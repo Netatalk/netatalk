@@ -45,7 +45,6 @@ AC_CHECK_HEADERS(netdb.h sgtty.h statfs.h dlfcn.h langinfo.h locale.h)
 AC_CHECK_HEADERS(sys/param.h sys/fcntl.h sys/termios.h)
 AC_CHECK_HEADERS(sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h)
 dnl Checks for header files, confirmed to be required as of 2011
-AC_CHECK_HEADERS(sys/epoll.h)
 AC_CHECK_HEADERS([sys/mount.h], , , 
 [#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -74,7 +73,6 @@ fi
 AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
 dnl these tests have been comfirmed to be needed in 2011
-AC_CHECK_FUNC(epoll_create, AC_DEFINE([HAVE_EPOLL], 1, Whether Linux epoll is available)) 
 AC_CHECK_FUNCS(backtrace_symbols dirfd getusershell pread pwrite pselect)
 AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen)
 AC_CHECK_FUNCS(mmap utime getpagesize) dnl needed by tbd
@@ -90,57 +88,11 @@ AC_SUBST(PTHREAD_LIBS)
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
 
-AC_CACHE_SAVE
-
-dnl --------------------------------------------------------------------------
 dnl 64bit platform check
-dnl --------------------------------------------------------------------------
+AC_NETATALK_64BIT_LIBS
 
-AC_MSG_CHECKING([whether to check for 64bit libraries])
-# Test if the compiler is in 64bit mode
-echo 'int i;' > conftest.$ac_ext
-atalk_cv_cc_64bit_output=no
-if AC_TRY_EVAL(ac_compile); then
-    case `/usr/bin/file conftest.$ac_objext` in
-    *"ELF 64"*)
-      atalk_cv_cc_64bit_output=yes
-      ;;
-    esac
-fi
-rm -rf conftest*
-
-case $host_cpu:$atalk_cv_cc_64bit_output in
-powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
-    case $target_os in
-    solaris2*)
-        AC_MSG_RESULT([yes])
-        atalk_libname="lib/64"
-        ;;
-    *bsd* | dragonfly*)
-        AC_MSG_RESULT([no])
-        atalk_libname="lib"
-        ;;
-    *)
-        AC_MSG_RESULT([yes])
-        atalk_libname="lib64"
-        ;;
-    esac
-    ;;
-*:*)
-    AC_MSG_RESULT([no])
-    atalk_libname="lib"
-    ;;
-esac
-
-dnl --------------------------------------------------------------------------
-dnl OS specific configuration comes in here:
-dnl --------------------------------------------------------------------------
-
+dnl OS specific checks
 AC_NETATALK_OS_SPECIFIC
-
-dnl --------------------------------------------------------------------------
-dnl specific configuration comes in here:
-dnl --------------------------------------------------------------------------
 
 dnl Check for optional admin group support
 AC_NETATALK_ADMIN_GROUP
@@ -183,9 +135,6 @@ AC_NETATALK_SHADOW
 	
 dnl Check for optional valid-shell-check support
 AC_NETATALK_SHELL_CHECK
-
-dnl Check for optional Webmin
-AC_NETATALK_WEBMIN
 
 dnl Check for optional sysv initscript install
 AC_NETATALK_SYSV_STYLE
@@ -232,55 +181,16 @@ AC_NETATALK_REALPATH
 dnl Check for sendfile()
 AC_NETATALK_SENDFILE
 
-dnl --------------------------------------------------------------------------
 dnl FHS stuff has to be done last because it overrides other defaults
-dnl --------------------------------------------------------------------------
+AC_NETATALK_FHS
 
-AC_MSG_CHECKING([whether to use Filesystem Hierarchy Standard (FHS) compatibility])
-AC_ARG_ENABLE(fhs,
-	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],[
-	if test "$enableval" = "yes"; then
-		uams_path="${libdir}/netatalk"
-		sysconfdir="/etc"
-		PKGCONFDIR=${sysconfdir}/netatalk
-		SERVERTEXT="${PKGCONFDIR}/msg"
-		use_pam_so=yes
-		mandir="/usr/share/man"
-		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
-dnl --------------------------------------------------------------------------
-dnl post-FHS substitutions, etc
-dnl --------------------------------------------------------------------------
-
-UAMS_PATH="${uams_path}"
-AC_SUBST(UAMS_PATH)
-
-dnl --------------------------------------------------------------------------
-dnl drop in includes for top level directory structures here...
-dnl --------------------------------------------------------------------------
-
-dnl Note: $(top_srcdir)/include should be added before all other includes
-dnl       so that includes from that directory a preferred to includes from
-dnl       /usr/include or similar places.
 LIBS="$LIBS -L\$(top_srcdir)/libatalk"
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
+UAMS_PATH="${uams_path}"
 
-
-dnl --------------------------------------------------------------------------
-dnl Last minute substitutions
-dnl --------------------------------------------------------------------------
-
-dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
+AC_SUBST(UAMS_PATH)
 
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)

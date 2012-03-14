@@ -1,5 +1,66 @@
 dnl Kitchen sink for configuration macros
 
+dnl Filesystem Hierarchy Standard (FHS) compatibility
+AC_DEFUN([AC_NETATALK_FHS], [
+AC_MSG_CHECKING([whether to use Filesystem Hierarchy Standard (FHS) compatibility])
+AC_ARG_ENABLE(fhs,
+	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],[
+	if test "$enableval" = "yes"; then
+		uams_path="${libdir}/netatalk"
+		sysconfdir="/etc"
+		PKGCONFDIR=${sysconfdir}/netatalk
+		SERVERTEXT="${PKGCONFDIR}/msg"
+		use_pam_so=yes
+		mandir="/usr/share/man"
+		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_RESULT([no])
+	fi
+	],[
+		AC_MSG_RESULT([no])
+	]
+)])
+
+dnl 64bit platform check
+AC_DEFUN([AC_NETATALK_64BIT_LIBS], [
+AC_MSG_CHECKING([whether to check for 64bit libraries])
+# Test if the compiler is in 64bit mode
+echo 'int i;' > conftest.$ac_ext
+atalk_cv_cc_64bit_output=no
+if AC_TRY_EVAL(ac_compile); then
+    case `/usr/bin/file conftest.$ac_objext` in
+    *"ELF 64"*)
+      atalk_cv_cc_64bit_output=yes
+      ;;
+    esac
+fi
+rm -rf conftest*
+
+case $host_cpu:$atalk_cv_cc_64bit_output in
+powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
+    case $target_os in
+    solaris2*)
+        AC_MSG_RESULT([yes])
+        atalk_libname="lib/64"
+        ;;
+    *bsd* | dragonfly*)
+        AC_MSG_RESULT([no])
+        atalk_libname="lib"
+        ;;
+    *)
+        AC_MSG_RESULT([yes])
+        atalk_libname="lib64"
+        ;;
+    esac
+    ;;
+*:*)
+    AC_MSG_RESULT([no])
+    atalk_libname="lib"
+    ;;
+esac
+])
+
 dnl Check for optional admin group support
 AC_DEFUN([AC_NETATALK_ADMIN_GROUP], [
     netatalk_cv_admin_group=yes
