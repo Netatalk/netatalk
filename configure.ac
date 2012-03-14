@@ -27,9 +27,6 @@ AM_PROG_CC_C_O
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
 
-dnl Request SUSv3 standard interfaces plus anything else the platform may have
-CFLAGS="$CFLAGS -D_XOPEN_SOURCE=600 -D__EXTENSIONS__ -D_GNU_SOURCE"
-
 dnl Check if we can use attribute unused (gcc only) from ethereal
 AC_MSG_CHECKING(to see if we can add '__attribute__((unused))' to CFLAGS)
 if test x$GCC != x ; then
