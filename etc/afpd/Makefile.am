@@ -58,7 +58,8 @@ afpd_CFLAGS = \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	-D_PATH_CONFDIR=\"$(pkgconfdir)/\"
+	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
+	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
 
 if HAVE_ACLS
 afpd_SOURCES += acls.c

@@ -53,3 +53,4 @@
 #endif
 
 #endif /* atalk/paths.h */
+

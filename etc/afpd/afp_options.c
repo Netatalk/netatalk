@@ -222,6 +222,7 @@ static void show_version_extended(void )
 static void show_paths( void )
 {
 	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+	printf( "       state directory:\t%s\n", _PATH_STATEDIR);
 	printf( "    afp_signature.conf:\t%s\n", _PATH_CONFDIR "afp_signature.conf");
 	printf( "      afp_voluuid.conf:\t%s\n", _PATH_CONFDIR "afp_voluuid.conf");
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );

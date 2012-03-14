@@ -22,10 +22,11 @@ libutil_la_SOURCES = \
 	unix.c
 
 libutil_la_CFLAGS = \
-	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
-	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
-	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
-	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\"
+	-D_PATH_CONFDIR='"$(pkgconfdir)/"' \
+	-DSERVERTEXT='"$(SERVERTEXT)/"' \
+	-D_PATH_AFPDPWFILE='"$(pkgconfdir)/afppasswd"' \
+	-D_PATH_AFPDUAMPATH='"$(UAMS_PATH)/"' \
+	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
 
 if HAVE_ATFUNCS
 libutil_la_SOURCES += ftw.c

@@ -1360,8 +1360,8 @@ int afp_config_parse(AFPObj *AFPObj)
 
     AFPObj->afp_version = 11;
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
-    options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
-    options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
+    options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
+    options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | AFPObj->cmdlineflags;
     
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
