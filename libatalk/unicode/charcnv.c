@@ -78,29 +78,6 @@ static struct charset_functions* charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 
-static char* read_charsets_from_env(charset_t ch)
-{
-    char *name;
-
-    switch (ch) {
-    case CH_MAC:
-        if (( name = getenv( "ATALK_MAC_CHARSET" )) != NULL )
-            return name;
-        else
-            return "MAC_ROMAN";
-        break;
-    case CH_UNIX:
-        if (( name = getenv( "ATALK_UNIX_CHARSET" )) != NULL )
-            return name;
-        else
-            return "LOCALE";
-        break;
-    default:
-        break;
-    }
-    return "ASCII";
-}
-
 
 /**
  * Return the name of a charset to give to iconv().
@@ -123,7 +100,7 @@ static const char *charset_name(charset_t ch)
     else if (ch == CH_UTF8_MAC) ret = "UTF8-MAC";
     else if (ch == CH_UNIX) {
         if (unixname[0] == '\0') {
-            ret = read_charsets_from_env(CH_UNIX);
+            ret = "LOCALE";
             strlcpy(unixname, ret, sizeof(unixname));
         }
         else
@@ -131,7 +108,7 @@ static const char *charset_name(charset_t ch)
     }
     else if (ch == CH_MAC) {
         if (macname[0] == '\0') {
-            ret = read_charsets_from_env(CH_MAC);
+            ret = "MAC_ROMAN";
             strlcpy(macname, ret, sizeof(macname));
         }
         else
