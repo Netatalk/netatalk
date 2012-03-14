@@ -76,7 +76,7 @@ int configinit(AFPObj *obj)
 {
     EC_INIT;
     DSI *dsi, **next = &obj->dsi;
-    char *p = NULL, *q = NULL;
+    char *p = NULL, *q = NULL, *savep;
     const char *r;
 
     auth_load(obj->options.uampath, obj->options.uamlist);
@@ -92,7 +92,7 @@ int configinit(AFPObj *obj)
 
     if (obj->options.listen) {
         EC_NULL( q = p = strdup(obj->options.listen) );
-        EC_NULL( p = strtok(p, ", ") );
+        EC_NULL( p = strtok_r(p, ", ", &savep) );
     }
 
     while (1) {
@@ -109,7 +109,7 @@ int configinit(AFPObj *obj)
 
         if (p)
             /* p is NULL if ! obj->options.listen */
-            p = strtok(NULL, ", ");
+            p = strtok_r(NULL, ", ", &savep);
         if (!p)
             break;
     }
