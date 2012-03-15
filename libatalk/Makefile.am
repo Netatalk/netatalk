@@ -9,6 +9,7 @@ lib_LTLIBRARIES = libatalk.la
 libatalk_la_SOURCES = dummy.c
 
 libatalk_la_LIBADD  = \
+	@WRAP_LIBS@ @ACL_LIBS@ \
 	acl/libacl.la \
 	adouble/libadouble.la	\
 	bstring/libbstring.la \
@@ -32,4 +33,4 @@ libatalk_la_DEPENDENCIES = \
 	util/libutil.la		\
 	vfs/libvfs.la
 
-libatalk_la_LDFLAGS = -static
+libatalk_la_LDFLAGS = -version-info 0:0:0
