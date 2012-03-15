@@ -1,12 +1,11 @@
-dnl $Id: config-checks.m4,v 1.6 2005-04-28 20:50:05 bfernhomberg Exp $
 dnl Autoconf macro to set the configuration directories.
 
 AC_DEFUN([AC_NETATALK_CONFIG_DIRS], [
-	PKGCONFDIR="${sysconfdir}/netatalk"
+	PKGCONFDIR="${sysconfdir}"
 
 	AC_ARG_WITH(pkgconfdir,
         	[  --with-pkgconfdir=DIR   package specific configuration in DIR
-                          [[SYSCONF/netatalk]]],
+                          [[$sysconfdir]]],
                	[
 			if test "x$withval" != "x"; then
 				PKGCONFDIR="$withval"

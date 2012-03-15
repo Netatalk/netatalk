@@ -223,8 +223,8 @@ static void show_paths( void )
 {
 	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
 	printf( "       state directory:\t%s\n", _PATH_STATEDIR);
-	printf( "    afp_signature.conf:\t%s\n", _PATH_CONFDIR "afp_signature.conf");
-	printf( "      afp_voluuid.conf:\t%s\n", _PATH_CONFDIR "afp_voluuid.conf");
+	printf( "    afp_signature.conf:\t%s\n", _PATH_STATEDIR "afp_signature.conf");
+	printf( "      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
 	printf( "  Server messages path:\t%s\n", SERVERTEXT);
 	printf( "              lockfile:\t%s\n", _PATH_AFPDLOCK);
