@@ -3,7 +3,7 @@ dnl Autoconf macros, display configure summary
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 
 	AC_MSG_RESULT([Configure summary:])
-	AC_MSG_RESULT([       init style:])
+	AC_MSG_RESULT([    init style:])
 	if test "x$init_style" != "x"; then
 		AC_MSG_RESULT([         $init_style])
 	else

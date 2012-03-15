@@ -9,6 +9,6 @@ service.atalk.systemd
 service.atalk-cnid.systemd
 netatalk
 netatalk.service
-netatalk-cnid.service 
+netatalk-cnid.service
 .gitignore
 *.o
