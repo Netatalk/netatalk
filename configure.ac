@@ -137,7 +137,7 @@ dnl Check for optional valid-shell-check support
 AC_NETATALK_SHELL_CHECK
 
 dnl Check for optional sysv initscript install
-AC_NETATALK_SYSV_STYLE
+AC_NETATALK_INIT_STYLE
 
 dnl Path where UAM modules shall be installed
 AC_ARG_WITH(uams-path, [  --with-uams-path=PATH   path to UAMs [[$libdir/netatalk/]]], [uams_path="$withval/"], [uams_path="$libdir/netatalk/"])

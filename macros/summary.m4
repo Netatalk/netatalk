@@ -1,12 +1,11 @@
-dnl $Id: summary.m4,v 1.6 2009-10-02 09:32:41 franklahm Exp $
 dnl Autoconf macros, display configure summary
 
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 
 	AC_MSG_RESULT([Configure summary:])
-	AC_MSG_RESULT([    Install style:])
-	if test "x$sysv_style" != "x"; then
-		AC_MSG_RESULT([         $sysv_style])
+	AC_MSG_RESULT([       init style:])
+	if test "x$init_style" != "x"; then
+		AC_MSG_RESULT([         $init_style])
 	else
 		AC_MSG_RESULT([         none])
 	fi

@@ -204,14 +204,14 @@ AC_ARG_ENABLE(shell-check,
 ])
 
 dnl Check for optional sysv initscript install
-AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
-    AC_ARG_WITH(sysv-style,
-                [  --with-sysv-style       use OS specific sysv config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|systemd]]],
-                sysv_style="$withval", sysv_style=none
+AC_DEFUN([AC_NETATALK_INIT_STYLE], [
+    AC_ARG_WITH(init-style,
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|systemd]]],
+                init_style="$withval", init_style=none
     )
-    case "$sysv_style" in 
+    case "$init_style" in 
     "redhat")
-	    AC_MSG_ERROR([--with-sysv-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
+	    AC_MSG_ERROR([--with-init-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
         ;;
     "redhat-sysv")
 	    AC_MSG_RESULT([enabling redhat-style sysv (upstart) configuration])
@@ -220,7 +220,7 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
 	    ;;
     "suse")
-	    AC_MSG_ERROR([--with-sysv-style=suse is obsoleted. Use suse-sysv or suse-systemd])
+	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
         ;;
     "suse-sysv")
 	    AC_MSG_RESULT([enabling suse-style sysv configuration])
@@ -244,16 +244,16 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
 	    AC_MSG_RESULT([disabling sysv support])
         ;;
     esac
-    AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
-    AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
-    AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
+    AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
+    AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
+    AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
     AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-    AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
-    AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
-    AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
-    AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
-    AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
-    AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = xnone)
+    AM_CONDITIONAL(USE_TRU64, test x$init_style = xtru64)
+    AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
+    AM_CONDITIONAL(USE_GENTOO, test x$init_style = xgentoo)
+    AM_CONDITIONAL(USE_DEBIAN, test x$init_style = xdebian)
+    AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
+    AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
 ])
 
@@ -358,7 +358,7 @@ if test x"$this_os" = "xsolaris"; then
     AC_DEFINE(__EXTENSIONS__,  1, [Solaris compilation environment])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
-	sysv_style=solaris
+	init_style=solaris
 
 	solaris_module=no
 	AC_MSG_CHECKING([if we can build Solaris kernel module])
