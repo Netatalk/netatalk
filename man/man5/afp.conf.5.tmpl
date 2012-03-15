@@ -500,6 +500,13 @@ Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions o
 .RE
 .SS "Miscellaneous Options"
 .PP
+vol dbpath = \fIpath\fR \fB(G)\fR
+.RS 4
+Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
+$localstatedir/netatalk/CNID/, where $localstatedir defaults to
+/var\&.
+.RE
+.PP
 basedir regex = \fIregex\fR \fB(H)\fR
 .RS 4
 Regular expression which matches the parent directory of the user homes\&. In the simple case this is just a path ie
@@ -816,11 +823,6 @@ Example: denied_hosts: 192\&.168\&.100/24,10\&.1\&.1\&.1,2001:db8::1428:57ab
 cnidscheme = \fIbackend\fR \fB(V)\fR
 .RS 4
 set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
-.RE
-.PP
-dbpath = \fIpath\fR \fB(V)\fR
-.RS 4
-Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&.
 .RE
 .PP
 cnidserver = \fIhost[:port]\fR \fB(V)\fR

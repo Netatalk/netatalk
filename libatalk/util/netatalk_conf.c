@@ -610,8 +610,7 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
     bstring dbpath;
-    if ((val = getoption(obj->iniconfig, section, "dbpath", preset)) == NULL)
-        val = _PATH_STATEDIR "CNID/";
+    EC_NULL_LOG( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
     EC_NULL_LOG( dbpath = bformat("%s/%s/", val, name) );
     volume->v_dbpath = strdup(bdata(dbpath));
     bdestroy(dbpath);
