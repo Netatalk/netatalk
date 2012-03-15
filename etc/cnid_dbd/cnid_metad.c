@@ -277,28 +277,42 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
 }
 
 /* ------------------ */
-static int set_dbdir(char *dbdir)
+static int set_dbdir(const char *dbdir, const char *vpath)
 {
-    int len;
+    EC_INIT;
+    int status;
     struct stat st;
+    bstring oldpath, newpath, cmd = NULL;
 
-    len = strlen(dbdir);
+    EC_NULL_LOG( oldpath = bformat("%s/%s/", vpath, DBHOME) );
+    EC_NULL_LOG( newpath = bformat("%s/%s/", dbdir, DBHOME) );
 
-    if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
+    if (lstat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
         return -1;
     }
 
-    if (dbdir[len - 1] != '/') {
-        strcat(dbdir, "/");
-        len++;
+    if (lstat(bdata(oldpath), &st) == 0 && lstat(bdata(newpath), &st) != 0 && errno == ENOENT) {
+        /* There's an .AppleDB in the volume root, we move it */
+        EC_NULL_LOG( cmd = bformat("mv '%s' '%s'", bdata(oldpath), dbdir) );
+        LOG(log_debug, logtype_cnid, "set_dbdir: cmd: %s", bdata(cmd));
+        if (WEXITSTATUS(system(bdata(cmd))) != 0) {
+            LOG(log_error, logtype_cnid, "set_dbdir: moving CNID db from \"%s\" to \"%s\" failed",
+                bdata(oldpath), dbdir);
+            EC_FAIL;
+        }
     }
-    strcpy(dbdir + len, DBHOME);
-    if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755 ) < 0) {
-        LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
+
+    if (lstat(bdata(newpath), &st) < 0 && mkdir(bdata(newpath), 0755 ) < 0) {
+        LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", bdata(newpath));
         return -1;
     }
-    return 0;
+
+EC_CLEANUP:
+    bdestroy(oldpath);
+    bdestroy(newpath);
+    bdestroy(cmd);
+    EC_EXIT;
 }
 
 /* ------------------ */
@@ -594,7 +608,7 @@ int main(int argc, char *argv[])
 
         LOG(log_maxdebug, logtype_cnid, "main: dbpath: %s", vol->v_dbpath);
 
-        if (set_dbdir(vol->v_dbpath) < 0) {
+        if (set_dbdir(vol->v_dbpath, volpath) < 0) {
             goto loop_end;
         }
 

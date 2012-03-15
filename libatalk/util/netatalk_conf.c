@@ -44,6 +44,7 @@
 #include <atalk/dsi.h>
 #include <atalk/uuid.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/bstrlib.h>
 
 #define VOLPASSLEN  8
 #ifndef UUID_PRINTABLE_STRING_LENGTH
@@ -608,8 +609,12 @@ static struct vol *creatvol(AFPObj *obj,
     else
         EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
-    val = getoption(obj->iniconfig, section, "dbpath", preset);
-    EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN, val ? val : path, pwd, path, name) );
+    bstring dbpath;
+    if ((val = getoption(obj->iniconfig, section, "dbpath", preset)) == NULL)
+        val = _PATH_STATEDIR "CNID/";
+    EC_NULL_LOG( dbpath = bformat("%s/%s/", val, name) );
+    volume->v_dbpath = strdup(bdata(dbpath));
+    bdestroy(dbpath);
 
     if (val = getoption(obj->iniconfig, section, "cnidscheme", preset))
         EC_NULL( volume->v_cnidscheme = strdup(val) );

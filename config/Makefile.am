@@ -30,7 +30,9 @@ pkgconfdir = @PKGCONFDIR@
 
 install-data-local: install-config-files
 	mkdir -pm 0755 $(DESTDIR)$(localstatedir)/netatalk/
+	mkdir -pm 0755 $(DESTDIR)$(localstatedir)/netatalk/CNID/
 	$(INSTALL_DATA) README $(DESTDIR)$(localstatedir)/netatalk/
+	$(INSTALL_DATA) README $(DESTDIR)$(localstatedir)/netatalk/CNID/
 
 uninstall-local:
 	for f in $(CONFFILES) $(GENFILES); do \
