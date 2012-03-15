@@ -599,12 +599,15 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "veto", preset))
         EC_NULL( volume->v_veto = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, section, "volcharset", preset))
+    /* vol charset is in [V] strictly. */
+    /* However, this can be set in both of [G] and [V] for intuitiveness */
+    if (val = getoption(obj->iniconfig, section, "vol charset", preset))
         EC_NULL( volume->v_volcodepage = strdup(val) );
     else
-        EC_NULL( volume->v_volcodepage = strdup("UTF8") );
+        EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
-    if (val = getoption(obj->iniconfig, section, "maccharset", preset))
+    /* mac charset is in both of [G] and [V] */
+    if (val = getoption(obj->iniconfig, section, "mac charset", preset))
         EC_NULL( volume->v_maccodepage = strdup(val) );
     else
         EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
@@ -1060,12 +1063,12 @@ void volume_free(struct vol *vol)
 int load_charset(struct vol *vol)
 {
     if ((vol->v_maccharset = add_charset(vol->v_maccodepage)) == (charset_t)-1) {
-        LOG(log_error, logtype_default, "Setting Mac codepage '%s' failed", vol->v_maccodepage);
+        LOG(log_error, logtype_default, "Setting mac charset '%s' failed", vol->v_maccodepage);
         return -1;
     }
 
     if ((vol->v_volcharset = add_charset(vol->v_volcodepage)) == (charset_t)-1) {
-        LOG(log_error, logtype_default, "Setting volume codepage '%s' failed", vol->v_volcodepage);
+        LOG(log_error, logtype_default, "Setting vol charset '%s' failed", vol->v_volcodepage);
         return -1;
     }
 
@@ -1493,27 +1496,39 @@ int afp_config_parse(AFPObj *AFPObj)
         free(q);
     }
 
-    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unixcodepage", NULL))) {
+    /* Charset Options */
+
+    /* unix charset is in [G] only */
+    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
         options->unixcharset = CH_UNIX;
         options->unixcodepage = strdup("LOCALE");
     } else {
         if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
             options->unixcharset = CH_UNIX;
             options->unixcodepage = strdup("LOCALE");
-            LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+            LOG(log_warning, logtype_afpd, "Setting unix charset to '%s' failed", p);
         } else {
             options->unixcodepage = strdup(p);
         }
     }
+
+    /* vol charset is in [V] strictly. */
+    /* However, this can be set in both of [G] and [V] for intuitiveness */
+    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
+        options->volcodepage = strdup("UTF8");
+    } else {
+        options->volcodepage = strdup(p);
+    }
 	
-    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "maccodepage", NULL))) {
+    /* mac charset is in both of [G] and [V] */
+    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccharset = CH_MAC;
         options->maccodepage = strdup("MAC_ROMAN");
     } else {
         if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
             options->maccharset = CH_MAC;
             options->maccodepage = strdup("MAC_ROMAN");
-            LOG(log_warning, logtype_afpd, "Setting Mac codepage to '%s' failed", p);
+            LOG(log_warning, logtype_afpd, "Setting mac charset to '%s' failed", p);
         } else {
             options->maccodepage = strdup(p);
         }
@@ -1522,8 +1537,8 @@ int afp_config_parse(AFPObj *AFPObj)
     /* Check for sane values */
     if (options->tickleval <= 0)
         options->tickleval = 30;
-    options->disconnected *= 3600 / options->tickleval;
-    options->sleep *= 3600 / options->tickleval;
+        options->disconnected *= 3600 / options->tickleval;
+        options->sleep *= 3600 / options->tickleval;
     if (options->timeout <= 0)
         options->timeout = 4;
     if (options->sleep <= 4)
@@ -1533,9 +1548,8 @@ int afp_config_parse(AFPObj *AFPObj)
     if (options->volnamelen < 8)
         options->volnamelen = 8; /* max mangled volname "???#FFFF" */
     if (options->volnamelen > 255)
-	    options->volnamelen = 255; /* AFP3 spec */
+        options->volnamelen = 255; /* AFP3 spec */
 
 EC_CLEANUP:
     EC_EXIT;
 }
-
