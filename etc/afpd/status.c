@@ -7,6 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -30,6 +31,14 @@
 
 #include <arpa/inet.h>
 
+#ifdef HAVE_KERBEROS
+#ifdef HAVE_KRB5_KRB5_H
+#include <krb5/krb5.h>
+#else
+#include <krb5.h>
+#endif /* HAVE_KRB5_KRB5_H */
+#endif /* HAVE_KERBEROS */
+
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
@@ -38,11 +47,24 @@
 #include "status.h"
 #include "afp_config.h"
 #include "icon.h"
+#include "uam_auth.h"
 
 static   size_t maxstatuslen = 0;
 
-static void status_flags(char *data, const int notif, const int ipok,
-                         const unsigned char passwdbits, const int dirsrvcs _U_, int flags)
+static int uam_gss_enabled()
+{
+    /* XXX: must be a better way to find out if uam_gss is active */
+    return auth_uamfind(UAM_SERVER_LOGIN_EXT,
+                        "Client Krb v2",
+                        sizeof("Client Krb v2")) != NULL;
+}
+
+static void status_flags(char *data,
+                         const int notif,
+                         const int ipok,
+                         const unsigned char passwdbits,
+                         const int dirsrvcs,
+                         int flags)
 {
     uint16_t           status;
 
@@ -50,7 +72,6 @@ static void status_flags(char *data, const int notif, const int ipok,
            | AFPSRVRINFO_SRVSIGNATURE
            | AFPSRVRINFO_SRVMSGS
            | AFPSRVRINFO_FASTBOZO
-           | AFPSRVRINFO_SRVRDIR
            | AFPSRVRINFO_SRVUTF8
            | AFPSRVRINFO_EXTSLEEP;
 
@@ -58,10 +79,12 @@ static void status_flags(char *data, const int notif, const int ipok,
         status |= AFPSRVRINFO_PASSWD;
     if (passwdbits & PASSWD_NOSAVE)
         status |= AFPSRVRINFO_NOSAVEPASSWD;
-    if (ipok) /* only advertise tcp/ip if we have a valid address */        
+    if (ipok) /* only advertise tcp/ip if we have a valid address */
         status |= AFPSRVRINFO_TCPIP;
-    if (notif) /* Default is yes */        
+    if (notif) /* Default is yes */
         status |= AFPSRVRINFO_SRVNOTIFY;
+    if (dirsrvcs)
+        status |= AFPSRVRINFO_SRVRDIR;
     if (flags & OPTION_UUID)
         status |= AFPSRVRINFO_UUID;
 
@@ -288,50 +311,173 @@ static size_t status_netaddress(char *data, int *servoffset,
     return (data - begin);
 }
 
-static size_t status_directorynames(char *data, int *diroffset, 
-				 const DSI *dsi _U_, 
-				 const struct afp_options *options)
+static bool append_directoryname(char **pdata,
+                                 size_t offset,
+                                 size_t *size,
+                                 char* DirectoryNamesCount,
+                                 size_t len,
+                                 char *principal)
+{
+    if (sizeof(uint8_t) + len  > maxstatuslen - offset - *size) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: out of space for principal '%s' (len=%d)",
+            principal, len);
+        return false;
+    } else if (len > 255) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: principal '%s' (len=%d) too long (max=255)",
+            principal, len);
+        return false;
+    }
+
+    LOG(log_info, logtype_afpd,
+        "DirectoryNames[%d]=%s",
+        *DirectoryNamesCount, principal);
+
+    *DirectoryNamesCount += 1;
+    char *data = *pdata;
+    *data++ = len;
+    strncpy(data, principal, len);
+
+    *pdata += len;
+    *size += sizeof(uint8_t) + len;
+
+    return true;
+}
+
+/**
+ * DirectoryNamesCount offset: uint16_t
+ * ...
+ * DirectoryNamesCount: uint8_t
+ * DirectoryNames: list of UTF-8 Pascal strings (uint8_t + char[1,255])
+ */
+static size_t status_directorynames(char *data,
+                                    int *diroffset,
+                                    const DSI *dsi _U_,
+                                    const struct afp_options *options _U_)
 {
     char *begin = data;
     uint16_t offset;
-    memcpy(&offset, data + *diroffset, sizeof(offset));
+
+    memcpy(&offset, begin + *diroffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;
 
-    /* I can not find documentation of any other purpose for the
-     * DirectoryNames field.
-     */
-    /*
-     * Try to synthesize a principal:
-     * service '/' fqdn '@' realm
-     */
-    if (options->k5service && options->k5realm && options->fqdn) {
-	/* should k5princ be utf8 encoded? */
-	size_t len;
-	char *p = strchr( options->fqdn, ':' );
-	if (p) 
-	    *p = '\0';
-	len = strlen( options->k5service ) 
-			+ strlen( options->fqdn )
-			+ strlen( options->k5realm );
-	len+=2; /* '/' and '@' */
-	if ( len > 255 || len+2 > maxstatuslen - offset) {
-	    *data++ = 0;
-	    LOG ( log_error, logtype_afpd, "status: could not set directory service list, no more room");
-	}	 
-	else {
-	    *data++ = 1; /* DirectoryNamesCount */
-	    *data++ = len;
-	    snprintf( data, len + 1, "%s/%s@%s", options->k5service,
-				options->fqdn, options->k5realm );
-	    data += len;
-	    if (p)
-	        *p = ':';
-       }
-    } else {
-	*data++ = 0;
+    char *DirectoryNamesCount = data++, *DirectoryNames = data;
+    *DirectoryNamesCount = 0;
+    size_t size = sizeof(uint8_t);
+
+    if (!uam_gss_enabled())
+        goto offset_calc;
+
+#ifdef HAVE_KERBEROS
+    krb5_context context;
+    krb5_error_code ret;
+    const char *error_msg;
+
+    if (krb5_init_context(&context)) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames failed to intialize a krb5_context");
+        goto offset_calc;
     }
 
+    krb5_keytab keytab;
+    if ((ret = krb5_kt_default(context, &keytab)))
+        goto krb5_error;
+
+    // figure out which service principal to use
+    krb5_keytab_entry entry;
+    char *principal;
+    if (options->k5service && options->fqdn && options->k5realm) {
+        LOG(log_debug, logtype_afpd,
+            "status:DirectoryNames: using service principal specified in options");
+
+        krb5_principal service_principal;
+        if ((ret = krb5_build_principal(context,
+                                        &service_principal,
+                                        strlen(options->k5realm),
+                                        options->k5realm,
+                                        options->k5service,
+                                        options->fqdn,
+                                        NULL)))
+            goto krb5_error;
+
+        // try to get the given service principal from keytab
+        ret = krb5_kt_get_entry(context,
+                                keytab,
+                                service_principal,
+                                0, // kvno - wildcard
+                                0, // enctype - wildcard
+                                &entry);
+        if (ret == KRB5_KT_NOTFOUND) {
+            krb5_unparse_name(context, service_principal, &principal);
+            LOG(log_error, logtype_afpd,
+                "status:DirectoryNames: specified service principal '%s' not found in keytab",
+                principal);
+            // XXX: should this be krb5_xfree?
+            krb5_free_unparsed_name(context, principal);
+            goto krb5_cleanup;
+        }
+        krb5_free_principal(context, service_principal);
+        if (ret)
+            goto krb5_error;
+    } else {
+        LOG(log_debug, logtype_afpd,
+            "status:DirectoryNames: using first entry from keytab as service principal");
+
+        krb5_kt_cursor cursor;
+        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor)))
+            goto krb5_error;
+
+        ret = krb5_kt_next_entry(context, keytab, &entry, &cursor);
+        krb5_kt_end_seq_get(context, keytab, &cursor);
+        if (ret)
+            goto krb5_error;
+    }
+
+    krb5_unparse_name(context, entry.principal, &principal);
+    krb5_kt_free_entry(context, &entry);
+
+    append_directoryname(&data,
+                         offset,
+                         &size,
+                         DirectoryNamesCount,
+                         strlen(principal),
+                         principal);
+
+    // XXX: should this be krb5_xfree?
+    krb5_free_unparsed_name(context, principal);
+    goto krb5_cleanup;
+
+krb5_error:
+    if (ret) {
+        error_msg = krb5_get_error_message(context, ret);
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: Kerberos error: %s",
+            (char *) error_msg);
+        krb5_free_error_message(context, error_msg);
+    }
+
+krb5_cleanup:
+    krb5_kt_close(context, keytab);
+    krb5_free_context(context);
+#else
+    if (!options->k5service || !options->fqdn || !options->k5realm)
+        goto offset_calc;
+
+    char principal[255];
+    size_t len = snprintf(principal, sizeof(principal), "%s/%s@%s",
+                          options->k5service, options->fqdn, options->k5realm);
+
+    append_directoryname(&data,
+                         offset,
+                         &size,
+                         DirectoryNamesCount,
+                         strlen(principal),
+                         principal);
+#endif // HAVE_KERBEROS
+
+offset_calc:
     /* Calculate and store offset for UTF8ServerName */
     *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
@@ -459,7 +605,7 @@ void status_init(AFPObj *obj, DSI *dsi)
                  options->flags & OPTION_SERVERNOTIF,
                  (options->fqdn || ipok),
                  options->passwdbits, 
-                 (options->k5service && options->k5realm && options->fqdn),
+                 uam_gss_enabled(),
                  options->flags);
     /* returns offset to signature offset */
     c = status_server(status, options->hostname, options);
