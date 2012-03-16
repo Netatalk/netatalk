@@ -249,9 +249,10 @@ static void guess_interface(DSI *dsi, const char *hostname, const char *port)
             getip_string((struct sockaddr *)&dsi->server), port, ifr.ifr_name);
         goto iflist_done;
     }
-    LOG(log_info, logtype_dsi, "dsi_tcp (Chooser will not select afp/tcp) "
-        "Check to make sure %s is in /etc/hosts and the correct domain is in "
-        "/etc/resolv.conf: %s", hostname, strerror(errno));
+
+    LOG(log_note, logtype_dsi, "dsi_tcp: couldn't find network interface with IP address to advertice, "
+        "check to make sure \"%s\" is in /etc/hosts or can be resolved with DNS, or "
+        "add a netinterface that is not a loopback or point-2-point type", hostname);
 
 iflist_done:
     close(fd);
@@ -267,7 +268,7 @@ iflist_done:
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const char *inport)
 {
     EC_INIT;
-    int                flag;
+    int                flag, err;
     char               *a = NULL, *b;
     const char         *address;
     const char         *port;
@@ -377,8 +378,8 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((ret = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
-        LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
+    if ((err = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
+        LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(err));
         goto interfaces;
     }
 
