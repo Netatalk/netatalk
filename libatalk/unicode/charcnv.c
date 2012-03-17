@@ -127,7 +127,7 @@ static const char *charset_name(charset_t ch)
         if (ln) {
             /* Check whether the charset name is supported
                by iconv */
-            LOG(log_info, logtype_default, "Locale charset is '%s'", ln);
+            LOG(log_debug, logtype_default, "Locale charset is '%s'", ln);
             atalk_iconv_t handle = atalk_iconv_open(ln, "UCS-2");
             if (handle == (atalk_iconv_t) -1) {
                 LOG(log_warning, logtype_default, "Locale charset '%s' unsupported, using ASCII instead", ln);
