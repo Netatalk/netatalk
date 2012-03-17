@@ -1,4 +1,4 @@
-# ($Id)
+# Netatalk 2.x afp volume configuration
 ###
 ### Delete a '#' character at the head of line if you need.
 ### If clients are Mac OS X only, it is not especially necessary.
