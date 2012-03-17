@@ -102,7 +102,7 @@ static volatile sig_atomic_t sigchild = 0;
 static uint maxvol;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
-#define TESTTIME   42                  /* this much seconds apfd client tries to  *
+#define TESTTIME   10                  /* this much seconds apfd client tries to  *
                                         * to reconnect every 5 secondes, catch it */
 #define MAXVOLS    4096
 #define DEFAULTHOST  "localhost"
@@ -112,7 +112,7 @@ struct server {
     struct volinfo *volinfo;
     pid_t pid;
     time_t tm;                    /* When respawned last */
-    int count;                    /* Times respawned in the last TESTTIME secondes */
+    unsigned int count;           /* Times respawned in the last TESTTIME secondes */
     int control_fd;               /* file descriptor to child cnid_dbd process */
 };
 
@@ -197,25 +197,30 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
             return -1;
         }
     } else {
-        /* we have a slot but no process, check for respawn too fast */
-        if ( (t < (up->tm + TESTTIME)) /* We're in the respawn time window */
-             &&
-             (up->count > MAXSPAWN) ) { /* ...and already tried to fork too often */
-            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn too fast just exiting");
-            return -1; /* just exit, dont sleep, because we might have work to do for another client  */
-        }
-        if ( t >= (up->tm + TESTTIME) ) { /* out of respawn too fast windows reset the count */
-            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn window ended");
-            up->tm = t;
-            up->count = 0;
+        /* we have a slot but no process */
+        if (up->count > 0) {
+            /* check for respawn too fast */
+            if (t < (up->tm + TESTTIME)) {
+                /* We're in the respawn time window */
+                if (up->count > MAXSPAWN) {
+                    /* ...and already tried to fork too often */
+                    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawning too fast");
+                    return -1; /* just exit, dont sleep, because we might have work to do for another client  */
+                }
+            } else {
+                /* out of respawn too fast windows reset the count */
+                LOG(log_info, logtype_cnid, "maybe_start_dbd: respawn window ended");
+                up->count = 0;
+            }
         }
         up->count++;
-        LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count now is: %u", up->count);
+        up->tm = t;
+        LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count: %u", up->count);
         if (up->count > MAXSPAWN) {
             /* We spawned too fast. From now until the first time we tried + TESTTIME seconds
                we will just return -1 above */
-            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshhold");
-        }
+            LOG(log_info, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshhold");
+       }
     }
 
     /* 
@@ -561,11 +566,15 @@ int main(int argc, char *argv[])
                 }
             }
             if (WIFEXITED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with exit code %i",
+                LOG(log_info, logtype_cnid, "cnid_dbd[%i] exited with exit code %i",
                     pid, WEXITSTATUS(status));
+            } else {
+                /* cnid_dbd did a clean exit probably on idle timeout, reset bookkeeping */
+                srv[i].tm = 0;
+                srv[i].count = 0;
             }
-            else if (WIFSIGNALED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with signal %i",
+            if (WIFSIGNALED(status)) {
+                LOG(log_info, logtype_cnid, "cnid_dbd[%i] received signal %i",
                     pid, WTERMSIG(status));
             }
             sigchild = 0;

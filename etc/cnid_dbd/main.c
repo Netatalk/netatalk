@@ -247,7 +247,7 @@ static void switch_to_user(char *dir)
         exit(1);
     }
     if (!getuid()) {
-        LOG(log_info, logtype_cnid, "Setting uid/gid to %i/%i", st.st_uid, st.st_gid);
+        LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", st.st_uid, st.st_gid);
         if (setgid(st.st_gid) < 0 || setuid(st.st_uid) < 0) {
             LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
             exit(1);
