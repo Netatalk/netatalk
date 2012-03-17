@@ -113,9 +113,11 @@ const char *uuid_bin2string(const unsigned char *uuid) {
     int i = 0;
     unsigned char c;
 
+#ifdef HAVE_LDAP
     if (ldap_uuid_string)
         uuidmask = ldap_uuid_string;
     else
+#endif
         uuidmask = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
 
     LOG(log_debug, logtype_afpd, "uuid_bin2string{uuid}: mask: %s", uuidmask);
