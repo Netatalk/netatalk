@@ -1439,8 +1439,8 @@ int afp_config_parse(AFPObj *AFPObj)
     options->tcp_sndbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
     options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fceholdfmod",    60);
-    options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep",          10);
-    options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect",     24);
+    options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
+    options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
 
     if ((p = iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
