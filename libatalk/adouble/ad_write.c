@@ -162,14 +162,25 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
-        LOG(log_error, logtype_default, "sys_ftruncate: %s", strerror(errno));
-        return -1;
+    EC_INIT;
+
+    if (ad->ad_vers == AD_VERSION_EA && size == 0) {
+#if HAVE_EAFD
+        EC_NEG1( sys_lremovexattr(of_name(ofork), AD_EA_RESO) );
+#else
+        EC_NEG1( unlink(ad->ad_ops->ad_path(ad->ad_name, 0)) );
+#endif
     }
 
-    ad->ad_rlen = size;    
+    EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
 
-    return 0;
+EC_CLEANUP:
+    if (ret == 0)
+        ad->ad_rlen = size;    
+    else
+        LOG(log_error, logtype_default, "ad_rtruncate(\"%s\"): %s",
+            fullpathname(ad->ad_name), strerror(errno));
+    EC_EXIT;
 }
 
 int ad_dtruncate(struct adouble *ad, const off_t size)

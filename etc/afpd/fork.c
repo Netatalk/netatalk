@@ -574,15 +574,8 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, s
             ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, size, st_size -size, ofork->of_refnum) < 0) {
             goto afp_setfork_err;
         }
-        if (ofork->of_ad->ad_vers == AD_VERSION_EA) {
-#if HAVE_EAFD
-            err = sys_lremovexattr(of_name(ofork), AD_EA_RESO);
-#else
-            err = unlink(ofork->of_vol->ad_path(of_name(ofork), 0));
-#endif
-        } else {
-            err = ad_rtruncate(ofork->of_ad, size);
-        }
+
+        err = ad_rtruncate(ofork->of_ad, size);
         if (st_size > size)
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);
         if (err < 0)
