@@ -44,7 +44,6 @@ struct vol {
     char            v_stamp[ADEDLEN_PRIVSYN];
     VolSpace        v_limitsize; /* Size limit, if any, in MiB */
     mode_t          v_umask;
-    mode_t          v_perm;  /* default permission value OR with requested perm*/
     mode_t          v_dperm; /* default directories permission value OR with requested perm*/
     mode_t          v_fperm; /* default files permission value OR with requested perm*/
     ucs2_t          *v_u8mname;     /* converted to utf8-mac in ucs2 */

@@ -632,9 +632,6 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "file perm", preset))
         volume->v_fperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "perm", preset))
-        volume->v_perm = (int)strtol(val, NULL, 8);
-
     if (val = getoption(obj->iniconfig, section, "vol size limit", preset))
         volume->v_limitsize = (uint32_t)strtoul(val, NULL, 10);
 
@@ -870,9 +867,6 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags &= ~AFPVOL_ACLS;
     }
 #endif
-
-    volume->v_dperm |= volume->v_perm;
-    volume->v_fperm |= volume->v_perm;
 
     /* Check EA support on volume */
     if (volume->v_vfs_ea == AFPVOL_EA_AUTO || volume->v_adouble == AD_VERSION_EA)
