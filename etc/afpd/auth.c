@@ -1057,7 +1057,7 @@ int auth_load(const char *path, const char *list)
         return -1;
 
     strlcpy(buf, list, sizeof(buf));
-    if ((p = strtok(buf, ",")) == NULL)
+    if ((p = strtok(buf, ", ")) == NULL)
         return -1;
 
     strcpy(name, path);
@@ -1082,7 +1082,7 @@ int auth_load(const char *path, const char *list)
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
         }
-        p = strtok(NULL, ",");
+        p = strtok(NULL, ", ");
     }
 
     return 0;

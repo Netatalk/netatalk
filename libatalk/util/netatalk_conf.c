@@ -403,7 +403,7 @@ static char *volxlate(const AFPObj *obj,
  * check access list
  *
  * this function wants something of the following form:
- * "@group,name,name2,@group2,name3"
+ * "@group,name,name2,@group2,name3" or "@group name name2 @group2 name3"
  * A NULL argument allows everybody to have access.
  * We return three things:
  *     -1: no list
@@ -419,7 +419,7 @@ static int accessvol(const AFPObj *obj, const char *args, const char *name)
         return -1;
 
     strlcpy(buf, args, sizeof(buf));
-    if ((p = strtok(buf, ",")) == NULL) /* nothing, return okay */
+    if ((p = strtok(buf, ", ")) == NULL) /* nothing, return okay */
         return -1;
 
     while (p) {
@@ -428,7 +428,7 @@ static int accessvol(const AFPObj *obj, const char *args, const char *name)
                 return 1;
         } else if (strcasecmp(p, name) == 0) /* it's a user name */
             return 1;
-        p = strtok(NULL, ",");
+        p = strtok(NULL, ", ");
     }
 
     return 0;
@@ -445,7 +445,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
         return -1;
 
     strlcpy(buf, args, sizeof(buf));
-    if ((p = strtok_r(buf, ",", &b)) == NULL) /* nothing, return okay */
+    if ((p = strtok_r(buf, ", ", &b)) == NULL) /* nothing, return okay */
         return -1;
 
     while (p) {
@@ -487,7 +487,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
 
         /* next address */
         freeaddrinfo(ai);
-        p = strtok_r(NULL, ",", &b);
+        p = strtok_r(NULL, ", ", &b);
     }
 
     return 0;
@@ -572,13 +572,13 @@ static struct vol *creatvol(AFPObj *obj,
      * deny -> either no list (-1), or not in list (0)
      */
     if (pwd) {
-        if (accessvol(obj, getoption(obj->iniconfig, section, "deny", preset), pwd->pw_name) == 1)
+        if (accessvol(obj, getoption(obj->iniconfig, section, "invalid users", preset), pwd->pw_name) == 1)
             goto EC_CLEANUP;
-        if (accessvol(obj, getoption(obj->iniconfig, section, "allow", preset), pwd->pw_name) == 0)
+        if (accessvol(obj, getoption(obj->iniconfig, section, "valid users", preset), pwd->pw_name) == 0)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "denied_hosts", preset)) == 1)
+        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "hosts deny", preset)) == 1)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "allowed_hosts", preset)) == 0)
+        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "hosts allow", preset)) == 0)
             goto EC_CLEANUP;
     }
 
@@ -596,7 +596,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "password", preset))
         EC_NULL( volume->v_password = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, section, "veto", preset))
+    if (val = getoption(obj->iniconfig, section, "veto files", preset))
         EC_NULL( volume->v_veto = strdup(val) );
 
     /* vol charset is in [V] strictly. */
@@ -618,7 +618,7 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_dbpath = strdup(bdata(dbpath));
     bdestroy(dbpath);
 
-    if (val = getoption(obj->iniconfig, section, "cnidscheme", preset))
+    if (val = getoption(obj->iniconfig, section, "cnid scheme", preset))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
     else
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
@@ -626,16 +626,16 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "umask", preset))
         volume->v_umask = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "dperm", preset))
+    if (val = getoption(obj->iniconfig, section, "directory perm", preset))
         volume->v_dperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "fperm", preset))
+    if (val = getoption(obj->iniconfig, section, "file perm", preset))
         volume->v_fperm = (int)strtol(val, NULL, 8);
 
     if (val = getoption(obj->iniconfig, section, "perm", preset))
         volume->v_perm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "volsizelimit", preset))
+    if (val = getoption(obj->iniconfig, section, "vol size limit", preset))
         volume->v_limitsize = (uint32_t)strtoul(val, NULL, 10);
 
     if (val = getoption(obj->iniconfig, section, "preexec", preset))
@@ -644,13 +644,13 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "postexec", preset))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "root_preexec", preset))
+    if (val = getoption(obj->iniconfig, section, "root preexec", preset))
         EC_NULL( volume->v_root_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "root_postexec", preset))
+    if (val = getoption(obj->iniconfig, section, "root postexec", preset))
         EC_NULL( volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "adouble", preset)) {
+    if (val = getoption(obj->iniconfig, section, "appledouble", preset)) {
         if (strcmp(val, "v2") == 0)
             volume->v_adouble = AD_VERSION2;
         else if (strcmp(val, "ea") == 0)
@@ -659,7 +659,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_adouble = AD_VERSION;
     }
 
-    if (val = getoption(obj->iniconfig, section, "cnidserver", preset)) {
+    if (val = getoption(obj->iniconfig, section, "cnid server", preset)) {
         EC_NULL( p = strdup(val) );
         volume->v_cnidserver = p;
         if (q = strrchr(val, ':')) {
@@ -694,7 +694,7 @@ static struct vol *creatvol(AFPObj *obj,
             volume->v_casefold = AFPVOL_ULOWERMUPPER;
     }
 
-    if (val = getoption(obj->iniconfig, section, "options", preset)) {
+    if (val = getoption(obj->iniconfig, section, "vol options", preset)) {
         q = strdup(val);
         if (p = strtok(q, ", ")) {
             while (p) {
@@ -983,7 +983,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         /* do variable substitution for volume name */
         if (STRCMP(secname, ==, INISEC_HOMES)) {
-            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "name", "$u's home"))
+            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home"))
                 strlcpy(tmp, p, MAXPATHLEN);
             else
                 strlcpy(tmp, p, MAXPATHLEN);
@@ -1319,7 +1319,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         path, user, pw->pw_dir, volpath);
 
     /* do variable substitution for volume name */
-    p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "name", "$u's home");
+    p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, volpath, NULL) );
 
@@ -1376,11 +1376,11 @@ int afp_config_parse(AFPObj *AFPObj)
     AFPObj->iniconfig = config;
 
     /* [Global] */
-    options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "loglevel", "default:note");
-    options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "logfile",  NULL);
+    options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
+    options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
 
-    /* [AFP] "options" options wo values */
-    if (q = iniparser_getstrdup(config, INISEC_GLOBAL, "options", NULL)) {
+    /* "server options" options wo values */
+    if (q = iniparser_getstrdup(config, INISEC_GLOBAL, "server options", NULL)) {
         if (p = strtok(q, ", ")) {
             while (p) {
                 if (strcasecmp(p, "nozeroconf"))
@@ -1415,30 +1415,30 @@ int afp_config_parse(AFPObj *AFPObj)
     /* figure out options w values */
 
     options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "loginmesg",      "");
-    options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guestname",      "nobody");
-    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwdfile",     _PATH_AFPDPWFILE);
-    options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uampath",        _PATH_AFPDUAMPATH);
-    options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uamlist",        "uams_dhx.so,uams_dhx2.so");
+    options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
+    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",_PATH_AFPDPWFILE);
+    options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
+    options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
     options->port           = iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
     options->signatureopt   = iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "auto");
-    options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5service",      NULL);
-    options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5realm",        NULL);
+    options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
+    options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
-    options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "ntdomain",       NULL);
-    options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "ntseparator",    NULL);
-    options->mimicmodel     = iniparser_getstrdup(config, INISEC_GLOBAL, "mimicmodel",     NULL);
-    options->adminauthuser  = iniparser_getstrdup(config, INISEC_GLOBAL, "adminauthuser",  NULL);
-    options->connections    = iniparser_getint   (config, INISEC_GLOBAL, "maxcon",         200);
-    options->passwdminlen   = iniparser_getint   (config, INISEC_GLOBAL, "passwdminlen",   0);
+    options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
+    options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
+    options->mimicmodel     = iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
+    options->adminauthuser  = iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
+    options->connections    = iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
+    options->passwdminlen   = iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
     options->tickleval      = iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
     options->timeout        = iniparser_getint   (config, INISEC_GLOBAL, "timeout",        4);
     options->dsireadbuf     = iniparser_getint   (config, INISEC_GLOBAL, "dsireadbuf",     12);
-    options->server_quantum = iniparser_getint   (config, INISEC_GLOBAL, "server_quantum", DSI_SERVQUANT_DEF);
+    options->server_quantum = iniparser_getint   (config, INISEC_GLOBAL, "server quantum", DSI_SERVQUANT_DEF);
     options->volnamelen     = iniparser_getint   (config, INISEC_GLOBAL, "volnamelen",     80);
     options->dircachesize   = iniparser_getint   (config, INISEC_GLOBAL, "dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
     options->tcp_sndbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
     options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
-    options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fceholdfmod",    60);
+    options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
 
@@ -1454,21 +1454,21 @@ int afp_config_parse(AFPObj *AFPObj)
         options->hostname = strdup(val);
     }
 
-    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "k5keytab", NULL))) {
+    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "k5 keytab", NULL))) {
         EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
         snprintf(options->k5keytab, strlen(p) + 14, "KRB5_KTNAME=%s", p);
         putenv(options->k5keytab);
     }
 
 #ifdef ADMIN_GRP
-    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "admingroup",  NULL))) {
+    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "admin group",  NULL))) {
          struct group *gr = getgrnam(p);
          if (gr != NULL)
              options->admingid = gr->gr_gid;
     }
 #endif /* ADMIN_GRP */
 
-    q = iniparser_getstrdup(config, INISEC_GLOBAL, "cnidserver", "localhost:4700");
+    q = iniparser_getstrdup(config, INISEC_GLOBAL, "cnid server", "localhost:4700");
     r = strrchr(q, ':');
     if (r)
         *r = 0;

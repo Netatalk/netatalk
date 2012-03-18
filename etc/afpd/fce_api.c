@@ -575,7 +575,7 @@ int fce_set_events(const char *events)
 
     fce_ev_enabled = 0;
 
-    for (p = strtok(e, ","); p; p = strtok(NULL, ",")) {
+    for (p = strtok(e, ", "); p; p = strtok(NULL, ", ")) {
         if (strcmp(p, "fmod") == 0) {
             fce_ev_enabled |= (1 << FCE_FILE_MODIFY);
         } else if (strcmp(p, "fdel") == 0) {
