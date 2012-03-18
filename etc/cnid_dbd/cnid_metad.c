@@ -560,7 +560,7 @@ int main(int argc, char *argv[])
                 srv[i].tm = 0;
                 srv[i].count = 0;
             }
-            else if (WIFSIGNALED(status)) {
+            if (WIFSIGNALED(status)) {
                 LOG(log_info, logtype_cnid, "cnid_dbd[%i] got signal %i",
                     pid, WTERMSIG(status));
             }
