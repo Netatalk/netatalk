@@ -478,6 +478,20 @@ Allows a different TCP port to be used for AFP\&. The default is 548\&. Also set
 option\&.
 .RE
 .PP
+sleep time = \fInumber\fR \fB(G)\fR
+.RS 4
+Keep sleeping AFP sessions for
+\fInumber\fR
+hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
+.RE
+.PP
+disconnect time = \fInumber\fR \fB(G)\fR
+.RS 4
+Keep disconnected AFP sessions for
+\fInumber\fR
+hours before dropping them\&. Default is 24 hours\&.
+.RE
+.PP
 server_quantum = \fInumber\fR \fB(G)\fR
 .RS 4
 This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
@@ -741,13 +755,6 @@ Do not use this option any longer as Netatalk 2\&.x correctly supports server no
 keepsessions \fB(G)\fR
 .RS 4
 Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\'s absolutely critical to restart the master process in time!
-.RE
-.PP
-sleep \fInumber\fR \fB(G)\fR
-.RS 4
-AFP 3\&.x waits
-\fInumber\fR
-hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
 .RE
 .PP
 noacl2maccess \fB(G)\fR
