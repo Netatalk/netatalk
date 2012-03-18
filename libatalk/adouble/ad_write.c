@@ -164,15 +164,12 @@ int ad_rtruncate( struct adouble *ad, const off_t size)
 {
     EC_INIT;
 
-    if (ad->ad_vers == AD_VERSION_EA && size == 0) {
-#if HAVE_EAFD
-        EC_NEG1( sys_lremovexattr(of_name(ofork), AD_EA_RESO) );
-#else
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA && size == 0)
         EC_NEG1( unlink(ad->ad_ops->ad_path(ad->ad_name, 0)) );
+    else
 #endif
-    }
-
-    EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
+        EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
 
 EC_CLEANUP:
     if (ret == 0)
