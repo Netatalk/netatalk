@@ -339,7 +339,7 @@ static bool append_directoryname(char **pdata,
     *data++ = len;
     strncpy(data, principal, len);
 
-    *pdata += len;
+    *pdata += len + 1;
     *size += sizeof(uint8_t) + len;
 
     return true;
