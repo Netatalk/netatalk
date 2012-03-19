@@ -62,6 +62,9 @@ static int dsi_peek(DSI *dsi)
     maxfd = dsi->socket + 1;
 
     while (1) {
+        if (dsi->socket == -1)
+            /* eg dsi_disconnect() might have disconnected us */
+            return -1;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
 
