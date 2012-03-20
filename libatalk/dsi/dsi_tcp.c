@@ -12,8 +12,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#define USE_TCP_NODELAY
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -333,13 +331,11 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
             setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
 #endif
 
-#ifdef USE_TCP_NODELAY
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
             flag = 1;
             setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
-#endif /* USE_TCP_NODELAY */
             
             if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
                 close(dsi->serversock);

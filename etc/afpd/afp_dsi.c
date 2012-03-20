@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <setjmp.h>
 #include <time.h>
@@ -47,6 +48,10 @@
 #warning UIDGID
 #include "uid.h"
 #endif /* FORCE_UIDGID */
+
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
 
 /* 
  * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
@@ -475,6 +480,10 @@ void afp_over_dsi(AFPObj *obj)
             LOG(log_error, logtype_dsi, "afp_over_dsi: setsockopt(SO_SNDBUF): %s", strerror(errno));
         }
     }
+
+    /* set TCP_NODELAY */
+    int flag = 1;
+    setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
     /* get stuck here until the end */
     while (1) {
