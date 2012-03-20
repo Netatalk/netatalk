@@ -879,22 +879,24 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         /* due to the nature of afp packets, we have to exit if we get
            an error. we can't do this with translation on. */
 #ifdef WITH_SENDFILE
-        int fd;
-
-        fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
-
-        if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) {
-            if (errno == EINVAL || errno == ENOSYS)
-                goto afp_read_loop;
-            else {
-                LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s", of_name(ofork), strerror(errno));
-                goto afp_read_exit;
+        if (!(obj->options.flags & OPTION_NOSENDFILE)) {
+            if (dsi_stream_read_file(dsi,
+                                     ad_readfile_init(ofork->of_ad, eid, &offset, 0),
+                                     offset,
+                                     dsi->datasize) < 0) {
+                switch (errno) {
+                case EINVAL:
+                case ENOSYS:
+                    goto afp_read_loop;
+                default:
+                    LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s", of_name(ofork), strerror(errno));
+                    goto afp_read_exit;
+                }
             }
+
+            dsi_readdone(dsi);
+            goto afp_read_done;
         }
-
-        dsi_readdone(dsi);
-        goto afp_read_done;
-
     afp_read_loop:
 #endif
 

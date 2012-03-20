@@ -1377,29 +1377,31 @@ int afp_config_parse(AFPObj *AFPObj)
     if (q = iniparser_getstrdup(config, INISEC_GLOBAL, "server options", NULL)) {
         if (p = strtok(q, ", ")) {
             while (p) {
-                if (strcasecmp(p, "nozeroconf"))
+                if (strcasecmp(p, "nozeroconf") == 0)
                     options->flags |= OPTION_NOZEROCONF;
-                if (strcasecmp(p, "icon"))
+                if (strcasecmp(p, "icon") == 0)
                     options->flags |= OPTION_CUSTOMICON;
-                if (strcasecmp(p, "noicon"))
+                if (strcasecmp(p, "noicon") == 0)
                     options->flags &= ~OPTION_CUSTOMICON;
-                if (strcasecmp(p, "advertise_ssh"))
+                if (strcasecmp(p, "advertise_ssh") == 0)
                     options->flags |= OPTION_ANNOUNCESSH;
-                if (strcasecmp(p, "noacl2maccess"))
+                if (strcasecmp(p, "noacl2maccess") == 0)
                     options->flags &= ~OPTION_ACL2MACCESS;
-                if (strcasecmp(p, "keepsessions"))
+                if (strcasecmp(p, "keepsessions") == 0)
                     options->flags |= OPTION_KEEPSESSIONS;
-                if (strcasecmp(p, "closevol"))
+                if (strcasecmp(p, "closevol") == 0)
                     options->flags |= OPTION_CLOSEVOL;
-                if (strcasecmp(p, "client_polling"))
+                if (strcasecmp(p, "client_polling") == 0)
                     options->flags &= ~OPTION_SERVERNOTIF;
-                if (strcasecmp(p, "nosavepassword"))
+                if (strcasecmp(p, "nosendfile") == 0)
+                    options->flags |= OPTION_NOSENDFILE;
+                if (strcasecmp(p, "nosavepassword") == 0)
                     options->passwdbits |= PASSWD_NOSAVE;
-                if (strcasecmp(p, "savepassword"))
+                if (strcasecmp(p, "savepassword") == 0)
                     options->passwdbits &= ~PASSWD_NOSAVE;
-                if (strcasecmp(p, "nosetpassword"))
+                if (strcasecmp(p, "nosetpassword") == 0)
                     options->passwdbits &= ~PASSWD_SET;
-                if (strcasecmp(p, "setpassword"))
+                if (strcasecmp(p, "setpassword") == 0)
                     options->passwdbits |= PASSWD_SET;
                 p = strtok(NULL, ", ");
             }

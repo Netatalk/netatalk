@@ -37,6 +37,7 @@
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
 #define OPTION_SERVERNOTIF   (1 << 2)
+#define OPTION_NOSENDFILE    (1 << 3)
 #define OPTION_CUSTOMICON    (1 << 4)
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
