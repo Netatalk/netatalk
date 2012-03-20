@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 23 Feb 2012
+.\"      Date: 19 Mar 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "23 Feb 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "19 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -113,9 +113,9 @@ parameter means that not the whole user home will be shared but the subdirectory
 \fBpath\fR\&. It is neccessary to define the
 \fBbasedir regex\fR
 option\&. It should be a regex which matches the parent directory of the user homes\&. Parameters denoted by a (H) belong to volume sections\&. The optional parameter
-\fBname\fR
+\fBhome name\fR
 can be used to change the AFP volume name which
-\fIusers\'s home\fR
+\fI$u\'s home\fR
 by default\&. See below under VARIABLE SUBSTITUTIONS\&.
 .PP
 The following example illustrates this\&. Given all user home directories are stored under
@@ -252,9 +252,9 @@ We define "groupdirs" for each primary group and use a personalized server name 
 .SH "EXPLANATION OF GLOBAL PARAMETERS"
 .SS "Authentication Methods"
 .PP
-uamlist = \fIuams list\fR \fB(G)\fR
+uam list = \fIuam list\fR \fB(G)\fR
 .RS 4
-Comma separated list of UAMs\&. (The default is uams_dhx\&.so,uams_dhx2\&.so)\&.
+Space or comma separated list of UAMs\&. (The default is "uams_dhx\&.so uams_dhx2\&.so")\&.
 .sp
 The most commonly used UAMs are:
 .PP
@@ -292,31 +292,29 @@ Allow Kerberos V for authentication (optional)
 .RE
 .RE
 .PP
-uampath = \fIpath\fR \fB(G)\fR
+uam path = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the default path for UAMs for this server (default is :ETCDIR:/uams)\&.
 .RE
 .PP
-k5keytab = \fIpath\fR \fB(G)\fR, k5service = \fIservice\fR \fB(G)\fR, k5realm = \fIrealm\fR \fB(G)\fR
+k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
 .RS 4
 These are required if the server supports the Kerberos 5 authentication UAM\&.
 .RE
 .PP
-ntdomain = \fIDOMAIN\fR \fB(G)\fR, ntseparator = \fISEPERATOR\fR \fB(G)\fR
+nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
 .RS 4
 Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
 .RE
 .PP
-adminauthuser = \fIuser\fR \fB(G)\fR
+admin auth user = \fIuser\fR \fB(G)\fR
 .RS 4
-Specifying eg
-\fBadminauthuser root\fR
-whenever a normal user login fails, afpd will try to authenticate as the specified
-\fBadminauthuser\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
-\fBadminauthuser\fR, you can authenticate as any other user\&.
+Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
+\fBadmin auth user\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
+\fBadmin auth user\fR, you can authenticate as any other user\&.
 .RE
 .PP
-ldap_server = \fIhost\fR \fB(G)\fR
+ldap server = \fIhost\fR \fB(G)\fR
 .RS 4
 Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
 .sp
@@ -325,7 +323,7 @@ You can use
 to syntactically check your config\&.
 .RE
 .PP
-ldap_auth_method = \fInone|simple|sasl\fR \fB(G)\fR
+ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
 .RS 4
 Authentication method:
 \fBnone | simple | sasl\fR
@@ -346,45 +344,45 @@ SASL\&. Not yet supported !
 .RE
 .RE
 .PP
-ldap_auth_dn = \fIdn\fR \fB(G)\fR
+ldap auth dn = \fIdn\fR \fB(G)\fR
 .RS 4
 Distinguished Name of the user for simple bind\&.
 .sp
 .RE
 .PP
-ldap_auth_pw = \fIpassword\fR \fB(G)\fR
+ldap auth pw = \fIpassword\fR \fB(G)\fR
 .RS 4
 Distinguished Name of the user for simple bind\&.
 .sp
 .RE
 .PP
-ldap_userbase = \fIbase dn\fR \fB(G)\fR
+ldap userbase = \fIbase dn\fR \fB(G)\fR
 .RS 4
 DN of the user container in LDAP\&.
 .sp
 .RE
 .PP
-ldap_userscope = \fIscope\fR \fB(G)\fR
+ldap userscope = \fIscope\fR \fB(G)\fR
 .RS 4
 Search scope for user search:
 \fBbase | one | sub\fR
 .sp
 .RE
 .PP
-ldap_groupbase = \fIbase dn\fR \fB(G)\fR
+ldap groupbase = \fIbase dn\fR \fB(G)\fR
 .RS 4
 DN of the group container in LDAP\&.
 .sp
 .RE
 .PP
-ldap_groupscope = \fIscope\fR \fB(G)\fR
+ldap groupscope = \fIscope\fR \fB(G)\fR
 .RS 4
 Search scope for user search:
 \fBbase | one | sub\fR
 .sp
 .RE
 .PP
-ldap_uuuid_attr = \fIdn\fR \fB(G)\fR
+ldap uuuid attr = \fIdn\fR \fB(G)\fR
 .RS 4
 Name of the LDAP attribute with the UUIDs\&.
 .sp
@@ -392,56 +390,69 @@ Note: this is used both for users and groups\&.
 .sp
 .RE
 .PP
-ldap_name_attr = \fIdn\fR \fB(G)\fR
+ldap name attr = \fIdn\fR \fB(G)\fR
 .RS 4
 Name of the LDAP attribute with the users short name\&.
 .sp
 .RE
 .PP
-ldap_group_attr = \fIdn\fR \fB(G)\fR
+ldap group attr = \fIdn\fR \fB(G)\fR
 .RS 4
 Name of the LDAP attribute with the groups short name\&.
 .sp
 .RE
-.SS "Codepage Options"
+.SS "Charset Options"
 .PP
-With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as Decomposed UTF\-8 (UTF8\-MAC)\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.
+With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as Decomposed UTF\-8 (UTF8\-MAC)\&. Previous AFP/OS versions used charsets like MacRoman, MacCentralEurope, etc\&.
 .PP
 To be able to serve AFP3 and older clients at the same time,
 \fBafpd\fR
-needs to be able to convert between UTF\-8 and Mac codepages\&. Even OS X clients partly still rely on codepages\&. As there\'s no way,
+needs to be able to convert between UTF\-8 and Mac charsets\&. Even OS X clients partly still rely on the mac charset\&. As there\'s no way,
 \fBafpd\fR
 can detect the codepage a pre AFP3 client uses, you have to specify it using the
-\fBmaccodepage\fR
+\fBmac charset\fR
 option\&. The default is MacRoman, which should be fine for most western users\&.
 .PP
 As
 \fBafpd\fR
-needs to interact with unix operating system as well, it need\'s to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
+needs to interact with UNIX operating system as well, it need\'s to be able to convert from UTF8\-MAC / Mac charset to the UNIX charset\&. By default
 \fBafpd\fR
-uses the systems LOCALE, or ASCII if your system doesn\'t support locales\&. You can set the unix codepage using the
-\fBunixcodepage\fR
+uses
+\fIUTF8\fR\&. You can set the UNIX charset using the
+\fBunix charset\fR
 option\&. If you\'re using extended characters in the configuration files for
 \fBafpd\fR, make sure your terminal matches the
-\fBunixcodepage\fR\&.
+\fBunix charset\fR\&.
 .PP
-unixcodepage = \fICODEPAGE\fR \fB(G)\fR
+unix charset = \fICHARSET\fR \fB(G)\fR
 .RS 4
-Specifies the servers unix codepage, e\&.g\&. "ISO\-8859\-15" or "UTF8"\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to LOCALE if your system supports it, otherwise ASCII will be used\&.
+Specifies the servers unix charset, e\&.g\&.
+\fIISO\-8859\-15\fR
+or
+\fIUTF8\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to the systems locale setting\&.
 .RE
 .PP
-maccodepage = \fICODEPAGE\fR \fB(G)\fR
+mac charset = \fICHARSET\fR \fB(G)/(V)\fR
 .RS 4
-Specifies the mac clients codepage, e\&.g\&. "MAC_ROMAN"\&. This is used to convert strings and filenames to the clients codepage for OS9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes maccharset\&. Defaults to MAC_ROMAN\&.
+Specifies the Mac clients charset, e\&.g\&.
+\fIMAC_ROMAN\fR\&. This is used to convert strings and filenames to the clients codepage for OS9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes
+\fBmac charset\fR\&. Defaults to
+\fIMAC_ROMAN\fR\&.
+.RE
+.PP
+vol charset = \fICHARSET\fR \fB(G)/(V)\fR
+.RS 4
+Specifies the encoding of the volumes filesystem, defaults to
+\fIUTF8\fR\&.
 .RE
 .SS "Password Options"
 .PP
-passwdfile = \fIpath\fR \fB(G)\fR
+passwd file = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the path to the Randnum UAM passwd file for this server (default is :ETCDIR:/afppasswd)\&.
 .RE
 .PP
-passwdminlen = \fInumber\fR \fB(G)\fR
+passwd minlen = \fInumber\fR \fB(G)\fR
 .RS 4
 Sets the minimum password length, if supported by the UAM
 .RE
@@ -458,14 +469,14 @@ Use this instead of the result from calling hostname for dertermening which IP a
 \fBafp listen\fR\&.
 .RE
 .PP
-afp listen = \fIip address[:port][,ip adress[:port], \&.\&.\&.]\fR \fB(G)\fR
+afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the server should advertise
 \fBand\fR
 listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
 .RE
 .PP
-cnid listen = \fIip address[:port][,ip adress[:port], \&.\&.\&.]\fR \fB(G)\fR
+cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the CNID server should listen on\&. The default is
 \fBlocalhost:4700\fR\&.
@@ -492,7 +503,7 @@ Keep disconnected AFP sessions for
 hours before dropping them\&. Default is 24 hours\&.
 .RE
 .PP
-server_quantum = \fInumber\fR \fB(G)\fR
+server quantum = \fInumber\fR \fB(G)\fR
 .RS 4
 This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
 .RE
@@ -527,7 +538,7 @@ Regular expression which matches the parent directory of the user homes\&. In th
 \fBbasedir regex = /home\fR
 .RE
 .PP
-name = \fIname\fR \fB(H)\fR
+home name = \fIname\fR \fB(H)\fR
 .RS 4
 AFP user home volume name\&. The default is
 \fIusers\'s home\fR\&.
@@ -540,12 +551,12 @@ Use section
 as option preset for all volumes (when set in the global section) or for one volume (when set in that volume\'s section)\&.
 .RE
 .PP
-admingroup = \fIgroup\fR \fB(G)\fR
+admin group = \fIgroup\fR \fB(G)\fR
 .RS 4
 Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
 .RE
 .PP
-cnidserver = \fIipaddress[:port]\fR \fB(G)/(V)\fR
+cnid server = \fIipaddress[:port]\fR \fB(G)/(V)\fR
 .RS 4
 Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
 .RE
@@ -557,7 +568,7 @@ Maximum possible entries in the directory cache\&. The cache stores directories 
 Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
 .RE
 .PP
-fcelistener = \fIhost[:port]\fR \fB(G)\fR
+fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
 Enables sending FCE events to the specified
 \fIhost\fR, default
@@ -565,23 +576,23 @@ Enables sending FCE events to the specified
 is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
 .RE
 .PP
-fceevents = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
+fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
 .RS 4
 Speficies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
 .RE
 .PP
-fcecoalesce = \fIall|delete|create\fR \fB(G)\fR
+fce coalesce = \fIall|delete|create\fR \fB(G)\fR
 .RS 4
 Coalesce FCE events\&.
 .RE
 .PP
-fceholdfmod = \fIseconds\fR \fB(G)\fR
+fce holdfmod = \fIseconds\fR \fB(G)\fR
 .RS 4
 This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
 .RE
 .PP
-guestname = \fIname\fR \fB(G)\fR
+guest account = \fIname\fR \fB(G)\fR
 .RS 4
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
 .RE
@@ -589,11 +600,11 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 loginmesg = \fImessage\fR \fB(G)\fR
 .RS 4
 Sets a message to be displayed when clients logon to the server\&. The message should be in
-\fBunixcodepage\fR
+\fBunix charset\fR
 and should be quoted\&. Extended characters are allowed\&.
 .RE
 .PP
-mimicmodel = \fImodel\fR \fB(G)\fR
+mimic model = \fImodel\fR \fB(G)\fR
 .RS 4
 Specifies the icon model that appears on clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
 .RE
@@ -642,13 +653,13 @@ Mac OS 9 and earlier are not influenced by this, because Maccharset volume name 
 .RE
 .SS "Logging Options"
 .PP
-logfile = \fIfile\fR \fB(G)\fR
+log file = \fIlogfile\fR \fB(G)\fR
 .RS 4
 If not specified Netatalk logs to syslogs daemon facilify\&. Otherwise it logs to
 \fBlogfile\fR\&.
 .RE
 .PP
-loglevel = \fItype:level,[type:level, \&.\&.\&.]\fR \fB(G)\fR
+log level = \fItype:level [type:level \&.\&.\&.]\fR \fB(G)\fR, log level = \fItype:level,[type:level, \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specify that any message of a loglevel up to the given
 \fBloglevel\fR
@@ -676,13 +687,13 @@ Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
 .RE
-.SS "Global Options"
+.SS "Server Options"
 .PP
-options =
+server options =
 \fIoption,[option,\&.\&.\&.]\fR
 \fB(G)\fR
 .PP
-options =
+server options =
 \fIoption [option \&.\&.\&.]\fR
 \fB(G)\fR
 .PP
@@ -779,7 +790,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .PP
 The section name defines the volume name which is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. No two volumes may have the same name\&. The volume name cannot contain the
 \':\'
-character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
+character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .PP
 path = \fIPATH\fR \fB(V)\fR
 .RS 4
@@ -787,56 +798,56 @@ The path name must be a fully qualified path name, or a path name using either t
 .sp
 The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
 \':\'
-character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
+character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .RE
 .PP
-adouble = \fIea|v2\fR \fB(V)\fR
+appledouble = \fIea|v2\fR \fB(V)\fR
 .RS 4
 Specify the format of the metadata files, which are used for saving Mac resource fork as well\&. Earlier versions used AppleDouble v2, the new default format is
 \fBea\fR\&.
 .RE
 .PP
-volsizelimit = \fIsize in MiB\fR \fB(V)\fR
+vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
-Useful for TimeMachine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "volsizelimit:1000" would limit the reported disk space to 1 GB\&.
+Useful for TimeMachine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
 This is an approximated calculation taking into accout the contents of TM sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
-allow = \fIusers/groups\fR \fB(V)\fR
+valid users = \fIusers/groups\fR \fB(V)\fR
 .RS 4
-The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by commas\&. Groups are designated by a @ prefix\&. Example: allow:user1,user2,@group
+The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by spaces or commas\&. Groups are designated by a @ prefix\&. Example: "valid users = user1 user2 @group"
 .RE
 .PP
-deny = \fIusers/groups\fR \fB(V)\fR
+invalid users = \fIusers/groups\fR \fB(V)\fR
 .RS 4
-The deny option specifies users and groups who are not allowed access to the share\&. It follows the same format as the allow option\&.
+The deny option specifies users and groups who are not allowed access to the share\&. It follows the same format as the "valid users" option\&.
 .RE
 .PP
-allowed_hosts = \fIIP host address/IP netmask bits[, \&.\&.\&. ]\fR \fB(V)\fR
+hosts allow = \fIIP host address/IP netmask bits[, \&.\&.\&. ]\fR \fB(V)\fR
 .RS 4
 Only listed hosts and networks are allowed, all others are rejected\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
 .sp
-Example: allowed_hosts:10\&.1\&.0\&.0/16,10\&.2\&.1\&.100,2001:0db8:1234::/48
+Example: hosts allow = 10\&.1\&.0\&.0/16 10\&.2\&.1\&.100 2001:0db8:1234::/48
 .RE
 .PP
-denied_hosts = \fIIP host address/IP netmask bits[, \&.\&.\&.]\fR \fB(V)\fR
+hosts deny = \fIIP host address/IP netmask bits [\&.\&.\&.]\fR \fB(V)\fR
 .RS 4
 Listed hosts and nets are rejected, all others are allowed\&.
 .sp
-Example: denied_hosts: 192\&.168\&.100/24,10\&.1\&.1\&.1,2001:db8::1428:57ab
+Example: hosts deny = 192\&.168\&.100/24 10\&.1\&.1\&.1 2001:db8::1428:57ab
 .RE
 .PP
-cnidscheme = \fIbackend\fR \fB(V)\fR
+cnid scheme = \fIbackend\fR \fB(V)\fR
 .RS 4
 set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
 .RE
 .PP
-cnidserver = \fIhost[:port]\fR \fB(V)\fR
+cnid server = \fIhost[:port]\fR \fB(V)\fR
 .RS 4
 Query this servername or IP address (default:\fIlocalhost\fR) and port (default:
 \fI4700\fR) for CNIDs\&. Only used with CNID backend "\fIdbd\fR"\&. This option here overrides any setting from
-afpd\&.conf:\fBcnidserver\fR\&.
+afp\&.conf:\fBcnid server\fR\&.
 .RE
 .PP
 ea = \fInone|auto|sys|ad\fR
@@ -879,12 +890,11 @@ No Extended Attributes support\&.
 .RE
 .RE
 .PP
-maccharset = \fIcharset\fR \fB(V)\fR
+mac charset = \fICHARSET\fR \fB(V)\fR
 .RS 4
-specifies the mac client codepage for this Volume, e\&.g\&. "MAC_ROMAN", "MAC_CYRILLIC"\&. If not specified the setting from
-afpd\&.conf
-is inherited\&. This setting is only required if you need volumes, where the mac codepage differs from the one globally set in
-afpd\&.conf\&.
+specifies the Mac client charset for this Volume, e\&.g\&.
+\fIMAC_ROMAN\fR,
+\fIMAC_CYRILLIC\fR\&. If not specified the global setting is applied\&. This setting is only required if you need volumes, where the Mac charset differs from the one globally set in the global section
 .RE
 .PP
 casefold = \fBoption\fR
@@ -909,16 +919,14 @@ password = \fIpassword\fR \fB(V)\fR
 This option allows you to set a volume password, which can be a maximum of 8 characters long (using ASCII strongly recommended at the time of this writing)\&.
 .RE
 .PP
-perm|fperm|dperm:\fImode\fR \fB(V)\fR
+file perm = \fImode\fR \fB(V)\fR, directory perm = \fImode\fR \fB(V)\fR
 .RS 4
 Add(or) with the client requested permissions:
-\fBperm\fR
-affects files and directories,
-\fBfperm\fR
+\fBfile perm\fR
 is for files only,
-\fBdperm\fR
-is for directories only\&. Use with
-\fBoptions:upriv\fR\&.
+\fBdirectory perm\fR
+is for directories only\&. Use without
+\fBvol options = noupriv\fR\&.
 .PP
 \fBExample.\ \&Volume for a collaborative workgroup\fR
 .sp
@@ -926,17 +934,19 @@ is for directories only\&. Use with
 .RS 4
 .\}
 .nf
-/path/to/volume "Workgroup" options:upriv dperm:0770 fperm:0660
+file perm = 0660
+directory perm = 0770
 .fi
 .if n \{\
 .RE
 .\}
+
 .RE
 .PP
 umask = \fImode\fR \fB(V)\fR
 .RS 4
-set perm mask\&. Use with
-\fBoptions:upriv\fR\&.
+set perm mask\&. Use without
+\fBvol options = noupriv\fR\&.
 .RE
 .PP
 preexec = \fIcommand\fR \fB(V)\fR
@@ -949,12 +959,12 @@ postexec = \fIcommand\fR \fB(V)\fR
 command to be run when the volume is closed, ignored for user defined volumes
 .RE
 .PP
-root_preexec = \fIcommand\fR \fB(V)\fR
+root preexec = \fIcommand\fR \fB(V)\fR
 .RS 4
 command to be run as root when the volume is mounted, ignored for user defined volumes
 .RE
 .PP
-root_postexec = \fIcommand\fR \fB(V)\fR
+root postexec = \fIcommand\fR \fB(V)\fR
 .RS 4
 command to be run as root when the volume is closed, ignored for user defined volumes
 .RE
@@ -969,14 +979,9 @@ rwlist = \fIusers/groups\fR \fB(V)\fR
 Allows certain users and groups to have read/write access to a share\&. This follows the allow option format\&.
 .RE
 .PP
-veto = \fIvetoed names\fR \fB(V)\fR
+veto files = \fIvetoed names\fR \fB(V)\fR
 .RS 4
 hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. The veto string must always be terminated with a \'/\', eg\&. "veto1/", "veto1/veto2/"\&.
-.RE
-.PP
-volcharset = \fIcharset\fR \fB(V)\fR
-.RS 4
-specifies the volume codepage, e\&.g\&. "UTF8", "UTF8\-MAC", "ISO\-8859\-15"\&. Defaults to "UTF8"\&.
 .RE
 .SS "Volume options"
 .PP
@@ -1002,8 +1007,8 @@ Enable Time Machine suport for this volume\&.
 .PP
 invisibledots \fB(V)\fR
 .RS 4
-Use with
-\fBusedots\fR: make dot files invisible\&.
+make dot files invisible\&. Use without
+\fBnousedots\fR\&.
 .RE
 .PP
 nonetids \fB(V)\fR
@@ -1019,11 +1024,11 @@ a non\-zero return code from preexec close the volume being immediately, prevent
 ro \fB(V)\fR
 .RS 4
 Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, you can use the
-\fB\-dbpath\fR
+\fBvol dbpath\fR
 option to relocate it\&. Overwrites
-\fBea:auto\fR
+\fBea = auto\fR
 with
-\fBea:none\fR
+\fBea = none\fR
 .RE
 .PP
 root_preexec_close \fB(V)\fR
@@ -1031,15 +1036,14 @@ root_preexec_close \fB(V)\fR
 a non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
-upriv \fB(V)\fR
+noupriv \fB(V)\fR
 .RS 4
-use AFP3 unix privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1 it\'s part of the default config :DEFAULT: line\&. See also:
-\fBperm|fperm|dperm\fR\&.
+Don\'t use AFP3 unix privileges\&. This should not be set for OS X clients\&. See also: "\fBfile perm =\fR" and "\fBdirectory perm =\fR"\&.
 .RE
 .PP
-usedots \fB(V)\fR
+nousedots \fB(V)\fR
 .RS 4
-Don\'t do :hex translation for dot files\&. note: when this option gets set, certain file names become illegal\&. These are \&.Parent and anything that starts with \&.Apple\&. See also
+do :hex translation for dot files\&. See also
 \fBinvisibledots\fR\&.
 .RE
 .PP
@@ -1116,7 +1120,7 @@ is not specified, a leading dot \'\&.\' will be encoded as
 This version now uses UTF\-8 as the default encoding for names\&. Special characters, like \'/\' and a leading \'\&.\' will still be CAP style encoded \&.
 .PP
 The
-\fBvolcharset\fR
+\fBvol charset\fR
 option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be volcharset ISO\-8859\-15\&.
 \fBapfd\fR
 will accept any
@@ -1125,7 +1129,7 @@ provided charset\&. If a character cannot be converted from the mac codepage to 
 \fBafpd\fR
 will convert the UTF\-8
 character to
-\fBmaccharset\fR
+\fBmac charset\fR
 first\&. If this conversion fails, you\'ll receive a \-50 error on the mac\&.
 .PP
 \fINote\fR: Whenever you can, please stick with the default UTF\-8 volume format\&.
