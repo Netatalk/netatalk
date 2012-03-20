@@ -599,14 +599,13 @@ static struct vol *creatvol(AFPObj *obj,
     if (val = getoption(obj->iniconfig, section, "veto files", preset))
         EC_NULL( volume->v_veto = strdup(val) );
 
-    /* vol charset is in [V] strictly. */
-    /* However, this can be set in both of [G] and [V] for intuitiveness */
+    /* vol charset is in [G] and [V] */
     if (val = getoption(obj->iniconfig, section, "vol charset", preset))
         EC_NULL( volume->v_volcodepage = strdup(val) );
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
-    /* mac charset is in both of [G] and [V] */
+    /* mac charset is in [G] and [V] */
     if (val = getoption(obj->iniconfig, section, "mac charset", preset))
         EC_NULL( volume->v_maccodepage = strdup(val) );
     else
@@ -1508,15 +1507,14 @@ int afp_config_parse(AFPObj *AFPObj)
         }
     }
 
-    /* vol charset is in [V] strictly. */
-    /* However, this can be set in both of [G] and [V] for intuitiveness */
+    /* vol charset is in [G[ and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
         options->volcodepage = strdup("UTF8");
     } else {
         options->volcodepage = strdup(p);
     }
 	
-    /* mac charset is in both of [G] and [V] */
+    /* mac charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccharset = CH_MAC;
         options->maccodepage = strdup("MAC_ROMAN");
