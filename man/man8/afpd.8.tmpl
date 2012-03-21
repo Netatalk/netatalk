@@ -2,12 +2,12 @@
 .\"     Title: afpd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 08 Mar 2011
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"      Date: 21 Mar 2012
+.\"    Manual: Netatalk 3.0
+.\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "08 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD" "8" "21 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -22,7 +22,7 @@
 afpd \- Apple Filing Protocol daemon
 .SH "SYNOPSIS"
 .HP \w'\fBafpd\fR\fB\fR\fBafpd\fR\fB\fR\ 'u
-\fBafpd\fR\fB\fR [\-duptDTI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfigfile\fR] [\-U\ \fIuams\fR] [\-m\ \fIumask\fR]
+\fBafpd\fR\fB\fR [\-d] [\-F\ \fIconfigfile\fR]
 .br
 \fBafpd\fR\fB\fR \-v | \-V | \-h 
 .SH "DESCRIPTION"
@@ -30,59 +30,15 @@ afpd \- Apple Filing Protocol daemon
 \fBafpd\fR
 provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time from /etc/rc\&.
 .PP
-:ETCDIR:/afpd\&.conf
+:ETCDIR:/afp\&.conf
 is the configuration file used by
 \fBafpd\fR
 to determine the behavior and configuration of the different virtual file servers that it provides\&.
-.PP
-The list of volumes offered to the user is generated from
-:ETCDIR:/AppleVolumes\&.system
-and one of
-:ETCDIR:/AppleVolumes\&.default,
-~/AppleVolumes,
-~/\&.AppleVolumes,
-~/applevolumes, or
-~/\&.applevolumes\&. The
-AppleVolumes
-files is used to specify volumes to mount and file name extension mappings\&.
-.PP
 .SH "OPTIONS"
 .PP
 \-d
 .RS 4
-Specifies that the daemon should not fork\&. If netatalk has been configured with
-\fI\-\-enable\-debug1\fR, a trace of all AFP commands will be written to stdout\&.
-.RE
-.PP
-\-p
-.RS 4
-Prevents clients from saving their passwords\&. (Equivalent to \-\fBnosavepasswd\fR
-in
-afpd\&.conf\&.)
-.RE
-.PP
-\-t
-.RS 4
-Allows clients to change their passwords\&. (Equivalent to
-\fB\-setpasswd\fR
-in
-afpd\&.conf\&.)
-.RE
-.PP
-\-D
-.RS 4
-Use DDP (AppleTalk) as transport protocol\&. (Equivalent to
-\fB\-ddp\fR
-in
-afpd\&.cond\&.)
-.RE
-.PP
-\-T
-.RS 4
-Use TCP/IP as transport protocol\&. (Equivalent to
-\fB\-tcp\fR
-in
-afpd\&.conf\&.)
+Specifies that the daemon should not fork\&.
 .RE
 .PP
 \-v
@@ -100,104 +56,10 @@ Print verbose information and exit\&.
 Print help and exit\&.
 .RE
 .PP
-\-I
-.RS 4
-Use a platform specific icon\&. (Equivalent to
-\fB\-icon\fR
-in
-afpd\&.conf\&.) (Recent Mac OS don\'t display it\&.)
-.RE
-.PP
-\-f \fIdefaultvolumes\fR
-.RS 4
-Specifies that
-\fIdefaultvolumes\fR
-should be read for a list of default volumes to offer, instead of
-:ETCDIR:/AppleVolumes\&.default\&.
-.RE
-.PP
-\-s \fIsystemvolumes\fR
-.RS 4
-Specifies that
-\fIsystemvolumes\fR
-should be read for a list of volume that all users will be offered, instead of
-:ETCDIR:/AppleVolumes\&.system\&.
-.RE
-.PP
-\-u
-.RS 4
-Read the user\'s
-AppleVolumes
-file first\&. This option causes volume names in the user\'s
-AppleVolumes
-file to override volume names in the system\'s
-AppleVolumes
-file\&. The default is to read the system
-AppleVolumes
-file first\&. Note that this option doesn\'t effect the precendence of filename extension mappings: the user\'s
-AppleVolumes
-file always has precedence\&.
-.RE
-.PP
-\-n \fInbpname\fR
-.RS 4
-Specifies that
-\fInbpname\fR
-should be used for NBP registration, instead of the first component of the hostname in the local zone\&.
-.RE
-.PP
-\-c \fImaxconnections\fR
-.RS 4
-Specifies the maximum number of connections to allow for this
-\fBafpd\fR\&. The default is 20\&.
-.RE
-.PP
-\-g \fIguest\fR
-.RS 4
-Specifies the name of the guest account\&. The default is \'\fInobody\fR\'\&.
-.RE
-.PP
-\-P \fIpidfile\fR
-.RS 4
-Specifies the file in which
-\fBafpd\fR
-stores its process id\&.
-.RE
-.PP
-\-S \fIport\fR
-.RS 4
-Specifies the port to register with when doing AFPoverTCP\&. Defaults to 548\&. (Equivalent to
-\fB\-port \fRin
-afpd\&.conf\&.)
-.RE
-.PP
-\-L \fImessage\fR
-.RS 4
-Specifies the login message that will be sent to clients\&. (Equivalent to
-\fB\-loginmsg\fR
-in
-afpd\&.conf\&.)
-.RE
-.PP
 \-F \fIconfigfile\fR
 .RS 4
 Specifies the configuration file to use\&. (Defaults to
-:ETCDIR:/netatalk/afpd\&.conf\&.)
-.RE
-.PP
-\-U \fIuams\fR
-.RS 4
-Comma\-separated list of UAMs to use for the authentication process\&. (Equivalent to
-\fB\-uamlist\fR
-in
-afpd\&.conf\&.)
-.RE
-.PP
-\-m \fIumask\fR
-.RS 4
-Use this
-\fIumask\fR
-for the creation of folders in Netatalk\&.
+:ETCDIR:/netatalk/afp\&.conf\&.)
 .RE
 .SH "SIGNALS"
 .PP
@@ -264,47 +126,25 @@ process will look in the message directory configured at build time for a file n
 .RE
 .SH "FILES"
 .PP
-:ETCDIR:/afpd\&.conf
+:ETCDIR:/afp\&.conf
 .RS 4
 configuration file used by afpd
 .RE
 .PP
-:ETCDIR:/AppleVolumes\&.default
-.RS 4
-list of default volumes to mount
-.RE
-.PP
-:ETCDIR:/AppleVolumes\&.system
-.RS 4
-list of volumes to offer all users
-.RE
-.PP
-~/AppleVolumes, ~/\&.AppleVolumes, ~/applevolumes, ~/\&.applevolumes
-.RS 4
-user\'s list of volumes to mount
-.RE
-.PP
-:ETCDIR:/afp_signature\&.conf
+afp_signature\&.conf
 .RS 4
 list of server signature
 .RE
 .PP
-:ETCDIR:/afp_voluuid\&.conf
+afp_voluuid\&.conf
 .RS 4
 list of UUID for Time Machine volume
-.RE
-.PP
-:ETCDIR:/afp_ldap\&.conf
-.RS 4
-configuration file for LDAP and ACL support
 .RE
 .PP
 :ETCDIR:/msg/message\&.pid
 .RS 4
 contains messages to be sent to users\&.
 .RE
-.SH "BUGS"
-.PP
 .SH "SEE ALSO"
 .PP
 \fBhosts_access\fR(5),

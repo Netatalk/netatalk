@@ -2,12 +2,12 @@
 .\"     Title: cnid_metad
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 01 Jan 2012
+.\"      Date: 21 Mar 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "01 Jan 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "CNID_METAD" "8" "21 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -22,7 +22,7 @@
 cnid_metad \- start cnid_dbd daemons on request
 .SH "SYNOPSIS"
 .HP \w'\fBcnid_metad\fR\fB\fR\fBcnid_metad\fR\fB\fR\ 'u
-\fBcnid_metad\fR\fB\fR [\-l\ \fIloglevel\fR\ [\-f\ \fIfilename\fR]] [\-d] [\-h\ \fIhostname\fR] [\-p\ \fIport\fR] [\-u\ \fIuser\fR] [\-g\ \fIgroup\fR] [\-s\ \fIcnid_dbdpathname\fR]
+\fBcnid_metad\fR\fB\fR [\-d] [\-F\ \fIconfiguration\ file\fR]
 .br
 \fBcnid_metad\fR\fB\fR \-v | \-V 
 .SH "DESCRIPTION"
@@ -39,61 +39,7 @@ instance once started and will restart it if necessary\&.
 is normally started at boot time from
 /etc/rc
 or equivalent and runs until shutdown\&.
-\fBafpd\fR
-needs to be configured with the
-\fB\-cnidserver\fR
-option in
-\fBafpd\&.conf\fR
-in order to access
-\fBcnid_metad\&.\fR
-It is possible to run more than one instance of
-\fBcnid_metad\fR
-on the same machine if different values for the interface and/or port are specified with the
-\fB\-h\fR
-and
-\fB\-p\fR
-options\&.
 .SH "OPTIONS"
-.PP
-\fB\-l\fR\fI <loglevel> [\-f <filename>]\fR
-.RS 4
-Specify that any message of a loglevel up to the given
-\fBloglevel\fR
-should be logged to the given file\&. If the filename is ommited the loglevel applies to messages passed to syslog\&. Default is logs to syslog with a default logging setup of
-\fB"log_note\fR"\&.
-.sp
-\fBNote:\fR
-\fBcnid_metad\fR
-passes this to
-\fBcnid_dbd\fR
-which will in turn use this for its logging setup\&.
-.sp
-loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE, LOG_INFO, LOG_DEBUG, LOG_DEBUG6, LOG_DEBUG7, LOG_DEBUG8, LOG_DEBUG9, LOG_MAXDEBUG
-.PP
-\fBExample.\ \&Useful default config\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-\-l log_info \-f /var/log/afpd\&.log
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBExample.\ \&Debugging config\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-\-l log_maxdebug \-f /var/log/afpd\&.log
-.fi
-.if n \{\
-.RE
-.\}
-.RE
 .PP
 \fB\-d\fR
 .RS 4
@@ -101,51 +47,12 @@ loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE, LOG_INFO, LOG_DEBUG, LOG_D
 will also leave the standard input, standard output and standard error file descriptors open\&. Useful for debugging\&.
 .RE
 .PP
-\fB\-h\fR\fI hostname\fR
+\fB\-F\fR \fIconfiguration file\fR
 .RS 4
 Use
-\fIhostname\fR
-as the network interface for requests as opposed to the default
-\fBlocalhost\fR\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
-.RE
-.PP
-\fB\-p\fR\fI port\fR
-.RS 4
-Use
-\fIport\fR
-as the port number for reqests\&. Default is 4700\&.
-.RE
-.PP
-\fB\-u\fR\fI user\fR
-.RS 4
-Switch to the userid of
-\fIuser\fR
-before serving requests\&. This userid will be inherited by all
-\fBcnid_dbd\fR
-daemon processes started\&.
-.RE
-.PP
-\fB\-g\fR\fI group\fR
-.RS 4
-Switch to the groupid of
-\fIgroup\fR
-before serving requests\&. This groupid will be inherited by all
-\fBcnid_dbd\fR
-daemon processes started\&. Both
-\fIuser\fR
-and
-\fIgroup\fR
-must be specified as strings\&.
-.RE
-.PP
-\fB\-s\fR\fI cnid_dbd pathname\fR
-.RS 4
-Use
-\fIcnid_dbd pathname\fR
-as the pathname of the executeable of the
-\fBcnid_dbd\fR
-daemon\&. The default is
-\fI:SBINDIR:/cnid_dbd\&.\fR
+\fIconfiguration file\fR
+as the configuration file\&. The default is
+\fI:ETCDIR:/afp\&.conf\fR\&.
 .RE
 .PP
 \fB\-v, \-V\fR
@@ -153,10 +60,6 @@ daemon\&. The default is
 Show version and exit\&.
 .RE
 .SH "CAVEATS"
-.PP
-The number of
-\fBcnid_dbd\fR
-subprocecesses is currently limited to 512\&.
 .PP
 \fBcnid_metad\fR
 does not block or catch any signals apart from SIGPIPE\&. It will therefore exit on most signals received\&. This will also cause all instances of
