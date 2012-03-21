@@ -10,6 +10,7 @@ Changes in 2.2.3
        and -krb5service are not set, from Jamie Gilbertson
 * FIX: afpd: sendfile() on FreeBSD was broken, courtesy of Denis Ahrens
 * FIX: afpd: Dont use searchdb when doing partial name search
+* FIX: debian initscript: start avahi-daemon (if available) before atalkd
 
 Changes in 2.2.2
 ================
