@@ -46,14 +46,14 @@ afpd_SOURCES = \
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@
 
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/sys \
-	@ZEROCONF_CFLAGS@ \
+	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
