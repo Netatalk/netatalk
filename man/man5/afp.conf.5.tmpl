@@ -150,7 +150,7 @@ in parentheses indicates that a parameter is specific to the [Global] section\&.
 indicates that a parameter can be specified in a volume specific section\&.
 .SH "VARIABLE SUBSTITUTIONS"
 .PP
-You can use variables in both volume path and volume name\&.
+You can use variables in volume names\&. The use of variables in paths is not supported for now\&.
 .sp
 .RS 4
 .ie n \{\
@@ -230,27 +230,18 @@ $$
 .RS 4
 prints dollar sign ($)
 .RE
-.PP
-\fBExample.\ \&Using variable substitution when defining volumes\fR
-.PP
-.if n \{\
-.RS 4
-.\}
-.nf
-          [Groupdir for $g]
-          /home/groups/$g
-
-          [$f is the best one]
-          ~
-        
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-We define "groupdirs" for each primary group and use a personalized server name for homedir shares\&.
 .SH "EXPLANATION OF GLOBAL PARAMETERS"
-.SS "Authentication Methods"
+.SS "Authentication Options"
+.PP
+save password = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Enables or disables the ability of clients to save passwords locally\&.
+.RE
+.PP
+set password = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Enables or disables the ability of clients to change their passwords via chooser or the "connect to server" dialog\&.
+.RE
 .PP
 uam list = \fIuam list\fR \fB(G)\fR
 .RS 4
@@ -458,6 +449,13 @@ Sets the minimum password length, if supported by the UAM
 .RE
 .SS "Network Options"
 .PP
+afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Specifies the IP address that the server should advertise
+\fBand\fR
+listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.RE
+.PP
 fqdn = \fIname:port\fR \fB(G)\fR
 .RS 4
 Specifies a fully\-qualified domain name, with an optional port\&. This is discarded if the server cannot resolve it\&. This option is not honored by AppleShare clients <= 3\&.8\&.3\&. This option is disabled by default\&. Use with caution as this will involve a second name resolution step on the client side\&. Also note that afpd will advertise this name:port combination but not automatically listen to it\&.
@@ -467,13 +465,6 @@ hostname = \fIname\fR \fB(G)\fR
 .RS 4
 Use this instead of the result from calling hostname for dertermening which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
 \fBafp listen\fR\&.
-.RE
-.PP
-afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
-.RS 4
-Specifies the IP address that the server should advertise
-\fBand\fR
-listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
 .RE
 .PP
 cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
@@ -522,6 +513,40 @@ Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restriction
 tcpsndbuf = \fInumber\fR \fB(G)\fR
 .RS 4
 Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+advertise ssh = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
+\fBsshd\fR(8)
+on the server to let things work\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+Setting this option is not recommended since globally encrypting AFP connections via SSH will increase the server\'s load significantly\&. On the other hand, Apple\'s client side implementation of this feature in MacOS X versions prior to 10\&.3\&.4 contained a security flaw\&.
+.sp .5v
+.RE
+.RE
+.PP
+zeroconf = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to use automatic Zeroconf
+service registration if support was compiled in\&.
+.RE
+.PP
+use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to use sendfile
+syscall for sending file data to clients\&.
 .RE
 .SS "Miscellaneous Options"
 .PP
@@ -597,7 +622,7 @@ guest account = \fIname\fR \fB(G)\fR
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
 .RE
 .PP
-loginmesg = \fImessage\fR \fB(G)\fR
+login message = \fImessage\fR \fB(G)\fR
 .RS 4
 Sets a message to be displayed when clients logon to the server\&. The message should be in
 \fBunix charset\fR
@@ -651,6 +676,26 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .sp
 Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limitted to 27 bytes\&.
 .RE
+.PP
+icon = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Use the platform\-specific icon\&. Mac OS X doesn\'t display it\&.
+.RE
+.PP
+keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\'s absolutely critical to restart the master process in time!
+.RE
+.PP
+map acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to map filesystem ACLs to effective permissions\&.
+.RE
+.PP
+close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Whether to close volumes possibly opened by clients when they\'re removed from the configuration and the configuration is reloaded\&.
+.RE
 .SS "Logging Options"
 .PP
 log file = \fIlogfile\fR \fB(G)\fR
@@ -686,91 +731,6 @@ loglevels: severe, error, warn, note, info, debug, debug6, debug7, debug8, debug
 Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
-.RE
-.SS "Server Options"
-.PP
-server options =
-\fIoption,[option,\&.\&.\&.]\fR
-\fB(G)\fR
-.PP
-server options =
-\fIoption [option \&.\&.\&.]\fR
-\fB(G)\fR
-.PP
-This allows multiple options to be specified in a comma or space delimited format\&. The available options are:
-.PP
-[no]savepassword \fB(G)\fR
-.RS 4
-Enables or disables the ability of clients to save passwords locally
-.RE
-.PP
-[no]setpassword \fB(G)\fR
-.RS 4
-Enables or disables the ability of clients to change their passwords via chooser or the "connect to server" dialog
-.RE
-.PP
-advertise_ssh \fB(G)\fR
-.RS 4
-Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
-\fBsshd\fR(8)
-on the server to let things work\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-Setting this option is not recommended since globally encrypting AFP connections via SSH will increase the server\'s load significantly\&. On the other hand, Apple\'s client side implementation of this feature in MacOS X versions prior to 10\&.3\&.4 contained a security flaw\&.
-.sp .5v
-.RE
-.RE
-.PP
-nozeroconf \fB(G)\fR
-.RS 4
-Disable automatic Zeroconf
-service registration if support was compiled in\&.
-.RE
-.PP
-client_polling \fB(G)\fR
-.RS 4
-With this switch enabled, afpd won\'t advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
-\fINote\fR: Depending on the number of simultaneously connected clients and the network\'s speed, this can lead to a significant higher load on your network!
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-Do not use this option any longer as Netatalk 2\&.x correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
-.sp .5v
-.RE
-.RE
-.PP
-[no]icon \fB(G)\fR
-.RS 4
-[Don\'t] Use the platform\-specific icon\&. Recent Mac OS don\'t display it any longer\&.
-.RE
-.PP
-keepsessions \fB(G)\fR
-.RS 4
-Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\'s absolutely critical to restart the master process in time!
-.RE
-.PP
-noacl2maccess \fB(G)\fR
-.RS 4
-Don\'t map filesystem ACLs to effective permissions\&.
 .RE
 .SS "Debug Parameters"
 .PP
@@ -841,13 +801,6 @@ Example: hosts deny = 192\&.168\&.100/24 10\&.1\&.1\&.1 2001:db8::1428:57ab
 cnid scheme = \fIbackend\fR \fB(V)\fR
 .RS 4
 set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
-.RE
-.PP
-cnid server = \fIhost[:port]\fR \fB(V)\fR
-.RS 4
-Query this servername or IP address (default:\fIlocalhost\fR) and port (default:
-\fI4700\fR) for CNIDs\&. Only used with CNID backend "\fIdbd\fR"\&. This option here overrides any setting from
-afp\&.conf:\fBcnid server\fR\&.
 .RE
 .PP
 ea = \fInone|auto|sys|ad\fR
@@ -985,82 +938,95 @@ hide files and directories,where the path matches one of the \'/\' delimited vet
 .RE
 .SS "Volume options"
 .PP
-vol options =
-\fIoption,[option,\&.\&.\&.]\fR
-\fB(V)\fR
+Boolean volume options\&.
 .PP
-vol options =
-\fIoption [option \&.\&.\&.]\fR
-\fB(V)\fR
-.PP
-This allows multiple options to be specified in a comma or space delimited format\&. The available options are:
-.PP
-searchdb \fB(V)\fR
+acls = \fIBOOLEAN\fR (default: \fItrue\fR) \fB(V)\fR
 .RS 4
-Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, ie Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
+Whether to flag volumes as supporting ACLs\&. If ACL support is compiled in, this is true by default\&.
 .RE
 .PP
-tm \fB(V)\fR
+cnid dev = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-Enable Time Machine suport for this volume\&.
+Whether to use the device number in the CNID backends\&. Helps when the device number is not constant across a reboot, eg cluster, \&.\&.\&.
 .RE
 .PP
-invisibledots \fB(V)\fR
+convert adouble = \fIBOOLEAN\fR (default: \fItrue\fR) \fB(V)\fR
+.RS 4
+Whether automatic conversion from
+\fBapple double = v2\fR
+to
+\fBapple double = ea\fR
+is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\'s recommdable to run
+\fBdbd\fR
+on volumes and do the conversion with that\&. Then this option can be set to no\&.
+.RE
+.PP
+hex encoding = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
+.RS 4
+Whether :hex encoding is done for file and directory names containing the character
+/\&. Setting this option to no makes the
+/
+character illegal\&.
+.RE
+.PP
+invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
 make dot files invisible\&. Use without
 \fBnousedots\fR\&.
 .RE
 .PP
-nonetids \fB(V)\fR
+network ids = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-Try to force ACL unawareness on the client\&.
+Whether the server support network ids\&. Setting this to
+\fIno\fR
+will result in the client not using ACL AFP functions\&.
 .RE
 .PP
-preexec_close \fB(V)\fR
+preexec close = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-a non\-zero return code from preexec close the volume being immediately, preventing clients to mount/see the volume in question\&.
+A non\-zero return code from preexec close the volume being immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
-ro \fB(V)\fR
+read only = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, you can use the
-\fBvol dbpath\fR
-option to relocate it\&. Overwrites
+Specifies the share as being read only for all users\&. Overwrites
 \fBea = auto\fR
 with
 \fBea = none\fR
 .RE
 .PP
-root_preexec_close \fB(V)\fR
+root preexec close= \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-a non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
+A non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
-noupriv \fB(V)\fR
+search db = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-Don\'t use AFP3 unix privileges\&. This should not be set for OS X clients\&. See also: "\fBfile perm =\fR" and "\fBdirectory perm =\fR"\&.
+Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, ie Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
 .RE
 .PP
-nousedots \fB(V)\fR
+stat vol = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-do :hex translation for dot files\&. See also
-\fBinvisibledots\fR\&.
+Whether to stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
 .RE
 .PP
-nodev \fB(V)\fR
+time machine = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-always use 0 for device number, helps when the device number is not constant across a reboot, cluster, \&.\&.\&.
+Whether to enable Time Machine suport for this volume\&.
 .RE
 .PP
-nohex \fB(V)\fR
+unix priv = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-Disables :hex translations for anything except dot files\&. This option makes the
-\'/\' character illegal\&.
+Whether to use AFP3 UNIX privileges\&. This should be set for OS X clients\&. See also:
+\fBfile perm\fR
+and
+\fBdirectory perm\fR\&.
 .RE
 .PP
-nostat \fB(V)\fR
+use dots = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-don\'t stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
+Whether to do :hex translation for dot files\&. See also
+\fBinvisible dots\fR\&.
 .RE
 .SH "CNID BACKENDS"
 .PP
