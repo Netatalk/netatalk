@@ -124,7 +124,6 @@ extern int         for_each_dirent(const struct vol *, char *, dir_loop , void *
 extern int         check_access(const AFPObj *obj, struct vol *, char *name , int mode);
 extern int         file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode);
 extern int         netatalk_unlink (const char *name);
-extern int         caseenumerate (const struct vol *, struct path *, struct dir *);
 
 /* from enumerate.c */
 extern char        *check_dirent (const struct vol *, char *);

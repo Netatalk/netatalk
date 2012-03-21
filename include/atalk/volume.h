@@ -123,7 +123,6 @@ struct vol {
                                      * help if device number is notconsistent across reboot
                                      * NOTE symlink to a different device will return an ACCESS error
                                      */
-#define AFPVOL_CASEINSEN (1 << 19)  /* volume is case insensitive */
 #define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not
                                        a valid SHIFT-JIS char, is encoded  as U\217 -*/
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */

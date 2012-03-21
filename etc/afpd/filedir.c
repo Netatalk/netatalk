@@ -333,7 +333,7 @@ static int moveandrename(const struct vol *vol,
             goto exit;
         }
 
-        if (stat(upath, st) == 0 || caseenumerate(vol, &path, curdir) == 0) {
+        if (stat(upath, st) == 0) {
             if (!stat(oldunixname, &nst) && !(nst.st_dev == st->st_dev && nst.st_ino == st->st_ino) ) {
                 /* not the same file */
                 rc = AFPERR_EXIST;
@@ -341,7 +341,7 @@ static int moveandrename(const struct vol *vol,
             }
             errno = 0;
         }
-    } else if (stat(upath, st ) == 0 || caseenumerate(vol, &path, curdir) == 0) {
+    } else if (stat(upath, st ) == 0) {
         rc = AFPERR_EXIST;
         goto exit;
     }
