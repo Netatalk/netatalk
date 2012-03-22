@@ -1417,7 +1417,7 @@ int afp_config_parse(AFPObj *AFPObj)
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
     options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
     options->port           = iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
-    options->signatureopt   = iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "auto");
+    options->signatureopt   = iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "");
     options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
     options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);

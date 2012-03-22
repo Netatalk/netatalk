@@ -643,10 +643,9 @@ void status_init(AFPObj *obj, DSI *dsi)
 /* If not found in conf file, genarate and append in conf file.       */
 /* If conf file don't exist, create and genarate.                     */
 /* If cannot open conf file, use one-time signature.                  */
-/* If signature = user:xxxxx, use it.                                  */
+/* If signature = xxxxx, use it.                                      */
 
 void set_signature(struct afp_options *options) {
-    char *usersign;
     int fd, i;
     struct stat tmpstat;
     char *servername_conf;
@@ -657,38 +656,26 @@ void set_signature(struct afp_options *options) {
     char *server_tmp;
     
     server_tmp = options->hostname;
-    if (strcmp(options->signatureopt, "auto") == 0) {
+    len = strlen(options->signatureopt);
+    if (len == 0) {
         goto server_signature_auto;   /* default */
-    } else if (strcmp(options->signatureopt, "host") == 0) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature host\" is obsoleted. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;   /* same as auto */
-    } else if (strncmp(options->signatureopt, "user", 4) == 0) {
-        goto server_signature_user;   /*  user string */
+    } else if (len < 3) {
+        LOG(log_warning, logtype_afpd, "WARNING: signature string %s is very short !", options->signatureopt);
+        goto server_signature_user;
+    } else if (len > 16) {
+        LOG(log_warning, logtype_afpd, "WARNING: signature string %s is very long !", options->signatureopt);
+        len = 16;
+        goto server_signature_user;
     } else {
-        LOG(log_error, logtype_afpd, "ERROR: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;   /* switch back to auto*/
+        LOG(log_info, logtype_afpd, "signature string is %s.", options->signatureopt);
+        goto server_signature_user;
     }
     
 server_signature_user:
     
-    /* Signature type is user string */
-    len = strlen(options->signatureopt);
-    if (len <= 5) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;
-    }
-    usersign = options->signatureopt + 5;
-    len = len - 5;
-    if (len > 16) {
-        LOG(log_warning, logtype_afpd, "WARNING: signature user string %s is very long !",  usersign);
-        len = 16;
-    } else if (len >= 3) {
-        LOG(log_info, logtype_afpd, "signature user string is %s.", usersign);
-    } else {
-        LOG(log_warning, logtype_afpd, "WARNING: signature user string %s is very short !",  usersign);
-    }
+    /* Signature is defined in afp.conf */
     memset(options->signature, 0, 16);
-    memcpy(options->signature, usersign, len);
+    memcpy(options->signature, options->signatureopt, len);
     goto server_signature_done;
     
 server_signature_auto:
@@ -783,7 +770,7 @@ server_signature_random:
         fprintf(fp, "# ServerSignature is unique identifier used to prevent logging on to\n");
         fprintf(fp, "# the same server twice.\n");
         fprintf(fp, "# \n");
-        fprintf(fp, "# If setting \"signature = user:xxxxx\" in afp.conf, this file is not used.\n\n");
+        fprintf(fp, "# If setting \"signature = xxxxx\" in afp.conf, this file is not used.\n\n");
     }
     
     if (fp) {
@@ -799,8 +786,7 @@ server_signature_done:
     
     /* retrun */
     LOG(log_info, logtype_afpd,
-        " \"%s\"'s signature is  %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-        server_tmp,
+        "signature is %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
         (options->signature)[ 0], (options->signature)[ 1],
         (options->signature)[ 2], (options->signature)[ 3],
         (options->signature)[ 4], (options->signature)[ 5],
