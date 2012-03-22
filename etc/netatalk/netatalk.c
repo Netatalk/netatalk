@@ -41,7 +41,7 @@ static pid_t run_process(const char *path, ...);
 /* static variables */
 static AFPObj obj;
 static sig_atomic_t got_chldsig;
-static pid_t afpd_pid, cnid_metad_pid;
+static pid_t afpd_pid = -1,  cnid_metad_pid = -1;
 static uint afpd_restarts, cnid_metad_restarts;
 static struct event_base *base;
 
@@ -70,8 +70,10 @@ static void libevent_logmsg_cb(int severity, const char *msg)
 static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGTERM");
-    kill(afpd_pid, SIGTERM);
-    kill(cnid_metad_pid, SIGTERM);
+    if (afpd_pid != -1)
+        kill(afpd_pid, SIGTERM);
+    if (cnid_metad_pid != -1)
+        kill(cnid_metad_pid, SIGTERM);
     server_unlock(_PATH_NETATALK_LOCK);
     event_base_loopbreak(base);
 }
@@ -79,8 +81,10 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-    kill(afpd_pid, SIGTERM);
-    kill(cnid_metad_pid, SIGTERM);
+    if (afpd_pid != -1)
+        kill(afpd_pid, SIGTERM);
+    if (cnid_metad_pid != -1)
+        kill(cnid_metad_pid, SIGTERM);
     server_unlock(_PATH_NETATALK_LOCK);
     event_base_loopbreak(base);
 }
@@ -129,6 +133,10 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 
 static void netatalk_exit(int ret)
 {
+    if (afpd_pid != -1)
+        kill(afpd_pid, SIGTERM);
+    if (cnid_metad_pid != -1)
+        kill(cnid_metad_pid, SIGTERM);
     server_unlock(_PATH_NETATALK_LOCK);
     exit(ret);
 }
