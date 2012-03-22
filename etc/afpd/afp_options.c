@@ -227,7 +227,6 @@ static void show_paths( void )
 	printf( "      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
 	printf( "  Server messages path:\t%s\n", SERVERTEXT);
-	printf( "              lockfile:\t%s\n", _PATH_AFPDLOCK);
 }
 
 /*
@@ -243,7 +242,7 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 {
     int c, err = 0;
 
-    while (EOF != ( c = getopt( ac, av, "dFvVh" )) ) {
+    while (EOF != ( c = getopt( ac, av, "dF:vVh" )) ) {
         switch ( c ) {
         case 'd':
             obj->cmdlineflags |= OPTION_DEBUG;

@@ -124,7 +124,6 @@ static struct server srv[MAXVOLS];
 
 static void daemon_exit(int i)
 {
-    server_unlock(_PATH_CNID_METAD_LOCK);
     exit(i);
 }
 
@@ -424,7 +423,7 @@ static void set_signal(void)
     /* block everywhere but in pselect */
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
-    sigprocmask(SIG_BLOCK, &set, NULL);
+    sigprocmask(SIG_SETMASK, &set, NULL);
 }
 
 static int setlimits(void)
@@ -486,16 +485,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* Check for PID lockfile */
-    if (check_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
-        return -1;
-
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
-
-    /* Create PID lockfile */
-    if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
-        return -1;
 
     if (afp_config_parse(&obj) != 0)
         daemon_exit(1);

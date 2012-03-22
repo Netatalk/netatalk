@@ -211,8 +211,10 @@ AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$net
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
-dnl --------------------- generate files
+dnl --------------------- configure subpackages
+AC_CONFIG_SUBDIRS([libevent])
 
+dnl --------------------- generate files
 AC_OUTPUT([Makefile
 	bin/Makefile
 	bin/ad/Makefile
@@ -239,6 +241,7 @@ AC_OUTPUT([Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
+	etc/netatalk/Makefile
 	etc/uams/Makefile
 	include/Makefile
 	include/atalk/Makefile

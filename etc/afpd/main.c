@@ -60,7 +60,6 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_childr
 
 static void afp_exit(int ret)
 {
-    server_unlock(_PATH_AFPDLOCK);
     exit(ret);
 }
 
@@ -129,7 +128,6 @@ static void afp_goaway(int sig)
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
 
-        server_unlock(_PATH_AFPDLOCK);
         _exit(0);
         break;
 
@@ -221,13 +219,7 @@ int main(int ac, char **av)
     /* Parse argv args and initialize default options */
     afp_options_parse_cmdline(&obj, ac, av);
 
-    if (check_lockfile("afpd", _PATH_AFPDLOCK) != 0)
-        exit(EXITERR_SYS);
-
     if (!(obj.cmdlineflags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
-        exit(EXITERR_SYS);
-
-    if (create_lockfile("afpd", _PATH_AFPDLOCK) != 0)
         exit(EXITERR_SYS);
 
     /* Log SIGBUS/SIGSEGV SBT */
@@ -249,6 +241,9 @@ int main(int ac, char **av)
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
+    
+    sigemptyset(&sigs);
+    pthread_sigmask(SIG_SETMASK, &sigs, NULL);
 
     memset(&sv, 0, sizeof(sv));    
     /* linux at least up to 2.4.22 send a SIGXFZ for vfat fs,

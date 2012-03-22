@@ -33,23 +33,14 @@
 
 
 /*
- * afpd paths
+ * netatalk paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
 #define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
+#  define _PATH_NETATALK_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netatalk.pid")
 #else
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
-#endif
-
-/*
- * cnid_metad paths
- */
-#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad.pid")
-#else
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
+#  define _PATH_NETATALK_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netatalk")
 #endif
 
 #endif /* atalk/paths.h */

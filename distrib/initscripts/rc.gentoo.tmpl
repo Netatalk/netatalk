@@ -1,0 +1,24 @@
+#!/sbin/runscript
+
+# Netatalk :NETATALK_VERSION: daemons.
+
+depend() {
+    need net
+    use logger dns
+}
+
+netatalk_startup () {
+    ebegin "Starting netatalk"
+    start-stop-daemon --start --quiet --exec :SBINDIR:/netatalk
+    eend $?
+}
+
+start () {
+    netatalk_startup
+}
+
+stop () {
+    ebegin "Stopping netatalk"
+    start-stop-daemon --stop --quiet --exec :SBINDIR:/netatalk
+    eend $?
+}
