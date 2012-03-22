@@ -13,8 +13,8 @@ SUFFIXES = .tmpl .
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
-GENERATED_MANS    = afpd.8 cnid_dbd.8 cnid_metad.8
-TEMPLATE_FILES    = afpd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl
+GENERATED_MANS    = afpd.8 cnid_dbd.8 cnid_metad.8 netatalk.8
+TEMPLATE_FILES    = afpd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl netatalk.8.tmpl
 
 man_MANS = $(GENERATED_MANS)
 
