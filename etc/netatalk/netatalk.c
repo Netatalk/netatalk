@@ -158,6 +158,7 @@ static pid_t run_process(const char *path, ...)
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
         exit(1);
     }
+    return pid;
 }
 
 static void usage(void)

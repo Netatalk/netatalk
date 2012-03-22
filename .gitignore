@@ -84,3 +84,6 @@ libevent/test/test-init
 libevent/test/test-ratelim
 libevent/test/test-time
 libevent/test/test-weof
+libevent/configure
+libevent/devpoll.lo
+libevent/evport.lo
