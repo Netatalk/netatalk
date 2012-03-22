@@ -1210,29 +1210,27 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     offset += cc;
 
 #if 0 /*def HAVE_SENDFILE_WRITE*/
-    if (!(obj->options.flags & OPTION_DEBUG)) {
-        if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
-                               offset, dsi->datasize)) < 0) {
-            switch (errno) {
-            case EDQUOT :
-            case EFBIG :
-            case ENOSPC :
-                cc = AFPERR_DFULL;
-                break;
-            default :
-                LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno) );
-                goto afp_write_loop;
-            }
-            dsi_writeflush(dsi);
-            *rbuflen = 0;
-            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                       reqcount,  ofork->of_refnum);
-            return cc;
+    if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
+                           offset, dsi->datasize)) < 0) {
+        switch (errno) {
+        case EDQUOT:
+        case EFBIG:
+        case ENOSPC:
+            cc = AFPERR_DFULL;
+            break;
+        default:
+            LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno) );
+            goto afp_write_loop;
         }
-
-        offset += cc;
-        goto afp_write_done;
+        dsi_writeflush(dsi);
+        *rbuflen = 0;
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
+                   reqcount,  ofork->of_refnum);
+        return cc;
     }
+
+    offset += cc;
+    goto afp_write_done;
 #endif /* 0, was HAVE_SENDFILE_WRITE */
 
     /* loop until everything gets written. currently

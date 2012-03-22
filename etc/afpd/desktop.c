@@ -560,20 +560,18 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
          * a problem. much confusion results otherwise. */
         while (*rbuflen > 0) {
 #ifdef WITH_SENDFILE
-            if (!obj->options.flags & OPTION_DEBUG) {
-                if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
-                    switch (errno) {
-                    case ENOSYS:
-                    case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                        break;
-                    default:
-                        goto geticon_exit;
-                    }
+            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
+                switch (errno) {
+                case ENOSYS:
+                case EINVAL:  /* there's no guarantee that all fs support sendfile */
+                    break;
+                default:
+                    goto geticon_exit;
                 }
-                else {
-                    dsi_readdone(dsi);
-                    return AFP_OK;
-                }
+            }
+            else {
+                dsi_readdone(dsi);
+                return AFP_OK;
             }
 #endif
             buflen = read(si.sdt_fd, rbuf, *rbuflen);
