@@ -9,6 +9,7 @@ SUFFIXES = .tmpl .
 	    -e "s@:BINDIR:@${bindir}@g" \
 	    -e "s@:ETCDIR:@${pkgconfdir}@g" \
 	    -e "s@:LIBDIR:@${libdir}@g" \
+	    -e "s@:STATEDIR:@${localstatedir}@g" \
 	    -e "s@:DEFAULT_CNID_SCHEME:@${DEFAULT_CNID_SCHEME}@g" \
 	    -e "s@:COMPILED_BACKENDS:@${compiled_backends}@g" \
 	    <$< >$@
