@@ -29,6 +29,7 @@
 #include <atalk/queue.h>
 #include <atalk/bstrlib.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "file.h"
 #include "filedir.h"
@@ -44,15 +45,13 @@
 
 /* Stuff from main.c which of cource can't be added as source to testbin */
 unsigned char nologin = 0;
-struct afp_options default_options;
-static AFPConfig *configs;
-
+static AFPObj obj;
+#define ARGNUM 3
+static char *args[] = {"test", "-F", "test.conf"};
 /* Static variables */
 
 int main(int argc, char **argv)
 {
-    #define ARGNUM 7
-    char *args[ARGNUM] = {"test", "-F", "test.conf", "-f", "test.default", "-s" ,"test.system"};
     int reti;
     uint16_t vid;
     struct vol *vol;
@@ -60,22 +59,24 @@ int main(int argc, char **argv)
     struct path *path;
 
     /* initialize */
-    afp_version = 32;
     printf("Initializing\n============\n");
-    TEST(setuplog("default log_note /dev/tty"));
-    TEST(afp_options_init(&default_options));
-    TEST_int(afp_options_parse( ARGNUM, args, &default_options), 1);
-    TEST_expr(configs = configinit(&default_options), configs != NULL);
-    TEST(cnid_init());
-    TEST(load_volumes(&configs->obj));
-    TEST_int(dircache_init(8192), 0);
- 
+    TEST(setuplog("default:maxdebug","/dev/tty"));
+
+    TEST( afp_options_parse_cmdline(&obj, 3, &args[0]) );
+
+    TEST_int( afp_config_parse(&obj), 0);
+    TEST_int( configinit(&obj), 0);
+    TEST( cnid_init() );
+    TEST( load_volumes(&obj, NULL) );
+    TEST_int( dircache_init(8192), 0);
+    obj.afp_version = 32;
+
     printf("\n");
 
     /* now run tests */
     printf("Running tests\n=============\n");
 
-    TEST_expr(vid = openvol(&configs->obj, "test"), vid != 0);
+    TEST_expr(vid = openvol(&obj, "test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
 
     /* test directory.c stuff */
@@ -84,27 +85,27 @@ int main(int argc, char **argv)
     TEST_expr(path = cname(vol, retdir, cnamewrap("Network Trash Folder")), path != NULL);
 
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);
-    TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
-    TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, ""), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, ""), 0);
 
-    TEST_expr(reti = createdir(&configs->obj, vid, DIRDID_ROOT, "dir1"),
+    TEST_expr(reti = createdir(&obj, vid, DIRDID_ROOT, "dir1"),
               reti == 0 || reti == AFPERR_EXIST);
 
-    TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, "dir1"), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "dir1"), 0);
 /*
   FIXME: this doesn't work although it should. "//" get translated to \000 \000 at means ".."
   ie this should getfiledirparms for DIRDID_ROOT_PARENT -- at least afair!
     TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, "//"), 0);
 */
-    TEST_int(createfile(&configs->obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
-    TEST_int(delete(&configs->obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
-    TEST_int(delete(&configs->obj, vid, DIRDID_ROOT, "dir1"), 0);
+    TEST_int(createfile(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
+    TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
+    TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1"), 0);
 
-    TEST_int(createfile(&configs->obj, vid, DIRDID_ROOT, "file1"), 0);
-    TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, "file1"), 0);
-    TEST_int(delete(&configs->obj, vid, DIRDID_ROOT, "file1"), 0);
+    TEST_int(createfile(&obj, vid, DIRDID_ROOT, "file1"), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "file1"), 0);
+    TEST_int(delete(&obj, vid, DIRDID_ROOT, "file1"), 0);
 
 
     /* test enumerate.c stuff */
-    TEST_int(enumerate(&configs->obj, vid, DIRDID_ROOT), 0);
+    TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0);
 }

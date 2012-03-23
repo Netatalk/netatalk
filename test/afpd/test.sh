@@ -10,15 +10,12 @@ fi
 if [ ! -f test.conf ] ; then
     echo -n "Creating configuration template ... "
     cat > test.conf <<EOF
-test -noddp -port 10548
-EOF
-    echo [ok]
-fi
+[Global]
+afp port = 10548
 
-if [ ! -f test.default ] ; then
-    echo -n "Creating volume config template ... "
-    cat > test.default <<EOF
-/tmp/AFPtestvolume "test" ea:none
+[test]
+path = /tmp/AFPtestvolume
+cnid scheme = last
 EOF
     echo [ok]
 fi
