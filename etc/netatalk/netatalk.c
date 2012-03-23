@@ -94,7 +94,7 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
     int status, i;
     pid_t pid;
 
-    LOG(log_note, logtype_afpd, "Got SIGCHLD event");
+    LOG(log_debug, logtype_afpd, "Got SIGCHLD event");
   
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
@@ -112,14 +112,14 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
         if (pid == afpd_pid) {
             sleep(1);
             afpd_restarts++;
-            LOG(log_note, logtype_afpd, "Restarting 'afpd' (restart: %u)", afpd_restarts);
+            LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
             if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
                 LOG(log_error, logtype_afpd, "Error starting 'afpd'");
             }
         } else if (pid = cnid_metad_pid) {
             sleep(1);
             cnid_metad_restarts++;
-            LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restart: %u)", cnid_metad_restarts);
+            LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
             if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
                 LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
             }
