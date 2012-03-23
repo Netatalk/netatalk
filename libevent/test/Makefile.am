@@ -19,7 +19,7 @@ endif
 EXTRA_PROGRAMS = regress
 noinst_HEADERS = tinytest.h tinytest_macros.h regress.h tinytest_local.h
 
-TESTS = $(top_srcdir)/test/test.sh
+# TESTS = $(top_srcdir)/test/test.sh
 
 BUILT_SOURCES =
 if BUILD_REGRESS
