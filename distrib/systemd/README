@@ -1,7 +1,7 @@
 The service file of the current Netatalk is not appropriate because it use
 a shell-script "netatalk.sh".
 
-Two experimental files are for future netatalk 3.0.
+Two experimental files are here.
 
     netatalk.service
     netatalk-cnid.service
