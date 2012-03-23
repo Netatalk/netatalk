@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 19 Mar 2012
+.\"      Date: 22 Mar 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "19 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "22 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ The file consists of sections and parameters\&. A section begins with the name o
 .RS 4
 .\}
 .nf
-        \fIname\fR = \fIvalue \fR
+\fIname\fR = \fIvalue \fR
       
 .fi
 .if n \{\
@@ -93,8 +93,8 @@ baz:
 .RS 4
 .\}
 .nf
-        [baz]
-        path = /foo/bar
+[baz]
+path = /foo/bar
       
 .fi
 .if n \{\
@@ -125,9 +125,9 @@ The following example illustrates this\&. Given all user home directories are st
 .RS 4
 .\}
 .nf
-        [Homes]
-        path = afp\-data
-        basedir regex = /home
+[Homes]
+path = afp\-data
+basedir regex = /home
       
 .fi
 .if n \{\
@@ -143,7 +143,7 @@ this results in an AFP home volume with a path of
 Parameters define the specific attributes of sections\&.
 .PP
 Some parameters are specific to the [Global] section (e\&.g\&.,
-\fIlogtype\fR)\&. All others are permissible only in volume sections\&. The letter
+\fIlog type\fR)\&. All others are permissible only in volume sections\&. The letter
 \fIG\fR
 in parentheses indicates that a parameter is specific to the [Global] section\&. The letter
 \fIV\fR
@@ -261,8 +261,7 @@ uams_clrtxt\&.so
 .PP
 uams_randum\&.so
 .RS 4
-allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :ETCDIR:/afppasswd file or the one specified via
-\fB\-passwdfile\fR\&. See
+allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :ETCDIR:/afppasswd file or the one specified via "\fBpasswd file\fR"\&. See
 \fBafppasswd\fR(1)
 for details\&. (legacy)
 .RE
@@ -517,7 +516,7 @@ Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions o
 .PP
 advertise ssh = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
-Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
+Allows old Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
 \fBsshd\fR(8)
 on the server to let things work\&.
 .if n \{\
@@ -540,7 +539,7 @@ Setting this option is not recommended since globally encrypting AFP connections
 zeroconf = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Whether to use automatic Zeroconf
-service registration if support was compiled in\&.
+service registration if Avahi or mDNSResponder were compiled in\&.
 .RE
 .PP
 use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -573,7 +572,7 @@ vol preset = \fIname\fR \fB(G)/(V)\fR
 .RS 4
 Use section
 \fBname\fR
-as option preset for all volumes (when set in the global section) or for one volume (when set in that volume\'s section)\&.
+as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\'s section)\&.
 .RE
 .PP
 admin group = \fIgroup\fR \fB(G)\fR
@@ -634,28 +633,11 @@ mimic model = \fImodel\fR \fB(G)\fR
 Specifies the icon model that appears on clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
 .RE
 .PP
-signature = { user:<text> | auto } \fB(G)\fR
+signature = <text> \fB(G)\fR
 .RS 4
-Specify a server signature\&. This option is useful while running multiple independent instances of afpd on one machine (eg\&. in clustered environments, to provide fault isolation etc\&.)\&. Default is "auto"\&. "auto" signature type allows afpd generating signature and saving it to
+Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
 :ETCDIR:/afp_signature\&.conf
-automatically (based on random number)\&. "host" signature type switches back to "auto" because it is obsoleted\&. "user" signature type allows administrator to set up a signature string manually\&. The maximum length is 16 characters\&.
-.PP
-\fBExample.\ \&Three server definitions using 2 different server signatures\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-first \-signature user:USERS
-                  second \-signature user:USERS
-                  third \-signature user:ADMINS
-.fi
-.if n \{\
-.RE
-.\}
-
-
-First two servers will appear as one logical AFP service to the clients \- if user logs in to first one and then connects to second one, session will be automatically redirected to the first one\&. But if client connects to first and then to third, will be asked for password twice and will see resources of both servers\&. Traditional method of signature generation causes two independent afpd instances to have the same signature and thus cause clients to be redirected automatically to server (s)he logged in first\&.
+automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 .RE
 .PP
 volnamelen = \fInumber\fR \fB(G)\fR
@@ -667,8 +649,8 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .\}
 .nf
 73:  limit of Mac OS X 10\&.1
-                80:  limit for Mac OS X 10\&.4/10\&.5 (default)
-                255: limit of spec
+80:  limit of Mac OS X 10\&.4/10\&.5 (default)
+255: limit of recent Mac OS X
 .fi
 .if n \{\
 .RE
@@ -748,9 +730,9 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
 .PP
-The section name defines the volume name which is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. No two volumes may have the same name\&. The volume name cannot contain the
+The section name defines the volume name which is the name that appears in the Chooser or the "connect to server" dialog on Macintoshes to represent the appropriate share\&. No two volumes may have the same name\&. The volume name cannot contain the
 \':\'
-character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
+character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to volnamelen parameter\&.
 .PP
 path = \fIPATH\fR \fB(V)\fR
 .RS 4
@@ -758,7 +740,7 @@ The path name must be a fully qualified path name, or a path name using either t
 .sp
 The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
 \':\'
-character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
+character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to volnamelen parameter\&.
 .RE
 .PP
 appledouble = \fIea|v2\fR \fB(V)\fR
@@ -769,9 +751,9 @@ Specify the format of the metadata files, which are used for saving Mac resource
 .PP
 vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
-Useful for TimeMachine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
+Useful for Time Machine: limits the reported volume size, thus preventing Time Machine from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approximated calculation taking into accout the contents of TM sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approximated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 valid users = \fIusers/groups\fR \fB(V)\fR
@@ -815,14 +797,10 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires writeable volume for perfoming test\&.
-\fBoptions:ro\fR
-overwrites
+\fBad\fR\&. Requires writeable volume for perfoming test\&. "\fBread only = yes\fR" overwrites
 \fBauto\fR
 with
-\fBnone\fR\&. Use explicit
-\fBea:sys|ad\fR
-for read\-only volumes where appropiate\&.
+\fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropiate\&.
 .RE
 .PP
 sys
@@ -847,7 +825,7 @@ mac charset = \fICHARSET\fR \fB(V)\fR
 .RS 4
 specifies the Mac client charset for this Volume, e\&.g\&.
 \fIMAC_ROMAN\fR,
-\fIMAC_CYRILLIC\fR\&. If not specified the global setting is applied\&. This setting is only required if you need volumes, where the Mac charset differs from the one globally set in the global section
+\fIMAC_CYRILLIC\fR\&. If not specified the global setting is applied\&. This setting is only required if you need volumes, where the Mac charset differs from the one globally set in the [Global] section\&.
 .RE
 .PP
 casefold = \fBoption\fR
@@ -878,8 +856,7 @@ Add(or) with the client requested permissions:
 \fBfile perm\fR
 is for files only,
 \fBdirectory perm\fR
-is for directories only\&. Use without
-\fBvol options = noupriv\fR\&.
+is for directories only\&. Don\'t use with "\fBunix priv = no\fR"\&.
 .PP
 \fBExample.\ \&Volume for a collaborative workgroup\fR
 .sp
@@ -898,8 +875,7 @@ directory perm = 0770
 .PP
 umask = \fImode\fR \fB(V)\fR
 .RS 4
-set perm mask\&. Use without
-\fBvol options = noupriv\fR\&.
+set perm mask\&. Don\'t use with "\fBunix priv = no\fR"\&.
 .RE
 .PP
 preexec = \fIcommand\fR \fB(V)\fR
@@ -953,9 +929,9 @@ Whether to use the device number in the CNID backends\&. Helps when the device n
 convert adouble = \fIBOOLEAN\fR (default: \fItrue\fR) \fB(V)\fR
 .RS 4
 Whether automatic conversion from
-\fBapple double = v2\fR
+\fBappledouble = v2\fR
 to
-\fBapple double = ea\fR
+\fBappledouble = ea\fR
 is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\'s recommdable to run
 \fBdbd\fR
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
@@ -971,8 +947,7 @@ character illegal\&.
 .PP
 invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-make dot files invisible\&. Use without
-\fBnousedots\fR\&.
+make dot files invisible\&. If "\fBuse dots = no\fR", this parameter is not unnecessary\&.
 .RE
 .PP
 network ids = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
@@ -1018,9 +993,10 @@ Whether to enable Time Machine suport for this volume\&.
 unix priv = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
 Whether to use AFP3 UNIX privileges\&. This should be set for OS X clients\&. See also:
-\fBfile perm\fR
+\fBfile perm\fR,
+\fBdirectory perm\fR
 and
-\fBdirectory perm\fR\&.
+\fBumask\fR\&.
 .RE
 .PP
 use dots = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
