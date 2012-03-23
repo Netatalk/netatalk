@@ -35,8 +35,12 @@
 
 #include <event2/event.h>
 
+/* how many seconds we wait to shutdown from SIGTERM before we send SIGKILL */
+#define KILL_GRACETIME 5
+
 /* forward declaration */
 static pid_t run_process(const char *path, ...);
+static void kill_childs(int count, int sig, ...);
 
 /* static variables */
 static AFPObj obj;
@@ -44,8 +48,14 @@ static sig_atomic_t got_chldsig;
 static pid_t afpd_pid = -1,  cnid_metad_pid = -1;
 static uint afpd_restarts, cnid_metad_restarts;
 static struct event_base *base;
+struct event *sigterm_ev, *sigquit_ev, *sigchld_ev;
+static int in_shutdown;
 
-/* event functions */
+/******************************************************************
+ * libevent helper functions
+ ******************************************************************/
+
+/* libevent logging callback */
 static void libevent_logmsg_cb(int severity, const char *msg)
 {
     switch (severity) {
@@ -67,28 +77,27 @@ static void libevent_logmsg_cb(int severity, const char *msg)
     }
 }
 
+/******************************************************************
+ * libevent event callbacks
+ ******************************************************************/
+
+/* SIGTERM callback */
 static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGTERM");
-    if (afpd_pid != -1)
-        kill(afpd_pid, SIGTERM);
-    if (cnid_metad_pid != -1)
-        kill(cnid_metad_pid, SIGTERM);
-    server_unlock(_PATH_NETATALK_LOCK);
+    in_shutdown = 1;
     event_base_loopbreak(base);
 }
 
+/* SIGQUIT callback */
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-    if (afpd_pid != -1)
-        kill(afpd_pid, SIGTERM);
-    if (cnid_metad_pid != -1)
-        kill(cnid_metad_pid, SIGTERM);
-    server_unlock(_PATH_NETATALK_LOCK);
+    in_shutdown = 1;
     event_base_loopbreak(base);
 }
 
+/* SIGCHLD callback */
 static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 {
     int status, i;
@@ -110,37 +119,65 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
         }
 
         if (pid == afpd_pid) {
-            sleep(1);
-            afpd_restarts++;
-            LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
-            if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-                LOG(log_error, logtype_afpd, "Error starting 'afpd'");
+            if (in_shutdown) {
+                afpd_pid = -1;
+            } else {
+                sleep(1);
+                afpd_restarts++;
+                LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
+                if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+                    LOG(log_error, logtype_afpd, "Error starting 'afpd'");
+                }
             }
         } else if (pid = cnid_metad_pid) {
-            sleep(1);
-            cnid_metad_restarts++;
-            LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
-            if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-                LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
+            if (in_shutdown) {
+                cnid_metad_pid = -1;
+            } else {
+                sleep(1);
+                cnid_metad_restarts++;
+                LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
+                if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+                    LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
+                }
             }
         } else {
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
         }
     }
+
+    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1)
+        event_base_loopbreak(base);
 }
 
-/* other functions */
+/******************************************************************
+ * helper functions
+ ******************************************************************/
 
+/* kill "count" processes passed as varargs of type "pid_t *" */
+static void kill_childs(int count, int sig, ...)
+{
+    va_list args;
+    pid_t *pid;
+
+    va_start(args, sig);
+
+    while (count--) {
+        pid = va_arg(args, pid_t *);
+        if (*pid == -1)
+            continue;
+        kill(*pid, sig);
+    }
+    va_end(args);
+}
+
+/* this get called when error conditions are met that require us to exit gracefully */
 static void netatalk_exit(int ret)
 {
-    if (afpd_pid != -1)
-        kill(afpd_pid, SIGTERM);
-    if (cnid_metad_pid != -1)
-        kill(cnid_metad_pid, SIGTERM);
     server_unlock(_PATH_NETATALK_LOCK);
     exit(ret);
 }
 
+/* this forks() and exec() "path" with varags as argc[] */
 static pid_t run_process(const char *path, ...)
 {
     int ret, i = 0;
@@ -234,10 +271,9 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
-    struct event *sigterm_ev, *sigquit_ev, *sigchld_ev;
-    sigterm_ev = event_new(base, SIGTERM, EV_SIGNAL|EV_PERSIST, sigterm_cb, NULL);
-    sigquit_ev = event_new(base, SIGQUIT, EV_SIGNAL|EV_PERSIST, sigquit_cb, NULL);
-    sigchld_ev = event_new(base, SIGCHLD, EV_SIGNAL|EV_PERSIST, sigchld_cb, NULL);
+    sigterm_ev = event_new(base, SIGTERM, EV_SIGNAL, sigterm_cb, NULL);
+    sigquit_ev = event_new(base, SIGQUIT, EV_SIGNAL, sigquit_cb, NULL);
+    sigchld_ev = event_new(base, SIGCHLD, EV_SIGNAL | EV_PERSIST, sigchld_cb, NULL);
 
     event_add(sigterm_ev, NULL);
     event_add(sigquit_ev, NULL);
@@ -252,5 +288,31 @@ int main(int argc, char **argv)
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    return ret;
+    /* got SIGTERM or similar, so we're going to shutdown */
+
+    /* block any signal but SIGCHLD */
+    sigfillset(&blocksigs);
+    sigdelset(&blocksigs, SIGCHLD);
+    sigprocmask(SIG_SETMASK, &blocksigs, NULL);
+
+    /* setup new events: remove SIGTERM and SIGQUIT cbs, add timeout */
+    struct timeval tv;
+    tv.tv_sec = KILL_GRACETIME;
+    tv.tv_usec = 0;
+    event_base_loopexit(base, &tv);
+    event_del(sigterm_ev);
+    event_del(sigquit_ev);
+
+    /* run the event loop again, waiting for child to exit on SIGTERM for KILL_GRACETIME seconds */
+    kill_childs(2, SIGTERM, &afpd_pid, &cnid_metad_pid);
+    ret = event_base_dispatch(base);
+
+    if (afpd_pid != -1 || cnid_metad_pid != -1) {
+        if (afpd_pid != -1)
+            LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
+        if (cnid_metad_pid != -1)
+            LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
+        kill_childs(2, SIGKILL, &afpd_pid, &cnid_metad_pid);
+    }
+    netatalk_exit(ret);
 }
