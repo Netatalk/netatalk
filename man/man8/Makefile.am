@@ -10,6 +10,7 @@ SUFFIXES = .tmpl .
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:LIBDIR:@${libdir}@ \
 	    -e s@:LIBEXECDIR:@${libexecdir}@ \
+	    -e "s@:STATEDIR:@${localstatedir}@g" \
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
