@@ -23,7 +23,7 @@ GENERATED_FILES = \
 	rc.redhat \
 	rc.solaris \
 	rc.suse \
-	service.netatalk.systemd
+	service.systemd
 
 TEMPLATES = \
 	rc.bsd.tmpl \
@@ -33,7 +33,7 @@ TEMPLATES = \
 	rc.redhat.tmpl \
 	rc.solaris.tmpl \
 	rc.suse.tmpl \
-	service.netatalk.systemd.tmpl
+	service.systemd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
@@ -75,8 +75,8 @@ if USE_SYSTEMD
 servicedir	= /lib/systemd/system
 service_DATA	= netatalk.service
 
-netatalk.service: service.netatalk.systemd
-	cp -f service.netatalk.systemd netatalk.service
+netatalk.service: service.systemd
+	cp -f service.systemd netatalk.service
 
 install-data-hook:
 	-systemctl daemon-reload
