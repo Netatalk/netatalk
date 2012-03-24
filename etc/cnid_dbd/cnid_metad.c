@@ -128,11 +128,13 @@ static void daemon_exit(int i)
 }
 
 /* ------------------ */
-static void sigterm_handler(int sig)
+static void sig_handler(int sig)
 {
     switch( sig ) {
-    case SIGTERM :
-        LOG(log_info, logtype_afpd, "shutting down on signal %d", sig );
+    case SIGTERM:
+    case SIGQUIT:
+        LOG(log_note, logtype_afpd, "shutting down on %s",
+            sig == SIGTERM ? "SIGTERM" : "SIGQUIT");
         break;
     default :
         LOG(log_error, logtype_afpd, "unexpected signal: %d", sig);
@@ -380,10 +382,14 @@ static void set_signal(void)
         daemon_exit(EXITERR_SYS);
     }
 
-    /* Catch SIGTERM */
-    sv.sa_handler = sigterm_handler;
+    /* Catch SIGTERM and SIGQUIT */
+    sv.sa_handler = sig_handler;
     sigfillset(&sv.sa_mask );
     if (sigaction(SIGTERM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
         daemon_exit(EXITERR_SYS);
     }
