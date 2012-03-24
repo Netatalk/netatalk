@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 22 Mar 2012
+.\"      Date: 23 Mar 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "22 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "23 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -284,7 +284,7 @@ Allow Kerberos V for authentication (optional)
 .PP
 uam path = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the default path for UAMs for this server (default is :ETCDIR:/uams)\&.
+Sets the default path for UAMs for this server (default is :LIBDIR:/netatalk)\&.
 .RE
 .PP
 k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
@@ -552,8 +552,7 @@ syscall for sending file data to clients\&.
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
-$localstatedir/netatalk/CNID/, where $localstatedir defaults to
-/var\&.
+:STATEDIR:/netatalk/CNID/\&.
 .RE
 .PP
 basedir regex = \fIregex\fR \fB(H)\fR
@@ -636,7 +635,7 @@ Specifies the icon model that appears on clients\&. Defaults to off\&. Examples:
 signature = <text> \fB(G)\fR
 .RS 4
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
-:ETCDIR:/afp_signature\&.conf
+:STATEDIR:/netatalk/afp_signature\&.conf
 automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 .RE
 .PP
@@ -689,7 +688,7 @@ If not specified Netatalk logs to syslogs daemon facilify\&. Otherwise it logs t
 log level = \fItype:level [type:level \&.\&.\&.]\fR \fB(G)\fR, log level = \fItype:level,[type:level, \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specify that any message of a loglevel up to the given
-\fBloglevel\fR
+\fBlog level\fR
 should be logged\&.
 .sp
 By default afpd logs to syslog with a default logging setup equivalent to
@@ -766,14 +765,14 @@ invalid users = \fIusers/groups\fR \fB(V)\fR
 The deny option specifies users and groups who are not allowed access to the share\&. It follows the same format as the "valid users" option\&.
 .RE
 .PP
-hosts allow = \fIIP host address/IP netmask bits[, \&.\&.\&. ]\fR \fB(V)\fR
+hosts allow = \fIIP host address/IP netmask bits [ \&.\&.\&. ]\fR \fB(V)\fR
 .RS 4
 Only listed hosts and networks are allowed, all others are rejected\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
 .sp
 Example: hosts allow = 10\&.1\&.0\&.0/16 10\&.2\&.1\&.100 2001:0db8:1234::/48
 .RE
 .PP
-hosts deny = \fIIP host address/IP netmask bits [\&.\&.\&.]\fR \fB(V)\fR
+hosts deny = \fIIP host address/IP netmask bits [ \&.\&.\&. ]\fR \fB(V)\fR
 .RS 4
 Listed hosts and nets are rejected, all others are allowed\&.
 .sp
@@ -1012,7 +1011,7 @@ folder in the volume root\&.
 .PP
 cdb
 .RS 4
-"Concurrent database", backend is based on Sleepycat\'s Berkely DB\&. With this backend several
+"Concurrent database", backend is based on Oracle Berkely DB\&. With this backend several
 \fBafpd\fR
 deamons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR
