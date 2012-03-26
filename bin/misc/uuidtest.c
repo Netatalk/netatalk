@@ -30,6 +30,7 @@
 #include <atalk/ldapconfig.h>
 #include <atalk/uuid.h>
 #include <atalk/logger.h>
+#include <atalk/iniparser.h>
 
 #define STRNCMP(a, R, b, l) (strncmp(a,b,l) R 0)
 
