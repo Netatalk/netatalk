@@ -14,13 +14,13 @@ AC_DEFUN([AC_NETATALK_CONFIG_DIRS], [
 	)
 
 
-	SERVERTEXT="${PKGCONFDIR}/msg"
+	SERVERTEXT="${localstatedir}/netatalk/msg"
 
 	AC_ARG_WITH(message-dir,
-		[  --with-message-dir=PATH path to server message files [[PKGCONF/msg]]],
+		[  --with-message-dir=PATH path to server message files [[$localstatedir/netatalk/msg/]]],
 		[
 			if test x"$withval" = x"no";  then 
-				AC_MSG_WARN([*** message-dir is mandatory and cannot be disabled, using default ***])
+				AC_MSG_WARN([message-dir is mandatory and cannot be disabled, using default])
 			elif test "x$withval" != "x" && test x"$withval" != x"yes"; then
 				SERVERTEXT="$withval"
 			fi
