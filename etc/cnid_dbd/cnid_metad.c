@@ -288,36 +288,41 @@ static int set_dbdir(const char *dbdir, const char *vpath)
     EC_INIT;
     int status;
     struct stat st;
-    bstring oldpath, newpath, cmd = NULL;
+    bstring oldpath, newpath;
+    char *cmd_argv[4];
+
+    LOG(log_note, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);
 
     EC_NULL_LOG( oldpath = bformat("%s/%s/", vpath, DBHOME) );
     EC_NULL_LOG( newpath = bformat("%s/%s/", dbdir, DBHOME) );
 
     if (lstat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
-        return -1;
+        EC_FAIL;
     }
 
     if (lstat(bdata(oldpath), &st) == 0 && lstat(bdata(newpath), &st) != 0 && errno == ENOENT) {
         /* There's an .AppleDB in the volume root, we move it */
-        EC_NULL_LOG( cmd = bformat("mv '%s' '%s'", bdata(oldpath), dbdir) );
-        LOG(log_debug, logtype_cnid, "set_dbdir: cmd: %s", bdata(cmd));
-        if (WEXITSTATUS(system(bdata(cmd))) != 0) {
+        cmd_argv[0] = "mv";
+        cmd_argv[1] = bdata(oldpath);
+        cmd_argv[2] = (char *)dbdir;
+        cmd_argv[3] = NULL;
+        if (run_cmd("mv", cmd_argv) != 0) {
             LOG(log_error, logtype_cnid, "set_dbdir: moving CNID db from \"%s\" to \"%s\" failed",
                 bdata(oldpath), dbdir);
             EC_FAIL;
         }
+
     }
 
     if (lstat(bdata(newpath), &st) < 0 && mkdir(bdata(newpath), 0755 ) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", bdata(newpath));
-        return -1;
+        EC_FAIL;
     }
 
 EC_CLEANUP:
     bdestroy(oldpath);
     bdestroy(newpath);
-    bdestroy(cmd);
     EC_EXIT;
 }
 
