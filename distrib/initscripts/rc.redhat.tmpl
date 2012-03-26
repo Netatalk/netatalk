@@ -2,10 +2,11 @@
 # chkconfig: - 91 35
 # description: Netatalk AFP fileserver for Macintosh clients
 #
-# Netatalk :NETATALK_VERSION: daemons.
+# Netatalk :NETATALK_VERSION:
 
 NETATALK_CONF_DIR=:ETCDIR:
 NETATALK_SBIN=:SBINDIR:
+prog=netatalk
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -15,8 +16,6 @@ NETATALK_SBIN=:SBINDIR:
 
 # initialize return values
 RETVAL=1
-RETVAL_CNID_METAD=0
-RETVAL_AFPD=0
 
 # startup code for everything
 netatalk_startup() {
@@ -27,39 +26,38 @@ netatalk_startup() {
     fi
 
     if [ -x ${NETATALK_SBIN}/netatalk ] ; then
-        echo -n "  Starting netatalk:"
+        echo -n $"Starting $prog: "
         daemon ${NETATALK_SBIN}/netatalk
-        RETVAL_NETATALK=$?
+        RETVAL=$?
         echo
     fi
 
-    if [ $RETVAL_NETATALK -eq 0 ]; then
-        RETVAL=0
+    if [ $RETVAL -eq 0 ]; then
         touch /var/lock/subsys/netatalk || RETVAL=1
     fi
 }
 
+# stop code for everything
+netatalk_stop() {
+    if [ -x ${NETATALK_SBIN}/netatalk ]; then
+        echo -n $"Stopping $prog: "
+        killproc netatalk
+        RETVAL=$?
+        echo
+    fi
+
+    if [ $RETVAL -eq 0 ] ; then
+        rm -f /var/lock/subsys/netatalk || RETVAL=1
+    fi
+}
+
+
 case "$1" in
     'start')
-        echo -n 'Starting Netatalk services: '
-        echo
         netatalk_startup
-        echo 
         ;;
     'stop')
-        echo 'Shutting down Netatalk services: '
-        if [ -x ${NETATALK_SBIN}/netatalk ]; then
-            echo -n "  Stopping netatalk:"
-            killproc netatalk
-            RETVAL_NETATALK=$?
-            echo
-        fi
-
-        if [ $RETVAL_CNID_METAD -eq 0 ] ; then
-            RETVAL=0
-            rm -f /var/lock/subsys/netatalk || RETVAL=1
-        fi
-        echo ""
+        netatalk_stop
         ;;
     'restart'|'reload')
         $0 stop
