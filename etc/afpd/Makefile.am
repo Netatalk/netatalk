@@ -50,8 +50,6 @@ afpd_LDADD =  \
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/sys \
 	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \

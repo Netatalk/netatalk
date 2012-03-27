@@ -6,8 +6,8 @@ sbin_PROGRAMS = netatalk
 
 netatalk_SOURCES = netatalk.c
 netatalk_CFLAGS = \
-	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/libevent/include \
+	-I$(top_builddir)/libevent/include \
 	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
 	-D_PATH_AFPD=\"$(sbindir)/afpd\" \
 	-D_PATH_CNID_METAD=\"$(sbindir)/cnid_metad\"

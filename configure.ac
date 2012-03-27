@@ -187,7 +187,6 @@ AC_NETATALK_SENDFILE
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
-LIBS="$LIBS -L\$(top_srcdir)/libatalk"
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
 UAMS_PATH="${uams_path}"
 

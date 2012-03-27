@@ -10,41 +10,42 @@ EXTRA_DIST = test.sh
 CLEANFILES = test.default test.conf
 
 test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
-				$(top_builddir)/etc/afpd/afp_avahi.c \
-				$(top_builddir)/etc/afpd/afp_config.c \
-				$(top_builddir)/etc/afpd/afp_dsi.c \
-				$(top_builddir)/etc/afpd/afp_options.c \
-				$(top_builddir)/etc/afpd/afp_util.c \
-				$(top_builddir)/etc/afpd/afprun.c \
-				$(top_builddir)/etc/afpd/appl.c \
-				$(top_builddir)/etc/afpd/auth.c \
-				$(top_builddir)/etc/afpd/afp_zeroconf.c \
-				$(top_builddir)/etc/afpd/catsearch.c \
-				$(top_builddir)/etc/afpd/desktop.c \
-				$(top_builddir)/etc/afpd/dircache.c \
-				$(top_builddir)/etc/afpd/directory.c \
-				$(top_builddir)/etc/afpd/enumerate.c \
-				$(top_builddir)/etc/afpd/extattrs.c \
-				$(top_builddir)/etc/afpd/fce_api.c \
-				$(top_builddir)/etc/afpd/fce_util.c \
-				$(top_builddir)/etc/afpd/file.c \
-				$(top_builddir)/etc/afpd/filedir.c \
-				$(top_builddir)/etc/afpd/fork.c \
-				$(top_builddir)/etc/afpd/gettok.c \
-				$(top_builddir)/etc/afpd/hash.c \
-				$(top_builddir)/etc/afpd/mangle.c \
-				$(top_builddir)/etc/afpd/messages.c \
-				$(top_builddir)/etc/afpd/nfsquota.c \
-				$(top_builddir)/etc/afpd/ofork.c \
-				$(top_builddir)/etc/afpd/quota.c \
-				$(top_builddir)/etc/afpd/status.c \
-				$(top_builddir)/etc/afpd/switch.c \
-				$(top_builddir)/etc/afpd/uam.c \
-				$(top_builddir)/etc/afpd/unix.c \
-				$(top_builddir)/etc/afpd/volume.c
+				$(top_srcdir)/etc/afpd/afp_avahi.c \
+				$(top_srcdir)/etc/afpd/afp_config.c \
+				$(top_srcdir)/etc/afpd/afp_dsi.c \
+				$(top_srcdir)/etc/afpd/afp_mdns.c \
+				$(top_srcdir)/etc/afpd/afp_options.c \
+				$(top_srcdir)/etc/afpd/afp_util.c \
+				$(top_srcdir)/etc/afpd/afprun.c \
+				$(top_srcdir)/etc/afpd/appl.c \
+				$(top_srcdir)/etc/afpd/auth.c \
+				$(top_srcdir)/etc/afpd/afp_zeroconf.c \
+				$(top_srcdir)/etc/afpd/catsearch.c \
+				$(top_srcdir)/etc/afpd/desktop.c \
+				$(top_srcdir)/etc/afpd/dircache.c \
+				$(top_srcdir)/etc/afpd/directory.c \
+				$(top_srcdir)/etc/afpd/enumerate.c \
+				$(top_srcdir)/etc/afpd/extattrs.c \
+				$(top_srcdir)/etc/afpd/fce_api.c \
+				$(top_srcdir)/etc/afpd/fce_util.c \
+				$(top_srcdir)/etc/afpd/file.c \
+				$(top_srcdir)/etc/afpd/filedir.c \
+				$(top_srcdir)/etc/afpd/fork.c \
+				$(top_srcdir)/etc/afpd/gettok.c \
+				$(top_srcdir)/etc/afpd/hash.c \
+				$(top_srcdir)/etc/afpd/mangle.c \
+				$(top_srcdir)/etc/afpd/messages.c \
+				$(top_srcdir)/etc/afpd/nfsquota.c \
+				$(top_srcdir)/etc/afpd/ofork.c \
+				$(top_srcdir)/etc/afpd/quota.c \
+				$(top_srcdir)/etc/afpd/status.c \
+				$(top_srcdir)/etc/afpd/switch.c \
+				$(top_srcdir)/etc/afpd/uam.c \
+				$(top_srcdir)/etc/afpd/unix.c \
+				$(top_srcdir)/etc/afpd/volume.c
 
 if HAVE_ACLS
-test_SOURCES += $(top_builddir)/etc/afpd/acls.c
+test_SOURCES += $(top_srcdir)/etc/afpd/acls.c
 endif
 
 test_CFLAGS = \
