@@ -34,6 +34,7 @@ Changes in 2.2.3
 * FIX: afpd: sendfile() on FreeBSD was broken, courtesy of Denis Ahrens
 * FIX: afpd: Dont use searchdb when doing partial name search
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
+* FIX: afpd: Fix a possible bug handling disconnected sessions, NetAFP Bug ID #16
 
 Changes in 2.2.2
 ================
