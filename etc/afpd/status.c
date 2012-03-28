@@ -7,6 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -28,12 +29,17 @@
 #endif /* BSD4_4 */
 #endif
 
-#include <netatalk/at.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
+#ifdef HAVE_KERBEROS
+#ifdef HAVE_KRB5_KRB5_H
+#include <krb5/krb5.h>
+#else
+#include <krb5.h>
+#endif /* HAVE_KRB5_KRB5_H */
+#endif /* HAVE_KERBEROS */
+
 #include <atalk/dsi.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
-#include <atalk/nbp.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
@@ -41,11 +47,24 @@
 #include "status.h"
 #include "afp_config.h"
 #include "icon.h"
+#include "uam_auth.h"
 
 static   size_t maxstatuslen = 0;
 
-static void status_flags(char *data, const int notif, const int ipok,
-                         const unsigned char passwdbits, const int dirsrvcs _U_, int flags)
+static int uam_gss_enabled()
+{
+    /* XXX: must be a better way to find out if uam_gss is active */
+    return auth_uamfind(UAM_SERVER_LOGIN_EXT,
+                        "Client Krb v2",
+                        sizeof("Client Krb v2")) != NULL;
+}
+
+static void status_flags(char *data,
+                         const int notif,
+                         const int ipok,
+                         const unsigned char passwdbits,
+                         const int dirsrvcs,
+                         int flags)
 {
     uint16_t           status;
 
@@ -53,7 +72,6 @@ static void status_flags(char *data, const int notif, const int ipok,
            | AFPSRVRINFO_SRVSIGNATURE
            | AFPSRVRINFO_SRVMSGS
            | AFPSRVRINFO_FASTBOZO
-           | AFPSRVRINFO_SRVRDIR
            | AFPSRVRINFO_SRVUTF8
            | AFPSRVRINFO_EXTSLEEP;
 
@@ -61,10 +79,12 @@ static void status_flags(char *data, const int notif, const int ipok,
         status |= AFPSRVRINFO_PASSWD;
     if (passwdbits & PASSWD_NOSAVE)
         status |= AFPSRVRINFO_NOSAVEPASSWD;
-    if (ipok) /* only advertise tcp/ip if we have a valid address */        
+    if (ipok) /* only advertise tcp/ip if we have a valid address */
         status |= AFPSRVRINFO_TCPIP;
-    if (notif) /* Default is yes */        
+    if (notif) /* Default is yes */
         status |= AFPSRVRINFO_SRVNOTIFY;
+    if (dirsrvcs)
+        status |= AFPSRVRINFO_SRVRDIR;
     if (flags & OPTION_UUID)
         status |= AFPSRVRINFO_UUID;
 
@@ -77,7 +97,7 @@ static int status_server(char *data, const char *server, const struct afp_option
     char                *start = data;
     char                *Obj, *Type, *Zone;
     char		buf[32];
-    u_int16_t           status;
+    uint16_t           status;
     size_t		len;
 
     /* make room for all offsets before server name */
@@ -85,9 +105,6 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
-#ifndef NO_DDP
-    nbp_name(server, &Obj, &Type, &Zone);
-#endif
     if ((size_t)-1 == (len = convert_string( 
                            options->unixcharset, options->maccharset, 
                            Obj, -1, buf, sizeof(buf))) ) {
@@ -125,7 +142,7 @@ static int status_server(char *data, const char *server, const struct afp_option
 static void status_machine(char *data)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     int			len;
 #ifdef AFS
     const char		*machine = "afs";
@@ -160,11 +177,11 @@ static void status_machine(char *data)
 }
 
 /* server signature is a 16-byte quantity */
-static u_int16_t status_signature(char *data, int *servoffset,
+static uint16_t status_signature(char *data, int *servoffset,
                                   const struct afp_options *options)
 {
     char                 *status;
-    u_int16_t            offset, sigoff;
+    uint16_t            offset, sigoff;
 
     status = data;
 
@@ -187,14 +204,11 @@ static u_int16_t status_signature(char *data, int *servoffset,
 }
 
 static size_t status_netaddress(char *data, int *servoffset,
-#ifndef NO_DDP
-                                const ASP asp,
-#endif
-                                const DSI *dsi,
-                                const struct afp_options *options)
+                             const DSI *dsi,
+                             const struct afp_options *options)
 {
     char               *begin;
-    u_int16_t          offset;
+    uint16_t          offset;
     size_t             addresses_len = 0;
 
     begin = data;
@@ -215,9 +229,6 @@ static size_t status_netaddress(char *data, int *servoffset,
        connection, but we don't have the ip address. to get around this,
        we turn off the status flag for tcp/ip. */
     *data++ = ((options->fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) +
-#ifndef NO_DDP
-        (asp ? 1 : 0) +
-#endif
               (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn && dsi)? 1 : 0);
 
     /* ip address */
@@ -291,23 +302,6 @@ static size_t status_netaddress(char *data, int *servoffset,
         }
     }
 
-#ifndef NO_DDP
-    if (asp) {
-        const struct sockaddr_at *ddpaddr = atp_sockaddr(asp->asp_atp);
-
-        /* ddp address */
-        *data++ = 6;
-        *data++ = 0x03; /* ddp address */
-        memcpy(data, &ddpaddr->sat_addr.s_net, sizeof(ddpaddr->sat_addr.s_net));
-        data += sizeof(ddpaddr->sat_addr.s_net);
-        memcpy(data, &ddpaddr->sat_addr.s_node,
-               sizeof(ddpaddr->sat_addr.s_node));
-        data += sizeof(ddpaddr->sat_addr.s_node);
-        memcpy(data, &ddpaddr->sat_port, sizeof(ddpaddr->sat_port));
-        data += sizeof(ddpaddr->sat_port);
-    }
-#endif /* ! NO_DDP */
-
     /* calculate/store Directory Services Names offset */
     offset = htons(data - begin); 
     *servoffset += sizeof(offset);
@@ -317,54 +311,177 @@ static size_t status_netaddress(char *data, int *servoffset,
     return (data - begin);
 }
 
-static size_t status_directorynames(char *data, int *diroffset, 
-				 const DSI *dsi _U_, 
-				 const struct afp_options *options)
+static bool append_directoryname(char **pdata,
+                                 size_t offset,
+                                 size_t *size,
+                                 char* DirectoryNamesCount,
+                                 size_t len,
+                                 char *principal)
+{
+    if (sizeof(uint8_t) + len  > maxstatuslen - offset - *size) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: out of space for principal '%s' (len=%d)",
+            principal, len);
+        return false;
+    } else if (len > 255) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: principal '%s' (len=%d) too long (max=255)",
+            principal, len);
+        return false;
+    }
+
+    LOG(log_info, logtype_afpd,
+        "DirectoryNames[%d]=%s",
+        *DirectoryNamesCount, principal);
+
+    *DirectoryNamesCount += 1;
+    char *data = *pdata;
+    *data++ = len;
+    strncpy(data, principal, len);
+
+    *pdata += len + 1;
+    *size += sizeof(uint8_t) + len;
+
+    return true;
+}
+
+/**
+ * DirectoryNamesCount offset: uint16_t
+ * ...
+ * DirectoryNamesCount: uint8_t
+ * DirectoryNames: list of UTF-8 Pascal strings (uint8_t + char[1,255])
+ */
+static size_t status_directorynames(char *data,
+                                    int *diroffset,
+                                    const DSI *dsi _U_,
+                                    const struct afp_options *options _U_)
 {
     char *begin = data;
-    u_int16_t offset;
-    memcpy(&offset, data + *diroffset, sizeof(offset));
+    uint16_t offset;
+
+    memcpy(&offset, begin + *diroffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;
 
-    /* I can not find documentation of any other purpose for the
-     * DirectoryNames field.
-     */
-    /*
-     * Try to synthesize a principal:
-     * service '/' fqdn '@' realm
-     */
-    if (options->k5service && options->k5realm && options->fqdn) {
-	/* should k5princ be utf8 encoded? */
-	size_t len;
-	char *p = strchr( options->fqdn, ':' );
-	if (p) 
-	    *p = '\0';
-	len = strlen( options->k5service ) 
-			+ strlen( options->fqdn )
-			+ strlen( options->k5realm );
-	len+=2; /* '/' and '@' */
-	if ( len > 255 || len+2 > maxstatuslen - offset) {
-	    *data++ = 0;
-	    LOG ( log_error, logtype_afpd, "status: could not set directory service list, no more room");
-	}	 
-	else {
-	    *data++ = 1; /* DirectoryNamesCount */
-	    *data++ = len;
-	    snprintf( data, len + 1, "%s/%s@%s", options->k5service,
-				options->fqdn, options->k5realm );
-	    data += len;
-	    if (p)
-	        *p = ':';
-       }
-    } else {
-	*data++ = 0;
+    char *DirectoryNamesCount = data++, *DirectoryNames = data;
+    *DirectoryNamesCount = 0;
+    size_t size = sizeof(uint8_t);
+
+    if (!uam_gss_enabled())
+        goto offset_calc;
+
+#ifdef HAVE_KERBEROS
+    krb5_context context;
+    krb5_error_code ret;
+    const char *error_msg;
+
+    if (krb5_init_context(&context)) {
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames failed to intialize a krb5_context");
+        goto offset_calc;
     }
 
+    krb5_keytab keytab;
+    if ((ret = krb5_kt_default(context, &keytab)))
+        goto krb5_error;
+
+    // figure out which service principal to use
+    krb5_keytab_entry entry;
+    char *principal;
+    if (options->k5service && options->fqdn && options->k5realm) {
+        LOG(log_debug, logtype_afpd,
+            "status:DirectoryNames: using service principal specified in options");
+
+        krb5_principal service_principal;
+        if ((ret = krb5_build_principal(context,
+                                        &service_principal,
+                                        strlen(options->k5realm),
+                                        options->k5realm,
+                                        options->k5service,
+                                        options->fqdn,
+                                        NULL)))
+            goto krb5_error;
+
+        // try to get the given service principal from keytab
+        ret = krb5_kt_get_entry(context,
+                                keytab,
+                                service_principal,
+                                0, // kvno - wildcard
+                                0, // enctype - wildcard
+                                &entry);
+        if (ret == KRB5_KT_NOTFOUND) {
+            krb5_unparse_name(context, service_principal, &principal);
+            LOG(log_error, logtype_afpd,
+                "status:DirectoryNames: specified service principal '%s' not found in keytab",
+                principal);
+            // XXX: should this be krb5_xfree?
+            krb5_free_unparsed_name(context, principal);
+            goto krb5_cleanup;
+        }
+        krb5_free_principal(context, service_principal);
+        if (ret)
+            goto krb5_error;
+    } else {
+        LOG(log_debug, logtype_afpd,
+            "status:DirectoryNames: using first entry from keytab as service principal");
+
+        krb5_kt_cursor cursor;
+        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor)))
+            goto krb5_error;
+
+        ret = krb5_kt_next_entry(context, keytab, &entry, &cursor);
+        krb5_kt_end_seq_get(context, keytab, &cursor);
+        if (ret)
+            goto krb5_error;
+    }
+
+    krb5_unparse_name(context, entry.principal, &principal);
+    krb5_kt_free_entry(context, &entry);
+
+    append_directoryname(&data,
+                         offset,
+                         &size,
+                         DirectoryNamesCount,
+                         strlen(principal),
+                         principal);
+
+    // XXX: should this be krb5_xfree?
+    krb5_free_unparsed_name(context, principal);
+    goto krb5_cleanup;
+
+krb5_error:
+    if (ret) {
+        error_msg = krb5_get_error_message(context, ret);
+        LOG(log_error, logtype_afpd,
+            "status:DirectoryNames: Kerberos error: %s",
+            (char *) error_msg);
+        krb5_free_error_message(context, error_msg);
+    }
+
+krb5_cleanup:
+    krb5_kt_close(context, keytab);
+    krb5_free_context(context);
+#else
+    if (!options->k5service || !options->fqdn || !options->k5realm)
+        goto offset_calc;
+
+    char principal[255];
+    size_t len = snprintf(principal, sizeof(principal), "%s/%s@%s",
+                          options->k5service, options->fqdn, options->k5realm);
+
+    append_directoryname(&data,
+                         offset,
+                         &size,
+                         DirectoryNamesCount,
+                         strlen(principal),
+                         principal);
+#endif // HAVE_KERBEROS
+
+offset_calc:
     /* Calculate and store offset for UTF8ServerName */
-    *diroffset += sizeof(u_int16_t);
+    *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
-    memcpy(begin + *diroffset, &offset, sizeof(u_int16_t));
+    memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
     /* return length of buffer */
     return (data - begin);
@@ -375,10 +492,10 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 				 const struct afp_options *options)
 {
     char *Obj, *Type, *Zone;
-    u_int16_t namelen;
+    uint16_t namelen;
     size_t len;
     char *begin = data;
-    u_int16_t offset, status;
+    uint16_t offset, status;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
@@ -393,26 +510,22 @@ static size_t status_utf8servername(char *data, int *nameoffset,
      */
 
     /* extract the obj part of the server */
-    Obj = (char *) (options->server ? options->server : options->hostname);
-#ifndef NO_DDP
-    nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
-#endif
+    Obj = options->hostname;
     if ((size_t) -1 == (len = convert_string (
-					options->unixcharset, CH_UTF8_MAC, 
-					Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
-	LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
+                            options->unixcharset, CH_UTF8_MAC, 
+                            Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
+        LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
 
-	/* set offset to 0 */
-	memset(begin + *nameoffset, 0, sizeof(offset));
+        /* set offset to 0 */
+        memset(begin + *nameoffset, 0, sizeof(offset));
         data = begin + offset;
-    }
-    else {
+    } else {
     	namelen = htons(len);
     	memcpy( data, &namelen, sizeof(namelen));
     	data += sizeof(namelen);
     	data += len;
     	offset = htons(offset);
-    	memcpy(begin + *nameoffset, &offset, sizeof(u_int16_t));
+    	memcpy(begin + *nameoffset, &offset, sizeof(uint16_t));
     }
 
     /* return length of buffer */
@@ -426,7 +539,7 @@ static void status_icon(char *data, const unsigned char *icondata,
 {
     char                *start = data;
     char                *sigdata = data + sigoffset;
-    u_int16_t		ret, status;
+    uint16_t		ret, status;
 
     memcpy(&status, start + AFPSTATUS_ICONOFF, sizeof(status));
     if ( icondata == NULL ) {
@@ -446,48 +559,27 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
-                 const struct afp_options *options)
+void status_init(AFPObj *obj, DSI *dsi)
 {
-#ifndef NO_DDP
-    ASP asp;
-#endif
-    DSI *dsi;
-    char *status = NULL;
+    char *status = dsi->status;
     size_t statuslen;
-    int c, sigoff, ipok;
+    int c, sigoff, ipok = 0;
+    const struct afp_options *options = &obj->options;
 
-    if (!(aspconfig || dsiconfig) || !options)
-        return;
+    maxstatuslen = sizeof(dsi->status);
 
-#ifndef NO_DDP
-    if (aspconfig) {
-        status = aspconfig->status;
-        maxstatuslen=sizeof(aspconfig->status);
-        asp = aspconfig->obj.handle;
-    } else
-        asp = NULL;
-#endif
-	
-    ipok = 0;
-    if (dsiconfig) {
-        status = dsiconfig->status;
-        maxstatuslen=sizeof(dsiconfig->status);
-        dsi = dsiconfig->obj.handle;
-        if (dsi->server.ss_family == AF_INET) { /* IPv4 */
-            const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
-            ipok = sa4->sin_addr.s_addr ? 1 : 0;
-        } else { /* IPv6 */
-            const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
-            for (int i=0; i<16; i++) {
-                if (sa6->sin6_addr.s6_addr[i]) {
-                    ipok = 1;
-                    break;
-                }
+    if (dsi->server.ss_family == AF_INET) { /* IPv4 */
+        const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
+        ipok = sa4->sin_addr.s_addr ? 1 : 0;
+    } else { /* IPv6 */
+        const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
+        for (int i=0; i<16; i++) {
+            if (sa6->sin6_addr.s6_addr[i]) {
+                ipok = 1;
+                break;
             }
         }
-    } else
-        dsi = NULL;
+    }
 
     /*
      * These routines must be called in order -- earlier calls
@@ -510,20 +602,15 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
      */
 
     status_flags(status,
-                 options->server_notif,
+                 options->flags & OPTION_SERVERNOTIF,
                  (options->fqdn || ipok),
                  options->passwdbits, 
-                 (options->k5service && options->k5realm && options->fqdn),
+                 uam_gss_enabled(),
                  options->flags);
     /* returns offset to signature offset */
-    c = status_server(status, options->server ? options->server :
-                      options->hostname, options);
+    c = status_server(status, options->hostname, options);
     status_machine(status);
-    status_versions(status,
-#ifndef NO_DDP
-                    asp,
-#endif
-                    dsi);
+    status_versions(status, dsi);
     status_uams(status, options->uamlist);
     if (options->flags & OPTION_CUSTOMICON)
         status_icon(status, icon, sizeof(icon), c);
@@ -533,11 +620,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     sigoff = status_signature(status, &c, options);
     /* c now contains the offset where the netaddress offset lives */
 
-    status_netaddress(status, &c,
-#ifndef NO_DDP
-                      asp,
-#endif
-                      dsi, options);
+    status_netaddress(status, &c, dsi, options);
     /* c now contains the offset where the Directory Names Count offset lives */
 
     statuslen = status_directorynames(status, &c, dsi, options);
@@ -546,24 +629,12 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     if ( statuslen < maxstatuslen) 
         statuslen = status_utf8servername(status, &c, dsi, options);
 
-#ifndef NO_DDP
-    if (aspconfig) {
-        if (dsiconfig) /* status is dsiconfig->status */
-            memcpy(aspconfig->status, status, statuslen);
-        asp_setstatus(asp, status, statuslen);
-        aspconfig->signature = status + sigoff;
-        aspconfig->statuslen = statuslen;
+    if ((options->flags & OPTION_CUSTOMICON) == 0) {
+        status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
     }
-#endif /* ! NO_DDP */
 
-    if (dsiconfig) {
-        if ((options->flags & OPTION_CUSTOMICON) == 0) {
-            status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
-        }
-        dsi_setstatus(dsi, status, statuslen);
-        dsiconfig->signature = status + sigoff;
-        dsiconfig->statuslen = statuslen;
-    }
+    dsi->signature = status + sigoff;
+    dsi->statuslen = statuslen;
 }
 
 /* set_signature()                                                    */
@@ -572,10 +643,9 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 /* If not found in conf file, genarate and append in conf file.       */
 /* If conf file don't exist, create and genarate.                     */
 /* If cannot open conf file, use one-time signature.                  */
-/* If -signature user:xxxxx, use it.                                  */
+/* If signature = xxxxx, use it.                                      */
 
 void set_signature(struct afp_options *options) {
-    char *usersign;
     int fd, i;
     struct stat tmpstat;
     char *servername_conf;
@@ -585,39 +655,27 @@ void set_signature(struct afp_options *options) {
     size_t len;
     char *server_tmp;
     
-    server_tmp = (options->server ? options->server : options->hostname);
-    if (strcmp(options->signatureopt, "auto") == 0) {
+    server_tmp = options->hostname;
+    len = strlen(options->signatureopt);
+    if (len == 0) {
         goto server_signature_auto;   /* default */
-    } else if (strcmp(options->signatureopt, "host") == 0) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature host\" is obsoleted. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;   /* same as auto */
-    } else if (strncmp(options->signatureopt, "user", 4) == 0) {
-        goto server_signature_user;   /*  user string */
+    } else if (len < 3) {
+        LOG(log_warning, logtype_afpd, "WARNING: signature string %s is very short !", options->signatureopt);
+        goto server_signature_user;
+    } else if (len > 16) {
+        LOG(log_warning, logtype_afpd, "WARNING: signature string %s is very long !", options->signatureopt);
+        len = 16;
+        goto server_signature_user;
     } else {
-        LOG(log_error, logtype_afpd, "ERROR: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;   /* switch back to auto*/
+        LOG(log_info, logtype_afpd, "signature string is %s.", options->signatureopt);
+        goto server_signature_user;
     }
     
 server_signature_user:
     
-    /* Signature type is user string */
-    len = strlen(options->signatureopt);
-    if (len <= 5) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
-        goto server_signature_auto;
-    }
-    usersign = options->signatureopt + 5;
-    len = len - 5;
-    if (len > 16) {
-        LOG(log_warning, logtype_afpd, "WARNING: signature user string %s is very long !",  usersign);
-        len = 16;
-    } else if (len >= 3) {
-        LOG(log_info, logtype_afpd, "signature user string is %s.", usersign);
-    } else {
-        LOG(log_warning, logtype_afpd, "WARNING: signature user string %s is very short !",  usersign);
-    }
+    /* Signature is defined in afp.conf */
     memset(options->signature, 0, 16);
-    memcpy(options->signature, usersign, len);
+    memcpy(options->signature, options->signatureopt, len);
     goto server_signature_done;
     
 server_signature_auto:
@@ -712,7 +770,7 @@ server_signature_random:
         fprintf(fp, "# ServerSignature is unique identifier used to prevent logging on to\n");
         fprintf(fp, "# the same server twice.\n");
         fprintf(fp, "# \n");
-        fprintf(fp, "# If setting \"-signature user:xxxxx\" in afpd.conf, this file is not used.\n\n");
+        fprintf(fp, "# If setting \"signature = xxxxx\" in afp.conf, this file is not used.\n\n");
     }
     
     if (fp) {
@@ -728,8 +786,7 @@ server_signature_done:
     
     /* retrun */
     LOG(log_info, logtype_afpd,
-        " \"%s\"'s signature is  %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-        server_tmp,
+        "signature is %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
         (options->signature)[ 0], (options->signature)[ 1],
         (options->signature)[ 2], (options->signature)[ 3],
         (options->signature)[ 4], (options->signature)[ 5],
@@ -745,9 +802,8 @@ server_signature_done:
 /* this is the same as asp/dsi_getstatus */
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    AFPConfig *config = obj->config;
+    memcpy(rbuf, obj->dsi->status, obj->dsi->statuslen);
+    *rbuflen = obj->dsi->statuslen;
 
-    memcpy(rbuf, config->status, config->statuslen);
-    *rbuflen = config->statuslen;
     return AFP_OK;
 }

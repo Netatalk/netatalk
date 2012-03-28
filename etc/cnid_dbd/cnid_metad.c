@@ -44,7 +44,7 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#define _XPG4_2 1
+// #define _XPG4_2 1
 #include <sys/socket.h>
 #include <stdio.h>
 #include <time.h>
@@ -89,7 +89,11 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/paths.h>
-#include <atalk/volinfo.h>
+#include <atalk/compat.h>
+#include <atalk/errchk.h>
+#include <atalk/bstrlib.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/volume.h>
 
 #include "usockfd.h"
 
@@ -109,7 +113,7 @@ static uint maxvol;
 #define DEFAULTPORT  "4700"
 
 struct server {
-    struct volinfo *volinfo;
+    char *v_path;
     pid_t pid;
     time_t tm;                    /* When respawned last */
     unsigned int count;           /* Times respawned in the last TESTTIME secondes */
@@ -118,21 +122,19 @@ struct server {
 
 static struct server srv[MAXVOLS];
 
-/* Default logging config: log to syslog with level log_note */
-static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
-
 static void daemon_exit(int i)
 {
-    server_unlock(_PATH_CNID_METAD_LOCK);
     exit(i);
 }
 
 /* ------------------ */
-static void sigterm_handler(int sig)
+static void sig_handler(int sig)
 {
     switch( sig ) {
-    case SIGTERM :
-        LOG(log_info, logtype_afpd, "shutting down on signal %d", sig );
+    case SIGTERM:
+    case SIGQUIT:
+        LOG(log_note, logtype_afpd, "shutting down on %s",
+            sig == SIGTERM ? "SIGTERM" : "SIGQUIT");
         break;
     default :
         LOG(log_error, logtype_afpd, "unexpected signal: %d", sig);
@@ -140,19 +142,20 @@ static void sigterm_handler(int sig)
     daemon_exit(0);
 }
 
-static struct server *test_usockfn(struct volinfo *volinfo)
+static struct server *test_usockfn(const char *path)
 {
     int i;
+
     for (i = 0; i < maxvol; i++) {
-        if ((srv[i].volinfo) && (strcmp(srv[i].volinfo->v_path, volinfo->v_path) == 0)) {
+        if (srv[i].v_path && STRCMP(path, ==, srv[i].v_path))
             return &srv[i];
-        }
     }
+
     return NULL;
 }
 
 /* -------------------- */
-static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
+static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
 {
     pid_t pid;
     struct server *up;
@@ -161,13 +164,13 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
     time_t t;
     char buf1[8];
     char buf2[8];
-    char *volpath = volinfo->v_path;
 
-    LOG(log_debug, logtype_cnid, "maybe_start_dbd: Volume: \"%s\"", volpath);
+    LOG(log_debug, logtype_cnid, "maybe_start_dbd(\"%s\"): BEGIN", volpath);
 
-    up = test_usockfn(volinfo);
+    up = test_usockfn(volpath);
     if (up && up->pid) {
         /* we already have a process, send our fd */
+        LOG(log_debug, logtype_cnid, "maybe_start_dbd: cnid_dbd[%d] already serving", up->pid);
         if (send_fd(up->control_fd, rqstfd) < 0) {
             /* FIXME */
             return -1;
@@ -175,16 +178,16 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
         return 0;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: no cnid_dbd for that volume yet");
+    LOG(log_debug, logtype_cnid, "maybe_start_dbd: no cnid_dbd serving yet");
 
     time(&t);
     if (!up) {
         /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
         for (i = 0; i <= maxvol; i++) {
-            if (srv[i].volinfo == NULL && i < MAXVOLS) {
+            if (srv[i].v_path == NULL && i < MAXVOLS) {
                 up = &srv[i];
-                up->volinfo = volinfo;
-                retainvolinfo(volinfo);
+                if ((up->v_path = strdup(volpath)) == NULL)
+                    return -1;
                 up->tm = t;
                 up->count = 0;
                 if (i == maxvol)
@@ -261,10 +264,10 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
             /* there's a pb with the db inform child, it will delete the db */
             LOG(log_warning, logtype_cnid,
                 "Multiple attempts to start CNID db daemon for \"%s\" failed, wiping the slate clean...",
-                up->volinfo->v_path);
-            ret = execlp(dbdpn, dbdpn, "-d", volpath, buf1, buf2, logconfig, NULL);
+                up->v_path);
+            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, "-d", NULL);
         } else {
-            ret = execlp(dbdpn, dbdpn, volpath, buf1, buf2, logconfig, NULL);
+            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, NULL);
         }
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -280,28 +283,47 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
 }
 
 /* ------------------ */
-static int set_dbdir(char *dbdir)
+static int set_dbdir(const char *dbdir, const char *vpath)
 {
-    int len;
+    EC_INIT;
+    int status;
     struct stat st;
+    bstring oldpath, newpath;
+    char *cmd_argv[4];
 
-    len = strlen(dbdir);
+    LOG(log_note, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);
 
-    if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
+    EC_NULL_LOG( oldpath = bformat("%s/%s/", vpath, DBHOME) );
+    EC_NULL_LOG( newpath = bformat("%s/%s/", dbdir, DBHOME) );
+
+    if (lstat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
-        return -1;
+        EC_FAIL;
     }
 
-    if (dbdir[len - 1] != '/') {
-        strcat(dbdir, "/");
-        len++;
+    if (lstat(bdata(oldpath), &st) == 0 && lstat(bdata(newpath), &st) != 0 && errno == ENOENT) {
+        /* There's an .AppleDB in the volume root, we move it */
+        cmd_argv[0] = "mv";
+        cmd_argv[1] = bdata(oldpath);
+        cmd_argv[2] = (char *)dbdir;
+        cmd_argv[3] = NULL;
+        if (run_cmd("mv", cmd_argv) != 0) {
+            LOG(log_error, logtype_cnid, "set_dbdir: moving CNID db from \"%s\" to \"%s\" failed",
+                bdata(oldpath), dbdir);
+            EC_FAIL;
+        }
+
     }
-    strcpy(dbdir + len, DBHOME);
-    if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755 ) < 0) {
-        LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
-        return -1;
+
+    if (lstat(bdata(newpath), &st) < 0 && mkdir(bdata(newpath), 0755 ) < 0) {
+        LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", bdata(newpath));
+        EC_FAIL;
     }
-    return 0;
+
+EC_CLEANUP:
+    bdestroy(oldpath);
+    bdestroy(newpath);
+    EC_EXIT;
 }
 
 /* ------------------ */
@@ -365,10 +387,14 @@ static void set_signal(void)
         daemon_exit(EXITERR_SYS);
     }
 
-    /* Catch SIGTERM */
-    sv.sa_handler = sigterm_handler;
+    /* Catch SIGTERM and SIGQUIT */
+    sv.sa_handler = sig_handler;
     sigfillset(&sv.sa_mask );
     if (sigaction(SIGTERM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
         daemon_exit(EXITERR_SYS);
     }
@@ -408,7 +434,7 @@ static void set_signal(void)
     /* block everywhere but in pselect */
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
-    sigprocmask(SIG_BLOCK, &set, NULL);
+    sigprocmask(SIG_SETMASK, &set, NULL);
 }
 
 static int setlimits(void)
@@ -439,8 +465,8 @@ int main(int argc, char *argv[])
     pid_t pid;
     int   status;
     char  *dbdpn = _PATH_CNID_DBD;
-    char  *host = DEFAULTHOST;
-    char  *port = DEFAULTPORT;
+    char  *host;
+    char  *port;
     int    i;
     int    cc;
     uid_t  uid = 0;
@@ -448,88 +474,51 @@ int main(int argc, char *argv[])
     int    err = 0;
     int    debug = 0;
     int    ret;
-    char   *loglevel = NULL;
-    char   *logfile  = NULL;
     sigset_t set;
-    struct volinfo *volinfo;
+    AFPObj obj = { 0 };
+    struct vol *vol;
 
-    set_processname("cnid_metad");
-
-    while (( cc = getopt( argc, argv, "vVds:p:h:u:g:l:f:")) != -1 ) {
+    while (( cc = getopt( argc, argv, "dF:vV")) != -1 ) {
         switch (cc) {
+        case 'd':
+            debug = 1;
+            break;
+        case 'F':
+            obj.cmdlineconfigfile = strdup(optarg);
+            break;
         case 'v':
         case 'V':
             printf("cnid_metad (Netatalk %s)\n", VERSION);
             return -1;
-        case 'd':
-            debug = 1;
-            break;
-        case 'h':
-            host = strdup(optarg);
-            break;
-        case 'u':
-            uid = user_to_uid (optarg);
-            if (!uid) {
-                LOG(log_error, logtype_cnid, "main: bad user %s", optarg);
-                err++;
-            }
-            break;
-        case 'g':
-            gid =group_to_gid (optarg);
-            if (!gid) {
-                LOG(log_error, logtype_cnid, "main: bad group %s", optarg);
-                err++;
-            }
-            break;
-        case 'p':
-            port = strdup(optarg);
-            break;
-        case 's':
-            dbdpn = strdup(optarg);
-            break;
-        case 'l':
-            loglevel = strdup(optarg);
-            break;
-        case 'f':
-            logfile = strdup(optarg);
-            break;
         default:
-            err++;
-            break;
+            printf("cnid_metad [-dvV] [-F alternate configfile ]\n");
+            return -1;
         }
     }
-
-    /* Check for PID lockfile */
-    if (check_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
-        return -1;
 
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
 
-    /* Create PID lockfile */
-    if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
-        return -1;
-
-    if (loglevel) {
-        strlcpy(logconfig + 8, loglevel, 13);
-        free(loglevel);
-        strcat(logconfig, " ");
-    }
-    if (logfile) {
-        strlcat(logconfig, logfile, MAXPATHLEN);
-        free(logfile);
-    }
-    setuplog(logconfig);
-
-    if (err) {
-        LOG(log_error, logtype_cnid, "main: bad arguments");
+    if (afp_config_parse(&obj) != 0)
         daemon_exit(1);
-    }
+
+    set_processname("cnid_metad");
+    setuplog(obj.options.logconfig, obj.options.logfile);
+
+    if (load_volumes(&obj, NULL) != 0)
+        daemon_exit(1);
 
     (void)setlimits();
 
+    host = iniparser_getstrdup(obj.iniconfig, INISEC_GLOBAL, "cnid listen", "localhost:4700");
+    if (port = strrchr(host, ':'))
+        *port++ = 0;
+    else
+        port = DEFAULTPORT;
     if ((srvfd = tsockfd_create(host, port, 10)) < 0)
         daemon_exit(1);
+
+    LOG(log_note, logtype_afpd, "CNID Server listening on %s:%s", host, port);
 
     /* switch uid/gid */
     if (uid || gid) {
@@ -574,7 +563,7 @@ int main(int argc, char *argv[])
                 srv[i].count = 0;
             }
             if (WIFSIGNALED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd[%i] received signal %i",
+                LOG(log_info, logtype_cnid, "cnid_dbd[%i] got signal %i",
                     pid, WTERMSIG(status));
             }
             sigchild = 0;
@@ -616,21 +605,25 @@ int main(int argc, char *argv[])
         }
         volpath[len] = '\0';
 
-        /* Load .volinfo file */
-        if ((volinfo = allocvolinfo(volpath)) == NULL) {
-            LOG(log_severe, logtype_cnid, "allocvolinfo(\"%s\"): %s",
-                volpath, strerror(errno));
+        LOG(log_debug, logtype_cnid, "main: request for volume: %s", volpath);
+
+        if (load_volumes(&obj, NULL) != 0) {
+            LOG(log_severe, logtype_cnid, "main: error reloading config");
             goto loop_end;
         }
 
-        if (set_dbdir(volinfo->v_dbpath) < 0) {
+        if ((vol = getvolbypath(&obj, volpath)) == NULL) {
+            LOG(log_severe, logtype_cnid, "main: no volume for path \"%s\"", volpath);
             goto loop_end;
         }
 
-        maybe_start_dbd(dbdpn, volinfo);
+        LOG(log_maxdebug, logtype_cnid, "main: dbpath: %s", vol->v_dbpath);
 
-        (void)closevolinfo(volinfo);
+        if (set_dbdir(vol->v_dbpath, volpath) < 0) {
+            goto loop_end;
+        }
 
+        maybe_start_dbd(&obj, dbdpn, vol->v_path);
     loop_end:
         close(rqstfd);
     }

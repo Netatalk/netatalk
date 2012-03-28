@@ -33,6 +33,7 @@
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/acl.h>
+#include <atalk/unix.h>
 
 #ifdef HAVE_SOLARIS_ACLS
 
@@ -47,7 +48,7 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     *retAces = NULL;
     /* Only call acl() for regular files and directories, otherwise just return 0 */
     if (lstat(name, &st) != 0) {
-        LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
         return -1;
     }
 
@@ -234,8 +235,16 @@ int nfsv4_chmod(char *name, mode_t mode)
     if (chmod(name, mode) != 0) /* (3) */
         goto exit;
 
-    if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) /* (4) */
-        goto exit;
+    if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) {/* (4) */
+        if (errno != EACCES)
+            goto exit;
+        become_root();
+        nnaces = get_nfsv4_acl(name, &nacl);
+        unbecome_root();
+        if (nnaces == -1)
+            goto exit;
+    }
+
     if ((nnaces = strip_nontrivial_aces(&nacl, nnaces)) == -1) /* (5) */
         goto exit;
 
@@ -243,8 +252,17 @@ int nfsv4_chmod(char *name, mode_t mode)
         goto exit;
 
     if ((ret = acl(name, ACE_SETACL, noaces + nnaces, cacl)) != 0) {
-        LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
-        goto exit;
+        if (errno != EACCES) {
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            goto exit;
+        }
+        become_root();
+        ret = acl(name, ACE_SETACL, noaces + nnaces, cacl);
+        unbecome_root();
+        if (ret != 0) {
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            goto exit;
+        }
     }
 
 exit:
@@ -252,7 +270,7 @@ exit:
     if (nacl) free(nacl);
     if (cacl) free(cacl);
 
-    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %u",
+    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %d",
         getcwdpath(), name, mode, ret);
 
     return ret;
@@ -284,7 +302,8 @@ int posix_chmod(const char *name, mode_t mode) {
     acl_t acl;
     u_char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
 
-    LOG(log_maxdebug, logtype_afpd, "posix_chmod: %s mode: 0x%08x", name, mode);
+    LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o) BEGIN",
+        fullpathname(name), mode);
 
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.
@@ -374,7 +393,8 @@ cleanup:
         acl_free(acl);
     }
 done:
-    LOG(log_maxdebug, logtype_afpd, "posix_chmod: %d", ret);
+    LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o): END: %d",
+        fullpathname(name), mode, ret);
     return ret;
 }
 

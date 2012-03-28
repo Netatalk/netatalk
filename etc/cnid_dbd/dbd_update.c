@@ -11,7 +11,8 @@
 #include <string.h>
 #include <errno.h>
 #include <atalk/logger.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/cnid_dbd_private.h>
 
 

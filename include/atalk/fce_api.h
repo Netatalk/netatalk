@@ -54,7 +54,7 @@ int fce_register_file_modification( struct ofork *ofork );
 int fce_register_tm_size(const char *vol, size_t used);
 
 int fce_add_udp_socket(const char *target );  // IP or IP:Port
-int fce_set_coalesce( char *coalesce_opt ); // all|delete|create
+int fce_set_coalesce(const char *coalesce_opt ); // all|delete|create
 int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre,tmsz (default is all except tmsz) */
 
 #define FCE_DEFAULT_PORT 12250

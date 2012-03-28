@@ -1,7 +1,8 @@
 dnl $Id: pam-check.m4,v 1.6 2010-01-11 13:06:02 franklahm Exp $
 dnl PAM finding macro
 
-AC_DEFUN([AC_PATH_PAM], [
+AC_DEFUN([AC_NETATALK_PATH_PAM], [
+    netatalk_cv_use_pam=no
 	AC_ARG_WITH(pam, [  --with-pam[[=PATH]]       specify path to PAM installation [[auto]]],
 		[
 			require_pam="yes"
@@ -125,6 +126,10 @@ AC_DEFUN([AC_PATH_PAM], [
 	else
 		AC_MSG_RESULT([yes])
 		ifelse([$1], , :, [$1])
+        use_pam_so=yes
+	    compile_pam=yes
+	    netatalk_cv_use_pam=yes
+	    AC_DEFINE(USE_PAM, 1, [Define to enable PAM support])
 	fi
 
     LIB_REMOVE_USR_LIB(PAM_LIBS)

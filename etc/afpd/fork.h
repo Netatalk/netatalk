@@ -7,9 +7,8 @@
 #define AFPD_FORK_H 1
 
 #include <stdio.h>
-#include <sys/cdefs.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/adouble.h>
 #include "volume.h"
 #include "directory.h"
@@ -27,7 +26,6 @@ struct ofork {
     uint16_t            of_refnum;
     int                 of_flags;
     struct ofork        **prevp, *next;
-//    struct ofork        *of_d_prev, *of_d_next;
 };
 
 #define OPENFORK_DATA   (0)
@@ -39,34 +37,34 @@ struct ofork {
 #define OPENACC_DWR (1<<5)
 
 /* ofork.of_flags bits */
-#define AFPFORK_OPEN    (1<<0)
-#define AFPFORK_RSRC    (1<<1)
-#define AFPFORK_DATA    (1<<2)
+#define AFPFORK_DATA    (1<<0)  /* open datafork */
+#define AFPFORK_RSRC    (1<<1)  /* open rsrcfork */
+#define AFPFORK_META    (1<<2)  /* open metadata */
 #define AFPFORK_DIRTY   (1<<3)
 #define AFPFORK_ACCRD   (1<<4)
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 #define AFPFORK_MODIFIED (1<<6) /* used in FCE for modified files */
+#define AFPFORK_ERROR   (1<<7)  /* used to indicate an error in opening the fork */
 
 #ifdef AFS
 extern struct ofork *writtenfork;
 #endif
 
-#define of_name(a) (a)->of_ad->ad_m_name
+#define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */
 extern struct ofork *of_alloc    (struct vol *, struct dir *,
-                                                      char *, u_int16_t *, const int,
+                                                      char *, uint16_t *, const int,
                                                       struct adouble *,
                                                       struct stat *);
 extern void         of_dealloc   (struct ofork *);
-extern struct ofork *of_find     (const u_int16_t);
+extern struct ofork *of_find     (const uint16_t);
 extern struct ofork *of_findname (struct path *);
 extern int          of_rename    (const struct vol *,
                                           struct ofork *,
                                           struct dir *, const char *,
                                           struct dir *, const char *);
 extern int          of_flush     (const struct vol *);
-extern void         of_pforkdesc (FILE *);
 extern int          of_stat      (struct path *);
 extern int          of_statdir   (struct vol *vol, struct path *);
 extern int          of_closefork (struct ofork *ofork);
@@ -82,7 +80,6 @@ extern int of_fstatat(int dirfd, struct path *path);
 
 /* in fork.c */
 extern int          flushfork    (struct ofork *);
-extern int          getforkmode  (struct adouble *, int , off_t );
 
 /* FP functions */
 int afp_openfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

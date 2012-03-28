@@ -55,32 +55,32 @@ char *ldap_group_attr;
 char *ldap_uid_attr;
 
 struct ldap_pref ldap_prefs[] = {
-    {&ldap_server,     "ldap_server",      0, 0, -1},
-    {&ldap_auth_method,"ldap_auth_method", 1, 1, -1},
-    {&ldap_auth_dn,    "ldap_auth_dn",     0, 0,  0},
-    {&ldap_auth_pw,    "ldap_auth_pw",     0, 0,  0},
-    {&ldap_userbase,   "ldap_userbase",    0, 0, -1},
-    {&ldap_userscope,  "ldap_userscope",   1 ,1, -1},
-    {&ldap_groupbase,  "ldap_groupbase",   0, 0, -1},
-    {&ldap_groupscope, "ldap_groupscope",  1 ,1, -1},
-    {&ldap_uuid_attr,  "ldap_uuid_attr",   0, 0, -1},
-    {&ldap_uuid_string,"ldap_uuid_string", 0, 0,  0},
-    {&ldap_name_attr,  "ldap_name_attr",   0, 0, -1},
-    {&ldap_group_attr, "ldap_group_attr",  0, 0, -1},
-    {&ldap_uid_attr,   "ldap_uid_attr",    0, 0,  0},
+    {&ldap_server,     "ldap server",      0, 0, -1},
+    {&ldap_auth_method,"ldap auth method", 1, 1, -1},
+    {&ldap_auth_dn,    "ldap auth dn",     0, 0,  0},
+    {&ldap_auth_pw,    "ldap auth pw",     0, 0,  0},
+    {&ldap_userbase,   "ldap userbase",    0, 0, -1},
+    {&ldap_userscope,  "ldap userscope",   1 ,1, -1},
+    {&ldap_groupbase,  "ldap groupbase",   0, 0, -1},
+    {&ldap_groupscope, "ldap groupscope",  1 ,1, -1},
+    {&ldap_uuid_attr,  "ldap uuid attr",   0, 0, -1},
+    {&ldap_uuid_string,"ldap uuid string", 0, 0,  0},
+    {&ldap_name_attr,  "ldap name attr",   0, 0, -1},
+    {&ldap_group_attr, "ldap group attr",  0, 0, -1},
+    {&ldap_uid_attr,   "ldap uid attr",    0, 0,  0},
     {NULL,             NULL,               0, 0, -1}
 };
 
 struct pref_array prefs_array[] = {
-    {"ldap_auth_method", "none",   LDAP_AUTH_NONE},
-    {"ldap_auth_method", "simple", LDAP_AUTH_SIMPLE},
-    {"ldap_auth_method", "sasl",   LDAP_AUTH_SASL},
-    {"ldap_userscope",   "base",   LDAP_SCOPE_BASE},
-    {"ldap_userscope",   "one",    LDAP_SCOPE_ONELEVEL},
-    {"ldap_userscope",   "sub",    LDAP_SCOPE_SUBTREE},
-    {"ldap_groupscope",  "base",   LDAP_SCOPE_BASE},
-    {"ldap_groupscope",  "one",    LDAP_SCOPE_ONELEVEL},
-    {"ldap_groupscope",  "sub",    LDAP_SCOPE_SUBTREE},
+    {"ldap auth method", "none",   LDAP_AUTH_NONE},
+    {"ldap auth method", "simple", LDAP_AUTH_SIMPLE},
+    {"ldap auth method", "sasl",   LDAP_AUTH_SASL},
+    {"ldap userscope",   "base",   LDAP_SCOPE_BASE},
+    {"ldap userscope",   "one",    LDAP_SCOPE_ONELEVEL},
+    {"ldap userscope",   "sub",    LDAP_SCOPE_SUBTREE},
+    {"ldap groupscope",  "base",   LDAP_SCOPE_BASE},
+    {"ldap groupscope",  "one",    LDAP_SCOPE_ONELEVEL},
+    {"ldap groupscope",  "sub",    LDAP_SCOPE_SUBTREE},
     {NULL,               NULL,     0}
 };
 

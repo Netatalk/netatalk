@@ -6,7 +6,6 @@ sbin_PROGRAMS = afpd
 noinst_PROGRAMS = hash fce
 
 afpd_SOURCES = \
-	afp_asp.c \
 	afp_avahi.c \
 	afp_config.c \
 	afp_dsi.c \
@@ -45,26 +44,19 @@ afpd_SOURCES = \
 	volume.c
 
 afpd_LDADD =  \
-	$(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @ZEROCONF_LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@
 
-afpd_LDFLAGS = -export-dynamic 
+afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/sys \
-	@SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
+	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
-	-D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
-	-D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
-	-D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
-	-D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	-D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
-	-D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\"
+	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
+	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
 
 if HAVE_ACLS
 afpd_SOURCES += acls.c

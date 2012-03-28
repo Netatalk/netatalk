@@ -20,11 +20,10 @@
 #include <atalk/util.h>
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
+#include <atalk/netatalk_conf.h>
 
 #include "afp_zeroconf.h"
 #include "afp_mdns.h"
-#include "afp_config.h"
-#include "volume.h"
 
 /*
  * We'll store all the DNSServiceRef's here so that we can
@@ -115,9 +114,8 @@ static void unregister_stuff() {
  * This function tries to register the AFP DNS
  * SRV service type.
  */
-static void register_stuff(const AFPConfig *configs) {
+static void register_stuff(const AFPObj *obj) {
     uint                                        port;
-    const AFPConfig                 *config;
     const struct vol                *volume;
     DSI                                         *dsi;
     char                                        name[MAXINSTANCENAMELEN+1];
@@ -159,10 +157,10 @@ static void register_stuff(const AFPConfig *configs) {
 
     // Now we can count the configs so we know how many service
     // records to allocate
-    for (config = configs; config; config = config->next) {
+    for (dsi = obj->dsi; dsi; dsi = dsi->next) {
         svc_ref_count++;                    // AFP_DNS_SERVICE_TYPE
-        if(i) svc_ref_count++;      // ADISK_SERVICE_TYPE
-        if (config->obj.options.mimicmodel) svc_ref_count++;        // DEV_INFO_SERVICE_TYPE
+        if (i) svc_ref_count++;      // ADISK_SERVICE_TYPE
+        if (obj->options.mimicmodel) svc_ref_count++;        // DEV_INFO_SERVICE_TYPE
     }
 
     // Allocate the memory to store our service refs
@@ -171,16 +169,13 @@ static void register_stuff(const AFPConfig *configs) {
     svc_ref_count = 0;
 
     /* AFP server */
-    for (config = configs; config; config = config->next) {
+    for (dsi = obj->dsi; dsi; dsi = dsi->next) {
 
-        dsi = (DSI *)config->obj.handle;
         port = getip_port((struct sockaddr *)&dsi->server);
 
-        if (convert_string(config->obj.options.unixcharset,
+        if (convert_string(obj->options.unixcharset,
                            CH_UTF8,
-                           config->obj.options.server ?
-                           config->obj.options.server :
-                           config->obj.options.hostname,
+                           obj->options.hostname,
                            -1,
                            name,
                            MAXINSTANCENAMELEN) <= 0) {
@@ -233,9 +228,9 @@ static void register_stuff(const AFPConfig *configs) {
             }
         }
 
-        if (config->obj.options.mimicmodel) {
+        if (obj->options.mimicmodel) {
             TXTRecordCreate(&txt_devinfo, 0, NULL);
-            TXTRecordPrintf(&txt_devinfo, "model", config->obj.options.mimicmodel);
+            TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel);
             error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                        0,               // no flags
                                        0,               // all network interfaces
@@ -279,10 +274,10 @@ fail:
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void md_zeroconf_register(const AFPConfig *configs) {
+void md_zeroconf_register(const AFPObj *obj) {
     int error;
 
-    register_stuff(configs);
+    register_stuff(obj);
     return;
 }
 

@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <limits.h>
 
-#include <atalk/volinfo.h>
+#include <atalk/netatalk_conf.h>
 #include "dbif.h"
 
 enum logtype {LOGSTD, LOGDEBUG};
@@ -15,6 +15,7 @@ typedef unsigned int dbd_flags_t;
 #define DBD_FLAGS_EXCL     (1 << 2)
 #define DBD_FLAGS_CLEANUP  (1 << 3) /* Dont create AD stuff, but cleanup orphaned */
 #define DBD_FLAGS_STATS    (1 << 4)
+#define DBD_FLAGS_V2TOEA   (1 << 5) /* Convert adouble:v2 to adouble:ea */
 
 #define ADv2_DIRNAME ".AppleDouble"
 
@@ -29,7 +30,7 @@ extern int db_locked; /* have we got the fcntl lock on lockfd ? */
 extern volatile sig_atomic_t alarmed;
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);
-extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
+extern int cmd_dbd_scanvol(DBD *dbd, struct vol *vol, dbd_flags_t flags);
 
 /*
   Functions for querying the database which couldn't be reused from the existing

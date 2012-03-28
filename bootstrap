@@ -4,22 +4,26 @@ set -x
 
 rm -rf autom4te*.cache
 
+LIBTOOLIZE=libtoolize
+SYSNAME=`uname`
+if [ "x$SYSNAME" = "xDarwin" ] ; then
+  LIBTOOLIZE=glibtoolize
+fi
+
 # build it all.
 aclocal -I macros $ACLOCAL_FLAGS || exit 1
 autoheader || exit 1
-libtoolize --force --copy
+$LIBTOOLIZE --force --copy
 automake --include-deps --add-missing --foreign --copy || exit 1
 autoconf || exit 1
 
-# Original configure call was:
-#./configure --enable-maintainer-mode "$@"
-# However, according to:
-#  http://sources.redhat.com/autobook/autobook/autobook_43.html#SEC43
-# we need to have AM_MAINTAINER_MODE in configure.in in order to use
-# this feature.  It's not there at the moment, so I'm changing the
-# configure call.
-# And sometimes I don't want this to run.
-# [ -z "$NOEXECCONFIGURE" ] && ./configure "$@"
+# libevent
+cd libevent
+aclocal -I m4 && \
+	autoheader && \
+	$LIBTOOLIZE --force --copy && \
+	autoconf && \
+	automake --include-deps --add-missing --force-missing --copy || exit 1
 
 # Let's not fall off the end...
 exit 0

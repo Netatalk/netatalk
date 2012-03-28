@@ -15,34 +15,20 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
-#include <atalk/logger.h>
-
 #ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
 #endif
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
+#include <arpa/inet.h>
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
+#include <atalk/logger.h>
+#include <atalk/compat.h>
 
 #define PASSWDLEN 8
 
@@ -253,7 +239,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char *username; 
     size_t  len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 

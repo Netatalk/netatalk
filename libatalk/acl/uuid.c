@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <arpa/inet.h>
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>
@@ -72,7 +73,7 @@ void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
  * convert ascii string that can include dashes to binary uuid.
  * caller must provide a buffer.
  */
-void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
+void uuid_string2bin( const char *uuidstring, unsigned char *uuid) {
     int nibble = 1;
     int i = 0;
     unsigned char c, val = 0;
@@ -106,7 +107,7 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
  * Use defined or default ascii mask for dash placement
  * Returns pointer to static buffer.
  */
-const char *uuid_bin2string(unsigned char *uuid) {
+const char *uuid_bin2string(const unsigned char *uuid) {
     static char uuidstring[64];
     const char *uuidmask;
     int i = 0;
@@ -143,7 +144,7 @@ const char *uuid_bin2string(unsigned char *uuid) {
  *   uuid: pointer to uuid_t storage that the caller must provide
  * returns 0 on success !=0 on errror
  */
-int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
+int getuuidfromname( const char *name, uuidtype_t type, unsigned char *uuid) {
     int ret = 0;
     uuidtype_t mytype = type;
     char nulluuid[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};

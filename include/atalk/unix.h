@@ -1,5 +1,4 @@
 /*
-   $Id: unix.h,v 1.3 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -23,6 +22,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#define NETATALK_DIOSZ_STACK 65536
+#define NETATALK_DIOSZ_HEAP  (1024*1024)
+
 /* vfs/unix.c */
 extern int netatalk_unlink(const char *name);
 extern int netatalk_unlinkat(int dirfd, const char *name);
@@ -36,7 +38,13 @@ extern int netatalk_rmdir_all_errors(int dirfd, const char *name);
 
 extern int setfilmode(const char *, mode_t, struct stat *, mode_t);
 extern int dir_rx_set(mode_t mode);
-extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
 extern int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath);
 extern int copy_file(int sfd, const char *src, const char *dst, mode_t mode);
+extern int copy_file_fd(int sfd, int dfd);
+extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode);
+
+extern void become_root(void);
+extern void unbecome_root(void);
+extern int gmem(gid_t gid, int ngroups, gid_t *groups);
+
 #endif  /* ATALK_UNIX_H */

@@ -1,7 +1,3 @@
-/*
- * $Id: cnid_cdb_private.h,v 1.7 2009-11-20 17:22:11 didg Exp $
- */
-
 #ifndef LIBATALK_CDB_PRIVATE_H
 #define LIBATALK_CDB_PRIVATE_H 1
 
@@ -9,26 +5,17 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <netatalk/endian.h>
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <sys/param.h>
 #include <sys/stat.h>
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif /* HAVE_SYS_TIME_H */
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
-#include <sys/cdefs.h>
+#include <arpa/inet.h>
+
 #include <db.h>
 
 #include <atalk/logger.h>

@@ -35,10 +35,13 @@
 #include <sys/param.h>
 #include <pwd.h>
 #include <dirent.h>
+#include <arpa/inet.h>
+
 #include <atalk/afp.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/compat.h>
 
 #include "atalk/cnid.h"
 #ifndef MAXPATHLEN
@@ -57,7 +60,7 @@ char* to_charset;
 static charset_t ch_mac;
 char* mac_charset;
 static int usedots = 0;
-static u_int16_t conv_flags = 0;
+static uint16_t conv_flags = 0;
 static int dry_run = 0;
 static int verbose=0;
 char *cnid_type;
@@ -146,7 +149,7 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
 	size_t outlen = 0;
 	unsigned char *p,*q;
 	int require_conversion = 0;
-    u_int16_t    flags = conv_flags;
+    uint16_t    flags = conv_flags;
 	cnid_t id;
 
 	p = (unsigned char *)name;

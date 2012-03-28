@@ -34,7 +34,6 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 #include <atalk/volume.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/queue.h>
@@ -140,7 +139,7 @@ static void usage_mv(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_mv(int argc, char *argv[])
+int ad_mv(int argc, char *argv[], AFPObj *obj)
 {
     size_t baselen, len;
     int rval;
@@ -185,7 +184,7 @@ int ad_mv(int argc, char *argv[])
 
     set_signal();
     cnid_init();
-    if (openvol(argv[argc - 1], &dvolume) != 0) {
+    if (openvol(obj, argv[argc - 1], &dvolume) != 0) {
         SLOG("Error opening CNID database for source \"%s\": ", argv[argc - 1]);
         return 1;
     }
@@ -197,7 +196,7 @@ int ad_mv(int argc, char *argv[])
     if (stat(argv[argc - 1], &sb) || !S_ISDIR(sb.st_mode)) {
         if (argc > 2)
             usage_mv();
-        if (openvol(argv[0], &svolume) != 0) {
+        if (openvol(obj, argv[0], &svolume) != 0) {
             SLOG("Error opening CNID database for destination \"%s\": ", argv[0]);
             return 1;
         }
@@ -235,7 +234,7 @@ int ad_mv(int argc, char *argv[])
             rval = 1;
         } else {
             memmove(endp, p, (size_t)len + 1);
-            openvol(*argv, &svolume);
+            openvol(obj, *argv, &svolume);
 
             if (do_move(*argv, path))
                 rval = 1;
@@ -295,9 +294,9 @@ static int do_move(const char *from, const char *to)
      * 1) source AFP volume != dest AFP volume
      * 2) either source or dest isn't even an AFP volume
      */
-    if (!svolume.volinfo.v_path
-        || !dvolume.volinfo.v_path
-        || strcmp(svolume.volinfo.v_path, dvolume.volinfo.v_path) != 0)
+    if (!svolume.vol->v_path
+        || !dvolume.vol->v_path
+        || strcmp(svolume.vol->v_path, dvolume.vol->v_path) != 0)
         mustcopy = 1;
     
     cnid_t cnid = 0;
@@ -340,7 +339,7 @@ static int do_move(const char *from, const char *to)
         
         switch (sb.st_mode & S_IFMT) {
         case S_IFREG:
-            if (dvolume.volume.vfs->vfs_renamefile(&dvolume.volume, -1, from, to) != 0) {
+            if (dvolume.vol->vfs->vfs_renamefile(dvolume.vol, -1, from, to) != 0) {
                 SLOG("Error moving adouble file for %s", from);
                 return -1;
             }
@@ -366,21 +365,21 @@ static int do_move(const char *from, const char *to)
 
         char *p = strdup(to);
         char *name = basename(p);
-        if (cnid_update(dvolume.volume.v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
+        if (cnid_update(dvolume.vol->v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
             SLOG("Cant update CNID for: %s", to);
             return 1;
         }
         free(p);
 
         struct adouble ad;
-        ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-        if (ad_open_metadata(to, S_ISDIR(sb.st_mode) ? ADFLAGS_DIR : 0, O_RDWR, &ad) != 0) {
+        ad_init(&ad, dvolume.vol);
+        if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF | ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             SLOG("Error opening adouble for: %s", to);
             return 1;
         }
         ad_setid(&ad, sb.st_dev, sb.st_ino, cnid, newdid, dvolume.db_stamp);
         ad_flush(&ad);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
 
         if (vflg)
             printf("%s -> %s\n", from, to);

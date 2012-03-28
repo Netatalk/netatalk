@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-getzones
-.deps
-.libs
-.gitignore
-getzones.o

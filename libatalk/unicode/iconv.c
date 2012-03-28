@@ -39,8 +39,8 @@
 #ifdef HAVE_USABLE_ICONV
 #include <iconv.h>
 #endif
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
 #include "byteorder.h"

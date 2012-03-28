@@ -1,5 +1,4 @@
 /*
-   $Id: ea.h,v 1.11 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -20,8 +19,26 @@
 #include <config.h>
 #endif
 
+#if HAVE_ATTR_XATTR_H
+#include <attr/xattr.h>
+#elif HAVE_SYS_XATTR_H
+#include <sys/xattr.h>
+#endif
+
+#ifdef HAVE_SYS_EA_H
+#include <sys/ea.h>
+#endif
+
+#ifdef HAVE_SYS_EXTATTR_H
+#include <sys/extattr.h>
+#endif
+
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
+
+#ifndef ENOATTR
+#define ENOATTR ENODATA
 #endif
 
 #include <atalk/vfs.h>
@@ -56,6 +73,28 @@ enum {
 #define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
 #endif
 
+/* Names for our Extended Attributes adouble data */
+#define AD_EA_META "org.netatalk.Metadata"
+#define AD_EA_RESO "org.netatalk.ResourceFork"
+#define NOT_NETATALK_EA(a) (strcmp((a), AD_EA_META) != 0) && (strcmp((a), AD_EA_RESO) != 0)
+
+/****************************************************************************************
+ * Wrappers for native EA functions taken from Samba
+ ****************************************************************************************/
+ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
+ssize_t sys_listxattr (const char *path, char *list, size_t size);
+ssize_t sys_llistxattr (const char *path, char *list, size_t size);
+ssize_t sys_flistxattr (int filedes, char *list, size_t size);
+int sys_removexattr (const char *path, const char *name);
+int sys_lremovexattr (const char *path, const char *name);
+int sys_fremovexattr (int filedes, const char *name);
+int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
+int sys_copyxattr (const char *src, const char *dst);
+int sys_getxattrfd(int fd, const char *uname, int oflag, ...);
 
 /****************************************************************************************
  * Stuff for our implementation of storing EAs in files in .AppleDouble dirs

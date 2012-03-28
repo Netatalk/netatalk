@@ -1,4 +1,4 @@
 Makefile
 Makefile.in
-.gitignore
 *.o
+lockrpc.gen.h

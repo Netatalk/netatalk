@@ -159,28 +159,7 @@ extern UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker]
     Global function decarations
    ========================================================================= */
 
-/*  */
-void log_init(void);
-
-/* Setup the level and type of log that will be logged for file loggging */
-void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype);
-
-/* Setup the level and type of log that will be logged to syslog. */
-void syslog_setup(int loglevel, enum logtypes logtype, 
-		  int display_options, int facility);
-
-/* This gets called e.g. from afpd.conf parsing code with a string like: */
-/* "default log_maxdebug /var/log/afpd.log" */
-void setuplog(const char *logstr);
-
-/* This gets called e.g. from afpd.conf parsing code with a string like: */
-/* "default dummyname" */
-void unsetuplog(const char *logstr);
-
-/* finish up and close the logs */
-void log_close(void);
-
-/* This function sets up the ProcessName */
+void setuplog(const char *loglevel, const char *logfile);
 void set_processname(const char *processname);
 
 /* LOG macro func no.1: log the message to file */
@@ -193,9 +172,6 @@ UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes lo
  * We choose the verbose form in favor of the obfuscated ones, its easier
  * to parse for human beings and facilitates expanding the macro for
  * inline checks for debug levels.
- *
- * How to properly enclose multistatement macros:
- * http://en.wikipedia.org/wiki/C_macro#Multiple_statements
  */
 
 #define LOG_MAX log_info

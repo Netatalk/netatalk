@@ -24,15 +24,15 @@
 #ifndef ATALK_DIRECTORY_H
 #define ATALK_DIRECTORY_H 1
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 #include <dirent.h>
 #include <stdint.h>
 
 #include <atalk/cnid.h>
 #include <atalk/bstrlib.h>
 #include <atalk/queue.h>
+#include <atalk/unicode.h>
 
 /* setgid directories */
 #ifndef DIRBITS

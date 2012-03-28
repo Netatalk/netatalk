@@ -32,7 +32,6 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 #include <atalk/volume.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/queue.h>
@@ -133,7 +132,7 @@ static void usage_rm(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_rm(int argc, char *argv[])
+int ad_rm(int argc, char *argv[], AFPObj *obj)
 {
     int ch;
 
@@ -166,7 +165,7 @@ int ad_rm(int argc, char *argv[])
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(argv[i], &volume);
+        openvol(obj, argv[i], &volume);
 
         if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
             if (alarmed) {
@@ -201,8 +200,8 @@ static int rm(const char *path,
     switch (statp->st_mode & S_IFMT) {
 
     case S_IFLNK:
-        if (volume.volinfo.v_path) {
-            if ((volume.volinfo.v_adouble == AD_VERSION2)
+        if (volume.vol->v_path) {
+            if ((volume.vol->v_adouble == AD_VERSION2)
                 && (strstr(path, ".AppleDouble") != NULL)) {
                 /* symlink inside adouble dir */
                 if (unlink(path) != 0)
@@ -216,7 +215,7 @@ static int rm(const char *path,
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
-            if (cnid_delete(volume.volume.v_cdb, cnid) != 0) {
+            if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
             }
@@ -235,8 +234,8 @@ static int rm(const char *path,
             return FTW_SKIP_SUBTREE;
         }
 
-        if (volume.volinfo.v_path) {
-            if ((volume.volinfo.v_adouble == AD_VERSION2)
+        if (volume.vol->v_path) {
+            if ((volume.vol->v_adouble == AD_VERSION2)
                 && (strstr(path, ".AppleDouble") != NULL)) {
                 /* should be adouble dir itself */
                 if (rmdir(path) != 0) {
@@ -252,7 +251,7 @@ static int rm(const char *path,
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
-            if (cnid_delete(volume.volume.v_cdb, did) != 0) {
+            if (cnid_delete(volume.vol->v_cdb, did) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(did), path);
                 return -1;
             }
@@ -283,8 +282,8 @@ static int rm(const char *path,
         break;
 
     default:
-        if (volume.volinfo.v_path) {
-            if ((volume.volinfo.v_adouble == AD_VERSION2)
+        if (volume.vol->v_path) {
+            if ((volume.vol->v_adouble == AD_VERSION2)
                 && (strstr(path, ".AppleDouble") != NULL)) {
                 /* file in adouble dir */
                 if (unlink(path) != 0)
@@ -298,13 +297,13 @@ static int rm(const char *path,
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
-            if (cnid_delete(volume.volume.v_cdb, cnid) != 0) {
+            if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
             }
 
             /* Ignore errors, because with -R adouble stuff is always alread gone */
-            volume.volume.vfs->vfs_deletefile(&volume.volume, -1, path);
+            volume.vol->vfs->vfs_deletefile(volume.vol, -1, path);
         }
 
         if (unlink(path) != 0) {

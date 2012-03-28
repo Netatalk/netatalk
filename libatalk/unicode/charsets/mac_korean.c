@@ -43,13 +43,13 @@ struct charset_functions charset_mac_korean = {
   NULL, NULL
 };
 
-static size_t mac_korean_char_push(u_int8_t* out, const ucs2_t* in, size_t* size)
+static size_t mac_korean_char_push(uint8_t* out, const ucs2_t* in, size_t* size)
 {
   ucs2_t wc = in[0];
 
   if ((wc & ~7) == 0xf860) {
     wc = cjk_compose_seq(in, size, mac_korean_compose,
-			 sizeof(mac_korean_compose) / sizeof(u_int32_t));
+			 sizeof(mac_korean_compose) / sizeof(uint32_t));
     if (!wc) return (size_t)-1;
   } else if ((wc & 0xf000) == 0xe000) {
     *size = 1;
@@ -62,7 +62,7 @@ static size_t mac_korean_char_push(u_int8_t* out, const ucs2_t* in, size_t* size
 	   (comb >= 0x0300 && comb <= 0x036f) ||
 	   (comb >= 0x20d0 && comb <= 0x20ea)) {
       ucs2_t comp = cjk_compose(wc, comb, mac_korean_compose,
-				sizeof(mac_korean_compose) / sizeof(u_int32_t));
+				sizeof(mac_korean_compose) / sizeof(uint32_t));
       if (!comp) break;
       wc = comp;
       if (++n == *size) break;
@@ -73,7 +73,7 @@ static size_t mac_korean_char_push(u_int8_t* out, const ucs2_t* in, size_t* size
     *size = 1;
   }
   if (wc <= 0x7f) {
-    out[0] = (u_int8_t)wc;
+    out[0] = (uint8_t)wc;
     return 1;
   }
   return cjk_char_push(cjk_lookup(wc, mac_korean_uni2_index,
@@ -87,9 +87,9 @@ static size_t mac_korean_push(void *cd, char **inbuf, size_t *inbytesleft,
 			  cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
-static size_t mac_korean_char_pull(ucs2_t* out, const u_int8_t* in, size_t* size)
+static size_t mac_korean_char_pull(ucs2_t* out, const uint8_t* in, size_t* size)
 {
-  u_int16_t c = in[0];
+  uint16_t c = in[0];
 
   if (c <= 0x7f) {
     *size = 1;
@@ -97,7 +97,7 @@ static size_t mac_korean_char_pull(ucs2_t* out, const u_int8_t* in, size_t* size
     return 1;
   } else if (c >= 0xa1 && c <= 0xfe) {
     if (*size >= 2) {
-      u_int8_t c2 = in[1];
+      uint8_t c2 = in[1];
       if ((c2 >= 0x41 && c2 <= 0x7d) || (c2 >= 0x81 && c2 <= 0xfe)) {
 	*size = 2;
 	c = (c << 8) + c2;

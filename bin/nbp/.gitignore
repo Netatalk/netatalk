@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-nbplkup
-nbprgstr
-nbpunrgstr
-.deps
-.libs
-.gitignore
-nbplkup.o nbprgstr.o nbpunrgstr.o

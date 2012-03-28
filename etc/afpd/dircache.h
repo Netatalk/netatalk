@@ -21,7 +21,6 @@
 #include <atalk/directory.h>
 
 /* Maximum size of the dircache hashtable */
-#define DEFAULT_MAX_DIRCACHE_SIZE 8192
 #define MAX_POSSIBLE_DIRCACHE_SIZE 131072
 #define DIRCACHE_FREE_QUANTUM 256
 

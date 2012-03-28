@@ -1,6 +1,4 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.8 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -131,7 +129,7 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
 
     data = tdb_fetch(db->tdb_didname, key);
     if (!data.dptr) {
-        u_int32_t version = htonl(DBVERSION);
+        uint32_t version = htonl(DBVERSION);
 
         data.dptr = (char *)&version;
         data.dsize = sizeof(version);

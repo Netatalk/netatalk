@@ -11,28 +11,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <ctype.h>
 #include <atalk/logger.h>
 #include <sys/param.h>
@@ -45,18 +26,15 @@ char *strchr (), *strrchr ();
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <netatalk/endian.h>
-#include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
+#include <atalk/volume.h>
 
 #include "afp_config.h"
 #include "auth.h"
 #include "uam_auth.h"
-
-#define utf8_encoding() (afp_version >= 30)
 
 #ifdef TRU64
 #include <netdb.h>
@@ -254,7 +232,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     }
 #ifndef NO_REAL_USER_NAME
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
+    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
 				CH_UCS2, name, -1, username, sizeof(username))))
 	return NULL;
 
@@ -317,7 +295,7 @@ int uam_checkuser(const struct passwd *pwd)
 
 int uam_random_string (AFPObj *obj, char *buf, int len)
 {
-    u_int32_t result;
+    uint32_t result;
     int ret;
     int fd;
 
@@ -332,7 +310,7 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 
         if (gettimeofday(&tv, &tz) < 0)
             return -1;
-        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
+        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->dsi);
         for (i = 0; i < len; i += sizeof(result)) {
             result = random();
             memcpy(buf + i, &result, sizeof(result));
@@ -359,7 +337,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
     switch (what) {
     case UAM_OPTION_USERNAME:
-        *buf = obj->username;
+        *buf = &(obj->username[0]);
         if (len)
             *len = sizeof(obj->username) - 1;
         break;
@@ -385,11 +363,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
             *len = sizeof(obj->options.passwdminlen);
             break;
 
-        case UAM_PASSWD_MAXFAIL:
-            *((int *) option) = obj->options.loginmaxfail;
-            *len = sizeof(obj->options.loginmaxfail);
-            break;
-
         case UAM_PASSWD_EXPIRETIME: /* not implemented */
         default:
             return -1;
@@ -398,7 +371,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
         break;
 
     case UAM_OPTION_SIGNATURE:
-        *buf = (void *) (((AFPConfig *)obj->config)->signature);
+        *buf = (void *)obj->dsi->signature;
         if (len)
             *len = 16;
         break;
@@ -416,13 +389,9 @@ int uam_afpserver_option(void *private, const int what, void *option,
             *len = strlen(obj->options.hostname);
         break;
 
-    case UAM_OPTION_PROTOCOL:
-        *((int *) option) = obj->proto;
-        break;
-        
     case UAM_OPTION_CLIENTNAME:
     {
-        struct DSI *dsi = obj->handle;
+        struct DSI *dsi = obj->dsi;
         const struct sockaddr *sa;
         static char hbuf[NI_MAXHOST];
         
@@ -487,31 +456,18 @@ int uam_afp_read(void *handle, char *buf, size_t *buflen,
     if (!obj)
         return AFPERR_PARAM;
 
-    switch (obj->proto) {
-#ifndef NO_DDP
-    case AFPPROTO_ASP:
-        if ((len = asp_wrtcont(obj->handle, buf, buflen )) < 0)
-            goto uam_afp_read_err;
-        return action(handle, buf, *buflen);
-        break;
-#endif
-    case AFPPROTO_DSI:
-        len = dsi_writeinit(obj->handle, buf, *buflen);
+        len = dsi_writeinit(obj->dsi, buf, *buflen);
         if (!len || ((len = action(handle, buf, len)) < 0)) {
-            dsi_writeflush(obj->handle);
+            dsi_writeflush(obj->dsi);
             goto uam_afp_read_err;
         }
 
-        while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
+        while ((len = (dsi_write(obj->dsi, buf, *buflen)))) {
             if ((len = action(handle, buf, len)) < 0) {
-                dsi_writeflush(obj->handle);
+                dsi_writeflush(obj->dsi);
                 goto uam_afp_read_err;
             }
         }
-        break;
-    default:
-        return -1;
-    }
     return 0;
 
 uam_afp_read_err:

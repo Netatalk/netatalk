@@ -109,10 +109,9 @@ int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rb
 int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
-/* Parse afp_ldap.conf */
+/* Parse afp.conf */
 extern int acl_ldap_readconfig(char *name);
 
 /* Misc funcs */
-extern int acltoownermode(const struct vol *vol, char *path, struct stat *st, struct maccess *ma);
-extern int check_vol_acl_support(const struct vol *vol);
+extern int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma);
 #endif

@@ -18,18 +18,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-/* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#endif /* ! WEXITSTATUS */
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif /* ! WIFEXITED */
-
 #include <sys/time.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -124,9 +114,11 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
     dsi_opensession(dsi);
     if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
         exit(EXITERR_SYS);
+
+    child->ipc_fds[0] = -1;
     child->ipc_fds[1] = ipc_fds[1];
+    close(ipc_fds[0]);
     return child;
-    break;
 
   default: /* just close */
     LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);

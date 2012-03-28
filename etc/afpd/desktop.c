@@ -1,6 +1,4 @@
 /*
- * $Id: desktop.c,v 1.50.2.1 2010-02-01 10:56:08 franklahm Exp $
- *
  * See COPYRIGHT.
  *
  * bug:
@@ -23,26 +21,131 @@
 #include <sys/uio.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <netatalk/at.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/dsi.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/unix.h>
+
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
 #include "desktop.h"
 #include "mangle.h"
 
+typedef struct _special_folder {
+    const char *name;
+    int precreate;
+    mode_t mode;
+    int hide;
+} _special_folder;
+
+static const _special_folder special_folders[] = {
+    {".AppleDesktop",            1,  0777,  0},
+    {NULL, 0, 0, 0}};
+
+/*
+ * precreate a folder
+ * this is only intended for folders in the volume root
+ * It will *not* work if the folder name contains extended characters
+ */
+static int create_special_folder (const struct vol *vol, const struct _special_folder *folder)
+{
+    char        *p,*q,*r;
+    struct adouble  ad;
+    uint16_t   attr;
+    struct stat st;
+    int     ret;
+
+
+    p = (char *) malloc ( strlen(vol->v_path)+strlen(folder->name)+2);
+    if ( p == NULL) {
+        LOG(log_error, logtype_afpd,"malloc failed");
+        exit (EXITERR_SYS);
+    }
+
+    q=strdup(folder->name);
+    if ( q == NULL) {
+        LOG(log_error, logtype_afpd,"malloc failed");
+        exit (EXITERR_SYS);
+    }
+
+    strcpy(p, vol->v_path);
+    strcat(p, "/");
+
+    r=q;
+    while (*r) {
+        if ((vol->v_casefold & AFPVOL_MTOUUPPER))
+            *r=toupper(*r);
+        else if ((vol->v_casefold & AFPVOL_MTOULOWER))
+            *r=tolower(*r);
+        r++;
+    }
+    strcat(p, q);
+
+    if ( (ret = stat( p, &st )) < 0 ) {
+        if (folder->precreate) {
+            if (ad_mkdir(p, folder->mode)) {
+                LOG(log_debug, logtype_afpd,"Creating '%s' failed in %s: %s", p, vol->v_path, strerror(errno));
+                free(p);
+                free(q);
+                return -1;
+            }
+            ret = 0;
+        }
+    }
+
+    if ( !ret && folder->hide) {
+        /* Hide it */
+        ad_init(&ad, vol);
+        if (ad_open(&ad, p, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
+            free(p);
+            free(q);
+            return (-1);
+        }
+
+        ad_setname(&ad, folder->name);
+
+        ad_getattr(&ad, &attr);
+        attr |= htons( ntohs( attr ) | ATTRBIT_INVISIBLE );
+        ad_setattr(&ad, attr);
+
+        /* do the same with the finder info */
+        if (ad_entry(&ad, ADEID_FINDERI)) {
+            memcpy(&attr, ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, sizeof(attr));
+            attr   |= htons(FINDERINFO_INVISIBLE);
+            memcpy(ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF,&attr, sizeof(attr));
+        }
+
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
+    }
+    free(p);
+    free(q);
+    return 0;
+}
+
+static void create_appledesktop_folder(const struct vol * vol)
+{
+    const _special_folder *p = &special_folders[0];
+
+    become_root();
+
+    for (; p->name != NULL; p++) {
+        create_special_folder (vol, p);
+    }
+
+    unbecome_root();
+}
 
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
-    u_int16_t	vid;
+    uint16_t	vid;
 
     ibuf += 2;
 
@@ -51,6 +154,8 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
+
+    create_appledesktop_folder(vol);
 
     memcpy( rbuf, &vid, sizeof(vid));
     *rbuflen = sizeof(vid);
@@ -118,14 +223,11 @@ static int iconopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
-#ifndef NO_DDP
-    struct iovec	iov[ 2 ];
-#endif
     u_char		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
     int			itype, cc = AFP_OK, iovcnt = 0;
     size_t 		buflen;
-    u_int32_t           ftype, itag;
-    u_int16_t		bsize, rsize, vid;
+    uint32_t           ftype, itag;
+    uint16_t		bsize, rsize, vid;
 
     buflen = *rbuflen;
     *rbuflen = 0;
@@ -211,80 +313,34 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      */
 addicon_err:
     if ( cc < 0 ) {
-        if (obj->proto == AFPPROTO_DSI) {
-            dsi_writeinit(obj->handle, rbuf, buflen);
-            dsi_writeflush(obj->handle);
-        }
+        dsi_writeinit(obj->dsi, rbuf, buflen);
+        dsi_writeflush(obj->dsi);
         return cc;
     }
 
-    switch (obj->proto) {
-#ifndef NO_DDP
-    case AFPPROTO_ASP:
-        buflen = bsize;
-        if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
-            return( AFPERR_PARAM );
+    DSI *dsi = obj->dsi;
 
-#ifdef DEBUG1
-        if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %d\n", buflen);
-            bprint(rbuf, buflen);
+    iovcnt = dsi_writeinit(dsi, rbuf, buflen);
+
+    /* add headers at end of file */
+    if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+        dsi_writeflush(dsi);
+        return AFPERR_PARAM;
+    }
+
+    if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+        dsi_writeflush(dsi);
+        return AFPERR_PARAM;
+    }
+
+    while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
+        if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+            LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+            dsi_writeflush(dsi);
+            return AFPERR_PARAM;
         }
-#endif
-
-        /*
-         * We're at the end of the file, add the headers, etc.  */
-        if ( cc == 0 ) {
-            iov[ 0 ].iov_base = (caddr_t)imh;
-            iov[ 0 ].iov_len = sizeof( imh );
-            iov[ 1 ].iov_base = rbuf;
-            iov[ 1 ].iov_len = bsize;
-            iovcnt = 2;
-        }
-
-        /*
-         * We found an icon to replace.
-         */
-        if ( cc > 0 ) {
-            iov[ 0 ].iov_base = rbuf;
-            iov[ 0 ].iov_len = bsize;
-            iovcnt = 1;
-        }
-
-        if ( writev( si.sdt_fd, iov, iovcnt ) < 0 ) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): writev: %s", icon_dtfile(vol, fcreator), strerror(errno) );
-            return( AFPERR_PARAM );
-        }
-        break;
-#endif /* no afp/asp */      
-    case AFPPROTO_DSI:
-        {
-            DSI *dsi = obj->handle;
-
-            iovcnt = dsi_writeinit(dsi, rbuf, buflen);
-
-            /* add headers at end of file */
-            if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                dsi_writeflush(dsi);
-                return AFPERR_PARAM;
-            }
-
-            if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                dsi_writeflush(dsi);
-                return AFPERR_PARAM;
-            }
-
-            while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-                if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                    LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                    dsi_writeflush(dsi);
-                    return AFPERR_PARAM;
-                }
-            }
-        }
-        break;
     }
 
     close( si.sdt_fd );
@@ -337,8 +393,8 @@ static const u_char	uicon[] = {
 int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
-    u_char	fcreator[ 4 ], ih[ 12 ];
-    u_int16_t	vid, iindex, bsize;
+    unsigned char	fcreator[ 4 ], ih[ 12 ];
+    uint16_t	vid, iindex, bsize;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -411,7 +467,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     off_t       offset;
     ssize_t	rc, buflen;
     u_char	fcreator[ 4 ], ftype[ 4 ], itype, ih[ 12 ];
-    u_int16_t	vid, bsize, rsize;
+    uint16_t	vid, bsize, rsize;
 
     buflen = *rbuflen;
     *rbuflen = 0;
@@ -486,8 +542,8 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 #define min(a,b)	((a)<(b)?(a):(b))
     rc = min( bsize, rsize );
 
-    if ((obj->proto == AFPPROTO_DSI) && (buflen < rc)) {
-        DSI *dsi = obj->handle;
+    if (buflen < rc) {
+        DSI *dsi = obj->dsi;
         struct stat st;
         off_t size;
 
@@ -504,20 +560,18 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
          * a problem. much confusion results otherwise. */
         while (*rbuflen > 0) {
 #ifdef WITH_SENDFILE
-            if (!obj->options.flags & OPTION_DEBUG) {
-                if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
-                    switch (errno) {
-                    case ENOSYS:
-                    case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                        break;
-                    default:
-                        goto geticon_exit;
-                    }
+            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
+                switch (errno) {
+                case ENOSYS:
+                case EINVAL:  /* there's no guarantee that all fs support sendfile */
+                    break;
+                default:
+                    goto geticon_exit;
                 }
-                else {
-                    dsi_readdone(dsi);
-                    return AFP_OK;
-                }
+            }
+            else {
+                dsi_readdone(dsi);
+                return AFP_OK;
             }
 #endif
             buflen = read(si.sdt_fd, rbuf, *rbuflen);
@@ -597,7 +651,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     char	*m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t	 flags;
+    uint16_t	 flags;
         
     if ( *mpath == '\0' ) {
         strcpy(upath, ".");
@@ -636,7 +690,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
     static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char        *m, *u;
-    u_int16_t    flags;
+    uint16_t    flags;
     size_t       outlen;
 
     m = mpath;
@@ -671,7 +725,7 @@ utompath_error:
 }
 
 /* ------------------------- */
-static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
+static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 {
     struct ofork        *of;
     char                *name, *upath;
@@ -683,18 +737,20 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     clen = min( clen, 199 );
 
     upath = path->u_name;
-    if (check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
     
     isadir = path_isadir(path);
     if (isadir || !(of = of_findname(path))) {
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(&ad, vol);
         adp = &ad;
     } else
         adp = of->of_ad;
 
-    if (ad_open_metadata( upath , ( (isadir) ? ADFLAGS_DIR : 0), O_CREAT, adp) < 0 ) {
+    if (ad_open(adp, upath,
+                ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0) | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                0666) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
@@ -711,18 +767,18 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
         ad_flush( adp );
     }
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
     return( AFP_OK );
 }
 
 /* ----------------------------- */
-int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
     struct path         *path;
-    u_int32_t           did;
-    u_int16_t		vid;
+    uint32_t           did;
+    uint16_t		vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -747,7 +803,7 @@ int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         ibuf++;
     }
 
-    return ad_addcomment(vol, path, ibuf);
+    return ad_addcomment(obj, vol, path, ibuf);
 }
 
 /* -------------------- */
@@ -762,7 +818,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     upath = path->u_name;
     isadir = path_isadir(path);
     if (isadir || !(of = of_findname(path))) {
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(&ad, vol);
         adp = &ad;
     } else
         adp = of->of_ad;
@@ -772,7 +828,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT)) {
-        ad_close_metadata( adp );
+        ad_close(adp, ADFLAGS_HF);
         return AFPERR_NOITEM;
     }
     /*
@@ -780,7 +836,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
      */
     if ( ad_getentrylen( adp, ADEID_COMMENT ) <= 0 ||
             ad_getentrylen( adp, ADEID_COMMENT ) > 199 ) {
-        ad_close_metadata( adp );
+        ad_close(adp, ADFLAGS_HF);
         return( AFPERR_NOITEM );
     }
 
@@ -788,7 +844,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     *rbuf++ = clen;
     memcpy( rbuf, ad_entry( adp, ADEID_COMMENT ), clen);
     *rbuflen = clen + 1;
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
 
     return( AFP_OK );
 }
@@ -799,8 +855,8 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
     
     *rbuflen = 0;
     ibuf += 2;
@@ -825,7 +881,7 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 }
 
 /* ----------------------- */
-static int ad_rmvcomment(struct vol *vol, struct path *path)
+static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 {
     struct adouble	ad, *adp;
     struct ofork        *of;
@@ -833,18 +889,18 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     char		*upath;
 
     upath = path->u_name;
-    if (check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
     isadir = path_isadir(path);
     if (isadir || !(of = of_findname(path))) {
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(&ad, vol);
         adp = &ad;
     } else
         adp = of->of_ad;
 
-    if ( ad_open_metadata( upath, (isadir) ? ADFLAGS_DIR : 0, 0, adp) < 0 ) {
+    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ((isadir) ? ADFLAGS_DIR : 0)) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOITEM );
@@ -859,7 +915,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
         ad_setentrylen( adp, ADEID_COMMENT, 0 );
         ad_flush( adp );
     }
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
     return( AFP_OK );
 }
 
@@ -869,8 +925,8 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -891,5 +947,5 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 	return get_afp_errno(AFPERR_NOOBJ);
     }
     
-    return ad_rmvcomment(vol, s_path);
+    return ad_rmvcomment(obj, vol, s_path);
 }

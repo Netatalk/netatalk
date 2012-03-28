@@ -8,22 +8,20 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <string.h>
 #include <inttypes.h>
 #include <sys/param.h>
-#include <sys/cdefs.h>
 #include <db.h>
 
 #include <atalk/unicode.h>
-#include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/volume.h>
 #include "pack.h"
 
-/* in main.c for `cnid_dbd` or cmd_dbd.c for `dbd` */
-extern struct volinfo volinfo;
+static const struct vol *volume;
 
 /* --------------- */
 /*
@@ -82,9 +80,9 @@ int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
     uint16_t flags = CONV_TOLOWER;
     memset(skey, 0, sizeof(DBT));
 
-    if (convert_charset(volinfo.v_volcharset,
-                        volinfo.v_volcharset,
-                        volinfo.v_maccharset,
+    if (convert_charset(volume->v_volcharset,
+                        volume->v_volcharset,
+                        volume->v_maccharset,
                         (char *)pdata->data + CNID_NAME_OFS,
                         strlen((char *)pdata->data + CNID_NAME_OFS),
                         buffer,
@@ -96,6 +94,11 @@ int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
     skey->data = buffer;
     skey->size = strlen(skey->data);
     return (0);
+}
+
+void pack_setvol(const struct vol *vol)
+{
+    volume = vol;
 }
 
 /* The equivalent to make_cnid_data in the cnid library. Non re-entrant. We

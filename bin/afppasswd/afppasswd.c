@@ -26,19 +26,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <pwd.h>
-
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <des.h>
 
@@ -69,7 +64,7 @@ static char buf[MAXPATHLEN + 1];
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 {
-  u_int8_t key[HEXPASSWDLEN];
+  uint8_t key[HEXPASSWDLEN];
   Key_schedule schedule;
   unsigned int i, j;
 

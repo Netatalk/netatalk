@@ -62,22 +62,6 @@ static void of_unhash(struct ofork *of)
     }
 }
 
-#ifdef DEBUG1
-void of_pforkdesc( FILE *f)
-{
-    int ofrefnum;
-
-    if (!oforks)
-        return;
-
-    for ( ofrefnum = 0; ofrefnum < nforks; ofrefnum++ ) {
-        if ( oforks[ ofrefnum ] != NULL ) {
-            fprintf( f, "%hu <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]));
-        }
-    }
-}
-#endif
-
 int of_flush(const struct vol *vol)
 {
     int refnum;
@@ -114,7 +98,9 @@ int of_rename(const struct vol *vol,
             && s_of->key.dev == of->key.dev
             && s_of->key.inode == of->key.inode ) {
             if (!done) {
-                strlcpy( of_name(of), newpath, of->of_ad->ad_m_namelen);
+                free(of_name(of));
+                if ((of_name(of) = strdup(newpath)) == NULL)
+                    return AFPERR_MISC;
                 done = 1;
             }
             if (newdir != olddir)
@@ -131,13 +117,13 @@ struct ofork *
 of_alloc(struct vol *vol,
          struct dir    *dir,
          char      *path,
-         u_int16_t     *ofrefnum,
+         uint16_t     *ofrefnum,
          const int      eid,
          struct adouble *ad,
          struct stat    *st)
 {
     struct ofork        *of;
-    u_int16_t       refnum, of_refnum;
+    uint16_t       refnum, of_refnum;
 
     int         i;
 
@@ -202,24 +188,18 @@ of_alloc(struct vol *vol,
 
         /* initialize to zero. This is important to ensure that
            ad_open really does reinitialize the structure. */
-        ad_init(ad, vol->v_adouble, vol->v_ad_options);
-
-        ad->ad_m_namelen = UTF8FILELEN_EARLY +1;
-        /* here's the deal: we allocate enough for the standard mac file length.
-         * in the future, we'll reallocate in fairly large jumps in case
-         * of long unicode names */
-        if (( ad->ad_m_name =(char *)malloc( ad->ad_m_namelen )) == NULL ) {
+        ad_init(ad, vol);
+        if ((ad->ad_name = strdup(path)) == NULL) {
             LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
             free(ad);
             free(of);
             oforks[ of_refnum ] = NULL;
             return NULL;
         }
-        strlcpy( ad->ad_m_name, path, ad->ad_m_namelen);
     } else {
         /* Increase the refcount on this struct adouble. This is
            decremented again in oforc_dealloc. */
-        ad->ad_refcount++;
+        ad_ref(ad);
     }
 
     of->of_ad = ad;
@@ -239,7 +219,7 @@ of_alloc(struct vol *vol,
     return( of );
 }
 
-struct ofork *of_find(const u_int16_t ofrefnum )
+struct ofork *of_find(const uint16_t ofrefnum )
 {
     if (!oforks || !nforks)
         return NULL;
@@ -396,10 +376,10 @@ void of_dealloc( struct ofork *of)
     of->of_ad->ad_refcount--;
 
     if ( of->of_ad->ad_refcount <= 0) {
-        free( of->of_ad->ad_m_name );
+        free( of->of_ad->ad_name );
         free( of->of_ad);
     } else {/* someone's still using it. just free this user's locks */
-        ad_unlock(of->of_ad, of->of_refnum);
+        ad_unlock(of->of_ad, of->of_refnum, of->of_flags & AFPFORK_ERROR ? 0 : 1);
     }
 
     free( of );
@@ -409,27 +389,21 @@ void of_dealloc( struct ofork *of)
 int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
-    int         adflags, doflush = 0;
+    int         adflags = 0;
     int                 ret;
 
     adflags = 0;
-    if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
+    if (ofork->of_flags & AFPFORK_DATA)
         adflags |= ADFLAGS_DF;
-    }
-    if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
+    if (ofork->of_flags & AFPFORK_META)
         adflags |= ADFLAGS_HF;
-        /*
-         * Only set the rfork's length if we're closing the rfork.
-         */
-        if ((ofork->of_flags & AFPFORK_RSRC)) {
-            ad_refresh( ofork->of_ad );
-            if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
-                ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
-                doflush++;
-            }
-            if ( doflush ) {
-                ad_flush( ofork->of_ad );
-            }
+    if (ofork->of_flags & AFPFORK_RSRC) {
+        adflags |= ADFLAGS_RF;
+        /* Only set the rfork's length if we're closing the rfork. */
+        ad_refresh(NULL, ofork->of_ad );
+        if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
+            ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
+            ad_flush( ofork->of_ad );
         }
     }
 
@@ -439,7 +413,7 @@ int of_closefork(struct ofork *ofork)
     }
 
     ret = 0;
-    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+    if ( ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0 ) {
         ret = -1;
     }
 
@@ -458,7 +432,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
     if ((of = of_findname(path))) {
         adp = of->of_ad;
     } else {
-        ad_init(ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(ad, vol);
         adp = ad;
     }
     return adp;

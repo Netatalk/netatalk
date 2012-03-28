@@ -6,13 +6,7 @@
 #ifndef AFPD_AUTH_H
 #define AFPD_AUTH_H 1
 
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif /* HAVE_LIMITS_H */
-
-#ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif /* HAVE_SYS_CDEFS_H */
 
 #include <atalk/globals.h>
 
@@ -22,11 +16,6 @@ struct afp_versions {
 };
 
 static const struct afp_versions  afp_versions[] = {
-#ifndef NO_DDP
-    { "AFPVersion 1.1", 11 },
-    { "AFPVersion 2.0", 20 },
-    { "AFPVersion 2.1", 21 },
-#endif /* ! NO_DDP */
     { "AFP2.2", 22 },
     { "AFPX03", 30 },
     { "AFP3.1", 31 },

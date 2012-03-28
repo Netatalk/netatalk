@@ -11,8 +11,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
+
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 
 void dsi_close(DSI *dsi)
 {

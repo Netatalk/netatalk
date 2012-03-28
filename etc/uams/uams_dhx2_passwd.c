@@ -19,22 +19,15 @@
 #include <string.h>
 #include <errno.h>
 #include <pwd.h>
-
-#ifdef HAVE_UNISTD_H
+#include <arpa/inet.h>
 #include <unistd.h>
-#endif
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif
 
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
 
 #ifdef SHADOWPW
 #include <shadow.h>
@@ -60,7 +53,7 @@ static gcry_mpi_t p, Ra;
 static gcry_mpi_t serverNonce;
 static char *K_MD5hash = NULL;
 static int K_hash_len;
-static u_int16_t ID;
+static uint16_t ID;
 
 /* The initialization vectors for CAST128 are fixed by Apple. */
 static unsigned char dhx_c2siv[] = { 'L', 'W', 'a', 'l', 'l', 'a', 'c', 'e' };
@@ -216,7 +209,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 
     /* Session ID first */
     ID = dhxhash(obj);
-    *(u_int16_t *)rbuf = htons(ID);
+    *(uint16_t *)rbuf = htons(ID);
     rbuf += 2;
     *rbuflen += 2;
 
@@ -230,7 +223,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     *rbuflen += 4;
 
     /* len = length of p = PRIMEBITS/8 */
-    *(u_int16_t *)rbuf = htons((u_int16_t) PRIMEBITS/8);
+    *(uint16_t *)rbuf = htons((uint16_t) PRIMEBITS/8);
     rbuf += 2;
     *rbuflen += 2;
 
@@ -314,7 +307,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char *username;
     size_t len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 
@@ -442,7 +435,7 @@ static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
     /* ---- Start building reply packet ---- */
 
     /* Session ID + 1 first */
-    *(u_int16_t *)rbuf = htons(ID+1);
+    *(uint16_t *)rbuf = htons(ID+1);
     rbuf += 2;
     *rbuflen += 2;
 
@@ -589,11 +582,11 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
 {
-    u_int16_t retID;
+    uint16_t retID;
     int ret;
 
     /* check for session id */
-    retID = ntohs(*(u_int16_t *)ibuf);
+    retID = ntohs(*(uint16_t *)ibuf);
     if (retID == ID)
         ret = logincont1(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
     else if (retID == ID+1)

@@ -1,0 +1,15 @@
+# This file is part of netatalk :NETATALK_VERSION:.
+
+[Unit]
+Description=Netatalk AFP fileserver for Macintosh clients
+After=syslog.target network.target avahi-daemon.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/netatalk
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

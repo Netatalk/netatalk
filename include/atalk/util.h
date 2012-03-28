@@ -11,13 +11,10 @@
 #ifndef _ATALK_UTIL_H
 #define _ATALK_UTIL_H 1
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
+#include <sys/socket.h>
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <poll.h>
-#include <netatalk/at.h>
 
 #include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
@@ -46,7 +43,17 @@
 #define AFP_ASSERT(b)
 #endif /* NDEBUG */
 
+#ifndef MIN
+#define MIN(a, b)  ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX(a, b)  ((a) > (b) ? (a) : (b))
+#endif
+
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
+#define ZERO_STRUCT(a) memset(&(a), 0, sizeof(a))
+#define ZERO_STRUCTP(a) memset((a), 0, sizeof(a))
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? a : b)
 #endif
@@ -74,9 +81,6 @@ extern void freeifacelist(char **);
 
 #define diatolower(x)     _dialowermap[(unsigned char) (x)]
 #define diatoupper(x)     _diacasemap[(unsigned char) (x)]
-#ifndef NO_DDP
-extern int atalk_aton     (char *, struct at_addr *);
-#endif
 extern void bprint        (char *, int);
 extern int strdiacasecmp  (const char *, const char *);
 extern int strndiacasecmp (const char *, const char *, size_t);
@@ -86,19 +90,6 @@ extern int create_lockfile(const char *program, const char *pidfile);
 extern void fault_setup	  (void (*fn)(void *));
 extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
-
-/* strlcpy and strlcat are used by pam modules */
-#ifndef UAM_MODULE_EXPORT
-#define UAM_MODULE_EXPORT 
-#endif
-
-#ifndef HAVE_STRLCPY
-UAM_MODULE_EXPORT size_t strlcpy (char *, const char *, size_t);
-#endif
- 
-#ifndef HAVE_STRLCAT
-UAM_MODULE_EXPORT size_t strlcat (char *, const char *, size_t);
-#endif
 
 #ifndef HAVE_DLFCN_H
 extern void *mod_open    (const char *);
@@ -190,6 +181,7 @@ extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 extern int daemonize(int nochdir, int noclose);
+extern int run_cmd(const char *cmd, char **cmd_argv);
 
 /******************************************************************
  * cnid.c

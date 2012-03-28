@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
 

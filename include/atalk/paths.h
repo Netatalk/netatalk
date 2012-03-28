@@ -31,60 +31,17 @@
 #  endif
 #endif
 
-/*
- * papd paths
- */
-#define _PATH_PAPDPRINTCAP	"/etc/printcap"
-#ifdef ultrix
-#define _PATH_PAPDSPOOLDIR	"/usr/spool/lpd"
-#else /* !ultrix */
-#define _PATH_PAPDSPOOLDIR	"/var/spool/lpd"
-#endif /* ultrix */
-#ifdef BSD4_4
-#define _PATH_DEVPRINTER	"/var/run/printer"
-#else /* !BSD4_4 */
-#define _PATH_DEVPRINTER	"/dev/printer"
-#endif /* BSD4_4 */
 
 /*
- * atalkd paths
- */
-#define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
-#define _PATH_ATALKDTMP		"atalkd.tmp"
-#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd.pid")
-#else
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
-#endif
-
-/*
- * psorder paths
- */
-#define _PATH_TMPPAGEORDER	"/tmp/psorderXXXXXX"
-#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd.pid")
-#else
-#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd")
-#endif
-
-/*
- * afpd paths
+ * netatalk paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
 #define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
+#  define _PATH_NETATALK_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netatalk.pid")
 #else
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
-#endif
-
-/*
- * cnid_metad paths
- */
-#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad.pid")
-#else
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
+#  define _PATH_NETATALK_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netatalk")
 #endif
 
 #endif /* atalk/paths.h */
+

@@ -1,6 +1,4 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.8 2009-11-20 17:22:11 didg Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -14,11 +12,11 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef CNID_BACKEND_CDB
+#include <arpa/inet.h>
 #include "cnid_cdb_private.h"
 
-extern int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const size_t len);
-
+extern int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                           cnid_t did, const char *name, size_t len);
 
 #define tid    NULL
 
@@ -168,8 +166,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
-                const cnid_t did, char *name, const size_t len,
-                cnid_t hint)
+                    cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     CNID_private *db;
     DBT key, data;

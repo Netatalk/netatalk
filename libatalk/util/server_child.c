@@ -18,17 +18,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <signal.h>
 #include <errno.h>
-
-/* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
 #include <sys/time.h>
 
 #include <atalk/logger.h>
@@ -60,8 +54,6 @@ typedef struct server_child_fork {
     struct server_child_data *table[CHILD_HASHSIZE];
     void (*cleanup)(const pid_t);
 } server_child_fork;
-
-int parent_or_child; /* 0: parent, 1: child */
 
 static inline void hash_child(struct server_child_data **htable,
                               struct server_child_data *child)

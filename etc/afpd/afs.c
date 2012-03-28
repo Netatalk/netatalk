@@ -29,7 +29,7 @@
 #include "misc.h"
 #include "unix.h"
 
-int afs_getvolspace(struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
+int afs_getvolspace(struct vol *vol, VolSpace *bfree, VolSpace *btotal, uint32_t *bsize)
 {
     struct ViceIoctl	vi;
     struct VolumeStatus	*vs;
@@ -78,8 +78,8 @@ int afp_getdiracl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     struct vol		*vol;
     struct dir		*dir;
     struct path		*path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
 
     ibuf += 2;
     memcpy( &vid, ibuf, sizeof( vid ));
@@ -162,8 +162,8 @@ int afp_setdiracl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     struct dir		*dir;
     char		*iend;
     struct path		*path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
 
     *rbuflen = 0;
     iend = ibuf + ibuflen;
@@ -228,7 +228,7 @@ int afp_afschangepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t 
     char	realm[ MAXKTCREALMLEN ];
     char	oldpw[ 9 ], newpw[ 9 ];
     int		len, rc;
-    u_int16_t	clen;
+    uint16_t	clen;
     struct ktc_encryptionKey	oldkey, newkey;
     struct ktc_token		adtok;
     struct ubik_client		*conn;

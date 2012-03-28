@@ -23,6 +23,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "desktop.h"
 #include "directory.h"
@@ -40,7 +41,7 @@
  */
 struct savedir {
     u_short	 sd_vid;
-    u_int32_t	 sd_did;
+    uint32_t	 sd_did;
     int		 sd_buflen;
     char	 *sd_buf;
     char	 *sd_last;
@@ -169,9 +170,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     int				did, ret, len, first = 1;
     size_t			esz;
     char                        *data, *start;
-    u_int16_t			vid, fbitmap, dbitmap, reqcnt, actcnt = 0;
-    u_int16_t			temp16;
-    u_int32_t			sindex, maxsz, sz = 0;
+    uint16_t			vid, fbitmap, dbitmap, reqcnt, actcnt = 0;
+    uint16_t			temp16;
+    uint32_t			sindex, maxsz, sz = 0;
     struct path                 *o_path;
     struct path                 s_path;
     int                         header;
@@ -272,8 +273,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "enumerate(\"%s/%s\", f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
         getcwdpath(), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
-    data = rbuf + 3 * sizeof( u_int16_t );
-    sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
+    data = rbuf + 3 * sizeof( uint16_t );
+    sz = 3 * sizeof( uint16_t );	/* fbitmap, dbitmap, reqcount */
 
     /*
      * Read the directory into a pre-malloced buffer, stored
@@ -365,6 +366,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
         sd.sd_last += len + 1;
         s_path.m_name = NULL;
+
+        /* Convert adouble:v2 to adouble:ea on the fly */
+        (void)ad_convert(s_path.u_name, &s_path.st, vol);
+
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
          * inaccurate, since that means /dev/null is a file, /dev/printer
@@ -382,7 +387,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                     return AFPERR_MISC;
                 }
             }
-            if ((ret = getdirparams(vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
+            if ((ret = getdirparams(obj, vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
                 return( ret );
 
         } else {
@@ -390,8 +395,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             /* files are added to the dircache in getfilparams() -> getmetadata() */
-            if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
-                                     data + header , &esz )) ) {
+            if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir, 
+                                               data + header , &esz )) ) {
                 return( ret );
             }
         }
@@ -440,6 +445,15 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     if ( actcnt == 0 ) {
         sd.sd_did = 0;		/* invalidate sd struct to force re-read */
+        /*
+         * in case were converting adouble stuff:
+         * after enumerating the whole dir we should have converted everything
+         * thus the .AppleDouble dir shouls be empty thus we can no try to
+         * delete it
+         */
+        if (vol->v_adouble == AD_VERSION_EA && ! (vol->v_flags & AFPVOL_NOV2TOEACONV))
+            (void)rmdir(".AppleDouble");
+
         return( AFPERR_NOOBJ );
     }
     sd.sd_sindex = sindex + actcnt;

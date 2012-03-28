@@ -1,4 +1,3 @@
-dnl $Id: db3-check.m4,v 1.23 2010-04-12 14:28:48 franklahm Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 dnl -- check header for minimum version and return version in
@@ -83,7 +82,8 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
 ])
 
 dnl -- This is called from configure
-AC_DEFUN([AC_PATH_BDB],[
+AC_DEFUN([AC_NETATALK_PATH_BDB],[
+if test "x$bdb_required" = "xyes"; then
     trybdbdir=""
     dobdbsearch=yes
     bdb_search_dirs="/usr/local /usr"
@@ -206,6 +206,7 @@ AC_DEFUN([AC_PATH_BDB],[
         ifelse([$1], , :, [$1])
     else
         ifelse([$2], , :, [$2])     
+		AC_MSG_ERROR([Berkeley DB library required but not found!])
     fi
 
     CFLAGS_REMOVE_USR_INCLUDE(BDB_CFLAGS)
@@ -214,6 +215,7 @@ AC_DEFUN([AC_PATH_BDB],[
     AC_SUBST(BDB_LIBS)
     AC_SUBST(BDB_BIN)
     AC_SUBST(BDB_PATH)
+fi
 ])
 
 

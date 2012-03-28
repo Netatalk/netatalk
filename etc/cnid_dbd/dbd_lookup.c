@@ -10,8 +10,8 @@
 CNID salvation spec:
 general rule: better safe then sorry, so we always delete CNIDs and assign
 new ones in case of a lookup mismatch. afpd also sends us the CNID found
-in the adouble file (for AFPVOL_CACHE volumes). In certain cases we can
-use this hint to determince the right CNID.
+in the adouble file. In certain cases we can use this hint to determince
+the right CNID.
 
 
 The lines...
@@ -116,7 +116,8 @@ to be safe we must assign new CNIDs to both files.
 #include <string.h>
 #include <sys/param.h>
 #include <errno.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 

@@ -36,7 +36,7 @@
 #include <atalk/logger.h>
 
 #ifndef SIGNAL_CAST
-#define SIGNAL_CAST (RETSIGTYPE (*)(int))
+#define SIGNAL_CAST (void (*)(int))
 #endif
 #ifndef SAFE_FREE /* Oh no this is also defined in tdb.h */
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
@@ -93,6 +93,7 @@ void netatalk_panic(const char *why)
 	backtrace_size = backtrace(backtrace_stack,BACKTRACE_STACK_SIZE);
 	backtrace_strings = backtrace_symbols(backtrace_stack, backtrace_size);
 
+	LOG(log_severe, logtype_default, "PANIC: %s", why);
 	LOG(log_severe, logtype_default, "BACKTRACE: %d stack frames:", backtrace_size);
 	
 	if (backtrace_strings) {

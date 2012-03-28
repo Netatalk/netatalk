@@ -37,7 +37,8 @@ pid_t server_lock(char *program, char *pidfile, int debug)
   FILE *pf;
   pid_t pid;
   int mask;
-  
+
+  if ( !debug ) {
   mask = umask(022);
   /* check for pid. this can get fooled by stale pid's. */
   if ((pf = fopen(pidfile, "r"))) {
@@ -60,7 +61,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
   /*
    * Disassociate from controlling tty.
    */
-  if ( !debug ) {
+
     int		i;
 
     getitimer(ITIMER_PROF, &itimer);
@@ -90,10 +91,11 @@ pid_t server_lock(char *program, char *pidfile, int debug)
       fclose(pf);
       return pid;
     }
-  } 
 
   fprintf(pf, "%d\n", getpid());
   fclose(pf);
+  } 
+
   return 0;
 }
 

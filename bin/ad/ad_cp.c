@@ -67,7 +67,6 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 #include <atalk/volume.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/queue.h>
@@ -212,7 +211,7 @@ static void usage_cp(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_cp(int argc, char *argv[])
+int ad_cp(int argc, char *argv[], AFPObj *obj)
 {
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;
@@ -352,11 +351,11 @@ int ad_cp(int argc, char *argv[])
 #endif
 
     /* Load .volinfo file for destination*/
-    openvol(to.p_path, &dvolume);
+    openvol(obj, to.p_path, &dvolume);
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(argv[i], &svolume);
+        openvol(obj, argv[i], &svolume);
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {
@@ -475,7 +474,7 @@ static int copy(const char *path,
     }
 
     /* Convert basename to appropiate volume encoding */
-    if (dvolume.volinfo.v_path) {
+    if (dvolume.vol->v_path) {
         if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
             SLOG("Error converting name for %s", to.p_path);
             badcp = rval = 1;
@@ -511,7 +510,7 @@ static int copy(const char *path,
         }
 
         /* Create ad dir and copy ".Parent" */
-        if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
+        if (dvolume.vol->v_path && dvolume.vol->v_adouble == AD_VERSION2) {
 
             /* Create ".AppleDouble" dir */
             mode_t omask = umask(0);
@@ -520,9 +519,9 @@ static int copy(const char *path,
             mkdir(cfrombstr(addir), 02777);
             bdestroy(addir);
 
-            if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
+            if (svolume.vol->v_path && svolume.vol->v_adouble == AD_VERSION2) {
                 /* copy ".Parent" file */
-                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path)) {
+                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
                     SLOG("Error copying adouble for %s -> %s", path, to.p_path);
                     badcp = rval = 1;
                     break;
@@ -543,18 +542,18 @@ static int copy(const char *path,
                 badcp = rval = 1;
                 break;
             }
-            ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open_metadata(to.p_path, ADFLAGS_DIR, O_RDWR | O_CREAT, &ad) != 0) {
+            ad_init(&ad, dvolume.vol);
+            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
             ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
-            ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
+            ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
-            ad_close_metadata(&ad);
+            ad_close(&ad, ADFLAGS_HF);
 
             umask(omask);
         }
@@ -583,12 +582,12 @@ static int copy(const char *path,
         if (ftw_copy_file(ftw, path, statp, dne))
             badcp = rval = 1;
 
-        if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
+        if (dvolume.vol->v_path && dvolume.vol->v_adouble == AD_VERSION2) {
 
             mode_t omask = umask(0);
-            if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
+            if (svolume.vol->v_path && svolume.vol->v_adouble == AD_VERSION2) {
                 /* copy ad-file */
-                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path)) {
+                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
                     SLOG("Error copying adouble for %s -> %s", path, to.p_path);
                     badcp = rval = 1;
                     break;
@@ -610,18 +609,18 @@ static int copy(const char *path,
                 badcp = rval = 1;
                 break;
             }
-            ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open_metadata(to.p_path, 0, O_RDWR | O_CREAT, &ad) != 0) {
+            ad_init(&ad, dvolume.vol);
+            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
             ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
-            ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
+            ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
-            ad_close_metadata(&ad);
+            ad_close(&ad, ADFLAGS_HF);
             umask(omask);
         }
         break;
@@ -693,7 +692,7 @@ static int ftw_copy_file(const struct FTW *entp,
             /* remove existing destination file name,
              * create a new file  */
             (void)unlink(to.p_path);
-            (void)dvolume.volume.vfs->vfs_deletefile(&dvolume.volume, -1, to.p_path);
+            (void)dvolume.vol->vfs->vfs_deletefile(dvolume.vol, -1, to.p_path);
             to_fd = open(to.p_path, O_WRONLY | O_TRUNC | O_CREAT,
                          sp->st_mode & ~(S_ISUID | S_ISGID));
         } else {

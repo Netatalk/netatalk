@@ -10,24 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-
-/* STDC check */
-#ifdef STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
 #include <errno.h>
 #include <limits.h>
 #include <sys/param.h>
@@ -51,7 +34,7 @@ char *strchr (), *strrchr ();
 /*
  * Get the free space on a partition.
  */
-int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
+int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, uint32_t *bsize)
 {
     VolSpace maxVolSpace = UINT64_MAX;
 
@@ -115,9 +98,9 @@ static int utombits(mode_t bits)
 /* --------------------------------
     cf AFP 3.0 page 63
 */
-void utommode(struct stat *stat, struct maccess *ma)
+static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess *ma)
 {
-mode_t mode;
+    mode_t mode;
 
     mode = stat->st_mode;
     ma->ma_world = utombits( mode );
@@ -131,10 +114,10 @@ mode_t mode;
     /* ma_user is a union of all permissions but we must follow
      * unix perm
     */
-    if ( (uuid == stat->st_uid) || (uuid == 0)) {
+    if ( (obj->uid == stat->st_uid) || (obj->uid == 0)) {
         ma->ma_user = ma->ma_owner | AR_UOWN;
     }
-    else if ( gmem( stat->st_gid )) {
+    else if (gmem(stat->st_gid, obj->ngroups, obj->groups)) {
         ma->ma_user = ma->ma_group;
     }
     else {
@@ -169,7 +152,7 @@ mode_t mode;
  *
  * dir parameter is used by AFS
  */
-void accessmode(const struct vol *vol, char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
+void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
 {
     struct stat     sb;
 
@@ -179,22 +162,10 @@ void accessmode(const struct vol *vol, char *path, struct maccess *ma, struct di
             return;
         st = &sb;
     }
-    utommode( st, ma );
+    utommode(obj, st, ma );
 #ifdef HAVE_ACLS
-    acltoownermode(vol, path, st, ma);
+    acltoownermode(obj, vol, path, st, ma);
 #endif
-}
-
-int gmem(const gid_t gid)
-{
-    int		i;
-
-    for ( i = 0; i < ngroups; i++ ) {
-        if ( groups[ i ] == gid ) {
-            return( 1 );
-        }
-    }
-    return( 0 );
 }
 
 static mode_t mtoubits(u_char bits)
@@ -283,17 +254,17 @@ int setdeskmode(const mode_t mode)
             }
 
             if (S_ISDIR(st.st_mode)) {
-                if ( chmod_acl( modbuf,  (DIRBITS | mode) & ~default_options.umask ) < 0 && errno != EPERM ) {
+                if ( chmod_acl( modbuf,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
                      LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
                 }
-            } else if ( chmod_acl( modbuf,  mode & ~(default_options.umask | EXEC_MODE) ) < 0 && errno != EPERM ) {
+            } else if ( chmod_acl( modbuf,  mode & ~EXEC_MODE ) < 0 && errno != EPERM ) {
                 LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
             }
 
         }
         closedir( sub );
         /* XXX: need to preserve special modes */
-        if ( chmod_acl( deskp->d_name,  (DIRBITS | mode) & ~default_options.umask ) < 0 && errno != EPERM ) {
+        if ( chmod_acl( deskp->d_name,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
             LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(deskp->d_name), strerror(errno) );
         }
     }
@@ -303,7 +274,7 @@ int setdeskmode(const mode_t mode)
         return -1;
     }
     /* XXX: need to preserve special modes */
-    if ( chmod_acl( ".AppleDesktop",  (DIRBITS | mode) & ~default_options.umask ) < 0 && errno != EPERM ) {
+    if ( chmod_acl( ".AppleDesktop",  (DIRBITS | mode)) < 0 && errno != EPERM ) {
         LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s", fullpathname(".AppleDesktop"),strerror(errno) );
     }
     return( 0 );
@@ -332,9 +303,6 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 /* --------------------- */
 int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 {
-
-    int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
-
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);
 
@@ -342,74 +310,17 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if (chmod_acl(name, (DIRBITS | mode) & ~vol->v_umask) < 0 )
         	return -1;
     }
-    if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
+    if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if (chmod_acl(name, (DIRBITS | mode) & ~vol->v_umask) < 0 )
             return -1;
     }
     return 0;
-}
-
-/* --------------------- */
-int setdirmode(const struct vol *vol, const char *name, mode_t mode)
-{
-    struct stat		st;
-    struct dirent	*dirp;
-    DIR			*dir;
-    mode_t              hf_mode;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
-    int                 dropbox = (vol->v_flags & AFPVOL_DROPBOX);
-    
-    mode |= vol->v_dperm;
-    hf_mode = ad_hf_mode(mode);
-
-    if (dir_rx_set(mode)) {
-    	/* extending right? dir first */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
-        	return -1;
-    }
-    
-    if (( dir = opendir( name )) == NULL ) {
-        LOG(log_error, logtype_afpd, "setdirmode: opendir: %s", fullpathname(name), strerror(errno) );
-        return( -1 );
-    }
-
-    for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        /* FIXME */
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
-            continue;
-        }
-        if ( lstat( dirp->d_name, &st ) < 0 ) {
-            LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s",dirp->d_name, strerror(errno) );
-            continue;
-        }
-
-        if (!S_ISDIR(st.st_mode)) {
-           int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
-
-           if (setfilmode(dirp->d_name, setmode, &st, vol->v_umask) < 0) {
-               closedir( dir );
-                LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
-                return -1;
-           }
-        }
-    }
-    closedir( dir );
-    
-    if (vol->vfs->vfs_setdirmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
-        return  -1 ;
-    }
-
-    if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
-        	return -1;
-    }
-    return( 0 );
 }
 
 /* ----------------------------- */
@@ -477,22 +388,13 @@ int setdeskowner(const uid_t uid, const gid_t gid)
 /* ----------------------------- */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path* path)
 {
-
-    if (!path->st_valid) {
-        of_stat(path);
-    }
-
-    if (path->st_errno) {
+    if (lchown(path->u_name, uid, gid) < 0 && errno != EPERM) {
+        LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
+            uid, gid, path->u_name, strerror(errno));
         return -1;
     }
 
-    if ( lchown( path->u_name, uid, gid ) < 0 && errno != EPERM ) {
-        LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
-            uid, gid, path->u_name, strerror(errno) );
-	return -1;
-    }
-
-    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid ) < 0 && errno != EPERM) {
+    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setfilowner: rf_chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno) );
         return -1;
@@ -508,92 +410,14 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct 
  * co-opting some bits. */
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 {
-    struct stat		st;
-    struct dirent	*dirp;
-    DIR			*dir;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
-
-    if (( dir = opendir( name )) == NULL ) {
-        return( -1 );
-    }
-    for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
-            continue;
-        }
-        if ( lstat( dirp->d_name, &st ) < 0 ) {
-            LOG(log_error, logtype_afpd, "setdirowner: stat %s: %s",
-                fullpathname(dirp->d_name), strerror(errno) );
-            continue;
-        }
-        if (( st.st_mode & S_IFMT ) == S_IFREG ) {
-            if ( lchown( dirp->d_name, uid, gid ) < 0 && errno != EPERM ) {
-                LOG(log_debug, logtype_afpd, "setdirowner: chown %s: %s",
-                    fullpathname(dirp->d_name), strerror(errno) );
-                /* return ( -1 ); Sometimes this is okay */
-            }
-        }
-    }
-    closedir( dir );
-
-    if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0) {
-        return -1;
-    }
-    
-    if ( lstat( ".", &st ) < 0 ) {
-        return( -1 );
-    }
-    if ( gid && gid != st.st_gid && lchown( ".", uid, gid ) < 0 && errno != EPERM ) {
+    if (lchown(name, uid, gid ) < 0 && errno != EPERM ) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
-            uid, gid, fullpathname("."), strerror(errno) );
+            uid, gid, fullpathname(name), strerror(errno) );
     }
+
+    if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0)
+        return -1;
 
     return( 0 );
 }
-
-#if 0
-/* recursive chown()ing of a directory */
-static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
-    struct stat sbuf;
-    DIR *odir = NULL;
-    struct dirent *entry;
-    char *name;
-    int ret = 0;
-    char newpath[PATH_MAX+1];
-    newpath[PATH_MAX] = '\0';
-    
-    if (chown(path, uid, gid) < 0) {
-        LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-
-    if (lstat(path, &sbuf) < 0) {
-	LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-	
-    if (S_ISDIR(sbuf.st_mode)) {
-	odir = opendir(path);
-	if (odir == NULL) {
-	    LOG(log_error, logtype_afpd, "cannot opendir() [%s] (uid = %d): %s", path, uid, strerror(errno));
-	    goto recursive_chown_end;
-	}
-	while (NULL != (entry=readdir(odir)) ) {
-	    name = entry->d_name;
-	    if (name[0] == '.' && name[1] == '\0')
-		continue;
-	    if (name[0] == '.' && name[1] == '.' && name[2] == '\0')
-		continue;
-	    sprintf(newpath, "%s/%s", path, name);
-	    if (recursive_chown(newpath, uid, gid) < 0)
-		ret = -1;
-	} /* while */
-    } /* if */
-
-recursive_chown_end:
-    if (odir != NULL) {
-	closedir(odir);
-    }
-    return ret;
-}
-#endif
 

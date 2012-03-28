@@ -1,14 +1,8 @@
-/*
- * $Id: unix.h,v 1.23 2010-04-12 14:28:47 franklahm Exp $
- */
-
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
-#ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif /* HAVE_SYS_CDEFS_H */
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include "config.h"
 #include "volume.h"
 
@@ -209,17 +203,16 @@ extern long quotactl (unsigned int, const char *, int, caddr_t);
 
 #endif /* linux */
 
-extern int getnfsquota (struct vol *, const int, const u_int32_t,
-                                struct dqblk *);
+extern int getnfsquota (struct vol *, const int, const uint32_t,
+                        struct dqblk *);
 
 #endif /* ! HAVE_LIBQUOTA */
-extern int uquota_getvolspace (struct vol *, VolSpace *, VolSpace *,
-                                       const u_int32_t);
+extern int uquota_getvolspace (const AFPObj *obj, struct vol *, VolSpace *, VolSpace *,
+                               const uint32_t);
 #endif /* NO_QUOTA_SUPPORT */
 
 extern struct afp_options default_options;
 
-extern int gmem            (const gid_t);
 extern int setdeskmode      (const mode_t);
 extern int setdirunixmode   (const struct vol *, const char *, mode_t);
 extern int setdirmode       (const struct vol *, const char *, mode_t);
@@ -227,7 +220,7 @@ extern int setdeskowner     (const uid_t, const gid_t);
 extern int setdirowner      (const struct vol *, const char *, const uid_t, const gid_t);
 extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);
-extern void accessmode      (const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
+extern void accessmode      (const AFPObj *obj, const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
 
 #ifdef AFS	
     #define accessmode afsmode

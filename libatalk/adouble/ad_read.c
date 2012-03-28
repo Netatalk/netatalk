@@ -1,6 +1,4 @@
 /*
- * $Id: ad_read.c,v 1.10 2010-02-10 14:05:37 franklahm Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -27,13 +25,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/adouble.h>
 #include <string.h>
 #include <sys/param.h>
+#include <errno.h>
+#include <stdlib.h>
 
-#ifndef MIN
-#define MIN(a,b)    ((a)<(b)?(a):(b))
-#endif /* ! MIN */
+#include <atalk/adouble.h>
+#include <atalk/ea.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
 
 ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 {
@@ -59,9 +59,11 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 /* XXX: locks have to be checked before each stream of consecutive
  *      ad_reads to prevent a denial in the middle from causing
  *      problems. */
-ssize_t ad_read( struct adouble *ad, const u_int32_t eid, off_t off, char *buf, const size_t buflen)
+ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 {
     ssize_t     cc;
+    ssize_t     rlen;
+    off_t r_off = 0;
 
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
@@ -77,32 +79,22 @@ ssize_t ad_read( struct adouble *ad, const u_int32_t eid, off_t off, char *buf, 
             cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
         }
     } else {
-        off_t r_off;
-
-        if ( ad_reso_fileno( ad ) == -1 ) {
+        if (! AD_RSRC_OPEN(ad))
             /* resource fork is not open ( cf etc/afp/fork.c) */
             return 0;
-        }
-        r_off = ad_getentryoff(ad, eid) + off;
 
-        if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 ) {
+        if (ad->ad_vers == AD_VERSION_EA) {
+#ifdef HAVE_EAFD
+            r_off = off;
+#else
+            r_off = off + ADEDOFF_RFORK_OSX;
+#endif
+        } else {
+            r_off = ad_getentryoff(ad, eid) + off;
+        }
+
+        if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )
             return( -1 );
-        }
-        /*
-         * We've just read in bytes from the disk that we read earlier
-         * into ad_data. If we're going to write this buffer out later,
-         * we need to update ad_data.
-         * FIXME : always false?
-         */
-        if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-            if ( ad->ad_resource_fork.adf_flags & O_RDWR ) {
-                memcpy(buf, ad->ad_data + r_off,
-                       MIN(sizeof( ad->ad_data ) - r_off, cc));
-            } else {
-                memcpy(ad->ad_data + r_off, buf,
-                       MIN(sizeof( ad->ad_data ) - r_off, cc));
-            }
-        }
     }
 
     return( cc );

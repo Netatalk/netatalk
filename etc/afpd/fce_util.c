@@ -35,8 +35,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <netatalk/at.h>
-
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
 #include <atalk/logger.h>
@@ -172,7 +170,7 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
  * all|delete|create
  */
 
-int fce_set_coalesce(char *opt)
+int fce_set_coalesce(const char *opt)
 {
     char *e;
     char *p;

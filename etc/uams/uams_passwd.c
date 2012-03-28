@@ -1,6 +1,4 @@
 /*
- * $Id: uams_passwd.c,v 1.31 2010-03-30 12:44:35 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,41 +13,24 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
 #include <pwd.h>
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
+#include <arpa/inet.h>
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
+#include <atalk/compat.h>
 
 #define PASSWDLEN 8
 
@@ -198,7 +179,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char       *username;
     size_t     len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 

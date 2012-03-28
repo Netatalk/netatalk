@@ -7,16 +7,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/adouble.h>
-
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <errno.h>
 
-
-#ifndef MIN
-#define MIN(a,b)	((a)<(b)?(a):(b))
-#endif /* ! MIN */
+#include <atalk/adouble.h>
+#include <atalk/ea.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
+#include <atalk/errchk.h>
 
 /* XXX: locking has to be checked before each stream of consecutive
  *      ad_writes to prevent a lock in the middle from causing problems. 
@@ -45,48 +47,57 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
 }
 
 /* end is always 0 */
-ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int end, const char *buf, const size_t buflen)
+ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const char *buf, size_t buflen)
 {
+    EC_INIT;
     struct stat		st;
     ssize_t		cc;
+    size_t roundup;
+    off_t    r_off;
 
     if (ad_data_fileno(ad) == -2) {
         /* It's a symlink */
         errno = EACCES;
         return -1;
     }
+
+    LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+        (uintmax_t)off, buflen, ad->ad_rlen);
     
     if ( eid == ADEID_DFORK ) {
-	if ( end ) {
-	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
-		return( -1 );
-	    }
-	    off = st.st_size - off;
-	}
-	cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
+        if ( end ) {
+            if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
+                return( -1 );
+            }
+            off = st.st_size - off;
+        }
+        cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
     } else if ( eid == ADEID_RFORK ) {
-        off_t    r_off;
-
-	if ( end ) {
-	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
-		return( -1 );
-	    }
-	    off = st.st_size - off -ad_getentryoff(ad, eid);
-	}
-	r_off = ad_getentryoff(ad, eid) + off;
-	cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
-
-	/* sync up our internal buffer  FIXME always false? */
-	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-	    memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
+        if (end) {
+            if (fstat( ad_reso_fileno(ad), &st ) < 0)
+                return(-1);
+            off = st.st_size - off - ad_getentryoff(ad, eid);
         }
-        if ( ad->ad_rlen < off + cc ) {
-             ad->ad_rlen = off + cc;
+        if (ad->ad_vers == AD_VERSION_EA) {
+#ifdef HAVE_EAFD
+            r_off = off;
+#else
+            r_off = ADEDOFF_RFORK_OSX + off;
+#endif
+        } else {
+            r_off = ad_getentryoff(ad, eid) + off;
         }
-    }
-    else {
+        cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
+
+        if ( ad->ad_rlen < off + cc )
+            ad->ad_rlen = off + cc;
+    } else {
         return -1; /* we don't know how to write if it's not a ressource or data fork */
     }
+
+EC_CLEANUP:
+    if (ret != 0)
+        return ret;
     return( cc );
 }
 
@@ -151,19 +162,121 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if ( sys_ftruncate( ad_reso_fileno(ad),
-	    size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
-	return -1;
-    }
-    ad->ad_rlen = size;    
+    EC_INIT;
 
-    return 0;
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA && size == 0)
+        EC_NEG1( unlink(ad->ad_ops->ad_path(ad->ad_name, 0)) );
+    else
+#endif
+        EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
+
+EC_CLEANUP:
+    if (ret == 0)
+        ad->ad_rlen = size;    
+    else
+        LOG(log_error, logtype_default, "ad_rtruncate(\"%s\"): %s",
+            fullpathname(ad->ad_name), strerror(errno));
+    EC_EXIT;
 }
 
 int ad_dtruncate(struct adouble *ad, const off_t size)
 {
     if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
-      return -1;
+        LOG(log_error, logtype_default, "sys_ftruncate(fd: %d): %s",
+            ad_data_fileno(ad), strerror(errno));
+        return -1;
     }
+
     return 0;
+}
+
+/* ----------------------- */
+static int copy_all(const int dfd, const void *buf,
+                               size_t buflen)
+{
+    ssize_t cc;
+
+    while (buflen > 0) {
+        if ((cc = write(dfd, buf, buflen)) < 0) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            default:
+                return -1;
+            }
+        }
+        buflen -= cc;
+    }
+
+    return 0;
+}
+
+/* -------------------------- 
+ * copy only the fork data stream
+*/
+int copy_fork(int eid, struct adouble *add, struct adouble *ads)
+{
+    ssize_t cc;
+    int     err = 0;
+    char    filebuf[8192];
+    int     sfd, dfd;
+
+    if (eid == ADEID_DFORK) {
+        sfd = ad_data_fileno(ads);
+        dfd = ad_data_fileno(add);
+    }
+    else {
+        sfd = ad_reso_fileno(ads);
+        dfd = ad_reso_fileno(add);
+    }        
+
+    if ((off_t)-1 == lseek(sfd, ad_getentryoff(ads, eid), SEEK_SET))
+    	return -1;
+
+    if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
+    	return -1;
+    	
+#if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
+    /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
+    off_t   offset = 0;
+    size_t  size;
+    struct stat         st;
+    #define BUF 128*1024*1024
+
+    if (fstat(sfd, &st) == 0) {
+        
+        while (1) {
+            if ( offset >= st.st_size) {
+               return 0;
+            }
+            size = (st.st_size -offset > BUF)?BUF:st.st_size -offset;
+            if ((cc = sys_sendfile(dfd, sfd, &offset, size)) < 0) {
+                switch (errno) {
+                case ENOSYS:
+                case EINVAL:  /* there's no guarantee that all fs support sendfile */
+                    goto no_sendfile;
+                default:
+                    return -1;
+                }
+            }
+        }
+    }
+    no_sendfile:
+    lseek(sfd, offset, SEEK_SET);
+#endif 
+
+    while (1) {
+        if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
+            if (errno == EINTR)
+                continue;
+            err = -1;
+            break;
+        }
+
+        if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0)) {
+            break;
+        }
+    }
+    return err;
 }

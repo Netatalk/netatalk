@@ -6,9 +6,8 @@
 #ifndef _ATALK_SERVER_CHILD_H
 #define _ATALK_SERVER_CHILD_H 1
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 /* useful stuff for child processes. most of this is hidden in 
  * server_child.c to ease changes in implementation */
@@ -36,8 +35,6 @@ typedef struct server_child_data {
   struct server_child_data **prevp, *next;
 } afp_child_t;
 
-extern int parent_or_child;
-
 /* server_child.c */
 extern server_child *server_child_alloc (const int, const int);
 extern afp_child_t *server_child_add (server_child *, int, pid_t, uint ipc_fds[2]);
@@ -46,7 +43,7 @@ extern void server_child_free (server_child *);
 
 extern void server_child_kill (server_child *, const int, const int);
 extern void server_child_kill_one_by_id (server_child *children, const int forkid, const pid_t pid, const uid_t,
-                                               const u_int32_t len, char *id, u_int32_t boottime);
+                                               const uint32_t len, char *id, uint32_t boottime);
 extern int  server_child_transfer_session(server_child *children, int forkid, pid_t, uid_t, int, uint16_t);
 extern void server_child_setup (server_child *, const int, void (*)(const pid_t));
 extern void server_child_handler (server_child *);

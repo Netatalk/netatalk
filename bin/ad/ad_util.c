@@ -59,12 +59,14 @@
 
 #include <atalk/util.h>
 #include <atalk/cnid.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/unicode.h>
+#include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
+
 
 #include "ad.h"
 
@@ -96,46 +98,38 @@ void _log(enum logtype lt, char *fmt, ...)
  *
  * @returns 0 on success, exits on error
  */
-int openvol(const char *path, afpvol_t *vol)
+int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 {
     int flags = 0;
 
     memset(vol, 0, sizeof(afpvol_t));
 
-    /* try to find a .AppleDesktop/.volinfo */
-    if (loadvolinfo((char *)path, &vol->volinfo) != 0)
+    if ((vol->vol = getvolbypath(obj, path)) == NULL)
         return -1;
 
-    if (STRCMP(vol->volinfo.v_cnidscheme, != , "dbd"))
-        ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->volinfo.v_path);
-
-    if (vol_load_charsets(&vol->volinfo) == -1)
-        ERROR("Error loading charsets!");
+    if (STRCMP(vol->vol->v_cnidscheme, != , "dbd"))
+        ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->vol->v_path);
 
     /* Sanity checks to ensure we can touch this volume */
-    if (vol->volinfo.v_adouble != AD_VERSION2)
-        ERROR("Unsupported adouble versions: %u", vol->volinfo.v_adouble);
+    if (vol->vol->v_adouble != AD_VERSION2
+        && vol->vol->v_adouble != AD_VERSION_EA)
+        ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
 
-    if (vol->volinfo.v_vfs_ea != AFPVOL_EA_SYS)
-        ERROR("Unsupported Extended Attributes option: %u", vol->volinfo.v_vfs_ea);
+    if (vol->vol->v_vfs_ea != AFPVOL_EA_SYS)
+        ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
 
-    /* initialize sufficient struct vol for VFS initialisation */
-    vol->volume.v_adouble = AD_VERSION2;
-    vol->volume.v_vfs_ea = AFPVOL_EA_SYS;
-    initvol_vfs(&vol->volume);
-
-    if ((vol->volinfo.v_flags & AFPVOL_NODEV))
+    if ((vol->vol->v_flags & AFPVOL_NODEV))
         flags |= CNID_FLAG_NODEV;
 
-    if ((vol->volume.v_cdb = cnid_open(vol->volinfo.v_path,
-                                       0000,
-                                       "dbd",
-                                       flags,
-                                       vol->volinfo.v_dbd_host,
-                                       vol->volinfo.v_dbd_port)) == NULL)
-        ERROR("Cant initialize CNID database connection for %s", vol->volinfo.v_path);
+    if ((vol->vol->v_cdb = cnid_open(vol->vol->v_path,
+                                     0000,
+                                     "dbd",
+                                     flags,
+                                     vol->vol->v_cnidserver,
+                                     vol->vol->v_cnidport)) == NULL)
+        ERROR("Cant initialize CNID database connection for %s", vol->vol->v_path);
 
-    cnid_getstamp(vol->volume.v_cdb,
+    cnid_getstamp(vol->vol->v_cdb,
                   vol->db_stamp,
                   sizeof(vol->db_stamp));
     
@@ -144,16 +138,17 @@ int openvol(const char *path, afpvol_t *vol)
 
 void closevol(afpvol_t *vol)
 {
-    if (vol->volume.v_cdb)
-        cnid_close(vol->volume.v_cdb);
-
+    if (vol->vol->v_cdb) {
+        cnid_close(vol->vol->v_cdb);
+        vol->vol->v_cdb = NULL;
+    }
     memset(vol, 0, sizeof(afpvol_t));
 }
 
 /*
   Taken form afpd/desktop.c
 */
-char *utompath(const struct volinfo *volinfo, const char *upath)
+char *utompath(const struct vol *vol, const char *upath)
 {
     static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char         *m;
@@ -168,22 +163,22 @@ char *utompath(const struct volinfo *volinfo, const char *upath)
     u = upath;
     outlen = strlen(upath);
 
-    if ((volinfo->v_casefold & AFPVOL_UTOMUPPER))
+    if ((vol->v_casefold & AFPVOL_UTOMUPPER))
         flags |= CONV_TOUPPER;
-    else if ((volinfo->v_casefold & AFPVOL_UTOMLOWER))
+    else if ((vol->v_casefold & AFPVOL_UTOMLOWER))
         flags |= CONV_TOLOWER;
 
-    if ((volinfo->v_flags & AFPVOL_EILSEQ)) {
+    if ((vol->v_flags & AFPVOL_EILSEQ)) {
         flags |= CONV__EILSEQ;
     }
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset(volinfo->v_volcharset,
+    if ((size_t)-1 == ( outlen = convert_charset(vol->v_volcharset,
                                                  CH_UTF8_MAC,
-                                                 volinfo->v_maccharset,
+                                                 vol->v_maccharset,
                                                  u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         SLOG("Conversion from %s to %s for %s failed.",
-             volinfo->v_volcodepage, volinfo->v_maccodepage, u);
+             vol->v_volcodepage, vol->v_maccodepage, u);
         return NULL;
     }
 
@@ -213,26 +208,26 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
     int pos = bname - path;
     uint16_t flags = 0;
 
-    if ( ! svol->volinfo.v_path) {
+    if ( ! svol->vol->v_path) {
         /* no source volume: escape special chars (eg ':') */
-        from = dvol->volinfo.v_volcharset; /* src = dst charset */
+        from = dvol->vol->v_volcharset; /* src = dst charset */
         flags |= CONV_ESCAPEHEX;
     } else {
-        from = svol->volinfo.v_volcharset;
+        from = svol->vol->v_volcharset;
     }
 
-    if ( (svol->volinfo.v_path)
-         && ! (svol->volinfo.v_flags & AFPVOL_USEDOTS)
-         && (dvol->volinfo.v_flags & AFPVOL_USEDOTS)) {
+    if ( (svol->vol->v_path)
+         && ! (svol->vol->v_flags & AFPVOL_USEDOTS)
+         && (dvol->vol->v_flags & AFPVOL_USEDOTS)) {
         /* source is without dots, destination is with */
         flags |= CONV_UNESCAPEHEX;
-    } else if (! (dvol->volinfo.v_flags & AFPVOL_USEDOTS)) {
+    } else if (! (dvol->vol->v_flags & AFPVOL_USEDOTS)) {
         flags |= CONV_ESCAPEDOTS;
     }
 
     int len = convert_charset(from,
-                              dvol->volinfo.v_volcharset,
-                              dvol->volinfo.v_maccharset,
+                              dvol->vol->v_volcharset,
+                              dvol->vol->v_maccharset,
                               bname, strlen(bname),
                               buf, MAXPATHLEN,
                               &flags);
@@ -276,8 +271,8 @@ cnid_t cnid_for_path(const afpvol_t *vol,
 
     cnid = htonl(2);
 
-    EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
-    EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
+    EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
+    EC_NULL(statpath = bfromcstr(vol->vol->v_path));
     EC_ZERO(bcatcstr(statpath, "/"));
 
     l = bsplit(rpath, '/');
@@ -290,7 +285,7 @@ cnid_t cnid_for_path(const afpvol_t *vol,
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
                        cfrombstr(statpath), strerror(errno));
 
-        if ((cnid = cnid_add(vol->volume.v_cdb,
+        if ((cnid = cnid_add(vol->vol->v_cdb,
                              &st,
                              *did,
                              cfrombstr(l->entry[i]),
@@ -344,8 +339,8 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
     *did = htonl(1);
     cnid = htonl(2);
 
-    EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
-    EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
+    EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
+    EC_NULL(statpath = bfromcstr(vol->vol->v_path));
 
     l = bsplit(rpath, '/');
     if (l->qty == 1)
@@ -359,7 +354,7 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
                        cfrombstr(statpath), strerror(errno));
 
-        if ((cnid = cnid_add(vol->volume.v_cdb,
+        if ((cnid = cnid_add(vol->vol->v_cdb,
                              &st,
                              *did,
                              cfrombstr(l->entry[i]),

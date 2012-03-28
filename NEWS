@@ -1,3 +1,26 @@
+Changes in 3.0 alpha1
+=====================
+* NEW: Central configuration file afp.conf which replaces all previous files
+* NEW: netatalk: service controller starting and restarting afpd and cnid_metad
+       as necessary
+* NEW: afpd: Extended Attributes AppleDouble backend (default)
+* UPD: CNID databases are stored in $localstatedir/netatalk/CNID
+       (default: /var/netatalk/CNID), databases found in AFP volumes are
+       automatically moved
+* UPD: Start scripts and service manifests have been changed to only start
+       the new netatalk service controller process
+* UPD: afpd: UNIX privileges and use dots enabled by default
+* UPD: afpd: Support for arbitrary AFP volumes using variable expansion has been
+       removed
+* UPD: afpd: afp_voluuid.conf and afp_signature.conf location has been
+       changed to $localstatedir/netatalk/ (default: /var/netatalk/)
+* UPD: afpd: default server messages dir changed to $localstatedir/netatalk/msg/
+* UPD: dbd: new option -C for conversion from AppleDouble v2 to ea
+* REM: AppleTalk support has been removed
+* REM: afpd: SLP and AFP proxy support have been removed
+* REM: afpd: legacy file extension to type/creator mapping has been removed
+* REM: afpd: AppleDouble backends v1, osx and sfm have been removed
+
 Changes in 2.2.3
 ================
 

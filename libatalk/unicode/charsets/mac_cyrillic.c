@@ -28,8 +28,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 #include <stdlib.h> /* for size_t */
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/unicode.h>
 
 #include "mac_cyrillic.h"

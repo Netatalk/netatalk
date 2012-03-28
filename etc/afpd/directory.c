@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <grp.h>
 #include <pwd.h>
 #include <sys/param.h>
@@ -31,6 +32,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/netatalk_conf.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -305,7 +307,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
     char *t;
     cnid_t fileid = 0;
 
-    if (afp_version >= 30) {
+    if (vol->v_obj->afp_version >= 30) {
         if (toUTF8) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
                 /*
@@ -337,7 +339,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
             /* duplicate work but we can't reuse all convert_char we did in demangle_osx
              * flags weren't the same
              */
-            if ( (t = utompath(vol, ret->u_name, fileid, utf8_encoding())) ) {
+            if ( (t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj))) ) {
                 /* at last got our view of mac name */
                 strcpy(ret->m_name, t);
             }
@@ -346,7 +348,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
 
     /* If we haven't got it by now, get it */
     if (ret->u_name == NULL) {
-        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did, utf8_encoding())) == NULL) {
+        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did, utf8_encoding(vol->v_obj))) == NULL) {
             afp_errno = AFPERR_PARAM;
             return -1;
         }
@@ -599,7 +601,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     }
 
-    utf8 = utf8_encoding();
+    utf8 = utf8_encoding(vol->v_obj);
     maxpath = (utf8) ? MAXPATHLEN - 7 : 255;
 
     /* Get it from the database */
@@ -705,86 +707,6 @@ exit:
 
 #define ENUMVETO "./../Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/:2eDS_Store/Contents/Desktop Folder/Trash/Benutzer/"
 
-int caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
-{
-    DIR               *dp;
-    struct dirent     *de;
-    int               ret;
-    static u_int32_t  did = 0;
-    static char       cname[MAXPATHLEN];
-    static char       lname[MAXPATHLEN];
-    ucs2_t        u2_path[MAXPATHLEN];
-    ucs2_t        u2_dename[MAXPATHLEN];
-    char          *tmp, *savepath;
-
-    if (!(vol->v_flags & AFPVOL_CASEINSEN))
-        return -1;
-
-    if (veto_file(ENUMVETO, path->u_name))
-        return -1;
-
-    savepath = path->u_name;
-
-    /* very simple cache */
-    if ( dir->d_did == did && strcmp(lname, path->u_name) == 0) {
-        path->u_name = cname;
-        path->d_dir = NULL;
-        if (of_stat( path ) == 0 ) {
-            return 0;
-        }
-        /* something changed, we cannot stat ... */
-        did = 0;
-    }
-
-    if (NULL == ( dp = opendir( "." )) ) {
-        LOG(log_debug, logtype_afpd, "caseenumerate: opendir failed: %s", dir->d_u_name);
-        return -1;
-    }
-
-
-    /* LOG(log_debug, logtype_afpd, "caseenumerate: for %s", path->u_name); */
-    if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, path->u_name, -1, u2_path, sizeof(u2_path)) )
-        LOG(log_debug, logtype_afpd, "caseenumerate: conversion failed for %s", path->u_name);
-
-    /*LOG(log_debug, logtype_afpd, "caseenumerate: dir: %s, path: %s", dir->d_u_name, path->u_name); */
-    ret = -1;
-    for ( de = readdir( dp ); de != NULL; de = readdir( dp )) {
-        if (NULL == check_dirent(vol, de->d_name))
-            continue;
-
-        if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, de->d_name, -1, u2_dename, sizeof(u2_dename)) )
-            continue;
-
-        if (strcasecmp_w( u2_path, u2_dename) == 0) {
-            tmp = path->u_name;
-            strlcpy(cname, de->d_name, sizeof(cname));
-            path->u_name = cname;
-            path->d_dir = NULL;
-            if (of_stat( path ) == 0 ) {
-                LOG(log_debug, logtype_afpd, "caseenumerate: using dir: %s, path: %s", de->d_name, path->u_name);
-                strlcpy(lname, tmp, sizeof(lname));
-                did = dir->d_did;
-                ret = 0;
-                break;
-            }
-            else
-                path->u_name = tmp;
-        }
-
-    }
-    closedir(dp);
-
-    if (ret) {
-        /* invalidate cache */
-        cname[0] = 0;
-        did = 0;
-        path->u_name = savepath;
-    }
-    /* LOG(log_debug, logtype_afpd, "caseenumerate: path on ret: %s", path->u_name); */
-    return ret;
-}
-
-
 /*!
  * @brief Construct struct dir
  *
@@ -821,7 +743,7 @@ struct dir *dir_new(const char *m_name,
         return NULL;
     }
 
-    if (convert_string_allocate( (utf8_encoding()) ? CH_UTF8_MAC : vol->v_maccharset,
+    if (convert_string_allocate( (utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC : vol->v_maccharset,
                                  CH_UCS2,
                                  m_name,
                                  -1, (char **)&dir->d_m_name_ucs2) == (size_t)-1 ) {
@@ -912,8 +834,8 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     /* get_id needs adp for reading CNID from adouble file */
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ((ad_open_metadata(path->u_name, ADFLAGS_DIR, 0, &ad)) == 0) /* 1 */
+    ad_init(&ad, vol);
+    if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) /* 1 */
         adp = &ad;
 
     /* Get CNID */
@@ -923,11 +845,11 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     if (adp)
-        ad_close_metadata(adp);
+        ad_close(adp, ADFLAGS_HF);
 
     /* Get macname from unixname */
     if (path->m_name == NULL) {
-        if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding())) == NULL) {
+        if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding(vol->v_obj))) == NULL) {
             LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname", path->u_name);
             err = 2;
             goto exit;
@@ -966,7 +888,7 @@ exit:
             cfrombstr(dir->d_u_name), path->u_name, err);
 
         if (adp)
-            ad_close_metadata(adp);
+            ad_close(adp, ADFLAGS_HF);
         if (!cdir && fullpath)
             bdestroy(fullpath);
         if (cdir)
@@ -1143,8 +1065,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     struct dir  *cdir;
     char        *data, *p;
     int         len;
-    u_int32_t   hint;
-    u_int16_t   len16;
+    uint32_t   hint;
+    uint16_t   len16;
     int         size = 0;
     int         toUTF8 = 0;
 
@@ -1159,13 +1081,13 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         data++;
         len = (unsigned char) *data++;
         size = 2;
-        if (afp_version >= 30) {
+        if (vol->v_obj->afp_version >= 30) {
             ret.m_type = 3;
             toUTF8 = 1;
         }
         break;
     case 3:
-        if (afp_version >= 30) {
+        if (vol->v_obj->afp_version >= 30) {
             data++;
             memcpy(&hint, data, sizeof(hint));
             hint = ntohl(hint);
@@ -1412,11 +1334,8 @@ int movecwd(const struct vol *vol, struct dir *dir)
  * If we aren't the file's owner we can't change its perms when moving it and smb
  * nfs,... don't even try.
  */
-#define AFP_CHECK_ACCESS
-
-int check_access(char *path, int mode)
+int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 {
-#ifdef AFP_CHECK_ACCESS
     struct maccess ma;
     char *p;
 
@@ -1424,21 +1343,21 @@ int check_access(char *path, int mode)
     if (!p)
         return -1;
 
-    accessmode(current_vol, p, &ma, curdir, NULL);
+    accessmode(obj, vol, p, &ma, curdir, NULL);
     if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
         return -1;
     if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
         return -1;
-#endif
+
     return 0;
 }
 
 /* --------------------- */
-int file_access(struct path *path, int mode)
+int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 {
     struct maccess ma;
 
-    accessmode(current_vol, path->u_name, &ma, curdir, &path->st);
+    accessmode(obj, vol, path->u_name, &ma, curdir, &path->st);
 
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
         path->u_name, ma.ma_user);
@@ -1456,7 +1375,7 @@ int file_access(struct path *path, int mode)
 }
 
 /* --------------------- */
-void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
+void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
 {
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
@@ -1477,8 +1396,9 @@ int dirreenumerate(struct dir *dir, struct stat *st)
    (name, dir) with curdir:name == dir, from afp_enumerate
 */
 
-int getdirparams(const struct vol *vol,
-                 u_int16_t bitmap, struct path *s_path,
+int getdirparams(const AFPObj *obj,
+                 const struct vol *vol,
+                 uint16_t bitmap, struct path *s_path,
                  struct dir *dir,
                  char *buf, size_t *buflen )
 {
@@ -1486,10 +1406,10 @@ int getdirparams(const struct vol *vol,
     struct adouble  ad;
     char        *data, *l_nameoff = NULL, *utf_nameoff = NULL;
     int         bit = 0, isad = 0;
-    u_int32_t           aint;
-    u_int16_t       ashort;
+    uint32_t           aint;
+    uint16_t       ashort;
     int                 ret;
-    u_int32_t           utf8 = 0;
+    uint32_t           utf8 = 0;
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
@@ -1500,16 +1420,16 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_BDATE) |
                    (1 << DIRPBIT_FINFO)))) {
 
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, ADFLAGS_CREATE|ADFLAGS_DIR, &ad) ) {
+        ad_init(&ad, vol);
+        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
             isad = 1;
-            if (ad.ad_md->adf_flags & O_CREAT) {
+            if (ad.ad_mdp->adf_flags & O_CREAT) {
                 /* We just created it */
                 if (s_path->m_name == NULL) {
                     if ((s_path->m_name = utompath(vol,
                                                    upath,
                                                    dir->d_did,
-                                                   utf8_encoding())) == NULL) {
+                                                   utf8_encoding(obj))) == NULL) {
                         LOG(log_error, logtype_afpd,
                             "getdirparams(\"%s\"): can't assign macname",
                             cfrombstr(dir->d_fullpath));
@@ -1598,13 +1518,13 @@ int getdirparams(const struct vol *vol,
             if (dir->d_m_name) /* root of parent can have a null name */
                 l_nameoff = data;
             else
-                memset(data, 0, sizeof(u_int16_t));
-            data += sizeof( u_int16_t );
+                memset(data, 0, sizeof(uint16_t));
+            data += sizeof( uint16_t );
             break;
 
         case DIRPBIT_SNAME :
-            memset(data, 0, sizeof(u_int16_t));
-            data += sizeof( u_int16_t );
+            memset(data, 0, sizeof(uint16_t));
+            data += sizeof( uint16_t );
             break;
 
         case DIRPBIT_DID :
@@ -1642,7 +1562,7 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
-            accessmode(vol, upath, &ma, dir , st);
+            accessmode(obj, vol, upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
@@ -1654,13 +1574,13 @@ int getdirparams(const struct vol *vol,
                Just pass back the same basic block for all
                directories. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            if (afp_version >= 30) { /* UTF8 name */
+            if (obj->afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
                 if (dir->d_m_name) /* root of parent can have a null name */
                     utf_nameoff = data;
                 else
-                    memset(data, 0, sizeof(u_int16_t));
-                data += sizeof( u_int16_t );
+                    memset(data, 0, sizeof(uint16_t));
+                data += sizeof( uint16_t );
                 aint = 0;
                 memcpy(data, &aint, sizeof( aint ));
                 data += sizeof( aint );
@@ -1678,7 +1598,7 @@ int getdirparams(const struct vol *vol,
 
         case DIRPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
-            accessmode(vol, upath, &ma, dir, st);
+            accessmode(obj, vol, upath, &ma, dir, st);
 
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
@@ -1700,7 +1620,7 @@ int getdirparams(const struct vol *vol,
 
         default :
             if ( isad ) {
-                ad_close_metadata( &ad );
+                ad_close(&ad, ADFLAGS_HF);
             }
             return( AFPERR_BITMAP );
         }
@@ -1718,7 +1638,7 @@ int getdirparams(const struct vol *vol,
         data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
     }
     if ( isad ) {
-        ad_close_metadata( &ad );
+        ad_close(&ad, ADFLAGS_HF);
     }
     *buflen = data - buf;
     return( AFP_OK );
@@ -1744,8 +1664,8 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     struct vol  *vol;
     struct dir  *dir;
     struct path *path;
-    u_int16_t   vid, bitmap;
-    u_int32_t   did;
+    uint16_t   vid, bitmap;
+    uint32_t   did;
     int     rc;
 
     *rbuflen = 0;
@@ -1796,11 +1716,9 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 }
 
 /*
- * cf AFP3.0.pdf page 244 for change_mdate and change_parent_mdate logic
- *
  * assume path == '\0' eg. it's a directory in canonical form
  */
-int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *buf )
+int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf )
 {
     struct maccess  ma;
     struct adouble  ad;
@@ -1809,19 +1727,21 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
 
     char                *upath;
     struct dir          *dir;
-    int         bit, isad = 1;
+    int         bit, isad = 0;
     int                 cdate, bdate;
     int                 owner, group;
-    u_int16_t       ashort, bshort, oshort;
+    uint16_t       ashort, bshort, oshort;
     int                 err = AFP_OK;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
-    u_int16_t           bitmap = d_bitmap;
+    uint16_t           bitmap = d_bitmap;
     u_char              finder_buf[32];
-    u_int32_t       upriv;
+    uint32_t       upriv;
     mode_t              mpriv = 0;
-    u_int16_t           upriv_bit = 0;
+    bool                set_upriv = false, set_maccess = false;
+
+    LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x)", path->u_name, bitmap);
 
     bit = 0;
     upath = path->u_name;
@@ -1858,33 +1778,27 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
             buf += 32;
             break;
         case DIRPBIT_UID :  /* What kind of loser mounts as root? */
-            change_parent_mdate = 1;
             memcpy( &owner, buf, sizeof(owner));
             buf += sizeof( owner );
             break;
         case DIRPBIT_GID :
-            change_parent_mdate = 1;
             memcpy( &group, buf, sizeof( group ));
             buf += sizeof( group );
             break;
         case DIRPBIT_ACCESS :
+            set_maccess = true;
             change_mdate = 1;
-            change_parent_mdate = 1;
             ma.ma_user = *buf++;
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
             ma.ma_owner = *buf++;
             mpriv = mtoumode( &ma ) | vol->v_dperm;
-            if (dir_rx_set(mpriv) && setdirmode( vol, upath, mpriv) < 0 ) {
-                err = set_dir_errors(path, "setdirmode", errno);
-                bitmap = 0;
-            }
             break;
             /* Ignore what the client thinks we should do to the
                ProDOS information block.  Skip over the data and
                report nothing amiss. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            if (afp_version < 30) {
+            if (vol->v_obj->afp_version < 30) {
                 buf += 6;
             }
             else {
@@ -1894,27 +1808,16 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
             break;
         case DIRPBIT_UNIXPR :
             if (vol_unix_priv(vol)) {
+                set_upriv = true;
                 memcpy( &owner, buf, sizeof(owner)); /* FIXME need to change owner too? */
                 buf += sizeof( owner );
                 memcpy( &group, buf, sizeof( group ));
                 buf += sizeof( group );
 
                 change_mdate = 1;
-                change_parent_mdate = 1;
                 memcpy( &upriv, buf, sizeof( upriv ));
                 buf += sizeof( upriv );
                 upriv = ntohl (upriv) | vol->v_dperm;
-                if (dir_rx_set(upriv)) {
-                    /* maybe we are trying to set perms back */
-                    if ( setdirunixmode(vol, upath, upriv) < 0 ) {
-                        bitmap = 0;
-                        err = set_dir_errors(path, "setdirunixmode", errno);
-                    }
-                }
-                else {
-                    /* do it later */
-                    upriv_bit = 1;
-                }
                 break;
             }
             /* fall through */
@@ -1927,33 +1830,17 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
         bitmap = bitmap>>1;
         bit++;
     }
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open_metadata( upath, ADFLAGS_DIR, O_CREAT, &ad) < 0) {
-        /*
-         * Check to see what we're trying to set.  If it's anything
-         * but ACCESS, UID, or GID, give an error.  If it's any of those
-         * three, we don't need the ad to be open, so just continue.
-         *
-         * note: we also don't need to worry about mdate. also, be quiet
-         *       if we're using the noadouble option.
-         */
-        if (!vol_noadouble(vol) && (d_bitmap &
-                                    ~((1<<DIRPBIT_ACCESS)|(1<<DIRPBIT_UNIXPR)|
-                                      (1<<DIRPBIT_UID)|(1<<DIRPBIT_GID)|
-                                      (1<<DIRPBIT_MDATE)|(1<<DIRPBIT_PDINFO)))) {
+    if (d_bitmap & ((1<<DIRPBIT_ATTR) | (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_FINFO))) {
+        ad_init(&ad, vol);
+        if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
+            LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x): need adouble", path->u_name, d_bitmap);
             return AFPERR_ACCESS;
         }
-
-        isad = 0;
-    } else {
-        /*
-         * Check to see if a create was necessary. If it was, we'll want
-         * to set our name, etc.
-         */
-        if ( (ad_get_HF_flags( &ad ) & O_CREAT)) {
+        if ((ad_get_MD_flags(&ad) & O_CREAT)) {
             ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
+        isad = 1;
     }
 
     bit = 0;
@@ -1994,7 +1881,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
         case DIRPBIT_FINFO :
             if (isad) {
                 /* Fixes #2802236 */
-                u_int16_t *fflags = (u_int16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
+                uint16_t *fflags = (uint16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
                 *fflags &= htons(~FINDERINFO_ISHARED);
                 /* #2802236 end */
                 if (  dir->d_did == DIRDID_ROOT ) {
@@ -2038,48 +1925,15 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
             }
             break;
         case DIRPBIT_ACCESS :
-            if (dir->d_did == DIRDID_ROOT) {
-                setdeskmode(mpriv);
-                if (!dir_rx_set(mpriv)) {
-                    /* we can't remove read and search for owner on volume root */
-                    err = AFPERR_ACCESS;
-                    goto setdirparam_done;
-                }
-            }
-
-            if (!dir_rx_set(mpriv) && setdirmode( vol, upath, mpriv) < 0 ) {
-                err = set_dir_errors(path, "setdirmode", errno);
-                goto setdirparam_done;
-            }
             break;
         case DIRPBIT_PDINFO :
-            if (afp_version >= 30) {
+            if (vol->v_obj->afp_version >= 30) {
                 err = AFPERR_BITMAP;
                 goto setdirparam_done;
             }
             break;
         case DIRPBIT_UNIXPR :
-            if (vol_unix_priv(vol)) {
-                if (dir->d_did == DIRDID_ROOT) {
-                    if (!dir_rx_set(upriv)) {
-                        /* we can't remove read and search for owner on volume root */
-                        err = AFPERR_ACCESS;
-                        goto setdirparam_done;
-                    }
-                    setdeskowner( -1, ntohl(group) );
-                    setdeskmode( upriv );
-                }
-                if ( setdirowner(vol, upath, -1, ntohl(group) ) < 0 ) {
-                    err = set_dir_errors(path, "setdirowner", errno);
-                    goto setdirparam_done;
-                }
-
-                if ( upriv_bit && setdirunixmode(vol, upath, upriv) < 0 ) {
-                    err = set_dir_errors(path, "setdirunixmode", errno);
-                    goto setdirparam_done;
-                }
-            }
-            else {
+            if (!vol_unix_priv(vol)) {
                 err = AFPERR_BITMAP;
                 goto setdirparam_done;
             }
@@ -2105,18 +1959,69 @@ setdirparam_done:
         utime(upath, &ut);
     }
 
-    if ( isad ) {
+    if (isad) {
         if (path->st_valid && !path->st_errno) {
             struct stat *st = &path->st;
-
             if (dir && dir->d_pdid) {
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_pdid, vol->v_stamp);
             }
         }
-        ad_flush( &ad);
-        ad_close_metadata( &ad);
+        if (ad_flush(&ad) != 0) {
+            switch (errno) {
+            case EACCES:
+                err = AFPERR_ACCESS;
+                break;
+            default:
+                err = AFPERR_MISC;
+                break;
+           }
+        }
+        ad_close(&ad, ADFLAGS_HF);
     }
 
+    if (err == AFP_OK) {
+        if (set_maccess == true) {
+            if (dir->d_did == DIRDID_ROOT) {
+                setdeskmode(mpriv);
+                if (!dir_rx_set(mpriv)) {
+                    /* we can't remove read and search for owner on volume root */
+                    err = AFPERR_ACCESS;
+                    goto setprivdone;
+                }
+            }
+            if (setdirunixmode(vol, upath, mpriv) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirunixmode: %s",
+                    fullpathname(upath), strerror(errno));
+                err = set_dir_errors(path, "setdirmode", errno);
+            }
+        }
+        if ((set_upriv == true) && vol_unix_priv(vol)) {
+            if (dir->d_did == DIRDID_ROOT) {
+                if (!dir_rx_set(upriv)) {
+                    /* we can't remove read and search for owner on volume root */
+                    err = AFPERR_ACCESS;
+                    goto setprivdone;
+                }
+                setdeskowner(-1, ntohl(group));
+                setdeskmode(upriv);
+            }
+
+            if (setdirowner(vol, upath, -1, ntohl(group)) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirowner: %s",
+                    fullpathname(upath), strerror(errno));
+                err = set_dir_errors(path, "setdirowner", errno);
+                goto setprivdone;
+            }
+
+            if (setdirunixmode(vol, upath, upriv) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirunixmode: %s",
+                    fullpathname(upath), strerror(errno));
+                err = set_dir_errors(path, "setdirunixmode", errno);
+            }
+        }
+    }
+
+setprivdone:
     if (change_parent_mdate && dir->d_did != DIRDID_ROOT
         && gettimeofday(&tv, NULL) == 0) {
         if (movecwd(vol, dirlookup(vol, dir->d_pdid)) == 0) {
@@ -2127,7 +2032,6 @@ setdirparam_done:
             /* should we reset curdir ?*/
         }
     }
-
     return err;
 }
 
@@ -2139,8 +2043,8 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     int                  dfd;
     struct vol           *vol;
     struct dir           *dir;
-    u_int32_t            did;
-    u_int16_t            vid;
+    uint32_t            did;
+    uint16_t            vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -2228,8 +2132,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     struct dir      *dir;
     char        *upath;
     struct path         *s_path;
-    u_int32_t       did;
-    u_int16_t       vid;
+    uint32_t       did;
+    uint16_t       vid;
     int                 err;
 
     *rbuflen = 0;
@@ -2281,10 +2185,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return( AFPERR_PARAM );
     }
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
-        if (vol_noadouble(vol))
-            goto createdir_done;
+    ad_init(&ad, vol);
+    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
         return( AFPERR_ACCESS );
     }
     ad_setname(&ad, s_path->m_name);
@@ -2292,12 +2194,12 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
 
     fce_register_new_dir(s_path);
 
-    ad_flush( &ad);
-    ad_close_metadata( &ad);
+    ad_flush(&ad);
+    ad_close(&ad, ADFLAGS_HF);
 
 createdir_done:
-    memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
-    *rbuflen = sizeof( u_int32_t );
+    memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
+    *rbuflen = sizeof( uint32_t );
     setvoltime(obj, vol );
     return( AFP_OK );
 }
@@ -2348,12 +2250,12 @@ int renamedir(const struct vol *vol,
 
     vol->vfs->vfs_renamedir(vol, dirfd, src, dst);
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
 
-    if (!ad_open_metadata( dst, ADFLAGS_DIR, 0, &ad)) {
+    if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) == 0) {
         ad_setname(&ad, newname);
-        ad_flush( &ad);
-        ad_close_metadata( &ad);
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
 
     return( AFP_OK );
@@ -2367,7 +2269,7 @@ int deletecurdir(struct vol *vol)
     struct dir  *fdir, *pdir;
     DIR *dp;
     struct adouble  ad;
-    u_int16_t       ashort;
+    uint16_t       ashort;
     int err;
 
     if ((pdir = dirlookup(vol, curdir->d_pdid)) == NULL) {
@@ -2376,12 +2278,12 @@ int deletecurdir(struct vol *vol)
 
     fdir = curdir;
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     /* we never want to create a resource fork here, we are going to delete it */
     if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 
         ad_getattr(&ad, &ashort);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
         if ((ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }
@@ -2448,7 +2350,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     struct passwd   *pw;
     struct group    *gr;
     char        *name;
-    u_int32_t           id;
+    uint32_t           id;
     int         len, sfunc;
     int         utf8 = 0;
 
@@ -2457,7 +2359,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     *rbuflen = 0;
 
     if (sfunc >= 3 && sfunc <= 6) {
-        if (afp_version < 30) {
+        if (obj->afp_version < 30) {
             return( AFPERR_PARAM );
         }
         utf8 = 1;
@@ -2497,7 +2399,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
 
     case 5 : /* UUID -> username */
     case 6 : /* UUID -> groupname */
-        if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
             return AFPERR_PARAM;
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
         uuidtype_t type;
@@ -2542,7 +2444,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         len = strlen( name );
 
     if (utf8) {
-        u_int16_t tp = htons(len);
+        uint16_t tp = htons(len);
         memcpy(rbuf, &tp, sizeof(tp));
         rbuf += sizeof(tp);
         *rbuflen += 2;
@@ -2560,22 +2462,22 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     return( AFP_OK );
 }
 
-int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct passwd   *pw;
     struct group    *gr;
     int             len, sfunc;
-    u_int32_t       id;
-    u_int16_t       ulen;
+    uint32_t       id;
+    uint16_t       ulen;
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;
-    LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d, afp_version: %d", sfunc, afp_version);
+    LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d", sfunc);
     switch ( sfunc ) {
     case 1 :
     case 2 : /* unicode */
-        if (afp_version < 30) {
+        if (obj->afp_version < 30) {
             return( AFPERR_PARAM );
         }
         memcpy(&ulen, ibuf, sizeof(ulen));
@@ -2589,7 +2491,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         break;
     case 5 : /* username -> UUID  */
     case 6 : /* groupname -> UUID */
-        if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
             return AFPERR_PARAM;
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
@@ -2653,8 +2555,8 @@ int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 #if 0
     struct vol   *vol;
     struct dir   *dir;
-    u_int16_t    vid;
-    u_int32_t    did;
+    uint16_t    vid;
+    uint32_t    did;
 #endif /* 0 */
 
     *rbuflen = 0;
@@ -2689,8 +2591,8 @@ int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf, si
     struct vol      *vol;
     struct dir      *parentdir;
     struct path     *path;
-    u_int32_t       did;
-    u_int16_t       vid;
+    uint32_t       did;
+    uint16_t       vid;
 
     *rbuflen = 0;
     ibuf += 2;

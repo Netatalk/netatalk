@@ -12,43 +12,30 @@ pkgconfdir = @PKGCONFDIR@
 	sed -e s@:BINDIR:@${bindir}@ \
 	    -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
-	    -e s@:PKGLIBEXECDIR:@${pkglibexecdir}@ \
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
 GENERATED_FILES = \
-	rc.afpd.netbsd		\
-	rc.atalk.redhat-sysv	\
-	rc.atalk.systemd	\
-	rc.atalk.tru64		\
-	rc.atalk.bsd		\
-	rc.atalkd.netbsd	\
-	rc.atalk.suse-sysv	\
-	rc.cnid_metad.netbsd	\
-	rc.papd.netbsd		\
-	rc.timelord.netbsd	\
-	rc.atalk.sysv		\
-	rc.atalk.gentoo		\
-	rc.atalk.debian		\
-	service.atalk.systemd
+	rc.bsd \
+	rc.debian \
+	rc.gentoo \
+	rc.netbsd \
+	rc.redhat \
+	rc.solaris \
+	rc.suse \
+	service.systemd
 
 TEMPLATES = \
-	rc.afpd.netbsd.tmpl		\
-	rc.atalk.redhat-sysv.tmpl	\
-	rc.atalk.systemd.tmpl		\
-	rc.atalk.tru64.tmpl		\
-	rc.atalk.bsd.tmpl		\
-	rc.atalkd.netbsd.tmpl		\
-	rc.atalk.suse-sysv.tmpl		\
-	rc.cnid_metad.netbsd.tmpl	\
-	rc.papd.netbsd.tmpl		\
-	rc.timelord.netbsd.tmpl		\
-	rc.atalk.sysv.tmpl		\
-	rc.atalk.gentoo.tmpl		\
-	rc.atalk.debian.tmpl		\
-	service.atalk.systemd.tmpl
+	rc.bsd.tmpl \
+	rc.debian.tmpl \
+	rc.gentoo.tmpl \
+	rc.netbsd.tmpl \
+	rc.redhat.tmpl \
+	rc.solaris.tmpl \
+	rc.suse.tmpl \
+	service.systemd.tmpl
 
-CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd atalkd cnid_metad papd timelord
+CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
@@ -66,8 +53,8 @@ if USE_REDHAT_SYSV
 sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.redhat-sysv
-	cp -f rc.atalk.redhat-sysv $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.redhat
+	cp -f rc.redhat $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -85,26 +72,18 @@ endif
 
 if USE_SYSTEMD
 
-sysvdir	= $(pkglibexecdir)
-sysv_SCRIPTS = netatalk.sh
-
 servicedir	= /lib/systemd/system
 service_DATA	= netatalk.service
 
-$(sysv_SCRIPTS): rc.atalk.systemd
-	cp -f rc.atalk.systemd $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-$(service_DATA): service.atalk.systemd
-	cp -f service.atalk.systemd $(service_DATA)
+netatalk.service: service.systemd
+	cp -f service.systemd netatalk.service
 
 install-data-hook:
 	-systemctl daemon-reload
 
 uninstall-startup:
 	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
-		$(DESTDIR)$(servicedir)/$(service_DATA)
+	rm -f $(DESTDIR)$(servicedir)/netatalk.service
 	-systemctl daemon-reload
 
 endif
@@ -118,8 +97,8 @@ if USE_SUSE_SYSV
 sysvdir	= /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.suse-sysv
-	cp -f rc.atalk.suse-sysv $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.suse
+	cp -f rc.suse $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -132,52 +111,15 @@ uninstall-startup:
 endif
 
 #
-# checking for "tru64" style sysv scripts:
-#
-
-if USE_TRU64
-
-sysvdir	= /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.tru64
-	cp -f rc.atalk.tru64 $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
-
-endif
-
-#
 # checking for NetBSD init scripts
 #
 
 if USE_NETBSD
 
 sysvdir = /etc/rc.d
-sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord
+sysv_SCRIPTS = netatalk
 
-afpd: rc.afpd.netbsd
-	cp -f $< $@
-	chmod a+x $@
-
-atalkd: rc.atalkd.netbsd
-	cp -f $< $@
-	chmod a+x $@
-
-cnid_metad: rc.cnid_metad.netbsd
-	cp -f $< $@
-	chmod a+x $@
-
-papd: rc.papd.netbsd
-	cp -f $< $@
-	chmod a+x $@
-
-timelord: rc.timelord.netbsd
+netatalk: rc.netbsd
 	cp -f $< $@
 	chmod a+x $@
 
@@ -198,8 +140,8 @@ if USE_SOLARIS
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.sysv
-	cp -f rc.atalk.sysv $@
+$(sysv_SCRIPTS): rc.solaris
+	cp -f rc.solaris $@
 	chmod a+x $@
 
 install-data-hook:
@@ -224,8 +166,8 @@ if USE_GENTOO
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.gentoo
-	cp -f rc.atalk.gentoo $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.gentoo
+	cp -f rc.gentoo $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -246,8 +188,8 @@ if USE_DEBIAN
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.debian
-	cp -f rc.atalk.debian $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.debian
+	cp -f rc.debian $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:

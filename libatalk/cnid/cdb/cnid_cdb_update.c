@@ -1,7 +1,3 @@
-/*
- * $Id: cnid_cdb_update.c,v 1.4 2009-11-20 17:22:11 didg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -14,9 +10,8 @@
 /* cnid_update: takes the given cnid and updates the metadata.  To
  * handle the did/name data, there are a bunch of functions to get
  * and set the various fields. */
-int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const size_t len
-                /*, const char *info, const int infolen*/)
+int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                    cnid_t did, const char *name, size_t len)
 {
     unsigned char *buf;
     CNID_private *db;

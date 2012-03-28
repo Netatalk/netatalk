@@ -16,9 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 
 #include <atalk/adouble.h>
 #include <atalk/util.h>

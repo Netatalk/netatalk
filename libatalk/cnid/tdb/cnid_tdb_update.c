@@ -1,7 +1,3 @@
-/*
- * $Id: cnid_tdb_update.c,v 1.6 2009-11-21 11:12:49 didg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -11,9 +7,8 @@
 #include "cnid_tdb.h"
 #include <atalk/logger.h>
 
-int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                     const cnid_t did, char *name, const size_t len
-                     /*, const char *info, const int infolen */ )
+int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                    cnid_t did, const char *name, size_t len)
 {
     struct _cnid_tdb_private *db;
     TDB_DATA key, data, altdata;

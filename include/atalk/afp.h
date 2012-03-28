@@ -24,23 +24,14 @@
 #ifndef _ATALK_AFP_H
 #define _ATALK_AFP_H 1
 
+#include <stdint.h>
 #include <sys/types.h>
-#include <netatalk/endian.h>
 
-typedef u_int16_t AFPUserBytes;
+typedef uint16_t AFPUserBytes;
 
 /* protocols */
 #define AFPPROTO_ASP           1
 #define AFPPROTO_DSI           2
-
-/* actual transports. the DSI ones (tcp right now) need to be
- * kept in sync w/ <atalk/dsi.h>. 
- * convention: AFPTRANS_* = (1 << DSI_*) 
- */
-#define AFPTRANS_NONE          0
-#define AFPTRANS_DDP          (1 << 0)
-#define AFPTRANS_TCP          (1 << 1)
-#define AFPTRANS_ALL          (AFPTRANS_DDP | AFPTRANS_TCP)
 
 /* server flags */
 #define AFPSRVRINFO_COPY         (1<<0)  /* supports copyfile */

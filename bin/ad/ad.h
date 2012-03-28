@@ -20,10 +20,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
+#include <atalk/globals.h>
 #include <atalk/ftw.h>
-#include <atalk/volinfo.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
+#include <atalk/volume.h>
 
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
@@ -47,26 +50,26 @@ enum logtype {STD, DBG};
     } while (0)
 
 typedef struct {
-    struct volinfo volinfo;
-    struct vol     volume;
+    struct vol     *vol;
     char           db_stamp[ADEDLEN_PRIVSYN];
 } afpvol_t;
 
 extern int log_verbose;             /* Logging flag */
 extern void _log(enum logtype lt, char *fmt, ...);
 
-extern int ad_ls(int argc, char **argv);
-extern int ad_cp(int argc, char **argv);
-extern int ad_rm(int argc, char **argv);
-extern int ad_mv(int argc, char **argv);
-extern int ad_find(int argc, char **argv);
+extern int ad_ls(int argc, char **argv, AFPObj *obj);
+extern int ad_cp(int argc, char **argv, AFPObj *obj);
+
+extern int ad_rm(int argc, char **argv, AFPObj *obj);
+extern int ad_mv(int argc, char **argv, AFPObj *obj);
+extern int ad_find(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */
-extern int openvol(const char *path, afpvol_t *vol);
+extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const afpvol_t *vol, const char *path, cnid_t *did);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did);
-extern char *utompath(const struct volinfo *volinfo, const char *upath);
+extern char *utompath(const struct vol *, const char *);
 extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen);
 
 typedef struct {

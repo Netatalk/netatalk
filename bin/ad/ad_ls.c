@@ -33,7 +33,6 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include <atalk/volinfo.h>
 #include "ad.h"
 
 #define ADv2_DIRNAME ".AppleDouble"
@@ -228,10 +227,10 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     if (S_ISDIR(st->st_mode))
         adflags = ADFLAGS_DIR;
 
-    if (vol->volinfo.v_path == NULL)
+    if (vol->vol->v_path == NULL)
         return;
 
-    ad_init(&ad, vol->volinfo.v_adouble, vol->volinfo.v_ad_options);
+    ad_init(&ad, vol->vol);
 
     if ( ad_metadata(path, adflags, &ad) < 0 )
         return;
@@ -381,7 +380,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     else
         printf(" !ADVOL_CACHE ");
 
-    ad_close_metadata(&ad);
+    ad_close(&ad, ADFLAGS_HF);
 }
 
 #define TYPE(b) ((st->st_mode & (S_IFMT)) == (b))
@@ -595,7 +594,7 @@ exit:
     return ret;
 }
 
-int ad_ls(int argc, char **argv)
+int ad_ls(int argc, char **argv, AFPObj *obj)
 {
     int c, firstarg;
     afpvol_t vol;
@@ -631,7 +630,7 @@ int ad_ls(int argc, char **argv)
     cnid_init();
 
     if ((argc - optind) == 0) {
-        openvol(".", &vol);
+        openvol(obj, ".", &vol);
         ad_ls_r(".", &vol);
         closevol(&vol);
     }
@@ -651,7 +650,7 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            openvol(argv[optind], &vol);
+            openvol(obj, argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
         next:
@@ -673,7 +672,7 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            openvol(argv[optind], &vol);
+            openvol(obj, argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
 

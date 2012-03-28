@@ -28,7 +28,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 #include <stdlib.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/unicode.h>
 
 #include "mac_turkish.h"

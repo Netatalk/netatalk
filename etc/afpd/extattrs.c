@@ -1,5 +1,4 @@
 /*
-  $Id: extattrs.c,v 1.29 2010-01-05 12:06:33 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -29,6 +28,7 @@
 #include <atalk/logger.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "volume.h"
 #include "desktop.h"
@@ -139,7 +139,6 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             return( AFPERR_NOOBJ );
         }
 
-        adp = of_ad(vol, s_path, &ad);
         uname = s_path->u_name;
         /*
           We have to check the FinderInfo for the file, because if they aren't all 0
@@ -151,10 +150,11 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
 
-        if ( ad_metadata( uname, adflags, adp) < 0 ) {
+        adp = &ad;
+        ad_init(adp, vol);
+        if (ad_metadata(uname, adflags, adp) != 0 ) {
             switch (errno) {
             case ENOENT:
-                adp = NULL;
                 break;
             case EACCES:
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
@@ -164,15 +164,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s", uname, strerror(errno));
                 return AFPERR_MISC;
             }
-        }
-
-        if (adp) {
+        } else {
             FinderInfo = ad_entry(adp, ADEID_FINDERI);
-
-#ifdef DEBUG
-            LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
-            hexdump( FinderInfo, 32);
-#endif
 
             if ((adflags & ADFLAGS_DIR)) {
                 /* set default view */
@@ -214,7 +207,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         default:
             buf_valid = 1;
         }
-    }
+    } /* if ((maxreply == 0) || (buf_valid == 0)) */
 
     /* Start building reply packet */
     bitmap = htons(bitmap);
@@ -240,8 +233,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 exit:
     if (ret != AFP_OK)
         buf_valid = 0;
+
     if (adp)
-        ad_close_metadata( adp);
+        ad_close(adp, ADFLAGS_HF);
 
     return ret;
 }

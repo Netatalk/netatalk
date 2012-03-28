@@ -1,0 +1,19 @@
+diff --git a/libevent/Makefile.am b/libevent/Makefile.am
+index 46f6d34..dda19b2 100644
+--- a/libevent/Makefile.am
++++ b/libevent/Makefile.am
+@@ -173,7 +173,7 @@ NO_UNDEFINED =
+ MAYBE_CORE =
+ endif
+ 
+-GENERIC_LDFLAGS = -version-info $(VERSION_INFO) $(RELEASE) $(NO_UNDEFINED)
++GENERIC_LDFLAGS = -static
+ 
+ libevent_la_SOURCES = $(CORE_SRC) $(EXTRA_SRC)
+ libevent_la_LIBADD = @LTLIBOBJS@ $(SYS_LIBS)
+@@ -221,3 +221,5 @@ FORCE:
+ 
+ DISTCLEANFILES = *~ libevent.pc ./include/event2/event-config.h
+ 
++install:
++

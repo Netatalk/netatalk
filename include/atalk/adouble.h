@@ -1,5 +1,4 @@
 /*
- * $Id: adouble.h,v 1.55 2010-03-30 12:55:26 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -36,46 +35,32 @@
 
 #include <atalk/standards.h>
 
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#ifdef HAVE_UNISTD_H
-#undef __USE_MISC
-#define __USE_MISC
 #include <unistd.h>
-#endif
-
-#include <sys/cdefs.h>
-
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
 
 #include <sys/mman.h>
 
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#include <netatalk/endian.h>
+
+#include <atalk/bstrlib.h>
 
 /* version info */
-#define AD_VERSION1     0x00010000
-#define SFM_VERSION     AD_VERSION1
-
 #define AD_VERSION2     0x00020000
 #define AD_VERSION2_OSX 0x00020001
-/*
-  #define AD_VERSION1_ADS 0x00010002
-*/
-#define AD_VERSION1_SFM 0x00010003
-#define AD_VERSION      AD_VERSION2
+#define AD_VERSION_EA   0x00020002
+
+/* default */
+#define AD_VERSION      AD_VERSION_EA
 
 /*
  * AppleDouble entry IDs.
  */
 #define ADEID_DFORK         1
 #define ADEID_RFORK         2
-#define ADEID_NAME          3 /* Note: starting with Netatalk 2.1 we do NOT alway set the name */
+#define ADEID_NAME          3
 #define ADEID_COMMENT       4
 #define ADEID_ICONBW        5
 #define ADEID_ICONCOL       6
@@ -89,48 +74,37 @@
 #define ADEID_AFPFILEI      14 /* where the rest of the FILEI info goes */
 #define ADEID_DID           15
 
-#if AD_VERSION == AD_VERSION1
-#define ADEID_MAX           16
-#else
 /* netatalk private note fileid reused DID */
 #define ADEID_PRIVDEV       16
 #define ADEID_PRIVINO       17
 #define ADEID_PRIVSYN       18 /* in synch with database */
 #define ADEID_PRIVID        19
-#define ADEID_SFMRESERVE1   20
-#define ADEID_SFMRESERVE2   21
+#define ADEID_MAX           (ADEID_PRIVID + 1)
 
+/* These are the real ids for these entries, as stored in the adouble file */
 #define AD_DEV              0x80444556
 #define AD_INO              0x80494E4F
 #define AD_SYN              0x8053594E
 #define AD_ID               0x8053567E
-#define ADEID_MAX           22
-#endif
 
 /* magic */
 #define AD_APPLESINGLE_MAGIC 0x00051600
 #define AD_APPLEDOUBLE_MAGIC 0x00051607
 #define AD_MAGIC             AD_APPLEDOUBLE_MAGIC
-#define SFM_MAGIC            0x00504641
 
 /* sizes of relevant entry bits */
 #define ADEDLEN_MAGIC       4
 #define ADEDLEN_VERSION     4
 #define ADEDLEN_FILLER      16
 #define ADEDLEN_NENTRIES    2
-
-/* 26 */
-#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + \
-                             ADEDLEN_FILLER + ADEDLEN_NENTRIES)
+#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES) /* 26 */
 #define AD_ENTRY_LEN        12  /* size of a single entry header */
 
-/* v1 field widths */
-#define ADEDLEN_NAME        255
-#define ADEDLEN_COMMENT     200
-#define ADEDLEN_FILEI       16
-#define ADEDLEN_FINDERI     32
-
-/* v2 field widths */
+/* field widths */
+#define ADEDLEN_NAME            255
+#define ADEDLEN_COMMENT         200
+#define ADEDLEN_FILEI           16
+#define ADEDLEN_FINDERI         32
 #define ADEDLEN_FILEDATESI      16
 #define ADEDLEN_SHORTNAME       12 /* length up to 8.3 */
 #define ADEDLEN_AFPFILEI        4
@@ -143,71 +117,48 @@
 #define ADEDLEN_PRIVSYN         8
 #define ADEDLEN_PRIVID          4
 
-#define ADEID_NUM_V1            5
 #define ADEID_NUM_V2            13
+#define ADEID_NUM_EA            8
+#define ADEID_NUM_OSX           2
 
-// #define ADEID_NUM_SFM        5
-/* sizeof SFM meta data */
-#define AD_SFM_LEN 60
-
-/* 589 */
-#define AD_DATASZ1      (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + ADEDLEN_FINDERI + \
-                         (ADEID_NUM_V1 * AD_ENTRY_LEN))
-
-#if AD_DATASZ1 != 589
-#error bad size for AD_DATASZ1
-#endif
-
-#define AD_NEWSZ2       (ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + ADEDLEN_PRODOSFILEI \
-                         + ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + ADEDLEN_PRIVSYN + ADEDLEN_PRIVID)
-
-/* 725 */
-#define AD_DATASZ2      (AD_DATASZ1 + AD_NEWSZ2 + ((ADEID_NUM_V2 - ADEID_NUM_V1) * AD_ENTRY_LEN))
-
+#define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
+                    ADEDLEN_FINDERI + ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + \
+                    ADEDLEN_PRODOSFILEI + ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + \
+                    ADEDLEN_PRIVSYN + ADEDLEN_PRIVID + (ADEID_NUM_V2 * AD_ENTRY_LEN))
 #if AD_DATASZ2 != 741
 #error bad size for AD_DATASZ2
 #endif
 
+#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + \
+                      ADEDLEN_FINDERI + ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + \
+                      ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + ADEDLEN_PRIVSYN + ADEDLEN_PRIVID)
+
+#if AD_DATASZ_EA != 402
+#error bad size for AD_DATASZ_EA
+#endif
+
+#define AD_DATASZ_OSX (AD_HEADER_LEN + (ADEID_NUM_OSX * AD_ENTRY_LEN) + ADEDLEN_FINDERI)
+
+#if AD_DATASZ_OSX != 82
+#error bad size for AD_DATASZ_OSX
+#endif
+
 #define AD_DATASZ_MAX   1024
-#if AD_VERSION == AD_VERSION1
-#define AD_DATASZ   AD_DATASZ1 /* hold enough for the entries */
-#elif AD_VERSION == AD_VERSION2
+
+#if AD_VERSION == AD_VERSION2
 #define AD_DATASZ   AD_DATASZ2
+#elif AD_VERSION == AD_VERSION_EA
+#define AD_DATASZ   AD_DATASZ_EA
 #endif
 
-/*
- * some legacy defines from netatalk-990130
- * (to keep from breaking certain packages)
- *
- */
+/* fallback for ad:ea on filesystems without fds for EAs, like old adouble:osx */
+#define ADEDOFF_FINDERI_OSX  (AD_HEADER_LEN + ADEID_NUM_OSX*AD_ENTRY_LEN)
+#define ADEDOFF_RFORK_OSX    (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI)
 
-#define ADEDOFF_RFORK   589
-#define ADEDOFF_NAME    86
-#define ADEDOFF_COMMENT 341
-#define ADEDOFF_FINDERI 557
-#ifndef ADEDOFF_FILEI
-#define ADEDOFF_FILEI   541
-#endif
-
-typedef u_int32_t cnid_t;
-
-/*
- * The header of the AppleDouble Header File looks like this:
- *
- *  NAME            SIZE
- *  ====            ====
- *  Magic           4
- *  Version         4
- *  Home File System    16  (this becomes filler in ad v2)
- *  Number of Entries   2
- *  Entry Descriptors for each entry:
- *      Entry ID    4
- *      Offset      4
- *      Length      4
- */
+typedef uint32_t cnid_t;
 
 struct ad_entry {
-    off_t   ade_off;
+    off_t     ade_off;
     ssize_t   ade_len;
 };
 
@@ -219,80 +170,81 @@ typedef struct adf_lock_t {
 
 struct ad_fd {
     int          adf_fd;        /* -1: invalid, -2: symlink */
-
-#ifndef HAVE_PREAD
-    off_t        adf_off;
-#endif
-
     char         *adf_syml;
     int          adf_flags;
-    int          adf_excl;
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
 };
 
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
-struct adouble_fops;
+#define AD_CLOSED  0xadc10ced
 
-struct adouble {
-    u_int32_t           ad_magic;
-    u_int32_t           ad_version;
-    char                ad_filler[ 16 ];
-    struct ad_entry     ad_eid[ ADEID_MAX ];
-    struct ad_fd        ad_data_fork, ad_resource_fork, ad_metadata_fork;
-    struct ad_fd        *ad_md; /* either ad_resource or ad_metadata */
-
-    int                 ad_flags;    /* This really stores version info too (AD_VERSION*) */
-    int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
-    unsigned int        ad_inited;
-    int                 ad_options;
-    int                 ad_fileordir;
-    int                 ad_refcount; /* used in afpd/ofork.c */
-    off_t               ad_rlen;     /* ressource fork len with AFP 3.0
-                                        the header parameter size is too small.
-                                     */
-    char                *ad_m_name;   /* mac name for open fork */
-    int                 ad_m_namelen;
-    struct adouble_fops *ad_ops;
-    u_int16_t       ad_open_forks;      /* open forks (by others) */
-
-#ifdef USE_MMAPPED_HEADERS
-    char                *ad_data;
-#else
-    char        ad_data[AD_DATASZ_MAX];
-#endif
-};
+struct adouble;
 
 struct adouble_fops {
-    char *(*ad_path)(const char *, int);
-    int  (*ad_mkrf)(char *);
+    const char *(*ad_path)(const char *, int);
+    int  (*ad_mkrf)(const char *);
     int  (*ad_rebuild_header)(struct adouble *);
-    int  (*ad_check_header)(struct adouble *, struct stat *);
-    int  (*ad_header_read)(struct adouble *, struct stat *);
-    int  (*ad_header_upgrade)(struct adouble *, char *);
+    int  (*ad_header_read)(const char *, struct adouble *, const struct stat *);
+    int  (*ad_header_upgrade)(struct adouble *, const char *);
+};
+
+struct adouble {
+    uint32_t            ad_magic;         /* Official adouble magic                   */
+    uint32_t            ad_version;       /* Official adouble version number          */
+    char                ad_filler[16];
+    struct ad_entry     ad_eid[ADEID_MAX];
+
+    struct ad_fd        ad_data_fork;     /* the data fork                            */
+
+    struct ad_fd        ad_metadata_fork; /* adouble:v2 -> unused                     *
+                                           * adouble:ea -> fd unused, only flags used */
+
+    struct ad_fd        ad_resource_fork; /* adouble:v2 -> the adouble file           *
+                                           * adouble:ea -> the EA fd                  */
+
+    struct ad_fd        *ad_rfp;          /* adouble:v2 -> ad_resource_fork           *
+                                           * adouble:ea -> ad_resource_fork           */
+
+    struct ad_fd        *ad_mdp;          /* adouble:v2 -> ad_resource_fork           *
+                                           * adouble:ea -> ad_metadata_fork           */
+
+    int                 ad_vers;          /* Our adouble version info (AD_VERSION*)   */
+    int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
+    uint32_t            ad_inited;
+    int                 ad_options;
+    int                 ad_refcount;       /* multiple forks may open one adouble     */
+    off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
+                                            * the header parameter size is too small. */
+    char                *ad_name;          /* name in server encoding (usually UTF8)  */
+    struct adouble_fops *ad_ops;
+    uint16_t            ad_open_forks;     /* open forks (by others)                  */
+    char                ad_data[AD_DATASZ_MAX];
 };
 
 #define ADFLAGS_DF        (1<<0)
-#define ADFLAGS_HF        (1<<1)
-#define ADFLAGS_DIR       (1<<2)
-/*
-#define ADFLAGS_NOADOUBLE (1<<3)
-*/
-#define ADFLAGS_V1COMPAT  (1<<4)
-#define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
-#define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
-#define ADFLAGS_OPENFORKS (1<<7)  /* check for open fork in ad_metadata function */
-#define ADFLAGS_RF        (1<<8)
-#define ADFLAGS_MD        ADFLAGS_HF /* (1<<9) */
-#define ADFLAGS_CREATE    (1<<9)
+#define ADFLAGS_RF        (1<<1)
+#define ADFLAGS_HF        (1<<2)
+#define ADFLAGS_DIR       (1<<3)
+#define ADFLAGS_NOHF      (1<<4)  /* not an error if no metadata fork */
+#define ADFLAGS_NORF      (1<<5)  /* not an error if no ressource fork */
+#define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
+#define ADFLAGS_SETSHRMD  (1<<7)  /* setting share mode must be done with excl fcnt lock,
+                                     which implies that the file must be openend rw.
+                                     If it can't be opened rw (eg EPERM or EROFS) it will
+                                     be opened ro and the fcntl locks will be shared, that
+                                     at least prevent other users who have rw access to the
+                                     file from placing excl locks. */
+#define ADFLAGS_RDWR      (1<<8)  /* open read/write */
+#define ADFLAGS_RDONLY    (1<<9)  /* open read only */
+#define ADFLAGS_CREATE    (1<<10)  /* create file, open called with O_CREAT */
+#define ADFLAGS_EXCL      (1<<11)  /* exclusive open, open called with O_EXCL */
+#define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
 
-/* adouble v2 cnid cache */
 #define ADVOL_NODEV      (1 << 0)
-#define ADVOL_CACHE      (1 << 1)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
-#define ADVOL_NOADOUBLE  (1 << 4)
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -303,39 +255,28 @@ struct adouble_fops {
 #define ADLOCK_FILELOCK (1<<3)
 
 /* we use this so that we can use the same mechanism for both byte
- * locks and file synchronization locks. i do this by co-opting either
- * first bits on 32-bit machines or shifting above the last bit on
- * 64-bit machines. this only matters for the data fork. */
-#if defined(TRY_64BITOFF_T) && (~0UL > 0xFFFFFFFFU)
-/* synchronization locks */
-#define AD_FILELOCK_BASE (0x80000000)
-#else
+ * locks and file synchronization locks. */
 #if _FILE_OFFSET_BITS == 64
-#define AD_FILELOCK_BASE (0x7FFFFFFFFFFFFFFFULL - 9)
+#define AD_FILELOCK_BASE (UINT64_C(0x7FFFFFFFFFFFFFFF) - 9)
 #else
-#define AD_FILELOCK_BASE (0x7FFFFFFF -9)
-#endif
+#define AD_FILELOCK_BASE (UINT32_C(0x7FFFFFFF) - 9)
 #endif
 
-/* FIXME:
- * AD_FILELOCK_BASE case
- */
-#if _FILE_OFFSET_BITS == 64
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
-/* Tru64 is an always-64-bit OS; version 4.0 does not set _FILE_OFFSET_BITS */
-#if defined(TRU64)
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
-#define BYTELOCK_MAX (0x7FFFFFFFU)
-#endif
-#endif
+#define BYTELOCK_MAX (AD_FILELOCK_BASE - 1)
 
+/* datafork and rsrcfork sharemode locks */
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
 #define AD_FILELOCK_OPEN_RD        (AD_FILELOCK_BASE + 1)
-#define AD_FILELOCK_DENY_WR        (AD_FILELOCK_BASE + 2)
-#define AD_FILELOCK_DENY_RD        (AD_FILELOCK_BASE + 3)
-#define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 4)
+#define AD_FILELOCK_RSRC_OPEN_WR   (AD_FILELOCK_BASE + 2)
+#define AD_FILELOCK_RSRC_OPEN_RD   (AD_FILELOCK_BASE + 3)
+
+#define AD_FILELOCK_DENY_WR        (AD_FILELOCK_BASE + 4)
+#define AD_FILELOCK_DENY_RD        (AD_FILELOCK_BASE + 5)
+#define AD_FILELOCK_RSRC_DENY_WR   (AD_FILELOCK_BASE + 6)
+#define AD_FILELOCK_RSRC_DENY_RD   (AD_FILELOCK_BASE + 7)
+
+#define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 8)
+#define AD_FILELOCK_RSRC_OPEN_NONE (AD_FILELOCK_BASE + 9)
 
 /* time stuff. we overload the bits a little.  */
 #define AD_DATE_CREATE         0
@@ -404,159 +345,99 @@ struct adouble_fops {
 #define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
 
 #define ad_data_fileno(ad)  ((ad)->ad_data_fork.adf_fd)
-#define ad_reso_fileno(ad)  ((ad)->ad_resource_fork.adf_fd)
-#define ad_meta_fileno(ad)  ((ad)->ad_md->adf_fd)
+#define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
+#define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
+
+/* -1 means not open, -2 is a symlink */
+#define AD_DATA_OPEN(ad) ((ad)->ad_data_fork.adf_fd >= 0)
+#define AD_META_OPEN(ad) ((ad)->ad_mdp->adf_fd >= 0)
+#define AD_RSRC_OPEN(ad) ((ad)->ad_rfp->adf_fd >= 0)
 
 #define ad_getversion(ad)   ((ad)->ad_version)
 
 #define ad_getentrylen(ad,eid)     ((ad)->ad_eid[(eid)].ade_len)
 #define ad_setentrylen(ad,eid,len) ((ad)->ad_eid[(eid)].ade_len = (len))
-#define ad_getentryoff(ad,eid)     ((ad)->ad_eid[(eid)].ade_off)
+#define ad_setentryoff(ad,eid,off) ((ad)->ad_eid[(eid)].ade_off = (off))
 #define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
-#define ad_get_HF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
-#define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
+#define ad_get_RF_flags(ad) ((ad)->ad_rfp->adf_flags)
+#define ad_get_MD_flags(ad) ((ad)->ad_mdp->adf_flags)
+
+/* Refcounting open forks using one struct adouble */
+#define ad_ref(ad)   (ad)->ad_refcount++
+#define ad_unref(ad) --((ad)->ad_refcount)
 
 /* ad_flush.c */
-extern int ad_rebuild_adouble_header (struct adouble *);
-extern int ad_rebuild_sfm_header (struct adouble *);
+extern int ad_rebuild_adouble_header_v2(struct adouble *);
+extern int ad_rebuild_adouble_header_ea(struct adouble *);
 extern int ad_copy_header (struct adouble *, struct adouble *);
 extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);
+extern int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags);
 
 /* ad_lock.c */
-extern int ad_fcntl_lock    (struct adouble *, const u_int32_t /*eid*/,
-                                 const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/);
-extern void ad_fcntl_unlock (struct adouble *, const int /*user*/);
-extern int ad_fcntl_tmplock (struct adouble *, const u_int32_t /*eid*/,
-                                 const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/);
-extern int ad_testlock      (struct adouble * /*adp*/, int /*eid*/, off_t /*off*/);
-
-extern u_int16_t ad_openforks (struct adouble * /*adp*/, u_int16_t);
-extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
-
-#define ad_lock ad_fcntl_lock
-#define ad_tmplock ad_fcntl_tmplock
-#define ad_unlock ad_fcntl_unlock
+extern int ad_testlock      (struct adouble *adp, int eid, off_t off);
+extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
+extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int fork);
+extern void ad_unlock(struct adouble *, int fork, int unlckbrl);
+extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int fork);
 
 /* ad_open.c */
+extern off_t ad_getentryoff(const struct adouble *ad, int eid);
+extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
-extern char *ad_path      (const char *, int);
-extern char *ad_path_osx  (const char *, int);
-extern char *ad_path_ads  (const char *, int);
-extern char *ad_path_sfm  (const char *, int);
-extern int ad_mode        (const char *, int);
-extern int ad_mkdir       (const char *, int);
-extern void ad_init       (struct adouble *, int, int );
-extern int ad_open        (const char *, int, int, int, struct adouble *);
-extern int ad_openat      (int dirfd, const char *, int, int, int, struct adouble *);
-extern int ad_refresh     (struct adouble *);
+extern const char *ad_path      (const char *, int);
+extern const char *ad_path_ea   (const char *, int);
+extern const char *ad_path_osx  (const char *path, int adflags);
+extern int ad_mode        (const char *, mode_t);
+extern int ad_mkdir       (const char *, mode_t);
+struct vol;
+extern void ad_init       (struct adouble *, const struct vol * restrict);
+extern void ad_init_old   (struct adouble *ad, int flags, int options);
+extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
+extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
+extern int ad_refresh     (const char *path, struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
-
-#define ad_open_metadata(name, flags, mode, adp)\
-   ad_open(name, ADFLAGS_MD|(flags), O_RDWR |(mode), 0666, (adp))
-
-#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_MD)
-
-/* build a resource fork mode from the data fork mode:
- * remove X mode and extend header to RW if R or W (W if R for locking),
- */
-static inline mode_t ad_hf_mode (mode_t mode)
-{
-    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
-    /* fnctl lock need write access */
-    if ((mode & S_IRUSR))
-        mode |= S_IWUSR;
-    if ((mode & S_IRGRP))
-        mode |= S_IWGRP;
-    if ((mode & S_IROTH))
-        mode |= S_IWOTH;
-
-    /* if write mode set add read mode */
-    if ((mode & S_IWUSR))
-        mode |= S_IRUSR;
-    if ((mode & S_IWGRP))
-        mode |= S_IRGRP;
-    if ((mode & S_IWOTH))
-        mode |= S_IROTH;
-
-    return mode;
-}
-
-/* ad_ea.c */
-ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
-ssize_t sys_listxattr (const char *path, char *list, size_t size);
-ssize_t sys_llistxattr (const char *path, char *list, size_t size);
-ssize_t sys_flistxattr (int filedes, char *list, size_t size);
-int sys_removexattr (const char *path, const char *name);
-int sys_lremovexattr (const char *path, const char *name);
-int sys_fremovexattr (int filedes, const char *name);
-int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
-int sys_copyxattr (const char *src, const char *dst);
-
+extern mode_t ad_hf_mode(mode_t mode);
+extern int ad_convert(const char *path, const struct stat *sp, const struct vol *vol);
+extern int ad_valid_header_osx(const char *path);
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
-
-extern ssize_t ad_read (struct adouble *, const u_int32_t,
-                            const off_t, char *, const size_t);
-extern ssize_t ad_pread (struct ad_fd *, void *, size_t, off_t);
-extern ssize_t ad_write (struct adouble *, const u_int32_t, off_t,
-                             const int, const char *, const size_t);
-extern ssize_t adf_pread  (struct ad_fd *, void *, size_t, off_t);
-extern ssize_t adf_pwrite (struct ad_fd *, const void *, size_t, off_t);
-extern int     ad_dtruncate (struct adouble *, const off_t);
-extern int     ad_rtruncate (struct adouble *, const off_t);
+extern ssize_t ad_read(struct adouble *, uint32_t, off_t, char *, size_t);
+extern ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t);
+extern ssize_t ad_write(struct adouble *, uint32_t, off_t, int, const char *, size_t);
+extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);
+extern ssize_t adf_pwrite(struct ad_fd *, const void *, size_t, off_t);
+extern int     ad_dtruncate(struct adouble *, off_t);
+extern int     ad_rtruncate(struct adouble *, off_t);
+extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads);
 
 /* ad_size.c */
-extern off_t ad_size (const struct adouble *, const u_int32_t );
+extern off_t ad_size (const struct adouble *, uint32_t );
 
 /* ad_mmap.c */
-extern void *ad_mmapread (struct adouble *, const u_int32_t,
-                              const off_t, const size_t);
-extern void *ad_mmapwrite (struct adouble *, const u_int32_t,
-                               const off_t, const int, const size_t);
+extern void *ad_mmapread(struct adouble *, uint32_t, off_t, size_t);
+extern void *ad_mmapwrite(struct adouble *, uint32_t, off_t, int, size_t);
 #define ad_munmap(buf, len)  (munmap((buf), (len)))
 
 /* ad_date.c */
-extern int ad_setdate (struct adouble *, unsigned int, u_int32_t);
-extern int ad_getdate (const struct adouble *, unsigned int, u_int32_t *);
+extern int ad_setdate(struct adouble *, unsigned int, uint32_t);
+extern int ad_getdate(const struct adouble *, unsigned int, uint32_t *);
 
 /* ad_attr.c */
-extern int       ad_setattr (const struct adouble *, const u_int16_t);
-extern int       ad_getattr (const struct adouble *, u_int16_t *);
-
-/* Note: starting with Netatalk 2.1 we do NOT alway set the name */
-extern int       ad_setname (struct adouble *, const char *);
-
-#if AD_VERSION == AD_VERSION2
-extern int       ad_setid (struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *);
-extern u_int32_t ad_getid (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *);
-extern u_int32_t ad_forcegetid (struct adouble *adp);
-#else
-#define ad_setid(a, b, c)
-#endif
+extern int       ad_setattr(const struct adouble *, uint16_t);
+extern int       ad_getattr(const struct adouble *, uint16_t *);
+extern int       ad_setname(struct adouble *, const char *);
+extern int       ad_setid(struct adouble *, dev_t dev, ino_t ino, uint32_t, uint32_t, const void *);
+extern uint32_t  ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
+extern uint32_t  ad_forcegetid(struct adouble *adp);
 
 #ifdef WITH_SENDFILE
-extern int ad_readfile_init(const struct adouble *ad, 
-				       const int eid, off_t *off,
-				       const int end);
+extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off, int end);
 #endif
-
-#if 0
-#ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile (struct adouble *, const int,
-                                 const int, off_t, const int, const size_t);
-#endif /* HAVE_SENDFILE_WRITE */
-#endif /* 0 */
 
 #endif /* _ATALK_ADOUBLE_H */

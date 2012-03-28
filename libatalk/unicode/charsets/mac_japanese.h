@@ -20,11 +20,11 @@
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
-static const u_int16_t mac_japanese_uni2_page00[][2] = {
+static const uint16_t mac_japanese_uni2_page00[][2] = {
   /* 0x00a */ { 0x0201,    1 },
 };
 
-static const u_int16_t mac_japanese_uni2_page20[][2] = {
+static const uint16_t mac_japanese_uni2_page20[][2] = {
   /* 0x201 */ { 0x0030,    3 }, { 0x0000,    0 }, { 0x4000,    5 },
   /* 0x204 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x208 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
@@ -38,12 +38,12 @@ static const u_int16_t mac_japanese_uni2_page20[][2] = {
   /* 0x228 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x8000,   44 },
 };
 
-static const u_int16_t mac_japanese_uni2_page24[][2] = {
+static const uint16_t mac_japanese_uni2_page24[][2] = {
   /* 0x246 */ { 0xffff,   45 }, { 0xffff,   61 },
   /* 0x248 */ { 0xffff,   77 }, { 0xf001,   93 }, { 0xffff,   98 }, { 0x003f,  114 },
 };
 
-static const u_int16_t mac_japanese_uni2_page26[][2] = {
+static const uint16_t mac_japanese_uni2_page26[][2] = {
   /* 0x260 */ { 0x4000,  120 }, { 0xf000,  121 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x264 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x00ff,  125 }, { 0x0000,    0 },
   /* 0x268 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
@@ -52,14 +52,14 @@ static const u_int16_t mac_japanese_uni2_page26[][2] = {
   /* 0x274 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x7fc0,  133 },
 };
 
-static const u_int16_t mac_japanese_uni2_page30[][2] = {
+static const uint16_t mac_japanese_uni2_page30[][2] = {
   /* 0x300 */ { 0x0010,  142 }, { 0xa000,  143 }, { 0x0001,  145 }, { 0x0000,    0 },
   /* 0x304 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x308 */ { 0x0000,    0 }, { 0x0010,  146 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x30c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0780,  147 },
 };
 
-static const u_int16_t mac_japanese_uni2_page32[][2] = {
+static const uint16_t mac_japanese_uni2_page32[][2] = {
   /* 0x322 */ { 0xfc00,  151 }, { 0xffff,  157 },
   /* 0x324 */ { 0x000d,  173 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x328 */ { 0x0000,    0 }, { 0x6340,  176 }, { 0x03f0,  181 }, { 0x0000,    0 },
@@ -70,12 +70,12 @@ static const u_int16_t mac_japanese_uni2_page32[][2] = {
   /* 0x33c */ { 0x2810,  242 }, { 0x0010,  245 },
 };
 
-static const u_int16_t mac_japanese_uni2_pagee0[][2] = {
+static const uint16_t mac_japanese_uni2_pagee0[][2] = {
   /* 0xe00 */ { 0xffff,  246 }, { 0xffff,  262 }, { 0x0fff,  278 }, { 0x001f,  290 },
   /* 0xe04 */ { 0x7f00,  295 },
 };
 
-static const u_int16_t mac_japanese_uni2_pagefe[][2] = {
+static const uint16_t mac_japanese_uni2_pagefe[][2] = {
   /* 0xfe3 */ { 0xffeb,  302 },
   /* 0xfe4 */ { 0x001f,  316 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0xfe8 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
@@ -95,7 +95,7 @@ static const cjk_index_t mac_japanese_uni2_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_japanese_uni2_charset[] = {
+static const uint16_t mac_japanese_uni2_charset[] = {
   0x0080, 0x00a0, 0x00fd, 0x815c, 0xffff, 0xffff, 0x8656, 0x8650,
   0x869b, 0x869d, 0x00fe, 0x859f, 0x85a0, 0x85a1, 0x85a2, 0x85a3,
   0x85a4, 0x85a5, 0x85a6, 0x85a7, 0x85a8, 0x85a9, 0x85aa, 0x85b3,
@@ -139,16 +139,16 @@ static const u_int16_t mac_japanese_uni2_charset[] = {
   0xeb78, 0x815f,
 };
 
-static const u_int16_t mac_japanese_2uni_page00[][2] = {
+static const uint16_t mac_japanese_2uni_page00[][2] = {
   /* 0x008 */ { 0x0001,    0 }, { 0x0000,    0 }, { 0x0001,    1 }, { 0x0000,    0 },
   /* 0x00c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0xe000,    2 },
 };
 
-static const u_int16_t mac_japanese_2uni_page81[][2] = {
+static const uint16_t mac_japanese_2uni_page81[][2] = {
   /* 0x815 */ { 0x9000,    5 },
 };
 
-static const u_int16_t mac_japanese_2uni_page85[][2] = {
+static const uint16_t mac_japanese_2uni_page85[][2] = {
   /* 0x854 */ { 0xffff,    7 }, { 0xc00f,   23 }, { 0xffff,   29 }, { 0x7003,   45 },
   /* 0x858 */ { 0x003f,   50 }, { 0x87fe,   56 }, { 0x3fff,   67 }, { 0xfff8,   81 },
   /* 0x85c */ { 0x0003,   94 }, { 0xf800,   96 }, { 0xffff,  101 }, { 0x001f,  117 },
@@ -164,7 +164,7 @@ static const u_int16_t mac_japanese_2uni_page85[][2] = {
   /* 0x884 */ { 0x0007,  257 }, { 0x0030,  260 }, { 0x3d00,  262 },
 };
 
-static const u_int16_t mac_japanese_2uni_pageeb[][2] = {
+static const uint16_t mac_japanese_2uni_pageeb[][2] = {
   /* 0xeb4 */ { 0x0006,  267 }, { 0x3803,  269 }, { 0xfe1f,  274 }, { 0x07ff,  286 },
   /* 0xeb8 */ { 0x0002,  297 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0xebc */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
@@ -185,7 +185,7 @@ static const cjk_index_t mac_japanese_2uni_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_japanese_2uni_charset[] = {
+static const uint16_t mac_japanese_2uni_charset[] = {
   0x005c, 0x00a0, 0x00a9, 0x2122, 0xe003, 0x2014, 0xff3c, 0x2460,
   0x2461, 0x2462, 0x2463, 0x2464, 0x2465, 0x2466, 0x2467, 0x2468,
   0x2469, 0x246a, 0x246b, 0x246c, 0x246d, 0x246e, 0x246f, 0x2470,
@@ -228,7 +228,7 @@ static const u_int16_t mac_japanese_2uni_charset[] = {
   0xe019, 0xe01a, 0xe01b, 0xe01c, 0xe01d, 0xe01e, 0xe01f, 0xe020,
 };
 
-static const u_int32_t mac_japanese_compose[] = {
+static const uint32_t mac_japanese_compose[] = {
   0x2010f87e, 0x2016f87e, 0x2026f87e, 0x2026f87f,
   0x21e6f87a, 0x21e7f87a, 0x21e8f87a, 0x21e9f87a,
   0x3001f87e, 0x3002f87e, 0x301cf87e, 0x3041f87e,

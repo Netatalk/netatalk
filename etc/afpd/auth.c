@@ -10,13 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
@@ -51,24 +50,7 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "acls.h"
 #endif
 
-int afp_version = 11;
 static int afp_version_index;
-
-uid_t   uuid;
-
-#if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-
-int *groups;
-#define GROUPS_SIZE sizeof(int)
-
-#else /* sun __svr4__ ultrix */
-
-gid_t   *groups;
-#define GROUPS_SIZE sizeof(gid_t)
-#endif /* sun ultrix */
-
-int ngroups;
-
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
 static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL, NULL }}, &uam_login,
                                    &uam_login};
@@ -78,23 +60,16 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions(char *data,
-#ifndef NO_DDP
-                     const ASP asp,
-#endif
-                     const DSI *dsi)
+void status_versions( char *data, const DSI *dsi)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     int         len, num, i, count = 0;
 
     memcpy(&status, start + AFPSTATUS_VERSOFF, sizeof(status));
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
 
     for ( i = 0; i < num; i++ ) {
-#ifndef NO_DDP
-        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
-#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         count++;
     }
@@ -102,9 +77,6 @@ void status_versions(char *data,
     *data++ = count;
 
     for ( i = 0; i < num; i++ ) {
-#ifndef NO_DDP
-        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
-#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;
@@ -118,7 +90,7 @@ void status_versions(char *data,
 void status_uams(char *data, const char *authlist)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     struct uam_obj      *uams;
     int         len, num = 0;
 
@@ -153,7 +125,7 @@ static int send_reply(const AFPObj *obj, const int err)
     if ((err == AFP_OK) || (err == AFPERR_AUTHCONT))
         return err;
 
-    obj->reply(obj->handle, err);
+    obj->reply(obj->dsi, err);
     obj->exit(0);
 
     return AFP_OK;
@@ -173,7 +145,7 @@ static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
     return( AFPERR_NOOP );
 }
 
-static int set_auth_switch(int expired)
+static int set_auth_switch(const AFPObj *obj, int expired)
 {
     int i;
 
@@ -194,7 +166,7 @@ static int set_auth_switch(int expired)
     }
     else {
         afp_switch = postauth_switch;
-        switch (afp_version) {
+        switch (obj->afp_version) {
 
         case 33:
         case 32:
@@ -269,45 +241,6 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     LOG(log_note, logtype_afpd, "%s Login by %s",
         afp_versions[afp_version_index].av_name, pwd->pw_name);
 
-#ifndef NO_DDP
-    if (obj->proto == AFPPROTO_ASP) {
-        ASP asp = obj->handle;
-        int addr_net = ntohs( asp->asp_sat.sat_addr.s_net );
-        int addr_node  = asp->asp_sat.sat_addr.s_node;
-
-        if (obj->options.authprintdir) {
-            if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
-                char nodename[256];
-                FILE *fp;
-                int mypid = getpid();
-                struct stat stat_buf;
-
-                sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
-                        addr_net / 256, addr_net % 256, addr_node);
-                LOG(log_info, logtype_afpd, "registering %s (uid %d) on %u.%u as %s",
-                    pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
-
-                if (stat(nodename, &stat_buf) == 0) { /* file exists */
-                    if (S_ISREG(stat_buf.st_mode)) { /* normal file */
-                        unlink(nodename);
-                        fp = fopen(nodename, "w");
-                        fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
-                        fclose(fp);
-                        chown( nodename, pwd->pw_uid, -1 );
-                    } else { /* somebody is messing with us */
-                        LOG(log_error, logtype_afpd, "print authfile %s is not a normal file, it will not be modified", nodename );
-                    }
-                } else { /* file 'nodename' does not exist */
-                    fp = fopen(nodename, "w");
-                    fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
-                    fclose(fp);
-                    chown( nodename, pwd->pw_uid, -1 );
-                }
-            } /* if (addr_net && addr_node ) */
-        } /* if (options->authprintdir) */
-    } /* if (obj->proto == AFPPROTO_ASP) */
-#endif
-
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER
         LOG(log_info, logtype_afpd, "running with uid %d", geteuid());
@@ -320,17 +253,17 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     /* Basically if the user is in the admin group, we stay root */
 
-    if (( ngroups = getgroups( 0, NULL )) < 0 ) {
+    if ((obj->ngroups = getgroups( 0, NULL )) < 0 ) {
         LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
 
-    if ( NULL == (groups = calloc(ngroups, GROUPS_SIZE)) ) {
-        LOG(log_error, logtype_afpd, "login: %s calloc: %d", ngroups);
+    if ( NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t))) ) {
+        LOG(log_error, logtype_afpd, "login: %s calloc: %d", obj->ngroups);
         return AFPERR_BADUAM;
     }
 
-    if (( ngroups = getgroups( ngroups, groups )) < 0 ) {
+    if (( obj->ngroups = getgroups(obj->ngroups, obj->groups )) < 0 ) {
         LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
@@ -340,8 +273,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     if (obj->options.admingid != 0) {
         int i;
-        for (i = 0; i < ngroups; i++) {
-            if (groups[i] == obj->options.admingid) admin = 1;
+        for (i = 0; i < obj->ngroups; i++) {
+            if (obj->groups[i] == obj->options.admingid) admin = 1;
         }
     }
     if (admin) {
@@ -392,25 +325,20 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
 #endif /* TRU64 */
 
-    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
+    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(obj->ngroups, obj->groups));
 
     /* There's probably a better way to do this, but for now, we just play root */
 #ifdef ADMIN_GRP
     if (admin)
-        uuid = 0;
+        obj->uid = 0;
     else
 #endif /* ADMIN_GRP */
-        uuid = pwd->pw_uid;
+        obj->uid = geteuid();
 
-    set_auth_switch(expired);
+    set_auth_switch(obj, expired);
     /* save our euid, we need it for preexec_close */
     obj->uid = geteuid();
     obj->logout = logout;
-
-#ifdef FORCE_UIDGID
-    obj->force_uid = 1;
-    save_uidgid ( &obj->uidgid );
-#endif
 
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
@@ -422,7 +350,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     uint32_t data;
-    DSI *dsi = (DSI *)AFPobj->handle;
+    DSI *dsi = (DSI *)AFPobj->dsi;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -514,10 +442,10 @@ int afp_getsession(
     char   *ibuf, size_t ibuflen, 
     char   *rbuf, size_t *rbuflen)
 {
-    u_int16_t           type;
-    u_int32_t           idlen = 0;
-    u_int32_t       boottime;
-    u_int32_t           tklen, tp;
+    uint16_t           type;
+    uint32_t           idlen = 0;
+    uint32_t       boottime;
+    uint32_t           tklen, tp;
     char                *token;
     char                *p;
 
@@ -615,9 +543,9 @@ int afp_getsession(
 /* ---------------------- */
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    DSI                 *dsi = (DSI *)obj->handle;
-    u_int16_t           type;
-    u_int32_t           tklen;
+    DSI                 *dsi = (DSI *)obj->dsi;
+    uint16_t           type;
+    uint32_t           tklen;
     pid_t               token;
     int                 i;
 
@@ -705,7 +633,7 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ]);
     for ( i = 0; i < num; i++ ) {
         if ( strncmp( ibuf, afp_versions[ i ].av_name , len ) == 0 ) {
-            afp_version = afp_versions[ i ].av_number;
+            obj->afp_version = afp_versions[ i ].av_number;
             afp_version_index = i;
             break;
         }
@@ -713,11 +641,8 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
     if ( i == num )                 /* An inappropo version */
         return AFPERR_BADVERS ;
 
-    if (afp_version >= 30 && obj->proto != AFPPROTO_DSI)
-        return AFPERR_BADVERS ;
-
     /* FIXME Hack */
-    if (afp_version >= 30 && sizeof(off_t) != 8) {
+    if (obj->afp_version >= 30 && sizeof(off_t) != 8) {
         LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!" );
         return AFPERR_BADVERS ;
     }
@@ -783,7 +708,7 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     size_t  len;
     int     i;
     char        type;
-    u_int16_t   len16;
+    uint16_t   len16;
     char        *username;
 
     *rbuflen = 0;
@@ -926,7 +851,7 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
 {
-    DSI *dsi = (DSI *)(obj->handle);
+    DSI *dsi = (DSI *)(obj->dsi);
 
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     of_close_all_forks();
@@ -969,7 +894,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
     if ((len + 1) & 1) /* pad byte */
         ibuf++;
 
-    if ( afp_version < 30) {
+    if (obj->afp_version < 30) {
         len = (unsigned char) *ibuf++;
         if ( len > sizeof(username) - 1) {
             return AFPERR_PARAM;
@@ -1006,7 +931,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
         (ret == AFPERR_AUTHCONT) ? "continued" :
         (ret ? "failed" : "succeeded"));
     if ( ret == AFP_OK )
-        set_auth_switch(0);
+        set_auth_switch(obj, 0);
 
     return ret;
 }
@@ -1015,9 +940,9 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
 /* FPGetUserInfo */
 int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    u_int8_t  thisuser;
-    u_int32_t id;
-    u_int16_t bitmap;
+    uint8_t  thisuser;
+    uint32_t id;
+    uint16_t bitmap;
     char *bitmapp;
 
     LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");
@@ -1132,7 +1057,7 @@ int auth_load(const char *path, const char *list)
         return -1;
 
     strlcpy(buf, list, sizeof(buf));
-    if ((p = strtok(buf, ",")) == NULL)
+    if ((p = strtok(buf, ", ")) == NULL)
         return -1;
 
     strcpy(name, path);
@@ -1157,7 +1082,7 @@ int auth_load(const char *path, const char *list)
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
         }
-        p = strtok(NULL, ",");
+        p = strtok(NULL, ", ");
     }
 
     return 0;

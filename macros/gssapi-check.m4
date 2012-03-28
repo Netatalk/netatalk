@@ -28,10 +28,10 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
   	  # Do no harm to the values of CFLAGS and LIBS while testing for
 	  # Kerberos support.
 
-		ac_save_CFLAGS=$CFLAGS
-		ac_save_CPPFLAGS=$CPPFLAGS
-		ac_save_LDFLAGS=$LDFLAGS
-		ac_save_LIBS=$LIBS
+		save_CFLAGS=$CFLAGS
+		save_CPPFLAGS=$CPPFLAGS
+		save_LDFLAGS=$LDFLAGS
+		save_LIBS=$LIBS
 
 	if test x$FOUND_GSSAPI = x"no"; then
 	  #################################################
@@ -39,17 +39,22 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	  AC_PATH_PROG(KRB5_CONFIG, krb5-config)
 	  AC_MSG_CHECKING(for working krb5-config)
 	  if test -x "$KRB5_CONFIG"; then
-	    ac_save_CFLAGS=$CFLAGS
-	    CFLAGS="";export CFLAGS
-	    ac_save_LDFLAGS=$LDFLAGS
-	    LDFLAGS="";export LDFLAGS
-	    GSSAPI_LIBS="`$KRB5_CONFIG --libs gssapi`"
-	    GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
-	    GSSAPI_CPPFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
-	    CFLAGS=$ac_save_CFLAGS;export CFLAGS
-	    LDFLAGS=$ac_save_LDFLAGS;export LDFLAGS
-	    FOUND_GSSAPI=yes
-	    AC_MSG_RESULT(yes)
+	    TEMP="`$KRB5_CONFIG --libs gssapi`"
+        if test $? -eq 0 ; then
+	        save_CFLAGS=$CFLAGS
+	        CFLAGS="";export CFLAGS
+	        save_LDFLAGS=$LDFLAGS
+	        LDFLAGS="";export LDFLAGS
+	        GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
+	        GSSAPI_CPPFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
+            GSSAPI_LIBS="$TEMP"
+	        CFLAGS=$save_CFLAGS;export CFLAGS
+	        LDFLAGS=$save_LDFLAGS;export LDFLAGS
+	        FOUND_GSSAPI=yes
+	        AC_MSG_RESULT(yes)
+        else
+	        AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
+        fi
 	  else
 	    AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
 	  fi
@@ -136,10 +141,10 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
         	GSSAPI_LIBS=""
 	fi
 
-        LIBS="$ac_save_LIBS"
-        CFLAGS="$ac_save_CFLAGS"
-        LDFLAGS="$ac_save_LDFLAGS"
-        CPPFLAGS="$ac_save_CPPFLAGS"
+        LIBS="$save_LIBS"
+        CFLAGS="$save_CFLAGS"
+        LDFLAGS="$save_LDFLAGS"
+        CPPFLAGS="$save_CPPFLAGS"
 	fi
 
         if test x"$ac_cv_func_gss_acquire_cred" = x"yes"; then
@@ -151,5 +156,6 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 
 	AC_SUBST(GSSAPI_LIBS)
 	AC_SUBST(GSSAPI_CFLAGS)
+	AC_SUBST(GSSAPI_LDFLAGS)
 
 ])

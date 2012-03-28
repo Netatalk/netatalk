@@ -12,37 +12,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <ctype.h>
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <arpa/inet.h>
 
 #include <atalk/logger.h>
-
-#include <netatalk/endian.h>
-
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
@@ -58,7 +37,7 @@ char *strchr (), *strrchr ();
 static C_Block		seskey;
 static Key_schedule	seskeysched;
 static struct passwd	*randpwd;
-static u_int8_t         randbuf[8];
+static uint8_t         randbuf[8];
 
 /* hash to a 16-bit number. this will generate completely harmless 
  * warnings on 64-bit machines. */
@@ -144,7 +123,7 @@ static int afppasswd(const struct passwd *pwd,
 		     unsigned char *passwd, int len, 
 		     const int set)
 {
-  u_int8_t key[DES_KEY_SZ*2];
+  uint8_t key[DES_KEY_SZ*2];
   char buf[MAXPATHLEN + 1], *p;
   Key_schedule	schedule;
   FILE *fp;
@@ -305,7 +284,7 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
 {
 
   char *passwdfile;
-  u_int16_t sessid;
+  uint16_t sessid;
   size_t len;
   int err;
  
@@ -350,7 +329,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 			     char *ibuf, size_t ibuflen _U_, 
 			     char *rbuf _U_, size_t *rbuflen)
 {
-  u_int16_t sessid;
+  uint16_t sessid;
 
   *rbuflen = 0;
 
@@ -389,7 +368,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
 			      char *ibuf, size_t ibuflen _U_, 
 			      char *rbuf, size_t *rbuflen)
 {
-  u_int16_t sessid;
+  uint16_t sessid;
   unsigned int i;
 
   *rbuflen = 0;
@@ -532,7 +511,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char       *username;
     size_t     len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 

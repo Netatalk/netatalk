@@ -1,4 +1,4 @@
-AC_DEFUN([AC_CHECK_ICONV],
+AC_DEFUN([AC_NETATALK_CHECK_ICONV],
 [
 
 dnl	#################################################

@@ -1,6 +1,4 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.29 2010-03-30 12:44:35 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,22 +13,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
 #include <pwd.h>
+#include <arpa/inet.h>
+
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
+
 #if defined(GNUTLS_DHX)
 #include <gnutls/openssl.h>
 #elif defined(OPENSSL_DHX)
@@ -59,7 +54,7 @@
 /* the secret key */
 static CAST_KEY castkey;
 static struct passwd *dhxpwd;
-static u_int8_t randbuf[16];
+static uint8_t randbuf[16];
 
 #ifdef TRU64
 #include <sia.h>
@@ -74,14 +69,14 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 			char *rbuf, size_t *rbuflen)
 {
     unsigned char iv[] = "CJalbert";
-    u_int8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
+    uint8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
 		    0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B };
-    u_int8_t g = 0x07;
+    uint8_t g = 0x07;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
-    u_int16_t sessid;
+    uint16_t sessid;
     size_t i;
     DH *dh;
 
@@ -250,7 +245,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char       *username;
     size_t     len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
     
@@ -280,7 +275,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 #endif /* SHADOWPW */
     unsigned char iv[] = "LWallace";
     BIGNUM *bn1, *bn2, *bn3;
-    u_int16_t sessid;
+    uint16_t sessid;
     char *p;
     int err = AFPERR_NOTAUTH;
 

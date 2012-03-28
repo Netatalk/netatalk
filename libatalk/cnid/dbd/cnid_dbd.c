@@ -11,15 +11,8 @@
 #ifdef CNID_BACKEND_DBD
 
 #include <stdlib.h>
-#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-#ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#endif /* HAVE_SYS_UIO_H */
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/socket.h>
@@ -33,8 +26,8 @@
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
@@ -273,7 +266,7 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
     vecs = 1;
 
     if (rqst->namelen) {
-        iov[1].iov_base = rqst->name;
+        iov[1].iov_base = (char *)rqst->name;
         iov[1].iov_len  = rqst->namelen;
         towrite += rqst->namelen;
         vecs++;
@@ -538,8 +531,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
-                    const cnid_t did, char *name, const size_t len,
-                    cnid_t hint)
+                    cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -603,7 +595,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* ---------------------- */
-cnid_t cnid_dbd_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
+cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -729,8 +721,8 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 }
 
 /* ---------------------- */
-cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                       char *name, const size_t len)
+cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+                       const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -791,7 +783,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 }
 
 /* ---------------------- */
-int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer, size_t buflen)
+int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -846,8 +838,8 @@ int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer
 }
 
 /* ---------------------- */
-int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                    const cnid_t did, char *name, const size_t len)
+int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                    cnid_t did, const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -901,8 +893,7 @@ int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
 
 /* ---------------------- */
 cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                            const cnid_t did, char *name, const size_t len,
-                            cnid_t hint)
+                            cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;

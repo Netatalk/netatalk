@@ -1,11 +1,6 @@
-/*
- * $Id: misc.h,v 1.5 2009-10-15 10:43:13 didg Exp $
- */
-
 #ifndef AFPD_MISC_H
 #define AFPD_MISC_H 1
 
-#include <sys/cdefs.h>
 #include <atalk/globals.h>
 
 /* FP functions */

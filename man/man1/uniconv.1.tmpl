@@ -2,12 +2,12 @@
 .\"     Title: uniconv
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 24 Jun 2004
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"      Date: 23 Mar 2012
+.\"    Manual: Netatalk 3.0
+.\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "UNICONV" "1" "24 Jun 2004" "Netatalk 2.2" "Netatalk 2.2"
+.TH "UNICONV" "1" "23 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -37,20 +37,20 @@ encoding\&.
 .PP
 \-c
 .RS 4
-CNID backend used on this volume, usually cdb or dbd\&. Should match the backend selected with afpd for this volume\&. If not specified, the default CNID backend `:DEFAULT_CNID_SCHEME:\' is used
+CNID backend used on this volume, usually cdb or dbd\&. Should match the backend selected with afpd for this volume\&. If not specified, the default CNID backend ":DEFAULT_CNID_SCHEME:" is used
 .RE
 .PP
 \-d
 .RS 4
-don\'t CAP encode leading dots (:2e), equivalent to
-\fBusedots\fR
+don\'t HEX encode leading dots (:2e), equivalent to
+\fBuse dots = yes\fR
 in
-\fBAppleVolumes.default\fR(5)
+\fBafp.conf\fR(5)
 .RE
 .PP
 \-f
 .RS 4
-encoding to convert from, use ASCII for CAP encoded volumes
+encoding to convert from, use ASCII for HEX encoded volumes
 .RE
 .PP
 \-h
@@ -60,12 +60,12 @@ display help
 .PP
 \-m
 .RS 4
-Macintosh client codepage, required for CAP encoded volumes\&. Defaults to `MAC_ROMAN\'
+Macintosh client codepage, required for HEX encoded volumes\&. Defaults to "MAC_ROMAN"
 .RE
 .PP
 \-n
 .RS 4
-`dry run\', don\'t do any real changes
+"dry run", don\'t do any real changes
 .RE
 .PP
 \-t
@@ -89,7 +89,7 @@ Setting the wrong options might render your data unusable!!! Make sure you know 
 .PP
 It is
 \fB*strongly*\fR
-recommended to do a `dry run\' first and to check the output for conversion errors\&.
+recommended to do a "dry run" first and to check the output for conversion errors\&.
 .PP
 \fBafpd\fR(8)
 should
@@ -109,7 +109,7 @@ or
 \fBUSE AT YOUR OWN RISK!!!\fR
 .SH "SELECTABLE CHARSETS"
 .PP
-Netatalk provides internal support for UTF\-8 (pre\- and decomposed) and CAP\&. If you want to use other charsets, they must be provided by
+Netatalk provides internal support for UTF\-8 (pre\- and decomposed) and HEX\&. If you want to use other charsets, they must be provided by
 \fBiconv\fR(1)
 .PP
 \fBuniconv\fR
@@ -164,7 +164,7 @@ example%\fB uniconv \-c cdb \-f ISO\-8859\-1 \-t UTF8 \-m MAC_ROMAN /path/to/sha
 .RE
 .\}
 .PP
-convert 1\&.x volume using iso8859\-1 adapted NLS to CAP encoding:
+convert 1\&.x volume using iso8859\-1 adapted NLS to HEX encoding:
 .sp
 .if n \{\
 .RS 4
@@ -176,7 +176,7 @@ example%\fB uniconv \-f ISO\-8859\-ADAPTED \-t ASCII \-m MAC_ROMAN/path/to/share
 .RE
 .\}
 .PP
-convert UTF\-8 volume to CAP, for MacCyrillic clients:
+convert UTF\-8 volume to HEX, for MacCyrillic clients:
 .sp
 .if n \{\
 .RS 4
@@ -189,4 +189,4 @@ example%\fB uniconv \-f UTF8 \-t ASCII \-m MAC_CYRILLIC /path/to/share\fR
 .\}
 .SH "SEE ALSO"
 .PP
-\fBAppleVolumes.default\fR(5),\fBafpd\fR(8),\fBiconv\fR(1),\fBcnid_metad\fR(8),\fBcnid_dbd\fR(8)
+\fBafp.conf\fR(5),\fBafpd\fR(8),\fBiconv\fR(1),\fBcnid_metad\fR(8),\fBcnid_dbd\fR(8)

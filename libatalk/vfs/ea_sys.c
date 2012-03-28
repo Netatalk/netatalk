@@ -1,5 +1,4 @@
 /*
-  $Id: ea_sys.c,v 1.8 2010-04-13 08:05:06 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -26,20 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-
-#if HAVE_ATTR_XATTR_H
-#include <attr/xattr.h>
-#elif HAVE_SYS_XATTR_H
-#include <sys/xattr.h>
-#endif
-
-#ifdef HAVE_SYS_EA_H
-#include <sys/ea.h>
-#endif
-
-#ifdef HAVE_SYS_EXTATTR_H
-#include <sys/extattr.h>
-#endif
+#include <arpa/inet.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
@@ -50,11 +36,6 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 #include <atalk/compat.h>
-
-#ifndef ENOATTR
-#define ENOATTR ENODATA
-#endif
-
 
 /**********************************************************************************
  * EA VFS funcs for storing EAs in nativa filesystem EAs
@@ -100,14 +81,15 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): symlink with kXAttrNoFollow", uname);
+            return AFPERR_MISC;
 
         case ENOATTR:
+        case ENOENT:
             return AFPERR_MISC;
 
         default:
-            LOG(log_error, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
             return AFPERR_MISC;
         }
     }
@@ -175,14 +157,14 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
+            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): symlink with kXAttrNoFollow", uname);
+            return AFPERR_MISC;
 
         case ENOATTR:
             return AFPERR_MISC;
 
         default:
-            LOG(log_error, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
             return AFPERR_MISC;
         }
     }
@@ -215,6 +197,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  *
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
+ * We hide the adouble:ea extended attributes here, but we currently
+ * allow reading, writing and deleteting them.
  */
 int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
@@ -236,43 +220,40 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 
     if (ret == -1) switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
-            /* its a symlink and client requested O_NOFOLLOW */
-            ret = AFPERR_BADTYPE;
-            goto exit;
-#ifdef HAVE_ATTROPEN            /* Solaris */
-        case ENOATTR:
+            /* its a symlink and client requested O_NOFOLLOW, we pretend 0 EAs */
+            LOG(log_debug, logtype_afpd, "sys_list_extattr(%s): symlink with kXAttrNoFollow", uname);
             ret = AFP_OK;
             goto exit;
-#endif
         default:
-            LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-            ret= AFPERR_MISC;
+            LOG(log_debug, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+            ret = AFPERR_MISC;
             goto exit;
     }
     
     ptr = buf;
     while (ret > 0)  {
         len = strlen(ptr);
+        if (NOT_NETATALK_EA(ptr)) {
+            /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
+            if ( 0 >= ( nlen = convert_string(vol->v_volcharset, CH_UTF8_MAC, ptr, len, attrnamebuf + attrbuflen, 256)) ) {
+                ret = AFPERR_MISC;
+                goto exit;
+            }
 
-        /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
-        if ( 0 >= ( nlen = convert_string(vol->v_volcharset, CH_UTF8_MAC, ptr, len, attrnamebuf + attrbuflen, 256)) ) {
-            ret = AFPERR_MISC;
-            goto exit;
+            LOG(log_debug7, logtype_afpd, "sys_list_extattr(%s): attribute: %s", uname, ptr);
+
+            attrbuflen += nlen + 1;
+            if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
+                /* Next EA name could overflow, so bail out with error.
+                   FIXME: evantually malloc/memcpy/realloc whatever.
+                   Is it worth it ? */
+                LOG(log_warning, logtype_afpd, "sys_list_extattr(%s): running out of buffer for EA names", uname);
+                ret = AFPERR_MISC;
+                goto exit;
+            }
         }
-
-        LOG(log_debug7, logtype_afpd, "sys_list_extattr(%s): attribute: %s", uname, ptr);
-
-        attrbuflen += nlen + 1;
-        if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
-            /* Next EA name could overflow, so bail out with error.
-               FIXME: evantually malloc/memcpy/realloc whatever.
-               Is it worth it ? */
-            LOG(log_warning, logtype_afpd, "sys_list_extattr(%s): running out of buffer for EA names", uname);
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-        ret -= len +1;
-        ptr += len +1;
+        ret -= len + 1;
+        ptr += len + 1;
     }
 
     ret = AFP_OK;
@@ -325,8 +306,8 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): encountered symlink with kXAttrNoFollow",
-                getcwdpath(), uname, attruname);
+            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s\", ea:'%s'): symlink with kXAttrNoFollow",
+                uname, attruname);
             return AFP_OK;
         case EEXIST:
             LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): EA already exists",
@@ -379,7 +360,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): encountered symlink with kXAttrNoFollow", uname);
+            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): symlink with kXAttrNoFollow", uname);
             return AFP_OK;
         case EACCES:
             LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));

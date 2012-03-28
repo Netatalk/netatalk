@@ -1,6 +1,4 @@
 /*
- * $Id: cnid_tdb_add.c,v 1.4 2009-11-20 17:37:14 didg Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -40,12 +38,12 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
 }
 
-unsigned char *make_tdb_data(u_int32_t flags, const struct stat *st,const cnid_t did,
+unsigned char *make_tdb_data(uint32_t flags, const struct stat *st,const cnid_t did,
                      const char *name, const size_t len)
 {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
     unsigned char *buf = start  +CNID_LEN;
-    u_int32_t i;
+    uint32_t i;
 
     if (len > MAXPATHLEN)
         return NULL;
@@ -154,7 +152,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
-                     const cnid_t did, char *name, const size_t len, cnid_t hint)
+                    cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     const struct stat *lstp;
     cnid_t id;

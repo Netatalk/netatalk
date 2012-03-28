@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_tcp.c,v 1.25 2009-12-08 22:34:37 didg Exp $
- *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -15,9 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <errno.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
@@ -25,10 +21,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif /* HAVE_STDINT_H */
 
 #include <sys/ioctl.h>
 #ifdef TRU64
@@ -56,8 +49,7 @@ int deny_severity = log_warning;
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
-#include <netatalk/endian.h>
-#include "dsi_private.h"
+#include <atalk/errchk.h>
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
@@ -104,7 +96,7 @@ static int dsi_tcp_open(DSI *dsi)
 #ifdef TCPWRAP
     {
         struct request_info req;
-        request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
+        request_init(&req, RQ_DAEMON, "afpd", RQ_FILE, dsi->socket, NULL);
         fromhost(&req);
         if (!hosts_access(&req)) {
             LOG(deny_severity, logtype_dsi, "refused connect from %s", eval_client(&req));
@@ -122,11 +114,8 @@ static int dsi_tcp_open(DSI *dsi)
     if (0 == (pid = fork()) ) { /* child */
         static struct itimerval timer = {{0, 0}, {DSI_TCPTIMEOUT, 0}};
         struct sigaction newact, oldact;
-        u_int8_t block[DSI_BLOCKSIZ];
+        uint8_t block[DSI_BLOCKSIZ];
         size_t stored;
-
-        /* Immediateyl mark globally that we're a child now */
-        parent_or_child = 1;
 
         /* reset signals */
         server_reset_signal();
@@ -258,9 +247,10 @@ static void guess_interface(DSI *dsi, const char *hostname, const char *port)
             getip_string((struct sockaddr *)&dsi->server), port, ifr.ifr_name);
         goto iflist_done;
     }
-    LOG(log_info, logtype_dsi, "dsi_tcp (Chooser will not select afp/tcp) "
-        "Check to make sure %s is in /etc/hosts and the correct domain is in "
-        "/etc/resolv.conf: %s", hostname, strerror(errno));
+
+    LOG(log_note, logtype_dsi, "dsi_tcp: couldn't find network interface with IP address to advertice, "
+        "check to make sure \"%s\" is in /etc/hosts or can be resolved with DNS, or "
+        "add a netinterface that is not a loopback or point-2-point type", hostname);
 
 iflist_done:
     close(fd);
@@ -273,14 +263,24 @@ iflist_done:
 #endif
 
 /* this needs to accept passed in addresses */
-int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
-                 const char *port, const int proxy)
+int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const char *inport)
 {
-    int                ret;
-    int                flag;
+    EC_INIT;
+    int                flag, err;
+    char               *a = NULL, *b;
+    const char         *address;
+    const char         *port;
     struct addrinfo    hints, *servinfo, *p;
 
-    dsi->protocol = DSI_TCPIP;
+    /* Check whether address is of the from IP:PORT and split */
+    address = inaddress;
+    port = inport;
+    if (address && strchr(address, ':')) {
+        EC_NULL_LOG( address = a = strdup(address) );
+        b = strchr(a, ':');
+        *b = 0;
+        port = b + 1;
+    }
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
@@ -301,67 +301,62 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         hints.ai_family = AF_UNSPEC;
 #endif
     }
-    if ((ret = getaddrinfo(address ? address : NULL, port ? port : "548", &hints, &servinfo)) != 0) {
+    if ((ret = getaddrinfo(address ? address : NULL, port, &hints, &servinfo)) != 0) {
         LOG(log_error, logtype_dsi, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
-        return 0;
+        EC_FAIL;
     }
 
-    /* create a socket */
-    if (proxy)
-        dsi->serversock = -1;
-    else {
-        /* loop through all the results and bind to the first we can */
-        for (p = servinfo; p != NULL; p = p->ai_next) {
-            if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
-                continue;
-            }
+    /* loop through all the results and bind to the first we can */
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
+            continue;
+        }
 
-            /*
-             * Set some socket options:
-             * SO_REUSEADDR deals w/ quick close/opens
-             * TCP_NODELAY diables Nagle
-             */
+        /*
+         * Set some socket options:
+         * SO_REUSEADDR deals w/ quick close/opens
+         * TCP_NODELAY diables Nagle
+         */
 #ifdef SO_REUSEADDR
-            flag = 1;
-            setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 #endif
 #if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
-            int on = 0;
-            setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
+        int on = 0;
+        setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
 #endif
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
-            flag = 1;
-            setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
             
-            if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
-                close(dsi->serversock);
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
-                continue;
-            }
-
-            if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
-                close(dsi->serversock);
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
-                continue;
-            }
-            
-            break;
+        if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
+            close(dsi->serversock);
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
+            continue;
         }
 
-        if (p == NULL)  {
-            LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
-            freeaddrinfo(servinfo);
-            return 0;
+        if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
+            close(dsi->serversock);
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
+            continue;
         }
+            
+        break;
+    }
 
-        /* Copy struct sockaddr to struct sockaddr_storage */
-        memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+    if (p == NULL)  {
+        LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
         freeaddrinfo(servinfo);
-    } /* if (proxy) */
+        EC_FAIL;
+    }
+
+    /* Copy struct sockaddr to struct sockaddr_storage */
+    memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+    freeaddrinfo(servinfo);
 
     /* Point protocol specific functions to tcp versions */
     dsi->proto_open = dsi_tcp_open;
@@ -371,7 +366,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 
     if (address) {
         /* address is a parameter, use it 'as is' */
-        return 1;
+        goto EC_CLEANUP;
     }
 
     /* Prepare hint for getaddrinfo */
@@ -379,8 +374,8 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
-        LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
+    if ((err = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
+        LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(err));
         goto interfaces;
     }
 
@@ -401,13 +396,17 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         /* Store found address in dsi->server */
         memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
         freeaddrinfo(servinfo);
-        return 1;
+        goto EC_CLEANUP;
     }
     LOG(log_info, logtype_dsi, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
     freeaddrinfo(servinfo);
 
 interfaces:
     guess_interface(dsi, hostname, port ? port : "548");
-    return 1;
+
+EC_CLEANUP:
+    if (a)
+        free(a);
+    EC_EXIT;
 }
 

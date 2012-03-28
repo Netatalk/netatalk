@@ -1,12 +1,5 @@
 Makefile
 Makefile.in
-apple_cleanup
-apple_cp
-apple_mv
-apple_rm
-cleanappledouble.pl
-netatalkshorternamelinks.pl
-lp2pap.sh
 asip-status.pl
 apple_dump
 .gitignore

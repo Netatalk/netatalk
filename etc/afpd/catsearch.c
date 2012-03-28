@@ -48,6 +48,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/unicode.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "desktop.h"
 #include "directory.h"
@@ -59,10 +60,10 @@
 
 
 struct finderinfo {
-	u_int32_t f_type;
-	u_int32_t creator;
-	u_int16_t attrs;    /* File attributes (high 8 bits)*/
-	u_int16_t label;    /* Label (low 8 bits )*/
+	uint32_t f_type;
+	uint32_t creator;
+	uint16_t attrs;    /* File attributes (high 8 bits)*/
+	uint16_t label;    /* Label (low 8 bits )*/
 	char reserved[22]; /* Unknown (at least for now...) */
 };
 
@@ -86,14 +87,14 @@ typedef char packed_finder[ADEDLEN_FINDERI];
 
 /* This is our search-criteria structure. */
 struct scrit {
-	u_int32_t rbitmap;          /* Request bitmap - which values should we check ? */
-	u_int16_t fbitmap, dbitmap; /* file & directory bitmap - which values should we return ? */
-	u_int16_t attr;             /* File attributes */
+	uint32_t rbitmap;          /* Request bitmap - which values should we check ? */
+	uint16_t fbitmap, dbitmap; /* file & directory bitmap - which values should we return ? */
+	uint16_t attr;             /* File attributes */
 	time_t cdate;               /* Creation date */
 	time_t mdate;               /* Last modification date */
 	time_t bdate;               /* Last backup date */
-	u_int32_t pdid;             /* Parent DID */
-    u_int16_t offcnt;           /* Offspring count */
+	uint32_t pdid;             /* Parent DID */
+    uint16_t offcnt;           /* Offspring count */
 	struct finderinfo finfo;    /* Finder info */
 	char lname[64];             /* Long name */ 
 	char utf8name[514];         /* UTF8 or UCS2 name */ /* for convert_charset dest_len parameter +2 */
@@ -213,7 +214,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 	if (!isdir && (of = of_findname(path))) {
 		adp = of->of_ad;
 	} else {
-		ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+		ad_init(&ad, vol);
 		adp = &ad;
 	} 
 
@@ -260,11 +261,11 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, stru
  */
 static int crit_check(struct vol *vol, struct path *path) {
 	int result = 0;
-	u_int16_t attr, flags = CONV_PRECOMPOSE;
+	uint16_t attr, flags = CONV_PRECOMPOSE;
 	struct finderinfo *finfo = NULL, finderinfo;
 	struct adouble *adp = NULL;
 	time_t c_date, b_date;
-	u_int32_t ac_date, ab_date;
+	uint32_t ac_date, ab_date;
 	static char convbuf[514]; /* for convert_charset dest_len parameter +2 */
 	size_t len;
     int islnk;
@@ -283,7 +284,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		 * An other option would be to call get_id in utompath but 
 		 * we need to pass parent dir
 		*/
-        if (!(path->m_name = utompath(vol, path->u_name, 0 , utf8_encoding()) )) {
+        if (!(path->m_name = utompath(vol, path->u_name, 0 , utf8_encoding(vol->v_obj)) )) {
         	/*retry with the right id */
        
         	cnid_t id;
@@ -296,7 +297,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	}
         	/* save the id for getfilparm */
         	path->id = id;
-        	if (!(path->m_name = utompath(vol, path->u_name, id , utf8_encoding()))) {
+        	if (!(path->m_name = utompath(vol, path->u_name, id , utf8_encoding(vol->v_obj)))) {
         		return 0;
         	}
         }
@@ -421,18 +422,18 @@ static int crit_check(struct vol *vol, struct path *path) {
 	result |= 1;
 crit_check_ret:
 	if (adp != NULL)
-		ad_close_metadata(adp);
+		ad_close(adp, ADFLAGS_HF);
 	return result;
 }  
 
 /* ------------------------------ */
-static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
+static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char **buf, int ext)
 {
 
 	char 		*p = *buf;
 	int 		ret;
 	size_t		tbuf =0;
-	u_int16_t	resultsize;
+	uint16_t	resultsize;
 	int 		isdir = S_ISDIR(path->st.st_mode); 
 
 	/* Skip resultsize */
@@ -449,11 +450,11 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
 	}
 	
 	if ( isdir ) {
-        ret = getdirparams(vol, c1.dbitmap, path, path->d_dir, p , &tbuf ); 
+        ret = getdirparams(obj, vol, c1.dbitmap, path, path->d_dir, p , &tbuf ); 
 	}
 	else {
 	    /* FIXME slow if we need the file ID, we already know it, done ? */
-		ret = getfilparams ( vol, c1.fbitmap, path, path->d_dir, p, &tbuf);
+		ret = getfilparams (obj, vol, c1.fbitmap, path, path->d_dir, p, &tbuf);
 	}
 
 	if ( ret != AFP_OK )
@@ -496,7 +497,8 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
  * @param ext       (r)  extended search flag
  */
 #define NUM_ROUNDS 200
-static int catsearch(struct vol *vol,
+static int catsearch(const AFPObj *obj,
+                     struct vol *vol,
                      struct dir *dir,  
                      int rmatches,
                      uint32_t *pos,
@@ -505,7 +507,7 @@ static int catsearch(struct vol *vol,
                      int *rsize,
                      int ext)
 {
-    static u_int32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
+    static uint32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
     static DIR *dirpos; 		 /* UNIX structure describing currently opened directory. */
     struct dir *currentdir;      /* struct dir of current directory */
 	int cidx, r;
@@ -647,7 +649,7 @@ static int catsearch(struct vol *vol,
 
 			/* bit 0 means that criteria has been met */
 			if ((ccr & 1)) {
-				r = rslt_add ( vol, &path, &rrbuf, ext);
+				r = rslt_add (obj, vol, &path, &rrbuf, ext);
 				
 				if (r == 0) {
 					result = AFPERR_MISC;
@@ -709,7 +711,8 @@ catsearch_end: /* Exiting catsearch: error condition */
  * @param rsize     (w)  length of data written to output buffer
  * @param ext       (r)  extended search flag
  */
-static int catsearch_db(struct vol *vol,
+static int catsearch_db(const AFPObj *obj,
+                        struct vol *vol,
                         struct dir *dir,  
                         const char *uname,
                         int rmatches,
@@ -784,7 +787,7 @@ static int catsearch_db(struct vol *vol,
 
         memset(&path, 0, sizeof(path));
         path.u_name = name;
-        path.m_name = utompath(vol, name, cnid, utf8_encoding());
+        path.m_name = utompath(vol, name, cnid, utf8_encoding(vol->v_obj));
 
         if (of_stat(&path) != 0) {
             switch (errno) {
@@ -813,7 +816,7 @@ static int catsearch_db(struct vol *vol,
             LOG(log_debug, logtype_afpd,"catsearch_db: match: %s/%s",
                 getcwdpath(), path.u_name);
             /* bit 1 means that criteria has been met */
-            r = rslt_add(vol, &path, &rrbuf, ext);
+            r = rslt_add(obj, vol, &path, &rrbuf, ext);
             if (r == 0) {
                 result = AFPERR_MISC;
                 goto catsearch_end;
@@ -849,17 +852,17 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
                   char *rbuf, size_t *rbuflen, int ext)
 {
     struct vol *vol;
-    u_int16_t   vid;
-    u_int16_t   spec_len;
-    u_int32_t   rmatches, reserved;
-    u_int32_t	catpos[4];
-    u_int32_t   pdid = 0;
+    uint16_t   vid;
+    uint16_t   spec_len;
+    uint32_t   rmatches, reserved;
+    uint32_t	catpos[4];
+    uint32_t   pdid = 0;
     int ret, rsize;
-    u_int32_t nrecs = 0;
+    uint32_t nrecs = 0;
     unsigned char *spec1, *spec2, *bspec1, *bspec2;
     size_t	len;
-    u_int16_t	namelen;
-    u_int16_t	flags;
+    uint16_t	namelen;
+    uint16_t	flags;
     char  	    tmppath[256];
     char        *uname;
 
@@ -1037,7 +1040,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
 		memcpy (c1.utf8name, spec1+2, namelen);
 		c1.utf8name[namelen] = 0;
-        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding())) == NULL)
+        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding(obj))) == NULL)
             return AFPERR_PARAM;
 
  		/* convert charset */
@@ -1054,10 +1057,10 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         && (strcmp(vol->v_cnidscheme, "dbd") == 0)
         && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */
-        ret = catsearch_db(vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+        ret = catsearch_db(obj, vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     else
         /* perform a slow filesystem tree search */
-        ret = catsearch(vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+        ret = catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
 
     memcpy(rbuf, catpos, sizeof(catpos));
     rbuf += sizeof(catpos);

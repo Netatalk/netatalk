@@ -28,7 +28,6 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/cnid_dbd_private.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/directory.h>
@@ -83,7 +82,7 @@ static void usage_find(void)
         );
 }
 
-int ad_find(int argc, char **argv)
+int ad_find(int argc, char **argv, AFPObj *obj)
 {
     int c, ret;
     afpvol_t vol;
@@ -112,14 +111,14 @@ int ad_find(int argc, char **argv)
     set_signal();
     cnid_init();
 
-    if (openvol(srchvol, &vol) != 0)
+    if (openvol(obj, srchvol, &vol) != 0)
         ERROR("Cant open volume \"%s\"", srchvol);
 
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];
-    if (convert_charset(vol.volinfo.v_volcharset,
-                        vol.volinfo.v_volcharset,
-                        vol.volinfo.v_maccharset,
+    if (convert_charset(vol.vol->v_volcharset,
+                        vol.vol->v_volcharset,
+                        vol.vol->v_maccharset,
                         argv[optind],
                         strlen(argv[optind]),
                         namebuf,
@@ -130,7 +129,7 @@ int ad_find(int argc, char **argv)
 
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
-    if ((count = cnid_find(vol.volume.v_cdb,
+    if ((count = cnid_find(vol.vol->v_cdb,
                            namebuf,
                            strlen(namebuf),
                            resbuf,
@@ -146,7 +145,7 @@ int ad_find(int argc, char **argv)
             bufp += sizeof(cnid_t);
 
             bstring path = NULL;
-            bstring volpath = bfromcstr(vol.volinfo.v_path);
+            bstring volpath = bfromcstr(vol.vol->v_path);
             BSTRING_STRIP_SLASH(volpath);
             char buffer[12 + MAXPATHLEN + 1];
             int buflen = 12 + MAXPATHLEN + 1;
@@ -155,7 +154,7 @@ int ad_find(int argc, char **argv)
             struct bstrList *pathlist = bstrListCreateMin(32);
 
             while (did != DIRDID_ROOT) {
-                if ((name = cnid_resolve(vol.volume.v_cdb, &did, buffer, buflen)) == NULL)
+                if ((name = cnid_resolve(vol.vol->v_cdb, &did, buffer, buflen)) == NULL)
                     goto next;
                 bstrListPush(pathlist, bfromcstr(name));
             }

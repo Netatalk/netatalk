@@ -25,6 +25,10 @@
 #include <rpc/rpc.h>
 #include <rpcsvc/rquota.h>
 
+#ifndef u_int
+#define u_int unsigned
+#endif
+
 bool_t
 xdr_getquota_args(xdrs, objp)
 	XDR *xdrs;

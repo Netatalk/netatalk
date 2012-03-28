@@ -1,6 +1,4 @@
 /*
- * $Id: ad_sendfile.c,v 1.11 2010-01-21 14:14:49 didg Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -32,18 +30,15 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef WITH_SENDFILE
-
-#include <atalk/adouble.h>
-
 #include <stdio.h>
-
 #include <sys/socket.h>
 #include <sys/uio.h>
-
 #include <errno.h>  
 
+#include <atalk/adouble.h>
 #include <atalk/logger.h>
-#include "ad_private.h"
+
+#include "ad_lock.h"
 
 #if defined(SENDFILE_FLAVOR_LINUX)
 #include <sys/sendfile.h>

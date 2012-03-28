@@ -26,5 +26,4 @@ autoscan.log
 *.tar.gz
 *.diff.gz
 *~
-.gitignore
 *.o

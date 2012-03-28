@@ -23,6 +23,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "volume.h"
 #include "directory.h"
@@ -87,8 +88,8 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 {
     int		cc;
     char	*p;
-    u_int16_t	len;
-    u_char	appltag[ 4 ];
+    uint16_t	len;
+    unsigned char	appltag[ 4 ];
     char	buf[ MAXPATHLEN ];
 
     while (( cc = read( sfd, buf, sizeof(appltag) + sizeof( u_short ))) > 0 ) {
@@ -199,12 +200,12 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     struct vol		*vol;
     struct dir		*dir;
     int			tfd, cc;
-    u_int32_t           did;
-    u_int16_t		vid, mplen;
+    uint32_t           did;
+    uint16_t		vid, mplen;
     struct path         *path;
     char                *dtf, *p, *mp;
-    u_char		creator[ 4 ];
-    u_char		appltag[ 4 ];
+    unsigned char		creator[ 4 ];
+    unsigned char		appltag[ 4 ];
     char		*mpath, *tempfile;
 
     *rbuflen = 0;
@@ -288,11 +289,11 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     struct vol		*vol;
     struct dir		*dir;
     int			tfd, cc;
-    u_int32_t           did;
-    u_int16_t		vid, mplen;
+    uint32_t           did;
+    uint16_t		vid, mplen;
     struct path    	*path;
     char                *dtf, *mp;
-    u_char		creator[ 4 ];
+    unsigned char		creator[ 4 ];
     char                *tempfile, *mpath;
 
     *rbuflen = 0;
@@ -361,9 +362,9 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     char		*p, *q;
     int			cc; 
     size_t		buflen;
-    u_int16_t		vid, aindex, bitmap, len;
-    u_char		creator[ 4 ];
-    u_char		appltag[ 4 ];
+    uint16_t		vid, aindex, bitmap, len;
+    unsigned char		creator[ 4 ];
+    unsigned char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
     
@@ -482,7 +483,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return( AFPERR_NOITEM );
     }
     buflen = *rbuflen - sizeof( bitmap ) - sizeof( appltag );
-    if ( getfilparams(vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
+    if ( getfilparams(obj, vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
                       sizeof( appltag ), &buflen ) != AFP_OK ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );

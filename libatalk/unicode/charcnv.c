@@ -42,11 +42,13 @@
 #if HAVE_LANGINFO_H
 #include <langinfo.h>
 #endif
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
+#include <atalk/compat.h>
+
 #include "byteorder.h"
 
 
@@ -76,29 +78,6 @@ static struct charset_functions* charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 
-static char* read_charsets_from_env(charset_t ch)
-{
-    char *name;
-
-    switch (ch) {
-    case CH_MAC:
-        if (( name = getenv( "ATALK_MAC_CHARSET" )) != NULL )
-            return name;
-        else
-            return "MAC_ROMAN";
-        break;
-    case CH_UNIX:
-        if (( name = getenv( "ATALK_UNIX_CHARSET" )) != NULL )
-            return name;
-        else
-            return "LOCALE";
-        break;
-    default:
-        break;
-    }
-    return "ASCII";
-}
-
 
 /**
  * Return the name of a charset to give to iconv().
@@ -121,7 +100,7 @@ static const char *charset_name(charset_t ch)
     else if (ch == CH_UTF8_MAC) ret = "UTF8-MAC";
     else if (ch == CH_UNIX) {
         if (unixname[0] == '\0') {
-            ret = read_charsets_from_env(CH_UNIX);
+            ret = "LOCALE";
             strlcpy(unixname, ret, sizeof(unixname));
         }
         else
@@ -129,7 +108,7 @@ static const char *charset_name(charset_t ch)
     }
     else if (ch == CH_MAC) {
         if (macname[0] == '\0') {
-            ret = read_charsets_from_env(CH_MAC);
+            ret = "MAC_ROMAN";
             strlcpy(macname, ret, sizeof(macname));
         }
         else
@@ -139,20 +118,19 @@ static const char *charset_name(charset_t ch)
     if (!ret)
         ret = charset_names[ch];
 
-#if defined(HAVE_NL_LANGINFO) && defined(CODESET)
+#if defined(CODESET)
     if (ret && strcasecmp(ret, "LOCALE") == 0) {
         const char *ln = NULL;
 
-#ifdef HAVE_SETLOCALE
         setlocale(LC_ALL, "");
-#endif
         ln = nl_langinfo(CODESET);
         if (ln) {
             /* Check whether the charset name is supported
                by iconv */
+            LOG(log_debug, logtype_default, "Locale charset is '%s'", ln);
             atalk_iconv_t handle = atalk_iconv_open(ln, "UCS-2");
             if (handle == (atalk_iconv_t) -1) {
-                LOG(log_debug, logtype_default, "Locale charset '%s' unsupported, using ASCII instead", ln);
+                LOG(log_warning, logtype_default, "Locale charset '%s' unsupported, using ASCII instead", ln);
                 ln = "ASCII";
             } else {
                 atalk_iconv_close(handle);
@@ -163,6 +141,7 @@ static const char *charset_name(charset_t ch)
         ret = ln;
     }
 #else /* system doesn't have LOCALE support */
+    LOG(log_warning, logtype_default, "system doesn't have LOCALE support");
     if (ch == CH_UNIX) ret = NULL;
 #endif
 
@@ -768,9 +747,9 @@ char * debug_out ( char * seq, size_t len)
  *      for e.g. HFS cdroms.
  */
 
-static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, u_int16_t *flags)
+static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
 {
-    const u_int16_t option = (flags ? *flags : 0);
+    const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len;
     size_t j = 0;
     const char* inbuf = (const char*)src;
@@ -880,9 +859,9 @@ end:
  */
 
 
-static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src, size_t srclen, char* dest, size_t destlen, u_int16_t *flags)
+static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
 {
-    const u_int16_t option = (flags ? *flags : 0);
+    const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len, i;
     size_t j = 0;
     const char* inbuf = (const char*)src;
@@ -1029,7 +1008,7 @@ end:
  * FIXME the size is a mess we really need a malloc/free logic
  *`dest size must be dest_len +2
  */
-size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, u_int16_t *flags)
+size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, uint16_t *flags)
 {
     size_t i_len, o_len;
     ucs2_t *u;

@@ -2,6 +2,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/compat.h>
+
 #if !defined HAVE_DIRFD && defined SOLARIS
 #include <dirent.h>
 int dirfd(DIR *dir)

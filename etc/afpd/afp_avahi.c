@@ -20,11 +20,10 @@
 #include <atalk/util.h>
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
+#include <atalk/netatalk_conf.h>
 
 #include "afp_zeroconf.h"
 #include "afp_avahi.h"
-#include "afp_config.h"
-#include "volume.h"
 
 /*****************************************************************
  * Global variables
@@ -45,7 +44,6 @@ static void publish_reply(AvahiEntryGroup *g,
  */
 static void register_stuff(void) {
     uint port;
-    const AFPConfig *config;
     const struct vol *volume;
     DSI *dsi;
     char name[MAXINSTANCENAMELEN+1];
@@ -93,20 +91,18 @@ static void register_stuff(void) {
         }
 
         /* AFP server */
-        for (config = ctx->configs; config; config = config->next) {
-
-            dsi = (DSI *)config->obj.handle;
+        for (dsi = ctx->obj->dsi; dsi; dsi = dsi->next) {
             port = getip_port((struct sockaddr *)&dsi->server);
 
-            if (convert_string(config->obj.options.unixcharset,
+            LOG(log_error, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
+
+            if (convert_string(ctx->obj->options.unixcharset,
                                CH_UTF8,
-                               config->obj.options.server ?
-                               config->obj.options.server :
-                               config->obj.options.hostname,
+                               ctx->obj->options.hostname,
                                -1,
                                name,
                                MAXINSTANCENAMELEN) <= 0) {
-                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
                 goto fail;
             }
             if ((dsi->bonjourname = strdup(name)) == NULL) {
@@ -147,8 +143,8 @@ static void register_stuff(void) {
                 goto fail;
             }	/* if */
 
-            if (config->obj.options.mimicmodel) {
-                strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", config->obj.options.mimicmodel);
+            if (ctx->obj->options.mimicmodel) {
+                strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", ctx->obj->options.mimicmodel);
                 if (avahi_entry_group_add_service_strlst(ctx->group,
                                                          AVAHI_IF_UNSPEC,
                                                          AVAHI_PROTO_UNSPEC,
@@ -279,7 +275,7 @@ static void client_callback(AvahiClient *client,
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void av_zeroconf_register(const AFPConfig *configs) {
+void av_zeroconf_register(const AFPObj *obj) {
     int error;
 
     /* initialize the struct that holds our config settings. */
@@ -288,7 +284,7 @@ void av_zeroconf_register(const AFPConfig *configs) {
         avahi_entry_group_reset(ctx->group);
     } else {
         ctx = calloc(1, sizeof(struct context));
-        ctx->configs = configs;
+        ctx->obj = obj;
         assert(ctx);
     }
 

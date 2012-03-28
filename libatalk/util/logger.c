@@ -39,18 +39,18 @@ Netatalk 2001 (c)
 #define MAXLOGSIZE 512
 
 #define LOGLEVEL_STRING_IDENTIFIERS { \
-  "LOG_NOTHING",                      \
-  "LOG_SEVERE",                       \
-  "LOG_ERROR",                        \
-  "LOG_WARN",                         \
-  "LOG_NOTE",                         \
-  "LOG_INFO",                         \
-  "LOG_DEBUG",                        \
-  "LOG_DEBUG6",                       \
-  "LOG_DEBUG7",                       \
-  "LOG_DEBUG8",                       \
-  "LOG_DEBUG9",                       \
-  "LOG_MAXDEBUG"}                        
+  "NOTHING",                      \
+  "SEVERE",                       \
+  "ERROR",                        \
+  "WARN",                         \
+  "NOTE",                         \
+  "INFO",                         \
+  "DEBUG",                        \
+  "DEBUG6",                       \
+  "DEBUG7",                       \
+  "DEBUG8",                       \
+  "DEBUG9",                       \
+  "MAXDEBUG"}                        
 
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
@@ -90,16 +90,20 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG /* logtype_uams */
 };
 
+static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
+
 /* We use this in order to track the last n log messages in order to prevent flooding */
 #define LOG_FLOODING_MINCOUNT 5 /* this controls after how many consecutive messages must be detected
                                    before we start to hide them */
 #define LOG_FLOODING_MAXCOUNT 1000 /* this controls after how many consecutive messages we force a 
                                       "repeated x times" message */
 #define LOG_FLOODING_ARRAY_SIZE 3 /* this contols how many messages in flow we track */
+
 struct log_flood_entry {
     int count;
     unsigned int hash;
 };
+
 static struct log_flood_entry log_flood_array[LOG_FLOODING_ARRAY_SIZE];
 static int log_flood_entries;
 
@@ -134,56 +138,6 @@ static unsigned int hash_message(const char *message)
         p++;
     }
     return hash;
-}
-
-/*
- * If filename == NULL its for syslog logging, otherwise its for file-logging.
- * "unsetuplog" calls with loglevel == NULL.
- * loglevel == NULL means:
- *    if logtype == default
- *       disable logging
- *    else
- *       set to default logging
- */
-static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
-{
-    unsigned int typenum, levelnum;
-
-    /* Parse logtype */
-    for( typenum=0; typenum < num_logtype_strings; typenum++) {
-        if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0)
-            break;
-    }
-    if (typenum >= num_logtype_strings) {
-        return;
-    }
-
-    /* Parse loglevel */
-    if (loglevel == NULL) {
-        levelnum = 0;
-    } else {
-        for(levelnum=1; levelnum < num_loglevel_strings; levelnum++) {
-            if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0)
-                break;
-        }
-        if (levelnum >= num_loglevel_strings) {
-            return;
-        }
-    }
-
-    /* is this a syslog setup or a filelog setup ? */
-    if (filename == NULL) {
-        /* must be syslog */
-        syslog_setup(levelnum,
-                     typenum,
-                     logoption_ndelay | logoption_pid,
-                     logfacility_daemon);
-    } else {
-        /* this must be a filelog */
-        log_setup(filename, levelnum, typenum);
-    }
-
-    return;
 }
 
 static void generate_message_details(char *message_details_buffer,
@@ -279,11 +233,20 @@ static int get_syslog_equivalent(enum loglevels loglevel)
     }
 }
 
-/* =========================================================================
-   Global function definitions
-   ========================================================================= */
+/* Called by the LOG macro for syslog messages */
+static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message)
+{
+    if ( !log_config.syslog_opened ) {
+        openlog(log_config.processname,
+                log_config.syslog_display_options,
+                log_config.syslog_facility);
+        log_config.syslog_opened = true;
+    }
 
-void log_init(void)
+    syslog(get_syslog_equivalent(loglevel), "%s", message);
+}
+
+static void log_init(void)
 {
     syslog_setup(log_info,
                  logtype_default,
@@ -291,7 +254,7 @@ void log_init(void)
                  logfacility_daemon);
 }
 
-void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
+static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
 {
     uid_t process_uid;
 
@@ -407,7 +370,7 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
 }
 
 /* Setup syslog logging */
-void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
+static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
 {
     /* 
      * FIXME:
@@ -440,28 +403,65 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
         arr_loglevel_strings[loglevel]);
 }
 
-void log_close(void)
+/*
+ * If filename == NULL its for syslog logging, otherwise its for file-logging.
+ * "unsetuplog" calls with loglevel == NULL.
+ * loglevel == NULL means:
+ *    if logtype == default
+ *       disable logging
+ *    else
+ *       set to default logging
+ */
+static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
 {
+    unsigned int typenum, levelnum;
+
+    /* Parse logtype */
+    for( typenum=0; typenum < num_logtype_strings; typenum++) {
+        if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0)
+            break;
+    }
+    if (typenum >= num_logtype_strings) {
+        return;
+    }
+
+    /* Parse loglevel */
+    if (loglevel == NULL) {
+        levelnum = 0;
+    } else {
+        for(levelnum=1; levelnum < num_loglevel_strings; levelnum++) {
+            if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0)
+                break;
+        }
+        if (levelnum >= num_loglevel_strings) {
+            return;
+        }
+    }
+
+    /* is this a syslog setup or a filelog setup ? */
+    if (filename == NULL) {
+        /* must be syslog */
+        syslog_setup(levelnum,
+                     typenum,
+                     logoption_ndelay | logoption_pid,
+                     logfacility_daemon);
+    } else {
+        /* this must be a filelog */
+        log_setup(filename, levelnum, typenum);
+    }
+
+    return;
 }
+
+/* =========================================================================
+   Global function definitions
+   ========================================================================= */
 
 /* This function sets up the processname */
 void set_processname(const char *processname)
 {
     strncpy(log_config.processname, processname, 15);
     log_config.processname[15] = 0;
-}
-
-/* Called by the LOG macro for syslog messages */
-static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message)
-{
-    if ( !log_config.syslog_opened ) {
-        openlog(log_config.processname,
-                log_config.syslog_display_options,
-                log_config.syslog_facility);
-        log_config.syslog_opened = true;
-    }
-
-    syslog(get_syslog_equivalent(loglevel), "%s", message);
 }
 
 /* -------------------------------------------------------------------------
@@ -619,57 +619,39 @@ exit:
     inlog = 0;
 }
 
-
-void setuplog(const char *logstr)
+void setuplog(const char *logstr, const char *logfile)
 {
-    char *ptr, *ptrbak, *logtype, *loglevel = NULL, *filename = NULL;
-    ptr = strdup(logstr);
-    ptrbak = ptr;
+    char *ptr, *save;
+    char *logtype, *loglevel;
+    char c;
 
-    /* logtype */
-    logtype = ptr;
+    save = ptr = strdup(logstr);
 
-    /* get loglevel */
-    ptr = strpbrk(ptr, " \t");
-    if (ptr) {
-        *ptr++ = 0;
-        while (*ptr && isspace(*ptr))
-            ptr++;
-        loglevel = ptr;
+    ptr = strtok(ptr, ", ");
 
-        /* get filename */
-        ptr = strpbrk(ptr, " \t");
-        if (ptr) {
-            *ptr++ = 0;
+    while (ptr) {
+        while (*ptr) {
             while (*ptr && isspace(*ptr))
                 ptr++;
+
+            logtype = ptr;
+            ptr = strpbrk(ptr, ":");
+            if (!ptr)
+                break;
+            *ptr = 0;
+
+            ptr++;
+            loglevel = ptr;
+            while (*ptr && !isspace(*ptr))
+                ptr++;
+            c = *ptr;
+            *ptr = 0;
+            setuplog_internal(loglevel, logtype, logfile);
+            *ptr = c;
         }
-        filename = ptr;
-        if (filename && *filename == 0)
-            filename = NULL;
+        ptr = strtok(NULL, ", ");
     }
 
-    /* finally call setuplog, filename can be NULL */
-    setuplog_internal(loglevel, logtype, filename);
-
-    free(ptrbak);
+    free(save);
 }
 
-void unsetuplog(const char *logstr)
-{
-    char *str, *logtype, *filename;
-
-    str = strdup(logstr);
-
-    /* logtype */
-    logtype = str;
-
-    /* get filename, can be NULL */
-    strtok(str, " \t");
-    filename = strtok(NULL, " \t");
-
-    /* finally call setuplog, filename can be NULL */
-    setuplog_internal(NULL, str, filename);
-
-    free(str);
-}

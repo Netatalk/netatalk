@@ -1,6 +1,4 @@
 /*
- * $Id: messages.c,v 1.23 2009-11-24 15:44:40 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -9,9 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -23,7 +19,6 @@
 #include <atalk/globals.h>
 
 #include "misc.h"
-
 
 #define MAXMESGSIZE 199
 
@@ -46,9 +41,9 @@ void readmessage(AFPObj *obj)
     int rc;
     static int c;
     uid_t euid;
-    u_int32_t maxmsgsize;
+    uint32_t maxmsgsize;
 
-    maxmsgsize = (obj->proto == AFPPROTO_DSI)?MIN(MAX(((DSI*)obj->handle)->attn_quantum, MAXMESGSIZE),MAXPATHLEN):MAXMESGSIZE;
+    maxmsgsize = MIN(MAX(obj->dsi->attn_quantum, MAXMESGSIZE), MAXPATHLEN);
 
     i=0;
     /* Construct file name SERVERTEXT/message.[pid] */
@@ -117,15 +112,15 @@ void readmessage(AFPObj *obj)
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     char *message;
-    u_int16_t type, bitmap;
-    u_int16_t msgsize;
+    uint16_t type, bitmap;
+    uint16_t msgsize;
     size_t outlen = 0;
     size_t msglen = 0;
     int utf8 = 0;
 
     *rbuflen = 0;
 
-    msgsize = (obj->proto == AFPPROTO_DSI)?MAX(((DSI*)obj->handle)->attn_quantum, MAXMESGSIZE):MAXMESGSIZE;
+    msgsize = MAX(obj->dsi->attn_quantum, MAXMESGSIZE);
 
     memcpy(&type, ibuf + 2, sizeof(type));
     memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
