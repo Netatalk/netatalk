@@ -719,7 +719,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     if (getoption_bool(obj->iniconfig, section, "read only", preset, 0))
         volume->v_flags |= AFPVOL_RO;
-    if (!getoption_bool(obj->iniconfig, section, "hex encoding", preset, 1))
+    if (!getoption_bool(obj->iniconfig, section, "hex encoding", preset, 0))
         volume->v_flags |= AFPVOL_NOHEX;
     if (getoption_bool(obj->iniconfig, section, "use dots", preset, 1))
         volume->v_flags |= AFPVOL_USEDOTS;
@@ -771,8 +771,10 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_INVDOTS;
 
     /* Mac to Unix conversion flags*/
-    if (!(volume->v_flags & AFPVOL_NOHEX))
+    if (!(volume->v_flags & AFPVOL_NOHEX)) {
         volume->v_mtou_flags |= CONV_ESCAPEHEX;
+        volume->v_utom_flags |= CONV_UNESCAPEHEX;
+    }
     if (!(volume->v_flags & AFPVOL_USEDOTS))
         volume->v_mtou_flags |= CONV_ESCAPEDOTS;
     if ((volume->v_flags & AFPVOL_EILSEQ))
@@ -784,7 +786,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_mtou_flags |= CONV_TOLOWER;
 
     /* Unix to Mac conversion flags*/
-    volume->v_utom_flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    volume->v_utom_flags = CONV_IGNORE;
     if ((volume->v_casefold & AFPVOL_UTOMUPPER))
         volume->v_utom_flags |= CONV_TOUPPER;
     else if ((volume->v_casefold & AFPVOL_UTOMLOWER))
