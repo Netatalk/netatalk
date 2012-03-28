@@ -334,9 +334,12 @@ static char *volxlate(const AFPObj *obj,
             }
         } else if (IS_VAR(p, "$c")) {
             DSI *dsi = obj->dsi;
-            len = sprintf(dest, "%s:%u",
-                          getip_string((struct sockaddr *)&dsi->client),
-                          getip_port((struct sockaddr *)&dsi->client));
+            if (obj->username[0]) {
+                len = sprintf(dest, "%s:%u",
+                              getip_string((struct sockaddr *)&dsi->client),
+                              getip_port((struct sockaddr *)&dsi->client));
+            } else {
+            }
             dest += len;
             destlen -= len;
         } else if (IS_VAR(p, "$d")) {
@@ -356,7 +359,7 @@ static char *volxlate(const AFPObj *obj,
             q = getip_string((struct sockaddr *)&dsi->client);
         } else if (IS_VAR(p, "$s")) {
             q = obj->options.hostname;
-        } else if (obj->username && IS_VAR(p, "$u")) {
+        } else if (obj->username[0] && IS_VAR(p, "$u")) {
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
                 q = sep+1;
