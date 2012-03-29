@@ -229,8 +229,10 @@ static void register_stuff(const AFPObj *obj) {
         }
 
         if (obj->options.mimicmodel) {
+            LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
+                dsi->bonjourname, obj->options.mimicmodel);
             TXTRecordCreate(&txt_devinfo, 0, NULL);
-            TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel);
+            TXTRecordPrintf(&txt_devinfo, "model=%s", obj->options.mimicmodel);
             error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                        0,               // no flags
                                        0,               // all network interfaces
@@ -238,7 +240,7 @@ static void register_stuff(const AFPObj *obj) {
                                        DEV_INFO_SERVICE_TYPE,
                                        "",            // default domains
                                        NULL,            // default host name
-                                       htons(port),
+                                       0,
                                        TXTRecordGetLength(&txt_devinfo),
                                        TXTRecordGetBytesPtr(&txt_devinfo),
                                        RegisterReply,           // callback
