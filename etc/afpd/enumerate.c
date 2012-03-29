@@ -353,7 +353,6 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         s_path.u_name = sd.sd_last;
         if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
             s_path.u_name = (char *)convname;
-            s_path.unconverted_name = sd.sd_last; /* Needed for CNID fixup */
         }
 
         if (of_stat( &s_path) < 0 ) {

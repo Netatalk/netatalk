@@ -216,15 +216,6 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
         from = svol->vol->v_volcharset;
     }
 
-    if ( (svol->vol->v_path)
-         && ! (svol->vol->v_flags & AFPVOL_USEDOTS)
-         && (dvol->vol->v_flags & AFPVOL_USEDOTS)) {
-        /* source is without dots, destination is with */
-        flags |= CONV_UNESCAPEHEX;
-    } else if (! (dvol->vol->v_flags & AFPVOL_USEDOTS)) {
-        flags |= CONV_ESCAPEDOTS;
-    }
-
     int len = convert_charset(from,
                               dvol->vol->v_volcharset,
                               dvol->vol->v_maccharset,

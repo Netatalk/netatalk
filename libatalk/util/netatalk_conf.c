@@ -719,10 +719,6 @@ static struct vol *creatvol(AFPObj *obj,
 
     if (getoption_bool(obj->iniconfig, section, "read only", preset, 0))
         volume->v_flags |= AFPVOL_RO;
-    if (!getoption_bool(obj->iniconfig, section, "hex encoding", preset, 0))
-        volume->v_flags |= AFPVOL_NOHEX;
-    if (getoption_bool(obj->iniconfig, section, "use dots", preset, 1))
-        volume->v_flags |= AFPVOL_USEDOTS;
     if (getoption_bool(obj->iniconfig, section, "invisible dots", preset, 0))
         volume->v_flags |= AFPVOL_INV_DOTS;
     if (!getoption_bool(obj->iniconfig, section, "stat vol", preset, 1))
@@ -771,12 +767,6 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_INVDOTS;
 
     /* Mac to Unix conversion flags*/
-    if (!(volume->v_flags & AFPVOL_NOHEX)) {
-        volume->v_mtou_flags |= CONV_ESCAPEHEX;
-        volume->v_utom_flags |= CONV_UNESCAPEHEX;
-    }
-    if (!(volume->v_flags & AFPVOL_USEDOTS))
-        volume->v_mtou_flags |= CONV_ESCAPEDOTS;
     if ((volume->v_flags & AFPVOL_EILSEQ))
         volume->v_mtou_flags |= CONV__EILSEQ;
 

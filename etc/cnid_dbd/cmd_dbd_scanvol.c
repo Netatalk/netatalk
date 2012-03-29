@@ -124,11 +124,6 @@ static char *mtoupath(char *mpath)
     }
 
     /* set conversion flags */
-    if (!(myvol->v_flags & AFPVOL_NOHEX))
-        flags |= CONV_ESCAPEHEX;
-    if (!(myvol->v_flags & AFPVOL_USEDOTS))
-        flags |= CONV_ESCAPEDOTS;
-
     if ((myvol->v_casefold & AFPVOL_MTOUUPPER))
         flags |= CONV_TOUPPER;
     else if ((myvol->v_casefold & AFPVOL_MTOULOWER))
