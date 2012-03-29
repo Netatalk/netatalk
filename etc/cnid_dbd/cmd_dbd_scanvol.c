@@ -221,7 +221,7 @@ static int check_adfile(const char *fname, const struct stat *st)
     if (myvol->v_adouble == AD_VERSION_EA) {
         if (!(dbd_flags & DBD_FLAGS_V2TOEA))
             return 0;
-        if (ad_convert(fname, st, myvol) != 0) {
+        if (ad_convert(fname, st, myvol, NULL) != 0) {
             switch (errno) {
             case ENOENT:
                 break;
@@ -1002,7 +1002,7 @@ static int scanvol(struct vol *vol, dbd_flags_t flags)
     if ((myvol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
         if (lstat(".", &st) != 0)
             return -1;
-        if (ad_convert(".", &st, vol) != 0) {
+        if (ad_convert(".", &st, vol, NULL) != 0) {
             switch (errno) {
             case ENOENT:
                 break;

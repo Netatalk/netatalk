@@ -83,6 +83,7 @@ struct path {
     int         m_type;             /* mac name type (long name, unicode */
     char        *m_name;            /* mac name */
     char        *u_name;            /* unix name */
+    char        *unconverted_name;  /* NULL or u_name before ad_convert() conversion */
     cnid_t      id;                 /* file id (only for getmetadata) */
     struct dir  *d_dir;             /* */
     int         st_valid;           /* does st_errno and st set */

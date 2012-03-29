@@ -347,13 +347,16 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             continue;
         }
         memset(&s_path, 0, sizeof(s_path));
-        s_path.u_name = sd.sd_last;
-        if (of_stat( &s_path) < 0 ) {
-            /*
-             * Somebody else plays with the dir, well it can be us with 
-            * "Empty Trash..."
-            */
 
+        /* conversions on the fly */
+        const char *convname;
+        s_path.u_name = sd.sd_last;
+        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
+            s_path.u_name = (char *)convname;
+            s_path.unconverted_name = sd.sd_last; /* Needed for CNID fixup */
+        }
+
+        if (of_stat( &s_path) < 0 ) {
             /* so the next time it won't try to stat it again
              * another solution would be to invalidate the cache with 
              * sd.sd_did = 0 but if it's not ENOENT error it will start again
@@ -364,11 +367,17 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             continue;
         }
 
+        /* Fixup CNID db if ad_convert resulted in a rename (then convname != NULL) */
+        if (convname) {
+            s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd.sd_last, strlen(sd.sd_last));
+            if (s_path.id != CNID_INVALID) {
+                if (cnid_update(vol->v_cdb, s_path.id, &s_path.st, curdir->d_did, convname, strlen(convname)) != 0)
+                    LOG(log_error, logtype_afpd, "enumerate: error updating CNID of \"%s\"", fullpathname(convname));
+            }
+        }
+
         sd.sd_last += len + 1;
         s_path.m_name = NULL;
-
-        /* Convert adouble:v2 to adouble:ea on the fly */
-        (void)ad_convert(s_path.u_name, &s_path.st, vol);
 
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
