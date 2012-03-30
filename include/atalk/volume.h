@@ -114,8 +114,6 @@ struct vol {
 #define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
 #define AFPVOL_UNIX_CTXT (1 << 6)   /* volume created by getvolbypath ie UNIX access, not afpd AFP user session */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
-#define AFPVOL_NOHEX     (1 << 10)  /* don't do :hex translation */
-#define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */

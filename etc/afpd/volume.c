@@ -321,7 +321,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
      * .Parent file here if it doesn't exist. */
 
     /* Convert adouble:v2 to adouble:ea on the fly */
-    (void)ad_convert(vol->v_path, st, vol);
+    (void)ad_convert(vol->v_path, st, vol, NULL);
 
     ad_init(&ad, vol);
     if (ad_open(&ad, vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0 ) {

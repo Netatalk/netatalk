@@ -103,9 +103,6 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
     if (name[0] != '.')
         return 1;
     
-    if (!(vol->v_flags & AFPVOL_USEDOTS))
-        return 0;
-        
     return netatalk_name(name) && strcmp(name,".AppleDouble") && strcasecmp(name,".Parent");
 }                                           
 
@@ -467,9 +464,6 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
     if (name[0] != '.')
         return 1;
     
-    if (!(vol->v_flags & AFPVOL_USEDOTS))
-        return 0;
-
 #ifndef HAVE_EAFD
     if (name[1] == '_')
         return ad_valid_header_osx(name);
