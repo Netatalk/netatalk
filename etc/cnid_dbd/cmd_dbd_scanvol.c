@@ -152,28 +152,6 @@ static char *mtoupath(char *mpath)
 }
 
 /*
-  Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
-  We do it by roundtripiping from volcharset to UTF8-MAC and back and then compare the result.
-*/
-static int check_name_encoding(char *uname)
-{
-    char *roundtripped;
-
-    roundtripped = mtoupath(utompath(uname));
-    if (!roundtripped) {
-        dbd_log( LOGSTD, "Error checking encoding for '%s/%s'", cwdbuf, uname);
-        return -1;
-    }
-
-    if ( STRCMP(uname, !=, roundtripped)) {
-        dbd_log( LOGSTD, "Bad encoding for '%s/%s'", cwdbuf, uname);
-        return -1;
-    }
-
-    return 0;
-}
-
-/*
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
   Returns pointer to name or NULL.
 */
@@ -204,19 +182,71 @@ static const char *check_special_dirs(const char *name)
 }
 
 /*
+ * We unCAPed a name, update CNID db
+ */
+static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, const char *newname)
+{
+    int ret;
+    cnid_t id;
+
+    /* Prepare request data */
+    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
+    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
+    rqst.did = did;
+    rqst.cnid = 0;
+    if ( ! (myvol->v_flags & AFPVOL_NODEV))
+        rqst.dev = sp->st_dev;
+    rqst.ino = sp->st_ino;
+    rqst.type = S_ISDIR(sp->st_mode) ? 1 : 0;
+    rqst.name = (char *)oldname;
+    rqst.namelen = strlen(oldname);
+
+    /* Query the database */
+    ret = dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
+    if (dbif_txn_close(dbd, ret) != 0)
+        return -1;
+    if (rply.result != CNID_DBD_RES_OK)
+        return 0;
+    id = rply.cnid;
+
+    /* Prepare request data */
+    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
+    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
+    rqst.did = did;
+    rqst.cnid = id;
+    if ( ! (myvol->v_flags & AFPVOL_NODEV))
+        rqst.dev = sp->st_dev;
+    rqst.ino = sp->st_ino;
+    rqst.type = S_ISDIR(sp->st_mode) ? 1 : 0;
+    rqst.name = (char *)newname;
+    rqst.namelen = strlen(newname);
+
+    /* Update the database */
+    ret = dbd_update(dbd, &rqst, &rply);
+    if (dbif_txn_close(dbd, ret) != 0)
+        return -1;
+    if (rply.result != CNID_DBD_RES_OK)
+        return -1;
+
+    return 0;
+}
+
+/*
   Check for .AppleDouble file, create if missing
 */
-static int check_adfile(const char *fname, const struct stat *st)
+static int check_adfile(const char *fname, const struct stat *st, const char **newname)
 {
     int ret;
     int adflags = ADFLAGS_HF;
     struct adouble ad;
     const char *adname;
 
+    *newname = NULL;
+
     if (myvol->v_adouble == AD_VERSION_EA) {
         if (!(dbd_flags & DBD_FLAGS_V2TOEA))
             return 0;
-        if (ad_convert(fname, st, myvol, NULL) != 0) {
+        if (ad_convert(fname, st, myvol, newname) != 0) {
             switch (errno) {
             case ENOENT:
                 break;
@@ -892,21 +922,21 @@ static int dbd_readdir(int volroot, cnid_t did)
            Tests
         **************************************************************************/
 
-        /* Check encoding */
-        if ( -1 == (encoding_ok = check_name_encoding(ep->d_name)) ) {
-            /* If its a file: skipp all other tests now ! */
-            /* For dirs we could try to get a CNID for it and recurse, but currently I prefer not to */
-            continue;
-        }
-
         /* Check for appledouble file, create if missing, but only if we have addir */
+        const char *name = NULL;
         adfile_ok = -1;
         if (ADDIR_OK)
-            adfile_ok = check_adfile(ep->d_name, &st);
+            adfile_ok = check_adfile(ep->d_name, &st, &name);
+
+        if (name == NULL) {
+            name = ep->d_name;
+        } else {
+            update_cnid(did, &st, ep->d_name, name);
+        }
 
         if ( ! nocniddb) {
             /* Check CNIDs */
-            cnid = check_cnid(ep->d_name, did, &st, adfile_ok);
+            cnid = check_cnid(name, did, &st, adfile_ok);
 
             /* Now add this object to our rebuild dbd */
             if (cnid && dbd_rebuild) {
@@ -917,7 +947,7 @@ static int dbd_readdir(int volroot, cnid_t did)
                     return -1;
                 if (rply.result != CNID_DBD_RES_OK) {
                     dbd_log( LOGSTD, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
-                             cnid, cwdbuf, ep->d_name);
+                             cnid, cwdbuf, name);
                     return -1;
                 }
                 count++;
@@ -933,20 +963,20 @@ static int dbd_readdir(int volroot, cnid_t did)
 
         /* Check EA files */
         if (myvol->v_vfs_ea == AFPVOL_EA_AD)
-            check_eafiles(ep->d_name);
+            check_eafiles(name);
 
         /**************************************************************************
           Recursion
         **************************************************************************/
         if (S_ISDIR(st.st_mode) && (cnid || nocniddb)) { /* If we have no cnid for it we cant recur */
             strcat(cwdbuf, "/");
-            strcat(cwdbuf, ep->d_name);
+            strcat(cwdbuf, name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
             if (-1 == (cwd = open(".", O_RDONLY))) {
                 dbd_log( LOGSTD, "Cant open directory '%s': %s", cwdbuf, strerror(errno));
                 continue;
             }
-            if (0 != chdir(ep->d_name)) {
+            if (0 != chdir(name)) {
                 dbd_log( LOGSTD, "Cant chdir to directory '%s': %s", cwdbuf, strerror(errno));
                 close(cwd);
                 continue;
