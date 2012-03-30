@@ -84,9 +84,29 @@ static void libevent_logmsg_cb(int severity, const char *msg)
 /* SIGTERM callback */
 static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 {
-    LOG(log_note, logtype_afpd, "Exiting on SIGTERM");
+    sigset_t sigs;
+    struct timeval tv;
+
+    LOG(log_info, logtype_afpd, "Exiting on SIGTERM");
+
+    if (in_shutdown)
+        return;
     in_shutdown = 1;
-    event_base_loopbreak(base);
+
+    /* block any signal but SIGCHLD */
+    sigfillset(&sigs);
+    sigdelset(&sigs, SIGCHLD);
+    sigprocmask(SIG_SETMASK, &sigs, NULL);
+
+    /* add 10 sec timeout timer, remove all events but SIGCHLD */
+    tv.tv_sec = KILL_GRACETIME;
+    tv.tv_usec = 0;
+    event_base_loopexit(base, &tv);
+    event_del(sigterm_ev);
+    event_del(sigquit_ev);
+    event_del(timer_ev);
+
+    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
 /* SIGQUIT callback */
@@ -299,24 +319,6 @@ int main(int argc, char **argv)
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    /* got SIGTERM so we're going to shutdown */
-
-    /* block any signal but SIGCHLD */
-    sigfillset(&blocksigs);
-    sigdelset(&blocksigs, SIGCHLD);
-    sigprocmask(SIG_SETMASK, &blocksigs, NULL);
-
-    /* setup new events: remove SIGTERM and SIGQUIT cbs, add timeout */
-    tv.tv_sec = KILL_GRACETIME;
-    tv.tv_usec = 0;
-    event_base_loopexit(base, &tv);
-    event_del(sigterm_ev);
-    event_del(sigquit_ev);
-
-    /* run the event loop again, waiting for child to exit on SIGTERM for KILL_GRACETIME seconds */
-    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, NULL);
-    ret = event_base_dispatch(base);
-
     if (afpd_pid != -1 || cnid_metad_pid != -1) {
         if (afpd_pid != -1)
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
@@ -324,5 +326,8 @@ int main(int argc, char **argv)
             LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
         kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, NULL);
     }
+
+    LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");
+
     netatalk_exit(ret);
 }
