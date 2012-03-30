@@ -805,7 +805,12 @@ int dbif_env_remove(const char *path)
     int ret;
     DBD *dbd;
 
-    LOG(log_debug, logtype_cnid, "Reopening BerkeleyDB environment");
+    LOG(log_debug, logtype_cnid, "Trying to remove BerkeleyDB environment");
+
+    if (get_lock(LOCK_EXCL, path) != LOCK_EXCL) {
+        LOG(log_warning, logtype_cnid, "CNID db \"%s\" in use, can't remove BerkeleyDB environment", path);
+        return 0;
+    }
     
     if (NULL == (dbd = dbif_init(path, "cnid2.db")))
         return -1;
