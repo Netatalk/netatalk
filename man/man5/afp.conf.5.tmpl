@@ -942,17 +942,9 @@ is performed when accessing filesystems from clients\&. This is generally useful
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
 .RE
 .PP
-hex encoding = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
-.RS 4
-Whether :hex encoding is done for file and directory names containing the character
-/\&. Setting this option to no makes the
-/
-character illegal\&.
-.RE
-.PP
 invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-make dot files invisible\&. If "\fBuse dots = no\fR", this parameter is not unnecessary\&.
+make dot files invisible\&.
 .RE
 .PP
 network ids = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
@@ -1002,12 +994,6 @@ Whether to use AFP3 UNIX privileges\&. This should be set for OS X clients\&. Se
 \fBdirectory perm\fR
 and
 \fBumask\fR\&.
-.RE
-.PP
-use dots = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
-.RS 4
-Whether to do :hex translation for dot files\&. See also
-\fBinvisible dots\fR\&.
 .RE
 .SH "CNID BACKENDS"
 .PP

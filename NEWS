@@ -1,7 +1,13 @@
 Changes in 3.0 alpha2
 =====================
 
+* UPD: afpd: Store '.' as is and '/' as ':' on the server, don't
+       CAP hexencode as "2e" and "2f" respectively
+* UPD: afdp: Automatic name conversion, renaming files and directories
+       containing CAP sequences to their not enscaped forms
+* UPD: dbd: -C option removes CAP encoding
 * UPD: Add graceful option to RedHat init script
+* REM: Volumes options "use dots" and "hex encoding"
 
 Changes in 3.0 alpha1
 =====================
