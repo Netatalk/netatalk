@@ -1321,7 +1321,6 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (prw != 0)
         subpath = prw;
 
-    strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, user, MAXPATHLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
