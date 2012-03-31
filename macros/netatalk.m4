@@ -1,5 +1,24 @@
 dnl Kitchen sink for configuration macros
 
+dnl Whether to disable bundled libevent
+AC_DEFUN([AC_NETATALK_LIBEVENT], [
+    AC_MSG_CHECKING([whether to disable bundled libevent (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)])
+    AC_ARG_ENABLE(
+        bundled-libevent,
+        [AC_HELP_STRING(
+            [--disable-bundled-libevent],
+            [whether the bundled version of libevent shall not be used (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)]
+        )],
+        use_bundled_libevent=$enableval,
+        use_bundled_libevent=yes
+    )
+
+    if test x"$use_bundled_libevent" = x"yes" ; then
+        AC_CONFIG_SUBDIRS([libevent])
+    fi
+    AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
+])
+
 dnl Filesystem Hierarchy Standard (FHS) compatibility
 AC_DEFUN([AC_NETATALK_FHS], [
 AC_MSG_CHECKING([whether to use Filesystem Hierarchy Standard (FHS) compatibility])

@@ -184,6 +184,9 @@ AC_NETATALK_REALPATH
 dnl Check for sendfile()
 AC_NETATALK_SENDFILE
 
+dnl Check whether bundled libevent shall not be used
+AC_NETATALK_LIBEVENT
+
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
@@ -209,9 +212,6 @@ AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$neta_cv_have_openssl != xyes)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
-
-dnl --------------------- configure subpackages
-AC_CONFIG_SUBDIRS([libevent])
 
 dnl --------------------- generate files
 AC_OUTPUT([Makefile
