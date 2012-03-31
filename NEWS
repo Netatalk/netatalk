@@ -7,6 +7,10 @@ Changes in 3.0 alpha2
        containing CAP sequences to their not enscaped forms
 * UPD: dbd: -C option removes CAP encoding
 * UPD: Add graceful option to RedHat init script
+* UPD: Add --disable-bundled-libevent configure options When set to yes,
+       we rely on a properly installed version on libevent CPPFLAGS and LDFLAGS
+       should be set properly to pick that up
+* UPD: Run ldconfig on Linux at the end of make install
 * REM: Volumes options "use dots" and "hex encoding"
 
 Changes in 3.0 alpha1
