@@ -103,7 +103,9 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 copy:
     /* Create a adouble:ea meta EA */
     LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): copying adouble", fullpathname(path), ret);
-    EC_ZERO_LOG( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE) );
+    EC_ZERO_LOGSTR( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE),
+                    "ad_conv_v22ea_hf(\"%s\"): error creating metadata EA: %s",
+                    fullpathname(path), strerror(errno));
     EC_ZERO_LOG( ad_copy_header(&adea, &adv2) );
     ad_flush(&adea);
 
@@ -155,6 +157,8 @@ static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct v
     const char *adpath;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
 
+    become_root();
+
     EC_ZERO( ad_conv_v22ea_hf(path, sp, vol) );
     EC_ZERO( ad_conv_v22ea_rf(path, sp, vol) );
 
@@ -162,13 +166,14 @@ static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct v
     LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
         path, fullpathname(adpath));
 
-    become_root();
-    EC_ZERO_LOG( unlink(adpath) );
-    unbecome_root();
+    unlink(adpath);
 
 EC_CLEANUP:
     if (errno == ENOENT)
         EC_STATUS(0);
+
+    unbecome_root();
+
     EC_EXIT;
 }
 

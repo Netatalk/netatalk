@@ -6,6 +6,8 @@ Changes in 3.0 alpha2
 * UPD: afdp: Automatic name conversion, renaming files and directories
        containing CAP sequences to their not enscaped forms
 * UPD: afpd: Correct handling of user homes and users without homes
+* UPD: afpd: Perform complete automatic adouble:v2 to adouble:ea conversion
+       as root. Previously only unlinking the adouble:v2 file was done as root
 * UPD: dbd: -C option removes CAP encoding
 * UPD: Add graceful option to RedHat init script
 * UPD: Add --disable-bundled-libevent configure options When set to yes,
