@@ -942,13 +942,16 @@ static int vol_section(const char *sec)
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 {
     EC_INIT;
+    static int regexerr = -1;
+    static regex_t reg;
     char        path[MAXPATHLEN + 1];
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1];
-    const char  *preset, *default_preset, *p;
+    const char  *preset, *default_preset, *p, *basedir;
     char        *q, *u;
     int         i;
     struct passwd   *pw;
+    regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
@@ -971,6 +974,27 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 || strcmp(obj->username, obj->options.guest) == 0)
                 /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
+            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
+                /* no user home */
+                continue;
+
+            /* check if user home matches our "basedir regex" */
+            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL)
+                continue;
+            LOG(log_debug, logtype_afpd, "readvolfile: basedir regex: '%s'", basedir);
+
+            if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
+                char errbuf[1024];
+                regerror(regexerr, &reg, errbuf, sizeof(errbuf));
+                LOG(log_debug, logtype_default, "readvolfile: bad basedir regex: %s", errbuf);
+            }
+
+            if (regexec(&reg, pwent->pw_dir, 1, match, 0) == REG_NOMATCH) {
+                LOG(log_debug, logtype_default, "readvolfile: user home \"%s\" doesn't match basedir regex \"%s\"",
+                    pwent->pw_dir, basedir);
+                continue;
+            }
+
             strlcpy(tmp, pwent->pw_dir, MAXPATHLEN);
             strlcat(tmp, "/", MAXPATHLEN);
             if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
@@ -1215,6 +1239,8 @@ struct vol *getvolbyvid(const uint16_t vid )
 struct vol *getvolbypath(AFPObj *obj, const char *path)
 {
     EC_INIT;
+    static int regexerr = -1;
+    static regex_t reg;
     struct vol *vol;
     struct vol *tmp;
     const struct passwd *pw;
@@ -1224,8 +1250,6 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
-    int regexerr = -1;
-    static regex_t reg;
     regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);

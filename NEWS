@@ -5,6 +5,7 @@ Changes in 3.0 alpha2
        CAP hexencode as "2e" and "2f" respectively
 * UPD: afdp: Automatic name conversion, renaming files and directories
        containing CAP sequences to their not enscaped forms
+* UPD: afpd: Correct handling of user homes and users without homes
 * UPD: dbd: -C option removes CAP encoding
 * UPD: Add graceful option to RedHat init script
 * UPD: Add --disable-bundled-libevent configure options When set to yes,
