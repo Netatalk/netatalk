@@ -1103,8 +1103,6 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {
-            if (vol->v_flags & AFPVOL_UNIX_CTXT)
-                continue;
             vol->v_deleted = 1;
         }
     } else {
