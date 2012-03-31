@@ -441,6 +441,10 @@ netatalk_cv_HAVE_TIMEOUT_ID_T=yes,netatalk_cv_HAVE_TIMEOUT_ID_T=no,netatalk_cv_H
 	AC_SUBST(KLDFLAGS)
 fi
 
+dnl Whether to run ldconfig after installing libraries
+AC_PATH_PROG(NETA_LDCONFIG, ldconfig, , [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/bin])
+echo NETA_LDCONFIG = $NETA_LDCONFIG
+AM_CONDITIONAL(RUN_LDCONFIG, test x"$this_os" = x"linux" -a x"$NETA_LDCONFIG" != x"")
 ])
 
 dnl Check for building PGP UAM module
