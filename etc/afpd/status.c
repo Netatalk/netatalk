@@ -479,7 +479,8 @@ krb5_cleanup:
 
 offset_calc:
     /* Calculate and store offset for UTF8ServerName */
-    *diroffset += sizeof(uint16_t);
+    if (uam_gss_enabled())
+        *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
     memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
