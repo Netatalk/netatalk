@@ -879,6 +879,11 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
             continue;
 
+        if (!myvol->vfs->vfs_validupath(myvol, ep->d_name)) {
+            dbd_log(LOGDEBUG, "Ignoring \"%s\"", ep->d_name);
+            continue;
+        }
+
         if ((ret = lstat(ep->d_name, &st)) < 0) {
             dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
                      cwdbuf, ep->d_name, strerror(errno));

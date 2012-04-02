@@ -15,6 +15,7 @@ Changes in 3.0 alpha2
        should be set properly to pick that up
 * UPD: Run ldconfig on Linux at the end of make install
 * FIX: afpd: ad cp on appledouble = ea volumes
+* FIX: dbd: ignore ._ appledouble files
 * REM: Volumes options "use dots" and "hex encoding"
 
 Changes in 3.0 alpha1
