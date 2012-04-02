@@ -211,7 +211,8 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
     if ( ! svol->vol->v_path) {
         /* no source volume: escape special chars (eg ':') */
         from = dvol->vol->v_volcharset; /* src = dst charset */
-        flags |= CONV_ESCAPEHEX;
+        if (dvol->vol->v_adouble == AD_VERSION2)
+            flags |= CONV_ESCAPEHEX;
     } else {
         from = svol->vol->v_volcharset;
     }

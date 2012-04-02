@@ -14,6 +14,7 @@ Changes in 3.0 alpha2
        we rely on a properly installed version on libevent CPPFLAGS and LDFLAGS
        should be set properly to pick that up
 * UPD: Run ldconfig on Linux at the end of make install
+* FIX: afpd: ad cp on appledouble = ea volumes
 * REM: Volumes options "use dots" and "hex encoding"
 
 Changes in 3.0 alpha1
