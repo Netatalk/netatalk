@@ -333,15 +333,14 @@ static char *volxlate(const AFPObj *obj,
                     q++;
             }
         } else if (IS_VAR(p, "$c")) {
-            DSI *dsi = obj->dsi;
-            if (obj->username[0]) {
+            if (IS_AFP_SESSION(obj)) {
+                DSI *dsi = obj->dsi;
                 len = sprintf(dest, "%s:%u",
                               getip_string((struct sockaddr *)&dsi->client),
                               getip_port((struct sockaddr *)&dsi->client));
-            } else {
+                dest += len;
+                destlen -= len;
             }
-            dest += len;
-            destlen -= len;
         } else if (IS_VAR(p, "$d")) {
             q = path;
         } else if (pwd && IS_VAR(p, "$f")) {
@@ -970,7 +969,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             continue;
         if (STRCMP(secname, ==, INISEC_HOMES)) {
             have_uservol = 1;
-            if (obj->username[0] == 0
+            if (!IS_AFP_SESSION(obj)
                 || strcmp(obj->username, obj->options.guest) == 0)
                 /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
@@ -1322,6 +1321,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         subpath = prw;
 
     strlcat(tmpbuf, user, MAXPATHLEN);
+    strlcat(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */
