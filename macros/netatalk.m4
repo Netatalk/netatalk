@@ -581,7 +581,7 @@ CFLAGS=""
 LIBS=""
 
 if test x"$netatalk_cv_ldap" != x"no" ; then
-   if test x"$netatalk_cv_ldap" != x"yes" -a test x"$netatalk_cv_ldap" != x"no"; then
+   if test x"$netatalk_cv_ldap" != x"yes" -a x"$netatalk_cv_ldap" != x"auto"; then
        CFLAGS=$netatalk_cv_ldap/include
        LIBS=$netatalk_cv_ldap/lib
    fi
