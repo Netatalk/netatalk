@@ -52,7 +52,7 @@ dnl	fi
 	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	AC_MSG_RESULT([         ACL support:             $with_acl_support])
 	AC_MSG_RESULT([         Kerberos support:        $with_kerberos])
-	AC_MSG_RESULT([         LDAP support:            $with_ldap])
+	AC_MSG_RESULT([         LDAP support:            $netatalk_cv_ldap])
 	if test x"$use_pam_so" = x"yes" -a x"$netatalk_cv_install_pam" = x"no"; then
 		AC_MSG_RESULT([])
 		AC_MSG_WARN([ PAM support was configured for your system, but the netatalk PAM configuration file])
