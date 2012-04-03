@@ -14,15 +14,14 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
         )
 
 	if test x"$compilegssapi" != x"no"; then
-
-                if test "x$compilegssapi" != "xyes" -a "x$compilegssapi" != "xauto"; then
-            		GSSAPI_CFLAGS="-I$withval/include"
-            		GSSAPI_CPPFLAGS="-I$withval/include"
-            		GSSAPI_LDFLAGS="-L$withval/${atalk_libname}"
-            		FOUND_GSSAPI=yes
+        if test "x$compilegssapi" != "xyes" -a "x$compilegssapi" != "xauto"; then
+            GSSAPI_CFLAGS="-I$withval/include"
+            GSSAPI_CPPFLAGS="-I$withval/include"
+            GSSAPI_LDFLAGS="-L$withval/${atalk_libname}"
+            FOUND_GSSAPI=yes
 			AC_MSG_CHECKING([checking for GSSAPI support in])
 			AC_MSG_RESULT([$compilegssapi])
-                fi
+        fi
 
 
   	  # Do no harm to the values of CFLAGS and LIBS while testing for
@@ -39,22 +38,20 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	  AC_PATH_PROG(KRB5_CONFIG, krb5-config)
 	  AC_MSG_CHECKING(for working krb5-config)
 	  if test -x "$KRB5_CONFIG"; then
+        CFLAGS=""; export CFLAGS
+	    LDFLAGS=""; export LDFLAGS
 	    TEMP="`$KRB5_CONFIG --libs gssapi`"
         if test $? -eq 0 ; then
-	        save_CFLAGS=$CFLAGS
-	        CFLAGS="";export CFLAGS
-	        save_LDFLAGS=$LDFLAGS
-	        LDFLAGS="";export LDFLAGS
 	        GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
 	        GSSAPI_CPPFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
             GSSAPI_LIBS="$TEMP"
-	        CFLAGS=$save_CFLAGS;export CFLAGS
-	        LDFLAGS=$save_LDFLAGS;export LDFLAGS
 	        FOUND_GSSAPI=yes
 	        AC_MSG_RESULT(yes)
         else
 	        AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
         fi
+	    CFLAGS=$save_CFLAGS; export CFLAGS
+	    LDFLAGS=$save_LDFLAGS; export LDFLAGS
 	  else
 	    AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
 	  fi
@@ -96,11 +93,10 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	  fi
 	fi
 
-	CFLAGS="$CFLAGS $GSSAPI_CFLAGS"
-	CPPFLAGS="$CPPFLAGS $GSSAPI_CPPFLAGS"
-	LDFLAGS="$LDFLAGS $GSSAPI_LDFLAGS"
-	LIBS="$LIBS $GSSAPI_LIBS"
-
+	CFLAGS="$GSSAPI_CFLAGS"
+	CPPFLAGS="$GSSAPI_CPPFLAGS"
+	LDFLAGS="$GSSAPI_LDFLAGS"
+	LIBS="$GSSAPI_LIBS"
 
 	# check for gssapi headers
 
@@ -132,7 +128,7 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	if test x"$ac_cv_func_gss_acquire_cred" = x"yes"; then
    		AC_DEFINE(HAVE_GSSAPI,1,[Whether to enable GSSAPI support])
 		AC_MSG_RESULT([yes])
-		GSSAPI_LIBS="$LDFLAGS $LIBS"
+#		GSSAPI_LIBS="$LDFLAGS $LIBS"
 	else
 		AC_MSG_RESULT([no])
 		if test x"$compilegssapi" = x"yes"; then

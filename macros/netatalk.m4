@@ -512,6 +512,9 @@ fi
 AM_CONDITIONAL(USE_GSSAPI, test x"$netatalk_cv_build_krb5_uam" = x"yes")
 ])
 
+dnl Check if we can directly use Kerberos 5 API, used for reading keytabs
+dnl and automatically construction DirectoryService names from that, instead
+dnl of requiring special configuration in afp.conf
 AC_DEFUN([AC_NETATALK_KERBEROS], [
 AC_MSG_CHECKING([for Kerberos 5 (necessary for GetSrvrInfo:DirectoryNames support)])
 AC_ARG_WITH([kerberos],
@@ -531,8 +534,10 @@ if test x"$with_kerberos" != x"no"; then
    AC_MSG_CHECKING([for krb5-config])
    if test -x "$KRB5_CONFIG"; then
       AC_MSG_RESULT([$KRB5_CONFIG])
-      CFLAGS="$CFLAGS `$KRB5_CONFIG --cflags krb5`"
-      LIBS="$LIBS `$KRB5_CONFIG --libs krb5`"
+      KRB5_CFLAGS="`$KRB5_CONFIG --cflags krb5`"
+      KRB5_LIBS="`$KRB5_CONFIG --libs krb5`"
+      AC_SUBST(KRB5_CFLAGS)
+      AC_SUBST(KRB5_LIBS)
       with_kerberos="yes"
    else
       AC_MSG_RESULT([not found])
