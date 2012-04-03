@@ -35,7 +35,7 @@
 
 static void usage_main(void)
 {
-    printf("Usage: ad ls|cp|rm|mv|find [file|dir, ...]\n");
+    printf("Usage: ad ls|cp|rm|mv|set|find [file|dir, ...]\n");
     printf("       ad -v|--version\n");
 }
 
@@ -69,6 +69,8 @@ int main(int argc, char **argv)
         return ad_rm(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "mv"))
         return ad_mv(argc, argv, &obj);
+    else if (STRCMP(argv[1], ==, "set"))
+        return ad_set(argc, argv, &obj);
     else if (STRCMP(argv[1], ==, "find"))
         return ad_find(argc, argv, &obj);
     else if (STRCMP(argv[1], ==, "-v")) {

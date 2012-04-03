@@ -12,7 +12,8 @@ ad_SOURCES = \
 	ad_ls.c \
 	ad_cp.c \
 	ad_mv.c \
-	ad_rm.c
+	ad_rm.c \
+	ad_set.c
 
 ad_CFLAGS = -D_PATH_AD=\"$(bindir)/ad\"
 
