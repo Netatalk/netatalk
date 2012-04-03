@@ -4,10 +4,12 @@ noinst_HEADERS = aclldap.h cache.h
 
 noinst_LTLIBRARIES = libacl.la
 libacl_la_SOURCES = cache.c unix.c uuid.c
-libacl_la_LIBADD =
+libacl_la_LDFLAGS =
+libacl_la_LIBADD  =
 
 if HAVE_LDAP
 libacl_la_SOURCES += ldap.c ldap_config.c
-libacl_la_LIBADD += -lldap
+libacl_la_LIBADD  += @LDAP_LIBS@
+libacl_la_LDFLAGS += @LDAP_LDLFLAGS@
 endif
 

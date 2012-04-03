@@ -576,14 +576,14 @@ AC_ARG_WITH(ldap,
 AC_MSG_RESULT($netatalk_cv_ldap)
 
 save_CFLAGS=$CFLAGS
-save_LIBS=$LIBS
+save_LDLFLAGS=$LDLFLAGS
 CFLAGS=""
-LIBS=""
+LDLFLAGS=""
 
 if test x"$netatalk_cv_ldap" != x"no" ; then
    if test x"$netatalk_cv_ldap" != x"yes" -a x"$netatalk_cv_ldap" != x"auto"; then
-       CFLAGS=$netatalk_cv_ldap/include
-       LIBS=$netatalk_cv_ldap/lib
+       CFLAGS=-I$netatalk_cv_ldap/include
+       LDLFLAGS=-L$netatalk_cv_ldap/lib
    fi
    	AC_CHECK_HEADER([ldap.h], netatalk_cv_ldap=yes,
         [ if test x"$netatalk_cv_ldap" = x"yes" ; then
@@ -600,15 +600,18 @@ if test x"$netatalk_cv_ldap" != x"no" ; then
 fi
 
 if test x"$netatalk_cv_ldap" = x"yes"; then
+   echo "********************************************************************"
     LDAP_CFLAGS=$CFLAGS
-    LDAP_LIBS=$LIBS
+    LDAP_LDLFLAGS=$LDLFLAGS
+    LDAP_LIBS=-lldap
 	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
     AC_SUBST(LDAP_CFLAGS)
+    AC_SUBST(LDAP_LDLFLAGS)
     AC_SUBST(LDAP_LIBS)
 fi
 
 CFLAGS=$save_CFLAGS
-LIBS=$save_LIBS
+LDLFLAGS=$save_LDLFLAGS
 ])
 
 dnl Check for ACL support
