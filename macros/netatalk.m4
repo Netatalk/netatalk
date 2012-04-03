@@ -600,7 +600,6 @@ if test x"$netatalk_cv_ldap" != x"no" ; then
 fi
 
 if test x"$netatalk_cv_ldap" = x"yes"; then
-   echo "********************************************************************"
     LDAP_CFLAGS=$CFLAGS
     LDAP_LDLFLAGS=$LDLFLAGS
     LDAP_LIBS=-lldap
