@@ -532,7 +532,7 @@ if test x"$with_kerberos" != x"no"; then
    if test -x "$KRB5_CONFIG"; then
       AC_MSG_RESULT([$KRB5_CONFIG])
       CFLAGS="$CFLAGS `$KRB5_CONFIG --cflags krb5`"
-      LIBS="`$KRB5_CONFIG --libs krb5` $LIBS"
+      LIBS="$LIBS `$KRB5_CONFIG --libs krb5`"
       with_kerberos="yes"
    else
       AC_MSG_RESULT([not found])
