@@ -570,34 +570,45 @@ AC_MSG_CHECKING(for LDAP (necessary for client-side ACL visibility))
 AC_ARG_WITH(ldap,
     [AS_HELP_STRING([--with-ldap],
         [LDAP support (default=auto)])],
-    [ case "$withval" in
-      yes|no)
-          with_ldap="$withval"
-		  ;;
-      *)
-          with_ldap=auto
-          ;;
-      esac ])
-AC_MSG_RESULT($with_ldap)
+        netatalk_cv_ldap=$withval,
+        netatalk_cv_ldap=auto
+        )
+AC_MSG_RESULT($netatalk_cv_ldap)
 
-if test x"$with_ldap" != x"no" ; then
-   	AC_CHECK_HEADER([ldap.h], with_ldap=yes,
-        [ if test x"$with_ldap" = x"yes" ; then
+save_CFLAGS=$CFLAGS
+save_LIBS=$LIBS
+CFLAGS=""
+LIBS=""
+
+if test x"$netatalk_cv_ldap" != x"no" ; then
+   if test x"$netatalk_cv_ldap" != x"yes" -a test x"$netatalk_cv_ldap" != x"no"; then
+       CFLAGS=$netatalk_cv_ldap/include
+       LIBS=$netatalk_cv_ldap/lib
+   fi
+   	AC_CHECK_HEADER([ldap.h], netatalk_cv_ldap=yes,
+        [ if test x"$netatalk_cv_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP headers])
         fi
-		with_ldap=no
+		netatalk_cv_ldap=no
         ])
-	AC_CHECK_LIB(ldap, ldap_init, with_ldap=yes,
-        [ if test x"$with_ldap" = x"yes" ; then
+	AC_CHECK_LIB(ldap, ldap_init, netatalk_cv_ldap=yes,
+        [ if test x"$netatalk_cv_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP library])
         fi
-		with_ldap=no
+		netatalk_cv_ldap=no
         ])
 fi
 
-if test x"$with_ldap" = x"yes"; then
+if test x"$netatalk_cv_ldap" = x"yes"; then
+    LDAP_CFLAGS=$CFLAGS
+    LDAP_LIBS=$LIBS
 	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
+    AC_SUBST(LDAP_CFLAGS)
+    AC_SUBST(LDAP_LIBS)
 fi
+
+CFLAGS=$save_CFLAGS
+LIBS=$save_LIBS
 ])
 
 dnl Check for ACL support
