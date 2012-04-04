@@ -51,6 +51,15 @@ netatalk_stop() {
     fi
 }
 
+# code to cause apfd and cnid_metad to restart
+netatalk_graceful() {
+    if [ -x ${NETATALK_SBIN}/netatalk ]; then
+        echo -n $"Restarting cnid_metad and afpd: "
+        killproc  netatalk -QUIT
+        RETVAL=$?
+        echo
+    fi
+}
 
 case "$1" in
     'start')
@@ -68,8 +77,11 @@ case "$1" in
         status netatalk
         RETVAL=$?
         ;;
+    'graceful')
+        netatalk_graceful
+        ;;
     *)
-        echo "Usage: $0 {start|stop|restart|reload|status}"
+        echo "Usage: $0 {start|stop|restart|reload|status|graceful}"
         exit 2
 esac
 

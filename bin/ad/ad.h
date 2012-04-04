@@ -38,6 +38,8 @@
     }
 #endif
 
+#define ADVOL_V2_OR_EA(ad) ((ad) == AD_VERSION2 || (ad) == AD_VERSION_EA)
+
 enum logtype {STD, DBG};
 
 #define SLOG(...)                             \

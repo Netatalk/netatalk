@@ -479,7 +479,8 @@ krb5_cleanup:
 
 offset_calc:
     /* Calculate and store offset for UTF8ServerName */
-    *diroffset += sizeof(uint16_t);
+    if (uam_gss_enabled())
+        *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
     memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
@@ -491,7 +492,6 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 				 const DSI *dsi _U_,
 				 const struct afp_options *options)
 {
-    char *Obj, *Type, *Zone;
     uint16_t namelen;
     size_t len;
     char *begin = data;
@@ -501,20 +501,15 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     offset = ntohs(offset);
     data += offset;
 
-    /* FIXME:
-     * What is the valid character range for an nbpname?
-     *
-     * Apple's server likes to use the non-qualified hostname
-     * This obviously won't work very well if multiple servers are running
-     * on the box.
-     */
+    LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
 
-    /* extract the obj part of the server */
-    Obj = options->hostname;
-    if ((size_t) -1 == (len = convert_string (
-                            options->unixcharset, CH_UTF8_MAC, 
-                            Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
-        LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
+    if ((len = convert_string(options->unixcharset,
+                              CH_UTF8_MAC, 
+                              options->hostname,
+                              -1,
+                              data + sizeof(namelen),
+                              maxstatuslen-offset)) == (size_t)-1) {
+        LOG(log_error, logtype_afpd, "Could not set utf8 servername");
 
         /* set offset to 0 */
         memset(begin + *nameoffset, 0, sizeof(offset));

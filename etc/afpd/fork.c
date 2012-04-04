@@ -880,11 +880,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
            an error. we can't do this with translation on. */
 #ifdef WITH_SENDFILE
         if (!(obj->options.flags & OPTION_NOSENDFILE)) {
-            if (dsi_stream_read_file(dsi,
-                                     ad_readfile_init(ofork->of_ad, eid, &offset, 0),
-                                     offset,
-                                     dsi->datasize) < 0) {
-                switch (errno) {
+            int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+            if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) { 
+               switch (errno) {
                 case EINVAL:
                 case ENOSYS:
                     goto afp_read_loop;

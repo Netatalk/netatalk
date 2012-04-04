@@ -333,12 +333,14 @@ static char *volxlate(const AFPObj *obj,
                     q++;
             }
         } else if (IS_VAR(p, "$c")) {
-            DSI *dsi = obj->dsi;
-            len = sprintf(dest, "%s:%u",
-                          getip_string((struct sockaddr *)&dsi->client),
-                          getip_port((struct sockaddr *)&dsi->client));
-            dest += len;
-            destlen -= len;
+            if (IS_AFP_SESSION(obj)) {
+                DSI *dsi = obj->dsi;
+                len = sprintf(dest, "%s:%u",
+                              getip_string((struct sockaddr *)&dsi->client),
+                              getip_port((struct sockaddr *)&dsi->client));
+                dest += len;
+                destlen -= len;
+            }
         } else if (IS_VAR(p, "$d")) {
             q = path;
         } else if (pwd && IS_VAR(p, "$f")) {
@@ -356,7 +358,7 @@ static char *volxlate(const AFPObj *obj,
             q = getip_string((struct sockaddr *)&dsi->client);
         } else if (IS_VAR(p, "$s")) {
             q = obj->options.hostname;
-        } else if (obj->username && IS_VAR(p, "$u")) {
+        } else if (obj->username[0] && IS_VAR(p, "$u")) {
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
                 q = sep+1;
@@ -716,10 +718,6 @@ static struct vol *creatvol(AFPObj *obj,
 
     if (getoption_bool(obj->iniconfig, section, "read only", preset, 0))
         volume->v_flags |= AFPVOL_RO;
-    if (!getoption_bool(obj->iniconfig, section, "hex encoding", preset, 1))
-        volume->v_flags |= AFPVOL_NOHEX;
-    if (getoption_bool(obj->iniconfig, section, "use dots", preset, 1))
-        volume->v_flags |= AFPVOL_USEDOTS;
     if (getoption_bool(obj->iniconfig, section, "invisible dots", preset, 0))
         volume->v_flags |= AFPVOL_INV_DOTS;
     if (!getoption_bool(obj->iniconfig, section, "stat vol", preset, 1))
@@ -768,10 +766,6 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_INVDOTS;
 
     /* Mac to Unix conversion flags*/
-    if (!(volume->v_flags & AFPVOL_NOHEX))
-        volume->v_mtou_flags |= CONV_ESCAPEHEX;
-    if (!(volume->v_flags & AFPVOL_USEDOTS))
-        volume->v_mtou_flags |= CONV_ESCAPEDOTS;
     if ((volume->v_flags & AFPVOL_EILSEQ))
         volume->v_mtou_flags |= CONV__EILSEQ;
 
@@ -781,7 +775,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_mtou_flags |= CONV_TOLOWER;
 
     /* Unix to Mac conversion flags*/
-    volume->v_utom_flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    volume->v_utom_flags = CONV_IGNORE;
     if ((volume->v_casefold & AFPVOL_UTOMUPPER))
         volume->v_utom_flags |= CONV_TOUPPER;
     else if ((volume->v_casefold & AFPVOL_UTOMLOWER))
@@ -947,13 +941,16 @@ static int vol_section(const char *sec)
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 {
     EC_INIT;
+    static int regexerr = -1;
+    static regex_t reg;
     char        path[MAXPATHLEN + 1];
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1];
-    const char  *preset, *default_preset, *p;
+    const char  *preset, *default_preset, *p, *basedir;
     char        *q, *u;
     int         i;
     struct passwd   *pw;
+    regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
@@ -972,10 +969,31 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             continue;
         if (STRCMP(secname, ==, INISEC_HOMES)) {
             have_uservol = 1;
-            if (obj->username[0] == 0
+            if (!IS_AFP_SESSION(obj)
                 || strcmp(obj->username, obj->options.guest) == 0)
                 /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
+            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
+                /* no user home */
+                continue;
+
+            /* check if user home matches our "basedir regex" */
+            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL)
+                continue;
+            LOG(log_debug, logtype_afpd, "readvolfile: basedir regex: '%s'", basedir);
+
+            if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
+                char errbuf[1024];
+                regerror(regexerr, &reg, errbuf, sizeof(errbuf));
+                LOG(log_debug, logtype_default, "readvolfile: bad basedir regex: %s", errbuf);
+            }
+
+            if (regexec(&reg, pwent->pw_dir, 1, match, 0) == REG_NOMATCH) {
+                LOG(log_debug, logtype_default, "readvolfile: user home \"%s\" doesn't match basedir regex \"%s\"",
+                    pwent->pw_dir, basedir);
+                continue;
+            }
+
             strlcpy(tmp, pwent->pw_dir, MAXPATHLEN);
             strlcat(tmp, "/", MAXPATHLEN);
             if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
@@ -1108,8 +1126,6 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {
-            if (vol->v_flags & AFPVOL_UNIX_CTXT)
-                continue;
             vol->v_deleted = 1;
         }
     } else {
@@ -1222,6 +1238,8 @@ struct vol *getvolbyvid(const uint16_t vid )
 struct vol *getvolbypath(AFPObj *obj, const char *path)
 {
     EC_INIT;
+    static int regexerr = -1;
+    static regex_t reg;
     struct vol *vol;
     struct vol *tmp;
     const struct passwd *pw;
@@ -1231,8 +1249,6 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
-    int regexerr = -1;
-    static regex_t reg;
     regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
@@ -1304,8 +1320,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (prw != 0)
         subpath = prw;
 
-    strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, user, MAXPATHLEN);
+    strlcat(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */

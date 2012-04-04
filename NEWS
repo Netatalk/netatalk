@@ -1,5 +1,26 @@
+Changes in 3.0 alpha2
+=====================
+
+* UPD: afpd: Store '.' as is and '/' as ':' on the server, don't
+       CAP hexencode as "2e" and "2f" respectively
+* UPD: afdp: Automatic name conversion, renaming files and directories
+       containing CAP sequences to their not enscaped forms
+* UPD: afpd: Correct handling of user homes and users without homes
+* UPD: afpd: Perform complete automatic adouble:v2 to adouble:ea conversion
+       as root. Previously only unlinking the adouble:v2 file was done as root
+* UPD: dbd: -C option removes CAP encoding
+* UPD: Add graceful option to RedHat init script
+* UPD: Add --disable-bundled-libevent configure options When set to yes,
+       we rely on a properly installed version on libevent CPPFLAGS and LDFLAGS
+       should be set properly to pick that up
+* UPD: Run ldconfig on Linux at the end of make install
+* FIX: afpd: ad cp on appledouble = ea volumes
+* FIX: dbd: ignore ._ appledouble files
+* REM: Volumes options "use dots" and "hex encoding"
+
 Changes in 3.0 alpha1
 =====================
+
 * NEW: Central configuration file afp.conf which replaces all previous files
 * NEW: netatalk: service controller starting and restarting afpd and cnid_metad
        as necessary
@@ -35,6 +56,8 @@ Changes in 2.2.3
 * FIX: afpd: Dont use searchdb when doing partial name search
 * FIX: afpd: Fix a possible bug handling disconnected sessions,
        NetAFP Bug ID #16
+* FIX: dbd: Don't remove BerkeleyDB if it's still in use by eg cnid_dbd, fixes
+       bug introduced in 2.2.2
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
 
 Changes in 2.2.2

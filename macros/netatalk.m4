@@ -1,5 +1,24 @@
 dnl Kitchen sink for configuration macros
 
+dnl Whether to disable bundled libevent
+AC_DEFUN([AC_NETATALK_LIBEVENT], [
+    AC_MSG_CHECKING([whether to disable bundled libevent (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)])
+    AC_ARG_ENABLE(
+        bundled-libevent,
+        [AC_HELP_STRING(
+            [--disable-bundled-libevent],
+            [whether the bundled version of libevent shall not be used (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)]
+        )],
+        use_bundled_libevent=$enableval,
+        use_bundled_libevent=yes
+    )
+
+    if test x"$use_bundled_libevent" = x"yes" ; then
+        AC_CONFIG_SUBDIRS([libevent])
+    fi
+    AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
+])
+
 dnl Filesystem Hierarchy Standard (FHS) compatibility
 AC_DEFUN([AC_NETATALK_FHS], [
 AC_MSG_CHECKING([whether to use Filesystem Hierarchy Standard (FHS) compatibility])
@@ -441,6 +460,10 @@ netatalk_cv_HAVE_TIMEOUT_ID_T=yes,netatalk_cv_HAVE_TIMEOUT_ID_T=no,netatalk_cv_H
 	AC_SUBST(KLDFLAGS)
 fi
 
+dnl Whether to run ldconfig after installing libraries
+AC_PATH_PROG(NETA_LDCONFIG, ldconfig, , [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/bin])
+echo NETA_LDCONFIG = $NETA_LDCONFIG
+AM_CONDITIONAL(RUN_LDCONFIG, test x"$this_os" = x"linux" -a x"$NETA_LDCONFIG" != x"")
 ])
 
 dnl Check for building PGP UAM module
@@ -489,6 +512,9 @@ fi
 AM_CONDITIONAL(USE_GSSAPI, test x"$netatalk_cv_build_krb5_uam" = x"yes")
 ])
 
+dnl Check if we can directly use Kerberos 5 API, used for reading keytabs
+dnl and automatically construction DirectoryService names from that, instead
+dnl of requiring special configuration in afp.conf
 AC_DEFUN([AC_NETATALK_KERBEROS], [
 AC_MSG_CHECKING([for Kerberos 5 (necessary for GetSrvrInfo:DirectoryNames support)])
 AC_ARG_WITH([kerberos],
@@ -508,8 +534,10 @@ if test x"$with_kerberos" != x"no"; then
    AC_MSG_CHECKING([for krb5-config])
    if test -x "$KRB5_CONFIG"; then
       AC_MSG_RESULT([$KRB5_CONFIG])
-      CFLAGS="$CFLAGS `$KRB5_CONFIG --cflags krb5`"
-      LIBS="`$KRB5_CONFIG --libs krb5` $LIBS"
+      KRB5_CFLAGS="`$KRB5_CONFIG --cflags krb5`"
+      KRB5_LIBS="`$KRB5_CONFIG --libs krb5`"
+      AC_SUBST(KRB5_CFLAGS)
+      AC_SUBST(KRB5_LIBS)
       with_kerberos="yes"
    else
       AC_MSG_RESULT([not found])
@@ -542,34 +570,47 @@ AC_MSG_CHECKING(for LDAP (necessary for client-side ACL visibility))
 AC_ARG_WITH(ldap,
     [AS_HELP_STRING([--with-ldap],
         [LDAP support (default=auto)])],
-    [ case "$withval" in
-      yes|no)
-          with_ldap="$withval"
-		  ;;
-      *)
-          with_ldap=auto
-          ;;
-      esac ])
-AC_MSG_RESULT($with_ldap)
+        netatalk_cv_ldap=$withval,
+        netatalk_cv_ldap=auto
+        )
+AC_MSG_RESULT($netatalk_cv_ldap)
 
-if test x"$with_ldap" != x"no" ; then
-   	AC_CHECK_HEADER([ldap.h], with_ldap=yes,
-        [ if test x"$with_ldap" = x"yes" ; then
+save_CFLAGS=$CFLAGS
+save_LDLFLAGS=$LDLFLAGS
+CFLAGS=""
+LDLFLAGS=""
+
+if test x"$netatalk_cv_ldap" != x"no" ; then
+   if test x"$netatalk_cv_ldap" != x"yes" -a x"$netatalk_cv_ldap" != x"auto"; then
+       CFLAGS=-I$netatalk_cv_ldap/include
+       LDLFLAGS=-L$netatalk_cv_ldap/lib
+   fi
+   	AC_CHECK_HEADER([ldap.h], netatalk_cv_ldap=yes,
+        [ if test x"$netatalk_cv_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP headers])
         fi
-		with_ldap=no
+		netatalk_cv_ldap=no
         ])
-	AC_CHECK_LIB(ldap, ldap_init, with_ldap=yes,
-        [ if test x"$with_ldap" = x"yes" ; then
+	AC_CHECK_LIB(ldap, ldap_init, netatalk_cv_ldap=yes,
+        [ if test x"$netatalk_cv_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP library])
         fi
-		with_ldap=no
+		netatalk_cv_ldap=no
         ])
 fi
 
-if test x"$with_ldap" = x"yes"; then
+if test x"$netatalk_cv_ldap" = x"yes"; then
+    LDAP_CFLAGS=$CFLAGS
+    LDAP_LDLFLAGS=$LDLFLAGS
+    LDAP_LIBS=-lldap
 	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
+    AC_SUBST(LDAP_CFLAGS)
+    AC_SUBST(LDAP_LDLFLAGS)
+    AC_SUBST(LDAP_LIBS)
 fi
+
+CFLAGS=$save_CFLAGS
+LDLFLAGS=$save_LDLFLAGS
 ])
 
 dnl Check for ACL support

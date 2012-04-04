@@ -81,6 +81,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
 
   /* get rid of some stuff */
   close(dsi->serversock);
+  dsi->serversock = -1;
   server_child_free(serv_children); 
 
   switch (dsi->header.dsi_command) {

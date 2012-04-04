@@ -50,6 +50,8 @@
 #define PASSWD_NOSAVE  (1 << 1)
 #define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
 
+#define IS_AFP_SESSION(obj) ((obj)->dsi && (obj)->dsi->serversock == -1)
+
 /**********************************************************************************************
  * Ini config sections
  **********************************************************************************************/
