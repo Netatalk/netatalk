@@ -11,6 +11,28 @@ AC_DEFUN([AC_DEVELOPER], [
     )
     AC_MSG_RESULT([$enable_dev])
     AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
+
+dnl Tracker, for Spotlight
+AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
+    ac_cv_tracker_pkg_default=tracker-sparql-0.12
+    AC_ARG_WITH([tracker-pkg-config],
+	[AS_HELP_STRING([--with-tracker-pkg-config],[name of the Tracker SPARQL pkg in pkg-config])],
+	[ac_cv_tracker_pkg=$withval],
+	[ac_cv_tracker_pkg=$ac_cv_tracker_pkg_default])
+
+    AC_MSG_NOTICE([searching for $ac_cv_tracker_pkg])
+
+    PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker=yes], [ac_cv_have_tracker=no])
+
+    if test x"$ac_cv_have_tracker" = x"no" ; then
+        if test x"$need_tracker" = x"yes" ; then
+            AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
+	fi
+    fi
+
+    AC_SUBST(TRACKER_CFLAGS)
+    AC_SUBST(TRACKER_LIBS)
+    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent
@@ -25,7 +47,10 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
     )
 
     if test x"$use_bundled_libevent" = x"yes" ; then
+        AC_MSG_RESULT([no])
         AC_CONFIG_SUBDIRS([libevent])
+    else
+        AC_MSG_RESULT([yes])
     fi
     AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
 ])

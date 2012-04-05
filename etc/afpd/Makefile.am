@@ -84,10 +84,8 @@ spot_LDADD = $(top_builddir)/libatalk/libatalk.la
 moduledir = @UAMS_PATH@
 module_LTLIBRARIES = mod_spotlight.la
 
+if HAVE_TRACKER
 mod_spotlight_la_SOURCES = spotlight_module.c
-mod_spotlight_la_CFLAGS  = \
-	-DDBUS_API_SUBJECT_TO_CHANGE \
-	-pthread -I/usr/include/tracker-0.12 -I/usr/include/tracker-0.12/libtracker-sparql -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-mod_spotlight_la_LDFLAGS = \
-	-module -avoid-version \
-	-Wl,--export-dynamic -pthread -ltracker-sparql-0.12 -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lgthread-2.0 -lrt -lglib-2.0  
+mod_spotlight_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@
+mod_spotlight_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@
+endif

@@ -184,6 +184,9 @@ AC_NETATALK_SENDFILE
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
+dnl Check for Tracker
+AC_NETATALK_SPOTLIGHT
+
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
