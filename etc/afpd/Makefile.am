@@ -87,7 +87,7 @@ module_LTLIBRARIES = mod_spotlight.la
 mod_spotlight_la_SOURCES = spotlight_module.c
 mod_spotlight_la_CFLAGS  = \
 	-DDBUS_API_SUBJECT_TO_CHANGE \
-	-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include  
+	-pthread -I/usr/include/tracker-0.12 -I/usr/include/tracker-0.12/libtracker-sparql -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
 mod_spotlight_la_LDFLAGS = \
 	-module -avoid-version \
-	-pthread -L/lib -ltrackerclient -ldbus-glib-1 -ldbus-1 -lpthread -lgobject-2.0 -lgthread-2.0 -lrt -lglib-2.0
+	-Wl,--export-dynamic -pthread -ltracker-sparql-0.12 -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lgthread-2.0 -lrt -lglib-2.0  
