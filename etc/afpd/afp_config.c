@@ -231,7 +231,6 @@ static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
     if (parent_or_child == 1) {
         configfree(configs, config);
         config->obj.ipc_fd = child->ipc_fds[1];
-        close(child->ipc_fds[0]); /* Close parent IPC fd */
         free(child);
         afp_over_dsi(&config->obj); /* start a session */
         exit (0);
