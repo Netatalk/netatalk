@@ -67,6 +67,8 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 
     if test x"$FOUND_GSSAPI" = x"yes" ; then
         # check for functions
+        export CFLAGS=$GSSAPI_CFLAGS
+        export LIBS=$GSSAPI_LIBS
         AC_CHECK_FUNC(gss_acquire_cred, [], [AC_MSG_ERROR([GSSAPI: required function gss_acquire_cred missing])])
 
         # Heimdal/MIT compatibility fix
@@ -96,7 +98,7 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
     AC_SUBST(GSSAPI_CFLAGS)
     AC_SUBST(GSSAPI_LDFLAGS)
 
-    LIBS="$save_LIBS"
-    CFLAGS="$save_CFLAGS"
-    LDFLAGS="$save_LDFLAGS"
+    export LIBS="$save_LIBS"
+    export CFLAGS="$save_CFLAGS"
+    export LDFLAGS="$save_LDFLAGS"
 ])
