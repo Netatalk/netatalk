@@ -20,7 +20,7 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-extern int        afp_config_parse(AFPObj *obj);
+extern int        afp_config_parse(AFPObj *obj, char *processname);
 
 extern int        load_charset(struct vol *vol);
 extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *));

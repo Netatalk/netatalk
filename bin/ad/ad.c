@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (afp_config_parse(&obj) != 0)
+    if (afp_config_parse(&obj, "") != 0)
         return 1;
 
     if (load_volumes(&obj, NULL) != 0)

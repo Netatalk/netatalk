@@ -225,11 +225,8 @@ int main(int ac, char **av)
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
-    if (afp_config_parse(&obj) != 0)
+    if (afp_config_parse(&obj, "afpd") != 0)
         afp_exit(EXITERR_CONF);
-
-    set_processname("afpd");
-    setuplog(obj.options.logconfig, obj.options.logfile);
 
     /* Save the user's current umask */
     obj.options.save_mask = umask(obj.options.umask);

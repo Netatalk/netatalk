@@ -272,11 +272,9 @@ int main(int argc, char **argv)
     sigfillset(&blocksigs);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
     
-    if (afp_config_parse(&obj) != 0)
+    if (afp_config_parse(&obj, "netatalk") != 0)
         netatalk_exit(EXITERR_CONF);
 
-    set_processname("netatalk");
-    setuplog(obj.options.logconfig, obj.options.logfile);
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
 

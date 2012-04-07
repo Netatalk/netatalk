@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     TEST( afp_options_parse_cmdline(&obj, 3, &args[0]) );
 
-    TEST_int( afp_config_parse(&obj), 0);
+    TEST_int( afp_config_parse(&obj, ""), 0);
     TEST_int( configinit(&obj), 0);
     TEST( cnid_init() );
     TEST( load_volumes(&obj, NULL) );

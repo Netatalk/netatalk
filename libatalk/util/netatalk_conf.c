@@ -1380,7 +1380,7 @@ struct vol *getvolbyname(const char *name)
 /*!
  * Initialize an AFPObj and options from ini config file
  */
-int afp_config_parse(AFPObj *AFPObj)
+int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
     EC_INIT;
     dictionary *config;
@@ -1403,6 +1403,11 @@ int afp_config_parse(AFPObj *AFPObj)
     /* [Global] */
     options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
+
+    if (processname[0] != '\0') {
+        set_processname(processname);
+        setuplog(options->logconfig, options->logfile);
+    }
 
     /* "server options" boolean options */
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
