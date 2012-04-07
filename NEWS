@@ -1,3 +1,8 @@
+Changes in 3.0 alpha3
+=====================
+
+* NEW: afpd: Per volume "login message", NetAFP bug ID #18
+
 Changes in 3.0 alpha2
 =====================
 

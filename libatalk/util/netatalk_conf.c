@@ -1427,7 +1427,7 @@ int afp_config_parse(AFPObj *AFPObj)
         options->passwdbits |= PASSWD_SET;
 
     /* figure out options w values */
-    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",      "");
+    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
     options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
     options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",_PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);

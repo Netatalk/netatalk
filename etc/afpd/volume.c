@@ -871,6 +871,14 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
                 goto openvol_err;
             }
         }
+
+        char *msg;
+        if ((msg = iniparser_getstrdup(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL) {
+            if (obj->options.loginmesg)
+                free(obj->options.loginmesg);
+            obj->options.loginmesg = msg;
+        }
+
         return( AFP_OK );
     }
 

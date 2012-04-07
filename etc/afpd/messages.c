@@ -133,10 +133,11 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
          * it has asked the login msg...
          * Workaround: concatenate the two if any, ugly.
          */
-        if (*message && *obj->options.loginmesg) {
-            strlcat(message, " - ", MAXMESGSIZE);
+        if (obj->options.loginmesg) {
+            if (*message)
+                strlcat(message, " - ", MAXMESGSIZE);
+            strlcat(message, obj->options.loginmesg, MAXMESGSIZE);
         }
-        strlcat(message, obj->options.loginmesg, MAXMESGSIZE);
         break;
     case AFPMESG_SERVER: /* server */
         break;
