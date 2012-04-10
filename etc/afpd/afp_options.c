@@ -792,7 +792,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
             exit( 0 );
             break;
         case 'h':	/* usage */
-            show_usage( p );
+            show_usage("afpd");
             exit( 0 );
             break;
         case 'I':
