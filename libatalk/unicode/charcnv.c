@@ -36,12 +36,6 @@
 #ifdef HAVE_USABLE_ICONV
 #include <iconv.h>
 #endif
-#if HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#if HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
 #include <arpa/inet.h>
 
 #include <atalk/logger.h>
@@ -73,7 +67,7 @@
 #define CHECK_FLAGS(a,b) (((a)!=NULL) ? (*(a) & (b)) : 0 )
 
 static atalk_iconv_t conv_handles[MAX_CHARSETS][MAX_CHARSETS];
-static char* charset_names[MAX_CHARSETS];
+char* charset_names[MAX_CHARSETS];
 static struct charset_functions* charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
@@ -85,67 +79,11 @@ static char hexdig[] = "0123456789abcdef";
 static const char *charset_name(charset_t ch)
 {
     const char *ret = NULL;
-    static int first = 1;
-    static char macname[128];
-    static char unixname[128];
-
-    if (first) {
-        memset(macname, 0, sizeof(macname));
-        memset(unixname, 0, sizeof(unixname));
-        first = 0;
-    }
 
     if (ch == CH_UCS2) ret = "UCS-2";
     else if (ch == CH_UTF8) ret = "UTF8";
     else if (ch == CH_UTF8_MAC) ret = "UTF8-MAC";
-    else if (ch == CH_UNIX) {
-        if (unixname[0] == '\0') {
-            ret = "LOCALE";
-            strlcpy(unixname, ret, sizeof(unixname));
-        }
-        else
-            ret = unixname;
-    }
-    else if (ch == CH_MAC) {
-        if (macname[0] == '\0') {
-            ret = "MAC_ROMAN";
-            strlcpy(macname, ret, sizeof(macname));
-        }
-        else
-            ret = macname;
-    }
-
-    if (!ret)
-        ret = charset_names[ch];
-
-#if defined(CODESET)
-    if (ret && strcasecmp(ret, "LOCALE") == 0) {
-        const char *ln = NULL;
-
-        setlocale(LC_ALL, "");
-        ln = nl_langinfo(CODESET);
-        if (ln) {
-            /* Check whether the charset name is supported
-               by iconv */
-            LOG(log_debug, logtype_default, "Locale charset is '%s'", ln);
-            atalk_iconv_t handle = atalk_iconv_open(ln, "UCS-2");
-            if (handle == (atalk_iconv_t) -1) {
-                LOG(log_warning, logtype_default, "Locale charset '%s' unsupported, using ASCII instead", ln);
-                ln = "ASCII";
-            } else {
-                atalk_iconv_close(handle);
-            }
-            if (ch==CH_UNIX)
-                strlcpy(unixname, ln, sizeof(unixname));
-        }
-        ret = ln;
-    }
-#else /* system doesn't have LOCALE support */
-    LOG(log_warning, logtype_default, "system doesn't have LOCALE support");
-    if (ch == CH_UNIX) ret = NULL;
-#endif
-
-    if (!ret || !*ret) ret = "ASCII";
+    else ret = charset_names[ch];
     return ret;
 }
 

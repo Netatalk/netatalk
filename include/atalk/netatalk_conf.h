@@ -31,4 +31,6 @@ extern struct vol *getvolbypath(AFPObj *obj, const char *path);
 extern struct vol *getvolbyname(const char *name);
 extern void       volume_free(struct vol *vol);
 extern void       volume_unlink(struct vol *volume);
+
+extern char* charset_names[];
 #endif
