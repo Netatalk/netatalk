@@ -499,11 +499,8 @@ int main(int argc, char *argv[])
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
 
-    if (afp_config_parse(&obj) != 0)
+    if (afp_config_parse(&obj, "cnid_metad") != 0)
         daemon_exit(1);
-
-    set_processname("cnid_metad");
-    setuplog(obj.options.logconfig, obj.options.logfile);
 
     if (load_volumes(&obj, NULL) != 0)
         daemon_exit(1);

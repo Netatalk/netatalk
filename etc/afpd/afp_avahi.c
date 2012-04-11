@@ -94,7 +94,7 @@ static void register_stuff(void) {
         for (dsi = ctx->obj->dsi; dsi; dsi = dsi->next) {
             port = getip_port((struct sockaddr *)&dsi->server);
 
-            LOG(log_error, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
+            LOG(log_info, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
 
             if (convert_string(ctx->obj->options.unixcharset,
                                CH_UTF8,

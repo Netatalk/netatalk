@@ -312,10 +312,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    EC_ZERO( afp_config_parse(&obj) );
-
-    set_processname("cnid_dbd");
-    setuplog(obj.options.logconfig, obj.options.logfile);
+    EC_ZERO( afp_config_parse(&obj, "cnid_dbd") );
 
     EC_ZERO( load_volumes(&obj, NULL) );
     EC_NULL( vol = getvolbypath(&obj, volpath) );

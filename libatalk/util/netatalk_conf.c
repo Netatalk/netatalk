@@ -31,6 +31,12 @@
 #include <inttypes.h>
 #include <time.h>
 #include <regex.h>
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+#if HAVE_LANGINFO_H
+#include <langinfo.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/util.h>
@@ -626,16 +632,24 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL( volume->v_veto = strdup(val) );
 
     /* vol charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "vol charset", preset, NULL))
+    if (val = getoption(obj->iniconfig, section, "vol charset", preset, NULL)) {
+        if (strcasecmp(val, "UTF-8") == 0) {
+            val = strdup("UTF8");
+        }
         EC_NULL( volume->v_volcodepage = strdup(val) );
+    }
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
     /* mac charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "mac charset", preset, NULL))
+    if (val = getoption(obj->iniconfig, section, "mac charset", preset, NULL)) {
+        if (strncasecmp(val, "MAC", 3) != 0) {
+            LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", val);
+        }
         EC_NULL( volume->v_maccodepage = strdup(val) );
+    }
     else
-        EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
+    EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
     bstring dbpath;
     EC_NULL_LOG( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
@@ -1380,7 +1394,7 @@ struct vol *getvolbyname(const char *name)
 /*!
  * Initialize an AFPObj and options from ini config file
  */
-int afp_config_parse(AFPObj *AFPObj)
+int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
     EC_INIT;
     dictionary *config;
@@ -1403,6 +1417,11 @@ int afp_config_parse(AFPObj *AFPObj)
     /* [Global] */
     options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
+
+    if (processname[0] != '\0') {
+        set_processname(processname);
+        setuplog(options->logconfig, options->logfile);
+    }
 
     /* "server options" boolean options */
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
@@ -1427,7 +1446,7 @@ int afp_config_parse(AFPObj *AFPObj)
         options->passwdbits |= PASSWD_SET;
 
     /* figure out options w values */
-    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",      "");
+    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
     options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
     options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",_PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
@@ -1513,38 +1532,52 @@ int afp_config_parse(AFPObj *AFPObj)
 
     /* unix charset is in [G] only */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
-        options->unixcharset = CH_UNIX;
-        options->unixcodepage = strdup("LOCALE");
+        options->unixcodepage = strdup("UTF8");
+        charset_names[CH_UNIX] = strdup("UTF8");
     } else {
-        if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
-            options->unixcharset = CH_UNIX;
-            options->unixcodepage = strdup("LOCALE");
-            LOG(log_warning, logtype_afpd, "Setting unix charset to '%s' failed", p);
-        } else {
-            options->unixcodepage = strdup(p);
+        if (strcasecmp(p, "LOCALE") == 0) {
+#if defined(CODESET)
+            setlocale(LC_ALL, "");
+            p = nl_langinfo(CODESET);
+            LOG(log_debug, logtype_afpd, "Locale charset is '%s'", p);
+#else /* system doesn't have LOCALE support */
+            LOG(log_warning, logtype_afpd, "system doesn't have LOCALE support");
+            p = strdup("UTF8");
+#endif
         }
+        if (strcasecmp(p, "UTF-8") == 0) {
+            p = strdup("UTF8");
+        }
+        options->unixcodepage = strdup(p);
+        charset_names[CH_UNIX] = strdup(p);
     }
+    options->unixcharset = CH_UNIX;
+    LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
 
-    /* vol charset is in [G[ and [V] */
+    /* vol charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
-        options->volcodepage = strdup("UTF8");
+        options->volcodepage = strdup(options->unixcodepage);
     } else {
+        if (strcasecmp(p, "UTF-8") == 0) {
+            p = strdup("UTF8");
+        }
         options->volcodepage = strdup(p);
     }
-	
+    LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
+    
     /* mac charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
-        options->maccharset = CH_MAC;
         options->maccodepage = strdup("MAC_ROMAN");
+        charset_names[CH_MAC] = strdup("MAC_ROMAN");
     } else {
-        if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
-            options->maccharset = CH_MAC;
-            options->maccodepage = strdup("MAC_ROMAN");
-            LOG(log_warning, logtype_afpd, "Setting mac charset to '%s' failed", p);
-        } else {
-            options->maccodepage = strdup(p);
+        if (strncasecmp(p, "MAC", 3) != 0) {
+            LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", p);
         }
+        options->maccodepage = strdup(p);
+        charset_names[CH_MAC] = strdup(p);
     }
+    options->maccharset = CH_MAC;
+    LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);
 
     /* Check for sane values */
     if (options->tickleval <= 0)
