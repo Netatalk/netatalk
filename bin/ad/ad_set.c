@@ -37,99 +37,34 @@
 
 #define ADv2_DIRNAME ".AppleDouble"
 
-#define DIR_DOT_OR_DOTDOT(a) \
-        ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
+#define DIR_DOT_OR_DOTDOT(a)                            \
+    ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
 
-static volatile sig_atomic_t alarmed;
-
-/* ls options */
-static int ls_a;
-static int ls_l;
-static int ls_R;
-static int ls_d;
-static int ls_u;
-
-/* Used for pretty printing */
-static int first = 1;
-static int recursion;
-
-static char           *netatalk_dirs[] = {
-    ADv2_DIRNAME,
-    ".AppleDB",
-    ".AppleDesktop",
+static const char *labels[] = {
+    "none",
+    "grey",
+    "green",
+    "violet",
+    "blue",
+    "yellow",
+    "red",
+    "orange",
     NULL
 };
 
-static char *labels[] = {
-    "---",
-    "gry",
-    "gre",
-    "vio",
-    "blu",
-    "yel",
-    "red",
-    "ora"
-};
-
-/*
-  SIGNAL handling:
-  catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
-*/
-
-static void sig_handler(int signo)
-{
-    alarmed = 1;
-    return;
-}
-
-static void set_signal(void)
-{
-    struct sigaction sv;
-
-    sv.sa_handler = sig_handler;
-    sv.sa_flags = SA_RESTART;
-    sigemptyset(&sv.sa_mask);
-    if (sigaction(SIGTERM, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
-
-    if (sigaction(SIGINT, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGINT): %s", strerror(errno));
-
-    memset(&sv, 0, sizeof(struct sigaction));
-    sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask);
-
-    if (sigaction(SIGABRT, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
-
-    if (sigaction(SIGHUP, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
-
-    if (sigaction(SIGQUIT, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
-}
-
-/*
-  Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
-  Returns pointer to name or NULL.
-*/
-static const char *check_netatalk_dirs(const char *name)
-{
-    int c;
-
-    for (c=0; netatalk_dirs[c]; c++) {
-        if ((strcmp(name, netatalk_dirs[c])) == 0)
-            return netatalk_dirs[c];
-    }
-    return NULL;
-}
-
+static char *new_label;
+static char *new_type;
+static char *new_creator;
+static char *new_flags;
+static char *new_attributes;
 
 static void usage_set(void)
 {
     printf(
-        "Usage: ad set file|dir [-t TYPE] [-c CREATOR] [-l label] [-f flags]\n\n"
-        "     FinderFlags (valid for (f)ile and/or (d)irectory):\n"
+        "Usage: ad set [-t TYPE] [-c CREATOR] [-l label] [-f flags] [-a attributes] file|dir \n\n"
+        "     Color Label:\n"
+        "       none | grey | green | violet | blue | yellow | red | orange\n\n"
+        "     FinderFlags:\n"
         "       d = On Desktop (f/d)\n"
         "       e = Hidden extension (f/d)\n"
         "       m = Shared (can run multiple times) (f)\n"
@@ -148,270 +83,249 @@ static void usage_set(void)
         "       r = No rename (f/d)\n"
         "       l = No delete (f/d)\n"
         "       o = No copy (f)\n\n"
-        "     Note: any letter appearing in uppercase means the flag is set\n"
-        "           but it's a directory for which the flag is not allowed.\n"
+        "     Uppercase letter sets the flag, lowercase removes the flag\n"
+        "     f = valid for files\n"
+        "     d = valid for directories\n"
+
         );
 }
 
-static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
+static void change_type(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_type)
 {
-    int adflags = 0;
-    struct adouble ad;
+    char *FinderInfo;
+
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)))
+        memcpy(FinderInfo, new_type, 4);
+}
+
+static void change_creator(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_creator)
+{
+    char *FinderInfo;
+
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)))
+        memcpy(FinderInfo + 4, new_creator, 4);
+
+}
+
+static void change_label(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_label)
+{
+    char *FinderInfo;
+    const char **color = &labels[0];
+    uint16_t FinderFlags;
+    unsigned char color_count = 0;
+
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL)
+        return;
+
+    while (*color) {
+        if (strcasecmp(*color, new_label) == 0) {
+            /* get flags */
+            memcpy(&FinderFlags, FinderInfo + 8, 2);
+            FinderFlags = ntohs(FinderFlags);
+
+            /* change value */
+            FinderFlags &= ~FINDERINFO_COLOR;
+            FinderFlags |= color_count << 1;
+
+            /* copy it back */
+            FinderFlags = ntohs(FinderFlags);
+            memcpy(FinderInfo + 8, &FinderFlags, 2);
+
+            break;
+        }
+        color++;
+        color_count++;
+    }
+}
+
+static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_attributes)
+{
+    char *FinderInfo;
+    uint16_t AFPattributes;
+
+    ad_getattr(ad, &AFPattributes);
+    AFPattributes = ntohs(AFPattributes);
+
+    if (S_ISREG(st->st_mode)) {
+        if (strchr(new_attributes, 'W'))
+            AFPattributes |= ATTRBIT_NOWRITE;
+        if (strchr(new_attributes, 'w'))
+            AFPattributes &= ~ATTRBIT_NOWRITE;
+
+        if (strchr(new_attributes, 'O'))
+            AFPattributes |= ATTRBIT_NOCOPY;
+        if (strchr(new_attributes, 'o'))
+            AFPattributes &= ~ATTRBIT_NOCOPY;
+    }
+
+    if (strchr(new_attributes, 'Y'))
+        AFPattributes |= ATTRBIT_SYSTEM;
+    if (strchr(new_attributes, 'y'))
+        AFPattributes &= ~ATTRBIT_SYSTEM;
+
+    if (strchr(new_attributes, 'P'))
+        AFPattributes |= ATTRBIT_BACKUP;
+    if (strchr(new_attributes, 'p'))
+        AFPattributes &= ~ATTRBIT_BACKUP;
+
+    if (strchr(new_attributes, 'R'))
+        AFPattributes |= ATTRBIT_NORENAME;
+    if (strchr(new_attributes, 'r'))
+        AFPattributes &= ~ATTRBIT_NORENAME;
+
+    if (strchr(new_attributes, 'L'))
+        AFPattributes |= ATTRBIT_NODELETE;
+    if (strchr(new_attributes, 'l'))
+        AFPattributes &= ~ATTRBIT_NODELETE;
+
+    AFPattributes = ntohs(AFPattributes);
+    ad_setattr(ad, AFPattributes);
+}
+
+static void change_flags(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_flags)
+{
     char *FinderInfo;
     uint16_t FinderFlags;
-    uint16_t AFPattributes;
-    char type[5] = "----";
-    char creator[5] = "----";
-    int i;
-    uint32_t cnid;
 
-    if (S_ISDIR(st->st_mode))
-        adflags = ADFLAGS_DIR;
-
-    if (vol->vol->v_path == NULL)
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL)
         return;
-
-    ad_init(&ad, vol->vol);
-
-    if ( ad_metadata(path, adflags, &ad) < 0 )
-        return;
-
-    FinderInfo = ad_entry(&ad, ADEID_FINDERI);
 
     memcpy(&FinderFlags, FinderInfo + 8, 2);
     FinderFlags = ntohs(FinderFlags);
 
-    memcpy(type, FinderInfo, 4);
-    memcpy(creator, FinderInfo + 4, 4);
+    if (S_ISREG(st->st_mode)) {
+        if (strchr(new_flags, 'M'))
+            FinderFlags |= FINDERINFO_ISHARED;
+        if (strchr(new_flags, 'm'))
+            FinderFlags &= ~FINDERINFO_ISHARED;
 
-    ad_getattr(&ad, &AFPattributes);
-    AFPattributes = ntohs(AFPattributes);
+        if (strchr(new_flags, 'N'))
+            FinderFlags |= FINDERINFO_HASNOINITS;
+        if (strchr(new_flags, 'n'))
+            FinderFlags &= ~FINDERINFO_HASNOINITS;
 
-    /*
-      Finder flags. Lowercase means valid, uppercase means invalid because
-      object is a dir and flag is only valid for files.
-    */
-    putchar(' ');
-    if (FinderFlags & FINDERINFO_ISONDESK)
-        putchar('d');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_HIDEEXT)
-        putchar('e');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_ISHARED) {
-        if (adflags & ADFLAGS_DIR)
-            putchar('M');
-        else
-            putchar('m');
-    } else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_HASNOINITS) {
-        if (adflags & ADFLAGS_DIR)
-            putchar('N');
-        else
-            putchar('n');
-    } else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_HASBEENINITED)
-        putchar('i');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_HASCUSTOMICON)
-        putchar('c');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_ISSTATIONNERY) {
-        if (adflags & ADFLAGS_DIR)
-            putchar('T');
-        else
-            putchar('t');
-    } else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_NAMELOCKED)
-        putchar('s');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_HASBUNDLE)
-        putchar('b');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_INVISIBLE)
-        putchar('v');
-    else
-        putchar('-');
-
-    if (FinderFlags & FINDERINFO_ISALIAS)
-        putchar('a');
-    else
-        putchar('-');
-
-    putchar(' ');
-
-    /* AFP attributes */
-    if (AFPattributes & ATTRBIT_SYSTEM)
-        putchar('y');
-    else
-        putchar('-');
-
-    if (AFPattributes & ATTRBIT_NOWRITE) {
-        if (adflags & ADFLAGS_DIR)
-            putchar('W');
-        else
-            putchar('w');
-    } else
-        putchar('-');
-
-    if (AFPattributes & ATTRBIT_BACKUP)
-        putchar('p');
-    else
-        putchar('-');
-
-    if (AFPattributes & ATTRBIT_NORENAME)
-        putchar('r');
-    else
-        putchar('-');
-
-    if (AFPattributes & ATTRBIT_NODELETE)
-        putchar('l');
-    else
-        putchar('-');
-
-    if (AFPattributes & ATTRBIT_NOCOPY) {
-        if (adflags & ADFLAGS_DIR)
-            putchar('O');
-        else
-            putchar('o');                
-    } else
-        putchar('-');
-
-    /* Color */
-    printf(" %s ", labels[(FinderFlags & FINDERINFO_COLOR) >> 1]);
-
-    /* Type & Creator */
-    for(i=0; i<4; i++) {
-        if (isalnum(type[i]))
-            putchar(type[i]);
-        else
-            putchar('-');
+        if (strchr(new_flags, 'T'))
+            FinderFlags |= FINDERINFO_ISSTATIONNERY;
+        if (strchr(new_flags, 't'))
+            FinderFlags &= ~FINDERINFO_ISSTATIONNERY;
     }
-    putchar(' '); 
-    for(i=0; i<4; i++) {
-        if (isalnum(creator[i]))
-            putchar(creator[i]);
-        else
-            putchar('-');
-    }
-    putchar(' '); 
 
-    /* CNID */
-    cnid = ad_forcegetid(&ad);
-    if (cnid)
-        printf(" %10u ", ntohl(cnid));
-    else
-        printf(" !ADVOL_CACHE ");
+    if (strchr(new_flags, 'D'))
+        FinderFlags |= FINDERINFO_ISONDESK;
+    if (strchr(new_flags, 'd'))
+        FinderFlags &= ~FINDERINFO_ISONDESK;
 
-    ad_close(&ad, ADFLAGS_HF);
+    if (strchr(new_flags, 'E'))
+        FinderFlags |= FINDERINFO_HIDEEXT;
+    if (strchr(new_flags, 'e'))
+        FinderFlags &= ~FINDERINFO_HIDEEXT;
+
+    if (strchr(new_flags, 'I'))
+        FinderFlags |= FINDERINFO_HASBEENINITED;
+    if (strchr(new_flags, 'i'))
+        FinderFlags &= ~FINDERINFO_HASBEENINITED;
+
+    if (strchr(new_flags, 'C'))
+        FinderFlags |= FINDERINFO_HASCUSTOMICON;
+    if (strchr(new_flags, 'c'))
+        FinderFlags &= ~FINDERINFO_HASCUSTOMICON;
+
+    if (strchr(new_flags, 'S'))
+        FinderFlags |= FINDERINFO_NAMELOCKED;
+    if (strchr(new_flags, 's'))
+        FinderFlags &= ~FINDERINFO_NAMELOCKED;
+
+    if (strchr(new_flags, 'B'))
+        FinderFlags |= FINDERINFO_HASBUNDLE;
+    if (strchr(new_flags, 'b'))
+        FinderFlags &= ~FINDERINFO_HASBUNDLE;
+
+    if (strchr(new_flags, 'V'))
+        FinderFlags |= FINDERINFO_INVISIBLE;
+    if (strchr(new_flags, 'v'))
+        FinderFlags &= ~FINDERINFO_INVISIBLE;
+
+    if (strchr(new_flags, 'A'))
+        FinderFlags |= FINDERINFO_ISALIAS;
+    if (strchr(new_flags, 'a'))
+        FinderFlags &= ~FINDERINFO_ISALIAS;
+
+    FinderFlags = ntohs(FinderFlags);
+    memcpy(FinderInfo + 8, &FinderFlags, 2);
 }
 
-int ad_ls(int argc, char **argv, AFPObj *obj)
+int ad_set(int argc, char **argv, AFPObj *obj)
 {
     int c, firstarg;
     afpvol_t vol;
     struct stat st;
+    int adflags = 0;
+    struct adouble ad;
 
-    while ((c = getopt(argc, argv, ":adlRu")) != -1) {
+    while ((c = getopt(argc, argv, ":l:t:c:f:a:")) != -1) {
         switch(c) {
-        case 'a':
-            ls_a = 1;
-            break;
-        case 'd':
-            ls_d = 1;
-            break;
         case 'l':
-            ls_l = 1;
+            new_label = strdup(optarg);
             break;
-        case 'R':
-            ls_R = 1;
+        case 't':
+            new_type = strdup(optarg);
             break;
-        case 'u':
-            ls_u = 1;
+        case 'c':
+            new_creator = strdup(optarg);
+            break;
+        case 'f':
+            new_flags = strdup(optarg);
+            break;
+        case 'a':
+            new_attributes = strdup(optarg);
             break;
         case ':':
         case '?':
-            usage_ls();
+            usage_set();
             return -1;
             break;
         }
 
     }
 
-    set_signal();
+    if (argc <= optind)
+        exit(1);
+
     cnid_init();
 
-    if ((argc - optind) == 0) {
-        openvol(obj, ".", &vol);
-        ad_ls_r(".", &vol);
-        closevol(&vol);
+    openvol(obj, argv[optind], &vol);
+    if (vol.vol->v_path == NULL)
+        exit(1);
+
+    if (stat(argv[optind], &st) != 0) {
+        perror("stat");
+        exit(1);
     }
-    else {
-        int havefile = 0;
 
-        firstarg = optind;
+    if (S_ISDIR(st.st_mode))
+        adflags = ADFLAGS_DIR;
 
-        /* First run: only print files from argv paths */
-        while(optind < argc) {
-            if (stat(argv[optind], &st) != 0)
-                goto next;
-            if (S_ISDIR(st.st_mode))
-                goto next;
+    ad_init(&ad, vol.vol);
 
-            havefile = 1;
-            first = 1;
-            recursion = 0;
+    if (ad_open(&ad, argv[optind], adflags | ADFLAGS_HF | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666) < 0)
+        goto exit;
 
-            openvol(obj, argv[optind], &vol);
-            ad_ls_r(argv[optind], &vol);
-            closevol(&vol);
-        next:
-            optind++;
-        }
-        if (havefile && (! ls_l))
-            printf("\n");
+    if (new_label)
+        change_label(argv[optind], &vol, &st, &ad, new_label);
+    if (new_type)
+        change_type(argv[optind], &vol, &st, &ad, new_type);
+    if (new_creator)
+        change_creator(argv[optind], &vol, &st, &ad, new_creator);
+    if (new_flags)
+        change_flags(argv[optind], &vol, &st, &ad, new_flags);
+    if (new_attributes)
+        change_attributes(argv[optind], &vol, &st, &ad, new_attributes);
 
-        /* Second run: print dirs */
-        optind = firstarg;
-        while(optind < argc) {
-            if (stat(argv[optind], &st) != 0)
-                goto next2;
-            if ( ! S_ISDIR(st.st_mode))
-                goto next2;
-            if ((optind > firstarg) || havefile)
-                printf("\n%s:\n", argv[optind]);
+    ad_flush(&ad);
+    ad_close(&ad, ADFLAGS_HF);
 
-            first = 1;
-            recursion = 0;
-
-            openvol(obj, argv[optind], &vol);
-            ad_ls_r(argv[optind], &vol);
-            closevol(&vol);
-
-        next2:
-            optind++;
-        }
-
-
-    }
+exit:
+    closevol(&vol);
 
     return 0;
 }
