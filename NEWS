@@ -5,6 +5,8 @@ Changes in 3.0 alpha3
 * NEW: ad: ad set subcommand for changing Mac metadata on the server
 * UPD: unix charset is UTF8 by default
        vol charset is same value as unix charset by default
+* FIX: afpd: Server info packet was malformed resulting in broken
+       server names being displayed on clients
 
 Changes in 3.0 alpha2
 =====================
