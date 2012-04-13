@@ -34,8 +34,8 @@
 #include <quota/quota.h>
 
 static int
-getfreespace(struct vol *vol, VolSpace *bfree, VolSpace *btotal,
-    uid_t uid, const char *classq)
+getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolSpace *btotal,
+	     uid_t uid, const char *classq)
 {
 	int retq;
 	struct ufs_quota_entry ufsq[QUOTA_NLIMITS];
@@ -52,7 +52,7 @@ getfreespace(struct vol *vol, VolSpace *bfree, VolSpace *btotal,
 		    strerror(errno));
 		return -1;
 	}
-	if ((retq = getfsquota(vol->v_path, ufsq, uid, classq)) < 0) {
+	if ((retq = getfsquota(obj, vol, ufsq, uid, classq)) < 0) {
 		LOG(log_info, logtype_afpd, "getfsquota(%s, %s): %s",
 		    vol->v_path, classq, strerror(errno));
 	}
@@ -78,19 +78,19 @@ getfreespace(struct vol *vol, VolSpace *bfree, VolSpace *btotal,
 	return 1;
 }
 
-int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const u_int32_t bsize)
+int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolSpace *btotal, const u_int32_t bsize)
 {
 	int uretq, gretq;
 	VolSpace ubfree, ubtotal;
 	VolSpace gbfree, gbtotal;
 
-	uretq = getfreespace(vol, &ubfree, &ubtotal,
-	    uuid, QUOTADICT_CLASS_USER);
+	uretq = getfreespace(obj, vol, &ubfree, &ubtotal,
+			     uuid, QUOTADICT_CLASS_USER);
 	LOG(log_info, logtype_afpd, "getfsquota(%s): %d %d",
 	    vol->v_path, (int)ubfree, (int)ubtotal);
-	if (ngroups >= 1) {
+	if (obj->ngroups >= 1) {
 		gretq = getfreespace(vol, &ubfree, &ubtotal,
-		    groups[0], QUOTADICT_CLASS_GROUP);
+		    obj->groups[0], QUOTADICT_CLASS_GROUP);
 	} else
 		gretq = -1;
 	if (uretq < 1 && gretq < 1) { /* no quota for this fs */
@@ -501,7 +501,7 @@ special(char *file, int *nfs)
 #endif /* __svr4__ */
 
 
-static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
+static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct dqblk *dq)
 
 {
 	struct dqblk dqg;
@@ -545,9 +545,9 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
         if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
                        uid, (char *)dq ) != 0 ) {
             /* try group quotas */
-            if (ngroups >= 1) {
+            if (obj->ngroups >= 1) {
                 if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
-                              groups[0], (char *) &dqg) != 0 ) {
+                              obj->groups[0], (char *) &dqg) != 0 ) {
                     seteuid( uid );
                     return( AFPERR_PARAM );
                 }
@@ -690,11 +690,11 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const 
 	    return getnfsquota(vol, uuid, bsize, dq);
     } else
 	/* local filesystem */
-	return getfsquota(vol, uuid, dq);
+      return getfsquota(obj, vol, obj->uid, dq);
 	   
 #else /* TRU64 */
     return vol->v_nfs ? getnfsquota(vol, obj->uid, bsize, dq) :
-           getfsquota(vol, obj->uid, dq);
+      getfsquota(obj, vol, obj->uid, dq);
 #endif /* TRU64 */
 }
 
