@@ -6,9 +6,9 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
     GSSAPI_LIBS=""
     GSSAPI_CFLAGS=""
     GSSAPI_LDFLAGS=""
-    save_CFLAGS=$CFLAGS
-    save_LDFLAGS=$LDFLAGS
-    save_LIBS=$LIBS
+    save_CFLAGS="$CFLAGS"
+    save_LDFLAGS="$LDFLAGS"
+    save_LIBS="$LIBS"
     export CFLAGS=""
     export LDFLAGS=""
     export LIBS=""
@@ -60,15 +60,15 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
         if test x"$ac_cv_search_gss_display_status" = x"no" ; then
             AC_MSG_ERROR([GSSAPI installation not found, library missing])
         fi
-        GSSAPI_CFLAGS=$CFLAGS
-        GSSAPI_LIBS=$LIBS
+        GSSAPI_CFLAGS="$CFLAGS"
+        GSSAPI_LIBS="$LIBS"
         FOUND_GSSAPI=yes
     fi
 
     if test x"$FOUND_GSSAPI" = x"yes" ; then
         # check for functions
-        export CFLAGS=$GSSAPI_CFLAGS
-        export LIBS=$GSSAPI_LIBS
+        export CFLAGS="$GSSAPI_CFLAGS"
+        export LIBS="$GSSAPI_LIBS"
         AC_CHECK_FUNC(gss_acquire_cred, [], [AC_MSG_ERROR([GSSAPI: required function gss_acquire_cred missing])])
 
         # Heimdal/MIT compatibility fix
