@@ -190,7 +190,7 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
     ssize_t retval;
     int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
         EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-    const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+    const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 
     if((retval=extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0)) >= 0) {
         if(retval > size) {
@@ -201,8 +201,7 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
             return retval;
     }
 
-    LOG(log_debug, logtype_default, "sys_fgetxattr: extattr_get_fd(): %s",
-        strerror(errno)));
+    LOG(log_debug, logtype_default, "sys_fgetxattr: extattr_get_fd(): %s", strerror(errno));
     return -1;
 #elif defined(HAVE_ATTR_GETF)
     int retval, flags = 0;
@@ -674,7 +673,7 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
     int retval = 0;
     int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
         EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-    const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+    const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
     if (flags) {
         /* Check attribute existence */
         retval = extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0);
@@ -687,7 +686,6 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
             /* Ignore other errors */
         }
         else {
-            log_error, logtype_default            /* CREATE attribute, that already exists */
             if (flags & XATTR_CREATE) {
                 errno = EEXIST;
                 return -1;
