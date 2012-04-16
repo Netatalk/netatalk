@@ -1,6 +1,4 @@
 /*
- * $Id: desktop.h,v 1.6 2009-10-15 10:43:13 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -29,6 +27,8 @@
 #include <atalk/globals.h>
 
 #include "volume.h"
+
+#define APPLEDESKTOP ".AppleDesktop"
 
 struct savedt {
     u_char	sdt_creator[ 4 ];
