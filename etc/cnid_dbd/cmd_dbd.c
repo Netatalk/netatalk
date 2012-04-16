@@ -258,7 +258,7 @@ int main(int argc, char **argv)
         setuplog("default:debug", "/dev/tty");
 
     /* Load config */
-    if (afp_config_parse(&obj, "") != 0) {
+    if (afp_config_parse(&obj, "dbd") != 0) {
         dbd_log( LOGSTD, "Couldn't load afp.conf");
         exit(EXIT_FAILURE);
     }

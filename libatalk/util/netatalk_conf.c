@@ -1404,6 +1404,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     char *q, *r;
     char val[MAXVAL];
 
+    if (processname != NULL)
+        set_processname(processname);
+
     AFPObj->afp_version = 11;
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
@@ -1418,10 +1421,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
 
-    if (processname[0] != '\0') {
-        set_processname(processname);
-        setuplog(options->logconfig, options->logfile);
-    }
+    setuplog(options->logconfig, options->logfile);
 
     /* "server options" boolean options */
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
