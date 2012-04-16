@@ -44,7 +44,7 @@ static void create_appledesktop_folder(const struct vol * vol)
     struct stat st;
 
     dtpath = bfromcstr(vol->v_dbpath);
-    bcatcstr(dtpath, ".");
+    bcatcstr(dtpath, "/" APPLEDESKTOP);
 
     if (stat(bdata(dtpath), &st) != 0) {
         become_root();
