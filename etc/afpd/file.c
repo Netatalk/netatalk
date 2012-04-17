@@ -728,8 +728,14 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         return AFPERR_MISC;
     }
 
-    (void)get_id(vol, &ad, &st, dir->d_did, upath, strlen(upath));
+    cnid_t id;
+    if ((id = get_id(vol, &ad, &st, dir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+        LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+        goto createfile_iderr;
+    }
+    (void)ad_setid(&ad, st.st_dev, st.st_ino, id, dir->d_did, vol->v_stamp);
 
+createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
     fce_register_new_file(s_path);
