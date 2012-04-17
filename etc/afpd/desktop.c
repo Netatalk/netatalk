@@ -40,19 +40,39 @@
 
 static void create_appledesktop_folder(const struct vol * vol)
 {
-    bstring dtpath;
+    bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
+    char *cmd_argv[4];
+
+    olddtpath = bfromcstr(vol->v_path);
+    bcatcstr(olddtpath, "/" APPLEDESKTOP);
 
     dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
-    if (stat(bdata(dtpath), &st) != 0) {
+    if (lstat(bdata(dtpath), &st) != 0) {
+
         become_root();
-        mkdir(bdata(dtpath), 0777);
+
+        if (lstat(bdata(olddtpath), &st) == 0) {
+            cmd_argv[0] = "mv";
+            cmd_argv[1] = bdata(olddtpath);
+            cmd_argv[2] = bdata(dtpath);
+            cmd_argv[3] = NULL;
+            if (run_cmd("mv", cmd_argv) != 0) {
+                LOG(log_error, logtype_afpd, "moving .AppleDesktop from \"%s\" to \"%s\" failed",
+                    bdata(olddtpath), bdata(dtpath));
+                mkdir(bdata(dtpath), 0777);
+            }
+        } else {
+            mkdir(bdata(dtpath), 0777);
+        }
+
         unbecome_root();
     }
 
     bdestroy(dtpath);
+    bdestroy(olddtpath);
 }
 
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
