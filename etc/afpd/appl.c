@@ -484,7 +484,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
     buflen = *rbuflen - sizeof( bitmap ) - sizeof( appltag );
     if ( getfilparams(obj, vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
-                      sizeof( appltag ), &buflen ) != AFP_OK ) {
+                      sizeof( appltag ), &buflen, 0) != AFP_OK ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );
     }

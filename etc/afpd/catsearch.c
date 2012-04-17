@@ -454,7 +454,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 	}
 	else {
 	    /* FIXME slow if we need the file ID, we already know it, done ? */
-		ret = getfilparams (obj, vol, c1.fbitmap, path, path->d_dir, p, &tbuf);
+		ret = getfilparams (obj, vol, c1.fbitmap, path, path->d_dir, p, &tbuf, 0);
 	}
 
 	if ( ret != AFP_OK )

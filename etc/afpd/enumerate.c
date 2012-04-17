@@ -404,7 +404,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             }
             /* files are added to the dircache in getfilparams() -> getmetadata() */
             if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir, 
-                                               data + header , &esz )) ) {
+                                               data + header, &esz, 1)) ) {
                 return( ret );
             }
         }
