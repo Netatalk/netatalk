@@ -109,8 +109,7 @@ extern struct extmap	*getextmap (const char *);
 extern struct extmap	*getdefextmap (void);
 
 extern int getfilparams (const AFPObj *obj, struct vol *, uint16_t, struct path *,
-                         struct dir *, char *buf, size_t *);
-
+                         struct dir *, char *buf, size_t *, int);
 extern int setfilparams (const AFPObj *obj, struct vol *, struct path *, uint16_t, char *);
 extern int renamefile   (const struct vol *, int, char *, char *, char *, struct adouble *);
 extern int copyfile     (const struct vol *, const struct vol *, int, char *, char *, char *, struct adouble *);

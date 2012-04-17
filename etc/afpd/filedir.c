@@ -113,7 +113,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
         *(rbuf + 2 * sizeof( uint16_t )) = (char) FILDIRBIT_ISDIR;
     } else {
         if (fbitmap && AFP_OK != (ret = getfilparams(obj, vol, fbitmap, s_path, curdir,
-                                                     rbuf + 3 * sizeof( uint16_t ), &buflen )) ) {
+                                                     rbuf + 3 * sizeof( uint16_t ), &buflen, 0)) ) {
             return( ret );
         }
         /* this is a file */

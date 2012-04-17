@@ -592,11 +592,8 @@ int getmetadata(const AFPObj *obj,
 }
                 
 /* ----------------------- */
-int getfilparams(const AFPObj *obj,
-                 struct vol *vol,
-                 uint16_t bitmap,
-                 struct path *path, struct dir *dir, 
-                 char *buf, size_t *buflen )
+int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path,
+                 struct dir *dir, char *buf, size_t *buflen, int in_enumerate)
 {
     struct adouble	ad, *adp;
     int                 opened = 0;
@@ -610,7 +607,12 @@ int getfilparams(const AFPObj *obj,
 
     if (opened) {
         char *upath;
-        flags = (bitmap & (1 << FILPBIT_ATTR)) ? ADFLAGS_CHECK_OF : 0;
+        /*
+         * Dont check for and resturn open fork attributes when enumerating
+         * This saves a lot of syscalls, the client will hopefully only use the result
+         * in FPGetFileParms where we return the correct value
+         */
+        flags = (!in_enumerate &&(bitmap & (1 << FILPBIT_ATTR))) ? ADFLAGS_CHECK_OF : 0;
 
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
@@ -1773,7 +1775,7 @@ retry:
     }
     path.id = cnid;
     if (AFP_OK != (err = getfilparams(obj, vol, bitmap, &path , curdir, 
-                                      rbuf + sizeof(bitmap), &buflen))) {
+                                      rbuf + sizeof(bitmap), &buflen, 0))) {
         return err;
     }
     *rbuflen = buflen + sizeof(bitmap);
