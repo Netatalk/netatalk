@@ -1430,14 +1430,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_CUSTOMICON;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "advertise ssh", 0))
         options->flags |= OPTION_ANNOUNCESSH;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "map acls", 1))
-        options->flags |= OPTION_ACL2MACCESS;
+    if (!iniparser_getboolean(config, INISEC_GLOBAL, "map acls", 1))
+        options->flags &= ~OPTION_ACL2MACCESS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "keep sessions", 0))
         options->flags |= OPTION_KEEPSESSIONS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
         options->flags |= OPTION_CLOSEVOL;
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 1))
-        options->flags |= OPTION_SERVERNOTIF;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))
+        options->flags &= ~OPTION_SERVERNOTIF;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
