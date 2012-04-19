@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 26 Mar 2012
+.\"      Date: 18 Apr 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "26 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "18 Apr 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -418,7 +418,10 @@ unix charset = \fICHARSET\fR \fB(G)\fR
 Specifies the servers unix charset, e\&.g\&.
 \fIISO\-8859\-15\fR
 or
-\fIUTF8\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to the systems locale setting\&.
+\fIEUC\-JP\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. If
+\fILOCALE\fR
+is set, the systems locale is used\&. Defaults to
+\fIUTF8\fR\&.
 .RE
 .PP
 mac charset = \fICHARSET\fR \fB(G)/(V)\fR
@@ -431,8 +434,8 @@ Specifies the Mac clients charset, e\&.g\&.
 .PP
 vol charset = \fICHARSET\fR \fB(G)/(V)\fR
 .RS 4
-Specifies the encoding of the volumes filesystem, defaults to
-\fIUTF8\fR\&.
+Specifies the encoding of the volumes filesystem\&. By default, it is the same as
+\fBunix charset\fR\&.
 .RE
 .SS "Password Options"
 .PP
@@ -679,6 +682,11 @@ map acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 Whether to map filesystem ACLs to effective permissions\&.
 .RE
 .PP
+solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
+.RE
+.PP
 close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Whether to close volumes possibly opened by clients when they\'re removed from the configuration and the configuration is reloaded\&.
@@ -732,6 +740,14 @@ timeout = \fInumber\fR \fB(G)\fR
 .RS 4
 Specify the number of tickles to send before timing out a connection\&. The default is 4, therefore a connection will timeout after 2 minutes\&.
 .RE
+.PP
+client polling = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+With this option enabled, afpd won\'t advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
+\fINote\fR: Depending on the number of simultaneously connected clients and the network\'s speed, this can lead to a significant higher load on your network!
+.sp
+Do not use this option any longer as present Netatalk correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
+.RE
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
 .PP
@@ -758,7 +774,7 @@ vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
 Useful for Time Machine: limits the reported volume size, thus preventing Time Machine from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approximated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approimated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 valid users = \fIusers/groups\fR \fB(V)\fR
@@ -1043,22 +1059,25 @@ might show that there are other CNID backends available, be warned those are lik
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
-needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0XF0) was saved as
+needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
 :f0\&. Some special characters will be converted as to :xx notation as well\&. \'/\' will be encoded to
 :2f, if
 \fBusedots\fR
 is not specified, a leading dot \'\&.\' will be encoded as
 :2e\&.
 .PP
-This version now uses UTF\-8 as the default encoding for names\&. Special characters, like \'/\' and a leading \'\&.\' will still be CAP style encoded \&.
+This version now uses UTF\-8 as the default encoding for names\&. \'/\' will be converted to \':\'\&.
 .PP
 The
 \fBvol charset\fR
-option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be volcharset ISO\-8859\-15\&.
-\fBapfd\fR
+option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be vol charset ISO\-8859\-15\&.
+\fBafpd\fR
 will accept any
 \fBiconv\fR(1)
-provided charset\&. If a character cannot be converted from the mac codepage to the selected volcharset, afpd will save it as a CAP encoded character\&. For AFP3 clients,
+provided charset\&. If a character cannot be converted from the
+\fBmac charset\fR
+to the selected
+\fBvol charset\fR, afpd will save it as a CAP encoded character\&. For AFP3 clients,
 \fBafpd\fR
 will convert the UTF\-8
 character to
