@@ -1024,10 +1024,12 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         /* do variable substitution for volume name */
         if (STRCMP(secname, ==, INISEC_HOMES)) {
-            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home"))
-                strlcpy(tmp, p, MAXPATHLEN);
-            else
-                strlcpy(tmp, p, MAXPATHLEN);
+            p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+            if (strstr(p, "$u") == NULL) {
+                LOG(log_warning, logtype_afpd, "home name must contain $u.");
+                p = "$u's home";
+            }
+            strlcpy(tmp, p, MAXPATHLEN);
         } else {
             strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
         }
@@ -1359,6 +1361,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     /* do variable substitution for volume name */
     p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+    if (strstr(p, "$u") == NULL)
+        p = "$u's home";
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, volpath, NULL) );
 
