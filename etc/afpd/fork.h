@@ -57,7 +57,7 @@ extern struct ofork *of_alloc    (struct vol *, struct dir *,
                                                       char *, uint16_t *, const int,
                                                       struct adouble *,
                                                       struct stat *);
-extern void         of_dealloc   (struct ofork *);
+extern void         of_dealloc   (const AFPObj *obj, struct ofork *);
 extern struct ofork *of_find     (const uint16_t);
 extern struct ofork *of_findname (struct path *);
 extern int          of_rename    (const struct vol *,
@@ -67,9 +67,9 @@ extern int          of_rename    (const struct vol *,
 extern int          of_flush     (const struct vol *);
 extern int          of_stat      (struct path *);
 extern int          of_statdir   (struct vol *vol, struct path *);
-extern int          of_closefork (struct ofork *ofork);
-extern void         of_closevol  (const struct vol *vol);
-extern void         of_close_all_forks(void);
+extern int          of_closefork (const AFPObj *obj, struct ofork *ofork);
+extern void         of_closevol  (const AFPObj *obj, const struct vol *vol);
+extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);
 
 #ifdef HAVE_ATFUNCS

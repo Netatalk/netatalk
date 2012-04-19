@@ -872,7 +872,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             }
         }
 
-        char *msg;
+        const char *msg;
         if ((msg = iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
             setmessage(msg);
 
@@ -894,14 +894,14 @@ openvol_err:
     return ret;
 }
 
-void closevol(struct vol *vol)
+void closevol(const AFPObj *obj, struct vol *vol)
 {
     if (!vol)
         return;
 
     vol->v_flags &= ~AFPVOL_OPEN;
 
-    of_closevol(vol);
+    of_closevol(obj, vol);
 
     dir_free( vol->v_root );
     vol->v_root = NULL;
@@ -919,20 +919,20 @@ void closevol(struct vol *vol)
 }
 
 /* ------------------------- */
-void close_all_vol(void)
+void close_all_vol(const AFPObj *obj)
 {
     struct vol  *ovol;
     curdir = NULL;
     for ( ovol = getvolumes(); ovol; ovol = ovol->v_next ) {
         if ( (ovol->v_flags & AFPVOL_OPEN) ) {
             ovol->v_flags &= ~AFPVOL_OPEN;
-            closevol(ovol);
+            closevol(obj, ovol);
         }
     }
 }
 
 /* ------------------------- */
-int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol  *vol;
     uint16_t   vid;
@@ -946,7 +946,7 @@ int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 
     (void)chdir("/");
     curdir = NULL;
-    closevol(vol);
+    closevol(obj, vol);
 
     return( AFP_OK );
 }

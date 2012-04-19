@@ -4,7 +4,8 @@ Changes in 3.0 alpha3
 * NEW: afpd: Per volume "login message", NetAFP bug ID #18
 * NEW: afpd: Cross-platform locking (share modes) on Solaris and derivates
        with Solaris CIFS/SMB server. Uses new Solaris fcntl F_SHARE share
-       reservation locking primitives.
+       reservation locking primitives. Enabled by default, set global
+       "solaris share reservations" option to false to disable it.
 * NEW: ad: ad set subcommand for changing Mac metadata on the server
 * UPD: unix charset is UTF8 by default
        vol charset is same value as unix charset by default

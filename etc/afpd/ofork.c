@@ -364,7 +364,7 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
 }
 #endif
 
-void of_dealloc( struct ofork *of)
+void of_dealloc(const AFPObj *obj,  struct ofork *of)
 {
     if (!oforks)
         return;
@@ -380,13 +380,23 @@ void of_dealloc( struct ofork *of)
         free( of->of_ad);
     } else {/* someone's still using it. just free this user's locks */
         ad_unlock(of->of_ad, of->of_refnum, of->of_flags & AFPFORK_ERROR ? 0 : 1);
+#ifdef HAVE_FSHARE_T
+        if (obj->options.flags & OPTION_SHARE_RESERV) {
+            fshare_t shmd;
+            shmd.f_id = of->of_refnum;
+            if (AD_DATA_OPEN(of->of_ad))
+                fcntl(ad_data_fileno(of->of_ad), F_UNSHARE, &shmd);
+            if (AD_RSRC_OPEN(of->of_ad))
+                fcntl(ad_reso_fileno(of->of_ad), F_UNSHARE, &shmd);
+        }
+#endif
     }
 
     free( of );
 }
 
 /* --------------------------- */
-int of_closefork(struct ofork *ofork)
+int of_closefork(const AFPObj *obj, struct ofork *ofork)
 {
     struct timeval      tv;
     int         adflags = 0;
@@ -412,12 +422,13 @@ int of_closefork(struct ofork *ofork)
         fce_register_file_modification(ofork);
     }
 
+    of_dealloc(obj, ofork);
+
     ret = 0;
     if ( ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0 ) {
         ret = -1;
     }
 
-    of_dealloc( ofork );
     return ret;
 }
 
@@ -441,7 +452,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
 /* ----------------------
    close all forks for a volume
 */
-void of_closevol(const struct vol *vol)
+void of_closevol(const AFPObj *obj, const struct vol *vol)
 {
     int refnum;
 
@@ -450,7 +461,7 @@ void of_closevol(const struct vol *vol)
 
     for ( refnum = 0; refnum < nforks; refnum++ ) {
         if (oforks[ refnum ] != NULL && oforks[refnum]->of_vol == vol) {
-            if (of_closefork( oforks[ refnum ]) < 0 ) {
+            if (of_closefork(obj, oforks[ refnum ]) < 0 ) {
                 LOG(log_error, logtype_afpd, "of_closevol: %s", strerror(errno) );
             }
         }
@@ -461,7 +472,7 @@ void of_closevol(const struct vol *vol)
 /* ----------------------
    close all forks for a volume
 */
-void of_close_all_forks(void)
+void of_close_all_forks(const AFPObj *obj)
 {
     int refnum;
 
@@ -470,7 +481,7 @@ void of_close_all_forks(void)
 
     for ( refnum = 0; refnum < nforks; refnum++ ) {
         if (oforks[ refnum ] != NULL) {
-            if (of_closefork( oforks[ refnum ]) < 0 ) {
+            if (of_closefork(obj, oforks[ refnum ]) < 0 ) {
                 LOG(log_error, logtype_afpd, "of_close_all_forks: %s", strerror(errno) );
             }
         }

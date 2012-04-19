@@ -1124,7 +1124,7 @@ int load_charset(struct vol *vol)
  * @param obj       (r) handle
  * @param delvol_fn (r) callback called for deleted volumes
  */
-int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
+int load_volumes(AFPObj *obj, void (*delvol_fn)(const AFPObj *obj, struct vol *))
 {
     EC_INIT;
     int fd = -1;
@@ -1180,7 +1180,7 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
         if (vol->v_deleted) {
             LOG(log_debug, logtype_afpd, "load_volumes: deleted: %s", vol->v_localname);
             if (delvol_fn)
-                delvol_fn(vol);
+                delvol_fn(obj, vol);
             vol = Volumes;
         }
     }
@@ -1440,6 +1440,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags &= ~OPTION_SERVERNOTIF;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
+        options->flags |= OPTION_SHARE_RESERV;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))

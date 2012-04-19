@@ -144,7 +144,7 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
     return 0;
 }
 
-static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
+static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid, int access, int ofrefnum)
 {
     int ret;
     int readset;
@@ -155,22 +155,24 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 #ifdef HAVE_FSHARE_T
     fshare_t shmd;
 
-    shmd.f_access = (access & OPENACC_RD ? F_RDACC : 0) | (access & OPENACC_WR ? F_WRACC : 0);
-    if (shmd.f_access == 0)
-        /* we must give an access mode, otherwise fcntl will complain */
-        shmd.f_access = F_RDACC;
-    shmd.f_deny = (access & OPENACC_DRD ? F_RDDNY : F_NODNY) | (access & OPENACC_DWR) ? F_WRDNY : 0;
-    shmd.f_id = ofrefnum;
+    if (obj->options.flags & OPTION_SHARE_RESERV) {
+        shmd.f_access = (access & OPENACC_RD ? F_RDACC : 0) | (access & OPENACC_WR ? F_WRACC : 0);
+        if (shmd.f_access == 0)
+            /* we must give an access mode, otherwise fcntl will complain */
+            shmd.f_access = F_RDACC;
+        shmd.f_deny = (access & OPENACC_DRD ? F_RDDNY : F_NODNY) | (access & OPENACC_DWR) ? F_WRDNY : 0;
+        shmd.f_id = ofrefnum;
 
-    int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
+        int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
 
-    if (fd != -1 && fd != -2 && fcntl(fd, F_SHARE, &shmd) != 0) {
-        LOG(log_debug, logtype_afpd, "fork_setmode: fcntl: %s", strerror(errno));
-        errno = EACCES;
-        return -1;
+        if (fd != -1 && fd != -2 && fcntl(fd, F_SHARE, &shmd) != 0) {
+            LOG(log_debug, logtype_afpd, "fork_setmode: fcntl: %s", strerror(errno));
+            errno = EACCES;
+            return -1;
+        }
     }
-
 #endif
+
     if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
         return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_NONE, 1, ofrefnum);
     }
@@ -455,7 +457,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         ad_getattr(ofork->of_ad, &bshort);
         if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
             ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc( ofork );
+            of_dealloc(obj, ofork );
             ofrefnum = 0;
             memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
             return(AFPERR_OLOCK);
@@ -470,13 +472,13 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     if ((eid == ADEID_DFORK)
         || (ad_reso_fileno(ofork->of_ad) != -1)
         || (ofork->of_ad->ad_vers == AD_VERSION_EA)) {
-        ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
+        ret = fork_setmode(obj, ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
         if (ret < 0) {
             ofork->of_flags |= AFPFORK_ERROR;
             ret = errno;
             ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc( ofork );
+            of_dealloc(obj, ofork );
             switch (ret) {
             case EAGAIN: /* return data anyway */
             case EACCES:
@@ -502,7 +504,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     return( AFP_OK );
 
 openfork_err:
-    of_dealloc( ofork );
+    of_dealloc(obj, ofork);
     if (errno == EACCES)
         return (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
     return ret;
@@ -1078,7 +1080,7 @@ int flushfork(struct ofork *ofork)
     return( err );
 }
 
-int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork    *ofork;
     uint16_t       ofrefnum;
@@ -1095,16 +1097,7 @@ int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     LOG(log_debug, logtype_afpd, "afp_closefork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
-#ifdef HAVE_FSHARE_T
-    fshare_t shmd;
-    shmd.f_id = ofork->of_refnum;
-    if (AD_DATA_OPEN(ofork->of_ad))
-        fcntl(ad_data_fileno(ofork->of_ad), F_UNSHARE, &shmd);
-    if (AD_RSRC_OPEN(ofork->of_ad))
-        fcntl(ad_reso_fileno(ofork->of_ad), F_UNSHARE, &shmd);
-#endif
-
-    if ( of_closefork( ofork ) < 0 ) {
+    if (of_closefork(obj, ofork) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_closefork(%s): of_closefork: %s", of_name(ofork), strerror(errno) );
         return( AFPERR_PARAM );
     }
