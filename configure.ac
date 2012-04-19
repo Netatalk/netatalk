@@ -50,6 +50,7 @@ AC_CHECK_HEADERS([sys/mount.h], , ,
 #include <sys/param.h>
 #endif
 ])
+AC_CHECK_TYPES([fshare_t], [], [], [[#include <fcntl.h>]])
 
 AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 

@@ -1258,6 +1258,19 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) < 0) {
         return AFPERR_DENYCONF;
     }
+#ifdef HAVE_FSHARE_T
+    fshare_t shmd;
+    shmd.f_access = F_RDACC;
+    shmd.f_deny = F_NODNY;
+    if (fcntl(ad_data_fileno(adp), F_SHARE, &shmd) != 0) {
+        retvalue = AFPERR_DENYCONF;
+        goto copy_exit;
+    }
+    if (AD_RSRC_OPEN(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
+        retvalue = AFPERR_DENYCONF;
+        goto copy_exit;
+    }
+#endif
     denyreadset = (ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
                   ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_DENY_RD) != 0 );
 
