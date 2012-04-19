@@ -992,8 +992,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
 
             /* check if user home matches our "basedir regex" */
-            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL)
+            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
+                LOG(log_error, logtype_afpd, "\"basedir regex =\" must be defined in [Homes] section");
                 continue;
+            }
             LOG(log_debug, logtype_afpd, "readvolfile: basedir regex: '%s'", basedir);
 
             if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
