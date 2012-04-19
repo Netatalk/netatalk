@@ -457,7 +457,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         ad_getattr(ofork->of_ad, &bshort);
         if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
             ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc(obj, ofork );
+            of_dealloc(ofork);
             ofrefnum = 0;
             memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
             return(AFPERR_OLOCK);
@@ -478,7 +478,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             ofork->of_flags |= AFPFORK_ERROR;
             ret = errno;
             ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc(obj, ofork );
+            of_dealloc(ofork);
             switch (ret) {
             case EAGAIN: /* return data anyway */
             case EACCES:
@@ -504,7 +504,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     return( AFP_OK );
 
 openfork_err:
-    of_dealloc(obj, ofork);
+    of_dealloc(ofork);
     if (errno == EACCES)
         return (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
     return ret;

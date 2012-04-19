@@ -57,7 +57,7 @@ extern struct ofork *of_alloc    (struct vol *, struct dir *,
                                                       char *, uint16_t *, const int,
                                                       struct adouble *,
                                                       struct stat *);
-extern void         of_dealloc   (const AFPObj *obj, struct ofork *);
+extern void         of_dealloc   (struct ofork *);
 extern struct ofork *of_find     (const uint16_t);
 extern struct ofork *of_findname (struct path *);
 extern int          of_rename    (const struct vol *,

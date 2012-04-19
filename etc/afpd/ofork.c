@@ -364,7 +364,7 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
 }
 #endif
 
-void of_dealloc(const AFPObj *obj,  struct ofork *of)
+void of_dealloc(struct ofork *of)
 {
     if (!oforks)
         return;
@@ -378,18 +378,6 @@ void of_dealloc(const AFPObj *obj,  struct ofork *of)
     if ( of->of_ad->ad_refcount <= 0) {
         free( of->of_ad->ad_name );
         free( of->of_ad);
-    } else {/* someone's still using it. just free this user's locks */
-        ad_unlock(of->of_ad, of->of_refnum, of->of_flags & AFPFORK_ERROR ? 0 : 1);
-#ifdef HAVE_FSHARE_T
-        if (obj->options.flags & OPTION_SHARE_RESERV) {
-            fshare_t shmd;
-            shmd.f_id = of->of_refnum;
-            if (AD_DATA_OPEN(of->of_ad))
-                fcntl(ad_data_fileno(of->of_ad), F_UNSHARE, &shmd);
-            if (AD_RSRC_OPEN(of->of_ad))
-                fcntl(ad_reso_fileno(of->of_ad), F_UNSHARE, &shmd);
-        }
-#endif
     }
 
     free( of );
@@ -422,12 +410,25 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         fce_register_file_modification(ofork);
     }
 
-    of_dealloc(obj, ofork);
+    ad_unlock(ofork->of_ad, ofork->of_refnum, ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
+
+#ifdef HAVE_FSHARE_T
+    if (obj->options.flags & OPTION_SHARE_RESERV) {
+        fshare_t shmd;
+        shmd.f_id = ofork->of_refnum;
+        if (AD_DATA_OPEN(ofork->of_ad))
+            fcntl(ad_data_fileno(ofork->of_ad), F_UNSHARE, &shmd);
+        if (AD_RSRC_OPEN(ofork->of_ad))
+            fcntl(ad_reso_fileno(ofork->of_ad), F_UNSHARE, &shmd);
+    }
+#endif
 
     ret = 0;
     if ( ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0 ) {
         ret = -1;
     }
+
+    of_dealloc(ofork);
 
     return ret;
 }
