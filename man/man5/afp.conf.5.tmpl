@@ -232,6 +232,111 @@ prints dollar sign ($)
 .SH "EXPLANATION OF GLOBAL PARAMETERS"
 .SS "Authentication Options"
 .PP
+admin auth user = \fIuser\fR \fB(G)\fR
+.RS 4
+Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
+\fBadmin auth user\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
+\fBadmin auth user\fR, you can authenticate as any other user\&.
+.RE
+.PP
+k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
+.RS 4
+These are required if the server supports the Kerberos 5 authentication UAM\&.
+.RE
+.PP
+ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
+.RS 4
+Authentication method:
+\fBnone | simple | sasl\fR
+.PP
+none
+.RS 4
+anonymous LDAP bind
+.RE
+.PP
+simple
+.RS 4
+simple LDAP bind
+.RE
+.PP
+sasl
+.RS 4
+SASL\&. Not yet supported !
+.RE
+.RE
+.PP
+ldap auth dn = \fIdn\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.sp
+.RE
+.PP
+ldap auth pw = \fIpassword\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.sp
+.RE
+.PP
+ldap server = \fIhost\fR \fB(G)\fR
+.RS 4
+Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
+.sp
+You can use
+\fBafpldaptest\fR(1)
+to syntactically check your config\&.
+.RE
+.PP
+ldap userbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the user container in LDAP\&.
+.sp
+.RE
+.PP
+ldap userscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.sp
+.RE
+.PP
+ldap groupbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the group container in LDAP\&.
+.sp
+.RE
+.PP
+ldap groupscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.sp
+.RE
+.PP
+ldap uuid attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the UUIDs\&.
+.sp
+Note: this is used both for users and groups\&.
+.sp
+.RE
+.PP
+ldap name attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the users short name\&.
+.sp
+.RE
+.PP
+ldap group attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the groups short name\&.
+.sp
+.RE
+.PP
+nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
+.RS 4
+Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
+.RE
+.PP
 save password = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Enables or disables the ability of clients to save passwords locally\&.
@@ -285,111 +390,6 @@ uam path = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the default path for UAMs for this server (default is :LIBDIR:/netatalk)\&.
 .RE
-.PP
-k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
-.RS 4
-These are required if the server supports the Kerberos 5 authentication UAM\&.
-.RE
-.PP
-nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
-.RS 4
-Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
-.RE
-.PP
-admin auth user = \fIuser\fR \fB(G)\fR
-.RS 4
-Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
-\fBadmin auth user\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
-\fBadmin auth user\fR, you can authenticate as any other user\&.
-.RE
-.PP
-ldap server = \fIhost\fR \fB(G)\fR
-.RS 4
-Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
-.sp
-You can use
-\fBafpldaptest\fR(1)
-to syntactically check your config\&.
-.RE
-.PP
-ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
-.RS 4
-Authentication method:
-\fBnone | simple | sasl\fR
-.PP
-none
-.RS 4
-anonymous LDAP bind
-.RE
-.PP
-simple
-.RS 4
-simple LDAP bind
-.RE
-.PP
-sasl
-.RS 4
-SASL\&. Not yet supported !
-.RE
-.RE
-.PP
-ldap auth dn = \fIdn\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap auth pw = \fIpassword\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap userbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the user container in LDAP\&.
-.sp
-.RE
-.PP
-ldap userscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap groupbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the group container in LDAP\&.
-.sp
-.RE
-.PP
-ldap groupscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap uuid attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the UUIDs\&.
-.sp
-Note: this is used both for users and groups\&.
-.sp
-.RE
-.PP
-ldap name attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the users short name\&.
-.sp
-.RE
-.PP
-ldap group attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the groups short name\&.
-.sp
-.RE
 .SS "Charset Options"
 .PP
 With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as Decomposed UTF\-8 (UTF8\-MAC)\&. Previous AFP/OS versions used charsets like MacRoman, MacCentralEurope, etc\&.
@@ -413,6 +413,14 @@ option\&. If you\'re using extended characters in the configuration files for
 \fBafpd\fR, make sure your terminal matches the
 \fBunix charset\fR\&.
 .PP
+mac charset = \fICHARSET\fR \fB(G)/(V)\fR
+.RS 4
+Specifies the Mac clients charset, e\&.g\&.
+\fIMAC_ROMAN\fR\&. This is used to convert strings and filenames to the clients codepage for OS9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes
+\fBmac charset\fR\&. Defaults to
+\fIMAC_ROMAN\fR\&.
+.RE
+.PP
 unix charset = \fICHARSET\fR \fB(G)\fR
 .RS 4
 Specifies the servers unix charset, e\&.g\&.
@@ -422,14 +430,6 @@ or
 \fILOCALE\fR
 is set, the systems locale is used\&. Defaults to
 \fIUTF8\fR\&.
-.RE
-.PP
-mac charset = \fICHARSET\fR \fB(G)/(V)\fR
-.RS 4
-Specifies the Mac clients charset, e\&.g\&.
-\fIMAC_ROMAN\fR\&. This is used to convert strings and filenames to the clients codepage for OS9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes
-\fBmac charset\fR\&. Defaults to
-\fIMAC_ROMAN\fR\&.
 .RE
 .PP
 vol charset = \fICHARSET\fR \fB(G)/(V)\fR
@@ -449,77 +449,6 @@ passwd minlen = \fInumber\fR \fB(G)\fR
 Sets the minimum password length, if supported by the UAM
 .RE
 .SS "Network Options"
-.PP
-afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
-.RS 4
-Specifies the IP address that the server should advertise
-\fBand\fR
-listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
-.RE
-.PP
-fqdn = \fIname:port\fR \fB(G)\fR
-.RS 4
-Specifies a fully\-qualified domain name, with an optional port\&. This is discarded if the server cannot resolve it\&. This option is not honored by AppleShare clients <= 3\&.8\&.3\&. This option is disabled by default\&. Use with caution as this will involve a second name resolution step on the client side\&. Also note that afpd will advertise this name:port combination but not automatically listen to it\&.
-.RE
-.PP
-hostname = \fIname\fR \fB(G)\fR
-.RS 4
-Use this instead of the result from calling hostname for dertermening which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
-\fBafp listen\fR\&.
-.RE
-.PP
-cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
-.RS 4
-Specifies the IP address that the CNID server should listen on\&. The default is
-\fBlocalhost:4700\fR\&.
-.RE
-.PP
-afp port = \fIport number\fR \fB(G)\fR
-.RS 4
-Allows a different TCP port to be used for AFP\&. The default is 548\&. Also sets the default port applied when none specified in an
-\fBafp listen\fR
-option\&.
-.RE
-.PP
-max connections = \fInumber\fR \fB(G)\fR
-.RS 4
-Sets the maximum number of clients that can simultaneously connect to the server (default is 200)\&.
-.RE
-.PP
-sleep time = \fInumber\fR \fB(G)\fR
-.RS 4
-Keep sleeping AFP sessions for
-\fInumber\fR
-hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
-.RE
-.PP
-disconnect time = \fInumber\fR \fB(G)\fR
-.RS 4
-Keep disconnected AFP sessions for
-\fInumber\fR
-hours before dropping them\&. Default is 24 hours\&.
-.RE
-.PP
-server quantum = \fInumber\fR \fB(G)\fR
-.RS 4
-This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
-.RE
-.PP
-dsireadbuf = \fInumber\fR \fB(G)\fR
-.RS 4
-Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
-\fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
-.RE
-.PP
-tcprcvbuf = \fInumber\fR \fB(G)\fR
-.RS 4
-Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
-.RE
-.PP
-tcpsndbuf = \fInumber\fR \fB(G)\fR
-.RS 4
-Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
-.RE
 .PP
 advertise ssh = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
@@ -543,10 +472,75 @@ Setting this option is not recommended since globally encrypting AFP connections
 .RE
 .RE
 .PP
-zeroconf = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
-Whether to use automatic Zeroconf
-service registration if Avahi or mDNSResponder were compiled in\&.
+Specifies the IP address that the server should advertise
+\fBand\fR
+listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.RE
+.PP
+afp port = \fIport number\fR \fB(G)\fR
+.RS 4
+Allows a different TCP port to be used for AFP\&. The default is 548\&. Also sets the default port applied when none specified in an
+\fBafp listen\fR
+option\&.
+.RE
+.PP
+cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Specifies the IP address that the CNID server should listen on\&. The default is
+\fBlocalhost:4700\fR\&.
+.RE
+.PP
+disconnect time = \fInumber\fR \fB(G)\fR
+.RS 4
+Keep disconnected AFP sessions for
+\fInumber\fR
+hours before dropping them\&. Default is 24 hours\&.
+.RE
+.PP
+dsireadbuf = \fInumber\fR \fB(G)\fR
+.RS 4
+Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
+\fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
+.RE
+.PP
+fqdn = \fIname:port\fR \fB(G)\fR
+.RS 4
+Specifies a fully\-qualified domain name, with an optional port\&. This is discarded if the server cannot resolve it\&. This option is not honored by AppleShare clients <= 3\&.8\&.3\&. This option is disabled by default\&. Use with caution as this will involve a second name resolution step on the client side\&. Also note that afpd will advertise this name:port combination but not automatically listen to it\&.
+.RE
+.PP
+hostname = \fIname\fR \fB(G)\fR
+.RS 4
+Use this instead of the result from calling hostname for dertermening which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
+\fBafp listen\fR\&.
+.RE
+.PP
+max connections = \fInumber\fR \fB(G)\fR
+.RS 4
+Sets the maximum number of clients that can simultaneously connect to the server (default is 200)\&.
+.RE
+.PP
+server quantum = \fInumber\fR \fB(G)\fR
+.RS 4
+This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
+.RE
+.PP
+sleep time = \fInumber\fR \fB(G)\fR
+.RS 4
+Keep sleeping AFP sessions for
+\fInumber\fR
+hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
+.RE
+.PP
+tcprcvbuf = \fInumber\fR \fB(G)\fR
+.RS 4
+Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+tcpsndbuf = \fInumber\fR \fB(G)\fR
+.RS 4
+Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .PP
 use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -554,12 +548,17 @@ use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 Whether to use sendfile
 syscall for sending file data to clients\&.
 .RE
+.PP
+zeroconf = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to use automatic Zeroconf
+service registration if Avahi or mDNSResponder were compiled in\&.
+.RE
 .SS "Miscellaneous Options"
 .PP
-vol dbpath = \fIpath\fR \fB(G)\fR
+admin group = \fIgroup\fR \fB(G)\fR
 .RS 4
-Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
-:STATEDIR:/netatalk/CNID/\&.
+Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
 .RE
 .PP
 basedir regex = \fIregex\fR \fB(H)\fR
@@ -568,22 +567,9 @@ Regular expression which matches the parent directory of the user homes\&. In th
 \fBbasedir regex = /home\fR
 .RE
 .PP
-home name = \fIname\fR \fB(H)\fR
+close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
-AFP user home volume name\&. The default is
-\fIusers\'s home\fR\&.
-.RE
-.PP
-vol preset = \fIname\fR \fB(G)/(V)\fR
-.RS 4
-Use section
-\fBname\fR
-as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\'s section)\&.
-.RE
-.PP
-admin group = \fIgroup\fR \fB(G)\fR
-.RS 4
-Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
+Whether to close volumes possibly opened by clients when they\'re removed from the configuration and the configuration is reloaded\&.
 .RE
 .PP
 cnid server = \fIipaddress[:port]\fR \fB(G)/(V)\fR
@@ -627,11 +613,34 @@ guest account = \fIname\fR \fB(G)\fR
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
 .RE
 .PP
+home name = \fIname\fR \fB(H)\fR
+.RS 4
+AFP user home volume name\&. The default is
+\fIusers\'s home\fR\&.
+.RE
+.PP
+icon = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Use the platform\-specific icon\&. Mac OS X doesn\'t display it\&.
+.RE
+.PP
+keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interruping active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
+\fInetatalk\fR
+service controller process, the AFP and CNID daemons will exit and then the service controller will restart them\&. AFP session processes are notified of the master afpd shutdown, they will then sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. The IPC channel between the AFP master service daemon and the AFP session child is used for keeping session state of AFP sessions in the AFP master process\&. The session state is needed when AFP clients experience eg network outages and try to reconnect to the AFP server\&.
+.RE
+.PP
 login message = \fImessage\fR \fB(G)/(V)\fR
 .RS 4
 Sets a message to be displayed when clients logon to the server\&. The message should be in
 \fBunix charset\fR
 and should be quoted\&. Extended characters are allowed\&.
+.RE
+.PP
+map acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to map filesystem ACLs to effective permissions\&.
 .RE
 .PP
 mimic model = \fImodel\fR \fB(G)\fR
@@ -644,6 +653,17 @@ signature = <text> \fB(G)\fR
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
 :STATEDIR:/netatalk/afp_signature\&.conf
 automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
+.RE
+.PP
+solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
+.RE
+.PP
+vol dbpath = \fIpath\fR \fB(G)\fR
+.RS 4
+Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
+:STATEDIR:/netatalk/CNID/\&.
 .RE
 .PP
 volnamelen = \fInumber\fR \fB(G)\fR
@@ -665,31 +685,11 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limitted to 27 bytes\&.
 .RE
 .PP
-icon = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+vol preset = \fIname\fR \fB(G)/(V)\fR
 .RS 4
-Use the platform\-specific icon\&. Mac OS X doesn\'t display it\&.
-.RE
-.PP
-keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
-.RS 4
-Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interruping active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
-\fInetatalk\fR
-service controller process, the AFP and CNID daemons will exit and then the service controller will restart them\&. AFP session processes are notified of the master afpd shutdown, they will then sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. The IPC channel between the AFP master service daemon and the AFP session child is used for keeping session state of AFP sessions in the AFP master process\&. The session state is needed when AFP clients experience eg network outages and try to reconnect to the AFP server\&.
-.RE
-.PP
-map acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
-.RS 4
-Whether to map filesystem ACLs to effective permissions\&.
-.RE
-.PP
-solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
-.RS 4
-Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
-.RE
-.PP
-close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
-.RS 4
-Whether to close volumes possibly opened by clients when they\'re removed from the configuration and the configuration is reloaded\&.
+Use section
+\fBname\fR
+as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\'s section)\&.
 .RE
 .SS "Logging Options"
 .PP
