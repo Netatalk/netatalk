@@ -58,14 +58,14 @@
 #define MIN(a,b) ((a) < (b) ? a : b)
 #endif
 
-#if BYTE_ORDER == BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
 #define hton64(x)       (x)
 #define ntoh64(x)       (x)
-#else /* BYTE_ORDER == BIG_ENDIAN */
+#else
 #define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
                          (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
 #define ntoh64(x)       (hton64(x))
-#endif /* BYTE_ORDER == BIG_ENDIAN */
+#endif
 
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);

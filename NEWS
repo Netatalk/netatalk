@@ -1,3 +1,9 @@
+Changes in 2.2.10
+================
+
+* FIX: afpd: Byte order detection. Fixes an error where Netatalk on
+       OpenIndiana returned wrong volume size information.
+
 Changes in 2.2.9
 ================
 

@@ -44,6 +44,7 @@ AC_CHECK_HEADERS([sys/mount.h], , ,
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_UID_T
+AC_C_BIGENDIAN
 AC_C_INLINE
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
