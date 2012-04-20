@@ -592,11 +592,8 @@ int getmetadata(const AFPObj *obj,
 }
                 
 /* ----------------------- */
-int getfilparams(const AFPObj *obj,
-                 struct vol *vol,
-                 uint16_t bitmap,
-                 struct path *path, struct dir *dir, 
-                 char *buf, size_t *buflen )
+int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path,
+                 struct dir *dir, char *buf, size_t *buflen, int in_enumerate)
 {
     struct adouble	ad, *adp;
     int                 opened = 0;
@@ -610,7 +607,12 @@ int getfilparams(const AFPObj *obj,
 
     if (opened) {
         char *upath;
-        flags = (bitmap & (1 << FILPBIT_ATTR)) ? ADFLAGS_CHECK_OF : 0;
+        /*
+         * Dont check for and resturn open fork attributes when enumerating
+         * This saves a lot of syscalls, the client will hopefully only use the result
+         * in FPGetFileParms where we return the correct value
+         */
+        flags = (!in_enumerate &&(bitmap & (1 << FILPBIT_ATTR))) ? ADFLAGS_CHECK_OF : 0;
 
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
@@ -728,8 +730,14 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         return AFPERR_MISC;
     }
 
-    (void)get_id(vol, &ad, &st, dir->d_did, upath, strlen(upath));
+    cnid_t id;
+    if ((id = get_id(vol, &ad, &st, dir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+        LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+        goto createfile_iderr;
+    }
+    (void)ad_setid(&ad, st.st_dev, st.st_ino, id, dir->d_did, vol->v_stamp);
 
+createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
     fce_register_new_file(s_path);
@@ -1250,6 +1258,19 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) < 0) {
         return AFPERR_DENYCONF;
     }
+#ifdef HAVE_FSHARE_T
+    fshare_t shmd;
+    shmd.f_access = F_RDACC;
+    shmd.f_deny = F_NODNY;
+    if (fcntl(ad_data_fileno(adp), F_SHARE, &shmd) != 0) {
+        retvalue = AFPERR_DENYCONF;
+        goto copy_exit;
+    }
+    if (AD_RSRC_OPEN(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
+        retvalue = AFPERR_DENYCONF;
+        goto copy_exit;
+    }
+#endif
     denyreadset = (ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
                   ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_DENY_RD) != 0 );
 
@@ -1773,7 +1794,7 @@ retry:
     }
     path.id = cnid;
     if (AFP_OK != (err = getfilparams(obj, vol, bitmap, &path , curdir, 
-                                      rbuf + sizeof(bitmap), &buflen))) {
+                                      rbuf + sizeof(bitmap), &buflen, 0))) {
         return err;
     }
     *rbuflen = buflen + sizeof(bitmap);

@@ -29,6 +29,6 @@ int afp_getsrvrparms (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size
 int afp_closevol     (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 /* netatalk functions */
-extern void close_all_vol(void);
-extern void closevol(struct vol *vol);
+extern void close_all_vol(const AFPObj *obj);
+extern void closevol(const AFPObj *obj, struct vol *vol);
 #endif

@@ -31,6 +31,12 @@
 #include <inttypes.h>
 #include <time.h>
 #include <regex.h>
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+#if HAVE_LANGINFO_H
+#include <langinfo.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/util.h>
@@ -626,16 +632,24 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL( volume->v_veto = strdup(val) );
 
     /* vol charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "vol charset", preset, NULL))
+    if (val = getoption(obj->iniconfig, section, "vol charset", preset, NULL)) {
+        if (strcasecmp(val, "UTF-8") == 0) {
+            val = strdup("UTF8");
+        }
         EC_NULL( volume->v_volcodepage = strdup(val) );
+    }
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
     /* mac charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "mac charset", preset, NULL))
+    if (val = getoption(obj->iniconfig, section, "mac charset", preset, NULL)) {
+        if (strncasecmp(val, "MAC", 3) != 0) {
+            LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", val);
+        }
         EC_NULL( volume->v_maccodepage = strdup(val) );
+    }
     else
-        EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
+    EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
     bstring dbpath;
     EC_NULL_LOG( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
@@ -978,8 +992,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
 
             /* check if user home matches our "basedir regex" */
-            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL)
+            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
+                LOG(log_error, logtype_afpd, "\"basedir regex =\" must be defined in [Homes] section");
                 continue;
+            }
             LOG(log_debug, logtype_afpd, "readvolfile: basedir regex: '%s'", basedir);
 
             if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
@@ -1010,10 +1026,12 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         /* do variable substitution for volume name */
         if (STRCMP(secname, ==, INISEC_HOMES)) {
-            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home"))
-                strlcpy(tmp, p, MAXPATHLEN);
-            else
-                strlcpy(tmp, p, MAXPATHLEN);
+            p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+            if (strstr(p, "$u") == NULL) {
+                LOG(log_warning, logtype_afpd, "home name must contain $u.");
+                p = "$u's home";
+            }
+            strlcpy(tmp, p, MAXPATHLEN);
         } else {
             strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
         }
@@ -1110,7 +1128,7 @@ int load_charset(struct vol *vol)
  * @param obj       (r) handle
  * @param delvol_fn (r) callback called for deleted volumes
  */
-int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
+int load_volumes(AFPObj *obj, void (*delvol_fn)(const AFPObj *obj, struct vol *))
 {
     EC_INIT;
     int fd = -1;
@@ -1166,7 +1184,7 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
         if (vol->v_deleted) {
             LOG(log_debug, logtype_afpd, "load_volumes: deleted: %s", vol->v_localname);
             if (delvol_fn)
-                delvol_fn(vol);
+                delvol_fn(obj, vol);
             vol = Volumes;
         }
     }
@@ -1345,6 +1363,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     /* do variable substitution for volume name */
     p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+    if (strstr(p, "$u") == NULL)
+        p = "$u's home";
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, volpath, NULL) );
 
@@ -1380,7 +1400,7 @@ struct vol *getvolbyname(const char *name)
 /*!
  * Initialize an AFPObj and options from ini config file
  */
-int afp_config_parse(AFPObj *AFPObj)
+int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
     EC_INIT;
     dictionary *config;
@@ -1390,11 +1410,14 @@ int afp_config_parse(AFPObj *AFPObj)
     char *q, *r;
     char val[MAXVAL];
 
+    if (processname != NULL)
+        set_processname(processname);
+
     AFPObj->afp_version = 11;
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
-    options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | AFPObj->cmdlineflags;
+    options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
         return -1;
@@ -1403,6 +1426,8 @@ int afp_config_parse(AFPObj *AFPObj)
     /* [Global] */
     options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
+
+    setuplog(options->logconfig, options->logfile);
 
     /* "server options" boolean options */
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
@@ -1417,17 +1442,19 @@ int afp_config_parse(AFPObj *AFPObj)
         options->flags |= OPTION_KEEPSESSIONS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
         options->flags |= OPTION_CLOSEVOL;
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 1))
+    if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))
         options->flags |= OPTION_SERVERNOTIF;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
+        options->flags |= OPTION_SHARE_RESERV;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
         options->passwdbits |= PASSWD_SET;
 
     /* figure out options w values */
-    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",      "");
+    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
     options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
     options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",_PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
@@ -1513,38 +1540,52 @@ int afp_config_parse(AFPObj *AFPObj)
 
     /* unix charset is in [G] only */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
-        options->unixcharset = CH_UNIX;
-        options->unixcodepage = strdup("LOCALE");
+        options->unixcodepage = strdup("UTF8");
+        charset_names[CH_UNIX] = strdup("UTF8");
     } else {
-        if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
-            options->unixcharset = CH_UNIX;
-            options->unixcodepage = strdup("LOCALE");
-            LOG(log_warning, logtype_afpd, "Setting unix charset to '%s' failed", p);
-        } else {
-            options->unixcodepage = strdup(p);
+        if (strcasecmp(p, "LOCALE") == 0) {
+#if defined(CODESET)
+            setlocale(LC_ALL, "");
+            p = nl_langinfo(CODESET);
+            LOG(log_debug, logtype_afpd, "Locale charset is '%s'", p);
+#else /* system doesn't have LOCALE support */
+            LOG(log_warning, logtype_afpd, "system doesn't have LOCALE support");
+            p = strdup("UTF8");
+#endif
         }
+        if (strcasecmp(p, "UTF-8") == 0) {
+            p = strdup("UTF8");
+        }
+        options->unixcodepage = strdup(p);
+        charset_names[CH_UNIX] = strdup(p);
     }
+    options->unixcharset = CH_UNIX;
+    LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
 
-    /* vol charset is in [G[ and [V] */
+    /* vol charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
-        options->volcodepage = strdup("UTF8");
+        options->volcodepage = strdup(options->unixcodepage);
     } else {
+        if (strcasecmp(p, "UTF-8") == 0) {
+            p = strdup("UTF8");
+        }
         options->volcodepage = strdup(p);
     }
-	
+    LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
+    
     /* mac charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
-        options->maccharset = CH_MAC;
         options->maccodepage = strdup("MAC_ROMAN");
+        charset_names[CH_MAC] = strdup("MAC_ROMAN");
     } else {
-        if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
-            options->maccharset = CH_MAC;
-            options->maccodepage = strdup("MAC_ROMAN");
-            LOG(log_warning, logtype_afpd, "Setting mac charset to '%s' failed", p);
-        } else {
-            options->maccodepage = strdup(p);
+        if (strncasecmp(p, "MAC", 3) != 0) {
+            LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", p);
         }
+        options->maccodepage = strdup(p);
+        charset_names[CH_MAC] = strdup(p);
     }
+    options->maccharset = CH_MAC;
+    LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);
 
     /* Check for sane values */
     if (options->tickleval <= 0)

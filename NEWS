@@ -1,3 +1,22 @@
+Changes in 3.0 alpha3
+=====================
+
+* NEW: afpd: Per volume "login message", NetAFP bug ID #18
+* NEW: afpd: Cross-platform locking (share modes) on Solaris and derivates
+       with Solaris CIFS/SMB server. Uses new Solaris fcntl F_SHARE share
+       reservation locking primitives. Enabled by default, set global
+       "solaris share reservations" option to false to disable it.
+* NEW: ad: ad set subcommand for changing Mac metadata on the server
+* UPD: unix charset is UTF8 by default
+       vol charset is same value as unix charset by default
+* UPD: .AppleDesktop/ are stored in $localstatedir/netatalk/CNID
+       (default: /var/netatalk/CNID), databases found in AFP volumes are
+       automatically moved
+* FIX: afpd: Server info packet was malformed resulting in broken
+       server names being displayed on clients
+* FIX: afpd: Byte order detection. Fixes an error where Netatalk on
+       OpenIndiana returned wrong volume size information.
+
 Changes in 3.0 alpha2
 =====================
 

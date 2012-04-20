@@ -35,7 +35,7 @@
 
 static void usage_main(void)
 {
-    printf("Usage: ad ls|cp|rm|mv|find [file|dir, ...]\n");
+    printf("Usage: ad ls|cp|rm|mv|set|find [file|dir, ...]\n");
     printf("       ad -v|--version\n");
 }
 
@@ -48,15 +48,15 @@ int main(int argc, char **argv)
 {
     AFPObj obj = { 0 };
 
-    setuplog("default:note", "/dev/tty");
-
     if (argc < 2) {
         usage_main();
         return 1;
     }
 
-    if (afp_config_parse(&obj) != 0)
+    if (afp_config_parse(&obj, "ad") != 0)
         return 1;
+
+    setuplog("default:note", "/dev/tty");
 
     if (load_volumes(&obj, NULL) != 0)
         return 1;
@@ -69,6 +69,8 @@ int main(int argc, char **argv)
         return ad_rm(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "mv"))
         return ad_mv(argc, argv, &obj);
+    else if (STRCMP(argv[1], ==, "set"))
+        return ad_set(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "find"))
         return ad_find(argc, argv, &obj);
     else if (STRCMP(argv[1], ==, "-v")) {

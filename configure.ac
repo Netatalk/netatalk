@@ -23,8 +23,7 @@ AC_PROG_PERL
 AC_PROG_GREP
 AC_PROG_PS
 AM_PROG_CC_C_O
-
-dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
 AC_C_INLINE
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
@@ -50,6 +49,7 @@ AC_CHECK_HEADERS([sys/mount.h], , ,
 #include <sys/param.h>
 #endif
 ])
+AC_CHECK_TYPES([fshare_t], [], [], [[#include <fcntl.h>]])
 
 AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 

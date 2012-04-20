@@ -92,7 +92,7 @@ static void afp_dsi_close(AFPObj *obj)
         }
     }
 
-    close_all_vol();
+    close_all_vol(obj);
     if (obj->logout)
         (*obj->logout)();
 

@@ -61,9 +61,9 @@ extern void _log(enum logtype lt, char *fmt, ...);
 
 extern int ad_ls(int argc, char **argv, AFPObj *obj);
 extern int ad_cp(int argc, char **argv, AFPObj *obj);
-
 extern int ad_rm(int argc, char **argv, AFPObj *obj);
 extern int ad_mv(int argc, char **argv, AFPObj *obj);
+extern int ad_set(int argc, char **argv, AFPObj *obj);
 extern int ad_find(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */

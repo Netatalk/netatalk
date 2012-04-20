@@ -7,15 +7,12 @@
    @version 3.0
    @brief   Parser for ini files.
 */
-/*--------------------------------------------------------------------------*/
-/*
-    $Id: iniparser.c,v 2.19 2011-03-02 20:15:13 ndevilla Exp $
-    $Revision: 2.19 $
-    $Date: 2011-03-02 20:15:13 $
-*/
+
 /*---------------------------- Includes ------------------------------------*/
 #include <ctype.h>
+
 #include <atalk/iniparser.h>
+#include <atalk/logger.h>
 
 /*---------------------------- Defines -------------------------------------*/
 #define ASCIILINESZ         (1024)
@@ -544,7 +541,7 @@ dictionary * iniparser_load(const char * ininame)
     dictionary * dict ;
 
     if ((inifile=fopen(ininame, "r"))==NULL) {
-        fprintf(stderr, "iniparser: cannot open %s\n", ininame);
+        LOG(logtype_default, log_error, "iniparser: cannot open \"%s\"", ininame);
         return NULL ;
     }
 
@@ -577,10 +574,8 @@ dictionary * iniparser_load(const char * ininame)
             continue;
         /* Safety check against buffer overflows */
         if (line[len]!='\n') {
-            fprintf(stderr,
-                    "iniparser: input line too long in %s (%d)\n",
-                    ininame,
-                    lineno);
+            LOG(logtype_default, log_error, "iniparser: input line too long in \"%s\" (lineno: %d)",
+                ininame, lineno);
             dictionary_del(dict);
             fclose(in);
             return NULL ;
@@ -609,7 +604,7 @@ dictionary * iniparser_load(const char * ininame)
         case LINE_VALUE:
             if (strcmp(key, "include") == 0) {
                 if ((include = fopen(val, "r")) == NULL) {
-                    fprintf(stderr, "iniparser: cannot open %s\n", val);
+                    LOG(logtype_default, log_error, "iniparser: cannot open \"%s\"", val);
                     continue;
                 }
                 in = include;
@@ -618,9 +613,8 @@ dictionary * iniparser_load(const char * ininame)
             errs = dictionary_set(dict, section, key, val) ;
             break ;
         case LINE_ERROR:
-            fprintf(stderr, "iniparser: syntax error in %s (%d):\n",
-                    ininame, lineno);
-            fprintf(stderr, "-> %s\n", line);
+            LOG(logtype_default, log_error, "iniparser: syntax error in %s (lineno: %d): %s",
+                ininame, lineno, line);
             errs++ ;
             break;
         default:
@@ -629,7 +623,7 @@ dictionary * iniparser_load(const char * ininame)
         memset(line, 0, ASCIILINESZ);
         last=0;
         if (errs<0) {
-            fprintf(stderr, "iniparser: memory allocation failure\n");
+            LOG(logtype_default, log_error, "iniparser: memory allocation failure");
             break ;
         }
     }

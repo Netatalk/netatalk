@@ -363,9 +363,10 @@ static size_t status_directorynames(char *data,
     offset = ntohs(offset);
     data += offset;
 
-    char *DirectoryNamesCount = data++, *DirectoryNames = data;
-    *DirectoryNamesCount = 0;
+    char *DirectoryNamesCount = data++;
+    char *DirectoryNames = data;
     size_t size = sizeof(uint8_t);
+    *DirectoryNamesCount = 0;
 
     if (!uam_gss_enabled())
         goto offset_calc;
@@ -445,16 +446,14 @@ static size_t status_directorynames(char *data,
                          strlen(principal),
                          principal);
 
-    // XXX: should this be krb5_xfree?
-    krb5_free_unparsed_name(context, principal);
+    free(principal);
     goto krb5_cleanup;
 
 krb5_error:
     if (ret) {
         error_msg = krb5_get_error_message(context, ret);
-        LOG(log_error, logtype_afpd,
-            "status:DirectoryNames: Kerberos error: %s",
-            (char *) error_msg);
+        LOG(log_note, logtype_afpd, "Can't get principal from default keytab: %s",
+            (char *)error_msg);
         krb5_free_error_message(context, error_msg);
     }
 
@@ -479,8 +478,7 @@ krb5_cleanup:
 
 offset_calc:
     /* Calculate and store offset for UTF8ServerName */
-    if (uam_gss_enabled())
-        *diroffset += sizeof(uint16_t);
+    *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
     memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
@@ -600,7 +598,7 @@ void status_init(AFPObj *obj, DSI *dsi)
                  options->flags & OPTION_SERVERNOTIF,
                  (options->fqdn || ipok),
                  options->passwdbits, 
-                 uam_gss_enabled(),
+                 1,
                  options->flags);
     /* returns offset to signature offset */
     c = status_server(status, options->hostname, options);

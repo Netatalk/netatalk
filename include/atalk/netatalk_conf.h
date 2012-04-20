@@ -20,10 +20,10 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-extern int        afp_config_parse(AFPObj *obj);
+extern int        afp_config_parse(AFPObj *obj, char *processname);
 
 extern int        load_charset(struct vol *vol);
-extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *));
+extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(const AFPObj *obj, struct vol *));
 extern void       unload_volumes(AFPObj *obj);
 extern struct vol *getvolumes(void);
 extern struct vol *getvolbyvid(const uint16_t);
@@ -31,4 +31,6 @@ extern struct vol *getvolbypath(AFPObj *obj, const char *path);
 extern struct vol *getvolbyname(const char *name);
 extern void       volume_free(struct vol *vol);
 extern void       volume_unlink(struct vol *volume);
+
+extern char* charset_names[];
 #endif
