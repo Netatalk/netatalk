@@ -23,8 +23,7 @@ AC_PROG_PERL
 AC_PROG_GREP
 AC_PROG_PS
 AM_PROG_CC_C_O
-
-dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
 AC_C_INLINE
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
