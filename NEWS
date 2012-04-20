@@ -9,6 +9,9 @@ Changes in 3.0 alpha3
 * NEW: ad: ad set subcommand for changing Mac metadata on the server
 * UPD: unix charset is UTF8 by default
        vol charset is same value as unix charset by default
+* UPD: .AppleDesktop/ are stored in $localstatedir/netatalk/CNID
+       (default: /var/netatalk/CNID), databases found in AFP volumes are
+       automatically moved
 * FIX: afpd: Server info packet was malformed resulting in broken
        server names being displayed on clients
 * FIX: afpd: Byte order detection. Fixes an error where Netatalk on
