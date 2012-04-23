@@ -1,13 +1,14 @@
 dnl configure.ac for netatalk
 
-AC_INIT(etc/afpd/main.c)
+AC_INIT
+AC_CONFIG_SRCDIR([etc/afpd/main.c])
 
 NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs.
@@ -17,8 +18,7 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+LT_INIT([dlopen])
 AC_PROG_PERL
 AC_PROG_GREP
 AC_PROG_PS
@@ -56,9 +56,9 @@ AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]
 dnl --------------------------------------------------------------------------
 dnl check if dlsym needs to add an underscore, uses libtool macros 
 dnl --------------------------------------------------------------------------
-AC_LTDL_DLLIB
+LT_LIB_DLLOAD
 AC_CHECK_FUNCS(dlopen dlsym dlclose)
-AC_LTDL_DLSYM_USCORE
+LT_FUNC_DLSYM_USCORE
 if test x"$libltdl_cv_need_uscore" = xyes; then
     AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
 fi
@@ -217,7 +217,7 @@ dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 dnl --------------------- generate files
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
 	bin/Makefile
 	bin/ad/Makefile
 	bin/afppasswd/Makefile
@@ -271,9 +271,10 @@ AC_OUTPUT([Makefile
 	man/man8/Makefile
 	test/Makefile
 	test/afpd/Makefile
-	],
-	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
-)
+	])
+AC_CONFIG_COMMANDS([default],[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*
+],[])
+AC_OUTPUT
 
 AC_NETATALK_LIBS_SUMMARY
 AC_NETATALK_CONFIG_SUMMARY
