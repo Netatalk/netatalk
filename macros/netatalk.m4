@@ -223,7 +223,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional sysv initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|solaris|systemd]]],
                 init_style="$withval", init_style=none
     )
     case "$init_style" in 
@@ -254,11 +254,17 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     "debian")
 	    AC_MSG_RESULT([enabling debian-style sysv support])
         ;;
+    "solaris")
+	    AC_MSG_RESULT([enabling solaris-style sysv support])
+        ;;
     "systemd")
 	    AC_MSG_RESULT([use general systemd configuration])
         ;;
+    "none")
+	    AC_MSG_RESULT([disabling init-style support])
+        ;;
     *)
-	    AC_MSG_RESULT([disabling sysv support])
+	    AC_MSG_ERROR([illegal init-style])
         ;;
     esac
     AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
