@@ -270,8 +270,6 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
     AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
     AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
-    AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-    AM_CONDITIONAL(USE_TRU64, test x$init_style = xtru64)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
     AM_CONDITIONAL(USE_GENTOO, test x$init_style = xgentoo)
     AM_CONDITIONAL(USE_DEBIAN, test x$init_style = xdebian)
