@@ -64,6 +64,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
       dsi->header.dsi_code = DSIERR_OK;
       kill(pid, SIGQUIT);
     }
+    close(ipc_fds[1]);
     dsi->proto_close(dsi);
     return child;
   }
@@ -80,6 +81,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
   }
 
   /* get rid of some stuff */
+  close(ipc_fds[0]);
   close(dsi->serversock);
   dsi->serversock = -1;
   server_child_free(serv_children); 
