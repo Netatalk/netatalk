@@ -12,6 +12,8 @@ Changes in 2.2.3
 * FIX: afpd: Dont use searchdb when doing partial name search
 * FIX: afpd: Fix a possible bug handling disconnected sessions,
        NetAFP Bug ID #16
+* FIX: afpd: Close IPC fds in afpd session child inherited from the afpd
+       master process
 * FIX: dbd: Don't remove BerkeleyDB if it's still in use by eg cnid_dbd, fixes
        bug introduced in 2.2.2
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
