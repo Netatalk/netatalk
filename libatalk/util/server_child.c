@@ -218,9 +218,6 @@ void server_child_free(server_child *children)
 
                 if (child->ipc_fds[0] != -1)
                     close(child->ipc_fds[0]);
-                if (child->ipc_fds[1] != -1)
-                    close(child->ipc_fds[1]);
-
                 if (child->clientid) {
                     free(child->clientid);
                 }

@@ -66,7 +66,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
   default: /* parent */
     /* using SIGQUIT is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
-    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds)) ==  NULL) {
+    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds[0])) ==  NULL) {
       LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
@@ -74,6 +74,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
       dsi->header.dsi_code = DSIERR_OK;
       kill(pid, SIGQUIT);
     }
+    close(ipc_fds[1]);
     dsi->proto_close(dsi);
     return child;
   }
