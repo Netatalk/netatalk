@@ -385,18 +385,19 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
             switch (errno) {
             case EINTR:
             case EAGAIN:
-#if defined(SOLARIS) || defined(FREEBSD)
+                len = 0;
 #ifdef HAVE_SENDFILEV
                 len = (size_t)nwritten;
 #else
+#if defined(SOLARIS) || defined(FREEBSD)
                 if (pos > offset) {
                     /* we actually have sent sth., adjust counters and keep trying */
                     len = pos - offset;
-                    written += len;
                     offset = pos;
                 }
-#endif /* HAVE_SENDFILEV */
 #endif /* defined(SOLARIS) || defined(FREEBSD) */
+#endif /* HAVE_SENDFILEV */
+
                 if (dsi_peek(dsi)) {
                     ret = -1;
                     goto exit;
@@ -424,7 +425,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
             vec[0].sfv_len -= len;
         }
 #endif  /* HAVE_SENDFILEV */
-
+        LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: wrote: %zd", len);
         written += len;
     }
 #ifdef HAVE_SENDFILEV
