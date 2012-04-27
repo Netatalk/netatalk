@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
+ * Copyright (c) 2010,2011,2012 Frank Lahm <franklahm@googlemail.com>
  * All rights reserved. See COPYRIGHT.
  *
  * this file provides the following functions:
@@ -30,8 +31,6 @@
 #include <atalk/dsi.h>
 #include <atalk/util.h>
 
-#define min(a,b)  ((a) < (b) ? (a) : (b))
-
 #ifndef MSG_MORE
 #define MSG_MORE 0x8000
 #endif
@@ -39,6 +38,17 @@
 #ifndef MSG_DONTWAIT
 #define MSG_DONTWAIT 0x40
 #endif
+
+/* Pack a DSI header in wire format */
+static void dsi_header_pack_reply(const DSI *dsi, char *buf)
+{
+    buf[0] = dsi->header.dsi_flags;
+    buf[1] = dsi->header.dsi_command;
+    memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));           
+    memcpy(buf + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
+    memcpy(buf + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
+    memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
+}
 
 /*
  * afpd is sleeping too much while trying to send something.
@@ -140,7 +150,7 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
     nbe = dsi->eof - dsi->start;
 
     if (nbe > 0) {
-        nbe = min((size_t)nbe, count);
+        nbe = MIN((size_t)nbe, count);
         memcpy(buf, dsi->start, nbe);
         dsi->start += nbe;
 
@@ -200,7 +210,7 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t len
   }
 
   /* fill the buffer with 8192 bytes or until buffer is full */
-  buflen = min(8192, dsi->end - dsi->eof);
+  buflen = MIN(8192, dsi->end - dsi->eof);
   if (buflen > 0) {
       ssize_t ret;
       ret = read(dsi->socket, dsi->eof, buflen);
@@ -318,18 +328,6 @@ exit:
   dsi->in_write--;
   return written;
 }
-
-/* Pack a DSI header in wire format */
-static void dsi_header_pack_reply(const DSI *dsi, char *buf)
-{
-    buf[0] = dsi->header.dsi_flags;
-    buf[1] = dsi->header.dsi_command;
-    memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));           
-    memcpy(buf + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
-    memcpy(buf + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
-    memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
-}
-
 
 /* ---------------------------------
 */
@@ -507,14 +505,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   if (dsi->flags & DSI_DISCONNECTED)
       return 0;
 
-  block[0] = dsi->header.dsi_flags;
-  block[1] = dsi->header.dsi_command;
-  memcpy(block + 2, &dsi->header.dsi_requestID, 
-	 sizeof(dsi->header.dsi_requestID));
-  memcpy(block + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
-  memcpy(block + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
-  memcpy(block + 12, &dsi->header.dsi_reserved,
-	 sizeof(dsi->header.dsi_reserved));
+  dsi_header_pack_reply(dsi, block);
 
   if (!length) { /* just write the header */
       LOG(log_maxdebug, logtype_dsi, "dsi_stream_send(%u bytes): DSI header, no data", sizeof(block));
@@ -602,7 +593,7 @@ int dsi_stream_receive(DSI *dsi)
   dsi->clientID = ntohs(dsi->header.dsi_requestID);
   
   /* make sure we don't over-write our buffers. */
-  dsi->cmdlen = min(ntohl(dsi->header.dsi_len), DSI_CMDSIZ);
+  dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), DSI_CMDSIZ);
   if (dsi_stream_read(dsi, dsi->commands, dsi->cmdlen) != dsi->cmdlen) 
     return 0;
 
