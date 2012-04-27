@@ -15,16 +15,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+
+#ifdef HAVE_SENDFILEV
+#include <sys/sendfile.h>
+#endif
 
 #include <atalk/logger.h>
 #include <atalk/dsi.h>
@@ -263,7 +263,7 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
   size_t written;
   ssize_t len;
-  unsigned int flags = 0;
+  unsigned int flags;
 
   dsi->in_write++;
   written = 0;
@@ -272,6 +272,11 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 
   if (dsi->flags & DSI_DISCONNECTED)
       return -1;
+
+  if (mode & DSI_MSG_MORE)
+      flags = MSG_MORE;
+  else
+      flags = 0;
 
   while (written < length) {
       len = send(dsi->socket, (uint8_t *) data + written, length - written, flags);
@@ -314,72 +319,127 @@ exit:
   return written;
 }
 
+/* Pack a DSI header in wire format */
+static void dsi_header_pack_reply(const DSI *dsi, char *buf)
+{
+    buf[0] = dsi->header.dsi_flags;
+    buf[1] = dsi->header.dsi_command;
+    memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));           
+    memcpy(buf + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
+    memcpy(buf + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
+    memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
+}
+
 
 /* ---------------------------------
 */
 #ifdef WITH_SENDFILE
-ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t length)
+ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const size_t length, const int err)
 {
-  int ret = 0;
-  size_t written;
-  ssize_t len;
-  off_t pos = offset;
-
-  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file(send %zd bytes): START", length);
-
-  if (dsi->flags & DSI_DISCONNECTED)
-      return -1;
-
-  dsi->in_write++;
-  written = 0;
-
-  while (written < length) {
-    len = sys_sendfile(dsi->socket, fromfd, &pos, length - written);
-        
-    if (len < 0) {
-      if (errno == EINTR)
-          continue;
-      if (errno == EINVAL || errno == ENOSYS) {
-          ret = -1;
-          goto exit;
-      }          
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-#if defined(SOLARIS) || defined(FREEBSD)
-          if (pos > offset) {
-              /* we actually have sent sth., adjust counters and keep trying */
-              len = pos - offset;
-              written += len;
-              offset = pos;
-          }
+    int ret = 0;
+    size_t written = 0;
+    size_t total = length;
+    ssize_t len;
+    off_t pos = offset;
+    char block[DSI_BLOCKSIZ];
+#ifdef HAVE_SENDFILEV
+    int sfvcnt;
+    struct sendfilevec vec[2];
+    ssize_t nwritten;
 #endif
-          if (dsi_peek(dsi)) {
-              /* can't go back to blocking mode, exit, the next read
-                 will return with an error and afpd will die.
-              */
-              break;
-          }
-          continue;
-      }
-      LOG(log_error, logtype_dsi, "dsi_stream_read_file: %s", strerror(errno));
-      break;
-    }
-    else if (!len) {
-        /* afpd is going to exit */
-          ret = -1;
-          goto exit;
-    }
-    else 
-        written += len;
-  }
 
-  dsi->write_count += written;
+    LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file(off: %jd, len: %zu)", (intmax_t)offset, length);
+
+    if (dsi->flags & DSI_DISCONNECTED)
+        return -1;
+
+    dsi->in_write++;
+
+    dsi->flags |= DSI_NOREPLY;
+    dsi->header.dsi_flags = DSIFL_REPLY;
+    dsi->header.dsi_len = htonl(length);
+    dsi->header.dsi_code = htonl(err);
+    dsi_header_pack_reply(dsi, block);
+
+#ifdef HAVE_SENDFILEV
+    total += DSI_BLOCKSIZ;
+    sfvcnt = 2;
+    vec[0].sfv_fd = SFV_FD_SELF;
+    vec[0].sfv_flag = 0;
+    vec[0].sfv_off = block;
+    vec[0].sfv_len = DSI_BLOCKSIZ;
+    vec[1].sfv_fd = fromfd;
+    vec[1].sfv_flag = 0;
+    vec[1].sfv_off = offset;
+    vec[1].sfv_len = length;
+#else
+    dsi_stream_write(dsi, block, sizeof(block), DSI_MSG_MORE);
+#endif
+
+    while (written < total) {
+#ifdef HAVE_SENDFILEV
+        nwritten = 0;
+        len = sendfilev(dsi->socket, vec, sfvcnt, &nwritten);
+#else
+        len = sys_sendfile(dsi->socket, fromfd, &pos, total - written);
+#endif
+        if (len < 0) {
+            switch (errno) {
+            case EINTR:
+            case EAGAIN:
+#if defined(SOLARIS) || defined(FREEBSD)
+#ifdef HAVE_SENDFILEV
+                len = (size_t)nwritten;
+#else
+                if (pos > offset) {
+                    /* we actually have sent sth., adjust counters and keep trying */
+                    len = pos - offset;
+                    written += len;
+                    offset = pos;
+                }
+#endif /* HAVE_SENDFILEV */
+#endif /* defined(SOLARIS) || defined(FREEBSD) */
+                if (dsi_peek(dsi)) {
+                    ret = -1;
+                    goto exit;
+                }
+                break;
+            default:
+                LOG(log_error, logtype_dsi, "dsi_stream_read_file: %s", strerror(errno));
+                ret = -1;
+                goto exit;
+            }
+        } else if (len == 0) {
+            /* afpd is going to exit */
+            ret = -1;
+            goto exit;
+        }
+#ifdef HAVE_SENDFILEV
+        if (sfvcnt == 2 && len >= vec[0].sfv_len) {
+            vec[1].sfv_off += len - vec[0].sfv_len;
+            vec[1].sfv_len -= len - vec[0].sfv_len;
+
+            vec[0] = vec[1];
+            sfvcnt = 1;
+        } else {
+            vec[0].sfv_off += len;
+            vec[0].sfv_len -= len;
+        }
+#endif  /* HAVE_SENDFILEV */
+
+        written += len;
+    }
+#ifdef HAVE_SENDFILEV
+    written -= DSI_BLOCKSIZ;
+#endif
+    dsi->write_count += written;
 
 exit:
-  dsi->in_write--;
-  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: sent: %zd", written);
-  if (ret != 0)
-      return -1;
-  return written;
+    dsi->in_write--;
+    LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: written: %zd", written);
+    if (ret != 0)
+        return -1;
+    return written;
 }
 #endif
 

@@ -485,15 +485,17 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             return AFPERR_PARAM;
         }
 
+#ifndef WITH_SENDFILE
         if ((buflen = dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0)
             goto geticon_exit;
+#endif
 
         *rbuflen = buflen;
         /* do to the streaming nature, we have to exit if we encounter
          * a problem. much confusion results otherwise. */
         while (*rbuflen > 0) {
 #ifdef WITH_SENDFILE
-            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
+            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize, AFP_OK) < 0) {
                 switch (errno) {
                 case ENOSYS:
                 case EINVAL:  /* there's no guarantee that all fs support sendfile */

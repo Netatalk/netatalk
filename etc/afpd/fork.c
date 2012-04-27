@@ -739,10 +739,18 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t
 
 #undef UNLOCKBIT
 
-static ssize_t read_file(struct ofork *ofork, int eid,
-                         off_t offset, u_char nlmask,
-                         u_char nlchar, char *rbuf,
-                         size_t *rbuflen)
+/*!
+ * Read *rbuflen bytes from fork at offset
+ *
+ * @param ofork    (r)  fork handle
+ * @param eid      (r)  data fork or ressource fork entry id
+ * @param offset   (r)  offset
+ * @param rbuf     (r)  data buffer
+ * @param rbuflen  (rw) in: number of bytes to read, out: bytes read
+ *
+ * @return         AFP status code
+ */
+static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbuf, size_t *rbuflen)
 {
     ssize_t cc;
     int eof = 0;
@@ -754,53 +762,23 @@ static ssize_t read_file(struct ofork *ofork, int eid,
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
-    if ( (size_t)cc < *rbuflen ) {
-        eof = 1;
-    }
-
-    /*
-     * Do Newline check.
-     */
-    if ( nlmask != 0 ) {
-        for ( p = rbuf, q = p + cc; p < q; ) {
-            if (( *p++ & nlmask ) == nlchar ) {
-                break;
-            }
-        }
-        if ( p != q ) {
-            cc = p - rbuf;
-            eof = 0;
-        }
-    }
-
     *rbuflen = cc;
-    if ( eof ) {
-        return( AFPERR_EOF );
-    }
+
+    if ((size_t)cc < *rbuflen)
+        return AFPERR_EOF;
     return AFP_OK;
 }
 
-/* -----------------------------
- * with ddp, afp_read can return fewer bytes than in reqcount
- * so return EOF only if read actually past end of file not
- * if offset +reqcount > size of file
- * e.g.:
- * getfork size ==> 10430
- * read fork offset 0 size 10752 ????  ==> 4264 bytes (without EOF)
- * read fork offset 4264 size 6128 ==> 4264 (without EOF)
- * read fork offset 9248 size 1508 ==> 1182 (EOF)
- * 10752 is a bug in Mac 7.5.x finder
- *
- * with dsi, should we check that reqcount < server quantum?
- */
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
-    struct ofork    *ofork;
-    off_t       offset, saveoff, reqcount, savereqcount;
-    ssize_t     cc, err;
-    int         eid;
-    uint16_t       ofrefnum;
-    u_char      nlmask, nlchar;
+    DSI          *dsi = obj->dsi;
+    struct ofork *ofork;
+    off_t        offset, saveoff, reqcount, savereqcount, size;
+    ssize_t      cc, err;
+    int          eid;
+    uint16_t     ofrefnum;
+
+    /* we break the AFP spec here by not supporting nlmask and nlchar anymore */
 
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
@@ -816,27 +794,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         err = AFPERR_ACCESS;
         goto afp_read_err;
     }
-    offset   = get_off_t(&ibuf, is64);
-    reqcount = get_off_t(&ibuf, is64);
-
-    LOG(log_debug, logtype_afpd,
-        "afp_read(off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)", offset, reqcount,
-        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
-
-    if (is64) {
-        nlmask = nlchar = 0;
-    }
-    else {
-        nlmask = *ibuf++;
-        nlchar = *ibuf++;
-    }
-    /* if we wanted to be picky, we could add in the following
-     * bit: if (afp_version == 11 && !(nlmask == 0xFF || !nlmask))
-     */
-    if (reqcount < 0 || offset < 0) {
-        err = AFPERR_PARAM;
-        goto afp_read_err;
-    }
 
     if ( ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
@@ -844,6 +801,34 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         eid = ADEID_RFORK;
     } else { /* fork wasn't opened. this should never really happen. */
         err = AFPERR_ACCESS;
+        goto afp_read_err;
+    }
+
+    offset   = get_off_t(&ibuf, is64);
+    reqcount = get_off_t(&ibuf, is64);
+
+    /* reqcount isn't always truthful. we need to deal with that. */
+    size = ad_size(ofork->of_ad, eid);
+
+    LOG(log_debug, logtype_afpd,
+        "afp_read(off: %" PRIu64 ", len: %" PRIu64 ", fork: %s, size: %" PRIu64 ")",
+        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r", size);
+
+    /* subtract off the offset */
+    if (reqcount + offset > size) {
+        reqcount = size - offset;
+        err = AFPERR_EOF;
+    }
+
+    savereqcount = reqcount;
+    saveoff = offset;
+
+    LOG(log_debug, logtype_afpd,
+        "afp_read(off: %" PRIu64 ", len: %" PRIu64 ", fork: %s)",
+        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+
+    if (reqcount < 0 || offset < 0) {
+        err = AFPERR_PARAM;
         goto afp_read_err;
     }
 
@@ -856,94 +841,72 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd)",
         of_name(ofork), (intmax_t)offset, (intmax_t)reqcount);
 
-    savereqcount = reqcount;
-    saveoff = offset;
-    if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, saveoff, savereqcount,ofork->of_refnum) < 0) {
-        err = AFPERR_LOCK;
-        goto afp_read_err;
-    }
+   if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+       if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
+           err = AFPERR_LOCK;
+           goto afp_read_err;
+       }
+   }
 
-    *rbuflen = MIN(reqcount, *rbuflen);
-    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): reading %jd bytes from file",
-        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
-
-    err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen);
-    if (err < 0)
-        goto afp_read_done;
-    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
-        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
-
-    /* dsi can stream requests. we can only do this if we're not checking
-     * for an end-of-line character. oh well. */
-    if ((*rbuflen < reqcount) && !nlmask) {
-        DSI    *dsi = obj->dsi;
-        off_t  size;
-
-        /* reqcount isn't always truthful. we need to deal with that. */
-        size = ad_size(ofork->of_ad, eid);
-
-        /* subtract off the offset */
-        size -= offset;
-        if (reqcount > size) {
-            reqcount = size;
-            err = AFPERR_EOF;
-        }
-
-        offset += *rbuflen;
-
-        /* dsi_readinit() returns size of next read buffer. by this point,
-         * we know that we're sending some data. if we fail, something
-         * horrible happened. */
-        if ((cc = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
-            goto afp_read_exit;
-        *rbuflen = cc;
-        /* due to the nature of afp packets, we have to exit if we get
-           an error. we can't do this with translation on. */
 #ifdef WITH_SENDFILE
-        if (!(obj->options.flags & OPTION_NOSENDFILE)) {
-            int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
-            if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) { 
-               switch (errno) {
-                case EINVAL:
-                case ENOSYS:
-                    goto afp_read_loop;
-                default:
-                    LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s", of_name(ofork), strerror(errno));
-                    goto afp_read_exit;
-                }
-            }
-
-            dsi_readdone(dsi);
-            goto afp_read_done;
+    if (!(obj->options.flags & OPTION_NOSENDFILE)) {
+        int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+        if (dsi_stream_read_file(dsi, fd, offset, reqcount, err) < 0) {
+            LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
+                of_name(ofork), strerror(errno));
+            goto afp_read_exit;
         }
-    afp_read_loop:
+        dsi_readdone(dsi);
+        goto afp_read_done;
+    }
 #endif
 
-        /* fill up our buffer. */
-        while (*rbuflen > 0) {
-            cc = read_file(ofork, eid, offset, nlmask, nlchar, rbuf,rbuflen);
-            if (cc < 0)
-                goto afp_read_exit;
+    *rbuflen = MIN(reqcount, *rbuflen);
 
-            offset += *rbuflen;
-            /* dsi_read() also returns buffer size of next allocation */
-            cc = dsi_read(dsi, rbuf, *rbuflen); /* send it off */
-            if (cc < 0)
-                goto afp_read_exit;
-            *rbuflen = cc;
-        }
-        dsi_readdone(dsi);
+    err = read_file(ofork, eid, offset, rbuf, rbuflen);
+    if (err < 0)
         goto afp_read_done;
 
-    afp_read_exit:
-        LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork), strerror(errno));
-        dsi_readdone(dsi);
-        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,ofork->of_refnum);
-        obj->exit(EXITERR_CLNT);
+    LOG(log_debug, logtype_afpd,
+        "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
+        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
+
+    offset += *rbuflen;
+
+    /*
+     * dsi_readinit() returns size of next read buffer. by this point,
+     * we know that we're sending some data. if we fail, something
+     * horrible happened.
+     */
+    if ((cc = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
+        goto afp_read_exit;
+    *rbuflen = cc;
+
+    while (*rbuflen > 0) {
+        cc = read_file(ofork, eid, offset, rbuf, rbuflen);
+        if (cc < 0)
+            goto afp_read_exit;
+
+        offset += *rbuflen;
+        /* dsi_read() also returns buffer size of next allocation */
+        cc = dsi_read(dsi, rbuf, *rbuflen); /* send it off */
+        if (cc < 0)
+            goto afp_read_exit;
+        *rbuflen = cc;
     }
+    dsi_readdone(dsi);
+    goto afp_read_done;
+
+afp_read_exit:
+    LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork), strerror(errno));
+    dsi_readdone(dsi);
+   if (obj->options.flags & OPTION_AFP_READ_LOCK)
+       ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
+    obj->exit(EXITERR_CLNT);
 
 afp_read_done:
-    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,ofork->of_refnum);
+    if (obj->options.flags & OPTION_AFP_READ_LOCK)
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
     return err;
 
 afp_read_err:
