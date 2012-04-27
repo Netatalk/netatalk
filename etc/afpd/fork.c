@@ -807,6 +807,12 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     offset   = get_off_t(&ibuf, is64);
     reqcount = get_off_t(&ibuf, is64);
 
+    /* zero request count */
+    err = AFP_OK;
+    if (!reqcount) {
+        goto afp_read_err;
+    }
+
     /* reqcount isn't always truthful. we need to deal with that. */
     size = ad_size(ofork->of_ad, eid);
 
@@ -814,10 +820,16 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         "afp_read(off: %" PRIu64 ", len: %" PRIu64 ", fork: %s, size: %" PRIu64 ")",
         offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r", size);
 
+    if (offset > size) {
+        err = AFPERR_EOF;
+
+    }
+
     /* subtract off the offset */
     if (reqcount + offset > size) {
         reqcount = size - offset;
         err = AFPERR_EOF;
+        goto afp_read_err;
     }
 
     savereqcount = reqcount;
@@ -829,12 +841,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if (reqcount < 0 || offset < 0) {
         err = AFPERR_PARAM;
-        goto afp_read_err;
-    }
-
-    /* zero request count */
-    err = AFP_OK;
-    if (!reqcount) {
         goto afp_read_err;
     }
 
