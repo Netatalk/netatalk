@@ -174,6 +174,8 @@ extern void dsi_getstatus (DSI *);
 extern void dsi_close (DSI *);
 
 #define DSI_NOWAIT 1
+#define DSI_MSG_MORE 2
+
 /* low-level stream commands -- in dsi_stream.c */
 extern ssize_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
 extern size_t dsi_stream_read (DSI *, void *, const size_t);
@@ -182,7 +184,7 @@ extern int dsi_stream_receive (DSI *);
 extern int dsi_disconnect(DSI *dsi);
 
 #ifdef WITH_SENDFILE
-extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len);
+extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err);
 #endif
 
 /* client writes -- dsi_write.c */
