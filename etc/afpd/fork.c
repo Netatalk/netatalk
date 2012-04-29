@@ -165,7 +165,7 @@ static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid, int acc
 
         int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
 
-        if (fd != -1 && fd != -2 && fcntl(fd, F_SHARE, &shmd) != 0) {
+        if (fd != -1 && fd != AD_SYMLINK && fcntl(fd, F_SHARE, &shmd) != 0) {
             LOG(log_debug, logtype_afpd, "fork_setmode: fcntl: %s", strerror(errno));
             errno = EACCES;
             return -1;

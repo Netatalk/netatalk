@@ -71,8 +71,7 @@ static int set_lock(int fd, int cmd,  struct flock *lock)
         shmdstrfromoff(lock->l_start),
         (intmax_t)lock->l_len);
 
-    if (fd == -2) {
-        /* We assign fd = -2 for symlinks -> do nothing */
+    if (fd == AD_SYMLINK) {
         if (cmd == F_GETLK)
             lock->l_type = F_UNLCK;
         return 0;

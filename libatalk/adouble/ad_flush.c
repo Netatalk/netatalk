@@ -371,7 +371,7 @@ static int ad_data_closefd(struct adouble *ad)
 {
     int ret = 0;
 
-    if (ad_data_fileno(ad) == -2) {
+    if (ad_data_fileno(ad) == AD_SYMLINK) {
         free(ad->ad_data_fork.adf_syml);
         ad->ad_data_fork.adf_syml = NULL;
     } else {
@@ -408,7 +408,7 @@ int ad_close(struct adouble *ad, int adflags)
         adflags |= ADFLAGS_HF;
 
     if ((adflags & ADFLAGS_DF)
-        && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
+        && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)
         && --ad->ad_data_fork.adf_refcount == 0) {
         if (ad_data_closefd(ad) < 0)
             err = -1;

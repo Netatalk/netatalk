@@ -55,8 +55,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
     size_t roundup;
     off_t    r_off;
 
-    if (ad_data_fileno(ad) == -2) {
-        /* It's a symlink */
+    if (ad_data_fileno(ad) == AD_SYMLINK) {
         errno = EACCES;
         return -1;
     }
