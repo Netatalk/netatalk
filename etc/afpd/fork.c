@@ -846,15 +846,16 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd)",
         of_name(ofork), (intmax_t)offset, (intmax_t)reqcount);
 
-   if (obj->options.flags & OPTION_AFP_READ_LOCK) {
-       if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
-           err = AFPERR_LOCK;
-           goto afp_read_err;
-       }
-   }
+    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+        if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
+            err = AFPERR_LOCK;
+            goto afp_read_err;
+        }
+    }
 
 #ifdef WITH_SENDFILE
-    if (!(obj->options.flags & OPTION_NOSENDFILE)) {
+    if (!(eid == ADEID_DFORK && ad_data_fileno(ofork->of_ad) == AD_SYMLINK) &&
+        !(obj->options.flags & OPTION_NOSENDFILE)) {
         int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
         if (dsi_stream_read_file(dsi, fd, offset, reqcount, err) < 0) {
             LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
