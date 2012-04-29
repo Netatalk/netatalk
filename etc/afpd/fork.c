@@ -822,14 +822,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if (offset > size) {
         err = AFPERR_EOF;
-
+        goto afp_read_err;
     }
 
     /* subtract off the offset */
     if (reqcount + offset > size) {
         reqcount = size - offset;
         err = AFPERR_EOF;
-        goto afp_read_err;
     }
 
     savereqcount = reqcount;
