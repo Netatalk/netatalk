@@ -1,6 +1,7 @@
 Changes in 3.0.1
 ================
 * FIX: afpd: Fix a Solaris 10 SPARC sendfilev bug
+* FIX: afpd: Fix a crash on FreeBSD
 * FIX: Fix possible alignment violations due to bad casts
 * FIX: dbd: Fix logging
 * UPD: Install relevant includes necessary for building programs with

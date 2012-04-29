@@ -1642,7 +1642,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
 
     va_start(args, adflags);
     if (adflags & ADFLAGS_CREATE)
-        mode = va_arg(args, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int) ? va_arg (args, int) : va_arg (args, mode_t));
     va_end(args);
 
     if (adflags & ADFLAGS_DF) {
@@ -1810,7 +1810,7 @@ int ad_openat(struct adouble  *ad,
 
     va_start(args, adflags);
     if (adflags & ADFLAGS_CREATE)
-        mode = va_arg(args, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int) ? va_arg (args, int) : va_arg (args, mode_t));
     va_end(args);
 
     EC_NEG1( ad_open(ad, path, adflags, mode) );
