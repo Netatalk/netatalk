@@ -326,6 +326,13 @@ Name of the LDAP attribute with the users short name\&.
 .sp
 .RE
 .PP
+ldap uuid string = \fISTRING\fR \fB(G)\fR
+.RS 4
+Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
+.sp
+Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
+.RE
+.PP
 ldap group attr = \fIdn\fR \fB(G)\fR
 .RS 4
 Name of the LDAP attribute with the groups short name\&.
@@ -559,6 +566,11 @@ service registration if Avahi or mDNSResponder were compiled in\&.
 admin group = \fIgroup\fR \fB(G)\fR
 .RS 4
 Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
+.RE
+.PP
+afp read locks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Whether to apply locks to the byte region read in FPRead calls\&. The AFP spec mandates this, but it\'s not really in line with UNIX semantics and is a performance hug\&.
 .RE
 .PP
 basedir regex = \fIregex\fR \fB(H)\fR
