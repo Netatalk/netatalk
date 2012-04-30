@@ -199,7 +199,6 @@ void server_child_free(server_child *children)
     server_child_fork *fork;
     struct server_child_data *child, *tmp;
     int i, j;
-    pid_t pid = getpid();
 
     for (i = 0; i < children->nforks; i++) {
         fork = (server_child_fork *) children->fork + i;

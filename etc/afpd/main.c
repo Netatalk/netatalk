@@ -412,7 +412,7 @@ int main(int ac, char **av)
         }
 
         for (int i = 0; i < fdset_used; i++) {
-            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP)) {
+            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
                 switch (polldata[i].fdtype) {
 
                 case LISTEN_FD:
