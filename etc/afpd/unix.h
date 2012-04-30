@@ -213,10 +213,8 @@ extern int uquota_getvolspace (const AFPObj *obj, struct vol *, VolSpace *, VolS
 
 extern struct afp_options default_options;
 
-extern int setdeskmode      (const mode_t);
 extern int setdirunixmode   (const struct vol *, const char *, mode_t);
 extern int setdirmode       (const struct vol *, const char *, mode_t);
-extern int setdeskowner     (const uid_t, const gid_t);
 extern int setdirowner      (const struct vol *, const char *, const uid_t, const gid_t);
 extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);

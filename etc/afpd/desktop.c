@@ -31,12 +31,165 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/unix.h>
 #include <atalk/bstrlib.h>
+#include <atalk/errchk.h>
 
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
 #include "desktop.h"
 #include "mangle.h"
+
+#define EXEC_MODE (S_IXGRP | S_IXUSR | S_IXOTH)
+
+int setdeskmode(const struct vol *vol, const mode_t mode)
+{
+    EC_INIT;
+    char		wd[ MAXPATHLEN + 1];
+    struct stat         st;
+    char		modbuf[ 12 + 1], *m;
+    struct dirent	*deskp, *subp;
+    DIR			*desk, *sub;
+
+    if (!dir_rx_set(mode)) {
+        /* want to remove read and search access to owner it will screw the volume */
+        return -1 ;
+    }
+    if ( getcwd( wd , MAXPATHLEN) == NULL ) {
+        return( -1 );
+    }
+
+    bstring dtpath = bfromcstr(vol->v_dbpath);
+    bcatcstr(dtpath, "/" APPLEDESKTOP);
+
+    EC_NEG1( chdir(bdata(dtpath)) );
+
+    if (( desk = opendir( "." )) == NULL ) {
+        if ( chdir( wd ) < 0 ) {
+            LOG(log_error, logtype_afpd, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
+        }
+        EC_FAIL;
+    }
+    for ( deskp = readdir( desk ); deskp != NULL; deskp = readdir( desk )) {
+        if ( strcmp( deskp->d_name, "." ) == 0 ||
+                strcmp( deskp->d_name, ".." ) == 0 || strlen( deskp->d_name ) > 2 ) {
+            continue;
+        }
+        strcpy( modbuf, deskp->d_name );
+        strcat( modbuf, "/" );
+        m = strchr( modbuf, '\0' );
+        if (( sub = opendir( deskp->d_name )) == NULL ) {
+            continue;
+        }
+        for ( subp = readdir( sub ); subp != NULL; subp = readdir( sub )) {
+            if ( strcmp( subp->d_name, "." ) == 0 ||
+                    strcmp( subp->d_name, ".." ) == 0 ) {
+                continue;
+            }
+            *m = '\0';
+            strcat( modbuf, subp->d_name );
+            /* XXX: need to preserve special modes */
+            if (lstat(modbuf, &st) < 0) {
+                LOG(log_error, logtype_afpd, "setdeskmode: stat %s: %s",fullpathname(modbuf), strerror(errno) );
+                continue;
+            }
+
+            if (S_ISDIR(st.st_mode)) {
+                if ( chmod_acl( modbuf,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+                     LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
+                }
+            } else if ( chmod_acl( modbuf,  mode & ~EXEC_MODE ) < 0 && errno != EPERM ) {
+                LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
+            }
+
+        }
+        closedir( sub );
+        /* XXX: need to preserve special modes */
+        if ( chmod_acl( deskp->d_name,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+            LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(deskp->d_name), strerror(errno) );
+        }
+    }
+    closedir( desk );
+    if ( chdir( wd ) < 0 ) {
+        LOG(log_error, logtype_afpd, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
+        EC_FAIL;
+    }
+    /* XXX: need to preserve special modes */
+    if ( chmod_acl(bdata(dtpath),  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+        LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s", bdata(dtpath), strerror(errno));
+    }
+
+EC_CLEANUP:
+    bdestroy(dtpath);
+    EC_EXIT;
+}
+
+int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
+{
+    EC_INIT;
+    char		wd[ MAXPATHLEN + 1];
+    char		modbuf[12 + 1], *m;
+    struct dirent	*deskp, *subp;
+    DIR			*desk, *sub;
+
+    if ( getcwd( wd, MAXPATHLEN ) == NULL ) {
+        return( -1 );
+    }
+
+    bstring dtpath = bfromcstr(vol->v_dbpath);
+    bcatcstr(dtpath, "/" APPLEDESKTOP);
+
+    EC_NEG1( chdir(bdata(dtpath)) );
+    
+    if (( desk = opendir( "." )) == NULL ) {
+        if ( chdir( wd ) < 0 ) {
+            LOG(log_error, logtype_afpd, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
+        }
+        EC_FAIL;
+    }
+    for ( deskp = readdir( desk ); deskp != NULL; deskp = readdir( desk )) {
+        if ( strcmp( deskp->d_name, "." ) == 0 ||
+                strcmp( deskp->d_name, ".." ) == 0 ||
+                strlen( deskp->d_name ) > 2 ) {
+            continue;
+        }
+        strcpy( modbuf, deskp->d_name );
+        strcat( modbuf, "/" );
+        m = strchr( modbuf, '\0' );
+        if (( sub = opendir( deskp->d_name )) == NULL ) {
+            continue;
+        }
+        for ( subp = readdir( sub ); subp != NULL; subp = readdir( sub )) {
+            if ( strcmp( subp->d_name, "." ) == 0 ||
+                    strcmp( subp->d_name, ".." ) == 0 ) {
+                continue;
+            }
+            *m = '\0';
+            strcat( modbuf, subp->d_name );
+            /* XXX: add special any uid, ignore group bits */
+            if ( chown( modbuf, uid, gid ) < 0 && errno != EPERM ) {
+                LOG(log_error, logtype_afpd, "setdeskown: chown %s: %s", fullpathname(modbuf), strerror(errno) );
+            }
+        }
+        closedir( sub );
+        /* XXX: add special any uid, ignore group bits */
+        if ( chown( deskp->d_name, uid, gid ) < 0 && errno != EPERM ) {
+            LOG(log_error, logtype_afpd, "setdeskowner: chown %s: %s",
+                deskp->d_name, strerror(errno) );
+        }
+    }
+    closedir( desk );
+    if ( chdir( wd ) < 0 ) {
+        LOG(log_error, logtype_afpd, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
+        EC_FAIL;
+    }
+    if (chown(bdata(dtpath), uid, gid ) < 0 && errno != EPERM ) {
+        LOG(log_error, logtype_afpd, "setdeskowner: chown %s: %s", fullpathname(".AppleDouble"), strerror(errno) );
+    }
+
+EC_CLEANUP:
+    bdestroy(dtpath);
+    EC_EXIT;
+}
 
 static void create_appledesktop_folder(const struct vol * vol)
 {

@@ -43,6 +43,9 @@ extern char	*dtfile (const struct vol *, u_char [], char *);
 extern char	*mtoupath (const struct vol *, char *, cnid_t, int utf8);
 extern char	*utompath (const struct vol *, char *, cnid_t, int utf8);
 
+extern int setdeskmode(const struct vol *vol, const mode_t mode);
+extern int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid);
+
 /* FP functions */
 int afp_opendt (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 int afp_addcomment (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
