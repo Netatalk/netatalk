@@ -19,6 +19,7 @@ NONGENERATED_MANS	=	ad.1 \
 				afppasswd.1 \
 				apple_dump.1 \
 				dbd.1 \
+				macusers.1 \
 				netatalk-config.1
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
