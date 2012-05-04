@@ -64,17 +64,18 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
     break;
 
   default: /* parent */
-    /* using SIGQUIT is hokey, but the child might not have
+    /* using SIGKILL is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
-    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds)) ==  NULL) {
+    close(ipc_fds[1]);
+    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds[0])) ==  NULL) {
       LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+      close(ipc_fds[0]);
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
       dsi_send(dsi);
       dsi->header.dsi_code = DSIERR_OK;
-      kill(pid, SIGQUIT);
+      kill(pid, SIGKILL);
     }
-    close(ipc_fds[1]);
     dsi->proto_close(dsi);
     return child;
   }
@@ -91,6 +92,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
   }
 
   /* get rid of some stuff */
+  dsi->AFPobj->ipc_fd = ipc_fds[1];
   close(ipc_fds[0]);
   close(dsi->serversock);
   server_child_free(serv_children); 
@@ -124,11 +126,7 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
     dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
     signal(SIGPIPE, SIG_IGN); /* we catch these ourselves */
     dsi_opensession(dsi);
-    if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
-        exit(EXITERR_SYS);
-    child->ipc_fds[1] = ipc_fds[1];
-    return child;
-    break;
+    return NULL;
 
   default: /* just close */
     LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);

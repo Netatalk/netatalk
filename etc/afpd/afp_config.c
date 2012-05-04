@@ -223,15 +223,8 @@ static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
     if (!(child = dsi_getsession(dsi,
                                  server_children,
                                  config->obj.options.tickleval))) {
-        LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
-        return NULL;
-    }
-
-    /* we've forked. */
-    if (parent_or_child == 1) {
+        /* we've forked. */
         configfree(configs, config);
-        config->obj.ipc_fd = child->ipc_fds[1];
-        free(child);
         afp_over_dsi(&config->obj); /* start a session */
         exit (0);
     }
@@ -449,6 +442,7 @@ srvloc_reg_err:
 
     config->fd = dsi->serversock;
     config->obj.handle = dsi;
+    dsi->AFPobj = &config->obj;
     config->obj.config = config;
     config->obj.proto = AFPPROTO_DSI;
 
@@ -590,7 +584,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
         first = AFPConfigInit(cmdline, cmdline);
 
     /* Now register with zeroconf, we also need the volumes for that */
-    if (! (first->obj.options.flags & OPTION_NOZEROCONF)) {
+    if (first && !(first->obj.options.flags & OPTION_NOZEROCONF)) {
         load_volumes(&first->obj);
         zeroconf_register(first);
     }

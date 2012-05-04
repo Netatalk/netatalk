@@ -32,7 +32,7 @@ typedef struct server_child_data {
   uint32_t  time;		/* client boot time (from the mac client) */
   uint32_t  idlen;		/* clientid len (from the Mac client) */
   char      *clientid;  /* clientid (from the Mac client) */
-  int       ipc_fds[2]; /* socketpair for IPC bw */
+  int       ipc_fd; /* socket for IPC bw afpd parent and childs */
   struct server_child_data **prevp, *next;
 } afp_child_t;
 
@@ -40,7 +40,7 @@ extern int parent_or_child;
 
 /* server_child.c */
 extern server_child *server_child_alloc (const int, const int);
-extern afp_child_t *server_child_add (server_child *, int, pid_t, uint ipc_fds[2]);
+extern afp_child_t *server_child_add (server_child *, int, pid_t, int ipc_fd);
 extern int  server_child_remove (server_child *, const int, const pid_t);
 extern void server_child_free (server_child *);
 
