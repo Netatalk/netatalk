@@ -161,7 +161,7 @@ extern void dsi_setstatus (DSI *, char *, const size_t);
 extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port);
 
 /* in dsi_getsess.c */
-extern afp_child_t *dsi_getsession (DSI *, server_child *, const int);
+extern int dsi_getsession (DSI *, server_child *, const int, afp_child_t **);
 extern void dsi_kill (int);
 
 

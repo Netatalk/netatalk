@@ -60,13 +60,13 @@ void configfree(AFPObj *obj, DSI *dsi)
         close(p->socket);
         free(p);
     }
+
     if (dsi) {
         dsi->next = NULL;
         obj->dsi = dsi;
     } else {
         afp_options_free(&obj->options);
     }
-
 }
 
 /*!
@@ -102,6 +102,7 @@ int configinit(AFPObj *obj)
         status_init(obj, dsi);
         *next = dsi;
         next = &dsi->next;
+        dsi->AFPobj = obj;
 
         LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
             getip_string((struct sockaddr *)&dsi->server),
@@ -113,9 +114,6 @@ int configinit(AFPObj *obj)
         if (!p)
             break;
     }
-
-    if (obj->dsi == NULL)
-        EC_FAIL;
 
 #ifdef HAVE_LDAP
     /* Parse afp.conf */
@@ -140,7 +138,6 @@ int configinit(AFPObj *obj)
 		LOG(log_note, logtype_afpd, "Fce events: %s", r);
 		fce_set_events(r);
     }
-
 
 EC_CLEANUP:
     if (q)

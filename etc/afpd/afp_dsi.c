@@ -385,7 +385,6 @@ void afp_over_dsi(AFPObj *obj)
     struct sigaction action;
 
     AFPobj = obj;
-    dsi->AFPobj = obj;
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)()) dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
