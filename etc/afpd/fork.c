@@ -1104,16 +1104,21 @@ static ssize_t write_file(struct ofork *ofork, int eid,
 }
 
 
-/* FPWrite. NOTE: on an error, we always use afp_write_err as
+/*
+ * FPWrite. NOTE: on an error, we always use afp_write_err as
  * the client may have sent us a bunch of data that's not reflected
- * in reqcount et al. */
+ * in reqcount et al.
+ */
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork    *ofork;
-    off_t               offset, saveoff, reqcount, oldsize, newsize;
+    off_t           offset, saveoff, reqcount, oldsize, newsize;
     int             endflag, eid, err = AFP_OK;
-    uint16_t       ofrefnum;
-    ssize_t             cc;
+    uint16_t        ofrefnum;
+    ssize_t         cc;
+    DSI             *dsi = obj->dsi;
+    char            *rcvbuf = dsi->buffer;
+    size_t          rcvbuflen = dsi->dsireadbuf * dsi->server_quantum;
 
     /* figure out parameters */
     ibuf++;
@@ -1178,28 +1183,28 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     }
 
     saveoff = offset;
-    if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff,
-                   reqcount, ofork->of_refnum) < 0) {
-        err = AFPERR_LOCK;
-        goto afp_write_err;
+    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+        if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff, reqcount, ofork->of_refnum) < 0) {
+            err = AFPERR_LOCK;
+            goto afp_write_err;
+        }
     }
 
-    DSI *dsi = obj->dsi;
-    /* find out what we have already and write it out. */
-    cc = dsi_writeinit(dsi, rbuf, *rbuflen);
+    /* find out what we have already */
+    cc = dsi_writeinit(dsi, rcvbuf, rcvbuflen);
 
-    if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
+    if (!cc || (cc = write_file(ofork, eid, offset, rcvbuf, cc)) < 0) {
         dsi_writeflush(dsi);
         *rbuflen = 0;
-        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+        if (obj->options.flags & OPTION_AFP_READ_LOCK)
+            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
         return cc;
     }
 
     offset += cc;
 
 #if 0 /*def HAVE_SENDFILE_WRITE*/
-    if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
-                           offset, dsi->datasize)) < 0) {
+    if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket, offset, dsi->datasize)) < 0) {
         switch (errno) {
         case EDQUOT:
         case EFBIG:
@@ -1212,8 +1217,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         }
         dsi_writeflush(dsi);
         *rbuflen = 0;
-        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                   reqcount,  ofork->of_refnum);
+        if (obj->options.flags & OPTION_AFP_READ_LOCK)
+            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
         return cc;
     }
 
@@ -1223,18 +1228,24 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
     /* loop until everything gets written. currently
      * dsi_write handles the end case by itself. */
-    while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
-        if ((cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
+    while ((cc = dsi_write(dsi, rcvbuf, rcvbuflen))) {
+
+        if ((cc = write_file(ofork, eid, offset, rcvbuf, cc)) < 0) {
             dsi_writeflush(dsi);
             *rbuflen = 0;
-            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                       reqcount,  ofork->of_refnum);
+            if (obj->options.flags & OPTION_AFP_READ_LOCK)
+                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
             return cc;
         }
+
+        LOG(log_debug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
+            (intmax_t)cc, (intmax_t)offset);
+
         offset += cc;
     }
 
-    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
+    if (obj->options.flags & OPTION_AFP_READ_LOCK)
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
     if ( ad_meta_fileno( ofork->of_ad ) != -1 ) /* META */
         ofork->of_flags |= AFPFORK_DIRTY;
 
