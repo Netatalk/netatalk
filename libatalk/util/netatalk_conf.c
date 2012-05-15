@@ -170,26 +170,28 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
   As we can't check (requires write access) on ro-volumes, we switch ea:auto
   volumes that are options:ro to ea:none.
 */
+#define EABUFSZ 4
 static int do_check_ea_support(const struct vol *vol)
 {
     int haseas;
-    char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
+    const char *eaname = "org.netatalk.has-Extended-Attributes";
     const char *eacontent = "yes";
+    char buf[EABUFSZ];
 
-    if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
-        LOG(log_note, logtype_afpd, "read-only volume '%s', can't test for EA support, assuming yes", vol->v_localname);
+    if (sys_lgetxattr(vol->v_path, eaname, buf, EABUFSZ) != -1)
+        return 1;
+
+    if (vol->v_flags & AFPVOL_RO) {
+        LOG(log_debug, logtype_afpd, "read-only volume '%s', can't test for EA support, assuming yes", vol->v_localname);
         return 1;
     }
 
-    mktemp(eaname);
-
     become_root();
 
-    if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
-        sys_removexattr(vol->v_path, eaname);
+    if ((sys_setxattr(vol->v_path, eaname, eacontent, strlen(eacontent) + 1, 0)) == 0) {
         haseas = 1;
     } else {
-        LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes or read-only volume root",
+        LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes or read-only volume",
             vol->v_localname);
         haseas = 0;
     }
@@ -202,25 +204,14 @@ static int do_check_ea_support(const struct vol *vol)
 static void check_ea_support(struct vol *vol)
 {
     int haseas;
-    char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
-    const char *eacontent = "yes";
 
     haseas = do_check_ea_support(vol);
 
     if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
-        if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
-            LOG(log_info, logtype_afpd, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
-            vol->v_vfs_ea = AFPVOL_EA_NONE;
-            return;
-        }
-
-        if (haseas) {
+        if (haseas)
             vol->v_vfs_ea = AFPVOL_EA_SYS;
-        } else {
-            LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes, using ea:ad instead",
-                vol->v_localname);
-            vol->v_vfs_ea = AFPVOL_EA_AD;
-        }
+        else
+            vol->v_vfs_ea = AFPVOL_EA_NONE;
     }
 
     if (vol->v_adouble == AD_VERSION_EA) {
