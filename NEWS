@@ -22,6 +22,7 @@ Changes in 2.2.3
 * FIX: dbd: Don't remove BerkeleyDB if it's still in use by eg cnid_dbd, fixes
        bug introduced in 2.2.2
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
+* FIX: Zeroconf could not advertise non-ASCII time machine volume name
 
 Changes in 2.2.2
 ================
