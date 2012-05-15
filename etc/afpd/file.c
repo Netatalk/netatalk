@@ -264,21 +264,17 @@ restart:
                         vol->v_path);
                     vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
                     if (vol->v_cdb) {
-                        /* deactivate cnid caching/storing in AppleDouble files and set ro mode*/
                         vol->v_flags &= ~AFPVOL_CACHE;
-                        vol->v_flags |= AFPVOL_RO;
-#ifdef SERVERTEXT
-                        /* kill ourself with SIGUSR2 aka msg pending */
-                        setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
-                                   "Check server messages for details. Switching to read-only mode.");
-                        kill(getpid(), SIGUSR2);
-#endif
-                        goto restart; /* not try again with the temp CNID db */
+                        if (!(vol->v_flags & AFPVOL_TM)) {
+                            vol->v_flags |= AFPVOL_RO;
+                            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
+                                       "Check server messages for details. Switching to read-only mode.");
+                            kill(getpid(), SIGUSR2);
+                        }
+                        goto restart; /* now try again with the temp CNID db */
                     } else {
-#ifdef SERVERTEXT
                         setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB failed too!"
                                    "Check server messages for details, can't recover from this state!");
-#endif
                     }
                 }
                 afp_errno = AFPERR_MISC;

@@ -8,6 +8,11 @@ Changes in 2.2.3
 * UPD: afpd: Ensure our umask is not altered by eg pam_umask
 * UPD: afpd: Use GSS_C_NO_NAME as server principal when Kerberos options -fqdn
        and -krb5service are not set, from Jamie Gilbertson
+* UPD: afpd: Changed behaviour for TimeMachine volumes in case there's a problem
+       talking to the CNID daemons. Previously the volume was flagged read-only
+       and an AFP message was sent to the client. As this might result in
+       TimeMachine assuming the backup sparse bundle is damaged, we now just
+       switch the CNID database to an in-memory tdb without the additional stuff.
 * FIX: afpd: sendfile() on FreeBSD was broken, courtesy of Denis Ahrens
 * FIX: afpd: Dont use searchdb when doing partial name search
 * FIX: afpd: Fix a possible bug handling disconnected sessions,
