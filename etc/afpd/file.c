@@ -735,6 +735,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
             return( AFPERR_ACCESS );
         case EDQUOT:
         case ENOSPC :
+	    LOG(log_info, logtype_afpd, "afp_createfile: DISK FULL");
             return( AFPERR_DFULL );
         default :
             return( AFPERR_PARAM );
@@ -1593,6 +1594,7 @@ done:
     case EDQUOT:
     case EFBIG:
     case ENOSPC:
+	LOG(log_info, logtype_afpd, "copyfile: DISK FULL");
         return AFPERR_DFULL;
     case ENOENT:
         return AFPERR_NOOBJ;

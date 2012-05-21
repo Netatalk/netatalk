@@ -638,6 +638,7 @@ afp_setfork_err:
         case EDQUOT:
         case EFBIG:
         case ENOSPC:
+            LOG(log_error, logtype_afpd, "afp_setforkparams: DISK FULL");
             return AFPERR_DFULL;
         default:
             return AFPERR_PARAM;
@@ -1163,6 +1164,7 @@ static ssize_t write_file(struct ofork *ofork, int eid,
         case EDQUOT :
         case EFBIG :
         case ENOSPC :
+            LOG(log_error, logtype_afpd, "write_file: DISK FULL");
             return( AFPERR_DFULL );
         case EACCES:
             return AFPERR_ACCESS;
@@ -1237,6 +1239,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     /* offset can overflow on 64-bit capable filesystems.
      * report disk full if that's going to happen. */
      if (sum_neg(is64, offset, reqcount)) {
+        LOG(log_error, logtype_afpd, "write_fork: DISK FULL");
         err = AFPERR_DFULL;
         goto afp_write_err;
     }
