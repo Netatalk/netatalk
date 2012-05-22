@@ -39,6 +39,7 @@
 #define OPTION_SERVERNOTIF   (1 << 2)
 #define OPTION_NOSENDFILE    (1 << 3)
 #define OPTION_CUSTOMICON    (1 << 4)
+#define OPTION_AFP_READ_LOCK (1 << 5) /* whether to do AFP spec conforming read locks (default: no) */
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)

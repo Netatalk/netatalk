@@ -357,7 +357,7 @@ int main(int ac, char **av)
     (void)setlimits();
 
     afp_child_t *child;
-    int fd[2];  /* we only use one, but server_child_add expects [2] */
+    int recon_ipc_fd;
     pid_t pid;
     int saveerrno;
 
@@ -412,7 +412,7 @@ int main(int ac, char **av)
         }
 
         for (int i = 0; i < fdset_used; i++) {
-            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP)) {
+            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
                 switch (polldata[i].fdtype) {
 
                 case LISTEN_FD:
@@ -423,7 +423,7 @@ int main(int ac, char **av)
                                      &polldata,
                                      &fdset_used,
                                      &fdset_size,
-                                     child->ipc_fds[0],
+                                     child->ipc_fd,
                                      IPC_FD,
                                      child);
                     }
@@ -433,10 +433,10 @@ int main(int ac, char **av)
                     child = (afp_child_t *)polldata[i].data;
                     LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
 
-                    if (ipc_server_read(server_children, child->ipc_fds[0]) != 0) {
-                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
-                        close(child->ipc_fds[0]);
-                        child->ipc_fds[0] = -1;
+                    if (ipc_server_read(server_children, child->ipc_fd) != 0) {
+                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fd);
+                        close(child->ipc_fd);
+                        child->ipc_fd = -1;
                         if ((obj.options.flags & OPTION_KEEPSESSIONS) && child->disasociated) {
                             LOG(log_note, logtype_afpd, "main: removing reattached child[%u]", child->pid);
                             server_child_remove(server_children, CHILD_DSIFORK, child->pid);
@@ -446,19 +446,20 @@ int main(int ac, char **av)
 
                 case DISASOCIATED_IPC_FD:
                     LOG(log_debug, logtype_afpd, "main: IPC reconnect request");
-                    if ((fd[0] = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
+                    if ((recon_ipc_fd = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
                         LOG(log_error, logtype_afpd, "main: accept: %s", strerror(errno));
                         break;
                     }
-                    if (readt(fd[0], &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
+                    if (readt(recon_ipc_fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
                         LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
-                        close(fd[0]);
+                        close(recon_ipc_fd);
                         break;
                     }
                     LOG(log_note, logtype_afpd, "main: IPC reconnect from pid [%u]", pid);
-                    if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, fd)) == NULL) {
+
+                    if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, recon_ipc_fd)) == NULL) {
                         LOG(log_error, logtype_afpd, "main: server_child_add");
-                        close(fd[0]);
+                        close(recon_ipc_fd);
                         break;
                     }
                     child->disasociated = 1;
@@ -467,7 +468,7 @@ int main(int ac, char **av)
                                  &polldata,
                                  &fdset_used,
                                  &fdset_size,
-                                 fd[0],
+                                 recon_ipc_fd,
                                  IPC_FD,
                                  child);
                     break;
@@ -487,18 +488,14 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_childr
 {
     afp_child_t *child = NULL;
 
-    if (!(child = dsi_getsession(dsi,
-                                 server_children,
-                                 obj->options.tickleval))) {
+    if (dsi_getsession(dsi, server_children, obj->options.tickleval, &child) != 0) {
         LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
         return NULL;
     }
 
     /* we've forked. */
-    if (child->ipc_fds[0] == -1) {
+    if (child == NULL) {
         configfree(obj, dsi);
-        obj->ipc_fd = child->ipc_fds[1];
-        free(child);
         afp_over_dsi(obj); /* start a session */
         exit (0);
     }

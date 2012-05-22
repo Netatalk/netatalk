@@ -239,20 +239,16 @@ restart:
                         vol->v_path);
                     vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
                     if (vol->v_cdb) {
-                        /* set ro mode*/
-                        vol->v_flags |= AFPVOL_RO;
-#ifdef SERVERTEXT
-                        /* kill ourself with SIGUSR2 aka msg pending */
-                        setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
-                                   "Check server messages for details. Switching to read-only mode.");
-                        kill(getpid(), SIGUSR2);
-#endif
-                        goto restart; /* not try again with the temp CNID db */
+                        if (!(vol->v_flags & AFPVOL_TM)) {
+                            vol->v_flags |= AFPVOL_RO;
+                            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
+                                       "Check server messages for details. Switching to read-only mode.");
+                            kill(getpid(), SIGUSR2);
+                        }
+                        goto restart; /* now try again with the temp CNID db */
                     } else {
-#ifdef SERVERTEXT
                         setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB failed too!"
                                    "Check server messages for details, can't recover from this state!");
-#endif
                     }
                 }
                 afp_errno = AFPERR_MISC;
@@ -705,6 +701,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
             return( AFPERR_ACCESS );
         case EDQUOT:
         case ENOSPC :
+	    LOG(log_info, logtype_afpd, "afp_createfile: DISK FULL");
             return( AFPERR_DFULL );
         default :
             return( AFPERR_PARAM );
@@ -1439,6 +1436,7 @@ done:
     case EDQUOT:
     case EFBIG:
     case ENOSPC:
+	LOG(log_info, logtype_afpd, "copyfile: DISK FULL");
         return AFPERR_DFULL;
     case ENOENT:
         return AFPERR_NOOBJ;

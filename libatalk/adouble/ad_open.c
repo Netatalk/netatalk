@@ -869,7 +869,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
                 EC_FAIL;
             }
             ad->ad_data_fork.adf_syml[lsz] = 0;
-            ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
+            ad->ad_data_fork.adf_fd = AD_SYMLINK;
             break;
         default:
             EC_FAIL;
@@ -1041,7 +1041,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
 
-    if (ad_meta_fileno(ad) == -2)
+    if (ad_meta_fileno(ad) == AD_SYMLINK)
         /* symlink */
         EC_EXIT;
 

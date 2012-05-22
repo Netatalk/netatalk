@@ -416,7 +416,11 @@ static size_t status_directorynames(char *data,
                 "status:DirectoryNames: specified service principal '%s' not found in keytab",
                 principal);
             // XXX: should this be krb5_xfree?
+#ifdef HAVE_KRB5_FREE_UNPARSED_NAME
             krb5_free_unparsed_name(context, principal);
+#else
+	    krb5_xfree(principal);
+#endif
             goto krb5_cleanup;
         }
         krb5_free_principal(context, service_principal);
@@ -454,7 +458,11 @@ krb5_error:
         error_msg = krb5_get_error_message(context, ret);
         LOG(log_note, logtype_afpd, "Can't get principal from default keytab: %s",
             (char *)error_msg);
+#ifdef HAVE_KRB5_FREE_ERROR_MESSAGE
         krb5_free_error_message(context, error_msg);
+#else
+	krb5_xfree(error_msg);
+#endif
     }
 
 krb5_cleanup:

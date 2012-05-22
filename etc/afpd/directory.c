@@ -1902,7 +1902,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             break;
         case DIRPBIT_UID :  /* What kind of loser mounts as root? */
             if ( (dir->d_did == DIRDID_ROOT) &&
-                 (setdeskowner( ntohl(owner), -1 ) < 0)) {
+                 (setdeskowner(vol, ntohl(owner), -1 ) < 0)) {
                 err = set_dir_errors(path, "setdeskowner", errno);
                 if (isad && err == AFPERR_PARAM) {
                     err = AFP_OK; /* ???*/
@@ -1918,7 +1918,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             break;
         case DIRPBIT_GID :
             if (dir->d_did == DIRDID_ROOT)
-                setdeskowner( -1, ntohl(group) );
+                setdeskowner(vol, -1, ntohl(group) );
             if ( setdirowner(vol, upath, -1, ntohl(group) ) < 0 ) {
                 err = set_dir_errors(path, "setdirowner", errno);
                 goto setdirparam_done;
@@ -1982,7 +1982,7 @@ setdirparam_done:
     if (err == AFP_OK) {
         if (set_maccess == true) {
             if (dir->d_did == DIRDID_ROOT) {
-                setdeskmode(mpriv);
+                setdeskmode(vol, mpriv);
                 if (!dir_rx_set(mpriv)) {
                     /* we can't remove read and search for owner on volume root */
                     err = AFPERR_ACCESS;
@@ -2002,8 +2002,8 @@ setdirparam_done:
                     err = AFPERR_ACCESS;
                     goto setprivdone;
                 }
-                setdeskowner(-1, ntohl(group));
-                setdeskmode(upriv);
+                setdeskowner(vol, -1, ntohl(group));
+                setdeskmode(vol, upriv);
             }
 
             if (setdirowner(vol, upath, -1, ntohl(group)) < 0) {

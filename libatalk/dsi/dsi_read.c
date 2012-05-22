@@ -23,8 +23,7 @@
  * it will send off the header plus whatever is in its command
  * buffer. it returns the amount of stuff still to be read
  * (constrained by the buffer size). */
-ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
-                     const size_t size, const int err)
+ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen, const size_t size, const int err)
 {
     LOG(log_maxdebug, logtype_dsi, "dsi_readinit: sending %zd bytes from buffer, total size: %zd",
         buflen, size);

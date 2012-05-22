@@ -5,10 +5,8 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
     AC_MSG_CHECKING([whether to disable bundled libevent (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)])
     AC_ARG_ENABLE(
         bundled-libevent,
-        [AC_HELP_STRING(
-            [--disable-bundled-libevent],
-            [whether the bundled version of libevent shall not be used (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)]
-        )],
+        [AS_HELP_STRING([--disable-bundled-libevent],[whether the bundled version of libevent shall not be used (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)
+        ])],
         use_bundled_libevent=$enableval,
         use_bundled_libevent=yes
     )
@@ -225,7 +223,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional sysv initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|solaris|systemd]]],
                 init_style="$withval", init_style=none
     )
     case "$init_style" in 
@@ -256,18 +254,22 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     "debian")
 	    AC_MSG_RESULT([enabling debian-style sysv support])
         ;;
+    "solaris")
+	    AC_MSG_RESULT([enabling solaris-style sysv support])
+        ;;
     "systemd")
 	    AC_MSG_RESULT([use general systemd configuration])
         ;;
+    "none")
+	    AC_MSG_RESULT([disabling init-style support])
+        ;;
     *)
-	    AC_MSG_RESULT([disabling sysv support])
+	    AC_MSG_ERROR([illegal init-style])
         ;;
     esac
     AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
     AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
     AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
-    AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-    AM_CONDITIONAL(USE_TRU64, test x$init_style = xtru64)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
     AM_CONDITIONAL(USE_GENTOO, test x$init_style = xgentoo)
     AM_CONDITIONAL(USE_DEBIAN, test x$init_style = xdebian)
@@ -443,13 +445,11 @@ if test x"$this_os" = "xsolaris"; then
 	   fi
 
            AC_CACHE_CHECK([for timeout_id_t],netatalk_cv_HAVE_TIMEOUT_ID_T,[
-           AC_TRY_LINK([\
+           AC_LINK_IFELSE([AC_LANG_PROGRAM([[\
 #include <sys/stream.h>
-#include <sys/ddi.h>],
-[\
+#include <sys/ddi.h>]], [[\
 timeout_id_t dummy;
-],
-netatalk_cv_HAVE_TIMEOUT_ID_T=yes,netatalk_cv_HAVE_TIMEOUT_ID_T=no,netatalk_cv_HAVE_TIMEOUT_ID_T=cross)])
+]])],[netatalk_cv_HAVE_TIMEOUT_ID_T=yes],[netatalk_cv_HAVE_TIMEOUT_ID_T=no])])
 
 	   AC_DEFINE(HAVE_TIMEOUT_ID_T, test x"$netatalk_cv_HAVE_TIMEOUT_ID" = x"yes", [define for timeout_id_t])
 	fi
@@ -550,6 +550,15 @@ fi
 if test x"$with_kerberos" = x"yes"; then
    AC_DEFINE([HAVE_KERBEROS], [1], [Define if Kerberos 5 is available])
 fi
+
+dnl Check for krb5_free_unparsed_name and krb5_free_error_message
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="$KRB5_CFLAGS"
+LIBS="$KRB5_LIBS"
+AC_CHECK_FUNCS([krb5_free_unparsed_name krb5_free_error_message])
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
 ])
 
 dnl Check for overwrite the config files or not
@@ -686,17 +695,15 @@ if test x"$with_acl_support" = x"yes" ; then
 		AC_CACHE_CHECK([for POSIX ACL support],netatalk_cv_HAVE_POSIX_ACLS,[
 			acl_LIBS=$LIBS
 			LIBS="$LIBS $ACL_LIBS"
-			AC_TRY_LINK([
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 				#include <sys/types.h>
 				#include <sys/acl.h>
-			],[
+			]], [[
 				acl_t acl;
 				int entry_id;
 				acl_entry_t *entry_p;
 				return acl_get_entry(acl, entry_id, entry_p);
-			],
-			[netatalk_cv_HAVE_POSIX_ACLS=yes],
-			[netatalk_cv_HAVE_POSIX_ACLS=no
+			]])],[netatalk_cv_HAVE_POSIX_ACLS=yes],[netatalk_cv_HAVE_POSIX_ACLS=no
                 with_acl_support=no])
 			LIBS=$acl_LIBS
 		])
@@ -706,16 +713,14 @@ if test x"$with_acl_support" = x"yes" ; then
 			AC_CACHE_CHECK([for acl_get_perm_np],netatalk_cv_HAVE_ACL_GET_PERM_NP,[
 				acl_LIBS=$LIBS
 				LIBS="$LIBS $ACL_LIBS"
-				AC_TRY_LINK([
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 					#include <sys/types.h>
 					#include <sys/acl.h>
-				],[
+				]], [[
 					acl_permset_t permset_d;
 					acl_perm_t perm;
 					return acl_get_perm_np(permset_d, perm);
-				],
-				[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],
-				[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
+				]])],[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
 				LIBS=$acl_LIBS
 			])
 			if test x"$netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
@@ -828,18 +833,16 @@ if test x"$ac_cv_func_getxattr" = x"yes" ; then
 	AC_CACHE_CHECK([whether xattr interface takes additional options], smb_attr_cv_xattr_add_opt, [
 		old_LIBS=$LIBS
 		LIBS="$LIBS $ACL_LIBS"
-		AC_TRY_COMPILE([
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 			#include <sys/types.h>
 			#if HAVE_ATTR_XATTR_H
 			#include <attr/xattr.h>
 			#elif HAVE_SYS_XATTR_H
 			#include <sys/xattr.h>
 			#endif
-		],[
+		]], [[
 			getxattr(0, 0, 0, 0, 0, 0);
-		],
-	        [smb_attr_cv_xattr_add_opt=yes],
-		[smb_attr_cv_xattr_add_opt=no;LIBS=$old_LIBS])
+		]])],[smb_attr_cv_xattr_add_opt=yes],[smb_attr_cv_xattr_add_opt=no;LIBS=$old_LIBS])
 	])
 	if test x"$smb_attr_cv_xattr_add_opt" = x"yes"; then
 		AC_DEFINE(XATTR_ADD_OPT, 1, [xattr functions have additional options])
@@ -928,6 +931,7 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
         AC_DEFINE(SENDFILE_FLAVOR_SOLARIS, 1, [Solaris sendfile()])
         AC_SEARCH_LIBS(sendfile, sendfile)
         AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
+        AC_CHECK_FUNCS([sendfilev])
         ;;
 
     *freebsd*)
@@ -950,7 +954,7 @@ dnl --------------------- Check if realpath() takes NULL
 AC_DEFUN([AC_NETATALK_REALPATH], [
 AC_CACHE_CHECK([if the realpath function allows a NULL argument],
     neta_cv_REALPATH_TAKES_NULL, [
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
             #include <stdio.h>
             #include <limits.h>
             #include <signal.h>
@@ -964,11 +968,8 @@ AC_CACHE_CHECK([if the realpath function allows a NULL argument],
                 signal(SIGSEGV, exit_on_core);
                 newpath = realpath("/tmp", NULL);
                 exit((newpath != NULL) ? 0 : 1);
-            }],
-            neta_cv_REALPATH_TAKES_NULL=yes,
-            neta_cv_REALPATH_TAKES_NULL=no,
-            neta_cv_REALPATH_TAKES_NULL=cross
-        )
+            }]])],[neta_cv_REALPATH_TAKES_NULL=yes],[neta_cv_REALPATH_TAKES_NULL=no],[neta_cv_REALPATH_TAKES_NULL=cross
+        ])
     ]
 )
 

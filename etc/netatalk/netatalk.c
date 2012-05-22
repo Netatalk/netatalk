@@ -153,7 +153,6 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 static void timer_cb(evutil_socket_t fd, short what, void *arg)
 {
     static int i = 0;
-    LOG(log_debug, logtype_afpd, "looping: %i", i++);
 
     if (in_shutdown)
         return;

@@ -291,7 +291,7 @@ static int set_dbdir(const char *dbdir, const char *vpath)
     bstring oldpath, newpath;
     char *cmd_argv[4];
 
-    LOG(log_note, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);
+    LOG(log_debug, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);
 
     EC_NULL_LOG( oldpath = bformat("%s/%s/", vpath, DBHOME) );
     EC_NULL_LOG( newpath = bformat("%s/%s/", dbdir, DBHOME) );

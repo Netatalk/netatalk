@@ -155,6 +155,9 @@
 #define ADEDOFF_FINDERI_OSX  (AD_HEADER_LEN + ADEID_NUM_OSX*AD_ENTRY_LEN)
 #define ADEDOFF_RFORK_OSX    (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI)
 
+/* special fd value used to indicate an open fork file is a (not open) symlink */
+#define AD_SYMLINK -2
+
 typedef uint32_t cnid_t;
 
 struct ad_entry {
@@ -169,7 +172,7 @@ typedef struct adf_lock_t {
 } adf_lock_t;
 
 struct ad_fd {
-    int          adf_fd;        /* -1: invalid, -2: symlink */
+    int          adf_fd;        /* -1: invalid, AD_SYMLINK: symlink */
     char         *adf_syml;
     int          adf_flags;
     adf_lock_t   *adf_lock;
@@ -348,7 +351,7 @@ struct adouble {
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
 
-/* -1 means not open, -2 is a symlink */
+/* -1: not open, AD_SYMLINK (-2): it's a symlink */
 #define AD_DATA_OPEN(ad) ((ad)->ad_data_fork.adf_fd >= 0)
 #define AD_META_OPEN(ad) ((ad)->ad_mdp->adf_fd >= 0)
 #define AD_RSRC_OPEN(ad) ((ad)->ad_rfp->adf_fd >= 0)

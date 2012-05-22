@@ -161,7 +161,7 @@ extern void dsi_setstatus (DSI *, char *, const size_t);
 extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port);
 
 /* in dsi_getsess.c */
-extern afp_child_t *dsi_getsession (DSI *, server_child *, const int);
+extern int dsi_getsession (DSI *, server_child *, const int, afp_child_t **);
 extern void dsi_kill (int);
 
 
@@ -174,6 +174,8 @@ extern void dsi_getstatus (DSI *);
 extern void dsi_close (DSI *);
 
 #define DSI_NOWAIT 1
+#define DSI_MSG_MORE 2
+
 /* low-level stream commands -- in dsi_stream.c */
 extern ssize_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
 extern size_t dsi_stream_read (DSI *, void *, const size_t);
@@ -182,7 +184,7 @@ extern int dsi_stream_receive (DSI *);
 extern int dsi_disconnect(DSI *dsi);
 
 #ifdef WITH_SENDFILE
-extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len);
+extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err);
 #endif
 
 /* client writes -- dsi_write.c */

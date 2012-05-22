@@ -212,6 +212,10 @@ AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$neta_cv_have_openssl != xyes)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
+AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
+
+dnl Enable silent Automake rules if present                                                                           
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 dnl --------------------- generate files
 AC_OUTPUT([Makefile

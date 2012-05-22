@@ -547,7 +547,7 @@ dictionary * iniparser_load(const char * ininame)
 
     dict = dictionary_new(0) ;
     if (!dict) {
-        fclose(in);
+        fclose(inifile);
         return NULL ;
     }
 

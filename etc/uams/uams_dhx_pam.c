@@ -324,7 +324,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _
 		     char *rbuf, size_t *rbuflen)
 {
     if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username");
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username [%s]", username);
         return AFPERR_NOTAUTH;
     }
 

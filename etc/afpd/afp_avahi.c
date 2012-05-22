@@ -70,7 +70,7 @@ static void register_stuff(void) {
 		
         for (volume = getvolumes(); volume; volume = volume->v_next) {
 
-            if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_name, -1, tmpname, 255) <= 0) {
+            if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, -1, tmpname, 255) <= 0) {
                 LOG ( log_error, logtype_afpd, "Could not set Zeroconf volume name for TimeMachine");
                 goto fail;
             }
