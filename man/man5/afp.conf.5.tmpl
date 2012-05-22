@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 18 Apr 2012
+.\"      Date: 22 May 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "18 Apr 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "22 May 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -949,9 +949,9 @@ hide files and directories,where the path matches one of the \'/\' delimited vet
 .PP
 Boolean volume options\&.
 .PP
-acls = \fIBOOLEAN\fR (default: \fItrue\fR) \fB(V)\fR
+acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-Whether to flag volumes as supporting ACLs\&. If ACL support is compiled in, this is true by default\&.
+Whether to flag volumes as supporting ACLs\&. If ACL support is compiled in, this is yes by default\&.
 .RE
 .PP
 cnid dev = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
@@ -959,7 +959,7 @@ cnid dev = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 Whether to use the device number in the CNID backends\&. Helps when the device number is not constant across a reboot, eg cluster, \&.\&.\&.
 .RE
 .PP
-convert adouble = \fIBOOLEAN\fR (default: \fItrue\fR) \fB(V)\fR
+convert appledouble = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
 Whether automatic conversion from
 \fBappledouble = v2\fR

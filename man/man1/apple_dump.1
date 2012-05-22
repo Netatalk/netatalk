@@ -2,12 +2,12 @@
 .\"     Title: apple_dump
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02 Sep 2011
+.\"      Date: 22 May 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "02 Sep 2011" "Netatalk 3.0" "Netatalk 3.0"
+.TH "APPLE_DUMP" "1" "22 May 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -19,10 +19,12 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-apple_dump \- Dump AppleSingle/AppleDouble format file
+apple_dump \- Dump AppleSingle/AppleDouble format data
 .SH "SYNOPSIS"
-.HP \w'\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\ 'u
+.HP \w'\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\ 'u
 \fBapple_dump\fR\fB\fR [\-a] \fIFILE\fR | \fIDIR\fR 
+.br
+\fBapple_dump\fR\fB\fR \-e \fIFILE\fR | \fIDIR\fR 
 .br
 \fBapple_dump\fR\fB\fR \-f \fIFILE\fR
 .br
@@ -34,7 +36,7 @@ apple_dump \- Dump AppleSingle/AppleDouble format file
 .SH "DESCRIPTION"
 .PP
 \fBapple_dump\fR
-dump AppleSingle/AppleDouble format file\&.
+dump AppleSingle/AppleDouble format data\&.
 .SH "OPTIONS"
 .PP
 \fB\-a\fR \fIFILE\fR|\fIDIR\fR
@@ -43,14 +45,21 @@ This is default\&. Dump a AppleSingle/AppleDouble file for
 \fIFILE\fR
 or
 \fIDIR\fR
-automatically\&. Extrapolate FinderInfo type from absolute path\&. If FILE is not AppleSingle/AppleDouble format, look for
+automatically\&. If FILE is not AppleSingle/AppleDouble format, look for extended attribute,
 \fI\&.AppleDouble/FILE\fR
 and
 \fI\&._FILE\fR\&. If
-\fIDIR\fR, look for
+\fIDIR\fR, look for extended attribute,
 \fIDIR/\&.AppleDouble/\&.Parent\fR
 and
 \fI\&._DIR\fR\&.
+.RE
+.PP
+\fB\-e\fR \fIFILE\fR|\fIDIR\fR
+.RS 4
+Dump extended attribute of\fIFILE\fR
+or
+\fIDIR\fR\&.
 .RE
 .PP
 \fB\-f\fR \fIFILE\fR
@@ -78,7 +87,10 @@ Show version and exit
 .PP
 There is no way to detect whether FinderInfo is FileInfo or DirInfo\&. By default, apple_dump examins whether file or directory, a parent directory is \&.AppleDouble, filename is \&._*, filename is \&.Parent, and so on\&.
 .PP
-If setting option \-f or \-d, assume FinderInfo and doesn\'t look for another file\&.
+If setting option \-e, \-f or \-d, assume FinderInfo and doesn\'t look for another file\&.
 .SH "SEE ALSO"
 .PP
-\fBad\fR(1)
+\fBad\fR(1),
+\fBgetfattr\fR(1),
+\fBattr\fR(1),
+\fBrunat\fR(1)
