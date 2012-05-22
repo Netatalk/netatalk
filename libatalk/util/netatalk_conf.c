@@ -743,7 +743,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (getoption_bool(obj->iniconfig, section, "acls", preset, 1))
         volume->v_flags |= AFPVOL_ACLS;
 #endif
-    if (!getoption_bool(obj->iniconfig, section, "convert adouble", preset, 1))
+    if (!getoption_bool(obj->iniconfig, section, "convert appledouble", preset, 1))
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
