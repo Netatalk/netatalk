@@ -47,6 +47,8 @@ pa_buf_t *pa_init(int fd)
 	h->bufsz = PA_BUFBLK * 2;
 
 	if (( rc = read( fd, h->buf, PA_BUFBLK )) < 0 ) {
+		free(h->buf);
+		free(h);
 		return( NULL );
 	}
 
