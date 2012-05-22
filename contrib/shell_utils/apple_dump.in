@@ -2,7 +2,7 @@
 #
 # AppleSingle/AppleDouble dump
 #
-# (c) 2009-2010 by HAT <hat@fa2.so-net.ne.jp>
+# (c) 2009-2012 by HAT <hat@fa2.so-net.ne.jp>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -48,27 +48,45 @@
 
 use File::Basename;
 use File::Spec;
+use File::Temp qw /tempfile/;
 use bigint; # require perl >= 5.8
+
+# check command for extended attributes -----------------------------------
+
+if (     0 == system("which getfattr > /dev/null 2>&1")) {
+    $eacommand = 1;
+} elsif (0 == system("which xattr > /dev/null 2>&1")) {
+    $eacommand = 2;
+} elsif (0 == system("which runat > /dev/null 2>&1")) {
+    $eacommand = 3;
+} else {
+    $eacommand = 0;
+}
+
+#printf ( "eacommand = %d\n", $eacommand );   # debug
 
 # parse command line -----------------------------------------------
 
+$eaoption = 0;
 $finderinfo = 0;              #  0: unknown   1: file   2: directory
 while ($arg = shift @ARGV)
 {
     if  ($arg =~ /^(-h|-help|--help)$/ ) {
         printf ("usage: %s [-a] FILE|DIR\n"           ,basename($0));
+        printf (" or:   %s -e FILE|DIR\n"             ,basename($0));
         printf (" or:   %s -f FILE\n"                 ,basename($0));
         printf (" or:   %s -d FILE\n"                 ,basename($0));
         printf (" or:   %s -h|-help|--help\n"         ,basename($0));
         printf (" or:   %s -v|-version|--version\n"   ,basename($0));
-        printf ("Dump AppleSingle/AppleDouble format file.\n");
+        printf ("Dump AppleSingle/AppleDouble format data.\n");
         printf ("\n");
-        printf ("  -a (default)     Dump a AppleSingle/AppleDouble file for FILE or DIR\n");
+        printf ("  -a (default)     Dump a AppleSingle/AppleDouble data for FILE or DIR\n");
         printf ("                   automatically.\n");
-        printf ("                   Extrapolate FinderInfo type from absolute path.\n");
         printf ("                   If FILE is not AppleSingle/AppleDouble format,\n");
-        printf ("                   look for '.AppleDouble/FILE' and '._FILE'.\n");
-        printf ("                   If DIR, look for 'DIR/.AppleDouble/.Parent' and '._DIR'.\n");
+        printf ("                   look for extended attribute, .AppleDouble/FILE and ._FILE.\n");
+        printf ("                   If DIR, look for extended attribute,\n");
+	printf ("                   DIR/.AppleDouble/.Parent and ._DIR.\n");
+        printf ("  -e               Dump extended attribute of FILE or DIR\n");
         printf ("  -f               Dump FILE. Assume FinderInfo to be FileInfo.\n");
         printf ("  -d               Dump FILE. Assume FinderInfo to be DirInfo.\n");
         printf ("  -h,-help,--help  Display this help and exit\n");
@@ -78,7 +96,7 @@ while ($arg = shift @ARGV)
         printf ("By default, %s examins whether file or directory,\n"   ,basename($0));
         printf ("a parent directory is .AppleDouble, filename is ._*, filename is .Parent,\n");
         printf ("and so on.\n");
-        printf ("If setting option -f or -d, %s assume FinderInfo and doesn't look for\n");
+        printf ("If setting option -e, -f or -d, %s assume FinderInfo and doesn't look for\n");
         printf ("another file.\n");
         exit 1;
     } elsif ($arg =~ /^(-v|-version|--version)$/ ) {
@@ -86,6 +104,13 @@ while ($arg = shift @ARGV)
         exit 1;
     } elsif ($arg eq "-a") {
         $finderinfo = 0;
+    } elsif ($arg eq "-e") {
+        if ($eacommand == 0) {
+	    printf (STDERR "%s: unsupported option -e\n", basename($0));
+	    printf (STDERR "because neither getfattr, xattr nor runat is not found.\n");
+	    exit 1;
+	}
+	$eaoption = 1;
     } elsif ($arg eq "-f") {
         $finderinfo = 1;
     } elsif ($arg eq "-d") {
@@ -113,18 +138,33 @@ if (!( -e $afile)) {
 $abspath = File::Spec->rel2abs($afile);
 ($basename, $path, $ext) = fileparse($abspath);
 
-if ( $finderinfo != 0 ) {
+if ( $eaoption == 1 ) {
+    if ( -f $afile ) {
+	$finderinfo = 1;
+    } elsif ( -d $afile ) {
+	$finderinfo = 2;
+    } else {
+	printf (STDERR "unknown error: %s\n", $afile);
+	exit 1;
+    }
+    if ( 0 == checkea($afile) ) {
+	printf (STDERR "\"%s\"'s extended attribute is not found\n",  $afile);
+	exit 1;
+    }
+    $openfile = eaopenfile($afile);
+    $openmessage = "Dumping \"$afile\"'s extended attribute...\n";
+} elsif ( $finderinfo != 0 ) {
     ;
 } elsif ( -f $afile ) {
     if ( $basename eq ".Parent") {
 	$finderinfo = 2;
     } elsif ( $path =~ /\/.AppleDouble\/$/ ) {
-	$finderinfo =1;
+        $finderinfo = 1;
     } elsif ( $basename =~ /^._/ ) {
 	if ( -f $path.substr($basename, 2) ) {
-	    $finderinfo =1;
+	    $finderinfo = 1;
 	} elsif ( -d $path.substr($basename, 2) ) {
-	    $finderinfo =2;
+	    $finderinfo = 2;
 	}
     }
     if (!open(INFILE, "<$afile")) {
@@ -135,46 +175,72 @@ if ( $finderinfo != 0 ) {
     $val = unpack("N", $buf );
     close(INFILE);
     if ($val == 0x00051600 || $val == 0x00051607) {
-	;
+        $openfile = $afile;
+	$openmessage = "Dumping \"$openfile\"...\n";
     } else {
-	printf ("\"%s\" is not AppleSingle/AppleDouble format.\n", $afile);
-	$finderinfo = 1;
-	$netatalkfile = $path.".AppleDouble/".$basename;
-	$osxfile = $path."._".$basename;
+        printf ("\"%s\" is not AppleSingle/AppleDouble format.\n", $afile);
+        $finderinfo = 1;
+        $adcount = 0;
+        $netatalkfile = $path.".AppleDouble/".$basename;
+        $osxfile = $path."._".$basename;
 
-	if (( -e $netatalkfile ) && !( -e $osxfile )) {
-	    $afile = $netatalkfile;
-	} elsif (!( -e $netatalkfile ) && ( -e $osxfile )) {
-	    $afile = $osxfile;
-	} elsif (( -e $netatalkfile ) && ( -e $osxfile )) {
-	    printf ("\"%s\" found.\n", $netatalkfile);
-	    printf ("\"%s\" found.\n", $osxfile);
-	    printf ("Specify which of file.\n");
-	    exit 1;
-	} else {
-	    printf ("\"%s\" not found.\n", $netatalkfile);
-	    printf ("\"%s\" not found.\n", $osxfile);
-	    exit 1;
+        if ( 1 == checkea($afile) ) {
+	    printf ("extended attribute of \"%s\" is found.\n", $afile);
+            $adcount++;
+	    $openfile = eaopenfile($afile);
+	    $openmessage = "Dumping \"$afile\"'s extended attribute...\n";
+	}
+	if ( -e $netatalkfile ) {
+            printf ("\"%s\" is found.\n", $netatalkfile);
+	    $openfile = $netatalkfile;
+	    $openmessage = "Dumping \"$openfile\"...\n";
+        }
+	if ( -e $osxfile ) {
+            printf ("\"%s\" is found.\n", $osxfile);
+            $adcount++;
+	    $openfile = $osxfile;
+	    $openmessage = "Dumping \"$openfile\"...\n";
+        }
+	if ( $adcount == 0 ) {
+            printf ("AppleSingle/AppleDouble data is not found.\n");
+            exit 1;
+	}
+	if ( $adcount != 1 ) {
+            printf ("Specify which.\n");
+            exit 1;
 	}
     }
 } elsif ( -d $afile) {
     printf ("\"%s\" is a directory.\n", $afile);
-    $finderinfo =2;
+    $finderinfo = 2;
+    $adcount = 0;
     $netatalkfile = $path.$basename."/.AppleDouble/.Parent";
     $osxfile = $path."._".$basename;
 
-    if (( -e $netatalkfile ) && !( -e $osxfile )) {
-	$afile = $netatalkfile;
-    } elsif (!( -e $netatalkfile ) && ( -e $osxfile )) {
-	$afile = $osxfile;
-    } elsif (( -e $netatalkfile ) && ( -e $osxfile )) {
+    if ( 1 == checkea($afile) ) {
+	printf ("extended attribute of \"%s\" is found.\n", $afile);
+	$adcount++;
+	$openfile = eaopenfile($afile);
+	$openmessage = "Dumping \"$afile\"'s extended attribute...\n";
+    }
+    if ( -e $netatalkfile ) {
 	printf ("\"%s\" found.\n", $netatalkfile);
+	$adcount++;
+	$openfile= $netatalkfile;
+	$openmessage = "Dumping \"$openfile\"...\n";
+    }
+    if ( -e $osxfile ) {
 	printf ("\"%s\" found.\n", $osxfile);
-	printf ("Specify which of file.\n");
+	$adcount++;
+	$openfile = $osxfile;
+	$openmessage = "Dumping \"$openfile\"...\n";
+    }
+    if ( $adcount == 0 ) {
+	printf ("AppleSingle/AppleDouble data is not found.\n");
 	exit 1;
-    } else {
-	printf ("\"%s\" not found.\n", $netatalkfile);
-	printf ("\"%s\" not found.\n", $osxfile);
+    }
+    if ( $adcount != 1 ) {
+	printf ("Specify which.\n");
 	exit 1;
     }
 } else {
@@ -182,11 +248,14 @@ if ( $finderinfo != 0 ) {
     exit 1;
 }
 
-if (!open(INFILE, "<$afile")) {
+if (!open(INFILE, "<$openfile")) {
     printf (STDERR "cannot open %s\n",  $afile);
     exit 1;
 }
-printf ("%s:\n\n", $afile);
+
+printf ($openmessage);
+
+#Dump --------------------------------------------------------
 
 # Magic Number -----------------------------------------------
 
@@ -759,6 +828,63 @@ sub hexdump {
     printf("%s : %s", $hexstr,$ascstr);
 
     print "\n";
+}
+
+sub checkea {
+    my ($file) = @_;
+
+    if ( $eacommand == 1 ) {
+	open(EALIST, "getfattr ".$file." |");
+	while(<EALIST>) {
+	    if ( $_ eq "user.org.netatalk.Metadata\n" ) {
+		close (EALIST);
+		return 1;
+	    }
+	}
+	close (EALIST);
+	return 0;
+    } elsif ( $eacommand == 2 ) {
+	open(EALIST, "attr -q -l ".$file." |");
+	while(<EALIST>) {
+	    if ( $_ eq "org.netatalk.Metadata\n" ) {
+		close (EALIST);
+		return 1;
+	    }
+	}
+	close (EALIST);
+	return 0;
+    } elsif ( $eacommand == 3 ) {
+	open(EALIST, "runat ".$file." ls -1 |");
+	while(<EALIST>) {
+	    if ( $_ eq "org.netatalk.Metadata\n" ) {
+		close (EALIST);
+		return 1;
+	    }
+	}
+	close (EALIST);
+	return 0;
+    } else {
+	return 0;
+    }
+}
+
+sub eaopenfile {
+    my ($file) = @_;
+
+    ($eatempfh, $eatempfile) = tempfile(UNLINK => 1);
+
+    if ( $eacommand == 1 ) {
+	system("getfattr --only-values -n user.org.netatalk.Metadata $file > $eatempfile");
+    } elsif ( $eacommand == 2 ) {
+	system("attr -q -g org.netatalk.Metadata $file > $eatempfile");
+    } elsif ( $eacommand == 3 ) {
+	system("runat $file cat org.netatalk.Metadata > $eatempfile");
+    } else {
+	return "";
+    }
+
+    close($eatempfh);
+    return $eatempfile;
 }
 
 #EOF

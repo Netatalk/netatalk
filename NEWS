@@ -4,6 +4,8 @@ Changes in 3.0 beta1
        "afp read locks" (default: no) which disables that the server
        applies UNIX byte range locks to regions of files in AFP read and
        write calls.
+* UPD: apple_dump: Extended Attributes AppleDouble support.
+       (*BSD is not supported yet)
 
 Changes in 3.0 alpha3
 =====================
@@ -14,8 +16,8 @@ Changes in 3.0 alpha3
        reservation locking primitives. Enabled by default, set global
        "solaris share reservations" option to false to disable it.
 * NEW: ad: ad set subcommand for changing Mac metadata on the server
-* UPD: unix charset is UTF8 by default
-       vol charset is same value as unix charset by default
+* UPD: unix charset is UTF8 by default.
+       vol charset is same value as unix charset by default.
 * UPD: .AppleDesktop/ are stored in $localstatedir/netatalk/CNID
        (default: /var/netatalk/CNID), databases found in AFP volumes are
        automatically moved
