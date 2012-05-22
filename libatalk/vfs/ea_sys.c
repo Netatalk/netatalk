@@ -362,11 +362,8 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): symlink with kXAttrNoFollow", uname);
             return AFP_OK;
-        case EACCES:
-            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
-            return AFPERR_ACCESS;
         default:
-            LOG(log_error, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
             return AFPERR_MISC;
         }
     }
