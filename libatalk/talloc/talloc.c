@@ -30,8 +30,25 @@
   inspired by http://swapped.cc/halloc/
 */
 
-#include "replace.h"
+#include "config.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+#include <atalk/compat.h>
+#include <atalk/util.h>
+
 #include "talloc.h"
+
+#define _PUBLIC_ extern
+
+/** 
+ * pointer difference macro 
+ */
+#define PTR_DIFF(p1,p2) ((ptrdiff_t)(((const char *)(p1)) - (const char *)(p2)))
+
 
 #ifdef TALLOC_BUILD_VERSION_MAJOR
 #if (TALLOC_VERSION_MAJOR != TALLOC_BUILD_VERSION_MAJOR)
@@ -2053,14 +2070,6 @@ _PUBLIC_ char *talloc_strndup_append_buffer(char *s, const char *a, size_t n)
 
 	return __talloc_strlendup_append(s, slen, a, strnlen(a, n));
 }
-
-#ifndef HAVE_VA_COPY
-#ifdef HAVE___VA_COPY
-#define va_copy(dest, src) __va_copy(dest, src)
-#else
-#define va_copy(dest, src) (dest) = (src)
-#endif
-#endif
 
 _PUBLIC_ char *talloc_vasprintf(const void *t, const char *fmt, va_list ap)
 {
