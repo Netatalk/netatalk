@@ -101,7 +101,7 @@ dnl Check for optional cracklib support
 AC_DEFUN([AC_NETATALK_CRACKLIB], [
 netatalk_cv_with_cracklib=no
 AC_ARG_WITH(cracklib,
-	[  --with-cracklib=DICT    enable/set location of cracklib dictionary],[
+	[  --with-cracklib[[=DICT]]  enable/set location of cracklib dictionary [[no]]],[
 	if test "x$withval" != "xno" ; then
 		cracklib="$withval"
 		AC_CHECK_LIB(crack, main, [
