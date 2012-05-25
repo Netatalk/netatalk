@@ -30,7 +30,7 @@ VERSION_INFO = 2:0:0
 #   3.0             1:0:0
 #   3.0.1           2:0:0
 
-SUBDIRS = acl adouble bstring compat cnid dsi iniparser tdb util unicode vfs
+SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -45,6 +45,7 @@ libatalk_la_LIBADD  = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	iniparser/libiniparser.la \
+	talloc/libtalloc.la       \
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
@@ -57,6 +58,7 @@ libatalk_la_DEPENDENCIES = \
 	cnid/libcnid.la \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
+	talloc/libtalloc.la       \
 	iniparser/libiniparser.la \
 	tdb/libtdb.la       \
 	unicode/libunicode.la \

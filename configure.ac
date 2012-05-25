@@ -259,6 +259,7 @@ AC_OUTPUT([Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/iniparser/Makefile
+	libatalk/talloc/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
