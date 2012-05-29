@@ -128,7 +128,7 @@ uams_LTLIBRARIES =		\
 # link creation
 #
 
-install-exec-hook:
+install-data-hook:
 	(if [ -d $(DESTDIR)$(uamsdir) ] ; then \
 		cd $(DESTDIR)$(uamsdir)					&& \
 		rm -f $(uams_LINKS)  					&& \
