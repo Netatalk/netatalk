@@ -1,3 +1,7 @@
+Changes in 3.0 beta2
+====================
+* UPD: Solaris and friends: Replace initscript with SMF manifest
+
 Changes in 3.0 beta1
 ====================
 * UPD: afpd: Performance tuning of read/write AFP operations. New option

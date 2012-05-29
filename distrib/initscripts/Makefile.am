@@ -23,7 +23,8 @@ GENERATED_FILES = \
 	rc.redhat \
 	rc.solaris \
 	rc.suse \
-	service.systemd
+	service.systemd \
+	netatalk.xml
 
 TEMPLATES = \
 	rc.bsd.tmpl \
@@ -33,7 +34,8 @@ TEMPLATES = \
 	rc.redhat.tmpl \
 	rc.solaris.tmpl \
 	rc.suse.tmpl \
-	service.systemd.tmpl
+	service.systemd.tmpl \
+	netatalk.xml.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
@@ -137,23 +139,14 @@ endif
 
 if USE_SOLARIS
 
-sysvdir = /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.solaris
-	cp -f rc.solaris $@
-	chmod a+x $@
+servicedir = /lib/svc/manifest/network/
+service_DATA = netatalk.xml
 
 install-data-hook:
-	rm -f $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
-	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
-	rm -f $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
-	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
+	svccfg import netatalk.xml
 
 uninstall-startup:
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) \
-		$(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS) \
-		$(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
+	svccfg delete network/netatalk
 
 endif
 
