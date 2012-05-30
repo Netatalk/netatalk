@@ -863,7 +863,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                 of_name(ofork), strerror(errno));
             goto afp_read_exit;
         }
-        dsi_readdone(dsi);
         goto afp_read_done;
     }
 #endif
