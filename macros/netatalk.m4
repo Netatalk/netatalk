@@ -1,5 +1,18 @@
 dnl Kitchen sink for configuration macros
 
+dnl Whether to enable developer build
+AC_DEFUN([AC_DEVELOPER], [
+    AC_MSG_CHECKING([whether to enable developer build])
+    AC_ARG_ENABLE(
+        developer,
+        AS_HELP_STRING([--enable-developer], [whether to enable developer build (ABI checking)]),
+        enable_dev=$enableval,
+        enable_dev=no
+    )
+    AC_MSG_RESULT([$enable_dev])
+    AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
+])
+
 dnl Whether to disable bundled libevent
 AC_DEFUN([AC_NETATALK_LIBEVENT], [
     AC_MSG_CHECKING([whether to disable bundled libevent (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)])

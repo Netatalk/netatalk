@@ -64,6 +64,7 @@ libatalk_la_DEPENDENCIES = \
 
 libatalk_la_LDFLAGS = -version-info $(VERSION_INFO)
 
+if DEVELOPER
 all-local: .libs/libatalk.so
 	@$(top_srcdir)/abigen.sh .libs/libatalk.so > libatalk.abi.tmp
 	@diff -u libatalk-$(NETATALK_VERSION).abi libatalk.abi.tmp || ( \
@@ -75,3 +76,4 @@ all-local: .libs/libatalk.so
 
 check-local: .libs/libatalk.so
 	@$(top_srcdir)/abigen.sh .libs/libatalk.so > libatalk-$(NETATALK_VERSION).abi
+endif
