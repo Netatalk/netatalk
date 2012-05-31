@@ -1,550 +1,550 @@
-acl_ldap_readconfig:$1 = {int (dictionary *)} 0x12e34 <acl_ldap_readconfig>
-ad_close:$2 = {int (struct adouble *, int)} 0x15a93 <ad_close>
-ad_convert:$3 = {int (const char *, const struct stat *, const struct vol *, const char **)} 0x14867 <ad_convert>
-ad_copy_header:$4 = {int (struct adouble *, struct adouble *)} 0x15098 <ad_copy_header>
-add_cachebyname:$5 = {int (const char *, const uuidp_t, const uuidtype_t, const long unsigned int)} 0x1099e <add_cachebyname>
-add_cachebyuuid:$6 = {int (uuidp_t, const char *, uuidtype_t, const long unsigned int)} 0x11020 <add_cachebyuuid>
-add_charset:$7 = {charset_t (const char *)} 0x3c1e2 <add_charset>
-ad_dir:$8 = {char *(const char *)} 0x1b079 <ad_dir>
-ad_dtruncate:$9 = {int (struct adouble *, const off_t)} 0x1c7c7 <ad_dtruncate>
-adflags2logstr:$10 = {const char *(int)} 0x17608 <adflags2logstr>
-ad_flush:$11 = {int (struct adouble *)} 0x15977 <ad_flush>
-ad_forcegetid:$12 = {uint32_t (struct adouble *)} 0x13891 <ad_forcegetid>
-adf_pread:$13 = {ssize_t (struct ad_fd *, void *, size_t, off_t)} 0x1bfe8 <adf_pread>
-adf_pwrite:$14 = {ssize_t (struct ad_fd *, const void *, size_t, off_t)} 0x1c2b4 <adf_pwrite>
-ad_getattr:$15 = {int (const struct adouble *, uint16_t *)} 0x13258 <ad_getattr>
-ad_getdate:$16 = {int (const struct adouble *, unsigned int, uint32_t *)} 0x14a4d <ad_getdate>
-ad_getentryoff:$17 = {off_t (const struct adouble *, int)} 0x1ad5c <ad_getentryoff>
-ad_getfuid:$18 = {uid_t (void)} 0x1b1c4 <ad_getfuid>
-ad_getid:$19 = {uint32_t (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *)} 0x136e9 <ad_getid>
-ad_hf_mode:$20 = {mode_t (mode_t)} 0x1bf7a <ad_hf_mode>
-ad_init:$21 = {void (struct adouble *, const struct vol *)} 0x1b46f <ad_init>
-ad_init_old:$22 = {void (struct adouble *, int, int)} 0x1b425 <ad_init_old>
-ad_lock:$23 = {int (struct adouble *, uint32_t, int, off_t, off_t, int)} 0x16b68 <ad_lock>
-ad_metadata:$24 = {int (const char *, int, struct adouble *)} 0x1ba09 <ad_metadata>
-ad_metadataat:$25 = {int (int, const char *, int, struct adouble *)} 0x1bb5c <ad_metadataat>
-ad_mkdir:$26 = {int (const char *, mode_t)} 0x1b24c <ad_mkdir>
-ad_mode:$27 = {int (const char *, mode_t)} 0x1b212 <ad_mode>
-ad_open:$28 = {int (struct adouble *, const char *, int, ...)} 0x1b4bf <ad_open>
-ad_openat:$29 = {int (struct adouble *, int, const char *, int, ...)} 0x1bd61 <ad_openat>
-ad_openforks:$30 = {uint16_t (struct adouble *, uint16_t)} 0x174e3 <ad_openforks>
-ad_path:$31 = {const char *(const char *, int)} 0x1af30 <ad_path>
-ad_path_ea:$32 = {const char *(const char *, int)} 0x1ade6 <ad_path_ea>
-ad_path_osx:$33 = {const char *(const char *, int)} 0x1adf7 <ad_path_osx>
-ad_read:$34 = {ssize_t (struct adouble *, const uint32_t, off_t, char *, const size_t)} 0x1c021 <ad_read>
-ad_readfile_init:$35 = {int (const struct adouble *, const int, off_t *, const int)} 0x1c17f <ad_readfile_init>
-ad_rebuild_adouble_header_ea:$36 = {int (struct adouble *)} 0x14cd0 <ad_rebuild_adouble_header_ea>
-ad_rebuild_adouble_header_v2:$37 = {int (struct adouble *)} 0x14af4 <ad_rebuild_adouble_header_v2>
-ad_refresh:$38 = {int (const char *, struct adouble *)} 0x1bc45 <ad_refresh>
-ad_rtruncate:$39 = {int (struct adouble *, const off_t)} 0x1c6b7 <ad_rtruncate>
-ad_setattr:$40 = {int (const struct adouble *, const uint16_t)} 0x133c3 <ad_setattr>
-ad_setdate:$41 = {int (struct adouble *, unsigned int, uint32_t)} 0x149b0 <ad_setdate>
-ad_setfuid:$42 = {int (const uid_t)} 0x1b1ad <ad_setfuid>
-ad_setid:$43 = {int (struct adouble *, const dev_t, const ino_t, const uint32_t, const cnid_t, const void *)} 0x13552 <ad_setid>
-ad_setname:$44 = {int (struct adouble *, const char *)} 0x13905 <ad_setname>
-ad_size:$45 = {off_t (const struct adouble *, const uint32_t)} 0x1c20c <ad_size>
-ad_stat:$46 = {int (const char *, struct stat *)} 0x1b1d0 <ad_stat>
-ad_testlock:$47 = {int (struct adouble *, int, const off_t)} 0x173d9 <ad_testlock>
-ad_tmplock:$48 = {int (struct adouble *, uint32_t, int, off_t, off_t, int)} 0x170a5 <ad_tmplock>
-ad_unlock:$49 = {void (struct adouble *, const int, int)} 0x172fe <ad_unlock>
-ad_valid_header_osx:$50 = {int (const char *)} 0x18489 <ad_valid_header_osx>
-ad_write:$51 = {ssize_t (struct adouble *, uint32_t, off_t, int, const char *, size_t)} 0x1c2ed <ad_write>
-afp_config_parse:$52 = {int (AFPObj *, char *)} 0x49397 <afp_config_parse>
-allow_severity:$53 = 5
-apply_ip_mask:$54 = {void (struct sockaddr *, int)} 0x4d67f <apply_ip_mask>
-atalk_iconv:$55 = {size_t (atalk_iconv_t, const char **, size_t *, char **, size_t *)} 0x3b798 <atalk_iconv>
-atalk_iconv_close:$56 = {int (atalk_iconv_t)} 0x3bcdb <atalk_iconv_close>
-atalk_iconv_open:$57 = {atalk_iconv_t (const char *, const char *)} 0x3b956 <atalk_iconv_open>
-atalk_register_charset:$58 = {int (struct charset_functions *)} 0x3b52c <atalk_register_charset>
-balloc:$59 = {int (bstring, int)} 0x1cabf <balloc>
-ballocmin:$60 = {int (bstring, int)} 0x1cc37 <ballocmin>
-bassign:$61 = {int (bstring, const_bstring)} 0x1d6bc <bassign>
-bassignblk:$62 = {int (bstring, const void *, int)} 0x1da55 <bassignblk>
-bassigncstr:$63 = {int (bstring, const char *)} 0x1d8ec <bassigncstr>
-bassignformat:$64 = {int (bstring, const char *, ...)} 0x23619 <bassignformat>
-bassigngets:$65 = {int (bstring, bNgetc, void *, char)} 0x21016 <bassigngets>
-bassignmidstr:$66 = {int (bstring, const_bstring, int, int)} 0x1d7b8 <bassignmidstr>
-bcatblk:$67 = {int (bstring, const void *, int)} 0x1d48e <bcatblk>
-bcatcstr:$68 = {int (bstring, const char *)} 0x1d377 <bcatcstr>
-bconcat:$69 = {int (bstring, const_bstring)} 0x1d13d <bconcat>
-bconchar:$70 = {int (bstring, char)} 0x1d2d6 <bconchar>
-bcstrfree:$71 = {int (char *)} 0x1d10c <bcstrfree>
-bdelete:$72 = {int (bstring, int, int)} 0x1ed69 <bdelete>
-bdestroy:$73 = {int (bstring)} 0x1eea9 <bdestroy>
-become_root:$74 = {void (void)} 0x4e3e7 <become_root>
-bfindreplace:$75 = {int (bstring, const_bstring, const_bstring, int)} 0x20bcb <bfindreplace>
-bfindreplacecaseless:$76 = {int (bstring, const_bstring, const_bstring, int)} 0x20c02 <bfindreplacecaseless>
-bformat:$77 = {bstring (const char *, ...)} 0x238eb <bformat>
-bformata:$78 = {int (bstring, const char *, ...)} 0x23347 <bformata>
-bfromcstr:$79 = {bstring (const char *)} 0x1cd11 <bfromcstr>
-bfromcstralloc:$80 = {bstring (int, const char *)} 0x1ce11 <bfromcstralloc>
-bgetsa:$81 = {int (bstring, bNgetc, void *, char)} 0x21143 <bgetsa>
-bgetstream:$82 = {bstring (bNgetc, void *, char)} 0x21273 <bgetstream>
-binchr:$83 = {int (const_bstring, int, const_bstring)} 0x1f986 <binchr>
-binchrr:$84 = {int (const_bstring, int, const_bstring)} 0x1fac2 <binchrr>
-binsert:$85 = {int (bstring, int, const_bstring, unsigned char)} 0x1ff01 <binsert>
-binsertch:$86 = {int (bstring, int, int, unsigned char)} 0x20c39 <binsertch>
-binstr:$87 = {int (const_bstring, int, const_bstring)} 0x1ef3b <binstr>
-binstrcaseless:$88 = {int (const_bstring, int, const_bstring)} 0x1f349 <binstrcaseless>
-binstrr:$89 = {int (const_bstring, int, const_bstring)} 0x1f1a6 <binstrr>
-binstrrcaseless:$90 = {int (const_bstring, int, const_bstring)} 0x1f51a <binstrrcaseless>
-biseq:$91 = {int (const_bstring, const_bstring)} 0x1e6b4 <biseq>
-biseqcaseless:$92 = {int (const_bstring, const_bstring)} 0x1e0f9 <biseqcaseless>
-biseqcstr:$93 = {int (const_bstring, const char *)} 0x1e85c <biseqcstr>
-biseqcstrcaseless:$94 = {int (const_bstring, const char *)} 0x1e909 <biseqcstrcaseless>
-bisstemeqblk:$95 = {int (const_bstring, const void *, int)} 0x1e77e <bisstemeqblk>
-bisstemeqcaselessblk:$96 = {int (const_bstring, const void *, int)} 0x1e25b <bisstemeqcaselessblk>
-bjoin:$97 = {bstring (const struct bstrList *, const_bstring)} 0x2209e <bjoin>
-bjoinInv:$98 = {bstring (const struct bstrList *, const_bstring)} 0x23eb4 <bjoinInv>
-blk2bstr:$99 = {bstring (const void *, int)} 0x1cf22 <blk2bstr>
-bltrimws:$100 = {int (bstring)} 0x1e386 <bltrimws>
-bmidstr:$101 = {bstring (const_bstring, int, int)} 0x1ecc4 <bmidstr>
-bninchr:$102 = {int (const_bstring, int, const_bstring)} 0x1fb9f <bninchr>
-bninchrr:$103 = {int (const_bstring, int, const_bstring)} 0x1fc4a <bninchrr>
-bpattern:$104 = {int (bstring, int)} 0x20db6 <bpattern>
-bread:$105 = {bstring (bNread, void *)} 0x20fc0 <bread>
-breada:$106 = {int (bstring, bNread, void *)} 0x20eb5 <breada>
-brefcstr:$107 = {bstring (char *)} 0x23ce0 <brefcstr>
-breplace:$108 = {int (bstring, int, int, const_bstring, unsigned char)} 0x20163 <breplace>
-brtrimws:$109 = {int (bstring)} 0x1e464 <brtrimws>
-bsbufflength:$110 = {int (struct bStream *, int)} 0x2136b <bsbufflength>
-bsclose:$111 = {void *(struct bStream *)} 0x2140a <bsclose>
-bseof:$112 = {int (const struct bStream *)} 0x213b1 <bseof>
-bsetstr:$113 = {int (bstring, int, const_bstring, unsigned char)} 0x1fcfe <bsetstr>
-bsopen:$114 = {struct bStream *(bNread, void *)} 0x212d9 <bsopen>
-bspeek:$115 = {int (bstring, const struct bStream *)} 0x2205a <bspeek>
-bsplit:$116 = {struct bstrList *(const_bstring, unsigned char)} 0x23016 <bsplit>
-bsplitcb:$117 = {int (const_bstring, unsigned char, int, int (*)(void *, int, int), void *)} 0x22ac3 <bsplitcb>
-bsplits:$118 = {struct bstrList *(const_bstring, const_bstring)} 0x23222 <bsplits>
-bsplitscb:$119 = {int (const_bstring, const_bstring, int, int (*)(void *, int, int), void *)} 0x22b89 <bsplitscb>
-bsplitstr:$120 = {struct bstrList *(const_bstring, const_bstring)} 0x2311c <bsplitstr>
-bsplitstrcb:$121 = {int (const_bstring, const_bstring, int, int (*)(void *, int, int), void *)} 0x22d41 <bsplitstrcb>
-bsread:$122 = {int (bstring, struct bStream *, int)} 0x21f80 <bsread>
-bsreada:$123 = {int (bstring, struct bStream *, int)} 0x21b4b <bsreada>
-bsreadln:$124 = {int (bstring, struct bStream *, char)} 0x21e1a <bsreadln>
-bsreadlna:$125 = {int (bstring, struct bStream *, char)} 0x21490 <bsreadlna>
-bsreadlns:$126 = {int (bstring, struct bStream *, const_bstring)} 0x21ea1 <bsreadlns>
-bsreadlnsa:$127 = {int (bstring, struct bStream *, const_bstring)} 0x21773 <bsreadlnsa>
-bssplitscb:$128 = {int (struct bStream *, const_bstring, int (*)(void *, int, const_bstring), void *)} 0x222d8 <bssplitscb>
-bssplitstrcb:$129 = {int (struct bStream *, const_bstring, int (*)(void *, int, const_bstring), void *)} 0x2257d <bssplitstrcb>
-bstr2cstr:$130 = {char *(const_bstring, char)} 0x1d022 <bstr2cstr>
-bstrchrp:$131 = {int (const_bstring, int, int)} 0x1f6f8 <bstrchrp>
-bstrcmp:$132 = {int (const_bstring, const_bstring)} 0x1ea00 <bstrcmp>
-bstrcpy:$133 = {bstring (const_bstring)} 0x1d58e <bstrcpy>
-bstricmp:$134 = {int (const_bstring, const_bstring)} 0x1dd17 <bstricmp>
-bstrListAlloc:$135 = {int (struct bstrList *, int)} 0x228c2 <bstrListAlloc>
-bstrListAllocMin:$136 = {int (struct bstrList *, int)} 0x229d7 <bstrListAllocMin>
-bstrListCreate:$137 = {struct bstrList *(void)} 0x2277b <bstrListCreate>
-bstrListCreateMin:$138 = {struct bstrList *(int)} 0x23dce <bstrListCreateMin>
-bstrListDestroy:$139 = {int (struct bstrList *)} 0x227e8 <bstrListDestroy>
-bstrListPop:$140 = {bstring (struct bstrList *)} 0x23ea5 <bstrListPop>
-bstrListPush:$141 = {int (struct bstrList *, bstring)} 0x23e2c <bstrListPush>
-bstrncmp:$142 = {int (const_bstring, const_bstring, int)} 0x1eb65 <bstrncmp>
-bstrnicmp:$143 = {int (const_bstring, const_bstring, int)} 0x1deeb <bstrnicmp>
-bstrrchrp:$144 = {int (const_bstring, int, int)} 0x1f795 <bstrrchrp>
-bsunread:$145 = {int (struct bStream *, const_bstring)} 0x2200c <bsunread>
-btolower:$146 = {int (bstring)} 0x1dc68 <btolower>
-btoupper:$147 = {int (bstring)} 0x1dbb9 <btoupper>
-btrimws:$148 = {int (bstring)} 0x1e55f <btrimws>
-btrunc:$149 = {int (bstring, int)} 0x1db2f <btrunc>
-bunrefcstr:$150 = {int (bstring)} 0x23d5a <bunrefcstr>
-bvcformata:$151 = {int (bstring, int, const char *, struct __va_list_tag *)} 0x23b52 <bvcformata>
-charset_decompose:$152 = {size_t (charset_t, char *, size_t, char *, size_t)} 0x3d661 <charset_decompose>
-charset_mac_centraleurope:$153 = {name = 0x67548 "MAC_CENTRALEUROPE", kTextEncoding = 29, pull = 0x40475 <mac_centraleurope_pull>, push = 0x4042b <mac_centraleurope_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_mac_chinese_simp:$154 = {name = 0x6784c "MAC_CHINESE_SIMP", kTextEncoding = 25, pull = 0x40736 <mac_chinese_simp_pull>, push = 0x405df <mac_chinese_simp_push>, flags = 85, iname = 0x6785d "EUC-CN", prev = 0x0, next = 0x0}
-charset_mac_chinese_trad:$155 = {name = 0x67ac0 "MAC_CHINESE_TRAD", kTextEncoding = 2, pull = 0x40a3f <mac_chinese_trad_pull>, push = 0x408d8 <mac_chinese_trad_push>, flags = 85, iname = 0x67ad1 "BIG-5", prev = 0x0, next = 0x0}
-charset_mac_cyrillic:$156 = {name = 0x67d08 "MAC_CYRILLIC", kTextEncoding = 7, pull = 0x40cad <mac_cyrillic_pull>, push = 0x40c63 <mac_cyrillic_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_mac_greek:$157 = {name = 0x67f40 "MAC_GREEK", kTextEncoding = 6, pull = 0x40edb <mac_greek_pull>, push = 0x40e1c <mac_greek_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_mac_hebrew:$158 = {name = 0x68158 "MAC_HEBREW", kTextEncoding = 5, pull = 0x4137f <mac_hebrew_pull>, push = 0x4103b <mac_hebrew_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_mac_japanese:$159 = {name = 0x68c3c "MAC_JAPANESE", kTextEncoding = 1, pull = 0x41a8d <mac_japanese_pull>, push = 0x418a2 <mac_japanese_push>, flags = 85, iname = 0x68c49 "SHIFT_JIS", prev = 0x0, next = 0x0}
-charset_mac_korean:$160 = {name = 0x6b734 "MAC_KOREAN", kTextEncoding = 3, pull = 0x41dd3 <mac_korean_pull>, push = 0x41c6c <mac_korean_push>, flags = 85, iname = 0x6b73f "EUC-KR", prev = 0x0, next = 0x0}
-charset_mac_roman:$161 = {name = 0x6ba20 "MAC_ROMAN", kTextEncoding = 0, pull = 0x4208e <mac_roman_pull>, push = 0x41fdf <mac_roman_push>, flags = 21, iname = 0x0, prev = 0x0, next = 0x0}
-charset_mac_turkish:$162 = {name = 0x6bce8 "MAC_TURKISH", kTextEncoding = 35, pull = 0x42338 <mac_turkish_pull>, push = 0x422ee <mac_turkish_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_names:$163 = 0x2894a0
-charset_precompose:$164 = {size_t (charset_t, char *, size_t, char *, size_t)} 0x3d53b <charset_precompose>
-charset_strlower:$165 = {size_t (charset_t, const char *, size_t, char *, size_t)} 0x3d213 <charset_strlower>
-charset_strupper:$166 = {size_t (charset_t, const char *, size_t, char *, size_t)} 0x3d13f <charset_strupper>
-charset_to_ucs2_allocate:$167 = {size_t (charset_t, uint16_t **, const char *)} 0x3d3c3 <charset_to_ucs2_allocate>
-charset_to_utf8_allocate:$168 = {size_t (charset_t, char **, const char *)} 0x3d40c <charset_to_utf8_allocate>
-charset_utf8:$169 = {name = 0x64420 "UTF8", kTextEncoding = 134217987, pull = 0x3e9e0 <utf8_pull>, push = 0x3ee3d <utf8_push>, flags = 22, iname = 0x0, prev = 0x0, next = 0x0}
-charset_utf8_mac:$170 = {name = 0x64425 "UTF8-MAC", kTextEncoding = 134217987, pull = 0x3e9e0 <utf8_pull>, push = 0x3ee3d <utf8_push>, flags = 27, iname = 0x0, prev = 0x0, next = 0x0}
-check_lockfile:$171 = {int (const char *, const char *)} 0x4c9b7 <check_lockfile>
-cjk_char_pull:$172 = {size_t (uint16_t, uint16_t *, const uint32_t *)} 0x3fd06 <cjk_char_pull>
-cjk_char_push:$173 = {size_t (uint16_t, uint8_t *)} 0x3fc7f <cjk_char_push>
-cjk_compose:$174 = {uint16_t (uint16_t, uint16_t, const uint32_t *, size_t)} 0x3ff04 <cjk_compose>
-cjk_compose_seq:$175 = {uint16_t (const uint16_t *, size_t *, const uint32_t *, size_t)} 0x3ffa5 <cjk_compose_seq>
-cjk_generic_pull:$176 = {size_t (size_t (*)(uint16_t *, const uint8_t *, size_t *), void *, char **, size_t *, char **, size_t *)} 0x3fa5a <cjk_generic_pull>
-cjk_generic_push:$177 = {size_t (size_t (*)(uint8_t *, const uint16_t *, size_t *), void *, char **, size_t *, char **, size_t *)} 0x3f7fa <cjk_generic_push>
-cjk_lookup:$178 = {uint16_t (uint16_t, const cjk_index_t *, const uint16_t *)} 0x3fdf7 <cjk_lookup>
-cnid_add:$179 = {cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, const char *, const size_t, cnid_t)} 0x249ea <cnid_add>
-cnid_close:$180 = {void (struct _cnid_db *)} 0x24976 <cnid_close>
-cnid_dbd_add:$181 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)} 0x264bb <cnid_dbd_add>
-cnid_dbd_close:$182 = {void (struct _cnid_db *)} 0x263d7 <cnid_dbd_close>
-cnid_dbd_delete:$183 = {int (struct _cnid_db *, const cnid_t)} 0x2775a <cnid_dbd_delete>
-cnid_dbd_find:$184 = {int (struct _cnid_db *, const char *, size_t, void *, size_t)} 0x26f6f <cnid_dbd_find>
-cnid_dbd_get:$185 = {cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)} 0x267ab <cnid_dbd_get>
-cnid_dbd_getstamp:$186 = {int (struct _cnid_db *, void *, const size_t)} 0x26bfa <cnid_dbd_getstamp>
-cnid_dbd_lookup:$187 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)} 0x26cb5 <cnid_dbd_lookup>
-cnid_dbd_module:$188 = {name = 0x5bb3a "dbd", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 0}
-cnid_dbd_open:$189 = {struct _cnid_db *(struct cnid_open_args *)} 0x261ee <cnid_dbd_open>
-cnid_dbd_rebuild_add:$190 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)} 0x2745f <cnid_dbd_rebuild_add>
-cnid_dbd_resolve:$191 = {char *(struct _cnid_db *, cnid_t *, void *, size_t)} 0x269da <cnid_dbd_resolve>
-cnid_dbd_update:$192 = {int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)} 0x2719d <cnid_dbd_update>
-cnid_delete:$193 = {int (struct _cnid_db *, cnid_t)} 0x24a73 <cnid_delete>
-cnid_find:$194 = {int (struct _cnid_db *, const char *, size_t, void *, size_t)} 0x24c0d <cnid_find>
-cnid_get:$195 = {cnid_t (struct _cnid_db *, const cnid_t, char *, const size_t)} 0x24ab1 <cnid_get>
-cnid_getstamp:$196 = {int (struct _cnid_db *, void *, const size_t)} 0x24b06 <cnid_getstamp>
-cnid_init:$197 = {void (void)} 0x24e40 <cnid_init>
-cnid_last_add:$198 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)} 0x278e0 <cnid_last_add>
-cnid_last_close:$199 = {void (struct _cnid_db *)} 0x27980 <cnid_last_close>
-cnid_last_delete:$200 = {int (struct _cnid_db *, const cnid_t)} 0x279b1 <cnid_last_delete>
-cnid_last_get:$201 = {cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)} 0x279c3 <cnid_last_get>
-cnid_last_lookup:$202 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)} 0x279dd <cnid_last_lookup>
-cnid_last_module:$203 = {name = 0x5bb7e "last", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 0}
-cnid_last_open:$204 = {struct _cnid_db *(struct cnid_open_args *)} 0x27b52 <cnid_last_open>
-cnid_last_resolve:$205 = {char *(struct _cnid_db *, cnid_t *, void *, size_t)} 0x27bd9 <cnid_last_resolve>
-cnid_last_update:$206 = {int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)} 0x27bf4 <cnid_last_update>
-cnid_lookup:$207 = {cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t)} 0x24bac <cnid_lookup>
-cnid_open:$208 = {struct _cnid_db *(const char *, mode_t, char *, int, const char *, const char *)} 0x244ff <cnid_open>
-cnid_rebuild_add:$209 = {cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t, cnid_t)} 0x24dd1 <cnid_rebuild_add>
-cnid_register:$210 = {void (struct _cnid_module *)} 0x240fc <cnid_register>
-cnid_resolve:$211 = {char *(struct _cnid_db *, cnid_t *, void *, size_t)} 0x24cbb <cnid_resolve>
-cnid_tdb_add:$212 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)} 0x28121 <cnid_tdb_add>
-cnid_tdb_close:$213 = {void (struct _cnid_db *)} 0x2833c <cnid_tdb_close>
-cnid_tdb_delete:$214 = {int (struct _cnid_db *, const cnid_t)} 0x28388 <cnid_tdb_delete>
-cnid_tdb_get:$215 = {cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)} 0x284bc <cnid_tdb_get>
-cnid_tdb_lookup:$216 = {cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)} 0x28684 <cnid_tdb_lookup>
-cnid_tdb_module:$217 = {name = 0x5bd5c "tdb", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 12}
-cnid_tdb_open:$218 = {struct _cnid_db *(struct cnid_open_args *)} 0x28d85 <cnid_tdb_open>
-cnid_tdb_resolve:$219 = {char *(struct _cnid_db *, cnid_t *, void *, size_t)} 0x292d8 <cnid_tdb_resolve>
-cnid_tdb_update:$220 = {int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)} 0x293d4 <cnid_tdb_update>
-cnid_update:$221 = {int (struct _cnid_db *, const cnid_t, const struct stat *, const cnid_t, char *, const size_t)} 0x24d66 <cnid_update>
-compare_ip:$222 = {int (const struct sockaddr *, const struct sockaddr *)} 0x4d7ea <compare_ip>
-convert_charset:$223 = {size_t (charset_t, charset_t, charset_t, const char *, size_t, char *, size_t, uint16_t *)} 0x3e658 <convert_charset>
-convert_string:$224 = {size_t (charset_t, charset_t, const void *, size_t, void *, size_t)} 0x3c8a9 <convert_string>
-convert_string_allocate:$225 = {size_t (charset_t, charset_t, const void *, size_t, char **)} 0x3ceb7 <convert_string_allocate>
-copy_ea:$226 = {int (const char *, int, const char *, const char *, mode_t)} 0x52b70 <copy_ea>
-copy_file:$227 = {int (int, const char *, const char *, mode_t)} 0x528d5 <copy_file>
-copy_file_fd:$228 = {int (int, int)} 0x52734 <copy_file_fd>
-copy_fork:$229 = {int (int, struct adouble *, struct adouble *)} 0x1c8b9 <copy_fork>
-create_lockfile:$230 = {int (const char *, const char *)} 0x4ca82 <create_lockfile>
-daemonize:$231 = {int (int, int)} 0x4e316 <daemonize>
-decompose_w:$232 = {size_t (uint16_t *, size_t, uint16_t *, size_t *)} 0x3ac22 <decompose_w>
-deny_severity:$233 = 3
-dequeue:$234 = {void *(q_t *)} 0x4a8e3 <dequeue>
-_diacasemap:$235 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 231, 203, 229, 128, 204, 129, 130, 131, 233, 230, 232, 234, 237, 235, 236, 132, 238, 241, 239, 133, 205, 242, 244, 243, 134, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 198, 183, 184, 184, 186, 187, 188, 189, 174, 175, 192, 193, 194, 195, 196, 197, 198, 199...}
-_dialowermap:$236 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 138, 140, 141, 142, 150, 154, 159, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 132, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 190, 191, 176, 177, 178, 179, 180, 181, 198, 183, 185, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199...}
-dictionary_del:$237 = {void (dictionary *)} 0x2d788 <dictionary_del>
-dictionary_dump:$238 = {void (dictionary *, FILE *)} 0x2de03 <dictionary_dump>
-dictionary_get:$239 = {const char *(const dictionary *, const char *, const char *, const char *)} 0x2d862 <dictionary_get>
-dictionary_hash:$240 = {unsigned int (char *)} 0x2d66b <dictionary_hash>
-dictionary_new:$241 = {dictionary *(int)} 0x2d6e3 <dictionary_new>
-dictionary_set:$242 = {int (dictionary *, char *, char *, char *)} 0x2d951 <dictionary_set>
-dictionary_unset:$243 = {void (dictionary *, char *, char *)} 0x2dc75 <dictionary_unset>
-dir_rx_set:$244 = {int (mode_t)} 0x524e0 <dir_rx_set>
-dsi_attention:$245 = {int (DSI *, AFPUserBytes)} 0x29950 <dsi_attention>
-dsi_close:$246 = {void (DSI *)} 0x29a94 <dsi_close>
-dsi_cmdreply:$247 = {int (DSI *, const int)} 0x29ba0 <dsi_cmdreply>
-dsi_disconnect:$248 = {int (DSI *)} 0x2c7aa <dsi_disconnect>
-dsi_getsession:$249 = {int (DSI *, server_child *, int, afp_child_t **)} 0x29cc0 <dsi_getsession>
-dsi_getstatus:$250 = {void (DSI *)} 0x2a2bc <dsi_getstatus>
-dsi_init:$251 = {DSI *(AFPObj *, const char *, const char *, const char *)} 0x2a36c <dsi_init>
-dsi_opensession:$252 = {void (DSI *)} 0x2a50b <dsi_opensession>
-dsi_read:$253 = {ssize_t (DSI *, void *, const size_t)} 0x2a8f9 <dsi_read>
-dsi_readdone:$254 = {void (DSI *)} 0x2a8d8 <dsi_readdone>
-dsi_readinit:$255 = {ssize_t (DSI *, void *, const size_t, const size_t, const int)} 0x2a778 <dsi_readinit>
-dsi_stream_read:$256 = {size_t (DSI *, void *, const size_t)} 0x2cdc5 <dsi_stream_read>
-dsi_stream_read_file:$257 = {ssize_t (DSI *, const int, off_t, const size_t, const int)} 0x2cac4 <dsi_stream_read_file>
-dsi_stream_receive:$258 = {int (DSI *)} 0x2d325 <dsi_stream_receive>
-dsi_stream_send:$259 = {int (DSI *, void *, size_t)} 0x2d001 <dsi_stream_send>
-dsi_stream_write:$260 = {ssize_t (DSI *, void *, const size_t, int)} 0x2c84d <dsi_stream_write>
-dsi_tcp_init:$261 = {int (DSI *, const char *, const char *, const char *)} 0x2b28d <dsi_tcp_init>
-dsi_tickle:$262 = {int (DSI *)} 0x2b94c <dsi_tickle>
-dsi_write:$263 = {size_t (DSI *, void *, const size_t)} 0x2bb3f <dsi_write>
-dsi_writeflush:$264 = {void (DSI *)} 0x2bc45 <dsi_writeflush>
-dsi_writeinit:$265 = {size_t (DSI *, void *, const size_t)} 0x2ba18 <dsi_writeinit>
-ea_chmod_dir:$266 = {int (const struct vol *, const char *, mode_t, struct stat *)} 0x571df <ea_chmod_dir>
-ea_chmod_file:$267 = {int (const struct vol *, const char *, mode_t, struct stat *)} 0x56eb4 <ea_chmod_file>
-ea_chown:$268 = {int (const struct vol *, const char *, uid_t, gid_t)} 0x56c80 <ea_chown>
-ea_close:$269 = {int (struct ea *)} 0x54cbc <ea_close>
-ea_copyfile:$270 = {int (const struct vol *, int, const char *, const char *)} 0x56758 <ea_copyfile>
-ea_deletefile:$271 = {int (const struct vol *, int, const char *)} 0x55f1f <ea_deletefile>
-ea_open:$272 = {int (const struct vol *, const char *, eaflags_t, struct ea *)} 0x54500 <ea_open>
-ea_openat:$273 = {int (const struct vol *, int, const char *, eaflags_t, struct ea *)} 0x54bd4 <ea_openat>
-ea_path:$274 = {char *(const struct ea *, const char *, int)} 0x5440f <ea_path>
-ea_renamefile:$275 = {int (const struct vol *, int, const char *, const char *)} 0x56195 <ea_renamefile>
-enqueue:$276 = {qnode_t *(q_t *, void *)} 0x4a801 <enqueue>
-fault_setup:$277 = {void (void (*)(void *))} 0x42cec <fault_setup>
-fdset_add_fd:$278 = {void (int, struct pollfd **, struct polldata **, int *, int *, int, enum fdtype, void *)} 0x4d83a <fdset_add_fd>
-fdset_del_fd:$279 = {void (struct pollfd **, struct polldata **, int *, int *, int)} 0x4d9e5 <fdset_del_fd>
-find_charset_functions:$280 = {struct charset_functions *(const char *)} 0x3b4d4 <find_charset_functions>
-_fini:$281 = {<text variable, no debug info>} 0x58f48 <_fini>
-freeifacelist:$282 = {void (char **)} 0x42f72 <freeifacelist>
-fullpathname:$283 = {const char *(const char *)} 0x4e4a8 <fullpathname>
-getcwdpath:$284 = {const char *(void)} 0x4e464 <getcwdpath>
-get_eacontent:$285 = {int (const struct vol *, char *, size_t *, const char *, int, const char *, int)} 0x554a5 <get_eacontent>
-get_easize:$286 = {int (const struct vol *, char *, size_t *, const char *, int, const char *)} 0x55231 <get_easize>
-getifacelist:$287 = {char **(void)} 0x42ef5 <getifacelist>
-getip_port:$288 = {unsigned int (const struct sockaddr *)} 0x4d623 <getip_port>
-getip_string:$289 = {const char *(const struct sockaddr *)} 0x4d520 <getip_string>
-getnamefromuuid:$290 = {int (const uuidp_t, char **, uuidtype_t *)} 0x11ea9 <getnamefromuuid>
-getuuidfromname:$291 = {int (const char *, uuidtype_t, unsigned char *)} 0x11a3d <getuuidfromname>
-getvolbyname:$292 = {struct vol *(const char *)} 0x49329 <getvolbyname>
-getvolbypath:$293 = {struct vol *(AFPObj *, const char *)} 0x48828 <getvolbypath>
-getvolbyvid:$294 = {struct vol *(const uint16_t)} 0x487c6 <getvolbyvid>
-getvolumes:$295 = {struct vol *(void)} 0x487b9 <getvolumes>
-gmem:$296 = {int (gid_t, int, gid_t *)} 0x4e8c2 <gmem>
-iniparser_dump:$297 = {void (const dictionary *, FILE *)} 0x2e15e <iniparser_dump>
-iniparser_dump_ini:$298 = {void (const dictionary *, FILE *)} 0x2e259 <iniparser_dump_ini>
-iniparser_find_entry:$299 = {int (const dictionary *, const char *)} 0x2e7a7 <iniparser_find_entry>
-iniparser_freedict:$300 = {void (dictionary *)} 0x2f017 <iniparser_freedict>
-iniparser_getboolean:$301 = {int (const dictionary *, const char *, const char *, int)} 0x2e6d1 <iniparser_getboolean>
-iniparser_getdouble:$302 = {double (const dictionary *, const char *, const char *, double)} 0x2e674 <iniparser_getdouble>
-iniparser_getint:$303 = {int (const dictionary *, const char *, const char *, int)} 0x2e617 <iniparser_getint>
-iniparser_getnsec:$304 = {int (const dictionary *)} 0x2e002 <iniparser_getnsec>
-iniparser_getsecname:$305 = {const char *(const dictionary *, int)} 0x2e091 <iniparser_getsecname>
-iniparser_getstrdup:$306 = {char *(const dictionary *, const char *, const char *, const char *)} 0x2e5aa <iniparser_getstrdup>
-iniparser_getstring:$307 = {const char *(const dictionary *, const char *, const char *, const char *)} 0x2e553 <iniparser_getstring>
-iniparser_load:$308 = {dictionary *(const char *)} 0x2eaff <iniparser_load>
-iniparser_set:$309 = {int (dictionary *, char *, char *, char *)} 0x2e7e9 <iniparser_set>
-iniparser_unset:$310 = {void (dictionary *, char *, char *)} 0x2e818 <iniparser_unset>
-_init:$311 = {<text variable, no debug info>} 0xe7e0 <_init>
-init_iconv:$312 = {void (void)} 0x3c48e <init_iconv>
-initvol_vfs:$313 = {void (struct vol *)} 0x5236e <initvol_vfs>
-ipc_child_write:$314 = {int (int, uint16_t, int, void *)} 0x4c565 <ipc_child_write>
-ipc_client_uds:$315 = {int (const char *)} 0x4bbac <ipc_client_uds>
-ipc_server_read:$316 = {int (server_child *, int)} 0x4c01e <ipc_server_read>
-ipc_server_uds:$317 = {int (const char *)} 0x4b930 <ipc_server_uds>
-islower_sp:$318 = {int (uint32_t)} 0x39965 <islower_sp>
-islower_w:$319 = {int (uint16_t)} 0x39944 <islower_w>
-isupper_sp:$320 = {int (uint32_t)} 0x399a4 <isupper_sp>
-isupper_w:$321 = {int (uint16_t)} 0x39983 <isupper_w>
-lchdir:$322 = {int (const char *)} 0x4e5b0 <lchdir>
-ldap_auth_dn:$323 = 0x0
-ldap_auth_method:$324 = 0
-ldap_auth_pw:$325 = 0x0
-ldap_config_valid:$326 = 0
-ldap_getnamefromuuid:$327 = {int (const char *, char **, uuidtype_t *)} 0x12c0f <ldap_getnamefromuuid>
-ldap_getuuidfromname:$328 = {int (const char *, uuidtype_t, char **)} 0x12a1c <ldap_getuuidfromname>
-ldap_group_attr:$329 = 0x0
-ldap_groupbase:$330 = 0x0
-ldap_groupscope:$331 = 0
-ldap_name_attr:$332 = 0x0
-ldap_prefs:$333 = {{pref = 0x0, name = 0x59478 "ldap server", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x59484 "ldap auth method", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = 0x59495 "ldap auth dn", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x594a2 "ldap auth pw", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x594af "ldap userbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x594bd "ldap userscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = 0x594cc "ldap groupbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x594db "ldap groupscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = 0x594eb "ldap uuid attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x594fa "ldap uuid string", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x5950b "ldap name attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x5951a "ldap group attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = 0x5952a "ldap uid attr", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x0, strorint = 0, intfromarray = 0, valid = -1}}
-ldap_server:$334 = 0x0
-ldap_uid_attr:$335 = 0x0
-ldap_userbase:$336 = 0x0
-ldap_userscope:$337 = 0
-ldap_uuid_attr:$338 = 0x0
-ldap_uuid_string:$339 = 0x0
-list_eas:$340 = {int (const struct vol *, char *, size_t *, const char *, int)} 0x55899 <list_eas>
-load_charset:$341 = {int (struct vol *)} 0x481aa <load_charset>
-load_volumes:$342 = {int (AFPObj *, void (*)(const AFPObj *, struct vol *))} 0x482a6 <load_volumes>
-localuuid_from_id:$343 = {void (unsigned char *, uuidtype_t, unsigned int)} 0x1181c <localuuid_from_id>
-lock_reg:$344 = {int (int, int, int, off_t, int, off_t)} 0x42fc0 <lock_reg>
-log_config:$345 = {inited = false, syslog_opened = false, console = false, processname = '\0' <repeats 15 times>, syslog_facility = 0, syslog_display_options = 0}
-lstatat:$346 = {int (int, const char *, struct stat *)} 0x52f68 <lstatat>
-make_log_entry:$347 = {void (enum loglevels, enum logtypes, const char *, int, char *, ...)} 0x43b47 <make_log_entry>
-make_tdb_data:$348 = {unsigned char *(uint32_t, const struct stat *, const cnid_t, const char *, const size_t)} 0x27d4e <make_tdb_data>
-mb_generic_pull:$349 = {size_t (int (*)(uint16_t *, const unsigned char *), void *, char **, size_t *, char **, size_t *)} 0x40187 <mb_generic_pull>
-mb_generic_push:$350 = {size_t (int (*)(unsigned char *, uint16_t), void *, char **, size_t *, char **, size_t *)} 0x40074 <mb_generic_push>
-namecache:$351 = {0x0 <repeats 256 times>}
-netatalk_panic:$352 = {void (const char *)} 0x42a61 <netatalk_panic>
-netatalk_rmdir:$353 = {int (int, const char *)} 0x5268d <netatalk_rmdir>
-netatalk_rmdir_all_errors:$354 = {int (int, const char *)} 0x525e9 <netatalk_rmdir_all_errors>
-netatalk_unlink:$355 = {int (const char *)} 0x526c8 <netatalk_unlink>
-netatalk_unlinkat:$356 = {int (int, const char *)} 0x52e51 <netatalk_unlinkat>
-nftw:$357 = {int (const char *, nftw_func_t, dir_notification_func_t, int, int)} 0x4fece <nftw>
-opendirat:$358 = {DIR *(int, const char *)} 0x52f9f <opendirat>
-openflags2logstr:$359 = {const char *(int)} 0x179b3 <openflags2logstr>
-posix_chmod:$360 = {int (const char *, mode_t)} 0x11290 <posix_chmod>
-posix_fchmod:$361 = {int (int, mode_t)} 0x115aa <posix_fchmod>
-precompose_w:$362 = {size_t (uint16_t *, size_t, uint16_t *, size_t *)} 0x3a834 <precompose_w>
-prefs_array:$363 = {{pref = 0x59484 "ldap auth method", valuestring = 0x59538 "none", value = 0}, {pref = 0x59484 "ldap auth method", valuestring = 0x5953d "simple", value = 128}, {pref = 0x59484 "ldap auth method", valuestring = 0x59544 "sasl", value = 163}, {pref = 0x594bd "ldap userscope", valuestring = 0x59549 "base", value = 0}, {pref = 0x594bd "ldap userscope", valuestring = 0x5954e "one", value = 1}, {pref = 0x594bd "ldap userscope", valuestring = 0x59552 "sub", value = 2}, {pref = 0x594db "ldap groupscope", valuestring = 0x59549 "base", value = 0}, {pref = 0x594db "ldap groupscope", valuestring = 0x5954e "one", value = 1}, {pref = 0x594db "ldap groupscope", valuestring = 0x59552 "sub", value = 2}, {pref = 0x0, valuestring = 0x0, value = 0}}
-prequeue:$364 = {qnode_t *(q_t *, void *)} 0x4a871 <prequeue>
-queue_destroy:$365 = {void (q_t *, void (*)(void *))} 0x4a95f <queue_destroy>
-queue_init:$366 = {q_t *(void)} 0x4a7b1 <queue_init>
-randombytes:$367 = {void (void *, int)} 0x4e805 <randombytes>
-readt:$368 = {ssize_t (int, void *, const size_t, int, int)} 0x4cbea <readt>
-reconnect_ipc:$369 = {int (AFPObj *)} 0x4bea8 <reconnect_ipc>
-recv_fd:$370 = {int (int, int)} 0x4db3b <recv_fd>
-rel_path_in_vol:$371 = {bstring (const char *, const char *)} 0x42384 <rel_path_in_vol>
-remove_acl_vfs:$372 = {int (const char *)} 0x58a44 <remove_acl_vfs>
-remove_ea:$373 = {int (const struct vol *, const char *, const char *, int)} 0x55d4e <remove_ea>
-run_cmd:$374 = {int (const char *, char **)} 0x4e0f8 <run_cmd>
-search_cachebyname:$375 = {int (const char *, uuidtype_t *, unsigned char *)} 0x10c0c <search_cachebyname>
-search_cachebyuuid:$376 = {int (uuidp_t, char **, uuidtype_t *)} 0x10e0d <search_cachebyuuid>
-send_fd:$377 = {int (int, int)} 0x4dd67 <send_fd>
-server_child_add:$378 = {afp_child_t *(server_child *, int, pid_t, int)} 0x4aa7f <server_child_add>
-server_child_alloc:$379 = {server_child *(const int, const int)} 0x4a9f2 <server_child_alloc>
-server_child_free:$380 = {void (server_child *)} 0x4adbd <server_child_free>
-server_child_kill:$381 = {void (server_child *, int, int)} 0x4ae9a <server_child_kill>
-server_child_kill_one_by_id:$382 = {void (server_child *, int, pid_t, uid_t, uint32_t, char *, uint32_t)} 0x4b370 <server_child_kill_one_by_id>
-server_child_remove:$383 = {int (server_child *, const int, pid_t)} 0x4ac87 <server_child_remove>
-server_child_setup:$384 = {void (server_child *, const int, void (*)(const pid_t))} 0x4b5d4 <server_child_setup>
-server_child_transfer_session:$385 = {int (server_child *, int, pid_t, uid_t, int, uint16_t)} 0x4afbd <server_child_transfer_session>
-server_lock:$386 = {pid_t (char *, char *, int)} 0x4c728 <server_lock>
-server_reset_signal:$387 = {void (void)} 0x4b61e <server_reset_signal>
-set_ea:$388 = {int (const struct vol *, const char *, const char *, const char *, size_t, int)} 0x55b6d <set_ea>
-setfilmode:$389 = {int (const char *, mode_t, struct stat *, mode_t)} 0x524fc <setfilmode>
-setnonblock:$390 = {int (int, int)} 0x4cb60 <setnonblock>
-set_processname:$391 = {void (const char *)} 0x43b15 <set_processname>
-setuplog:$392 = {void (const char *, const char *)} 0x441fb <setuplog>
-statat:$393 = {int (int, const char *, struct stat *)} 0x52f31 <statat>
-strcasechr_sp:$394 = {uint16_t *(const uint16_t *, uint32_t)} 0x39b0b <strcasechr_sp>
-strcasechr_w:$395 = {uint16_t *(const uint16_t *, uint16_t)} 0x39a94 <strcasechr_w>
-strcasecmp_w:$396 = {int (const uint16_t *, const uint16_t *)} 0x39e87 <strcasecmp_w>
-strcasestr_w:$397 = {uint16_t *(const uint16_t *, const uint16_t *)} 0x39d23 <strcasestr_w>
-strcat_w:$398 = {uint16_t *(uint16_t *, const uint16_t *)} 0x3a3d6 <strcat_w>
-strchr_w:$399 = {uint16_t *(const uint16_t *, uint16_t)} 0x39a39 <strchr_w>
-strcmp_w:$400 = {int (const uint16_t *, const uint16_t *)} 0x39b97 <strcmp_w>
-strdiacasecmp:$401 = {int (const char *, const char *)} 0x4df5c <strdiacasecmp>
-strdup_w:$402 = {uint16_t *(const uint16_t *)} 0x3a28d <strdup_w>
-stripped_slashes_basename:$403 = {char *(char *)} 0x4e534 <stripped_slashes_basename>
-strlcat:$404 = {size_t (char *, const char *, size_t)} 0x298a2 <strlcat>
-strlcpy:$405 = {size_t (char *, const char *, size_t)} 0x29828 <strlcpy>
-strlen_w:$406 = {size_t (const uint16_t *)} 0x399c2 <strlen_w>
-strlower_w:$407 = {int (uint16_t *)} 0x39728 <strlower_w>
-strncasecmp_w:$408 = {int (const uint16_t *, const uint16_t *, size_t)} 0x3a00f <strncasecmp_w>
-strncat_w:$409 = {uint16_t *(uint16_t *, const uint16_t *, const size_t)} 0x3a34b <strncat_w>
-strncmp_w:$410 = {int (const uint16_t *, const uint16_t *, size_t)} 0x39bea <strncmp_w>
-strncpy_w:$411 = {uint16_t *(uint16_t *, const uint16_t *, const size_t)} 0x3a2a9 <strncpy_w>
-strndiacasecmp:$412 = {int (const char *, const char *, size_t)} 0x4dfff <strndiacasecmp>
-strndup_w:$413 = {uint16_t *(const uint16_t *, size_t)} 0x3a1da <strndup_w>
-strnlen_w:$414 = {size_t (const uint16_t *, size_t)} 0x399f5 <strnlen_w>
-strstr_w:$415 = {uint16_t *(const uint16_t *, const uint16_t *)} 0x39c6f <strstr_w>
-strupper_w:$416 = {int (uint16_t *)} 0x39836 <strupper_w>
-sys_ea_copyfile:$417 = {int (const struct vol *, int, const char *, const char *)} 0x58114 <sys_ea_copyfile>
-sys_fgetxattr:$418 = {ssize_t (int, const char *, void *, size_t)} 0x58752 <sys_fgetxattr>
-sys_fsetxattr:$419 = {int (int, const char *, const void *, size_t, int)} 0x589b7 <sys_fsetxattr>
-sys_ftruncate:$420 = {int (int, off_t)} 0x1c595 <sys_ftruncate>
-sys_get_eacontent:$421 = {int (const struct vol *, char *, size_t *, const char *, int, const char *, int)} 0x578d5 <sys_get_eacontent>
-sys_get_easize:$422 = {int (const struct vol *, char *, size_t *, const char *, int, const char *)} 0x5768c <sys_get_easize>
-sys_getxattr:$423 = {ssize_t (const char *, const char *, void *, size_t)} 0x58716 <sys_getxattr>
-sys_getxattrfd:$424 = {int (int, const char *, int, ...)} 0x58676 <sys_getxattrfd>
-sys_lgetxattr:$425 = {ssize_t (const char *, const char *, void *, size_t)} 0x5878c <sys_lgetxattr>
-sys_list_eas:$426 = {int (const struct vol *, char *, size_t *, const char *, int)} 0x57ada <sys_list_eas>
-sys_listxattr:$427 = {ssize_t (const char *, char *, size_t)} 0x588a1 <sys_listxattr>
-sys_llistxattr:$428 = {ssize_t (const char *, char *, size_t)} 0x588dd <sys_llistxattr>
-sys_lremovexattr:$429 = {int (const char *, const char *)} 0x58945 <sys_lremovexattr>
-sys_lsetxattr:$430 = {int (const char *, const char *, const void *, size_t, int)} 0x589fb <sys_lsetxattr>
-sys_remove_ea:$431 = {int (const struct vol *, const char *, const char *, int)} 0x58006 <sys_remove_ea>
-sys_removexattr:$432 = {int (const char *, const char *)} 0x58919 <sys_removexattr>
-sys_sendfile:$433 = {ssize_t (int, int, off_t *, size_t)} 0x1c154 <sys_sendfile>
-sys_set_ea:$434 = {int (const struct vol *, const char *, const char *, const char *, size_t, int)} 0x57d8f <sys_set_ea>
-sys_setxattr:$435 = {int (const char *, const char *, const void *, size_t, int)} 0x58971 <sys_setxattr>
-tdb_add_flags:$436 = {void (struct tdb_context *, unsigned int)} 0x358e9 <tdb_add_flags>
-tdb_allocate:$437 = {tdb_off_t (struct tdb_context *, tdb_len_t, struct tdb_record *)} 0x308bf <tdb_allocate>
-tdb_alloc_read:$438 = {unsigned char *(struct tdb_context *, tdb_off_t, tdb_len_t)} 0x31be0 <tdb_alloc_read>
-tdb_append:$439 = {int (struct tdb_context *, TDB_DATA, TDB_DATA)} 0x3569a <tdb_append>
-tdb_brlock:$440 = {int (struct tdb_context *, tdb_off_t, int, int, int, size_t)} 0x31f61 <tdb_brlock>
-tdb_brlock_upgrade:$441 = {int (struct tdb_context *, tdb_off_t, size_t)} 0x320cc <tdb_brlock_upgrade>
-tdb_chainlock:$442 = {int (struct tdb_context *, TDB_DATA)} 0x32d4f <tdb_chainlock>
-tdb_chainlock_mark:$443 = {int (struct tdb_context *, TDB_DATA)} 0x32df9 <tdb_chainlock_mark>
-tdb_chainlock_nonblock:$444 = {int (struct tdb_context *, TDB_DATA)} 0x32da4 <tdb_chainlock_nonblock>
-tdb_chainlock_read:$445 = {int (struct tdb_context *, TDB_DATA)} 0x32eec <tdb_chainlock_read>
-tdb_chainlock_unmark:$446 = {int (struct tdb_context *, TDB_DATA)} 0x32e4e <tdb_chainlock_unmark>
-tdb_chainunlock:$447 = {int (struct tdb_context *, TDB_DATA)} 0x32e9d <tdb_chainunlock>
-tdb_chainunlock_read:$448 = {int (struct tdb_context *, TDB_DATA)} 0x32f41 <tdb_chainunlock_read>
-tdb_check:$449 = {int (struct tdb_context *, int (*)(TDB_DATA, TDB_DATA, void *), void *)} 0x2f958 <tdb_check>
-tdb_close:$450 = {int (struct tdb_context *)} 0x33fa4 <tdb_close>
-tdb_convert:$451 = {void *(void *, uint32_t)} 0x3113e <tdb_convert>
-tdb_delete:$452 = {int (struct tdb_context *, TDB_DATA)} 0x35143 <tdb_delete>
-tdb_do_delete:$453 = {int (struct tdb_context *, tdb_off_t, struct tdb_record *)} 0x34c83 <tdb_do_delete>
-tdb_dump_all:$454 = {void (struct tdb_context *)} 0x30028 <tdb_dump_all>
-tdb_enable_seqnum:$455 = {void (struct tdb_context *)} 0x35a61 <tdb_enable_seqnum>
-tdb_error:$456 = {enum TDB_ERROR (struct tdb_context *)} 0x30210 <tdb_error>
-tdb_errorstr:$457 = {const char *(struct tdb_context *)} 0x30221 <tdb_errorstr>
-tdb_exists:$458 = {int (struct tdb_context *, TDB_DATA)} 0x34c3f <tdb_exists>
-tdb_expand:$459 = {int (struct tdb_context *, tdb_off_t)} 0x317d2 <tdb_expand>
-tdb_fd:$460 = {int (struct tdb_context *)} 0x35861 <tdb_fd>
-tdb_fetch:$461 = {TDB_DATA (struct tdb_context *, TDB_DATA)} 0x34a96 <tdb_fetch>
-tdb_find_lock_hash:$462 = {tdb_off_t (struct tdb_context *, TDB_DATA, uint32_t, int, struct tdb_record *)} 0x3476d <tdb_find_lock_hash>
-tdb_firstkey:$463 = {TDB_DATA (struct tdb_context *)} 0x3922d <tdb_firstkey>
-tdb_free:$464 = {int (struct tdb_context *, tdb_off_t, struct tdb_record *)} 0x30422 <tdb_free>
-tdb_freelist_size:$465 = {int (struct tdb_context *)} 0x30b41 <tdb_freelist_size>
-tdb_get_flags:$466 = {int (struct tdb_context *)} 0x358d5 <tdb_get_flags>
-tdb_get_logging_private:$467 = {void *(struct tdb_context *)} 0x34134 <tdb_get_logging_private>
-tdb_get_seqnum:$468 = {int (struct tdb_context *)} 0x35887 <tdb_get_seqnum>
-tdb_hash_size:$469 = {int (struct tdb_context *)} 0x358b1 <tdb_hash_size>
-tdb_increment_seqnum_nonblock:$470 = {void (struct tdb_context *)} 0x34518 <tdb_increment_seqnum_nonblock>
-tdb_io_init:$471 = {void (struct tdb_context *)} 0x31f28 <tdb_io_init>
-tdb_lock:$472 = {int (struct tdb_context *, int, int)} 0x32494 <tdb_lock>
-tdb_lockall:$473 = {int (struct tdb_context *)} 0x32c4a <tdb_lockall>
-tdb_lockall_mark:$474 = {int (struct tdb_context *)} 0x32c6b <tdb_lockall_mark>
-tdb_lockall_nonblock:$475 = {int (struct tdb_context *)} 0x32ca8 <tdb_lockall_nonblock>
-tdb_lockall_read:$476 = {int (struct tdb_context *)} 0x32ceb <tdb_lockall_read>
-tdb_lockall_read_nonblock:$477 = {int (struct tdb_context *)} 0x32d0c <tdb_lockall_read_nonblock>
-tdb_lockall_unmark:$478 = {int (struct tdb_context *)} 0x32c8c <tdb_lockall_unmark>
-tdb_lock_nonblock:$479 = {int (struct tdb_context *, int, int)} 0x32508 <tdb_lock_nonblock>
-tdb_lock_record:$480 = {int (struct tdb_context *, tdb_off_t)} 0x32f90 <tdb_lock_record>
-tdb_log_fn:$481 = {tdb_log_func (struct tdb_context *)} 0x35872 <tdb_log_fn>
-tdb_map_size:$482 = {size_t (struct tdb_context *)} 0x358c2 <tdb_map_size>
-tdb_mmap:$483 = {void (struct tdb_context *)} 0x31424 <tdb_mmap>
-tdb_munmap:$484 = {int (struct tdb_context *)} 0x313ea <tdb_munmap>
-tdb_name:$485 = {const char *(struct tdb_context *)} 0x35850 <tdb_name>
-tdb_nextkey:$486 = {TDB_DATA (struct tdb_context *, TDB_DATA)} 0x39362 <tdb_nextkey>
-tdb_null:$487 = {dptr = 0x0, dsize = 0}
-tdb_ofs_read:$488 = {int (struct tdb_context *, tdb_off_t, tdb_off_t *)} 0x31b29 <tdb_ofs_read>
-tdb_ofs_write:$489 = {int (struct tdb_context *, tdb_off_t, tdb_off_t *)} 0x31b6f <tdb_ofs_write>
-tdb_open:$490 = {struct tdb_context *(const char *, int, int, int, mode_t)} 0x33486 <tdb_open>
-tdb_open_ex:$491 = {struct tdb_context *(const char *, int, int, int, mode_t, const struct tdb_logging_context *, tdb_hash_func)} 0x33555 <tdb_open_ex>
-tdb_parse_data:$492 = {int (struct tdb_context *, TDB_DATA, tdb_off_t, tdb_len_t, int (*)(TDB_DATA, TDB_DATA, void *), void *)} 0x31cc5 <tdb_parse_data>
-tdb_parse_record:$493 = {int (struct tdb_context *, TDB_DATA, int (*)(TDB_DATA, TDB_DATA, void *), void *)} 0x34aed <tdb_parse_record>
-tdb_printfreelist:$494 = {int (struct tdb_context *)} 0x30077 <tdb_printfreelist>
-tdb_rec_free_read:$495 = {int (struct tdb_context *, tdb_off_t, struct tdb_record *)} 0x3028c <tdb_rec_free_read>
-tdb_rec_read:$496 = {int (struct tdb_context *, tdb_off_t, struct tdb_record *)} 0x31dc5 <tdb_rec_read>
-tdb_rec_write:$497 = {int (struct tdb_context *, tdb_off_t, struct tdb_record *)} 0x31ea5 <tdb_rec_write>
-tdb_remove_flags:$498 = {void (struct tdb_context *, unsigned int)} 0x359a4 <tdb_remove_flags>
-tdb_reopen:$499 = {int (struct tdb_context *)} 0x34481 <tdb_reopen>
-tdb_reopen_all:$500 = {int (int)} 0x344a8 <tdb_reopen_all>
-tdb_repack:$501 = {int (struct tdb_context *)} 0x35f07 <tdb_repack>
-tdb_setalarm_sigptr:$502 = {void (struct tdb_context *, volatile sig_atomic_t *)} 0x31f44 <tdb_setalarm_sigptr>
-tdb_set_logging_function:$503 = {void (struct tdb_context *, const struct tdb_logging_context *)} 0x34109 <tdb_set_logging_function>
-tdb_set_max_dead:$504 = {void (struct tdb_context *, int)} 0x33f8a <tdb_set_max_dead>
-tdb_store:$505 = {int (struct tdb_context *, TDB_DATA, TDB_DATA, int)} 0x3559f <tdb_store>
-_tdb_transaction_cancel:$506 = {int (struct tdb_context *)} 0x37289 <_tdb_transaction_cancel>
-tdb_transaction_cancel:$507 = {int (struct tdb_context *)} 0x37672 <tdb_transaction_cancel>
-tdb_transaction_commit:$508 = {int (struct tdb_context *)} 0x3832b <tdb_transaction_commit>
-tdb_transaction_lock:$509 = {int (struct tdb_context *, int)} 0x327fe <tdb_transaction_lock>
-tdb_transaction_prepare_commit:$510 = {int (struct tdb_context *)} 0x38314 <tdb_transaction_prepare_commit>
-tdb_transaction_recover:$511 = {int (struct tdb_context *)} 0x386cc <tdb_transaction_recover>
-tdb_transaction_start:$512 = {int (struct tdb_context *)} 0x36d2d <tdb_transaction_start>
-tdb_transaction_unlock:$513 = {int (struct tdb_context *)} 0x328e1 <tdb_transaction_unlock>
-tdb_traverse:$514 = {int (struct tdb_context *, tdb_traverse_func, void *)} 0x39167 <tdb_traverse>
-tdb_traverse_read:$515 = {int (struct tdb_context *, tdb_traverse_func, void *)} 0x390cd <tdb_traverse_read>
-tdb_unlock:$516 = {int (struct tdb_context *, int, int)} 0x32530 <tdb_unlock>
-tdb_unlockall:$517 = {int (struct tdb_context *)} 0x32ccf <tdb_unlockall>
-tdb_unlockall_read:$518 = {int (struct tdb_context *)} 0x32d33 <tdb_unlockall_read>
-tdb_unlock_record:$519 = {int (struct tdb_context *, tdb_off_t)} 0x330b9 <tdb_unlock_record>
-tdb_validate_freelist:$520 = {int (struct tdb_context *, int *)} 0x30c12 <tdb_validate_freelist>
-tdb_wipe_all:$521 = {int (struct tdb_context *)} 0x35b59 <tdb_wipe_all>
-tdb_write_lock_record:$522 = {int (struct tdb_context *, tdb_off_t)} 0x32ffe <tdb_write_lock_record>
-tdb_write_unlock_record:$523 = {int (struct tdb_context *, tdb_off_t)} 0x3307a <tdb_write_unlock_record>
-tolower_sp:$524 = {uint32_t (uint32_t)} 0x3f739 <tolower_sp>
-tolower_w:$525 = {uint16_t (uint16_t)} 0x3f4f5 <tolower_w>
-toupper_sp:$526 = {uint32_t (uint32_t)} 0x3f4b0 <toupper_sp>
-toupper_w:$527 = {uint16_t (uint16_t)} 0x3f2a0 <toupper_w>
-type_configs:$528 = {{set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}}
-ucs2_to_charset:$529 = {size_t (charset_t, const uint16_t *, char *, size_t)} 0x3d455 <ucs2_to_charset>
-ucs2_to_charset_allocate:$530 = {size_t (charset_t, char **, const uint16_t *)} 0x3d4a6 <ucs2_to_charset_allocate>
-unbecome_root:$531 = {void (void)} 0x4e420 <unbecome_root>
-unix_rename:$532 = {int (int, const char *, int, const char *)} 0x52ed5 <unix_rename>
-unix_strlower:$533 = {size_t (const char *, size_t, char *, size_t)} 0x3d31e <unix_strlower>
-unix_strupper:$534 = {size_t (const char *, size_t, char *, size_t)} 0x3d2e7 <unix_strupper>
-unload_volumes:$535 = {void (AFPObj *)} 0x486fd <unload_volumes>
-utf8_charlen:$536 = {size_t (char *)} 0x3afb2 <utf8_charlen>
-utf8_decompose:$537 = {size_t (char *, size_t, char *, size_t)} 0x3d7be <utf8_decompose>
-utf8_precompose:$538 = {size_t (char *, size_t, char *, size_t)} 0x3d787 <utf8_precompose>
-utf8_strlen_validate:$539 = {size_t (char *)} 0x3b237 <utf8_strlen_validate>
-utf8_strlower:$540 = {size_t (const char *, size_t, char *, size_t)} 0x3d38c <utf8_strlower>
-utf8_strupper:$541 = {size_t (const char *, size_t, char *, size_t)} 0x3d355 <utf8_strupper>
-utf8_to_charset_allocate:$542 = {size_t (charset_t, char **, const char *)} 0x3d4f2 <utf8_to_charset_allocate>
-uuid_bin2string:$543 = {const char *(const unsigned char *)} 0x11927 <uuid_bin2string>
-uuidcache:$544 = {0x0 <repeats 256 times>}
-uuidcache_dump:$545 = {void (void)} 0x1056c <uuidcache_dump>
-uuid_string2bin:$546 = {void (const char *, unsigned char *)} 0x11887 <uuid_string2bin>
-uuidtype:$547 = {0x59210 "", 0x59211 "USER", 0x59216 "GROUP", 0x5921c "LOCAL"}
-volume_free:$548 = {void (struct vol *)} 0x48028 <volume_free>
-volume_unlink:$549 = {void (struct vol *)} 0x47fb0 <volume_unlink>
-writet:$550 = {ssize_t (int, void *, const size_t, int, int)} 0x4d0ae <writet>
+acl_ldap_readconfig: int (dictionary *)
+ad_close: int (struct adouble *, int)
+ad_convert: int (const char *, const struct stat *, const struct vol *, const char **)
+ad_copy_header: int (struct adouble *, struct adouble *)
+add_cachebyname: int (const char *, const uuidp_t, const uuidtype_t, const long unsigned int)
+add_cachebyuuid: int (uuidp_t, const char *, uuidtype_t, const long unsigned int)
+add_charset: charset_t (const char *)
+ad_dir: char *(const char *)
+ad_dtruncate: int (struct adouble *, const off_t)
+adflags2logstr: const char *(int)
+ad_flush: int (struct adouble *)
+ad_forcegetid: uint32_t (struct adouble *)
+adf_pread: ssize_t (struct ad_fd *, void *, size_t, off_t)
+adf_pwrite: ssize_t (struct ad_fd *, const void *, size_t, off_t)
+ad_getattr: int (const struct adouble *, uint16_t *)
+ad_getdate: int (const struct adouble *, unsigned int, uint32_t *)
+ad_getentryoff: off_t (const struct adouble *, int)
+ad_getfuid: uid_t (void)
+ad_getid: uint32_t (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *)
+ad_hf_mode: mode_t (mode_t)
+ad_init: void (struct adouble *, const struct vol *)
+ad_init_old: void (struct adouble *, int, int)
+ad_lock: int (struct adouble *, uint32_t, int, off_t, off_t, int)
+ad_metadata: int (const char *, int, struct adouble *)
+ad_metadataat: int (int, const char *, int, struct adouble *)
+ad_mkdir: int (const char *, mode_t)
+ad_mode: int (const char *, mode_t)
+ad_open: int (struct adouble *, const char *, int, ...)
+ad_openat: int (struct adouble *, int, const char *, int, ...)
+ad_openforks: uint16_t (struct adouble *, uint16_t)
+ad_path: const char *(const char *, int)
+ad_path_ea: const char *(const char *, int)
+ad_path_osx: const char *(const char *, int)
+ad_read: ssize_t (struct adouble *, const uint32_t, off_t, char *, const size_t)
+ad_readfile_init: int (const struct adouble *, const int, off_t *, const int)
+ad_rebuild_adouble_header_ea: int (struct adouble *)
+ad_rebuild_adouble_header_v2: int (struct adouble *)
+ad_refresh: int (const char *, struct adouble *)
+ad_rtruncate: int (struct adouble *, const off_t)
+ad_setattr: int (const struct adouble *, const uint16_t)
+ad_setdate: int (struct adouble *, unsigned int, uint32_t)
+ad_setfuid: int (const uid_t)
+ad_setid: int (struct adouble *, const dev_t, const ino_t, const uint32_t, const cnid_t, const void *)
+ad_setname: int (struct adouble *, const char *)
+ad_size: off_t (const struct adouble *, const uint32_t)
+ad_stat: int (const char *, struct stat *)
+ad_testlock: int (struct adouble *, int, const off_t)
+ad_tmplock: int (struct adouble *, uint32_t, int, off_t, off_t, int)
+ad_unlock: void (struct adouble *, const int, int)
+ad_valid_header_osx: int (const char *)
+ad_write: ssize_t (struct adouble *, uint32_t, off_t, int, const char *, size_t)
+afp_config_parse: int (AFPObj *, char *)
+allow_severity: 5
+apply_ip_mask: void (struct sockaddr *, int)
+atalk_iconv: size_t (atalk_iconv_t, const char **, size_t *, char **, size_t *)
+atalk_iconv_close: int (atalk_iconv_t)
+atalk_iconv_open: atalk_iconv_t (const char *, const char *)
+atalk_register_charset: int (struct charset_functions *)
+balloc: int (bstring, int)
+ballocmin: int (bstring, int)
+bassign: int (bstring, const_bstring)
+bassignblk: int (bstring, const void *, int)
+bassigncstr: int (bstring, const char *)
+bassignformat: int (bstring, const char *, ...)
+bassigngets: int (bstring, bNgetc, void *, char)
+bassignmidstr: int (bstring, const_bstring, int, int)
+bcatblk: int (bstring, const void *, int)
+bcatcstr: int (bstring, const char *)
+bconcat: int (bstring, const_bstring)
+bconchar: int (bstring, char)
+bcstrfree: int (char *)
+bdelete: int (bstring, int, int)
+bdestroy: int (bstring)
+become_root: void (void)
+bfindreplace: int (bstring, const_bstring, const_bstring, int)
+bfindreplacecaseless: int (bstring, const_bstring, const_bstring, int)
+bformat: bstring (const char *, ...)
+bformata: int (bstring, const char *, ...)
+bfromcstr: bstring (const char *)
+bfromcstralloc: bstring (int, const char *)
+bgetsa: int (bstring, bNgetc, void *, char)
+bgetstream: bstring (bNgetc, void *, char)
+binchr: int (const_bstring, int, const_bstring)
+binchrr: int (const_bstring, int, const_bstring)
+binsert: int (bstring, int, const_bstring, unsigned char)
+binsertch: int (bstring, int, int, unsigned char)
+binstr: int (const_bstring, int, const_bstring)
+binstrcaseless: int (const_bstring, int, const_bstring)
+binstrr: int (const_bstring, int, const_bstring)
+binstrrcaseless: int (const_bstring, int, const_bstring)
+biseq: int (const_bstring, const_bstring)
+biseqcaseless: int (const_bstring, const_bstring)
+biseqcstr: int (const_bstring, const char *)
+biseqcstrcaseless: int (const_bstring, const char *)
+bisstemeqblk: int (const_bstring, const void *, int)
+bisstemeqcaselessblk: int (const_bstring, const void *, int)
+bjoin: bstring (const struct bstrList *, const_bstring)
+bjoinInv: bstring (const struct bstrList *, const_bstring)
+blk2bstr: bstring (const void *, int)
+bltrimws: int (bstring)
+bmidstr: bstring (const_bstring, int, int)
+bninchr: int (const_bstring, int, const_bstring)
+bninchrr: int (const_bstring, int, const_bstring)
+bpattern: int (bstring, int)
+bread: bstring (bNread, void *)
+breada: int (bstring, bNread, void *)
+brefcstr: bstring (char *)
+breplace: int (bstring, int, int, const_bstring, unsigned char)
+brtrimws: int (bstring)
+bsbufflength: int (struct bStream *, int)
+bsclose: void *(struct bStream *)
+bseof: int (const struct bStream *)
+bsetstr: int (bstring, int, const_bstring, unsigned char)
+bsopen: struct bStream *(bNread, void *)
+bspeek: int (bstring, const struct bStream *)
+bsplit: struct bstrList *(const_bstring, unsigned char)
+bsplitcb: int (const_bstring, unsigned char, int, int (*)(void *, int, int), void *)
+bsplits: struct bstrList *(const_bstring, const_bstring)
+bsplitscb: int (const_bstring, const_bstring, int, int (*)(void *, int, int), void *)
+bsplitstr: struct bstrList *(const_bstring, const_bstring)
+bsplitstrcb: int (const_bstring, const_bstring, int, int (*)(void *, int, int), void *)
+bsread: int (bstring, struct bStream *, int)
+bsreada: int (bstring, struct bStream *, int)
+bsreadln: int (bstring, struct bStream *, char)
+bsreadlna: int (bstring, struct bStream *, char)
+bsreadlns: int (bstring, struct bStream *, const_bstring)
+bsreadlnsa: int (bstring, struct bStream *, const_bstring)
+bssplitscb: int (struct bStream *, const_bstring, int (*)(void *, int, const_bstring), void *)
+bssplitstrcb: int (struct bStream *, const_bstring, int (*)(void *, int, const_bstring), void *)
+bstr2cstr: char *(const_bstring, char)
+bstrchrp: int (const_bstring, int, int)
+bstrcmp: int (const_bstring, const_bstring)
+bstrcpy: bstring (const_bstring)
+bstricmp: int (const_bstring, const_bstring)
+bstrListAlloc: int (struct bstrList *, int)
+bstrListAllocMin: int (struct bstrList *, int)
+bstrListCreate: struct bstrList *(void)
+bstrListCreateMin: struct bstrList *(int)
+bstrListDestroy: int (struct bstrList *)
+bstrListPop: bstring (struct bstrList *)
+bstrListPush: int (struct bstrList *, bstring)
+bstrncmp: int (const_bstring, const_bstring, int)
+bstrnicmp: int (const_bstring, const_bstring, int)
+bstrrchrp: int (const_bstring, int, int)
+bsunread: int (struct bStream *, const_bstring)
+btolower: int (bstring)
+btoupper: int (bstring)
+btrimws: int (bstring)
+btrunc: int (bstring, int)
+bunrefcstr: int (bstring)
+bvcformata: int (bstring, int, const char *, struct __va_list_tag *)
+charset_decompose: size_t (charset_t, char *, size_t, char *, size_t)
+charset_mac_centraleurope: {name = "MAC_CENTRALEUROPE", kTextEncoding = 29, pull = <mac_centraleurope_pull>, push = <mac_centraleurope_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
+charset_mac_chinese_simp: {name = "MAC_CHINESE_SIMP", kTextEncoding = 25, pull = <mac_chinese_simp_pull>, push = <mac_chinese_simp_push>, flags = 85, iname = "EUC-CN", prev = 0x0, next = 0x0}
+charset_mac_chinese_trad: {name = "MAC_CHINESE_TRAD", kTextEncoding = 2, pull = <mac_chinese_trad_pull>, push = <mac_chinese_trad_push>, flags = 85, iname = "BIG-5", prev = 0x0, next = 0x0}
+charset_mac_cyrillic: {name = "MAC_CYRILLIC", kTextEncoding = 7, pull = <mac_cyrillic_pull>, push = <mac_cyrillic_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
+charset_mac_greek: {name = "MAC_GREEK", kTextEncoding = 6, pull = <mac_greek_pull>, push = <mac_greek_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
+charset_mac_hebrew: {name = "MAC_HEBREW", kTextEncoding = 5, pull = <mac_hebrew_pull>, push = <mac_hebrew_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
+charset_mac_japanese: {name = "MAC_JAPANESE", kTextEncoding = 1, pull = <mac_japanese_pull>, push = <mac_japanese_push>, flags = 85, iname = "SHIFT_JIS", prev = 0x0, next = 0x0}
+charset_mac_korean: {name = "MAC_KOREAN", kTextEncoding = 3, pull = <mac_korean_pull>, push = <mac_korean_push>, flags = 85, iname = "EUC-KR", prev = 0x0, next = 0x0}
+charset_mac_roman: {name = "MAC_ROMAN", kTextEncoding = 0, pull = <mac_roman_pull>, push = <mac_roman_push>, flags = 21, iname = 0x0, prev = 0x0, next = 0x0}
+charset_mac_turkish: {name = "MAC_TURKISH", kTextEncoding = 35, pull = <mac_turkish_pull>, push = <mac_turkish_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
+charset_names: 0x2894a0
+charset_precompose: size_t (charset_t, char *, size_t, char *, size_t)
+charset_strlower: size_t (charset_t, const char *, size_t, char *, size_t)
+charset_strupper: size_t (charset_t, const char *, size_t, char *, size_t)
+charset_to_ucs2_allocate: size_t (charset_t, uint16_t **, const char *)
+charset_to_utf8_allocate: size_t (charset_t, char **, const char *)
+charset_utf8: {name = "UTF8", kTextEncoding = 134217987, pull = <utf8_pull>, push = <utf8_push>, flags = 22, iname = 0x0, prev = 0x0, next = 0x0}
+charset_utf8_mac: {name = "UTF8-MAC", kTextEncoding = 134217987, pull = <utf8_pull>, push = <utf8_push>, flags = 27, iname = 0x0, prev = 0x0, next = 0x0}
+check_lockfile: int (const char *, const char *)
+cjk_char_pull: size_t (uint16_t, uint16_t *, const uint32_t *)
+cjk_char_push: size_t (uint16_t, uint8_t *)
+cjk_compose: uint16_t (uint16_t, uint16_t, const uint32_t *, size_t)
+cjk_compose_seq: uint16_t (const uint16_t *, size_t *, const uint32_t *, size_t)
+cjk_generic_pull: size_t (size_t (*)(uint16_t *, const uint8_t *, size_t *), void *, char **, size_t *, char **, size_t *)
+cjk_generic_push: size_t (size_t (*)(uint8_t *, const uint16_t *, size_t *), void *, char **, size_t *, char **, size_t *)
+cjk_lookup: uint16_t (uint16_t, const cjk_index_t *, const uint16_t *)
+cnid_add: cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, const char *, const size_t, cnid_t)
+cnid_close: void (struct _cnid_db *)
+cnid_dbd_add: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)
+cnid_dbd_close: void (struct _cnid_db *)
+cnid_dbd_delete: int (struct _cnid_db *, const cnid_t)
+cnid_dbd_find: int (struct _cnid_db *, const char *, size_t, void *, size_t)
+cnid_dbd_get: cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)
+cnid_dbd_getstamp: int (struct _cnid_db *, void *, const size_t)
+cnid_dbd_lookup: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)
+cnid_dbd_module: {name = "dbd", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 0}
+cnid_dbd_open: struct _cnid_db *(struct cnid_open_args *)
+cnid_dbd_rebuild_add: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)
+cnid_dbd_resolve: char *(struct _cnid_db *, cnid_t *, void *, size_t)
+cnid_dbd_update: int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)
+cnid_delete: int (struct _cnid_db *, cnid_t)
+cnid_find: int (struct _cnid_db *, const char *, size_t, void *, size_t)
+cnid_get: cnid_t (struct _cnid_db *, const cnid_t, char *, const size_t)
+cnid_getstamp: int (struct _cnid_db *, void *, const size_t)
+cnid_init: void (void)
+cnid_last_add: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)
+cnid_last_close: void (struct _cnid_db *)
+cnid_last_delete: int (struct _cnid_db *, const cnid_t)
+cnid_last_get: cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)
+cnid_last_lookup: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)
+cnid_last_module: {name = "last", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 0}
+cnid_last_open: struct _cnid_db *(struct cnid_open_args *)
+cnid_last_resolve: char *(struct _cnid_db *, cnid_t *, void *, size_t)
+cnid_last_update: int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)
+cnid_lookup: cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t)
+cnid_open: struct _cnid_db *(const char *, mode_t, char *, int, const char *, const char *)
+cnid_rebuild_add: cnid_t (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t, cnid_t)
+cnid_register: void (struct _cnid_module *)
+cnid_resolve: char *(struct _cnid_db *, cnid_t *, void *, size_t)
+cnid_tdb_add: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t, cnid_t)
+cnid_tdb_close: void (struct _cnid_db *)
+cnid_tdb_delete: int (struct _cnid_db *, const cnid_t)
+cnid_tdb_get: cnid_t (struct _cnid_db *, cnid_t, const char *, size_t)
+cnid_tdb_lookup: cnid_t (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t)
+cnid_tdb_module: {name = "tdb", db_list = {next = 0x0, prev = 0x0}, cnid_open = 0, flags = 12}
+cnid_tdb_open: struct _cnid_db *(struct cnid_open_args *)
+cnid_tdb_resolve: char *(struct _cnid_db *, cnid_t *, void *, size_t)
+cnid_tdb_update: int (struct _cnid_db *, cnid_t, const struct stat *, cnid_t, const char *, size_t)
+cnid_update: int (struct _cnid_db *, const cnid_t, const struct stat *, const cnid_t, char *, const size_t)
+compare_ip: int (const struct sockaddr *, const struct sockaddr *)
+convert_charset: size_t (charset_t, charset_t, charset_t, const char *, size_t, char *, size_t, uint16_t *)
+convert_string: size_t (charset_t, charset_t, const void *, size_t, void *, size_t)
+convert_string_allocate: size_t (charset_t, charset_t, const void *, size_t, char **)
+copy_ea: int (const char *, int, const char *, const char *, mode_t)
+copy_file: int (int, const char *, const char *, mode_t)
+copy_file_fd: int (int, int)
+copy_fork: int (int, struct adouble *, struct adouble *)
+create_lockfile: int (const char *, const char *)
+daemonize: int (int, int)
+decompose_w: size_t (uint16_t *, size_t, uint16_t *, size_t *)
+deny_severity: 3
+dequeue: void *(q_t *)
+_diacasemap: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 231, 203, 229, 128, 204, 129, 130, 131, 233, 230, 232, 234, 237, 235, 236, 132, 238, 241, 239, 133, 205, 242, 244, 243, 134, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 198, 183, 184, 184, 186, 187, 188, 189, 174, 175, 192, 193, 194, 195, 196, 197, 198, 199...}
+_dialowermap: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 138, 140, 141, 142, 150, 154, 159, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 132, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 190, 191, 176, 177, 178, 179, 180, 181, 198, 183, 185, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199...}
+dictionary_del: void (dictionary *)
+dictionary_dump: void (dictionary *, FILE *)
+dictionary_get: const char *(const dictionary *, const char *, const char *, const char *)
+dictionary_hash: unsigned int (char *)
+dictionary_new: dictionary *(int)
+dictionary_set: int (dictionary *, char *, char *, char *)
+dictionary_unset: void (dictionary *, char *, char *)
+dir_rx_set: int (mode_t)
+dsi_attention: int (DSI *, AFPUserBytes)
+dsi_close: void (DSI *)
+dsi_cmdreply: int (DSI *, const int)
+dsi_disconnect: int (DSI *)
+dsi_getsession: int (DSI *, server_child *, int, afp_child_t **)
+dsi_getstatus: void (DSI *)
+dsi_init: DSI *(AFPObj *, const char *, const char *, const char *)
+dsi_opensession: void (DSI *)
+dsi_read: ssize_t (DSI *, void *, const size_t)
+dsi_readdone: void (DSI *)
+dsi_readinit: ssize_t (DSI *, void *, const size_t, const size_t, const int)
+dsi_stream_read: size_t (DSI *, void *, const size_t)
+dsi_stream_read_file: ssize_t (DSI *, const int, off_t, const size_t, const int)
+dsi_stream_receive: int (DSI *)
+dsi_stream_send: int (DSI *, void *, size_t)
+dsi_stream_write: ssize_t (DSI *, void *, const size_t, int)
+dsi_tcp_init: int (DSI *, const char *, const char *, const char *)
+dsi_tickle: int (DSI *)
+dsi_write: size_t (DSI *, void *, const size_t)
+dsi_writeflush: void (DSI *)
+dsi_writeinit: size_t (DSI *, void *, const size_t)
+ea_chmod_dir: int (const struct vol *, const char *, mode_t, struct stat *)
+ea_chmod_file: int (const struct vol *, const char *, mode_t, struct stat *)
+ea_chown: int (const struct vol *, const char *, uid_t, gid_t)
+ea_close: int (struct ea *)
+ea_copyfile: int (const struct vol *, int, const char *, const char *)
+ea_deletefile: int (const struct vol *, int, const char *)
+ea_open: int (const struct vol *, const char *, eaflags_t, struct ea *)
+ea_openat: int (const struct vol *, int, const char *, eaflags_t, struct ea *)
+ea_path: char *(const struct ea *, const char *, int)
+ea_renamefile: int (const struct vol *, int, const char *, const char *)
+enqueue: qnode_t *(q_t *, void *)
+fault_setup: void (void (*)(void *))
+fdset_add_fd: void (int, struct pollfd **, struct polldata **, int *, int *, int, enum fdtype, void *)
+fdset_del_fd: void (struct pollfd **, struct polldata **, int *, int *, int)
+find_charset_functions: struct charset_functions *(const char *)
+_fini: <text variable, no debug info>
+freeifacelist: void (char **)
+fullpathname: const char *(const char *)
+getcwdpath: const char *(void)
+get_eacontent: int (const struct vol *, char *, size_t *, const char *, int, const char *, int)
+get_easize: int (const struct vol *, char *, size_t *, const char *, int, const char *)
+getifacelist: char **(void)
+getip_port: unsigned int (const struct sockaddr *)
+getip_string: const char *(const struct sockaddr *)
+getnamefromuuid: int (const uuidp_t, char **, uuidtype_t *)
+getuuidfromname: int (const char *, uuidtype_t, unsigned char *)
+getvolbyname: struct vol *(const char *)
+getvolbypath: struct vol *(AFPObj *, const char *)
+getvolbyvid: struct vol *(const uint16_t)
+getvolumes: struct vol *(void)
+gmem: int (gid_t, int, gid_t *)
+iniparser_dump: void (const dictionary *, FILE *)
+iniparser_dump_ini: void (const dictionary *, FILE *)
+iniparser_find_entry: int (const dictionary *, const char *)
+iniparser_freedict: void (dictionary *)
+iniparser_getboolean: int (const dictionary *, const char *, const char *, int)
+iniparser_getdouble: double (const dictionary *, const char *, const char *, double)
+iniparser_getint: int (const dictionary *, const char *, const char *, int)
+iniparser_getnsec: int (const dictionary *)
+iniparser_getsecname: const char *(const dictionary *, int)
+iniparser_getstrdup: char *(const dictionary *, const char *, const char *, const char *)
+iniparser_getstring: const char *(const dictionary *, const char *, const char *, const char *)
+iniparser_load: dictionary *(const char *)
+iniparser_set: int (dictionary *, char *, char *, char *)
+iniparser_unset: void (dictionary *, char *, char *)
+_init: <text variable, no debug info>
+init_iconv: void (void)
+initvol_vfs: void (struct vol *)
+ipc_child_write: int (int, uint16_t, int, void *)
+ipc_client_uds: int (const char *)
+ipc_server_read: int (server_child *, int)
+ipc_server_uds: int (const char *)
+islower_sp: int (uint32_t)
+islower_w: int (uint16_t)
+isupper_sp: int (uint32_t)
+isupper_w: int (uint16_t)
+lchdir: int (const char *)
+ldap_auth_dn: 0x0
+ldap_auth_method: 0
+ldap_auth_pw: 0x0
+ldap_config_valid: 0
+ldap_getnamefromuuid: int (const char *, char **, uuidtype_t *)
+ldap_getuuidfromname: int (const char *, uuidtype_t, char **)
+ldap_group_attr: 0x0
+ldap_groupbase: 0x0
+ldap_groupscope: 0
+ldap_name_attr: 0x0
+ldap_prefs: {{pref = 0x0, name = "ldap server", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap auth method", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap auth dn", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap auth pw", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap userbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap userscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap groupbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap groupscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap uuid attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uuid string", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap name attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap group attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uid attr", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x0, strorint = 0, intfromarray = 0, valid = -1}}
+ldap_server: 0x0
+ldap_uid_attr: 0x0
+ldap_userbase: 0x0
+ldap_userscope: 0
+ldap_uuid_attr: 0x0
+ldap_uuid_string: 0x0
+list_eas: int (const struct vol *, char *, size_t *, const char *, int)
+load_charset: int (struct vol *)
+load_volumes: int (AFPObj *, void (*)(const AFPObj *, struct vol *))
+localuuid_from_id: void (unsigned char *, uuidtype_t, unsigned int)
+lock_reg: int (int, int, int, off_t, int, off_t)
+log_config: {inited = false, syslog_opened = false, console = false, processname = '\0' <repeats 15 times>, syslog_facility = 0, syslog_display_options = 0}
+lstatat: int (int, const char *, struct stat *)
+make_log_entry: void (enum loglevels, enum logtypes, const char *, int, char *, ...)
+make_tdb_data: unsigned char *(uint32_t, const struct stat *, const cnid_t, const char *, const size_t)
+mb_generic_pull: size_t (int (*)(uint16_t *, const unsigned char *), void *, char **, size_t *, char **, size_t *)
+mb_generic_push: size_t (int (*)(unsigned char *, uint16_t), void *, char **, size_t *, char **, size_t *)
+namecache: {<repeats 256 times>}
+netatalk_panic: void (const char *)
+netatalk_rmdir: int (int, const char *)
+netatalk_rmdir_all_errors: int (int, const char *)
+netatalk_unlink: int (const char *)
+netatalk_unlinkat: int (int, const char *)
+nftw: int (const char *, nftw_func_t, dir_notification_func_t, int, int)
+opendirat: DIR *(int, const char *)
+openflags2logstr: const char *(int)
+posix_chmod: int (const char *, mode_t)
+posix_fchmod: int (int, mode_t)
+precompose_w: size_t (uint16_t *, size_t, uint16_t *, size_t *)
+prefs_array: {{pref = "ldap auth method", valuestring = "none", value = 0}, {pref = "ldap auth method", valuestring = "simple", value = 128}, {pref = "ldap auth method", valuestring = "sasl", value = 163}, {pref = "ldap userscope", valuestring = "base", value = 0}, {pref = "ldap userscope", valuestring = "one", value = 1}, {pref = "ldap userscope", valuestring = "sub", value = 2}, {pref = "ldap groupscope", valuestring = "base", value = 0}, {pref = "ldap groupscope", valuestring = "one", value = 1}, {pref = "ldap groupscope", valuestring = "sub", value = 2}, {pref = 0x0, valuestring = 0x0, value = 0}}
+prequeue: qnode_t *(q_t *, void *)
+queue_destroy: void (q_t *, void (*)(void *))
+queue_init: q_t *(void)
+randombytes: void (void *, int)
+readt: ssize_t (int, void *, const size_t, int, int)
+reconnect_ipc: int (AFPObj *)
+recv_fd: int (int, int)
+rel_path_in_vol: bstring (const char *, const char *)
+remove_acl_vfs: int (const char *)
+remove_ea: int (const struct vol *, const char *, const char *, int)
+run_cmd: int (const char *, char **)
+search_cachebyname: int (const char *, uuidtype_t *, unsigned char *)
+search_cachebyuuid: int (uuidp_t, char **, uuidtype_t *)
+send_fd: int (int, int)
+server_child_add: afp_child_t *(server_child *, int, pid_t, int)
+server_child_alloc: server_child *(const int, const int)
+server_child_free: void (server_child *)
+server_child_kill: void (server_child *, int, int)
+server_child_kill_one_by_id: void (server_child *, int, pid_t, uid_t, uint32_t, char *, uint32_t)
+server_child_remove: int (server_child *, const int, pid_t)
+server_child_setup: void (server_child *, const int, void (*)(const pid_t))
+server_child_transfer_session: int (server_child *, int, pid_t, uid_t, int, uint16_t)
+server_lock: pid_t (char *, char *, int)
+server_reset_signal: void (void)
+set_ea: int (const struct vol *, const char *, const char *, const char *, size_t, int)
+setfilmode: int (const char *, mode_t, struct stat *, mode_t)
+setnonblock: int (int, int)
+set_processname: void (const char *)
+setuplog: void (const char *, const char *)
+statat: int (int, const char *, struct stat *)
+strcasechr_sp: uint16_t *(const uint16_t *, uint32_t)
+strcasechr_w: uint16_t *(const uint16_t *, uint16_t)
+strcasecmp_w: int (const uint16_t *, const uint16_t *)
+strcasestr_w: uint16_t *(const uint16_t *, const uint16_t *)
+strcat_w: uint16_t *(uint16_t *, const uint16_t *)
+strchr_w: uint16_t *(const uint16_t *, uint16_t)
+strcmp_w: int (const uint16_t *, const uint16_t *)
+strdiacasecmp: int (const char *, const char *)
+strdup_w: uint16_t *(const uint16_t *)
+stripped_slashes_basename: char *(char *)
+strlcat: size_t (char *, const char *, size_t)
+strlcpy: size_t (char *, const char *, size_t)
+strlen_w: size_t (const uint16_t *)
+strlower_w: int (uint16_t *)
+strncasecmp_w: int (const uint16_t *, const uint16_t *, size_t)
+strncat_w: uint16_t *(uint16_t *, const uint16_t *, const size_t)
+strncmp_w: int (const uint16_t *, const uint16_t *, size_t)
+strncpy_w: uint16_t *(uint16_t *, const uint16_t *, const size_t)
+strndiacasecmp: int (const char *, const char *, size_t)
+strndup_w: uint16_t *(const uint16_t *, size_t)
+strnlen_w: size_t (const uint16_t *, size_t)
+strstr_w: uint16_t *(const uint16_t *, const uint16_t *)
+strupper_w: int (uint16_t *)
+sys_ea_copyfile: int (const struct vol *, int, const char *, const char *)
+sys_fgetxattr: ssize_t (int, const char *, void *, size_t)
+sys_fsetxattr: int (int, const char *, const void *, size_t, int)
+sys_ftruncate: int (int, off_t)
+sys_get_eacontent: int (const struct vol *, char *, size_t *, const char *, int, const char *, int)
+sys_get_easize: int (const struct vol *, char *, size_t *, const char *, int, const char *)
+sys_getxattr: ssize_t (const char *, const char *, void *, size_t)
+sys_getxattrfd: int (int, const char *, int, ...)
+sys_lgetxattr: ssize_t (const char *, const char *, void *, size_t)
+sys_list_eas: int (const struct vol *, char *, size_t *, const char *, int)
+sys_listxattr: ssize_t (const char *, char *, size_t)
+sys_llistxattr: ssize_t (const char *, char *, size_t)
+sys_lremovexattr: int (const char *, const char *)
+sys_lsetxattr: int (const char *, const char *, const void *, size_t, int)
+sys_remove_ea: int (const struct vol *, const char *, const char *, int)
+sys_removexattr: int (const char *, const char *)
+sys_sendfile: ssize_t (int, int, off_t *, size_t)
+sys_set_ea: int (const struct vol *, const char *, const char *, const char *, size_t, int)
+sys_setxattr: int (const char *, const char *, const void *, size_t, int)
+tdb_add_flags: void (struct tdb_context *, unsigned int)
+tdb_allocate: tdb_off_t (struct tdb_context *, tdb_len_t, struct tdb_record *)
+tdb_alloc_read: unsigned char *(struct tdb_context *, tdb_off_t, tdb_len_t)
+tdb_append: int (struct tdb_context *, TDB_DATA, TDB_DATA)
+tdb_brlock: int (struct tdb_context *, tdb_off_t, int, int, int, size_t)
+tdb_brlock_upgrade: int (struct tdb_context *, tdb_off_t, size_t)
+tdb_chainlock: int (struct tdb_context *, TDB_DATA)
+tdb_chainlock_mark: int (struct tdb_context *, TDB_DATA)
+tdb_chainlock_nonblock: int (struct tdb_context *, TDB_DATA)
+tdb_chainlock_read: int (struct tdb_context *, TDB_DATA)
+tdb_chainlock_unmark: int (struct tdb_context *, TDB_DATA)
+tdb_chainunlock: int (struct tdb_context *, TDB_DATA)
+tdb_chainunlock_read: int (struct tdb_context *, TDB_DATA)
+tdb_check: int (struct tdb_context *, int (*)(TDB_DATA, TDB_DATA, void *), void *)
+tdb_close: int (struct tdb_context *)
+tdb_convert: void *(void *, uint32_t)
+tdb_delete: int (struct tdb_context *, TDB_DATA)
+tdb_do_delete: int (struct tdb_context *, tdb_off_t, struct tdb_record *)
+tdb_dump_all: void (struct tdb_context *)
+tdb_enable_seqnum: void (struct tdb_context *)
+tdb_error: enum TDB_ERROR (struct tdb_context *)
+tdb_errorstr: const char *(struct tdb_context *)
+tdb_exists: int (struct tdb_context *, TDB_DATA)
+tdb_expand: int (struct tdb_context *, tdb_off_t)
+tdb_fd: int (struct tdb_context *)
+tdb_fetch: TDB_DATA (struct tdb_context *, TDB_DATA)
+tdb_find_lock_hash: tdb_off_t (struct tdb_context *, TDB_DATA, uint32_t, int, struct tdb_record *)
+tdb_firstkey: TDB_DATA (struct tdb_context *)
+tdb_free: int (struct tdb_context *, tdb_off_t, struct tdb_record *)
+tdb_freelist_size: int (struct tdb_context *)
+tdb_get_flags: int (struct tdb_context *)
+tdb_get_logging_private: void *(struct tdb_context *)
+tdb_get_seqnum: int (struct tdb_context *)
+tdb_hash_size: int (struct tdb_context *)
+tdb_increment_seqnum_nonblock: void (struct tdb_context *)
+tdb_io_init: void (struct tdb_context *)
+tdb_lock: int (struct tdb_context *, int, int)
+tdb_lockall: int (struct tdb_context *)
+tdb_lockall_mark: int (struct tdb_context *)
+tdb_lockall_nonblock: int (struct tdb_context *)
+tdb_lockall_read: int (struct tdb_context *)
+tdb_lockall_read_nonblock: int (struct tdb_context *)
+tdb_lockall_unmark: int (struct tdb_context *)
+tdb_lock_nonblock: int (struct tdb_context *, int, int)
+tdb_lock_record: int (struct tdb_context *, tdb_off_t)
+tdb_log_fn: tdb_log_func (struct tdb_context *)
+tdb_map_size: size_t (struct tdb_context *)
+tdb_mmap: void (struct tdb_context *)
+tdb_munmap: int (struct tdb_context *)
+tdb_name: const char *(struct tdb_context *)
+tdb_nextkey: TDB_DATA (struct tdb_context *, TDB_DATA)
+tdb_null: {dptr = 0x0, dsize = 0}
+tdb_ofs_read: int (struct tdb_context *, tdb_off_t, tdb_off_t *)
+tdb_ofs_write: int (struct tdb_context *, tdb_off_t, tdb_off_t *)
+tdb_open: struct tdb_context *(const char *, int, int, int, mode_t)
+tdb_open_ex: struct tdb_context *(const char *, int, int, int, mode_t, const struct tdb_logging_context *, tdb_hash_func)
+tdb_parse_data: int (struct tdb_context *, TDB_DATA, tdb_off_t, tdb_len_t, int (*)(TDB_DATA, TDB_DATA, void *), void *)
+tdb_parse_record: int (struct tdb_context *, TDB_DATA, int (*)(TDB_DATA, TDB_DATA, void *), void *)
+tdb_printfreelist: int (struct tdb_context *)
+tdb_rec_free_read: int (struct tdb_context *, tdb_off_t, struct tdb_record *)
+tdb_rec_read: int (struct tdb_context *, tdb_off_t, struct tdb_record *)
+tdb_rec_write: int (struct tdb_context *, tdb_off_t, struct tdb_record *)
+tdb_remove_flags: void (struct tdb_context *, unsigned int)
+tdb_reopen: int (struct tdb_context *)
+tdb_reopen_all: int (int)
+tdb_repack: int (struct tdb_context *)
+tdb_setalarm_sigptr: void (struct tdb_context *, volatile sig_atomic_t *)
+tdb_set_logging_function: void (struct tdb_context *, const struct tdb_logging_context *)
+tdb_set_max_dead: void (struct tdb_context *, int)
+tdb_store: int (struct tdb_context *, TDB_DATA, TDB_DATA, int)
+_tdb_transaction_cancel: int (struct tdb_context *)
+tdb_transaction_cancel: int (struct tdb_context *)
+tdb_transaction_commit: int (struct tdb_context *)
+tdb_transaction_lock: int (struct tdb_context *, int)
+tdb_transaction_prepare_commit: int (struct tdb_context *)
+tdb_transaction_recover: int (struct tdb_context *)
+tdb_transaction_start: int (struct tdb_context *)
+tdb_transaction_unlock: int (struct tdb_context *)
+tdb_traverse: int (struct tdb_context *, tdb_traverse_func, void *)
+tdb_traverse_read: int (struct tdb_context *, tdb_traverse_func, void *)
+tdb_unlock: int (struct tdb_context *, int, int)
+tdb_unlockall: int (struct tdb_context *)
+tdb_unlockall_read: int (struct tdb_context *)
+tdb_unlock_record: int (struct tdb_context *, tdb_off_t)
+tdb_validate_freelist: int (struct tdb_context *, int *)
+tdb_wipe_all: int (struct tdb_context *)
+tdb_write_lock_record: int (struct tdb_context *, tdb_off_t)
+tdb_write_unlock_record: int (struct tdb_context *, tdb_off_t)
+tolower_sp: uint32_t (uint32_t)
+tolower_w: uint16_t (uint16_t)
+toupper_sp: uint32_t (uint32_t)
+toupper_w: uint16_t (uint16_t)
+type_configs: {{set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}, {set = false, syslog = false, fd = -1, level = log_none, display_options = 0}}
+ucs2_to_charset: size_t (charset_t, const uint16_t *, char *, size_t)
+ucs2_to_charset_allocate: size_t (charset_t, char **, const uint16_t *)
+unbecome_root: void (void)
+unix_rename: int (int, const char *, int, const char *)
+unix_strlower: size_t (const char *, size_t, char *, size_t)
+unix_strupper: size_t (const char *, size_t, char *, size_t)
+unload_volumes: void (AFPObj *)
+utf8_charlen: size_t (char *)
+utf8_decompose: size_t (char *, size_t, char *, size_t)
+utf8_precompose: size_t (char *, size_t, char *, size_t)
+utf8_strlen_validate: size_t (char *)
+utf8_strlower: size_t (const char *, size_t, char *, size_t)
+utf8_strupper: size_t (const char *, size_t, char *, size_t)
+utf8_to_charset_allocate: size_t (charset_t, char **, const char *)
+uuid_bin2string: const char *(const unsigned char *)
+uuidcache: {<repeats 256 times>}
+uuidcache_dump: void (void)
+uuid_string2bin: void (const char *, unsigned char *)
+uuidtype: {"", "USER", "GROUP", "LOCAL"}
+volume_free: void (struct vol *)
+volume_unlink: void (struct vol *)
+writet: ssize_t (int, void *, const size_t, int, int)

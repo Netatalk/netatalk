@@ -17,5 +17,5 @@ done
 ) > $GDBSCRIPT
 
 # forcing the terminal avoids a problem on Fedora12
-TERM=none gdb -batch -x $GDBSCRIPT "$SHAREDLIB" < /dev/null
+TERM=none gdb -batch -x $GDBSCRIPT "$SHAREDLIB" < /dev/null | sed -e 's/:\$[0-9]* = /: /g' -e 's/<[0-9a-zA-Z_]*>$//g' -e 's/0x[0-9a-f]* $//g' -e 's/0x[[:xdigit:]]* \("[[:alnum:] _-]*"\)/\1/g' -e 's/0x[[:xdigit:]]* \(<[[:alnum:] _-]*>\)/\1/g' -e 's/{\(.*\)} $/\1/g'
 rm -f $GDBSCRIPT
