@@ -37,8 +37,8 @@ typedef struct cacheduser {
     struct cacheduser *next;
 } cacheduser_t;
 
-cacheduser_t *namecache[256];   /* indexed by hash of name */
-cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
+static cacheduser_t *namecache[256];   /* indexed by hash of name */
+static cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
 
 /********************************************************
  * helper function
