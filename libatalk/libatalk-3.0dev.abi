@@ -160,7 +160,6 @@ charset_mac_japanese: {name = "MAC_JAPANESE", kTextEncoding = 1, pull = <mac_jap
 charset_mac_korean: {name = "MAC_KOREAN", kTextEncoding = 3, pull = <mac_korean_pull>, push = <mac_korean_push>, flags = 85, iname = "EUC-KR", prev = 0x0, next = 0x0}
 charset_mac_roman: {name = "MAC_ROMAN", kTextEncoding = 0, pull = <mac_roman_pull>, push = <mac_roman_push>, flags = 21, iname = 0x0, prev = 0x0, next = 0x0}
 charset_mac_turkish: {name = "MAC_TURKISH", kTextEncoding = 35, pull = <mac_turkish_pull>, push = <mac_turkish_push>, flags = 17, iname = 0x0, prev = 0x0, next = 0x0}
-charset_names: 0x2894a0
 charset_precompose: size_t (charset_t, char *, size_t, char *, size_t)
 charset_strlower: size_t (charset_t, const char *, size_t, char *, size_t)
 charset_strupper: size_t (charset_t, const char *, size_t, char *, size_t)
@@ -348,7 +347,6 @@ make_log_entry: void (enum loglevels, enum logtypes, const char *, int, char *, 
 make_tdb_data: unsigned char *(uint32_t, const struct stat *, const cnid_t, const char *, const size_t)
 mb_generic_pull: size_t (int (*)(uint16_t *, const unsigned char *), void *, char **, size_t *, char **, size_t *)
 mb_generic_push: size_t (int (*)(unsigned char *, uint16_t), void *, char **, size_t *, char **, size_t *)
-namecache: {<repeats 256 times>}
 netatalk_panic: void (const char *)
 netatalk_rmdir: int (int, const char *)
 netatalk_rmdir_all_errors: int (int, const char *)
@@ -385,6 +383,7 @@ server_child_setup: void (server_child *, const int, void (*)(const pid_t))
 server_child_transfer_session: int (server_child *, int, pid_t, uid_t, int, uint16_t)
 server_lock: pid_t (char *, char *, int)
 server_reset_signal: void (void)
+set_charset_name: int (charset_t, const char *)
 set_ea: int (const struct vol *, const char *, const char *, const char *, size_t, int)
 setfilmode: int (const char *, mode_t, struct stat *, mode_t)
 setnonblock: int (int, int)
@@ -541,7 +540,6 @@ utf8_strlower: size_t (const char *, size_t, char *, size_t)
 utf8_strupper: size_t (const char *, size_t, char *, size_t)
 utf8_to_charset_allocate: size_t (charset_t, char **, const char *)
 uuid_bin2string: const char *(const unsigned char *)
-uuidcache: {<repeats 256 times>}
 uuidcache_dump: void (void)
 uuid_string2bin: void (const char *, unsigned char *)
 uuidtype: {"", "USER", "GROUP", "LOCAL"}
