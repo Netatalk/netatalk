@@ -1,6 +1,7 @@
 Changes in 3.0 beta2
 ====================
 * UPD: Solaris and friends: Replace initscript with SMF manifest
+* FIX: Solaris and friends: resource fork handling
 
 Changes in 3.0 beta1
 ====================
