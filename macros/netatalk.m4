@@ -268,7 +268,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_RESULT([enabling debian-style sysv support])
         ;;
     "solaris")
-	    AC_MSG_RESULT([enabling solaris-style sysv support])
+	    AC_MSG_RESULT([enabling solaris-style SMF support])
         ;;
     "systemd")
 	    AC_MSG_RESULT([use general systemd configuration])
