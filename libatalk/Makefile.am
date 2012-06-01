@@ -10,15 +10,13 @@
 #               support?
 #
 # To increment a VERSION_INFO (current:revision:age):
-#    If the ABI didn't change:
-#        Return (current:revision+1:age)
+#    If the ABI didn't change, but any library code changed:
+#        current:revision+1:age
 #    If the ABI changed, but it's backward-compatible:
-#        Return (current+1:0:age+1)
+#        current+1:0:age+1
 #    If the ABI changed and it isn't backward-compatible:
-#        Return (current+1:0:0)
+#        current+1:0:0
 #
-# Once an RC is out, DO NOT MAKE ANY ABI-BREAKING CHANGES IN THAT SERIES
-# UNLESS YOU REALLY REALLY HAVE TO.
 
 VERSION_INFO = 1:0:0
 
@@ -28,6 +26,7 @@ VERSION_INFO = 1:0:0
 #   3.0.0-alpha2    0:0:0
 #   3.0.0-alpha3    0:0:0
 #   3.0.0-beta1     0:0:0
+#   3.0.0-beta2     1:0:0
 
 SUBDIRS = acl adouble bstring compat cnid dsi iniparser tdb util unicode vfs
 
