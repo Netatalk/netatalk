@@ -67,6 +67,14 @@ libatalk_la_LDFLAGS = -version-info $(VERSION_INFO)
 if DEVELOPER
 all-local: .libs/libatalk.so
 	@$(top_srcdir)/abigen.sh .libs/libatalk.so > libatalk.abi.tmp
+	@if [ ! -f libatalk-$(NETATALK_VERSION).abi ] ; then \
+		cp libatalk.abi.tmp libatalk-$(NETATALK_VERSION).abi ; \
+		echo "**********************************************************************************************************" ; \
+		echo "                                created ABI file libatalk-$(NETATALK_VERSION).abi" ; \
+		echo "    check https://sourceforge.net/apps/mediawiki/netatalk/index.php?title=Developer_Infos#ABI_checking" ; \
+		echo "**********************************************************************************************************" ; \
+		exit 1 ; \
+	fi
 	@diff -u libatalk-$(NETATALK_VERSION).abi libatalk.abi.tmp || ( \
 		echo '**********************************************************************************************************' && \
 		echo '***                                     libatalk ABI changed                                           ***' && \
@@ -74,6 +82,4 @@ all-local: .libs/libatalk.so
 		echo '**********************************************************************************************************' && \
 		exit 1 )
 
-check-local: .libs/libatalk.so
-	@$(top_srcdir)/abigen.sh .libs/libatalk.so > libatalk-$(NETATALK_VERSION).abi
 endif
