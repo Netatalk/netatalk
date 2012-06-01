@@ -83,3 +83,7 @@ all-local: .libs/libatalk.so
 		exit 1 )
 
 endif
+
+EXTRA_DIST = \
+	libatalk-3.0beta1.abi \
+	libatalk-3.0beta2.abi
