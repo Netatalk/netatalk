@@ -1534,7 +1534,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* unix charset is in [G] only */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
         options->unixcodepage = strdup("UTF8");
-        charset_names[CH_UNIX] = strdup("UTF8");
+        set_charset_name(CH_UNIX, "UTF8");
     } else {
         if (strcasecmp(p, "LOCALE") == 0) {
 #if defined(CODESET)
@@ -1550,7 +1550,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             p = strdup("UTF8");
         }
         options->unixcodepage = strdup(p);
-        charset_names[CH_UNIX] = strdup(p);
+        set_charset_name(CH_UNIX, p);
     }
     options->unixcharset = CH_UNIX;
     LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
@@ -1569,13 +1569,13 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* mac charset is in [G] and [V] */
     if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccodepage = strdup("MAC_ROMAN");
-        charset_names[CH_MAC] = strdup("MAC_ROMAN");
+        set_charset_name(CH_MAC, "MAC_ROMAN");
     } else {
         if (strncasecmp(p, "MAC", 3) != 0) {
             LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", p);
         }
         options->maccodepage = strdup(p);
-        charset_names[CH_MAC] = strdup(p);
+        set_charset_name(CH_MAC, p);
     }
     options->maccharset = CH_MAC;
     LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);

@@ -1146,7 +1146,12 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
     EC_INIT;
     struct stat st;
 
-    LOG(log_debug, logtype_default, "ad_reso_size(\"%s\")", path);
+    if (adflags & ADFLAGS_DIR) {
+        ad->ad_rlen = 0;
+        goto EC_CLEANUP;
+    }
+
+    LOG(log_debug, logtype_default, "ad_reso_size(\"%s\"): BEGIN", path);
 
 #ifdef HAVE_EAFD
     ssize_t easz;
@@ -1155,10 +1160,9 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
         EC_NEG1( fstat(ad_reso_fileno(ad), &st) );
         ad->ad_rlen = st.st_size;
     } else if (ad_meta_fileno(ad) != -1) {
-        EC_NEG1( easz = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0) );
-        ad->ad_rlen = easz;
+        EC_NEG1( (ad->ad_rlen = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0)) );
     } else {
-        EC_FAIL;
+        EC_NEG1( (ad->ad_rlen = sys_lgetxattr(path, AD_EA_RESO, NULL, 0)) );
     }
 
 #else

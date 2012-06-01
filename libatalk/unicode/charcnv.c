@@ -67,7 +67,7 @@
 #define CHECK_FLAGS(a,b) (((a)!=NULL) ? (*(a) & (b)) : 0 )
 
 static atalk_iconv_t conv_handles[MAX_CHARSETS][MAX_CHARSETS];
-char* charset_names[MAX_CHARSETS];
+static char* charset_names[MAX_CHARSETS];
 static struct charset_functions* charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
@@ -85,6 +85,14 @@ static const char *charset_name(charset_t ch)
     else if (ch == CH_UTF8_MAC) ret = "UTF8-MAC";
     else ret = charset_names[ch];
     return ret;
+}
+
+int set_charset_name(charset_t ch, const char *name)
+{
+    if (ch >= NUM_CHARSETS)
+        return -1;
+    charset_names[ch] = strdup(name);
+    return 0;
 }
 
 static struct charset_functions* get_charset_functions (charset_t ch)

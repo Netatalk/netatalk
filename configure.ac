@@ -190,6 +190,8 @@ AC_NETATALK_LIBEVENT
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
+AC_DEVELOPER
+
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
 UAMS_PATH="${uams_path}"
 

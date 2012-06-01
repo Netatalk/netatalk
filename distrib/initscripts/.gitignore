@@ -10,5 +10,5 @@ rc.suse
 service.systemd
 netatalk
 netatalk.service
-.gitignore
+netatalk.xml
 *.o
