@@ -16,6 +16,10 @@
             <service_fmri value="svc:/system/filesystem/local"/>
         </dependency>
 
+        <dependency name="mdns" grouping="optional_all" restart_on="error" type="service">
+            <service_fmri value="svc:/network/dns/multicast"/>
+        </dependency>
+
         <method_context>
         </method_context>
 
