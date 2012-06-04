@@ -833,8 +833,12 @@ sub hexdump {
 sub checkea {
     my ($file) = @_;
 
+    $file =~ s/\\/\\\\/g;
+    $file =~ s/\"/\\\"/g;
+    $file =~ s/\$/\\\$/g;
+    $file =~ s/\`/\\\`/g;
     if ( $eacommand == 1 ) {
-	open(EALIST, "getfattr ".$file." |");
+	open(EALIST, "getfattr \"$file\" |");
 	while(<EALIST>) {
 	    if ( $_ eq "user.org.netatalk.Metadata\n" ) {
 		close (EALIST);
@@ -844,7 +848,7 @@ sub checkea {
 	close (EALIST);
 	return 0;
     } elsif ( $eacommand == 2 ) {
-	open(EALIST, "attr -q -l ".$file." |");
+	open(EALIST, "attr -q -l \"$file\" |");
 	while(<EALIST>) {
 	    if ( $_ eq "org.netatalk.Metadata\n" ) {
 		close (EALIST);
@@ -854,7 +858,7 @@ sub checkea {
 	close (EALIST);
 	return 0;
     } elsif ( $eacommand == 3 ) {
-	open(EALIST, "runat ".$file." ls -1 |");
+	open(EALIST, "runat \"$file\" ls -1 |");
 	while(<EALIST>) {
 	    if ( $_ eq "org.netatalk.Metadata\n" ) {
 		close (EALIST);
@@ -871,14 +875,18 @@ sub checkea {
 sub eaopenfile {
     my ($file) = @_;
 
+    $file =~ s/\\/\\\\/g;
+    $file =~ s/\"/\\\"/g;
+    $file =~ s/\$/\\\$/g;
+    $file =~ s/\`/\\\`/g;
     ($eatempfh, $eatempfile) = tempfile(UNLINK => 1);
 
     if ( $eacommand == 1 ) {
-	system("getfattr --only-values -n user.org.netatalk.Metadata $file > $eatempfile");
+	system("getfattr --only-values -n user.org.netatalk.Metadata \"$file\" > $eatempfile");
     } elsif ( $eacommand == 2 ) {
-	system("attr -q -g org.netatalk.Metadata $file > $eatempfile");
+	system("attr -q -g org.netatalk.Metadata \"$file\" > $eatempfile");
     } elsif ( $eacommand == 3 ) {
-	system("runat $file cat org.netatalk.Metadata > $eatempfile");
+	system("runat \"$file\" cat org.netatalk.Metadata > $eatempfile");
     } else {
 	return "";
     }
