@@ -39,8 +39,7 @@
 
 #include <atalk/compat.h>
 #include <atalk/util.h>
-
-#include "talloc.h"
+#include <atalk/talloc.h>
 
 #define _PUBLIC_ extern
 
