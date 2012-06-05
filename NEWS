@@ -1,3 +1,7 @@
+Changes in 3.0 beta3
+====================
+* UPD: read only mode if cnid scheme is last
+
 Changes in 3.0 beta2
 ====================
 * UPD: Solaris and friends: Replace initscript with SMF manifest

@@ -756,12 +756,15 @@ static struct vol *creatvol(AFPObj *obj,
      * 1) neither the rolist nor the rwlist exist -> rw
      * 2) rolist exists -> ro if user is in it.
      * 3) rwlist exists -> ro unless user is in it.
+     * 4) cnid scheme = last -> ro forcibly.
      */
     if (pwd) {
         if (accessvol(obj, getoption(obj->iniconfig, section, "rolist", preset, NULL), pwd->pw_name) == 1
             || accessvol(obj, getoption(obj->iniconfig, section, "rwlist", preset, NULL), pwd->pw_name) == 0)
             volume->v_flags |= AFPVOL_RO;
     }
+    if (0 == strcmp(volume->v_cnidscheme, "last"))
+        volume->v_flags |= AFPVOL_RO;
 
     if ((volume->v_flags & AFPVOL_NODEV))
         volume->v_ad_options |= ADVOL_NODEV;
