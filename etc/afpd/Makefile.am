@@ -3,7 +3,7 @@
 pkgconfdir = @PKGCONFDIR@
 
 sbin_PROGRAMS = afpd
-noinst_PROGRAMS = hash fce
+noinst_PROGRAMS = hash fce spot
 
 afpd_SOURCES = \
 	afp_avahi.c \
@@ -66,7 +66,7 @@ endif
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
-	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h
+	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h dd.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
@@ -74,3 +74,7 @@ hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
 fce_SOURCES = fce_api.c fce_util.c
 fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
 fce_LDADD = $(top_builddir)/libatalk/libatalk.la
+
+spot_SOURCES = dd.c
+spot_CFLAGS = -DSPOT_TEST_MAIN
+spot_LDADD = $(top_builddir)/libatalk/libatalk.la
