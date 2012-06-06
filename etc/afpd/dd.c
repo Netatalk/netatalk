@@ -22,11 +22,13 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include <atalk/errchk.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/talloc.h>
+#include <atalk/bstrlib.h>
 
 #include "dd.h"
 
@@ -34,57 +36,54 @@ static const char *neststrings[] = {
     "",
     "    ",
     "        ",
-    "            "
+    "            ",
+    "                ",
+    "                    ",
+    "                        "
 };
 
-static int dd_add_elem(dd_t *dd, dde_type_e type, void *val, size_t size)
+void *_dd_add_obj(dd_t *dd, void *talloc_chunk, void *obj, size_t size)
 {
-    if (dd->dd_count == 0) {
-        dd->dd_elem = talloc_array(dd, dde_t *, 1);
+    AFP_ASSERT(talloc_chunk);
+    
+    if (dd->dd_talloc_array == NULL) {
+        dd->dd_talloc_array = talloc_array(dd, void *, 1);
     } else {
-        dd->dd_elem = talloc_realloc(dd, dd->dd_elem, dde_t *, dd->dd_count + 1);
+        dd->dd_talloc_array = talloc_realloc(dd, dd->dd_talloc_array, void *, talloc_array_length(dd->dd_talloc_array) + 1);
     }
 
-    if (dd->dd_elem == NULL) {
-        LOG(logtype_default, log_error, "Allocation error");
-        return -1;
-    }
-
-    dd->dd_elem[dd->dd_count] = talloc(dd->dd_elem, dde_t);
-    dd->dd_elem[dd->dd_count]->dde_type = type;
-    dd->dd_elem[dd->dd_count]->dde_val = talloc_memdup(dd->dd_elem, val, size);
-
-    dd->dd_count++;
+    memcpy(talloc_chunk, obj, size);
+    dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = talloc_chunk;
 
     return 0;
 }
 
 static int dd_dump(dd_t *dd, int nestinglevel)
 {
-    printf("%sArray(#%d): {\n", neststrings[nestinglevel], dd->dd_count);
-    for (int n = 0; n < dd->dd_count; n++) {
-        switch (dd->dd_elem[n]->dde_type) {
-        case DDT_INT64: {
-            int i;
-            memcpy(&i, dd->dd_elem[n]->dde_val, sizeof(int));
-            printf("%s%d:\t%d\n", neststrings[nestinglevel + 1], n, i);
-            break;
-        }
-        case DDT_STRING:
-            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, dd->dd_elem[n]->dde_val);
-            break;
-        case DDT_BOOL: {
-            bool b;
-            memcpy(&b, dd->dd_elem[n]->dde_val, sizeof(bool));
-            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, b ? "true" : "false");
-            break;
-        }
-        case DDT_ARRAY:
-            dd_dump(dd->dd_elem[n]->dde_val, nestinglevel + 1);
-            break;
-        default:
-            LOG(logtype_default, log_error, "Unknown type");
-            break;
+    const char *type;
+
+    printf("%sArray(#%d): {\n", neststrings[nestinglevel], talloc_array_length(dd->dd_talloc_array));
+
+    for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
+
+        type = talloc_get_name(dd->dd_talloc_array[n]);
+
+        if (STRCMP(type, ==, "int64_t")) {
+            int64_t i;
+            memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
+            printf("%s%d:\t%" PRId64 "\n", neststrings[nestinglevel + 1], n, i);
+        } else if (STRCMP(type, ==, "bstring")) {
+            bstring b;
+            memcpy(&b, dd->dd_talloc_array[n], sizeof(bstring));
+            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, bdata(b));
+        } else if (STRCMP(type, ==, "_Bool")) {
+            bool bl;
+            memcpy(&bl, dd->dd_talloc_array[n], sizeof(bool));
+            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, bl ? "true" : "false");
+        } else if (STRCMP(type, ==, "dd_t")) {
+            dd_t *nested;
+            memcpy(&nested, dd->dd_talloc_array[n], sizeof(dd_t *));
+            dd_dump(nested, nestinglevel + 1);
         }
     }
     printf("%s}\n", neststrings[nestinglevel]);
@@ -105,29 +104,25 @@ int main(int argc, char **argv)
     LOG(logtype_default, log_info, "Start");
 
     i = 2;
-    dd_add_elem(dd, DDT_INT64, &i, sizeof(int));
+    dd_add_obj(dd, &i, int64_t);
 
-    i = 3;
-    dd_add_elem(dd, DDT_INT64, &i, sizeof(int));
-
-    char *str = "hello world";
-    dd_add_elem(dd, DDT_STRING, str, strlen(str) + 1);
+    bstring str = bfromcstr("hello world");
+    dd_add_obj(dd, &str, bstring);
 
     bool b = true;
-    dd_add_elem(dd, DDT_BOOL, &b, sizeof(bool));
+    dd_add_obj(dd, &b, bool);
 
     b = false;
-    dd_add_elem(dd, DDT_BOOL, &b, sizeof(bool));
+    dd_add_obj(dd, &b, bool);
 
     i = 1;
-    dd_add_elem(dd, DDT_INT64, &i, sizeof(int));
+    dd_add_obj(dd, &i, int64_t);
 
     /* add a nested array */
     dd_t *nested = talloc_zero(dd, dd_t);
-
-    dd_add_elem(nested, DDT_INT64, &i, sizeof(int));
-
-    dd_add_elem(dd, DDT_ARRAY, nested, sizeof(dd_t));
+    dd_add_obj(nested, &i, int64_t);
+    dd_add_obj(nested, &str, bstring);
+    dd_add_obj(dd, &nested, dd_t);
 
     dd_dump(dd, 0);
 

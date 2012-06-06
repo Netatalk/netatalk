@@ -16,27 +16,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-/* dynamic datastore element types */
-typedef enum {
-    DDT_INT64,
-    DDT_BOOL,
-    DDT_DATE,
-    DDT_UUID,
-    DDT_FLOAT,
-    DDT_STRING,
-    DDT_UTF16_STRING,
-    DDT_ARRAY,
-    DDT_DICTIONARY
-} dde_type_e;
-
-/* one dynamic datastore element */
-typedef struct {
-    dde_type_e dde_type;    /* type */
-    void       *dde_val;    /* void pointer to value */
-} dde_t;
-
 /* dynamic datastore */
 typedef struct {
-    int   dd_count;         /* number of elements */
-    dde_t **dd_elem;        /* talloc'ed array of elements */
+    void **dd_talloc_array;
 } dd_t;
+
+#define dd_init(dd) (dd)->dd_talloc_array = NULL;
+
+#define dd_add_obj(dd, obj, type)                                   \
+    _dd_add_obj((dd), talloc((dd), type), (obj), sizeof(type));
+
+#define dd_get_count(dd) talloc_array_length(dd)
