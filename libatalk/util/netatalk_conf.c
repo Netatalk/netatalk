@@ -1426,8 +1426,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* "server options" boolean options */
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
         options->flags |= OPTION_NOZEROCONF;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "icon", 0))
-        options->flags |= OPTION_CUSTOMICON;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "advertise ssh", 0))
         options->flags |= OPTION_ANNOUNCESSH;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "map acls", 1))

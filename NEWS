@@ -1,6 +1,7 @@
 Changes in 3.0 beta3
 ====================
 * UPD: read only mode if cnid scheme is last
+* REM: global option "icon"
 
 Changes in 3.0 beta2
 ====================
