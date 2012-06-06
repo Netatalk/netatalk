@@ -42,10 +42,12 @@ static const char *neststrings[] = {
     "                        "
 };
 
-void *_dd_add_obj(dd_t *dd, void *talloc_chunk, void *obj, size_t size)
+int _dd_add_obj(dd_t *dd, void *talloc_chunk, void *obj, size_t size, int (*destructor)(void *))
 {
     AFP_ASSERT(talloc_chunk);
-    
+
+    if (destructor)
+        talloc_set_destructor(talloc_chunk, destructor);
     if (dd->dd_talloc_array == NULL) {
         dd->dd_talloc_array = talloc_array(dd, void *, 1);
     } else {
@@ -89,6 +91,12 @@ static int dd_dump(dd_t *dd, int nestinglevel)
     printf("%s}\n", neststrings[nestinglevel]);
 }
 
+static int bstring_destructor(void *bstr)
+{
+    bdestroy(*(bstring *)bstr);
+    return 0;
+}
+
 #ifdef SPOT_TEST_MAIN
 #include <stdarg.h>
 
@@ -104,25 +112,25 @@ int main(int argc, char **argv)
     LOG(logtype_default, log_info, "Start");
 
     i = 2;
-    dd_add_obj(dd, &i, int64_t);
+    dd_add_obj(dd, &i, int64_t, NULL);
 
     bstring str = bfromcstr("hello world");
-    dd_add_obj(dd, &str, bstring);
+    dd_add_obj(dd, &str, bstring, bstring_destructor);
 
     bool b = true;
-    dd_add_obj(dd, &b, bool);
+    dd_add_obj(dd, &b, bool, NULL);
 
     b = false;
-    dd_add_obj(dd, &b, bool);
+    dd_add_obj(dd, &b, bool, NULL);
 
     i = 1;
-    dd_add_obj(dd, &i, int64_t);
+    dd_add_obj(dd, &i, int64_t, NULL);
 
     /* add a nested array */
     dd_t *nested = talloc_zero(dd, dd_t);
-    dd_add_obj(nested, &i, int64_t);
-    dd_add_obj(nested, &str, bstring);
-    dd_add_obj(dd, &nested, dd_t);
+    dd_add_obj(nested, &i, int64_t, NULL);
+    dd_add_obj(nested, &str, bstring, bstring_destructor);
+    dd_add_obj(dd, &nested, dd_t, NULL);
 
     dd_dump(dd, 0);
 

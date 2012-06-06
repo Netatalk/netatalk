@@ -16,6 +16,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef DD_H
+#define DD_H
+
 /* dynamic datastore */
 typedef struct {
     void **dd_talloc_array;
@@ -23,7 +26,11 @@ typedef struct {
 
 #define dd_init(dd) (dd)->dd_talloc_array = NULL;
 
-#define dd_add_obj(dd, obj, type)                                   \
-    _dd_add_obj((dd), talloc((dd), type), (obj), sizeof(type));
+#define dd_add_obj(dd, obj, type, destructor)                              \
+    _dd_add_obj((dd), talloc((dd), type), (obj), sizeof(type), (destructor));
 
-#define dd_get_count(dd) talloc_array_length(dd)
+#define dd_get_count(dd) talloc_array_length(dd->dd_talloc_array)
+
+extern int _dd_add_obj(dd_t *dd, void *talloc_chunk, void *obj, size_t size, int (*destructor)(void *));
+
+#endif  /* DD_H */
