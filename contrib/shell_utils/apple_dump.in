@@ -107,7 +107,7 @@ while ($arg = shift @ARGV)
     } elsif ($arg eq "-e") {
         if ($eacommand == 0) {
 	    printf (STDERR "%s: unsupported option -e\n", basename($0));
-	    printf (STDERR "because neither getfattr, xattr nor runat is not found.\n");
+	    printf (STDERR "because neither getfattr, xattr nor runat is found.\n");
 	    exit 1;
 	}
 	$eaoption = 1;
@@ -129,7 +129,7 @@ if (!($afile)) {
     exit 1;
 }
 if (!( -e $afile)) {
-    printf (STDERR "\"%s\" not found.\n", $afile);
+    printf (STDERR "\"%s\" is not found.\n", $afile);
     exit 1;
 }
 
@@ -154,7 +154,7 @@ if ( $eaoption == 1 ) {
     $openfile = eaopenfile($afile);
     $openmessage = "Dumping \"$afile\"'s extended attribute...\n";
 } elsif ( $finderinfo != 0 ) {
-    ;
+    $openfile = $afile;
 } elsif ( -f $afile ) {
     if ( $basename eq ".Parent") {
 	$finderinfo = 2;
@@ -185,7 +185,7 @@ if ( $eaoption == 1 ) {
         $osxfile = $path."._".$basename;
 
         if ( 1 == checkea($afile) ) {
-	    printf ("extended attribute of \"%s\" is found.\n", $afile);
+	    printf ("\"%s\"\'s extended attribute is found.\n", $afile);
             $adcount++;
 	    $openfile = eaopenfile($afile);
 	    $openmessage = "Dumping \"$afile\"'s extended attribute...\n";
@@ -206,7 +206,7 @@ if ( $eaoption == 1 ) {
             exit 1;
 	}
 	if ( $adcount != 1 ) {
-            printf ("Specify which.\n");
+            printf ("Specify any one.\n");
             exit 1;
 	}
     }
@@ -218,19 +218,19 @@ if ( $eaoption == 1 ) {
     $osxfile = $path."._".$basename;
 
     if ( 1 == checkea($afile) ) {
-	printf ("extended attribute of \"%s\" is found.\n", $afile);
+	printf ("\"%s\"\'s extended attribute is found.\n", $afile);
 	$adcount++;
 	$openfile = eaopenfile($afile);
 	$openmessage = "Dumping \"$afile\"'s extended attribute...\n";
     }
     if ( -e $netatalkfile ) {
-	printf ("\"%s\" found.\n", $netatalkfile);
+	printf ("\"%s\" is found.\n", $netatalkfile);
 	$adcount++;
 	$openfile= $netatalkfile;
 	$openmessage = "Dumping \"$openfile\"...\n";
     }
     if ( -e $osxfile ) {
-	printf ("\"%s\" found.\n", $osxfile);
+	printf ("\"%s\" is found.\n", $osxfile);
 	$adcount++;
 	$openfile = $osxfile;
 	$openmessage = "Dumping \"$openfile\"...\n";
@@ -240,7 +240,7 @@ if ( $eaoption == 1 ) {
 	exit 1;
     }
     if ( $adcount != 1 ) {
-	printf ("Specify which.\n");
+	printf ("Specify any one.\n");
 	exit 1;
     }
 } else {
@@ -249,7 +249,7 @@ if ( $eaoption == 1 ) {
 }
 
 if (!open(INFILE, "<$openfile")) {
-    printf (STDERR "cannot open %s\n",  $afile);
+    printf (STDERR "cannot open %s\n",  $openfile);
     exit 1;
 }
 
@@ -375,7 +375,7 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 #    if ( $entid == 13 ) { ; } # Short Name
 #    if ( $entid == 14 ) { ; } # AFP File Info 
     elsif ( $entid == 15 ) { print "\n"; bedump($ofst,$len); } # Directory ID
-    elsif ( $entid == 0x8053567E  ) { print "\n"; bedump($ofst,$len); } # CNID (Netatalk Extended)
+    elsif ( $entid == 0x8053567E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # CNID (Netatalk Extended)
     elsif ( $entid == 0x8053594E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)
     elsif ( $entid == 0x80444556  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # dev (Netatalk Extended)
     elsif ( $entid == 0x80494E4F  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # inode (Netatalk Extended)
