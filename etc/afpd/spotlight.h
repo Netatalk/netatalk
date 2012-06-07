@@ -16,21 +16,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifndef DD_H
-#define DD_H
+#ifndef SPOTLIGHT_H
+#define SPOTLIGHT_H
 
-/* dynamic datastore */
+#include <atalk/dalloc.h>
+
 typedef struct {
-    void **dd_talloc_array;
-} dd_t;
+    uint16_t   ca_unkn1;
+    uint32_t   ca_unkn2;
+    DALLOC_CTX *ca_cnids;
+} cnid_array_t;
 
-#define dd_init(dd) (dd)->dd_talloc_array = NULL;
-
-#define dd_add_obj(dd, obj, type, destructor)                              \
-    _dd_add_obj((dd), talloc((dd), type), (obj), sizeof(type), (destructor));
-
-#define dd_get_count(dd) talloc_array_length(dd->dd_talloc_array)
-
-extern int _dd_add_obj(dd_t *dd, void *talloc_chunk, void *obj, size_t size, int (*destructor)(void *));
-
-#endif  /* DD_H */
+#endif /* SPOTLIGHT_H */
