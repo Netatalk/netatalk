@@ -17,6 +17,6 @@ libunicode_la_SOURCES = \
 
 libunicode_la_LIBADD = $(LIBUNICODE_DEPS)
 
-noinst_HEADERS = utf16_casetable.h precompose.h byteorder.h
+noinst_HEADERS = utf16_casetable.h precompose.h
 
 LIBS=@ICONV_LIBS@

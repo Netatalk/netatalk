@@ -27,8 +27,7 @@
 
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
-
-#include "../../libatalk/unicode/byteorder.h"
+#include <atalk/byteorder.h>
 
 static size_t   iso8859_adapted_pull(void *,char **, size_t *, char **, size_t *);
 static size_t   iso8859_adapted_push(void *,char **, size_t *, char **, size_t *);

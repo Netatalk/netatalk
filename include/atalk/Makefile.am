@@ -41,5 +41,5 @@ noinst_HEADERS = \
 	dsi.h \
 	ldapconfig.h \
 	talloc.h \
-	dalloc.h
-
+	dalloc.h \
+	byteorder.h
