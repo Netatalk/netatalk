@@ -707,6 +707,8 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 		break;
     }
 	case SPOTLIGHT_CMD_FLAGS:
+        RSIVAL(rbuf, 0, 0x0100006b); /* Whatever this value means... flags? */
+        *rbuflen += 4;
 		break;
 
 	case SPOTLIGHT_CMD_RPC:
