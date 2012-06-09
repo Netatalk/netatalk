@@ -20,11 +20,17 @@
 #define SPOTLIGHT_H
 
 #include <atalk/dalloc.h>
+#include <atalk/globals.h>
 
+typedef DALLOC_CTX sl_array_t;    /* an array of elements                    */
+typedef DALLOC_CTX sl_dict_t;     /* an array of key/value elements          */
+typedef DALLOC_CTX sl_filemeta_t; /* an array of elements                    */
 typedef struct {
     uint16_t   ca_unkn1;
     uint32_t   ca_unkn2;
     DALLOC_CTX *ca_cnids;
-} cnid_array_t;
+} cnid_array_t;                   /* an array of CNID                        */
+
+extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen);
 
 #endif /* SPOTLIGHT_H */

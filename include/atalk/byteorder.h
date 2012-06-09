@@ -74,6 +74,7 @@ reasoning behind them. byteorder.h defines the following macros:
 
 SVAL(buf,pos) - extract a 2 byte SMB value
 IVAL(buf,pos) - extract a 4 byte SMB value
+LVAL(buf,pos) - extract a 8 byte SMB value
 SVALS(buf,pos) signed version of SVAL()
 IVALS(buf,pos) signed version of IVAL()
 
@@ -118,6 +119,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 #define SVAL(buf,pos) (PVAL(buf,(pos)+1)|PVAL(buf,pos)<<8)
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
+#define LVAL(buf,pos) (IVAL(buf,pos)|IVAL(buf,(pos)+4)<<32)
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos+1)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos)=(unsigned char)((val)>>8))
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
 #define SVALS(buf,pos) ((int16)SVAL(buf,pos))
@@ -131,6 +133,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 #define SVAL(buf,pos) (PVAL(buf,pos)|PVAL(buf,(pos)+1)<<8)
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
+#define LVAL(buf,pos) (IVAL(buf,pos)|((uint64_t)IVAL(buf,(pos)+4))<<32)
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos+1)=(unsigned char)((val)>>8))
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
 #define SVALS(buf,pos) ((int16)SVAL(buf,pos))
@@ -156,6 +159,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define SVAL_NC(buf,pos) (*(uint16_t *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define IVAL(buf,pos) (*(const uint32_t *)((const char *)(buf) + (pos)))
 #define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define LVAL(buf,pos) (*(const uint64_t *)((const char *)(buf) + (pos)))
 #define SVALS(buf,pos) (*(const int16_t *)((const char *)(buf) + (pos)))
 #define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
@@ -172,11 +176,15 @@ it also defines lots of intermediate macros, just ignore those :-)
 /* now the reverse routines - these are used in nmb packets (mostly) */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))
 #define IREV(x) ((SREV(x)<<16) | (SREV((x)>>16)))
+#define LREV(x) ((IREV(x)<<32) | (IREV((x)>>32)))
 
 #define RSVAL(buf,pos) SREV(SVAL(buf,pos))
 #define RSVALS(buf,pos) SREV(SVALS(buf,pos))
 #define RIVAL(buf,pos) IREV(IVAL(buf,pos))
 #define RIVALS(buf,pos) IREV(IVALS(buf,pos))
+
+#define RLVAL(buf,pos) LREV(LVAL(buf,pos))
+
 #define RSSVAL(buf,pos,val) SSVAL(buf,pos,SREV(val))
 #define RSSVALS(buf,pos,val) SSVALS(buf,pos,SREV(val))
 #define RSIVAL(buf,pos,val) SIVAL(buf,pos,IREV(val))
