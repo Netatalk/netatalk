@@ -36,16 +36,12 @@ AC_MSG_CHECKING([whether to use Filesystem Hierarchy Standard (FHS) compatibilit
 AC_ARG_ENABLE(fhs,
 	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],[
 	if test "$enableval" = "yes"; then
-		bindir="/bin"
-		sbindir="/sbin"
-		sysconfdir="/etc"
-		libdir="/lib"
-		localstatedir="/var"
-		mandir="/usr/share/man"
 		uams_path="${libdir}/netatalk"
-		PKGCONFDIR="${sysconfdir}"
-		SERVERTEXT="${localstatedir}/netatalk/msg"
+		sysconfdir="/etc"
+		PKGCONFDIR=${sysconfdir}/netatalk
+		SERVERTEXT="${PKGCONFDIR}/msg"
 		use_pam_so=yes
+		mandir="/usr/share/man"
 		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
 		AC_MSG_RESULT([yes])
 	else
