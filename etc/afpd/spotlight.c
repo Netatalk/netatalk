@@ -356,9 +356,9 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
             subcount = query_data64 >> 32;
             if (subcount > 64)
                 EC_FAIL;
-            sl_nit_t nil = 0;
+            sl_nil_t nil = 0;
             for (i = 0; i < subcount; i++)
-                dalloc_add(query, &nil, sl_nit_t);
+                dalloc_add(query, &nil, sl_nil_t);
             count -= subcount;
             break;
         }
@@ -512,13 +512,17 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;
 
-    printf("%sArray(#%d): {\n", neststrings[nestinglevel], talloc_array_length(dd->dd_talloc_array));
+    printf("%s%s(#%d): {\n", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
 
     for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
 
         type = talloc_get_name(dd->dd_talloc_array[n]);
 
-        if (STRCMP(type, ==, "int64_t")) {
+        if (STRCMP(type, ==, "DALLOC_CTX")
+                   || STRCMP(type, ==, "sl_array_t")
+                   || STRCMP(type, ==, "sl_dict_t")) {
+            dd_dump(dd->dd_talloc_array[n], nestinglevel + 1);
+        } else if (STRCMP(type, ==, "int64_t")) {
             int64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
             printf("%s%d:\t%" PRId64 "\n", neststrings[nestinglevel + 1], n, i);
@@ -534,17 +538,6 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
             sl_bool_t bl;
             memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
             printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, bl ? "true" : "false");
-        } else if (STRCMP(type, ==, "DALLOC_CTX")) {
-            DALLOC_CTX nested;
-            memcpy(&nested, dd->dd_talloc_array[n], sizeof(DALLOC_CTX));
-            dd_dump(&nested, nestinglevel + 1);
-        } else if (STRCMP(type, ==, "sl_cnids_t *")) {
-            sl_cnids_t *cnids;
-            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t *));
-            printf("%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
-                   neststrings[nestinglevel + 1], n, cnids->ca_unkn1, cnids->ca_unkn2);
-            if (cnids->ca_cnids)
-                dd_dump(cnids->ca_cnids, nestinglevel + 1);
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
@@ -603,19 +596,21 @@ int main(int argc, char **argv)
     cnids->ca_unkn2 = 2;
 
     dalloc_add(cnids->ca_cnids, &id, uint32_t);
-    dalloc_add(dd, &cnids, sl_cnids_t *);
+    dalloc_add(dd, cnids, sl_cnids_t);
 
-    /* test an stack CNID array */
-    id = 17;
-    sl_cnids_t cnids2;
+    /* Now the Spotlight types */
+    sl_array_t *sl_arrary = talloc_zero(dd, sl_array_t);
+    i = 1234;
+    dalloc_add(sl_arrary, &i, int64_t);
 
-    cnids2.ca_cnids = talloc_zero(mem_ctx, DALLOC_CTX);
-    cnids2.ca_unkn1 = 3;
-    cnids2.ca_unkn2 = 4;
+    sl_dict_t *sl_dict = talloc_zero(dd, sl_dict_t);
+    i = 5678;
+    dalloc_add(sl_dict, &i, int64_t);
+    dalloc_add(sl_arrary, sl_dict, sl_dict_t);
 
-    dalloc_add(cnids2.ca_cnids, &id, uint32_t);
-    dalloc_add(dd, &cnids2, sl_cnids_t);
+    dalloc_add(dd, sl_arrary, sl_array_t);
 
+    /* Now dump the whole thing */
     dd_dump(dd, 0);
 
     talloc_free(mem_ctx);

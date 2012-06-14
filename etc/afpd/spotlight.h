@@ -27,7 +27,7 @@
 typedef DALLOC_CTX     sl_array_t;    /* an array of elements                                           */
 typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements                                 */
 typedef DALLOC_CTX     sl_filemeta_t; /* an array of elements                                           */
-typedef int            sl_nit_t;      /* a nil element                                                  */
+typedef int            sl_nil_t;      /* a nil element                                                  */
 typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t as it's a define for something else */
 typedef struct timeval sl_time_t;     /* a boolean, we avoid bool_t as it's a define for something else */
 typedef struct {
