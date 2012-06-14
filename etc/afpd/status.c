@@ -613,10 +613,7 @@ void status_init(AFPObj *obj, DSI *dsi)
     status_machine(status);
     status_versions(status, dsi);
     status_uams(status, options->uamlist);
-    if (options->flags & OPTION_CUSTOMICON)
-        status_icon(status, icon, sizeof(icon), c);
-    else
-        status_icon(status, apple_atalk_icon, sizeof(apple_atalk_icon), c);
+    status_icon(status, icon, sizeof(icon), c);
 
     sigoff = status_signature(status, &c, options);
     /* c now contains the offset where the netaddress offset lives */
@@ -629,10 +626,6 @@ void status_init(AFPObj *obj, DSI *dsi)
 
     if ( statuslen < maxstatuslen) 
         statuslen = status_utf8servername(status, &c, dsi, options);
-
-    if ((options->flags & OPTION_CUSTOMICON) == 0) {
-        status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
-    }
 
     dsi->signature = status + sigoff;
     dsi->statuslen = statuslen;

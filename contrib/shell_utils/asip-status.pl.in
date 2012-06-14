@@ -229,7 +229,12 @@ sub parse_FPGetSrvrInfo()
 
 	my ($icon_offset) = unpack("n", @packet[6] . @packet[7]);
 	print "Volume Icon & Mask offset: $icon_offset\n" if ($main::debug);
-	print "Volume Icon & Mask: exist\n" if ($icon_offset);
+	print "Volume Icon & Mask: ";
+	if ($icon_offset) {
+	    print "Yes\n";
+	} else {
+	    print "No\n";
+	}
 
 	my ($flags) = unpack("n", @packet[8] . @packet[9]);
 	my (@flags) = parse_afp_flags($flags);
