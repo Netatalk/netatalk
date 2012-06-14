@@ -71,172 +71,186 @@
 #define SL_ENC_BIG_ENDIAN    2
 #define SL_ENC_UTF_16        4
 
-static uint64_t spotlight_ntoh64(const char *buf, int encoding)
+/* Forward declarations */
+static int dissect_spotlight(TALLOC_CTX *mem_ctx, const char *buf);
+
+static double spotlight_ieee_double(const char *buf, int offset, uint encoding)
 {
-	if (encoding == SL_ENC_LITTLE_ENDIAN)
-		return LVAL(buf, 0);
-	else
-        return ntoh64(LVAL(buf, 0));
+    union {
+        double d;
+        uint32_t w[2];
+    } ieee_fp_union;
+
+	if (encoding == SL_ENC_LITTLE_ENDIAN) {
+#ifdef WORDS_BIGENDIAN
+        ieee_fp_union.w[0] = IVAL(buf, offset + 4);
+        ieee_fp_union.w[1] = IVAL(buf, offset);
+#else
+        ieee_fp_union.w[0] = IVAL(buf, offset);
+        ieee_fp_union.w[1] = IVAL(buf, offset + 4);
+#endif
+        return ieee_fp_union.d;
+    } else {
+#ifdef WORDS_BIGENDIAN
+        ieee_fp_union.w[0] = RIVAL(buf, offset);
+        ieee_fp_union.w[1] = RIVAL(buf, offset + 4);
+#else
+        ieee_fp_union.w[0] = RIVAL(buf, offset + 4);
+        ieee_fp_union.w[1] = RIVAL(buf, offset);
+#endif
+        return ieee_fp_union.d;
+    }
 }
 
-#if 0
-static gdouble
-spotlight_ntohieee_double(tvbuff_t *tvb, gint offset, guint encoding)
+static uint64_t spotlight_ntoh64(const char *buf, int off, uint encoding)
 {
-	if (encoding == ENC_LITTLE_ENDIAN)
-		return tvb_get_letohieee_double(tvb, offset);
+	if (encoding == SL_ENC_LITTLE_ENDIAN)
+		return LVAL(buf, off);
 	else
-		return tvb_get_ntohieee_double(tvb, offset);
+        return ntoh64(LVAL(buf, off));
 }
 
 /*
 * Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
 * If there is no byte order mark, -1 is returned.
 */
-static guint
-spotlight_get_utf16_string_encoding(tvbuff_t *tvb, gint offset, gint query_length, guint encoding) {
-	guint utf16_encoding;
+static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int query_length, uint encoding) {
+	uint utf16_encoding;
 
 	/* check for byte order mark */
-	utf16_encoding = ENC_BIG_ENDIAN;
+	utf16_encoding = SL_ENC_BIG_ENDIAN;
 	if (query_length >= 2) {
-		guint16 byte_order_mark;
-		if (encoding == ENC_LITTLE_ENDIAN)
-			byte_order_mark = tvb_get_letohs(tvb, offset);
+		uint16_t byte_order_mark;
+		if (encoding == SL_ENC_LITTLE_ENDIAN)
+			byte_order_mark = SVAL(buf, offset);
 		else
-			byte_order_mark = tvb_get_ntohs(tvb, offset);
+			byte_order_mark = RSVAL(buf, offset);
 
 		if (byte_order_mark == 0xFFFE) {
-			utf16_encoding = ENC_BIG_ENDIAN | ENC_UTF_16;
+			utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
 		}
 		else if (byte_order_mark == 0xFEFF) {
-			utf16_encoding = ENC_LITTLE_ENDIAN | ENC_UTF_16;
+			utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
 		}
 	}
 
 	return utf16_encoding;
 }
 
-static gint
-spotlight_int64(tvbuff_t *tvb, proto_tree *tree, gint offset, guint encoding)
+static int spotlight_int64(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	gint count, i;
-	guint64 query_data64;
+	int count, i;
+	uint64_t query_data64;
 
-	query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+	query_data64 = spotlight_ntoh64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		query_data64 = spotlight_ntoh64(tvb, offset, encoding);
-		proto_tree_add_text(tree, tvb, offset, 8, "int64: 0x%016" G_GINT64_MODIFIER "x", query_data64);
+		query_data64 = spotlight_ntoh64(buf, offset, encoding);
+        dalloc_add(query, &query_data64, uint64_t);
 		offset += 8;
 	}
 
 	return count;
 }
 
-static gint
-spotlight_date(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, gint offset, guint encoding)
+static int spotlight_date(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	gint count, i;
-	guint64 query_data64;
-	nstime_t t;
+	int count, i;
+	uint64_t query_data64;
+	sl_time_t t;
 
-	query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+	query_data64 = spotlight_ntoh64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
-	if (count > SUBQ_SAFETY_LIM) {
-		expert_add_info_format(pinfo, tree, PI_MALFORMED, PI_ERROR,
-							   "Subquery count (%d) > safety limit (%d)", count, SUBQ_SAFETY_LIM);
-		return -1;
-	}
-
 	i = 0;
 	while (i++ < count) {
-		query_data64 = spotlight_ntoh64(tvb, offset, encoding) >> 24;
-		t.secs = query_data64 - SPOTLIGHT_TIME_DELTA;
-		t.nsecs = 0;
-		proto_tree_add_time(tree, hf_afp_spotlight_date, tvb, offset, 8, &t);
+		query_data64 = spotlight_ntoh64(buf, offset, encoding) >> 24;
+		t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
+		t.tv_usec = 0;
+        dalloc_add(query, &t, sl_time_t);
 		offset += 8;
 	}
 
 	return count;
 }
 
-static gint
-spotlight_uuid(tvbuff_t *tvb, proto_tree *tree, gint offset, guint encoding)
+static int spotlight_uuid(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	gint count, i;
-	guint64 query_data64;
-
-	query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+	int count, i;
+    uint64_t query_data64;
+    sl_uuid_t uuid;
+	query_data64 = spotlight_ntoh64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		proto_tree_add_item(tree, hf_afp_spotlight_uuid, tvb, offset, 16, ENC_BIG_ENDIAN);
+        memcpy(uuid.sl_uuid, buf + offset, 16);
+        dalloc_add(query, &uuid, sl_uuid_t);
 		offset += 16;
 	}
 
 	return count;
 }
 
-static gint
-spotlight_float(tvbuff_t *tvb, proto_tree *tree, gint offset, guint encoding)
+static int spotlight_float(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	gint count, i;
-	guint64 query_data64;
-	gdouble fval;
+	int count, i;
+	uint64_t query_data64;
+	double fval;
 
-	query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+	query_data64 = spotlight_ntoh64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		fval = spotlight_ntohieee_double(tvb, offset, encoding);
-		proto_tree_add_text(tree, tvb, offset, 8, "float: %f", fval);
+		fval = spotlight_ieee_double(buf, offset, encoding);
+        dalloc_add(query, &fval, double);
 		offset += 8;
 	}
 
 	return count;
 }
 
-static gint
-spotlight_CNID_array(tvbuff_t *tvb, proto_tree *tree, gint offset, guint encoding)
+static int spotlight_CNID_array(DALLOC_CTX *query, const char *buf, int offset, int length, uint encoding)
 {
-	gint count;
-	guint64 query_data64;
-	guint16 unknown1;
-	guint32 unknown2;
+    EC_INIT;
+	int count;
+	uint64_t query_data64;
+    sl_cnids_t cnids;
 
-	query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+    EC_NULL( cnids.ca_cnids = talloc_zero(query, DALLOC_CTX) );
+
+    if (length <= 16)
+        /* that's permitted, it's an empty array */
+        goto EC_CLEANUP;
+    
+	query_data64 = spotlight_ntoh64(buf, offset, encoding);
 	count = query_data64 & 0xffff;
-	unknown1 = (query_data64 & 0xffff0000) >> 16;
-	unknown2 = query_data64 >> 32;
 
-	proto_tree_add_text(tree, tvb, offset + 2, 2, "unknown1: 0x%04" G_GINT16_MODIFIER "x",
-		unknown1);
-	proto_tree_add_text(tree, tvb, offset + 4, 4, "unknown2: 0x%08" G_GINT32_MODIFIER "x",
-		unknown2);
+	cnids.ca_unkn1 = (query_data64 & 0xffff0000) >> 16;
+	cnids.ca_unkn2 = query_data64 >> 32;
+
 	offset += 8;
 
-
 	while (count --) {
-		query_data64 = spotlight_ntoh64(tvb, offset, encoding);
-		proto_tree_add_text(tree, tvb, offset, 8, "CNID: %" G_GINT64_MODIFIER "u",
-			query_data64);
+		query_data64 = spotlight_ntoh64(buf, offset, encoding);
+        dalloc_add(cnids.ca_cnids, &query_data64, uint64_t);
 		offset += 8;
 	}
 
-	return 0;
+    dalloc_add(query, &cnids, sl_cnids_t);
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 
-static const char *spotlight_get_qtype_string(guint64 query_type)
+static const char *spotlight_get_qtype_string(uint64_t query_type)
 {
 	switch (query_type) {
 	case SQ_TYPE_NULL:
@@ -258,7 +272,7 @@ static const char *spotlight_get_qtype_string(guint64 query_type)
 	}
 }
 
-static const char *spotlight_get_cpx_qtype_string(guint64 cpx_query_type)
+static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
 {
 	switch (cpx_query_type) {
 	case SQ_CPX_TYPE_ARRAY:
@@ -278,389 +292,143 @@ static const char *spotlight_get_cpx_qtype_string(guint64 cpx_query_type)
 	}
 }
 
-static gint
-spotlight_dissect_query_loop(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, gint offset,
-                             guint64 cpx_query_type, gint count, gint toc_offset, guint encoding)
+static int spotlight_dissect_loop(DALLOC_CTX *query,
+                                  const char *buf,
+                                  uint offset,
+                                  uint count,
+                                  const uint toc_offset,
+                                  const uint encoding)
 {
-	gint i, j;
-	gint subquery_count;
-	gint toc_index;
-	guint64 query_data64;
-	gint query_length;
-	guint64 query_type;
-	guint64 complex_query_type;
-	guint unicode_encoding;
-	guint8 mark_exists;
+    EC_INIT;
+	int i, toc_index, query_length;
+    uint subcount, cpx_query_type, cpx_query_count;
+	uint64_t query_data64, query_type;
+	uint unicode_encoding;
+	uint8_t mark_exists;
+    const char *p;
 
-	proto_item *item_query;
-	proto_tree *sub_tree;
-
-	/*
-	 * This loops through a possibly nested query data structure.
-	 * The outermost one is always without count and called from
-	 * dissect_spotlight() with count = INT_MAX thus the while (...)
-	 * loop terminates if (offset >= toc_offset).
-	 * If nested structures are found, these will have an encoded element
-	 * count which is used in a recursive call to
-	 * spotlight_dissect_query_loop as count parameter, thus in this case
-	 * the while (...) loop will terminate when count reaches 0.
-	 */
-	while ((offset < (toc_offset - 8)) && (count > 0)) {
-		query_data64 = spotlight_ntoh64(tvb, offset, encoding);
+	while (count > 0 && (offset < toc_offset)) {
+		query_data64 = spotlight_ntoh64(buf, offset, encoding);
 		query_length = (query_data64 & 0xffff) * 8;
-		if (query_length == 0) {
-			/* XXX - report this as an error */
-			break;
-		}
 		query_type = (query_data64 & 0xffff0000) >> 16;
+		if (query_length == 0)
+            EC_FAIL;
 
 		switch (query_type) {
 		case SQ_TYPE_COMPLEX:
-			toc_index = (gint)((query_data64 >> 32) - 1);
-			query_data64 = spotlight_ntoh64(tvb, toc_offset + toc_index * 8, encoding);
-			complex_query_type = (query_data64 & 0xffff0000) >> 16;
+			toc_index = (query_data64 >> 32) - 1;
+			query_data64 = spotlight_ntoh64(buf, toc_offset + toc_index * 8, encoding);
+            query_length += (query_data64 & 0xffff) * 8;
+			cpx_query_type = (query_data64 & 0xffff0000) >> 16;
+            cpx_query_count = query_data64 >> 32;
 
-			switch (complex_query_type) {
+            switch (cpx_query_type) {
 			case SQ_CPX_TYPE_ARRAY:
+                EC_NEG1_LOG( spotlight_dissect_loop(query, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+                break;
 			case SQ_CPX_TYPE_DICT:
-				subquery_count = (gint)(query_data64 >> 32);
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length,
-								 "%s, toc index: %u, children: %u",
-								 spotlight_get_cpx_qtype_string(complex_query_type),
-								 toc_index + 1,
-								 subquery_count);
-				break;
-			case SQ_CPX_TYPE_STRING:
-				subquery_count = 1;
-				query_data64 = spotlight_ntoh64(tvb, offset + 8, encoding);
-				query_length = (query_data64 & 0xffff) * 8;
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length + 8,
-								 "%s, toc index: %u, string: '%s'",
-								 spotlight_get_cpx_qtype_string(complex_query_type),
-								 toc_index + 1,
-								 tvb_get_ephemeral_string(tvb, offset + 16, query_length - 8));
-				break;
-			case SQ_CPX_TYPE_UTF16_STRING:
-				/*
-				* This is an UTF-16 string.
-				* Dissections show the typical byte order mark 0xFFFE or 0xFEFF, respectively.
-				* However the existence of such a mark can not be assumed.
-				* If the mark is missing, big endian encoding is assumed.
-				*/
+                EC_NEG1_LOG( spotlight_dissect_loop(query, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+                break;
+            case SQ_CPX_TYPE_STRING:
+                p = buf + offset + 16;
+                dalloc_add(query, &p, char *);
+                break;
+            case SQ_CPX_TYPE_UTF16_STRING:
+                unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 16, query_length, encoding);
+                mark_exists = (unicode_encoding & SL_ENC_UTF_16);
+                unicode_encoding &= ~SL_ENC_UTF_16;
+                break;
+            case SQ_CPX_TYPE_FILEMETA:
+                if (query_length <= 8) {
+                } else {
+                    EC_NEG1_LOG( dissect_spotlight(query, buf + offset + 16) );
+                }
+                break;
+            case SQ_CPX_TYPE_CNIDS:
+                EC_NEG1_LOG( spotlight_CNID_array(query, buf, offset + 16, query_length, encoding) );
+                break;
+            } /* switch (cpx_query_type) */
 
-				subquery_count = 1;
-				query_data64 = spotlight_ntoh64(tvb, offset + 8, encoding);
-				query_length = (query_data64 & 0xffff) * 8;
-
-				unicode_encoding = spotlight_get_utf16_string_encoding(tvb, offset + 16, query_length - 8, encoding);
-				mark_exists = (unicode_encoding & ENC_UTF_16);
-				unicode_encoding &= ~ENC_UTF_16;
-
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length + 8,
-								 "%s, toc index: %u, utf-16 string: '%s'",
-								 spotlight_get_cpx_qtype_string(complex_query_type),
-								 toc_index + 1,
-								 tvb_get_ephemeral_unicode_string(tvb, offset + (mark_exists ? 18 : 16),
-								 query_length - (mark_exists? 10 : 8), unicode_encoding));
-				break;
-			default:
-				subquery_count = 1;
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length,
-								 "type: %s (%s), toc index: %u, children: %u",
-								 spotlight_get_qtype_string(query_type),
-								 spotlight_get_cpx_qtype_string(complex_query_type),
-								 toc_index + 1,
-								 subquery_count);
-				break;
-			}
-
-			sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-			offset += 8;
-			offset = spotlight_dissect_query_loop(tvb, pinfo, sub_tree, offset, complex_query_type, subquery_count, toc_offset, encoding);
 			count--;
 			break;
-		case SQ_TYPE_NULL:
-			subquery_count = (gint)(query_data64 >> 32);
-			if (subquery_count > count) {
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length, "null");
-				expert_add_info_format(pinfo, item_query, PI_MALFORMED, PI_ERROR,
-					"Subquery count (%d) > query count (%d)", subquery_count, count);
-				count = 0;
-			} else if (subquery_count > 20) {
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length, "null");
-				expert_add_info_format(pinfo, item_query, PI_PROTOCOL, PI_WARN,
-					"Abnormal number of subqueries (%d)", subquery_count);
-				count -= subquery_count;
-			} else {
-				for (i = 0; i < subquery_count; i++, count--)
-					proto_tree_add_text(tree, tvb, offset, query_length, "null");
-			}
-			offset += query_length;
-			break;
-		case SQ_TYPE_BOOL:
-			proto_tree_add_text(tree, tvb, offset, query_length, "bool: %s",
-							 (query_data64 >> 32) ? "true" : "false");
-			count--;
-			offset += query_length;
-			break;
-		case SQ_TYPE_INT64:
-			item_query = proto_tree_add_text(tree, tvb, offset, 8, "int64");
-			sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-			j = spotlight_int64(tvb, sub_tree, offset, encoding);
-			count -= j;
-			offset += query_length;
-			break;
-		case SQ_TYPE_UUID:
-			item_query = proto_tree_add_text(tree, tvb, offset, 8, "UUID");
-			sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-			j = spotlight_uuid(tvb, sub_tree, offset, encoding);
-			count -= j;
-			offset += query_length;
-			break;
-		case SQ_TYPE_FLOAT:
-			item_query = proto_tree_add_text(tree, tvb, offset, 8, "float");
-			sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-			j = spotlight_float(tvb, sub_tree, offset, encoding);
-			count -= j;
-			offset += query_length;
-			break;
-		case SQ_TYPE_DATA:
-			switch (cpx_query_type) {
-			case SQ_CPX_TYPE_STRING:
-				proto_tree_add_text(tree, tvb, offset, query_length, "string: '%s'",
-						    tvb_get_ephemeral_string(tvb, offset + 8, query_length - 8));
-				break;
-			case SQ_CPX_TYPE_UTF16_STRING: {
-				/* description see above */
-				unicode_encoding = spotlight_get_utf16_string_encoding(tvb, offset + 8, query_length, encoding);
-				mark_exists = (unicode_encoding & ENC_UTF_16);
-				unicode_encoding &= ~ENC_UTF_16;
 
-				proto_tree_add_text(tree, tvb, offset, query_length, "utf-16 string: '%s'",
-						    tvb_get_ephemeral_unicode_string(tvb, offset + (mark_exists ? 10 : 8),
-								query_length - (mark_exists? 10 : 8), unicode_encoding));
-				break;
-			}
-			case SQ_CPX_TYPE_FILEMETA:
-				if (query_length <= 8) {
-					/* item_query = */ proto_tree_add_text(tree, tvb, offset, query_length, "filemeta (empty)");
-				} else {
-					item_query = proto_tree_add_text(tree, tvb, offset, query_length, "filemeta");
-					sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-					(void)dissect_spotlight(tvb, pinfo, sub_tree, offset + 8);
-				}
-				break;
-			}
-			count--;
-			offset += query_length;
-			break;
-		case SQ_TYPE_CNIDS:
-			if (query_length <= 8) {
-				/* item_query = */ proto_tree_add_text(tree, tvb, offset, query_length, "CNID Array (empty)");
-			} else {
-				item_query = proto_tree_add_text(tree, tvb, offset, query_length, "CNID Array");
-				sub_tree = proto_item_add_subtree(item_query, ett_afp_spotlight_query_line);
-				spotlight_CNID_array(tvb, sub_tree, offset + 8, encoding);
-			}
-			count--;
-			offset += query_length;
-			break;
-		case SQ_TYPE_DATE:
-			if ((j = spotlight_date(tvb, pinfo, tree, offset, encoding)) == -1)
-				return offset;
-			count -= j;
-			offset += query_length;
-			break;
-		default:
-			proto_tree_add_text(tree, tvb, offset, query_length, "type: %s",
-							 spotlight_get_qtype_string(query_type));
-			count--;
-			offset += query_length;
-			break;
-		}
-	}
+        case SQ_TYPE_NULL: {
+            subcount = query_data64 >> 32;
+            if (subcount > 64)
+                EC_FAIL;
+            sl_nit_t nil = 0;
+            for (i = 0; i < subcount; i++)
+                dalloc_add(query, &nil, sl_nit_t);
+            count -= subcount;
+            break;
+        }
+        case SQ_TYPE_BOOL: {
+            sl_bool_t b = query_data64 >> 32;
+            dalloc_add(query, &b, sl_bool_t);
+            count--;
+            break;
+        }
+        case SQ_TYPE_INT64:
+            EC_NEG1_LOG( subcount = spotlight_int64(query, buf, offset, encoding) );
+            count -= subcount;
+            break;
+        case SQ_TYPE_UUID:
+            EC_NEG1_LOG( subcount = spotlight_uuid(query, buf, offset, encoding) );
+            count -= subcount;
+            break;
+        case SQ_TYPE_FLOAT:
+            EC_NEG1_LOG( subcount = spotlight_float(query, buf, offset, encoding) );
+            count -= subcount;
+            break;
+        case SQ_TYPE_DATE:
+            EC_NEG1_LOG( subcount = spotlight_date(query, buf, offset, encoding) );
+            count -= subcount;
+            break;
+        case SQ_TYPE_CNIDS:
+            EC_NEG1_LOG( spotlight_CNID_array(query, buf, offset + 8, query_length, encoding) );
+            break;
+        default:
+            EC_FAIL;
+        }
 
-	return offset;
-}
-
-static gint
-dissect_spotlight(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, gint offset)
-{
-	guint encoding;
-	gint i;
-	guint64 toc_offset;
-	guint64 querylen;
-	gint toc_entries;
-	guint64 toc_entry;
-
-	proto_item *item_queries_data;
-	proto_tree *sub_tree_queries;
-	proto_item *item_toc;
-	proto_tree *sub_tree_toc;
-
-	if (strncmp(tvb_get_ephemeral_string(tvb, offset, 8), "md031234", 8) == 0)
-		encoding = ENC_BIG_ENDIAN;
-	else
-		encoding = ENC_LITTLE_ENDIAN;
-	proto_tree_add_text(tree,
-			    tvb,
-			    offset,
-			    8,
-			    "Endianess: %s",
-			    encoding == ENC_BIG_ENDIAN ?
-			    "Big Endian" : "Litte Endian");
-	offset += 8;
-
-	toc_offset = (spotlight_ntoh64(tvb, offset, encoding) >> 32) * 8;
-	if (toc_offset < 8) {
-		proto_tree_add_text(tree,
-				    tvb,
-				    offset,
-				    8,
-				    "ToC Offset: %" G_GINT64_MODIFIER "u < 8 (bogus)",
-				    toc_offset);
-		return -1;
-	}
-	toc_offset -= 8;
-	if (offset + toc_offset + 8 > G_MAXINT) {
-		proto_tree_add_text(tree,
-				    tvb,
-				    offset,
-				    8,
-				    "ToC Offset: %" G_GINT64_MODIFIER "u > %u (bogus)",
-				    toc_offset,
-				    G_MAXINT - 8 - offset);
-		return -1;
-	}
-	querylen = (spotlight_ntoh64(tvb, offset, encoding) & 0xffffffff) * 8;
-	if (querylen < 8) {
-		proto_tree_add_text(tree,
-				    tvb,
-				    offset,
-				    8,
-				    "ToC Offset: %" G_GINT64_MODIFIER "u Bytes, Query length: %" G_GINT64_MODIFIER "u < 8 (bogus)",
-				    toc_offset,
-				    querylen);
-		return -1;
-	}
-	querylen -= 8;
-	if (querylen > G_MAXINT) {
-		proto_tree_add_text(tree,
-				    tvb,
-				    offset,
-				    8,
-				    "ToC Offset: %" G_GINT64_MODIFIER "u Bytes, Query length: %" G_GINT64_MODIFIER "u > %u (bogus)",
-				    toc_offset,
-				    querylen,
-				    G_MAXINT);
-		return -1;
-	}
-	proto_tree_add_text(tree,
-			    tvb,
-			    offset,
-			    8,
-			    "ToC Offset: %" G_GINT64_MODIFIER "u Bytes, Query length: %" G_GINT64_MODIFIER "u Bytes",
-			    toc_offset,
-			    querylen);
-	offset += 8;
-
-	toc_entries = (gint)(spotlight_ntoh64(tvb, offset + (gint)toc_offset, encoding) & 0xffff);
-
-	item_queries_data = proto_tree_add_text(tree,
-						tvb,
-						offset,
-						(gint)toc_offset,
-						"Spotlight RPC data");
-	sub_tree_queries = proto_item_add_subtree(item_queries_data, ett_afp_spotlight_queries);
-
-	/* Queries */
-	offset = spotlight_dissect_query_loop(tvb, pinfo, sub_tree_queries, offset, SQ_CPX_TYPE_ARRAY, INT_MAX, offset + (gint)toc_offset + 8, encoding);
-
-	/* ToC */
-	if (toc_entries < 1) {
-		proto_tree_add_text(tree,
-				    tvb,
-				    offset,
-				    (gint)querylen - (gint)toc_offset,
-				    "Complex types ToC (%u < 1 - bogus)",
-				    toc_entries);
-		return -1;
-	}
-	toc_entries -= 1;
-	item_toc = proto_tree_add_text(tree,
-				       tvb,
-				       offset,
-				       (gint)querylen - (gint)toc_offset,
-				       "Complex types ToC (%u entries)",
-				       toc_entries);
-	sub_tree_toc = proto_item_add_subtree(item_toc, ett_afp_spotlight_toc);
-	proto_tree_add_text(sub_tree_toc, tvb, offset, 2, "Number of entries (%u)", toc_entries);
-	proto_tree_add_text(sub_tree_toc, tvb, offset + 2, 2, "unknown");
-	proto_tree_add_text(sub_tree_toc, tvb, offset + 4, 4, "unknown");
-
-	offset += 8;
-	for (i = 0; i < toc_entries; i++, offset += 8) {
-		toc_entry = spotlight_ntoh64(tvb, offset, encoding);
-		if ((((toc_entry & 0xffff0000) >> 16) == SQ_CPX_TYPE_ARRAY)
-		    || (((toc_entry & 0xffff0000) >> 16) == SQ_CPX_TYPE_DICT)) {
-			proto_tree_add_text(sub_tree_toc,
-					    tvb,
-					    offset,
-					    8,
-					    "%u: count: %" G_GINT64_MODIFIER "u, type: %s, offset: %" G_GINT64_MODIFIER "u",
-					    i+1,
-					    toc_entry >> 32,
-					    spotlight_get_cpx_qtype_string((toc_entry & 0xffff0000) >> 16),
-					    (toc_entry & 0xffff) * 8);
-		} else if ((((toc_entry & 0xffff0000) >> 16) == SQ_CPX_TYPE_STRING)
-			|| (((toc_entry & 0xffff0000) >> 16) == SQ_CPX_TYPE_UTF16_STRING)) {
-			proto_tree_add_text(sub_tree_toc,
-					    tvb,
-					    offset,
-					    8,
-					    "%u: pad byte count: %" G_GINT64_MODIFIER "x, type: %s, offset: %" G_GINT64_MODIFIER "u",
-					    i+1,
-					    8 - (toc_entry >> 32),
-					    spotlight_get_cpx_qtype_string((toc_entry & 0xffff0000) >> 16),
-					    (toc_entry & 0xffff) * 8);
-		}
-		else {
-			proto_tree_add_text(sub_tree_toc,
-					    tvb,
-					    offset,
-					    8,
-					    "%u: unknown: 0x%08" G_GINT64_MODIFIER "x, type: %s, offset: %" G_GINT64_MODIFIER "u",
-					    i+1,
-					    toc_entry >> 32,
-					    spotlight_get_cpx_qtype_string((toc_entry & 0xffff0000) >> 16),
-					    (toc_entry & 0xffff) * 8);
-		}
-
-
-	}
-
-	return offset;
-}
-#endif
-
-static DALLOC_CTX *unpack_spotlight(TALLOC_CTX *mem_ctx, char *ibuf, size_t ibuflen)
-{
-    EC_INIT;
-	int len;
-    DALLOC_CTX *query;
-
-    EC_NULL_LOG( query = talloc_zero(mem_ctx, DALLOC_CTX) );
-
-    ibuf++;
-    ibuflen--;
-
+        offset += query_length;
+    }
 
 EC_CLEANUP:
     if (ret != 0) {
-        talloc_free(query);
-        query = NULL;
+        offset = -1;
     }
-	return query;
+	return offset;
+}
+
+static int dissect_spotlight(TALLOC_CTX *mem_ctx, const char *buf)
+{
+    EC_INIT;
+	int encoding, i, toc_entries;
+	uint64_t toc_offset, tquerylen, toc_entry;
+    DALLOC_CTX *query;
+
+	if (strncmp(buf, "md031234", 8) == 0)
+		encoding = SL_ENC_BIG_ENDIAN;
+	else
+		encoding = SL_ENC_LITTLE_ENDIAN;
+
+	buf += 8;
+
+	toc_offset = ((spotlight_ntoh64(buf, 0, encoding) >> 32) - 1 ) * 8;
+	if (toc_offset < 0 || (toc_offset > 65000)) {
+        EC_FAIL;
+	}
+
+	buf += 8;
+
+	toc_entries = (int)(spotlight_ntoh64(buf, toc_offset, encoding) & 0xffff);
+
+    EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
+	EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 /**************************************************************************************************
@@ -712,9 +480,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 		break;
 
 	case SPOTLIGHT_CMD_RPC:
-        /* IVAL(buf, 14): our reply in SPOTLIGHT_CMD_FLAGS */
-        /* IVAL(buf, 18): length */
-        /* IVAL(buf, 22): endianess, ignored, we assume little endian */
+        (void)dissect_spotlight(tmp_ctx, ibuf + 22);
 		break;
 	}
 
@@ -764,21 +530,28 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
             char *s;
             memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
             printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, s);
-        } else if (STRCMP(type, ==, "_Bool")) {
-            bool bl;
-            memcpy(&bl, dd->dd_talloc_array[n], sizeof(bool));
+        } else if (STRCMP(type, ==, "sl_bool_t")) {
+            sl_bool_t bl;
+            memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
             printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, bl ? "true" : "false");
-        } else if (STRCMP(type, ==, "dd_t")) {
-            DALLOC_CTX *nested;
-            memcpy(&nested, dd->dd_talloc_array[n], sizeof(DALLOC_CTX *));
-            dd_dump(nested, nestinglevel + 1);
-        } else if (STRCMP(type, ==, "cnid_array_t")) {
-            cnid_array_t *cnids;
-            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(cnid_array_t *));
+        } else if (STRCMP(type, ==, "DALLOC_CTX")) {
+            DALLOC_CTX nested;
+            memcpy(&nested, dd->dd_talloc_array[n], sizeof(DALLOC_CTX));
+            dd_dump(&nested, nestinglevel + 1);
+        } else if (STRCMP(type, ==, "sl_cnids_t *")) {
+            sl_cnids_t *cnids;
+            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t *));
             printf("%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
                    neststrings[nestinglevel + 1], n, cnids->ca_unkn1, cnids->ca_unkn2);
             if (cnids->ca_cnids)
                 dd_dump(cnids->ca_cnids, nestinglevel + 1);
+        } else if (STRCMP(type, ==, "sl_cnids_t")) {
+            sl_cnids_t cnids;
+            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
+            printf("%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
+                   neststrings[nestinglevel + 1], n, cnids.ca_unkn1, cnids.ca_unkn2);
+            if (cnids.ca_cnids)
+                dd_dump(cnids.ca_cnids, nestinglevel + 1);
         }
     }
     printf("%s}\n", neststrings[nestinglevel]);
@@ -807,22 +580,22 @@ int main(int argc, char **argv)
     char *str = talloc_strdup(dd, "hello world");
     dalloc_add(dd, &str, char *);
 
-    bool b = true;
-    dalloc_add(dd, &b, bool);
+    sl_bool_t b = true;
+    dalloc_add(dd, &b, sl_bool_t);
 
     b = false;
-    dalloc_add(dd, &b, bool);
+    dalloc_add(dd, &b, sl_bool_t);
 
 
     /* add a nested array */
     DALLOC_CTX *nested = talloc_zero(dd, DALLOC_CTX);
     i = 3;
     dalloc_add(nested, &i, int64_t);
-    dalloc_add(dd, &nested, DALLOC_CTX);
+    dalloc_add(dd, nested, DALLOC_CTX);
 
-    /* test a CNID array */
+    /* test an allocated CNID array */
     uint32_t id = 16;
-    cnid_array_t *cnids = talloc_zero(dd, cnid_array_t);
+    sl_cnids_t *cnids = talloc_zero(dd, sl_cnids_t);
 
     cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
 
@@ -830,7 +603,18 @@ int main(int argc, char **argv)
     cnids->ca_unkn2 = 2;
 
     dalloc_add(cnids->ca_cnids, &id, uint32_t);
-    dalloc_add(dd, &cnids, cnid_array_t);
+    dalloc_add(dd, &cnids, sl_cnids_t *);
+
+    /* test an stack CNID array */
+    id = 17;
+    sl_cnids_t cnids2;
+
+    cnids2.ca_cnids = talloc_zero(mem_ctx, DALLOC_CTX);
+    cnids2.ca_unkn1 = 3;
+    cnids2.ca_unkn2 = 4;
+
+    dalloc_add(cnids2.ca_cnids, &id, uint32_t);
+    dalloc_add(dd, &cnids2, sl_cnids_t);
 
     dd_dump(dd, 0);
 
