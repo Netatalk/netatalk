@@ -72,7 +72,63 @@
 #define SL_ENC_UTF_16        4
 
 /* Forward declarations */
-static int dissect_spotlight(TALLOC_CTX *mem_ctx, const char *buf);
+static int dissect_spotlight(DALLOC_CTX *query, const char *buf);
+
+static const char *neststrings[] = {
+    "",
+    "    ",
+    "        ",
+    "            ",
+    "                ",
+    "                    ",
+    "                        "
+};
+
+static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
+{
+    const char *type;
+
+    LOG(logtype_default, log_debug, "%s1: %s(#%d): {", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
+
+    for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
+
+        type = talloc_get_name(dd->dd_talloc_array[n]);
+
+        if (STRCMP(type, ==, "DALLOC_CTX")
+                   || STRCMP(type, ==, "sl_array_t")
+                   || STRCMP(type, ==, "sl_dict_t")) {
+            dd_dump(dd->dd_talloc_array[n], nestinglevel + 1);
+        } else if (STRCMP(type, ==, "uint64_t")) {
+            uint64_t i;
+            memcpy(&i, dd->dd_talloc_array[n], sizeof(uint64_t));
+            LOG(logtype_default, log_debug, "%s%u:\t0x%04x", neststrings[nestinglevel + 1], n + 1, i);
+        } else if (STRCMP(type, ==, "int64_t")) {
+            int64_t i;
+            memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
+            LOG(logtype_default, log_debug, "%s%d:\t%" PRId64, neststrings[nestinglevel + 1], n + 1, i);
+        } else if (STRCMP(type, ==, "uint32_t")) {
+            uint32_t i;
+            memcpy(&i, dd->dd_talloc_array[n], sizeof(uint32_t));
+            LOG(logtype_default, log_debug, "%s%d:\t%" PRIu32, neststrings[nestinglevel + 1], n + 1, i);
+        } else if (STRCMP(type, ==, "char *")) {
+            char *s;
+            memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
+            LOG(logtype_default, log_debug, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, s);
+        } else if (STRCMP(type, ==, "sl_bool_t")) {
+            sl_bool_t bl;
+            memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
+            LOG(logtype_default, log_debug, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, bl ? "true" : "false");
+        } else if (STRCMP(type, ==, "sl_cnids_t")) {
+            sl_cnids_t cnids;
+            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
+            LOG(logtype_default, log_debug, "%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
+                   neststrings[nestinglevel + 1], n + 1, cnids.ca_unkn1, cnids.ca_unkn2);
+            if (cnids.ca_cnids)
+                dd_dump(cnids.ca_cnids, nestinglevel + 1);
+        }
+    }
+    LOG(logtype_default, log_debug, "%s}", neststrings[nestinglevel]);
+}
 
 static double spotlight_ieee_double(const char *buf, int offset, uint encoding)
 {
@@ -305,7 +361,8 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
 	uint64_t query_data64, query_type;
 	uint unicode_encoding;
 	uint8_t mark_exists;
-    const char *p;
+    char *p;
+    int padding, slen;
 
 	while (count > 0 && (offset < toc_offset)) {
 		query_data64 = spotlight_ntoh64(buf, offset, encoding);
@@ -318,25 +375,49 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
 		case SQ_TYPE_COMPLEX:
 			toc_index = (query_data64 >> 32) - 1;
 			query_data64 = spotlight_ntoh64(buf, toc_offset + toc_index * 8, encoding);
-            query_length += (query_data64 & 0xffff) * 8;
 			cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
 
             switch (cpx_query_type) {
-			case SQ_CPX_TYPE_ARRAY:
-                EC_NEG1_LOG( spotlight_dissect_loop(query, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+			case SQ_CPX_TYPE_ARRAY: {
+                sl_array_t *sl_arrary = talloc_zero(query, sl_array_t);
+                EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_arrary, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+                dalloc_add(query, sl_arrary, sl_array_t);
                 break;
-			case SQ_CPX_TYPE_DICT:
-                EC_NEG1_LOG( spotlight_dissect_loop(query, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+            }
+
+			case SQ_CPX_TYPE_DICT: {
+                sl_dict_t *sl_dict = talloc_zero(query, sl_dict_t);
+                EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_dict, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
+                dalloc_add(query, sl_dict, sl_dict_t);
                 break;
+            }
             case SQ_CPX_TYPE_STRING:
-                p = buf + offset + 16;
+                query_data64 = spotlight_ntoh64(buf, offset + 8, encoding);
+                query_length += (query_data64 & 0xffff) * 8;
+                if ((padding = 8 - (query_data64 >> 32)) < 0)
+                    EC_FAIL;
+                if ((slen = query_length - 16 - padding) < 1)
+                    EC_FAIL;
+                p = talloc_strndup(query, buf + offset + 16, slen);
                 dalloc_add(query, &p, char *);
                 break;
+
             case SQ_CPX_TYPE_UTF16_STRING:
-                unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 16, query_length, encoding);
+                query_data64 = spotlight_ntoh64(buf, offset + 8, encoding);
+                query_length += (query_data64 & 0xffff) * 8;
+                if ((padding = 8 - (query_data64 >> 32)) < 0)
+                    EC_FAIL;
+                if ((slen = query_length - 16 - padding) < 1)
+                    EC_FAIL;
+
+                unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 16, slen, encoding);
                 mark_exists = (unicode_encoding & SL_ENC_UTF_16);
                 unicode_encoding &= ~SL_ENC_UTF_16;
+
+                EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
+                dalloc_add(query, &p, char *);
+
                 break;
             case SQ_CPX_TYPE_FILEMETA:
                 if (query_length <= 8) {
@@ -401,12 +482,11 @@ EC_CLEANUP:
 	return offset;
 }
 
-static int dissect_spotlight(TALLOC_CTX *mem_ctx, const char *buf)
+static int dissect_spotlight(DALLOC_CTX *query, const char *buf)
 {
     EC_INIT;
 	int encoding, i, toc_entries;
 	uint64_t toc_offset, tquerylen, toc_entry;
-    DALLOC_CTX *query;
 
 	if (strncmp(buf, "md031234", 8) == 0)
 		encoding = SL_ENC_BIG_ENDIAN;
@@ -424,7 +504,6 @@ static int dissect_spotlight(TALLOC_CTX *mem_ctx, const char *buf)
 
 	toc_entries = (int)(spotlight_ntoh64(buf, toc_offset, encoding) & 0xffff);
 
-    EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 	EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
 
 EC_CLEANUP:
@@ -442,6 +521,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     int cmd;
     int endianess = SL_ENC_LITTLE_ENDIAN;
     struct vol      *vol;
+    DALLOC_CTX *query;
 
     *rbuflen = 0;
 
@@ -479,9 +559,13 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         *rbuflen += 4;
 		break;
 
-	case SPOTLIGHT_CMD_RPC:
-        (void)dissect_spotlight(tmp_ctx, ibuf + 22);
+	case SPOTLIGHT_CMD_RPC: {
+        DALLOC_CTX *query;
+        EC_NULL( query = talloc_zero(tmp_ctx, DALLOC_CTX) );
+        (void)dissect_spotlight(query, ibuf + 22);
+        dd_dump(query, 0);
 		break;
+    }
 	}
 
 EC_CLEANUP:
@@ -498,62 +582,9 @@ EC_CLEANUP:
 
 #ifdef SPOT_TEST_MAIN
 
-static const char *neststrings[] = {
-    "",
-    "    ",
-    "        ",
-    "            ",
-    "                ",
-    "                    ",
-    "                        "
-};
-
-static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
-{
-    const char *type;
-
-    printf("%s%s(#%d): {\n", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
-
-    for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
-
-        type = talloc_get_name(dd->dd_talloc_array[n]);
-
-        if (STRCMP(type, ==, "DALLOC_CTX")
-                   || STRCMP(type, ==, "sl_array_t")
-                   || STRCMP(type, ==, "sl_dict_t")) {
-            dd_dump(dd->dd_talloc_array[n], nestinglevel + 1);
-        } else if (STRCMP(type, ==, "int64_t")) {
-            int64_t i;
-            memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
-            printf("%s%d:\t%" PRId64 "\n", neststrings[nestinglevel + 1], n, i);
-        } else if (STRCMP(type, ==, "uint32_t")) {
-            uint32_t i;
-            memcpy(&i, dd->dd_talloc_array[n], sizeof(uint32_t));
-            printf("%s%d:\t%" PRIu32 "\n", neststrings[nestinglevel + 1], n, i);
-        } else if (STRCMP(type, ==, "char *")) {
-            char *s;
-            memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
-            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, s);
-        } else if (STRCMP(type, ==, "sl_bool_t")) {
-            sl_bool_t bl;
-            memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
-            printf("%s%d:\t%s\n", neststrings[nestinglevel + 1], n, bl ? "true" : "false");
-        } else if (STRCMP(type, ==, "sl_cnids_t")) {
-            sl_cnids_t cnids;
-            memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
-            printf("%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
-                   neststrings[nestinglevel + 1], n, cnids.ca_unkn1, cnids.ca_unkn2);
-            if (cnids.ca_cnids)
-                dd_dump(cnids.ca_cnids, nestinglevel + 1);
-        }
-    }
-    printf("%s}\n", neststrings[nestinglevel]);
-}
-
-#include <stdarg.h>
-
 int main(int argc, char **argv)
 {
+    EC_INIT;
     TALLOC_CTX *mem_ctx = talloc_new(NULL);
     DALLOC_CTX *dd = talloc_zero(mem_ctx, DALLOC_CTX);
     int64_t i;
@@ -563,6 +594,7 @@ int main(int argc, char **argv)
 
     LOG(logtype_default, log_info, "Start");
 
+#if 0
     i = 2;
     dalloc_add(dd, &i, int64_t);
 
@@ -609,11 +641,29 @@ int main(int argc, char **argv)
     dalloc_add(sl_arrary, sl_dict, sl_dict_t);
 
     dalloc_add(dd, sl_arrary, sl_array_t);
+#endif
+
+    /* now parse a real spotlight packet */
+    char ibuf[8192];
+    char rbuf[8192];
+    int fd;
+    size_t len;
+    DALLOC_CTX *query;
+
+    EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
+
+    EC_NEG1_LOG( fd = open("/home/ralph/netatalk/spot/etc/afpd/spotlight-packet.bin", O_RDONLY) );
+    EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
+    EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
 
     /* Now dump the whole thing */
-    dd_dump(dd, 0);
+    dd_dump(query, 0);
 
-    talloc_free(mem_ctx);
-    return 0;
+EC_CLEANUP:
+    if (mem_ctx) {
+        talloc_free(mem_ctx);
+        mem_ctx = NULL;
+    }
+    EC_EXIT;
 }
 #endif
