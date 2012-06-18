@@ -115,33 +115,45 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 #if CAREFUL_ALIGNMENT
 
-#if BYTE_ORDER==BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
 
 #define SVAL(buf,pos) (PVAL(buf,(pos)+1)|PVAL(buf,pos)<<8)
+#define SVALS(buf,pos) ((int16)SVAL(buf,pos))
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
+#define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
 #define LVAL(buf,pos) (IVAL(buf,pos)|IVAL(buf,(pos)+4)<<32)
+#define LVALS(buf,pos) ((int64_t)LVAL(buf,pos))
+
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos+1)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos)=(unsigned char)((val)>>8))
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
-#define SVALS(buf,pos) ((int16)SVAL(buf,pos))
-#define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
+#define SLVALX(buf,pos,val) (SLVALX(buf,pos,val&0xFFFFFFFF),SLVALX(buf,pos+4,val>>32))
+
 #define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
+#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
+#define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
+#define SLVAL(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
 
 #else
 
 #define SVAL(buf,pos) (PVAL(buf,pos)|PVAL(buf,(pos)+1)<<8)
+#define SVALS(buf,pos) ((int16)SVAL(buf,pos))
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
+#define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
 #define LVAL(buf,pos) (IVAL(buf,pos)|((uint64_t)IVAL(buf,(pos)+4))<<32)
+#define LVALS(buf,pos) ((int64_t)LVAL(buf,pos))
+
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos+1)=(unsigned char)((val)>>8))
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
-#define SVALS(buf,pos) ((int16)SVAL(buf,pos))
-#define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
+#define SLVALX(buf,pos,val) (SIVALX(buf,pos,val&0xFFFFFFFF),SIVALX(buf,pos+4,val>>32))
+
 #define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
+#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
+#define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
+#define SLVALS(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
 
 #endif
 
@@ -160,16 +172,21 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define IVAL(buf,pos) (*(const uint32_t *)((const char *)(buf) + (pos)))
 #define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define LVAL(buf,pos) (*(const uint64_t *)((const char *)(buf) + (pos)))
+#define LVAL_NC(buf,pos) (*(uint64_t *)((char *)(buf) + (pos)))
 #define SVALS(buf,pos) (*(const int16_t *)((const char *)(buf) + (pos)))
 #define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
 #define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define LVALS(buf,pos) (*(const int64_t *)((const char *)(buf) + (pos)))
+#define LVALS(buf,pos) (*(int64_t *)((char *)(buf) + (pos)))
 
 /* store single value in an SMB buffer */
 #define SSVAL(buf,pos,val) SVAL_NC(buf,pos)=((uint16_t)(val))
 #define SIVAL(buf,pos,val) IVAL_NC(buf,pos)=((uint32_t)(val))
+#define SLVAL(buf,pos,val) LVAL_NC(buf,pos)=((uint64_t)(val))
 #define SSVALS(buf,pos,val) SVALS_NC(buf,pos)=((int16)(val))
 #define SIVALS(buf,pos,val) IVALS_NC(buf,pos)=((int32_t)(val))
+#define SLVALS(buf,pos,val) LVALS_NC(buf,pos)=((int64_t)(val))
 
 #endif /* CAREFUL_ALIGNMENT */
 
@@ -182,13 +199,16 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define RSVALS(buf,pos) SREV(SVALS(buf,pos))
 #define RIVAL(buf,pos) IREV(IVAL(buf,pos))
 #define RIVALS(buf,pos) IREV(IVALS(buf,pos))
-
 #define RLVAL(buf,pos) LREV(LVAL(buf,pos))
+#define RLVALS(buf,pos) LREV(LVALS(buf,pos))
 
 #define RSSVAL(buf,pos,val) SSVAL(buf,pos,SREV(val))
 #define RSSVALS(buf,pos,val) SSVALS(buf,pos,SREV(val))
 #define RSIVAL(buf,pos,val) SIVAL(buf,pos,IREV(val))
 #define RSIVALS(buf,pos,val) SIVALS(buf,pos,IREV(val))
+
+#define RSLVAL(buf,pos,val) SLVAL(buf,pos,LREV(val))
+#define RSLVALS(buf,pos,val) SLVALS(buf,pos,LREV(val))
 
 /* Alignment macros. */
 #define ALIGN4(p,base) ((p) + ((4 - (PTR_DIFF((p), (base)) & 3)) & 3))
