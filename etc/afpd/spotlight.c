@@ -40,9 +40,9 @@
  **************************************************************************************************/
 
 /* FPSpotlightRPC subcommand codes */
+#define SPOTLIGHT_CMD_VOLPATH 1
 #define SPOTLIGHT_CMD_FLAGS   2
 #define SPOTLIGHT_CMD_RPC     3
-#define SPOTLIGHT_CMD_VOLPATH 4
 
 /* Spotlight epoch is UNIX epoch minus SPOTLIGHT_TIME_DELTA */
 #define SPOTLIGHT_TIME_DELTA INT64_C(280878921600U)
@@ -74,6 +74,7 @@
 /* Forward declarations */
 static int dissect_spotlight(DALLOC_CTX *query, const char *buf);
 
+/* Helper functions and stuff */
 static const char *neststrings[] = {
     "",
     "    ",
@@ -88,7 +89,7 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;
 
-    LOG(logtype_default, log_debug, "%s1: %s(#%d): {", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
+    LOG(log_debug, logtype_sl, "%s1: %s(#%d): {", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
 
     for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
 
@@ -101,69 +102,33 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
         } else if (STRCMP(type, ==, "uint64_t")) {
             uint64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(uint64_t));
-            LOG(logtype_default, log_debug, "%s%u:\t0x%04x", neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%s%u:\t0x%04x", neststrings[nestinglevel + 1], n + 1, i);
         } else if (STRCMP(type, ==, "int64_t")) {
             int64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
-            LOG(logtype_default, log_debug, "%s%d:\t%" PRId64, neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%s%d:\t%" PRId64, neststrings[nestinglevel + 1], n + 1, i);
         } else if (STRCMP(type, ==, "uint32_t")) {
             uint32_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(uint32_t));
-            LOG(logtype_default, log_debug, "%s%d:\t%" PRIu32, neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%s%d:\t%" PRIu32, neststrings[nestinglevel + 1], n + 1, i);
         } else if (STRCMP(type, ==, "char *")) {
             char *s;
             memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
-            LOG(logtype_default, log_debug, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, s);
+            LOG(log_debug, logtype_sl, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, s);
         } else if (STRCMP(type, ==, "sl_bool_t")) {
             sl_bool_t bl;
             memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
-            LOG(logtype_default, log_debug, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, bl ? "true" : "false");
+            LOG(log_debug, logtype_sl, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, bl ? "true" : "false");
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
-            LOG(logtype_default, log_debug, "%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
+            LOG(log_debug, logtype_sl, "%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
                    neststrings[nestinglevel + 1], n + 1, cnids.ca_unkn1, cnids.ca_unkn2);
             if (cnids.ca_cnids)
                 dd_dump(cnids.ca_cnids, nestinglevel + 1);
         }
     }
-    LOG(logtype_default, log_debug, "%s}", neststrings[nestinglevel]);
-}
-
-static double spotlight_ieee_double(const char *buf, int offset, uint encoding)
-{
-    union {
-        double d;
-        uint32_t w[2];
-    } ieee_fp_union;
-
-	if (encoding == SL_ENC_LITTLE_ENDIAN) {
-#ifdef WORDS_BIGENDIAN
-        ieee_fp_union.w[0] = IVAL(buf, offset + 4);
-        ieee_fp_union.w[1] = IVAL(buf, offset);
-#else
-        ieee_fp_union.w[0] = IVAL(buf, offset);
-        ieee_fp_union.w[1] = IVAL(buf, offset + 4);
-#endif
-        return ieee_fp_union.d;
-    } else {
-#ifdef WORDS_BIGENDIAN
-        ieee_fp_union.w[0] = RIVAL(buf, offset);
-        ieee_fp_union.w[1] = RIVAL(buf, offset + 4);
-#else
-        ieee_fp_union.w[0] = RIVAL(buf, offset + 4);
-        ieee_fp_union.w[1] = RIVAL(buf, offset);
-#endif
-        return ieee_fp_union.d;
-    }
-}
-
-static uint64_t spotlight_ntoh64(const char *buf, int off, uint encoding)
-{
-	if (encoding == SL_ENC_LITTLE_ENDIAN)
-		return LVAL(buf, off);
-	else
-        return ntoh64(LVAL(buf, off));
+    LOG(log_debug, logtype_sl, "%s}", neststrings[nestinglevel]);
 }
 
 /*
@@ -193,18 +158,63 @@ static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int
 	return utf16_encoding;
 }
 
-static int spotlight_int64(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
+/**************************************************************************************************
+ * marshalling functions
+ **************************************************************************************************/
+
+static uint64_t sl_pack_tag(uint16_t type, uint16_t size, uint32_t val)
+{
+    uint64_t tag = ((uint64_t)val << 32) | ((uint64_t)type << 16) | size;
+    return tag;
+}
+
+static int sl_pack_float(double d, char **buf, int *buf_len, char **toc_buf, int *toc_len, int *toc_idx)
+{
+    union {
+        double d;
+        uint64_t w;
+    } ieee_fp_union;
+
+    SLVAL(*buf, 0, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1));
+    SLVAL(*buf, 8, ieee_fp_union.w);
+    *buf += 2 * sizeof(uint64_t);
+    buf_len += 2 * sizeof(uint64_t);
+
+    return 0;
+}
+
+static int sl_pack_uint64(uint64_t u, char **buf, int *buf_len, char **toc_buf, int *toc_len, int *toc_idx)
+{
+    SLVAL(*buf, 0, sl_pack_tag(SQ_TYPE_INT64, 2, 1));
+    SLVAL(*buf, 8, u);
+    *buf += 2 * sizeof(uint64_t);
+    *buf_len += 2 * sizeof(uint64_t);
+}
+
+/**************************************************************************************************
+ * unmarshalling functions
+ **************************************************************************************************/
+
+static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
+{
+    if (encoding == SL_ENC_LITTLE_ENDIAN)
+            return LVAL(buf, offset);
+        else
+            return RLVAL(buf, offset);
+}
+
+static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
 	int count, i;
 	uint64_t query_data64;
 
-	query_data64 = spotlight_ntoh64(buf, offset, encoding);
+	query_data64 = sl_unpack_uint64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		query_data64 = spotlight_ntoh64(buf, offset, encoding);
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
         dalloc_add(query, &query_data64, uint64_t);
 		offset += 8;
 	}
@@ -212,19 +222,19 @@ static int spotlight_int64(DALLOC_CTX *query, const char *buf, int offset, uint 
 	return count;
 }
 
-static int spotlight_date(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
+static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
 	int count, i;
 	uint64_t query_data64;
 	sl_time_t t;
 
-	query_data64 = spotlight_ntoh64(buf, offset, encoding);
+	query_data64 = sl_unpack_uint64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		query_data64 = spotlight_ntoh64(buf, offset, encoding) >> 24;
+		query_data64 = sl_unpack_uint64(buf, offset, encoding) >> 24;
 		t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
 		t.tv_usec = 0;
         dalloc_add(query, &t, sl_time_t);
@@ -234,12 +244,12 @@ static int spotlight_date(DALLOC_CTX *query, const char *buf, int offset, uint e
 	return count;
 }
 
-static int spotlight_uuid(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
+static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
 	int count, i;
     uint64_t query_data64;
     sl_uuid_t uuid;
-	query_data64 = spotlight_ntoh64(buf, offset, encoding);
+	query_data64 = sl_unpack_uint64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
@@ -253,27 +263,47 @@ static int spotlight_uuid(DALLOC_CTX *query, const char *buf, int offset, uint e
 	return count;
 }
 
-static int spotlight_float(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
+static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
 	int count, i;
 	uint64_t query_data64;
 	double fval;
+    union {
+        double d;
+        uint32_t w[2];
+    } ieee_fp_union;
 
-	query_data64 = spotlight_ntoh64(buf, offset, encoding);
+	query_data64 = sl_unpack_uint64(buf, offset, encoding);
 	count = query_data64 >> 32;
 	offset += 8;
 
 	i = 0;
 	while (i++ < count) {
-		fval = spotlight_ieee_double(buf, offset, encoding);
-        dalloc_add(query, &fval, double);
+        if (encoding == SL_ENC_LITTLE_ENDIAN) {
+#ifdef WORDS_BIGENDIAN
+            ieee_fp_union.w[0] = IVAL(buf, offset + 4);
+            ieee_fp_union.w[1] = IVAL(buf, offset);
+#else
+            ieee_fp_union.w[0] = IVAL(buf, offset);
+            ieee_fp_union.w[1] = IVAL(buf, offset + 4);
+#endif
+        } else {
+#ifdef WORDS_BIGENDIAN
+            ieee_fp_union.w[0] = RIVAL(buf, offset);
+            ieee_fp_union.w[1] = RIVAL(buf, offset + 4);
+#else
+            ieee_fp_union.w[0] = RIVAL(buf, offset + 4);
+            ieee_fp_union.w[1] = RIVAL(buf, offset);
+#endif
+        }
+        dalloc_add(query, &ieee_fp_union.d, double);
 		offset += 8;
 	}
 
 	return count;
 }
 
-static int spotlight_CNID_array(DALLOC_CTX *query, const char *buf, int offset, int length, uint encoding)
+static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int length, uint encoding)
 {
     EC_INIT;
 	int count;
@@ -286,7 +316,7 @@ static int spotlight_CNID_array(DALLOC_CTX *query, const char *buf, int offset, 
         /* that's permitted, it's an empty array */
         goto EC_CLEANUP;
     
-	query_data64 = spotlight_ntoh64(buf, offset, encoding);
+	query_data64 = sl_unpack_uint64(buf, offset, encoding);
 	count = query_data64 & 0xffff;
 
 	cnids.ca_unkn1 = (query_data64 & 0xffff0000) >> 16;
@@ -295,7 +325,7 @@ static int spotlight_CNID_array(DALLOC_CTX *query, const char *buf, int offset, 
 	offset += 8;
 
 	while (count --) {
-		query_data64 = spotlight_ntoh64(buf, offset, encoding);
+		query_data64 = sl_unpack_uint64(buf, offset, encoding);
         dalloc_add(cnids.ca_cnids, &query_data64, uint64_t);
 		offset += 8;
 	}
@@ -365,7 +395,7 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
     int padding, slen;
 
 	while (count > 0 && (offset < toc_offset)) {
-		query_data64 = spotlight_ntoh64(buf, offset, encoding);
+		query_data64 = sl_unpack_uint64(buf, offset, encoding);
 		query_length = (query_data64 & 0xffff) * 8;
 		query_type = (query_data64 & 0xffff0000) >> 16;
 		if (query_length == 0)
@@ -374,7 +404,7 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
 		switch (query_type) {
 		case SQ_TYPE_COMPLEX:
 			toc_index = (query_data64 >> 32) - 1;
-			query_data64 = spotlight_ntoh64(buf, toc_offset + toc_index * 8, encoding);
+			query_data64 = sl_unpack_uint64(buf, toc_offset + toc_index * 8, encoding);
 			cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
 
@@ -393,7 +423,7 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
                 break;
             }
             case SQ_CPX_TYPE_STRING:
-                query_data64 = spotlight_ntoh64(buf, offset + 8, encoding);
+                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
                 query_length += (query_data64 & 0xffff) * 8;
                 if ((padding = 8 - (query_data64 >> 32)) < 0)
                     EC_FAIL;
@@ -404,7 +434,7 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
                 break;
 
             case SQ_CPX_TYPE_UTF16_STRING:
-                query_data64 = spotlight_ntoh64(buf, offset + 8, encoding);
+                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
                 query_length += (query_data64 & 0xffff) * 8;
                 if ((padding = 8 - (query_data64 >> 32)) < 0)
                     EC_FAIL;
@@ -417,16 +447,23 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
 
                 EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
                 dalloc_add(query, &p, char *);
-
                 break;
+
             case SQ_CPX_TYPE_FILEMETA:
+                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
+                query_length += (query_data64 & 0xffff) * 8;
+
                 if (query_length <= 8) {
+                    EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8%s", "");
                 } else {
                     EC_NEG1_LOG( dissect_spotlight(query, buf + offset + 16) );
                 }
                 break;
+
             case SQ_CPX_TYPE_CNIDS:
-                EC_NEG1_LOG( spotlight_CNID_array(query, buf, offset + 16, query_length, encoding) );
+                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
+                query_length += (query_data64 & 0xffff) * 8;
+                EC_NEG1_LOG( sl_unpack_CNID(query, buf, offset + 16, query_length, encoding) );
                 break;
             } /* switch (cpx_query_type) */
 
@@ -450,23 +487,20 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
             break;
         }
         case SQ_TYPE_INT64:
-            EC_NEG1_LOG( subcount = spotlight_int64(query, buf, offset, encoding) );
+            EC_NEG1_LOG( subcount = sl_unpack_ints(query, buf, offset, encoding) );
             count -= subcount;
             break;
         case SQ_TYPE_UUID:
-            EC_NEG1_LOG( subcount = spotlight_uuid(query, buf, offset, encoding) );
+            EC_NEG1_LOG( subcount = sl_unpack_uuid(query, buf, offset, encoding) );
             count -= subcount;
             break;
         case SQ_TYPE_FLOAT:
-            EC_NEG1_LOG( subcount = spotlight_float(query, buf, offset, encoding) );
+            EC_NEG1_LOG( subcount = sl_unpack_floats(query, buf, offset, encoding) );
             count -= subcount;
             break;
         case SQ_TYPE_DATE:
-            EC_NEG1_LOG( subcount = spotlight_date(query, buf, offset, encoding) );
+            EC_NEG1_LOG( subcount = sl_unpack_date(query, buf, offset, encoding) );
             count -= subcount;
-            break;
-        case SQ_TYPE_CNIDS:
-            EC_NEG1_LOG( spotlight_CNID_array(query, buf, offset + 8, query_length, encoding) );
             break;
         default:
             EC_FAIL;
@@ -495,14 +529,14 @@ static int dissect_spotlight(DALLOC_CTX *query, const char *buf)
 
 	buf += 8;
 
-	toc_offset = ((spotlight_ntoh64(buf, 0, encoding) >> 32) - 1 ) * 8;
+	toc_offset = ((sl_unpack_uint64(buf, 0, encoding) >> 32) - 1 ) * 8;
 	if (toc_offset < 0 || (toc_offset > 65000)) {
         EC_FAIL;
 	}
 
 	buf += 8;
 
-	toc_entries = (int)(spotlight_ntoh64(buf, toc_offset, encoding) & 0xffff);
+	toc_entries = (int)(sl_unpack_uint64(buf, toc_offset, encoding) & 0xffff);
 
 	EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
 
@@ -529,10 +563,10 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     ibuflen -= 2;
 
     vid = SVAL(ibuf, 0);
-    LOG(logtype_default, log_note, "afp_spotlight_rpc(vid: %" PRIu16 ")", vid);
+    LOG(log_debug, logtype_sl, "afp_spotlight_rpc(vid: %" PRIu16 ")", vid);
 
     if ((vol = getvolbyvid(vid)) == NULL) {
-        LOG(logtype_default, log_error, "afp_spotlight_rpc: bad volume id: %" PRIu16 ")", vid);
+        LOG(log_error, logtype_sl, "afp_spotlight_rpc: bad volume id: %" PRIu16 ")", vid);
         ret = AFPERR_ACCESS;
         goto EC_CLEANUP;
     }
@@ -540,7 +574,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     /*    IVAL(ibuf, 2): unknown, always 0x00008004, some flags ? */
 
     cmd = RIVAL(ibuf, 6);
-    LOG(logtype_default, log_note, "afp_spotlight_rpc(cmd: %d)", cmd);
+    LOG(log_debug, logtype_sl, "afp_spotlight_rpc(cmd: %d)", cmd);
 
     /*    IVAL(ibuf, 10: unknown, always 0x00000000 */
 
@@ -571,7 +605,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 EC_CLEANUP:
     talloc_free(tmp_ctx);
     if (ret != AFP_OK) {
-        
+        return AFPERR_MISC;
     }
     EC_EXIT;
 }
@@ -592,7 +626,7 @@ int main(int argc, char **argv)
     set_processname("spot");
     setuplog("default:info", "/dev/tty");
 
-    LOG(logtype_default, log_info, "Start");
+    LOG(log_info, logtype_sl, "Start");
 
 #if 0
     i = 2;
