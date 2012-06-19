@@ -59,9 +59,8 @@ Netatalk 2001 (c)
   "CNID",                            \
   "AFPDaemon",                       \
   "DSI",                             \
-  "ATalkDaemon",                     \
-  "PAPDaemon",                       \
   "UAMS",                            \
+  "Spotlight",                       \
   "end_of_list_marker"}              \
 
 /* =========================================================================
