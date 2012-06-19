@@ -624,7 +624,7 @@ int main(int argc, char **argv)
     int64_t i;
 
     set_processname("spot");
-    setuplog("default:info", "/dev/tty");
+    setuplog("default:info,spotlight:debug", "/dev/tty");
 
     LOG(log_info, logtype_sl, "Start");
 
@@ -686,7 +686,7 @@ int main(int argc, char **argv)
 
     EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("/home/ralph/netatalk/spot/etc/afpd/spotlight-packet.bin", O_RDONLY) );
+    EC_NEG1_LOG( fd = open("/home/ralph/netatalk/spot/etc/afpd/spotlight-packet2.bin", O_RDONLY) );
     EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
     EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
 
