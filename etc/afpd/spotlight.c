@@ -58,12 +58,12 @@
 #define SQ_TYPE_DATE    0x8600
 #define SQ_TYPE_TOC     0x8800
 
-#define SQ_CPX_TYPE_ARRAY    		0x0a00
-#define SQ_CPX_TYPE_STRING   		0x0c00
-#define SQ_CPX_TYPE_UTF16_STRING	0x1c00
-#define SQ_CPX_TYPE_DICT     		0x0d00
-#define SQ_CPX_TYPE_CNIDS    		0x1a00
-#define SQ_CPX_TYPE_FILEMETA 		0x1b00
+#define SQ_CPX_TYPE_ARRAY           0x0a00
+#define SQ_CPX_TYPE_STRING          0x0c00
+#define SQ_CPX_TYPE_UTF16_STRING    0x1c00
+#define SQ_CPX_TYPE_DICT            0x0d00
+#define SQ_CPX_TYPE_CNIDS           0x1a00
+#define SQ_CPX_TYPE_FILEMETA        0x1b00
 
 #define SUBQ_SAFETY_LIM 20
 
@@ -138,26 +138,26 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
 * If there is no byte order mark, -1 is returned.
 */
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int query_length, uint encoding) {
-	uint utf16_encoding;
+    uint utf16_encoding;
 
-	/* check for byte order mark */
-	utf16_encoding = SL_ENC_BIG_ENDIAN;
-	if (query_length >= 2) {
-		uint16_t byte_order_mark;
-		if (encoding == SL_ENC_LITTLE_ENDIAN)
-			byte_order_mark = SVAL(buf, offset);
-		else
-			byte_order_mark = RSVAL(buf, offset);
+    /* check for byte order mark */
+    utf16_encoding = SL_ENC_BIG_ENDIAN;
+    if (query_length >= 2) {
+        uint16_t byte_order_mark;
+        if (encoding == SL_ENC_LITTLE_ENDIAN)
+            byte_order_mark = SVAL(buf, offset);
+        else
+            byte_order_mark = RSVAL(buf, offset);
 
-		if (byte_order_mark == 0xFFFE) {
-			utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
-		}
-		else if (byte_order_mark == 0xFEFF) {
-			utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
-		}
-	}
+        if (byte_order_mark == 0xFFFE) {
+            utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
+        }
+        else if (byte_order_mark == 0xFEFF) {
+            utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
+        }
+    }
 
-	return utf16_encoding;
+    return utf16_encoding;
 }
 
 /**************************************************************************************************
@@ -302,80 +302,80 @@ static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 
 static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	int count, i;
-	uint64_t query_data64;
+    int count, i;
+    uint64_t query_data64;
 
-	query_data64 = sl_unpack_uint64(buf, offset, encoding);
-	count = query_data64 >> 32;
-	offset += 8;
+    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    count = query_data64 >> 32;
+    offset += 8;
 
-	i = 0;
-	while (i++ < count) {
+    i = 0;
+    while (i++ < count) {
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
         dalloc_add(query, &query_data64, uint64_t);
-		offset += 8;
-	}
+        offset += 8;
+    }
 
-	return count;
+    return count;
 }
 
 static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	int count, i;
-	uint64_t query_data64;
-	sl_time_t t;
+    int count, i;
+    uint64_t query_data64;
+    sl_time_t t;
 
-	query_data64 = sl_unpack_uint64(buf, offset, encoding);
-	count = query_data64 >> 32;
-	offset += 8;
+    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    count = query_data64 >> 32;
+    offset += 8;
 
-	i = 0;
-	while (i++ < count) {
-		query_data64 = sl_unpack_uint64(buf, offset, encoding) >> 24;
-		t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
-		t.tv_usec = 0;
+    i = 0;
+    while (i++ < count) {
+        query_data64 = sl_unpack_uint64(buf, offset, encoding) >> 24;
+        t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
+        t.tv_usec = 0;
         dalloc_add(query, &t, sl_time_t);
-		offset += 8;
-	}
+        offset += 8;
+    }
 
-	return count;
+    return count;
 }
 
 static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	int count, i;
+    int count, i;
     uint64_t query_data64;
     sl_uuid_t uuid;
-	query_data64 = sl_unpack_uint64(buf, offset, encoding);
-	count = query_data64 >> 32;
-	offset += 8;
+    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    count = query_data64 >> 32;
+    offset += 8;
 
-	i = 0;
-	while (i++ < count) {
+    i = 0;
+    while (i++ < count) {
         memcpy(uuid.sl_uuid, buf + offset, 16);
         dalloc_add(query, &uuid, sl_uuid_t);
-		offset += 16;
-	}
+        offset += 16;
+    }
 
-	return count;
+    return count;
 }
 
 static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, uint encoding)
 {
-	int count, i;
-	uint64_t query_data64;
-	double fval;
+    int count, i;
+    uint64_t query_data64;
+    double fval;
     union {
         double d;
         uint32_t w[2];
     } ieee_fp_union;
 
-	query_data64 = sl_unpack_uint64(buf, offset, encoding);
-	count = query_data64 >> 32;
-	offset += 8;
+    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    count = query_data64 >> 32;
+    offset += 8;
 
-	i = 0;
-	while (i++ < count) {
+    i = 0;
+    while (i++ < count) {
         if (encoding == SL_ENC_LITTLE_ENDIAN) {
 #ifdef WORDS_BIGENDIAN
             ieee_fp_union.w[0] = IVAL(buf, offset + 4);
@@ -394,17 +394,17 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, uint
 #endif
         }
         dalloc_add(query, &ieee_fp_union.d, double);
-		offset += 8;
-	}
+        offset += 8;
+    }
 
-	return count;
+    return count;
 }
 
 static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int length, uint encoding)
 {
     EC_INIT;
-	int count;
-	uint64_t query_data64;
+    int count;
+    uint64_t query_data64;
     sl_cnids_t cnids;
 
     EC_NULL( cnids.ca_cnids = talloc_zero(query, DALLOC_CTX) );
@@ -413,19 +413,19 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int le
         /* that's permitted, it's an empty array */
         goto EC_CLEANUP;
     
-	query_data64 = sl_unpack_uint64(buf, offset, encoding);
-	count = query_data64 & 0xffff;
+    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    count = query_data64 & 0xffff;
 
-	cnids.ca_unkn1 = (query_data64 & 0xffff0000) >> 16;
-	cnids.ca_unkn2 = query_data64 >> 32;
+    cnids.ca_unkn1 = (query_data64 & 0xffff0000) >> 16;
+    cnids.ca_unkn2 = query_data64 >> 32;
 
-	offset += 8;
+    offset += 8;
 
-	while (count --) {
-		query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    while (count --) {
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
         dalloc_add(cnids.ca_cnids, &query_data64, uint64_t);
-		offset += 8;
-	}
+        offset += 8;
+    }
 
     dalloc_add(query, &cnids, sl_cnids_t);
 
@@ -435,44 +435,44 @@ EC_CLEANUP:
 
 static const char *spotlight_get_qtype_string(uint64_t query_type)
 {
-	switch (query_type) {
-	case SQ_TYPE_NULL:
-		return "null";
-	case SQ_TYPE_COMPLEX:
-		return "complex";
-	case SQ_TYPE_INT64:
-		return "int64";
-	case SQ_TYPE_BOOL:
-		return "bool";
-	case SQ_TYPE_FLOAT:
-		return "float";
-	case SQ_TYPE_DATA:
-		return "data";
-	case SQ_TYPE_CNIDS:
-		return "CNIDs";
-	default:
-		return "unknown";
-	}
+    switch (query_type) {
+    case SQ_TYPE_NULL:
+        return "null";
+    case SQ_TYPE_COMPLEX:
+        return "complex";
+    case SQ_TYPE_INT64:
+        return "int64";
+    case SQ_TYPE_BOOL:
+        return "bool";
+    case SQ_TYPE_FLOAT:
+        return "float";
+    case SQ_TYPE_DATA:
+        return "data";
+    case SQ_TYPE_CNIDS:
+        return "CNIDs";
+    default:
+        return "unknown";
+    }
 }
 
 static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
 {
-	switch (cpx_query_type) {
-	case SQ_CPX_TYPE_ARRAY:
-		return "array";
-	case SQ_CPX_TYPE_STRING:
-		return "string";
-	case SQ_CPX_TYPE_UTF16_STRING:
-		return "utf-16 string";
-	case SQ_CPX_TYPE_DICT:
-		return "dictionary";
-	case SQ_CPX_TYPE_CNIDS:
-		return "CNIDs";
-	case SQ_CPX_TYPE_FILEMETA:
-		return "FileMeta";
-	default:
-		return "unknown";
-	}
+    switch (cpx_query_type) {
+    case SQ_CPX_TYPE_ARRAY:
+        return "array";
+    case SQ_CPX_TYPE_STRING:
+        return "string";
+    case SQ_CPX_TYPE_UTF16_STRING:
+        return "utf-16 string";
+    case SQ_CPX_TYPE_DICT:
+        return "dictionary";
+    case SQ_CPX_TYPE_CNIDS:
+        return "CNIDs";
+    case SQ_CPX_TYPE_FILEMETA:
+        return "FileMeta";
+    default:
+        return "unknown";
+    }
 }
 
 static int spotlight_dissect_loop(DALLOC_CTX *query,
@@ -483,37 +483,37 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
                                   const uint encoding)
 {
     EC_INIT;
-	int i, toc_index, query_length;
+    int i, toc_index, query_length;
     uint subcount, cpx_query_type, cpx_query_count;
-	uint64_t query_data64, query_type;
-	uint unicode_encoding;
-	uint8_t mark_exists;
+    uint64_t query_data64, query_type;
+    uint unicode_encoding;
+    uint8_t mark_exists;
     char *p;
     int padding, slen;
 
-	while (count > 0 && (offset < toc_offset)) {
-		query_data64 = sl_unpack_uint64(buf, offset, encoding);
-		query_length = (query_data64 & 0xffff) * 8;
-		query_type = (query_data64 & 0xffff0000) >> 16;
-		if (query_length == 0)
+    while (count > 0 && (offset < toc_offset)) {
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        query_length = (query_data64 & 0xffff) * 8;
+        query_type = (query_data64 & 0xffff0000) >> 16;
+        if (query_length == 0)
             EC_FAIL;
 
-		switch (query_type) {
-		case SQ_TYPE_COMPLEX:
-			toc_index = (query_data64 >> 32) - 1;
-			query_data64 = sl_unpack_uint64(buf, toc_offset + toc_index * 8, encoding);
-			cpx_query_type = (query_data64 & 0xffff0000) >> 16;
+        switch (query_type) {
+        case SQ_TYPE_COMPLEX:
+            toc_index = (query_data64 >> 32) - 1;
+            query_data64 = sl_unpack_uint64(buf, toc_offset + toc_index * 8, encoding);
+            cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
 
             switch (cpx_query_type) {
-			case SQ_CPX_TYPE_ARRAY: {
+            case SQ_CPX_TYPE_ARRAY: {
                 sl_array_t *sl_arrary = talloc_zero(query, sl_array_t);
                 EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_arrary, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
                 dalloc_add(query, sl_arrary, sl_array_t);
                 break;
             }
 
-			case SQ_CPX_TYPE_DICT: {
+            case SQ_CPX_TYPE_DICT: {
                 sl_dict_t *sl_dict = talloc_zero(query, sl_dict_t);
                 EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_dict, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
                 dalloc_add(query, sl_dict, sl_dict_t);
@@ -564,8 +564,8 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
                 break;
             } /* switch (cpx_query_type) */
 
-			count--;
-			break;
+            count--;
+            break;
 
         case SQ_TYPE_NULL: {
             subcount = query_data64 >> 32;
@@ -610,32 +610,32 @@ EC_CLEANUP:
     if (ret != 0) {
         offset = -1;
     }
-	return offset;
+    return offset;
 }
 
 static int dissect_spotlight(DALLOC_CTX *query, const char *buf)
 {
     EC_INIT;
-	int encoding, i, toc_entries;
-	uint64_t toc_offset, tquerylen, toc_entry;
+    int encoding, i, toc_entries;
+    uint64_t toc_offset, tquerylen, toc_entry;
 
-	if (strncmp(buf, "md031234", 8) == 0)
-		encoding = SL_ENC_BIG_ENDIAN;
-	else
-		encoding = SL_ENC_LITTLE_ENDIAN;
+    if (strncmp(buf, "md031234", 8) == 0)
+        encoding = SL_ENC_BIG_ENDIAN;
+    else
+        encoding = SL_ENC_LITTLE_ENDIAN;
 
-	buf += 8;
+    buf += 8;
 
-	toc_offset = ((sl_unpack_uint64(buf, 0, encoding) >> 32) - 1 ) * 8;
-	if (toc_offset < 0 || (toc_offset > 65000)) {
+    toc_offset = ((sl_unpack_uint64(buf, 0, encoding) >> 32) - 1 ) * 8;
+    if (toc_offset < 0 || (toc_offset > 65000)) {
         EC_FAIL;
-	}
+    }
 
-	buf += 8;
+    buf += 8;
 
-	toc_entries = (int)(sl_unpack_uint64(buf, toc_offset, encoding) & 0xffff);
+    toc_entries = (int)(sl_unpack_uint64(buf, toc_offset, encoding) & 0xffff);
 
-	EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
+    EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
 
 EC_CLEANUP:
     EC_EXIT;
@@ -675,29 +675,29 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 
     /*    IVAL(ibuf, 10: unknown, always 0x00000000 */
 
-	switch (cmd) {
+    switch (cmd) {
 
-	case SPOTLIGHT_CMD_VOLPATH: {
+    case SPOTLIGHT_CMD_VOLPATH: {
         RSIVAL(rbuf, 0, ntohs(vid));
         RSIVAL(rbuf, 4, 0);
         int len = strlen(vol->v_path) + 1;
         strncpy(rbuf + 8, vol->v_path, len);
         *rbuflen += 8 + len;
-		break;
+        break;
     }
-	case SPOTLIGHT_CMD_FLAGS:
+    case SPOTLIGHT_CMD_FLAGS:
         RSIVAL(rbuf, 0, 0x0100006b); /* Whatever this value means... flags? */
         *rbuflen += 4;
-		break;
+        break;
 
-	case SPOTLIGHT_CMD_RPC: {
+    case SPOTLIGHT_CMD_RPC: {
         DALLOC_CTX *query;
         EC_NULL( query = talloc_zero(tmp_ctx, DALLOC_CTX) );
         (void)dissect_spotlight(query, ibuf + 22);
         dd_dump(query, 0);
-		break;
+        break;
     }
-	}
+    }
 
 EC_CLEANUP:
     talloc_free(tmp_ctx);
