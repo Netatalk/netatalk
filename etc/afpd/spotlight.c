@@ -56,6 +56,7 @@
 #define SQ_TYPE_CNIDS   0x8700
 #define SQ_TYPE_UUID    0x0e00
 #define SQ_TYPE_DATE    0x8600
+#define SQ_TYPE_TOC     0x8800
 
 #define SQ_CPX_TYPE_ARRAY    		0x0a00
 #define SQ_CPX_TYPE_STRING   		0x0c00
@@ -73,6 +74,7 @@
 
 /* Forward declarations */
 static int dissect_spotlight(DALLOC_CTX *query, const char *buf);
+static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf, int *toc_idx);
 
 /* Helper functions and stuff */
 static const char *neststrings[] = {
@@ -162,33 +164,128 @@ static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int
  * marshalling functions
  **************************************************************************************************/
 
-static uint64_t sl_pack_tag(uint16_t type, uint16_t size, uint32_t val)
+#define SL_OFFSET_DELTA 16
+
+static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count, uint32_t val)
 {
-    uint64_t tag = ((uint64_t)val << 32) | ((uint64_t)type << 16) | size;
+    uint64_t tag = ((uint64_t)val << 32) | ((uint64_t)type << 16) | size_or_count;
     return tag;
 }
 
-static int sl_pack_float(double d, char **buf, int *buf_len, char **toc_buf, int *toc_len, int *toc_idx)
+static int sl_pack_float(double d, char *buf, int offset)
 {
     union {
         double d;
         uint64_t w;
     } ieee_fp_union;
 
-    SLVAL(*buf, 0, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1));
-    SLVAL(*buf, 8, ieee_fp_union.w);
-    *buf += 2 * sizeof(uint64_t);
-    buf_len += 2 * sizeof(uint64_t);
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1));
+    SLVAL(buf, offset + 8, ieee_fp_union.w);
 
-    return 0;
+    return offset + 2 * sizeof(uint64_t);
 }
 
-static int sl_pack_uint64(uint64_t u, char **buf, int *buf_len, char **toc_buf, int *toc_len, int *toc_idx)
+static int sl_pack_uint64(uint64_t u, char *buf, int offset)
 {
-    SLVAL(*buf, 0, sl_pack_tag(SQ_TYPE_INT64, 2, 1));
-    SLVAL(*buf, 8, u);
-    *buf += 2 * sizeof(uint64_t);
-    *buf_len += 2 * sizeof(uint64_t);
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_INT64, 2, 1));
+    SLVAL(buf, offset + 8, u);
+
+    return offset + 2 * sizeof(uint64_t);
+}
+
+static int sl_pack_date(sl_time_t t, char *buf, int offset)
+{
+    uint64_t data = 0;
+
+    data = (t.tv_sec + SPOTLIGHT_TIME_DELTA) << 24;
+
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_DATE, 2, 1));
+    SLVAL(buf, offset + 8, data);
+
+    return offset + 2 * sizeof(uint64_t);
+}
+
+static int sl_pack_uuid(sl_uuid_t uuid, char *buf, int offset)
+{
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_UUID, 3, 1));
+    memcpy(buf + offset + 8, &uuid, 16);
+
+    return offset + sizeof(uint64_t) + 16;
+}
+
+static int sl_pack_CNID(sl_cnids_t *cnids, uint32_t context, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    int len = 0, off = 0;
+    int cnid_count = talloc_array_length(cnids->ca_cnids);
+
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, cnid_count));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    *toc_idx++;
+    offset += 8;
+
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_CNIDS, 2 + cnid_count, 8 /* unknown meaning, but always 8 */));
+    offset += 8;
+
+    SLVAL(buf, offset, sl_pack_tag(0x0add, cnid_count, context));
+    offset += 8;
+
+    for (int i = 0; i < cnid_count; i++) {
+        SLVAL(buf, offset, cnids->ca_cnids->dd_talloc_array[i]);
+        offset += 8;
+    }
+    
+    return offset;
+}
+
+static int sl_pack_array(sl_array_t *array, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_ARRAY, (offset + SL_OFFSET_DELTA) / 8, talloc_array_length(array->dd_talloc_array)));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    *toc_idx++;
+    offset += 8;
+
+    offset = sl_pack_loop(array, buf, offset, toc_buf, toc_idx);
+
+    return offset;
+}
+
+static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_DICT, (offset + SL_OFFSET_DELTA) / 8, talloc_array_length(dict->dd_talloc_array)));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    *toc_idx++;
+    offset += 8;
+
+    offset = sl_pack_loop(dict, buf, offset, toc_buf, toc_idx);
+
+    return offset;
+}
+
+static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    int len, octets, used_in_last_octet;
+    len = strlen(s);
+    octets = (len / 8) + (len & 7 ? 1 : 0);
+    used_in_last_octet = 8 - (octets * 8 - len);
+
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_DICT, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    *toc_idx++;
+    offset += 8;
+
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_DATA, octets + 1, used_in_last_octet));
+    offset += 8;
+
+    memset(buf + offset, 0, octets * 8);
+    strncpy(buf + offset, s, len);
+    offset += octets * 8;
+
+    return offset;
+}
+
+static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    return offset;
 }
 
 /**************************************************************************************************
@@ -686,7 +783,7 @@ int main(int argc, char **argv)
 
     EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("/home/ralph/netatalk/spot/etc/afpd/spotlight-packet2.bin", O_RDONLY) );
+    EC_NEG1_LOG( fd = open("spotlight-packet2.bin", O_RDONLY) );
     EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
     EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
 
