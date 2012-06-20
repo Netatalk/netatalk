@@ -100,10 +100,9 @@ static void afp_dsi_close(AFPObj *obj)
     close_all_vol();
 
     if (obj->logout) {
-        /* Block SIGTERM, PAM might send us a SIGTERM in (*obj->logout)() -> pam_close_session() */
+        /* Block sigs, PAM/systemd/whoever might send us a SIG??? in (*obj->logout)() -> pam_close_session() */
+        sigfillset(&sigs);
         pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-        sigemptyset(&sigs);
-        sigaddset(&sigs, SIGTERM);
         (*obj->logout)();
     }
 
