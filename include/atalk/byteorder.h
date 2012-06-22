@@ -125,15 +125,15 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define LVALS(buf,pos) ((int64_t)LVAL(buf,pos))
 
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos+1)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos)=(unsigned char)((val)>>8))
-#define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
-#define SLVALX(buf,pos,val) (SLVALX(buf,pos,val&0xFFFFFFFF),SLVALX(buf,pos+4,val>>32))
+#define SIVALX(buf,pos,val) (SSVALX(buf,pos,((val)&0xFFFF)),SSVALX(buf,pos+2,(val)>>16))
+#define SLVALX(buf,pos,val) (SIVALX(buf,pos,((val)&0xFFFFFFFF)),SIVALX(buf,pos+4,(val)>>32))
 
 #define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
 #define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
 #define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
-#define SLVAL(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
+#define SLVALS(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
 
 #else
 
@@ -145,8 +145,8 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define LVALS(buf,pos) ((int64_t)LVAL(buf,pos))
 
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos+1)=(unsigned char)((val)>>8))
-#define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
-#define SLVALX(buf,pos,val) (SIVALX(buf,pos,val&0xFFFFFFFF),SIVALX(buf,pos+4,val>>32))
+#define SIVALX(buf,pos,val) (SSVALX(buf,pos,((val)&0xFFFF)),SSVALX(buf,pos+2,(val)>>16))
+#define SLVALX(buf,pos,val) (SIVALX(buf,pos,((val)&0xFFFFFFFF)),SIVALX(buf,pos+4,(val)>>32))
 
 #define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))

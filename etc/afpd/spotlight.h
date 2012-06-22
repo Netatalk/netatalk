@@ -26,7 +26,7 @@
 
 typedef DALLOC_CTX     sl_array_t;    /* an array of elements                                           */
 typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements                                 */
-typedef DALLOC_CTX     sl_filemeta_t; /* an array of elements                                           */
+typedef DALLOC_CTX     sl_filemeta_t; /* contains one sl_array_t                                        */
 typedef int            sl_nil_t;      /* a nil element                                                  */
 typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t as it's a define for something else */
 typedef struct timeval sl_time_t;     /* a boolean, we avoid bool_t as it's a define for something else */
@@ -35,7 +35,7 @@ typedef struct {
 }                      sl_uuid_t;     /* a UUID                                                         */
 typedef struct {
     uint16_t   ca_unkn1;
-    uint32_t   ca_unkn2;
+    uint32_t   ca_context;
     DALLOC_CTX *ca_cnids;
 }                      sl_cnids_t;    /* an array of CNID                                               */
 
