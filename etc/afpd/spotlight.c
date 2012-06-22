@@ -233,7 +233,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
     int cnid_count = talloc_array_length(cnids->ca_cnids);
 
     SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, cnid_count));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
 
@@ -255,8 +255,13 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
 
 static int sl_pack_array(sl_array_t *array, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_ARRAY, (offset + SL_OFFSET_DELTA) / 8, talloc_array_length(array->dd_talloc_array)));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    int count = talloc_array_length(array->dd_talloc_array);
+    int octets = (offset + SL_OFFSET_DELTA) / 8;
+
+    LOG(log_maxdebug, logtype_sl, "sl_pack_array: count: %d, offset:%d, octets: %d", count, offset, octets);
+
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_ARRAY, octets, count));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
 
@@ -268,7 +273,7 @@ static int sl_pack_array(sl_array_t *array, char *buf, int offset, char *toc_buf
 static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_DICT, (offset + SL_OFFSET_DELTA) / 8, talloc_array_length(dict->dd_talloc_array)));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
 
@@ -277,15 +282,19 @@ static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, 
     return offset;
 }
 
-static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf, int *toc_idx)
+static int sl_pack_string(char **string, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     int len, octets, used_in_last_octet;
+    char *s = *string;
     len = strlen(s);
     octets = (len / 8) + (len & 7 ? 1 : 0);
     used_in_last_octet = 8 - (octets * 8 - len);
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_DICT, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx));
+    LOG(log_maxdebug, logtype_sl, "sl_pack_string(\"%s\"): len: %d, octets: %d, used_in_last_octet: %d",
+        s, len, octets, used_in_last_octet);
+
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet));
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
 
@@ -352,9 +361,9 @@ static int sl_pack(DALLOC_CTX *query, char *buf)
     int len = 0;
 
     memcpy(buf, "432130dm", 8);
-    EC_NEG1_LOG( len = sl_pack_loop(query, buf + 16, 0, toc_buf, &toc_index) );
-    SIVAL(buf, 8, len / 8 + toc_index + 1);
-    SIVAL(buf, 12, toc_index + 1);
+    EC_NEG1_LOG( len = sl_pack_loop(query, buf + 16, 0, toc_buf + 8, &toc_index) );
+    SIVAL(buf, 8, len / 8 + 1 + toc_index + 1);
+    SIVAL(buf, 12, len / 8 + 1);
 
     SLVAL(toc_buf, 0, sl_pack_tag(SQ_TYPE_TOC, toc_index + 1, 0));
     memcpy(buf + 16 + len, toc_buf, (toc_index + 1 ) * 8);
@@ -862,7 +871,7 @@ int main(int argc, char **argv)
 
     EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("spotlight-packet2.bin", O_RDONLY) );
+    EC_NEG1_LOG( fd = open("test.bin", O_RDONLY) );
     EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
     close(fd);
     EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
@@ -874,25 +883,9 @@ int main(int argc, char **argv)
     char buf[MAX_SLQ_DAT];
     EC_NEG1_LOG( qlen = sl_pack(query, buf) );
 
-    EC_NEG1_LOG( fd = open("tmp", O_RDWR | O_CREAT, 0644) );
+    EC_NEG1_LOG( fd = open("test.bin", O_RDWR) );
+    lseek(fd, 24, SEEK_SET);
     write(fd, buf, qlen);
-    close(fd);
-
-    SLVAL(buf, 0, INT64_C(0x0102030405060708U));
-
-#if 0
-    (((unsigned char *)((buf)))[(0)])         = (unsigned char)((((uint64_t)(0x0102030405060708UL))&0xFFFFFFFF&0xFFFF) &0xFF);
-    (((unsigned char *)((buf)))[(0)+1])       = (unsigned char)((((uint64_t)(0x0102030405060708UL))&0xFFFFFFFF&0xFFFF) >> 8);
-    (((unsigned char *)((buf)))[(0)+2])       = (unsigned char)((((uint64_t)(0x0102030405060708UL))&0xFFFFFFFF>>16) & 0xFF);
-    (((unsigned char *)((buf)))[(0)+2 +1])    = (unsigned char)((((uint64_t)(0x0102030405060708UL))&0xFFFFFFFF>>16)>>8);
-    (((unsigned char *)((buf)))[(0)+4])       = (unsigned char)((((uint64_t)(0x0102030405060708UL))>>32&0xFFFF)&0xFF);
-    (((unsigned char *)((buf)))[(0)+4 +1])    = (unsigned char)((((uint64_t)(0x0102030405060708UL))>>32&0xFFFF)>>8);
-    (((unsigned char *)((buf)))[(0)+4 +2])    = (unsigned char)((((uint64_t)(0x0102030405060708UL))>>32>>16)&0xFF);
-    (((unsigned char *)((buf)))[(0)+4 +2 +1]) = (unsigned char)((((uint64_t)(0x0102030405060708UL))>>32>>16)>>8);
-#endif
-
-    EC_NEG1_LOG( fd = open("tmp2", O_RDWR | O_CREAT, 0644) );
-    write(fd, buf, 8);
     close(fd);
 
 EC_CLEANUP:
