@@ -248,7 +248,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_ERROR([--with-init-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
         ;;
     "redhat-sysv")
-	    AC_MSG_RESULT([enabling redhat-style sysv (upstart) configuration])
+	    AC_MSG_RESULT([enabling redhat-style sysv initscript support])
 	    ;;
     "redhat-systemd")
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
@@ -257,25 +257,25 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
         ;;
     "suse-sysv")
-	    AC_MSG_RESULT([enabling suse-style sysv configuration])
+	    AC_MSG_RESULT([enabling suse-style sysv initscript support])
 	    ;;
     "suse-systemd")
 	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
 	    ;;
     "gentoo")
-	    AC_MSG_RESULT([enabling gentoo-style sysv support])
+	    AC_MSG_RESULT([enabling gentoo-style initscript support])
         ;;
     "netbsd")
-	    AC_MSG_RESULT([enabling netbsd-style sysv support])
+	    AC_MSG_RESULT([enabling netbsd-style initscript support])
         ;;
     "debian")
-	    AC_MSG_RESULT([enabling debian-style sysv support])
+	    AC_MSG_RESULT([enabling debian-style initscript support])
         ;;
     "solaris")
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
         ;;
     "systemd")
-	    AC_MSG_RESULT([use general systemd configuration])
+	    AC_MSG_RESULT([enabling general systemd support])
         ;;
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
