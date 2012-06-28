@@ -893,16 +893,16 @@ static struct vol *creatvol(AFPObj *obj,
     initvol_vfs(volume);
 
     /* get/store uuid from file in afpd master*/
-    if (!(pwd) && (volume->v_flags & AFPVOL_TM)) {
-        char *uuid = get_vol_uuid(obj, volume->v_localname);
-        if (!uuid) {
-            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
-                volume->v_localname);
-        } else {
-            volume->v_uuid = uuid;
-            LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
-                volume->v_localname, volume->v_uuid);
-        }
+    become_root();
+    char *uuid = get_vol_uuid(obj, volume->v_localname);
+    unbecome_root();
+    if (!uuid) {
+        LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
+            volume->v_localname);
+    } else {
+        volume->v_uuid = uuid;
+        LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
+            volume->v_localname, volume->v_uuid);
     }
 
     /* no errors shall happen beyond this point because the cleanup would mess the volume chain up */

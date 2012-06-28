@@ -79,19 +79,20 @@ static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
 /* Helper functions and stuff */
 static const char *neststrings[] = {
     "",
-    "    ",
-    "        ",
-    "            ",
-    "                ",
-    "                    ",
-    "                        "
+    "\t",
+    "\t\t",
+    "\t\t\t",
+    "\t\t\t\t",
+    "\t\t\t\t\t",
+    "\t\t\t\t\t\t",
 };
 
 static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;
 
-    LOG(log_debug, logtype_sl, "%s1: %s(#%d): {", neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
+    LOG(log_debug, logtype_sl, "%s%s(#%d): {",
+        neststrings[nestinglevel], talloc_get_name(dd), talloc_array_length(dd->dd_talloc_array));
 
     for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
 
@@ -104,28 +105,28 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
         } else if (STRCMP(type, ==, "uint64_t")) {
             uint64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(uint64_t));
-            LOG(log_debug, logtype_sl, "%s%u:\t0x%04x", neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%suint64_t: 0x%04x", neststrings[nestinglevel + 1], i);
         } else if (STRCMP(type, ==, "int64_t")) {
             int64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
-            LOG(log_debug, logtype_sl, "%s%d:\t%" PRId64, neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%sint64_t: %" PRId64, neststrings[nestinglevel + 1], i);
         } else if (STRCMP(type, ==, "uint32_t")) {
             uint32_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(uint32_t));
-            LOG(log_debug, logtype_sl, "%s%d:\t%" PRIu32, neststrings[nestinglevel + 1], n + 1, i);
+            LOG(log_debug, logtype_sl, "%s%s: %" PRIu32, neststrings[nestinglevel + 1], type, i);
         } else if (STRCMP(type, ==, "char *")) {
             char *s;
             memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
-            LOG(log_debug, logtype_sl, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, s);
+            LOG(log_debug, logtype_sl, "%sstring: %s", neststrings[nestinglevel + 1], s);
         } else if (STRCMP(type, ==, "sl_bool_t")) {
             sl_bool_t bl;
             memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
-            LOG(log_debug, logtype_sl, "%s%d:\t%s", neststrings[nestinglevel + 1], n + +1, bl ? "true" : "false");
+            LOG(log_debug, logtype_sl, "%sbool: %s", neststrings[nestinglevel + 1], bl ? "true" : "false");
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
-            LOG(log_debug, logtype_sl, "%s%d:\tunkn1: %" PRIu16 ", unkn2: %" PRIu32,
-                   neststrings[nestinglevel + 1], n + 1, cnids.ca_unkn1, cnids.ca_context);
+            LOG(log_debug, logtype_sl, "%sCNIDs: unkn1: %" PRIu16 ", unkn2: %" PRIu32,
+                   neststrings[nestinglevel + 1], cnids.ca_unkn1, cnids.ca_context);
             if (cnids.ca_cnids)
                 dd_dump(cnids.ca_cnids, nestinglevel + 1);
         }
@@ -730,6 +731,61 @@ EC_CLEANUP:
 }
 
 /**************************************************************************************************
+ * Spotlight RPC functions
+ **************************************************************************************************/
+
+static int sl_rpc_fetchPropertiesForContext(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
+{
+    EC_INIT;
+
+    char *s;
+    sl_dict_t *dict;
+    sl_array_t *array;
+    sl_uuid_t uuid;
+
+    if (!v->v_uuid)
+        EC_FAIL_LOG("sl_rpc_fetchPropertiesForContext: missing UUID for volume: %s", v->v_localname);
+
+    dict = talloc_zero(reply, sl_dict_t);
+
+    /* key/val 1 */
+    s = talloc_strdup(dict, "kMDSStoreMetaScopes");
+    dalloc_add(dict, &s, char *);
+
+    array = talloc_zero(dict, sl_array_t);
+    s = talloc_strdup(array, "kMDQueryScopeComputer");
+    dalloc_add(array, &s, char *);
+    dalloc_add(dict, array, sl_array_t);
+
+    /* key/val 2 */
+    s = talloc_strdup(dict, "kMDSStorePathScopes");
+    dalloc_add(dict, &s, char *);
+
+    array = talloc_zero(dict, sl_array_t);
+    s = talloc_strdup(array, v->v_path);
+    dalloc_add(array, &s, char *);
+    dalloc_add(dict, array, sl_array_t);
+
+    /* key/val 3 */
+    s = talloc_strdup(dict, "kMDSStoreUUID");
+    dalloc_add(dict, &s, char *);
+
+    memcpy(uuid.sl_uuid, v->v_uuid, 16);
+    dalloc_add(dict, &uuid, sl_uuid_t);
+
+    /* key/val 4 */
+    s = talloc_strdup(dict, "kMDSStoreHasPersistentUUID");
+    dalloc_add(dict, &s, char *);
+    sl_bool_t b = true;
+    dalloc_add(dict, &b, sl_bool_t);
+
+    dalloc_add(reply, dict, sl_dict_t);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/**************************************************************************************************
  * AFP functions
  **************************************************************************************************/
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
@@ -781,8 +837,35 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     case SPOTLIGHT_CMD_RPC: {
         DALLOC_CTX *query;
         EC_NULL( query = talloc_zero(tmp_ctx, DALLOC_CTX) );
-        (void)dissect_spotlight(query, ibuf + 22);
+        DALLOC_CTX *reply;
+        EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
+
+        EC_ZERO( dissect_spotlight(query, ibuf + 22) );
         dd_dump(query, 0);
+
+        char **cmd;
+        EC_NULL_LOG( cmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
+
+
+        if (STRCMP(*cmd, ==, "fetchPropertiesForContext:")) {
+            EC_ZERO_LOG( sl_rpc_fetchPropertiesForContext(obj, query, reply, vol) );
+        } else if (STRCMP(*cmd, ==, "fetchQueryResultsForContext:")) {
+            uint64_t *p;
+            if ((p = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1)) != NULL) {
+                LOG(log_info, logtype_sl, "fetchQueryResultsForContext: 0x%" PRIx64, *p);
+            }
+        }
+
+        /* Spotlight RPC status code ? 0 in all traces, we use 0xffffffff for an error, never seen from Apple */
+        if (ret == 0)
+            memset(rbuf, 0, 4);
+        else
+            memset(rbuf, 0xff, 4);
+        *rbuflen += 4;
+
+        int len;
+        EC_NEG1_LOG( len = sl_pack(reply, rbuf + 4) );
+        *rbuflen += len;
         break;
     }
     }
@@ -790,6 +873,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 EC_CLEANUP:
     talloc_free(tmp_ctx);
     if (ret != AFP_OK) {
+        *rbuflen = 0;
         return AFPERR_MISC;
     }
     EC_EXIT;
@@ -849,6 +933,8 @@ int main(int argc, char **argv)
     dalloc_add(cnids->ca_cnids, &id, uint32_t);
     dalloc_add(dd, cnids, sl_cnids_t);
 
+#endif
+
     /* Now the Spotlight types */
     sl_array_t *sl_arrary = talloc_zero(dd, sl_array_t);
     i = 1234;
@@ -860,8 +946,10 @@ int main(int argc, char **argv)
     dalloc_add(sl_arrary, sl_dict, sl_dict_t);
 
     dalloc_add(dd, sl_arrary, sl_array_t);
-#endif
+    dd_dump(dd, 0);
 
+
+#if 0
     /* now parse a real spotlight packet */
     char ibuf[8192];
     char rbuf[8192];
@@ -871,7 +959,7 @@ int main(int argc, char **argv)
 
     EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("test.bin", O_RDONLY) );
+    EC_NEG1_LOG( fd = open("spotlight-packet.bin", O_RDONLY) );
     EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
     close(fd);
     EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
@@ -887,6 +975,7 @@ int main(int argc, char **argv)
     lseek(fd, 24, SEEK_SET);
     write(fd, buf, qlen);
     close(fd);
+#endif
 
 EC_CLEANUP:
     if (mem_ctx) {

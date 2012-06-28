@@ -31,7 +31,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/dalloc.h>
 
-/* Use dalloc_add_obj() macro, not this function */
+/* Use dalloc_add() macro, not this function */
 int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_t size)
 {
     AFP_ASSERT(talloc_chunk);
@@ -41,4 +41,39 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_
     dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = talloc_chunk;
 
     return 0;
+}
+
+void *dalloc_get(DALLOC_CTX *d, ...)
+{
+    EC_INIT;
+    void *p = NULL;
+    va_list args;
+    const char *type;
+    int elem;
+    const char *elemtype;
+
+    va_start(args, d);
+    type = va_arg(args, const char *);
+
+    if (STRCMP(type, !=, "DALLOC_CTX"))
+        EC_FAIL;
+
+    while (STRCMP(type, ==, "DALLOC_CTX")) {
+        elem = va_arg(args, int);
+        AFP_ASSERT(elem < talloc_array_length(d->dd_talloc_array));
+        d = d->dd_talloc_array[elem];
+        type = va_arg(args, const char *);
+    }
+
+    elem = va_arg(args, int);
+    AFP_ASSERT(elem < talloc_array_length(d->dd_talloc_array));
+
+    p = talloc_check_name(d->dd_talloc_array[elem], type);
+
+    va_end(args);
+
+EC_CLEANUP:
+    if (ret != 0)
+        p = NULL;
+    return p;
 }

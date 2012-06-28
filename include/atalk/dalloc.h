@@ -26,12 +26,11 @@ typedef struct {
     void **dd_talloc_array;
 } DALLOC_CTX;
 
-#define dalloc_add(dd, obj, type)                                       \
-    dalloc_add_talloc_chunk((dd), talloc((dd), type), (obj), sizeof(type));
+#define dalloc_add(d, obj, type) dalloc_add_talloc_chunk((d), talloc((d), type), (obj), sizeof(type));
 
-#define dd_get_count(dd) talloc_array_length(dd->dd_talloc_array)
-
+/* Use dalloc_add() macro, not this function */
 extern int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_t size);
 
+extern void *dalloc_get(DALLOC_CTX *d, ...);
 
 #endif  /* DALLOC_H */
