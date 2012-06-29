@@ -37,6 +37,7 @@ afpd_SOURCES = \
 	ofork.c \
 	quota.c \
 	spotlight.c \
+	spotlight_marshalling.c \
 	status.c \
 	switch.c \
 	uam.c \
@@ -76,6 +77,6 @@ fce_SOURCES = fce_api.c fce_util.c
 fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
 fce_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-spot_SOURCES = spotlight.c
+spot_SOURCES = spotlight.c spotlight_marshalling.c
 spot_CFLAGS = -DSPOT_TEST_MAIN
 spot_LDADD = $(top_builddir)/libatalk/libatalk.la

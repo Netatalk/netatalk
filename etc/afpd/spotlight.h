@@ -24,6 +24,17 @@
 #include <atalk/dalloc.h>
 #include <atalk/globals.h>
 
+/* FPSpotlightRPC subcommand codes */
+#define SPOTLIGHT_CMD_OPEN    1
+#define SPOTLIGHT_CMD_FLAGS   2
+#define SPOTLIGHT_CMD_RPC     3
+#define SPOTLIGHT_CMD_OPEN2   4
+
+/* Can be ored and used as flags */
+#define SL_ENC_LITTLE_ENDIAN 1
+#define SL_ENC_BIG_ENDIAN    2
+#define SL_ENC_UTF_16        4
+
 typedef DALLOC_CTX     sl_array_t;    /* an array of elements                                           */
 typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements                                 */
 typedef DALLOC_CTX     sl_filemeta_t; /* contains one sl_array_t                                        */
@@ -40,5 +51,7 @@ typedef struct {
 }                      sl_cnids_t;    /* an array of CNID                                               */
 
 extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen);
+extern int sl_pack(DALLOC_CTX *query, char *buf);
+extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 
 #endif /* SPOTLIGHT_H */
