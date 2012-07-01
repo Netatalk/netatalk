@@ -155,6 +155,7 @@ if ( $eaoption == 1 ) {
     $openmessage = "Dumping \"$afile\"'s extended attribute...\n";
 } elsif ( $finderinfo != 0 ) {
     $openfile = $afile;
+    $openmessage = "Dumping \"$openfile\"...\n";
 } elsif ( -f $afile ) {
     if ( $basename eq ".Parent") {
         $finderinfo = 2;
@@ -192,6 +193,7 @@ if ( $eaoption == 1 ) {
         }
         if ( -e $netatalkfile ) {
             printf ("\"%s\" is found.\n", $netatalkfile);
+            $adcount++;
             $openfile = $netatalkfile;
             $openmessage = "Dumping \"$openfile\"...\n";
         }
