@@ -67,18 +67,20 @@ if (     0 == system("which getfattr > /dev/null 2>&1")) {
 
 # parse command line -----------------------------------------------
 
+$stdinputmode = 0;
 $eaoption = 0;
 $finderinfo = 0;              #  0: unknown   1: file   2: directory
 while ($arg = shift @ARGV)
 {
     if  ($arg =~ /^(-h|-help|--help)$/ ) {
-        printf ("usage: %s [-a] FILE|DIR\n"           ,basename($0));
+        printf ("usage: %s [-a] [FILE|DIR]\n"         ,basename($0));
         printf (" or:   %s -e FILE|DIR\n"             ,basename($0));
-        printf (" or:   %s -f FILE\n"                 ,basename($0));
-        printf (" or:   %s -d FILE\n"                 ,basename($0));
+        printf (" or:   %s -f [FILE]\n"               ,basename($0));
+        printf (" or:   %s -d [FILE]\n"               ,basename($0));
         printf (" or:   %s -h|-help|--help\n"         ,basename($0));
         printf (" or:   %s -v|-version|--version\n"   ,basename($0));
         printf ("Dump AppleSingle/AppleDouble format data.\n");
+        printf ("With no FILE|DIR, or when FILE|DIR is -, read standard input.\n");
         printf ("\n");
         printf ("  -a (default)     Dump a AppleSingle/AppleDouble data for FILE or DIR\n");
         printf ("                   automatically.\n");
@@ -115,6 +117,8 @@ while ($arg = shift @ARGV)
         $finderinfo = 1;
     } elsif ($arg eq "-d") {
         $finderinfo = 2;
+    } elsif ($arg eq "-") {
+        $stdinputmode = 1;
     } elsif ($arg =~ /^-/) {
         printf (STDERR "%s: invalid option %s\n", basename($0), $arg);
         printf (STDERR "Try \`%s\ -h' for more information.\n", basename($0));
@@ -125,10 +129,8 @@ while ($arg = shift @ARGV)
 }
 
 if (!($afile)) {
-    printf (STDERR "missing file operand.\n");
-    exit 1;
-}
-if (!( -e $afile)) {
+    $stdinputmode = 1;
+} elsif (!( -e $afile)) {
     printf (STDERR "\"%s\" is not found.\n", $afile);
     exit 1;
 }
@@ -138,7 +140,12 @@ if (!( -e $afile)) {
 $abspath = File::Spec->rel2abs($afile);
 ($basename, $path, $ext) = fileparse($abspath);
 
-if ( $eaoption == 1 ) {
+if ( $stdinputmode == 1) {
+    ($eatempfh, $openfile) = tempfile(UNLINK => 1);
+    system("cat - > $openfile");
+    close($eatempfh);
+    $openmessage = "Dumping Standard Input...\n";
+} elsif ( $eaoption == 1 ) {
     if ( -f $afile ) {
         $finderinfo = 1;
     } elsif ( -d $afile ) {
