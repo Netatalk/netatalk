@@ -1,7 +1,8 @@
-Changes in 3.0 beta3
-====================
+Changes in 3.0
+==============
 * UPD: read only mode if cnid scheme is last
 * REM: global option "icon"
+* FIX: CNID path for user homes
 
 Changes in 3.0 beta2
 ====================
