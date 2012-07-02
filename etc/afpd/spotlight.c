@@ -66,14 +66,6 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
             uint64_t i;
             memcpy(&i, dd->dd_talloc_array[n], sizeof(uint64_t));
             LOG(log_debug, logtype_sl, "%suint64_t: 0x%04x", neststrings[nestinglevel + 1], i);
-        } else if (STRCMP(type, ==, "int64_t")) {
-            int64_t i;
-            memcpy(&i, dd->dd_talloc_array[n], sizeof(int64_t));
-            LOG(log_debug, logtype_sl, "%sint64_t: %" PRId64, neststrings[nestinglevel + 1], i);
-        } else if (STRCMP(type, ==, "uint32_t")) {
-            uint32_t i;
-            memcpy(&i, dd->dd_talloc_array[n], sizeof(uint32_t));
-            LOG(log_debug, logtype_sl, "%s%s: %" PRIu32, neststrings[nestinglevel + 1], type, i);
         } else if (STRCMP(type, ==, "char *")) {
             char *s;
             memcpy(&s, dd->dd_talloc_array[n], sizeof(char *));
@@ -98,7 +90,7 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
  * Spotlight RPC functions
  **************************************************************************************************/
 
-static int sl_rpc_fetchPropertiesForContext(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
+static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 {
     EC_INIT;
 
@@ -145,6 +137,13 @@ static int sl_rpc_fetchPropertiesForContext(AFPObj *obj, const DALLOC_CTX *query
 
     dalloc_add(reply, dict, sl_dict_t);
 
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+static int sl_rpc_openQuery(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
+{
+    EC_INIT;
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -214,6 +213,8 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
 
         if (STRCMP(*cmd, ==, "fetchPropertiesForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchPropertiesForContext(obj, query, reply, vol) );
+        } else if (STRCMP(*cmd, ==, "openQueryWithParams:forContext:")) {
+            EC_ZERO_LOG( sl_rpc_openQuery(obj, query, reply, vol) );
         } else if (STRCMP(*cmd, ==, "fetchQueryResultsForContext:")) {
             uint64_t *p;
             if ((p = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1)) != NULL) {
@@ -258,7 +259,7 @@ int main(int argc, char **argv)
     EC_INIT;
     TALLOC_CTX *mem_ctx = talloc_new(NULL);
     DALLOC_CTX *dd = talloc_zero(mem_ctx, DALLOC_CTX);
-    int64_t i;
+    uint64_t i;
 
     set_processname("spot");
     setuplog("default:info,spotlight:debug", "/dev/tty");
@@ -267,10 +268,10 @@ int main(int argc, char **argv)
 
 #if 0
     i = 2;
-    dalloc_add(dd, &i, int64_t);
+    dalloc_add(dd, &i, uint64_t);
 
     i = 1;
-    dalloc_add(dd, &i, int64_t);
+    dalloc_add(dd, &i, uint64_t);
 
 
     char *str = talloc_strdup(dd, "hello world");
@@ -286,11 +287,11 @@ int main(int argc, char **argv)
     /* add a nested array */
     DALLOC_CTX *nested = talloc_zero(dd, DALLOC_CTX);
     i = 3;
-    dalloc_add(nested, &i, int64_t);
+    dalloc_add(nested, &i, uint64_t);
     dalloc_add(dd, nested, DALLOC_CTX);
 
     /* test an allocated CNID array */
-    uint32_t id = 16;
+    uint64_t id = 16;
     sl_cnids_t *cnids = talloc_zero(dd, sl_cnids_t);
 
     cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
@@ -298,26 +299,24 @@ int main(int argc, char **argv)
     cnids->ca_unkn1 = 1;
     cnids->ca_unkn2 = 2;
 
-    dalloc_add(cnids->ca_cnids, &id, uint32_t);
+    dalloc_add(cnids->ca_cnids, &id, uint64_t);
     dalloc_add(dd, cnids, sl_cnids_t);
 
 #endif
 
     /* Now the Spotlight types */
     sl_array_t *sl_arrary = talloc_zero(dd, sl_array_t);
-    i = 1234;
-    dalloc_add(sl_arrary, &i, int64_t);
+    i = 0x1234;
+    dalloc_add(sl_arrary, &i, uint64_t);
 
     sl_dict_t *sl_dict = talloc_zero(dd, sl_dict_t);
-    i = 5678;
-    dalloc_add(sl_dict, &i, int64_t);
+    i = 0x5678;
+    dalloc_add(sl_dict, &i, uint64_t);
     dalloc_add(sl_arrary, sl_dict, sl_dict_t);
 
     dalloc_add(dd, sl_arrary, sl_array_t);
     dd_dump(dd, 0);
 
-
-#if 0
     /* now parse a real spotlight packet */
     char ibuf[8192];
     char rbuf[8192];
@@ -327,14 +326,15 @@ int main(int argc, char **argv)
 
     EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("spotlight-packet.bin", O_RDONLY) );
+    EC_NEG1_LOG( fd = open("openQuery-packet.bin", O_RDONLY) );
     EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
     close(fd);
-    EC_NEG1_LOG( dissect_spotlight(query, ibuf + 24) );
+    EC_NEG1_LOG( sl_unpack(query, ibuf + 24) );
 
     /* Now dump the whole thing */
     dd_dump(query, 0);
 
+#if 0
     int qlen;
     char buf[MAX_SLQ_DAT];
     EC_NEG1_LOG( qlen = sl_pack(query, buf) );

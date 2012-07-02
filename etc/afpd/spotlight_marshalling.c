@@ -64,6 +64,7 @@
 
 /* Forward declarations */
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf, int *toc_idx);
+static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset, uint count, const uint toc_offset, const uint encoding);
 
 /*
 * Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
@@ -469,21 +470,102 @@ static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
     }
 }
 
-static int spotlight_dissect_loop(DALLOC_CTX *query,
-                                  const char *buf,
-                                  uint offset,
-                                  uint count,
-                                  const uint toc_offset,
-                                  const uint encoding)
+static int sl_unpack_cpx(DALLOC_CTX *query,
+                         const char *buf,
+                         const int offset,
+                         uint cpx_query_type,
+                         uint cpx_query_count,
+                         const uint toc_offset,
+                         const uint encoding)
 {
     EC_INIT;
-    int i, toc_index, query_length;
-    uint subcount, cpx_query_type, cpx_query_count;
-    uint64_t query_data64, query_type;
+
+    int roffset = offset;
+    uint64_t query_data64;
     uint unicode_encoding;
     uint8_t mark_exists;
     char *p;
-    int padding, slen;
+    int qlen, padding, slen;
+    sl_array_t *sl_arrary;
+    sl_dict_t *sl_dict;
+
+    switch (cpx_query_type) {
+    case SQ_CPX_TYPE_ARRAY:
+        sl_arrary = talloc_zero(query, sl_array_t);
+        EC_NEG1_LOG( roffset = sl_unpack_loop(sl_arrary, buf, offset, cpx_query_count, toc_offset, encoding) );
+        dalloc_add(query, sl_arrary, sl_array_t);
+        break;
+
+    case SQ_CPX_TYPE_DICT:
+        sl_dict = talloc_zero(query, sl_dict_t);
+        EC_NEG1_LOG( roffset = sl_unpack_loop(sl_dict, buf, offset, cpx_query_count, toc_offset, encoding) );
+        dalloc_add(query, sl_dict, sl_dict_t);
+        break;
+
+    case SQ_CPX_TYPE_STRING:
+    case SQ_CPX_TYPE_UTF16_STRING:
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        qlen = (query_data64 & 0xffff) * 8;
+        if ((padding = 8 - (query_data64 >> 32)) < 0)
+            EC_FAIL;
+        if ((slen = qlen - 8 - padding) < 1)
+            EC_FAIL;
+
+        if (cpx_query_type == SQ_CPX_TYPE_STRING) {
+            p = talloc_strndup(query, buf + offset + 8, slen);
+        } else {
+            unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 8, slen, encoding);
+            mark_exists = (unicode_encoding & SL_ENC_UTF_16);
+            unicode_encoding &= ~SL_ENC_UTF_16;
+            EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
+        }
+
+        dalloc_add(query, &p, char *);
+        roffset += qlen;
+        break;
+
+    case SQ_CPX_TYPE_FILEMETA:
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        qlen = (query_data64 & 0xffff) * 8;
+        if (qlen <= 8) {
+            EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8: %d", qlen);
+        } else {
+            EC_NEG1_LOG( sl_unpack(query, buf + offset + 8) );
+        }
+        roffset += qlen;
+        break;
+
+    case SQ_CPX_TYPE_CNIDS:
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        qlen = (query_data64 & 0xffff) * 8;
+        EC_NEG1_LOG( sl_unpack_CNID(query, buf, offset + 8, qlen, encoding) );
+        roffset += qlen;
+        break;
+
+    default:
+        EC_FAIL;
+    }
+            
+EC_CLEANUP:
+    if (ret != 0)
+        roffset = -1;
+    return roffset;
+}
+
+static int sl_unpack_loop(DALLOC_CTX *query,
+                          const char *buf,
+                          int offset,
+                          uint count,
+                          const uint toc_offset,
+                          const uint encoding)
+{
+    EC_INIT;
+    int i, toc_index, query_length;
+    uint subcount;
+    uint64_t query_data64, query_type;
+    uint cpx_query_type, cpx_query_count;
+    sl_nil_t nil;
+    sl_bool_t b;
 
     while (count > 0 && (offset < toc_offset)) {
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
@@ -499,105 +581,48 @@ static int spotlight_dissect_loop(DALLOC_CTX *query,
             cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
 
-            switch (cpx_query_type) {
-            case SQ_CPX_TYPE_ARRAY: {
-                sl_array_t *sl_arrary = talloc_zero(query, sl_array_t);
-                EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_arrary, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
-                dalloc_add(query, sl_arrary, sl_array_t);
-                break;
-            }
-
-            case SQ_CPX_TYPE_DICT: {
-                sl_dict_t *sl_dict = talloc_zero(query, sl_dict_t);
-                EC_NEG1_LOG( offset = spotlight_dissect_loop(sl_dict, buf, offset + 8, cpx_query_count, toc_offset, encoding) );
-                dalloc_add(query, sl_dict, sl_dict_t);
-                break;
-            }
-            case SQ_CPX_TYPE_STRING:
-                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
-                query_length += (query_data64 & 0xffff) * 8;
-                if ((padding = 8 - (query_data64 >> 32)) < 0)
-                    EC_FAIL;
-                if ((slen = query_length - 16 - padding) < 1)
-                    EC_FAIL;
-                p = talloc_strndup(query, buf + offset + 16, slen);
-                dalloc_add(query, &p, char *);
-                break;
-
-            case SQ_CPX_TYPE_UTF16_STRING:
-                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
-                query_length += (query_data64 & 0xffff) * 8;
-                if ((padding = 8 - (query_data64 >> 32)) < 0)
-                    EC_FAIL;
-                if ((slen = query_length - 16 - padding) < 1)
-                    EC_FAIL;
-
-                unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 16, slen, encoding);
-                mark_exists = (unicode_encoding & SL_ENC_UTF_16);
-                unicode_encoding &= ~SL_ENC_UTF_16;
-
-                EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
-                dalloc_add(query, &p, char *);
-                break;
-
-            case SQ_CPX_TYPE_FILEMETA:
-                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
-                query_length += (query_data64 & 0xffff) * 8;
-
-                if (query_length <= 8) {
-                    EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8%s", "");
-                } else {
-                    EC_NEG1_LOG( sl_unpack(query, buf + offset + 16) );
-                }
-                break;
-
-            case SQ_CPX_TYPE_CNIDS:
-                query_data64 = sl_unpack_uint64(buf, offset + 8, encoding);
-                query_length += (query_data64 & 0xffff) * 8;
-                EC_NEG1_LOG( sl_unpack_CNID(query, buf, offset + 16, query_length, encoding) );
-                break;
-            } /* switch (cpx_query_type) */
-
+            EC_NEG1_LOG( offset = sl_unpack_cpx(query, buf, offset + 8, cpx_query_type, cpx_query_count, toc_offset, encoding));
             count--;
             break;
-
-        case SQ_TYPE_NULL: {
+        case SQ_TYPE_NULL:
             subcount = query_data64 >> 32;
             if (subcount > 64)
                 EC_FAIL;
-            sl_nil_t nil = 0;
+            nil = 0;
             for (i = 0; i < subcount; i++)
                 dalloc_add(query, &nil, sl_nil_t);
+            offset += query_length;
             count -= subcount;
             break;
-        }
-        case SQ_TYPE_BOOL: {
-            sl_bool_t b = query_data64 >> 32;
+        case SQ_TYPE_BOOL:
+            b = query_data64 >> 32;
             dalloc_add(query, &b, sl_bool_t);
+            offset += query_length;
             count--;
             break;
-        }
         case SQ_TYPE_INT64:
             EC_NEG1_LOG( subcount = sl_unpack_ints(query, buf, offset, encoding) );
+            offset += query_length;
             count -= subcount;
             break;
         case SQ_TYPE_UUID:
             EC_NEG1_LOG( subcount = sl_unpack_uuid(query, buf, offset, encoding) );
+            offset += query_length;
             count -= subcount;
             break;
         case SQ_TYPE_FLOAT:
             EC_NEG1_LOG( subcount = sl_unpack_floats(query, buf, offset, encoding) );
+            offset += query_length;
             count -= subcount;
             break;
         case SQ_TYPE_DATE:
             EC_NEG1_LOG( subcount = sl_unpack_date(query, buf, offset, encoding) );
+            offset += query_length;
             count -= subcount;
             break;
         default:
             EC_FAIL;
         }
-
-        offset += query_length;
     }
 
 EC_CLEANUP:
@@ -659,7 +684,7 @@ int sl_unpack(DALLOC_CTX *query, const char *buf)
 
     toc_entries = (int)(sl_unpack_uint64(buf, toc_offset, encoding) & 0xffff);
 
-    EC_NEG1( spotlight_dissect_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
+    EC_NEG1( sl_unpack_loop(query, buf, 0, 1, toc_offset + 8, encoding) );
 
 EC_CLEANUP:
     EC_EXIT;
