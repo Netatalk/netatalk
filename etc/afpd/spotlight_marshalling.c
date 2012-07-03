@@ -485,7 +485,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     uint unicode_encoding;
     uint8_t mark_exists;
     char *p;
-    int qlen, padding, slen;
+    int qlen, used_in_last_block, slen;
     sl_array_t *sl_arrary;
     sl_dict_t *sl_dict;
 
@@ -506,10 +506,8 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     case SQ_CPX_TYPE_UTF16_STRING:
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
         qlen = (query_data64 & 0xffff) * 8;
-        if ((padding = 8 - (query_data64 >> 32)) < 0)
-            EC_FAIL;
-        if ((slen = qlen - 8 - padding) < 1)
-            EC_FAIL;
+        used_in_last_block = query_data64 >> 32;
+        slen = qlen - 8 + used_in_last_block;
 
         if (cpx_query_type == SQ_CPX_TYPE_STRING) {
             p = talloc_strndup(query, buf + offset + 8, slen);

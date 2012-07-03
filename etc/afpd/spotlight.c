@@ -204,9 +204,12 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         DALLOC_CTX *reply;
         EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
 
-        EC_ZERO( sl_unpack(query, ibuf + 22) );
+        ret = sl_unpack(query, ibuf + 22);
         dd_dump(query, 0);
-
+        if (ret != 0) {
+            LOG(log_error, logtype_sl, "sl_unpack");
+            EC_FAIL;
+        }
         char **cmd;
         EC_NULL_LOG( cmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
 
@@ -304,6 +307,7 @@ int main(int argc, char **argv)
 
 #endif
 
+#if 0
     /* Now the Spotlight types */
     sl_array_t *sl_arrary = talloc_zero(dd, sl_array_t);
     i = 0x1234;
@@ -316,25 +320,29 @@ int main(int argc, char **argv)
 
     dalloc_add(dd, sl_arrary, sl_array_t);
     dd_dump(dd, 0);
+#endif
 
     /* now parse a real spotlight packet */
-    char ibuf[8192];
-    char rbuf[8192];
-    int fd;
-    size_t len;
-    DALLOC_CTX *query;
+    if (argc > 1) {
+        char ibuf[8192];
+        char rbuf[8192];
+        int fd;
+        size_t len;
+        DALLOC_CTX *query;
 
-    EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
+        EC_NULL( query = talloc_zero(mem_ctx, DALLOC_CTX) );
 
-    EC_NEG1_LOG( fd = open("openQuery-packet.bin", O_RDONLY) );
-    EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
-    close(fd);
-    EC_NEG1_LOG( sl_unpack(query, ibuf + 24) );
+        EC_NEG1_LOG( fd = open(argv[1], O_RDONLY) );
+        EC_NEG1_LOG( len = read(fd, ibuf, 8192) );
+        close(fd);
+        EC_NEG1_LOG( sl_unpack(query, ibuf + 24) );
 
-    /* Now dump the whole thing */
-    dd_dump(query, 0);
+        /* Now dump the whole thing */
+        dd_dump(query, 0);
+    }
 
 #if 0
+    /* packing  */
     int qlen;
     char buf[MAX_SLQ_DAT];
     EC_NEG1_LOG( qlen = sl_pack(query, buf) );
