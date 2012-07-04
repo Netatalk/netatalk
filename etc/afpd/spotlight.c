@@ -35,6 +35,9 @@
 
 #include "spotlight.h"
 
+void *sl_module;
+struct sl_module_export *sl_module_export;
+
 
 /* Helper functions and stuff */
 static const char *neststrings[] = {
@@ -149,6 +152,30 @@ EC_CLEANUP:
 }
 
 /**************************************************************************************************
+ * Spotlight module functions
+ **************************************************************************************************/
+
+int sl_mod_load(const char *path)
+{
+    EC_INIT;
+
+    if ((sl_module = mod_open(path)) == NULL) {
+        LOG(log_error, logtype_sl, "sl_mod_load(%s): failed to load: %s", path, mod_error());
+        EC_FAIL;
+    }
+
+    if ((sl_module_export = mod_symbol(sl_module, "sl_mod")) == NULL) {
+        LOG(log_error, logtype_sl, "sl_mod_load(%s): mod_symbol error for symbol %s", path, "sl_mod");
+        EC_FAIL;
+    }
+
+    sl_module_export->sl_mod_init("test");
+   
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/**************************************************************************************************
  * AFP functions
  **************************************************************************************************/
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
@@ -204,15 +231,10 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         DALLOC_CTX *reply;
         EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
 
-        ret = sl_unpack(query, ibuf + 22);
-        dd_dump(query, 0);
-        if (ret != 0) {
-            LOG(log_error, logtype_sl, "sl_unpack");
-            EC_FAIL;
-        }
+        EC_NEG1_LOG( sl_unpack(query, ibuf + 22) );
+
         char **cmd;
         EC_NULL_LOG( cmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
-
 
         if (STRCMP(*cmd, ==, "fetchPropertiesForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchPropertiesForContext(obj, query, reply, vol) );
@@ -225,18 +247,14 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
             }
         }
 
-        /* Spotlight RPC status code ? 0 in all traces, we use 0xffffffff for an error, never seen from Apple */
-        if (ret == 0)
-            memset(rbuf, 0, 4);
-        else
-            memset(rbuf, 0xff, 4);
+        dd_dump(reply, 0);
+
+        memset(rbuf, 0, 4);
         *rbuflen += 4;
 
         int len;
         EC_NEG1_LOG( len = sl_pack(reply, rbuf + 4) );
         *rbuflen += len;
-
-        dd_dump(reply, 0);
 
         break;
     }

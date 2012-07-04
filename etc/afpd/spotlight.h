@@ -20,9 +20,31 @@
 #define SPOTLIGHT_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <atalk/dalloc.h>
 #include <atalk/globals.h>
+
+/**************************************************************************************************
+ * Spotlight module stuff
+ **************************************************************************************************/
+
+#define SL_MODULE_VERSION 1
+
+struct sl_module_export {
+    int sl_mod_version;
+    int (*sl_mod_init)        (void *);
+    int (*sl_mod_start_search)(void *);
+    int (*sl_mod_fetch_result)(void *);
+    int (*sl_mod_end_search)  (void *);
+};
+
+extern int sl_mod_load(const char *path);
+
+
+/**************************************************************************************************
+ * Spotlight RPC and marshalling stuff
+ **************************************************************************************************/
 
 /* FPSpotlightRPC subcommand codes */
 #define SPOTLIGHT_CMD_OPEN    1

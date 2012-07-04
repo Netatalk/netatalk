@@ -38,6 +38,7 @@
 #include "fork.h"
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
+#include "spotlight.h"
 
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
@@ -343,7 +344,8 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
-    
+    sl_mod_load(_PATH_AFPDUAMPATH "mod_spotlight.so");
+
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
 
     if (obj.options.flags & OPTION_KEEPSESSIONS) {
