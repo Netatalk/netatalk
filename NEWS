@@ -1,7 +1,7 @@
 Changes in 3.0
 ==============
-* UPD: read only mode if cnid scheme is last
-* REM: global option "icon"
+* UPD: afpd: force read only mode if cnid scheme is last
+* REM: afpd: removed global option "icon"
 * FIX: CNID path for user homes
 
 Changes in 3.0 beta2
