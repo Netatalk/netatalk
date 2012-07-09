@@ -1,3 +1,9 @@
+Changes in 3.0
+==============
+* UPD: afpd: force read only mode if cnid scheme is last
+* REM: afpd: removed global option "icon"
+* FIX: CNID path for user homes
+
 Changes in 3.0 beta2
 ====================
 * UPD: Solaris and friends: Replace initscript with SMF manifest
@@ -74,6 +80,12 @@ Changes in 3.0 alpha1
 * REM: afpd: SLP and AFP proxy support have been removed
 * REM: afpd: legacy file extension to type/creator mapping has been removed
 * REM: afpd: AppleDouble backends v1, osx and sfm have been removed
+
+Changes in 2.2.4
+================
+
+* FIX: Missing UAM links
+* FIX: Lockup in AFP logout on Fedora 17
 
 Changes in 2.2.3
 ================

@@ -76,7 +76,8 @@ static sigjmp_buf recon_jmp;
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
-
+    sigset_t sigs;
+    
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
@@ -93,8 +94,12 @@ static void afp_dsi_close(AFPObj *obj)
     }
 
     close_all_vol(obj);
-    if (obj->logout)
+    if (obj->logout) {
+        /* Block sigs, PAM/systemd/whoever might send us a SIG??? in (*obj->logout)() -> pam_close_session() */
+        sigfillset(&sigs);
+        pthread_sigmask(SIG_BLOCK, &sigs, NULL);
         (*obj->logout)();
+    }
 
     LOG(log_note, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written",
         dsi->read_count/1024.0, dsi->write_count/1024.0);

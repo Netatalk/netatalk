@@ -2,12 +2,12 @@
 .\"     Title: apple_dump
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 22 May 2012
+.\"      Date: 02 Jul 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "22 May 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "APPLE_DUMP" "1" "02 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -22,13 +22,13 @@
 apple_dump \- Dump AppleSingle/AppleDouble format data
 .SH "SYNOPSIS"
 .HP \w'\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\ 'u
-\fBapple_dump\fR\fB\fR [\-a] \fIFILE\fR | \fIDIR\fR 
+\fBapple_dump\fR\fB\fR [\-a] [\fIFILE\fR | \fIDIR\fR]
 .br
 \fBapple_dump\fR\fB\fR \-e \fIFILE\fR | \fIDIR\fR 
 .br
-\fBapple_dump\fR\fB\fR \-f \fIFILE\fR
+\fBapple_dump\fR\fB\fR \-f [\fIFILE\fR]
 .br
-\fBapple_dump\fR\fB\fR \-d \fIFILE\fR
+\fBapple_dump\fR\fB\fR \-d [\fIFILE\fR]
 .br
 \fBapple_dump\fR\fB\fR \-h | \-help | \-\-help 
 .br
@@ -37,6 +37,11 @@ apple_dump \- Dump AppleSingle/AppleDouble format data
 .PP
 \fBapple_dump\fR
 dump AppleSingle/AppleDouble format data\&.
+.PP
+With no
+\fIFILE\fR|\fIDIR\fR, or when
+\fIFILE\fR|\fIDIR\fR
+is \-, read standard input\&.
 .SH "OPTIONS"
 .PP
 \fB\-a\fR \fIFILE\fR|\fIDIR\fR

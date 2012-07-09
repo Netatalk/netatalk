@@ -9,9 +9,6 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
     save_CFLAGS="$CFLAGS"
     save_LDFLAGS="$LDFLAGS"
     save_LIBS="$LIBS"
-    export CFLAGS=""
-    export LDFLAGS=""
-    export LIBS=""
 
     AC_ARG_WITH(gssapi,
         [  --with-gssapi[[=PATH]]    path to GSSAPI for Kerberos V UAM [[auto]]],

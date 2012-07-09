@@ -435,7 +435,7 @@ extern int ad_setdate(struct adouble *, unsigned int, uint32_t);
 extern int ad_getdate(const struct adouble *, unsigned int, uint32_t *);
 
 /* ad_attr.c */
-extern int       ad_setattr(const struct adouble *, uint16_t);
+extern int       ad_setattr(const struct adouble *, const uint16_t);
 extern int       ad_getattr(const struct adouble *, uint16_t *);
 extern int       ad_setname(struct adouble *, const char *);
 extern int       ad_setid(struct adouble *, dev_t dev, ino_t ino, uint32_t, uint32_t, const void *);
