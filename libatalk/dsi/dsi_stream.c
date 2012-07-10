@@ -364,7 +364,9 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
     sfvcnt = 2;
     vec[0].sfv_fd = SFV_FD_SELF;
     vec[0].sfv_flag = 0;
-    vec[0].sfv_off = block;
+    /* Cast to unsigned long to prevent sign extension of the
+     * pointer value for the LFS case; see Apache PR 39463. */
+    vec[0].sfv_off = (unsigned long)block;
     vec[0].sfv_len = DSI_BLOCKSIZ;
     vec[1].sfv_fd = fromfd;
     vec[1].sfv_flag = 0;

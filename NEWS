@@ -1,3 +1,7 @@
+Changes in 3.0.1
+================
+* FIX: afpd: Fix a Solaris 10 SPARC sendfilev bug
+
 Changes in 3.0
 ==============
 * UPD: afpd: force read only mode if cnid scheme is last
