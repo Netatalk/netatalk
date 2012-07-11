@@ -242,6 +242,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     size_t nwritten;
     gcry_mpi_t Ma;
     char *Ra_binary = NULL;
+    uint16_t uint16;
 
     *rbuflen = 0;
 
@@ -267,7 +268,8 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 
     /* Session ID first */
     ID = dhxhash(obj);
-    *(u_int16_t *)rbuf = htons(ID);
+    uint16 = htons(ID);
+    memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
 
@@ -281,7 +283,9 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     *rbuflen += 4;
 
     /* len = length of p = PRIMEBITS/8 */
-    *(u_int16_t *)rbuf = htons((u_int16_t) PRIMEBITS/8);
+
+    uint16 = htons((uint16_t) PRIMEBITS/8);
+    memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
 
@@ -403,6 +407,7 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf, siz
     char serverNonce_bin[16];
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
+    uint16_t uint16;
 
     *rbuflen = 0;
 
@@ -488,7 +493,8 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf, siz
     /* ---- Start building reply packet ---- */
 
     /* Session ID + 1 first */
-    *(u_int16_t *)rbuf = htons(ID+1);
+    uint16 = htons(ID+1);
+    memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
 
@@ -719,7 +725,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     int ret;
 
     /* check for session id */
-    retID = ntohs(*(u_int16_t *)ibuf);
+    memcpy(&retID, ibuf, sizeof(uint16_t));
+    retID = ntohs(retID);
     if (retID == ID)
         ret = logincont1(obj, ibuf, ibuflen, rbuf, rbuflen);
     else if (retID == ID+1)

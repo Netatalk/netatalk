@@ -1996,9 +1996,12 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
         case DIRPBIT_FINFO :
             if (isad) {
                 /* Fixes #2802236 */
-                u_int16_t *fflags = (u_int16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
-                *fflags &= htons(~FINDERINFO_ISHARED);
+                uint16_t fflags;
+                memcpy(&fflags, finder_buf + FINDERINFO_FRFLAGOFF, sizeof(uint16_t));
+                fflags &= htons(~FINDERINFO_ISHARED);
+                memcpy(finder_buf + FINDERINFO_FRFLAGOFF, &fflags, sizeof(uint16_t));
                 /* #2802236 end */
+
                 if (  dir->d_did == DIRDID_ROOT ) {
                     /*
                      * Alright, we admit it, this is *really* sick!
