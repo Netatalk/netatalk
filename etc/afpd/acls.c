@@ -991,7 +991,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     EC_INIT;
     int mapped_aces = 0;
     int dirflag;
-    uint32_t *darwin_ace_count = (uint32_t *)rbuf;
+    char *darwin_ace_count = rbuf;
 #ifdef HAVE_SOLARIS_ACLS
     int ace_count = 0;
     ace_t *aces = NULL;
@@ -1040,8 +1040,9 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 
     LOG(log_debug, logtype_afpd, "get_and_map_acl: mapped %d ACEs", mapped_aces);
 
-    *darwin_ace_count = htonl(mapped_aces);
     *rbuflen += sizeof(darwin_acl_header_t) + (mapped_aces * sizeof(darwin_ace_t));
+    mapped_aces = htonl(mapped_aces);
+    memcpy(darwin_ace_count, &mapped_aces, sizeof(uint32_t));
 
     EC_STATUS(0);
 
