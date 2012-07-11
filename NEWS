@@ -1,6 +1,7 @@
 Changes in 3.0.1
 ================
 * FIX: afpd: Fix a Solaris 10 SPARC sendfilev bug
+* FIX: Fix possible alignment violations due to bad casts
 
 Changes in 3.0
 ==============
