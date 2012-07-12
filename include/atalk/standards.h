@@ -15,6 +15,10 @@
 #ifndef ATALK_STANDARDS_H
 #define ATALK_STANDARDS_H 1
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__)
 # ifndef _XOPEN_SOURCE
 #  define _XOPEN_SOURCE 600
