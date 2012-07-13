@@ -6,9 +6,10 @@
  * are checks for EINTR everywhere. 
  */
 
-#include <signal.h>
-
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+
+#include <signal.h>
 
 #if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
 extern char *getusershell (void);
@@ -58,3 +59,4 @@ extern size_t strlcpy (char *, const char *, size_t);
 extern size_t strlcat (char *, const char *, size_t);
 #endif
 
+#endif
