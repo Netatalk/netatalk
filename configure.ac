@@ -175,9 +175,6 @@ AC_NETATALK_ACL
 dnl Check for Extended Attributes support
 AC_NETATALK_EXTENDED_ATTRIBUTES
 
-dnl Check for libsmbsharemodes from Samba for Samba/Netatalk access/deny/share modes interop
-AC_NETATALK_SMB_SHAREMODES
-
 dnl Check if realpath() takes NULL
 AC_NETATALK_REALPATH
 
