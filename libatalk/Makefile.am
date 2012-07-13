@@ -18,7 +18,7 @@
 #        current+1:0:0
 #
 
-VERSION_INFO = 1:0:0
+VERSION_INFO = 2:0:0
 
 # History:          VERSION_INFO
 #
@@ -28,6 +28,7 @@ VERSION_INFO = 1:0:0
 #   3.0.0-beta1     0:0:0
 #   3.0.0-beta2     1:0:0
 #   3.0             1:0:0
+#   3.0.1           2:0:0
 
 SUBDIRS = acl adouble bstring compat cnid dsi iniparser tdb util unicode vfs
 
