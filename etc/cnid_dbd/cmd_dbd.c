@@ -251,17 +251,17 @@ int main(int argc, char **argv)
     /* Setup signal handling */
     set_signal();
 
-    /* Setup logging. Should be portable among *NIXes */
-    if (!verbose)
-        setuplog("default:info", "/dev/tty");
-    else
-        setuplog("default:debug", "/dev/tty");
-
     /* Load config */
     if (afp_config_parse(&obj, "dbd") != 0) {
         dbd_log( LOGSTD, "Couldn't load afp.conf");
         exit(EXIT_FAILURE);
     }
+
+    /* Setup logging. Should be portable among *NIXes */
+    if (!verbose)
+        setuplog("default:info", "/dev/tty");
+    else
+        setuplog("default:debug", "/dev/tty");
 
     if (load_volumes(&obj, NULL) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
