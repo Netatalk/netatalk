@@ -7,11 +7,8 @@
 #define AFPD_GLOBALS_H 1
 
 #include <sys/param.h>
-
-#ifdef ADMIN_GRP
 #include <grp.h>
 #include <sys/types.h>
-#endif /* ADMIN_GRP */
 
 #ifdef HAVE_NETDB_H
 #include <netdb.h>  /* this isn't header-protected under ultrix */
@@ -98,9 +95,7 @@ struct afp_options {
     charset_t maccharset, unixcharset; 
     mode_t umask;
     mode_t save_mask;
-#ifdef ADMIN_GRP
     gid_t admingid;
-#endif /* ADMIN_GRP */
     int    volnamelen;
     /* default value for winbind authentication */
     char *ntdomain, *ntseparator;
