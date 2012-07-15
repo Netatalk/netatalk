@@ -53,6 +53,7 @@ char *ldap_uuid_string;
 char *ldap_name_attr;
 char *ldap_group_attr;
 char *ldap_uid_attr;
+int  ldap_uuid_encoding;
 
 struct ldap_pref ldap_prefs[] = {
     {&ldap_server,     "ldap server",      0, 0, -1},
@@ -68,6 +69,7 @@ struct ldap_pref ldap_prefs[] = {
     {&ldap_name_attr,  "ldap name attr",   0, 0, -1},
     {&ldap_group_attr, "ldap group attr",  0, 0, -1},
     {&ldap_uid_attr,   "ldap uid attr",    0, 0,  0},
+    {&ldap_uuid_encoding,"ldap uuid encoding", 1, 1,  0},
     {NULL,             NULL,               0, 0, -1}
 };
 
@@ -81,6 +83,8 @@ struct pref_array prefs_array[] = {
     {"ldap groupscope",  "base",   LDAP_SCOPE_BASE},
     {"ldap groupscope",  "one",    LDAP_SCOPE_ONELEVEL},
     {"ldap groupscope",  "sub",    LDAP_SCOPE_SUBTREE},
+    {"ldap uuid encoding", "ms-guid",    LDAP_UUID_ENCODING_MSGUID},
+    {"ldap uuid encoding", "string", LDAP_UUID_ENCODING_STRING},
     {NULL,               NULL,     0}
 };
 
@@ -116,7 +120,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     static LDAP *ld     = NULL;
     LDAPMessage* msg    = NULL;
     LDAPMessage* entry  = NULL;
-    char **attribute_values = NULL;
+    struct berval **attribute_values = NULL;
     struct timeval timeout;
 
     LOG(log_maxdebug, logtype_afpd,"ldap: BEGIN");
@@ -199,27 +203,30 @@ retry:
         ret = -1;
         goto cleanup;
     }
-    attribute_values = ldap_get_values(ld, entry, attributes[0]);
+
+    attribute_values = ldap_get_values_len(ld, entry, attributes[0]);
     if (attribute_values == NULL) {
-        LOG(log_error, logtype_default, "ldap: ldap_get_values error");
+        LOG(log_error, logtype_default, "ldap: ldap_get_values_len error");
         ret = -1;
         goto cleanup;
     }
 
     LOG(log_maxdebug, logtype_afpd,"ldap: search result: %s: %s",
-        attributes[0], attribute_values[0]);
+        attributes[0], attribute_values[0]->bv_val);
 
-    /* allocate result */
-    *result = strdup(attribute_values[0]);
+    /* allocate and copy result */
+    *result = calloc(1, attribute_values[0]->bv_len + 1);
+    memcpy(*result, attribute_values[0]->bv_val, attribute_values[0]->bv_len + 1);
+
     if (*result == NULL) {
-        LOG(log_error, logtype_default, "ldap: strdup error: %s",strerror(errno));
+        LOG(log_error, logtype_default, "ldap: memcopy error: %s", strerror(errno));
         ret = -1;
         goto cleanup;
     }
 
 cleanup:
     if (attribute_values)
-        ldap_value_free(attribute_values);
+        ldap_value_free_len(attribute_values);
     /* FIXME: is there another way to free entry ? */
     while (entry != NULL)
         entry = ldap_next_entry(ld, entry);
@@ -288,8 +295,26 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
     } else  { /* type hopefully == UUID_USER */
         ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, uuid_string);
     }
+
     if (ret != 1)
         return -1;
+
+    if(ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
+        /* Convert byte array to UUID string (no dashes) */
+        unsigned char* uuid_bytes = (unsigned char*) *uuid_string;
+        *uuid_string = malloc(37);
+        snprintf(*uuid_string, 37,
+            "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+            uuid_bytes[3], uuid_bytes[2], uuid_bytes[1], uuid_bytes[0], /* Data1 */
+            uuid_bytes[5], uuid_bytes[4], /* Data2 */
+            uuid_bytes[7], uuid_bytes[6], /* Data3 */
+            uuid_bytes[8], uuid_bytes[9], /* Data4 - High Bytes */
+            uuid_bytes[10], uuid_bytes[11], uuid_bytes[12], /* Data4 - Low Bytes */
+            uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
+        free(uuid_bytes);
+        LOG(log_error, logtype_default, "ldap_getnamefromuuid: uuid_string: %s", *uuid_string);
+    }
+
     return 0;
 }
 
@@ -313,8 +338,47 @@ int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
     if (!ldap_config_valid)
         return -1;
 
-    /* make filter */
-    len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
+    if(ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
+        /* Convert to LDAP-safe binary encoding for direct query of AD objectGUID attribute */
+        char* stripped = malloc(strlen(uuidstr));
+
+        int i = 0;
+        int s = 0;
+        char c;
+        while(c = uuidstr[i]) {
+            if((c >='a' && c <= 'f')
+                || (c >= 'A' && c <= 'F')
+                || (c >= '0' && c <= '9')) {
+                stripped[s++] = toupper(c);
+            }
+            i++;
+        }
+
+        /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
+        char* ldap_bytes = malloc(49);
+        snprintf(ldap_bytes, 49,
+            "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c"
+            "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c",
+            /* Data1 (uint32) */
+            stripped[6], stripped[7], stripped[4], stripped[5],
+            stripped[2], stripped[3], stripped[0], stripped[1],
+            /* Data2 (uint16) */
+            stripped[10], stripped[11], stripped[8], stripped[9],
+            /* Data3 (uint16) */
+            stripped[14], stripped[15], stripped[12], stripped[13],
+            /* Data4 (uint64) */
+            stripped[16], stripped[17], stripped[18], stripped[19],
+            stripped[20], stripped[21], stripped[22], stripped[23],
+            stripped[24], stripped[25], stripped[26], stripped[27],
+            stripped[28], stripped[29], stripped[30], stripped[31]);
+        len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, ldap_bytes);
+
+        free(ldap_bytes);
+        free(stripped);
+    } else {
+        len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
+    }
+
     if (len >= 256 || len == -1) {
         LOG(log_error, logtype_default, "ldap_getnamefromuuid: filter overflow:%d, \"%s\"", len, filter);
         return -1;
