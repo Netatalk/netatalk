@@ -300,16 +300,6 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
-    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus path", "/bin/dbus-daemon");
-    LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
-    if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
-        LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
-        netatalk_exit(EXITERR_CONF);
-    }
-
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
-    system("tracker-control -s");
-
     if ((base = event_base_new()) == NULL) {
         LOG(log_error, logtype_afpd, "Error starting event loop");
         netatalk_exit(EXITERR_CONF);
@@ -334,10 +324,22 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus path", "/bin/dbus-daemon");
+    LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+    if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+        netatalk_exit(EXITERR_CONF);
+    }
+
+    sleep(1);
+
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    system("/usr/bin/tracker-control -s");
+
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    if (afpd_pid != -1 || cnid_metad_pid != -1) {
+    if (afpd_pid != -1 || cnid_metad_pid != -1 || dbus_pid != -1) {
         if (afpd_pid != -1)
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
         if (cnid_metad_pid != -1)
