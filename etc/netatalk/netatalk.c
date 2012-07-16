@@ -45,11 +45,12 @@ static void kill_childs(int sig, ...);
 /* static variables */
 static AFPObj obj;
 static sig_atomic_t got_chldsig;
-static pid_t afpd_pid = -1,  cnid_metad_pid = -1;
-static uint afpd_restarts, cnid_metad_restarts;
+static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1;
+static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
+static const char *dbus_path;
 
 /******************************************************************
  * libevent helper functions
@@ -106,14 +107,16 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(sigquit_ev);
     event_del(timer_ev);
 
-    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, NULL);
+    system("tracker-control -t");
+    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
 /* SIGQUIT callback */
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, NULL);
+    system("tracker-control -t");
+    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
 /* SIGCHLD callback */
@@ -122,30 +125,30 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
     int status, i;
     pid_t pid;
 
-    LOG(log_debug, logtype_afpd, "Got SIGCHLD event");
-  
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status))
-                LOG(log_info, logtype_afpd, "child[%d]: exited %d", pid, WEXITSTATUS(status));
+                LOG(log_info, logtype_default, "child[%d]: exited %d", pid, WEXITSTATUS(status));
             else
-                LOG(log_info, logtype_afpd, "child[%d]: done", pid);
+                LOG(log_info, logtype_default, "child[%d]: done", pid);
         } else {
             if (WIFSIGNALED(status))
-                LOG(log_info, logtype_afpd, "child[%d]: killed by signal %d", pid, WTERMSIG(status));
+                LOG(log_info, logtype_default, "child[%d]: killed by signal %d", pid, WTERMSIG(status));
             else
-                LOG(log_info, logtype_afpd, "child[%d]: died", pid);
+                LOG(log_info, logtype_default, "child[%d]: died", pid);
         }
 
         if (pid == afpd_pid)
             afpd_pid = -1;
-        else if (pid = cnid_metad_pid)
+        else if (pid == cnid_metad_pid)
             cnid_metad_pid = -1;
+        else if (pid == dbus_pid)
+            dbus_pid = -1;
         else
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
     }
 
-    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1)
+    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1 && dbus_pid == -1)
         event_base_loopbreak(base);
 }
 
@@ -161,7 +164,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         afpd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
         if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-            LOG(log_error, logtype_afpd, "Error starting 'afpd'");
+            LOG(log_error, logtype_default, "Error starting 'afpd'");
         }
     }
 
@@ -169,7 +172,15 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         cnid_metad_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
         if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-            LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
+            LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
+        }
+    }
+
+    if (dbus_pid == -1) {
+        dbus_restarts++;
+        LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
+        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus.session.conf", NULL)) == -1) {
+            LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
         }
     }
 }
@@ -289,6 +300,16 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus path", "/bin/dbus-daemon");
+    LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+    if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+        netatalk_exit(EXITERR_CONF);
+    }
+
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    system("tracker-control -s");
+
     if ((base = event_base_new()) == NULL) {
         LOG(log_error, logtype_afpd, "Error starting event loop");
         netatalk_exit(EXITERR_CONF);
@@ -321,7 +342,9 @@ int main(int argc, char **argv)
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
         if (cnid_metad_pid != -1)
             LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
-        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, NULL);
+        if (dbus_pid != -1)
+            LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
+        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
     }
 
     LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");
