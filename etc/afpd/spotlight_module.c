@@ -16,21 +16,28 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifndef DALLOC_H
-#define DALLOC_H
+#include <atalk/util.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
 
-#include <atalk/talloc.h>
+#include "spotlight.h"
 
-/* dynamic datastore */
-typedef struct {
-    void **dd_talloc_array;
-} DALLOC_CTX;
+int sl_mod_init(void *p)
+{
+    EC_INIT;
 
-/* Use dalloc_add() macro, not this function */
-extern int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_t size);
+    const char *msg = p;
 
-#define dalloc_add(d, obj, type) dalloc_add_talloc_chunk((d), talloc((d), type), (obj), sizeof(type));
-extern void *dalloc_get(const DALLOC_CTX *d, ...);
-extern void *dalloc_value_for_key(const DALLOC_CTX *d, ...);
+    LOG(log_note, logtype_sl, "sl_mod_init: %s", msg);
 
-#endif  /* DALLOC_H */
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+struct sl_module_export sl_mod = {
+    SL_MODULE_VERSION,
+    sl_mod_init,
+    NULL,
+    NULL,
+    NULL
+};

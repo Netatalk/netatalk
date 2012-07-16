@@ -147,6 +147,12 @@ EC_CLEANUP:
 static int sl_rpc_openQuery(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 {
     EC_INIT;
+
+    char **sl_query;
+    EC_NULL_LOG( sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryString") );
+
+    LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", *sl_query);
+
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -232,6 +238,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
 
         EC_NEG1_LOG( sl_unpack(query, ibuf + 22) );
+        dd_dump(query, 0);
 
         char **cmd;
         EC_NULL_LOG( cmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
