@@ -77,6 +77,8 @@ fce_SOURCES = fce_api.c fce_util.c
 fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
 fce_LDADD = $(top_builddir)/libatalk/libatalk.la
 
+
+if HAVE_TRACKER
 spot_SOURCES = spotlight.c spotlight_marshalling.c
 spot_CFLAGS = -DSPOT_TEST_MAIN
 spot_LDADD = $(top_builddir)/libatalk/libatalk.la
@@ -84,7 +86,6 @@ spot_LDADD = $(top_builddir)/libatalk/libatalk.la
 moduledir = @UAMS_PATH@
 module_LTLIBRARIES = mod_spotlight.la
 
-if HAVE_TRACKER
 mod_spotlight_la_SOURCES = spotlight_module.c
 mod_spotlight_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@
 mod_spotlight_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@
