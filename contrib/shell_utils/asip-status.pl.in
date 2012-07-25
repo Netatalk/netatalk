@@ -240,8 +240,9 @@ sub parse_FPGetSrvrInfo()
 	my (@flags) = parse_afp_flags($flags);
 
 	print "Flags: ";
-	print "$flags - " if ($main::debug);
-	print join(",", @flags) . "\n";
+	print "$flags" if ($main::debug);
+	print "\n";
+	print join("\n", @flags) . "\n";
 
 	# server name starts at offset+10, length byte first.
 
@@ -411,18 +412,22 @@ sub parse_afp_flags
 
 	# $flags is a 16 bit little-endian number
 
-	push (@flags, "SupportsCopyFile") if ($flags & (1<<0));
-	push (@flags, "SupportsChgPwd") if ($flags & (1<<1));
-	push (@flags, "DontAllowSavePwd") if ($flags & (1<<2));
-	push (@flags, "SupportsServerMessages") if ($flags & (1<<3));
-	push (@flags, "SupportsServerSignature") if ($flags & (1<<4));
-	push (@flags, "SupportsTCP/IP") if ($flags & (1<<5));
-	push (@flags, "SupportsSrvrNotifications") if ($flags & (1<<6));
-	push (@flags, "SupportsReconnect") if ($flags & (1<<7));
-	push (@flags, "SupportsOpenDirectory") if ($flags & (1<<8));
-	push (@flags, "SupportsUTF8Servername") if ($flags & (1<<9));
-	push (@flags, "SupportsUUIDs") if ($flags & (1<<10));
-	push (@flags, "SupportsSuperClient") if ($flags & (1<<15));
+	push (@flags, "    SupportsCopyFile") if ($flags & (1<<0));
+	push (@flags, "    SupportsChgPwd") if ($flags & (1<<1));
+	push (@flags, "    DontAllowSavePwd") if ($flags & (1<<2));
+	push (@flags, "    SupportsServerMessages") if ($flags & (1<<3));
+	push (@flags, "    SupportsServerSignature") if ($flags & (1<<4));
+	push (@flags, "    SupportsTCP/IP") if ($flags & (1<<5));
+	push (@flags, "    SupportsSrvrNotifications") if ($flags & (1<<6));
+	push (@flags, "    SupportsReconnect") if ($flags & (1<<7));
+	push (@flags, "    SupportsOpenDirectory") if ($flags & (1<<8));
+	push (@flags, "    SupportsUTF8Servername") if ($flags & (1<<9));
+	push (@flags, "    SupportsUUIDs") if ($flags & (1<<10));
+	push (@flags, "    SupportsExtSleep") if ($flags & (1<<11));
+	push (@flags, "    UnknownBit12") if ($flags & (1<<12));
+	push (@flags, "    UnknownBit13") if ($flags & (1<<13));
+	push (@flags, "    UnknownBit14") if ($flags & (1<<14));
+	push (@flags, "    SupportsSuperClient") if ($flags & (1<<15));
 
 	return @flags;
 }
