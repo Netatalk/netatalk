@@ -2,12 +2,12 @@
 .\"     Title: asip-status.pl
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02 Sep 2011
+.\"      Date: 24 Jul 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "ASIP\-STATUS\&.PL" "1" "02 Sep 2011" "Netatalk 3.0" "Netatalk 3.0"
+.TH "ASIP\-STATUS\&.PL" "1" "24 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -60,22 +60,28 @@ Show version\&.
 .RS 4
 .\}
 .nf
-\fBasip\-status\&.pl\fR 192\&.168\&.21\&.2
-AFP reply from 192\&.168\&.21\&.2:548
+\fBasip\-status\&.pl\fR 192\&.168\&.1\&.15
+AFP reply from 192\&.168\&.1\&.15:548
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
 Request ID: 57005
 Machine type: Macintosh
 AFP versions: AFPVersion 1\&.1,AFPVersion 2\&.0,AFPVersion 2\&.1,AFP2\&.2
 UAMs: Cleartxt passwrd,Randnum exchange,2\-Way Randnum exchange
-Flags: SupportsCopyFile,SupportsChgPwd,SupportsServerMessages,
-SupportsServerSignature,SupportsTCP/IP,SupportsSuperClient
-Server name: PowerMac 9600/200
+Volume Icon & Mask: Yes
+Flags: 
+    SupportsCopyFile
+    SupportsChgPwd
+    SupportsServerMessages
+    SupportsServerSignature
+    SupportsTCP/IP
+    SupportsSuperClient
+Server name: bookchan
 Signature:
-04 c1 6e 59 04 c1 6e 59 04 c1 6e 59 04 c1 6e 59  \&.\&.nY\&.\&.nY\&.\&.nY\&.\&.nY
+04 1d 65 23 04 1d 65 23 04 1d 65 23 04 1d 65 23  \&.\&.e#\&.\&.e#\&.\&.e#\&.\&.e#
                                                   
-Network address: 192\&.168\&.21\&.2:548 (tcp/ip address and port)
-Network address: 10\&.20 (ddp address)
+Network address: 192\&.168\&.1\&.15:548 (TCP/IP address and port)
+Network address: 65280\&.128 (ddp address)
 .fi
 .if n \{\
 .RE
@@ -90,20 +96,27 @@ AFP reply from myserver:10548
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
 Request ID: 57005
-Machine type: Netatalk
-AFP versions: AFPVersion 1\&.1,AFPVersion 2\&.0,AFPVersion 2\&.1,AFP2\&.2,AFPX03,
-AFP3\&.1
-UAMs: Cleartxt passwrd,Randnum exchange,2\-Way Randnum exchange,DHCAST128
-Flags: SupportsCopyFile,SupportsServerMessages,SupportsServerSignature,
-SupportsTCP/IP,SupportsSrvrNotifications,SupportsOpenDirectory,
-SupportsUTF8Servername,SupportsSuperClient
-Server name: Fire V480
+Machine type: Netatalk3\&.0
+AFP versions: AFP2\&.2,AFPX03,AFP3\&.1,AFP3\&.2,AFP3\&.3
+UAMs: DHX2,DHCAST128
+Volume Icon & Mask: Yes
+Flags: 
+    SupportsCopyFile
+    SupportsServerMessages
+    SupportsServerSignature
+    SupportsTCP/IP
+    SupportsSrvrNotifications
+    SupportsOpenDirectory
+    SupportsUTF8Servername
+    SupportsUUIDs
+    SupportsExtSleep
+    SupportsSuperClient
+Server name: myserver
 Signature:
-83 29 cc 60 83 29 cc 60 83 29 cc 60 83 29 cc 60  \&.)\&.`\&.)\&.`\&.)\&.`\&.)\&.`
+8a c6 12 3a 0e d9 95 3e 6f 31 e3 a9 17 f5 70 f6  \&.\&.\&.:\&.\&.\&.>o1\&.\&.\&.\&.p\&.
                                                   
-Network address: 192\&.168\&.21\&.1:10548 (TCP/IP address and port)
-Network address: 65282\&.142 (ddp address)
-UTF8 Servername: Fire V480
+Network address: 192\&.168\&.1\&.154:10548 (TCP/IP address and port)
+UTF8 Servername: myserver
 .fi
 .if n \{\
 .RE

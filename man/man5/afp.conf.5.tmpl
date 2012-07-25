@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 06 Jun 2012
+.\"      Date: 25 Jul 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "06 Jun 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "25 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -331,6 +331,21 @@ ldap uuid string = \fISTRING\fR \fB(G)\fR
 Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
 .sp
 Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
+.RE
+.PP
+ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
+.RS 4
+Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
+.PP
+string
+.RS 4
+UUID is a string, use with eg OpenDirectory\&.
+.RE
+.PP
+ms\-guid
+.RS 4
+Binary objectGUID from Active Directory
+.RE
 .RE
 .PP
 ldap group attr = \fIdn\fR \fB(G)\fR
