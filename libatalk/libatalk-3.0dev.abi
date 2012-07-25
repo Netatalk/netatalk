@@ -329,12 +329,13 @@ ldap_group_attr: 0x0
 ldap_groupbase: 0x0
 ldap_groupscope: 0
 ldap_name_attr: 0x0
-ldap_prefs: {{pref = 0x0, name = "ldap server", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap auth method", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap auth dn", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap auth pw", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap userbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap userscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap groupbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap groupscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap uuid attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uuid string", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap name attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap group attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uid attr", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = 0x0, strorint = 0, intfromarray = 0, valid = -1}}
+ldap_prefs: {{pref = 0x0, name = "ldap server", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap auth method", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap auth dn", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap auth pw", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap userbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap userscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap groupbase", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap groupscope", strorint = 1, intfromarray = 1, valid = -1}, {pref = 0x0, name = "ldap uuid attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uuid string", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap name attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap group attr", strorint = 0, intfromarray = 0, valid = -1}, {pref = 0x0, name = "ldap uid attr", strorint = 0, intfromarray = 0, valid = 0}, {pref = 0x0, name = "ldap uuid encoding", strorint = 1, intfromarray = 1, valid = 0}, {pref = 0x0, name = 0x0, strorint = 0, intfromarray = 0, valid = -1}}
 ldap_server: 0x0
 ldap_uid_attr: 0x0
 ldap_userbase: 0x0
 ldap_userscope: 0
 ldap_uuid_attr: 0x0
+ldap_uuid_encoding: 0
 ldap_uuid_string: 0x0
 list_eas: int (const struct vol *, char *, size_t *, const char *, int)
 load_charset: int (struct vol *)
@@ -358,7 +359,7 @@ openflags2logstr: const char *(int)
 posix_chmod: int (const char *, mode_t)
 posix_fchmod: int (int, mode_t)
 precompose_w: size_t (uint16_t *, size_t, uint16_t *, size_t *)
-prefs_array: {{pref = "ldap auth method", valuestring = "none", value = 0}, {pref = "ldap auth method", valuestring = "simple", value = 128}, {pref = "ldap auth method", valuestring = "sasl", value = 163}, {pref = "ldap userscope", valuestring = "base", value = 0}, {pref = "ldap userscope", valuestring = "one", value = 1}, {pref = "ldap userscope", valuestring = "sub", value = 2}, {pref = "ldap groupscope", valuestring = "base", value = 0}, {pref = "ldap groupscope", valuestring = "one", value = 1}, {pref = "ldap groupscope", valuestring = "sub", value = 2}, {pref = 0x0, valuestring = 0x0, value = 0}}
+prefs_array: {{pref = "ldap auth method", valuestring = "none", value = 0}, {pref = "ldap auth method", valuestring = "simple", value = 128}, {pref = "ldap auth method", valuestring = "sasl", value = 163}, {pref = "ldap userscope", valuestring = "base", value = 0}, {pref = "ldap userscope", valuestring = "one", value = 1}, {pref = "ldap userscope", valuestring = "sub", value = 2}, {pref = "ldap groupscope", valuestring = "base", value = 0}, {pref = "ldap groupscope", valuestring = "one", value = 1}, {pref = "ldap groupscope", valuestring = "sub", value = 2}, {pref = "ldap uuid encoding", valuestring = "ms-guid", value = 1}, {pref = "ldap uuid encoding", valuestring = "string", value = 0}, {pref = 0x0, valuestring = 0x0, value = 0}}
 prequeue: qnode_t *(q_t *, void *)
 queue_destroy: void (q_t *, void (*)(void *))
 queue_init: q_t *(void)
