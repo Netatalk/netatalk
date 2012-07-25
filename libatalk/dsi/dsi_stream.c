@@ -400,7 +400,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
 #endif /* defined(SOLARIS) || defined(FREEBSD) */
 #endif /* HAVE_SENDFILEV */
 
-                if (dsi_peek(dsi)) {
+                if (dsi_peek(dsi) != 0) {
                     ret = -1;
                     goto exit;
                 }
@@ -533,7 +533,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
           break;
       else if (len < 0) { /* error */
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
-              if (!dsi_peek(dsi)) {
+              if (dsi_peek(dsi) != 0) {
                   continue;
               }
           }
