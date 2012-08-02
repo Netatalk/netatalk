@@ -1,4 +1,3 @@
-
 /*-------------------------------------------------------------------------*/
 /**
    @file    iniparser.c
@@ -35,9 +34,9 @@ typedef enum _line_status_ {
 
 /*-------------------------------------------------------------------------*/
 /**
-  @brief	Remove blanks at the beginning and the end of a string.
-  @param	s	String to parse.
-  @return	ptr to statically allocated string.
+  @brief    Remove blanks at the beginning and the end of a string.
+  @param    s   String to parse.
+  @return   ptr to statically allocated string.
 
   This function returns a pointer to a statically allocated string,
   which is identical to the input string, except that all blank
@@ -50,21 +49,21 @@ typedef enum _line_status_ {
 static char * strstrip(char * s)
 {
     static char l[ASCIILINESZ+1];
-	char * last ;
-	
+    char * last ;
+
     if (s==NULL) return NULL ;
-    
-	while (isspace((int)*s) && *s) s++;
-	memset(l, 0, ASCIILINESZ+1);
-	strcpy(l, s);
-	last = l + strlen(l);
-	while (last > l) {
-		if (!isspace((int)*(last-1)))
-			break ;
-		last -- ;
-	}
-	*last = (char)0;
-	return (char*)l ;
+
+    while (isspace((int)*s) && *s) s++;
+    memset(l, 0, ASCIILINESZ+1);
+    strcpy(l, s);
+    last = l + strlen(l);
+    while (last > l) {
+        if (!isspace((int)*(last-1)))
+            break ;
+        last -- ;
+    }
+    *last = (char)0;
+    return (char*)l ;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -441,7 +440,7 @@ void iniparser_unset(dictionary * ini, char *section, char * key)
 
 /*-------------------------------------------------------------------------*/
 /**
-  @brief	Load a single line from an INI file
+  @brief    Load a single line from an INI file
   @param    input_line  Input line, may be concatenated multi-line input
   @param    section     Output space to store section
   @param    key         Output space to store key
@@ -454,7 +453,7 @@ static line_status iniparser_line(
     char * section,
     char * key,
     char * value)
-{   
+{
     line_status sta ;
     char        line[ASCIILINESZ+1];
     int         len ;
@@ -468,7 +467,7 @@ static line_status iniparser_line(
         sta = LINE_EMPTY ;
     } else if (line[0]=='#' || line[0]==';') {
         /* Comment line */
-        sta = LINE_COMMENT ; 
+        sta = LINE_COMMENT ;
     } else if (line[0]=='[' && line[len-1]==']') {
         /* Section name */
         sscanf(line, "[%[^]]", section);
@@ -541,7 +540,7 @@ dictionary * iniparser_load(const char * ininame)
     dictionary * dict ;
 
     if ((inifile=fopen(ininame, "r"))==NULL) {
-        LOG(logtype_default, log_error, "iniparser: cannot open \"%s\"", ininame);
+        LOG(log_error, logtype_default, "iniparser: cannot open \"%s\"", ininame);
         return NULL ;
     }
 
@@ -574,7 +573,7 @@ dictionary * iniparser_load(const char * ininame)
             continue;
         /* Safety check against buffer overflows */
         if (line[len]!='\n') {
-            LOG(logtype_default, log_error, "iniparser: input line too long in \"%s\" (lineno: %d)",
+            LOG(log_error, logtype_default, "iniparser: input line too long in \"%s\" (lineno: %d)",
                 ininame, lineno);
             dictionary_del(dict);
             fclose(in);
@@ -604,7 +603,7 @@ dictionary * iniparser_load(const char * ininame)
         case LINE_VALUE:
             if (strcmp(key, "include") == 0) {
                 if ((include = fopen(val, "r")) == NULL) {
-                    LOG(logtype_default, log_error, "iniparser: cannot open \"%s\"", val);
+                    LOG(log_error, logtype_default, "iniparser: cannot open \"%s\"", val);
                     continue;
                 }
                 in = include;
@@ -613,7 +612,7 @@ dictionary * iniparser_load(const char * ininame)
             errs = dictionary_set(dict, section, key, val) ;
             break ;
         case LINE_ERROR:
-            LOG(logtype_default, log_error, "iniparser: syntax error in %s (lineno: %d): %s",
+            LOG(log_error, logtype_default, "iniparser: syntax error in %s (lineno: %d): %s",
                 ininame, lineno, line);
             errs++ ;
             break;
@@ -623,7 +622,7 @@ dictionary * iniparser_load(const char * ininame)
         memset(line, 0, ASCIILINESZ);
         last=0;
         if (errs<0) {
-            LOG(logtype_default, log_error, "iniparser: memory allocation failure");
+            LOG(log_error, logtype_default, "iniparser: memory allocation failure");
             break ;
         }
     }
