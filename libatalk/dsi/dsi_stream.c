@@ -533,7 +533,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
           break;
       else if (len < 0) { /* error */
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
-              if (dsi_peek(dsi) != 0) {
+              if (dsi_peek(dsi) == 0) {
                   continue;
               }
           }
