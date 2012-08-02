@@ -73,9 +73,20 @@ Automake is a tool that generates  'Makefile.in' files.
 
 Documentation: http://www.gnu.org/software/automake/
 
+Required
+========
+5. Berkeley DB
+Berkeley DB is a programmatic toolkit that provides fast, reliable,
+scalable, and mission-critical database support to software
+developers. BDB can downloaded from
+http://www.oracle.com/database/berkeley-db/index.html
+Netatalk's CNID database uses the library and header files from BDB.
+Currently, Netatalk supports BDB 4.6 and later.
+
+
 Optional
 ========
-5. OpenSSL and/or Libgcrypt
+6. OpenSSL and/or Libgcrypt
 The OpenSSL Project is a collaborative effort to develop a robust,
 commercial-grade, full-featured, and Open Source toolkit implementing
 the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
@@ -83,7 +94,7 @@ v1) protocols as well as a full-strength general purpose cryptography
 library.
 This is required to enable DHX login support.
 
-Get everything at http://www.openssl.org/ 
+Get everything at http://www.openssl.org/
 
 The Libgcrypt is a general purpose cryptographic library based on
 the code from GnuPG.
@@ -91,7 +102,7 @@ This is required to enable DHX2 login support.
 
 Get everything at http://directory.fsf.org/project/libgcrypt/
 
-6. TCP Wrappers 
+7. TCP Wrappers
 Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
 programs log the client host name of incoming telnet, ftp, rsh,
 rlogin, finger etc. requests. Security options are: access control per
@@ -102,7 +113,7 @@ Netatalk uses TCP Wrappers to authorize host access when using
 afpovertcp. It should be noted that if DDP is in use, the connection
 will still be allowed as TCP Wrappers do not impact DDP connections.
 
-7. PAM (Pluggable Authentication Modules) 
+8. PAM (Pluggable Authentication Modules)
 PAM provides a flexible mechanism for authenticating
 users. PAM was invented by SUN Microsystems.
 
@@ -113,14 +124,6 @@ administrator to choose how applications authenticate users.
 You can get the Linux PAM documentation and sources from
 http://www.kernel.org/pub/linux/libs/pam/
 Netatalk also supports other standard PAM implementations such as OpenPAM.
-
-8. Berkeley DB
-Berkeley DB is a programmatic toolkit that provides fast, reliable,
-scalable, and mission-critical database support to software
-developers. BDB can downloaded from
-http://www.oracle.com/database/berkeley-db/index.html
-Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.6 and later.
 
 Error checking and logging
 ==========================
@@ -197,11 +200,11 @@ The ini parser is taken from <http://ndevilla.free.fr/iniparser/>.
 It has been slightly modified:
 - case-sensitive
 - "include" directive added
-- iniparser_getstrdup() to complemnt iniparser_getstring(), it return allocated strings
-  which the caller must free as necessary
-- the API has been modifed such that all iniparser_get* funcs take a section and a parameter
-  as sepereta args instead of one string of the form "section:parameter" in the original
-  library
+- iniparser_getstrdup() to complemnt iniparser_getstring(), it return allocated
+  strings which the caller must free as necessary
+- the API has been modifed such that all iniparser_get* funcs take a section and
+  a parameter as sepereta args instead of one string of the form "section:parameter"
+  in the original library
 
 CNID Database Daemons
 =====================
@@ -213,15 +216,15 @@ There is one cnid_dbd daemon per netatalk volume. The underlying database
 structure is based on Berkeley DB and the database format is the same
 as in the cdb CNID backend, so this can be used as a drop-in replacement.
 
-Advantages: 
+Advantages:
 
 - No locking issues or leftover locks due to crashed afpd daemons any
   more. Since there is only one thread of control accessing the
   database, no locking is needed and changes appear atomic.
 
 - Berkeley DB transactions are difficult to get right with several
-  processes attempting to access the CNID database simultanously. This 
-  is much easier with a single process and the database can be made nearly 
+  processes attempting to access the CNID database simultanously. This
+  is much easier with a single process and the database can be made nearly
   crashproof this way (at a performance cost).
 
 - No problems with user permissions and access to underlying database
@@ -254,7 +257,7 @@ Disadvantages:
   Kernel 2.4.18 using unix domain sockets. The requests are "empty"
   (no database lookups/changes), so this is just the IPC
   overhead.
-  
+
   I have not measured the effects of the advantages of simultanous
   database access.
 
