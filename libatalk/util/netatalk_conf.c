@@ -1025,6 +1025,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 LOG(log_warning, logtype_afpd, "home name must contain $u.");
                 p = "$u's home";
             }
+            if (strchr(p, ':') != NULL) {
+                LOG(log_warning, logtype_afpd, "home name must not contain \":\".");
+                p = "$u's home";
+            }
             strlcpy(tmp, p, MAXPATHLEN);
         } else {
             strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);

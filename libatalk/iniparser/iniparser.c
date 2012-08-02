@@ -598,6 +598,8 @@ dictionary * iniparser_load(const char * ininame)
         case LINE_COMMENT:
             break ;
         case LINE_SECTION:
+            if (strchr(section, ':') != NULL)
+                LOG(log_error, logtype_default, "iniparser: syntax error \"%s\" section name must not contain \":\".", section);
             errs = dictionary_set(dict, section, NULL, NULL);
             break ;
         case LINE_VALUE:
