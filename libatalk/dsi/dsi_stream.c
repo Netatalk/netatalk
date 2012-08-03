@@ -338,13 +338,16 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
     len = sys_sendfile(dsi->socket, fromfd, &pos, length - written);
         
     if (len < 0) {
-      if (errno == EINTR)
-          continue;
       if (errno == EINVAL || errno == ENOSYS) {
           ret = -1;
           goto exit;
       }          
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+          /*
+           * May return EINTR too, see:
+           * http://wesunsolve.net/bugid/id/6408517
+           * https://issues.apache.org/bugzilla/show_bug.cgi?id=44550
+           */
 #if defined(SOLARIS) || defined(FREEBSD)
           if (pos > offset) {
               /* we actually have sent sth., adjust counters and keep trying */
