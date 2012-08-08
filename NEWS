@@ -8,6 +8,7 @@ Changes in 3.0.1
 * FIX: Fix possible alignment violations due to bad casts
 * FIX: dbd: Fix logging
 * FIX: apple_dump: Extended Attributes AppleDouble support for *BSD
+* FIX: handling of '/' and ':' in volume name
 * UPD: Install relevant includes necessary for building programs with
        installed headers and shared lib libatalk
 * REM: Remove --with-smbsharemodes configure option, it was an

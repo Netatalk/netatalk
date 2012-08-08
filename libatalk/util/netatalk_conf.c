@@ -562,8 +562,8 @@ static struct vol *creatvol(AFPObj *obj,
 {
     EC_INIT;
     struct vol  *volume = NULL;
-    int         suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
-    char        tmpname[AFPVOL_U8MNAMELEN+1];
+    int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
+    char        *tmpname;
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
     uint16_t    flags;
@@ -642,9 +642,14 @@ static struct vol *creatvol(AFPObj *obj,
     else
     EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
+    vlen = strlen(name);
+    tmpname = strdup(name);
+    for(i = 0; i < vlen; i++)
+        if(tmpname[i] == '/') tmpname[i] = ':';
+
     bstring dbpath;
     EC_NULL_LOG( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
-    EC_NULL_LOG( dbpath = bformat("%s/%s/", val, name) );
+    EC_NULL_LOG( dbpath = bformat("%s/%s/", val, tmpname) );
     EC_NULL_LOG( volume->v_dbpath = strdup(bdata(dbpath)) );
     bdestroy(dbpath);
 
@@ -795,12 +800,9 @@ static struct vol *creatvol(AFPObj *obj,
     /* because v_vid has not been decided yet. */
     suffixlen = sprintf(suffix, "#%X", lastvid + 1 );
 
-
-    vlen = strlen( name );
-
     /* Unicode Volume Name */
     /* Firstly convert name from unixcharset to UTF8-MAC */
-    flags = CONV_IGNORE;
+    flags = CONV_IGNORE | CONV_ALLOW_SLASH;
     tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
     if (tmpvlen <= 0) {
         strcpy(tmpname, "???");
@@ -810,7 +812,7 @@ static struct vol *creatvol(AFPObj *obj,
     /* Do we have to mangle ? */
     if ( (flags & CONV_REQMANGLE) || (tmpvlen > obj->options.volnamelen)) {
         if (tmpvlen + suffixlen > obj->options.volnamelen) {
-            flags = CONV_FORCE;
+            flags = CONV_FORCE | CONV_ALLOW_SLASH;
             tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, obj->options.volnamelen - suffixlen, &flags);
             tmpname[tmpvlen >= 0 ? tmpvlen : 0] = 0;
         }
@@ -826,7 +828,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Maccharset Volume Name */
     /* Firsty convert name from unixcharset to maccharset */
-    flags = CONV_IGNORE;
+    flags = CONV_IGNORE | CONV_ALLOW_SLASH;
     tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
     if (tmpvlen <= 0) {
         strcpy(tmpname, "???");
@@ -836,7 +838,7 @@ static struct vol *creatvol(AFPObj *obj,
     /* Do we have to mangle ? */
     if ( (flags & CONV_REQMANGLE) || (tmpvlen > AFPVOL_MACNAMELEN)) {
         if (tmpvlen + suffixlen > AFPVOL_MACNAMELEN) {
-            flags = CONV_FORCE;
+            flags = CONV_FORCE | CONV_ALLOW_SLASH;
             tmpvlen = convert_charset(obj->options.unixcharset,
                                       obj->options.maccharset,
                                       0,

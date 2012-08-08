@@ -57,6 +57,7 @@ typedef struct {
 #define CONV_FORCE          (1<<8) /* force convertion */
 #define CONV__EILSEQ        (1<<9) /* ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
 #define CONV_ALLOW_COLON   (1<<10) /* Allow ':' in name. Needed for Extended Attributes */
+#define CONV_ALLOW_SLASH   (1<<11) /* Allow '/' in name. Needed for volume name */
 
 /* conversion return flags */
 #define CONV_REQMANGLE  (1<<14) /* mangling of returned name is required */
