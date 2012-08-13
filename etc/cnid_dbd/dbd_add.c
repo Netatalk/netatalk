@@ -17,11 +17,7 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/cnid.h>
-#ifdef HAVE_DB4_DB_H
-#include <db4/db.h>
-#else
 #include <db.h>
-#endif
 
 #include "dbif.h"
 #include "pack.h"
