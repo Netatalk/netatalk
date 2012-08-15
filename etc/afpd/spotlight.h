@@ -72,6 +72,23 @@ typedef struct {
     DALLOC_CTX *ca_cnids;
 }                      sl_cnids_t;    /* an array of CNID                                               */
 
+/**************************************************************************************************
+ * Some helper stuff dealing with queries
+ **************************************************************************************************/
+
+typedef struct {
+    time_t slq_time;            /* timestamp where we received this query */
+    uint64_t slq_ctx1;          /* client context 1 */
+    uint64_t slq_ctx2;          /* client context 2 */
+    DALLOC_CTX *slq_query;      /* the complete query as unmarshalled in openQuery */
+    const char *sql_qstring;    /* the Spotlight query string */
+    DALLOC_CTX *slq_reqinfo;    /* array with requested metadata */
+} slq_t;
+
+/**************************************************************************************************
+ * Function declarations
+ **************************************************************************************************/
+
 extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen);
 extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);

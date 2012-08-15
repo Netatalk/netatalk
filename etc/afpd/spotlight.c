@@ -32,12 +32,13 @@
 #include <atalk/byteorder.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
+#include <atalk/queue.h>
 
 #include "spotlight.h"
 
-void *sl_module;
-struct sl_module_export *sl_module_export;
-
+static void *sl_module;
+static struct sl_module_export *sl_module_export;
+static q_t *sl_queries;
 
 /* Helper functions and stuff */
 static const char *neststrings[] = {
@@ -153,6 +154,8 @@ static int sl_rpc_openQuery(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_C
 
     LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", *sl_query);
 
+    enqueue(sl_queries, query);
+
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -164,6 +167,8 @@ EC_CLEANUP:
 int sl_mod_load(const char *path)
 {
     EC_INIT;
+
+    sl_queries = queue_init();
 
     if ((sl_module = mod_open(path)) == NULL) {
         LOG(log_error, logtype_sl, "sl_mod_load(%s): failed to load: %s", path, mod_error());
