@@ -11,6 +11,7 @@ AC_DEFUN([AC_DEVELOPER], [
     )
     AC_MSG_RESULT([$enable_dev])
     AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
+])
 
 dnl Tracker, for Spotlight
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
