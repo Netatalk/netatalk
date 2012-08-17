@@ -653,6 +653,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
+    pam_set_item(pamh, PAM_RUSER, PAM_username);
 
     PAM_error = pam_authenticate(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {

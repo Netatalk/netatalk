@@ -343,6 +343,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
 
+    /* Some PAM module might have reset our signal handlers and timer, so we need to reestablish them */
+    afp_over_dsi_sighandlers(obj);
+
     return( AFP_OK );
 }
 

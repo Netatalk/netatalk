@@ -378,22 +378,13 @@ static void pending_request(DSI *dsi)
     }
 }
 
-/* -------------------------------------------
- afp over dsi. this never returns. 
-*/
-void afp_over_dsi(AFPObj *obj)
+void afp_over_dsi_sighandlers(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
     int rc_idx;
     uint32_t err, cmd;
     uint8_t function;
     struct sigaction action;
-
-    AFPobj = obj;
-    obj->exit = afp_dsi_die;
-    obj->reply = (int (*)()) dsi_cmdreply;
-    obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
-    dsi->tickle = 0;
 
     memset(&action, 0, sizeof(action));
     sigfillset(&action.sa_mask);
@@ -457,6 +448,25 @@ void afp_over_dsi(AFPObj *obj)
         afp_dsi_die(EXITERR_SYS);
     }
 #endif /* DEBUGGING */
+}
+
+/* -------------------------------------------
+ afp over dsi. this never returns. 
+*/
+void afp_over_dsi(AFPObj *obj)
+{
+    DSI *dsi = (DSI *) obj->handle;
+    int rc_idx;
+    u_int32_t err, cmd;
+    u_int8_t function;
+
+    AFPobj = obj;
+    obj->exit = afp_dsi_die;
+    obj->reply = (int (*)()) dsi_cmdreply;
+    obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
+    dsi->tickle = 0;
+
+    afp_over_dsi_sighandlers(obj);
 
     if (dircache_init(obj->options.dircachesize) != 0)
         afp_dsi_die(EXITERR_SYS);

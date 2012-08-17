@@ -163,5 +163,5 @@ extern const char *AfpErr2name(int err);
 extern struct dir rootParent;
 
 extern void afp_over_dsi (AFPObj *);
-
+extern void afp_over_dsi_sighandlers(AFPObj *obj);
 #endif /* globals.h */
