@@ -6,6 +6,8 @@ Changes in 2.2.4
 * FIX: Reset signal handlers and alarm timer after successfull PAM
        authentication. Fixes a problem with AFP disconnects caused
        by pam_smbpass.so messing with our handlers and timer.
+* FIX: afpd: Fix a possible problem with sendfile on Solaris derived
+       platforms
 
 Changes in 2.2.3
 ================
