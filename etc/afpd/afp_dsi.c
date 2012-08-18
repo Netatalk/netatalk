@@ -381,9 +381,6 @@ static void pending_request(DSI *dsi)
 void afp_over_dsi_sighandlers(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
-    int rc_idx;
-    uint32_t err, cmd;
-    uint8_t function;
     struct sigaction action;
 
     memset(&action, 0, sizeof(action));
@@ -457,8 +454,8 @@ void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
     int rc_idx;
-    u_int32_t err, cmd;
-    u_int8_t function;
+    uint32_t err, cmd;
+    uint8_t function;
 
     AFPobj = obj;
     obj->exit = afp_dsi_die;
