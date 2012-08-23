@@ -5,6 +5,9 @@ Changes in 3.0.1
        Active Directory.
 * FIX: afpd: Fix a Solaris 10 SPARC sendfilev bug
 * FIX: afpd: Fix a crash on FreeBSD
+* FIX: afpd: Fixes open file handle refcounting bug which was reported as
+       being unable to play movies off a Netatalk AFP share.
+       Bug ID 3559783.
 * FIX: Fix possible alignment violations due to bad casts
 * FIX: dbd: Fix logging
 * FIX: apple_dump: Extended Attributes AppleDouble support for *BSD
