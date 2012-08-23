@@ -392,9 +392,12 @@ int ad_close(struct adouble *ad, int adflags)
     if (ad == NULL)
         return err;
 
+
     LOG(log_debug, logtype_default,
-        "ad_close(%s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_close(%s): BEGIN: {d: %d, m: %d, r: %d} "
+        "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         adflags2logstr(adflags),
+        ad->ad_data_refcount, ad->ad_meta_refcount, ad->ad_reso_refcount,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
@@ -407,37 +410,48 @@ int ad_close(struct adouble *ad, int adflags)
     if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF))
         adflags |= ADFLAGS_HF;
 
-    if ((adflags & ADFLAGS_DF)
-        && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)
-        && --ad->ad_data_fork.adf_refcount == 0) {
-        if (ad_data_closefd(ad) < 0)
-            err = -1;
-        adf_lock_free(&ad->ad_data_fork);
-    }
-
-    if ((adflags & ADFLAGS_HF)
-        && (ad_meta_fileno(ad) != -1) && !(--ad->ad_mdp->adf_refcount)) {
-        if (close( ad_meta_fileno(ad)) < 0)
-            err = -1;
-        ad_meta_fileno(ad) = -1;
-        if (ad->ad_vers == AD_VERSION2)
-            adf_lock_free(ad->ad_mdp);
-    }
-
-    if ((adflags & ADFLAGS_RF) && (ad->ad_vers == AD_VERSION_EA)) {
-        if ((ad_reso_fileno(ad) != -1)
-            && !(--ad->ad_rfp->adf_refcount)) {
-            if (close(ad->ad_rfp->adf_fd) < 0)
+    if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {        
+        if (ad->ad_data_refcount)
+            ad->ad_data_refcount--;
+        if (--ad->ad_data_fork.adf_refcount == 0) {
+            if (ad_data_closefd(ad) < 0)
                 err = -1;
-            ad->ad_rlen = 0;
-            ad_reso_fileno(ad) = -1;
-            adf_lock_free(ad->ad_rfp);
+            adf_lock_free(&ad->ad_data_fork);
+        }
+    }
+
+    if ((adflags & ADFLAGS_HF) && (ad_meta_fileno(ad) != -1)) {
+        if (ad->ad_meta_refcount)
+            ad->ad_meta_refcount--;
+        if (!(--ad->ad_mdp->adf_refcount)) {
+            if (close( ad_meta_fileno(ad)) < 0)
+                err = -1;
+            ad_meta_fileno(ad) = -1;
+            if (ad->ad_vers == AD_VERSION2)
+                adf_lock_free(ad->ad_mdp);
+        }
+    }
+
+    if (adflags & ADFLAGS_RF) {
+        if (ad->ad_reso_refcount)
+            ad->ad_reso_refcount--;
+        if (ad->ad_vers == AD_VERSION_EA) {
+            if ((ad_reso_fileno(ad) != -1)
+                && !(--ad->ad_rfp->adf_refcount)) {
+                if (close(ad->ad_rfp->adf_fd) < 0)
+                    err = -1;
+                ad->ad_rlen = 0;
+                ad_reso_fileno(ad) = -1;
+                adf_lock_free(ad->ad_rfp);
+            }
         }
     }
 
     LOG(log_debug, logtype_default,
-        "ad_close(%s): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_close(%s): END: %d {d: %d, m: %d, r: %d} "
+        "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         adflags2logstr(adflags), err,
+        ad->ad_data_refcount, ad->ad_meta_refcount, ad->ad_reso_refcount,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);

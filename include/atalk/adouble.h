@@ -49,7 +49,6 @@
 
 /* version info */
 #define AD_VERSION2     0x00020000
-#define AD_VERSION2_OSX 0x00020001
 #define AD_VERSION_EA   0x00020002
 
 /* default */
@@ -201,9 +200,6 @@ struct adouble {
 
     struct ad_fd        ad_data_fork;     /* the data fork                            */
 
-    struct ad_fd        ad_metadata_fork; /* adouble:v2 -> unused                     *
-                                           * adouble:ea -> fd unused, only flags used */
-
     struct ad_fd        ad_resource_fork; /* adouble:v2 -> the adouble file           *
                                            * adouble:ea -> the EA fd                  */
 
@@ -211,13 +207,16 @@ struct adouble {
                                            * adouble:ea -> ad_resource_fork           */
 
     struct ad_fd        *ad_mdp;          /* adouble:v2 -> ad_resource_fork           *
-                                           * adouble:ea -> ad_metadata_fork           */
+                                           * adouble:ea -> ad_data_fork               */
 
     int                 ad_vers;          /* Our adouble version info (AD_VERSION*)   */
     int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
     uint32_t            ad_inited;
     int                 ad_options;
     int                 ad_refcount;       /* multiple forks may open one adouble     */
+    int                 ad_data_refcount;
+    int                 ad_meta_refcount;
+    int                 ad_reso_refcount;
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
     char                *ad_name;          /* name in server encoding (usually UTF8)  */
@@ -352,9 +351,9 @@ struct adouble {
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
 
 /* -1: not open, AD_SYMLINK (-2): it's a symlink */
-#define AD_DATA_OPEN(ad) ((ad)->ad_data_fork.adf_fd >= 0)
-#define AD_META_OPEN(ad) ((ad)->ad_mdp->adf_fd >= 0)
-#define AD_RSRC_OPEN(ad) ((ad)->ad_rfp->adf_fd >= 0)
+#define AD_DATA_OPEN(ad) (((ad)->ad_data_refcount) && (ad_data_fileno(ad) >= 0))
+#define AD_META_OPEN(ad) (((ad)->ad_meta_refcount) && (ad_meta_fileno(ad) >= 0))
+#define AD_RSRC_OPEN(ad) (((ad)->ad_reso_refcount) && (ad_reso_fileno(ad) >= 0))
 
 #define ad_getversion(ad)   ((ad)->ad_version)
 
