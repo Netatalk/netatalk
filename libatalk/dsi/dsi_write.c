@@ -33,14 +33,14 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen _U_)
 
   /* figure out how much data we have. do a couple checks for 0 
    * data */
-  header = ntohl(dsi->header.dsi_code);
+  header = ntohl(dsi->header.dsi_doff);
   dsi->datasize = header ? ntohl(dsi->header.dsi_len) - header : 0;
 
   if (dsi->datasize > 0) {
-      len = MIN(sizeof(dsi->commands) - header, dsi->datasize);
+      len = MIN(dsi->server_quantum - header, dsi->datasize);
 
       /* write last part of command buffer into buf */
-      memcpy(buf, dsi->commands + header, len);
+      memmove(buf, dsi->commands + header, len);
 
       /* recalculate remaining data */
       dsi->datasize -= len;

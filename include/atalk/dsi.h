@@ -45,12 +45,14 @@ struct dsi_block {
     uint8_t dsi_flags;       /* packet type: request or reply */
     uint8_t dsi_command;     /* command */
     uint16_t dsi_requestID;  /* request ID */
-    uint32_t dsi_code;       /* error code or data offset */
+    union {
+        uint32_t dsi_code;   /* error code */
+        uint32_t dsi_doff;   /* data offset */
+    };
     uint32_t dsi_len;        /* total data length */
     uint32_t dsi_reserved;   /* reserved field */
 };
 
-#define DSI_CMDSIZ        8192
 #define DSI_DATASIZ       8192
 
 /* child and parent processes might interpret a couple of these
@@ -72,7 +74,8 @@ typedef struct DSI {
 
     uint32_t attn_quantum, datasize, server_quantum;
     uint16_t serverID, clientID;
-    uint8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
+    uint8_t  *commands; /* DSI recieve buffer */
+    uint8_t  data[DSI_DATASIZ];    /* DSI reply buffer */
     size_t   datalen, cmdlen;
     off_t    read_count, write_count;
     uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */

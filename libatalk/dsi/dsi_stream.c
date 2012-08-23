@@ -596,7 +596,7 @@ int dsi_stream_receive(DSI *dsi)
   dsi->clientID = ntohs(dsi->header.dsi_requestID);
   
   /* make sure we don't over-write our buffers. */
-  dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), DSI_CMDSIZ);
+  dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
   if (dsi_stream_read(dsi, dsi->commands, dsi->cmdlen) != dsi->cmdlen) 
     return 0;
 
