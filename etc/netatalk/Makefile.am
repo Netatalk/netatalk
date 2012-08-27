@@ -13,6 +13,8 @@ netatalk_CFLAGS = \
 netatalk_LDADD = \
 	$(top_builddir)/libatalk/libatalk.la
 
+netatalk_LDFLAGS =
+
 if USE_BUILTIN_LIBEVENT
 netatalk_CFLAGS += \
 	-I$(top_srcdir)/libevent/include \
@@ -20,4 +22,7 @@ netatalk_CFLAGS += \
 
 netatalk_LDADD += \
 	$(top_builddir)/libevent/libevent.la
+else
+netatalk_CFLAGS += @LIBEVENT_CFLAGS@
+netatalk_LDFLAGS += @LIBEVENT_LDFLAGS@ -levent
 endif
