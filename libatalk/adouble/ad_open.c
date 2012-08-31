@@ -1695,26 +1695,16 @@ EC_CLEANUP:
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
-    uid_t uid;
     int   ret, err, oflags;
 
     /* Sanitize flags */
     oflags = (flags & (ADFLAGS_CHECK_OF | ADFLAGS_DIR)) | ADFLAGS_HF | ADFLAGS_RDONLY;    
 
     if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
-        uid = geteuid();
-        if (seteuid(0)) {
-            LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
-            errno = EACCES;
-            return -1;
-        }
-        /* we are root open read only */
+        become_root();
         ret = ad_open(adp, name, oflags);
+        unbecome_root();
         err = errno;
-        if ( seteuid(uid) < 0) {
-            LOG(log_error, logtype_default, "ad_metadata: can't seteuid back");
-            exit(EXITERR_SYS);
-        }
         errno = err;
     }
 

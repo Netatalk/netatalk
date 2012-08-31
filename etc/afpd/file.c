@@ -1954,9 +1954,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     uint32_t		sid, did;
     uint16_t		vid;
 
-    uid_t              uid;
-    gid_t              gid;
-
     *rbuflen = 0;
     ibuf += 2;
 
@@ -2124,13 +2121,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
     /* change perms, src gets dest perm and vice versa */
 
-    uid = geteuid();
-    gid = getegid();
-    if (seteuid(0)) {
-        LOG(log_error, logtype_afpd, "seteuid failed %s", strerror(errno));
-        err = AFP_OK; /* ignore error */
-        goto err_temp_to_dest;
-    }
+    become_root();
 
     /*
      * we need to exchange ACL entries as well
@@ -2154,10 +2145,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     setfilunixmode(vol, path, srcst.st_mode);
     setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
 
-    if ( setegid(gid) < 0 || seteuid(uid) < 0) {
-        LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
-        exit(EXITERR_SYS);
-    }
+    unbecome_root();
 
     err = AFP_OK;
     goto err_exchangefile;

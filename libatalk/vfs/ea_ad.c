@@ -1694,28 +1694,20 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 
     int ret = AFP_OK;
     unsigned int count = 0;
-    uid_t uid;
     const char *eaname;
     const char *eaname_safe = NULL;
     struct ea ea;
 
     LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
     /* .AppleDouble already might be inaccesible, so we must run as id 0 */
-    uid = geteuid();
-    if (seteuid(0)) {
-        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): seteuid: %s", name, strerror(errno));
-        return AFPERR_MISC;
-    }
+    become_root();
 
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         /* ENOENT --> no EA files, nothing to do */
         if (errno != ENOENT)
             ret = AFPERR_MISC;
-        if (seteuid(uid) < 0) {
-            LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
-            exit(EXITERR_SYS);
-        }
+        unbecome_root();
         return ret;
     }
 
@@ -1768,10 +1760,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     }
 
 exit:
-    if (seteuid(uid) < 0) {
-        LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
-        exit(EXITERR_SYS);
-    }
+    unbecome_root();
 
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): error closing ea handle", name);

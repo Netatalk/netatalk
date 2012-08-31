@@ -15,6 +15,7 @@
 #include <atalk/afp.h>
 #include <atalk/dsi.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
 #include <atalk/logger.h>
 #include <atalk/globals.h>
 
@@ -40,7 +41,6 @@ void readmessage(AFPObj *obj)
     unsigned int i; 
     int rc;
     static int c;
-    uid_t euid;
     uint32_t maxmsgsize;
 
     maxmsgsize = MIN(MAX(obj->dsi->attn_quantum, MAXMESGSIZE), MAXPATHLEN);
@@ -77,22 +77,12 @@ void readmessage(AFPObj *obj)
         /* cleanup */
         fclose(message);
 
-        /* Save effective uid and switch to root to delete file. */
-        /* Delete will probably fail otherwise, but let's try anyways */
-        euid = geteuid();
-        if (seteuid(0) < 0) {
-            LOG(log_error, logtype_afpd, "Could not switch back to root: %s",
-				strerror(errno));
-        }
+        become_root();
 
         if ((rc = unlink(filename)) != 0)
 	    LOG(log_error, logtype_afpd, "File '%s' could not be deleted", strerror(errno));
 
-        /* Drop privs again, failing this is very bad */
-        if (seteuid(euid) < 0) {
-            LOG(log_error, logtype_afpd, "Could not switch back to uid %d: %s", euid, strerror(errno));
-            exit(EXITERR_SYS);
-        }
+        unbecome_root();
 
         if (rc < 0) {
             LOG(log_error, logtype_afpd, "Error deleting %s: %s", filename, strerror(rc));
