@@ -164,6 +164,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
 {
     int len = 0, off = 0;
     int cnid_count = talloc_array_length(cnids->ca_cnids);
+    uint64_t id;
 
     SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, cnid_count));
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
@@ -178,7 +179,8 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
         offset += 8;
 
         for (int i = 0; i < cnid_count; i++) {
-             SLVAL(buf, offset, cnids->ca_cnids->dd_talloc_array[i]);
+            memcpy(&id, cnids->ca_cnids->dd_talloc_array[i], sizeof(uint64_t));
+            SLVAL(buf, offset, id);
             offset += 8;
         }
     }
