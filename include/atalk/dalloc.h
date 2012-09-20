@@ -32,5 +32,5 @@ extern int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj
 #define dalloc_add(d, obj, type) dalloc_add_talloc_chunk((d), talloc((d), type), (obj), sizeof(type));
 extern void *dalloc_get(const DALLOC_CTX *d, ...);
 extern void *dalloc_value_for_key(const DALLOC_CTX *d, ...);
-
+extern int dalloc_size(DALLOC_CTX *d);
 #endif  /* DALLOC_H */

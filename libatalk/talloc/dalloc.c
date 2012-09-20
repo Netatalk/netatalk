@@ -43,6 +43,14 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_
     return 0;
 }
 
+/* Get number of elements, returns 0 if the structure is empty or not initialized */
+int dalloc_size(DALLOC_CTX *d)
+{
+    if (!d || !d->dd_talloc_array)
+        return 0;
+    return talloc_array_length(d->dd_talloc_array);
+}
+
 void *dalloc_get(const DALLOC_CTX *d, ...)
 {
     EC_INIT;
