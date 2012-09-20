@@ -178,7 +178,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
 #define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define LVALS(buf,pos) (*(const int64_t *)((const char *)(buf) + (pos)))
-#define LVALS(buf,pos) (*(int64_t *)((char *)(buf) + (pos)))
+#define LVALS_NC(buf,pos) (*(int64_t *)((char *)(buf) + (pos)))
 
 /* store single value in an SMB buffer */
 #define SSVAL(buf,pos,val) SVAL_NC(buf,pos)=((uint16_t)(val))
