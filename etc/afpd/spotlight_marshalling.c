@@ -178,7 +178,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
         offset += 8;
 
         for (int i = 0; i < cnid_count; i++) {
-            SLVAL(buf, offset, cnids->ca_cnids->dd_talloc_array[i]);
+             SLVAL(buf, offset, cnids->ca_cnids->dd_talloc_array[i]);
             offset += 8;
         }
     }

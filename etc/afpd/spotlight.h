@@ -65,24 +65,34 @@ typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t as it's a de
 typedef struct timeval sl_time_t;     /* a boolean, we avoid bool_t as it's a define for something else */
 typedef struct {
     char sl_uuid[16];
-}                      sl_uuid_t;     /* a UUID                                                         */
+}  sl_uuid_t;                         /* a UUID                                                         */
 typedef struct {
     uint16_t   ca_unkn1;
     uint32_t   ca_context;
     DALLOC_CTX *ca_cnids;
-}                      sl_cnids_t;    /* an array of CNID                                               */
+}  sl_cnids_t;                        /* an array of CNIDs                                              */
 
 /**************************************************************************************************
  * Some helper stuff dealing with queries
  **************************************************************************************************/
 
+/* Internal query state */
+typedef enum {
+    SLQ_STATE_NEW      = 1,           /* Query received from client                                     */
+    SLQ_STATE_RUNNING  = 2,           /* Query dispatched to Tracker                                    */
+    SLQ_STATE_DONE     = 3,           /* Tracker finished                                               */
+    SLQ_STATE_END      = 4            /* Query results returned to client                               */
+} slq_state_t;
+
+/* Internal query data structure */
 typedef struct {
-    time_t slq_time;            /* timestamp where we received this query */
-    uint64_t slq_ctx1;          /* client context 1 */
-    uint64_t slq_ctx2;          /* client context 2 */
-    DALLOC_CTX *slq_query;      /* the complete query as unmarshalled in openQuery */
-    const char *sql_qstring;    /* the Spotlight query string */
-    DALLOC_CTX *slq_reqinfo;    /* array with requested metadata */
+    slq_state_t    slq_state;         /* State                                                          */
+    time_t         slq_time;          /* timestamp where we received this query                         */
+    uint64_t       slq_ctx1;          /* client context 1                                               */
+    uint64_t       slq_ctx2;          /* client context 2                                               */
+    const char     *slq_qstring;      /* the Spotlight query string                                     */
+    DALLOC_CTX     *slq_reqinfo;      /* array with requested metadata                                  */
+    void           *slq_tracker_cursor; /* Tracker query result cursor                                  */
 } slq_t;
 
 /**************************************************************************************************
