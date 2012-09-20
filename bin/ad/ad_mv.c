@@ -301,7 +301,7 @@ static int do_move(const char *from, const char *to)
     
     cnid_t cnid = 0;
     if (!mustcopy) {
-        if ((cnid = cnid_for_path(&svolume, from, &did)) == CNID_INVALID) {
+        if ((cnid = cnid_for_path(svolume.vol->v_cdb, svolume.vol->v_path, from, &did)) == CNID_INVALID) {
             SLOG("Couldn't resolve CNID for %s", from);
             return -1;
         }

@@ -18,6 +18,7 @@
 
 #include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */
@@ -188,5 +189,6 @@ extern int run_cmd(const char *cmd, char **cmd_argv);
  *****************************************************************/
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
+extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath, const char *path, cnid_t *did);
 
 #endif  /* _ATALK_UTIL_H */
