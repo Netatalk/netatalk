@@ -28,6 +28,12 @@
 
 static TrackerSparqlConnection *connection;
 
+const char *tracker_to_unix_path(const char *path)
+{
+    /* just skip 'file://' */
+    return path + 7;
+}
+
 static int sl_mod_init(void *p)
 {
     EC_INIT;
@@ -130,21 +136,71 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int add_filemeta(DALLOC_CTX *reqinfo, const int metacount, sl_array_t *fm_array, cnid_t id, const char *path)
+{
+    EC_INIT;
+    sl_array_t *meta;
+    sl_nil_t nil = 0;
+    int i = metacount;
+
+    LOG(log_debug, logtype_sl, "add_filemeta: metadata count: %d", metacount);
+
+    meta = talloc_zero(fm_array, sl_array_t);
+
+    while (i--) {
+        dalloc_add(meta, &nil, sl_nil_t);
+    }
+
+    dalloc_add(fm_array, meta, sl_array_t);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
 static int sl_mod_fetch_result(void *p)
 {
     EC_INIT;
     slq_t *slq = p;
     GError *error = NULL;
+    int i = 0;
+    cnid_t did, id;
+    const char *path;
+    sl_cnids_t *cnids;
+    sl_filemeta_t *fm;
+    sl_array_t *fm_array;
+    uint64_t uint64;
 
-    if (slq->slq_tracker_cursor) {
-        int i = 0;
-        while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
-            LOG(log_debug, logtype_sl, "Result [%d]: %s",
-                i++, tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL));
-        }
-    } else {
+    if (!slq->slq_tracker_cursor) {
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: no results found");
+        goto EC_CLEANUP;
     }
+
+    /* Prepare CNIDs */
+    cnids = talloc_zero(slq->slq_reply, sl_cnids_t);
+    cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+    cnids->ca_unkn1 = 0xadd;
+    cnids->ca_context = slq->slq_ctx2;
+
+    /* Prepare FileMeta */
+    fm = talloc_zero(slq->slq_reply, sl_filemeta_t);
+    fm_array = talloc_zero(fm, sl_array_t);
+    dalloc_add(fm, fm_array, sl_array_t);
+
+    while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
+        EC_NULL_LOG( path = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL) );
+        path = tracker_to_unix_path(path);
+        LOG(log_debug, logtype_sl, "sl_mod_fetch_result: path(volpath: %s): \"%s\"", slq->slq_vol->v_path, path);
+        if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
+            LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error");
+            continue;
+        }
+        LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i++, ntohl(id), path);
+        uint64 = ntohl(id);
+        dalloc_add(cnids->ca_cnids, &uint64, uint64_t);
+        add_filemeta(slq->slq_reqinfo, slq->slq_metacount, fm_array, id, path);
+    }
+    dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
+    dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
     if (slq->slq_tracker_cursor)

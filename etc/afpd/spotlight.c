@@ -82,7 +82,7 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
-            LOG(log_debug, logtype_sl, "%sCNIDs: unkn1: %" PRIu16 ", unkn2: %" PRIu32,
+            LOG(log_debug, logtype_sl, "%sCNIDs: unkn1: 0x%" PRIx16 ", unkn2: 0x%" PRIx32,
                    neststrings[nestinglevel + 1], cnids.ca_unkn1, cnids.ca_context);
             if (cnids.ca_cnids)
                 dd_dump(cnids.ca_cnids, nestinglevel + 1);
@@ -191,28 +191,32 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int sl_rpc_openQuery(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
+static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, struct vol *v)
 {
     EC_INIT;
     char **sl_query;
     uint64_t *uint64;
-    DALLOC_CTX *dalloc_ctx;
+    DALLOC_CTX *reqinfo;
     sl_array_t *array;
 
     slq_t *slq = talloc_zero(sl_ctx, slq_t);
 
     /* Allocate and initialize query object */
+    slq->slq_obj = obj;
+    slq->slq_vol = v;
     EC_NULL_LOG( sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryString") );
     LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", *sl_query);
     slq->slq_qstring = talloc_steal(slq, *sl_query);
     slq->slq_state = SLQ_STATE_NEW;
     slq->slq_time = time(NULL);
-    EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
+    EC_NULL_LOG( uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
     slq->slq_ctx1 = *uint64;
-    EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 2) );
+    EC_NULL_LOG( uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 2) );
     slq->slq_ctx2 = *uint64;
-    EC_NULL_LOG (dalloc_ctx = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDAttributeArray") );
-    slq->slq_reqinfo = talloc_steal(slq, dalloc_ctx);
+    EC_NULL_LOG( reqinfo = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDAttributeArray") );
+    slq->slq_reqinfo = talloc_steal(slq, reqinfo);
+    slq->slq_metacount = dalloc_size(slq->slq_reqinfo);
+
     LOG(log_maxdebug, logtype_sl, "sl_rpc_openQuery: requested attributes:");
     dd_dump(slq->slq_reqinfo, 0);
 
@@ -236,6 +240,10 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     slq_t *slq;
     uint64_t *uint64, ctx1, ctx2;
     sl_array_t *array;
+
+    array = talloc_zero(reply, sl_array_t);
+    uint64_t sl_res = 0;
+    dalloc_add(array, &sl_res, uint64_t);
     
     /* Context */
     EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
@@ -246,13 +254,14 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     /* Get query for context */
     EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
 
+    /* Pass reply handle */
+    slq->slq_reply = array;
+
     /* Fetch Tracker results*/
     sl_module_export->sl_mod_fetch_result(slq);
 
 EC_CLEANUP:
-    array = talloc_zero(reply, sl_array_t);
-    uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
-    dalloc_add(array, &sl_res, uint64_t);
+
     dalloc_add(reply, array, sl_array_t);
 
     EC_EXIT;
@@ -342,6 +351,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
 
         EC_NEG1_LOG( sl_unpack(query, ibuf + 22) );
+        LOG(log_debug, logtype_sl, "afp_spotlight_rpc: Request dump:");
         dd_dump(query, 0);
 
         char **cmd;
@@ -350,16 +360,12 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         if (STRCMP(*cmd, ==, "fetchPropertiesForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchPropertiesForContext(obj, query, reply, vol) );
         } else if (STRCMP(*cmd, ==, "openQueryWithParams:forContext:")) {
-            uint64_t *ctx1, *ctx2;
-            EC_NULL_LOG (ctx1 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
-            EC_NULL_LOG (ctx2 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 2) );
-            LOG(log_debug, logtype_sl, "ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64, *ctx1, *ctx2);
-
             EC_ZERO_LOG( sl_rpc_openQuery(obj, query, reply, vol) );
         } else if (STRCMP(*cmd, ==, "fetchQueryResultsForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchQueryResultsForContext(obj, query, reply, vol) );
         }
 
+        LOG(log_debug, logtype_sl, "afp_spotlight_rpc: Reply dump:");
         dd_dump(reply, 0);
 
         memset(rbuf, 0, 4);

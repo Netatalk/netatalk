@@ -24,6 +24,7 @@
 
 #include <atalk/dalloc.h>
 #include <atalk/globals.h>
+#include <atalk/volume.h>
 
 /**************************************************************************************************
  * Spotlight module stuff
@@ -87,11 +88,15 @@ typedef enum {
 /* Internal query data structure */
 typedef struct {
     slq_state_t    slq_state;         /* State                                                          */
+    AFPObj         *slq_obj;          /* global AFPObj handle                                           */
+    const struct vol *slq_vol;        /* volume handle                                                  */
+    DALLOC_CTX     *slq_reply;        /* reply handle                                                   */
     time_t         slq_time;          /* timestamp where we received this query                         */
     uint64_t       slq_ctx1;          /* client context 1                                               */
     uint64_t       slq_ctx2;          /* client context 2                                               */
     const char     *slq_qstring;      /* the Spotlight query string                                     */
     DALLOC_CTX     *slq_reqinfo;      /* array with requested metadata                                  */
+    int            slq_metacount;     /* number of requested metadata attributes in slq_reqinfo         */
     void           *slq_tracker_cursor; /* Tracker query result cursor                                  */
 } slq_t;
 
