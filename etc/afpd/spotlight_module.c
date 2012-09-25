@@ -72,7 +72,7 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 
     EC_NULL_LOG( word = strstr(slquery, "*==") );
     word += 4; /* skip *== and the left enclosing quote */
-    EC_NULL( word = talloc_strdup(slq, word) );
+    EC_NULL( word = dalloc_strdup(slq, word) );
     /* Search asterisk */
     EC_NULL_LOG( p = strchr(word, '*') );
     *p = 0;
@@ -151,7 +151,7 @@ static int add_filemeta(DALLOC_CTX *reqinfo, const int metacount, sl_array_t *fm
         dalloc_add_copy(meta, &nil, sl_nil_t);
     }
 
-    dalloc_add_copy(fm_array, meta, sl_array_t);
+    dalloc_add(fm_array, meta, sl_array_t);
 
 EC_CLEANUP:
     EC_EXIT;
@@ -184,7 +184,7 @@ static int sl_mod_fetch_result(void *p)
     /* Prepare FileMeta */
     fm = talloc_zero(slq->slq_reply, sl_filemeta_t);
     fm_array = talloc_zero(fm, sl_array_t);
-    dalloc_add_copy(fm, fm_array, sl_array_t);
+    dalloc_add(fm, fm_array, sl_array_t);
 
     while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
         EC_NULL_LOG( path = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL) );
@@ -199,8 +199,8 @@ static int sl_mod_fetch_result(void *p)
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
         add_filemeta(slq->slq_reqinfo, slq->slq_metacount, fm_array, id, path);
     }
-    dalloc_add_copy(slq->slq_reply, cnids, sl_cnids_t);
-    dalloc_add_copy(slq->slq_reply, fm, sl_filemeta_t);
+    dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
+    dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
     if (slq->slq_tracker_cursor)

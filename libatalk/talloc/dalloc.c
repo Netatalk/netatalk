@@ -121,8 +121,12 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
     }
 
     for (elem = 0; elem + 1 < talloc_array_length(d->dd_talloc_array); elem += 2) {
-        memcpy(&s, d->dd_talloc_array[elem], sizeof(char *));
-        if (STRCMP(s, ==, type)) {
+        if (STRCMP(talloc_get_name(d->dd_talloc_array[elem]), !=, "char *")) {
+            LOG(log_error, logtype_default, "dalloc_value_for_key: key not a string: %s",
+                talloc_get_name(d->dd_talloc_array[elem]));
+            EC_FAIL;
+        }
+        if (STRCMP((char *)d->dd_talloc_array[elem], ==, type)) {
             p = d->dd_talloc_array[elem + 1];
             break;
         }            
@@ -132,5 +136,39 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
 EC_CLEANUP:
     if (ret != 0)
         p = NULL;
+    return p;
+}
+
+char *dalloc_strdup(const void *ctx, const char *string)
+{
+    EC_INIT;
+    char *p;
+
+    EC_NULL( p = talloc_strdup(ctx, string) );
+    talloc_set_name(p, "char *");
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (p)
+            talloc_free(p);
+        p = NULL;
+    }
+    return p;
+}
+
+char *dalloc_strndup(const void *ctx, const char *string, size_t n)
+{
+    EC_INIT;
+    char *p;
+
+    EC_NULL( p = talloc_strndup(ctx, string, n) );
+    talloc_set_name(p, "char *");
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (p)
+            talloc_free(p);
+        p = NULL;
+    }
     return p;
 }
