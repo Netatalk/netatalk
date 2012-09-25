@@ -193,8 +193,6 @@ static int sl_pack_array(sl_array_t *array, char *buf, int offset, char *toc_buf
     int count = talloc_array_length(array->dd_talloc_array);
     int octets = (offset + SL_OFFSET_DELTA) / 8;
 
-    LOG(log_maxdebug, logtype_sl, "sl_pack_array: count: %d, offset:%d, octets: %d", count, offset, octets);
-
     SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_ARRAY, octets, count));
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
@@ -242,9 +240,6 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf, int *to
     len = strlen(s);
     octets = (len / 8) + (len & 7 ? 1 : 0);
     used_in_last_octet = 8 - (octets * 8 - len);
-
-    LOG(log_maxdebug, logtype_sl, "sl_pack_string(\"%s\"): len: %d, octets: %d, used_in_last_octet: %d",
-        s, len, octets, used_in_last_octet);
 
     SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet));
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
