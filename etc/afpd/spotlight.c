@@ -65,6 +65,7 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
 
         if (STRCMP(type, ==, "DALLOC_CTX")
                    || STRCMP(type, ==, "sl_array_t")
+                   || STRCMP(type, ==, "sl_filemeta_t")
                    || STRCMP(type, ==, "sl_dict_t")) {
             dd_dump(dd->dd_talloc_array[n], nestinglevel + 1);
         } else if (STRCMP(type, ==, "uint64_t")) {
@@ -79,13 +80,15 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
             sl_bool_t bl;
             memcpy(&bl, dd->dd_talloc_array[n], sizeof(sl_bool_t));
             LOG(log_debug, logtype_sl, "%sbool: %s", neststrings[nestinglevel + 1], bl ? "true" : "false");
+        } else if (STRCMP(type, ==, "sl_nil_t")) {
+            LOG(log_debug, logtype_sl, "%snil", neststrings[nestinglevel + 1]);
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
             LOG(log_debug, logtype_sl, "%sCNIDs: unkn1: 0x%" PRIx16 ", unkn2: 0x%" PRIx32,
                    neststrings[nestinglevel + 1], cnids.ca_unkn1, cnids.ca_context);
             if (cnids.ca_cnids)
-                dd_dump(cnids.ca_cnids, nestinglevel + 1);
+                dd_dump(cnids.ca_cnids, nestinglevel + 2);
         }
     }
     LOG(log_debug, logtype_sl, "%s}", neststrings[nestinglevel]);
@@ -461,7 +464,6 @@ int main(int argc, char **argv)
     EC_NULL_LOG (int2 = dalloc_get(dd, "DALLOC_CTX", 6, "uint64_t", 1) );
     LOG(log_debug, logtype_sl, "ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64, *int1, *int2);
 
-#if 0
     /* now parse a real spotlight packet */
     if (argc > 1) {
         char ibuf[8192];
@@ -480,7 +482,6 @@ int main(int argc, char **argv)
         /* Now dump the whole thing */
         dd_dump(query, 0);
     }
-#endif
 
 #if 0
     /* packing  */

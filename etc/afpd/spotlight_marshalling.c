@@ -166,7 +166,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
     int cnid_count = talloc_array_length(cnids->ca_cnids);
     uint64_t id;
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, cnid_count));
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0 /* cnid_count */));
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
@@ -213,6 +213,25 @@ static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, 
     offset += 8;
 
     offset = sl_pack_loop(dict, buf, offset, toc_buf, toc_idx);
+
+    return offset;
+}
+
+static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, char *toc_buf, int *toc_idx)
+{
+    int fmlen;                  /* lenght of filemeta */
+    int saveoff = offset + 8;
+
+    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    offset += 16;
+
+    fmlen = sl_pack(fm, buf + offset);
+    offset += fmlen;
+
+    SLVAL(buf, saveoff, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */));
+
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (offset + SL_OFFSET_DELTA) / 8, fmlen / 8));
+    *toc_idx += 1;
 
     return offset;
 }
@@ -488,14 +507,15 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     uint8_t mark_exists;
     char *p;
     int qlen, used_in_last_block, slen;
-    sl_array_t *sl_arrary;
+    sl_array_t *sl_array;
     sl_dict_t *sl_dict;
+    sl_filemeta_t *sl_fm;
 
     switch (cpx_query_type) {
     case SQ_CPX_TYPE_ARRAY:
-        sl_arrary = talloc_zero(query, sl_array_t);
-        EC_NEG1_LOG( roffset = sl_unpack_loop(sl_arrary, buf, offset, cpx_query_count, toc_offset, encoding) );
-        dalloc_add(query, sl_arrary, sl_array_t);
+        sl_array = talloc_zero(query, sl_array_t);
+        EC_NEG1_LOG( roffset = sl_unpack_loop(sl_array, buf, offset, cpx_query_count, toc_offset, encoding) );
+        dalloc_add(query, sl_array, sl_array_t);
         break;
 
     case SQ_CPX_TYPE_DICT:
@@ -530,7 +550,9 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         if (qlen <= 8) {
             EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8: %d", qlen);
         } else {
-            EC_NEG1_LOG( sl_unpack(query, buf + offset + 8) );
+            sl_fm = talloc_zero(query, sl_filemeta_t);
+            EC_NEG1_LOG( sl_unpack(sl_fm, buf + offset + 8) );
+            dalloc_add(query, sl_fm, sl_filemeta_t);
         }
         roffset += qlen;
         break;
