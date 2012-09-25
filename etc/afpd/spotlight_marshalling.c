@@ -220,7 +220,7 @@ static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, 
 static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     int fmlen;                  /* lenght of filemeta */
-    int saveoff = offset + 8;
+    int saveoff = offset;
 
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     offset += 16;
@@ -228,9 +228,9 @@ static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, char *toc_
     fmlen = sl_pack(fm, buf + offset);
     offset += fmlen;
 
-    SLVAL(buf, saveoff, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */));
+    SLVAL(buf, saveoff + 8, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */));
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (offset + SL_OFFSET_DELTA) / 8, fmlen / 8));
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (saveoff + SL_OFFSET_DELTA) / 8, fmlen / 8));
     *toc_idx += 1;
 
     return offset;

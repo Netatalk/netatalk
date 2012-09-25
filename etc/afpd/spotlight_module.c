@@ -136,19 +136,30 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int add_filemeta(DALLOC_CTX *reqinfo, const int metacount, sl_array_t *fm_array, cnid_t id, const char *path)
+static int add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, cnid_t id, const char *path)
 {
     EC_INIT;
     sl_array_t *meta;
     sl_nil_t nil = 0;
-    int i = metacount;
+    int i, metacount;
+
+    if ((metacount = talloc_array_length(reqinfo->dd_talloc_array)) == 0)
+        EC_FAIL;
 
     LOG(log_debug, logtype_sl, "add_filemeta: metadata count: %d", metacount);
 
     meta = talloc_zero(fm_array, sl_array_t);
 
-    while (i--) {
-        dalloc_add_copy(meta, &nil, sl_nil_t);
+    for (i = 0; i < metacount; i++) {
+        if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemDisplayName")) {
+            char *p, *name;
+            if ((p = strrchr(path, '/'))) {
+                name = dalloc_strdup(meta, p + 1);
+                dalloc_add(meta, name, "char *");
+            }
+        } else {
+            dalloc_add_copy(meta, &nil, sl_nil_t);
+        }
     }
 
     dalloc_add(fm_array, meta, sl_array_t);
@@ -186,6 +197,10 @@ static int sl_mod_fetch_result(void *p)
     fm_array = talloc_zero(fm, sl_array_t);
     dalloc_add(fm, fm_array, sl_array_t);
 
+    /* For some reason the list of results always starts with a nil entry */
+    sl_nil_t nil;
+    dalloc_add_copy(fm_array, &nil, sl_nil_t);
+
     while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
         EC_NULL_LOG( path = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL) );
         path = tracker_to_unix_path(path);
@@ -197,7 +212,8 @@ static int sl_mod_fetch_result(void *p)
         LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i++, ntohl(id), path);
         uint64 = ntohl(id);
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
-        add_filemeta(slq->slq_reqinfo, slq->slq_metacount, fm_array, id, path);
+        add_filemeta(slq->slq_reqinfo, fm_array, id, path);
+        //dalloc_add_copy(fm_array, &nil, sl_nil_t);
     }
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);

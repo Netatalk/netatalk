@@ -95,8 +95,7 @@ typedef struct {
     uint64_t       slq_ctx1;          /* client context 1                                               */
     uint64_t       slq_ctx2;          /* client context 2                                               */
     const char     *slq_qstring;      /* the Spotlight query string                                     */
-    DALLOC_CTX     *slq_reqinfo;      /* array with requested metadata                                  */
-    int            slq_metacount;     /* number of requested metadata attributes in slq_reqinfo         */
+    sl_array_t     *slq_reqinfo;      /* array with requested metadata                                  */
     void           *slq_tracker_cursor; /* Tracker query result cursor                                  */
 } slq_t;
 

@@ -218,7 +218,6 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     slq->slq_ctx2 = *uint64;
     EC_NULL_LOG( reqinfo = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDAttributeArray") );
     slq->slq_reqinfo = talloc_steal(slq, reqinfo);
-    slq->slq_metacount = dalloc_size(slq->slq_reqinfo);
 
     LOG(log_maxdebug, logtype_sl, "sl_rpc_openQuery: requested attributes:");
     dd_dump(slq->slq_reqinfo, 0);
