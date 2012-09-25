@@ -219,8 +219,10 @@ static int sl_mod_fetch_result(void *p)
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
-    if (slq->slq_tracker_cursor)
+    if (slq->slq_tracker_cursor) {
         g_object_unref(slq->slq_tracker_cursor);
+        slq->slq_tracker_cursor = NULL;
+    }
     EC_EXIT;
 }
 
