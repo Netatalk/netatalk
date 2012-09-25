@@ -273,6 +273,8 @@ static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
             offset = sl_pack_array(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
         } else if (STRCMP(type, ==, "sl_dict_t")) {
             offset = sl_pack_dict(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+        } else if (STRCMP(type, ==, "sl_filemeta_t")) {
+            offset = sl_pack_filemeta(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
         } else if (STRCMP(type, ==, "uint64_t")) {
             uint64_t i;
             memcpy(&i, query->dd_talloc_array[n], sizeof(uint64_t));
