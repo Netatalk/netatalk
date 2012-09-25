@@ -159,36 +159,36 @@ static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj, const DALLOC_CTX 
 
     /* key/val 1 */
     s = talloc_strdup(dict, "kMDSStoreMetaScopes");
-    dalloc_add(dict, &s, char *);
+    dalloc_add_copy(dict, &s, char *);
 
     array = talloc_zero(dict, sl_array_t);
     s = talloc_strdup(array, "kMDQueryScopeComputer");
-    dalloc_add(array, &s, char *);
-    dalloc_add(dict, array, sl_array_t);
+    dalloc_add_copy(array, &s, char *);
+    dalloc_add_copy(dict, array, sl_array_t);
 
     /* key/val 2 */
     s = talloc_strdup(dict, "kMDSStorePathScopes");
-    dalloc_add(dict, &s, char *);
+    dalloc_add_copy(dict, &s, char *);
 
     array = talloc_zero(dict, sl_array_t);
     s = talloc_strdup(array, v->v_path);
-    dalloc_add(array, &s, char *);
-    dalloc_add(dict, array, sl_array_t);
+    dalloc_add_copy(array, &s, char *);
+    dalloc_add_copy(dict, array, sl_array_t);
 
     /* key/val 3 */
     s = talloc_strdup(dict, "kMDSStoreUUID");
-    dalloc_add(dict, &s, char *);
+    dalloc_add_copy(dict, &s, char *);
 
     memcpy(uuid.sl_uuid, v->v_uuid, 16);
-    dalloc_add(dict, &uuid, sl_uuid_t);
+    dalloc_add_copy(dict, &uuid, sl_uuid_t);
 
     /* key/val 4 */
     s = talloc_strdup(dict, "kMDSStoreHasPersistentUUID");
-    dalloc_add(dict, &s, char *);
+    dalloc_add_copy(dict, &s, char *);
     sl_bool_t b = true;
-    dalloc_add(dict, &b, sl_bool_t);
+    dalloc_add_copy(dict, &b, sl_bool_t);
 
-    dalloc_add(reply, dict, sl_dict_t);
+    dalloc_add_copy(reply, dict, sl_dict_t);
 
 EC_CLEANUP:
     EC_EXIT;
@@ -231,8 +231,8 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
 EC_CLEANUP:
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
-    dalloc_add(array, &sl_res, uint64_t);
-    dalloc_add(reply, array, sl_array_t);
+    dalloc_add_copy(array, &sl_res, uint64_t);
+    dalloc_add_copy(reply, array, sl_array_t);
 
     EC_EXIT;
 }
@@ -246,7 +246,7 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
 
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = 0;
-    dalloc_add(array, &sl_res, uint64_t);
+    dalloc_add_copy(array, &sl_res, uint64_t);
     
     /* Context */
     EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
@@ -265,7 +265,7 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
 
 EC_CLEANUP:
 
-    dalloc_add(reply, array, sl_array_t);
+    dalloc_add_copy(reply, array, sl_array_t);
 
     EC_EXIT;
 }
@@ -409,60 +409,41 @@ int main(int argc, char **argv)
 
     LOG(log_info, logtype_sl, "Start");
 
-    i = 2;
-    dalloc_add(dd, &i, uint64_t);
-
     i = 1;
-    dalloc_add(dd, &i, uint64_t);
-
-
+    dalloc_add_copy(dd, &i, uint64_t);
     char *str = talloc_strdup(dd, "hello world");
-    dalloc_add(dd, &str, char *);
-
+    dalloc_add_copy(dd, &str, char *);
     sl_bool_t b = true;
-    dalloc_add(dd, &b, sl_bool_t);
-
-    b = false;
-    dalloc_add(dd, &b, sl_bool_t);
-
+    dalloc_add_copy(dd, &b, sl_bool_t);
 
     /* add a nested array */
     DALLOC_CTX *nested = talloc_zero(dd, DALLOC_CTX);
     i = 3;
-    dalloc_add(nested, &i, uint64_t);
-    dalloc_add(dd, nested, DALLOC_CTX);
+    dalloc_add_copy(nested, &i, uint64_t);
+    dalloc_add_copy(dd, nested, DALLOC_CTX);
 
-#if 0
     /* test an allocated CNID array */
     uint64_t id = 16;
     sl_cnids_t *cnids = talloc_zero(dd, sl_cnids_t);
     cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
     cnids->ca_unkn1 = 1;
-    dalloc_add(cnids->ca_cnids, &id, uint64_t);
-    dalloc_add(dd, cnids, sl_cnids_t);
-#endif
+    dalloc_add_copy(cnids->ca_cnids, &id, uint64_t);
+    dalloc_add_copy(dd, cnids, sl_cnids_t);
 
     /* Now the Spotlight types */
-    sl_array_t *sl_arrary = talloc_zero(dd, sl_array_t);
+    sl_array_t *sl_array = talloc_zero(dd, sl_array_t);
     i = 0x1234;
-    dalloc_add(sl_arrary, &i, uint64_t);
+    dalloc_add_copy(sl_array, &i, uint64_t);
     i = 0x5678;
-    dalloc_add(sl_arrary, &i, uint64_t);
+    dalloc_add_copy(sl_array, &i, uint64_t);
 
-#if 0
     sl_dict_t *sl_dict = talloc_zero(dd, sl_dict_t);
     i = 0xffff;
-    dalloc_add(sl_dict, &i, uint64_t);
-    dalloc_add(sl_arrary, sl_dict, sl_dict_t);
-#endif
+    dalloc_add_copy(sl_dict, &i, uint64_t);
+    dalloc_add_copy(sl_array, sl_dict, sl_dict_t);
 
-    dalloc_add(dd, sl_arrary, sl_array_t);
+    dalloc_add_copy(dd, sl_array, sl_array_t);
     dd_dump(dd, 0);
-
-    uint64_t *int1, *int2;
-    EC_NULL_LOG (int1 = dalloc_get(dd, "DALLOC_CTX", 6, "uint64_t", 0) );
-    EC_NULL_LOG (int2 = dalloc_get(dd, "DALLOC_CTX", 6, "uint64_t", 1) );
-    LOG(log_debug, logtype_sl, "ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64, *int1, *int2);
 
     /* now parse a real spotlight packet */
     if (argc > 1) {

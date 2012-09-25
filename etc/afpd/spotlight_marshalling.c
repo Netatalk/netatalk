@@ -328,7 +328,7 @@ static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset, uint e
     i = 0;
     while (i++ < count) {
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
-        dalloc_add(query, &query_data64, uint64_t);
+        dalloc_add_copy(query, &query_data64, uint64_t);
         offset += 8;
     }
 
@@ -350,7 +350,7 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset, uint e
         query_data64 = sl_unpack_uint64(buf, offset, encoding) >> 24;
         t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
         t.tv_usec = 0;
-        dalloc_add(query, &t, sl_time_t);
+        dalloc_add_copy(query, &t, sl_time_t);
         offset += 8;
     }
 
@@ -369,7 +369,7 @@ static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset, uint e
     i = 0;
     while (i++ < count) {
         memcpy(uuid.sl_uuid, buf + offset, 16);
-        dalloc_add(query, &uuid, sl_uuid_t);
+        dalloc_add_copy(query, &uuid, sl_uuid_t);
         offset += 16;
     }
 
@@ -409,7 +409,7 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, uint
             ieee_fp_union.w[1] = RIVAL(buf, offset);
 #endif
         }
-        dalloc_add(query, &ieee_fp_union.d, double);
+        dalloc_add_copy(query, &ieee_fp_union.d, double);
         offset += 8;
     }
 
@@ -439,11 +439,11 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int le
 
     while (count --) {
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
-        dalloc_add(cnids.ca_cnids, &query_data64, uint64_t);
+        dalloc_add_copy(cnids.ca_cnids, &query_data64, uint64_t);
         offset += 8;
     }
 
-    dalloc_add(query, &cnids, sl_cnids_t);
+    dalloc_add_copy(query, &cnids, sl_cnids_t);
 
 EC_CLEANUP:
     EC_EXIT;
@@ -515,13 +515,13 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     case SQ_CPX_TYPE_ARRAY:
         sl_array = talloc_zero(query, sl_array_t);
         EC_NEG1_LOG( roffset = sl_unpack_loop(sl_array, buf, offset, cpx_query_count, toc_offset, encoding) );
-        dalloc_add(query, sl_array, sl_array_t);
+        dalloc_add_copy(query, sl_array, sl_array_t);
         break;
 
     case SQ_CPX_TYPE_DICT:
         sl_dict = talloc_zero(query, sl_dict_t);
         EC_NEG1_LOG( roffset = sl_unpack_loop(sl_dict, buf, offset, cpx_query_count, toc_offset, encoding) );
-        dalloc_add(query, sl_dict, sl_dict_t);
+        dalloc_add_copy(query, sl_dict, sl_dict_t);
         break;
 
     case SQ_CPX_TYPE_STRING:
@@ -540,7 +540,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
         }
 
-        dalloc_add(query, &p, char *);
+        dalloc_add_copy(query, &p, char *);
         roffset += qlen;
         break;
 
@@ -552,7 +552,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         } else {
             sl_fm = talloc_zero(query, sl_filemeta_t);
             EC_NEG1_LOG( sl_unpack(sl_fm, buf + offset + 8) );
-            dalloc_add(query, sl_fm, sl_filemeta_t);
+            dalloc_add_copy(query, sl_fm, sl_filemeta_t);
         }
         roffset += qlen;
         break;
@@ -612,13 +612,13 @@ static int sl_unpack_loop(DALLOC_CTX *query,
                 EC_FAIL;
             nil = 0;
             for (i = 0; i < subcount; i++)
-                dalloc_add(query, &nil, sl_nil_t);
+                dalloc_add_copy(query, &nil, sl_nil_t);
             offset += query_length;
             count -= subcount;
             break;
         case SQ_TYPE_BOOL:
             b = query_data64 >> 32;
-            dalloc_add(query, &b, sl_bool_t);
+            dalloc_add_copy(query, &b, sl_bool_t);
             offset += query_length;
             count--;
             break;

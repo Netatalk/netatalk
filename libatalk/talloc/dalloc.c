@@ -31,15 +31,26 @@
 #include <atalk/bstrlib.h>
 #include <atalk/dalloc.h>
 
-/* Use dalloc_add() macro, not this function */
+/* Use dalloc_add_copy() macro, not this function */
 int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_t size)
 {
-    AFP_ASSERT(talloc_chunk);
+    if (talloc_chunk) {
+        /* Called from dalloc_add_copy() macro */
+        dd->dd_talloc_array = talloc_realloc(dd,
+                                             dd->dd_talloc_array,
+                                             void *,
+                                             talloc_array_length(dd->dd_talloc_array) + 1);
+        memcpy(talloc_chunk, obj, size);
+        dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = talloc_chunk;
+    } else {
+        /* Called from dalloc_add() macro */
+        dd->dd_talloc_array = talloc_realloc(dd,
+                                             dd->dd_talloc_array,
+                                             void *,
+                                             talloc_array_length(dd->dd_talloc_array) + 1);
+        dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = obj;
 
-    dd->dd_talloc_array = talloc_realloc(dd, dd->dd_talloc_array, void *, talloc_array_length(dd->dd_talloc_array) + 1);
-    memcpy(talloc_chunk, obj, size);
-    dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = talloc_chunk;
-
+    }
     return 0;
 }
 
