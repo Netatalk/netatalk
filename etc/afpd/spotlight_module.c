@@ -226,10 +226,25 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/* Free ressources allocated in this module */
+static int sl_mod_close_query(void *p)
+{
+    EC_INIT;
+    slq_t *slq = p;
+
+    if (slq->slq_tracker_cursor) {
+        g_object_unref(slq->slq_tracker_cursor);
+        slq->slq_tracker_cursor = NULL;
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
 struct sl_module_export sl_mod = {
     SL_MODULE_VERSION,
     sl_mod_init,
     sl_mod_start_search,
     sl_mod_fetch_result,
-    NULL
+    sl_mod_close_query
 };

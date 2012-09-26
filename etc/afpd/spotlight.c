@@ -108,12 +108,21 @@ static int slq_add(slq_t *slq)
 {
     EC_INIT;
 
-    LOG(log_debug, logtype_sl, "slq_add(q: \"%s\"ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64 ")",
-        slq->slq_qstring, slq->slq_ctx1, slq->slq_ctx2);
-
     if (slq_active)
         talloc_free(slq_active);
     slq_active = slq;
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+static int slq_remove(slq_t *slq)
+{
+    EC_INIT;
+
+    if ((slq_active->slq_ctx1 == slq->slq_ctx1) && (slq_active->slq_ctx2 == slq->slq_ctx2)) {
+        slq_active = NULL;
+    }
 
 EC_CLEANUP:
     EC_EXIT;
@@ -228,11 +237,12 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     sl_module_export->sl_mod_start_search(slq);
 
 EC_CLEANUP:
-    array = talloc_zero(reply, sl_array_t);
-    uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
-    dalloc_add_copy(array, &sl_res, uint64_t);
-    dalloc_add(reply, array, sl_array_t);
-
+    if (ret == 0) {
+        array = talloc_zero(reply, sl_array_t);
+        uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
+        dalloc_add_copy(array, &sl_res, uint64_t);
+        dalloc_add(reply, array, sl_array_t);
+    }
     EC_EXIT;
 }
 
@@ -242,10 +252,6 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     slq_t *slq;
     uint64_t *uint64, ctx1, ctx2;
     sl_array_t *array;
-
-    array = talloc_zero(reply, sl_array_t);
-    uint64_t sl_res = 0;
-    dalloc_add_copy(array, &sl_res, uint64_t);
     
     /* Context */
     EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
@@ -256,16 +262,48 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     /* Get query for context */
     EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
 
-    /* Pass reply handle */
+    /* Create and pass reply handle */
+    array = talloc_zero(reply, sl_array_t);
+    uint64_t sl_res = 0;
+    dalloc_add_copy(array, &sl_res, uint64_t);
     slq->slq_reply = array;
 
     /* Fetch Tracker results*/
     sl_module_export->sl_mod_fetch_result(slq);
 
 EC_CLEANUP:
+    if (ret == 0) {
+        dalloc_add(reply, array, sl_array_t);
+    }
+    EC_EXIT;
+}
 
-    dalloc_add(reply, array, sl_array_t);
+static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
+{
+    EC_INIT;
+    slq_t *slq;
+    uint64_t *uint64, ctx1, ctx2;
+    sl_array_t *array;
+    
+    /* Context */
+    EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
+    ctx1 = *uint64;
+    EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 2) );
+    ctx2 = *uint64;
 
+    /* Get query for context and free it */
+    EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
+    sl_module_export->sl_mod_end_search(slq);
+    slq_remove(slq);
+    talloc_free(slq);
+
+EC_CLEANUP:
+    if (ret == 0) {
+        array = talloc_zero(reply, sl_array_t);
+        uint64_t sl_res = 0;
+        dalloc_add_copy(array, &sl_res, uint64_t);
+        dalloc_add(reply, array, sl_array_t);
+    }
     EC_EXIT;
 }
 
@@ -308,6 +346,9 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     int endianess = SL_ENC_LITTLE_ENDIAN;
     struct vol      *vol;
     DALLOC_CTX *query;
+    DALLOC_CTX *reply;
+    char *rpccmd;
+    int len;
 
     *rbuflen = 0;
 
@@ -333,38 +374,39 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     switch (cmd) {
 
     case SPOTLIGHT_CMD_OPEN:
-    case SPOTLIGHT_CMD_OPEN2: {
+    case SPOTLIGHT_CMD_OPEN2:
         RSIVAL(rbuf, 0, ntohs(vid));
         RSIVAL(rbuf, 4, 0);
-        int len = strlen(vol->v_path) + 1;
+        len = strlen(vol->v_path) + 1;
         strncpy(rbuf + 8, vol->v_path, len);
         *rbuflen += 8 + len;
         break;
-    }
+
     case SPOTLIGHT_CMD_FLAGS:
         RSIVAL(rbuf, 0, 0x0100006b); /* Whatever this value means... flags? Helios uses 0x1eefface */
         *rbuflen += 4;
         break;
 
-    case SPOTLIGHT_CMD_RPC: {
-        DALLOC_CTX *query;
+    case SPOTLIGHT_CMD_RPC:
         EC_NULL( query = talloc_zero(tmp_ctx, DALLOC_CTX) );
-        DALLOC_CTX *reply;
         EC_NULL( reply = talloc_zero(tmp_ctx, DALLOC_CTX) );
-
         EC_NEG1_LOG( sl_unpack(query, ibuf + 22) );
+
         LOG(log_debug, logtype_sl, "afp_spotlight_rpc: Request dump:");
         dd_dump(query, 0);
 
-        char *cmd;
-        EC_NULL_LOG( cmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
+        EC_NULL_LOG( rpccmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "char *", 0) );
 
-        if (STRCMP(cmd, ==, "fetchPropertiesForContext:")) {
+        if (STRCMP(rpccmd, ==, "fetchPropertiesForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchPropertiesForContext(obj, query, reply, vol) );
-        } else if (STRCMP(cmd, ==, "openQueryWithParams:forContext:")) {
+        } else if (STRCMP(rpccmd, ==, "openQueryWithParams:forContext:")) {
             EC_ZERO_LOG( sl_rpc_openQuery(obj, query, reply, vol) );
-        } else if (STRCMP(cmd, ==, "fetchQueryResultsForContext:")) {
+        } else if (STRCMP(rpccmd, ==, "fetchQueryResultsForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchQueryResultsForContext(obj, query, reply, vol) );
+        } else if (STRCMP(rpccmd, ==, "closeQueryForContext:")) {
+            EC_ZERO_LOG( sl_rpc_closeQueryForContext(obj, query, reply, vol) );
+        } else {
+            LOG(log_error, logtype_sl, "afp_spotlight_rpc: unknown Spotlight RPC: %s", rpccmd);
         }
 
         LOG(log_debug, logtype_sl, "afp_spotlight_rpc: Reply dump:");
@@ -373,12 +415,9 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
         memset(rbuf, 0, 4);
         *rbuflen += 4;
 
-        int len;
         EC_NEG1_LOG( len = sl_pack(reply, rbuf + 4) );
         *rbuflen += len;
-
         break;
-    }
     }
 
 EC_CLEANUP:
