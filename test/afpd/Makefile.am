@@ -10,6 +10,7 @@ EXTRA_DIST = test.sh
 CLEANFILES = test.default test.conf
 
 test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
+				$(top_builddir)/etc/afpd/afp_asp.c \
 				$(top_builddir)/etc/afpd/afp_avahi.c \
 				$(top_builddir)/etc/afpd/afp_config.c \
 				$(top_builddir)/etc/afpd/afp_dsi.c \
