@@ -19,6 +19,7 @@ Changes in 3.0.1
 * UPD: libevent configure args to pick up installed version. Removed
        configure arg --disable-libevent, added configure args
        --with-libevent-header|lib.
+* UPD: gentoo initscript: merge from portage netatalk.init,v 1.1
 * REM: Remove --with-smbsharemodes configure option, it was an
        empty stub not yet implemented
 
