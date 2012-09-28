@@ -88,4 +88,5 @@ endif
 EXTRA_DIST = \
 	libatalk-3.0beta1.abi \
 	libatalk-3.0beta2.abi \
+	libatalk-3.0.1.abi \
 	libatalk-3.0.abi
