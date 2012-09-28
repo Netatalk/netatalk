@@ -3,7 +3,7 @@ dnl Autoconf macros, display configure summary
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 
 	AC_MSG_RESULT([Configure summary:])
-	AC_MSG_RESULT([    init style:])
+	AC_MSG_RESULT([    INIT STYLE:])
 	if test "x$init_style" != "x"; then
 		AC_MSG_RESULT([         $init_style])
 	else
@@ -49,7 +49,7 @@ dnl	fi
 	AC_MSG_RESULT([         admin group support:     $netatalk_cv_admin_group])
 	AC_MSG_RESULT([         valid shell check:       $netatalk_cv_use_shellcheck])
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
-	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
+dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	AC_MSG_RESULT([         ACL support:             $with_acl_support])
 	AC_MSG_RESULT([         Kerberos support:        $with_kerberos])
 	AC_MSG_RESULT([         LDAP support:            $netatalk_cv_ldap])

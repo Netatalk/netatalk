@@ -15,18 +15,26 @@ AC_DEFUN([AC_DEVELOPER], [
 
 dnl Whether to disable bundled libevent
 AC_DEFUN([AC_NETATALK_LIBEVENT], [
-    AC_MSG_CHECKING([whether to disable bundled libevent (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)])
-    AC_ARG_ENABLE(
-        bundled-libevent,
-        [AS_HELP_STRING([--disable-bundled-libevent],[whether the bundled version of libevent shall not be used (define CPPFLAGS and LDFLAGS otherwise appropiately to pick up installed version)
-        ])],
-        use_bundled_libevent=$enableval,
+    use_bundled_libevent=no
+    AC_MSG_CHECKING([whether to use bundled or installed libevent])
+    AC_ARG_WITH(
+        libevent-header,
+        [AS_HELP_STRING([--with-libevent-header],[path to libevent header files])],
+        LIBEVENT_CFLAGS=-I$withval,
         use_bundled_libevent=yes
     )
-
+    AC_ARG_WITH(
+        libevent-lib,
+        [AS_HELP_STRING([--with-libevent-lib],[path to libevent header library])],
+        LIBEVENT_LDFLAGS=-L$withval,
+        use_bundled_libevent=yes
+    )
+    AC_MSG_RESULT([$use_bundled_libevent])
     if test x"$use_bundled_libevent" = x"yes" ; then
         AC_CONFIG_SUBDIRS([libevent])
     fi
+    AC_SUBST(LIBEVENT_CFLAGS)
+    AC_SUBST(LIBEVENT_LDFLAGS)
     AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
 ])
 

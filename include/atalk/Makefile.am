@@ -15,29 +15,29 @@ atalkinclude_HEADERS = \
 	ea.h \
 	acl.h \
 	unix.h \
-	volume.h
+	volume.h \
+	standards.h \
+	bstrlib.h \
+	list.h \
+	globals.h \
+	compat.h \
+	uam.h \
+	iniparser.h \
+	dictionary.h \
+	hash.h
 
 noinst_HEADERS = \
 	directory.h \
-	hash.h \
 	uuid.h \
 	queue.h \
 	server_child.h \
 	server_ipc.h \
 	tdb.h \
-	uam.h \
 	cnid_dbd_private.h \
 	cnid_private.h \
 	bstradd.h \
-	bstrlib.h \
 	errchk.h \
 	ftw.h \
-	compat.h \
 	dsi.h \
 	ldapconfig.h \
-	list.h \
-	globals.h \
-	fce_api.h \
-	standards.h \
-	iniparser.h \
-	dictionary.h
+	fce_api.h

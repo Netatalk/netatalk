@@ -90,9 +90,7 @@ struct vol {
     int             v_root_preexec_close;
     int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
-#ifdef __svr4__
-    int         v_qfd;
-#endif /*__svr4__*/
+    int             v_qfd;
 };
 
 /* load_volumes() flags */

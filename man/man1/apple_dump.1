@@ -2,12 +2,12 @@
 .\"     Title: apple_dump
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02 Jul 2012
+.\"      Date: 16 Jul 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "02 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "APPLE_DUMP" "1" "16 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -36,7 +36,9 @@ apple_dump \- Dump AppleSingle/AppleDouble format data
 .SH "DESCRIPTION"
 .PP
 \fBapple_dump\fR
-dump AppleSingle/AppleDouble format data\&.
+is a perl script to dump AppleSingle/AppleDouble format data\&.
+.PP
+This script can dump various AppleSingle/AppleDouble data created by mailer, archiver, Mac OS X, Netatalk and so on\&.
 .PP
 With no
 \fIFILE\fR|\fIDIR\fR, or when
@@ -44,7 +46,7 @@ With no
 is \-, read standard input\&.
 .SH "OPTIONS"
 .PP
-\fB\-a\fR \fIFILE\fR|\fIDIR\fR
+\fB\-a\fR [\fIFILE\fR|\fIDIR\fR]
 .RS 4
 This is default\&. Dump a AppleSingle/AppleDouble file for
 \fIFILE\fR
@@ -67,13 +69,13 @@ or
 \fIDIR\fR\&.
 .RE
 .PP
-\fB\-f\fR \fIFILE\fR
+\fB\-f\fR [\fIFILE\fR]
 .RS 4
 Dump
 \fIFILE\fR\&. Assume FinderInfo to be FileInfo\&.
 .RE
 .PP
-\fB\-d\fR \fIFILE\fR
+\fB\-d\fR [\fIFILE\fR]
 .RS 4
 Dump
 \fIFILE\fR\&. Assume FinderInfo to be DirInfo\&.
@@ -98,4 +100,6 @@ If setting option \-e, \-f or \-d, assume FinderInfo and doesn\'t look for anoth
 \fBad\fR(1),
 \fBgetfattr\fR(1),
 \fBattr\fR(1),
-\fBrunat\fR(1)
+\fBrunat\fR(1),
+\fBgetextattr\fR(8),
+\fBlsextattr\fR(8)

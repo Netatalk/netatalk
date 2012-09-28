@@ -229,6 +229,7 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     uid_t uid;
     gid_t gid;
+    uint32_t tmp;
     struct passwd *pwd;
     struct group *grp;
 
@@ -250,7 +251,8 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     /* Check if UUID is a client local one */
     if (memcmp(uuidp, local_user_uuid, 12) == 0) {
         *type = UUID_USER;
-        uid = ntohl(*(uint32_t *)(uuidp + 12));
+        memcpy(&tmp, uuidp + 12, sizeof(uint32_t));
+        uid = ntohl(tmp);
         if ((pwd = getpwuid(uid)) == NULL) {
             /* not found, add negative entry to cache */
             add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);
@@ -266,7 +268,8 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
         return ret;
     } else if (memcmp(uuidp, local_group_uuid, 12) == 0) {
         *type = UUID_GROUP;
-        gid = ntohl(*(uint32_t *)(uuidp + 12));
+        memcpy(&tmp, uuidp + 12, sizeof(uint32_t));
+        gid = ntohl(tmp);
         if ((grp = getgrgid(gid)) == NULL) {
             /* not found, add negative entry to cache */
             add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);

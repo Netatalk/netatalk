@@ -166,13 +166,6 @@ static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
     {0, 0, 0}
 };
 
-/* fallback for EAs */
-static const struct entry entry_order_osx[ADEID_NUM_OSX +1] = {
-    {ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI},
-    {ADEID_RFORK, ADEDOFF_RFORK_OSX, ADEDLEN_INIT},
-    {0, 0, 0}
-};
-
 #define ADFLAGS2LOGSTRBUFSIZ 128
 const char *adflags2logstr(int adflags)
 {
@@ -325,10 +318,9 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
 
     LOG(log_debug, logtype_default, "new_ad_header(\"%s\")", path);
 
-    if (stp == NULL) {
-        stp = &st;
-        if (lstat(path, &st) != 0)
-            return -1;
+    if (ad->ad_magic == AD_MAGIC) {
+        LOG(log_debug, logtype_default, "new_ad_header(\"%s\"): already initialized", path);
+        return 0;
     }
 
     ad->ad_magic = AD_MAGIC;
@@ -343,11 +335,8 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         eid = entry_order2;
     else if (ad->ad_vers == AD_VERSION_EA)
         eid = entry_order_ea;
-    else if (ad->ad_vers == AD_VERSION2_OSX)
-        eid = entry_order_osx;
-    else {
+    else
         return -1;
-    }
 
     while (eid->id) {
         ad->ad_eid[eid->id].ade_off = eid->offset;
@@ -356,34 +345,39 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     }
 
     /* put something sane in the directory finderinfo */
-    if (ad->ad_vers != AD_VERSION2_OSX) {
-        if ((adflags & ADFLAGS_DIR)) {
-            /* set default view */
-            ashort = htons(FINDERINFO_CLOSEDVIEW);
-            memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
-        } else {
-            /* set default creator/type fields */
-            memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
-            memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
-        }
-
-        /* make things invisible */
-        if ((ad->ad_options & ADVOL_INVDOTS)
-            && (*path == '.')
-            && !((adflags & ADFLAGS_DIR) && (path[1] == 0))
-            ) {
-            ashort = htons(ATTRBIT_INVISIBLE);
-            ad_setattr(ad, ashort);
-            ashort = htons(FINDERINFO_INVISIBLE);
-            memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
-        }
-
-        /* put something sane in the date fields */
-        ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, stp->st_mtime);
-        ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, stp->st_mtime);
-        ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, stp->st_mtime);
-        ad_setdate(ad, AD_DATE_BACKUP, AD_DATE_START);
+    if (stp == NULL) {
+        stp = &st;
+        if (lstat(path, &st) != 0)
+            return -1;
     }
+
+    if ((adflags & ADFLAGS_DIR)) {
+        /* set default view */
+        ashort = htons(FINDERINFO_CLOSEDVIEW);
+        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
+    } else {
+        /* set default creator/type fields */
+        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
+        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
+    }
+
+    /* make things invisible */
+    if ((ad->ad_options & ADVOL_INVDOTS)
+        && (*path == '.')
+        && !((adflags & ADFLAGS_DIR) && (path[1] == 0))
+        ) {
+        ashort = htons(ATTRBIT_INVISIBLE);
+        ad_setattr(ad, ashort);
+        ashort = htons(FINDERINFO_INVISIBLE);
+        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
+    }
+
+    /* put something sane in the date fields */
+    ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, stp->st_mtime);
+    ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, stp->st_mtime);
+    ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, stp->st_mtime);
+    ad_setdate(ad, AD_DATE_BACKUP, AD_DATE_START);
+
     return 0;
 }
 
@@ -1042,8 +1036,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
 
     if (ad_meta_fileno(ad) == AD_SYMLINK)
-        /* symlink */
-        EC_EXIT;
+        goto EC_CLEANUP;
 
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -1256,6 +1249,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         /* This is a new adouble header file, create it */
         LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): created adouble rfork, initializing: \"%s\"",
             path, rfpath);
+        EC_NEG1_LOG( new_ad_header(ad, path, NULL, adflags) );
         LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
@@ -1610,8 +1604,10 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     mode_t mode = 0;
 
     LOG(log_debug, logtype_default,
-        "ad_open(\"%s\", %s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_open(\"%s\", %s): BEGIN {d: %d, m: %d, r: %d}"
+        "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         fullpathname(path), adflags2logstr(adflags),
+        ad->ad_data_refcount, ad->ad_meta_refcount, ad->ad_reso_refcount,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
@@ -1642,19 +1638,31 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
 
     va_start(args, adflags);
     if (adflags & ADFLAGS_CREATE)
-        mode = va_arg(args, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int) ? va_arg (args, int) : va_arg (args, mode_t));
     va_end(args);
 
     if (adflags & ADFLAGS_DF) {
-        EC_ZERO( ad_open_df(path, adflags, mode, ad) );
+        ad->ad_data_refcount++;
+        if (ad_open_df(path, adflags, mode, ad) != 0) {
+            ad->ad_data_refcount--;
+            EC_FAIL;
+        }
     }
 
     if (adflags & ADFLAGS_HF) {
-        EC_ZERO( ad_open_hf(path, adflags, mode, ad) );
+        ad->ad_meta_refcount++;
+        if (ad_open_hf(path, adflags, mode, ad) != 0) {
+            ad->ad_meta_refcount--;
+            EC_FAIL;
+        }
     }
 
     if (adflags & ADFLAGS_RF) {
-        EC_ZERO( ad_open_rf(path, adflags, mode, ad) );
+        ad->ad_reso_refcount++;
+        if (ad_open_rf(path, adflags, mode, ad) != 0) {
+            ad->ad_reso_refcount--;
+            EC_FAIL;
+        }
     }
 
     if (adflags & ADFLAGS_CHECK_OF) {
@@ -1663,8 +1671,10 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
 
 EC_CLEANUP:
     LOG(log_debug, logtype_default,
-        "ad_open(\"%s\"): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_open(\"%s\"): END: %d {d: %d, m: %d, r: %d}"
+        "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         fullpathname(path), ret,
+        ad->ad_data_refcount, ad->ad_meta_refcount, ad->ad_reso_refcount,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
@@ -1685,26 +1695,16 @@ EC_CLEANUP:
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
-    uid_t uid;
     int   ret, err, oflags;
 
     /* Sanitize flags */
     oflags = (flags & (ADFLAGS_CHECK_OF | ADFLAGS_DIR)) | ADFLAGS_HF | ADFLAGS_RDONLY;    
 
     if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
-        uid = geteuid();
-        if (seteuid(0)) {
-            LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
-            errno = EACCES;
-            return -1;
-        }
-        /* we are root open read only */
+        become_root();
         ret = ad_open(adp, name, oflags);
+        unbecome_root();
         err = errno;
-        if ( seteuid(uid) < 0) {
-            LOG(log_error, logtype_default, "ad_metadata: can't seteuid back");
-            exit(EXITERR_SYS);
-        }
         errno = err;
     }
 
@@ -1810,7 +1810,7 @@ int ad_openat(struct adouble  *ad,
 
     va_start(args, adflags);
     if (adflags & ADFLAGS_CREATE)
-        mode = va_arg(args, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int) ? va_arg (args, int) : va_arg (args, mode_t));
     va_end(args);
 
     EC_NEG1( ad_open(ad, path, adflags, mode) );

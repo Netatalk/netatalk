@@ -59,6 +59,8 @@ if (     0 == system("which getfattr > /dev/null 2>&1")) {
     $eacommand = 2;
 } elsif (0 == system("which runat > /dev/null 2>&1")) {
     $eacommand = 3;
+} elsif (0 == system("which getextattr > /dev/null 2>&1")) {
+    $eacommand = 4;
 } else {
     $eacommand = 0;
 }
@@ -109,7 +111,7 @@ while ($arg = shift @ARGV)
     } elsif ($arg eq "-e") {
         if ($eacommand == 0) {
             printf (STDERR "%s: unsupported option -e\n", basename($0));
-            printf (STDERR "because neither getfattr, xattr nor runat is found.\n");
+            printf (STDERR "because neither getfattr, xattr, runat nor getextattr is found.\n");
             exit 1;
         }
         $eaoption = 1;
@@ -873,6 +875,17 @@ sub checkea {
         }
         close (EALIST);
         return 0;
+    } elsif ( $eacommand == 4 ) {
+        open(EALIST, "lsextattr -q user \"$file\" |");
+        while(<EALIST>) {
+            $_ = "\t".$_;
+            if ( $_ =~ /\torg\.netatalk\.Metadata[\n\t]/ ) {
+                close (EALIST);
+                return 1;
+            }
+        }
+        close (EALIST);
+        return 0;
     } else {
         return 0;
     }
@@ -893,6 +906,8 @@ sub eaopenfile {
         system("attr -q -g org.netatalk.Metadata \"$file\" > $eatempfile");
     } elsif ( $eacommand == 3 ) {
         system("runat \"$file\" cat org.netatalk.Metadata > $eatempfile");
+    } elsif ( $eacommand == 4 ) {
+        system("getextattr -q user org.netatalk.Metadata \"$file\" > $eatempfile");
     } else {
         return "";
     }

@@ -124,26 +124,30 @@ static int unpack_header(struct ea * restrict ea)
 {
     int ret = 0;
     unsigned int count = 0;
+    uint16_t uint16;
     uint32_t uint32;
     char *buf;
 
     /* Check magic and version */
     buf = ea->ea_data;
-    if (*(uint32_t *)buf != htonl(EA_MAGIC)) {
-        LOG(log_error, logtype_afpd, "unpack_header: wrong magic 0x%08x", *(uint32_t *)buf);
+    memcpy(&uint32, buf, sizeof(uint32_t));
+    if (uint32 != htonl(EA_MAGIC)) {
+        LOG(log_error, logtype_afpd, "unpack_header: wrong magic 0x%08x", uint32);
         ret = -1;
         goto exit;
     }
     buf += 4;
-    if (*(uint16_t *)buf != htons(EA_VERSION)) {
-        LOG(log_error, logtype_afpd, "unpack_header: wrong version 0x%04x", *(uint16_t *)buf);
+    memcpy(&uint16, buf, sizeof(uint16_t));
+    if (uint16 != htons(EA_VERSION)) {
+        LOG(log_error, logtype_afpd, "unpack_header: wrong version 0x%04x", uint16);
         ret = -1;
         goto exit;
     }
     buf += 2;
 
     /* Get EA count */
-    ea->ea_count = ntohs(*(uint16_t *)buf);
+    memcpy(&uint16, buf, sizeof(uint16_t));
+    ea->ea_count = ntohs(uint16);
     LOG(log_debug, logtype_afpd, "unpack_header: number of EAs: %u", ea->ea_count);
     buf += 2;
 
@@ -391,6 +395,8 @@ static int create_ea_header(const char * restrict uname,
 {
     int fd = -1, err = 0;
     char *ptr;
+    uint16_t uint16;
+    uint32_t uint32;
 
     if ((fd = open(uname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
         LOG(log_error, logtype_afpd, "ea_create: open race condition with ea header for file: %s", uname);
@@ -406,11 +412,15 @@ static int create_ea_header(const char * restrict uname,
 
     /* Now init it */
     ptr = ea->ea_data;
-    *(uint32_t *)ptr = htonl(EA_MAGIC);
+    uint32 = htonl(EA_MAGIC);
+    memcpy(ptr, &uint32, sizeof(uint32_t));
     ptr += EA_MAGIC_LEN;
-    *(uint16_t *)ptr = htons(EA_VERSION);
+
+    uint16 = htons(EA_VERSION);
+    memcpy(ptr, &uint16, sizeof(uint16_t));
     ptr += EA_VERSION_LEN;
-    *(uint16_t *)ptr = 0;       /* count */
+
+    memset(ptr, 0, 2);          /* count */
 
     ea->ea_size = EA_HEADER_SIZE;
     ea->ea_inited = EA_INITED;
@@ -1684,28 +1694,20 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 
     int ret = AFP_OK;
     unsigned int count = 0;
-    uid_t uid;
     const char *eaname;
     const char *eaname_safe = NULL;
     struct ea ea;
 
     LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
     /* .AppleDouble already might be inaccesible, so we must run as id 0 */
-    uid = geteuid();
-    if (seteuid(0)) {
-        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): seteuid: %s", name, strerror(errno));
-        return AFPERR_MISC;
-    }
+    become_root();
 
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         /* ENOENT --> no EA files, nothing to do */
         if (errno != ENOENT)
             ret = AFPERR_MISC;
-        if (seteuid(uid) < 0) {
-            LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
-            exit(EXITERR_SYS);
-        }
+        unbecome_root();
         return ret;
     }
 
@@ -1758,10 +1760,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     }
 
 exit:
-    if (seteuid(uid) < 0) {
-        LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
-        exit(EXITERR_SYS);
-    }
+    unbecome_root();
 
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): error closing ea handle", name);

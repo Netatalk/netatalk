@@ -347,6 +347,12 @@ int get_lock(int cmd, const char *dbpath)
     char lockpath[PATH_MAX];
     struct stat st;
 
+    LOG(log_debug, logtype_cnid, "get_lock(%s, \"%s\")",
+        cmd == LOCK_EXCL ? "LOCK_EXCL" :
+        cmd == LOCK_SHRD ? "LOCK_SHRD" :
+        cmd == LOCK_FREE ? "LOCK_FREE" :
+        cmd == LOCK_UNLOCK ? "LOCK_UNLOCK" : "UNKNOWN" , dbpath ? dbpath : "");
+
     switch (cmd) {
     case LOCK_FREE:
         if (lockfd == -1)
@@ -808,7 +814,7 @@ int dbif_env_remove(const char *path)
     LOG(log_debug, logtype_cnid, "Trying to remove BerkeleyDB environment");
 
     if (get_lock(LOCK_EXCL, path) != LOCK_EXCL) {
-        LOG(log_warning, logtype_cnid, "CNID db \"%s\" in use, can't remove BerkeleyDB environment", path);
+        LOG(log_debug, logtype_cnid, "CNID db \"%s\" in use, not removing BerkeleyDB environment", path);
         return 0;
     }
     

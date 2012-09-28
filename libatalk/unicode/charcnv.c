@@ -866,6 +866,7 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
                 i_len = i;
                 break;
             case 0x002f: /* 0x002f = '/' */
+                if (option & CONV_ALLOW_SLASH) break;
                 escch = c;
                 j = i_len - i;
                 i_len = i;

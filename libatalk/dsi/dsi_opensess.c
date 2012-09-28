@@ -16,25 +16,12 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 
-static void dsi_init_buffer(DSI *dsi)
-{
-    /* default is 12 * 300k = 3,6 MB (Apr 2011) */
-    if ((dsi->buffer = malloc(dsi->dsireadbuf * dsi->server_quantum)) == NULL) {
-        LOG(log_error, logtype_dsi, "dsi_init_buffer: OOM");
-        AFP_PANIC("OOM in dsi_init_buffer");
-    }
-    dsi->start = dsi->buffer;
-    dsi->eof = dsi->buffer;
-    dsi->end = dsi->buffer + (dsi->dsireadbuf * dsi->server_quantum);
-}
-
 /* OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)
 {
   uint32_t i = 0; /* this serves double duty. it must be 4-bytes long */
   int offs;
 
-  dsi_init_buffer(dsi);
   if (setnonblock(dsi->socket, 1) < 0) {
       LOG(log_error, logtype_dsi, "dsi_opensession: setnonblock: %s", strerror(errno));
       AFP_PANIC("setnonblock error");

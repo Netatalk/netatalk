@@ -251,17 +251,17 @@ int main(int argc, char **argv)
     /* Setup signal handling */
     set_signal();
 
-    /* Setup logging. Should be portable among *NIXes */
-    if (!verbose)
-        setuplog("default:info", "/dev/tty");
-    else
-        setuplog("default:debug", "/dev/tty");
-
     /* Load config */
     if (afp_config_parse(&obj, "dbd") != 0) {
         dbd_log( LOGSTD, "Couldn't load afp.conf");
         exit(EXIT_FAILURE);
     }
+
+    /* Setup logging. Should be portable among *NIXes */
+    if (!verbose)
+        setuplog("default:info", "/dev/tty");
+    else
+        setuplog("default:debug", "/dev/tty");
 
     if (load_volumes(&obj, NULL) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
@@ -342,6 +342,7 @@ int main(int argc, char **argv)
     if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
         goto exit_noenv;
     if (db_locked != LOCK_EXCL) {
+        dbd_log(LOGDEBUG, "Database is in use, acquiring shared lock");
         /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
         if (exclusive) {
             dbd_log(LOGSTD, "Database is in use and exlusive was requested");

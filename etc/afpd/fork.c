@@ -301,8 +301,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         LOG(log_error, logtype_afpd, "afp_openfork(%s): %s", s_path->m_name, strerror(errno));
         return AFPERR_PARAM;
     }
-    /* FIXME should we check it first ? */
+
     upath = s_path->u_name;
+    path = s_path->m_name;
+    st = &s_path->st;
+
     if (!vol_unix_priv(vol)) {
         if (check_access(obj, vol, upath, access ) < 0) {
             return AFPERR_ACCESS;
@@ -313,33 +316,36 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         }
     }
 
-    st   = &s_path->st;
-    /* XXX: this probably isn't the best way to do this. the already
-       open bits should really be set if the fork is opened by any
-       program, not just this one. however, that's problematic to do
-       if we can't write lock files somewhere. opened is also passed to
-       ad_open so that we can keep file locks together.
-       FIXME: add the fork we are opening?
-    */
     if ((opened = of_findname(s_path))) {
         adsame = opened->of_ad;
     }
 
-    if ( fork == OPENFORK_DATA ) {
+    adflags = ADFLAGS_SETSHRMD;
+
+    if (fork == OPENFORK_DATA) {
         eid = ADEID_DFORK;
-        adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF;
+        adflags |= ADFLAGS_DF;
     } else {
         eid = ADEID_RFORK;
-        adflags = ADFLAGS_RF | ADFLAGS_HF | ADFLAGS_NOHF;
+        adflags |= ADFLAGS_RF;
         if (!(access & OPENACC_WR))
             adflags |= ADFLAGS_NORF;
     }
 
-    path = s_path->m_name;
-    if (( ofork = of_alloc(vol, curdir, path, &ofrefnum, eid,
-                           adsame, st)) == NULL ) {
-        return( AFPERR_NFILE );
+    if (access & OPENACC_WR) {
+        adflags |= ADFLAGS_RDWR;
+        if (fork != OPENFORK_DATA)
+            /*
+             * We only try to create the resource
+             * fork if the user wants to open it for write acess.
+             */
+            adflags |= ADFLAGS_CREATE;
+    } else {
+        adflags |= ADFLAGS_RDONLY;
     }
+
+    if ((ofork = of_alloc(vol, curdir, path, &ofrefnum, eid, adsame, st)) == NULL)
+        return AFPERR_NFILE;
 
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s, %s)",
         fullpathname(s_path->u_name),
@@ -347,90 +353,60 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         !(access & OPENACC_WR) ? "O_RDONLY" : "O_RDWR");
 
     ret = AFPERR_NOOBJ;
+
+    /* First ad_open(), opens data or ressource fork */
+    if (ad_open(ofork->of_ad, upath, adflags, 0666) < 0) {
+        switch (errno) {
+        case EROFS:
+            ret = AFPERR_VLOCK;
+        case EACCES:
+            goto openfork_err;
+        case ENOENT:
+            goto openfork_err;
+        case EMFILE :
+        case ENFILE :
+            ret = AFPERR_NFILE;
+            goto openfork_err;
+        case EISDIR :
+            ret = AFPERR_BADTYPE;
+            goto openfork_err;
+        default:
+            LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
+            ret = AFPERR_PARAM;
+            goto openfork_err;
+        }
+    }
+
+    /*
+     * Create metadata if we open rw, otherwise only open existing metadata
+     */
     if (access & OPENACC_WR) {
-        /* try opening in read-write mode */
-        if (ad_open(ofork->of_ad, upath,
-                    adflags | ADFLAGS_RDWR | ADFLAGS_SETSHRMD) < 0) {
-            switch ( errno ) {
-            case EROFS:
-                ret = AFPERR_VLOCK;
-            case EACCES:
-                goto openfork_err;
-            case ENOENT:
-                if (fork == OPENFORK_DATA) {
-                    /* try to open only the data fork */
-                    if (ad_open(ofork->of_ad, upath,
-                                ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_SETSHRMD) < 0) {
-                        goto openfork_err;
-                    }
-                    adflags = ADFLAGS_DF;
-                } else {
-                    /* here's the deal. we only try to create the resource
-                     * fork if the user wants to open it for write acess. */
-                    if (ad_open(ofork->of_ad, upath,
-                                adflags | ADFLAGS_RDWR | ADFLAGS_SETSHRMD | ADFLAGS_CREATE, 0666) < 0)
-                        goto openfork_err;
-                    ofork->of_flags |= AFPFORK_META;
-                }
-                break;
-            case EMFILE :
-            case ENFILE :
-                ret = AFPERR_NFILE;
-                goto openfork_err;
-            case EISDIR :
-                ret = AFPERR_BADTYPE;
-                goto openfork_err;
-            default:
-                LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
-                ret = AFPERR_PARAM;
-                goto openfork_err;
-            }
-        }
-        else {
-            /* the ressource fork is open too */
-            ofork->of_flags |= AFPFORK_META;
-        }
+        adflags = ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE;
     } else {
-        /* try opening in read-only mode */
-        ret = AFPERR_NOOBJ;
-        if (ad_open(ofork->of_ad, upath, adflags | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) < 0) {
-            switch ( errno ) {
-            case EROFS:
-                ret = AFPERR_VLOCK;
-                goto openfork_err;
-            case EACCES:
-                goto openfork_err;
-            case ENOENT:
-                /* see if client asked for a read only data fork */
-                if (fork == OPENFORK_DATA) {
-                    if (ad_open(ofork->of_ad, upath, ADFLAGS_DF | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) < 0) {
-                        goto openfork_err;
-                    }
-                    adflags = ADFLAGS_DF;
-                }
-                /* else we don't set AFPFORK_META because there's no ressource fork file
-                 * We need to check AFPFORK_META in afp_closefork(). eg fork open read-only
-                 * then create in open read-write.
-                 * FIXME , it doesn't play well with byte locking example:
-                 * ressource fork open read only
-                 * locking set on it (no effect, there's no file!)
-                 * ressource fork open read write now
-                 */
-                break;
-            case EMFILE :
-            case ENFILE :
-                ret = AFPERR_NFILE;
-                goto openfork_err;
-            case EISDIR :
-                ret = AFPERR_BADTYPE;
-                goto openfork_err;
-            default:
-                LOG(log_error, logtype_afpd, "afp_openfork(\"%s\"): %s",
-                    fullpathname(s_path->m_name), strerror(errno) );
-                goto openfork_err;
-            }
-        } else {
-            ofork->of_flags |= AFPFORK_META;
+        adflags = ADFLAGS_HF | ADFLAGS_RDONLY;
+    }
+
+    if (ad_open(ofork->of_ad, upath, adflags, 0666) == 0) {
+        ofork->of_flags |= AFPFORK_META;
+    } else {
+        switch (errno) {
+        case EACCES:
+        case ENOENT:
+            /* no metadata? We don't care! */
+            break;
+        case EROFS:
+            ret = AFPERR_VLOCK;
+        case EMFILE :
+        case ENFILE :
+            ret = AFPERR_NFILE;
+            goto openfork_err;
+        case EISDIR :
+            ret = AFPERR_BADTYPE;
+            goto openfork_err;
+        default:
+            LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
+            ret = AFPERR_PARAM;
+            goto openfork_err;
         }
     }
 
@@ -499,6 +475,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     /* the file may be open read only without ressource fork */
     if ((access & OPENACC_RD))
         ofork->of_flags |= AFPFORK_ACCRD;
+
+    LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): fork: %" PRIu16,
+        fullpathname(s_path->m_name), ofork->of_refnum);
 
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
     return( AFP_OK );
@@ -818,8 +797,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     size = ad_size(ofork->of_ad, eid);
 
     LOG(log_debug, logtype_afpd,
-        "afp_read(off: %" PRIu64 ", len: %" PRIu64 ", fork: %s, size: %" PRIu64 ")",
-        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r", size);
+        "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %" PRIu64 ")",
+        ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount, size);
 
     if (offset > size) {
         err = AFPERR_EOF;
@@ -835,17 +814,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     savereqcount = reqcount;
     saveoff = offset;
 
-    LOG(log_debug, logtype_afpd,
-        "afp_read(off: %" PRIu64 ", len: %" PRIu64 ", fork: %s)",
-        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
-
     if (reqcount < 0 || offset < 0) {
         err = AFPERR_PARAM;
         goto afp_read_err;
     }
-
-    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd)",
-        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount);
 
     if (obj->options.flags & OPTION_AFP_READ_LOCK) {
         if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
@@ -1063,8 +1035,8 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, s
         return( AFPERR_PARAM );
     }
 
-    LOG(log_debug, logtype_afpd, "afp_closefork(fork: %s)",
-        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+    LOG(log_debug, logtype_afpd, "afp_closefork(fork: %" PRIu16 " [%s])",
+        ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "rsrc");
 
     if (of_closefork(obj, ofork) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_closefork(%s): of_closefork: %s", of_name(ofork), strerror(errno) );
@@ -1118,8 +1090,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     uint16_t        ofrefnum;
     ssize_t         cc;
     DSI             *dsi = obj->dsi;
-    char            *rcvbuf = dsi->buffer;
-    size_t          rcvbuflen = dsi->dsireadbuf * dsi->server_quantum;
+    char            *rcvbuf = dsi->commands;
+    size_t          rcvbuflen = dsi->server_quantum;
 
     /* figure out parameters */
     ibuf++;
@@ -1137,8 +1109,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         goto afp_write_err;
     }
 
-    LOG(log_debug, logtype_afpd, "afp_write(off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
-        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+    LOG(log_debug, logtype_afpd, "afp_write(fork: %" PRIu16 " [%s], off: %" PRIu64 ", size: %" PRIu64 ")",
+        ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount);
 
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
         err = AFPERR_ACCESS;
@@ -1261,8 +1233,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     return( AFP_OK );
 
 afp_write_err:
-    dsi_writeinit(obj->dsi, rbuf, *rbuflen);
-    dsi_writeflush(obj->dsi);
+    dsi_writeinit(dsi, rcvbuf, rcvbuflen);
+    dsi_writeflush(dsi);
 
     if (err != AFP_OK) {
         *rbuflen = 0;
