@@ -148,6 +148,16 @@ EC_CLEANUP:
     return q;
 }
 
+/* Error handling for queries */
+static void slq_error(slq_t *slq)
+{
+    if (!slq)
+        return;
+    sl_module_export->sl_mod_error(slq);
+    slq_remove(slq);
+    talloc_free(slq);
+}
+
 /**************************************************************************************************
  * Spotlight RPC functions
  **************************************************************************************************/
@@ -210,16 +220,17 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     uint64_t *uint64;
     DALLOC_CTX *reqinfo;
     sl_array_t *array;
-
-    slq_t *slq = talloc_zero(sl_ctx, slq_t);
+    slq_t *slq = NULL;
 
     /* Allocate and initialize query object */
+    slq = talloc_zero(sl_ctx, slq_t);
+    slq->slq_state = SLQ_STATE_NEW;
     slq->slq_obj = obj;
     slq->slq_vol = v;
     EC_NULL_LOG( sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryString") );
     LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", sl_query);
     slq->slq_qstring = talloc_steal(slq, sl_query);
-    slq->slq_state = SLQ_STATE_NEW;
+
     slq->slq_time = time(NULL);
     EC_NULL_LOG( uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
     slq->slq_ctx1 = *uint64;
@@ -234,14 +245,16 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     (void)slq_add(slq);
 
     /* Run the query */
-    sl_module_export->sl_mod_start_search(slq);
+    EC_ZERO( sl_module_export->sl_mod_start_search(slq) );
+
+    array = talloc_zero(reply, sl_array_t);
+    uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
+    dalloc_add_copy(array, &sl_res, uint64_t);
+    dalloc_add(reply, array, sl_array_t);
 
 EC_CLEANUP:
-    if (ret == 0) {
-        array = talloc_zero(reply, sl_array_t);
-        uint64_t sl_res = ret == 0 ? 0 : UINT64_MAX;
-        dalloc_add_copy(array, &sl_res, uint64_t);
-        dalloc_add(reply, array, sl_array_t);
+    if (ret != 0) {
+        slq_error(slq);
     }
     EC_EXIT;
 }
@@ -249,10 +262,10 @@ EC_CLEANUP:
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 {
     EC_INIT;
-    slq_t *slq;
+    slq_t *slq = NULL;
     uint64_t *uint64, ctx1, ctx2;
     sl_array_t *array;
-    
+
     /* Context */
     EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
     ctx1 = *uint64;
@@ -261,6 +274,9 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
 
     /* Get query for context */
     EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
+    if (slq->slq_state != SLQ_STATE_RUNNING) {
+        EC_FAIL_LOG("Spotlight: attempt to fetch results for query that isn't runnnig");
+    }
 
     /* Create and pass reply handle */
     array = talloc_zero(reply, sl_array_t);
@@ -269,11 +285,13 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     slq->slq_reply = array;
 
     /* Fetch Tracker results*/
-    sl_module_export->sl_mod_fetch_result(slq);
+    EC_ZERO( sl_module_export->sl_mod_fetch_result(slq) );
+
+    dalloc_add(reply, array, sl_array_t);
 
 EC_CLEANUP:
-    if (ret == 0) {
-        dalloc_add(reply, array, sl_array_t);
+    if (ret != 0) {
+        slq_error(slq);
     }
     EC_EXIT;
 }
@@ -281,7 +299,7 @@ EC_CLEANUP:
 static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 {
     EC_INIT;
-    slq_t *slq;
+    slq_t *slq = NULL;
     uint64_t *uint64, ctx1, ctx2;
     sl_array_t *array;
     
@@ -296,13 +314,16 @@ static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *quer
     sl_module_export->sl_mod_end_search(slq);
     slq_remove(slq);
     talloc_free(slq);
+    slq = NULL;
+
+    array = talloc_zero(reply, sl_array_t);
+    uint64_t sl_res = 0;
+    dalloc_add_copy(array, &sl_res, uint64_t);
+    dalloc_add(reply, array, sl_array_t);
 
 EC_CLEANUP:
-    if (ret == 0) {
-        array = talloc_zero(reply, sl_array_t);
-        uint64_t sl_res = 0;
-        dalloc_add_copy(array, &sl_res, uint64_t);
-        dalloc_add(reply, array, sl_array_t);
+    if (ret != 0) {
+        slq_error(slq);
     }
     EC_EXIT;
 }

@@ -38,6 +38,7 @@ struct sl_module_export {
     int (*sl_mod_start_search)(void *);
     int (*sl_mod_fetch_result)(void *);
     int (*sl_mod_end_search)  (void *);
+    int (*sl_mod_error)       (void *);
 };
 
 extern int sl_mod_load(const char *path);

@@ -131,6 +131,7 @@ static int sl_mod_start_search(void *p)
         g_clear_error(&error);
         EC_FAIL;
     }
+    slq->slq_state = SLQ_STATE_RUNNING;
 
 EC_CLEANUP:
     EC_EXIT;
@@ -241,10 +242,28 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int sl_mod_error(void *p)
+{
+    EC_INIT;
+    slq_t *slq = p;
+
+    if (!slq)
+        goto EC_CLEANUP;
+
+    if (slq->slq_tracker_cursor) {
+        g_object_unref(slq->slq_tracker_cursor);
+        slq->slq_tracker_cursor = NULL;
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
 struct sl_module_export sl_mod = {
     SL_MODULE_VERSION,
     sl_mod_init,
     sl_mod_start_search,
     sl_mod_fetch_result,
-    sl_mod_close_query
+    sl_mod_close_query,
+    sl_mod_error
 };
