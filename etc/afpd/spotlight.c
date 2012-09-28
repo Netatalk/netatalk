@@ -12,6 +12,8 @@
   GNU General Public License for more details.
 */
 
+#define USE_LIST
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -25,6 +27,7 @@
 #include <inttypes.h>
 #include <time.h>
 
+#include <atalk/list.h>
 #include <atalk/errchk.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
@@ -33,7 +36,6 @@
 #include <atalk/byteorder.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
-#include <atalk/queue.h>
 
 #include "spotlight.h"
 
@@ -98,30 +100,35 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
  * Spotlight queries
  **************************************************************************************************/
 
-static q_t *sl_queries;
-static slq_t *slq_active;
+static ATALK_LIST_HEAD(sl_queries);
 
 /*!
  * Add a query to the list of active queries
  */
 static int slq_add(slq_t *slq)
 {
-    EC_INIT;
-
-    if (slq_active)
-        talloc_free(slq_active);
-    slq_active = slq;
-
-EC_CLEANUP:
-    EC_EXIT;
+    list_add(&(slq->slq_list), &sl_queries);
+    return 0;
 }
 
 static int slq_remove(slq_t *slq)
 {
     EC_INIT;
+    struct list_head *p;
+    slq_t *q = NULL;
 
-    if ((slq_active->slq_ctx1 == slq->slq_ctx1) && (slq_active->slq_ctx2 == slq->slq_ctx2)) {
-        slq_active = NULL;
+    list_for_each(p, &sl_queries) {
+        q = list_entry(p, slq_t, slq_list);
+        if ((q->slq_ctx1 == slq->slq_ctx1) && (q->slq_ctx2 == slq->slq_ctx2)) {            
+            list_del(p);
+            break;
+        }
+        q = NULL;
+    }
+
+    if (q == NULL) {
+        /* The SL query 'slq' was not found in the list, this is not supposed to happen! */
+        LOG(log_warning, logtype_sl, "slq_remove: slq not in active query list");
     }
 
 EC_CLEANUP:
@@ -131,17 +138,22 @@ EC_CLEANUP:
 static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 {
     EC_INIT;
-    slq_t *q;
+    slq_t *q = NULL;
+    struct list_head *p;
 
-    LOG(log_debug, logtype_sl, "slq_for_ctx(ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64
-        "): active: ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64,
-        ctx1, ctx2, slq_active->slq_ctx1, slq_active->slq_ctx2);
+    list_for_each(p, &sl_queries) {
+        q = list_entry(p, slq_t, slq_list);
 
-    if ((slq_active->slq_ctx1 == ctx1) && (slq_active->slq_ctx2 == ctx2))
-        q = slq_active;
-    else
+        LOG(log_debug, logtype_sl, "slq_for_ctx(ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64
+            "): active: ctx1: 0x%" PRIx64 ", ctx2: 0x%" PRIx64,
+            ctx1, ctx2, q->slq_ctx1, q->slq_ctx2);
+
+        if ((q->slq_ctx1 == ctx1) && (q->slq_ctx2 == ctx2)) {            
+            break;
+        }
         q = NULL;
-    
+    }
+
 EC_CLEANUP:
     if (ret != 0)
         q = NULL;
@@ -337,7 +349,6 @@ int sl_mod_load(const char *path)
     EC_INIT;
 
     sl_ctx = talloc_new(NULL);
-    sl_queries = queue_init();
 
     if ((sl_module = mod_open(path)) == NULL) {
         LOG(log_error, logtype_sl, "sl_mod_load(%s): failed to load: %s", path, mod_error());

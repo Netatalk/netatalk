@@ -87,7 +87,8 @@ typedef enum {
 } slq_state_t;
 
 /* Internal query data structure */
-typedef struct {
+typedef struct _slq_t {
+    struct list_head slq_list;        /* queries are stored in a list                                   */
     slq_state_t    slq_state;         /* State                                                          */
     AFPObj         *slq_obj;          /* global AFPObj handle                                           */
     const struct vol *slq_vol;        /* volume handle                                                  */
