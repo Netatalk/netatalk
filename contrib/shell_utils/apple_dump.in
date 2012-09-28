@@ -55,7 +55,7 @@ use bigint; # require perl >= 5.8
 
 if (     0 == system("which getfattr > /dev/null 2>&1")) {
     $eacommand = 1;
-} elsif (0 == system("which xattr > /dev/null 2>&1")) {
+} elsif (0 == system("which attr > /dev/null 2>&1")) {
     $eacommand = 2;
 } elsif (0 == system("which runat > /dev/null 2>&1")) {
     $eacommand = 3;
@@ -111,7 +111,7 @@ while ($arg = shift @ARGV)
     } elsif ($arg eq "-e") {
         if ($eacommand == 0) {
             printf (STDERR "%s: unsupported option -e\n", basename($0));
-            printf (STDERR "because neither getfattr, xattr, runat nor getextattr is found.\n");
+            printf (STDERR "because neither getfattr, attr, runat nor getextattr is found.\n");
             exit 1;
         }
         $eaoption = 1;
