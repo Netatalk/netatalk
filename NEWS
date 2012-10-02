@@ -1,3 +1,7 @@
+Changes in 3.0.2
+================
+* FIX: "path" parameter value may contain symlink.
+
 Changes in 3.0.1
 ================
 * NEW: afpd: Optional "ldap uuid encoding = string | ms-guid" parameter to

@@ -953,9 +953,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
-    char        path[MAXPATHLEN + 1];
+    char        *path;
     char        volname[AFPVOL_U8MNAMELEN + 1];
-    char        tmp[MAXPATHLEN + 1];
+    char        tmp[MAXPATHLEN + 1], tmp2[MAXPATHLEN + 1];
     const char  *preset, *default_preset, *p, *basedir;
     char        *q, *u;
     int         i;
@@ -1017,7 +1017,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             strlcpy(tmp, p, MAXPATHLEN);
         }
 
-        if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
+        if (volxlate(obj, tmp2, sizeof(tmp2) - 1, tmp, pwent, NULL, NULL) == NULL)
             continue;
 
         /* do variable substitution for volume name */
@@ -1035,10 +1035,34 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         } else {
             strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
         }
-        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
+        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, tmp2, NULL) == NULL)
             continue;
 
         preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
+
+        /* Normalize volume path */
+#ifdef REALPATH_TAKES_NULL
+        if ((path = realpath(tmp2, NULL)) == NULL) {
+            LOG(log_error, logtype_afpd, "readvolfile() cannot resolve path \"%s\"", tmp2);
+            continue;
+        }
+#else
+        if ((path = malloc(MAXPATHLEN+1)) == NULL)
+            continue;
+        if (realpath(tmp2, path) == NULL) {
+            free(path);
+            LOG(log_error, logtype_afpd, "readvolfile() cannot resolve path \"%s\"", tmp2);
+            continue;
+        }
+        /* Safe some memory */
+        char *tmp3;
+        if ((tmp3 = strdup(path)) == NULL) {
+            free(path);
+            continue;
+        }
+        free(path);
+        path = tmp3;
+#endif
 
         creatvol(obj, pwent, secname, volname, path, preset ? preset : default_preset ? default_preset : NULL);
     }
@@ -1263,7 +1287,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     const struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        abspath[MAXPATHLEN + 1];
-    char        volpath[MAXPATHLEN + 1];
+    char        volpath[MAXPATHLEN + 1], *realvolpath;
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
@@ -1344,9 +1368,11 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     /* (6) */
     if (subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
+        /*
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
         }
+        */
         strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
         strlcat(tmpbuf, "/", MAXPATHLEN);
     }
@@ -1356,23 +1382,47 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
         return NULL;
 
+    /* Normalize volume path */
+#ifdef REALPATH_TAKES_NULL
+    if ((realvolpath = realpath(volpath, NULL)) == NULL) {
+        LOG(log_error, logtype_afpd, "getvolbypath() cannot resolve path \"%s\"", volpath);
+        return NULL;
+    }
+#else
+    if ((realvolpath = malloc(MAXPATHLEN+1)) == NULL)
+        return NULL;
+    if (realpath(volpath, realvolpath) == NULL) {
+        free(realvolpath);
+        LOG(log_error, logtype_afpd, "getvolbypath() cannot resolve path \"%s\"", volpath);
+        return NULL;
+    }
+    /* Safe some memory */
+    char *tmpbuf2;
+    if ((tmpbuf2 = strdup(realvolpath)) == NULL) {
+        free(realvolpath);
+        return NULL;
+    }
+    free(realvolpath);
+    realvolpath = tmpbuf2;
+#endif
+
     EC_NULL( pw = getpwnam(user) );
 
-    LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\"): user: %s, homedir: %s => volpath: \"%s\"",
-        path, user, pw->pw_dir, volpath);
+    LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\"): user: %s, homedir: %s => realvolpath: \"%s\"",
+        path, user, pw->pw_dir, realvolpath);
 
     /* do variable substitution for volume name */
     p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
     if (strstr(p, "$u") == NULL)
         p = "$u's home";
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
-    EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, volpath, NULL) );
+    EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath, NULL) );
 
     const char  *preset, *default_preset;
     default_preset = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL);
     preset = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "vol preset", NULL);
 
-    vol = creatvol(obj, pw, INISEC_HOMES, volname, volpath, preset ? preset : default_preset ? default_preset : NULL);
+    vol = creatvol(obj, pw, INISEC_HOMES, volname, realvolpath, preset ? preset : default_preset ? default_preset : NULL);
 
 EC_CLEANUP:
     if (user)
