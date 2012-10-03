@@ -67,6 +67,42 @@ static int have_uservol = 0; /* whether there's generic user home share in confi
 static struct vol *Volumes = NULL;
 static uint16_t    lastvid = 0;
 
+
+/*
+ * Normalize volume path
+ */
+static char *realpath_safe(const char *path)
+{
+    char *resolved_path;
+
+#ifdef REALPATH_TAKES_NULL
+    if ((resolved_path = realpath(path, NULL)) == NULL) {
+        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        return NULL;
+    }
+    return resolved_path;
+
+#else
+if ((resolved_path = malloc(MAXPATHLEN+1)) == NULL)
+        return NULL;
+    if (realpath(path, resolved_path) == NULL) {
+        free(resolved_path);
+        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        return NULL;
+    }
+    /* Safe some memory */
+    char *tmp;
+    if ((tmp = strdup(resolved_path)) == NULL) {
+        free(resolved_path);
+        return NULL;
+    }
+    free(resolved_path);
+    resolved_path = tmp;
+    return resolved_path;
+#endif
+}
+
+
 /* 
  * Get a volumes UUID from the config file.
  * If there is none, it is generated and stored there.
@@ -953,7 +989,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
-    char        *path;
+    char        *realvolpath;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1], tmp2[MAXPATHLEN + 1];
     const char  *preset, *default_preset, *p, *basedir;
@@ -1040,31 +1076,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
 
-        /* Normalize volume path */
-#ifdef REALPATH_TAKES_NULL
-        if ((path = realpath(tmp2, NULL)) == NULL) {
-            LOG(log_error, logtype_afpd, "readvolfile() cannot resolve path \"%s\"", tmp2);
+        if ((realvolpath = realpath_safe(tmp2)) == NULL)
             continue;
-        }
-#else
-        if ((path = malloc(MAXPATHLEN+1)) == NULL)
-            continue;
-        if (realpath(tmp2, path) == NULL) {
-            free(path);
-            LOG(log_error, logtype_afpd, "readvolfile() cannot resolve path \"%s\"", tmp2);
-            continue;
-        }
-        /* Safe some memory */
-        char *tmp3;
-        if ((tmp3 = strdup(path)) == NULL) {
-            free(path);
-            continue;
-        }
-        free(path);
-        path = tmp3;
-#endif
 
-        creatvol(obj, pwent, secname, volname, path, preset ? preset : default_preset ? default_preset : NULL);
+        creatvol(obj, pwent, secname, volname, realvolpath, preset ? preset : default_preset ? default_preset : NULL);
     }
 
 EC_CLEANUP:
@@ -1382,29 +1397,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
         return NULL;
 
-    /* Normalize volume path */
-#ifdef REALPATH_TAKES_NULL
-    if ((realvolpath = realpath(volpath, NULL)) == NULL) {
-        LOG(log_error, logtype_afpd, "getvolbypath() cannot resolve path \"%s\"", volpath);
+    if ((realvolpath = realpath_safe(volpath)) == NULL)
         return NULL;
-    }
-#else
-    if ((realvolpath = malloc(MAXPATHLEN+1)) == NULL)
-        return NULL;
-    if (realpath(volpath, realvolpath) == NULL) {
-        free(realvolpath);
-        LOG(log_error, logtype_afpd, "getvolbypath() cannot resolve path \"%s\"", volpath);
-        return NULL;
-    }
-    /* Safe some memory */
-    char *tmpbuf2;
-    if ((tmpbuf2 = strdup(realvolpath)) == NULL) {
-        free(realvolpath);
-        return NULL;
-    }
-    free(realvolpath);
-    realvolpath = tmpbuf2;
-#endif
 
     EC_NULL( pw = getpwnam(user) );
 
