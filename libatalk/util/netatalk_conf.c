@@ -989,6 +989,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
+    char        *realpw_dir;
     char        *realvolpath;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1], tmp2[MAXPATHLEN + 1];
@@ -1022,6 +1023,8 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
                 /* no user home */
                 continue;
+            if ((realpw_dir = realpath_safe(pwent->pw_dir)) == NULL)
+                continue;
 
             /* check if user home matches our "basedir regex" */
             if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
@@ -1036,13 +1039,13 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 LOG(log_debug, logtype_default, "readvolfile: bad basedir regex: %s", errbuf);
             }
 
-            if (regexec(&reg, pwent->pw_dir, 1, match, 0) == REG_NOMATCH) {
+            if (regexec(&reg, realpw_dir, 1, match, 0) == REG_NOMATCH) {
                 LOG(log_debug, logtype_default, "readvolfile: user home \"%s\" doesn't match basedir regex \"%s\"",
-                    pwent->pw_dir, basedir);
+                    realpw_dir, basedir);
                 continue;
             }
 
-            strlcpy(tmp, pwent->pw_dir, MAXPATHLEN);
+            strlcpy(tmp, realpw_dir, MAXPATHLEN);
             strlcat(tmp, "/", MAXPATHLEN);
             if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
                 strlcat(tmp, p, MAXPATHLEN);
