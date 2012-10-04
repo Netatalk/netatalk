@@ -771,26 +771,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFPERR_MISC;
     }
 
-    /* Normalize volume path */
-#ifdef REALPATH_TAKES_NULL
-    if ((volume->v_path = realpath(path, NULL)) == NULL)
-        return AFPERR_MISC;
-#else
-    if ((volume->v_path = malloc(MAXPATHLEN+1)) == NULL)
-        return AFPERR_MISC;
-    if (realpath(path, volume->v_path) == NULL) {
-        free(volume->v_path);
-        return AFPERR_MISC;
-    }
-    /* Safe some memory */
-    char *tmp;
-    if ((tmp = strdup(volume->v_path)) == NULL) {
-        free(volume->v_path);
-        return AFPERR_MISC;
-    }
-    free(volume->v_path);
-    volume->v_path = tmp;
-#endif
+    strlcpy(volume->v_path, path, MAXPATHLEN);
 
     if (volume_codepage(obj, volume) < 0) {
         ret = AFPERR_MISC;
