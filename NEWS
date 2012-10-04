@@ -1,5 +1,6 @@
 Changes in 3.0.2
 ================
+* UPD: ignore duplicated or nested volume path.
 * FIX: "path" parameter value may contain symlink.
 * FIX: "basedir regex" was never able to treat symlink.
        If /home -> /usr/home, set "basedir regex = /usr/home".

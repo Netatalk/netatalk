@@ -598,6 +598,8 @@ static struct vol *creatvol(AFPObj *obj,
 {
     EC_INIT;
     struct vol  *volume = NULL;
+    char        current_path[MAXPATHLEN+1], another_path[MAXPATHLEN+1];
+    size_t      current_pathlen, another_pathlen;
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
     char        *tmpname;
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
@@ -620,9 +622,22 @@ static struct vol *creatvol(AFPObj *obj,
     }
 
     /* Once volumes are loaded, we never change options again, we just delete em when they're removed from afp.conf */
+    /* Duplicated or nested volume is ignored  */
+    strlcpy(current_path, path, MAXPATHLEN);
+    current_pathlen = strlcat(current_path, "/", MAXPATHLEN);
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
-        if (STRCMP(path, ==, vol->v_path)) {
-            LOG(log_debug, logtype_afpd, "createvol('%s'): already loaded", name);
+        strlcpy(another_path, vol->v_path, MAXPATHLEN);
+        another_pathlen = strlcat(another_path, "/", MAXPATHLEN);
+        if ( 0 == strncmp(current_path, another_path, MIN(current_pathlen, another_pathlen))) {
+            if (current_pathlen == another_pathlen) {
+                if ( 0 == strcmp(name ,vol->v_localname)) {
+                    LOG(log_debug, logtype_afpd, "createvol('%s'): already loaded", name);
+                } else {
+                    LOG(log_error, logtype_afpd, "paths are duplicated - \"%s\"", path);
+                }
+            } else {
+                LOG(log_error, logtype_afpd, "paths are nested - \"%s\" and \"%s\"", path, vol->v_path);
+            }
             vol->v_deleted = 0;
             volume = vol;
             goto EC_CLEANUP;
