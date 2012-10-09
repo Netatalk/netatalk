@@ -521,9 +521,17 @@ int ad_valid_header_osx(const char *path)
     adosx.ad_version = ntohl(adosx.ad_version);
 
     if ((adosx.ad_magic != AD_MAGIC) || (adosx.ad_version != AD_VERSION2)) {
-        LOG(log_error, logtype_afpd, "ad_valid_header_osx: not an adouble:ox file");
+        LOG(log_warning, logtype_afpd, "ad_valid_header_osx: not an adouble:osx file");
         EC_FAIL;
     }
+
+    if (strncmp(buf + ADEDOFF_FILLER, "Mac OS X", strlen("Mac OS X")) == 0)
+        /*
+         * It's a split fork created by OS X, it's not our "own" ._ file
+         * and thus not a valid header in this context.
+         * We allow enumeration and access.
+         */
+        EC_FAIL;
 
 EC_CLEANUP:
     LOG(log_debug, logtype_afpd, "ad_valid_header_osx(\"%s\"): END: %d", fullpathname(path), ret);
