@@ -1281,7 +1281,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     const struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        abspath[MAXPATHLEN + 1];
-    char        volpath[MAXPATHLEN + 1], *realvolpath;
+    char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
@@ -1374,11 +1374,9 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     /* (7) */
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
-        return NULL;
+        EC_FAIL;
 
-    if ((realvolpath = realpath_safe(volpath)) == NULL)
-        return NULL;
-
+    EC_NULL( realvolpath = realpath_safe(volpath) );
     EC_NULL( pw = getpwnam(user) );
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\"): user: %s, homedir: %s => realvolpath: \"%s\"",
@@ -1400,6 +1398,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 EC_CLEANUP:
     if (user)
         free(user);
+    if (realvolpath)
+        free(realvolpath);
     if (ret != 0)
         vol = NULL;
     return vol;
