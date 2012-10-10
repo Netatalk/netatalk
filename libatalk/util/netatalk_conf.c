@@ -549,7 +549,7 @@ EC_CLEANUP:
  * @param pwd      (r) struct passwd of logged in user, may be NULL in master afpd
  * @param section  (r) volume name wo variables expanded (exactly as in iniconfig)
  * @param name     (r) volume name
- * @param path     (r) volume path
+ * @param path_in  (r) volume path
  * @param preset   (r) default preset, may be NULL
  * @returns            vol on success, NULL on error
  */
@@ -557,7 +557,7 @@ static struct vol *creatvol(AFPObj *obj,
                             const struct passwd *pwd,
                             const char *section,
                             const char *name,
-                            const char *path,
+                            const char *path_in,
                             const char *preset)
 {
     EC_INIT;
@@ -565,20 +565,24 @@ static struct vol *creatvol(AFPObj *obj,
     size_t      current_pathlen, another_pathlen;
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
     char        *tmpname;
+    char        path[MAXPATHLEN + 1];
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
     uint16_t    flags;
     const char  *val;
     char        *p, *q;
 
+    /* Ensure the path is '/' terminated */
+    strlcpy(path, path_in, MAXPATHLEN);
+    if (path[strlen(path) - 1] != '/')
+        strlcat(path, "/", MAXPATHLEN);
+
     LOG(log_debug, logtype_afpd, "createvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
         name, path, preset ? preset : "-");
 
     if ( name == NULL || *name == '\0' ) {
-        if ((name = strrchr( path, '/' )) == NULL) {
+        if ((name = strrchr( path, '/' )) == NULL)
             EC_FAIL;
-        }
-
         /* if you wish to share /, you need to specify a name. */
         if (*++name == '\0')
             EC_FAIL;
@@ -592,17 +596,13 @@ static struct vol *creatvol(AFPObj *obj,
         another_pathlen = strlen(vol->v_path);
         if (strncmp(path, vol->v_path, MIN(current_pathlen, another_pathlen)) == 0) {
             if (current_pathlen == another_pathlen) {
-                if ( 0 == strcmp(name, vol->v_localname)) {
-                    LOG(log_debug, logtype_afpd, "createvol('%s'): already loaded", name);
-                } else {
-                    LOG(log_error, logtype_afpd, "paths are duplicated - \"%s\"", path);
-                }
+                LOG(log_error, logtype_afpd, "volume \"%s\" paths is duplicated: \"%s\"", name, path);
+                vol->v_deleted = 0;
+                volume = vol;
+                goto EC_CLEANUP;
             } else {
-                LOG(log_error, logtype_afpd, "paths are nested - \"%s\" and \"%s\"", path, vol->v_path);
+                LOG(log_note, logtype_afpd, "volume \"%s\" paths are nested: \"%s\" and \"%s\"", name, path, vol->v_path);
             }
-            vol->v_deleted = 0;
-            volume = vol;
-            goto EC_CLEANUP;
         }
     }
 
@@ -880,10 +880,9 @@ static struct vol *creatvol(AFPObj *obj,
     EC_NULL( volume->v_localname = strdup(name) );
     EC_NULL( volume->v_u8mname = strdup_w(u8mtmpname) );
     EC_NULL( volume->v_macname = strdup_w(mactmpname) );
-    EC_NULL( volume->v_path = malloc(strlen(path) + 1) );
-
+    EC_NULL( volume->v_path = strdup(path) ); 
+        
     volume->v_name = utf8_encoding(obj) ? volume->v_u8mname : volume->v_macname;
-    strcpy(volume->v_path, path);
 
 #ifdef __svr4__
     volume->v_qfd = -1;
