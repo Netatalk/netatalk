@@ -29,6 +29,7 @@ VERSION_INFO = 2:0:0
 #   3.0.0-beta2     1:0:0
 #   3.0             1:0:0
 #   3.0.1           2:0:0
+#   3.0.2           3:0:1
 
 SUBDIRS = acl adouble bstring compat cnid dsi iniparser tdb util unicode vfs
 
