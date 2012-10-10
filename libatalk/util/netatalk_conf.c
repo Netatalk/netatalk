@@ -965,10 +965,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
-    char        *realpw_dir;
     char        *realvolpath;
     char        volname[AFPVOL_U8MNAMELEN + 1];
-    char        tmp[MAXPATHLEN + 1], tmp2[MAXPATHLEN + 1];
+    char        path[MAXPATHLEN + 1], tmp[MAXPATHLEN + 1];
     const char  *preset, *default_preset, *p, *basedir;
     char        *q, *u;
     int         i;
@@ -999,7 +998,8 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
                 /* no user home */
                 continue;
-            if ((realpw_dir = realpath_safe(pwent->pw_dir)) == NULL)
+
+            if ((realpath(pwent->pw_dir, tmp)) == NULL)
                 continue;
 
             /* check if user home matches our "basedir regex" */
@@ -1013,16 +1013,15 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 char errbuf[1024];
                 regerror(regexerr, &reg, errbuf, sizeof(errbuf));
                 LOG(log_debug, logtype_default, "readvolfile: bad basedir regex: %s", errbuf);
-            }
-
-            if (regexec(&reg, realpw_dir, 1, match, 0) == REG_NOMATCH) {
-                LOG(log_debug, logtype_default, "readvolfile: user home \"%s\" doesn't match basedir regex \"%s\"",
-                    realpw_dir, basedir);
                 continue;
             }
 
-            strlcpy(tmp, realpw_dir, MAXPATHLEN);
-            strlcat(tmp, "/", MAXPATHLEN);
+            if (regexec(&reg, tmp, 1, match, 0) == REG_NOMATCH) {
+                LOG(log_error, logtype_default, "readvolfile: user home \"%s\" doesn't match basedir regex \"%s\"",
+                    tmp, basedir);
+                continue;
+            }
+
             if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
                 strlcat(tmp, p, MAXPATHLEN);
         } else {
@@ -1032,7 +1031,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             strlcpy(tmp, p, MAXPATHLEN);
         }
 
-        if (volxlate(obj, tmp2, sizeof(tmp2) - 1, tmp, pwent, NULL, NULL) == NULL)
+        if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
             continue;
 
         /* do variable substitution for volume name */
@@ -1050,15 +1049,16 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         } else {
             strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
         }
-        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, tmp2, NULL) == NULL)
+        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
             continue;
 
         preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
 
-        if ((realvolpath = realpath_safe(tmp2)) == NULL)
+        if ((realvolpath = realpath_safe(path)) == NULL)
             continue;
 
         creatvol(obj, pwent, secname, volname, realvolpath, preset ? preset : default_preset ? default_preset : NULL);
+        free(realvolpath);
     }
 
 EC_CLEANUP:
