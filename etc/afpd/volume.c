@@ -686,7 +686,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     int     len, ret;
     size_t  namelen;
     uint16_t   bitmap;
-    char        path[ MAXPATHLEN + 1];
     char        *vol_uname;
     char        *vol_mname;
     char        *volname_tmp;
@@ -765,14 +764,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFPERR_PARAM;
     }
 
-    if ( NULL == getcwd(path, MAXPATHLEN)) {
-        /* shouldn't be fatal but it will fail later */
-        LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
-        return AFPERR_MISC;
-    }
-
-    strlcpy(volume->v_path, path, MAXPATHLEN);
-
     if (volume_codepage(obj, volume) < 0) {
         ret = AFPERR_MISC;
         goto openvol_err;
@@ -801,9 +792,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         goto openvol_err;
     }
 
-    if ((vol_uname = strrchr(path, '/')) == NULL)
-        vol_uname = path;
-    else if (*(vol_uname + 1) != '\0')
+    if ((vol_uname = strrchr(volume->v_path, '/')) == NULL)
+        vol_uname = volume->v_path;
+    else if (vol_uname[1] != '\0')
         vol_uname++;
 
     if ((dir = dir_new(vol_mname,
