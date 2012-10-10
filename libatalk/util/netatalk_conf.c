@@ -67,42 +67,6 @@ static int have_uservol = 0; /* whether there's generic user home share in confi
 static struct vol *Volumes = NULL;
 static uint16_t    lastvid = 0;
 
-
-/*
- * Normalize volume path
- */
-static char *realpath_safe(const char *path)
-{
-    char *resolved_path;
-
-#ifdef REALPATH_TAKES_NULL
-    if ((resolved_path = realpath(path, NULL)) == NULL) {
-        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
-        return NULL;
-    }
-    return resolved_path;
-
-#else
-if ((resolved_path = malloc(MAXPATHLEN+1)) == NULL)
-        return NULL;
-    if (realpath(path, resolved_path) == NULL) {
-        free(resolved_path);
-        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
-        return NULL;
-    }
-    /* Safe some memory */
-    char *tmp;
-    if ((tmp = strdup(resolved_path)) == NULL) {
-        free(resolved_path);
-        return NULL;
-    }
-    free(resolved_path);
-    resolved_path = tmp;
-    return resolved_path;
-#endif
-}
-
-
 /* 
  * Get a volumes UUID from the config file.
  * If there is none, it is generated and stored there.

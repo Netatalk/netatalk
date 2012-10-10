@@ -342,3 +342,36 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
     }
     return( 0 );
 }
+
+/*
+ * realpath() replacement that always allocates storage for returned path
+ */
+char *realpath_safe(const char *path)
+{
+    char *resolved_path;
+
+#ifdef REALPATH_TAKES_NULL
+    if ((resolved_path = realpath(path, NULL)) == NULL) {
+        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        return NULL;
+    }
+    return resolved_path;
+#else
+    if ((resolved_path = malloc(MAXPATHLEN+1)) == NULL)
+        return NULL;
+    if (realpath(path, resolved_path) == NULL) {
+        free(resolved_path);
+        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        return NULL;
+    }
+    /* Safe some memory */
+    char *tmp;
+    if ((tmp = strdup(resolved_path)) == NULL) {
+        free(resolved_path);
+        return NULL;
+    }
+    free(resolved_path);
+    resolved_path = tmp;
+    return resolved_path;
+#endif
+}

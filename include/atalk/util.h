@@ -182,6 +182,7 @@ extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 extern int daemonize(int nochdir, int noclose);
 extern int run_cmd(const char *cmd, char **cmd_argv);
+extern char *realpath_safe(const char *path);
 
 /******************************************************************
  * cnid.c
