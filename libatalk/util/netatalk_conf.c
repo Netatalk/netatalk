@@ -1036,8 +1036,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
             }
 
-            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
+            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
+                strlcat(tmp, "/", MAXPATHLEN);
                 strlcat(tmp, p, MAXPATHLEN);
+            }
         } else {
             /* Get path */
             if ((p = iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
