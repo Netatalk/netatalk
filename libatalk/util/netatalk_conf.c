@@ -572,10 +572,7 @@ static struct vol *creatvol(AFPObj *obj,
     const char  *val;
     char        *p, *q;
 
-    /* Ensure the path is '/' terminated */
     strlcpy(path, path_in, MAXPATHLEN);
-    if (path[strlen(path) - 1] != '/')
-        strlcat(path, "/", MAXPATHLEN);
 
     LOG(log_debug, logtype_afpd, "createvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
         name, path, preset ? preset : "-");
@@ -590,7 +587,12 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Once volumes are loaded, we never change options again, we just delete em when they're removed from afp.conf */
 
-    /* Check for duplicated or nested volumes */
+    /*
+     * Check for duplicated or nested volumes, eg:
+     * /Volumes/name      /Volumes/name     [duplicate], and
+     * /Volumes/name      /Volumes/name/dir [nested], but beware of simple strncmp test:
+     * /Volumes/name      /Volumes/name1    [strncmp match if n=strlen("Volumes/name") -> false positive]
+     */
     current_pathlen = strlen(path);
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
         another_pathlen = strlen(vol->v_path);
@@ -601,7 +603,19 @@ static struct vol *creatvol(AFPObj *obj,
                 volume = vol;
                 goto EC_CLEANUP;
             } else {
-                LOG(log_note, logtype_afpd, "volume \"%s\" paths are nested: \"%s\" and \"%s\"", name, path, vol->v_path);
+                const char *shorter_path, *longer_path;
+                int shorter_len;
+                if (another_pathlen > current_pathlen) {
+                    shorter_len = current_pathlen;
+                    shorter_path = path;
+                    longer_path = vol->v_path;
+                } else {
+                    shorter_len = another_pathlen;
+                    shorter_path = vol->v_path;
+                    longer_path = path;
+                }
+                if (longer_path[shorter_len] == '/')
+                    LOG(log_info, logtype_afpd, "volume \"%s\" paths are nested: \"%s\" and \"%s\"", name, path, vol->v_path);
             }
         }
     }
