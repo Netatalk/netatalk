@@ -190,4 +190,11 @@ extern char *realpath_safe(const char *path);
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
 
+/******************************************************************
+ * cnid.c
+ *****************************************************************/
+
+extern void initline   (int, char *);
+extern int  parseline  (int, char *);
+
 #endif  /* _ATALK_UTIL_H */

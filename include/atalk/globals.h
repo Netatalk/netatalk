@@ -151,10 +151,6 @@ extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);
 extern void readmessage (AFPObj *);
 
-/* gettok.c */
-extern void initline   (int, char *);
-extern int  parseline  (int, char *);
-
 /* afp_util.c */
 extern const char *AfpNum2name (int );
 extern const char *AfpErr2name(int err);

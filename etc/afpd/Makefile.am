@@ -28,7 +28,6 @@ afpd_SOURCES = \
 	file.c \
 	filedir.c \
 	fork.c \
-	gettok.c \
 	hash.c \
 	main.c \
 	mangle.c \
