@@ -611,6 +611,11 @@ Maximum possible entries in the directory cache\&. The cache stores directories 
 Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
 .RE
 .PP
+extmap file = \fIpath\fR \fB(G)\fR
+.RS 4
+Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/extmap\&.conf)\&.
+.RE
+.PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
 Enables sending FCE events to the specified

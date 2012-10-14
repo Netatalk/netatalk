@@ -10,7 +10,7 @@ EXTRA_DIST = afp.conf.tmpl
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
-CONFFILES = 
+CONFFILES = extmap.conf
 
 pkgconfdir = @PKGCONFDIR@
 #

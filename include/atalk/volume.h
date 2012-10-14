@@ -20,6 +20,13 @@
 
 typedef uint64_t VolSpace;
 
+/* This should belong in a file.h */
+struct extmap {
+    char		*em_ext;
+    char		em_creator[4];
+    char		em_type[4];
+};
+
 struct vol {
     struct vol      *v_next;
     AFPObj          *v_obj;

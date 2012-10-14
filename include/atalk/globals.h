@@ -86,7 +86,7 @@ struct afp_options {
     char *uampath, *fqdn;
     char *sigconffile;
     char *uuidconf;
-    char *guest, *loginmesg, *keyfile, *passwdfile;
+    char *guest, *loginmesg, *keyfile, *passwdfile, *extmapfile;
     char *uamlist;
     char *signatureopt;
     unsigned char signature[16];

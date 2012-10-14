@@ -77,6 +77,7 @@ static int default_type(void *finder)
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
 void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data, int islink)
 {
+    struct extmap       *em;
     void                *ad_finder = NULL;
     int                 chk_ext = 0;
 
@@ -85,6 +86,9 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
 
     if (ad_finder) {
         memcpy(data, ad_finder, ADEDLEN_FINDERI);
+        /* default type ? */
+        if (default_type(ad_finder)) 
+            chk_ext = 1;
     }
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
@@ -103,6 +107,12 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         memcpy((char *)data + FINDERINFO_FRFLAGOFF, &linkflag, 2);
         memcpy((char *)data + FINDERINFO_FRTYPEOFF,"slnk",4); 
         memcpy((char *)data + FINDERINFO_FRCREATOFF,"rhap",4); 
+    }
+
+    /** Only enter if no appledouble information and no finder information found. */
+    if (chk_ext && (em = getextmap( upath ))) {
+        memcpy(data, em->em_type, sizeof( em->em_type ));
+        memcpy((char *)data + 4, em->em_creator, sizeof(em->em_creator));
     }
 
     return data;
@@ -1002,6 +1012,17 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             ad_setdate(adp, AD_DATE_BACKUP, bdate);
             break;
         case FILPBIT_FINFO :
+            if (default_type( ad_entry( adp, ADEID_FINDERI ))
+                    && ( 
+                     ((em = getextmap( path->m_name )) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+                     || ((em = getdefextmap()) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+            )) {
+                memcpy(finder_buf, ufinderi, 8 );
+            }
             memcpy(ad_entry( adp, ADEID_FINDERI ), finder_buf, 32 );
             break;
         case FILPBIT_UNIXPR :

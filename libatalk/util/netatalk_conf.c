@@ -1081,6 +1081,159 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static struct extmap    *Extmap = NULL, *Defextmap = NULL;
+static int              Extmap_cnt;
+
+static int setextmap(char *ext, char *type, char *creator)
+{
+    EC_INIT;
+    struct extmap *em;
+    int           cnt;
+
+    if (Extmap == NULL) {
+        EC_NULL_LOG( Extmap = calloc(1, sizeof( struct extmap )) );
+    }
+
+    ext++;
+
+    for (em = Extmap, cnt = 0; em->em_ext; em++, cnt++)
+        if ((strdiacasecmp(em->em_ext, ext)) == 0)
+            goto EC_CLEANUP;
+
+    EC_NULL_LOG( Extmap = realloc(Extmap, sizeof(struct extmap) * (cnt + 2)) );
+    (Extmap + cnt + 1)->em_ext = NULL;
+    em = Extmap + cnt;
+
+    EC_NULL( em->em_ext = strdup(ext) );
+
+    if ( *type == '\0' ) {
+        memcpy(em->em_type, "\0\0\0\0", sizeof( em->em_type ));
+    } else {
+        memcpy(em->em_type, type, sizeof( em->em_type ));
+    }
+    if ( *creator == '\0' ) {
+        memcpy(em->em_creator, "\0\0\0\0", sizeof( em->em_creator ));
+    } else {
+        memcpy(em->em_creator, creator, sizeof( em->em_creator ));
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/* -------------------------- */
+static int extmap_cmp(const void *map1, const void *map2)
+{
+    const struct extmap *em1 = map1;
+    const struct extmap *em2 = map2;
+    return strdiacasecmp(em1->em_ext, em2->em_ext);
+}
+
+static void sortextmap( void)
+{
+    struct extmap   *em;
+
+    Extmap_cnt = 0;
+    if ((em = Extmap) == NULL) {
+        return;
+    }
+    while (em->em_ext) {
+        em++;
+        Extmap_cnt++;
+    }
+    if (Extmap_cnt) {
+        qsort(Extmap, Extmap_cnt, sizeof(struct extmap), extmap_cmp);
+        if (*Extmap->em_ext == 0) {
+            /* the first line is really "." the default entry,
+             * we remove the leading '.' in setextmap
+             */
+            Defextmap = Extmap;
+        }
+    }
+}
+
+static void free_extmap( void)
+{
+    struct extmap   *em;
+
+    if (Extmap) {
+        for ( em = Extmap; em->em_ext; em++) {
+            free (em->em_ext);
+        }
+        free(Extmap);
+        Extmap = NULL;
+        Defextmap = Extmap;
+        Extmap_cnt = 0;
+    }
+}
+
+static int ext_cmp_key(const void *key, const void *obj)
+{
+    const char          *p = key;
+    const struct extmap *em = obj;
+    return strdiacasecmp(p, em->em_ext);
+}
+
+struct extmap *getextmap(const char *path)
+{
+    char      *p;
+    struct extmap *em;
+
+    if (!Extmap_cnt || NULL == ( p = strrchr( path, '.' )) ) {
+        return( Defextmap );
+    }
+    p++;
+    if (!*p) {
+        return( Defextmap );
+    }
+    em = bsearch(p, Extmap, Extmap_cnt, sizeof(struct extmap), ext_cmp_key);
+    if (em) {
+        return( em );
+    } else {
+        return( Defextmap );
+    }
+}
+
+struct extmap *getdefextmap(void)
+{
+    return( Defextmap );
+}
+
+static int readextmap(const char *file)
+{
+    EC_INIT;
+    FILE        *fp;
+    char        ext[256];
+    char        buf[256];
+    char        type[5], creator[5];
+
+    LOG(log_debug, logtype_afpd, "readextmap: loading \"%s\"", file);
+
+    EC_NULL_LOGSTR( fp = fopen(file, "r"), "Couldn't open extension maping file %s", file);
+
+    while (fgets(buf, sizeof(buf), fp) != NULL) {
+        initline(strlen(buf), buf);
+        parseline(sizeof(ext) - 1, ext);
+
+        switch (ext[0]) {
+        case '.' :
+            parseline(sizeof(type) - 1, type);
+            parseline(sizeof(creator) - 1, creator);
+            setextmap(ext, type, creator);
+            LOG(log_debug, logtype_afpd, "readextmap: mapping: '%s' -> %s/%s", ext, type, creator);
+            break;
+        }
+    }
+
+    sortextmap();
+    EC_ZERO( fclose(fp) );
+
+    LOG(log_debug, logtype_afpd, "readextmap: done", file);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
 /**************************************************************
  * API functions
  **************************************************************/
@@ -1495,7 +1648,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* figure out options w values */
     options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
     options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
-    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",_PATH_AFPDPWFILE);
+    options->extmapfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "afp_extmap.conf");
+    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",    _PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
     options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
     options->port           = iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
@@ -1625,6 +1779,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
     options->maccharset = CH_MAC;
     LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);
+
+    EC_ZERO_LOG( readextmap(options->extmapfile) );
 
     /* Check for sane values */
     if (options->tickleval <= 0)

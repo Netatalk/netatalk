@@ -1,5 +1,7 @@
 Changes in 3.0.2
 ================
+* NEW: afpd: Put file extension type/creator mapping back in which had
+       been removed in 3.0.
 * UPD: ignore duplicated or nested volume path.
 * FIX: "path" parameter value may contain symlink.
 * FIX: "basedir regex" was never able to treat symlink.
