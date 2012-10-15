@@ -213,7 +213,6 @@ static int sl_mod_fetch_result(void *p)
         uint64 = ntohl(id);
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
         add_filemeta(slq->slq_reqinfo, fm_array, id, path);
-        //dalloc_add_copy(fm_array, &nil, sl_nil_t);
     }
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
