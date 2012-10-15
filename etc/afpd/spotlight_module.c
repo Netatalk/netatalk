@@ -33,14 +33,14 @@ char *tracker_to_unix_path(const char *uri)
 {
     EC_INIT;
     GFile *f = NULL;
-    char *path;
+    char *path = NULL;
 
     EC_NULL_LOG( f = g_file_new_for_uri(uri) );
     EC_NULL_LOG( path = g_file_get_path(f) );
 
 EC_CLEANUP:
     if (f)
-        g_free(f);
+        g_object_unref(f);
     if (ret != 0)
         return NULL;
     return path;
@@ -76,7 +76,7 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
     EC_INIT;
     const gchar *sparql_query;
-    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s/')) }";
+    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s')) }";
     const char *slquery = slq->slq_qstring;
     char *word, *p;
 
