@@ -163,10 +163,10 @@ static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset)
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     int len = 0, off = 0;
-    int cnid_count = talloc_array_length(cnids->ca_cnids);
+    int cnid_count = talloc_array_length(cnids->ca_cnids->dd_talloc_array);
     uint64_t id;
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0 /* cnid_count */));
+    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0));
     SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
     *toc_idx += 1;
     offset += 8;
