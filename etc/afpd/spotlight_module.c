@@ -64,7 +64,7 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
     EC_INIT;
     const gchar *sparql_query;
-    const char *sparql_query_format = "SELECT nie:url(?f) WHERE { ?f nie:url ?name FILTER regex(?name, \"%s\")}";
+    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s')) }";
     const char *slquery = slq->slq_qstring;
     char *word, *p;
 
@@ -75,9 +75,8 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
     EC_NULL( word = dalloc_strdup(slq, word) );
     /* Search asterisk */
     EC_NULL_LOG( p = strchr(word, '*') );
-    *p = 0;
-
-    sparql_query = talloc_asprintf(slq, sparql_query_format, word);
+    p[1] = 0;
+    sparql_query = talloc_asprintf(slq, sparql_query_format, word, slq->slq_vol->v_path);
 
     LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
 
