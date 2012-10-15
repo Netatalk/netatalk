@@ -18,6 +18,7 @@
 
 #include <string.h>
 
+#include <gio/gio.h>
 #include <tracker-sparql.h>
 
 #include <atalk/util.h>
@@ -28,10 +29,19 @@
 
 static TrackerSparqlConnection *connection;
 
-const char *tracker_to_unix_path(const char *path)
+const char *tracker_to_unix_path(const char *uri)
 {
-    /* just skip 'file://' */
-    return path + 7;
+    EC_INIT;
+    GFile *f;
+    const char *path;
+
+    EC_NULL_LOG( f = g_file_new_for_uri(uri) );
+    EC_NULL_LOG( path = g_file_get_path(f) );
+
+EC_CLEANUP:
+    if (ret != 0)
+        return NULL;
+    return path;
 }
 
 static int sl_mod_init(void *p)
@@ -64,7 +74,7 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
     EC_INIT;
     const gchar *sparql_query;
-    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s')) }";
+    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s/')) }";
     const char *slquery = slq->slq_qstring;
     char *word, *p;
 
