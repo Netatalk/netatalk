@@ -353,7 +353,7 @@ int sl_mod_load(const char *path)
     sl_ctx = talloc_new(NULL);
 
     if ((sl_module = mod_open(path)) == NULL) {
-        LOG(log_error, logtype_sl, "sl_mod_load(%s): failed to load: %s", path, mod_error());
+        LOG(log_error, logtype_sl, "Failed to load: %s", path, mod_error());
         EC_FAIL;
     }
 
@@ -385,6 +385,9 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
     int len;
 
     *rbuflen = 0;
+
+    if (sl_module == NULL)
+        return AFPERR_NOOP;
 
     ibuf += 2;
     ibuflen -= 2;
