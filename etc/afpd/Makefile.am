@@ -87,6 +87,6 @@ moduledir = @UAMS_PATH@
 module_LTLIBRARIES = mod_spotlight.la
 
 mod_spotlight_la_SOURCES = spotlight_module.c
-mod_spotlight_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@
-mod_spotlight_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@
+mod_spotlight_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@ @TRACKER_MINER_CFLAGS@
+mod_spotlight_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@ @TRACKER_MINER_LIBS@
 endif

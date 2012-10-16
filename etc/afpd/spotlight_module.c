@@ -20,6 +20,7 @@
 
 #include <gio/gio.h>
 #include <tracker-sparql.h>
+#include <libtracker-miner/tracker-miner.h>
 
 #include <atalk/util.h>
 #include <atalk/errchk.h>
@@ -289,11 +290,48 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int sl_mod_index_file(const void *p)
+{
+#ifdef HAVE_TRACKER_MINER
+    /* hangs in tracker_miner_manager_new_full() for whatever reason... */
+    return 0;
+
+    EC_INIT;
+    const char *f = p;
+
+    if (!f)
+        goto EC_CLEANUP;
+
+    TrackerMinerManager *manager;
+    GError *error = NULL;
+    GFile *file;
+
+    if ((manager = tracker_miner_manager_new_full(FALSE, &error)) == NULL) {
+        LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): couldn't connect to Tracker miner", f);
+    } else {
+        file = g_file_new_for_commandline_arg(f);
+        tracker_miner_manager_index_file(manager, file, &error);
+        if (error)
+            LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): indexing failed", f);
+        else
+            LOG(log_debug, logtype_sl, "sl_mod_index_file(\"%s\"): indexing file was successful", f);
+        g_object_unref(manager);
+        g_object_unref(file);
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+#else
+    return 0;
+#endif
+}
+
 struct sl_module_export sl_mod = {
     SL_MODULE_VERSION,
     sl_mod_init,
     sl_mod_start_search,
     sl_mod_fetch_result,
     sl_mod_close_query,
-    sl_mod_error
+    sl_mod_error,
+    sl_mod_index_file
 };

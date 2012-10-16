@@ -39,10 +39,11 @@ struct sl_module_export {
     int (*sl_mod_fetch_result)(void *);
     int (*sl_mod_end_search)  (void *);
     int (*sl_mod_error)       (void *);
+    int (*sl_mod_index_file)  (const void *);
 };
 
 extern int sl_mod_load(const char *path);
-
+extern void sl_index_file(const char *path);
 
 /**************************************************************************************************
  * Spotlight RPC and marshalling stuff

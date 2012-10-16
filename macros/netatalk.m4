@@ -28,12 +28,30 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     if test x"$ac_cv_have_tracker" = x"no" ; then
         if test x"$need_tracker" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
+        fi
+    else
+        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker library is available])
 	fi
-    fi
 
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
     AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
+
+    ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
+    AC_ARG_WITH([tracker-miner-pkg-config],
+	[AS_HELP_STRING([--with-tracker-miner-pkg-config],[name of the Tracker miner pkg in pkg-config])],
+	[ac_cv_tracker_miner_pkg=$withval],
+	[ac_cv_tracker_miner_pkg=$ac_cv_tracker_miner_pkg_default])
+
+    AC_MSG_NOTICE([searching for $ac_cv_tracker_miner_pkg])
+
+    PKG_CHECK_MODULES([TRACKER_MINER], [$ac_cv_tracker_miner_pkg >= 0.12], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
+
+    if test x"$ac_cv_have_tracker_miner" = x"yes" ; then
+        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
+        AC_SUBST(TRACKER_MINER_CFLAGS)
+        AC_SUBST(TRACKER_MINER_LIBS)
+	fi
 ])
 
 dnl Whether to disable bundled libevent

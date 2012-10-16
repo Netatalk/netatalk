@@ -368,9 +368,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/**
+ * Index a file
+ **/
+void sl_index_file(const char *path)
+{
+    sl_module_export->sl_mod_index_file(path);
+}
+
 /**************************************************************************************************
  * AFP functions
  **************************************************************************************************/
+
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     EC_INIT;

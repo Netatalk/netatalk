@@ -34,6 +34,7 @@
 #include "file.h"
 #include "filedir.h"
 #include "unix.h"
+#include "spotlight.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
@@ -738,10 +739,8 @@ createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
     fce_register_new_file(s_path);
-
-createfile_done:
+    sl_index_file(path);
     curdir->d_offcnt++;
-
     setvoltime(obj, vol );
 
     return (retvalue);
