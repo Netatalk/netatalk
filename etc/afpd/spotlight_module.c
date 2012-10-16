@@ -29,16 +29,18 @@
 
 static TrackerSparqlConnection *connection;
 
-const char *tracker_to_unix_path(const char *uri)
+char *tracker_to_unix_path(const char *uri)
 {
     EC_INIT;
-    GFile *f;
-    const char *path;
+    GFile *f = NULL;
+    char *path;
 
     EC_NULL_LOG( f = g_file_new_for_uri(uri) );
     EC_NULL_LOG( path = g_file_get_path(f) );
 
 EC_CLEANUP:
+    if (f)
+        g_free(f);
     if (ret != 0)
         return NULL;
     return path;
@@ -185,7 +187,8 @@ static int sl_mod_fetch_result(void *p)
     GError *error = NULL;
     int i = 0;
     cnid_t did, id;
-    const char *path;
+    const gchar *uri;
+    char *path;
     sl_cnids_t *cnids;
     sl_filemeta_t *fm;
     sl_array_t *fm_array;
@@ -211,19 +214,36 @@ static int sl_mod_fetch_result(void *p)
     sl_nil_t nil;
     dalloc_add_copy(fm_array, &nil, sl_nil_t);
 
+    LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
+
     while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
-        EC_NULL_LOG( path = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL) );
-        path = tracker_to_unix_path(path);
+        uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
+        LOG(log_debug, logtype_sl, "Result %d: uri: \"%s\"", i, uri);
+
+        EC_NULL_LOG( path = tracker_to_unix_path(uri) );
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: path(volpath: %s): \"%s\"", slq->slq_vol->v_path, path);
+
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
             LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error");
-            continue;
+            goto loop_cleanup;
         }
         LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i++, ntohl(id), path);
+
         uint64 = ntohl(id);
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
         add_filemeta(slq->slq_reqinfo, fm_array, id, path);
+
+    loop_cleanup:
+        g_free(path);
     }
+
+    if (error) {
+        LOG(log_error, logtype_sl, "Couldn't query the Tracker Store: '%s'",
+            error ? error->message : "unknown error");
+        g_clear_error (&error);
+        EC_FAIL;
+    }
+
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
