@@ -244,6 +244,8 @@ static int sl_mod_fetch_result(void *p)
         EC_FAIL;
     }
 
+    slq->slq_state = SLQ_STATE_DONE;
+
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 

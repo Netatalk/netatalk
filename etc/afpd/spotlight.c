@@ -286,8 +286,8 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
 
     /* Get query for context */
     EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
-    if (slq->slq_state != SLQ_STATE_RUNNING) {
-        EC_FAIL_LOG("Spotlight: attempt to fetch results for query that isn't runnnig");
+    if (slq->slq_state != SLQ_STATE_RUNNING && slq->slq_state != SLQ_STATE_DONE) {
+        EC_FAIL_LOG("Spotlight: attempt to fetch results for query that isn't active");
     }
 
     /* Create and pass reply handle */
@@ -296,8 +296,10 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     dalloc_add_copy(array, &sl_res, uint64_t);
     slq->slq_reply = array;
 
-    /* Fetch Tracker results*/
-    EC_ZERO( sl_module_export->sl_mod_fetch_result(slq) );
+    if (slq->slq_state == SLQ_STATE_RUNNING) {
+        /* Fetch Tracker results*/
+        EC_ZERO( sl_module_export->sl_mod_fetch_result(slq) );
+    }
 
     dalloc_add(reply, array, sl_array_t);
 
