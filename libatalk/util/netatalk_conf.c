@@ -1448,6 +1448,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_SHARE_RESERV;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "spotlight", 0))
+        options->flags |= OPTION_SPOTLIGHT;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
