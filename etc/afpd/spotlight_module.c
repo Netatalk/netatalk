@@ -79,21 +79,38 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
     EC_INIT;
     const gchar *sparql_query;
-    const char *sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri fts:match '%s' . ?uri nie:url ?url FILTER(fn:starts-with(?url, 'file://%s')) }";
+    const char *sparql_query_format;
     const char *slquery = slq->slq_qstring;
     char *word, *p;
 
     LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", slquery);
 
-    EC_NULL_LOG( word = strstr(slquery, "*==") );
-    word += 4; /* skip *== and the left enclosing quote */
-    EC_NULL( word = dalloc_strdup(slq, word) );
-    /* Search asterisk */
-    EC_NULL_LOG( p = strchr(word, '*') );
-    p[1] = 0;
-    sparql_query = talloc_asprintf(slq, sparql_query_format, word, slq->slq_vol->v_path);
-
-    LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
+    if ((word = strstr(slquery, "*==")) || (word = strstr(slquery, "kMDItemTextContent=="))) {
+        /* Full text search */
+        sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri nie:url ?url . FILTER(fn:starts-with(?url, 'file://%s')) . ?uri fts:match '%s'}";
+        EC_NULL_LOG( word = strchr(word, '"') );
+        word++;
+        EC_NULL( word = dalloc_strdup(slq, word) );
+        EC_NULL_LOG( p = strchr(word, '"') );
+        *p = 0;
+        sparql_query = talloc_asprintf(slq, sparql_query_format, slq->slq_vol->v_path, word);
+        LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
+    } else if ((word = strstr(slquery, "kMDItemDisplayName=="))) {
+        /* Filename search */
+        sparql_query_format = "SELECT nie:url(?f) WHERE { ?f nie:url ?url . ?f nfo:fileName ?name . FILTER(fn:starts-with(?url, 'file://%s/') && regex(?name, '%s')) }";
+        EC_NULL_LOG( word = strchr(word, '"') );
+        word++;
+        EC_NULL( word = dalloc_strdup(slq, word) );
+        EC_NULL_LOG( p = strchr(word, '"') );
+        if (*(p-1) == '*')
+            *(p-1) = 0;
+        else
+            *p = 0;
+        sparql_query = talloc_asprintf(slq, sparql_query_format, slq->slq_vol->v_path, word);
+        LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
+    } else {
+        EC_FAIL_LOG("Can't parse SL query: '%s'", slquery);
+    }
 
 EC_CLEANUP:
     if (ret != 0)
