@@ -28,6 +28,8 @@
 
 #include "spotlight.h"
 
+#define MAX_SL_RESULTS 20
+
 static TrackerSparqlConnection *connection;
 
 char *tracker_to_unix_path(const char *uri)
@@ -194,6 +196,7 @@ static int sl_mod_fetch_result(void *p)
     sl_filemeta_t *fm;
     sl_array_t *fm_array;
     uint64_t uint64;
+    gboolean more;
 
     if (!slq->slq_tracker_cursor) {
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: no results found");
@@ -217,12 +220,9 @@ static int sl_mod_fetch_result(void *p)
 
     LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
 
-    while (tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
+    while (i <= MAX_SL_RESULTS && tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
         uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
-        LOG(log_debug, logtype_sl, "Result %d: uri: \"%s\"", i, uri);
-
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
-        LOG(log_debug, logtype_sl, "sl_mod_fetch_result: path(volpath: %s): \"%s\"", slq->slq_vol->v_path, path);
 
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
             LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error");
@@ -245,15 +245,18 @@ static int sl_mod_fetch_result(void *p)
         EC_FAIL;
     }
 
-    slq->slq_state = SLQ_STATE_DONE;
+    if (i < MAX_SL_RESULTS)
+        slq->slq_state = SLQ_STATE_DONE;
 
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
     if (slq->slq_tracker_cursor) {
-        g_object_unref(slq->slq_tracker_cursor);
-        slq->slq_tracker_cursor = NULL;
+        if ((ret != 0) || (slq->slq_state == SLQ_STATE_DONE)) {
+            g_object_unref(slq->slq_tracker_cursor);
+            slq->slq_tracker_cursor = NULL;
+        }
     }
     EC_EXIT;
 }

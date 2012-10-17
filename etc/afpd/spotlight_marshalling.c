@@ -32,8 +32,12 @@
 #include <atalk/byteorder.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
+#include <atalk/dsi.h>
 
 #include "spotlight.h"
+
+#define MAX_SLQ_DAT (DSI_DATASIZ - 64)
+#define MAX_SLQ_TOC 8192
 
 /**************************************************************************************************
  * RPC data marshalling and unmarshalling
@@ -65,6 +69,30 @@
 /* Forward declarations */
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf, int *toc_idx);
 static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset, uint count, const uint toc_offset, const uint encoding);
+
+/**************************************************************************************************
+ * Wrapper functions for the *VAL macros with bound checking
+ **************************************************************************************************/
+
+static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
+{
+    if (off + sizeof(val) >= maxoff) {
+        LOG(log_error, logtype_sl, "sivalc: off: %zd, maxoff: %zd", off, maxoff);
+        return -1;
+    }
+    SIVAL(buf, off, val);
+    return 0;
+}
+
+static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
+{
+    if (off + sizeof(val) >= maxoff) {
+        LOG(log_error, logtype_sl, "slvalc: off: %zd, maxoff: %zd", off, maxoff);
+        return -1;
+    }
+    SLVAL(buf, off, val);
+    return 0;
+}
 
 /*
 * Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
@@ -107,157 +135,218 @@ static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count, uint32_t val)
 
 static int sl_pack_float(double d, char *buf, int offset)
 {
+    EC_INIT;
+
     union {
         double d;
         uint64_t w;
     } ieee_fp_union;
 
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1));
-    SLVAL(buf, offset + 8, ieee_fp_union.w);
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1)) );
+    EC_ZERO( slvalc(buf, offset + 8, MAX_SLQ_DAT, ieee_fp_union.w) );
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + 2 * sizeof(uint64_t);
 }
 
 static int sl_pack_uint64(uint64_t u, char *buf, int offset)
 {
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_INT64, 2, 1));
-    SLVAL(buf, offset + 8, u);
+    EC_INIT;
 
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_INT64, 2, 1)) );
+    EC_ZERO( slvalc(buf, offset + 8, MAX_SLQ_DAT, u) );
+
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + 2 * sizeof(uint64_t);
 }
 
 static int sl_pack_bool(sl_bool_t bl, char *buf, int offset)
 {
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_BOOL, 1, bl ? 1 : 0));
+    EC_INIT;
 
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_BOOL, 1, bl ? 1 : 0)) );
+
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + sizeof(uint64_t);
 }
 
 static int sl_pack_nil(char *buf, int offset)
 {
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_NULL, 1, 1));
+    EC_INIT;
 
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_NULL, 1, 1)) );
+
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + sizeof(uint64_t);
 }
 
 static int sl_pack_date(sl_time_t t, char *buf, int offset)
 {
+    EC_INIT;
     uint64_t data = 0;
 
     data = (t.tv_sec + SPOTLIGHT_TIME_DELTA) << 24;
 
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_DATE, 2, 1));
-    SLVAL(buf, offset + 8, data);
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_DATE, 2, 1)) );
+    EC_ZERO( slvalc(buf, offset + 8, MAX_SLQ_DAT, data) );
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + 2 * sizeof(uint64_t);
 }
 
 static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset)
 {
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_UUID, 3, 1));
+    EC_INIT;
+
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_UUID, 3, 1)) );
+    if (offset + 8 + 16 >= MAX_SLQ_DAT)
+        EC_FAIL;
     memcpy(buf + offset + 8, uuid, 16);
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset + sizeof(uint64_t) + 16;
 }
 
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
+    EC_INIT;
     int len = 0, off = 0;
     int cnid_count = talloc_array_length(cnids->ca_cnids->dd_talloc_array);
     uint64_t id;
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    EC_ZERO( slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC, sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0)) );
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1)) );
     *toc_idx += 1;
     offset += 8;
 
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_CNIDS, 2 + cnid_count, 8 /* unknown meaning, but always 8 */));
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_CNIDS, 2 + cnid_count, 8 /* unknown meaning, but always 8 */)) );
     offset += 8;
 
     if (cnid_count > 0) {
-        SLVAL(buf, offset, sl_pack_tag(0x0add, cnid_count, cnids->ca_context));
+        EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(0x0add, cnid_count, cnids->ca_context)) );
         offset += 8;
 
         for (int i = 0; i < cnid_count; i++) {
             memcpy(&id, cnids->ca_cnids->dd_talloc_array[i], sizeof(uint64_t));
-            SLVAL(buf, offset, id);
+            EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, id) );
             offset += 8;
         }
     }
     
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
 static int sl_pack_array(sl_array_t *array, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
+    EC_INIT;
     int count = talloc_array_length(array->dd_talloc_array);
     int octets = (offset + SL_OFFSET_DELTA) / 8;
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_ARRAY, octets, count));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    EC_ZERO( slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC, sl_pack_tag(SQ_CPX_TYPE_ARRAY, octets, count)) );
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1)) );
     *toc_idx += 1;
     offset += 8;
 
-    offset = sl_pack_loop(array, buf, offset, toc_buf, toc_idx);
+    EC_NEG1( offset = sl_pack_loop(array, buf, offset, toc_buf, toc_idx) );
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
 static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_DICT, (offset + SL_OFFSET_DELTA) / 8, talloc_array_length(dict->dd_talloc_array)));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    EC_INIT;
+
+    EC_ZERO( slvalc(toc_buf,
+                    *toc_idx * 8,
+                    MAX_SLQ_TOC,
+                    sl_pack_tag(SQ_CPX_TYPE_DICT,
+                                (offset + SL_OFFSET_DELTA) / 8,
+                                talloc_array_length(dict->dd_talloc_array))) );
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1)) );
     *toc_idx += 1;
     offset += 8;
 
-    offset = sl_pack_loop(dict, buf, offset, toc_buf, toc_idx);
+    EC_NEG1( offset = sl_pack_loop(dict, buf, offset, toc_buf, toc_idx) );
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
 static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
+    EC_INIT;
     int fmlen;                  /* lenght of filemeta */
     int saveoff = offset;
 
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1)) );
     offset += 16;
 
-    fmlen = sl_pack(fm, buf + offset);
+    EC_NEG1( fmlen = sl_pack(fm, buf + offset) );
     offset += fmlen;
 
-    SLVAL(buf, saveoff + 8, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */));
+    EC_ZERO( slvalc(buf, saveoff + 8, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */)) );
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (saveoff + SL_OFFSET_DELTA) / 8, fmlen / 8));
+    EC_ZERO( slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC, sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (saveoff + SL_OFFSET_DELTA) / 8, fmlen / 8)) );
     *toc_idx += 1;
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
 static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
+    EC_INIT;
     int len, octets, used_in_last_octet;
+
     len = strlen(s);
     octets = (len / 8) + (len & 7 ? 1 : 0);
     used_in_last_octet = 8 - (octets * 8 - len);
 
-    SLVAL(toc_buf, *toc_idx * 8, sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet));
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1));
+    EC_ZERO( slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC, sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8, used_in_last_octet)) );
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_COMPLEX, 1, *toc_idx + 1)) );
     *toc_idx += 1;
     offset += 8;
 
-    SLVAL(buf, offset, sl_pack_tag(SQ_TYPE_DATA, octets + 1, used_in_last_octet));
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_DATA, octets + 1, used_in_last_octet)) );
     offset += 8;
 
+    if (offset + octets * 8 > MAX_SLQ_DAT)
+        EC_FAIL;
     memset(buf + offset, 0, octets * 8);
     strncpy(buf + offset, s, len);
     offset += octets * 8;
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
+    EC_INIT;
     const char *type;
 
     for (int n = 0; n < talloc_array_length(query->dd_talloc_array); n++) {
@@ -265,38 +354,41 @@ static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
         type = talloc_get_name(query->dd_talloc_array[n]);
 
         if (STRCMP(type, ==, "sl_array_t")) {
-            offset = sl_pack_array(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+            EC_NEG1( offset = sl_pack_array(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx) );
         } else if (STRCMP(type, ==, "sl_dict_t")) {
-            offset = sl_pack_dict(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+            EC_NEG1( offset = sl_pack_dict(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx) );
         } else if (STRCMP(type, ==, "sl_filemeta_t")) {
-            offset = sl_pack_filemeta(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+            EC_NEG1( offset = sl_pack_filemeta(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx) );
         } else if (STRCMP(type, ==, "uint64_t")) {
             uint64_t i;
             memcpy(&i, query->dd_talloc_array[n], sizeof(uint64_t));
-            offset = sl_pack_uint64(i, buf, offset);
+            EC_NEG1( offset = sl_pack_uint64(i, buf, offset) );
         } else if (STRCMP(type, ==, "char *")) {
-            offset = sl_pack_string(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+            EC_NEG1( offset = sl_pack_string(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx) );
         } else if (STRCMP(type, ==, "sl_bool_t")) {
             sl_bool_t bl;
             memcpy(&bl, query->dd_talloc_array[n], sizeof(sl_bool_t));
-            offset = sl_pack_bool(bl, buf, offset);
+            EC_NEG1( offset = sl_pack_bool(bl, buf, offset) );
         } else if (STRCMP(type, ==, "double")) {
             double d;
             memcpy(&d, query->dd_talloc_array[n], sizeof(double));
-            offset = sl_pack_float(d, buf, offset);
+            EC_NEG1( offset = sl_pack_float(d, buf, offset) );
         } else if (STRCMP(type, ==, "sl_nil_t")) {
-            offset = sl_pack_nil(buf, offset);
+            EC_NEG1( offset = sl_pack_nil(buf, offset) );
         } else if (STRCMP(type, ==, "sl_time_t")) {
             sl_time_t t;
             memcpy(&t, query->dd_talloc_array[n], sizeof(sl_time_t));
-            offset = sl_pack_date(t, buf, offset);
+            EC_NEG1( offset = sl_pack_date(t, buf, offset) );
         } else if (STRCMP(type, ==, "sl_uuid_t")) {
-            offset = sl_pack_uuid(query->dd_talloc_array[n], buf, offset);
+            EC_NEG1( offset = sl_pack_uuid(query->dd_talloc_array[n], buf, offset) );
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
-            offset = sl_pack_CNID(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx);
+            EC_NEG1( offset = sl_pack_CNID(query->dd_talloc_array[n], buf, offset, toc_buf, toc_idx) );
         }
     }
 
+EC_CLEANUP:
+    if (ret != 0)
+        return -1;
     return offset;
 }
 
@@ -655,9 +747,6 @@ EC_CLEANUP:
  * Global functions for packing und unpacking
  **************************************************************************************************/
 
-#define MAX_SLQ_DAT 65000
-#define MAX_SLQ_TOC 2048
-
 int sl_pack(DALLOC_CTX *query, char *buf)
 {
     EC_INIT;
@@ -667,12 +756,13 @@ int sl_pack(DALLOC_CTX *query, char *buf)
 
     memcpy(buf, "432130dm", 8);
     EC_NEG1_LOG( len = sl_pack_loop(query, buf + 16, 0, toc_buf + 8, &toc_index) );
-    SIVAL(buf, 8, len / 8 + 1 + toc_index + 1);
-    SIVAL(buf, 12, len / 8 + 1);
+    EC_ZERO( sivalc(buf, 8, MAX_SLQ_DAT, len / 8 + 1 + toc_index + 1) );
+    EC_ZERO( sivalc(buf, 12, MAX_SLQ_DAT, len / 8 + 1) );
 
-    SLVAL(toc_buf, 0, sl_pack_tag(SQ_TYPE_TOC, toc_index + 1, 0));
+    EC_ZERO( slvalc(toc_buf, 0, MAX_SLQ_TOC, sl_pack_tag(SQ_TYPE_TOC, toc_index + 1, 0)) );
+    if ((16 + len + ((toc_index + 1 ) * 8)) >= MAX_SLQ_DAT)
+        EC_FAIL;
     memcpy(buf + 16 + len, toc_buf, (toc_index + 1 ) * 8);
-
     len += 16 + (toc_index + 1 ) * 8;
 
 EC_CLEANUP:
