@@ -1648,7 +1648,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* figure out options w values */
     options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
     options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
-    options->extmapfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "afp_extmap.conf");
+    options->extmapfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",    _PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
     options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
@@ -1780,7 +1780,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->maccharset = CH_MAC;
     LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);
 
-    EC_ZERO_LOG( readextmap(options->extmapfile) );
+    if (readextmap(options->extmapfile) != 0) {
+        LOG(log_error, logtype_afpd, "Couldn't load extension -> type/creator mappings file \"%s\"",
+            options->extmapfile);
+    }
 
     /* Check for sane values */
     if (options->tickleval <= 0)
