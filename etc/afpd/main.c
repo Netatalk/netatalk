@@ -344,8 +344,6 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
-    if (obj.options.flags & OPTION_SPOTLIGHT)
-        sl_mod_load(_PATH_AFPDUAMPATH "mod_spotlight.so");
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
 

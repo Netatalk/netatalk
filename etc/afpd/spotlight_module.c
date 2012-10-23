@@ -17,6 +17,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
+#include <locale.h>
 
 #include <gio/gio.h>
 #include <tracker-sparql.h>
@@ -25,6 +26,7 @@
 #include <atalk/util.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 
 #include "spotlight.h"
 
@@ -55,11 +57,22 @@ static int sl_mod_init(void *p)
     GError *error = NULL;
     const char *msg = p;
 
-    LOG(log_note, logtype_sl, "sl_mod_init: %s", msg);
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    LOG(log_info, logtype_sl, "sl_mod_init: %s", msg);
 
     g_type_init();
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    setenv("TRACKER_SPARQL_BACKEND", "bus", 1);
+
+#ifdef DEBUG
+    setenv("TRACKER_VERBOSITY", "3", 1);
+    dup2(type_configs[logtype_sl].fd, 1);
+    dup2(type_configs[logtype_sl].fd, 2);
+#endif
+
+    become_root();
     connection = tracker_sparql_connection_get(NULL, &error);
+    unbecome_root();
+
     if (!connection) {
         LOG(log_error, logtype_sl, "Couldn't obtain a direct connection to the Tracker store: %s",
             error ? error->message : "unknown error");
@@ -97,7 +110,7 @@ static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
         LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
     } else if ((word = strstr(slquery, "kMDItemDisplayName=="))) {
         /* Filename search */
-        sparql_query_format = "SELECT nie:url(?f) WHERE { ?f nie:url ?url . ?f nfo:fileName ?name . FILTER(fn:starts-with(?url, 'file://%s/') && regex(?name, '%s')) }";
+        sparql_query_format = "SELECT ?url WHERE { ?x nie:url ?url ; nfo:fileName ?name FILTER(fn:starts-with(?url, 'file://%s/') && regex(?name, '%s')) }";
         EC_NULL_LOG( word = strchr(word, '"') );
         word++;
         EC_NULL( word = dalloc_strdup(slq, word) );
@@ -155,7 +168,10 @@ static int sl_mod_start_search(void *p)
     tracker_sparql_connection_query_async(connection, sparql_query, NULL, tracker_cb, slq);
 #endif
 
+    become_root();
     slq->slq_tracker_cursor = tracker_sparql_connection_query(connection, sparql_query, NULL, &error);
+    unbecome_root();
+
     if (error) {
         LOG(log_error, logtype_sl, "Couldn't query the Tracker Store: '%s'",
             error ? error->message : "unknown error");
@@ -213,7 +229,7 @@ static int sl_mod_fetch_result(void *p)
     sl_filemeta_t *fm;
     sl_array_t *fm_array;
     uint64_t uint64;
-    gboolean more;
+    gboolean qres;
 
     if (!slq->slq_tracker_cursor) {
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: no results found");
@@ -237,15 +253,27 @@ static int sl_mod_fetch_result(void *p)
 
     LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
 
-    while (i <= MAX_SL_RESULTS && tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error)) {
+    while (i <= MAX_SL_RESULTS) {
+        become_root();
+        qres = tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error);
+        unbecome_root();
+
+        if (!qres)
+            break;
+
+        become_root();
         uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
+        unbecome_root();
+
+        LOG(log_debug, logtype_sl, "uri: \"%s\"", uri);
+
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
 
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
             LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error");
             goto loop_cleanup;
         }
-        LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i++, ntohl(id), path);
+        LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), path);
 
         uint64 = ntohl(id);
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
@@ -253,7 +281,8 @@ static int sl_mod_fetch_result(void *p)
 
     loop_cleanup:
         g_free(path);
-    }
+        i++;
+   }
 
     if (error) {
         LOG(log_error, logtype_sl, "Couldn't query the Tracker Store: '%s'",

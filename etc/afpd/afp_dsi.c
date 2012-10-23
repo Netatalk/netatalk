@@ -44,6 +44,7 @@
 #include "auth.h"
 #include "fork.h"
 #include "dircache.h"
+#include "spotlight.h"
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
@@ -491,6 +492,10 @@ void afp_over_dsi(AFPObj *obj)
     /* set TCP_NODELAY */
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
+
+    /* Initialize Spotlight */
+    if (obj->options.flags & OPTION_SPOTLIGHT)
+        sl_mod_load(_PATH_AFPDUAMPATH "mod_spotlight.so");
 
     /* get stuck here until the end */
     while (1) {
