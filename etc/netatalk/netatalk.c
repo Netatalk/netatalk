@@ -324,7 +324,7 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
-    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus path", "/bin/dbus-daemon");
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/bin/dbus-daemon");
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
     if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
         LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
     sleep(1);
 
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
-    system("/usr/bin/tracker-control -s");
+    system(TRACKER_PREFIX "/bin/tracker-control -s");
 
     /* run the event loop */
     ret = event_base_dispatch(base);

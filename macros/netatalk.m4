@@ -31,6 +31,8 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         fi
     else
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker library is available])
+        ac_cv_tracker_prefix=`pkg-config --variable=prefix $ac_cv_tracker_pkg`
+        AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
 	fi
 
     AC_SUBST(TRACKER_CFLAGS)
