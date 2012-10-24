@@ -12,7 +12,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([    AFP:])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([         ACL support: $with_acl_support])
-	AC_MSG_RESULT([         Spotligh: $ac_cv_have_tracker])
+	AC_MSG_RESULT([         Spotlight: $ac_cv_have_tracker])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
 	AC_MSG_RESULT([    UAMS:])
