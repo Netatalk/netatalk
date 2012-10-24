@@ -222,7 +222,7 @@ EC_CLEANUP:
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     EC_INIT;
-    int len = 0, off = 0;
+    int off = 0, len;
     int cnid_count = talloc_array_length(cnids->ca_cnids->dd_talloc_array);
     uint64_t id;
 
@@ -231,7 +231,11 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
     *toc_idx += 1;
     offset += 8;
 
-    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_CNIDS, 2 + cnid_count, 8 /* unknown meaning, but always 8 */)) );
+    len = cnid_count + 1;
+    if (cnid_count > 0)
+        len ++;
+
+    EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_CNIDS, len, 8 /* unknown meaning, but always 8 */)) );
     offset += 8;
 
     if (cnid_count > 0) {
@@ -302,7 +306,13 @@ static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, char *toc_
     offset += 16;
 
     EC_NEG1( fmlen = sl_pack(fm, buf + offset) );
-    offset += fmlen;
+
+    /* Check for empty filemeta array, if it's only 40 bytes, it's only the header but no content */
+    LOG(log_debug, logtype_sl, "fmlen: %d", fmlen);
+    if (fmlen > 40)
+        offset += fmlen;
+    else
+        fmlen = 0;
 
     EC_ZERO( slvalc(buf, saveoff + 8, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_DATA, (fmlen / 8) + 1, 8 /* unknown meaning, but always 8 */)) );
 

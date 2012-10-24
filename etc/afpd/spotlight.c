@@ -276,7 +276,6 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     EC_INIT;
     slq_t *slq = NULL;
     uint64_t *uint64, ctx1, ctx2;
-    sl_array_t *array;
 
     /* Context */
     EC_NULL_LOG (uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
@@ -291,17 +290,12 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CT
     }
 
     /* Create and pass reply handle */
-    array = talloc_zero(reply, sl_array_t);
-    uint64_t sl_res = 0;
-    dalloc_add_copy(array, &sl_res, uint64_t);
-    slq->slq_reply = array;
+    EC_NULL( slq->slq_reply = talloc_zero(reply, sl_array_t) );
 
-    if (slq->slq_state == SLQ_STATE_RUNNING) {
-        /* Fetch Tracker results*/
-        EC_ZERO( sl_module_export->sl_mod_fetch_result(slq) );
-    }
+    /* Fetch Tracker results*/
+    EC_ZERO_LOG( sl_module_export->sl_mod_fetch_result(slq) );
 
-    dalloc_add(reply, array, sl_array_t);
+    dalloc_add(reply, slq->slq_reply, sl_array_t);
 
 EC_CLEANUP:
     if (ret != 0) {
@@ -325,6 +319,8 @@ static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *quer
 
     /* Get query for context and free it */
     EC_NULL_LOG( slq = slq_for_ctx(ctx1, ctx2) );
+    if (slq->slq_state != SLQ_STATE_DONE)
+        LOG(log_warning, logtype_sl, "Closing active query");
     sl_module_export->sl_mod_end_search(slq);
     slq_remove(slq);
     talloc_free(slq);

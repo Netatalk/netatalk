@@ -191,8 +191,10 @@ static int add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, cnid_t id, co
     sl_nil_t nil = 0;
     int i, metacount;
 
-    if ((metacount = talloc_array_length(reqinfo->dd_talloc_array)) == 0)
-        EC_FAIL;
+    if ((metacount = talloc_array_length(reqinfo->dd_talloc_array)) == 0) {
+        dalloc_add_copy(fm_array, &nil, sl_nil_t);
+        goto EC_CLEANUP;
+    }
 
     LOG(log_debug, logtype_sl, "add_filemeta: metadata count: %d", metacount);
 
@@ -228,8 +230,9 @@ static int sl_mod_fetch_result(void *p)
     sl_cnids_t *cnids;
     sl_filemeta_t *fm;
     sl_array_t *fm_array;
+    sl_nil_t nil;
     uint64_t uint64;
-    gboolean qres;
+    gboolean qres, firstmatch = true;
 
     if (!slq->slq_tracker_cursor) {
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: no results found");
@@ -247,13 +250,9 @@ static int sl_mod_fetch_result(void *p)
     fm_array = talloc_zero(fm, sl_array_t);
     dalloc_add(fm, fm_array, sl_array_t);
 
-    /* For some reason the list of results always starts with a nil entry */
-    sl_nil_t nil;
-    dalloc_add_copy(fm_array, &nil, sl_nil_t);
-
     LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
 
-    while (i <= MAX_SL_RESULTS) {
+    while ((slq->slq_state == SLQ_STATE_RUNNING) && (i <= MAX_SL_RESULTS)) {
         become_root();
         qres = tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error);
         unbecome_root();
@@ -261,11 +260,15 @@ static int sl_mod_fetch_result(void *p)
         if (!qres)
             break;
 
+        if (firstmatch) {
+            /* For some reason the list of results always starts with a nil entry */
+            dalloc_add_copy(fm_array, &nil, sl_nil_t);
+            firstmatch = false;
+        }
+
         become_root();
         uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
         unbecome_root();
-
-        LOG(log_debug, logtype_sl, "uri: \"%s\"", uri);
 
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
 
@@ -294,12 +297,14 @@ static int sl_mod_fetch_result(void *p)
     if (i < MAX_SL_RESULTS)
         slq->slq_state = SLQ_STATE_DONE;
 
+    uint64 = (i > 0) ? 35 : 0; /* OS X AFP server returns 35 here if results are found */
+    dalloc_add_copy(slq->slq_reply, &uint64, uint64_t);
     dalloc_add(slq->slq_reply, cnids, sl_cnids_t);
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
-    if (slq->slq_tracker_cursor) {
-        if ((ret != 0) || (slq->slq_state == SLQ_STATE_DONE)) {
+    if (ret != 0) {
+        if (slq->slq_tracker_cursor) {
             g_object_unref(slq->slq_tracker_cursor);
             slq->slq_tracker_cursor = NULL;
         }
