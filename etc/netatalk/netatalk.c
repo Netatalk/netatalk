@@ -32,6 +32,8 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include <event2/event.h>
 
@@ -51,6 +53,43 @@ static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path;
+
+/******************************************************************
+ * Misc stuff
+ ******************************************************************/
+
+/* Set Tracker Miners to index all our volumes */
+static int set_sl_volumes(void)
+{
+    EC_INIT;
+    const struct vol *volumes, *vol;
+    struct bstrList *vollist = bstrListCreate();
+    bstring sep = bfromcstr(", ");
+    bstring volnamelist = NULL, cmd = NULL;
+
+    EC_NULL_LOG( volumes = getvolumes() );
+
+    for (vol = volumes; vol; vol = vol->v_next) {
+        bstring volnamequot = bformat("'%s'", vol->v_path);
+        bstrListPush(vollist, volnamequot);
+    }
+
+    volnamelist = bjoin(vollist, sep);
+    cmd = bformat("gsettings set org.freedesktop.Tracker.Miner.Files index-recursive-directories \"[%s]\"", bdata(volnamelist));
+    LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
+    system(bdata(cmd));
+
+EC_CLEANUP:
+    if (cmd)
+        bdestroy(cmd);
+    if (sep)
+        bdestroy(sep);
+    if (vollist)
+        bstrListDestroy(vollist);
+    if (volnamelist)
+        bdestroy(volnamelist);
+    EC_EXIT;
+}
 
 /******************************************************************
  * libevent helper functions
@@ -285,6 +324,8 @@ int main(int argc, char **argv)
     if (afp_config_parse(&obj, "netatalk") != 0)
         netatalk_exit(EXITERR_CONF);
 
+    load_volumes(&obj, NULL);
+
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
 
@@ -331,9 +372,11 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
+    /* Allow dbus some time to start up */
     sleep(1);
 
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    set_sl_volumes();
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 
     /* run the event loop */
