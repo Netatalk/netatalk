@@ -116,4 +116,11 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $LDAP_LDLFLAGS $LDAP_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $LDAP_CFLAGS])
 	fi
+    AC_MSG_RESULT([    LIBEVENT:])
+    if test x"$use_bundled_libevent" = x"yes"; then
+		AC_MSG_RESULT([        bundled])
+    else
+		AC_MSG_RESULT([        LIBS   = $LIBEVENT_CFLAGS])
+		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_LDFLAGS])
+    fi
 ])
