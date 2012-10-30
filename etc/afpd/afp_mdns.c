@@ -232,7 +232,7 @@ static void register_stuff(const AFPObj *obj) {
             LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
                 dsi->bonjourname, obj->options.mimicmodel);
             TXTRecordCreate(&txt_devinfo, 0, NULL);
-            TXTRecordPrintf(&txt_devinfo, "model=%s", obj->options.mimicmodel);
+            TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel);
             error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                        0,               // no flags
                                        0,               // all network interfaces
@@ -240,7 +240,14 @@ static void register_stuff(const AFPObj *obj) {
                                        DEV_INFO_SERVICE_TYPE,
                                        "",            // default domains
                                        NULL,            // default host name
-                                       0,
+                                       /*
+                                        * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
+                                        *   "A value of 0 for a port is passed to register placeholder services.
+                                        *    Place holder services are not found  when browsing, but other
+                                        *    clients cannot register with the same name as the placeholder service."
+                                        * We therefor use port 9 which is used by the adisk service type.
+                                        */
+                                       htons(9),
                                        TXTRecordGetLength(&txt_devinfo),
                                        TXTRecordGetBytesPtr(&txt_devinfo),
                                        RegisterReply,           // callback
