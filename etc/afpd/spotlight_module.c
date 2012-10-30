@@ -33,6 +33,7 @@
 #define MAX_SL_RESULTS 20
 
 static TrackerSparqlConnection *connection;
+static TrackerMinerManager *manager;
 
 char *tracker_to_unix_path(const char *uri)
 {
@@ -71,11 +72,18 @@ static int sl_mod_init(void *p)
 
     become_root();
     connection = tracker_sparql_connection_get(NULL, &error);
+    manager = tracker_miner_manager_new_full(FALSE, &error);
     unbecome_root();
 
     if (!connection) {
         LOG(log_error, logtype_sl, "Couldn't obtain a direct connection to the Tracker store: %s",
             error ? error->message : "unknown error");
+        g_clear_error(&error);
+        EC_FAIL;
+    }
+
+    if (!manager) {
+        LOG(log_error, logtype_sl, "Couldn't connect to Tracker miner");
         g_clear_error(&error);
         EC_FAIL;
     }
@@ -347,33 +355,29 @@ EC_CLEANUP:
 static int sl_mod_index_file(const void *p)
 {
 #ifdef HAVE_TRACKER_MINER
-    /* hangs in tracker_miner_manager_new_full() for whatever reason... */
-    return 0;
-
     EC_INIT;
     const char *f = p;
 
     if (!f)
         goto EC_CLEANUP;
 
-    TrackerMinerManager *manager;
     GError *error = NULL;
-    GFile *file;
+    GFile *file = NULL;
 
-    if ((manager = tracker_miner_manager_new_full(FALSE, &error)) == NULL) {
-        LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): couldn't connect to Tracker miner", f);
-    } else {
-        file = g_file_new_for_commandline_arg(f);
-        tracker_miner_manager_index_file(manager, file, &error);
-        if (error)
-            LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): indexing failed", f);
-        else
-            LOG(log_debug, logtype_sl, "sl_mod_index_file(\"%s\"): indexing file was successful", f);
-        g_object_unref(manager);
-        g_object_unref(file);
-    }
+    file = g_file_new_for_commandline_arg(f);
+
+    become_root();
+    tracker_miner_manager_index_file(manager, file, &error);
+    unbecome_root();
+
+    if (error)
+        LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): indexing failed", f);
+    else
+        LOG(log_debug, logtype_sl, "sl_mod_index_file(\"%s\"): indexing file was successful", f);
 
 EC_CLEANUP:
+    if (file)
+        g_object_unref(file);
     EC_EXIT;
 #else
     return 0;
