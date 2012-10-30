@@ -42,4 +42,5 @@ noinst_HEADERS = \
 	ldapconfig.h \
 	talloc.h \
 	dalloc.h \
-	byteorder.h
+	byteorder.h \
+	fce_api.h

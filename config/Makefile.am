@@ -6,7 +6,7 @@ SUFFIXES = .tmpl .
 TMPLFILES = afp.conf.tmpl dbus-session.conf.tmpl
 GENFILES = afp.conf dbus-session.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl
+EXTRA_DIST = afp.conf.tmpl dbus-session.conf.tmpl
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
