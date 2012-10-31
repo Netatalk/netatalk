@@ -35,7 +35,7 @@
 static TrackerSparqlConnection *connection;
 static TrackerMinerManager *manager;
 
-char *tracker_to_unix_path(const char *uri)
+static char *tracker_to_unix_path(const char *uri)
 {
     EC_INIT;
     GFile *f = NULL;
