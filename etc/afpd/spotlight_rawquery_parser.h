@@ -71,7 +71,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 33 "spotlight_rawquery_parser.y"
+#line 34 "spotlight_rawquery_parser.y"
 
     int ival;
     const char *sval;
@@ -92,7 +92,7 @@ extern YYSTYPE yylval;
 /* "%code provides" blocks.  */
 
 /* Line 2068 of yacc.c  */
-#line 27 "spotlight_rawquery_parser.y"
+#line 28 "spotlight_rawquery_parser.y"
 
   extern const gchar *map_spotlight_to_sparql_query(slq_t *slq);
   extern slq_t *ssp_slq;

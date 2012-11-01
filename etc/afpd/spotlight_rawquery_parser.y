@@ -5,6 +5,7 @@
   #include <gio/gio.h>
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
+  #include <atalk/errchk.h>
   #include "spotlight_SPARQL_map.h"
   #include "spotlight.h"
 
@@ -142,15 +143,17 @@ int yywrap()
 
 const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
-    YY_BUFFER_STATE s;
+    EC_INIT;
+    YY_BUFFER_STATE s = NULL;
 
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
 
-    LOG(log_debug, logtype_sl, "map_spotlight_to_sparql_query: %s", slq->slq_qstring);
+    EC_ZERO( yyparse() );
 
-    yyparse();
-    yy_delete_buffer(s);
+EC_CLEANUP:
+    if (s)
+        yy_delete_buffer(s);
 
     return ssp_result;
 }

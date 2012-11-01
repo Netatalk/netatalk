@@ -74,6 +74,7 @@
   #include <gio/gio.h>
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
+  #include <atalk/errchk.h>
   #include "spotlight_SPARQL_map.h"
   #include "spotlight.h"
 
@@ -94,7 +95,7 @@
 
 
 /* Line 268 of yacc.c  */
-#line 98 "spotlight_rawquery_parser.c"
+#line 99 "spotlight_rawquery_parser.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -155,7 +156,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 33 "spotlight_rawquery_parser.y"
+#line 34 "spotlight_rawquery_parser.y"
 
     int ival;
     const char *sval;
@@ -163,7 +164,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 167 "spotlight_rawquery_parser.c"
+#line 168 "spotlight_rawquery_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -173,7 +174,7 @@ typedef union YYSTYPE
 /* "%code provides" blocks.  */
 
 /* Line 340 of yacc.c  */
-#line 27 "spotlight_rawquery_parser.y"
+#line 28 "spotlight_rawquery_parser.y"
 
   extern const gchar *map_spotlight_to_sparql_query(slq_t *slq);
   extern slq_t *ssp_slq;
@@ -182,13 +183,13 @@ typedef union YYSTYPE
 
 
 /* Line 340 of yacc.c  */
-#line 186 "spotlight_rawquery_parser.c"
+#line 187 "spotlight_rawquery_parser.c"
 
 /* Copy the second part of user declarations.  */
 
 
 /* Line 343 of yacc.c  */
-#line 192 "spotlight_rawquery_parser.c"
+#line 193 "spotlight_rawquery_parser.c"
 
 #ifdef short
 # undef short
@@ -479,8 +480,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    51,    51,    53,    57,    67,    73,    74,    75,    76,
-      77,    86,    90
+       0,    52,    52,    54,    58,    68,    74,    75,    76,    77,
+      78,    87,    91
 };
 #endif
 
@@ -1423,7 +1424,7 @@ yyreduce:
         case 4:
 
 /* Line 1806 of yacc.c  */
-#line 57 "spotlight_rawquery_parser.y"
+#line 58 "spotlight_rawquery_parser.y"
     {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
@@ -1436,7 +1437,7 @@ yyreduce:
   case 5:
 
 /* Line 1806 of yacc.c  */
-#line 67 "spotlight_rawquery_parser.y"
+#line 68 "spotlight_rawquery_parser.y"
     {
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
         (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
@@ -1448,35 +1449,35 @@ yyreduce:
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 73 "spotlight_rawquery_parser.y"
+#line 74 "spotlight_rawquery_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 74 "spotlight_rawquery_parser.y"
+#line 75 "spotlight_rawquery_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 8:
 
 /* Line 1806 of yacc.c  */
-#line 75 "spotlight_rawquery_parser.y"
+#line 76 "spotlight_rawquery_parser.y"
     {(yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(2) - (3)].sval));}
     break;
 
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 76 "spotlight_rawquery_parser.y"
+#line 77 "spotlight_rawquery_parser.y"
     {(yyval.sval) = talloc_asprintf(ssp_slq, "%s . %s", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));}
     break;
 
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 77 "spotlight_rawquery_parser.y"
+#line 78 "spotlight_rawquery_parser.y"
     {
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
         (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
@@ -1488,21 +1489,21 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 86 "spotlight_rawquery_parser.y"
+#line 87 "spotlight_rawquery_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), (yyvsp[(4) - (5)].sval));}
     break;
 
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 90 "spotlight_rawquery_parser.y"
+#line 91 "spotlight_rawquery_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (14)].sval), (yyvsp[(7) - (14)].sval), (yyvsp[(12) - (14)].sval));}
     break;
 
 
 
 /* Line 1806 of yacc.c  */
-#line 1506 "spotlight_rawquery_parser.c"
+#line 1507 "spotlight_rawquery_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1733,7 +1734,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 93 "spotlight_rawquery_parser.y"
+#line 94 "spotlight_rawquery_parser.y"
 
 
 const char *map_daterange(const char *dateattr, const char *date1, const char *date2)
@@ -1786,15 +1787,17 @@ int yywrap()
 
 const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 {
-    YY_BUFFER_STATE s;
+    EC_INIT;
+    YY_BUFFER_STATE s = NULL;
 
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
 
-    LOG(log_debug, logtype_sl, "map_spotlight_to_sparql_query: %s", slq->slq_qstring);
+    EC_ZERO( yyparse() );
 
-    yyparse();
-    yy_delete_buffer(s);
+EC_CLEANUP:
+    if (s)
+        yy_delete_buffer(s);
 
     return ssp_result;
 }
