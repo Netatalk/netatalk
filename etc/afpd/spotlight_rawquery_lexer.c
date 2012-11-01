@@ -370,12 +370,12 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[75] =
     {   0,
-        0,    0,   21,   20,   17,   17,   20,    7,   20,   20,
-        8,    9,    6,   16,   14,   20,   15,    6,    6,    6,
-        6,   20,    0,   13,    0,   10,    6,   12,    6,    6,
-        6,    6,    6,   11,    0,    0,    6,    6,    6,    6,
-        6,    0,    0,    6,    6,    6,    5,    0,    0,    6,
-        6,    4,    0,    0,    6,    0,    0,    1,    0,    0,
+        0,    0,   21,   20,   19,   19,   20,    9,   20,   20,
+       10,   11,    8,   18,   16,   20,   17,    8,    8,    8,
+        8,   20,    0,   15,    0,   12,    8,   14,    8,    5,
+        8,    8,    8,   13,    0,    0,    8,    8,    4,    8,
+        8,    0,    0,    8,    8,    8,    7,    0,    0,    8,
+        8,    6,    0,    0,    8,    0,    0,    1,    0,    0,
         0,    2,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    3,    0
     } ;
@@ -386,8 +386,8 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    4,    5,    1,    6,    1,    7,    1,    8,
-        9,   10,    1,   11,   12,   13,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,   14,    1,   15,
+        9,   10,    1,   11,   12,   13,    1,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,   14,    1,   15,
        16,   17,    1,    1,   10,   10,   10,   10,   10,   10,
        10,   10,   18,   10,   10,   10,   10,   10,   10,   10,
        10,   19,   10,   20,   10,   10,   10,   10,   10,   21,
@@ -819,80 +819,80 @@ YY_RULE_SETUP
 case 4:
 YY_RULE_SETUP
 #line 14 "spotlight_rawquery_lexer.l"
-{yylval.bval = false; return BOOL;}
+/* ignore case specifier */
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
 #line 15 "spotlight_rawquery_lexer.l"
-{yylval.bval = true; return BOOL;}
+/* ignore */
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
 #line 16 "spotlight_rawquery_lexer.l"
-{yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
+{yylval.bval = false; return BOOL;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
 #line 17 "spotlight_rawquery_lexer.l"
-return QUOTE;
+{yylval.bval = true; return BOOL;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 #line 18 "spotlight_rawquery_lexer.l"
-return OBRACE;
+{yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
 #line 19 "spotlight_rawquery_lexer.l"
-return CBRACE;
+return QUOTE;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 20 "spotlight_rawquery_lexer.l"
-return AND;
+return OBRACE;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
 #line 21 "spotlight_rawquery_lexer.l"
-return OR;
+return CBRACE;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
 #line 22 "spotlight_rawquery_lexer.l"
-return EQUAL;
+return AND;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
 #line 23 "spotlight_rawquery_lexer.l"
-return UNEQUAL;
+return OR;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
 #line 24 "spotlight_rawquery_lexer.l"
-return LT;
+return EQUAL;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
 #line 25 "spotlight_rawquery_lexer.l"
-return GT;
+return UNEQUAL;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
 #line 26 "spotlight_rawquery_lexer.l"
-return COMMA;
+return LT;
 	YY_BREAK
 case 17:
-/* rule 17 can match eol */
 YY_RULE_SETUP
 #line 27 "spotlight_rawquery_lexer.l"
-/* ignore */
+return GT;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 #line 28 "spotlight_rawquery_lexer.l"
-/* ignore case specifier */
+return COMMA;
 	YY_BREAK
 case 19:
+/* rule 19 can match eol */
 YY_RULE_SETUP
 #line 29 "spotlight_rawquery_lexer.l"
 /* ignore */

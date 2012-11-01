@@ -11,9 +11,11 @@
 InRange                               return FUNC_INRANGE;
 \$time\.iso                           return DATE_SPEC;
 ....-..-..T..:..:..Z                  {yylval.sval = talloc_strdup(ssp_slq, yytext); return DATE;}
+cwd                                   /* ignore case specifier */
+cd                                    /* ignore */
 false                                 {yylval.bval = false; return BOOL;}
 true                                  {yylval.bval = true; return BOOL;}
-[a-zA-Z\*]+                           {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
+[a-zA-Z0-9\*]+                        {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 \"                                    return QUOTE;
 \(                                    return OBRACE;
 \)                                    return CBRACE;
@@ -25,6 +27,4 @@ true                                  {yylval.bval = true; return BOOL;}
 \>                                    return GT;
 \,                                    return COMMA;
 [ \t\n]                               /* ignore */
-cwd                                   /* ignore case specifier */
-cd                                    /* ignore */
 %%

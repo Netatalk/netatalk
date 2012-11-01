@@ -21,12 +21,14 @@
 #include "spotlight_SPARQL_map.h"
 
 struct spotlight_sparql_map spotlight_sparql_map[] = {
-/*   ssm_spotlight_attr                    ssm_sparql_attr              ssm_sparql_query_fmtstr */
-    {"*",                                  "fts:match",                 "?x fts:match '%s'"},
-    {"kMDItemTextContent",                 "fts:match",                 "?x fts:match '%s'"},
-    {"kMDItemDisplayName",                 "nfo:fileName",              "?x nfo:fileName ?y FILTER(regex(?y, '%s'))"},
-    {"kMDItemContentCreationDate",         "nfo:fileCreated",           "?x nfo:fileCreated '%s'"},
-    {"kMDItemFSContentChangeDate",         "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},
-    {"kMDItemContentModificationDate",     "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},
-    {NULL, NULL, NULL}
+/*   ssm_spotlight_attr                 ssm_type,   ssm_sparql_attr */
+    {"*",                               ssmt_fts,   "fts:match"},
+    {"kMDItemTextContent",              ssmt_fts,   "fts:match"},
+    {"kMDItemDisplayName",              ssmt_str,   "nfo:fileName"},
+    {"kMDItemContentCreationDate",      ssmt_date,  "nfo:fileCreated"},
+    {"kMDItemFSContentChangeDate",      ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemContentModificationDate",  ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemPixelWidth",               ssmt_num,   "nfo:width"},
+    {"kMDItemPixelHeight",              ssmt_num,   "nfo:height"},
+    {NULL, ssmt_str, NULL}
 };

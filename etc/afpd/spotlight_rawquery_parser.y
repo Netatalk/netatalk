@@ -82,7 +82,7 @@ BOOL                             {
     else
         $$ = talloc_asprintf(ssp_slq, "%s", $1);
 }
-| match                        {$$ = $1;}
+| match                        {$$ = $1; if ($$ == NULL) YYABORT;}
 | function                     {$$ = $1;}
 | OBRACE expr CBRACE           {$$ = talloc_asprintf(ssp_slq, "%s", $2);}
 | expr AND expr                {$$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);}
@@ -128,18 +128,37 @@ const char *map_daterange(const char *dateattr, const char *date1, const char *d
 
 const char *map_expr(const char *attr, char op, const char *val)
 {
+    EC_INIT;
     char *result = NULL;
     struct spotlight_sparql_map *p;
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
-#if 0
         if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
-            result = talloc_asprintf(ssp_slq, p->ssm_sparql_query_fmtstr, val);
+            switch (p->ssm_type) {
+            case ssmt_bool:
+                result = talloc_asprintf(ssp_slq, "?x %s '%s'", p->ssm_sparql_attr, val);
+                break;
+            case ssmt_num:
+                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(?y %c '%s')", p->ssm_sparql_attr, op, val);
+                break;
+            case ssmt_str:
+                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(regex(?y, '%s'))", p->ssm_sparql_attr, val);
+                break;
+            case ssmt_fts:
+                result = talloc_asprintf(ssp_slq, "?x %s '%s'", p->ssm_sparql_attr, val);
+                break;
+            case ssmt_date:
+                yyerror("enexpected ssmt_date");
+                EC_FAIL;
+            default:
+                yyerror("unknown Spotlight attribute type");
+                EC_FAIL;
+            }
             break;
         }
-#endif
     }
 
+EC_CLEANUP:
     return result;
 }
 
@@ -169,6 +188,7 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
+    ssp_result = NULL;
 
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
@@ -179,9 +199,9 @@ EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
     if (ret == 0)
-        *sparql_result = NULL;
-    else
         *sparql_result = ssp_result;
+    else
+        *sparql_result = NULL;
     EC_EXIT;
 }
 
