@@ -27,5 +27,5 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemContentCreationDate",         "nfo:fileCreated",           "?x nfo:fileCreated '%s'"},
     {"kMDItemFSContentChangeDate",         "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},
     {"kMDItemContentModificationDate",     "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},
-    {NULL, NULL}
+    {NULL, NULL, NULL}
 };
