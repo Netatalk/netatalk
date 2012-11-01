@@ -102,7 +102,7 @@
 
   /* local vars */
   static gchar *ssp_result;
-
+  static char sparqlvar;
 
 
 /* Line 268 of yacc.c  */
@@ -1459,7 +1459,7 @@ yyreduce:
     {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
-                                 "{ ?x nie:url ?url FILTER(fn:starts-with(?url, 'file://%s/')) . %s}",
+                                 "{ ?obj nie:url ?url FILTER(fn:starts-with(?url, 'file://%s/')) . %s}",
                                  ssp_slq->slq_vol->v_path, (yyvsp[(1) - (1)].sval));
     (yyval.sval) = ssp_result;
 }
@@ -1832,18 +1832,23 @@ const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
     struct tm *tmp;
     char buf1[64], buf2[64];
 
-    EC_NULL( tmp = localtime(&date1) );
+    EC_NULL_LOG( tmp = localtime(&date1) );
     strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-    EC_NULL( tmp = localtime(&date2) );
+    EC_NULL_LOG( tmp = localtime(&date2) );
     strftime(buf2, sizeof(buf2), "%Y-%m-%dT%H:%M:%SZ", tmp);
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->ssm_spotlight_attr) == 0) {
             result = talloc_asprintf(ssp_slq,
-                                     "?x %s ?d FILTER (?d > '%s' && ?d < '%s')",
+                                     "?obj %s ?%c FILTER (?%c > '%s' && ?%c < '%s')",
                                      p->ssm_sparql_attr,
+                                     sparqlvar,
+                                     sparqlvar,
                                      buf1,
+                                     sparqlvar,
                                      buf2);
+            sparqlvar++;
+            break;
         }
     }
 
@@ -1866,22 +1871,39 @@ const char *map_expr(const char *attr, char op, const char *val)
         if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
             switch (p->ssm_type) {
             case ssmt_bool:
-                result = talloc_asprintf(ssp_slq, "?x %s '%s'", p->ssm_sparql_attr, val);
+                result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
             case ssmt_num:
-                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(?y %c '%s')", p->ssm_sparql_attr, op, val);
+                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c '%s')",
+                                         p->ssm_sparql_attr,
+                                         sparqlvar,
+                                         sparqlvar,
+                                         op,
+                                         val);
+                sparqlvar++;
                 break;
             case ssmt_str:
-                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(regex(?y, '%s'))", p->ssm_sparql_attr, val);
+                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(regex(?%c, '%s'))",
+                                         p->ssm_sparql_attr,
+                                         sparqlvar,
+                                         sparqlvar,
+                                         val);
+                sparqlvar++;
                 break;
             case ssmt_fts:
-                result = talloc_asprintf(ssp_slq, "?x %s '%s'", p->ssm_sparql_attr, val);
+                result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
             case ssmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL( tmp = localtime(&t) );
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(?y %c '%s')", p->ssm_sparql_attr, op, buf1);
+                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c '%s')",
+                                         p->ssm_sparql_attr,
+                                         sparqlvar,
+                                         sparqlvar,
+                                         op,
+                                         buf1);
+                sparqlvar++;
                 break;
             default:
                 yyerror("unknown Spotlight attribute type");
@@ -1925,6 +1947,7 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
+    sparqlvar = 'a';
 
     EC_ZERO( yyparse() );
 
@@ -1953,6 +1976,7 @@ int main(int argc, char **argv)
     struct vol *vol = talloc_zero(ssp_slq, struct vol);
     vol->v_path = "/Volumes/test";
     ssp_slq->slq_vol = vol;
+    sparqlvar = 'a';
 
     s = yy_scan_string(argv[1]);
 
