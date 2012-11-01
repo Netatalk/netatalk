@@ -4,7 +4,7 @@ afpd
 fce
 hash
 spot
-test_parse_mtab
+srp
 .deps
 .libs
 *.o

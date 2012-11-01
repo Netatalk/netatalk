@@ -29,6 +29,7 @@
 #include <atalk/unix.h>
 
 #include "spotlight.h"
+#include "spotlight_rawquery_parser.h"
 
 #define MAX_SL_RESULTS 20
 
@@ -92,52 +93,6 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*!
- * Return talloced query from query string
- * *=="query*"
- */
-static const gchar *map_spotlight_to_sparql_query(slq_t *slq)
-{
-    EC_INIT;
-    const gchar *sparql_query;
-    const char *sparql_query_format;
-    const char *slquery = slq->slq_qstring;
-    char *word, *p;
-
-    LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", slquery);
-
-    if ((word = strstr(slquery, "*==")) || (word = strstr(slquery, "kMDItemTextContent=="))) {
-        /* Full text search */
-        sparql_query_format = "SELECT nie:url(?uri) WHERE {?uri nie:url ?url . FILTER(fn:starts-with(?url, 'file://%s')) . ?uri fts:match '%s'}";
-        EC_NULL_LOG( word = strchr(word, '"') );
-        word++;
-        EC_NULL( word = dalloc_strdup(slq, word) );
-        EC_NULL_LOG( p = strchr(word, '"') );
-        *p = 0;
-        sparql_query = talloc_asprintf(slq, sparql_query_format, slq->slq_vol->v_path, word);
-        LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
-    } else if ((word = strstr(slquery, "kMDItemDisplayName=="))) {
-        /* Filename search */
-        sparql_query_format = "SELECT ?url WHERE { ?x nie:url ?url ; nfo:fileName ?name FILTER(fn:starts-with(?url, 'file://%s/') && regex(?name, '%s')) }";
-        EC_NULL_LOG( word = strchr(word, '"') );
-        word++;
-        EC_NULL( word = dalloc_strdup(slq, word) );
-        EC_NULL_LOG( p = strchr(word, '"') );
-        if (*(p-1) == '*')
-            *(p-1) = 0;
-        else
-            *p = 0;
-        sparql_query = talloc_asprintf(slq, sparql_query_format, slq->slq_vol->v_path, word);
-        LOG(log_debug, logtype_sl, "query_word_from_sl_query: \"%s\"", sparql_query);
-    } else {
-        EC_FAIL_LOG("Can't parse SL query: '%s'", slquery);
-    }
-
-EC_CLEANUP:
-    if (ret != 0)
-        sparql_query = NULL;
-    return sparql_query;
-}
 
 static void tracker_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
@@ -281,7 +236,7 @@ static int sl_mod_fetch_result(void *p)
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
 
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
-            LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error");
+            LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", path);
             goto loop_cleanup;
         }
         LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), path);
