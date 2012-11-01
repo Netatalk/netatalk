@@ -42,11 +42,6 @@ extern int pselect(int, fd_set * restrict, fd_set * restrict,
 extern int flock (int, int);
 #endif
 
-#ifndef HAVE_INET_ATON
-struct in_addr;
-extern int inet_aton(const char *, struct in_addr *);
-#endif
-
 #ifndef HAVE_STRNLEN
 extern size_t strnlen(const char *s, size_t n);
 #endif

@@ -51,12 +51,6 @@ extern const u_char	ufinderi[];
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
 
-struct extmap {
-    char		*em_ext;
-    char		em_creator[ 4 ];
-    char		em_type[ 4 ];
-};
-
 #define kTextEncodingUTF8 0x08000103
 
 typedef enum {

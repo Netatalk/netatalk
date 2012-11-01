@@ -30,6 +30,17 @@
 #include <atalk/logger.h>
 #include <atalk/iniparser.h>
 
+void acl_ldap_freeconfig(void)
+{
+    for (int i = 0; ldap_prefs[i].name != NULL; i++) {
+        if (ldap_prefs[i].intfromarray == 0 && ldap_prefs[i].strorint == 0) {
+            free(*((char **)(ldap_prefs[i].pref)));
+            *((char **)(ldap_prefs[i].pref)) = NULL;
+        }
+        ldap_prefs[i].valid = ldap_prefs[i].valid_save;
+    }
+}
+
 int acl_ldap_readconfig(dictionary *iniconfig)
 {
     int i, j;

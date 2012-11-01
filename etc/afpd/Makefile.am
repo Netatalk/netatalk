@@ -28,7 +28,6 @@ afpd_SOURCES = \
 	file.c \
 	filedir.c \
 	fork.c \
-	gettok.c \
 	hash.c \
 	main.c \
 	mangle.c \
@@ -52,7 +51,7 @@ afpd_LDADD =  \
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ @KRB5_CFLAGS@\
+	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \

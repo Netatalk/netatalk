@@ -19,7 +19,6 @@ extern int              ustatfs_getvolspace (const struct vol *,
                                              uint32_t *);
 extern void             setvoltime (AFPObj *, struct vol *);
 extern int              pollvoltime (AFPObj *);
-extern void             vol_fce_tm_event(void);
 
 /* FP functions */
 int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

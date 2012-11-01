@@ -9,6 +9,7 @@ libutil_la_SOURCES = \
 	cnid.c		\
 	fault.c		\
 	getiface.c	\
+	gettok.c	\
 	locking.c   \
 	logger.c	\
 	module.c	\

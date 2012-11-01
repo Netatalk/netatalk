@@ -254,6 +254,13 @@ int main(int ac, char **av)
         afp_exit(EXITERR_SYS);
     }
 #endif
+
+    sv.sa_handler = SIG_IGN;
+    sigemptyset( &sv.sa_mask );
+    if (sigaction(SIGPIPE, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
+        afp_exit(EXITERR_SYS);
+    }
     
     sv.sa_handler = afp_goaway; /* handler for all sigs */
 
@@ -383,12 +390,17 @@ int main(int ac, char **av)
 
         if (reloadconfig) {
             nologin++;
-            auth_unload();
+
             fd_reset_listening_sockets(&obj);
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
 
             configfree(&obj, NULL);
+            afp_config_free(&obj);
+
+            if (afp_config_parse(&obj, "afpd") != 0)
+                afp_exit(EXITERR_CONF);
+
             if (configinit(&obj) != 0) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 afp_exit(EXITERR_CONF);

@@ -22,6 +22,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
+#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>

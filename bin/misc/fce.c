@@ -27,8 +27,7 @@ static char *fce_ev_names[] = {
     "FCE_FILE_DELETE",
     "FCE_DIR_DELETE",
     "FCE_FILE_CREATE",
-    "FCE_DIR_CREATE",
-    "FCE_TM_SIZE"
+    "FCE_DIR_CREATE"
 };
 
 // get sockaddr, IPv4 or IPv6:
@@ -63,6 +62,7 @@ static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
     packet->datalen = ntohs(packet->datalen);
 
     memcpy(&packet->data[0], p, packet->datalen);
+    packet->data[packet->datalen] = 0; /* 0 terminate strings */
     p += packet->datalen;
 
     return 0;
@@ -134,13 +134,6 @@ int main(void)
         if (memcmp(packet.magic, FCE_PACKET_MAGIC, sizeof(packet.magic)) == 0) {
 
             switch (packet.mode) {
-            case FCE_TM_SIZE:
-                memcpy(&tmsize, packet.data, sizeof(uint64_t));
-                tmsize = ntoh64(tmsize);
-                printf("ID: %" PRIu32 ", Event: %s, Volume: %s, TM used size: %" PRIu64 " \n",
-                       packet.event_id, fce_ev_names[packet.mode], packet.data + sizeof(uint64_t), tmsize);
-                break;
-
             case FCE_CONN_START:
                 printf("FCE Start\n");
                 break;

@@ -64,7 +64,7 @@ static int set_lock(int fd, int cmd,  struct flock *lock)
 {
     EC_INIT;
 
-    LOG(log_debug, logtype_default, "set_lock(fd: %d, %s, %s, off: %jd (%s), len: %jd): BEGIN",
+    LOG(log_debug, logtype_ad, "set_lock(fd: %d, %s, %s, off: %jd (%s), len: %jd): BEGIN",
         fd, cmd == F_SETLK ? "F_SETLK" : "F_GETLK",
         lock->l_type == F_RDLCK ? "F_RDLCK" : lock->l_type == F_WRLCK ? "F_WRLCK" : "F_UNLCK",
         (intmax_t)lock->l_start,
@@ -361,7 +361,7 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     int type;  
     int ret = 0, fcntl_lock_err = 0;
 
-    LOG(log_debug, logtype_default, "ad_lock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
+    LOG(log_debug, logtype_ad, "ad_lock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         locktypetostr(locktype),
         (intmax_t)off,
@@ -496,7 +496,7 @@ exit:
             set_lock(adf->adf_fd, F_SETLK, &lock);
         }
     }
-    LOG(log_debug, logtype_default, "ad_lock: END: %d", ret);
+    LOG(log_debug, logtype_ad, "ad_lock: END: %d", ret);
     return ret;
 }
 
@@ -507,7 +507,7 @@ int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t 
     int err;
     int type;  
 
-    LOG(log_debug, logtype_default, "ad_tmplock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
+    LOG(log_debug, logtype_ad, "ad_tmplock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         locktypetostr(locktype),
         (intmax_t)off,
@@ -564,14 +564,14 @@ int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t 
         adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
 
 exit:
-    LOG(log_debug, logtype_default, "ad_tmplock: END: %d", err);
+    LOG(log_debug, logtype_ad, "ad_tmplock: END: %d", err);
     return err;
 }
 
 /* --------------------- */
 void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
 {
-    LOG(log_debug, logtype_default, "ad_unlock(unlckbrl: %d): BEGIN", unlckbrl);
+    LOG(log_debug, logtype_ad, "ad_unlock(unlckbrl: %d): BEGIN", unlckbrl);
 
     if (ad_data_fileno(ad) != -1) {
         adf_unlock(ad, &ad->ad_data_fork, fork, unlckbrl);
@@ -580,7 +580,7 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
         adf_unlock(ad, &ad->ad_resource_fork, fork, unlckbrl);
     }
 
-    LOG(log_debug, logtype_default, "ad_unlock: END");
+    LOG(log_debug, logtype_ad, "ad_unlock: END");
 }
 
 /*!
@@ -598,7 +598,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
     int ret = 0;
     off_t lock_offset;
 
-    LOG(log_debug, logtype_default, "ad_testlock(%s, off: %jd (%s): BEGIN",
+    LOG(log_debug, logtype_ad, "ad_testlock(%s, off: %jd (%s): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         (intmax_t)off,
         shmdstrfromoff(off));
@@ -611,7 +611,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 
     ret = testlock(&ad->ad_data_fork, lock_offset, 1);
 
-    LOG(log_debug, logtype_default, "ad_testlock: END: %d", ret);
+    LOG(log_debug, logtype_ad, "ad_testlock: END: %d", ret);
     return ret;
 }
 

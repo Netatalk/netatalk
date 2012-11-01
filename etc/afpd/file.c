@@ -78,6 +78,7 @@ static int default_type(void *finder)
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
 void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data, int islink)
 {
+    struct extmap       *em;
     void                *ad_finder = NULL;
     int                 chk_ext = 0;
 
@@ -86,6 +87,9 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
 
     if (ad_finder) {
         memcpy(data, ad_finder, ADEDLEN_FINDERI);
+        /* default type ? */
+        if (default_type(ad_finder)) 
+            chk_ext = 1;
     }
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
@@ -104,6 +108,12 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         memcpy((char *)data + FINDERINFO_FRFLAGOFF, &linkflag, 2);
         memcpy((char *)data + FINDERINFO_FRTYPEOFF,"slnk",4); 
         memcpy((char *)data + FINDERINFO_FRCREATOFF,"rhap",4); 
+    }
+
+    /** Only enter if no appledouble information and no finder information found. */
+    if (chk_ext && (em = getextmap( upath ))) {
+        memcpy(data, em->em_type, sizeof( em->em_type ));
+        memcpy((char *)data + 4, em->em_creator, sizeof(em->em_creator));
     }
 
     return data;
@@ -738,8 +748,10 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
-    fce_register_new_file(s_path);
+    fce_register(FCE_FILE_CREATE, fullpathname(upath), NULL, fce_file);
     sl_index_file(path);
+
+createfile_done:
     curdir->d_offcnt++;
     setvoltime(obj, vol );
 
@@ -827,7 +839,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
     u_char              finder_buf[32];
-    int symlinked = 0;
+    int symlinked = S_ISLNK(path->st.st_mode);
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
@@ -1001,6 +1013,17 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             ad_setdate(adp, AD_DATE_BACKUP, bdate);
             break;
         case FILPBIT_FINFO :
+            if (default_type( ad_entry( adp, ADEID_FINDERI ))
+                    && ( 
+                     ((em = getextmap( path->m_name )) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+                     || ((em = getdefextmap()) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+            )) {
+                memcpy(finder_buf, ufinderi, 8 );
+            }
             memcpy(ad_entry( adp, ADEID_FINDERI ), finder_buf, 32 );
             break;
         case FILPBIT_UNIXPR :
@@ -1953,9 +1976,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     uint32_t		sid, did;
     uint16_t		vid;
 
-    uid_t              uid;
-    gid_t              gid;
-
     *rbuflen = 0;
     ibuf += 2;
 
@@ -2123,13 +2143,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
     /* change perms, src gets dest perm and vice versa */
 
-    uid = geteuid();
-    gid = getegid();
-    if (seteuid(0)) {
-        LOG(log_error, logtype_afpd, "seteuid failed %s", strerror(errno));
-        err = AFP_OK; /* ignore error */
-        goto err_temp_to_dest;
-    }
+    become_root();
 
     /*
      * we need to exchange ACL entries as well
@@ -2153,10 +2167,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     setfilunixmode(vol, path, srcst.st_mode);
     setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
 
-    if ( setegid(gid) < 0 || seteuid(uid) < 0) {
-        LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
-        exit(EXITERR_SYS);
-    }
+    unbecome_root();
 
     err = AFP_OK;
     goto err_exchangefile;

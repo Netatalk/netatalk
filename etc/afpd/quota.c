@@ -25,6 +25,7 @@
 #include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
+#include <atalk/unix.h>
 
 #include "auth.h"
 #include "volume.h"
@@ -47,16 +48,15 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolSpace *btot
 		return -1;
 	}
 
-	if ( seteuid( getuid() ) != 0 )  {
-		LOG(log_info, logtype_afpd, "seteuid(): %s",
-		    strerror(errno));
-		return -1;
-	}
+    become_root();
+
 	if ((retq = getfsquota(obj, vol, ufsq, uid, classq)) < 0) {
 		LOG(log_info, logtype_afpd, "getfsquota(%s, %s): %s",
 		    vol->v_path, classq, strerror(errno));
 	}
-        seteuid( uid );
+
+    unbecome_root();
+
 	if (retq < 1)
 		return retq;
 
@@ -541,29 +541,19 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 #endif /* TRU64 */
 
 #ifdef BSD4_4
-    if ( seteuid( getuid() ) == 0 ) {
+    become_root();
         if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
                        uid, (char *)dq ) != 0 ) {
             /* try group quotas */
             if (obj->ngroups >= 1) {
                 if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
                               obj->groups[0], (char *) &dqg) != 0 ) {
-                    seteuid( uid );
+                    unbecome_root();
                     return( AFPERR_PARAM );
                 }
             }
         }
-        seteuid( uid );
-    }
-
-#elif defined(TRU64)
-    if ( seteuid( getuid() ) == 0 ) {
-        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA, USRQUOTA),
-                       uid, (char *)dq ) != 0 ) {
-            seteuid( uid );
-            return ( AFPERR_PARAM );
-        }
-        seteuid( uid );
+        unbecome_root();
     }
 
 #else /* BSD4_4 */

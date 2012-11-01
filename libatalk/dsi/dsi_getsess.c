@@ -121,7 +121,6 @@ int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_chi
     /* set up the tickle timer */
     dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;
     dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
-    signal(SIGPIPE, SIG_IGN); /* we catch these ourselves */
     dsi_opensession(dsi);
     *childp = NULL;
     return 0;

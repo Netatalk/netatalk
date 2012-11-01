@@ -1,3 +1,21 @@
+Changes in 3.0.2
+================
+* NEW: afpd: Put file extension type/creator mapping back in which had
+       been removed in 3.0.
+* NEW: afpd: new option 'ad domain'. From FR #66.
+* UPD: ignore volumes with duplicated volumes paths.
+* FIX: volumes and home share with symlinks in the path
+* FIX: Copying packages to a Netatalk share could fail, bug #469
+* FIX: Reloading volumes from config file was broken.
+       Fixes bug #474.
+* FIX: Fix _device-info service type registered with dns-sd API
+* FIX: Fix pathname bug for FCE modified event.
+* FIX: "valid users" options and friends only use ',' as field delimiter.
+       Fixes bug #472.
+* FIX: Remove length limitation of options like "valid users".
+       Fixes bug #473.
+* REM: Remove TimeMachine volume used size FCE event.
+
 Changes in 3.0.1
 ================
 * NEW: afpd: Optional "ldap uuid encoding = string | ms-guid" parameter to
@@ -16,6 +34,10 @@ Changes in 3.0.1
 * FIX: handling of '/' and ':' in volume name
 * UPD: Install relevant includes necessary for building programs with
        installed headers and shared lib libatalk
+* UPD: libevent configure args to pick up installed version. Removed
+       configure arg --disable-libevent, added configure args
+       --with-libevent-header|lib.
+* UPD: gentoo initscript: merge from portage netatalk.init,v 1.1
 * REM: Remove --with-smbsharemodes configure option, it was an
        empty stub not yet implemented
 

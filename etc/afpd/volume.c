@@ -264,22 +264,6 @@ getvolspace_done:
     return( AFP_OK );
 }
 
-#define FCE_TM_DELTA 10  /* send notification every 10 seconds */
-void vol_fce_tm_event(void)
-{
-    static time_t last;
-    time_t now = time(NULL);
-    struct vol  *vol = getvolumes();
-
-    if ((last + FCE_TM_DELTA) < now) {
-        last = now;
-        for ( ; vol; vol = vol->v_next ) {
-            if (vol->v_flags & AFPVOL_TM)
-                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_appended);
-        }
-    }
-}
-
 /* -----------------------
  * set volume creation date
  * avoid duplicate, well at least it tries
@@ -543,7 +527,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     int         vcnt;
     size_t      len;
 
-    load_volumes(obj, closevol);
+    load_volumes(obj);
 
     data = rbuf + 5;
     for ( vcnt = 0, volume = getvolumes(); volume; volume = volume->v_next ) {
@@ -686,7 +670,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     int     len, ret;
     size_t  namelen;
     uint16_t   bitmap;
-    char        path[ MAXPATHLEN + 1];
     char        *vol_uname;
     char        *vol_mname;
     char        *volname_tmp;
@@ -721,7 +704,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ((len + 1) & 1) /* pad to an even boundary */
         ibuf++;
 
-    load_volumes(obj, closevol);
+    load_volumes(obj);
 
     for ( volume = getvolumes(); volume; volume = volume->v_next ) {
         if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {
@@ -765,33 +748,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFPERR_PARAM;
     }
 
-    if ( NULL == getcwd(path, MAXPATHLEN)) {
-        /* shouldn't be fatal but it will fail later */
-        LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
-        return AFPERR_MISC;
-    }
-
-    /* Normalize volume path */
-#ifdef REALPATH_TAKES_NULL
-    if ((volume->v_path = realpath(path, NULL)) == NULL)
-        return AFPERR_MISC;
-#else
-    if ((volume->v_path = malloc(MAXPATHLEN+1)) == NULL)
-        return AFPERR_MISC;
-    if (realpath(path, volume->v_path) == NULL) {
-        free(volume->v_path);
-        return AFPERR_MISC;
-    }
-    /* Safe some memory */
-    char *tmp;
-    if ((tmp = strdup(volume->v_path)) == NULL) {
-        free(volume->v_path);
-        return AFPERR_MISC;
-    }
-    free(volume->v_path);
-    volume->v_path = tmp;
-#endif
-
     if (volume_codepage(obj, volume) < 0) {
         ret = AFPERR_MISC;
         goto openvol_err;
@@ -820,9 +776,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         goto openvol_err;
     }
 
-    if ((vol_uname = strrchr(path, '/')) == NULL)
-        vol_uname = path;
-    else if (*(vol_uname + 1) != '\0')
+    if ((vol_uname = strrchr(volume->v_path, '/')) == NULL)
+        vol_uname = volume->v_path;
+    else if (vol_uname[1] != '\0')
         vol_uname++;
 
     if ((dir = dir_new(vol_mname,

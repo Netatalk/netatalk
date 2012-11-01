@@ -183,6 +183,8 @@ extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 extern int daemonize(int nochdir, int noclose);
 extern int run_cmd(const char *cmd, char **cmd_argv);
+extern char *realpath_safe(const char *path);
+extern const char *basename_safe(const char *path);
 
 /******************************************************************
  * cnid.c
@@ -190,5 +192,12 @@ extern int run_cmd(const char *cmd, char **cmd_argv);
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
 extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath, const char *path, cnid_t *did);
+
+/******************************************************************
+ * cnid.c
+ *****************************************************************/
+
+extern void initline   (int, char *);
+extern int  parseline  (int, char *);
 
 #endif  /* _ATALK_UTIL_H */

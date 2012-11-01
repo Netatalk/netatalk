@@ -525,7 +525,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
                 delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
             if (delcnid != CNID_INVALID)
                 cnid_delete(vol->v_cdb, delcnid);
-            fce_register_delete_dir(upath);
+            fce_register(FCE_DIR_DELETE, fullpathname(upath), NULL, fce_dir);
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
@@ -533,7 +533,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             if ((dname = bstrcpy(curdir->d_u_name)) == NULL)
                 return AFPERR_MISC;
             if ((rc = deletecurdir(vol)) == AFP_OK)
-                fce_register_delete_dir(cfrombstr(dname));
+                fce_register(FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL, fce_dir);
             bdestroy(dname);
         }
     } else if (of_findname(s_path)) {
@@ -547,7 +547,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             rc = AFPERR_NOOBJ;
         } else {
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
-				fce_register_delete_file( s_path );
+				fce_register(FCE_FILE_DELETE, fullpathname(upath), NULL, fce_file);
                 if (vol->v_tm_used < s_path->st.st_size)
                     vol->v_tm_used = 0;
                 else 

@@ -60,7 +60,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         return -1;
     }
 
-    LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+    LOG(log_debug, logtype_ad, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
         (uintmax_t)off, buflen, ad->ad_rlen);
     
     if ( eid == ADEID_DFORK ) {
@@ -174,7 +174,7 @@ EC_CLEANUP:
     if (ret == 0)
         ad->ad_rlen = size;    
     else
-        LOG(log_error, logtype_default, "ad_rtruncate(\"%s\"): %s",
+        LOG(log_error, logtype_ad, "ad_rtruncate(\"%s\"): %s",
             fullpathname(ad->ad_name), strerror(errno));
     EC_EXIT;
 }
@@ -182,7 +182,7 @@ EC_CLEANUP:
 int ad_dtruncate(struct adouble *ad, const off_t size)
 {
     if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
-        LOG(log_error, logtype_default, "sys_ftruncate(fd: %d): %s",
+        LOG(log_error, logtype_ad, "sys_ftruncate(fd: %d): %s",
             ad_data_fileno(ad), strerror(errno));
         return -1;
     }

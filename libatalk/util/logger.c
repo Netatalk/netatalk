@@ -1,3 +1,4 @@
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -31,8 +32,7 @@ Netatalk 2001 (c)
 
 #include <atalk/util.h>
 #include <atalk/logger.h>
-
-#define OPEN_LOGS_AS_UID 0
+#include <atalk/unix.h>
 
 #define COUNT_ARRAY(array) (sizeof((array))/sizeof((array)[0]))
 
@@ -60,8 +60,10 @@ Netatalk 2001 (c)
   "AFPDaemon",                       \
   "DSI",                             \
   "UAMS",                            \
+  "FCE",                             \
+  "ad",                              \
   "Spotlight",                       \
-  "end_of_list_marker"}              \
+  "end_of_list_marker"}
 
 /* =========================================================================
    Config
@@ -85,6 +87,8 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_afpd */
     DEFAULT_LOG_CONFIG, /* logtype_dsi */
     DEFAULT_LOG_CONFIG, /* logtype_uams */
+    DEFAULT_LOG_CONFIG, /* logtype_fce */
+    DEFAULT_LOG_CONFIG, /* logtype_ad */
     DEFAULT_LOG_CONFIG  /* logtype_sl */
 };
 
@@ -254,8 +258,6 @@ static void log_init(void)
 
 static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
 {
-    uid_t process_uid;
-
     if (loglevel == 0) {
         /* Disable */
         if (type_configs[logtype].set) {
@@ -319,21 +321,11 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
         free(tmp);
 
     } else {
-        process_uid = geteuid();
-        if (process_uid) {
-            if (seteuid(OPEN_LOGS_AS_UID) == -1) {
-                process_uid = 0;
-            }
-        }
+        become_root();
         type_configs[logtype].fd = open(filename,
                                         O_CREAT | O_WRONLY | O_APPEND,
                                         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        if (process_uid) {
-            if (seteuid(process_uid) == -1) {
-                LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
-                exit(EXITERR_SYS);
-            }
-        }
+        become_root();
     }
 
     /* Check for error opening/creating logfile */

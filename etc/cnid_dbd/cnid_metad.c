@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
     if (afp_config_parse(&obj, "cnid_metad") != 0)
         daemon_exit(1);
 
-    if (load_volumes(&obj, NULL) != 0)
+    if (load_volumes(&obj) != 0)
         daemon_exit(1);
 
     (void)setlimits();
@@ -604,7 +604,7 @@ int main(int argc, char *argv[])
 
         LOG(log_debug, logtype_cnid, "main: request for volume: %s", volpath);
 
-        if (load_volumes(&obj, NULL) != 0) {
+        if (load_volumes(&obj) != 0) {
             LOG(log_severe, logtype_cnid, "main: error reloading config");
             goto loop_end;
         }

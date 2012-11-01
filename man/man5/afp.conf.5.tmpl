@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 25 Jul 2012
+.\"      Date: 22 Nov 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "25 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "22 Nov 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -37,8 +37,8 @@ The file consists of sections and parameters\&. A section begins with the name o
 .RS 4
 .\}
 .nf
-\fIname\fR = \fIvalue \fR
-      
+    \fIname\fR = \fIvalue \fR
+    
 .fi
 .if n \{\
 .RE
@@ -53,7 +53,7 @@ Only the first equals sign in a parameter is significant\&. Whitespace before or
 Any line beginning with a semicolon (\(lq;\(rq) or a hash (\(lq#\(rq) character is ignored, as are lines containing only whitespace\&.
 .PP
 Any line ending in a
-\(lq\e\(rq
+\(lq \e \(rq
 is continued on the next line in the customary UNIX fashion\&.
 .PP
 The values following the equals sign in parameters are all either a string (no quotes needed) or a boolean, which may be given as yes/no, 1/0 or true/false\&. Case is not significant in boolean values, but is preserved in string values\&. Some items such as create masks are numeric\&.
@@ -93,9 +93,8 @@ baz:
 .RS 4
 .\}
 .nf
-[baz]
-path = /foo/bar
-      
+ [baz]
+    path = /foo/bar 
 .fi
 .if n \{\
 .RE
@@ -124,9 +123,7 @@ The following example illustrates this\&. Given all user home directories are st
 .RS 4
 .\}
 .nf
-[Homes]
-path = afp\-data
-basedir regex = /home
+ [Homes] path = afp\-data basedir regex = /home
       
 .fi
 .if n \{\
@@ -232,6 +229,11 @@ prints dollar sign ($)
 .SH "EXPLANATION OF GLOBAL PARAMETERS"
 .SS "Authentication Options"
 .PP
+ad domain = \fIDOMAIN\fR \fB(G)\fR
+.RS 4
+Append @DOMAIN to username when authenticating\&. Useful in Active Directory environments that otherwise would require the user to enter the full user@domain string\&.
+.RE
+.PP
 admin auth user = \fIuser\fR \fB(G)\fR
 .RS 4
 Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
@@ -242,116 +244,6 @@ Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails,
 k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
 .RS 4
 These are required if the server supports the Kerberos 5 authentication UAM\&.
-.RE
-.PP
-ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
-.RS 4
-Authentication method:
-\fBnone | simple | sasl\fR
-.PP
-none
-.RS 4
-anonymous LDAP bind
-.RE
-.PP
-simple
-.RS 4
-simple LDAP bind
-.RE
-.PP
-sasl
-.RS 4
-SASL\&. Not yet supported !
-.RE
-.RE
-.PP
-ldap auth dn = \fIdn\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap auth pw = \fIpassword\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap server = \fIhost\fR \fB(G)\fR
-.RS 4
-Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
-.sp
-You can use
-\fBafpldaptest\fR(1)
-to syntactically check your config\&.
-.RE
-.PP
-ldap userbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the user container in LDAP\&.
-.sp
-.RE
-.PP
-ldap userscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap groupbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the group container in LDAP\&.
-.sp
-.RE
-.PP
-ldap groupscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap uuid attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the UUIDs\&.
-.sp
-Note: this is used both for users and groups\&.
-.sp
-.RE
-.PP
-ldap name attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the users short name\&.
-.sp
-.RE
-.PP
-ldap uuid string = \fISTRING\fR \fB(G)\fR
-.RS 4
-Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
-.sp
-Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
-.RE
-.PP
-ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
-.RS 4
-Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
-.PP
-string
-.RS 4
-UUID is a string, use with eg OpenDirectory\&.
-.RE
-.PP
-ms\-guid
-.RS 4
-Binary objectGUID from Active Directory
-.RE
-.RE
-.PP
-ldap group attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the groups short name\&.
-.sp
 .RE
 .PP
 nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
@@ -611,28 +503,9 @@ Maximum possible entries in the directory cache\&. The cache stores directories 
 Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
 .RE
 .PP
-fce listener = \fIhost[:port]\fR \fB(G)\fR
+extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Enables sending FCE events to the specified
-\fIhost\fR, default
-\fIport\fR
-is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
-.RE
-.PP
-fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
-.RS 4
-Speficies which FCE events are active, default is
-\fIfmod,fdel,ddel,fcre,dcre\fR\&.
-.RE
-.PP
-fce coalesce = \fIall|delete|create\fR \fB(G)\fR
-.RS 4
-Coalesce FCE events\&.
-.RE
-.PP
-fce holdfmod = \fIseconds\fR \fB(G)\fR
-.RS 4
-This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/AppleVolumes\&.system)\&.
 .RE
 .PP
 guest account = \fIname\fR \fB(G)\fR
@@ -696,9 +569,9 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .RS 4
 .\}
 .nf
-73:  limit of Mac OS X 10\&.1
-80:  limit of Mac OS X 10\&.4/10\&.5 (default)
-255: limit of recent Mac OS X
+ 73: limit of Mac OS X 10\&.1 80: limit of Mac
+            OS X 10\&.4/10\&.5 (default) 255: limit of recent Mac OS
+            X
 .fi
 .if n \{\
 .RE
@@ -749,6 +622,33 @@ Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
 .RE
+.SS "Filesystem Change Events (FCE)"
+.PP
+Netatalk includes a nifty filesystem change event mechanism where afpd processes notfiy interested listeners about certain filesytem event by UDP network datagrams\&.
+.PP
+fce listener = \fIhost[:port]\fR \fB(G)\fR
+.RS 4
+Enables sending FCE events to the specified
+\fIhost\fR, default
+\fIport\fR
+is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
+.RE
+.PP
+fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
+.RS 4
+Speficies which FCE events are active, default is
+\fIfmod,fdel,ddel,fcre,dcre\fR\&.
+.RE
+.PP
+fce coalesce = \fIall|delete|create\fR \fB(G)\fR
+.RS 4
+Coalesce FCE events\&.
+.RE
+.PP
+fce holdfmod = \fIseconds\fR \fB(G)\fR
+.RS 4
+This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
+.RE
 .SS "Debug Parameters"
 .PP
 These options are useful for debugging only\&.
@@ -769,6 +669,118 @@ With this option enabled, afpd won\'t advertise that it is capable of server not
 \fINote\fR: Depending on the number of simultaneously connected clients and the network\'s speed, this can lead to a significant higher load on your network!
 .sp
 Do not use this option any longer as present Netatalk correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
+.RE
+.SS "Options for ACL handling"
+.PP
+For a basic mode of operation there\'s nothing to configure\&. afpd reads ACLs on the fly, calculating effective permissions and returning the calculated permissions via the so called UARights permission bits\&. On a Mac the Finder uses these bits to adjust permission in Finder windows\&. For example folder whos UNIX mode would only result in in read\-only permissions for a user will not be displayed with a read\-only icon and the user will be able to write to the folder given the folder has an ACL giving the user write access\&.
+.PP
+However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\'s a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involed as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\'s or gid\'s\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
+.PP
+Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
+.PP
+The following LDAP options must be configured for Netatalk:
+.PP
+ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
+.RS 4
+Authentication method:
+\fBnone | simple | sasl\fR
+.PP
+none
+.RS 4
+anonymous LDAP bind
+.RE
+.PP
+simple
+.RS 4
+simple LDAP bind
+.RE
+.PP
+sasl
+.RS 4
+SASL\&. Not yet supported !
+.RE
+.sp
+.RE
+.PP
+ldap auth dn = \fIdn\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.RE
+.PP
+ldap auth pw = \fIpassword\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.RE
+.PP
+ldap server = \fIhost\fR \fB(G)\fR
+.RS 4
+Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
+.sp
+You can use
+\fBafpldaptest\fR(1)
+to syntactically check your config\&.
+.RE
+.PP
+ldap userbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the user container in LDAP\&.
+.RE
+.PP
+ldap userscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.RE
+.PP
+ldap groupbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the group container in LDAP\&.
+.RE
+.PP
+ldap groupscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.RE
+.PP
+ldap uuid attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the UUIDs\&.
+.sp
+Note: this is used both for users and groups\&.
+.RE
+.PP
+ldap name attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the users short name\&.
+.RE
+.PP
+ldap uuid string = \fISTRING\fR \fB(G)\fR
+.RS 4
+Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
+.sp
+Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
+.RE
+.PP
+ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
+.RS 4
+Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
+.PP
+string
+.RS 4
+UUID is a string, use with eg OpenDirectory\&.
+.RE
+.PP
+ms\-guid
+.RS 4
+Binary objectGUID from Active Directory
+.RE
+.sp
+.RE
+.PP
+ldap group attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the groups short name\&.
 .RE
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
@@ -902,17 +914,19 @@ is for files only,
 is for directories only\&. Don\'t use with "\fBunix priv = no\fR"\&.
 .PP
 \fBExample.\ \&Volume for a collaborative workgroup\fR
+
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-file perm = 0660
-directory perm = 0770
+file perm = 0660 directory perm =
+                0770
 .fi
 .if n \{\
 .RE
 .\}
+.sp
 
 .RE
 .PP
@@ -1097,7 +1111,7 @@ The
 option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be vol charset ISO\-8859\-15\&.
 \fBafpd\fR
 will accept any
-\fBiconv\fR(1)
+\fB iconv \fR(1)
 provided charset\&. If a character cannot be converted from the
 \fBmac charset\fR
 to the selected

@@ -86,7 +86,7 @@ struct afp_options {
     char *uampath, *fqdn;
     char *sigconffile;
     char *uuidconf;
-    char *guest, *loginmesg, *keyfile, *passwdfile;
+    char *guest, *loginmesg, *keyfile, *passwdfile, *extmapfile;
     char *uamlist;
     char *signatureopt;
     unsigned char signature[16];
@@ -98,7 +98,7 @@ struct afp_options {
     gid_t admingid;
     int    volnamelen;
     /* default value for winbind authentication */
-    char *ntdomain, *ntseparator;
+    char *ntdomain, *ntseparator, *addomain;
     char *logconfig;
     char *logfile;
     char *mimicmodel;
@@ -147,13 +147,8 @@ extern const char         *Cnid_port;
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
-extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);
 extern void readmessage (AFPObj *);
-
-/* gettok.c */
-extern void initline   (int, char *);
-extern int  parseline  (int, char *);
 
 /* afp_util.c */
 extern const char *AfpNum2name (int );

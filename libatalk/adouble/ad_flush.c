@@ -61,7 +61,7 @@ int ad_rebuild_adouble_header_v2(struct adouble *ad)
     char        *buf, *nentp;
     int             len;
 
-    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header_v2");
+    LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_v2");
 
     buf = ad->ad_data;
 
@@ -107,7 +107,7 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
     char        *buf, *nentp;
     int             len;
 
-    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header_ea");
+    LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_ea");
 
     buf = ad->ad_data;
 
@@ -155,7 +155,7 @@ static int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     char           *buf;
     int            len;
 
-    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header_osx");
+    LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_osx");
 
     buf = &adbuf[0];
 
@@ -167,7 +167,7 @@ static int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     memcpy(buf, &temp, sizeof( temp ));
     buf += sizeof( temp );
 
-    memset(buf, 0, sizeof(ad->ad_filler));
+    memcpy(buf, "Netatalk        ", 16);
     buf += sizeof( ad->ad_filler );
 
     nent = htons(ADEID_NUM_OSX);
@@ -253,7 +253,7 @@ static int ad_flush_hf(struct adouble *ad)
     int len;
     int cwd = -1;
 
-    LOG(log_debug, logtype_default, "ad_flush_hf(%s)", adflags2logstr(ad->ad_adflags));
+    LOG(log_debug, logtype_ad, "ad_flush_hf(%s)", adflags2logstr(ad->ad_adflags));
 
     struct ad_fd *adf;
 
@@ -265,7 +265,7 @@ static int ad_flush_hf(struct adouble *ad)
         adf = &ad->ad_data_fork;
         break;
     default:
-        LOG(log_error, logtype_afpd, "ad_flush: unexpected adouble version");
+        LOG(log_error, logtype_ad, "ad_flush: unexpected adouble version");
         return -1;
     }
 
@@ -302,7 +302,7 @@ static int ad_flush_hf(struct adouble *ad)
             }
             break;
         default:
-            LOG(log_error, logtype_afpd, "ad_flush: unexpected adouble version");
+            LOG(log_error, logtype_ad, "ad_flush: unexpected adouble version");
             return -1;
         }
     }
@@ -329,7 +329,7 @@ static int ad_flush_rf(struct adouble *ad)
     if (ad->ad_vers != AD_VERSION_EA)
         return 0;
 
-    LOG(log_debug, logtype_default, "ad_flush_rf(%s)", adflags2logstr(ad->ad_adflags));
+    LOG(log_debug, logtype_ad, "ad_flush_rf(%s)", adflags2logstr(ad->ad_adflags));
 
     if ((ad->ad_rfp->adf_flags & O_RDWR)) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
@@ -353,7 +353,7 @@ int ad_flush(struct adouble *ad)
 {
     EC_INIT;
 
-    LOG(log_debug, logtype_default, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
+    LOG(log_debug, logtype_ad, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
 
     if (AD_META_OPEN(ad)) {
         EC_ZERO( ad_flush_hf(ad) );
@@ -393,7 +393,7 @@ int ad_close(struct adouble *ad, int adflags)
         return err;
 
 
-    LOG(log_debug, logtype_default,
+    LOG(log_debug, logtype_ad,
         "ad_close(%s): BEGIN: {d: %d, m: %d, r: %d} "
         "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         adflags2logstr(adflags),
@@ -412,11 +412,11 @@ int ad_close(struct adouble *ad, int adflags)
 
     if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {        
         if (ad->ad_data_refcount)
-            ad->ad_data_refcount--;
+            if (--ad->ad_data_refcount == 0)
+                adf_lock_free(&ad->ad_data_fork);                
         if (--ad->ad_data_fork.adf_refcount == 0) {
             if (ad_data_closefd(ad) < 0)
                 err = -1;
-            adf_lock_free(&ad->ad_data_fork);
         }
     }
 
@@ -427,14 +427,13 @@ int ad_close(struct adouble *ad, int adflags)
             if (close( ad_meta_fileno(ad)) < 0)
                 err = -1;
             ad_meta_fileno(ad) = -1;
-            if (ad->ad_vers == AD_VERSION2)
-                adf_lock_free(ad->ad_mdp);
         }
     }
 
     if (adflags & ADFLAGS_RF) {
         if (ad->ad_reso_refcount)
-            ad->ad_reso_refcount--;
+            if (--ad->ad_reso_refcount == 0)
+                adf_lock_free(ad->ad_rfp);
         if (ad->ad_vers == AD_VERSION_EA) {
             if ((ad_reso_fileno(ad) != -1)
                 && !(--ad->ad_rfp->adf_refcount)) {
@@ -442,12 +441,11 @@ int ad_close(struct adouble *ad, int adflags)
                     err = -1;
                 ad->ad_rlen = 0;
                 ad_reso_fileno(ad) = -1;
-                adf_lock_free(ad->ad_rfp);
             }
         }
     }
 
-    LOG(log_debug, logtype_default,
+    LOG(log_debug, logtype_ad,
         "ad_close(%s): END: %d {d: %d, m: %d, r: %d} "
         "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         adflags2logstr(adflags), err,
