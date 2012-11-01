@@ -49,7 +49,7 @@
     time_t tval;
 }
 
-%expect 1
+%expect 5
 %error-verbose
 
 %type <sval> match expr line function
@@ -109,6 +109,10 @@ WORD EQUAL QUOTE WORD QUOTE     {$$ = map_expr($1, '=', $4);}
 | WORD UNEQUAL QUOTE WORD QUOTE {$$ = map_expr($1, '!', $4);}
 | WORD LT QUOTE WORD QUOTE      {$$ = map_expr($1, '<', $4);}
 | WORD GT QUOTE WORD QUOTE      {$$ = map_expr($1, '>', $4);}
+| WORD EQUAL QUOTE WORD QUOTE WORD    {$$ = map_expr($1, '=', $4);}
+| WORD UNEQUAL QUOTE WORD QUOTE WORD {$$ = map_expr($1, '!', $4);}
+| WORD LT QUOTE WORD QUOTE WORD     {$$ = map_expr($1, '<', $4);}
+| WORD GT QUOTE WORD QUOTE WORD     {$$ = map_expr($1, '>', $4);}
 ;
 
 function:

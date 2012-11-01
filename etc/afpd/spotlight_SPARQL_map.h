@@ -24,7 +24,8 @@ enum ssm_type {
     ssmt_num,    /* a numeric value that requires a SPARQL FILTER */
     ssmt_str,    /* a string value that requieres a SPARQL FILTER */
     ssmt_fts,    /* a string value that will be queried with SPARQL 'fts:match' */
-    ssmt_date    /* date values are handled in a special map function map_daterange() */
+    ssmt_date,   /* date values are handled in a special map function map_daterange() */
+    ssmt_cnt     /* kMDItemContentType, requires special mapping */
 };
 
 struct spotlight_sparql_map {
