@@ -39,29 +39,37 @@
    enum yytokentype {
      DATE = 258,
      WORD = 259,
-     FUNC_INRANGE = 260,
-     DATE_SPEC = 261,
-     OBRACE = 262,
-     CBRACE = 263,
-     EQUAL = 264,
-     COMMA = 265,
-     QUOTE = 266,
-     AND = 267,
-     OR = 268
+     BOOL = 260,
+     FUNC_INRANGE = 261,
+     DATE_SPEC = 262,
+     OBRACE = 263,
+     CBRACE = 264,
+     EQUAL = 265,
+     UNEQUAL = 266,
+     GT = 267,
+     LT = 268,
+     COMMA = 269,
+     QUOTE = 270,
+     AND = 271,
+     OR = 272
    };
 #endif
 /* Tokens.  */
 #define DATE 258
 #define WORD 259
-#define FUNC_INRANGE 260
-#define DATE_SPEC 261
-#define OBRACE 262
-#define CBRACE 263
-#define EQUAL 264
-#define COMMA 265
-#define QUOTE 266
-#define AND 267
-#define OR 268
+#define BOOL 260
+#define FUNC_INRANGE 261
+#define DATE_SPEC 262
+#define OBRACE 263
+#define CBRACE 264
+#define EQUAL 265
+#define UNEQUAL 266
+#define GT 267
+#define LT 268
+#define COMMA 269
+#define QUOTE 270
+#define AND 271
+#define OR 272
 
 
 
@@ -71,15 +79,16 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 34 "spotlight_rawquery_parser.y"
+#line 37 "spotlight_rawquery_parser.y"
 
     int ival;
     const char *sval;
+    bool bval;
 
 
 
 /* Line 2068 of yacc.c  */
-#line 83 "spotlight_rawquery_parser.h"
+#line 92 "spotlight_rawquery_parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -92,13 +101,12 @@ extern YYSTYPE yylval;
 /* "%code provides" blocks.  */
 
 /* Line 2068 of yacc.c  */
-#line 28 "spotlight_rawquery_parser.y"
+#line 32 "spotlight_rawquery_parser.y"
 
-  extern const gchar *map_spotlight_to_sparql_query(slq_t *slq);
+  extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
   extern slq_t *ssp_slq;
-  extern gchar *ssp_result;
 
 
 
 /* Line 2068 of yacc.c  */
-#line 105 "spotlight_rawquery_parser.h"
+#line 113 "spotlight_rawquery_parser.h"

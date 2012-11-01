@@ -21,9 +21,10 @@
 #include "spotlight_SPARQL_map.h"
 
 struct spotlight_sparql_map spotlight_sparql_map[] = {
+/*   ssm_spotlight_attr                    ssm_sparql_attr              ssm_sparql_query_fmtstr */
     {"*",                                  "fts:match",                 "?x fts:match '%s'"},
     {"kMDItemTextContent",                 "fts:match",                 "?x fts:match '%s'"},
-    {"kMDItemDisplayName",                 "nfo:fileName",              "?x nfo:fileName ?name FILTER(regex(?name, '%s'))"},
+    {"kMDItemDisplayName",                 "nfo:fileName",              "?x nfo:fileName ?y FILTER(regex(?y, '%s'))"},
     {"kMDItemContentCreationDate",         "nfo:fileCreated",           "?x nfo:fileCreated '%s'"},
     {"kMDItemFSContentChangeDate",         "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},
     {"kMDItemContentModificationDate",     "nfo:fileLastModified",      "?x nfo:fileLastModified '%s'"},

@@ -17,23 +17,27 @@
   extern YY_BUFFER_STATE yy_scan_string( const char *str);
   extern void yy_delete_buffer ( YY_BUFFER_STATE buffer );
 
-  static const char *map_expr(const char *attr, const char *val);
+  /* forward declarations */
+  static const char *map_expr(const char *attr, char op, const char *val);
   static const char *map_daterange(const char *dateattr, const char *date1, const char *date2);
 
+  /* global vars, eg needed by the lexer */
   slq_t *ssp_slq;
-  gchar *ssp_result;
+
+  /* local vars */
+  static gchar *ssp_result;
 
 %}
 
 %code provides {
-  extern const gchar *map_spotlight_to_sparql_query(slq_t *slq);
+  extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
   extern slq_t *ssp_slq;
-  extern gchar *ssp_result;
 }
 
 %union {
     int ival;
     const char *sval;
+    bool bval;
 }
 
 %expect 1
@@ -42,9 +46,10 @@
 %type <sval> match expr line function
 %token <sval> DATE
 %token <sval> WORD
+%token <bval> BOOL
 %token FUNC_INRANGE
 %token DATE_SPEC
-%token OBRACE CBRACE EQUAL COMMA QUOTE
+%token OBRACE CBRACE EQUAL UNEQUAL GT LT COMMA QUOTE
 %left AND
 %left OR
 %%
@@ -65,7 +70,13 @@ expr                           {
 ;
 
 expr:
-match OR match                 {
+BOOL                             {
+    if ($1 == false)
+        YYACCEPT;
+    else
+        YYABORT;
+}
+| match OR match                 {
     if (strcmp($1, $3) != 0)
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     else
@@ -84,7 +95,10 @@ match OR match                 {
 ;
 
 match:
-WORD EQUAL QUOTE WORD QUOTE    {$$ = map_expr($1, $4);}
+WORD EQUAL QUOTE WORD QUOTE     {$$ = map_expr($1, '=', $4);}
+| WORD UNEQUAL QUOTE WORD QUOTE {$$ = map_expr($1, '!', $4);}
+| WORD LT QUOTE WORD QUOTE      {$$ = map_expr($1, '<', $4);}
+| WORD GT QUOTE WORD QUOTE      {$$ = map_expr($1, '>', $4);}
 ;
 
 function:
@@ -112,16 +126,18 @@ const char *map_daterange(const char *dateattr, const char *date1, const char *d
     return result;
 }
 
-const char *map_expr(const char *attr, const char *val)
+const char *map_expr(const char *attr, char op, const char *val)
 {
     char *result = NULL;
     struct spotlight_sparql_map *p;
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
+#if 0
         if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
             result = talloc_asprintf(ssp_slq, p->ssm_sparql_query_fmtstr, val);
             break;
         }
+#endif
     }
 
     return result;
@@ -141,7 +157,15 @@ int yywrap()
     return 1;
 } 
 
-const gchar *map_spotlight_to_sparql_query(slq_t *slq)
+/**
+ * Map a Spotlight RAW query string to a SPARQL query string
+ *
+ * @param[in]     slq            Spotlight query handle
+ * @param[out]    sparql_result  Mapped SPARQL query, string is allocated in
+ *                               talloc context of slq
+ * @return        0 on success, -1 on error
+ **/
+int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
@@ -154,13 +178,17 @@ const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
-
-    return ssp_result;
+    if (ret == 0)
+        *sparql_result = NULL;
+    else
+        *sparql_result = ssp_result;
+    EC_EXIT;
 }
 
 #ifdef MAIN
 int main(int argc, char **argv)
 {
+    int ret;
     YY_BUFFER_STATE s;
 
     if (argc != 2) {
@@ -175,11 +203,12 @@ int main(int argc, char **argv)
 
     s = yy_scan_string(argv[1]);
 
-    yyparse();
+    ret = yyparse();
 
     yy_delete_buffer(s);
 
-    printf("SPARQL: %s\n", ssp_result);
+    if (ret == 0)
+        printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
 
     return 0;
 } 

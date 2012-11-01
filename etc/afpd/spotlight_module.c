@@ -118,12 +118,13 @@ static int sl_mod_start_search(void *p)
 {
     EC_INIT;
     slq_t *slq = p; 
-    const gchar *sparql_query;
+    gchar *sparql_query;
     GError *error = NULL;
 
     LOG(log_debug, logtype_sl, "sl_mod_start_search: Spotlight query string: \"%s\"", slq->slq_qstring);
 
-    EC_NULL_LOG( sparql_query = map_spotlight_to_sparql_query(slq) );
+    EC_ZERO_LOGSTR( map_spotlight_to_sparql_query(slq, &sparql_query),
+                    "Mapping Spotlight query failed: \"%s\"", slq->slq_qstring );
     LOG(log_debug, logtype_sl, "sl_mod_start_search: SPARQL query: \"%s\"", sparql_query);
 
 #if 0

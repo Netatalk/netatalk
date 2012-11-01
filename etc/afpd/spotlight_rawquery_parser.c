@@ -86,16 +86,20 @@
   extern YY_BUFFER_STATE yy_scan_string( const char *str);
   extern void yy_delete_buffer ( YY_BUFFER_STATE buffer );
 
-  static const char *map_expr(const char *attr, const char *val);
+  /* forward declarations */
+  static const char *map_expr(const char *attr, char op, const char *val);
   static const char *map_daterange(const char *dateattr, const char *date1, const char *date2);
 
+  /* global vars, eg needed by the lexer */
   slq_t *ssp_slq;
-  gchar *ssp_result;
+
+  /* local vars */
+  static gchar *ssp_result;
 
 
 
 /* Line 268 of yacc.c  */
-#line 99 "spotlight_rawquery_parser.c"
+#line 103 "spotlight_rawquery_parser.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -124,29 +128,37 @@
    enum yytokentype {
      DATE = 258,
      WORD = 259,
-     FUNC_INRANGE = 260,
-     DATE_SPEC = 261,
-     OBRACE = 262,
-     CBRACE = 263,
-     EQUAL = 264,
-     COMMA = 265,
-     QUOTE = 266,
-     AND = 267,
-     OR = 268
+     BOOL = 260,
+     FUNC_INRANGE = 261,
+     DATE_SPEC = 262,
+     OBRACE = 263,
+     CBRACE = 264,
+     EQUAL = 265,
+     UNEQUAL = 266,
+     GT = 267,
+     LT = 268,
+     COMMA = 269,
+     QUOTE = 270,
+     AND = 271,
+     OR = 272
    };
 #endif
 /* Tokens.  */
 #define DATE 258
 #define WORD 259
-#define FUNC_INRANGE 260
-#define DATE_SPEC 261
-#define OBRACE 262
-#define CBRACE 263
-#define EQUAL 264
-#define COMMA 265
-#define QUOTE 266
-#define AND 267
-#define OR 268
+#define BOOL 260
+#define FUNC_INRANGE 261
+#define DATE_SPEC 262
+#define OBRACE 263
+#define CBRACE 264
+#define EQUAL 265
+#define UNEQUAL 266
+#define GT 267
+#define LT 268
+#define COMMA 269
+#define QUOTE 270
+#define AND 271
+#define OR 272
 
 
 
@@ -156,15 +168,16 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 34 "spotlight_rawquery_parser.y"
+#line 37 "spotlight_rawquery_parser.y"
 
     int ival;
     const char *sval;
+    bool bval;
 
 
 
 /* Line 293 of yacc.c  */
-#line 168 "spotlight_rawquery_parser.c"
+#line 181 "spotlight_rawquery_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -174,22 +187,21 @@ typedef union YYSTYPE
 /* "%code provides" blocks.  */
 
 /* Line 340 of yacc.c  */
-#line 28 "spotlight_rawquery_parser.y"
+#line 32 "spotlight_rawquery_parser.y"
 
-  extern const gchar *map_spotlight_to_sparql_query(slq_t *slq);
+  extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
   extern slq_t *ssp_slq;
-  extern gchar *ssp_result;
 
 
 
 /* Line 340 of yacc.c  */
-#line 187 "spotlight_rawquery_parser.c"
+#line 199 "spotlight_rawquery_parser.c"
 
 /* Copy the second part of user declarations.  */
 
 
 /* Line 343 of yacc.c  */
-#line 193 "spotlight_rawquery_parser.c"
+#line 205 "spotlight_rawquery_parser.c"
 
 #ifdef short
 # undef short
@@ -408,20 +420,20 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   37
+#define YYLAST   51
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  14
+#define YYNTOKENS  18
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  12
+#define YYNRULES  16
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  35
+#define YYNSTATES  48
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   268
+#define YYMAXUTOK   272
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -455,7 +467,8 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12,    13
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17
 };
 
 #if YYDEBUG
@@ -463,25 +476,27 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     4,     7,     9,    13,    15,    17,    21,
-      25,    29,    35
+       0,     0,     3,     4,     7,     9,    11,    15,    17,    19,
+      23,    27,    31,    37,    43,    49,    55
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      15,     0,    -1,    -1,    15,    16,    -1,    17,    -1,    18,
-      13,    18,    -1,    18,    -1,    19,    -1,     7,    17,     8,
-      -1,    17,    12,    17,    -1,    17,    13,    17,    -1,     4,
-       9,    11,     4,    11,    -1,     5,     7,     4,    10,     6,
-       7,     3,     8,    10,     6,     7,     3,     8,     8,    -1
+      19,     0,    -1,    -1,    19,    20,    -1,    21,    -1,     5,
+      -1,    22,    17,    22,    -1,    22,    -1,    23,    -1,     8,
+      21,     9,    -1,    21,    16,    21,    -1,    21,    17,    21,
+      -1,     4,    10,    15,     4,    15,    -1,     4,    11,    15,
+       4,    15,    -1,     4,    13,    15,     4,    15,    -1,     4,
+      12,    15,     4,    15,    -1,     6,     8,     4,    14,     7,
+       8,     3,     9,    14,     7,     8,     3,     9,     9,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    52,    52,    54,    58,    68,    74,    75,    76,    77,
-      78,    87,    91
+       0,    57,    57,    59,    63,    73,    79,    85,    86,    87,
+      88,    89,    98,    99,   100,   101,   105
 };
 #endif
 
@@ -490,9 +505,10 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "DATE", "WORD", "FUNC_INRANGE",
-  "DATE_SPEC", "OBRACE", "CBRACE", "EQUAL", "COMMA", "QUOTE", "AND", "OR",
-  "$accept", "input", "line", "expr", "match", "function", 0
+  "$end", "error", "$undefined", "DATE", "WORD", "BOOL", "FUNC_INRANGE",
+  "DATE_SPEC", "OBRACE", "CBRACE", "EQUAL", "UNEQUAL", "GT", "LT", "COMMA",
+  "QUOTE", "AND", "OR", "$accept", "input", "line", "expr", "match",
+  "function", 0
 };
 #endif
 
@@ -502,22 +518,22 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268
+     265,   266,   267,   268,   269,   270,   271,   272
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    14,    15,    15,    16,    17,    17,    17,    17,    17,
-      17,    18,    19
+       0,    18,    19,    19,    20,    21,    21,    21,    21,    21,
+      21,    21,    22,    22,    22,    22,    23
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     1,     3,     1,     1,     3,     3,
-       3,     5,    14
+       0,     2,     0,     2,     1,     1,     3,     1,     1,     3,
+       3,     3,     5,     5,     5,     5,    14
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -525,33 +541,35 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     0,     0,     0,     3,     4,     6,     7,
-       0,     0,     0,     0,     0,     0,     0,     0,     8,     9,
-      10,     5,     0,     0,    11,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,    12
+       2,     0,     1,     0,     5,     0,     0,     3,     4,     7,
+       8,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     9,    10,    11,     6,     0,
+       0,     0,     0,     0,    12,    13,    15,    14,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    16
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     6,     7,     8,     9
+      -1,     1,     7,     8,     9,    10
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -7
+#define YYPACT_NINF -15
 static const yytype_int8 yypact[] =
 {
-      -7,     6,    -7,    -6,    -2,    -3,    -7,     2,     5,    -7,
-      -4,    15,     4,    -3,    -3,    16,    17,    12,    -7,    10,
-      -7,    -7,    13,    19,    -7,    20,    23,    21,    18,    24,
-      25,    28,    26,    27,    -7
+     -15,     1,   -15,    12,   -15,    -4,    13,   -15,   -14,    -7,
+     -15,    -2,     5,    11,    14,    10,    -1,    13,    13,    23,
+      24,    26,    27,    28,    19,   -15,    17,   -15,   -15,    20,
+      21,    22,    25,    31,   -15,   -15,   -15,   -15,    33,    36,
+      34,    30,    35,    37,    43,    38,    39,   -15
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -7,    -7,    -7,    -5,    22,    -7
+     -15,   -15,   -15,    -6,    32,   -15
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -560,34 +578,39 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-      12,     3,     4,    10,     5,    11,     2,    16,    19,    20,
-       3,     4,    18,     5,    13,    14,    13,    14,    15,    17,
-       3,    22,    23,    14,    24,    25,    27,    26,    29,    28,
-      30,    32,    31,     0,    33,    34,     0,    21
+      16,     2,    17,    18,    15,     3,     4,     5,    25,     6,
+      19,    26,    27,    20,    24,    17,    18,     3,     4,     5,
+      21,     6,    11,    12,    13,    14,    22,     3,    29,    23,
+      30,    31,    32,    33,    18,    34,    35,    36,    38,    40,
+      37,    39,    43,    41,    42,    44,    45,    46,    47,     0,
+       0,    28
 };
 
 #define yypact_value_is_default(yystate) \
-  ((yystate) == (-7))
+  ((yystate) == (-15))
 
 #define yytable_value_is_error(yytable_value) \
   YYID (0)
 
 static const yytype_int8 yycheck[] =
 {
-       5,     4,     5,     9,     7,     7,     0,    11,    13,    14,
-       4,     5,     8,     7,    12,    13,    12,    13,    13,     4,
-       4,     4,    10,    13,    11,     6,     3,     7,    10,     8,
-       6,     3,     7,    -1,     8,     8,    -1,    15
+       6,     0,    16,    17,     8,     4,     5,     6,     9,     8,
+      17,    17,    18,    15,     4,    16,    17,     4,     5,     6,
+      15,     8,    10,    11,    12,    13,    15,     4,     4,    15,
+       4,     4,     4,    14,    17,    15,    15,    15,     7,     3,
+      15,     8,     7,     9,    14,     8,     3,     9,     9,    -1,
+      -1,    19
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    15,     0,     4,     5,     7,    16,    17,    18,    19,
-       9,     7,    17,    12,    13,    13,    11,     4,     8,    17,
-      17,    18,     4,    10,    11,     6,     7,     3,     8,    10,
-       6,     7,     3,     8,     8
+       0,    19,     0,     4,     5,     6,     8,    20,    21,    22,
+      23,    10,    11,    12,    13,     8,    21,    16,    17,    17,
+      15,    15,    15,    15,     4,     9,    21,    21,    22,     4,
+       4,     4,     4,    14,    15,    15,    15,    15,     7,     8,
+       3,     9,    14,     7,     8,     3,     9,     9
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1424,7 +1447,7 @@ yyreduce:
         case 4:
 
 /* Line 1806 of yacc.c  */
-#line 58 "spotlight_rawquery_parser.y"
+#line 63 "spotlight_rawquery_parser.y"
     {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
@@ -1437,47 +1460,19 @@ yyreduce:
   case 5:
 
 /* Line 1806 of yacc.c  */
-#line 68 "spotlight_rawquery_parser.y"
+#line 73 "spotlight_rawquery_parser.y"
     {
-    if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
-        (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
+    if ((yyvsp[(1) - (1)].bval) == false)
+        YYACCEPT;
     else
-        (yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(1) - (3)].sval));
+        YYABORT;
 }
     break;
 
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 74 "spotlight_rawquery_parser.y"
-    {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
-    break;
-
-  case 7:
-
-/* Line 1806 of yacc.c  */
-#line 75 "spotlight_rawquery_parser.y"
-    {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
-    break;
-
-  case 8:
-
-/* Line 1806 of yacc.c  */
-#line 76 "spotlight_rawquery_parser.y"
-    {(yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(2) - (3)].sval));}
-    break;
-
-  case 9:
-
-/* Line 1806 of yacc.c  */
-#line 77 "spotlight_rawquery_parser.y"
-    {(yyval.sval) = talloc_asprintf(ssp_slq, "%s . %s", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));}
-    break;
-
-  case 10:
-
-/* Line 1806 of yacc.c  */
-#line 78 "spotlight_rawquery_parser.y"
+#line 79 "spotlight_rawquery_parser.y"
     {
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
         (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
@@ -1486,24 +1481,85 @@ yyreduce:
 }
     break;
 
-  case 11:
+  case 7:
+
+/* Line 1806 of yacc.c  */
+#line 85 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
+    break;
+
+  case 8:
+
+/* Line 1806 of yacc.c  */
+#line 86 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
+    break;
+
+  case 9:
 
 /* Line 1806 of yacc.c  */
 #line 87 "spotlight_rawquery_parser.y"
-    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), (yyvsp[(4) - (5)].sval));}
+    {(yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(2) - (3)].sval));}
+    break;
+
+  case 10:
+
+/* Line 1806 of yacc.c  */
+#line 88 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = talloc_asprintf(ssp_slq, "%s . %s", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));}
+    break;
+
+  case 11:
+
+/* Line 1806 of yacc.c  */
+#line 89 "spotlight_rawquery_parser.y"
+    {
+    if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
+        (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
+    else
+        (yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(1) - (3)].sval));
+}
     break;
 
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 91 "spotlight_rawquery_parser.y"
+#line 98 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
+    break;
+
+  case 13:
+
+/* Line 1806 of yacc.c  */
+#line 99 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
+    break;
+
+  case 14:
+
+/* Line 1806 of yacc.c  */
+#line 100 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
+    break;
+
+  case 15:
+
+/* Line 1806 of yacc.c  */
+#line 101 "spotlight_rawquery_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
+    break;
+
+  case 16:
+
+/* Line 1806 of yacc.c  */
+#line 105 "spotlight_rawquery_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (14)].sval), (yyvsp[(7) - (14)].sval), (yyvsp[(12) - (14)].sval));}
     break;
 
 
 
 /* Line 1806 of yacc.c  */
-#line 1507 "spotlight_rawquery_parser.c"
+#line 1563 "spotlight_rawquery_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1734,7 +1790,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 94 "spotlight_rawquery_parser.y"
+#line 108 "spotlight_rawquery_parser.y"
 
 
 const char *map_daterange(const char *dateattr, const char *date1, const char *date2)
@@ -1756,7 +1812,7 @@ const char *map_daterange(const char *dateattr, const char *date1, const char *d
     return result;
 }
 
-const char *map_expr(const char *attr, const char *val)
+const char *map_expr(const char *attr, char op, const char *val)
 {
     char *result = NULL;
     struct spotlight_sparql_map *p;
@@ -1785,7 +1841,15 @@ int yywrap()
     return 1;
 } 
 
-const gchar *map_spotlight_to_sparql_query(slq_t *slq)
+/**
+ * Map a Spotlight RAW query string to a SPARQL query string
+ *
+ * @param[in]     slq            Spotlight query handle
+ * @param[out]    sparql_result  Mapped SPARQL query, string is allocated in
+ *                               talloc context of slq
+ * @return        0 on success, -1 on error
+ **/
+int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
@@ -1798,13 +1862,17 @@ const gchar *map_spotlight_to_sparql_query(slq_t *slq)
 EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
-
-    return ssp_result;
+    if (ret == 0)
+        *sparql_result = NULL;
+    else
+        *sparql_result = ssp_result;
+    EC_EXIT;
 }
 
 #ifdef MAIN
 int main(int argc, char **argv)
 {
+    int ret;
     YY_BUFFER_STATE s;
 
     if (argc != 2) {
@@ -1819,11 +1887,12 @@ int main(int argc, char **argv)
 
     s = yy_scan_string(argv[1]);
 
-    yyparse();
+    ret = yyparse();
 
     yy_delete_buffer(s);
 
-    printf("SPARQL: %s\n", ssp_result);
+    if (ret == 0)
+        printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
 
     return 0;
 } 
