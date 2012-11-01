@@ -173,6 +173,7 @@ const char *map_expr(const char *attr, char op, const char *val)
     time_t t;
     struct tm *tmp;
     char buf1[64];
+    bstring q = NULL, search = NULL, replace = NULL;
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
@@ -191,11 +192,15 @@ const char *map_expr(const char *attr, char op, const char *val)
                 sparqlvar++;
                 break;
             case ssmt_str:
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
                 result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(regex(?%c, '%s'))",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
-                                         val);
+                                         bdata(q));
                 sparqlvar++;
                 break;
             case ssmt_fts:
@@ -222,6 +227,12 @@ const char *map_expr(const char *attr, char op, const char *val)
     }
 
 EC_CLEANUP:
+    if (q)
+        bdestroy(q);
+    if (search)
+        bdestroy(search);
+    if (replace)
+        bdestroy(replace);
     return result;
 }
 
