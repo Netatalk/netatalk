@@ -1,11 +1,17 @@
 %{
+  #include <atalk/standards.h>
+
   #include <stdbool.h>
   #include <stdio.h>
   #include <string.h>
+  #include <time.h>
+
   #include <gio/gio.h>
+
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
   #include <atalk/errchk.h>
+
   #include "spotlight_SPARQL_map.h"
   #include "spotlight.h"
 
@@ -19,9 +25,10 @@
 
   /* forward declarations */
   static const char *map_expr(const char *attr, char op, const char *val);
-  static const char *map_daterange(const char *dateattr, const char *date1, const char *date2);
-
-  /* global vars, eg needed by the lexer */
+  static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
+  static time_t isodate2unix(const char *s);
+ 
+ /* global vars, eg needed by the lexer */
   slq_t *ssp_slq;
 
   /* local vars */
@@ -30,6 +37,7 @@
 %}
 
 %code provides {
+  #define SPRAW_TIME_OFFSET 978307200
   extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
   extern slq_t *ssp_slq;
 }
@@ -38,17 +46,19 @@
     int ival;
     const char *sval;
     bool bval;
+    time_t tval;
 }
 
 %expect 1
 %error-verbose
 
 %type <sval> match expr line function
-%token <sval> DATE
+%type <tval> date
+
 %token <sval> WORD
 %token <bval> BOOL
 %token FUNC_INRANGE
-%token DATE_SPEC
+%token DATE_ISO
 %token OBRACE CBRACE EQUAL UNEQUAL GT LT COMMA QUOTE
 %left AND
 %left OR
@@ -102,27 +112,51 @@ WORD EQUAL QUOTE WORD QUOTE     {$$ = map_expr($1, '=', $4);}
 ;
 
 function:
-FUNC_INRANGE OBRACE WORD COMMA DATE_SPEC OBRACE DATE CBRACE COMMA DATE_SPEC OBRACE DATE CBRACE CBRACE {$$ = map_daterange($3, $7, $12);}
+FUNC_INRANGE OBRACE WORD COMMA date COMMA date CBRACE {$$ = map_daterange($3, $5, $7);}
+;
+
+date:
+DATE_ISO OBRACE WORD CBRACE    {$$ = isodate2unix($3);}
+| WORD                         {$$ = atoi($1) + SPRAW_TIME_OFFSET;}
 ;
 
 %%
 
-const char *map_daterange(const char *dateattr, const char *date1, const char *date2)
+static time_t isodate2unix(const char *s)
 {
+    struct tm tm;
+
+    if (strptime(s, "%Y-%m-%dT%H:%M:%SZ", &tm) == NULL)
+        return (time_t)-1;
+    return mktime(&tm);
+}
+
+const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
+{
+    EC_INIT;
     char *result = NULL;
     struct spotlight_sparql_map *p;
+    struct tm *tmp;
+    char buf1[64], buf2[64];
+
+    EC_NULL( tmp = localtime(&date1) );
+    strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
+    EC_NULL( tmp = localtime(&date2) );
+    strftime(buf2, sizeof(buf2), "%Y-%m-%dT%H:%M:%SZ", tmp);
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->ssm_spotlight_attr) == 0) {
             result = talloc_asprintf(ssp_slq,
                                      "?x %s ?d FILTER (?d > '%s' && ?d < '%s')",
                                      p->ssm_sparql_attr,
-                                     date1,
-                                     date2);
+                                     buf1,
+                                     buf2);
         }
     }
 
-
+EC_CLEANUP:
+    if (ret != 0)
+        return NULL;
     return result;
 }
 
@@ -131,6 +165,9 @@ const char *map_expr(const char *attr, char op, const char *val)
     EC_INIT;
     char *result = NULL;
     struct spotlight_sparql_map *p;
+    time_t t;
+    struct tm *tmp;
+    char buf1[64];
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
@@ -148,8 +185,11 @@ const char *map_expr(const char *attr, char op, const char *val)
                 result = talloc_asprintf(ssp_slq, "?x %s '%s'", p->ssm_sparql_attr, val);
                 break;
             case ssmt_date:
-                yyerror("enexpected ssmt_date");
-                EC_FAIL;
+                t = atoi(val) + SPRAW_TIME_OFFSET;
+                EC_NULL( tmp = localtime(&t) );
+                strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
+                result = talloc_asprintf(ssp_slq, "?x %s ?y FILTER(?y %c '%s')", p->ssm_sparql_attr, op, buf1);
+                break;
             default:
                 yyerror("unknown Spotlight attribute type");
                 EC_FAIL;

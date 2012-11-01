@@ -37,39 +37,37 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     DATE = 258,
-     WORD = 259,
-     BOOL = 260,
-     FUNC_INRANGE = 261,
-     DATE_SPEC = 262,
-     OBRACE = 263,
-     CBRACE = 264,
-     EQUAL = 265,
-     UNEQUAL = 266,
-     GT = 267,
-     LT = 268,
-     COMMA = 269,
-     QUOTE = 270,
-     AND = 271,
-     OR = 272
+     WORD = 258,
+     BOOL = 259,
+     FUNC_INRANGE = 260,
+     DATE_ISO = 261,
+     OBRACE = 262,
+     CBRACE = 263,
+     EQUAL = 264,
+     UNEQUAL = 265,
+     GT = 266,
+     LT = 267,
+     COMMA = 268,
+     QUOTE = 269,
+     AND = 270,
+     OR = 271
    };
 #endif
 /* Tokens.  */
-#define DATE 258
-#define WORD 259
-#define BOOL 260
-#define FUNC_INRANGE 261
-#define DATE_SPEC 262
-#define OBRACE 263
-#define CBRACE 264
-#define EQUAL 265
-#define UNEQUAL 266
-#define GT 267
-#define LT 268
-#define COMMA 269
-#define QUOTE 270
-#define AND 271
-#define OR 272
+#define WORD 258
+#define BOOL 259
+#define FUNC_INRANGE 260
+#define DATE_ISO 261
+#define OBRACE 262
+#define CBRACE 263
+#define EQUAL 264
+#define UNEQUAL 265
+#define GT 266
+#define LT 267
+#define COMMA 268
+#define QUOTE 269
+#define AND 270
+#define OR 271
 
 
 
@@ -79,16 +77,17 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 37 "spotlight_rawquery_parser.y"
+#line 45 "spotlight_rawquery_parser.y"
 
     int ival;
     const char *sval;
     bool bval;
+    time_t tval;
 
 
 
 /* Line 2068 of yacc.c  */
-#line 92 "spotlight_rawquery_parser.h"
+#line 91 "spotlight_rawquery_parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -101,8 +100,9 @@ extern YYSTYPE yylval;
 /* "%code provides" blocks.  */
 
 /* Line 2068 of yacc.c  */
-#line 32 "spotlight_rawquery_parser.y"
+#line 39 "spotlight_rawquery_parser.y"
 
+  #define SPRAW_TIME_OFFSET 978307200
   extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
   extern slq_t *ssp_slq;
 
