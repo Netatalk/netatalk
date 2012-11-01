@@ -181,11 +181,12 @@ const char *map_expr(const char *attr, char op, const char *val)
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
             case ssmt_num:
-                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c '%s')",
+                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c%c '%s')",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
                                          op,
+                                         op == '!' ? '=' : ' ', /* append '=' to '!' */
                                          val);
                 sparqlvar++;
                 break;
