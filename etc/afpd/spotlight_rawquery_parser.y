@@ -73,7 +73,7 @@ line:
 expr                           {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(fn:starts-with(?url, 'file://%s/')) . %s}",
+                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s}",
                                  ssp_slq->slq_vol->v_path, $1);
     $$ = ssp_result;
 }
@@ -169,6 +169,32 @@ EC_CLEANUP:
     return result;
 }
 
+static char *map_type_search(const char *attr, char op, const char *val)
+{
+    char *result = NULL;
+    const char *sparqlAttr;
+
+    for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
+        if (strcmp(p->mdtm_value, val) == 0) {
+            switch (p->mdtm_type) {
+            case kMDTypeMapRDF:
+                sparqlAttr = "rdf:type";
+                break;
+            case kMDTypeMapMime:
+                sparqlAttr = "nie:mimeType";
+                break;
+            default:
+                return NULL;
+            }
+            result = talloc_asprintf(ssp_slq, "?obj %s '%s'",
+                                     sparqlAttr,
+                                     p->mdtm_sparql);
+            break;
+        }
+    }
+    return result;
+}
+
 const char *map_expr(const char *attr, char op, const char *val)
 {
     EC_INIT;
@@ -221,6 +247,9 @@ const char *map_expr(const char *attr, char op, const char *val)
                                          op,
                                          buf1);
                 sparqlvar++;
+                break;
+            case ssmt_type:
+                result = map_type_search(attr, op, val);
                 break;
             default:
                 yyerror("unknown Spotlight attribute type");

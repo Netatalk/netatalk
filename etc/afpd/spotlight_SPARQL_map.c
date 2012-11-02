@@ -36,13 +36,14 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemContentModificationDate",  ssmt_date,  "nfo:fileLastModified"},
     {"kMDItemAttributeChangeDate",      ssmt_date,  "nfo:fileLastModified"},
     {"kMDItemAuthors",                  ssmt_str,   "dc:creator"},
-    {"kMDItemContentType",              ssmt_cnt,   "nie:mimeType"},
     {"kMDItemCopyright",                ssmt_str,   "nie:copyright"},
     {"kMDItemCountry",                  ssmt_str,   "nco:country"},
     {"kMDItemCreator",                  ssmt_str,   "dc:creator"},
     {"kMDItemDurationSeconds",          ssmt_num,   "nfo:duration"},
     {"kMDItemNumberOfPages",            ssmt_num,   "nfo:pageCount"},
     {"kMDItemTitle",                    ssmt_str,   "nie:title"},
+    {"_kMDItemGroupId",                 ssmt_type,  NULL},
+    {"kMDItemContentTypeTree",          ssmt_type,  NULL},
 
     /* Image metadata */
     {"kMDItemPixelWidth",               ssmt_num,   "nfo:width"},
@@ -61,4 +62,36 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemMusicalGenre",             ssmt_str,   "nfo:genre"},
 
     {NULL, ssmt_str, NULL}
+};
+
+struct MDTypeMap MDTypeMap[] = {
+    {"1",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#Email"},
+    {"2",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nco#Contact"},
+    {"3",                       kMDTypeMapNotSup,   NULL}, /* PrefPane */
+    {"4",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Font"},
+    {"5",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Bookmark"},
+    {"6",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nco#Contact"},
+    {"7",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Video"},
+    {"8",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Executable"},
+    {"9",                       kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Folder"},
+    {"10",                      kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Audio"},
+    {"11",                      kMDTypeMapMime,     "application/pdf"},
+    {"12",                      kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Presentation"},
+    {"13",                      kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Image"},
+    {"public.jpeg",             kMDTypeMapMime,     "image/jpeg"},
+    {"public.tiff",             kMDTypeMapMime,     "image/tiff"},
+    {"com.compuserve.gif",      kMDTypeMapMime,     "image/gif"},
+    {"public.png",              kMDTypeMapMime,     "image/png"},
+    {"com.microsoft.bmp",       kMDTypeMapMime,     "image/bmp"},
+    {"public.content",          kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Document"},
+    {"public.mp3",              kMDTypeMapMime,     "audio/mpeg"},
+    {"public.mpeg-4-audio",     kMDTypeMapMime,     "audio/x-aac"},
+    {"com.apple.application",   kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Software"},
+    {"public.text",             kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#TextDocument"},
+    {"public.plain-text",       kMDTypeMapMime,     "text/plain"},
+    {"public.rtf",              kMDTypeMapMime,     "text/rtf"},
+    {"public.html",             kMDTypeMapMime,     "text/html"},
+    {"public.xml",              kMDTypeMapMime,     "text/xml"},
+    {"public.source-code",      kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#SourceCode"},
+    {NULL,                      kMDTypeMapNotSup,   NULL}
 };

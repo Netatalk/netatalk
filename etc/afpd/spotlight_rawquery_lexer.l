@@ -12,7 +12,7 @@ InRange                               return FUNC_INRANGE;
 \$time\.iso                           return DATE_ISO;
 false                                 {yylval.bval = false; return BOOL;}
 true                                  {yylval.bval = true; return BOOL;}
-[a-zA-Z0-9\*\:\-\.]+                  {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
+[a-zA-Z0-9_\*\:\-\.]+                 {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 \"                                    return QUOTE;
 \(                                    return OBRACE;
 \)                                    return CBRACE;
