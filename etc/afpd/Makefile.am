@@ -68,7 +68,7 @@ noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h fi
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
 	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h spotlight.h \
-	 spotlight_rawquery_parser.h
+	 spotlight_rawquery_parser.h spotlight_SPARQL_map.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
