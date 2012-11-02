@@ -185,6 +185,7 @@ extern int daemonize(int nochdir, int noclose);
 extern int run_cmd(const char *cmd, char **cmd_argv);
 extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
+extern char *strtok_quote (char *s, const char *delim);
 
 /******************************************************************
  * cnid.c

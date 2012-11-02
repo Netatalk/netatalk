@@ -218,7 +218,7 @@ int check_name(const struct vol *vol, char *name)
     move and rename sdir:oldname to curdir:newname in volume vol
     special care is needed for lock   
 */
-static int moveandrename(const struct vol *vol,
+static int moveandrename(struct vol *vol,
                          struct dir *sdir,
                          int sdir_fd,
                          char *oldname,
@@ -349,7 +349,7 @@ static int moveandrename(const struct vol *vol,
         if (of_findname(&path)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
         } else {
-            rc = renamefile(vol, sdir_fd, oldunixname, upath, newname, adp );
+            rc = renamefile(vol, curdir, sdir_fd, oldunixname, upath, newname, adp );
             if (rc == AFP_OK)
                 of_rename(vol, opened, sdir, oldname, curdir, newname);
         }

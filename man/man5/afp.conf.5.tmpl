@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 22 Nov 2012
+.\"      Date: 06 Dez 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "22 Nov 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "06 Dez 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -699,7 +699,6 @@ sasl
 .RS 4
 SASL\&. Not yet supported !
 .RE
-.sp
 .RE
 .PP
 ldap auth dn = \fIdn\fR \fB(G)\fR
@@ -775,7 +774,6 @@ ms\-guid
 .RS 4
 Binary objectGUID from Active Directory
 .RE
-.sp
 .RE
 .PP
 ldap group attr = \fIdn\fR \fB(G)\fR
@@ -811,9 +809,19 @@ Useful for Time Machine: limits the reported volume size, thus preventing Time M
 This is an approimated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
-valid users = \fIusers/groups\fR \fB(V)\fR
+valid users = \fIuser @group\fR \fB(V)\fR
 .RS 4
-The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by spaces or commas\&. Groups are designated by a @ prefix\&. Example: "valid users = user1 user2 @group"
+The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by spaces or commas\&. Groups are designated by a @ prefix\&. Names may be quoted in order to allow for spaces in names\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+valid users = user "user 2" @group \(lq@group 2"
+.fi
+.if n \{\
+.RE
+.\}
 .RE
 .PP
 invalid users = \fIusers/groups\fR \fB(V)\fR
@@ -914,7 +922,6 @@ is for files only,
 is for directories only\&. Don\'t use with "\fBunix priv = no\fR"\&.
 .PP
 \fBExample.\ \&Volume for a collaborative workgroup\fR
-
 .sp
 .if n \{\
 .RS 4
@@ -926,7 +933,6 @@ file perm = 0660 directory perm =
 .if n \{\
 .RE
 .\}
-.sp
 
 .RE
 .PP
@@ -1111,7 +1117,7 @@ The
 option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be vol charset ISO\-8859\-15\&.
 \fBafpd\fR
 will accept any
-\fB iconv \fR(1)
+\fBiconv\fR(1)
 provided charset\&. If a character cannot be converted from the
 \fBmac charset\fR
 to the selected

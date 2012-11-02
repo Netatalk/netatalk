@@ -10,11 +10,15 @@ Changes in 3.0.2
        Fixes bug #474.
 * FIX: Fix _device-info service type registered with dns-sd API
 * FIX: Fix pathname bug for FCE modified event.
-* FIX: "valid users" options and friends only use ',' as field delimiter.
-       Fixes bug #472.
 * FIX: Remove length limitation of options like "valid users".
        Fixes bug #473.
+* FIX: Dont copy our metadata EA in copyfile().
+       Fixes bug #452.
+* FIX: Fix an error where catalog search gave incomplete results.
+       Fixes bug #479.
 * REM: Remove TimeMachine volume used size FCE event.
+* UPD: Add quoting support to '[in]valid users' option.
+       Fixes bug #472.
 
 Changes in 3.0.1
 ================

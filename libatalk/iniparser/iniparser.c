@@ -8,6 +8,10 @@
 */
 
 /*---------------------------- Includes ------------------------------------*/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <ctype.h>
 
 #include <atalk/iniparser.h>
@@ -474,8 +478,7 @@ static line_status iniparser_line(
         strcpy(section, strstrip(section));
         strcpy(section, section);
         sta = LINE_SECTION ;
-    } else if (sscanf (line, "%[^=] = \"%[^\"]\"", key, value) == 2
-           ||  sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
+    } else if (sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
            ||  sscanf (line, "%[^=] = %[^;#]",     key, value) == 2) {
         /* Usual key=value, with or without comments */
         strcpy(key, strstrip(key));
