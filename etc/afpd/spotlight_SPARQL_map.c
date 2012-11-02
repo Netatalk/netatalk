@@ -20,12 +20,15 @@
 
 #include "spotlight_SPARQL_map.h"
 
+#define NOTSUPPORTED NULL
+#define SPECIAL      NULL
+
 struct spotlight_sparql_map spotlight_sparql_map[] = {
     /* ssm_spotlight_attr               ssm_type,   ssm_sparql_attr */
     {"*",                               ssmt_fts,   "fts:match"},
 
     /* Filesystem metadata */
-    {"kMDItemFSLabel", ssmt_num, ""},
+    {"kMDItemFSLabel",                  ssmt_num,   NOTSUPPORTED},
     {"kMDItemDisplayName",              ssmt_str,   "nfo:fileName"},
     {"kMDItemFSName",                   ssmt_str,   "nfo:fileName"},
     {"kMDItemFSContentChangeDate",      ssmt_date,  "nfo:fileLastModified"},
@@ -42,8 +45,8 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemDurationSeconds",          ssmt_num,   "nfo:duration"},
     {"kMDItemNumberOfPages",            ssmt_num,   "nfo:pageCount"},
     {"kMDItemTitle",                    ssmt_str,   "nie:title"},
-    {"_kMDItemGroupId",                 ssmt_type,  NULL},
-    {"kMDItemContentTypeTree",          ssmt_type,  NULL},
+    {"_kMDItemGroupId",                 ssmt_type,  SPECIAL},
+    {"kMDItemContentTypeTree",          ssmt_type,  SPECIAL},
 
     /* Image metadata */
     {"kMDItemPixelWidth",               ssmt_num,   "nfo:width"},
