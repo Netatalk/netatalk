@@ -59,7 +59,7 @@ static int sl_mod_init(void *p)
     GError *error = NULL;
     const char *msg = p;
 
-    LOG(log_info, logtype_sl, "sl_mod_init: %s", msg);
+    LOG(log_info, logtype_sl, "Initializing Spotlight module");
 
     g_type_init();
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
