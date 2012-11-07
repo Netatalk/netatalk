@@ -6,6 +6,7 @@ Changes in 3.0.2
 * FIX: "path" parameter value may contain symlink.
 * FIX: "basedir regex" was never able to treat symlink.
        If /home -> /usr/home, set "basedir regex = /usr/home".
+* FIX: Memory leak
 
 Changes in 3.0.1
 ================

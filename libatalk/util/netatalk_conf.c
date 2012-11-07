@@ -564,7 +564,7 @@ static struct vol *creatvol(AFPObj *obj,
     struct vol  *volume = NULL;
     size_t      current_pathlen, another_pathlen;
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
-    char        *tmpname;
+    char        tmpname[AFPVOL_U8MNAMELEN+1];
     char        path[MAXPATHLEN + 1];
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
@@ -670,7 +670,7 @@ static struct vol *creatvol(AFPObj *obj,
     EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
     vlen = strlen(name);
-    tmpname = strdup(name);
+    strlcpy(tmpname, name, sizeof(tmpname));
     for(i = 0; i < vlen; i++)
         if(tmpname[i] == '/') tmpname[i] = ':';
 
