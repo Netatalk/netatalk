@@ -80,6 +80,16 @@ static const char *skip_files[] =
 };
 static struct fce_close_event last_close_event;
 
+static char *fce_event_names[] = {
+    "",
+    "FCE_FILE_MODIFY",
+    "FCE_FILE_DELETE",
+    "FCE_DIR_DELETE",
+    "FCE_FILE_CREATE",
+    "FCE_DIR_CREATE",
+    "FCE_TM_SIZE",
+};
+
 /*
  *
  * Initialize network structs for any listeners
@@ -106,7 +116,7 @@ void fce_init_udp()
             close(udp_entry->sock);
 
         if ((rv = getaddrinfo(udp_entry->addr, udp_entry->port, &hints, &servinfo)) != 0) {
-            LOG(log_error, logtype_afpd, "fce_init_udp: getaddrinfo(%s:%s): %s",
+            LOG(log_error, logtype_fce, "fce_init_udp: getaddrinfo(%s:%s): %s",
                 udp_entry->addr, udp_entry->port, gai_strerror(rv));
             continue;
         }
@@ -114,7 +124,7 @@ void fce_init_udp()
         /* loop through all the results and make a socket */
         for (p = servinfo; p != NULL; p = p->ai_next) {
             if ((udp_entry->sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                LOG(log_error, logtype_afpd, "fce_init_udp: socket(%s:%s): %s",
+                LOG(log_error, logtype_fce, "fce_init_udp: socket(%s:%s): %s",
                     udp_entry->addr, udp_entry->port, strerror(errno));
                 continue;
             }
@@ -122,7 +132,7 @@ void fce_init_udp()
         }
 
         if (p == NULL) {
-            LOG(log_error, logtype_afpd, "fce_init_udp: no socket for %s:%s",
+            LOG(log_error, logtype_fce, "fce_init_udp: no socket for %s:%s",
                 udp_entry->addr, udp_entry->port);
         }
         udp_entry->addrinfo = *p;
@@ -240,7 +250,7 @@ static void send_fce_event( char *path, int mode )
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     time_t now = time(NULL);
 
-    LOG(log_debug, logtype_afpd, "send_fce_event: start");
+    LOG(log_debug, logtype_fce, "send_fce_event: start");
 
     /* initialized ? */
     if (first_event == FCE_TRUE) {
@@ -273,7 +283,7 @@ static void send_fce_event( char *path, int mode )
             
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
-                LOG(log_error, logtype_afpd, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
+                LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
 
                 udp_entry->next_try_on_error = now + FCE_SOCKET_RETRY_DELAY_S;
                 continue;
@@ -307,7 +317,7 @@ static void send_fce_event( char *path, int mode )
         /* Problems ? */
         if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_afpd, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
+            LOG(log_error, logtype_fce, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
                 udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
 
             close( udp_entry->sock );
@@ -323,7 +333,7 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
         target_port = FCE_DEFAULT_PORT_STRING;
 
     if (udp_sockets >= FCE_MAX_UDP_SOCKS) {
-        LOG(log_error, logtype_afpd, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
+        LOG(log_error, logtype_fce, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
         return AFPERR_PARAM;
     }
 
@@ -350,7 +360,7 @@ static void save_close_event(const char *path)
         send_fce_event(last_close_event.path, FCE_FILE_MODIFY);
     }
 
-    LOG(log_debug, logtype_afpd, "save_close_event: %s", path);
+    LOG(log_debug, logtype_fce, "save_close_event: %s", path);
 
     last_close_event.time = now;
     strncpy(last_close_event.path, path, MAXPATHLEN);
@@ -364,6 +374,11 @@ static void save_close_event(const char *path)
 static int register_fce(const char *u_name, int is_dir, int mode)
 {
     static int first_event = FCE_TRUE;
+
+    AFP_ASSERT(mode >= FCE_FIRST_EVENT && mode <= FCE_LAST_EVENT);
+
+    LOG(log_debug, logtype_fce, "register_fce(path: %s, type: %s, event: %s",
+        fullpathname(u_name), is_dir ? "dir" : "file", fce_event_names[mode]);
 
     if (udp_sockets == 0)
         /* No listeners configured */
@@ -393,13 +408,13 @@ static int register_fce(const char *u_name, int is_dir, int mode)
         strlcpy(full_path_buffer, u_name, MAXPATHLEN);
     } else if (!is_dir || mode == FCE_DIR_DELETE) {
 		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
-			LOG(log_error, logtype_afpd, "FCE file name too long: %s/%s", cwd, u_name );
+			LOG(log_error, logtype_fce, "FCE file name too long: %s/%s", cwd, u_name );
 			return AFPERR_PARAM;
 		}
 		sprintf( full_path_buffer, "%s/%s", cwd, u_name );
 	} else {
 		if (strlen( cwd ) >= MAXPATHLEN) {
-			LOG(log_error, logtype_afpd, "FCE directory name too long: %s", cwd);
+			LOG(log_error, logtype_fce, "FCE directory name too long: %s", cwd);
 			return AFPERR_PARAM;
 		}
 		strcpy( full_path_buffer, cwd);
@@ -408,11 +423,11 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 	/* Can we ignore this event based on type or history? */
 	if (!(mode & FCE_TM_SIZE) && fce_handle_coalescation( full_path_buffer, is_dir, mode ))
 	{
-		LOG(log_debug9, logtype_afpd, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
+		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
 		return AFP_OK;
 	}
 
-	LOG(log_debug9, logtype_afpd, "Detected fc event <%d> for <%s>", mode, full_path_buffer );
+	LOG(log_debug9, logtype_fce, "Detected fc event <%d> for <%s>", mode, full_path_buffer );
 
     if (mode & FCE_FILE_MODIFY) {
         save_close_event(full_path_buffer);
@@ -430,7 +445,7 @@ static void check_saved_close_events(int fmodwait)
 
     /* check if configured holdclose time has passed */
     if (last_close_event.time && ((last_close_event.time + fmodwait) < now)) {
-        LOG(log_debug, logtype_afpd, "check_saved_close_events: sending event: %s", last_close_event.path);
+        LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s", last_close_event.path);
         /* yes, send event */
         send_fce_event(&last_close_event.path[0], FCE_FILE_MODIFY);
         last_close_event.path[0] = 0;

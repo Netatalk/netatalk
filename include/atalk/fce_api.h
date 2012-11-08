@@ -22,6 +22,8 @@
 #define FCE_CONN_START     42
 #define FCE_CONN_BROKEN    99
 
+#define FCE_FIRST_EVENT     FCE_FILE_MODIFY /* keep in sync with last file event above */
+#define FCE_LAST_EVENT      FCE_TM_SIZE     /* keep in sync with last file event above */
 
 /* fce_packet.fce_magic */
 #define FCE_PACKET_MAGIC  "at_fcapi"
