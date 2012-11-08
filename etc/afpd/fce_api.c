@@ -70,7 +70,6 @@ static unsigned long fce_ev_enabled =
     (1 << FCE_FILE_CREATE) |
     (1 << FCE_DIR_CREATE);
 
-static uint64_t tm_used;          /* used for passing to event handler */
 #define MAXIOBUF 1024
 static char iobuf[MAXIOBUF];
 static const char *skip_files[] = 
@@ -86,8 +85,7 @@ static char *fce_event_names[] = {
     "FCE_FILE_DELETE",
     "FCE_DIR_DELETE",
     "FCE_FILE_CREATE",
-    "FCE_DIR_CREATE",
-    "FCE_TM_SIZE",
+    "FCE_DIR_CREATE"
 };
 
 /*
@@ -190,19 +188,7 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
     /* This is the payload len. Means: the packet has len bytes more until packet is finished */
     data_len = FCE_PACKET_HEADER_SIZE + pathlen;
 
-    switch (mode) {
-    case FCE_TM_SIZE:
-        t = (uint64_t *)packet->data;
-        *t = hton64(tm_used);
-        memcpy(packet->data + sizeof(tm_used), path, pathlen);
-        
-        packet->datalen = pathlen + sizeof(tm_used);
-        data_len += sizeof(tm_used);
-        break;
-    default:
-        memcpy(packet->data, path, pathlen);
-        break;
-    }
+    memcpy(packet->data, path, pathlen);
 
     /* return the packet len */
     return data_len;
@@ -401,12 +387,11 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 	}
 
 
+    /* FIXME: use fullpathname() for path? */
 	char full_path_buffer[MAXPATHLEN + 1] = {""};
 	const char *cwd = getcwdpath();
 
-    if (mode == FCE_TM_SIZE) {
-        strlcpy(full_path_buffer, u_name, MAXPATHLEN);
-    } else if (!is_dir || mode == FCE_DIR_DELETE) {
+    if (!is_dir || mode == FCE_DIR_DELETE) {
 		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
 			LOG(log_error, logtype_fce, "FCE file name too long: %s/%s", cwd, u_name );
 			return AFPERR_PARAM;
@@ -421,13 +406,10 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 	}
 
 	/* Can we ignore this event based on type or history? */
-	if (!(mode & FCE_TM_SIZE) && fce_handle_coalescation( full_path_buffer, is_dir, mode ))
-	{
+	if (fce_handle_coalescation(full_path_buffer, is_dir, mode)) {
 		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
 		return AFP_OK;
 	}
-
-	LOG(log_debug9, logtype_fce, "Detected fc event <%d> for <%s>", mode, full_path_buffer );
 
     if (mode & FCE_FILE_MODIFY) {
         save_close_event(full_path_buffer);
@@ -462,7 +444,6 @@ static void check_saved_close_events(int fmodwait)
 
 void fce_pending_events(AFPObj *obj)
 {
-    vol_fce_tm_event();
     check_saved_close_events(obj->options.fce_fmodwait);
 }
 
@@ -540,22 +521,6 @@ int fce_register_file_modification( struct ofork *ofork )
     
     return ret;    
 }
-
-int fce_register_tm_size(const char *vol, size_t used)
-{
-    int ret = AFP_OK;
-
-    if (vol == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_TM_SIZE)))
-        return ret;
-
-    tm_used = used;             /* oh what a hack */
-    ret = register_fce(vol, false, FCE_TM_SIZE);
-
-    return ret;
-}
 #endif
 
 /*
@@ -601,8 +566,6 @@ int fce_set_events(const char *events)
             fce_ev_enabled |= (1 << FCE_FILE_CREATE);
         } else if (strcmp(p, "dcre") == 0) {
             fce_ev_enabled |= (1 << FCE_DIR_CREATE);
-        } else if (strcmp(p, "tmsz") == 0) {
-            fce_ev_enabled |= (1 << FCE_TM_SIZE);
         }
     }
 

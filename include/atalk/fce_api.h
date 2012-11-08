@@ -18,12 +18,11 @@
 #define FCE_DIR_DELETE      3
 #define FCE_FILE_CREATE     4
 #define FCE_DIR_CREATE      5
-#define FCE_TM_SIZE         6
 #define FCE_CONN_START     42
 #define FCE_CONN_BROKEN    99
 
 #define FCE_FIRST_EVENT     FCE_FILE_MODIFY /* keep in sync with last file event above */
-#define FCE_LAST_EVENT      FCE_TM_SIZE     /* keep in sync with last file event above */
+#define FCE_LAST_EVENT      FCE_DIR_CREATE  /* keep in sync with last file event above */
 
 /* fce_packet.fce_magic */
 #define FCE_PACKET_MAGIC  "at_fcapi"
@@ -53,11 +52,10 @@ int fce_register_delete_dir( char *name );
 int fce_register_new_dir( struct path *path );
 int fce_register_new_file( struct path *path );
 int fce_register_file_modification( struct ofork *ofork );
-int fce_register_tm_size(const char *vol, size_t used);
 
 int fce_add_udp_socket(const char *target );  // IP or IP:Port
 int fce_set_coalesce(const char *coalesce_opt ); // all|delete|create
-int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre,tmsz (default is all except tmsz) */
+int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre */
 
 #define FCE_DEFAULT_PORT 12250
 #define FCE_DEFAULT_PORT_STRING "12250"

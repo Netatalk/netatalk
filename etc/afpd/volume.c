@@ -264,22 +264,6 @@ getvolspace_done:
     return( AFP_OK );
 }
 
-#define FCE_TM_DELTA 10  /* send notification every 10 seconds */
-void vol_fce_tm_event(void)
-{
-    static time_t last;
-    time_t now = time(NULL);
-    struct vol  *vol = getvolumes();
-
-    if ((last + FCE_TM_DELTA) < now) {
-        last = now;
-        for ( ; vol; vol = vol->v_next ) {
-            if (vol->v_flags & AFPVOL_TM)
-                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_appended);
-        }
-    }
-}
-
 /* -----------------------
  * set volume creation date
  * avoid duplicate, well at least it tries
