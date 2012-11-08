@@ -62,6 +62,7 @@ static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
     packet->datalen = ntohs(packet->datalen);
 
     memcpy(&packet->data[0], p, packet->datalen);
+    packet->data[packet->datalen] = 0; /* 0 terminate strings */
     p += packet->datalen;
 
     return 0;
