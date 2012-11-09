@@ -32,6 +32,7 @@
  * Format is network byte order.
  */
 #define FCE_PACKET_HEADER_SIZE 8+1+1+4+2
+
 struct fce_packet
 {
     char magic[8];
@@ -42,17 +43,14 @@ struct fce_packet
     char data[MAXPATHLEN];
 };
 
+typedef uint32_t fce_ev_t;
+typedef enum { fce_file, fce_dir } fce_obj_t;
+
 struct path;
 struct ofork;
 
 void fce_pending_events(AFPObj *obj);
-
-int fce_register_delete_file( struct path *path );
-int fce_register_delete_dir( char *name );
-int fce_register_new_dir( struct path *path );
-int fce_register_new_file( struct path *path );
-int fce_register_file_modification( struct ofork *ofork );
-
+int fce_register(fce_ev_t event, const char *path, const char *oldpath, fce_obj_t type);
 int fce_add_udp_socket(const char *target );  // IP or IP:Port
 int fce_set_coalesce(const char *coalesce_opt ); // all|delete|create
 int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre */

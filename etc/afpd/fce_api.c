@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010 Mark Williams
+ * Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
  *
  * File change event API for netatalk
  *
@@ -29,13 +30,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
-
-
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdbool.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
@@ -56,13 +56,10 @@
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"
 
-#define FCE_TRUE 1
-#define FCE_FALSE 0
-
 /* We store our connection data here */
 static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
 static int udp_sockets = 0;
-static int udp_initialized = FCE_FALSE;
+static bool udp_initialized = false;
 static unsigned long fce_ev_enabled =
     (1 << FCE_FILE_MODIFY) |
     (1 << FCE_FILE_DELETE) |
@@ -99,7 +96,7 @@ void fce_init_udp()
     int rv;
     struct addrinfo hints, *servinfo, *p;
 
-    if (udp_initialized == FCE_TRUE)
+    if (udp_initialized == true)
         return;
 
     memset(&hints, 0, sizeof hints);
@@ -139,12 +136,12 @@ void fce_init_udp()
         freeaddrinfo(servinfo);
     }
 
-    udp_initialized = FCE_TRUE;
+    udp_initialized = true;
 }
 
 void fce_cleanup()
 {
-    if (udp_initialized == FCE_FALSE )
+    if (udp_initialized == false )
         return;
 
     for (int i = 0; i < udp_sockets; i++)
@@ -158,13 +155,13 @@ void fce_cleanup()
             udp_entry->sock = -1;
         }
     }
-    udp_initialized = FCE_FALSE;
+    udp_initialized = false;
 }
 
 /*
  * Construct a UDP packet for our listeners and return packet size
  * */
-static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode, uint32_t event_id )
+static ssize_t build_fce_packet( struct fce_packet *packet, const char *path, int event, uint32_t event_id )
 {
     size_t pathlen = 0;
     ssize_t data_len = 0;
@@ -173,7 +170,7 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
     /* Set content of packet */
     memcpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
     packet->version = FCE_PACKET_VERSION;
-    packet->mode = mode;
+    packet->mode = event;
    
     packet->event_id = event_id; 
 
@@ -227,9 +224,9 @@ static void pack_fce_packet(struct fce_packet *packet, unsigned char *buf, int m
  * Send the fce information to all (connected) listeners
  * We dont give return code because all errors are handled internally (I hope..)
  * */
-static void send_fce_event( char *path, int mode )
+static void send_fce_event(const char *path, int event)
 {    
-    static int first_event = FCE_TRUE;
+    static bool first_event = true;
 
     struct fce_packet packet;
     void *data = &packet;
@@ -239,15 +236,15 @@ static void send_fce_event( char *path, int mode )
     LOG(log_debug, logtype_fce, "send_fce_event: start");
 
     /* initialized ? */
-    if (first_event == FCE_TRUE) {
-        first_event = FCE_FALSE;
+    if (first_event == true) {
+        first_event = false;
         fce_init_udp();
         /* Notify listeners the we start from the beginning */
         send_fce_event( "", FCE_CONN_START );
     }
 
     /* build our data packet */
-    ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
+    ssize_t data_len = build_fce_packet( &packet, path, event, ++event_id );
     pack_fce_packet(&packet, iobuf, MAXIOBUF);
 
     for (int i = 0; i < udp_sockets; i++)
@@ -289,7 +286,7 @@ static void send_fce_event( char *path, int mode )
                    udp_entry->addrinfo.ai_addrlen);
 
             /* Rebuild our original data packet */
-            data_len = build_fce_packet( &packet, path, mode, event_id );
+            data_len = build_fce_packet(&packet, path, event, event_id);
             pack_fce_packet(&packet, iobuf, MAXIOBUF);
         }
 
@@ -357,66 +354,54 @@ static void save_close_event(const char *path)
  * Dispatcher for all incoming file change events
  *
  * */
-static int register_fce(const char *u_name, int is_dir, int mode)
+int fce_register(fce_ev_t event, const char *path, const char *oldpath, fce_obj_t type)
 {
-    static int first_event = FCE_TRUE;
+    static bool first_event = true;
+    const char *bname;
 
-    AFP_ASSERT(mode >= FCE_FIRST_EVENT && mode <= FCE_LAST_EVENT);
+    if (!(fce_ev_enabled & (1 << event)))
+        return AFP_OK;
+
+    AFP_ASSERT(event >= FCE_FIRST_EVENT && event <= FCE_LAST_EVENT);
 
     LOG(log_debug, logtype_fce, "register_fce(path: %s, type: %s, event: %s",
-        fullpathname(u_name), is_dir ? "dir" : "file", fce_event_names[mode]);
+        path , type == fce_dir ? "dir" : "file", fce_event_names[event]);
+
+    bname = basename_safe(path);
 
     if (udp_sockets == 0)
         /* No listeners configured */
         return AFP_OK;
 
-    if (u_name == NULL)
+    if (path == NULL)
         return AFPERR_PARAM;
 
 	/* do some initialization on the fly the first time */
 	if (first_event) {
 		fce_initialize_history();
-        first_event = FCE_FALSE;
+        first_event = false;
 	}
 
 	/* handle files which should not cause events (.DS_Store atc. ) */
-	for (int i = 0; skip_files[i] != NULL; i++)
-	{
-		if (!strcmp( u_name, skip_files[i]))
+	for (int i = 0; skip_files[i] != NULL; i++) {
+		if (strcmp(bname, skip_files[i]) == 0)
 			return AFP_OK;
 	}
 
-
-    /* FIXME: use fullpathname() for path? */
-	char full_path_buffer[MAXPATHLEN + 1] = {""};
-	const char *cwd = getcwdpath();
-
-    if (!is_dir || mode == FCE_DIR_DELETE) {
-		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
-			LOG(log_error, logtype_fce, "FCE file name too long: %s/%s", cwd, u_name );
-			return AFPERR_PARAM;
-		}
-		sprintf( full_path_buffer, "%s/%s", cwd, u_name );
-	} else {
-		if (strlen( cwd ) >= MAXPATHLEN) {
-			LOG(log_error, logtype_fce, "FCE directory name too long: %s", cwd);
-			return AFPERR_PARAM;
-		}
-		strcpy( full_path_buffer, cwd);
-	}
-
 	/* Can we ignore this event based on type or history? */
-	if (fce_handle_coalescation(full_path_buffer, is_dir, mode)) {
-		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
+	if (fce_handle_coalescation(event, path, type)) {
+		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", event, path);
 		return AFP_OK;
 	}
 
-    if (mode & FCE_FILE_MODIFY) {
-        save_close_event(full_path_buffer);
-        return AFP_OK;
+    switch (event) {
+    case FCE_FILE_MODIFY:
+        save_close_event(path);
+        break;
+    default:
+        send_fce_event(path, event);
+        break;
     }
-
-    send_fce_event( full_path_buffer, mode );
 
     return AFP_OK;
 }
@@ -440,88 +425,10 @@ static void check_saved_close_events(int fmodwait)
 /*
  * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
  * */
-#ifndef FCE_TEST_MAIN
-
 void fce_pending_events(AFPObj *obj)
 {
     check_saved_close_events(obj->options.fce_fmodwait);
 }
-
-int fce_register_delete_file( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_DELETE)))
-        return ret;
-	
-    ret = register_fce( path->u_name, false, FCE_FILE_DELETE );
-
-    return ret;
-}
-int fce_register_delete_dir( char *name )
-{
-    int ret = AFP_OK;
-
-    if (name == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_DIR_DELETE)))
-        return ret;
-	
-    ret = register_fce( name, true, FCE_DIR_DELETE);
-
-    return ret;
-}
-
-int fce_register_new_dir( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_DIR_CREATE)))
-        return ret;
-
-    ret = register_fce( path->u_name, true, FCE_DIR_CREATE );
-
-    return ret;
-}
-
-
-int fce_register_new_file( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_CREATE)))
-        return ret;
-
-    ret = register_fce( path->u_name, false, FCE_FILE_CREATE );
-
-    return ret;
-}
-
-int fce_register_file_modification( struct ofork *ofork )
-{
-    int ret = AFP_OK;
-
-    if (ofork == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_MODIFY)))
-        return ret;
-
-    ret = register_fce(of_name(ofork), false, FCE_FILE_MODIFY );
-    
-    return ret;    
-}
-#endif
 
 /*
  *
@@ -646,7 +553,7 @@ int main( int argc, char*argv[] )
         if (end_time && now >= end_time)
             break;
 
-        register_fce( path, 0, event_code );
+        fce_register(event_code, path, NULL, 0);
         ev_cnt++;
 
         
