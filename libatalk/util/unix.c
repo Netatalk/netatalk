@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <sys/wait.h>
+#include <libgen.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
@@ -374,4 +375,14 @@ char *realpath_safe(const char *path)
     resolved_path = tmp;
     return resolved_path;
 #endif
+}
+
+/**
+ * Returns pointer to static buffer with basename of path
+ **/
+const char *basename_safe(const char *path)
+{
+    static char buf[MAXPATHLEN+1];
+    strlcpy(buf, path, MAXPATHLEN);
+    return basename(buf);
 }
