@@ -407,7 +407,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
     if (ofork->of_flags & AFPFORK_MODIFIED) {
-        fce_register(FCE_FILE_MODIFY, fullpathname(ofork->of_ad->ad_name), NULL, fce_file);
+        struct dir *dir =  dirlookup(ofork->of_vol, ofork->of_did);
+        bstring forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
+        fce_register(FCE_FILE_MODIFY, bdata(forkpath), NULL, fce_file);
+        bdestroy(forkpath);
     }
 
     ad_unlock(ofork->of_ad, ofork->of_refnum, ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
