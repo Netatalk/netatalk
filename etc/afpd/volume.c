@@ -513,6 +513,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NONETIDS;
             else if (strcasecmp(p, "noacls") == 0)
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
+            else if (strcasecmp(p, "followsymlinks") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_FOLLOWSYM;
             p = strtok(NULL, ",");
         }
 
@@ -778,6 +780,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_ad_options |= ADVOL_INVDOTS;
         if ((volume->v_flags & AFPVOL_NOADOUBLE))
             volume->v_ad_options |= ADVOL_NOADOUBLE;
+        if ((volume->v_flags & AFPVOL_FOLLOWSYM))
+            volume->v_ad_options |= ADVOL_FOLLO_SYML;
 
         if (options[VOLOPT_PASSWORD].c_value)
             volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);

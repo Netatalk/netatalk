@@ -115,7 +115,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         }
     }
 
-    if (islink){
+    if (islink && !vol_syml_opt(vol)) {
         u_int16_t linkflag;
         memcpy(&linkflag, (char *)data + FINDERINFO_FRFLAGOFF, 2);
         linkflag |= htons(FINDERINFO_ISALIAS);
@@ -701,7 +701,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     upath = s_path->u_name;
     
     /* if upath is deleted we already in trouble anyway */
-    if ((of = of_findname(s_path))) {
+    if ((of = of_findname(vol, s_path))) {
         adp = of->of_ad;
     } else {
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
@@ -871,6 +871,9 @@ int setfilparams(struct vol *vol,
     u_int16_t           bitmap = f_bitmap;
     u_int32_t           cdate,bdate;
     u_char              finder_buf[32];
+    int fp;
+    ssize_t len;
+    char symbuf[MAXPATHLEN+1];
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
@@ -912,29 +915,32 @@ int setfilparams(struct vol *vol,
             break;
         case FILPBIT_FINFO :
             change_mdate = 1;
-            memcpy(finder_buf, buf, 32 );
-            if (memcmp(buf,"slnkrhap",8)==0 && !S_ISLNK(path->st.st_mode)){
-            // SLFINFO
-                int fp;
-                ssize_t len;
-                int erc=1;
-                char buf[PATH_MAX+1];
-                if ((fp=open(path->u_name,O_RDONLY))>=0){
-                    if ((len=read(fp,buf,PATH_MAX+1))){
-                        if (unlink(path->u_name)==0){
-                            buf[len]=0;
-                            erc = symlink(buf, path->u_name);
-                            if (!erc)
-                                of_stat(path);
-                        }
-                    }
-                    close(fp);
-                }
-                if (erc!=0){
-                    err=AFPERR_BITMAP;
+            if (memcmp(buf,"slnkrhap",8) == 0
+                && !(S_ISLNK(path->st.st_mode))
+                && !(vol->v_flags & AFPVOL_FOLLOWSYM)) {
+                /* request to turn this into a symlink */
+                if ((fp = open(path->u_name, O_RDONLY)) == -1) {
+                    err = AFPERR_MISC;
                     goto setfilparam_done;
                 }
+                len = read(fp, symbuf, MAXPATHLEN);
+                close(fp);
+                if (!(len > 0)) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                if (unlink(path->u_name) != 0) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                symbuf[len] = 0;
+                if (symlink(symbuf, path->u_name) != 0) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                of_stat(vol, path);
             }
+            memcpy(finder_buf, buf, 32 );
             buf += 32;
             break;
         case FILPBIT_UNIXPR :
@@ -1807,7 +1813,7 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     cnid_t        did  = param->did;
     cnid_t	  aint;
     
-    if ( lstat(de->d_name, &path.st)<0 )
+    if (ostat(de->d_name, &path.st, vol_syml_opt(vol)) < 0)
         return 0;
     
     /* update or add to cnid */
@@ -1852,7 +1858,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     }
     
     /* FIXME use of_statdir ? */
-    if (lstat(name, &st)) {
+    if (ostat(name, &st, vol_syml_opt(vol))) {
 	return -1;
     }
 
@@ -1931,7 +1937,7 @@ retry:
 
     memset(&path, 0, sizeof(path));
     path.u_name = upath;
-    if ( of_stat(&path) < 0 ) {
+    if (of_stat(vol, &path) < 0 ) {
 #ifdef ESTALE
         /* with nfs and our working directory is deleted */
 	if (errno == ESTALE) {
@@ -2026,7 +2032,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     err = AFP_OK;
-    if ((movecwd(vol, dir) < 0) || (lstat(upath, &st) < 0)) {
+    if ((movecwd(vol, dir) < 0) || (ostat(upath, &st, vol_syml_opt(vol)) < 0)) {
         switch (errno) {
         case EACCES:
         case EPERM:
@@ -2062,7 +2068,7 @@ delete:
 }
 
 /* ------------------------------ */
-static struct adouble *find_adouble(struct path *path, struct ofork **of, struct adouble *adp)
+static struct adouble *find_adouble(const struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
 {
     int             ret;
 
@@ -2089,7 +2095,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
         return NULL;
     }
     
-    if ((*of = of_findname(path))) {
+    if ((*of = of_findname(vol, path))) {
         /* reuse struct adouble so it won't break locks */
         adp = (*of)->of_ad;
     }
@@ -2180,7 +2186,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
     
     ad_init(&ads, vol->v_adouble, vol->v_ad_options);
-    if (!(adsp = find_adouble( path, &s_of, &ads))) {
+    if (!(adsp = find_adouble(vol, path, &s_of, &ads))) {
         return afp_errno;
     }
 
@@ -2213,7 +2219,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
 
     ad_init(&add, vol->v_adouble, vol->v_ad_options);
-    if (!(addp = find_adouble( path, &d_of, &add))) {
+    if (!(addp = find_adouble(vol, path, &d_of, &add))) {
         err = afp_errno;
         goto err_exchangefile;
     }
@@ -2271,10 +2277,10 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     if (did)
         cnid_delete(vol->v_cdb, did);
 
-    if ((did && ( (crossdev && lstat( upath, &srcst) < 0) || 
+    if ((did && ( (crossdev && ostat(upath, &srcst, vol_syml_opt(vol)) < 0) || 
                 cnid_update(vol->v_cdb, did, &srcst, curdir->d_did,upath, dlen) < 0))
        ||
-       (sid && ( (crossdev && lstat(p, &destst) < 0) ||
+        (sid && ( (crossdev && ostat(p, &destst, vol_syml_opt(vol)) < 0) ||
                 cnid_update(vol->v_cdb, sid, &destst, sdir->d_did,supath, slen) < 0))
     ) {
         switch (errno) {

@@ -168,19 +168,102 @@ char *stripped_slashes_basename(char *p)
     return (strrchr(p, '/') ? strrchr(p, '/') + 1 : p);
 }
 
+/*********************************************************************************
+ * chdir(), chmod(), chown(), stat() wrappers taking an additional option.
+ * Currently the only used options are O_NOFOLLOW, used to switch between symlink
+ * behaviour, and O_NETATALK_ACL for ochmod() indicating chmod_acl() shall be
+ * called which does special ACL handling depending on the filesytem
+ *********************************************************************************/
+
+int ostat(const char *path, struct stat *buf, int options)
+{
+    if (options & O_NOFOLLOW)
+        return lstat(path, buf);
+    else
+        return stat(path, buf);
+}
+
+int ochown(const char *path, uid_t owner, gid_t group, int options)
+{
+    if (options & O_NOFOLLOW)
+        return lchown(path, owner, group);
+    else
+        return chown(path, owner, group);
+}
+
+/*!
+ * chmod() wrapper for symlink and ACL handling
+ *
+ * @param path       (r) path
+ * @param mode       (r) requested mode
+ * @param sb         (r) stat() of path or NULL
+ * @param option     (r) O_NOFOLLOW | O_NETATALK_ACL
+ *
+ * Options description:
+ * O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
+ * O_NETATALK_ACL: call chmod_acl() instead of chmod()
+ */
+int ochmod(const char *path, mode_t mode, const struct stat *st, int options)
+{
+    struct stat sb;
+
+    if (!st) {
+        if (lstat(path, &sb) != 0)
+            return -1;
+        st = &sb;
+    }
+
+    if (options & O_NOFOLLOW)
+        if (S_ISLNK(st->st_mode))
+            return 0;
+
+    if (options & O_NETATALK_ACL) {
+        return chmod_acl(path, mode);
+    } else {
+        return chmod(path, mode);
+    }
+}
+
+/* 
+ * @brief ostat/fsstatat multiplexer
+ *
+ * ostatat mulitplexes ostat and fstatat. If we dont HAVE_ATFUNCS, dirfd is ignored.
+ *
+ * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
+ * @param path    (r) pathname
+ * @param st      (rw) pointer to struct stat
+ */
+int ostatat(int dirfd, const char *path, struct stat *st, int options)
+{
+#ifdef HAVE_ATFUNCS
+    if (dirfd == -1)
+        dirfd = AT_FDCWD;
+    return fstatat(dirfd, path, st, (options & O_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
+#else
+    return ostat(path, st, options);
+#endif            
+
+    /* DEADC0DE */
+    return -1;
+}
+
 /*!
  * @brief symlink safe chdir replacement
  *
- * Only chdirs to dir if it doesn't contain symlinks.
+ * Only chdirs to dir if it doesn't contain symlinks or if symlink checking
+ * is disabled
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-int lchdir(const char *dir)
+int ochdir(const char *dir, int options)
 {
     char buf[MAXPATHLEN+1];
     char cwd[MAXPATHLEN+1];
     char *test;
     int  i;
+
+    if (!(options & O_NOFOLLOW))
+        return chdir(dir);
 
     /*
      dir is a canonical path (without "../" "./" "//" )

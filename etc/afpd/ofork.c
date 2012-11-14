@@ -248,14 +248,14 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 }
 
 /* -------------------------- */
-int of_stat(struct path *path)
+int of_stat(const struct vol *vol, struct path *path)
 {
     int ret;
 
     path->st_errno = 0;
     path->st_valid = 1;
 
-    if ((ret = lstat(path->u_name, &path->st)) < 0) {
+    if ((ret = ostat(path->u_name, &path->st, vol_syml_opt(vol))) < 0) {
         LOG(log_debug, logtype_afpd, "of_stat('%s/%s': %s)",
             cfrombstr(curdir->d_fullpath), path->u_name, strerror(errno));
     	path->st_errno = errno;
@@ -294,7 +294,7 @@ int of_statdir(struct vol *vol, struct path *path)
 
     if (*path->m_name) {
         /* not curdir */
-        return of_stat (path);
+        return of_stat(vol, path);
     }
     path->st_errno = 0;
     path->st_valid = 1;
@@ -306,7 +306,7 @@ int of_statdir(struct vol *vol, struct path *path)
 
     LOG(log_debug, logtype_afpd, "of_statdir: stating: '%s'", pathname);
 
-    if (!(ret = lstat(pathname, &path->st)))
+    if (!(ret = ostat(pathname, &path->st, vol_syml_opt(vol))))
         return 0;
 
     path->st_errno = errno;
@@ -317,7 +317,7 @@ int of_statdir(struct vol *vol, struct path *path)
            return -1;
        path->st_errno = 0;
 
-       if ((ret = lstat(cfrombstr(path->d_dir->d_u_name), &path->st)) < 0) 
+       if ((ret = ostat(cfrombstr(path->d_dir->d_u_name), &path->st, vol_syml_opt(vol))) < 0) 
            path->st_errno = errno;
     }
 
@@ -325,13 +325,13 @@ int of_statdir(struct vol *vol, struct path *path)
 }
 
 /* -------------------------- */
-struct ofork *of_findname(struct path *path)
+struct ofork *of_findname(const struct vol *vol, struct path *path)
 {
     struct ofork *of;
     struct file_key key;
 
     if (!path->st_valid) {
-        of_stat(path);
+        of_stat(vol, path);
     }
 
     if (path->st_errno)
@@ -455,7 +455,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
     struct ofork        *of;
     struct adouble      *adp;
 
-    if ((of = of_findname(path))) {
+    if ((of = of_findname(vol, path))) {
         adp = of->of_ad;
     } else {
         ad_init(ad, vol->v_adouble, vol->v_ad_options);

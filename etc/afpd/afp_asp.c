@@ -81,7 +81,7 @@ static void afp_authprint_remove(AFPObj *obj)
 
     memset( addr_filename_buff, 0, 256 );
 
-    if(lstat(addr_filename, &cap_st) == 0) {
+    if (stat(addr_filename, &cap_st) == 0) {
 	if( S_ISREG(cap_st.st_mode) ) {
 	    int len;
 	    int capfd = open( addr_filename, O_RDONLY );

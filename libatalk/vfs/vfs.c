@@ -48,11 +48,11 @@ struct perm {
     gid_t gid;
 };
 
-typedef int (*rf_loop)(struct dirent *, char *, void *, int , mode_t );
+typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *, int);
 
 /* ----------------------------- */
 static int 
-for_each_adouble(const char *from, const char *name, rf_loop fn, void *data, int flag, mode_t v_umask)
+for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vol *vol, void *data, int flag)
 {
     char            buf[ MAXPATHLEN + 1];
     char            *m;
@@ -78,7 +78,7 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, void *data, int
         }
         
         strlcat(buf, de->d_name, sizeof(buf));
-        if (fn && (ret = fn(de, buf, data, flag, v_umask))) {
+        if (fn && (ret = fn(vol, de, buf, data, flag))) {
            closedir(dp);
            return ret;
         }
@@ -131,7 +131,7 @@ static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR)
 }
 
 /* ----------------- */
-static int deletecurdir_adouble_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask)
+static int deletecurdir_adouble_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     struct stat st;
     int         err;
@@ -154,20 +154,20 @@ static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
        as well. */
-    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, NULL, 1, vol->v_umask))) 
+    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, vol, NULL, 1))) 
         return err;
     return netatalk_rmdir(-1, ".AppleDouble" );
 }
 
 /* ----------------- */
-static int adouble_setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
+static int adouble_setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 {
-    return setfilmode(name, ad_hf_mode(mode), st, v_umask);
+    return setfilmode(vol, name, ad_hf_mode(mode), st);
 }
 
 static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_HF ), mode, st, vol->v_umask);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF ), mode, st);
 }
 
 /* ----------------- */
@@ -181,7 +181,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             return -1;
     }
 
-    if (adouble_setfilmode(vol->ad_path(name, ADFLAGS_DIR ), mode, st, vol->v_umask) < 0) 
+    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR ), mode, st) < 0) 
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -192,18 +192,18 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 }
 
 /* ----------------- */
-static int setdirmode_adouble_loop(struct dirent *de _U_, char *name, void *data, int flag, mode_t v_umask)
+static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag)
 {
     mode_t hf_mode = *(mode_t *)data;
     struct stat st;
 
-    if ( stat( name, &st ) < 0 ) {
+    if (ostat(name, &st, vol_syml_opt(vol)) < 0 ) {
         if (flag)
             return 0;
         LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s", name, strerror(errno) );
     }
     else if (!S_ISDIR(st.st_mode)) {
-        if (setfilmode(name, hf_mode , &st, v_umask) < 0) {
+        if (setfilmode(vol, name, hf_mode, &st) < 0) {
                /* FIXME what do we do then? */
         }
     }
@@ -222,7 +222,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
             return -1;
     }
 
-    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, &hf_mode, vol_noadouble(vol), vol->v_umask))
+    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, vol, &hf_mode, vol_noadouble(vol)))
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -233,7 +233,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 }
 
 /* ----------------- */
-static int setdirowner_adouble_loop(struct dirent *de _U_, char *name, void *data, int flag _U_, mode_t v_umask _U_)
+static int setdirowner_adouble_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag _U_)
 {
     struct perm   *owner  = data;
 
@@ -257,7 +257,7 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 
     adouble_p = ad_dir(vol->ad_path(name, ADFLAGS_DIR ));
 
-    if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, &owner, noadouble, vol->v_umask)) 
+    if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, vol, &owner, noadouble))
         return -1;
 
     /*
@@ -297,7 +297,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
         if (errno == ENOENT) {
 	        struct adouble    ad;
 
-            if (lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
+            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no ressource fork, */
                 return 0;
 
             /* We are here  because :
@@ -496,7 +496,7 @@ EC_CLEANUP:
 /*********************************************************************************
  * sfm adouble format
  *********************************************************************************/
-static int ads_chown_loop(struct dirent *de _U_, char *name, void *data, int flag _U_, mode_t v_umask _U_)
+static int ads_chown_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag _U_)
 {
     struct perm   *owner  = data;
     
@@ -526,11 +526,11 @@ static int RF_chown_ads(VFS_FUNC_ARGS_CHOWN)
     if (chown( ad_p, uid, gid ) < 0) {
     	return -1;
     }
-    return for_each_adouble("chown_ads", ad_p, ads_chown_loop, &owner, 1, vol->v_umask);
+    return for_each_adouble("chown_ads", ad_p, ads_chown_loop, vol, &owner, 1);
 }
 
 /* --------------------------------- */
-static int deletecurdir_ads1_loop(struct dirent *de _U_, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+static int deletecurdir_ads1_loop(const struct vol *vol _U_, struct dirent *de _U_, char *name, void *data _U_, int flag _U_)
 {
     return netatalk_unlink(name);
 }
@@ -539,19 +539,19 @@ static int ads_delete_rf(char *name)
 {
     int err;
 
-    if ((err = for_each_adouble("deletecurdir", name, deletecurdir_ads1_loop, NULL, 1, 0))) 
+    if ((err = for_each_adouble("deletecurdir", name, deletecurdir_ads1_loop, NULL, NULL, 1)))
         return err;
     /* FIXME 
      * it's a problem for a nfs mounted folder, there's .nfsxxx around
      * for linux the following line solve it.
      * but it could fail if rm .nfsxxx  create a new .nfsyyy :(
     */
-    if ((err = for_each_adouble("deletecurdir", name, deletecurdir_ads1_loop, NULL, 1, 0))) 
+    if ((err = for_each_adouble("deletecurdir", name, deletecurdir_ads1_loop, NULL, NULL, 1))) 
         return err;
     return netatalk_rmdir(-1, name);
 }
 
-static int deletecurdir_ads_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+static int deletecurdir_ads_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     struct stat st;
     
@@ -569,7 +569,7 @@ static int RF_deletecurdir_ads(VFS_FUNC_ARGS_DELETECURDIR)
     int err;
 
     /* delete stray .AppleDouble files. this happens to get .Parent files as well. */
-    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_ads_loop, NULL, 1, 0))) 
+    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_ads_loop, vol, NULL, 1))) 
         return err;
 
     return netatalk_rmdir(-1, ".AppleDouble" );
@@ -581,14 +581,14 @@ struct set_mode {
     struct stat *st;
 };
 
-static int ads_setfilmode_loop(struct dirent *de _U_, char *name, void *data, int flag _U_, mode_t v_umask)
+static int ads_setfilmode_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag _U_)
 {
     struct set_mode *param = data;
 
-    return setfilmode(name, param->mode, param->st, v_umask);
+    return setfilmode(vol, name, param->mode, NULL);
 }
 
-static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
+static int ads_setfilmode(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
 {
     mode_t file_mode = ad_hf_mode(mode);
     mode_t dir_mode = file_mode;
@@ -604,16 +604,16 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
 	/* change folder */
 	dir_mode |= DIRBITS;
     if (dir_rx_set(dir_mode)) {
-        if (chmod_acl( name,  dir_mode ) < 0)
+        if (ochmod(name, dir_mode, st, vol_syml_opt(vol) | O_NETATALK_ACL) < 0)
             return -1;
     }
     param.st = st;
     param.mode = file_mode;
-    if (for_each_adouble("setfilmode_ads", name, ads_setfilmode_loop, &param, 0, v_umask) < 0)
+    if (for_each_adouble("setfilmode_ads", name, ads_setfilmode_loop, vol, &param, 0) < 0)
         return -1;
 
     if (!dir_rx_set(dir_mode)) {
-        if (chmod_acl( name,  dir_mode ) < 0)
+        if (ochmod(name, dir_mode, st, vol_syml_opt(vol) | O_NETATALK_ACL) < 0)
             return -1;
     }
 
@@ -622,7 +622,7 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
 
 static int RF_setfilmode_ads(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    return ads_setfilmode(ad_dir(vol->ad_path(name, ADFLAGS_HF )), mode, st, vol->v_umask);
+    return ads_setfilmode(vol, ad_dir(vol->ad_path(name, ADFLAGS_HF )), mode, st);
 }
 
 /* ------------------- */
@@ -645,7 +645,7 @@ static int RF_setdirunixmode_ads(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             return -1;
     }
 
-    if (ads_setfilmode(ad_dir(vol->ad_path(name, ADFLAGS_DIR)), mode, st, vol->v_umask) < 0)
+    if (ads_setfilmode(vol, ad_dir(vol->ad_path(name, ADFLAGS_DIR)), mode, st) < 0)
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -663,25 +663,25 @@ struct dir_mode {
     int    dropbox;
 };
 
-static int setdirmode_ads_loop(struct dirent *de _U_, char *name, void *data, int flag, mode_t v_umask)
+static int setdirmode_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag)
 {
 
     struct dir_mode *param = data;
     int    ret = 0; /* 0 ignore error, -1 */
 
     if (dir_rx_set(param->mode)) {
-        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, v_umask) < 0) {
+        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, vol->v_umask) < 0) {
             if (flag) {
                 return 0;
             }
             return ret;
         }
     }
-    if (ads_setfilmode(name, param->mode, NULL, v_umask) < 0)
+    if (ads_setfilmode(vol, name, param->mode, NULL) < 0)
         return ret;
 
     if (!dir_rx_set(param->mode)) {
-        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, v_umask) < 0) {
+        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, vol->v_umask) < 0) {
             if (flag) {
                 return 0;
             }
@@ -708,7 +708,7 @@ static int RF_setdirmode_ads(VFS_FUNC_ARGS_SETDIRMODE)
             return -1;
     }
 
-    if (for_each_adouble("setdirmode_ads", ad_dir(ad_p), setdirmode_ads_loop, &param, vol_noadouble(vol), vol->v_umask))
+    if (for_each_adouble("setdirmode_ads", ad_dir(ad_p), setdirmode_ads_loop, vol, &param, vol_noadouble(vol)))
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -719,7 +719,7 @@ static int RF_setdirmode_ads(VFS_FUNC_ARGS_SETDIRMODE)
 }
 
 /* ------------------- */
-static int setdirowner_ads1_loop(struct dirent *de _U_, char *name, void *data, int flag _U_, mode_t v_umask _U_)
+static int setdirowner_ads1_loop(const struct vol *vol _U_, struct dirent *de _U_, char *name, void *data, int flag _U_)
 {
     struct perm   *owner  = data;
 
@@ -731,11 +731,11 @@ static int setdirowner_ads1_loop(struct dirent *de _U_, char *name, void *data, 
     return 0;
 }
 
-static int setdirowner_ads_loop(struct dirent *de _U_, char *name, void *data, int flag, mode_t v_umask _U_)
+static int setdirowner_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag)
 {
     struct perm   *owner  = data;
 
-    if (for_each_adouble("setdirowner", name, setdirowner_ads1_loop, data, flag, 0) < 0)
+    if (for_each_adouble("setdirowner", name, setdirowner_ads1_loop, vol, data, flag) < 0)
         return -1;
 
     if ( chown( name, owner->uid, owner->gid ) < 0 && errno != EPERM ) {
@@ -758,7 +758,7 @@ static int RF_setdirowner_ads(VFS_FUNC_ARGS_SETDIROWNER)
 
     strlcpy(adouble_p, ad_dir(vol->ad_path(name, ADFLAGS_DIR )), sizeof(adouble_p));
 
-    if (for_each_adouble("setdirowner", ad_dir(adouble_p), setdirowner_ads_loop, &owner, noadouble, 0)) 
+    if (for_each_adouble("setdirowner", ad_dir(adouble_p), setdirowner_ads_loop, vol, &owner, noadouble)) 
         return -1;
 
     /*
@@ -822,7 +822,7 @@ static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
         if (errno == ENOENT) {
 	        struct adouble    ad;
 
-            if (lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
+            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no ressource fork, */
                 return 0;
             
             /* We are here  because :
@@ -881,7 +881,7 @@ static int RF_deletecurdir_osx(VFS_FUNC_ARGS_DELETECURDIR)
 /* ---------------- */
 static int RF_setdirunixmode_osx(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_DIR ), mode, st, vol->v_umask);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR), mode, st);
 }
 
 /* ---------------- */
@@ -908,7 +908,7 @@ static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
         struct stat st;
 
         err = errno;
-        if (errno == ENOENT && lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
+        if (errno == ENOENT && ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no ressource fork, */
             return 0;
         errno = err;
         return -1;

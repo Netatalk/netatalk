@@ -331,7 +331,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
        ad_open so that we can keep file locks together.
        FIXME: add the fork we are opening? 
     */
-    if ((opened = of_findname(s_path))) {
+    if ((opened = of_findname(vol, s_path))) {
         adsame = opened->of_ad;
     }
 

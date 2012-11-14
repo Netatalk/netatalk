@@ -688,7 +688,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     }
     
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         adp = &ad;
     } else
@@ -761,7 +761,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
 
     upath = path->u_name;
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         adp = &ad;
     } else
@@ -838,7 +838,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     }
 
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         adp = &ad;
     } else

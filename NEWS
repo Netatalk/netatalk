@@ -2,6 +2,9 @@ Changes in 2.2.5
 ================
 
 * FIX: Fix errors searching volumes
+* NEW: Configurable symlink handling with a new volume option
+       'followsymlinks'. Setting the option causes afpd to follow
+       symlinks on the server side.
 
 Changes in 2.2.4
 ================

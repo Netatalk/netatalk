@@ -894,7 +894,7 @@ int ea_close(struct ea * restrict ea)
             if (ea->ea_count == 0) {
                 /* Check if EA header exists and remove it */
                 eaname = ea_path(ea, NULL, 0);
-                if ((lstatat(ea->dirfd, eaname, &st)) == 0) {
+                if ((statat(ea->dirfd, eaname, &st)) == 0) {
                     if ((netatalk_unlinkat(ea->dirfd, eaname)) != 0) {
                         LOG(log_error, logtype_afpd, "ea_close('%s'): unlink: %s",
                             eaname, strerror(errno));
@@ -1571,7 +1571,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
         }
     }
 
-    if ((lchown(ea_path(&ea, NULL, 0), uid, gid)) != 0) {
+    if ((ochown(ea_path(&ea, NULL, 0), uid, gid, vol_syml_opt(vol))) != 0) {
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1588,7 +1588,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
             ret = AFPERR_MISC;
             goto exit;
         }
-        if ((lchown(eaname, uid, gid)) != 0) {
+        if ((ochown(eaname, uid, gid, vol_syml_opt(vol))) != 0) {
             switch (errno) {
             case EPERM:
             case EACCES:
@@ -1632,7 +1632,7 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
     }
 
     /* Set mode on EA header file */
-    if ((setfilmode(ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+    if ((setfilmode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
         switch (errno) {
         case EPERM:
@@ -1651,7 +1651,7 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
             ret = AFPERR_MISC;
             goto exit;
         }
-        if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
+        if ((setfilmode(vol, eaname, ea_mode(mode), NULL)) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname, strerror(errno));
             switch (errno) {
             case EPERM:
@@ -1708,7 +1708,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     }
 
     /* Set mode on EA header */
-    if ((setfilmode(ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+    if ((setfilmode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
         switch (errno) {
         case EPERM:
@@ -1738,7 +1738,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             ret = AFPERR_MISC;
             goto exit;
         }
-        if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
+        if ((setfilmode(vol, eaname, ea_mode(mode), NULL)) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", eaname, strerror(errno));
             switch (errno) {
             case EPERM:

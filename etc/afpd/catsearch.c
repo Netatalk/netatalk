@@ -193,7 +193,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 	    
 	isdir  = S_ISDIR(path->st.st_mode);
 
-	if (!isdir && (of = of_findname(path))) {
+	if (!isdir && (of = of_findname(vol, path))) {
 		adp = of->of_ad;
 	} else {
 		ad_init(&ad, vol->v_adouble, vol->v_ad_options);
@@ -581,7 +581,7 @@ static int catsearch(struct vol *vol,
 
 			memset(&path, 0, sizeof(path));
 			path.u_name = entry->d_name;
-			if (of_stat(&path) != 0) {
+			if (of_stat(vol, &path) != 0) {
 				switch (errno) {
 				case EACCES:
 				case ELOOP:
@@ -774,7 +774,7 @@ static int catsearch_db(struct vol *vol,
         path.u_name = name;
         path.m_name = utompath(vol, name, cnid, utf8_encoding());
 
-        if (of_stat(&path) != 0) {
+        if (of_stat(vol, &path) != 0) {
             switch (errno) {
             case EACCES:
             case ELOOP:

@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 13 Oct 2011
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
+.\"      Date: 27 Dez 2012
+.\"    Manual: Netatalk 3.0
+.\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "13 Oct 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "27 Dez 2012" "Netatalk 3.0" "Netatalk 3.0"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -58,7 +67,7 @@ path
 The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
 .PP
 The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
-\':\'
+\*(Aq:\*(Aq
 character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .if n \{\
 .sp
@@ -79,7 +88,7 @@ line\&. Though newline escaping is supported\&.
 .sp .5v
 .RE
 .PP
-The leading\-dot lines specify file name extension mappings\&. The extension \'\&.\' sets the default creator and type for otherwise untyped Unix files\&.
+The leading\-dot lines specify file name extension mappings\&. The extension \*(Aq\&.\*(Aq sets the default creator and type for otherwise untyped Unix files\&.
 .if n \{\
 .sp
 .\}
@@ -131,7 +140,7 @@ Specify the format of the metadata files, which are used for saving Mac resource
 .br
 \fBadouble:osx\fR
 \fBcannot\fR
-be treated normally any longer\&. Its only aim was to temporarely share eg\&. FAT32 formatted FireWire harddrives written on a Macintosh with afpd\&. Apple\'s metadata scheme lacks several essential features, so using it on the server\'s side will break both CNIDs and MacOS 9 compatibility\&. AppleDouble file of Mac OS X 10\&.6 is incompatible to V1 and V2\&.
+be treated normally any longer\&. Its only aim was to temporarely share eg\&. FAT32 formatted FireWire harddrives written on a Macintosh with afpd\&. Apple\*(Aqs metadata scheme lacks several essential features, so using it on the server\*(Aqs side will break both CNIDs and MacOS 9 compatibility\&. AppleDouble file of Mac OS X 10\&.6 is incompatible to V1 and V2\&.
 .sp .5v
 .RE
 .RE
@@ -284,14 +293,19 @@ a non\-zero return code from root_preexec closes the volume immediately, prevent
 .PP
 upriv
 .RS 4
-use AFP3 unix privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1 it\'s part of the default config :DEFAULT: line\&. See also:
+use AFP3 unix privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1 it\*(Aqs part of the default config :DEFAULT: line\&. See also:
 \fBperm|fperm|dperm\fR\&.
 .RE
 .PP
 usedots
 .RS 4
-Don\'t do :hex translation for dot files\&. note: when this option gets set, certain file names become illegal\&. These are \&.Parent and anything that starts with \&.Apple\&. See also
+Don\*(Aqt do :hex translation for dot files\&. note: when this option gets set, certain file names become illegal\&. These are \&.Parent and anything that starts with \&.Apple\&. See also
 \fBinvisibledots\fR\&.
+.RE
+.PP
+followsymlinks
+.RS 4
+Follow symlinks on the server\&.
 .RE
 .RE
 .PP
@@ -362,7 +376,7 @@ Allows certain users and groups to have read/write access to a share\&. This fol
 .PP
 veto:\fI[vetoed names]\fR
 .RS 4
-hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. The veto string must always be terminated with a \'/\', eg\&. "veto1/", "veto1/veto2/"\&.
+hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, eg\&. "veto1/", "veto1/veto2/"\&.
 .RE
 .PP
 volcharset:\fI[charset]\fR
@@ -392,7 +406,7 @@ if you specify an unknown variable, it will not get converted\&.
 .sp -1
 .IP "  2." 4.2
 .\}
-if you specify a known variable, but that variable doesn\'t have a value, it will get ignored\&.
+if you specify a known variable, but that variable doesn\*(Aqt have a value, it will get ignored\&.
 .RE
 .PP
 The variables which can be used for substitutions are:
@@ -404,7 +418,7 @@ basename
 .PP
 $c
 .RS 4
-client\'s ip or appletalk address
+client\*(Aqs ip or appletalk address
 .RE
 .PP
 $d
@@ -429,7 +443,7 @@ hostname
 .PP
 $i
 .RS 4
-client\'s ip, without port
+client\*(Aqs ip, without port
 .RE
 .PP
 $s
@@ -473,13 +487,13 @@ prints dollar sign ($)
 We define "groupdirs" for each primary group and use a personalized server name for homedir shares\&.
 .SH "CNID BACKENDS"
 .PP
-The AFP protocol mostly refers to files and directories by ID and not by name\&. Netatalk needs a way to store these ID\'s in a persistent way, to achieve this several different CNID backends are available\&. The CNID Databases are by default located in the
+The AFP protocol mostly refers to files and directories by ID and not by name\&. Netatalk needs a way to store these ID\*(Aqs in a persistent way, to achieve this several different CNID backends are available\&. The CNID Databases are by default located in the
 \&.AppleDB
 folder in the volume root\&.
 .PP
 cdb
 .RS 4
-"Concurrent database", backend is based on Sleepycat\'s Berkely DB\&. With this backend several
+"Concurrent database", backend is based on Sleepycat\*(Aqs Berkely DB\&. With this backend several
 \fBafpd\fR
 deamons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR
@@ -500,7 +514,7 @@ processes communicate with the daemon for database reads and updates\&. If built
 .PP
 last
 .RS 4
-This backend is an exception, in terms of ID persistency\&. ID\'s are only valid for the current session\&. This is basically what
+This backend is an exception, in terms of ID persistency\&. ID\*(Aqs are only valid for the current session\&. This is basically what
 \fBafpd\fR
 did in the 1\&.5 (and 1\&.6) versions\&. This backend is still available, as it is useful for e\&.g\&. sharing cdroms\&.
 .sp
@@ -513,20 +527,20 @@ now relies heavily on a persistent ID database\&. Aliases will likely not work a
 .PP
 Even though
 \fB\&./configure \-\-help\fR
-might show that there are other CNID backends available, be warned those are likely broken or mainly used for testing\&. Don\'t use them unless you know what you\'re doing, they may be removed without further notice from future versions\&.
+might show that there are other CNID backends available, be warned those are likely broken or mainly used for testing\&. Don\*(Aqt use them unless you know what you\*(Aqre doing, they may be removed without further notice from future versions\&.
 .SH "CHARSET OPTIONS"
 .PP
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
 needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0XF0) was saved as
-:f0\&. Some special characters will be converted as to :xx notation as well\&. \'/\' will be encoded to
+:f0\&. Some special characters will be converted as to :xx notation as well\&. \*(Aq/\*(Aq will be encoded to
 :2f, if
 \fBusedots\fR
-is not specified, a leading dot \'\&.\' will be encoded as
+is not specified, a leading dot \*(Aq\&.\*(Aq will be encoded as
 :2e\&.
 .PP
-This version now uses UTF\-8 as the default encoding for names\&. Special characters, like \'/\' and a leading \'\&.\' will still be CAP style encoded \&.
+This version now uses UTF\-8 as the default encoding for names\&. Special characters, like \*(Aq/\*(Aq and a leading \*(Aq\&.\*(Aq will still be CAP style encoded \&.
 .PP
 The
 \fB\-volcharset\fR
@@ -539,14 +553,14 @@ provided charset\&. If a character cannot be converted from the mac codepage to 
 will convert the UTF\-8
 character to
 \fB\-maccharset\fR
-first\&. If this conversion fails, you\'ll receive a \-50 error on the mac\&.
+first\&. If this conversion fails, you\*(Aqll receive a \-50 error on the mac\&.
 .PP
 \fINote\fR: Whenever you can, please stick with the default UTF\-8 volume format\&.
 .SH "COMPATIBILITY WITH EARLIER VERSIONS"
 .PP
 To use a volume created with an earlier
 \fBafpd\fR
-version, you\'ll have to specify the following options:
+version, you\*(Aqll have to specify the following options:
 .PP
 \fBExample.\ \&use a 1.x style volume\fR
 .sp
@@ -580,7 +594,7 @@ You should consider converting old style volumes to the new UTF\-8/AD2 format\&.
 \fINote\fR: Using above example options will allow you to downgrade to 1\&.x netatalk again\&.
 .PP
 \fINote\fR: Some 1\&.x NLS files used non standard mappings, e\&.g\&.
-maccode\&.iso8859\-1\&.adapted\&. Three 1\&.x CAP double\-byte maccharsets are incompatible to netatalk 2\&.x; "MAC_CHINESE_TRAD", "MAC_JAPANESE" and "MAC_KOREAN"\&. These are not supported anymore\&. You\'ll have to copy the contents of those volumes files to a Mac and then back to the netatalk server, preferably to an UTF\-8 volume\&.
+maccode\&.iso8859\-1\&.adapted\&. Three 1\&.x CAP double\-byte maccharsets are incompatible to netatalk 2\&.x; "MAC_CHINESE_TRAD", "MAC_JAPANESE" and "MAC_KOREAN"\&. These are not supported anymore\&. You\*(Aqll have to copy the contents of those volumes files to a Mac and then back to the netatalk server, preferably to an UTF\-8 volume\&.
 .SH "ADVANCED OPTIONS"
 .PP
 The following options should only be used after serious consideration\&. Be sure you fully understood the, sometimes complex, consequences, before using them\&.
@@ -660,7 +674,7 @@ to not create \&.AppleDouble directories unless macintosh metadata needs to be w
 \fBafpd\fR
 to not automatically create \&.AppleDouble subdirs containing AD header files in every directory it enters (which will it do by default)\&.
 .sp
-In case, you save or change files from mac clients, AD metadata files have to be written even in case you set this option\&. So you can\'t avoid the creation of \&.AppleDouble directories and its contents when you give macs write access to a share and they make use of it\&.
+In case, you save or change files from mac clients, AD metadata files have to be written even in case you set this option\&. So you can\*(Aqt avoid the creation of \&.AppleDouble directories and its contents when you give macs write access to a share and they make use of it\&.
 .sp
 Try to avoid
 \fBnoadouble\fR
@@ -671,7 +685,7 @@ nocnidcache
 .RS 4
 If set
 \fBafpd\fR
-doesn\'t store the ID information in AppleDouble V2 header files\&. As these IDs are used for caching and as a database backup, this option normally shouldn\'t be set\&.
+doesn\*(Aqt store the ID information in AppleDouble V2 header files\&. As these IDs are used for caching and as a database backup, this option normally shouldn\*(Aqt be set\&.
 .RE
 .PP
 nodev
@@ -681,18 +695,18 @@ always use 0 for device number, helps when the device number is not constant acr
 .PP
 nofileid
 .RS 4
-don\'t advertise createfileid, resolveid, deleteid calls\&.
+don\*(Aqt advertise createfileid, resolveid, deleteid calls\&.
 .RE
 .PP
 nohex
 .RS 4
 Disables :hex translations for anything except dot files\&. This option makes the
-\'/\' character illegal\&.
+\*(Aq/\*(Aq character illegal\&.
 .RE
 .PP
 nostat
 .RS 4
-don\'t stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
+don\*(Aqt stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
 .RE
 .PP
 prodos

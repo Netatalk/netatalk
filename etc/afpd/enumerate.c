@@ -283,7 +283,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     if ( sindex == 1 || curdir->d_did != sd.sd_did || vid != sd.sd_vid ) {
         sd.sd_last = sd.sd_buf;
         /* if dir was in the cache we don't have the inode */
-        if (( !o_path->st_valid && lstat( ".", &o_path->st ) < 0 ) ||
+        if (( !o_path->st_valid && ostat(".", &o_path->st, vol_syml_opt(vol)) < 0 ) ||
             (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
         {
             LOG(log_error, logtype_afpd, "enumerate: loop error: %s (%d)", strerror(errno), errno);
@@ -347,7 +347,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         }
         memset(&s_path, 0, sizeof(s_path));
         s_path.u_name = sd.sd_last;
-        if (of_stat( &s_path) < 0 ) {
+        if (of_stat(vol, &s_path) < 0 ) {
             /*
              * Somebody else plays with the dir, well it can be us with 
             * "Empty Trash..."

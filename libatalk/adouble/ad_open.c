@@ -1013,8 +1013,8 @@ int ad_stat(const char *path, struct stat *stbuf)
     if (!p) {
         return -1;
     }
-//FIXME!
-    return lstat( p, stbuf );
+
+    return stat(p, stbuf);
 }
 
 /* ----------------
@@ -1036,7 +1036,7 @@ static int ad_chown(const char *path, struct stat *stbuf)
     if (default_uid != (uid_t)-1) {
         /* we are root (admin) */
         id = (default_uid)?default_uid:stbuf->st_uid;
-        ret = lchown( path, id, stbuf->st_gid );
+        ret = chown(path, id, stbuf->st_gid);
     }
 #endif
     return ret;
@@ -1284,12 +1284,12 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 }
             }
                 
-            ad->ad_data_fork.adf_fd =open( path, hoflags | O_NOFOLLOW, admode );
+            ad->ad_data_fork.adf_fd = open(path, hoflags | ad_get_syml_opt(ad), admode);
             
             if (ad->ad_data_fork.adf_fd == -1) {
                 if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
                     hoflags = oflags;
-                    ad->ad_data_fork.adf_fd = open( path, hoflags | O_NOFOLLOW, admode );
+                    ad->ad_data_fork.adf_fd = open( path, hoflags | ad_get_syml_opt(ad), admode );
                 }
                 if (ad->ad_data_fork.adf_fd == -1 && errno == OPEN_NOFOLLOW_ERRNO) {
                     int lsz;
@@ -1366,11 +1366,11 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
     if (!(adflags & ADFLAGS_RDONLY)) {
         hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
     }
-    ad->ad_md->adf_fd = open( ad_p, hoflags | O_NOFOLLOW, 0 );
+    ad->ad_md->adf_fd = open(ad_p, hoflags | ad_get_syml_opt(ad), 0);
     if (ad->ad_md->adf_fd < 0 ) {
         if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
             hoflags = oflags & ~(O_CREAT | O_EXCL);
-            ad->ad_md->adf_fd = open( ad_p, hoflags | O_NOFOLLOW, 0 );
+            ad->ad_md->adf_fd = open(ad_p, hoflags | ad_get_syml_opt(ad), 0);
         }
     }
 
@@ -1391,7 +1391,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
             }
             admode = ad_hf_mode(admode);
             if ((errno == ENOENT) && (ad->ad_flags != AD_VERSION2_OSX)) {
-                if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
+                if (ad->ad_ops->ad_mkrf(ad_p) < 0) {
                     return ad_error(ad, adflags);
                 }
                 admode = mode;
@@ -1673,7 +1673,7 @@ static int new_rfork(const char *path, struct adouble *ad, int adflags)
         memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
     }
 
-    if (lstat(path, &st) < 0) {
+    if (ostat(path, &st, ad_get_syml_opt(ad)) < 0) {
         return -1;
     }
 

@@ -293,6 +293,8 @@ struct adouble_fops {
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_NOADOUBLE  (1 << 4)
+#define ADVOL_FOLLO_SYML (1 << 5)
+
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -416,6 +418,8 @@ struct adouble_fops {
 
 #define ad_get_HF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
 #define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
+
+#define ad_get_syml_opt(ad) (((ad)->ad_options & ADVOL_FOLLO_SYML) ? 0 : O_NOFOLLOW)
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header (struct adouble *);

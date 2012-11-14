@@ -17,6 +17,9 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <poll.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+
 #include <netatalk/at.h>
 
 #include <atalk/unicode.h>
@@ -187,9 +190,14 @@ extern int recv_fd(int fd, int nonblocking);
 extern const char *getcwdpath(void);
 extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);
-extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 extern int daemonize(int nochdir, int noclose);
+
+extern int ochdir(const char *dir, int options);
+extern int ostat(const char *path, struct stat *buf, int options);
+extern int ostatat(int dirfd, const char *path, struct stat *st, int options);
+extern int ochown(const char *path, uid_t owner, gid_t group, int options);
+extern int ochmod(const char *path, mode_t mode, const struct stat *st, int options);
 
 /******************************************************************
  * cnid.c
