@@ -33,7 +33,7 @@ int dir_rx_set(mode_t mode)
 }
 
 /* --------------------- */
-int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
+int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 {
     struct stat sb;
     mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by default */
@@ -44,12 +44,9 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
         st = &sb;
     }
 
-    if (S_ISLNK(st->st_mode))
-        return 0; /* we don't want to change link permissions */
-    
     mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
 
-    if ( chmod_acl( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
+    if (ochmod(name, mode & ~vol->v_umask, st, vol_syml_opt(vol) | O_NETATALK_ACL) < 0 && errno != EPERM ) {
         return -1;
     }
     return 0;
@@ -328,29 +325,6 @@ int statat(int dirfd, const char *path, struct stat *st)
     return (fstatat(dirfd, path, st, 0));
 #else
     return (stat(path, st));
-#endif            
-
-    /* DEADC0DE */
-    return -1;
-}
-
-/* 
- * @brief lstat/fsstatat multiplexer
- *
- * lstatat mulitplexes lstat and fstatat. If we dont HAVE_ATFUNCS, dirfd is ignored.
- *
- * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
- * @param path    (r) pathname
- * @param st      (rw) pointer to struct stat
- */
-int lstatat(int dirfd, const char *path, struct stat *st)
-{
-#ifdef HAVE_ATFUNCS
-    if (dirfd == -1)
-        dirfd = AT_FDCWD;
-    return (fstatat(dirfd, path, st, AT_SYMLINK_NOFOLLOW));
-#else
-    return (lstat(path, st));
 #endif            
 
     /* DEADC0DE */

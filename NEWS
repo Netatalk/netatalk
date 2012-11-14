@@ -22,6 +22,12 @@ Changes in 3.0.2
        when dbd was scanning their volumes. Fixes bug #477.
 * FIX: Netatalk didn't start when the last line of the config file
        afp.conf wasn't terminated by a newline. Fixes bug #476.
+* NEW: Add a new volumes option 'follow symlinks'. The default setting is
+       false, symlinks are not followed on the server. This is the same
+       behaviour as OS X's AFP server.
+       Setting the option to true causes afpd to follow symlinks on the
+       server. symlinks may point outside of the AFP volume, currently
+       afpd doesn't do any checks for "wide symlinks".
 
 Changes in 3.0.1
 ================

@@ -21,6 +21,8 @@
 
 #ifdef HAVE_ACLS
 
+#define O_NETATALK_ACL (O_NOFOLLOW << 1)
+
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 
@@ -51,6 +53,7 @@ extern int remove_acl_vfs(const char *name);
 
 #else /* HAVE_ACLS=no */
 
+#define O_NETATALK_ACL
 #define chmod_acl chmod
 
 #endif /* HAVE_ACLS */

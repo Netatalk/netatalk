@@ -830,7 +830,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
     }
     
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol);
         adp = &ad;
     } else
@@ -905,7 +905,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
 
     upath = path->u_name;
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol);
         adp = &ad;
     } else
@@ -982,7 +982,7 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     }
 
     isadir = path_isadir(path);
-    if (isadir || !(of = of_findname(path))) {
+    if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol);
         adp = &ad;
     } else

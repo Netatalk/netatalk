@@ -773,6 +773,8 @@ static struct vol *creatvol(AFPObj *obj,
 #endif
     if (!getoption_bool(obj->iniconfig, section, "convert appledouble", preset, 1))
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
+    if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
+        volume->v_flags |= AFPVOL_FOLLOWSYM;
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;
@@ -800,6 +802,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_UNIXPRIV;
     if ((volume->v_flags & AFPVOL_INV_DOTS))
         volume->v_ad_options |= ADVOL_INVDOTS;
+    if ((volume->v_flags & AFPVOL_FOLLOWSYM))
+        volume->v_ad_options |= ADVOL_FOLLO_SYML;
 
     /* Mac to Unix conversion flags*/
     if ((volume->v_flags & AFPVOL_EILSEQ))

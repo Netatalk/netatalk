@@ -808,6 +808,9 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     if (adflags & ADFLAGS_TRUNC)
         oflags |= O_TRUNC;
 
+    if (!(ad->ad_options & ADVOL_FOLLO_SYML))
+        oflags |= O_NOFOLLOW;
+
     return oflags;
 }
 
@@ -841,7 +844,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
         goto EC_CLEANUP;
     }
 
-    oflags = O_NOFOLLOW | ad2openflags(ad, ADFLAGS_DF, adflags);
+    oflags = ad2openflags(ad, ADFLAGS_DF, adflags);
 
     admode = mode;
     if ((adflags & ADFLAGS_CREATE)) {
@@ -929,7 +932,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
     }
 
     ad_p = ad->ad_ops->ad_path(path, adflags);
-    oflags = O_NOFOLLOW | ad2openflags(ad, ADFLAGS_HF, adflags);
+    oflags = ad2openflags(ad, ADFLAGS_HF, adflags);
     LOG(log_debug, logtype_ad,"ad_open_hf_v2(\"%s\"): open flags: %s",
         fullpathname(path), openflags2logstr(oflags));
     nocreatflags = oflags & ~(O_CREAT | O_EXCL);
@@ -1041,7 +1044,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
-    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
+    oflags = ad2openflags(ad, ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC);
 
     if (ad_meta_fileno(ad) == AD_SYMLINK)
         goto EC_CLEANUP;
@@ -1221,7 +1224,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
 
     LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
-    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_RF, adflags) & ~O_CREAT);
+    oflags = ad2openflags(ad, ADFLAGS_RF, adflags) & ~O_CREAT;
 
     if (ad_reso_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -1500,7 +1503,7 @@ int ad_stat(const char *path, struct stat *stbuf)
     p = ad_dir(path);
     if (!p)
         return -1;
-    return lstat( p, stbuf );
+    return stat( p, stbuf );
 }
 
 /* ----------------

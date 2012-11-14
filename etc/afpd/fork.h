@@ -59,13 +59,13 @@ extern struct ofork *of_alloc    (struct vol *, struct dir *,
                                                       struct stat *);
 extern void         of_dealloc   (struct ofork *);
 extern struct ofork *of_find     (const uint16_t);
-extern struct ofork *of_findname (struct path *);
+extern struct ofork *of_findname (const struct vol *vol, struct path *);
 extern int          of_rename    (const struct vol *,
                                           struct ofork *,
                                           struct dir *, const char *,
                                           struct dir *, const char *);
 extern int          of_flush     (const struct vol *);
-extern int          of_stat      (struct path *);
+extern int          of_stat      (const struct vol *vol, struct path *);
 extern int          of_statdir   (struct vol *vol, struct path *);
 extern int          of_closefork (const AFPObj *obj, struct ofork *ofork);
 extern void         of_closevol  (const AFPObj *obj, const struct vol *vol);

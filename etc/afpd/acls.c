@@ -1380,7 +1380,7 @@ static int check_acl_access(const AFPObj *obj,
     }
 #endif
 
-    EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
+    EC_ZERO_LOG_ERR(ostat(path, &st, vol_syml_opt(vol)), AFPERR_PARAM);
 
     is_dir = !strcmp(path, ".");
 

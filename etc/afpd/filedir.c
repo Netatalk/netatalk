@@ -346,7 +346,7 @@ static int moveandrename(struct vol *vol,
     if ( !isdir ) {
         path.st_valid = 1;
         path.st_errno = errno;
-        if (of_findname(&path)) {
+        if (of_findname(vol, &path)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
         } else {
             rc = renamefile(vol, curdir, sdir_fd, oldunixname, upath, newname, adp );
@@ -536,7 +536,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
                 fce_register(FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL, fce_dir);
             bdestroy(dname);
         }
-    } else if (of_findname(s_path)) {
+    } else if (of_findname(vol, s_path)) {
         rc = AFPERR_BUSY;
     } else {
         /* it's a file st_valid should always be true
@@ -703,8 +703,8 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         if (!isdir && !vol_unix_priv(vol)) {
             int  admode = ad_mode("", 0777) | vol->v_fperm;
 
-            setfilmode(upath, admode, NULL, vol->v_umask);
-            vol->vfs->vfs_setfilmode(vol, upath, admode, NULL);
+            setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
+            vol->vfs->vfs_setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
         }
         setvoltime(obj, vol );
     }
