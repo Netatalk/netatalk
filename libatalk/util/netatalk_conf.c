@@ -571,9 +571,6 @@ static struct vol *creatvol(AFPObj *obj,
     uint16_t    flags;
     const char  *val;
     char        *p, *q;
-    bool        new_vol_nested = false; /* flag whether the new volume path is a subdirectory
-                                        *  of an existing directory in which case we force
-                                        * "last" cnidsheme and read only behaviour */
 
     strlcpy(path, path_in, MAXPATHLEN);
 
@@ -613,21 +610,12 @@ static struct vol *creatvol(AFPObj *obj,
                     shorter_path = path;
                     longer_path = vol->v_path;
                 } else {
-                    new_vol_nested = true;
                     shorter_len = another_pathlen;
                     shorter_path = vol->v_path;
                     longer_path = path;
                 }
-                if (longer_path[shorter_len] == '/') {
-                    if (!new_vol_nested && STRCMP(vol->v_cnidscheme, !=, "last")) {
-                        /* the volume "vol" is nested, we must force cnidscheme "last" and read-only */
-                        LOG(log_warning, logtype_afpd, "volume \"%s\" path \"%s\" is nested, set to read-only",
-                            vol->v_configname, vol->v_path);
-                        vol->v_flags = AFPVOL_RO;
-                        free(vol->v_cnidscheme);
-                        vol->v_cnidscheme = strdup("last");
-                    }
-                }
+                if (longer_path[shorter_len] == '/')
+                    LOG(log_info, logtype_afpd, "volume \"%s\" paths are nested: \"%s\" and \"%s\"", name, path, vol->v_path);
             }
         }
     }
@@ -794,14 +782,6 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_preexec_close = 1;
     if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
         volume->v_root_preexec_close = 1;
-
-    /* Fixup for nested volume */
-    if (new_vol_nested && strcmp(volume->v_cnidscheme, "last")) {
-        LOG(log_note, logtype_afpd, "volume \"%s\" is changed into cnid last and read only. path is nested: \"%s\"",
-            name, path);
-        free(volume->v_cnidscheme);
-        volume->v_cnidscheme = strdup("last");
-    }
 
     /*
      * Handle read-only behaviour. semantics:
