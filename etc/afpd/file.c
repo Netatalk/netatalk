@@ -838,7 +838,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
     u_char              finder_buf[32];
-    int symlinked = 0;
+    int symlinked = S_ISLNK(path->st.st_mode);
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");

@@ -7,6 +7,7 @@ Changes in 3.0.2
 * FIX: "basedir regex" was never able to treat symlink.
        If /home -> /usr/home, set "basedir regex = /usr/home".
 * FIX: Memory leak
+* FIX: Copying packages to a Netatalk share could fail, bug #469
 
 Changes in 3.0.1
 ================
