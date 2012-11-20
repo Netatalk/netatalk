@@ -1,5 +1,6 @@
 EXTRA_DIST = \
 	afs-check.m4		\
+	ax_pthread.m4		\
 	cnid-backend.m4		\
 	config-checks.m4	\
 	db3-check.m4		\
@@ -17,4 +18,3 @@ EXTRA_DIST = \
 	summary.m4		\
 	tcp-wrappers.m4		\
 	util.m4
-
