@@ -253,6 +253,13 @@ int main(int ac, char **av)
         afp_exit(EXITERR_SYS);
     }
 #endif
+
+    sv.sa_handler = SIG_IGN;
+    sigemptyset( &sv.sa_mask );
+    if (sigaction(SIGPIPE, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
+        afp_exit(EXITERR_SYS);
+    }
     
     sv.sa_handler = afp_goaway; /* handler for all sigs */
 
