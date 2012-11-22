@@ -50,15 +50,16 @@ static pthread_t       poller;
         free(str); free(key);                           \
     }
 
+static struct pollfd *fds;
 
 /*
  * This is the thread that polls the filehandles
  */
-void *polling_thread(void *arg) {
+static void *polling_thread(void *arg) {
     // First we loop through getting the filehandles and adding them to our poll, we
     // need to allocate our pollfd's
     DNSServiceErrorType error;
-    struct pollfd           *fds = calloc(svc_ref_count, sizeof(struct pollfd));
+    fds = calloc(svc_ref_count, sizeof(struct pollfd));
     assert(fds);
 
     for(int i=0; i < svc_ref_count; i++) {
@@ -78,28 +79,32 @@ void *polling_thread(void *arg) {
     return(NULL);
 }
 
-
 /*
  * This is the callback for the service register function ... actually there isn't a lot
  * we can do if we get problems, so we don't really need to do anything other than report
  * the issue.
  */
-void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode,
-                   const char *name, const char *regtype, const char *domain, void *context) {
-
-    if(errorCode != kDNSServiceErr_NoError) {
+static void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode,
+                          const char *name, const char *regtype, const char *domain, void *context)
+{
+    if (errorCode != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to register mDNS service: %s%s%s: code=%d",
             name, regtype, domain, errorCode);
     }
 }
-
 
 /*
  * This function unregisters anything we have already
  * registered and frees associated memory
  */
 static void unregister_stuff() {
-    pthread_kill(poller, SIGKILL);
+    pthread_cancel(poller);    
+
+    for (int i = 0; i < svc_ref_count; i++)
+        close(fds[i].fd);
+    free(fds);
+    fds = NULL;
+
     if(svc_refs) {
         for(int i=0; i < svc_ref_count; i++) {
             DNSServiceRefDeallocate(svc_refs[i]);

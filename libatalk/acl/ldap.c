@@ -23,6 +23,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #define LDAP_DEPRECATED 1
 #include <ldap.h>
 
@@ -56,21 +57,22 @@ char *ldap_uid_attr;
 int  ldap_uuid_encoding;
 
 struct ldap_pref ldap_prefs[] = {
-    {&ldap_server,     "ldap server",      0, 0, -1},
-    {&ldap_auth_method,"ldap auth method", 1, 1, -1},
-    {&ldap_auth_dn,    "ldap auth dn",     0, 0,  0},
-    {&ldap_auth_pw,    "ldap auth pw",     0, 0,  0},
-    {&ldap_userbase,   "ldap userbase",    0, 0, -1},
-    {&ldap_userscope,  "ldap userscope",   1 ,1, -1},
-    {&ldap_groupbase,  "ldap groupbase",   0, 0, -1},
-    {&ldap_groupscope, "ldap groupscope",  1 ,1, -1},
-    {&ldap_uuid_attr,  "ldap uuid attr",   0, 0, -1},
-    {&ldap_uuid_string,"ldap uuid string", 0, 0,  0},
-    {&ldap_name_attr,  "ldap name attr",   0, 0, -1},
-    {&ldap_group_attr, "ldap group attr",  0, 0, -1},
-    {&ldap_uid_attr,   "ldap uid attr",    0, 0,  0},
-    {&ldap_uuid_encoding,"ldap uuid encoding", 1, 1,  0},
-    {NULL,             NULL,               0, 0, -1}
+    /* pointer to pref,    prefname,              strorint, intfromarray, valid, valid_save */
+    {&ldap_server,         "ldap server",         0, 0, -1, -1},
+    {&ldap_auth_method,    "ldap auth method",    1, 1, -1, -1},
+    {&ldap_auth_dn,        "ldap auth dn",        0, 0,  0,  0},
+    {&ldap_auth_pw,        "ldap auth pw",        0, 0,  0,  0},
+    {&ldap_userbase,       "ldap userbase",       0, 0, -1, -1},
+    {&ldap_userscope,      "ldap userscope",      1 ,1, -1, -1},
+    {&ldap_groupbase,      "ldap groupbase",      0, 0, -1, -1},
+    {&ldap_groupscope,     "ldap groupscope",     1 ,1, -1, -1},
+    {&ldap_uuid_attr,      "ldap uuid attr",      0, 0, -1, -1},
+    {&ldap_uuid_string,    "ldap uuid string",    0, 0,  0,  0},
+    {&ldap_name_attr,      "ldap name attr",      0, 0, -1, -1},
+    {&ldap_group_attr,     "ldap group attr",     0, 0, -1, -1},
+    {&ldap_uid_attr,       "ldap uid attr",       0, 0,  0,  0},
+    {&ldap_uuid_encoding,  "ldap uuid encoding",  1, 1,  0,  0},
+    {NULL,                 NULL,                  0, 0,  0,  0}
 };
 
 struct pref_array prefs_array[] = {

@@ -21,7 +21,7 @@
 #include <atalk/volume.h>
 
 extern int        afp_config_parse(AFPObj *obj, char *processname);
-
+extern void       afp_config_free(AFPObj *obj);
 extern int        load_charset(struct vol *vol);
 extern int        load_volumes(AFPObj *obj);
 extern void       unload_volumes(AFPObj *obj);

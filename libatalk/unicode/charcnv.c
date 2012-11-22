@@ -95,6 +95,16 @@ int set_charset_name(charset_t ch, const char *name)
     return 0;
 }
 
+void free_charset_names(void)
+{
+    for (int ch = 0; ch < MAX_CHARSETS; ch++) {
+        if (charset_names[ch]) {
+            free(charset_names[ch]);
+            charset_names[ch] = NULL;
+        }
+    }
+}
+
 static struct charset_functions* get_charset_functions (charset_t ch)
 {
     if (charsets[ch] != NULL)

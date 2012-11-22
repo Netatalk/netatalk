@@ -116,6 +116,13 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
+/* SIGQUIT callback */
+static void sighup_cb(evutil_socket_t fd, short what, void *arg)
+{
+    LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
+    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
+}
+
 /* SIGCHLD callback */
 static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 {
@@ -296,6 +303,7 @@ int main(int argc, char **argv)
 
     sigterm_ev = event_new(base, SIGTERM, EV_SIGNAL, sigterm_cb, NULL);
     sigquit_ev = event_new(base, SIGQUIT, EV_SIGNAL | EV_PERSIST, sigquit_cb, NULL);
+    sigquit_ev = event_new(base, SIGHUP,  EV_SIGNAL | EV_PERSIST, sighup_cb, NULL);
     sigchld_ev = event_new(base, SIGCHLD, EV_SIGNAL | EV_PERSIST, sigchld_cb, NULL);
     timer_ev = event_new(base, -1, EV_PERSIST, timer_cb, NULL);
 
@@ -311,6 +319,7 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGTERM);
     sigdelset(&blocksigs, SIGQUIT);
     sigdelset(&blocksigs, SIGCHLD);
+    sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
     /* run the event loop */

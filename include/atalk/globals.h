@@ -147,7 +147,6 @@ extern const char         *Cnid_port;
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
-extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);
 extern void readmessage (AFPObj *);
 

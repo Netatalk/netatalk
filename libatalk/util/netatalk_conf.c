@@ -1754,11 +1754,11 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             LOG(log_debug, logtype_afpd, "Locale charset is '%s'", p);
 #else /* system doesn't have LOCALE support */
             LOG(log_warning, logtype_afpd, "system doesn't have LOCALE support");
-            p = strdup("UTF8");
+            p = "UTF8";
 #endif
         }
         if (strcasecmp(p, "UTF-8") == 0) {
-            p = strdup("UTF8");
+            p = "UTF8";
         }
         options->unixcodepage = strdup(p);
         set_charset_name(CH_UNIX, p);
@@ -1771,7 +1771,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->volcodepage = strdup(options->unixcodepage);
     } else {
         if (strcasecmp(p, "UTF-8") == 0) {
-            p = strdup("UTF8");
+            p = "UTF8";
         }
         options->volcodepage = strdup(p);
     }
@@ -1814,4 +1814,79 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
 EC_CLEANUP:
     EC_EXIT;
+}
+
+#define CONFIG_ARG_FREE(a) do {                     \
+    free(a);                                        \
+    a = NULL;                                       \
+    } while (0);
+
+/* get rid of any allocated afp_option buffers. */
+void afp_config_free(AFPObj *obj)
+{
+    if (obj->options.configfile)
+        CONFIG_ARG_FREE(obj->options.configfile);
+    if (obj->options.sigconffile)
+        CONFIG_ARG_FREE(obj->options.sigconffile);
+    if (obj->options.uuidconf)
+        CONFIG_ARG_FREE(obj->options.uuidconf);
+    if (obj->options.logconfig)
+        CONFIG_ARG_FREE(obj->options.logconfig);
+    if (obj->options.logfile)
+        CONFIG_ARG_FREE(obj->options.logfile);
+    if (obj->options.loginmesg)
+        CONFIG_ARG_FREE(obj->options.loginmesg);
+    if (obj->options.guest)
+        CONFIG_ARG_FREE(obj->options.guest);
+    if (obj->options.extmapfile)
+        CONFIG_ARG_FREE(obj->options.extmapfile);
+    if (obj->options.passwdfile)
+        CONFIG_ARG_FREE(obj->options.passwdfile);
+    if (obj->options.uampath)
+        CONFIG_ARG_FREE(obj->options.uampath);
+    if (obj->options.uamlist)
+        CONFIG_ARG_FREE(obj->options.uamlist);
+    if (obj->options.port)
+        CONFIG_ARG_FREE(obj->options.port);
+    if (obj->options.signatureopt)
+        CONFIG_ARG_FREE(obj->options.signatureopt);
+    if (obj->options.k5service)
+        CONFIG_ARG_FREE(obj->options.k5service);
+    if (obj->options.k5realm)
+        CONFIG_ARG_FREE(obj->options.k5realm);
+    if (obj->options.listen)
+        CONFIG_ARG_FREE(obj->options.listen);
+    if (obj->options.ntdomain)
+        CONFIG_ARG_FREE(obj->options.ntdomain);
+    if (obj->options.ntseparator)
+        CONFIG_ARG_FREE(obj->options.ntseparator);
+    if (obj->options.mimicmodel)
+        CONFIG_ARG_FREE(obj->options.mimicmodel);
+    if (obj->options.adminauthuser)
+        CONFIG_ARG_FREE(obj->options.adminauthuser);
+    if (obj->options.hostname)
+        CONFIG_ARG_FREE(obj->options.hostname);
+    if (obj->options.k5keytab)
+        CONFIG_ARG_FREE(obj->options.k5keytab);
+    if (obj->options.Cnid_srv)
+        CONFIG_ARG_FREE(obj->options.Cnid_srv);
+    if (obj->options.Cnid_port)
+        CONFIG_ARG_FREE(obj->options.Cnid_port);
+    if (obj->options.fqdn)
+        CONFIG_ARG_FREE(obj->options.fqdn);
+
+    if (obj->options.unixcodepage)
+        CONFIG_ARG_FREE(obj->options.unixcodepage);
+    if (obj->options.maccodepage)
+        CONFIG_ARG_FREE(obj->options.maccodepage);
+    if (obj->options.volcodepage)
+        CONFIG_ARG_FREE(obj->options.volcodepage);
+
+    obj->options.flags = 0;
+    obj->options.passwdbits = 0;
+
+    /* Free everything called from afp_config_parse() */
+    free_extmap();
+    iniparser_freedict(obj->iniconfig);
+    free_charset_names();
 }

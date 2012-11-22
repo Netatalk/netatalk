@@ -44,55 +44,6 @@
 
 #define LENGTH 512
 
-/* get rid of any allocated afp_option buffers. */
-void afp_options_free(struct afp_options *opt)
-{
-	if (opt->hostname)
-        free(opt->hostname);
-	if (opt->adminauthuser)
-        free(opt->adminauthuser);
-	if (opt->configfile)
-        free(opt->configfile);
-    if (opt->fqdn)
-        free(opt->fqdn);
-    if (opt->guest)
-        free(opt->guest);
-    if (opt->listen)
-        free(opt->listen);
-    if (opt->k5realm)
-        free(opt->k5realm);
-    if (opt->k5keytab)
-        free(opt->k5keytab);
-    if (opt->k5service)
-        free(opt->k5service);
-    if (opt->logconfig)
-        free(opt->logconfig);
-    if (opt->logfile)
-        free(opt->logfile);
-    if (opt->loginmesg)
-        free(opt->loginmesg);
-    if (opt->maccodepage)
-        free(opt->maccodepage);
-	if (opt->mimicmodel)
-        free(opt->mimicmodel);
-    if (opt->ntdomain)
-        free(opt->ntdomain);
-    if (opt->ntseparator)
-        free(opt->ntseparator);
-    if (opt->passwdfile)
-        free(opt->passwdfile);
-    if (opt->port)
-        free(opt->port);
-    if (opt->signatureopt)
-        free(opt->signatureopt);
-    if (opt->uamlist)
-        free(opt->uamlist);
-    if (opt->uampath)
-        free(opt->uampath);
-    if (opt->unixcodepage)
-        free(opt->unixcodepage);
-}
-
 /*
  * Show version information about afpd.
  * Used by "afp -v".

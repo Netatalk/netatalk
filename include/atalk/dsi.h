@@ -162,6 +162,7 @@ typedef struct DSI {
 extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port);
 extern void dsi_setstatus (DSI *, char *, const size_t);
 extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port);
+extern void dsi_free(DSI *dsi);
 
 /* in dsi_getsess.c */
 extern int dsi_getsession (DSI *, server_child *, const int, afp_child_t **);
