@@ -411,26 +411,31 @@ static char *volxlate(const AFPObj *obj,
  */
 static int accessvol(const AFPObj *obj, const char *args, const char *name)
 {
-    char buf[MAXPATHLEN + 1], *p;
+    EC_INIT;
+    char *names = NULL, *p;
     struct group *gr;
 
     if (!args)
-        return -1;
+        EC_EXIT_STATUS(-1);
 
-    strlcpy(buf, args, sizeof(buf));
-    if ((p = strtok(buf, ",")) == NULL) /* nothing, return okay */
-        return -1;
+    EC_NULL_LOG( names = strdup(args) );
+
+    if ((p = strtok(names, ",")) == NULL) /* nothing, return okay */
+        EC_EXIT_STATUS(-1);
 
     while (p) {
         if (*p == '@') { /* it's a group */
             if ((gr = getgrnam(p + 1)) && gmem(gr->gr_gid, obj->ngroups, obj->groups))
-                return 1;
+                EC_EXIT_STATUS(1);
         } else if (strcasecmp(p, name) == 0) /* it's a user name */
-            return 1;
+            EC_EXIT_STATUS(1);
         p = strtok(NULL, ", ");
     }
 
-    return 0;
+EC_CLEANUP:
+    if (names)
+        free(names);
+    EC_EXIT;
 }
 
 static int hostaccessvol(const AFPObj *obj, const char *volname, const char *args)
