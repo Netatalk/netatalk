@@ -8,6 +8,8 @@ Changes in 3.0.2
        If /home -> /usr/home, set "basedir regex = /usr/home".
 * FIX: Memory leak
 * FIX: Copying packages to a Netatalk share could fail, bug #469
+* FIX: Reloading volumes from config file was broken.
+       Fixes bug #474.
 
 Changes in 3.0.1
 ================

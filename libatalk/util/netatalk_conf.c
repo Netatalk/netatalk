@@ -567,7 +567,6 @@ static struct vol *creatvol(AFPObj *obj,
 {
     EC_INIT;
     struct vol  *volume = NULL;
-    size_t      current_pathlen, another_pathlen;
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
     char        tmpname[AFPVOL_U8MNAMELEN+1];
     char        path[MAXPATHLEN + 1];
@@ -592,37 +591,26 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Once volumes are loaded, we never change options again, we just delete em when they're removed from afp.conf */
 
-    /*
-     * Check for duplicated or nested volumes, eg:
-     * /Volumes/name      /Volumes/name     [duplicate], and
-     * /Volumes/name      /Volumes/name/dir [nested], but beware of simple strncmp test:
-     * /Volumes/name      /Volumes/name1    [strncmp match if n=strlen("Volumes/name") -> false positive]
-     */
-    current_pathlen = strlen(path);
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
-        another_pathlen = strlen(vol->v_path);
-        if (strncmp(path, vol->v_path, MIN(current_pathlen, another_pathlen)) == 0) {
-            if (current_pathlen == another_pathlen) {
-                LOG(log_error, logtype_afpd, "volume \"%s\" paths is duplicated: \"%s\"", name, path);
-                vol->v_deleted = 0;
-                volume = vol;
-                goto EC_CLEANUP;
-            } else {
-                const char *shorter_path, *longer_path;
-                int shorter_len;
-                if (another_pathlen > current_pathlen) {
-                    shorter_len = current_pathlen;
-                    shorter_path = path;
-                    longer_path = vol->v_path;
-                } else {
-                    shorter_len = another_pathlen;
-                    shorter_path = vol->v_path;
-                    longer_path = path;
-                }
-                if (longer_path[shorter_len] == '/')
-                    LOG(log_info, logtype_afpd, "volume \"%s\" paths are nested: \"%s\" and \"%s\"", name, path, vol->v_path);
-            }
+        if (STRCMP(name, ==, vol->v_localname) && vol->v_deleted) {
+            /* 
+             * reloading config, volume still present, nothing else to do,
+             * we don't change options for volumes once they're loaded
+             */
+            vol->v_deleted = 0;
+            EC_EXIT_STATUS(0);
         }
+        if (STRCMP(path, ==, vol->v_path)) {
+            LOG(log_note, logtype_afpd, "volume \"%s\" path \"%s\" is the same as volumes \"%s\" path",
+                name, path, vol->v_configname);
+            EC_EXIT_STATUS(0);
+
+        }
+        /*
+         * We could check for nested volume paths here, but
+         * nobody was able to come up with an implementation yet,
+         * that is simple, fast and correct.
+         */
     }
 
     /*
@@ -944,10 +932,8 @@ static struct vol *creatvol(AFPObj *obj,
 EC_CLEANUP:
     LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
     if (ret != 0) {
-        if (volume) {
+        if (volume)
             volume_free(volume);
-            free(volume);
-        }
         return NULL;
     }
     return volume;
@@ -1268,12 +1254,14 @@ void volume_unlink(struct vol *volume)
 }
 
 /*!
- * Free all resources allocated in a struct vol, only struct dir *v_root can't be freed
+ * Free all resources allocated in a struct vol in load_volumes()
+ *
+ * Actually opening a volume (afp_openvol()) will allocate additional
+ * ressources which are freed in closevol()
  */
 void volume_free(struct vol *vol)
 {
-    LOG(log_debug, logtype_afpd, "volume_free('%s'): BEGIN", vol->v_localname);
-
+    free(vol->v_configname);
     free(vol->v_localname);
     free(vol->v_u8mname);
     free(vol->v_macname);
@@ -1288,10 +1276,12 @@ void volume_free(struct vol *vol)
     free(vol->v_uuid);
     free(vol->v_cnidserver);
     free(vol->v_cnidport);
+    free(vol->v_preexec);
     free(vol->v_root_preexec);
     free(vol->v_postexec);
+    free(vol->v_root_postexec);
 
-    LOG(log_debug, logtype_afpd, "volume_free: END");
+    free(vol);
 }
 
 /*!
@@ -1320,7 +1310,7 @@ int load_charset(struct vol *vol)
  * @param obj       (r) handle
  * @param delvol_fn (r) callback called for deleted volumes
  */
-int load_volumes(AFPObj *obj, void (*delvol_fn)(const AFPObj *obj, struct vol *))
+int load_volumes(AFPObj *obj)
 {
     EC_INIT;
     int fd = -1;
@@ -1372,12 +1362,24 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(const AFPObj *obj, struct vol *)
 
     EC_ZERO_LOG( readvolfile(obj, pwent) );
 
-    for ( vol = Volumes; vol; vol = vol->v_next ) {
-        if (vol->v_deleted) {
+    struct vol *p, *prevvol;
+
+    vol = Volumes;
+    prevvol = NULL;
+
+    while (vol) {
+        if (vol->v_deleted && !(vol->v_flags & AFPVOL_OPEN)) {
             LOG(log_debug, logtype_afpd, "load_volumes: deleted: %s", vol->v_localname);
-            if (delvol_fn)
-                delvol_fn(obj, vol);
-            vol = Volumes;
+            if (prevvol)
+                prevvol->v_next = vol->v_next;
+            else
+                Volumes = NULL;
+            p = vol->v_next;
+            volume_free(vol);
+            vol = p;
+        } else {
+            prevvol = vol;
+            vol = vol->v_next;
         }
     }
 
@@ -1391,12 +1393,16 @@ EC_CLEANUP:
 
 void unload_volumes(AFPObj *obj)
 {
-    struct vol *vol;
+    struct vol *vol, *p;
 
     LOG(log_debug, logtype_afpd, "unload_volumes: BEGIN");
 
-    for (vol = Volumes; vol; vol = vol->v_next)
+    p = Volumes;
+    while (p) {
+        vol = p;
+        p = vol->v_next;
         volume_free(vol);
+    }
     Volumes = NULL;
     obj->options.volfile.mtime = 0;
     

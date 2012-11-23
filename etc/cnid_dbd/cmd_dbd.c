@@ -263,7 +263,7 @@ int main(int argc, char **argv)
     else
         setuplog("default:debug", "/dev/tty");
 
-    if (load_volumes(&obj, NULL) != 0) {
+    if (load_volumes(&obj) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
         exit(EXIT_FAILURE);
     }

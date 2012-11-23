@@ -527,7 +527,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     int         vcnt;
     size_t      len;
 
-    load_volumes(obj, closevol);
+    load_volumes(obj);
 
     data = rbuf + 5;
     for ( vcnt = 0, volume = getvolumes(); volume; volume = volume->v_next ) {
@@ -704,7 +704,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ((len + 1) & 1) /* pad to an even boundary */
         ibuf++;
 
-    load_volumes(obj, closevol);
+    load_volumes(obj);
 
     for ( volume = getvolumes(); volume; volume = volume->v_next ) {
         if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {

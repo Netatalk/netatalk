@@ -122,7 +122,7 @@ int configinit(AFPObj *obj)
 
     /* Now register with zeroconf, we also need the volumes for that */
     if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-        load_volumes(obj, NULL);
+        load_volumes(obj);
         zeroconf_register(obj);
     }
 
