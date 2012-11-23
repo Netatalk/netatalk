@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 25 Jul 2012
+.\"      Date: 22 Nov 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "25 Jul 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "22 Nov 2012" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -242,116 +242,6 @@ Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails,
 k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
 .RS 4
 These are required if the server supports the Kerberos 5 authentication UAM\&.
-.RE
-.PP
-ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
-.RS 4
-Authentication method:
-\fBnone | simple | sasl\fR
-.PP
-none
-.RS 4
-anonymous LDAP bind
-.RE
-.PP
-simple
-.RS 4
-simple LDAP bind
-.RE
-.PP
-sasl
-.RS 4
-SASL\&. Not yet supported !
-.RE
-.RE
-.PP
-ldap auth dn = \fIdn\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap auth pw = \fIpassword\fR \fB(G)\fR
-.RS 4
-Distinguished Name of the user for simple bind\&.
-.sp
-.RE
-.PP
-ldap server = \fIhost\fR \fB(G)\fR
-.RS 4
-Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
-.sp
-You can use
-\fBafpldaptest\fR(1)
-to syntactically check your config\&.
-.RE
-.PP
-ldap userbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the user container in LDAP\&.
-.sp
-.RE
-.PP
-ldap userscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap groupbase = \fIbase dn\fR \fB(G)\fR
-.RS 4
-DN of the group container in LDAP\&.
-.sp
-.RE
-.PP
-ldap groupscope = \fIscope\fR \fB(G)\fR
-.RS 4
-Search scope for user search:
-\fBbase | one | sub\fR
-.sp
-.RE
-.PP
-ldap uuid attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the UUIDs\&.
-.sp
-Note: this is used both for users and groups\&.
-.sp
-.RE
-.PP
-ldap name attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the users short name\&.
-.sp
-.RE
-.PP
-ldap uuid string = \fISTRING\fR \fB(G)\fR
-.RS 4
-Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
-.sp
-Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
-.RE
-.PP
-ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
-.RS 4
-Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
-.PP
-string
-.RS 4
-UUID is a string, use with eg OpenDirectory\&.
-.RE
-.PP
-ms\-guid
-.RS 4
-Binary objectGUID from Active Directory
-.RE
-.RE
-.PP
-ldap group attr = \fIdn\fR \fB(G)\fR
-.RS 4
-Name of the LDAP attribute with the groups short name\&.
-.sp
 .RE
 .PP
 nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
@@ -613,7 +503,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/extmap\&.conf)\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/AppleVolumes\&.system)\&.
 .RE
 .PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
@@ -624,7 +514,7 @@ Enables sending FCE events to the specified
 is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
 .RE
 .PP
-fce events = \fIfmod,fdel,ddel,fcre,dcre\fR \fB(G)\fR
+fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
 .RS 4
 Speficies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
@@ -774,6 +664,116 @@ With this option enabled, afpd won\'t advertise that it is capable of server not
 \fINote\fR: Depending on the number of simultaneously connected clients and the network\'s speed, this can lead to a significant higher load on your network!
 .sp
 Do not use this option any longer as present Netatalk correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
+.RE
+.SS "Options for ACL handling"
+.PP
+For a basic mode of operation there\'s nothing to configure\&. afpd reads ACLs on the fly, calculating effective permissions and returning the calculated permissions via the so called UARights permission bits\&. On a Mac the Finder uses these bits to adjust permission in Finder windows\&. For example folder whos UNIX mode would only result in in read\-only permissions for a user will not be displayed with a read\-only icon and the user will be able to write to the folder given the folder has an ACL giving the user write access\&.
+.PP
+However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\'s a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involed as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\'s or gid\'s\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
+.PP
+Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
+.PP
+The following LDAP options must be configured for Netatalk:
+.PP
+ldap auth method = \fInone|simple|sasl\fR \fB(G)\fR
+.RS 4
+Authentication method:
+\fBnone | simple | sasl\fR
+.PP
+none
+.RS 4
+anonymous LDAP bind
+.RE
+.PP
+simple
+.RS 4
+simple LDAP bind
+.RE
+.PP
+sasl
+.RS 4
+SASL\&. Not yet supported !
+.RE
+.RE
+.PP
+ldap auth dn = \fIdn\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.RE
+.PP
+ldap auth pw = \fIpassword\fR \fB(G)\fR
+.RS 4
+Distinguished Name of the user for simple bind\&.
+.RE
+.PP
+ldap server = \fIhost\fR \fB(G)\fR
+.RS 4
+Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
+.sp
+You can use
+\fBafpldaptest\fR(1)
+to syntactically check your config\&.
+.RE
+.PP
+ldap userbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the user container in LDAP\&.
+.RE
+.PP
+ldap userscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.RE
+.PP
+ldap groupbase = \fIbase dn\fR \fB(G)\fR
+.RS 4
+DN of the group container in LDAP\&.
+.RE
+.PP
+ldap groupscope = \fIscope\fR \fB(G)\fR
+.RS 4
+Search scope for user search:
+\fBbase | one | sub\fR
+.RE
+.PP
+ldap uuid attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the UUIDs\&.
+.sp
+Note: this is used both for users and groups\&.
+.RE
+.PP
+ldap name attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the users short name\&.
+.RE
+.PP
+ldap uuid string = \fISTRING\fR \fB(G)\fR
+.RS 4
+Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
+.sp
+Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
+.RE
+.PP
+ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
+.RS 4
+Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
+.PP
+string
+.RS 4
+UUID is a string, use with eg OpenDirectory\&.
+.RE
+.PP
+ms\-guid
+.RS 4
+Binary objectGUID from Active Directory
+.RE
+.RE
+.PP
+ldap group attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the groups short name\&.
 .RE
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
