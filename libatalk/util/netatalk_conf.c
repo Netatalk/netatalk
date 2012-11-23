@@ -402,7 +402,7 @@ static char *volxlate(const AFPObj *obj,
  * check access list
  *
  * this function wants something of the following form:
- * "@group,name,name2,@group2,name3" or "@group name name2 @group2 name3"
+ * "@group,name,name2,@group2,name3".
  * A NULL argument allows everybody to have access.
  * We return three things:
  *     -1: no list
@@ -418,7 +418,7 @@ static int accessvol(const AFPObj *obj, const char *args, const char *name)
         return -1;
 
     strlcpy(buf, args, sizeof(buf));
-    if ((p = strtok(buf, ", ")) == NULL) /* nothing, return okay */
+    if ((p = strtok(buf, ",")) == NULL) /* nothing, return okay */
         return -1;
 
     while (p) {
