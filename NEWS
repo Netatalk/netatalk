@@ -11,7 +11,7 @@ Changes in 3.0.2
 * FIX: Fix pathname bug for FCE modified event.
 * FIX: "valid users" options and friends only use ',' as field delimiter.
        Fixes bug #472.
-* FIX: Remove lenght limitation of options like "valid users".
+* FIX: Remove length limitation of options like "valid users".
        Fixes bug #473.
 * REM: Remove TimeMachine volume used size FCE event.
 
