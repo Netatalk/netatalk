@@ -412,11 +412,11 @@ int ad_close(struct adouble *ad, int adflags)
 
     if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {        
         if (ad->ad_data_refcount)
-            ad->ad_data_refcount--;
+            if (--ad->ad_data_refcount == 0)
+                adf_lock_free(&ad->ad_data_fork);                
         if (--ad->ad_data_fork.adf_refcount == 0) {
             if (ad_data_closefd(ad) < 0)
                 err = -1;
-            adf_lock_free(&ad->ad_data_fork);
         }
     }
 
@@ -427,14 +427,13 @@ int ad_close(struct adouble *ad, int adflags)
             if (close( ad_meta_fileno(ad)) < 0)
                 err = -1;
             ad_meta_fileno(ad) = -1;
-            if (ad->ad_vers == AD_VERSION2)
-                adf_lock_free(ad->ad_mdp);
         }
     }
 
     if (adflags & ADFLAGS_RF) {
         if (ad->ad_reso_refcount)
-            ad->ad_reso_refcount--;
+            if (--ad->ad_reso_refcount == 0)
+                adf_lock_free(ad->ad_rfp);
         if (ad->ad_vers == AD_VERSION_EA) {
             if ((ad_reso_fileno(ad) != -1)
                 && !(--ad->ad_rfp->adf_refcount)) {
@@ -442,7 +441,6 @@ int ad_close(struct adouble *ad, int adflags)
                     err = -1;
                 ad->ad_rlen = 0;
                 ad_reso_fileno(ad) = -1;
-                adf_lock_free(ad->ad_rfp);
             }
         }
     }
