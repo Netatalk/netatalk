@@ -598,13 +598,13 @@ static struct vol *creatvol(AFPObj *obj,
              * we don't change options for volumes once they're loaded
              */
             vol->v_deleted = 0;
+            volume = vol;
             EC_EXIT_STATUS(0);
         }
         if (STRCMP(path, ==, vol->v_path)) {
             LOG(log_note, logtype_afpd, "volume \"%s\" path \"%s\" is the same as volumes \"%s\" path",
                 name, path, vol->v_configname);
             EC_EXIT_STATUS(0);
-
         }
         /*
          * We could check for nested volume paths here, but
