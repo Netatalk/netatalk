@@ -64,8 +64,16 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 
     LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): BEGIN", fullpathname(path));
 
+    switch (S_IFMT & sp->st_mode) {
+    case S_IFREG:
+        break;
+    default:
+        return 0;
+    }
+
     ad_init(&adea, vol);
     ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
+
     adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
 
     /* Open and lock adouble:v2 file */
@@ -123,6 +131,13 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
     struct adouble adea;
 
     LOG(log_debug, logtype_ad,"ad_conv_v22ea_rf(\"%s\"): BEGIN", fullpathname(path));
+
+    switch (S_IFMT & sp->st_mode) {
+    case S_IFREG:
+        break;
+    default:
+        return 0;
+    }
 
     if (S_ISDIR(sp->st_mode))
         return 0;
