@@ -37,8 +37,8 @@ The file consists of sections and parameters\&. A section begins with the name o
 .RS 4
 .\}
 .nf
-\fIname\fR = \fIvalue \fR
-      
+    \fIname\fR = \fIvalue \fR
+    
 .fi
 .if n \{\
 .RE
@@ -53,7 +53,7 @@ Only the first equals sign in a parameter is significant\&. Whitespace before or
 Any line beginning with a semicolon (\(lq;\(rq) or a hash (\(lq#\(rq) character is ignored, as are lines containing only whitespace\&.
 .PP
 Any line ending in a
-\(lq\e\(rq
+\(lq \e \(rq
 is continued on the next line in the customary UNIX fashion\&.
 .PP
 The values following the equals sign in parameters are all either a string (no quotes needed) or a boolean, which may be given as yes/no, 1/0 or true/false\&. Case is not significant in boolean values, but is preserved in string values\&. Some items such as create masks are numeric\&.
@@ -93,9 +93,8 @@ baz:
 .RS 4
 .\}
 .nf
-[baz]
-path = /foo/bar
-      
+ [baz]
+    path = /foo/bar 
 .fi
 .if n \{\
 .RE
@@ -124,9 +123,7 @@ The following example illustrates this\&. Given all user home directories are st
 .RS 4
 .\}
 .nf
-[Homes]
-path = afp\-data
-basedir regex = /home
+ [Homes] path = afp\-data basedir regex = /home
       
 .fi
 .if n \{\
@@ -231,6 +228,11 @@ prints dollar sign ($)
 .RE
 .SH "EXPLANATION OF GLOBAL PARAMETERS"
 .SS "Authentication Options"
+.PP
+ad domain = \fIDOMAIN\fR \fB(G)\fR
+.RS 4
+Append @DOMAIN to username when authenticating\&. Useful in Active Directory environments that otherwise would require the user to enter the full user@domain string\&.
+.RE
 .PP
 admin auth user = \fIuser\fR \fB(G)\fR
 .RS 4
@@ -567,9 +569,9 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .RS 4
 .\}
 .nf
-73:  limit of Mac OS X 10\&.1
-80:  limit of Mac OS X 10\&.4/10\&.5 (default)
-255: limit of recent Mac OS X
+ 73: limit of Mac OS X 10\&.1 80: limit of Mac
+            OS X 10\&.4/10\&.5 (default) 255: limit of recent Mac OS
+            X
 .fi
 .if n \{\
 .RE
@@ -697,6 +699,7 @@ sasl
 .RS 4
 SASL\&. Not yet supported !
 .RE
+.sp
 .RE
 .PP
 ldap auth dn = \fIdn\fR \fB(G)\fR
@@ -772,6 +775,7 @@ ms\-guid
 .RS 4
 Binary objectGUID from Active Directory
 .RE
+.sp
 .RE
 .PP
 ldap group attr = \fIdn\fR \fB(G)\fR
@@ -910,17 +914,19 @@ is for files only,
 is for directories only\&. Don\'t use with "\fBunix priv = no\fR"\&.
 .PP
 \fBExample.\ \&Volume for a collaborative workgroup\fR
+
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-file perm = 0660
-directory perm = 0770
+file perm = 0660 directory perm =
+                0770
 .fi
 .if n \{\
 .RE
 .\}
+.sp
 
 .RE
 .PP
@@ -1105,7 +1111,7 @@ The
 option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be vol charset ISO\-8859\-15\&.
 \fBafpd\fR
 will accept any
-\fBiconv\fR(1)
+\fB iconv \fR(1)
 provided charset\&. If a character cannot be converted from the
 \fBmac charset\fR
 to the selected

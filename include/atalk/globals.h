@@ -98,7 +98,7 @@ struct afp_options {
     gid_t admingid;
     int    volnamelen;
     /* default value for winbind authentication */
-    char *ntdomain, *ntseparator;
+    char *ntdomain, *ntseparator, *addomain;
     char *logconfig;
     char *logfile;
     char *mimicmodel;
