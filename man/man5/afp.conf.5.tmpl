@@ -506,30 +506,6 @@ extmap file = \fIpath\fR \fB(G)\fR
 Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/AppleVolumes\&.system)\&.
 .RE
 .PP
-fce listener = \fIhost[:port]\fR \fB(G)\fR
-.RS 4
-Enables sending FCE events to the specified
-\fIhost\fR, default
-\fIport\fR
-is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
-.RE
-.PP
-fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
-.RS 4
-Speficies which FCE events are active, default is
-\fIfmod,fdel,ddel,fcre,dcre\fR\&.
-.RE
-.PP
-fce coalesce = \fIall|delete|create\fR \fB(G)\fR
-.RS 4
-Coalesce FCE events\&.
-.RE
-.PP
-fce holdfmod = \fIseconds\fR \fB(G)\fR
-.RS 4
-This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
-.RE
-.PP
 guest account = \fIname\fR \fB(G)\fR
 .RS 4
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
@@ -625,7 +601,7 @@ should be logged\&.
 By default afpd logs to syslog with a default logging setup equivalent to
 \fBdefault:note\fR
 .sp
-logtypes: default, afpdaemon, logger, uamsdaemon, dsi, fce, ad
+logtypes: default, afpdaemon, logger, uamsdaemon
 .sp
 loglevels: severe, error, warn, note, info, debug, debug6, debug7, debug8, debug9, maxdebug
 .if n \{\
@@ -643,6 +619,33 @@ loglevels: severe, error, warn, note, info, debug, debug6, debug7, debug8, debug
 Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
+.RE
+.SS "Filesystem Change Events (FCE)"
+.PP
+Netatalk includes a nifty filesystem change event mechanism where afpd processes notfiy interested listeners about certain filesytem event by UDP network datagrams\&.
+.PP
+fce listener = \fIhost[:port]\fR \fB(G)\fR
+.RS 4
+Enables sending FCE events to the specified
+\fIhost\fR, default
+\fIport\fR
+is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
+.RE
+.PP
+fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
+.RS 4
+Speficies which FCE events are active, default is
+\fIfmod,fdel,ddel,fcre,dcre\fR\&.
+.RE
+.PP
+fce coalesce = \fIall|delete|create\fR \fB(G)\fR
+.RS 4
+Coalesce FCE events\&.
+.RE
+.PP
+fce holdfmod = \fIseconds\fR \fB(G)\fR
+.RS 4
+This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
 .RE
 .SS "Debug Parameters"
 .PP
