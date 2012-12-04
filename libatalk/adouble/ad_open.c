@@ -1133,7 +1133,9 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
         break;
     }
 
-    if (ret != 0)
+    if (ret == 0)
+        ad->ad_meta_refcount++;
+    else
         ret = ad_error(ad, adflags);
 
     return ret;
@@ -1186,13 +1188,23 @@ EC_CLEANUP:
 
 static int ad_open_rf_v2(const char *path, int adflags, int mode, struct adouble *ad)
 {
+    EC_INIT;
+
     /*
      * ad_open_hf_v2() does the work, but if it failed and adflags are ADFLAGS_NOHF | ADFLAGS_RF
      * ad_open_hf_v2() didn't give an error, but we're supposed to return a reso fork fd
      */
-    if (!AD_RSRC_OPEN(ad) && !(adflags & ADFLAGS_NORF))
-        return -1;
-    return 0;
+
+    LOG(log_debug, logtype_ad, "ad_open_rf_v2(\"%s\"): BEGIN", fullpathname(path));
+
+    if (!AD_META_OPEN(ad) && !(adflags & ADFLAGS_NORF))
+        EC_FAIL;
+    if (AD_META_OPEN(ad))
+        ad->ad_reso_refcount++;
+
+EC_CLEANUP:
+    LOG(log_debug, logtype_ad, "ad_open_rf_v2(\"%s\"): END: %d", fullpathname(path), ret);
+    EC_EXIT;
 }
 
 static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble *ad)
@@ -1250,6 +1262,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
     opened = 1;
     ad->ad_rfp->adf_refcount = 1;
     ad->ad_rfp->adf_flags = oflags;
+    ad->ad_reso_refcount++;
 
 #ifndef HAVE_EAFD
     EC_ZERO_LOG( fstat(ad_reso_fileno(ad), &st) );
@@ -1276,6 +1289,7 @@ EC_CLEANUP:
         if (opened && (ad_reso_fileno(ad) != -1)) {
             close(ad_reso_fileno(ad));
             ad_reso_fileno(ad) = -1;
+            ad->ad_reso_refcount--;
             ad->ad_rfp->adf_refcount = 0;
         }
         if (adflags & ADFLAGS_NORF) {
@@ -1658,17 +1672,13 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     }
 
     if (adflags & ADFLAGS_HF) {
-        ad->ad_meta_refcount++;
         if (ad_open_hf(path, adflags, mode, ad) != 0) {
-            ad->ad_meta_refcount--;
             EC_FAIL;
         }
     }
 
     if (adflags & ADFLAGS_RF) {
-        ad->ad_reso_refcount++;
         if (ad_open_rf(path, adflags, mode, ad) != 0) {
-            ad->ad_reso_refcount--;
             EC_FAIL;
         }
     }

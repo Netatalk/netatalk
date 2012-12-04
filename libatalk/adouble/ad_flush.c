@@ -237,8 +237,8 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     }
     add->ad_rlen = ads->ad_rlen;
 
-    if ((ads->ad_vers == AD_VERSION2) && (add->ad_vers = AD_VERSION_EA)
-        || (ads->ad_vers == AD_VERSION_EA) && (add->ad_vers = AD_VERSION2)) {
+    if (((ads->ad_vers == AD_VERSION2) && (add->ad_vers == AD_VERSION_EA))
+        || ((ads->ad_vers == AD_VERSION_EA) && (add->ad_vers == AD_VERSION2))) {
         cnid_t id;
         memcpy(&id, ad_entry(add, ADEID_PRIVID), sizeof(cnid_t));
         id = htonl(id);
