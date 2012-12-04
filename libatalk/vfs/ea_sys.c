@@ -439,6 +439,9 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 		if (!*name)
 			continue;
 
+        if (STRCMP(name, ==, AD_EA_META))
+            continue;
+
         if (sfd != -1) {
             if (fchdir(sfd) == -1) {
                 LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to sfd: %s",
