@@ -980,6 +980,12 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
         isad = 0;
     } else if ((ad_get_MD_flags( adp ) & O_CREAT) ) {
         ad_setname(adp, path->m_name);
+        cnid_t id;
+        if ((id = get_id(vol, adp, &path->st, curdir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+            LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+            return AFPERR_MISC;
+        }
+        (void)ad_setid(adp, path->st.st_dev, path->st.st_ino, id, curdir->d_did, vol->v_stamp);
     }
     
     bit = 0;
