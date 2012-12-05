@@ -2308,7 +2308,7 @@ int deletecurdir(struct vol *vol)
             /* bail if it's not a symlink */
             if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
                 LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): not empty",
-                    curdir->d_fullpath);
+                    bdata(curdir->d_fullpath));
                 closedir(dp);
                 return AFPERR_DIRNEMPT;
             }
