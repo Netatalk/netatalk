@@ -402,7 +402,7 @@ static char *volxlate(const AFPObj *obj,
  * check access list
  *
  * this function wants something of the following form:
- * "@group,name,name2,@group2,name3".
+ * "@group,name,name2,@group2,name3" or "@group name name2 @group2 name3"
  * A NULL argument allows everybody to have access.
  * We return three things:
  *     -1: no list
@@ -420,7 +420,7 @@ static int accessvol(const AFPObj *obj, const char *args, const char *name)
 
     EC_NULL_LOG( names = strdup(args) );
 
-    if ((p = strtok(names, ",")) == NULL) /* nothing, return okay */
+    if ((p = strtok(names, ", ")) == NULL) /* nothing, return okay */
         EC_EXIT_STATUS(-1);
 
     while (p) {
