@@ -386,3 +386,41 @@ const char *basename_safe(const char *path)
     strlcpy(buf, path, MAXPATHLEN);
     return basename(buf);
 }
+
+/**
+ * extended strtok allows the quoted strings
+ * modified strtok.c in glibc 2.0.6
+ **/
+char *strtok_quote(char *s, const char *delim)
+{
+    static char *olds = NULL;
+    char *token;
+
+    if (s == NULL)
+        s = olds;
+
+    /* Scan leading delimiters.  */
+    s += strspn (s, delim);
+    if (*s == '\0')
+        return NULL;
+
+    /* Find the end of the token.  */
+    token = s;
+
+    if (token[0] == '\"') {
+        token++;
+        s = strpbrk (token, "\"");
+    } else {
+        s = strpbrk (token, delim);
+    }
+
+    if (s == NULL) {
+        /* This token finishes the string.  */
+        olds = strchr (token, '\0');
+    } else {
+        /* Terminate the token and make OLDS point past it.  */
+        *s = '\0';
+        olds = s + 1;
+    }
+    return token;
+}
