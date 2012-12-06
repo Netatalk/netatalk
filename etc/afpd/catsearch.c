@@ -29,6 +29,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -109,12 +112,8 @@ struct scrit {
  *
  */
 struct dsitem {
-//	struct dir *dir; /* Structure describing this directory */
-//  cnid_t did;      /* CNID of this directory           */
-	int pidx;        /* Parent's dsitem structure index. */
-	int checked;     /* Have we checked this directory ? */
-	int path_len;
-	char *path;      /* absolute UNIX path to this directory */
+    cnid_t ds_did;         /* CNID of this directory           */
+    int    ds_checked;     /* Have we checked this directory ? */
 };
  
 
@@ -131,7 +130,6 @@ static void clearstack(void)
 	save_cidx = -1;
 	while (dsidx > 0) {
 		dsidx--;
-		free(dstack[dsidx].path);
 	}
 }
 
@@ -156,23 +154,8 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 
 	/* Put new element. Allocate and copy lname and path. */
 	ds = dstack + dsidx++;
-//	ds->did = dir->d_did;
-	ds->pidx = pidx;
-	ds->checked = 0;
-	if (pidx >= 0) {
-	    l = dstack[pidx].path_len;
-	    u = strlen(uname) +1;
-	    if (!(ds->path = malloc(l + u + 1) ))
-			return -1;
-		memcpy(ds->path, dstack[pidx].path, l);
-		ds->path[l] = '/';
-		memcpy(&ds->path[l+1], uname, u);
-		ds->path_len = l +u;
-	}
-	else {
-	    ds->path = strdup(uname);
-		ds->path_len = strlen(uname);
-	}
+	ds->ds_did = dir->d_did;
+	ds->ds_checked = 0;
 	return 0;
 }
 
@@ -187,9 +170,9 @@ static int reducestack(void)
 	}
 
 	while (dsidx > 0) {
-		if (dstack[dsidx-1].checked) {
+		if (dstack[dsidx-1].ds_checked) {
 			dsidx--;
-			free(dstack[dsidx].path);
+//			free(dstack[dsidx].path);
 		} else
 			return dsidx - 1;
 	} 
@@ -521,7 +504,8 @@ static int catsearch(const AFPObj *obj,
     int num_rounds = NUM_ROUNDS;
     int cwd = -1;
     int error;
-        
+    int unlen;
+
 	if (*pos != 0 && *pos != cur_pos) {
 		result = AFPERR_CATCHNG;
 		goto catsearch_end;
@@ -555,20 +539,24 @@ static int catsearch(const AFPObj *obj,
     start_time = time(NULL);
 
 	while ((cidx = reducestack()) != -1) {
-        LOG(log_debug, logtype_afpd, "catsearch: dir: \"%s\"", dstack[cidx].path);
+        if ((currentdir = dirlookup(vol, dstack[cidx].ds_did)) == NULL) {
+            result = AFPERR_MISC;
+            goto catsearch_end;
+        }
+        LOG(log_debug, logtype_afpd, "catsearch: current struct dir: \"%s\"", cfrombstr(currentdir->d_fullpath));
 
-		error = lchdir(dstack[cidx].path);
+		error = lchdir(bdata(currentdir->d_fullpath));
 
 		if (!error && dirpos == NULL)
 			dirpos = opendir(".");
 
 		if (dirpos == NULL)
-			dirpos = opendir(dstack[cidx].path);
+			dirpos = opendir(bdata(currentdir->d_fullpath));
 
 		if (error || dirpos == NULL) {
 			switch (errno) {
 			case EACCES:
-				dstack[cidx].checked = 1;
+				dstack[cidx].ds_checked = 1;
 				continue;
 			case EMFILE:
 			case ENFILE:
@@ -583,11 +571,6 @@ static int catsearch(const AFPObj *obj,
 			goto catsearch_end;
 		}
 
-        if ((currentdir = dirlookup_bypath(vol, dstack[cidx].path)) == NULL) {
-            result = AFPERR_MISC;
-            goto catsearch_end;
-        }
-        LOG(log_debug, logtype_afpd, "catsearch: current struct dir: \"%s\"", cfrombstr(currentdir->d_fullpath));
 		
 		while ((entry = readdir(dirpos)) != NULL) {
 			(*pos)++;
@@ -615,12 +598,13 @@ static int catsearch(const AFPObj *obj,
 					goto catsearch_end;
 				} 
 			}
-			if (S_ISDIR(path.st.st_mode)) {
+            switch (S_IFMT & path.st.st_mode) {
+            case S_IFDIR:
 				/* here we can short cut 
 				   ie if in the same loop the parent dir wasn't in the cache
 				   ALL dirsearch_byname will fail.
 				*/
-                int unlen = strlen(path.u_name);
+                unlen = strlen(path.u_name);
                 path.d_dir = dircache_search_by_name(vol,
                                                      currentdir,
                                                      path.u_name,
@@ -641,8 +625,12 @@ static int catsearch(const AFPObj *obj,
 					result = AFPERR_MISC;
 					goto catsearch_end;
 				} 
-            } else {
+                break;
+            case S_IFREG:
             	path.d_dir = currentdir;
+                break;
+            default:
+                continue;
             }
 
 			ccr = crit_check(vol, &path);
@@ -674,7 +662,7 @@ static int catsearch(const AFPObj *obj,
 		} /* while ((entry=readdir(dirpos)) != NULL) */
 		closedir(dirpos);
 		dirpos = NULL;
-		dstack[cidx].checked = 1;
+		dstack[cidx].ds_checked = 1;
 	} /* while (current_idx = reducestack()) != -1) */
 
 	/* We have finished traversing our tree. Return EOF here. */

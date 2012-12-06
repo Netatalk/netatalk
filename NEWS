@@ -16,6 +16,8 @@ Changes in 3.0.2
        Fixes bug #473.
 * FIX: Dont copy our metadata EA in copyfile().
        Fixes bug #452.
+* FIX: Fix an error where catalog search gave incomplete results.
+       Fixes bug #479.
 * REM: Remove TimeMachine volume used size FCE event.
 
 Changes in 3.0.1
