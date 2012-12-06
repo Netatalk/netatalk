@@ -54,10 +54,11 @@ void configfree(AFPObj *obj, DSI *dsi)
         /* Master afpd reloading config */
         auth_unload();
         if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-            unload_volumes(obj);
             zeroconf_deregister();
         }
     }
+
+    unload_volumes(obj);
 
     /* Master and child releasing unneeded DSI handles */
     for (p = obj->dsi; p; p = q) {
