@@ -17,6 +17,8 @@ Changes in 3.0.2
 * FIX: Fix an error where catalog search gave incomplete results.
        Fixes bug #479.
 * REM: Remove TimeMachine volume used size FCE event.
+* UPD: Add quoting support to '[in]valid users' option.
+       Fixes bug #472.
 
 Changes in 3.0.1
 ================
