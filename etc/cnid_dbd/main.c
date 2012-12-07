@@ -43,6 +43,8 @@
 static DBD *dbd;
 static int exit_sig = 0;
 static int db_locked;
+static bstring dbpath;
+static struct db_param *dbp;
 
 static void sig_exit(int signo)
 {
@@ -80,6 +82,74 @@ static void block_sigs_onoff(int block)
 #ifndef min
 #define min(a,b)        ((a)<(b)?(a):(b))
 #endif
+
+static int delete_db(void)
+{
+    EC_INIT;
+    int cwd = -1;
+
+    EC_NEG1( cwd = open(".", O_RDONLY) );
+
+    chdir(bdata(dbpath));
+    system("rm -f cnid2.db lock log.* __db.*");
+    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
+        EC_FAIL;
+    }
+
+EC_CLEANUP:
+    if (cwd != -1)
+        fchdir(cwd);
+    EC_EXIT;
+}
+
+static int wipe_db(void)
+{
+    EC_INIT;
+    DBT key, data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.data = ROOTINFO_KEY;
+    key.size = ROOTINFO_KEYLEN;
+
+    if (dbif_get(dbd, DBIF_CNID, &key, &data, 0) <= 0) {
+        LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error getting rootinfo record");
+        EC_FAIL;
+    }
+
+    EC_NEG1_LOG( dbif_close(dbd) );
+    EC_NEG1_LOG( dbif_env_remove(bdata(dbpath)) );
+    EC_ZERO_LOG( delete_db() );
+
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
+        EC_FAIL;
+    }
+
+    EC_NULL_LOG( dbd = dbif_init(bdata(dbpath), "cnid2.db") );
+
+    /* Only recover if we got the lock */
+    EC_NEG1_LOG( dbif_env_open(dbd, dbp, DBOPTIONS | DB_RECOVER) );
+
+    LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
+
+    EC_NEG1_LOG( dbif_open(dbd, dbp, 0) );
+
+    memset(&key, 0, sizeof(key));
+    key.data = ROOTINFO_KEY;
+    key.size = ROOTINFO_KEYLEN;
+
+    if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) != 0) {
+        LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error writing rootinfo key");
+        EC_FAIL;
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
 
 static int loop(struct db_param *dbp)
 {
@@ -170,6 +240,9 @@ static int loop(struct db_param *dbp)
                 break;
             case CNID_DBD_OP_SEARCH:
                 ret = dbd_search(dbd, &rqst, &rply);
+                break;
+            case CNID_DBD_OP_WIPE:
+                ret = wipe_db();
                 break;
             default:
                 LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
@@ -274,14 +347,12 @@ static void set_signal(void)
 int main(int argc, char *argv[])
 {
     EC_INIT;
-    struct db_param *dbp;
     int delete_bdb = 0;
     int ctrlfd = -1, clntfd = -1;
     char *logconfig;
     AFPObj obj = { 0 };
     struct vol *vol;
     char *volpath = NULL;
-    bstring dbpath;
 
     while (( ret = getopt( argc, argv, "dF:l:p:t:vV")) != -1 ) {
         switch (ret) {
@@ -327,26 +398,14 @@ int main(int argc, char *argv[])
     switch_to_user(bdata(dbpath));
 
     /* Get db lock */
-    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) == -1) {
+    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
         LOG(log_error, logtype_cnid, "main: fatal db lock error");
         EC_FAIL;
     }
-    if (db_locked != LOCK_EXCL) {
-        /* Couldn't get exclusive lock, try shared lock  */
-        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD) {
-            LOG(log_error, logtype_cnid, "main: fatal db lock error");
-            EC_FAIL;
-        }
-    }
 
-    if (delete_bdb && (db_locked == LOCK_EXCL)) {
+    if (delete_bdb) {
         LOG(log_warning, logtype_cnid, "main: too many CNID db opening attempts, wiping the slate clean");
-        chdir(bdata(dbpath));
-        system("rm -f cnid2.db lock log.* __db.*");
-        if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
-            LOG(log_error, logtype_cnid, "main: fatal db lock error");
-            EC_FAIL;
-        }
+        EC_ZERO( delete_db() );
     }
 
     set_signal();

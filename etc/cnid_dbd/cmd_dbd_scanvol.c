@@ -29,12 +29,13 @@
 #include <atalk/adouble.h>
 #include <atalk/unicode.h>
 #include <atalk/netatalk_conf.h>
-#include <atalk/cnid_dbd_private.h>
+//#include <atalk/cnid_dbd_private.h>
 #include <atalk/volume.h>
 #include <atalk/ea.h>
 #include <atalk/util.h>
 #include <atalk/acl.h>
 #include <atalk/compat.h>
+#include <atalk/cnid.h>
 
 #include "cmd_dbd.h"
 #include "dbif.h"
@@ -48,7 +49,7 @@
 
 static struct vol     *myvol;
 static char           cwdbuf[MAXPATHLEN+1];
-static DBD            *dbd;
+static struct vol     *vol;
 static DBD            *dbd_rebuild;
 static dbd_flags_t    dbd_flags;
 static char           stamp[CNID_DEV_LEN];
@@ -65,6 +66,7 @@ static struct cnid_dbd_rqst rqst;
 static struct cnid_dbd_rply rply;
 static jmp_buf jmp;
 static char pname[MAXPATHLEN] = "../";
+static char cnidResBuf[12 + MAXPATHLEN + 1];
 
 /*
   Taken form afpd/desktop.c
@@ -189,43 +191,13 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, c
     int ret;
     cnid_t id;
 
-    /* Prepare request data */
-    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
-    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
-    rqst.did = did;
-    rqst.cnid = 0;
-    if ( ! (myvol->v_flags & AFPVOL_NODEV))
-        rqst.dev = sp->st_dev;
-    rqst.ino = sp->st_ino;
-    rqst.type = S_ISDIR(sp->st_mode) ? 1 : 0;
-    rqst.name = (char *)oldname;
-    rqst.namelen = strlen(oldname);
-
     /* Query the database */
-    ret = dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
-    if (dbif_txn_close(dbd, ret) != 0)
-        return -1;
-    if (rply.result != CNID_DBD_RES_OK)
+    if ((id = cnid_lookup(vol->v_cdb, sp, did, (char *)oldname, strlen(oldname))) == CNID_INVALID)
+        /* not in db, no need to update */
         return 0;
-    id = rply.cnid;
-
-    /* Prepare request data */
-    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
-    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
-    rqst.did = did;
-    rqst.cnid = id;
-    if ( ! (myvol->v_flags & AFPVOL_NODEV))
-        rqst.dev = sp->st_dev;
-    rqst.ino = sp->st_ino;
-    rqst.type = S_ISDIR(sp->st_mode) ? 1 : 0;
-    rqst.name = (char *)newname;
-    rqst.namelen = strlen(newname);
 
     /* Update the database */
-    ret = dbd_update(dbd, &rqst, &rply);
-    if (dbif_txn_close(dbd, ret) != 0)
-        return -1;
-    if (rply.result != CNID_DBD_RES_OK)
+    if (cnid_update(vol->v_cdb, id, sp, did, (char *)newname, strlen(newname)) < 0)
         return -1;
 
     return 0;
@@ -258,9 +230,6 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         return 0;
     }
     
-    if (dbd_flags & DBD_FLAGS_CLEANUP)
-        return 0;
-
     if (S_ISDIR(st->st_mode))
         adflags |= ADFLAGS_DIR;
 
@@ -421,9 +390,6 @@ static int check_addir(int volroot)
     struct stat st;
     struct adouble ad;
     char *mname = NULL;
-
-    if (dbd_flags & DBD_FLAGS_CLEANUP)
-        return 0;
 
     if (myvol->v_adouble == AD_VERSION_EA)
         return 0;
@@ -644,31 +610,17 @@ static int read_addir(void)
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
 {
     int ret, adflags = ADFLAGS_HF;
-    cnid_t db_cnid, ad_cnid;
+    cnid_t db_cnid, ad_cnid, tmpid;
     struct adouble ad;
 
     adflags = ADFLAGS_HF | (S_ISDIR(st->st_mode) ? ADFLAGS_DIR : 0);
 
-    /* Force checkout every X items */
-    static int cnidcount = 0;
-    cnidcount++;
-    if (cnidcount > 10000) {
-        cnidcount = 0;
-        if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
-            dbd_log(LOGSTD, "Error checkpointing!");
-            return CNID_INVALID;
-        }
-    }
-
     /* Get CNID from ad-file */
-    ad_cnid = 0;
+    ad_cnid = CNID_INVALID;
     if (ADFILE_OK) {
         ad_init(&ad, myvol);
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             
-            if (dbd_flags & DBD_FLAGS_CLEANUP)
-                return CNID_INVALID;
-
             if (myvol->v_adouble != AD_VERSION_EA) {
                 dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
                 return CNID_INVALID;
@@ -676,7 +628,6 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log( LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
             adfile_ok = 1;
         } else {
-
             if (dbd_flags & DBD_FLAGS_FORCE) {
                 ad_cnid = ad_forcegetid(&ad);
                 /* This ensures the changed stamp is written */
@@ -694,128 +645,26 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     }
 
     /* Get CNID from database */
-
-    /* Prepare request data */
-    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
-    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
-    rqst.did = did;
-    rqst.cnid = ad_cnid;
-    if ( ! (myvol->v_flags & AFPVOL_NODEV))
-        rqst.dev = st->st_dev;
-    rqst.ino = st->st_ino;
-    rqst.type = S_ISDIR(st->st_mode)?1:0;
-    rqst.name = (char *)name;
-    rqst.namelen = strlen(name);
-
-    /* Query the database */
-    ret = dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
-    if (dbif_txn_close(dbd, ret) != 0)
+    if ((db_cnid = cnid_add(vol->v_cdb, st, did, (char *)name, strlen(name), ad_cnid)) == CNID_INVALID)
         return CNID_INVALID;
-    if (rply.result == CNID_DBD_RES_OK) {
-        db_cnid = rply.cnid;
-    } else if (rply.result == CNID_DBD_RES_NOTFOUND) {
-        if ( ! (dbd_flags & DBD_FLAGS_FORCE))
-            dbd_log( LOGSTD, "No CNID for '%s/%s' in database", cwdbuf, name);
-        db_cnid = 0;
-    } else {
-        dbd_log( LOGSTD, "Fatal error resolving '%s/%s'", cwdbuf, name);
-        db_cnid = 0;
-    }
 
-    /* Compare results from both CNID searches */
-    if (ad_cnid && db_cnid && (ad_cnid == db_cnid)) {
-        /* Everything is fine */
-        return db_cnid;
-    } else if (ad_cnid && db_cnid && (ad_cnid != db_cnid)) {
+    /* Compare CNID from db and adouble file */
+    if (ad_cnid != db_cnid && adfile_ok == 0) {
         /* Mismatch, overwrite ad file with value from db */
-        dbd_log( LOGSTD, "CNID mismatch for '%s/%s', db: %u, ad-file: %u", cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
-        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            dbd_log(LOGSTD, "Updating AppleDouble file for '%s/%s' with CNID: %u from database",
-                            cwdbuf, name, ntohl(db_cnid));
-            ad_init(&ad, myvol);
-            if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
-                dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
-                        cwdbuf, name, strerror(errno));
-                return CNID_INVALID;
-            }
-            ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
-            ad_flush(&ad);
-            ad_close(&ad, ADFLAGS_HF);
+        dbd_log(LOGSTD, "CNID mismatch for '%s/%s', CNID db: %u, ad-file: %u",
+                cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
+        ad_init(&ad, myvol);
+        if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
+            dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
+                    cwdbuf, name, strerror(errno));
+            return CNID_INVALID;
         }
-        return db_cnid;
-    } else if (ad_cnid && (db_cnid == 0)) {
-        /* in ad-file but not in db */
-        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            /* Ensure the cnid from the ad-file is not already occupied by another file */
-            dbd_log(LOGDEBUG, "Checking whether CNID %u from ad-file is occupied",
-                    ntohl(ad_cnid));
-
-            rqst.cnid = ad_cnid;
-            ret = dbd_resolve(dbd, &rqst, &rply);
-            if (rply.result == CNID_DBD_RES_OK) {
-                /* Occupied! Choose another, update ad-file */
-                ret = dbd_add(dbd, &rqst, &rply, 1);
-                if (dbif_txn_close(dbd, ret) != 0)
-                    return CNID_INVALID;
-                db_cnid = rply.cnid;
-                dbd_log(LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
-
-                if (ADFILE_OK && ( ! (dbd_flags & DBD_FLAGS_SCAN))) {
-                    dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
-                            cwdbuf, name, ntohl(db_cnid));
-                    ad_init(&ad, myvol);
-                    if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
-                        dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
-                                cwdbuf, name, strerror(errno));
-                        return CNID_INVALID;
-                    }
-                    ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
-                    ad_flush(&ad);
-                    ad_close(&ad, ADFLAGS_HF);
-                }
-                return db_cnid;
-            }
-
-            dbd_log(LOGDEBUG, "CNID rebuild add '%s/%s' with CNID from ad-file %u",
-                    cwdbuf, name, ntohl(ad_cnid));
-            rqst.cnid = ad_cnid;
-            ret = dbd_rebuild_add(dbd, &rqst, &rply);
-            if (dbif_txn_close(dbd, ret) != 0)
-                return CNID_INVALID;
-        }
-        return ad_cnid;
-    } else if ((db_cnid == 0) && (ad_cnid == 0)) {
-        /* No CNID at all, we clearly have to allocate a fresh one... */
-        /* Note: the next test will use this new CNID too! */
-        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            /* add to db */
-            ret = dbd_add(dbd, &rqst, &rply, 1);
-            if (dbif_txn_close(dbd, ret) != 0)
-                return CNID_INVALID;
-            db_cnid = rply.cnid;
-            dbd_log(LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
-        }
+        ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
 
-    if ((ad_cnid == 0) && db_cnid) {
-        /* in db but zeroID in ad-file, write it to ad-file */
-        if (ADFILE_OK && ! (dbd_flags & DBD_FLAGS_SCAN)) {            
-            dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
-                    cwdbuf, name, ntohl(db_cnid));
-            ad_init(&ad, myvol);
-            if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
-                dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
-                        cwdbuf, name, strerror(errno));
-                return CNID_INVALID;
-            }
-            ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
-            ad_flush(&ad);
-            ad_close(&ad, ADFLAGS_HF);
-        }
-        return db_cnid;
-    }
-
-    return CNID_INVALID;
+    return db_cnid;
 }
 
 /*
@@ -939,30 +788,28 @@ static int dbd_readdir(int volroot, cnid_t did)
             update_cnid(did, &st, ep->d_name, name);
         }
 
-        if ( ! nocniddb) {
-            /* Check CNIDs */
-            cnid = check_cnid(name, did, &st, adfile_ok);
+        /* Check CNIDs */
+        cnid = check_cnid(name, did, &st, adfile_ok);
 
-            /* Now add this object to our rebuild dbd */
-            if (cnid && dbd_rebuild) {
-                static uint count = 0;
-                rqst.cnid = rply.cnid;
-                ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
-                if (dbif_txn_close(dbd_rebuild, ret) != 0)
-                    return -1;
-                if (rply.result != CNID_DBD_RES_OK) {
-                    dbd_log( LOGSTD, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
-                             cnid, cwdbuf, name);
+        /* Now add this object to our rebuild dbd */
+        if (cnid && dbd_rebuild) {
+            static uint count = 0;
+            rqst.cnid = rply.cnid;
+            ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
+            if (dbif_txn_close(dbd_rebuild, ret) != 0)
+                return -1;
+            if (rply.result != CNID_DBD_RES_OK) {
+                dbd_log( LOGSTD, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
+                         cnid, cwdbuf, name);
+                return -1;
+            }
+            count++;
+            if (count == 10000) {
+                if (dbif_txn_checkpoint(dbd_rebuild, 0, 0, 0) < 0) {
+                    dbd_log(LOGSTD, "Error checkpointing!");
                     return -1;
                 }
-                count++;
-                if (count == 10000) {
-                    if (dbif_txn_checkpoint(dbd_rebuild, 0, 0, 0) < 0) {
-                        dbd_log(LOGSTD, "Error checkpointing!");
-                        return -1;
-                    }
-                    count = 0;
-                }
+                count = 0;
             }
         }
 
@@ -973,7 +820,7 @@ static int dbd_readdir(int volroot, cnid_t did)
         /**************************************************************************
           Recursion
         **************************************************************************/
-        if (S_ISDIR(st.st_mode) && (cnid || nocniddb)) { /* If we have no cnid for it we cant recur */
+        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we cant enter recursion */
             strcat(cwdbuf, "/");
             strcat(cwdbuf, name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
@@ -1051,173 +898,38 @@ static int scanvol(struct vol *vol, dbd_flags_t flags)
 }
 
 /*
-  Remove all CNIDs from dbd that are not in dbd_rebuild
-*/
-static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
-{
-    int ret = 0, deleted = 0;
-    cnid_t dbd_cnid = 0, rebuild_cnid = 0;
-    struct cnid_dbd_rqst rqst;
-    struct cnid_dbd_rply rply;
-
-    /* jump over rootinfo key */
-    if ( dbif_idwalk(dbd, &dbd_cnid, 0) != 1)
-        return;
-    if ( dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0) != 1)
-        return;
-
-    /* Get first id from dbd_rebuild */
-    if ((dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0)) == -1)
-        return;
-
-    /* Start main loop through dbd: get CNID from dbd */
-    while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) {
-        /* Check if we got a termination signal */
-        if (alarmed)
-            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
-
-        if (deleted > 1000) {
-            deleted = 0;
-            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
-                dbd_log(LOGSTD, "Error checkpointing!");
-                goto cleanup;
-            }
-        }
-
-        /* This should be the normal case: CNID is in both dbs */
-        if (dbd_cnid == rebuild_cnid) {
-            /* Get next CNID from rebuild db */
-            if ((ret = dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0)) == -1) {
-                /* Some error */
-                goto cleanup;
-            } else if (ret == 0) {
-                /* end of rebuild_cnid, delete all remaining CNIDs from dbd */
-                while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) {
-                    dbd_log(LOGSTD, "Orphaned CNID in database: %u", dbd_cnid);
-                    if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-                        rqst.cnid = htonl(dbd_cnid);
-                        if ((ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID)) == -1) {
-                            dbd_log(LOGSTD, "Error deleting CNID %u", dbd_cnid);
-                            (void)dbif_txn_abort(dbd);
-                            goto cleanup;
-                        }
-                        
-                        if (dbif_txn_close(dbd, ret) != 0)
-                            return;
-                        deleted++;
-                    }
-                    /* Check if we got a termination signal */
-                    if (alarmed)
-                        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
-                }
-                return;
-            } else
-                /* Normal case (ret=1): continue while loop */
-                continue;
-        }
-
-        if (dbd_cnid < rebuild_cnid) {
-            /* CNID is orphaned -> delete */
-            dbd_log(LOGSTD, "One orphaned CNID in database: %u.", dbd_cnid);
-            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-                rqst.cnid = htonl(dbd_cnid);
-                if ((ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID)) == -1) {
-                    dbd_log(LOGSTD, "Error deleting CNID %u", dbd_cnid);
-                    (void)dbif_txn_abort(dbd);
-                    goto cleanup;
-                }
-                if (dbif_txn_close(dbd, ret) != 0)
-                    return;
-                deleted++;
-            }
-            continue;
-        }
-
-        if (dbd_cnid > rebuild_cnid) {
-            dbif_idwalk(dbd, NULL, 1); /* Close cursor */
-            dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
-            (void)dbif_txn_close(dbd, 2);
-            (void)dbif_txn_close(dbd_rebuild, 2);                
-            dbd_log(LOGSTD, "Ghost CNID: %u. This is fatal! Dumping rebuild db:\n", rebuild_cnid);
-            dbif_dump(dbd_rebuild, 0);
-            dbd_log(LOGSTD, "Send this dump and a `dbd -d ...` dump to the Netatalk Dev team!");
-            goto cleanup;
-        }
-    } /* while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) */
-
-cleanup:
-    dbif_idwalk(dbd, NULL, 1); /* Close cursor */
-    dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
-    return;
-}
-
-static const char *get_tmpdb_path(void)
-{
-    pid_t pid = getpid();
-    static char path[MAXPATHLEN];
-    snprintf(path, MAXPATHLEN, "/tmp/tmpdb-dbd.%u", pid);
-    if (mkdir(path, 0755) != 0)
-        return NULL;
-    return path;
-}
-
-/*
   Main func called from cmd_dbd.c
 */
-int cmd_dbd_scanvol(DBD *dbd_ref, struct vol *vol, dbd_flags_t flags)
+int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {
     int ret = 0;
-    struct db_param db_param = { 0 };
-    const char *tmpdb_path = NULL;
 
-    /* Set cachesize for in-memory rebuild db */
-    db_param.cachesize = 64 * 1024;         /* 64 MB */
-    db_param.maxlocks = DEFAULT_MAXLOCKS;
-    db_param.maxlockobjs = DEFAULT_MAXLOCKOBJS;
-    db_param.logfile_autoremove = 1;
-
-    /* Make it accessible for all funcs */
-    dbd = dbd_ref;
+    /* Make vol accessible for all funcs */
+    vol = vol_in;
 
     /* We only support unicode volumes ! */
     if (vol->v_volcharset != CH_UTF8) {
-        dbd_log( LOGSTD, "Not a Unicode volume: %s, %u != %u", vol->v_volcodepage, vol->v_volcharset, CH_UTF8);
+        dbd_log(LOGSTD, "Not a Unicode volume: %s, %u != %u", vol->v_volcodepage, vol->v_volcharset, CH_UTF8);
         return -1;
     }
 
-    /* Get volume stamp */
-    dbd_getstamp(dbd, &rqst, &rply);
-    if (rply.result != CNID_DBD_RES_OK) {
+    /*
+     * Get CNID database stamp, cnid_getstamp() passes the buffer,
+     * then cnid_resolve() actually gets the value from the db
+     */
+    cnid_getstamp(vol->v_cdb, stamp, sizeof(stamp));
+    cnid_t rootid = 0;
+    if (cnid_resolve(vol->v_cdb, &rootid, cnidResBuf, sizeof(cnidResBuf)) == NULL) {
+        dbd_log(LOGSTD, "error resolving rootinfo key");
+        goto exit;
+    }
+
+#if 0
+    if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild))) {
         ret = -1;
         goto exit;
     }
-    memcpy(stamp, rply.name, CNID_DEV_LEN);
-
-    /* temporary rebuild db, used with -re rebuild to delete unused CNIDs, not used with -f */
-    if (! nocniddb && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE)) {
-        tmpdb_path = get_tmpdb_path();
-        if (NULL == (dbd_rebuild = dbif_init(tmpdb_path, "cnid2.db"))) {
-            ret = -1;
-            goto exit;
-        }
-
-        if (dbif_env_open(dbd_rebuild,
-                          &db_param,
-                          DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN) < 0) {
-            dbd_log(LOGSTD, "error opening tmp database!");
-            goto exit;
-        }
-
-        if (0 != (dbif_open(dbd_rebuild, NULL, 0))) {
-            ret = -1;
-            goto exit;
-        }
-
-        if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild))) {
-            ret = -1;
-            goto exit;
-        }
-    }
+#endif
 
     if (setjmp(jmp) != 0) {
         ret = 0;                /* Got signal, jump from dbd_readdir */
@@ -1231,30 +943,5 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct vol *vol, dbd_flags_t flags)
     }
 
 exit:
-    if (! nocniddb) {
-        if (dbif_txn_close(dbd, ret == 0 ? 1 : 0) != 0)
-            ret = -1;
-        if (dbd_rebuild)
-            if (dbif_txn_close(dbd_rebuild, ret == 0 ? 1 : 0) != 0)
-                ret = -1;
-        if ((ret == 0) && dbd_rebuild && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
-            /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
-               other clients in between our pass 1 and 2 */
-            delete_orphaned_cnids(dbd, dbd_rebuild, flags);
-    }
-
-    if (dbd_rebuild) {
-        dbd_log(LOGDEBUG, "Closing tmp db");
-        dbif_close(dbd_rebuild);
-
-        if (tmpdb_path) {
-            char cmd[8 + MAXPATHLEN];
-            snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", tmpdb_path);
-            dbd_log( LOGDEBUG, "Removing temp database '%s'", tmpdb_path);
-            system(cmd);
-            snprintf(cmd, 8 + MAXPATHLEN, "rmdir %s", tmpdb_path);
-            system(cmd);
-        }        
-    }
     return ret;
 }

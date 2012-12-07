@@ -456,7 +456,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
     cdb->cnid_update = cnid_dbd_update;
     cdb->cnid_rebuild_add = cnid_dbd_rebuild_add;
     cdb->cnid_close = cnid_dbd_close;
-
+    cdb->cnid_wipe = cnid_dbd_wipe;
     return cdb;
 }
 
@@ -992,6 +992,57 @@ int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
     default:
         abort();
     }
+}
+
+int cnid_dbd_wipe(struct _cnid_db *cdb)
+{
+    CNID_private *db;
+    struct cnid_dbd_rqst rqst;
+    struct cnid_dbd_rply rply;
+
+    if (!cdb || !(db = cdb->_private)) {
+        LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    LOG(log_debug, logtype_cnid, "cnid_dbd_wipe");
+
+    RQST_RESET(&rqst);
+    rqst.op = CNID_DBD_OP_WIPE;
+    rqst.cnid = 0;
+
+    rply.namelen = 0;
+    if (transmit(db, &rqst, &rply) < 0) {
+        errno = CNID_ERR_DB;
+        return -1;
+    }
+
+    if (rply.result != CNID_DBD_RES_OK) {
+        errno = CNID_ERR_DB;
+        return -1;
+    }
+    LOG(log_debug, logtype_cnid, "cnid_dbd_wipe: ok");
+
+    struct cnid_dbd_rqst rqst_stamp;
+    struct cnid_dbd_rply rply_stamp;
+    char  stamp[ADEDLEN_PRIVSYN];
+
+    dbd_initstamp(&rqst_stamp);
+    memset(stamp, 0, ADEDLEN_PRIVSYN);
+    rply_stamp.name = stamp;
+    rply_stamp.namelen = ADEDLEN_PRIVSYN;
+
+    if (dbd_rpc(db, &rqst_stamp, &rply_stamp) < 0)
+        return -1;
+    if (dbd_reply_stamp(&rply_stamp ) < 0)
+        return -1;
+
+    if (db->client_stamp)
+        memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
+    memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
+
+    return 0;
 }
 
 

@@ -56,7 +56,8 @@ static struct _cnid_db *cnid_tdb_new(const char *volpath)
     cdb->cnid_resolve = cnid_tdb_resolve;
     cdb->cnid_update = cnid_tdb_update;
     cdb->cnid_close = cnid_tdb_close;
-    
+    cdb->cnid_wipe = NULL;
+
     return cdb;
 }
 

@@ -139,7 +139,8 @@ static struct _cnid_db *cnid_last_new(const char *volpath)
     cdb->cnid_resolve = cnid_last_resolve;
     cdb->cnid_update = cnid_last_update;
     cdb->cnid_close = cnid_last_close;
-    
+    cdb->cnid_wipe = NULL;
+
     return cdb;
 }
 
