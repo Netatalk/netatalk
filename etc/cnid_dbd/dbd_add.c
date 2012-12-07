@@ -123,7 +123,7 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 
 /* ------------------------ */
 /* We need a nolookup version for `dbd` */
-int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int nolookup)
+int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     rply->namelen = 0;
 
@@ -131,18 +131,16 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, in
         ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
     /* See if we have an entry already and return it if yes */
-    if (! nolookup) {
-        if (dbd_lookup(dbd, rqst, rply, 0) < 0) {
-            LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): error in dbd_lookup",
-                ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-            return -1;
-        }
+    if (dbd_lookup(dbd, rqst, rply) < 0) {
+        LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): error in dbd_lookup",
+            ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+        return -1;
+    }
 
-        if (rply->result == CNID_DBD_RES_OK) {
-            /* Found it. rply->cnid is the correct CNID now. */
-            LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success --> CNID: %u", ntohl(rply->cnid));
-            return 1;
-        }
+    if (rply->result == CNID_DBD_RES_OK) {
+        /* Found it. rply->cnid is the correct CNID now. */
+        LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success --> CNID: %u", ntohl(rply->cnid));
+        return 1;
     }
 
     LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): {adding to database ...}",

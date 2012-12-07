@@ -145,7 +145,7 @@ static int loop(struct db_param *dbp)
                 ret = 1;
                 break;
             case CNID_DBD_OP_ADD:
-                ret = dbd_add(dbd, &rqst, &rply, 0);
+                ret = dbd_add(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_GET:
                 ret = dbd_get(dbd, &rqst, &rply);
@@ -154,7 +154,7 @@ static int loop(struct db_param *dbp)
                 ret = dbd_resolve(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_LOOKUP:
-                ret = dbd_lookup(dbd, &rqst, &rply, 0);
+                ret = dbd_lookup(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_UPDATE:
                 ret = dbd_update(dbd, &rqst, &rply);
