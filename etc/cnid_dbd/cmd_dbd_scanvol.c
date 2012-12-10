@@ -628,15 +628,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log( LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
             adfile_ok = 1;
         } else {
-            if (dbd_flags & DBD_FLAGS_FORCE) {
-                ad_cnid = ad_forcegetid(&ad);
-                /* This ensures the changed stamp is written */
-                ad_setid( &ad, st->st_dev, st->st_ino, ad_cnid, did, stamp);
-                ad_flush(&ad);
-            } else
-                ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
-
-            if (ad_cnid == 0)
+            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
+            if (ad_cnid == CNID_INVALID)
                 dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
             else
                 dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
