@@ -117,25 +117,22 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
 }
 
 /* ----------------------------- */
-uint32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino , const cnid_t did, const void *stamp)
+uint32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino , const cnid_t did, const void *stamp _U_)
 {
     uint32_t aint = 0;
     dev_t  dev;
     ino_t  ino;
     cnid_t a_did;
-    char   temp[ADEDLEN_PRIVSYN];
 
     if (adp) {
         if (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)) {
             memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));
             memcpy(&ino, ad_entry(adp, ADEID_PRIVINO), sizeof(ino_t));
-            memcpy(temp, ad_entry(adp, ADEID_PRIVSYN), sizeof(temp));
             memcpy(&a_did, ad_entry(adp, ADEID_DID), sizeof(cnid_t));
 
             if (((adp->ad_options & ADVOL_NODEV) || (dev == st_dev))
                 && ino == st_ino
-                && (!did || a_did == did)
-                && (memcmp(stamp, temp, sizeof(temp)) == 0) ) {
+                && (!did || a_did == did) ) {
                 memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
                 if (adp->ad_vers == AD_VERSION2)
                     return aint;
