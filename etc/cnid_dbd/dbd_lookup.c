@@ -120,6 +120,7 @@ to be safe we must assign new CNIDs to both files.
 
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid.h>
 
 #include "pack.h"
 #include "dbif.h"
@@ -281,6 +282,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
                 return -1;
             rply->result = CNID_DBD_RES_NOTFOUND;
+            rqst->cnid = CNID_INVALID; /* invalidate CNID hint */
             return 1;
         }
     }
@@ -292,6 +294,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
             return -1;
         rply->result = CNID_DBD_RES_NOTFOUND;
+        rqst->cnid = CNID_INVALID; /* invalidate CNID hint */
         return 1;
     }
 
