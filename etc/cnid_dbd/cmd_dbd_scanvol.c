@@ -911,18 +911,6 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
      * then cnid_resolve() actually gets the value from the db
      */
     cnid_getstamp(vol->v_cdb, stamp, sizeof(stamp));
-    cnid_t rootid = 0;
-    if (cnid_resolve(vol->v_cdb, &rootid, cnidResBuf, sizeof(cnidResBuf)) == NULL) {
-        dbd_log(LOGSTD, "error resolving rootinfo key");
-        goto exit;
-    }
-
-#if 0
-    if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild))) {
-        ret = -1;
-        goto exit;
-    }
-#endif
 
     if (setjmp(jmp) != 0) {
         ret = 0;                /* Got signal, jump from dbd_readdir */
