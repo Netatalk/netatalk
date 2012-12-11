@@ -545,7 +545,7 @@ static int catsearch(const AFPObj *obj,
         }
         LOG(log_debug, logtype_afpd, "catsearch: current struct dir: \"%s\"", cfrombstr(currentdir->d_fullpath));
 
-		error = lchdir(bdata(currentdir->d_fullpath));
+		error = movecwd(vol, currentdir);
 
 		if (!error && dirpos == NULL)
 			dirpos = opendir(".");
