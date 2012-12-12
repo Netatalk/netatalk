@@ -723,14 +723,7 @@ static int solaris_unlinkat(int attrdirfd, const char *name)
 
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode)
 {
-	int filedes = attropen(path, attrpath, oflag, mode);
-	if (filedes == -1) {
-        if (errno != ENOENT)
-            LOG(log_error, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
-                path, attrpath, strerror(errno));
-        errno = ENOATTR;
-	}
-	return filedes;
+	return attropen(path, attrpath, oflag, mode);
 }
 
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
