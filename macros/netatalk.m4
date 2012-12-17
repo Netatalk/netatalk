@@ -585,7 +585,7 @@ save_CFLAGS="$CFLAGS"
 save_LIBS="$LIBS"
 CFLAGS="$KRB5_CFLAGS"
 LIBS="$KRB5_LIBS"
-AC_CHECK_FUNCS([krb5_free_unparsed_name krb5_free_error_message])
+AC_CHECK_FUNCS([krb5_free_unparsed_name krb5_free_error_message krb5_free_keytab_entry_contents krb5_kt_free_entry])
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 ])
