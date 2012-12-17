@@ -98,6 +98,13 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
            PAM_ACCOUNT=system
            PAM_PASSWORD=system
            PAM_SESSION=system
+        dnl Solaris 11+
+        elif test -f "$pampath/other" ; then
+           PAM_DIRECTIVE=include
+           PAM_AUTH=${PAMDIR}etc/pam.d/other
+           PAM_ACCOUNT=${PAMDIR}etc/pam.d/other
+           PAM_PASSWORD=${PAMDIR}etc/pam.d/other
+           PAM_SESSION=${PAMDIR}etc/pam.d/other
         dnl Fallback
         else
            PAM_DIRECTIVE=required

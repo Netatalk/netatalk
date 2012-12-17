@@ -19,6 +19,8 @@ Changes in 3.0.2
 * REM: Remove TimeMachine volume used size FCE event.
 * UPD: Add quoting support to '[in]valid users' option.
        Fixes bug #472.
+* FIX: Install working PAM config on Solaris 11.
+       Fixed bug #481.
 
 Changes in 3.0.1
 ================
