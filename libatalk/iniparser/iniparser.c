@@ -574,14 +574,6 @@ dictionary * iniparser_load(const char * ininame)
         len = (int)strlen(line)-1;
         if (len==0)
             continue;
-        /* Safety check against buffer overflows */
-        if (line[len]!='\n') {
-            LOG(log_error, logtype_default, "iniparser: input line too long in \"%s\" (lineno: %d)",
-                ininame, lineno);
-            dictionary_del(dict);
-            fclose(in);
-            return NULL ;
-        }
         /* Get rid of \n and spaces at end of line */
         while ((len>=0) &&
                 ((line[len]=='\n') || (isspace(line[len])))) {
