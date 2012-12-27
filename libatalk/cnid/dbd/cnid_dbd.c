@@ -563,8 +563,8 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
     rqst.name = name;
     rqst.namelen = len;
 
-    LOG(log_debug, logtype_cnid, "cnid_dbd_add: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir)",
-        ntohl(did), name, (long long)st->st_ino, rqst.type);
+    LOG(log_debug, logtype_cnid, "cnid_dbd_add: CNID: %u, name: '%s', dev: 0x%llx, inode: 0x%llx, type: %s",
+        ntohl(did), name, (long long)rqst.dev, (long long)st->st_ino, rqst.type ? "dir" : "file");
 
     rply.namelen = 0;
     if (transmit(db, &rqst, &rply) < 0) {
