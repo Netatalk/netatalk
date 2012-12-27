@@ -29,13 +29,13 @@
 #include <atalk/adouble.h>
 #include <atalk/unicode.h>
 #include <atalk/netatalk_conf.h>
-//#include <atalk/cnid_dbd_private.h>
 #include <atalk/volume.h>
 #include <atalk/ea.h>
 #include <atalk/util.h>
 #include <atalk/acl.h>
 #include <atalk/compat.h>
 #include <atalk/cnid.h>
+#include <atalk/errchk.h>
 
 #include "cmd_dbd.h"
 #include "dbif.h"
@@ -47,7 +47,6 @@
 #define ADFILE_OK (adfile_ok == 0)
 
 
-static struct vol     *myvol;
 static char           cwdbuf[MAXPATHLEN+1];
 static struct vol     *vol;
 static DBD            *dbd_rebuild;
@@ -85,22 +84,22 @@ static char *utompath(char *upath)
     u = upath;
     outlen = strlen(upath);
 
-    if ((myvol->v_casefold & AFPVOL_UTOMUPPER))
+    if ((vol->v_casefold & AFPVOL_UTOMUPPER))
         flags |= CONV_TOUPPER;
-    else if ((myvol->v_casefold & AFPVOL_UTOMLOWER))
+    else if ((vol->v_casefold & AFPVOL_UTOMLOWER))
         flags |= CONV_TOLOWER;
 
-    if ((myvol->v_flags & AFPVOL_EILSEQ)) {
+    if ((vol->v_flags & AFPVOL_EILSEQ)) {
         flags |= CONV__EILSEQ;
     }
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset(myvol->v_volcharset,
+    if ((size_t)-1 == ( outlen = convert_charset(vol->v_volcharset,
                                                  CH_UTF8_MAC,
-                                                 myvol->v_maccharset,
+                                                 vol->v_maccharset,
                                                  u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         dbd_log( LOGSTD, "Conversion from %s to %s for %s failed.",
-                 myvol->v_volcodepage, myvol->v_maccodepage, u);
+                 vol->v_volcodepage, vol->v_maccodepage, u);
         return NULL;
     }
 
@@ -126,12 +125,12 @@ static char *mtoupath(char *mpath)
     }
 
     /* set conversion flags */
-    if ((myvol->v_casefold & AFPVOL_MTOUUPPER))
+    if ((vol->v_casefold & AFPVOL_MTOUUPPER))
         flags |= CONV_TOUPPER;
-    else if ((myvol->v_casefold & AFPVOL_MTOULOWER))
+    else if ((vol->v_casefold & AFPVOL_MTOULOWER))
         flags |= CONV_TOLOWER;
 
-    if ((myvol->v_flags & AFPVOL_EILSEQ)) {
+    if ((vol->v_flags & AFPVOL_EILSEQ)) {
         flags |= CONV__EILSEQ;
     }
 
@@ -142,11 +141,11 @@ static char *mtoupath(char *mpath)
     outlen = MAXPATHLEN;
 
     if ((size_t)-1 == (outlen = convert_charset(CH_UTF8_MAC,
-                                                myvol->v_volcharset,
-                                                myvol->v_maccharset,
+                                                vol->v_volcharset,
+                                                vol->v_maccharset,
                                                 m, inplen, u, outlen, &flags)) ) {
         dbd_log( LOGSTD, "conversion from UTF8-MAC to %s for %s failed.",
-                 myvol->v_volcodepage, mpath);
+                 vol->v_volcodepage, mpath);
         return NULL;
     }
 
@@ -215,10 +214,10 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
 
     *newname = NULL;
 
-    if (myvol->v_adouble == AD_VERSION_EA) {
+    if (vol->v_adouble == AD_VERSION_EA) {
         if (!(dbd_flags & DBD_FLAGS_V2TOEA))
             return 0;
-        if (ad_convert(fname, st, myvol, newname) != 0) {
+        if (ad_convert(fname, st, vol, newname) != 0) {
             switch (errno) {
             case ENOENT:
                 break;
@@ -233,7 +232,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
     if (S_ISDIR(st->st_mode))
         adflags |= ADFLAGS_DIR;
 
-    adname = myvol->ad_path(fname, adflags);
+    adname = vol->ad_path(fname, adflags);
 
     if ((ret = access( adname, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -249,7 +248,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
             return -1;
 
         /* Create ad file */
-        ad_init(&ad, myvol);
+        ad_init(&ad, vol);
 
         if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
@@ -269,7 +268,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         chmod(adname, st->st_mode);
 #endif
     } else {
-        ad_init(&ad, myvol);
+        ad_init(&ad, vol);
         if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
             return -1;
@@ -338,7 +337,7 @@ static int check_eafiles(const char *fname)
     struct stat st;
     char *eaname;
 
-    if ((ret = ea_open(myvol, fname, EA_RDWR, &ea)) != 0) {
+    if ((ret = ea_open(vol, fname, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             return 0;
         dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files", cwdbuf, fname);
@@ -391,7 +390,7 @@ static int check_addir(int volroot)
     struct adouble ad;
     char *mname = NULL;
 
-    if (myvol->v_adouble == AD_VERSION_EA)
+    if (vol->v_adouble == AD_VERSION_EA)
         return 0;
 
     /* Check for ad-dir */
@@ -404,10 +403,10 @@ static int check_addir(int volroot)
     }
 
     /* Check for ".Parent" */
-    if ( (adpar_ok = access(myvol->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
+    if ( (adpar_ok = access(vol->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Access error on '%s/%s': %s",
-                    cwdbuf, myvol->ad_path(".", ADFLAGS_DIR), strerror(errno));
+                    cwdbuf, vol->ad_path(".", ADFLAGS_DIR), strerror(errno));
             return -1;
         }
         dbd_log(LOGSTD, "Missing .AppleDouble/.Parent for '%s'", cwdbuf);
@@ -426,7 +425,7 @@ static int check_addir(int volroot)
         }
 
         /* Create ad dir and set name */
-        ad_init(&ad, myvol);
+        ad_init(&ad, vol);
 
         if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
@@ -447,7 +446,7 @@ static int check_addir(int volroot)
             return -1;
         }
         chown(ADv2_DIRNAME, st.st_uid, st.st_gid);
-        chown(myvol->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid);
+        chown(vol->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid);
     }
 
     return 0;
@@ -466,7 +465,7 @@ static int check_eafile_in_adouble(const char *name)
     char *namep, *namedup = NULL;
 
     /* Check if this is an AFPVOL_EA_AD vol */
-    if (myvol->v_vfs_ea == AFPVOL_EA_AD) {
+    if (vol->v_vfs_ea == AFPVOL_EA_AD) {
         /* Does the filename contain "::EA" ? */
         namedup = strdup(name);
         if ((namep = strstr(namedup, "::EA")) == NULL) {
@@ -525,7 +524,7 @@ static int read_addir(void)
     struct stat st;
 
     if ((chdir(ADv2_DIRNAME)) != 0) {
-        if (myvol->v_adouble == AD_VERSION_EA) {
+        if (vol->v_adouble == AD_VERSION_EA) {
             return 0;
         }
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
@@ -618,10 +617,10 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     /* Get CNID from ad-file */
     ad_cnid = CNID_INVALID;
     if (ADFILE_OK) {
-        ad_init(&ad, myvol);
+        ad_init(&ad, vol);
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             
-            if (myvol->v_adouble != AD_VERSION_EA) {
+            if (vol->v_adouble != AD_VERSION_EA) {
                 dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
                 return CNID_INVALID;
             }
@@ -646,7 +645,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         /* Mismatch, overwrite ad file with value from db */
         dbd_log(LOGSTD, "CNID mismatch for '%s/%s', CNID db: %u, ad-file: %u",
                 cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
-        ad_init(&ad, myvol);
+        ad_init(&ad, vol);
         if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                     cwdbuf, name, strerror(errno));
@@ -721,7 +720,7 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
             continue;
 
-        if (!myvol->vfs->vfs_validupath(myvol, ep->d_name)) {
+        if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
             dbd_log(LOGDEBUG, "Ignoring \"%s\"", ep->d_name);
             continue;
         }
@@ -807,7 +806,7 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         /* Check EA files */
-        if (myvol->v_vfs_ea == AFPVOL_EA_AD)
+        if (vol->v_vfs_ea == AFPVOL_EA_AD)
             check_eafiles(name);
 
         /**************************************************************************
@@ -840,7 +839,7 @@ static int dbd_readdir(int volroot, cnid_t did)
     /*
       Use results of previous checks
     */
-    if ((myvol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
+    if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
         if (rmdir(ADv2_DIRNAME) != 0) {
             switch (errno) {
             case ENOENT:
@@ -855,55 +854,25 @@ static int dbd_readdir(int volroot, cnid_t did)
     return ret;
 }
 
-static int scanvol(struct vol *vol, dbd_flags_t flags)
-{
-    struct stat st;
-
-    /* Make this stuff accessible from all funcs easily */
-    myvol = vol;
-    dbd_flags = flags;
-
-    /* Run with umask 0 */
-    umask(0);
-
-    strcpy(cwdbuf, myvol->v_path);
-    chdir(myvol->v_path);
-
-    if ((myvol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
-        if (lstat(".", &st) != 0)
-            return -1;
-        if (ad_convert(".", &st, vol, NULL) != 0) {
-            switch (errno) {
-            case ENOENT:
-                break;
-            default:
-                dbd_log(LOGSTD, "Conversion error for \"%s\": %s", myvol->v_path, strerror(errno));
-                break;
-            }
-        }
-    }
-
-    /* Start recursion */
-    if (dbd_readdir(1, htonl(2)) < 0)  /* 2 = volumeroot CNID */
-        return -1;
-
-    return 0;
-}
-
 /*
   Main func called from cmd_dbd.c
 */
 int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {
-    int ret = 0;
+    EC_INIT;
+    struct stat st;
+
+    /* Run with umask 0 */
+    umask(0);
 
     /* Make vol accessible for all funcs */
     vol = vol_in;
+    dbd_flags = flags;
 
     /* We only support unicode volumes ! */
     if (vol->v_volcharset != CH_UTF8) {
         dbd_log(LOGSTD, "Not a Unicode volume: %s, %u != %u", vol->v_volcodepage, vol->v_volcharset, CH_UTF8);
-        return -1;
+        EC_FAIL;
     }
 
     /*
@@ -913,16 +882,29 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
     cnid_getstamp(vol->v_cdb, stamp, sizeof(stamp));
 
     if (setjmp(jmp) != 0) {
-        ret = 0;                /* Got signal, jump from dbd_readdir */
-        goto exit;
+        EC_EXIT_STATUS(0); /* Got signal, jump from dbd_readdir */
     }
 
-    /* scanvol */
-    if ((scanvol(vol, flags)) != 0) {
-        ret = -1;
-        goto exit;
+    strcpy(cwdbuf, vol->v_path);
+    chdir(vol->v_path);
+
+    if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
+        if (lstat(".", &st) != 0)
+            EC_FAIL;
+        if (ad_convert(".", &st, vol, NULL) != 0) {
+            switch (errno) {
+            case ENOENT:
+                break;
+            default:
+                dbd_log(LOGSTD, "Conversion error for \"%s\": %s", vol->v_path, strerror(errno));
+                break;
+            }
+        }
     }
 
-exit:
-    return ret;
+    /* Start recursion */
+    EC_NEG1( dbd_readdir(1, htonl(2)) );  /* 2 = volumeroot CNID */
+
+EC_CLEANUP:
+    EC_EXIT;
 }
