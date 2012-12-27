@@ -92,13 +92,14 @@ static void set_signal(void)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-cfFstvV] <path to netatalk volume>\n"
-           "dbd scans or reindex Netatalk CNID databases of AFP volumes.\n"
-           "dbd must be run with appropiate permissions i.e. as root.\n"
-           "By default dbd rebuilds the CNID database of the volume.\n\n"
+    printf("Usage: dbd [-cfFstvV] <path to netatalk volume>\n\n"
+           "dbd scans all file and directories of AFP volumes, updating the\n"
+           "CNID database of the volume. dbd must be run with appropiate\n"
+           "permissions i.e. as root.\n\n"
            "Options:\n"
-           "   -s Scan volume:\n"
-           "   -c convert from adouble:v2 to adouble:ea (use with -r)\n"
+           "   -s scan volume: treat the volume as read only and don't\n"
+           "      perform any filesystem modifications\n"
+           "   -c convert from adouble:v2 to adouble:ea\n"
            "   -F location of the afp.conf config file\n"
            "   -f delete and recreate CNID database\n"
            "   -t show statistics while running\n"
@@ -137,7 +138,7 @@ int main(int argc, char **argv)
     const char *volpath = NULL;
 
     int c;
-    while ((c = getopt(argc, argv, ":cfF:stvV")) != -1) {
+    while ((c = getopt(argc, argv, ":cfF:rstvV")) != -1) {
         switch(c) {
         case 'c':
             flags |= DBD_FLAGS_V2TOEA;
@@ -147,6 +148,9 @@ int main(int argc, char **argv)
             break;
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
+            break;
+        case 'r':
+            /* the default */
             break;
         case 's':
             dbd_cmd = dbd_scan;
@@ -231,7 +235,7 @@ int main(int argc, char **argv)
     if ((vol->v_cdb = cnid_open(vol->v_path,
                                 0000,
                                 "dbd",
-                                flags,
+                                vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0,
                                 vol->v_cnidserver,
                                 vol->v_cnidport)) == NULL) {
         dbd_log(LOGSTD, "Cant initialize CNID database connection for %s", vol->v_path);
