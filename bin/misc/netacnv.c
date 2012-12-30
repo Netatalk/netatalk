@@ -70,6 +70,9 @@ int main(int argc, char **argv)
     }
     string = argv[optind];
 
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, "MAC_ROMAN");
+
     if ( (charset_t) -1 == (from = add_charset(f ? f : "UTF8-MAC")) ) {
         fprintf( stderr, "Setting codepage %s as from codepage failed\n", f ? f : "UTF8-MAC");
         return (-1);
