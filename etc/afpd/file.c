@@ -1939,7 +1939,7 @@ delete:
 }
 
 /* ------------------------------ */
-static struct adouble *find_adouble(const AFPObj *obj, const struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
+static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
 {
     int             ret;
 

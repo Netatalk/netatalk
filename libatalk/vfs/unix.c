@@ -46,7 +46,7 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat
 
     mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
 
-    if (ochmod(name, mode & ~vol->v_umask, st, vol_syml_opt(vol) | O_NETATALK_ACL) < 0 && errno != EPERM ) {
+    if (ochmod((char *)name, mode & ~vol->v_umask, st, vol_syml_opt(vol) | O_NETATALK_ACL) < 0 && errno != EPERM ) {
         return -1;
     }
     return 0;

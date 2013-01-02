@@ -224,7 +224,7 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 
 
 /* --------------------- */
-int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
+int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 {
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);

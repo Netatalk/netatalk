@@ -54,7 +54,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
  * echo off means password.
  */
 static int PAM_conv (int num_msg,
-                     const struct pam_message **msg,
+                     struct pam_message **msg,
                      struct pam_response **resp,
                      void *appdata_ptr _U_) 
 {
