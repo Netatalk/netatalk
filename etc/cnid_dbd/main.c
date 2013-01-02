@@ -243,7 +243,7 @@ static int reinit_db(void)
 {
     EC_INIT;
     DBT key, data;
-    bool copyRootInfo;
+    bool copyRootInfo = false;
 
     if (dbd) {
         memset(&key, 0, sizeof(key));
