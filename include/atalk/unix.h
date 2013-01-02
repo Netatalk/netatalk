@@ -26,6 +26,8 @@
 #define NETATALK_DIOSZ_STACK 65536
 #define NETATALK_DIOSZ_HEAP  (1024*1024)
 
+struct vol;
+
 /* vfs/unix.c */
 extern int netatalk_unlink(const char *name);
 extern int netatalk_unlinkat(int dirfd, const char *name);
