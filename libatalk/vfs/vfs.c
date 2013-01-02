@@ -218,7 +218,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
             return -1;
     }
 
-    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, &hf_mode, 0, vol->v_umask))
+    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, vol, &hf_mode, 0))
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -487,7 +487,7 @@ static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR)
 }
 
 /* Returns 1 if the entry is NOT an ._ file */
-static int deletecurdir_ea_osx_chkifempty_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     if (de->d_name[0] != '.' || de->d_name[0] == '_')
         return 1;
@@ -495,7 +495,7 @@ static int deletecurdir_ea_osx_chkifempty_loop(struct dirent *de, char *name, vo
     return 0;
 }
 
-static int deletecurdir_ea_osx_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+static int deletecurdir_ea_osx_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     int ret;
     
@@ -515,7 +515,7 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
     /* first check if there's really no other file besides files starting with ._ */
     if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
                                 deletecurdir_ea_osx_chkifempty_loop,
-                                NULL, 0, 0)) != 0) {
+                                vol, NULL, 0)) != 0) {
         if (err == 1)
             return AFPERR_DIRNEMPT;
         return AFPERR_MISC;
@@ -524,7 +524,7 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
     /* Now delete orphaned ._ files */
     if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
                                 deletecurdir_ea_osx_loop,
-                                NULL, 0, 0)) != 0)
+                                vol, NULL, 0)) != 0)
         return err;
 
 #endif
@@ -542,7 +542,7 @@ static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
 {
 #ifndef HAVE_EAFD
-    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_HF ), mode, st, vol->v_umask);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF ), mode, st);
 #endif
     return 0;
 }
