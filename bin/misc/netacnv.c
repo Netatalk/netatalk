@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     char *f = NULL, *t = NULL;
     charset_t from, to, mac;
 
-    while ((opt = getopt(argc, argv, "m::o:f:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "m:o:f:t:")) != -1) {
         switch(opt) {
         case 'm':
             macName = strdup(optarg);
