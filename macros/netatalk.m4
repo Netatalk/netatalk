@@ -359,7 +359,7 @@ fi
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then 
 	AC_MSG_RESULT([ * Linux specific configuration])
-	
+    AC_DEFINE(LINUX, 1, [OS is Linux])	
 	dnl ----- check if we need the quotactl wrapper
     AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
 		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
