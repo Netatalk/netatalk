@@ -53,7 +53,7 @@ extern int remove_acl_vfs(const char *name);
 
 #else /* HAVE_ACLS=no */
 
-#define O_NETATALK_ACL
+#define O_NETATALK_ACL 0
 #define chmod_acl chmod
 
 #endif /* HAVE_ACLS */
