@@ -263,7 +263,7 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
  * O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
  * O_NETATALK_ACL: call chmod_acl() instead of chmod()
  */
-int ochmod(const char *path, mode_t mode, const struct stat *st, int options)
+int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {
     struct stat sb;
 
