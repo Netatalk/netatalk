@@ -45,7 +45,9 @@
 
 #include <atalk/ftw.h>
 
+#ifndef HAVE_MEMPCPY
 #define mempcpy(D, S, N) ((void *) ((char *) memcpy (D, S, N) + (N)))
+#endif
 
 #define NDEBUG 1
 #include <assert.h>
