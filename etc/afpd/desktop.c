@@ -31,6 +31,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/unix.h>
 #include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 #include <atalk/errchk.h>
 
 #include "volume.h"
@@ -61,7 +62,7 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
     bstring dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
-    EC_NEG1( chdir(bdata(dtpath)) );
+    EC_NEG1( chdir(cfrombstr(dtpath)) );
 
     if (( desk = opendir( "." )) == NULL ) {
         if ( chdir( wd ) < 0 ) {
@@ -138,7 +139,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
     bstring dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
-    EC_NEG1( chdir(bdata(dtpath)) );
+    EC_NEG1( chdir(cfrombstr(dtpath)) );
     
     if (( desk = opendir( "." )) == NULL ) {
         if ( chdir( wd ) < 0 ) {
@@ -182,7 +183,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
         LOG(log_error, logtype_afpd, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
         EC_FAIL;
     }
-    if (chown(bdata(dtpath), uid, gid ) < 0 && errno != EPERM ) {
+    if (chown(cfrombstr(dtpath), uid, gid ) < 0 && errno != EPERM ) {
         LOG(log_error, logtype_afpd, "setdeskowner: chown %s: %s", fullpathname(".AppleDouble"), strerror(errno) );
     }
 
@@ -203,11 +204,11 @@ static void create_appledesktop_folder(const struct vol * vol)
     dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
-    if (lstat(bdata(dtpath), &st) != 0) {
+    if (lstat(cfrombstr(dtpath), &st) != 0) {
 
         become_root();
 
-        if (lstat(bdata(olddtpath), &st) == 0) {
+        if (lstat(cfrombstr(olddtpath), &st) == 0) {
             cmd_argv[0] = "mv";
             cmd_argv[1] = bdata(olddtpath);
             cmd_argv[2] = bdata(dtpath);
@@ -215,10 +216,10 @@ static void create_appledesktop_folder(const struct vol * vol)
             if (run_cmd("mv", cmd_argv) != 0) {
                 LOG(log_error, logtype_afpd, "moving .AppleDesktop from \"%s\" to \"%s\" failed",
                     bdata(olddtpath), bdata(dtpath));
-                mkdir(bdata(dtpath), 0777);
+                mkdir(cfrombstr(dtpath), 0777);
             }
         } else {
-            mkdir(bdata(dtpath), 0777);
+            mkdir(cfrombstr(dtpath), 0777);
         }
 
         unbecome_root();

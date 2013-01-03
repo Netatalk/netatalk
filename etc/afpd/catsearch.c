@@ -137,7 +137,6 @@ static void clearstack(void)
 static int addstack(char *uname, struct dir *dir, int pidx)
 {
 	struct dsitem *ds;
-	size_t         l, u;
     struct dsitem *tmpds = NULL;
 
 	/* check if we have some space on stack... */
@@ -551,7 +550,7 @@ static int catsearch(const AFPObj *obj,
 			dirpos = opendir(".");
 
 		if (dirpos == NULL)
-			dirpos = opendir(bdata(currentdir->d_fullpath));
+			dirpos = opendir(cfrombstr(currentdir->d_fullpath));
 
 		if (error || dirpos == NULL) {
 			switch (errno) {

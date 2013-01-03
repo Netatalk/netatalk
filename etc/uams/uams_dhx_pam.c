@@ -197,7 +197,7 @@ static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_,
     DH *dh;
 
     /* get the client's public key */
-    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
+    if (!(bn = BN_bin2bn((unsigned char *)ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM No Public Key -- %s",
 		  strerror(errno));
@@ -259,10 +259,10 @@ static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     /* figure out the key. store the key in rbuf for now. */
-    i = DH_compute_key(rbuf, bn, dh);
+    i = DH_compute_key((unsigned char *)rbuf, bn, dh);
     
     /* set the key */
-    CAST_set_key(&castkey, i, rbuf);
+    CAST_set_key(&castkey, i, (unsigned char *)rbuf);
     
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -271,7 +271,7 @@ static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_,
     *rbuflen += sizeof(sessid);
     
     /* public key */
-    BN_bn2bin(dh->pub_key, rbuf); 
+    BN_bn2bin(dh->pub_key, (unsigned char *)rbuf); 
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
 
@@ -305,7 +305,7 @@ static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_,
 #endif /* 0 */
 
     /* encrypt using cast */
-    CAST_cbc_encrypt(rbuf, rbuf, CRYPTBUFLEN, &castkey, msg2_iv, 
+    CAST_cbc_encrypt((unsigned char *)rbuf, (unsigned char *)rbuf, CRYPTBUFLEN, &castkey, msg2_iv, 
 		     CAST_ENCRYPT);
     *rbuflen += CRYPTBUFLEN;
     BN_free(bn);
@@ -440,13 +440,13 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 	hostname = NULL;
 	}
 
-    CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
+    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)rbuf, CRYPT2BUFLEN, &castkey,
 		     msg3_iv, CAST_DECRYPT);
     memset(&castkey, 0, sizeof(castkey));
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn(rbuf, KEYSIZE, NULL)))
+    if (!(bn1 = BN_bin2bn((unsigned char *)rbuf, KEYSIZE, NULL)))
       return AFPERR_PARAM;
 
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {
@@ -617,13 +617,13 @@ static int pam_changepw(void *obj, char *username,
     }
 
     /* grab the client's nonce, old password, and new password. */
-    CAST_cbc_encrypt(ibuf, ibuf, CHANGEPWBUFLEN, &castkey,
+    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)ibuf, CHANGEPWBUFLEN, &castkey,
 		     msg3_iv, CAST_DECRYPT);
     memset(&castkey, 0, sizeof(castkey));
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
+    if (!(bn1 = BN_bin2bn((unsigned char *)ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %s",
 		  strerror(errno));

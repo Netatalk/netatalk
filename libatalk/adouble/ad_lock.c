@@ -630,7 +630,6 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
 {
     uint16_t ret = 0;
-    struct ad_fd *adf;
     off_t off;
     off_t len;
 

@@ -25,7 +25,6 @@
    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "tdb_private.h"
 
 /* check for an out of bounds access - if it is out of bounds then

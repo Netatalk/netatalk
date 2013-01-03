@@ -912,7 +912,7 @@ exit:
 void dir_free_invalid_q(void)
 {
     struct dir *dir;
-    while (dir = (struct dir *)dequeue(invalid_dircache_entries))
+    while ((dir = (struct dir *)dequeue(invalid_dircache_entries)))
         dir_free(dir);
 }
 
@@ -2200,7 +2200,6 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
 
-createdir_done:
     memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
     *rbuflen = sizeof( uint32_t );
     setvoltime(obj, vol );

@@ -26,7 +26,7 @@ int cnid_tdb_delete(struct _cnid_db *cdb, const cnid_t id)
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
-    key.dptr  = (char *)&id;
+    key.dptr  = (unsigned char *)&id;
     key.dsize = sizeof(cnid_t);
     data = tdb_fetch(db->tdb_cnid, key);
     if (!data.dptr)
@@ -40,7 +40,7 @@ int cnid_tdb_delete(struct _cnid_db *cdb, const cnid_t id)
     key.dsize = CNID_DEVINO_LEN;
     tdb_delete(db->tdb_devino, key); 
 
-    key.dptr = (char *)data.dptr +CNID_DID_OFS;
+    key.dptr = data.dptr +CNID_DID_OFS;
     key.dsize = data.dsize -CNID_DID_OFS;
     tdb_delete(db->tdb_didname, key); 
 

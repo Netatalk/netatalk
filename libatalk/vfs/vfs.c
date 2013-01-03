@@ -170,7 +170,6 @@ static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
     const char *adouble = vol->ad_path(name, ADFLAGS_DIR );
-    int  dropbox = vol->v_flags;
 
     if (dir_rx_set(mode)) {
         if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0 ) 
@@ -208,7 +207,6 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
 
 static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
-    int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
     const char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
     const char  *adouble_p = ad_dir(adouble);

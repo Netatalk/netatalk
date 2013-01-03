@@ -23,15 +23,9 @@
    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 0
-#include "replace.h"
-#include "system/filesys.h"
-#include "system/time.h"
-#include "system/shmem.h"
-#include "system/select.h"
-#include "system/wait.h"
-#include "tdb.h"
-#endif
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <unistd.h>
 #include <stdint.h>
@@ -50,6 +44,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/param.h>
+#include <stddef.h>
 
 #ifndef __STRING
 #define __STRING(x)    #x
@@ -77,10 +72,6 @@
 
 typedef uint32_t tdb_len_t;
 typedef uint32_t tdb_off_t;
-
-#ifndef offsetof
-#define offsetof(t,f) ((unsigned int)&((t *)0)->f)
-#endif
 
 #define TDB_MAGIC_FOOD "TDB file\n"
 #define TDB_VERSION (0x26011967 + 6)

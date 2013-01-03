@@ -26,6 +26,7 @@
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 
@@ -216,7 +217,7 @@ static int delete_db(void)
 
     EC_ZERO( get_lock(LOCK_FREE, bdata(dbpath)) );
     EC_NEG1( cwd = open(".", O_RDONLY) );
-    chdir(bdata(dbpath));
+    chdir(cfrombstr(dbpath));
     system("rm -f cnid2.db lock log.* __db.*");
 
     if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
@@ -477,7 +478,6 @@ int main(int argc, char *argv[])
     EC_INIT;
     int delete_bdb = 0;
     int ctrlfd = -1, clntfd = -1;
-    char *logconfig;
     AFPObj obj = { 0 };
     char *volpath = NULL;
 

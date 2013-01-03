@@ -65,7 +65,6 @@ static struct cnid_dbd_rqst rqst;
 static struct cnid_dbd_rply rply;
 static jmp_buf jmp;
 static char pname[MAXPATHLEN] = "../";
-static char cnidResBuf[12 + MAXPATHLEN + 1];
 
 /*
   Taken form afpd/desktop.c
@@ -107,52 +106,6 @@ static char *utompath(char *upath)
 }
 
 /*
-  Taken form afpd/desktop.c
-*/
-static char *mtoupath(char *mpath)
-{
-    static char  upath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
-    char    *m, *u;
-    size_t       inplen;
-    size_t       outlen;
-    u_int16_t    flags = 0;
-
-    if (!mpath)
-        return NULL;
-
-    if ( *mpath == '\0' ) {
-        return( "." );
-    }
-
-    /* set conversion flags */
-    if ((vol->v_casefold & AFPVOL_MTOUUPPER))
-        flags |= CONV_TOUPPER;
-    else if ((vol->v_casefold & AFPVOL_MTOULOWER))
-        flags |= CONV_TOLOWER;
-
-    if ((vol->v_flags & AFPVOL_EILSEQ)) {
-        flags |= CONV__EILSEQ;
-    }
-
-    m = mpath;
-    u = upath;
-
-    inplen = strlen(m);
-    outlen = MAXPATHLEN;
-
-    if ((size_t)-1 == (outlen = convert_charset(CH_UTF8_MAC,
-                                                vol->v_volcharset,
-                                                vol->v_maccharset,
-                                                m, inplen, u, outlen, &flags)) ) {
-        dbd_log( LOGSTD, "conversion from UTF8-MAC to %s for %s failed.",
-                 vol->v_volcodepage, mpath);
-        return NULL;
-    }
-
-    return( upath );
-}
-
-/*
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
   Returns pointer to name or NULL.
 */
@@ -187,7 +140,6 @@ static const char *check_special_dirs(const char *name)
  */
 static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, const char *newname)
 {
-    int ret;
     cnid_t id;
 
     /* Query the database */
@@ -608,8 +560,8 @@ static int read_addir(void)
 */
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
 {
-    int ret, adflags = ADFLAGS_HF;
-    cnid_t db_cnid, ad_cnid, tmpid;
+    int adflags = ADFLAGS_HF;
+    cnid_t db_cnid, ad_cnid;
     struct adouble ad;
 
     adflags = ADFLAGS_HF | (S_ISDIR(st->st_mode) ? ADFLAGS_DIR : 0);
@@ -667,7 +619,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 */
 static int dbd_readdir(int volroot, cnid_t did)
 {
-    int cwd, ret = 0, adfile_ok, addir_ok, encoding_ok;
+    int cwd, ret = 0, adfile_ok, addir_ok;
     cnid_t cnid = 0;
     const char *name;
     DIR *dp;

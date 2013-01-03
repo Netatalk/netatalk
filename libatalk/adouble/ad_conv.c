@@ -57,7 +57,6 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
     EC_INIT;
     struct adouble adv2;
     struct adouble adea;
-    const char *adpath;
     int adflags;
     uint32_t ctime, mtime, afpinfo = 0;
     char *emptyad;
@@ -199,7 +198,7 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
 {
     EC_INIT;
     static char buf[MAXPATHLEN];
-    const char *adpath, *p;
+    const char *p;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
     bstring newpath = NULL;
 

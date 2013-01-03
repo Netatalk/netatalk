@@ -152,7 +152,6 @@ static int get_tm_used(struct vol * restrict vol)
     DIR *dir = NULL;
     const struct dirent *entry;
     const char *p;
-    struct stat st;
     long int links;
     time_t now = time(NULL);
 
@@ -212,7 +211,6 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 {
     int         spaceflag, rc;
     uint32_t   maxsize;
-    VolSpace    used;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
 #endif
@@ -663,7 +661,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 {
     struct stat st;
     char    *volname;
-    char        *p;
 
     struct vol  *volume;
     struct dir  *dir;

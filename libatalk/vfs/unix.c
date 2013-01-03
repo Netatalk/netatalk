@@ -166,9 +166,6 @@ int copy_file(int dirfd, const char *src, const char *dst, mode_t mode)
     int    ret = 0;
     int    sfd = -1;
     int    dfd = -1;
-    ssize_t cc;
-    size_t  buflen;
-    char   filebuf[NETATALK_DIOSZ_STACK];
 
 #ifdef HAVE_ATFUNCS
     if (dirfd == -1)

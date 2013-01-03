@@ -434,7 +434,6 @@ struct dir *dircache_search_by_name(const struct vol *vol,
 int dircache_add(const struct vol *vol,
                  struct dir *dir)
 {
-    struct dir *cdir = NULL;
     struct dir key;
     hnode_t *hn;
 

@@ -751,7 +751,6 @@ createfile_iderr:
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
     fce_register(FCE_FILE_CREATE, fullpathname(upath), NULL, fce_file);
 
-createfile_done:
     curdir->d_offcnt++;
 
     setvoltime(obj, vol );

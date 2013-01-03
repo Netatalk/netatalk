@@ -52,7 +52,6 @@ static void kill_childs(int sig, ...);
 
 /* static variables */
 static AFPObj obj;
-static sig_atomic_t got_chldsig;
 static pid_t afpd_pid = -1,  cnid_metad_pid = -1;
 static uint afpd_restarts, cnid_metad_restarts;
 static struct event_base *base;
@@ -134,7 +133,7 @@ static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 /* SIGCHLD callback */
 static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 {
-    int status, i;
+    int status;
     pid_t pid;
 
     LOG(log_debug, logtype_afpd, "Got SIGCHLD event");
@@ -167,8 +166,6 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 /* timer callback */
 static void timer_cb(evutil_socket_t fd, short what, void *arg)
 {
-    static int i = 0;
-
     if (in_shutdown)
         return;
 
@@ -252,7 +249,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    const char *configfile = NULL;
     int c, ret, debug = 0;
     sigset_t blocksigs;
     struct timeval tv;

@@ -318,8 +318,6 @@ static int do_gss_auth(void *obj,
 
 cleanup_client_name:
     gss_release_name(&status, &client_name);
-
-cleanup_context:
     gss_release_buffer(&status, &authenticator_buff);
     gss_delete_sec_context(&status, &context, NULL);
 

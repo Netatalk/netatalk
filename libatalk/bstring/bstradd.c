@@ -77,7 +77,6 @@
  */
 bstring brefcstr (char *str) {
     bstring b;
-    int i;
     size_t j;
 
 	if (str == NULL)
@@ -90,7 +89,7 @@ bstring brefcstr (char *str) {
 
 	b->slen = (int) j;
     b->mlen = -1;
-    b->data = str;
+    b->data = (unsigned char *)str;
 
 	return b;
 }

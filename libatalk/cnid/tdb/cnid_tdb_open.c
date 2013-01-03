@@ -125,14 +125,14 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
      * to change the format in any way. */
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.dptr = DBVERSION_KEY;
+    key.dptr = (unsigned char *)DBVERSION_KEY;
     key.dsize = DBVERSION_KEYLEN;
 
     data = tdb_fetch(db->tdb_didname, key);
     if (!data.dptr) {
         uint32_t version = htonl(DBVERSION);
 
-        data.dptr = (char *)&version;
+        data.dptr = (unsigned char *)&version;
         data.dsize = sizeof(version);
         if (tdb_store(db->tdb_didname, key, data, TDB_REPLACE)) {
             LOG(log_error, logtype_default, "tdb_open: Error putting new version");

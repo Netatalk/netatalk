@@ -95,7 +95,7 @@ static void status_flags(char *data,
 static int status_server(char *data, const char *server, const struct afp_options *options)
 {
     char                *start = data;
-    char                *Obj, *Type, *Zone;
+    char                *Obj;
     char		buf[32];
     uint16_t           status;
     size_t		len;
@@ -364,7 +364,6 @@ static size_t status_directorynames(char *data,
     data += offset;
 
     char *DirectoryNamesCount = data++;
-    char *DirectoryNames = data;
     size_t size = sizeof(uint8_t);
     *DirectoryNamesCount = 0;
 
@@ -441,7 +440,7 @@ static size_t status_directorynames(char *data,
     }
 
     krb5_unparse_name(context, entry.principal, &principal);
-    krb5_kt_free_entry(context, &entry);
+    krb5_free_keytab_entry_contents(context, &entry);
 
     append_directoryname(&data,
                          offset,
@@ -501,7 +500,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     uint16_t namelen;
     size_t len;
     char *begin = data;
-    uint16_t offset, status;
+    uint16_t offset;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
@@ -645,7 +644,7 @@ void set_signature(struct afp_options *options) {
     char *servername_conf;
     int header = 0;
     char buf[1024], *p;
-    FILE *fp = NULL, *randomp;
+    FILE *fp = NULL;
     size_t len;
     char *server_tmp;
     

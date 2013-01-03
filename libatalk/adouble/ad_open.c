@@ -108,7 +108,9 @@ static int ad_mkrf(const char *path);
 static int ad_header_read(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade(struct adouble *ad, const char *name);
 
+#ifdef HAVE_EAFD
 static int ad_mkrf_ea(const char *path);
+#endif
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
 static int ad_reso_size(const char *path, int adflags, struct adouble *ad);
@@ -691,11 +693,13 @@ static int ad_mkrf(const char *path)
     return 0;
 }
 
+#ifdef HAVE_EAFD
 static int ad_mkrf_ea(const char *path _U_)
 {
     AFP_PANIC("ad_mkrf_ea: dont use");
     return 0;
 }
+#endif
 
 static int ad_mkrf_osx(const char *path _U_)
 {
@@ -1033,7 +1037,6 @@ EC_CLEANUP:
 static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble *ad)
 {
     EC_INIT;
-    ssize_t rforklen;
     int oflags;
     int opened = 0;
 
@@ -1216,7 +1219,6 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
     int oflags;
     int opened = 0;
     int closeflags = adflags & (ADFLAGS_DF | ADFLAGS_HF);
-    ssize_t rlen;
 #ifndef HAVE_EAFD
     const char *rfpath;
     struct stat st;

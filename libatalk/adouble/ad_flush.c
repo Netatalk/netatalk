@@ -59,7 +59,6 @@ int ad_rebuild_adouble_header_v2(struct adouble *ad)
     uint32_t       temp;
     uint16_t       nent;
     char        *buf, *nentp;
-    int             len;
 
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_v2");
 
@@ -105,7 +104,6 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
     uint32_t       temp;
     uint16_t       nent;
     char        *buf, *nentp;
-    int             len;
 
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_ea");
 
@@ -153,7 +151,6 @@ static int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     uint32_t       temp;
     uint16_t       nent;
     char           *buf;
-    int            len;
 
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_osx");
 

@@ -210,8 +210,6 @@ static int setlimits(void)
 
 int main(int ac, char **av)
 {
-    fd_set              rfds;
-    void                *ipc;
     struct sigaction	sv;
     sigset_t            sigs;
     int                 ret;
@@ -428,7 +426,7 @@ int main(int ac, char **av)
                 switch (polldata[i].fdtype) {
 
                 case LISTEN_FD:
-                    if (child = dsi_start(&obj, (DSI *)polldata[i].data, server_children)) {
+                    if ((child = dsi_start(&obj, (DSI *)polldata[i].data, server_children))) {
                         /* Add IPC fd to select fd set */
                         fdset_add_fd(obj.options.connections + AFP_LISTENERS + FDSET_SAFETY,
                                      &fdset,
