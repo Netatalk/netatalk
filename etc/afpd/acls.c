@@ -1736,6 +1736,7 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
         getcwdpath(), path, ma->ma_user);
 
 #ifdef HAVE_SOLARIS_ACLS
+    uint32_t rights = 0;
     EC_ZERO_LOG(solaris_acl_rights(obj, path, st, &rights));
 
     LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);
