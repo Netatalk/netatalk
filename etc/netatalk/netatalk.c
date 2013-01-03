@@ -146,7 +146,7 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 
         if (pid == afpd_pid)
             afpd_pid = -1;
-        else if (pid = cnid_metad_pid)
+        else if (pid == cnid_metad_pid)
             cnid_metad_pid = -1;
         else
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
