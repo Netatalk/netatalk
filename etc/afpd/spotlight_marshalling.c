@@ -100,20 +100,17 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int query_length, uint encoding) {
     uint utf16_encoding;
 
-    /* check for byte order mark */
-    utf16_encoding = SL_ENC_BIG_ENDIAN;
+    /* Assumed encoding in absence of a bom is little endian */
+    utf16_encoding = SL_ENC_LITTLE_ENDIAN;
+
     if (query_length >= 2) {
         uint16_t byte_order_mark;
-        if (encoding == SL_ENC_LITTLE_ENDIAN)
-            byte_order_mark = SVAL(buf, offset);
-        else
-            byte_order_mark = RSVAL(buf, offset);
-
+        memcpy(&byte_order_mark, buf + offset, sizeof(uint16_t));
         if (byte_order_mark == 0xFFFE) {
-            utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
+            utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
         }
         else if (byte_order_mark == 0xFEFF) {
-            utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
+            utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
         }
     }
 
@@ -603,7 +600,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     uint64_t query_data64;
     uint unicode_encoding;
     uint8_t mark_exists;
-    char *p;
+    char *p, *tmp;
     int qlen, used_in_last_block, slen;
     sl_array_t *sl_array;
     sl_dict_t *sl_dict;
@@ -634,8 +631,11 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         } else {
             unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 8, slen, encoding);
             mark_exists = (unicode_encoding & SL_ENC_UTF_16);
-            unicode_encoding &= ~SL_ENC_UTF_16;
-            EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 18 : 16), slen, &p) );
+            if (unicode_encoding & SL_ENC_BIG_ENDIAN)
+                EC_FAIL_LOG("Unsupported big endian UTF16 string");
+            EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 10 : 8), slen, &tmp) );
+            p = dalloc_strndup(query, tmp, strlen(tmp));
+            free(tmp);
         }
 
         dalloc_add(query, p, char *);
