@@ -104,14 +104,12 @@ static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int
     utf16_encoding = SL_ENC_LITTLE_ENDIAN;
 
     if (query_length >= 2) {
-        uint16_t byte_order_mark;
-        memcpy(&byte_order_mark, buf + offset, sizeof(uint16_t));
-        if (byte_order_mark == 0xFFFE) {
+        uint8_t le_bom[] = {0xff, 0xfe};
+        uint8_t be_bom[] = {0xfe, 0xff};
+        if (memcmp(le_bom, buf + offset, sizeof(uint16_t)) == 0)
             utf16_encoding = SL_ENC_LITTLE_ENDIAN | SL_ENC_UTF_16;
-        }
-        else if (byte_order_mark == 0xFEFF) {
+        else if (memcmp(be_bom, buf + offset, sizeof(uint16_t)) == 0)
             utf16_encoding = SL_ENC_BIG_ENDIAN | SL_ENC_UTF_16;
-        }
     }
 
     return utf16_encoding;
@@ -624,7 +622,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
         qlen = (query_data64 & 0xffff) * 8;
         used_in_last_block = query_data64 >> 32;
-        slen = qlen - 8 + used_in_last_block;
+        slen = qlen - 16 + used_in_last_block;
 
         if (cpx_query_type == SQ_CPX_TYPE_STRING) {
             p = dalloc_strndup(query, buf + offset + 8, slen);
@@ -633,7 +631,12 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             mark_exists = (unicode_encoding & SL_ENC_UTF_16);
             if (unicode_encoding & SL_ENC_BIG_ENDIAN)
                 EC_FAIL_LOG("Unsupported big endian UTF16 string");
-            EC_NEG1( convert_string_allocate(CH_UCS2, CH_UTF8, buf + offset + (mark_exists ? 10 : 8), slen, &tmp) );
+            slen -= mark_exists ? 2 : 0;
+            EC_NEG1( convert_string_allocate(CH_UCS2,
+                                             CH_UTF8,
+                                             buf + offset + (mark_exists ? 10 : 8),
+                                             slen,
+                                             &tmp) );
             p = dalloc_strndup(query, tmp, strlen(tmp));
             free(tmp);
         }

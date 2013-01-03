@@ -772,7 +772,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 25 "spotlight_rawquery_lexer.l"
-return FUNC_INRANGE;                                       
+return FUNC_INRANGE;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
