@@ -12,12 +12,20 @@
 #include "slmod_sparql_parser.h"
 %}
 
+ASC     [a-zA-Z0-9_\*\:\-\.]
+U       [\x80-\xbf]
+U2      [\xc2-\xdf]
+U3      [\xe0-\xef]
+U4      [\xf0-\xf4]
+
+UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
+UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
+
 %%
 InRange                               return FUNC_INRANGE;
 \$time\.iso                           return DATE_ISO;
 false                                 {yylval.bval = false; return BOOL;}
 true                                  {yylval.bval = true; return BOOL;}
-[a-zA-Z0-9_\*\:\-\.]+                 {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 \"                                    return QUOTE;
 \(                                    return OBRACE;
 \)                                    return CBRACE;
@@ -28,5 +36,6 @@ true                                  {yylval.bval = true; return BOOL;}
 \<                                    return LT;
 \>                                    return GT;
 \,                                    return COMMA;
+{UANY}+                               {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 [ \t\n]                               /* ignore */
 %%
