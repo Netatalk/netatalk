@@ -3,7 +3,6 @@ Changes in 3.0.2
 * NEW: afpd: Put file extension type/creator mapping back in which had
        been removed in 3.0.
 * NEW: afpd: new option 'ad domain'. From FR #66.
-* UPD: ignore volumes with duplicated volumes paths.
 * FIX: volumes and home share with symlinks in the path
 * FIX: Copying packages to a Netatalk share could fail, bug #469
 * FIX: Reloading volumes from config file was broken.  Fixes bug #474.
