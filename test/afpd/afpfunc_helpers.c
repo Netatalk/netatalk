@@ -1,5 +1,4 @@
 /*
-  $Id: afpfunc_helpers.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify

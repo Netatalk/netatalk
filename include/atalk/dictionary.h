@@ -4,7 +4,6 @@
    @file    dictionary.h
    @author  N. Devillard
    @date    Sep 2007
-   @version $Revision: 1.12 $
    @brief   Implements a dictionary for string variables.
 
    This module implements a simple dictionary object, i.e. a list
@@ -14,10 +13,8 @@
 /*--------------------------------------------------------------------------*/
 
 /*
-	$Id: dictionary.h,v 1.12 2007-11-23 21:37:00 ndevilla Exp $
 	$Author: ndevilla $
 	$Date: 2007-11-23 21:37:00 $
-	$Revision: 1.12 $
 */
 
 #ifndef _DICTIONARY_H_

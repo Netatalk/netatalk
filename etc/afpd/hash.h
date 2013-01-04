@@ -14,7 +14,6 @@
  * into proprietary software; there is no requirement for such software to
  * contain a copyright notice related to this source.
  *
- * $Id: hash.h,v 1.2 2009-10-02 09:32:40 franklahm Exp $
  * $Name:  $
  */
 

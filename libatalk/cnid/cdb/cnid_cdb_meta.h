@@ -1,5 +1,4 @@
 /*
- * $Id: cnid_cdb_meta.h,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
  */
 
 #define CNID_META_CNID_LEN      4
