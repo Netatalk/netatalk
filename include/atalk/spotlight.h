@@ -97,9 +97,17 @@ typedef struct _slq_t {
     time_t         slq_time;          /* timestamp where we received this query                         */
     uint64_t       slq_ctx1;          /* client context 1                                               */
     uint64_t       slq_ctx2;          /* client context 2                                               */
-    const char     *slq_qstring;      /* the Spotlight query string                                     */
     sl_array_t     *slq_reqinfo;      /* array with requested metadata                                  */
-    void           *slq_tracker_cursor; /* Tracker query result cursor                                  */
+    const char     *slq_qstring;      /* the Spotlight query string                                     */
+
+#ifdef HAVE_TRACKER_SPARQL
+    void           *slq_tracker_cursor; /* Tracker SPARQL query result cursor                           */
+#endif
+#ifdef HAVE_TRACKER_0_6
+    char           *slq_trackerquery; /* query string*/
+    int            slq_service;       /* Tracker service */
+    int            slq_offset;        /* search offset */
+#endif
 } slq_t;
 
 /**************************************************************************************************

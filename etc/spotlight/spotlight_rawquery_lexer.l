@@ -9,7 +9,15 @@
 #include <gio/gio.h>
 #include <atalk/talloc.h>
 #include <atalk/spotlight.h>
+#ifdef HAVE_TRACKER_SPARQL
 #include "slmod_sparql_parser.h"
+#define SLQ_VAR ssp_slq
+#endif
+#ifdef HAVE_TRACKER_0_6
+#include <tracker.h>
+#include "slmod_tracker_0_6_parser.h"
+#define SLQ_VAR ts_slq
+#endif
 %}
 
 ASC     [a-zA-Z0-9_\*\:\-\.]
@@ -36,6 +44,6 @@ true                                  {yylval.bval = true; return BOOL;}
 \<                                    return LT;
 \>                                    return GT;
 \,                                    return COMMA;
-{UANY}+                               {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
+{UANY}+                               {yylval.sval = talloc_strdup(SLQ_VAR, yytext); return WORD;}
 [ \t\n]                               /* ignore */
 %%

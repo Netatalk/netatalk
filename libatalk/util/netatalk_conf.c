@@ -1622,6 +1622,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
+#ifdef HAVE_TRACKER_SPARQL
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_sparql.so");
+#endif
+#ifdef HAVE_TRACKER_0_6
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_tracker_0_6.so");
+#endif
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
@@ -1881,6 +1887,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.Cnid_port);
     if (obj->options.fqdn)
         CONFIG_ARG_FREE(obj->options.fqdn);
+    if (obj->options.slmod_path)
+        CONFIG_ARG_FREE(obj->options.slmod_path);
 
     if (obj->options.unixcodepage)
         CONFIG_ARG_FREE(obj->options.unixcodepage);

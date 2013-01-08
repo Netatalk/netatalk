@@ -15,6 +15,7 @@ AC_DEFUN([AC_DEVELOPER], [
 
 dnl Tracker, for Spotlight
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
+    dnl Tracker SPARQL
     ac_cv_tracker_pkg_default=tracker-sparql-0.12
     AC_ARG_WITH([tracker-pkg-config],
 	[AS_HELP_STRING([--with-tracker-pkg-config],[name of the Tracker SPARQL pkg in pkg-config])],
@@ -30,14 +31,11 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
     else
-        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker library is available])
+        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
+        AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
         ac_cv_tracker_prefix=`pkg-config --variable=prefix $ac_cv_tracker_pkg`
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
 	fi
-
-    AC_SUBST(TRACKER_CFLAGS)
-    AC_SUBST(TRACKER_LIBS)
-    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker" = x"yes"])
 
     ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
     AC_ARG_WITH([tracker-miner-pkg-config],
@@ -54,6 +52,22 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_SUBST(TRACKER_MINER_CFLAGS)
         AC_SUBST(TRACKER_MINER_LIBS)
 	fi
+
+    dnl Test for Tracker 0.6 on Solaris and derived platforms
+    if test x"$this_os" = x"solaris"; then
+        PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_0_6=yes], [ac_cv_have_tracker_0_6=no])
+        if test x"$ac_cv_have_tracker_0_6" = x"yes" ; then
+            AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
+            AC_DEFINE(HAVE_TRACKER_0_6, 1, [Define if Tracker 0.6 is available])
+            ac_cv_tracker_prefix=`pkg-config --variable=prefix tracker`
+            AC_DEFINE_UNQUOTED(TRACKER_0_6_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+	    fi
+    fi
+
+    AC_SUBST(TRACKER_CFLAGS)
+    AC_SUBST(TRACKER_LIBS)
+    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER_0_6, [test x"$ac_cv_have_tracker_0_6" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent

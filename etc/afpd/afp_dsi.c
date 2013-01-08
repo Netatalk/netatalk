@@ -492,8 +492,8 @@ void afp_over_dsi(AFPObj *obj)
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
     /* Initialize Spotlight */
-    if (obj->options.flags & OPTION_SPOTLIGHT)
-        sl_mod_load(_PATH_AFPDUAMPATH "slmod_sparql.so");
+    if ((obj->options.flags & OPTION_SPOTLIGHT) && (obj->options.slmod_path))
+        sl_mod_load(obj->options.slmod_path);
 
     /* get stuck here until the end */
     while (1) {

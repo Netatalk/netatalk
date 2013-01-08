@@ -348,7 +348,7 @@ int sl_mod_load(const char *path)
     sl_ctx = talloc_new(NULL);
 
     if ((sl_module = mod_open(path)) == NULL) {
-        LOG(log_error, logtype_sl, "Failed to load: %s", path, mod_error());
+        LOG(log_error, logtype_sl, "Failed to load module \'%s\': %s", path, mod_error());
         EC_FAIL;
     }
 

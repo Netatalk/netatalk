@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 spot
+stp
 srp
 .deps
 .libs
