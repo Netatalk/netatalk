@@ -369,7 +369,8 @@ EC_CLEANUP:
  **/
 void sl_index_file(const char *path)
 {
-    sl_module_export->sl_mod_index_file(path);
+    if (sl_module_export && sl_module_export->sl_mod_index_file)
+        sl_module_export->sl_mod_index_file(path);
 }
 
 /**************************************************************************************************
