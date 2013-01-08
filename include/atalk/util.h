@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
+#include <sys/stat.h>
 
 #include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
@@ -179,13 +180,18 @@ extern int recv_fd(int fd, int nonblocking);
 extern const char *getcwdpath(void);
 extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);
-extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 extern int daemonize(int nochdir, int noclose);
 extern int run_cmd(const char *cmd, char **cmd_argv);
 extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote (char *s, const char *delim);
+
+extern int ochdir(const char *dir, int options);
+extern int ostat(const char *path, struct stat *buf, int options);
+extern int ostatat(int dirfd, const char *path, struct stat *st, int options);
+extern int ochown(const char *path, uid_t owner, gid_t group, int options);
+extern int ochmod(char *path, mode_t mode, const struct stat *st, int options);
 
 /******************************************************************
  * cnid.c

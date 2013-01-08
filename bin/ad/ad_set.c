@@ -140,7 +140,6 @@ static void change_label(char *path, afpvol_t *vol, const struct stat *st, struc
 
 static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_attributes)
 {
-    char *FinderInfo;
     uint16_t AFPattributes;
 
     ad_getattr(ad, &AFPattributes);
@@ -256,7 +255,7 @@ static void change_flags(char *path, afpvol_t *vol, const struct stat *st, struc
 
 int ad_set(int argc, char **argv, AFPObj *obj)
 {
-    int c, firstarg;
+    int c;
     afpvol_t vol;
     struct stat st;
     int adflags = 0;

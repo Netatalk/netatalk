@@ -26,7 +26,7 @@ cnid_t cnid_tdb_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t l
     buf += sizeof(did);
     memcpy(buf, name, len);
     *(buf + len) = '\0'; /* Make it a C-string. */
-    key.dptr = start;
+    key.dptr = (unsigned char *)start;
     key.dsize = CNID_DID_LEN + len + 1;
     data = tdb_fetch(db->tdb_didname, key);
     if (!data.dptr)

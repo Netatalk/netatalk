@@ -51,6 +51,7 @@
 #include <atalk/uuid.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #define VOLPASSLEN  8
 #ifndef UUID_PRINTABLE_STRING_LENGTH
@@ -513,13 +514,11 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
  */
 static const char *getoption(const dictionary *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
 {
-    EC_INIT;
     const char *result;
 
     if ((!(result = iniparser_getstring(conf, vol, opt, NULL))) && (defsec != NULL))
         result = iniparser_getstring(conf, defsec, opt, NULL);
     
-EC_CLEANUP:
     if (result == NULL)
         result = defval;
     return result;
@@ -538,13 +537,11 @@ EC_CLEANUP:
  */
 static int getoption_bool(const dictionary *conf, const char *vol, const char *opt, const char *defsec, int defval)
 {
-    EC_INIT;
     int result;
 
     if (((result = iniparser_getboolean(conf, vol, opt, -1)) == -1) && (defsec != NULL))
         result = iniparser_getboolean(conf, defsec, opt, -1);
     
-EC_CLEANUP:
     if (result == -1)
         result = defval;
     return result;
@@ -639,14 +636,14 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_vfs_ea = AFPVOL_EA_AUTO;
     volume->v_umask = obj->options.umask;
 
-    if (val = getoption(obj->iniconfig, section, "password", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "password", preset, NULL)))
         EC_NULL( volume->v_password = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, section, "veto files", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "veto files", preset, NULL)))
         EC_NULL( volume->v_veto = strdup(val) );
 
     /* vol charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "vol charset", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "vol charset", preset, NULL))) {
         if (strcasecmp(val, "UTF-8") == 0) {
             val = strdup("UTF8");
         }
@@ -656,7 +653,7 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
     /* mac charset is in [G] and [V] */
-    if (val = getoption(obj->iniconfig, section, "mac charset", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "mac charset", preset, NULL))) {
         if (strncasecmp(val, "MAC", 3) != 0) {
             LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", val);
         }
@@ -671,41 +668,41 @@ static struct vol *creatvol(AFPObj *obj,
         if(tmpname[i] == '/') tmpname[i] = ':';
 
     bstring dbpath;
-    EC_NULL_LOG( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
-    EC_NULL_LOG( dbpath = bformat("%s/%s/", val, tmpname) );
-    EC_NULL_LOG( volume->v_dbpath = strdup(bdata(dbpath)) );
+    EC_NULL( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
+    EC_NULL( dbpath = bformat("%s/%s/", val, tmpname) );
+    EC_NULL( volume->v_dbpath = strdup(cfrombstr(dbpath)) );
     bdestroy(dbpath);
 
-    if (val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL)))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
     else
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
 
-    if (val = getoption(obj->iniconfig, section, "umask", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "umask", preset, NULL)))
         volume->v_umask = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "directory perm", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "directory perm", preset, NULL)))
         volume->v_dperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "file perm", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "file perm", preset, NULL)))
         volume->v_fperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, section, "vol size limit", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "vol size limit", preset, NULL)))
         volume->v_limitsize = (uint32_t)strtoul(val, NULL, 10);
 
-    if (val = getoption(obj->iniconfig, section, "preexec", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "preexec", preset, NULL)))
         EC_NULL( volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "postexec", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "postexec", preset, NULL)))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "root preexec", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "root preexec", preset, NULL)))
         EC_NULL( volume->v_root_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "root postexec", preset, NULL))
+    if ((val = getoption(obj->iniconfig, section, "root postexec", preset, NULL)))
         EC_NULL( volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, section, "appledouble", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "appledouble", preset, NULL))) {
         if (strcmp(val, "v2") == 0)
             volume->v_adouble = AD_VERSION2;
         else if (strcmp(val, "ea") == 0)
@@ -714,10 +711,10 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_adouble = AD_VERSION;
     }
 
-    if (val = getoption(obj->iniconfig, section, "cnid server", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "cnid server", preset, NULL))) {
         EC_NULL( p = strdup(val) );
         volume->v_cnidserver = p;
-        if (q = strrchr(val, ':')) {
+        if ((q = strrchr(val, ':'))) {
             *q++ = 0;
             volume->v_cnidport = strdup(q);
         } else {
@@ -729,7 +726,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_cnidport = strdup(obj->options.Cnid_port);
     }
 
-    if (val = getoption(obj->iniconfig, section, "ea", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "ea", preset, NULL))) {
         if (strcasecmp(val, "ad") == 0)
             volume->v_vfs_ea = AFPVOL_EA_AD;
         else if (strcasecmp(val, "sys") == 0)
@@ -738,7 +735,7 @@ static struct vol *creatvol(AFPObj *obj,
             volume->v_vfs_ea = AFPVOL_EA_NONE;
     }
 
-    if (val = getoption(obj->iniconfig, section, "casefold", preset, NULL)) {
+    if ((val = getoption(obj->iniconfig, section, "casefold", preset, NULL))) {
         if (strcasecmp(val, "tolower") == 0)
             volume->v_casefold = AFPVOL_UMLOWER;
         else if (strcasecmp(val, "toupper") == 0)
@@ -773,6 +770,8 @@ static struct vol *creatvol(AFPObj *obj,
 #endif
     if (!getoption_bool(obj->iniconfig, section, "convert appledouble", preset, 1))
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
+    if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
+        volume->v_flags |= AFPVOL_FOLLOWSYM;
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;
@@ -800,6 +799,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_UNIXPRIV;
     if ((volume->v_flags & AFPVOL_INV_DOTS))
         volume->v_ad_options |= ADVOL_INVDOTS;
+    if ((volume->v_flags & AFPVOL_FOLLOWSYM))
+        volume->v_ad_options |= ADVOL_FOLLO_SYML;
 
     /* Mac to Unix conversion flags*/
     if ((volume->v_flags & AFPVOL_EILSEQ))
@@ -977,9 +978,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        path[MAXPATHLEN + 1], tmp[MAXPATHLEN + 1];
     const char  *preset, *default_preset, *p, *basedir;
-    char        *q, *u;
     int         i;
-    struct passwd   *pw;
     regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
@@ -1030,7 +1029,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
             }
 
-            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
+            if ((p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
                 strlcat(tmp, "/", MAXPATHLEN);
                 strlcat(tmp, p, MAXPATHLEN);
             }
@@ -1071,7 +1070,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         free(realvolpath);
     }
 
-EC_CLEANUP:
+// EC_CLEANUP:
     EC_EXIT;
 }
 
@@ -1534,7 +1533,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         p++;
     EC_NULL_LOG( user = strdup(p) );
 
-    if (prw = strchr(user, '/'))
+    if ((prw = strchr(user, '/')))
         *prw++ = 0;
     if (prw != 0)
         subpath = prw;
@@ -1544,7 +1543,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */
-    if (subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
+    if ((subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
         /*
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
@@ -1611,8 +1610,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     EC_INIT;
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
-    int i, c;
-    const char *p, *tmp;
+    int c;
+    const char *p;
     char *q, *r;
     char val[MAXVAL];
 

@@ -68,7 +68,7 @@ static unsigned long fce_ev_enabled =
     (1 << FCE_DIR_CREATE);
 
 #define MAXIOBUF 1024
-static char iobuf[MAXIOBUF];
+static unsigned char iobuf[MAXIOBUF];
 static const char *skip_files[] = 
 {
 	".DS_Store",
@@ -165,7 +165,6 @@ static ssize_t build_fce_packet( struct fce_packet *packet, const char *path, in
 {
     size_t pathlen = 0;
     ssize_t data_len = 0;
-    uint64_t *t;
 
     /* Set content of packet */
     memcpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
@@ -229,7 +228,6 @@ static void send_fce_event(const char *path, int event)
     static bool first_event = true;
 
     struct fce_packet packet;
-    void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     time_t now = time(NULL);
 
@@ -490,7 +488,7 @@ void shortsleep( unsigned int us )
 }
 int main( int argc, char*argv[] )
 {
-    int c,ret;
+    int c;
 
     char *port = FCE_DEFAULT_PORT_STRING;
     char *host = "localhost";

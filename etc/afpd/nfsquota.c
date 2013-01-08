@@ -1,5 +1,4 @@
 /*
- * $Id: nfsquota.c,v 1.13 2009-10-13 22:55:37 didg Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:

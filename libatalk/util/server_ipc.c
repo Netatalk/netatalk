@@ -267,8 +267,6 @@ int ipc_server_read(server_child *children, int fd)
     LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
         ipc_cmd_str[ipc.command], ipc.child_pid); 
 
-    int afp_socket;
-
     switch (ipc.command) {
 
 	case IPC_DISCOLDSESSION:

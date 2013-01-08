@@ -158,7 +158,7 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct mac
 
     ma->ma_user = ma->ma_owner = ma->ma_world = ma->ma_group = 0;
     if (!st) {
-        if (lstat(path, &sb) != 0)
+        if (ostat(path, &sb, vol_syml_opt(vol)) != 0)
             return;
         st = &sb;
     }
@@ -207,7 +207,7 @@ mode_t mtoumode(struct maccess *ma)
 int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 {
     if (!path->st_valid) {
-        of_stat(path);
+        of_stat(vol, path);
     }
 
     if (path->st_errno) {
@@ -216,7 +216,7 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
         
     mode |= vol->v_fperm;
 
-    if (setfilmode( path->u_name, mode, &path->st, vol->v_umask) < 0)
+    if (setfilmode(vol, path->u_name, mode, &path->st) < 0)
         return -1;
     /* we need to set write perm if read set for resource fork */
     return vol->vfs->vfs_setfilmode(vol, path->u_name, mode, &path->st);
@@ -224,7 +224,7 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 
 
 /* --------------------- */
-int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
+int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 {
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);
@@ -249,7 +249,7 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 /* ----------------------------- */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path* path)
 {
-    if (lchown(path->u_name, uid, gid) < 0 && errno != EPERM) {
+    if (ochown( path->u_name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM ) {
         LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno));
         return -1;
@@ -271,7 +271,7 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct 
  * co-opting some bits. */
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 {
-    if (lchown(name, uid, gid ) < 0 && errno != EPERM ) {
+    if (ochown(name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM ) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
             uid, gid, fullpathname(name), strerror(errno) );
     }
@@ -281,4 +281,3 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
 
     return( 0 );
 }
-

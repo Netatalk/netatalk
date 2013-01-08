@@ -74,7 +74,7 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 {
     static cnid_t id;
     static char buf[ROOTINFO_DATALEN];
-    DBT rootinfo_key, rootinfo_data;
+    DBT rootinfo_key, rootinfo_data, key, data;
     int rc;
     cnid_t hint;
 
@@ -83,47 +83,63 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
     if (id == 0) {
-        if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) < 0) {
+        if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) != 1) {
             rply->result = CNID_DBD_RES_ERR_DB;
             return -1;
         }
-        if (rc == 0) {
-            /* no rootinfo key yet */
-            memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
+        memcpy(buf, (char *)rootinfo_data.data, ROOTINFO_DATALEN);
+        memcpy(&hint, buf + CNID_TYPE_OFS, sizeof(hint));
+        id = ntohl(hint);
+        if (id < CNID_START - 1)
             id = CNID_START - 1;
+    }
+
+    cnid_t trycnid, tmp;
+
+    while (true) {
+        if (rply->cnid != CNID_INVALID) {
+            trycnid = ntohl(rply->cnid);
+            rply->cnid = CNID_INVALID;
         } else {
-            memcpy(buf, (char *)rootinfo_data.data, ROOTINFO_DATALEN);
-            memcpy(&hint, buf + CNID_TYPE_OFS, sizeof(hint));
-            id = ntohl(hint);
-            if (id < CNID_START - 1)
-                id = CNID_START - 1;
+            if (++id == CNID_INVALID)
+                id = CNID_START;
+            trycnid = id;
+        }
+        tmp = htonl(trycnid);
+        key.data = &tmp;
+        key.size = sizeof(cnid_t);
+        rc = dbif_get(dbd, DBIF_CNID, &key, &data, 0);
+        if (rc == 0) {
+            break;
+        } else if (rc == -1) {
+            rply->result = CNID_DBD_RES_ERR_DB;
+            return -1;
         }
     }
 
-    /* If we've hit the max CNID allowed, we return an error. CNID
-     * needs to be recycled before proceding. */
-    if (++id == CNID_INVALID) {
-        rply->result = CNID_DBD_RES_ERR_MAX;
-        return -1;
+    if (trycnid == id) {
+        rootinfo_data.data = buf;
+        rootinfo_data.size = ROOTINFO_DATALEN;
+        hint = htonl(id);
+        memcpy(buf + CNID_TYPE_OFS, &hint, sizeof(hint));
+
+        if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
+            rply->result = CNID_DBD_RES_ERR_DB;
+            return -1;
+        }
     }
 
-    rootinfo_data.data = buf;
-    rootinfo_data.size = ROOTINFO_DATALEN;
-    hint = htonl(id);
-    memcpy(buf + CNID_TYPE_OFS, &hint, sizeof(hint));
-
-    if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
-        rply->result = CNID_DBD_RES_ERR_DB;
-        return -1;
-    }
-    rply->cnid = hint;
+    rply->cnid = htonl(trycnid);
     return 0;
 }
 
 /* ------------------------ */
 /* We need a nolookup version for `dbd` */
-int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int nolookup)
+int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     rply->namelen = 0;
 
@@ -131,24 +147,25 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, in
         ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
     /* See if we have an entry already and return it if yes */
-    if (! nolookup) {
-        if (dbd_lookup(dbd, rqst, rply, 0) < 0) {
-            LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): error in dbd_lookup",
-                ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-            return -1;
-        }
+    if (dbd_lookup(dbd, rqst, rply) < 0) {
+        LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): error in dbd_lookup",
+            ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+        return -1;
+    }
 
-        if (rply->result == CNID_DBD_RES_OK) {
-            /* Found it. rply->cnid is the correct CNID now. */
-            LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success --> CNID: %u", ntohl(rply->cnid));
-            return 1;
-        }
+    if (rply->result == CNID_DBD_RES_OK) {
+        /* Found it. rply->cnid is the correct CNID now. */
+        LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success --> CNID: %u", ntohl(rply->cnid));
+        return 1;
     }
 
     LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): {adding to database ...}",
         ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
-
+    if (rqst->cnid) {
+        /* rqst->cnid is the cnid "hint"/backup from the adouble file */
+        rply->cnid = rqst->cnid;
+    }
     if (get_cnid(dbd, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_MAX) {
             LOG(log_error, logtype_cnid, "dbd_add: FATAL: CNID database has reached its limit.");

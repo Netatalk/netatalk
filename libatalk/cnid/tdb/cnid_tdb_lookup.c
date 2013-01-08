@@ -25,7 +25,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
         return 0;
     }
 
-    if ((buf = make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
+    if ((buf = (char *)make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_lookup: Pathname is too long");
         return 0;
     }
@@ -42,7 +42,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     memcpy(dev, buf + CNID_DEV_OFS, CNID_DEV_LEN);
     memcpy(ino, buf + CNID_INO_OFS, CNID_INO_LEN);
 
-    key.dptr = buf +CNID_DEVINO_OFS;
+    key.dptr = (unsigned char *)buf + CNID_DEVINO_OFS;
     key.dsize  = CNID_DEVINO_LEN;
     cniddata = tdb_fetch(db->tdb_devino, key);
     if (!cniddata.dptr) {
@@ -66,7 +66,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     }
 
     /* did/name now */
-    key.dptr = buf + CNID_DID_OFS;
+    key.dptr = (unsigned char *)buf + CNID_DID_OFS;
     key.dsize = CNID_DID_LEN + len + 1;
     cniddata = tdb_fetch(db->tdb_didname, key);
     if (!cniddata.dptr) {

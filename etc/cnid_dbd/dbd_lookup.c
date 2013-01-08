@@ -1,5 +1,4 @@
 /*
- * $Id: dbd_lookup.c,v 1.18 2010-01-19 14:57:11 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -120,6 +119,7 @@ to be safe we must assign new CNIDs to both files.
 
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid.h>
 
 #include "pack.h"
 #include "dbif.h"
@@ -130,7 +130,7 @@ to be safe we must assign new CNIDs to both files.
  *  up the database if there's a problem.
  */
 
-int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int roflag)
+int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     unsigned char *buf;
     DBT key, devdata, diddata;
@@ -211,16 +211,14 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
             LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for devino", 
                 rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
-            if (! roflag) {
-                rqst->cnid = id_devino;
-                rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
-                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
-                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
-                if (rc < 0) {
-                    LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for devino", 
-                        rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-                    return -1;
-                }
+            rqst->cnid = id_devino;
+            rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
+            rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
+            rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
+            if (rc < 0) {
+                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for devino", 
+                    rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+                return -1;
             }
         }
 
@@ -230,16 +228,14 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
             LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for didname", 
                 rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
-            if (! roflag) {
-                rqst->cnid = id_didname;
-                rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
-                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
-                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
-                if (rc < 0) {
-                    LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for didname", 
-                        rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-                    return -1;
-                }
+            rqst->cnid = id_didname;
+            rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
+            rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
+            rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
+            if (rc < 0) {
+                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for didname", 
+                    rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+                return -1;
             }
         }
 
@@ -262,15 +258,14 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
             ntohl(rqst->did), rqst->name, ntohl(id_didname),
             (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(id_devino));
 
-        if (! roflag) {
-            rqst->cnid = id_devino;
-            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                return -1;
+        rqst->cnid = id_devino;
+        if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+            return -1;
 
-            rqst->cnid = id_didname;
-            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                return -1;
-        }
+        rqst->cnid = id_didname;
+        if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+            return -1;
+
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
@@ -282,12 +277,11 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
             LOG(log_debug, logtype_cnid, "dbd_lookup: server side mv (with resource fork)");
             update = 1;
         } else {
-            if ( ! roflag) {
-                rqst->cnid = id_devino;
-                if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                    return -1;
-            }
+            rqst->cnid = id_devino;
+            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+                return -1;
             rply->result = CNID_DBD_RES_NOTFOUND;
+            rqst->cnid = CNID_INVALID; /* invalidate CNID hint */
             return 1;
         }
     }
@@ -295,17 +289,16 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     if ( ! devino) {
         LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): CNID resolve problem: changed dev/ino",
             ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-        if ( ! roflag) {
-            rqst->cnid = id_didname;
-            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                return -1;
-        }
+        rqst->cnid = id_didname;
+        if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+            return -1;
         rply->result = CNID_DBD_RES_NOTFOUND;
+        rqst->cnid = CNID_INVALID; /* invalidate CNID hint */
         return 1;
     }
 
     /* This is also a catch all if we've forgot to catch some possibility with the preceding ifs*/
-    if (!update || roflag) {
+    if (!update) {
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }

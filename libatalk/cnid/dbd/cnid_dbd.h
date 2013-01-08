@@ -32,7 +32,7 @@ extern int    cnid_dbd_update     (struct _cnid_db *, cnid_t, const struct stat 
 extern int    cnid_dbd_delete     (struct _cnid_db *, const cnid_t);
 extern cnid_t cnid_dbd_rebuild_add(struct _cnid_db *, const struct stat *,
                                    cnid_t, const char *, size_t, cnid_t);
-
+extern int    cnid_dbd_wipe       (struct _cnid_db *cdb);
 /* FIXME: These functions could be static in cnid_dbd.c */
 
 #endif /* include/atalk/cnid_dbd.h */

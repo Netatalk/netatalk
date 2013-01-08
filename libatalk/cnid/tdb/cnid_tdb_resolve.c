@@ -1,5 +1,4 @@
 /*
- * $Id: cnid_tdb_resolve.c,v 1.4 2009-11-22 14:14:05 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,7 +18,7 @@ char *cnid_tdb_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer, size_t l
     if (!cdb || !(db = cdb->_private) || !id || !(*id)) {
         return NULL;
     }
-    key.dptr  = (char *)id;
+    key.dptr  = (unsigned char *)id;
     key.dsize = sizeof(cnid_t);
     data = tdb_fetch(db->tdb_cnid, key);
     if (data.dptr) 

@@ -62,7 +62,6 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 {
     ssize_t     cc;
-    ssize_t     rlen;
     off_t r_off = 0;
 
     /* We're either reading the data fork (and thus the data file)

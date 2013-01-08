@@ -1,5 +1,4 @@
 /*
- * $Id: updcrc.c,v 1.5 2009-10-13 22:55:36 didg Exp $
  *
  * updcrc(3), crc(1) - calculate crc polynomials
  *

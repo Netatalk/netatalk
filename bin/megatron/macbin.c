@@ -1,5 +1,4 @@
 /*
- * $Id: macbin.c,v 1.15 2010-01-27 21:27:53 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H

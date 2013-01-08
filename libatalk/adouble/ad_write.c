@@ -52,7 +52,6 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
     EC_INIT;
     struct stat		st;
     ssize_t		cc;
-    size_t roundup;
     off_t    r_off;
 
     if (ad_data_fileno(ad) == AD_SYMLINK) {
@@ -94,7 +93,6 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         return -1; /* we don't know how to write if it's not a ressource or data fork */
     }
 
-EC_CLEANUP:
     if (ret != 0)
         return ret;
     return( cc );

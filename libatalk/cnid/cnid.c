@@ -338,3 +338,15 @@ cnid_t ret;
     unblock_signal(cdb->flags);
     return ret;
 }
+
+/* --------------- */
+int cnid_wipe(struct _cnid_db *cdb)
+{
+    int ret = 0;
+
+    block_signal(cdb->flags);
+    if (cdb->cnid_wipe)
+        ret = cdb->cnid_wipe(cdb);
+    unblock_signal(cdb->flags);
+    return ret;
+}

@@ -1,5 +1,4 @@
 /*
- * $Id: cnid_cdb_delete.c,v 1.4 2009-10-29 13:38:16 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.

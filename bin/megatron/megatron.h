@@ -1,5 +1,4 @@
 /*
- * $Id: megatron.h,v 1.5 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifndef _MEGATRON_H

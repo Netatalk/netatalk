@@ -27,65 +27,29 @@
 #include <errno.h>
 
 #include <atalk/logger.h>
-#include <atalk/cnid_dbd_private.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
 
 #include "cmd_dbd.h"
-#include "dbd.h"
-#include "dbif.h"
-#include "db_param.h"
-#include "pack.h"
 
-#define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN)
+enum dbd_cmd {dbd_scan, dbd_rebuild};
 
-int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
+/* Global variables */
 volatile sig_atomic_t alarmed;  /* flags for signals */
-int db_locked;                  /* have we got the fcntl lock on lockfile ? */
 
-static DBD *dbd;
-static int verbose;             /* Logging flag */
-static int exclusive;           /* Exclusive volume access */
-static struct db_param db_param = {
-    NULL,                       /* Volume dirpath */
-    1,                          /* bdb logfile autoremove */
-    64 * 1024,                  /* bdb cachesize (64 MB) */
-    DEFAULT_MAXLOCKS,           /* maxlocks */
-    DEFAULT_MAXLOCKOBJS,        /* maxlockobjs */
-    0,                          /* flush_interval */
-    0,                          /* flush_frequency */
-    0,                          /* usock_file */
-    -1,                         /* fd_table_size */
-    -1,                         /* idle_timeout */
-    -1                          /* max_vols */
-};
-static char dbpath[MAXPATHLEN+1];   /* Path to the dbd database */
+/* Local variables */
+static dbd_flags_t flags;
 
-/* 
-   Provide some logging
+/***************************************************************************
+ * Local functions
+ ***************************************************************************/
+
+/*
+ * SIGNAL handling:
+ * catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
  */
-void dbd_log(enum logtype lt, char *fmt, ...)
-{
-    int len;
-    static char logbuffer[1024];
-    va_list args;
-
-    if ( (lt == LOGSTD) || (verbose == 1)) {
-        va_start(args, fmt);
-        len = vsnprintf(logbuffer, 1023, fmt, args);
-        va_end(args);
-        logbuffer[1023] = 0;
-
-        printf("%s\n", logbuffer);
-    }
-}
-
-/* 
-   SIGNAL handling:
-   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
- */
-
 static void sig_handler(int signo)
 {
     alarmed = 1;
@@ -128,99 +92,79 @@ static void set_signal(void)
 
 static void usage (void)
 {
-    printf("dbd (Netatalk %s)\n"
-           "Usage: dbd [-CeFtvx] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
-           "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
-           "dbd must be run with appropiate permissions i.e. as root.\n\n"
-           "Main commands are:\n"
-           "   -d Dump CNID database\n"
-           "      Option: -i dump indexes too\n\n"
-           "   -s Scan volume:\n"
-           "      Options: -c Don't check .AppleDouble stuff, only ckeck orphaned.\n"
-           "               -n Don't open CNID database, skip CNID checks.\n\n"
-           "   -r Rebuild volume:\n"
-           "      Options: -c Don't create .AppleDouble stuff, only cleanup orphaned.\n"
-           "               -f wipe database and rebuild from IDs stored in AppleDouble\n"
-           "                  metadata file or EA. Implies -e.\n\n"
-           "   -u Upgrade:\n"
-           "      Opens the database which triggers any necessary upgrades,\n"
-           "      then closes and exits.\n\n"
-           "General options:\n"
-           "   -C convert from adouble:v2 to adouble:ea (use with -r)\n"
+    printf("Usage: dbd [-cfFstvV] <path to netatalk volume>\n\n"
+           "dbd scans all file and directories of AFP volumes, updating the\n"
+           "CNID database of the volume. dbd must be run with appropiate\n"
+           "permissions i.e. as root.\n\n"
+           "Options:\n"
+           "   -s scan volume: treat the volume as read only and don't\n"
+           "      perform any filesystem modifications\n"
+           "   -c convert from adouble:v2 to adouble:ea\n"
            "   -F location of the afp.conf config file\n"
-           "   -e only work on inactive volumes and lock them (exclusive)\n"
-           "   -x rebuild indexes (just for completeness, mostly useless!)\n"
+           "   -f delete and recreate CNID database\n"
            "   -t show statistics while running\n"
-           "   -v verbose\n\n"
-           , VERSION
+           "   -v verbose\n"
+           "   -V show version info\n\n"
         );
+}
+
+/***************************************************************************
+ * Global functions
+ ***************************************************************************/
+
+void dbd_log(enum logtype lt, char *fmt, ...)
+{
+    int len;
+    static char logbuffer[1024];
+    va_list args;
+
+    if ( (lt == LOGSTD) || (flags & DBD_FLAGS_VERBOSE)) {
+        va_start(args, fmt);
+        len = vsnprintf(logbuffer, 1023, fmt, args);
+        va_end(args);
+        logbuffer[1023] = 0;
+
+        printf("%s\n", logbuffer);
+    }
 }
 
 int main(int argc, char **argv)
 {
-    int c, lockfd, ret = -1;
-    int dump=0, scan=0, rebuild=0, prep_upgrade=0, rebuildindexes=0, dumpindexes=0, force=0;
-    dbd_flags_t flags = 0;
-    char *volpath;
-    int cdir;
+    EC_INIT;
+    int dbd_cmd = dbd_rebuild;
+    int cdir = -1;
     AFPObj obj = { 0 };
-    struct vol *vol;
+    struct vol *vol = NULL;
+    const char *volpath = NULL;
 
-    if (geteuid() != 0) {
-        usage();
-        exit(EXIT_FAILURE);
-    }
-    /* Inhereting perms in ad_mkdir etc requires this */
-    ad_setfuid(0);
-
-    while ((c = getopt(argc, argv, ":cCdefFinrstuvx")) != -1) {
+    int c;
+    while ((c = getopt(argc, argv, ":cfF:rstvV")) != -1) {
         switch(c) {
         case 'c':
-            flags |= DBD_FLAGS_CLEANUP;
-            break;
-        case 'C':
             flags |= DBD_FLAGS_V2TOEA;
             break;
-        case 'd':
-            dump = 1;
-            break;
-        case 'i':
-            dumpindexes = 1;
-            break;
-        case 's':
-            scan = 1;
-            flags |= DBD_FLAGS_SCAN;
-            break;
-        case 'n':
-            nocniddb = 1; /* FIXME: this could/should be a flag too for consistency */
-            break;
-        case 'r':
-            rebuild = 1;
-            break;
-        case 't':
-            flags |= DBD_FLAGS_STATS;
-            break;
-        case 'u':
-            prep_upgrade = 1;
-            break;
-        case 'v':
-            verbose = 1;
-            break;
-        case 'e':
-            exclusive = 1;
-            flags |= DBD_FLAGS_EXCL;
-            break;
-        case 'x':
-            rebuildindexes = 1;
-            break;
         case 'f':
-            force = 1;
-            exclusive = 1;
-            flags |= DBD_FLAGS_FORCE | DBD_FLAGS_EXCL;
+            flags |= DBD_FLAGS_FORCE;
             break;
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
             break;
+        case 'r':
+            /* the default */
+            break;
+        case 's':
+            dbd_cmd = dbd_scan;
+            flags |= DBD_FLAGS_SCAN;
+            break;
+        case 't':
+            flags |= DBD_FLAGS_STATS;
+            break;
+        case 'v':
+            flags |= DBD_FLAGS_VERBOSE;
+            break;
+        case 'V':
+            printf("dbd %s\n", VERSION);
+            exit(0);
         case ':':
         case '?':
             usage();
@@ -229,16 +173,18 @@ int main(int argc, char **argv)
         }
     }
 
-    if ((dump + scan + rebuild + prep_upgrade) != 1) {
-        usage();
-        exit(EXIT_FAILURE);
-    }
-
     if ( (optind + 1) != argc ) {
         usage();
         exit(EXIT_FAILURE);
     }
     volpath = argv[optind];
+
+    if (geteuid() != 0) {
+        usage();
+        exit(EXIT_FAILURE);
+    }
+    /* Inhereting perms in ad_mkdir etc requires this */
+    ad_setfuid(0);
 
     setvbuf(stdout, (char *) NULL, _IONBF, 0);
 
@@ -257,11 +203,14 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    /* Initialize CNID subsystem */
+    cnid_init();
+
     /* Setup logging. Should be portable among *NIXes */
-    if (!verbose)
-        setuplog("default:info", "/dev/tty");
+    if (flags & DBD_FLAGS_VERBOSE)
+        setuplog("default:note, cnid:debug", "/dev/tty");
     else
-        setuplog("default:debug", "/dev/tty");
+        setuplog("default:note", "/dev/tty");
 
     if (load_volumes(&obj) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
@@ -278,7 +227,20 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    pack_setvol(vol);
+    /* open volume */
+    if (STRCMP(vol->v_cnidscheme, != , "dbd")) {
+        dbd_log(LOGSTD, "\"%s\" isn't a \"dbd\" CNID volume", vol->v_path);
+        exit(EXIT_FAILURE);
+    }
+    if ((vol->v_cdb = cnid_open(vol->v_path,
+                                0000,
+                                "dbd",
+                                vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0,
+                                vol->v_cnidserver,
+                                vol->v_cnidport)) == NULL) {
+        dbd_log(LOGSTD, "Cant initialize CNID database connection for %s", vol->v_path);
+        exit(EXIT_FAILURE);
+    }
 
     if (vol->v_adouble == AD_VERSION_EA)
         dbd_log( LOGDEBUG, "adouble:ea volume");
@@ -301,145 +263,28 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);        
     }
 
-    /* Enuser dbpath is there, create if necessary */
-    struct stat st;
-    if (stat(vol->v_dbpath, &st) != 0) {
-        if (errno != ENOENT) {
-            dbd_log( LOGSTD, "Can't stat dbpath \"%s\": %s", vol->v_dbpath, strerror(errno));
-            exit(EXIT_FAILURE);        
+    if (flags & DBD_FLAGS_FORCE) {
+        if (cnid_wipe(vol->v_cdb) != 0) {
+            dbd_log( LOGSTD, "Failed to wipe CNID db");
+            EC_FAIL;
         }
-        if ((mkdir(vol->v_dbpath, 0755)) != 0) {
-            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", vol->v_dbpath, strerror(errno));
-            exit(EXIT_FAILURE);
-        }        
-    }
-
-    /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
-    if ( (strlen(vol->v_dbpath) + strlen("/.AppleDB")) > MAXPATHLEN ) {
-        dbd_log( LOGSTD, "Volume pathname too long");
-        exit(EXIT_FAILURE);        
-    }
-    strncpy(dbpath, vol->v_dbpath, MAXPATHLEN - strlen("/.AppleDB"));
-    strcat(dbpath, "/.AppleDB");
-
-    /* Check or create dbpath */
-    int dbdirfd = open(dbpath, O_RDONLY);
-    if (dbdirfd == -1 && errno == ENOENT) {
-        if (errno == ENOENT) {
-            if ((mkdir(dbpath, 0755)) != 0) {
-                dbd_log( LOGSTD, "Can't create .AppleDB for \"%s\": %s", dbpath, strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            dbd_log( LOGSTD, "Somethings wrong with .AppleDB for \"%s\", giving up: %s", dbpath, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        close(dbdirfd);
-    }
-
-    /* Get db lock */
-    if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-        goto exit_noenv;
-    if (db_locked != LOCK_EXCL) {
-        dbd_log(LOGDEBUG, "Database is in use, acquiring shared lock");
-        /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
-        if (exclusive) {
-            dbd_log(LOGSTD, "Database is in use and exlusive was requested");
-            goto exit_noenv;
-        }
-        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD)
-            goto exit_noenv;
-    }
-
-    /* Check if -f is requested and wipe db if yes */
-    if ((flags & DBD_FLAGS_FORCE) && rebuild) {
-        char cmd[8 + MAXPATHLEN];
-        if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
-            goto exit_noenv;
-
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
-        dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
-        system(cmd);
-        if ((mkdir(dbpath, 0755)) != 0) {
-            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-        dbd_log( LOGDEBUG, "Removed old database.");
-        if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-            goto exit_noenv;
-    }
-
-    /* 
-       Lets start with the BerkeleyDB stuff
-    */
-    if ( ! nocniddb) {
-        if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
-            goto exit_noenv;
-        
-        if (dbif_env_open(dbd,
-                          &db_param,
-                          (db_locked == LOCK_EXCL) ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
-            dbd_log( LOGSTD, "error opening database!");
-            goto exit_noenv;
-        }
-
-        if (db_locked == LOCK_EXCL)
-            dbd_log( LOGDEBUG, "Finished recovery.");
-
-        if (dbif_open(dbd, NULL, rebuildindexes) < 0) {
-            dbif_close(dbd);
-            goto exit_failure;
-        }
-
-        /* Prepare upgrade ? We're done */
-        if (prep_upgrade) {
-            (void)dbif_txn_close(dbd, 1);
-            goto cleanup;
-        }
-    }
-
-    /* Downgrade db lock if not running exclusive */
-    if (!exclusive && (db_locked == LOCK_EXCL)) {
-        if (get_lock(LOCK_UNLOCK, NULL) != 0)
-            goto exit_failure;
-        if (get_lock(LOCK_SHRD, NULL) != LOCK_SHRD)
-            goto exit_failure;
     }
 
     /* Now execute given command scan|rebuild|dump */
-    if (dump && ! nocniddb) {
-        if (dbif_dump(dbd, dumpindexes) < 0) {
-            dbd_log( LOGSTD, "Error dumping database");
-        }
-    } else if ((rebuild && ! nocniddb) || scan) {
-        if (cmd_dbd_scanvol(dbd, vol, flags) < 0) {
+    switch (dbd_cmd) {
+    case dbd_scan:
+    case dbd_rebuild:
+        if (cmd_dbd_scanvol(vol, flags) < 0) {
             dbd_log( LOGSTD, "Error repairing database.");
         }
+        break;
     }
 
-cleanup:
-    /* Cleanup */
-    dbd_log(LOGDEBUG, "Closing db");
-    if (! nocniddb) {
-        if (dbif_close(dbd) < 0) {
-            dbd_log( LOGSTD, "Error closing database");
-            goto exit_failure;
-        }
-    }
+EC_CLEANUP:
+    if (vol)
+        cnid_close(vol->v_cdb);
 
-exit_success:
-    ret = 0;
-
-exit_failure:
-    if (dbif_env_remove(dbpath) < 0) {
-        dbd_log( LOGSTD, "Error removing BerkeleyDB database environment");
-        ret++;
-    }
-    get_lock(0, NULL);
-
-exit_noenv:    
-    if ((fchdir(cdir)) < 0)
+    if (cdir != -1 && (fchdir(cdir) < 0))
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
 
     if (ret == 0)

@@ -26,7 +26,9 @@
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/util.h>
 
 #include "db_param.h"
 #include "dbif.h"
@@ -43,6 +45,9 @@
 static DBD *dbd;
 static int exit_sig = 0;
 static int db_locked;
+static bstring dbpath;
+static struct db_param *dbp;
+static struct vol *vol;
 
 static void sig_exit(int signo)
 {
@@ -77,9 +82,203 @@ static void block_sigs_onoff(int block)
   of the cnid_dbd_rply structure contains further details.
 
 */
-#ifndef min
-#define min(a,b)        ((a)<(b)?(a):(b))
-#endif
+
+/*!
+ * Get lock on db lock file
+ *
+ * @args cmd       (r) lock command:
+ *                     LOCK_FREE:   close lockfd
+ *                     LOCK_UNLOCK: unlock lockm keep lockfd open
+ *                     LOCK_EXCL:   F_WRLCK on lockfd
+ *                     LOCK_SHRD:   F_RDLCK on lockfd
+ * @args dbpath    (r) path to lockfile, only used on first call,
+ *                     later the stored fd is used
+ * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
+ *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
+ *                     success, 0 if the lock couldn't be acquired, -1 on other errors
+ */
+static int get_lock(int cmd, const char *dbpath)
+{
+    static int lockfd = -1;
+    int ret;
+    char lockpath[PATH_MAX];
+    struct stat st;
+
+    LOG(log_debug, logtype_cnid, "get_lock(%s, \"%s\")",
+        cmd == LOCK_EXCL ? "LOCK_EXCL" :
+        cmd == LOCK_SHRD ? "LOCK_SHRD" :
+        cmd == LOCK_FREE ? "LOCK_FREE" :
+        cmd == LOCK_UNLOCK ? "LOCK_UNLOCK" : "UNKNOWN",
+        dbpath ? dbpath : "");
+
+    switch (cmd) {
+    case LOCK_FREE:
+        if (lockfd == -1)
+            return -1;
+        close(lockfd);
+        lockfd = -1;
+        return 0;
+
+    case LOCK_UNLOCK:
+        if (lockfd == -1)
+            return -1;
+        return unlock(lockfd, 0, SEEK_SET, 0);
+
+    case LOCK_EXCL:
+    case LOCK_SHRD:
+        if (lockfd == -1) {
+            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+                LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
+                return -1;
+            }
+            strncpy(lockpath, dbpath, PATH_MAX - 1);
+            strcat(lockpath, "/");
+            strcat(lockpath, LOCKFILENAME);
+
+            if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
+                LOG(log_error, logtype_cnid, "Error opening lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((stat(dbpath, &st)) != 0) {
+                LOG(log_error, logtype_cnid, "Error statting lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
+                LOG(log_error, logtype_cnid, "Error inheriting lockfile permissions: %s",
+                         strerror(errno));
+                return -1;
+            }
+        }
+    
+        if (cmd == LOCK_EXCL)
+            ret = write_lock(lockfd, 0, SEEK_SET, 0);
+        else
+            ret = read_lock(lockfd, 0, SEEK_SET, 0);
+
+        if (ret != 0) {
+            if (cmd == LOCK_SHRD)
+                LOG(log_error, logtype_cnid, "Volume CNID db is locked, try again...");
+            return 0; 
+        }
+
+        LOG(log_debug, logtype_cnid, "get_lock: got %s lock",
+            cmd == LOCK_EXCL ? "LOCK_EXCL" : "LOCK_SHRD");    
+        return cmd;
+
+    default:
+        return -1;
+    } /* switch(cmd) */
+
+    /* deadc0de, never get here */
+    return -1;
+}
+
+static int open_db(void)
+{
+    EC_INIT;
+
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
+        EC_FAIL;
+    }
+
+    if (NULL == (dbd = dbif_init(bdata(dbpath), "cnid2.db")))
+        EC_FAIL;
+
+    /* Only recover if we got the lock */
+    if (dbif_env_open(dbd, dbp, DBOPTIONS | DB_RECOVER) < 0)
+        EC_FAIL;
+
+    LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
+
+    if (dbif_open(dbd, dbp, 0) < 0)
+        EC_FAIL;
+
+    LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (dbd) {
+            (void)dbif_close(dbd);
+            dbd = NULL;
+        }
+    }
+
+    EC_EXIT;
+}
+
+static int delete_db(void)
+{
+    EC_INIT;
+    int cwd = -1;
+
+    EC_ZERO( get_lock(LOCK_FREE, bdata(dbpath)) );
+    EC_NEG1( cwd = open(".", O_RDONLY) );
+    chdir(cfrombstr(dbpath));
+    system("rm -f cnid2.db lock log.* __db.*");
+
+    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
+        EC_FAIL;
+    }
+
+    LOG(log_warning, logtype_cnid, "Recreated CNID BerkeleyDB databases of volume \"%s\"", vol->v_localname);
+
+EC_CLEANUP:
+    if (cwd != -1)
+        fchdir(cwd);
+    EC_EXIT;
+}
+
+
+/**
+ * Close dbd if open, delete it, reopen
+ *
+ * Also tries to copy the rootinfo key, that would allow for keeping the db stamp
+ * and last used CNID
+ **/
+static int reinit_db(void)
+{
+    EC_INIT;
+    DBT key, data;
+    bool copyRootInfo = false;
+
+    if (dbd) {
+        memset(&key, 0, sizeof(key));
+        memset(&data, 0, sizeof(data));
+
+        key.data = ROOTINFO_KEY;
+        key.size = ROOTINFO_KEYLEN;
+
+        if (dbif_get(dbd, DBIF_CNID, &key, &data, 0) <= 0) {
+            LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error getting rootinfo record");
+            copyRootInfo = false;
+        } else {
+            copyRootInfo = true;
+        }
+        (void)dbif_close(dbd);
+    }
+
+    EC_ZERO_LOG( delete_db() );
+    EC_ZERO_LOG( open_db() );
+
+    if (copyRootInfo == true) {
+        memset(&key, 0, sizeof(key));
+        key.data = ROOTINFO_KEY;
+        key.size = ROOTINFO_KEYLEN;
+
+        if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) != 0) {
+            LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error writing rootinfo key");
+            EC_FAIL;
+        }
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
 
 static int loop(struct db_param *dbp)
 {
@@ -110,7 +309,7 @@ static int loop(struct db_param *dbp)
         dbp->flush_interval, timebuf);
 
     while (1) {
-        timeout = min(time_next_flush, time_last_rqst +dbp->idle_timeout);
+        timeout = MIN(time_next_flush, time_last_rqst + dbp->idle_timeout);
         if (timeout > now)
             timeout -= now;
         else
@@ -145,7 +344,7 @@ static int loop(struct db_param *dbp)
                 ret = 1;
                 break;
             case CNID_DBD_OP_ADD:
-                ret = dbd_add(dbd, &rqst, &rply, 0);
+                ret = dbd_add(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_GET:
                 ret = dbd_get(dbd, &rqst, &rply);
@@ -154,7 +353,7 @@ static int loop(struct db_param *dbp)
                 ret = dbd_resolve(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_LOOKUP:
-                ret = dbd_lookup(dbd, &rqst, &rply, 0);
+                ret = dbd_lookup(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_UPDATE:
                 ret = dbd_update(dbd, &rqst, &rply);
@@ -170,6 +369,9 @@ static int loop(struct db_param *dbp)
                 break;
             case CNID_DBD_OP_SEARCH:
                 ret = dbd_search(dbd, &rqst, &rply);
+                break;
+            case CNID_DBD_OP_WIPE:
+                ret = reinit_db();
                 break;
             default:
                 LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
@@ -274,18 +476,15 @@ static void set_signal(void)
 int main(int argc, char *argv[])
 {
     EC_INIT;
-    struct db_param *dbp;
     int delete_bdb = 0;
     int ctrlfd = -1, clntfd = -1;
-    char *logconfig;
     AFPObj obj = { 0 };
-    struct vol *vol;
     char *volpath = NULL;
-    bstring dbpath;
 
     while (( ret = getopt( argc, argv, "dF:l:p:t:vV")) != -1 ) {
         switch (ret) {
         case 'd':
+            /* this is now just ignored, as we do it automatically anyway */
             delete_bdb = 1;
             break;
         case 'F':
@@ -326,29 +525,6 @@ int main(int argc, char *argv[])
 
     switch_to_user(bdata(dbpath));
 
-    /* Get db lock */
-    if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) == -1) {
-        LOG(log_error, logtype_cnid, "main: fatal db lock error");
-        EC_FAIL;
-    }
-    if (db_locked != LOCK_EXCL) {
-        /* Couldn't get exclusive lock, try shared lock  */
-        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD) {
-            LOG(log_error, logtype_cnid, "main: fatal db lock error");
-            EC_FAIL;
-        }
-    }
-
-    if (delete_bdb && (db_locked == LOCK_EXCL)) {
-        LOG(log_warning, logtype_cnid, "main: too many CNID db opening attempts, wiping the slate clean");
-        chdir(bdata(dbpath));
-        system("rm -f cnid2.db lock log.* __db.*");
-        if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
-            LOG(log_error, logtype_cnid, "main: fatal db lock error");
-            EC_FAIL;
-        }
-    }
-
     set_signal();
 
     /* SIGINT and SIGTERM are always off, unless we are in pselect */
@@ -358,36 +534,10 @@ int main(int argc, char *argv[])
         EC_FAIL;
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
-    if (NULL == (dbd = dbif_init(bdata(dbpath), "cnid2.db")))
-        EC_FAIL;
-
-    /* Only recover if we got the lock */
-    if (dbif_env_open(dbd,
-                      dbp,
-                      (db_locked == LOCK_EXCL) ? DBOPTIONS | DB_RECOVER : DBOPTIONS) < 0)
-        EC_FAIL;
-    LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
-
-    if (dbif_open(dbd, dbp, 0) < 0) {
-        ret = -1;
-        goto close_db;
+    if (open_db() != 0) {
+        LOG(log_error, logtype_cnid, "Failed to open CNID database for volume \"%s\"", vol->v_localname);
+        EC_ZERO_LOG( reinit_db() );
     }
-
-    LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
-
-    /* Downgrade db lock  */
-    if (db_locked == LOCK_EXCL) {
-        if (get_lock(LOCK_UNLOCK, NULL) != 0) {
-            ret = -1;
-            goto close_db;
-        }
-
-        if (get_lock(LOCK_SHRD, NULL) != LOCK_SHRD) {
-            ret = -1;
-            goto close_db;
-        }
-    }
-
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         ret = -1;

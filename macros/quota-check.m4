@@ -1,4 +1,3 @@
-dnl $Id: quota-check.m4,v 1.6 2005-07-20 23:58:21 didg Exp $
 dnl Autoconf macro to check for quota support
 dnl FIXME: This is in now way complete.
 

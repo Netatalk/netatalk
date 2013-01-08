@@ -1,8 +1,16 @@
-/*
- * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * All Rights Reserved.  See COPYRIGHT.
- */
-
+/* 
+   Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -46,7 +54,6 @@ static void kill_childs(int sig, ...);
 
 /* static variables */
 static AFPObj obj;
-static sig_atomic_t got_chldsig;
 static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
 static struct event_base *base;
@@ -168,7 +175,7 @@ static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 /* SIGCHLD callback */
 static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 {
-    int status, i;
+    int status;
     pid_t pid;
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -201,8 +208,6 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 /* timer callback */
 static void timer_cb(evutil_socket_t fd, short what, void *arg)
 {
-    static int i = 0;
-
     if (in_shutdown)
         return;
 
@@ -294,7 +299,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    const char *configfile = NULL;
     int c, ret, debug = 0;
     sigset_t blocksigs;
     struct timeval tv;

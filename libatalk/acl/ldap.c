@@ -347,7 +347,7 @@ int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
         int i = 0;
         int s = 0;
         char c;
-        while(c = uuidstr[i]) {
+        while ((c = uuidstr[i])) {
             if((c >='a' && c <= 'f')
                 || (c >= 'A' && c <= 'F')
                 || (c >= '0' && c <= '9')) {

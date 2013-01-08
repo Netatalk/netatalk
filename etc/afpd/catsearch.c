@@ -137,7 +137,6 @@ static void clearstack(void)
 static int addstack(char *uname, struct dir *dir, int pidx)
 {
 	struct dsitem *ds;
-	size_t         l, u;
     struct dsitem *tmpds = NULL;
 
 	/* check if we have some space on stack... */
@@ -194,7 +193,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 	    
 	isdir  = S_ISDIR(path->st.st_mode);
 
-	if (!isdir && (of = of_findname(path))) {
+	if (!isdir && (of = of_findname(vol, path))) {
 		adp = of->of_ad;
 	} else {
 		ad_init(&ad, vol);
@@ -551,7 +550,7 @@ static int catsearch(const AFPObj *obj,
 			dirpos = opendir(".");
 
 		if (dirpos == NULL)
-			dirpos = opendir(bdata(currentdir->d_fullpath));
+			dirpos = opendir(cfrombstr(currentdir->d_fullpath));
 
 		if (error || dirpos == NULL) {
 			switch (errno) {
@@ -583,7 +582,7 @@ static int catsearch(const AFPObj *obj,
 
 			memset(&path, 0, sizeof(path));
 			path.u_name = entry->d_name;
-			if (of_stat(&path) != 0) {
+			if (of_stat(vol, &path) != 0) {
 				switch (errno) {
 				case EACCES:
 				case ELOOP:
@@ -777,7 +776,7 @@ static int catsearch_db(const AFPObj *obj,
         path.u_name = name;
         path.m_name = utompath(vol, name, cnid, utf8_encoding(vol->v_obj));
 
-        if (of_stat(&path) != 0) {
+        if (of_stat(vol, &path) != 0) {
             switch (errno) {
             case EACCES:
             case ELOOP:
