@@ -3,7 +3,7 @@
 pkgconfdir = @PKGCONFDIR@
 
 sbin_PROGRAMS = afpd
-noinst_PROGRAMS = hash fce spot srp
+noinst_PROGRAMS = hash fce spot
 
 afpd_SOURCES = \
 	afp_avahi.c \
@@ -68,7 +68,7 @@ noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h fi
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
 	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h spotlight.h \
-	 spotlight_rawquery_parser.h spotlight_SPARQL_map.h
+	spotlight_SPARQL_map.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
@@ -77,13 +77,15 @@ fce_SOURCES = fce_api.c fce_util.c
 fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
 fce_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-AM_YFLAGS = -d
-BUILT_SOURCES = spotlight_rawquery_parser.h
-
-if HAVE_TRACKER
 spot_SOURCES = spotlight.c spotlight_marshalling.c
 spot_CFLAGS = -DSPOT_TEST_MAIN
 spot_LDADD = $(top_builddir)/libatalk/libatalk.la
+
+AM_YFLAGS = -d
+
+if HAVE_TRACKER
+BUILT_SOURCES = spotlight_rawquery_parser.h spotlight_rawquery_lexer.h
+noinst_PROGRAMS += srp
 
 moduledir = @UAMS_PATH@
 module_LTLIBRARIES = mod_spotlight.la

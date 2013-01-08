@@ -390,8 +390,12 @@ int main(int argc, char **argv)
 
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
     set_sl_volumes();
+#ifdef TRACKER_PREFIX
     system(TRACKER_PREFIX "/bin/tracker-control -s");
-
+#endif
+#ifdef SOLARIS
+    system("/usr/bin/trackerd");    
+#endif
     /* run the event loop */
     ret = event_base_dispatch(base);
 
