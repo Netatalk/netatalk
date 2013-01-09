@@ -84,7 +84,7 @@ spot_LDADD = $(top_builddir)/libatalk/libatalk.la
 AM_YFLAGS = -d
 
 if HAVE_TRACKER
-BUILT_SOURCES = spotlight_rawquery_parser.h spotlight_rawquery_lexer.h
+BUILT_SOURCES = spotlight_rawquery_parser.h
 noinst_PROGRAMS += srp
 
 moduledir = @UAMS_PATH@
