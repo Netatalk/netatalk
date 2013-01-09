@@ -1,5 +1,10 @@
+%top{
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+}
+
 %{
-#include <string.h>
 #include <stdbool.h>
 #include <gio/gio.h>
 #include <atalk/talloc.h>

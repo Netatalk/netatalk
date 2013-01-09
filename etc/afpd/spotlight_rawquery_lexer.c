@@ -1,5 +1,11 @@
+#line 2 "spotlight_rawquery_lexer.l"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
-#line 3 "spotlight_rawquery_lexer.c"
+
+
+#line 9 "spotlight_rawquery_lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -475,14 +481,14 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 #line 1 "spotlight_rawquery_lexer.l"
-#line 2 "spotlight_rawquery_lexer.l"
-#include <string.h>
+
+#line 8 "spotlight_rawquery_lexer.l"
 #include <stdbool.h>
 #include <gio/gio.h>
 #include <atalk/talloc.h>
 #include "spotlight.h"
 #include "spotlight_rawquery_parser.h"
-#line 486 "spotlight_rawquery_lexer.c"
+#line 492 "spotlight_rawquery_lexer.c"
 
 #define INITIAL 0
 
@@ -571,7 +577,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( yytext, yyleng, 1, yyout )) {} } while (0)
+#define ECHO fwrite( yytext, yyleng, 1, yyout )
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -582,7 +588,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		unsigned n; \
+		int n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -664,9 +670,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 10 "spotlight_rawquery_lexer.l"
+#line 15 "spotlight_rawquery_lexer.l"
 
-#line 670 "spotlight_rawquery_lexer.c"
+#line 676 "spotlight_rawquery_lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -751,91 +757,91 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 11 "spotlight_rawquery_lexer.l"
+#line 16 "spotlight_rawquery_lexer.l"
 return FUNC_INRANGE;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 12 "spotlight_rawquery_lexer.l"
+#line 17 "spotlight_rawquery_lexer.l"
 return DATE_ISO;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 13 "spotlight_rawquery_lexer.l"
+#line 18 "spotlight_rawquery_lexer.l"
 {yylval.bval = false; return BOOL;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 14 "spotlight_rawquery_lexer.l"
+#line 19 "spotlight_rawquery_lexer.l"
 {yylval.bval = true; return BOOL;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 15 "spotlight_rawquery_lexer.l"
+#line 20 "spotlight_rawquery_lexer.l"
 {yylval.sval = talloc_strdup(ssp_slq, yytext); return WORD;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 16 "spotlight_rawquery_lexer.l"
+#line 21 "spotlight_rawquery_lexer.l"
 return QUOTE;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 17 "spotlight_rawquery_lexer.l"
+#line 22 "spotlight_rawquery_lexer.l"
 return OBRACE;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 18 "spotlight_rawquery_lexer.l"
+#line 23 "spotlight_rawquery_lexer.l"
 return CBRACE;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 19 "spotlight_rawquery_lexer.l"
+#line 24 "spotlight_rawquery_lexer.l"
 return AND;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 20 "spotlight_rawquery_lexer.l"
+#line 25 "spotlight_rawquery_lexer.l"
 return OR;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 21 "spotlight_rawquery_lexer.l"
+#line 26 "spotlight_rawquery_lexer.l"
 return EQUAL;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 22 "spotlight_rawquery_lexer.l"
+#line 27 "spotlight_rawquery_lexer.l"
 return UNEQUAL;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 23 "spotlight_rawquery_lexer.l"
+#line 28 "spotlight_rawquery_lexer.l"
 return LT;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 24 "spotlight_rawquery_lexer.l"
+#line 29 "spotlight_rawquery_lexer.l"
 return GT;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 25 "spotlight_rawquery_lexer.l"
+#line 30 "spotlight_rawquery_lexer.l"
 return COMMA;
 	YY_BREAK
 case 16:
 /* rule 16 can match eol */
 YY_RULE_SETUP
-#line 26 "spotlight_rawquery_lexer.l"
+#line 31 "spotlight_rawquery_lexer.l"
 /* ignore */
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 27 "spotlight_rawquery_lexer.l"
+#line 32 "spotlight_rawquery_lexer.l"
 ECHO;
 	YY_BREAK
-#line 839 "spotlight_rawquery_lexer.c"
+#line 845 "spotlight_rawquery_lexer.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1833,7 +1839,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 27 "spotlight_rawquery_lexer.l"
+#line 32 "spotlight_rawquery_lexer.l"
 
 
 
