@@ -378,6 +378,14 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
+#ifdef HAVE_TRACKER
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    setenv("XDG_DATA_DIRS", TRACKER_PREFIX "/share/:/usr/share/", 1);
+    setenv("TRACKER_DB_ONTOLOGIES_DIR", TRACKER_PREFIX "/share/tracker/ontologies", 1);
+    setenv("TRACKER_EXTRACTOR_RULES_DIR", TRACKER_PREFIX "/share/tracker/extract-rules", 1);
+    setenv("TRACKER_LANGUAGE_STOPWORDS_DIR", TRACKER_PREFIX "/share/tracker/languages", 1);
+#endif
+
     dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/bin/dbus-daemon");
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
     if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
@@ -388,13 +396,9 @@ int main(int argc, char **argv)
     /* Allow dbus some time to start up */
     sleep(1);
 
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+#ifdef HAVE_TRACKER
     set_sl_volumes();
-#ifdef TRACKER_PREFIX
     system(TRACKER_PREFIX "/bin/tracker-control -s");
-#endif
-#ifdef SOLARIS
-    system("/usr/bin/trackerd");    
 #endif
     /* run the event loop */
     ret = event_base_dispatch(base);
