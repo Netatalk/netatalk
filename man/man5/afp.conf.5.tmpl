@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 06 Dez 2012
+.\"      Date: 12 Jan 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "06 Dez 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "12 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -88,9 +88,9 @@ option is considered a
 \fIvol preset\fR
 which can be selected in other volume sections via the
 \fBvol preset\fR
-option and constitutes defaults for the volume\&. For any option speficied both in a preset
+option and constitutes defaults for the volume\&. For any option specified both in a preset
 \fIand\fR
-in a volume section the volume section setting completly substitutes the preset option\&.
+in a volume section the volume section setting completely substitutes the preset option\&.
 .PP
 The access rights granted by the server are masked by the access rights granted to the specified or guest UNIX user by the host system\&. The server does not grant more access than the host system grants\&.
 .PP
@@ -117,7 +117,7 @@ Parameters in this section apply to the server as a whole\&. Parameters denoted 
 This section enable sharing of the UNIX server user home directories\&. Specifying an optional
 \fBpath\fR
 parameter means that not the whole user home will be shared but the subdirectory
-\fBpath\fR\&. It is neccessary to define the
+\fBpath\fR\&. It is necessary to define the
 \fBbasedir regex\fR
 option\&. It should be a regex which matches the parent directory of the user homes\&. Parameters denoted by a (H) belong to volume sections\&. The optional parameter
 \fBhome name\fR
@@ -255,9 +255,9 @@ k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm
 These are required if the server supports the Kerberos 5 authentication UAM\&.
 .RE
 .PP
-nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
+nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPARATOR\fR \fB(G)\fR
 .RS 4
-Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
+Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the available and active UAM authentication modules\&.
 .RE
 .PP
 save password = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -349,7 +349,7 @@ unix charset = \fICHARSET\fR \fB(G)\fR
 Specifies the servers unix charset, e\&.g\&.
 \fIISO\-8859\-15\fR
 or
-\fIEUC\-JP\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. If
+\fIEUC\-JP\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authentication, server messages and volume names\&. If
 \fILOCALE\fR
 is set, the systems locale is used\&. Defaults to
 \fIUTF8\fR\&.
@@ -395,7 +395,7 @@ Setting this option is not recommended since globally encrypting AFP connections
 .RE
 .RE
 .PP
-afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the server should advertise
 \fBand\fR
@@ -409,7 +409,7 @@ Allows a different TCP port to be used for AFP\&. The default is 548\&. Also set
 option\&.
 .RE
 .PP
-cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+cnid listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the CNID server should listen on\&. The default is
 \fBlocalhost:4700\fR\&.
@@ -435,7 +435,7 @@ Specifies a fully\-qualified domain name, with an optional port\&. This is disca
 .PP
 hostname = \fIname\fR \fB(G)\fR
 .RS 4
-Use this instead of the result from calling hostname for dertermening which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
+Use this instead of the result from calling hostname for determining which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
 \fBafp listen\fR\&.
 .RE
 .PP
@@ -530,7 +530,7 @@ AFP user home volume name\&. The default is
 .PP
 keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
-Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interruping active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
+Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interrupting active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
 \fInetatalk\fR
 service controller process, the AFP and CNID daemons will exit and then the service controller will restart them\&. AFP session processes are notified of the master afpd shutdown, they will then sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. The IPC channel between the AFP master service daemon and the AFP session child is used for keeping session state of AFP sessions in the AFP master process\&. The session state is needed when AFP clients experience eg network outages and try to reconnect to the AFP server\&.
 .RE
@@ -566,7 +566,7 @@ Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this 
 .PP
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
+Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
 :STATEDIR:/netatalk/CNID/\&.
 .RE
 .PP
@@ -586,7 +586,7 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .RE
 .\}
 .sp
-Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limitted to 27 bytes\&.
+Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limited to 27 bytes\&.
 .RE
 .PP
 vol preset = \fIname\fR \fB(G)/(V)\fR
@@ -599,7 +599,7 @@ as option preset for all volumes (when set in the [Global] section) or for one v
 .PP
 log file = \fIlogfile\fR \fB(G)\fR
 .RS 4
-If not specified Netatalk logs to syslogs daemon facilify\&. Otherwise it logs to
+If not specified Netatalk logs to syslogs daemon facility\&. Otherwise it logs to
 \fBlogfile\fR\&.
 .RE
 .PP
@@ -640,7 +640,7 @@ fce listener = \fIhost[:port]\fR \fB(G)\fR
 Enables sending FCE events to the specified
 \fIhost\fR, default
 \fIport\fR
-is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
+is 12250 if not specified\&. Specifying multiple listeners is done by having this option once for each of them\&.
 .RE
 .PP
 fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
@@ -656,7 +656,7 @@ Coalesce FCE events\&.
 .PP
 fce holdfmod = \fIseconds\fR \fB(G)\fR
 .RS 4
-This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
+This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file multiple times for every "save"\&. Default: 60 seconds\&.
 .RE
 .SS "Debug Parameters"
 .PP
@@ -765,7 +765,7 @@ Name of the LDAP attribute with the users short name\&.
 .PP
 ldap uuid string = \fISTRING\fR \fB(G)\fR
 .RS 4
-Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
+Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a separator\&.
 .sp
 Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
 .RE
@@ -815,7 +815,7 @@ vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
 Useful for Time Machine: limits the reported volume size, thus preventing Time Machine from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approimated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approximated calculation taking into account the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 valid users = \fIuser @group\fR \fB(V)\fR
@@ -869,10 +869,10 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires writeable volume for perfoming test\&. "\fBread only = yes\fR" overwrites
+\fBad\fR\&. Requires writeable volume for performing test\&. "\fBread only = yes\fR" overwrites
 \fBauto\fR
 with
-\fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropiate\&.
+\fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropriate\&.
 .RE
 .PP
 sys
@@ -1056,7 +1056,7 @@ Whether to stat volume path when enumerating volumes list, useful for automounti
 .PP
 time machine = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-Whether to enable Time Machine suport for this volume\&.
+Whether to enable Time Machine support for this volume\&.
 .RE
 .PP
 unix priv = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
