@@ -25,6 +25,7 @@
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/spotlight.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -34,7 +35,6 @@
 #include "file.h"
 #include "filedir.h"
 #include "unix.h"
-#include "spotlight.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes

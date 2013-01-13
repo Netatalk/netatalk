@@ -11,9 +11,9 @@
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
   #include <atalk/errchk.h>
+  #include <atalk/spotlight.h>
 
-  #include "spotlight_SPARQL_map.h"
-  #include "spotlight.h"
+  #include "slmod_sparql_map.h"
 
   struct yy_buffer_state;
   typedef struct yy_buffer_state *YY_BUFFER_STATE;

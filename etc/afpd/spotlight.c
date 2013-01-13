@@ -36,8 +36,7 @@
 #include <atalk/byteorder.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
-
-#include "spotlight.h"
+#include <atalk/spotlight.h>
 
 static TALLOC_CTX *sl_ctx;
 static void *sl_module;

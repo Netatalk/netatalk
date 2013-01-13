@@ -39,12 +39,12 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/spotlight.h>
 
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
 #include "dircache.h"
-#include "spotlight.h"
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
@@ -493,7 +493,7 @@ void afp_over_dsi(AFPObj *obj)
 
     /* Initialize Spotlight */
     if (obj->options.flags & OPTION_SPOTLIGHT)
-        sl_mod_load(_PATH_AFPDUAMPATH "mod_spotlight.so");
+        sl_mod_load(_PATH_AFPDUAMPATH "slmod_sparql.so");
 
     /* get stuck here until the end */
     while (1) {

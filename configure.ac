@@ -245,6 +245,7 @@ AC_OUTPUT([Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
 	etc/netatalk/Makefile
+	etc/spotlight/Makefile
 	etc/uams/Makefile
 	include/Makefile
 	include/atalk/Makefile

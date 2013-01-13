@@ -33,8 +33,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 #include <atalk/dsi.h>
-
-#include "spotlight.h"
+#include <atalk/spotlight.h>
 
 #define MAX_SLQ_DAT (DSI_DATASIZ - 64)
 #define MAX_SLQ_TOC 8192

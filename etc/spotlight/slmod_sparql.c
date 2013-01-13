@@ -27,9 +27,9 @@
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/unix.h>
+#include <atalk/spotlight.h>
 
-#include "spotlight.h"
-#include "spotlight_rawquery_parser.h"
+#include "slmod_sparql_parser.h"
 
 #define MAX_SL_RESULTS 20
 

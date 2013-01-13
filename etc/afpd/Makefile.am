@@ -67,8 +67,7 @@ endif
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
-	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h spotlight.h \
-	spotlight_SPARQL_map.h
+	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
@@ -80,28 +79,3 @@ fce_LDADD = $(top_builddir)/libatalk/libatalk.la
 spot_SOURCES = spotlight.c spotlight_marshalling.c
 spot_CFLAGS = -DSPOT_TEST_MAIN
 spot_LDADD = $(top_builddir)/libatalk/libatalk.la
-
-AM_YFLAGS = -d
-
-if HAVE_TRACKER
-BUILT_SOURCES = spotlight_rawquery_parser.h
-noinst_PROGRAMS += srp
-
-moduledir = @UAMS_PATH@
-module_LTLIBRARIES = mod_spotlight.la
-
-mod_spotlight_la_SOURCES = \
-	spotlight_module.c \
-	spotlight_SPARQL_map.c \
-	spotlight_rawquery_parser.y \
-	spotlight_rawquery_lexer.l
-mod_spotlight_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@ @TRACKER_MINER_CFLAGS@
-mod_spotlight_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@ @TRACKER_MINER_LIBS@
-
-srp_SOURCES = \
-	spotlight_SPARQL_map.c \
-	spotlight_rawquery_parser.y \
-	spotlight_rawquery_lexer.l
-srp_CFLAGS = -DMAIN -I$(top_srcdir)/include @TRACKER_CFLAGS@
-srp_LDADD = $(top_builddir)/libatalk/libatalk.la
-endif

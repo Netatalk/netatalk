@@ -39,6 +39,7 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include <atalk/server_ipc.h>
 #include <atalk/uuid.h>
 #include <atalk/globals.h>
+#include <atalk/spotlight.h>
 
 #include "auth.h"
 #include "uam_auth.h"
@@ -46,7 +47,6 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "status.h"
 #include "fork.h"
 #include "extattrs.h"
-#include "spotlight.h"
 #ifdef HAVE_ACLS
 #include "acls.h"
 #endif

@@ -37,7 +37,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
-    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker" = x"yes"])
 
     ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
     AC_ARG_WITH([tracker-miner-pkg-config],

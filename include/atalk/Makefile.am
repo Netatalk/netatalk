@@ -43,4 +43,5 @@ noinst_HEADERS = \
 	talloc.h \
 	dalloc.h \
 	byteorder.h \
-	fce_api.h
+	fce_api.h \
+	spotlight.h

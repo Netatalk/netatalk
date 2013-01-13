@@ -18,7 +18,7 @@
 
 #include <unistd.h>
 
-#include "spotlight_SPARQL_map.h"
+#include "slmod_sparql_map.h"
 
 #define NOTSUPPORTED NULL
 #define SPECIAL      NULL

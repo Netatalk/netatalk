@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <gio/gio.h>
 #include <atalk/talloc.h>
-#include "spotlight.h"
-#include "spotlight_rawquery_parser.h"
+#include <atalk/spotlight.h>
+#include "slmod_sparql_parser.h"
 %}
 
 %%
