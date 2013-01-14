@@ -346,15 +346,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             sd.sd_last += len + 1;
             continue;
         }
+
         memset(&s_path, 0, sizeof(s_path));
-
-        /* conversions on the fly */
-        const char *convname;
         s_path.u_name = sd.sd_last;
-        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
-            s_path.u_name = (char *)convname;
-        }
-
         if (of_stat(vol, &s_path) < 0 ) {
             /* so the next time it won't try to stat it again
              * another solution would be to invalidate the cache with 
@@ -364,6 +358,12 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             sd.sd_last += len + 1;
             curdir->d_offcnt--;		/* a little lie */
             continue;
+        }
+
+        /* conversions on the fly */
+        const char *convname;
+        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
+            s_path.u_name = (char *)convname;
         }
 
         /* Fixup CNID db if ad_convert resulted in a rename (then convname != NULL) */

@@ -27,6 +27,8 @@ Changes in 3.0.2
        Setting the option to true causes afpd to follow symlinks on the
        server. symlinks may point outside of the AFP volume, currently
        afpd doesn't do any checks for "wide symlinks".
+* FIX: Automatic AppleDouble conversion to EAs failing for directories.
+       Fixes bug #486.
 
 Changes in 3.0.1
 ================
