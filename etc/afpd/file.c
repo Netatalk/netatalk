@@ -92,6 +92,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
     }
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
+        chk_ext = 1;
         if (vol_inv_dots(vol) && *upath == '.') { /* make it invisible */
             uint16_t ashort;
             
