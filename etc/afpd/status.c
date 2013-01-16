@@ -442,8 +442,7 @@ static size_t status_directorynames(char *data,
     krb5_unparse_name(context, entry.principal, &principal);
 #ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
     krb5_free_keytab_entry_contents(context, &entry);
-#endif
-#ifdef HAVE_KRB5_KT_FREE_ENTRY
+#elif defined(HAVE_KRB5_KT_FREE_ENTRY)
     krb5_kt_free_entry(context, &entry);
 #endif
     append_directoryname(&data,
