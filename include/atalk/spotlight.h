@@ -99,7 +99,8 @@ typedef struct _slq_t {
     uint64_t       slq_ctx2;          /* client context 2                                               */
     sl_array_t     *slq_reqinfo;      /* array with requested metadata                                  */
     const char     *slq_qstring;      /* the Spotlight query string                                     */
-
+    uint64_t       *slq_cnids;        /* Pointer to array with CNIDs to which a query applies           */
+    size_t         slq_cnids_num;    /* Size of slq_cnids array                                        */
 #ifdef HAVE_TRACKER_SPARQL
     void           *slq_tracker_cursor; /* Tracker SPARQL query result cursor                           */
 #endif

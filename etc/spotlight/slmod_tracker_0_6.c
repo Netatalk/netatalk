@@ -118,6 +118,17 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int cnid_cmp_fn(const void *p1, const void *p2)
+{
+    const uint64_t *cnid1 = p1, *cnid2 = p2;
+    if (*cnid1 == *cnid2)
+        return 0;
+    if (*cnid1 < *cnid2)
+        return -1;
+    else
+        return 1;            
+}
+
 static int sl_mod_fetch_result(void *p)
 {
     EC_INIT;
@@ -185,6 +196,11 @@ static int sl_mod_fetch_result(void *p)
             LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), *result);
 
             uint64 = ntohl(id);
+            if (slq->slq_cnids) {
+                if (!bsearch(&uint64, slq->slq_cnids, slq->slq_cnids_num, sizeof(uint64_t), cnid_cmp_fn))
+                    goto loop_continue;
+            }
+
             dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
             add_filemeta(slq->slq_reqinfo, fm_array, id, *result);
 

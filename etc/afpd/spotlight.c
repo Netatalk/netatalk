@@ -224,6 +224,38 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int cnid_comp_fn(const void *p1, const void *p2)
+{
+    const uint64_t *cnid1 = p1, *cnid2 = p2;
+    if (*cnid1 == *cnid2)
+        return 0;
+    if (*cnid1 < *cnid2)
+        return -1;
+    else
+        return 1;            
+}
+
+static int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
+{
+    EC_INIT;
+    uint64_t *cnids = NULL;
+
+    EC_NULL( cnids = talloc_array(slq, uint64_t, talloc_array_length(p)) );
+    for (int i = 0; i < talloc_array_length(p); i++)
+        memcpy(&cnids[i], p->dd_talloc_array[i], sizeof(uint64_t));
+    qsort(cnids, talloc_array_length(p), sizeof(uint64_t), cnid_comp_fn);
+
+    slq->slq_cnids = cnids;
+    slq->slq_cnids_num = talloc_array_length(p);
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (cnids)
+            talloc_free(cnids);
+    }
+    EC_EXIT;
+}
+
 static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, struct vol *v)
 {
     EC_INIT;
@@ -231,6 +263,7 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     uint64_t *uint64;
     DALLOC_CTX *reqinfo;
     sl_array_t *array;
+    sl_cnids_t *cnids;
     slq_t *slq = NULL;
 
     /* Allocate and initialize query object */
@@ -249,12 +282,15 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     slq->slq_ctx2 = *uint64;
     EC_NULL_LOG( reqinfo = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDAttributeArray") );
     slq->slq_reqinfo = talloc_steal(slq, reqinfo);
-
+    if ((cnids = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryItemArray"))) {
+        EC_ZERO_LOG( sl_createCNIDArray(slq, cnids->ca_cnids) );
+    }
+        
     LOG(log_maxdebug, logtype_sl, "sl_rpc_openQuery: requested attributes:");
     dd_dump(slq->slq_reqinfo, 0);
 
     (void)slq_add(slq);
-
+    
     /* Run the query */
     EC_ZERO( sl_module_export->sl_mod_start_search(slq) );
 
