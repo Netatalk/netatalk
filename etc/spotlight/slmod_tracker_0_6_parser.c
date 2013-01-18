@@ -529,8 +529,8 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint8 yyrline[] =
 {
        0,    67,    67,    69,    73,    80,    86,    92,    93,    94,
-      95,   103,   107,   108,   109,   110,   111,   112,   113,   114,
-     118,   122,   123
+      95,   108,   112,   113,   114,   115,   116,   117,   118,   119,
+     123,   127,   128
 };
 #endif
 
@@ -1502,7 +1502,12 @@ yyreduce:
 /* Line 1792 of yacc.c  */
 #line 95 "slmod_tracker_0_6_parser.y"
     {
-    if ((yyvsp[(1) - (3)].sval))
+    if ((yyvsp[(1) - (3)].sval) && (yyvsp[(3) - (3)].sval)) {
+        if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
+            YYABORT;
+        else
+            (yyval.sval) = (yyvsp[(1) - (3)].sval);
+    } else if ((yyvsp[(1) - (3)].sval))
         (yyval.sval) = (yyvsp[(1) - (3)].sval);
     else if ((yyvsp[(3) - (3)].sval))
         (yyval.sval) = (yyvsp[(3) - (3)].sval);
@@ -1513,79 +1518,79 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 103 "slmod_tracker_0_6_parser.y"
+#line 108 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 107 "slmod_tracker_0_6_parser.y"
+#line 112 "slmod_tracker_0_6_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 108 "slmod_tracker_0_6_parser.y"
+#line 113 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 109 "slmod_tracker_0_6_parser.y"
+#line 114 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 110 "slmod_tracker_0_6_parser.y"
+#line 115 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 111 "slmod_tracker_0_6_parser.y"
+#line 116 "slmod_tracker_0_6_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 112 "slmod_tracker_0_6_parser.y"
+#line 117 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 113 "slmod_tracker_0_6_parser.y"
+#line 118 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 114 "slmod_tracker_0_6_parser.y"
+#line 119 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 118 "slmod_tracker_0_6_parser.y"
+#line 123 "slmod_tracker_0_6_parser.y"
     {YYABORT;}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 122 "slmod_tracker_0_6_parser.y"
+#line 127 "slmod_tracker_0_6_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 123 "slmod_tracker_0_6_parser.y"
+#line 128 "slmod_tracker_0_6_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1589 "slmod_tracker_0_6_parser.c"
+#line 1594 "slmod_tracker_0_6_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1817,7 +1822,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 126 "slmod_tracker_0_6_parser.y"
+#line 131 "slmod_tracker_0_6_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -1955,6 +1960,6 @@ int main(int argc, char **argv)
                tracker_type_to_service_name(ts_type), ts_search);
     }
 
-    return 0;
+    return ret;
 } 
 #endif

@@ -93,7 +93,12 @@ BOOL                             {
 | function                     {$$ = $1;}
 | OBRACE expr CBRACE           {$$ = $2;}
 | expr AND expr                {
-    if ($1)
+    if ($1 && $3) {
+        if (strcmp($1, $3) != 0)
+            YYABORT;
+        else
+            $$ = $1;
+    } else if ($1)
         $$ = $1;
     else if ($3)
         $$ = $3;
@@ -260,6 +265,6 @@ int main(int argc, char **argv)
                tracker_type_to_service_name(ts_type), ts_search);
     }
 
-    return 0;
+    return ret;
 } 
 #endif
