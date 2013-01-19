@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 12 Jan 2013
+.\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "12 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "19 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -132,8 +132,9 @@ The following example illustrates this\&. Given all user home directories are st
 .RS 4
 .\}
 .nf
- [Homes] path = afp\-data basedir regex = /home
-      
+ [Homes]
+      path = afp\-data
+      basedir regex = /home
 .fi
 .if n \{\
 .RE
@@ -143,6 +144,24 @@ For a user
 \fIjohn\fR
 this results in an AFP home volume with a path of
 /home/john/afp\-data\&.
+.PP
+If
+\fBbasedir regex\fR
+contains symlink, set the canonicalized absolute path\&. When
+/home
+links to
+/usr/home:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ [Homes]
+      basedir regex = /usr/home
+.fi
+.if n \{\
+.RE
+.\}
 .SH "PARAMETERS"
 .PP
 Parameters define the specific attributes of sections\&.
@@ -435,7 +454,7 @@ Specifies a fully\-qualified domain name, with an optional port\&. This is disca
 .PP
 hostname = \fIname\fR \fB(G)\fR
 .RS 4
-Use this instead of the result from calling hostname for determining which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
+Use this instead of the result from calling hostname for determining which IP address to advertise, therefore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
 \fBafp listen\fR\&.
 .RE
 .PP
@@ -491,7 +510,9 @@ Whether to apply locks to the byte region read in FPRead calls\&. The AFP spec m
 .PP
 basedir regex = \fIregex\fR \fB(H)\fR
 .RS 4
-Regular expression which matches the parent directory of the user homes\&. In the simple case this is just a path ie
+Regular expression which matches the parent directory of the user homes\&. If
+\fBbasedir regex\fR
+contains symlink, you must set the canonicalized absolute path\&. In the simple case this is just a path ie
 \fBbasedir regex = /home\fR
 .RE
 .PP
@@ -514,7 +535,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/AppleVolumes\&.system)\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/extmap\&.conf)\&.
 .RE
 .PP
 guest account = \fIname\fR \fB(G)\fR
@@ -525,7 +546,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 home name = \fIname\fR \fB(H)\fR
 .RS 4
 AFP user home volume name\&. The default is
-\fIusers\*(Aqs home\fR\&.
+\fIuser\*(Aqs home\fR\&.
 .RE
 .PP
 keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -633,7 +654,7 @@ Both logtype and loglevels are case insensitive\&.
 .RE
 .SS "Filesystem Change Events (FCE)"
 .PP
-Netatalk includes a nifty filesystem change event mechanism where afpd processes notfiy interested listeners about certain filesytem event by UDP network datagrams\&.
+Netatalk includes a nifty filesystem change event mechanism where afpd processes notify interested listeners about certain filesystem event by UDP network datagrams\&.
 .PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
@@ -645,7 +666,7 @@ is 12250 if not specified\&. Specifying multiple listeners is done by having thi
 .PP
 fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
 .RS 4
-Speficies which FCE events are active, default is
+Specifies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
 .RE
 .PP
@@ -683,7 +704,7 @@ Do not use this option any longer as present Netatalk correctly supports server 
 .PP
 For a basic mode of operation there\*(Aqs nothing to configure\&. afpd reads ACLs on the fly, calculating effective permissions and returning the calculated permissions via the so called UARights permission bits\&. On a Mac the Finder uses these bits to adjust permission in Finder windows\&. For example folder whos UNIX mode would only result in in read\-only permissions for a user will not be displayed with a read\-only icon and the user will be able to write to the folder given the folder has an ACL giving the user write access\&.
 .PP
-However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\*(Aqs a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involed as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
+However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\*(Aqs a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involved as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
 .PP
 Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
 .PP
@@ -869,7 +890,7 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires writeable volume for performing test\&. "\fBread only = yes\fR" overwrites
+\fBad\fR\&. Requires writable volume for performing test\&. "\fBread only = yes\fR" overwrites
 \fBauto\fR
 with
 \fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropriate\&.
@@ -1004,7 +1025,7 @@ Whether automatic conversion from
 \fBappledouble = v2\fR
 to
 \fBappledouble = ea\fR
-is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommdable to run
+is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommendable to run
 \fBdbd\fR
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
 .RE
@@ -1075,9 +1096,9 @@ directory\&.
 .PP
 cdb
 .RS 4
-"Concurrent database", backend is based on Oracle Berkely DB\&. With this backend several
+"Concurrent database", backend is based on Oracle Berkley DB\&. With this backend several
 \fBafpd\fR
-deamons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
+daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR
 process is active for a volume\&. The drawback is, that the crash of a single
 \fBafpd\fR
@@ -1117,7 +1138,7 @@ might show that there are other CNID backends available, be warned those are lik
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
-needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
+needs a way to preserve extended Macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
 :f0\&. Some special characters will be converted as to :xx notation as well\&. \*(Aq/\*(Aq will be encoded to
 :2f, if
 \fBusedots\fR
@@ -1148,4 +1169,5 @@ first\&. If this conversion fails, you\*(Aqll receive a \-50 error on the mac\&.
 \fBafpd\fR(8),
 \fBafppasswd\fR(5),
 \fBafp_signature.conf\fR(5),
+\fBextmap.conf\fR(5),
 \fBcnid_metad\fR(8)

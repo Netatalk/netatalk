@@ -14,8 +14,8 @@ SUFFIXES = .tmpl .
 	    -e "s@:COMPILED_BACKENDS:@${compiled_backends}@g" \
 	    <$< >$@
 
-GENERATED_MANS = afp.conf.5 afp_signature.conf.5 afp_voluuid.conf.5
-TEMPLATE_FILES = afp.conf.5.tmpl afp_signature.conf.5.tmpl afp_voluuid.conf.5.tmpl
+GENERATED_MANS = afp.conf.5 afp_signature.conf.5 afp_voluuid.conf.5 extmap.conf.5
+TEMPLATE_FILES = afp.conf.5.tmpl afp_signature.conf.5.tmpl afp_voluuid.conf.5.tmpl extmap.conf.5.tmpl
 NONGENERATED_MANS =
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)

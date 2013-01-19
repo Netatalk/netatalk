@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: afpd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 23 Mar 2012
+.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
+.\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "23 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFPD" "8" "19 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -64,7 +73,7 @@ Specifies the configuration file to use\&. (Defaults to
 .RE
 .SH "SIGNALS"
 .PP
-To shut down a user\'s
+To shut down a user\*(Aqs
 \fBafpd\fR
 process it is recommended that
 \fBSIGKILL (\-9)\fR
@@ -105,7 +114,7 @@ to a child
 \fBafpd\fR
 enables
 \fImax_debug\fR
-logging for this process\&. The log is sent to fhe file
+logging for this process\&. The log is sent to the file
 /tmp/afpd\&.PID\&.XXXXXX\&. Sending another
 \fBSIGINT\fR
 will revert to the original log settings\&.
@@ -142,6 +151,11 @@ list of server signature
 list of UUID for Time Machine volume
 .RE
 .PP
+:ETCDIR:/extmap\&.conf
+.RS 4
+file name extension mapping
+.RE
+.PP
 :ETCDIR:/msg/message\&.pid
 .RS 4
 contains messages to be sent to users\&.
@@ -153,4 +167,5 @@ contains messages to be sent to users\&.
 \fBafp.conf\fR(5),
 \fBafp_signature.conf\fR(5),
 \fBafp_voluuid.conf\fR(5),
+\fBextmap.conf\fR(5),
 \fBdbd\fR(1)\&.

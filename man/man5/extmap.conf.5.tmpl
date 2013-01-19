@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: dbd
+.\"     Title: extmap.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 28 Dec 2012
+.\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "DBD" "1" "28 Dec 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "EXTMAP\&.CONF" "5" "19 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,54 +28,50 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-dbd \- CNID database maintenance
+extmap.conf \- Configuration file used by afpd(8) to specify file name extension mappings\&.
 .SH "SYNOPSIS"
-.HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-fsv] \fIvolumepath\fR
+.HP \w'\fB:ETCDIR:/extmap\&.conf\fR\fB\fR\ 'u
+\fB:ETCDIR:/extmap\&.conf\fR\fB\fR
 .SH "DESCRIPTION"
 .PP
-\fBdbd\fR
-scans all file and directories of AFP volumes, updating the CNID database of the volume\&. It must be run with appropriate permissions i\&.e\&. as root\&.\&.
-.SH "OPTIONS"
+
+:ETCDIR:/extmap\&.conf
+is the configuration file used by
+\fBafpd\fR
+to specify file name extension mappings\&.
 .PP
-\-c
+The configuration lines are composed like:
+.PP
+\&.extension
+\fI[ type [ creator ] ]\fR
+.PP
+Any line beginning with a hash (\(lq#\(rq) character is ignored\&. The leading\-dot lines specify file name extension mappings\&. The extension \*(Aq\&.\*(Aq sets the default creator and type for otherwise untyped Unix files\&.
+.SH "EXAMPLES"
+.PP
+\fBExample.\ \&Extension is jpg. Type is "JPEG". Creator is "ogle".\fR
+.sp
+.if n \{\
 .RS 4
-convert from adouble:v2 to adouble:ea
+.\}
+.nf
+\&.jpg "JPEG" "ogle"
+.fi
+.if n \{\
 .RE
+.\}
 .PP
-\-f
+\fBExample.\ \&Extension is lzh. Type is "LHA ". Creator is not defined.\fR
+.sp
+.if n \{\
 .RS 4
-delete and recreate CNID database
+.\}
+.nf
+\&.lzh "LHA "
+.fi
+.if n \{\
 .RE
-.PP
-\-F
-.RS 4
-location of the afp\&.conf config file
-.RE
-.PP
-\-s
-.RS 4
-scan volume: treat the volume as read only and don\*(Aqt perform any filesystem modifications
-.RE
-.PP
-\-t
-.RS 4
-show statistics while running
-.RE
-.PP
-\-v
-.RS 4
-verbose
-.RE
-.PP
-\-V
-.RS 4
-display version info
-.RE
-.SH "CNID BACKGROUND"
-.PP
-The CNID backends maintains name to ID mappings\&. If you change a filename outside afpd(8) (shell, samba), the CNID database will not reflect that change\&. Netatalk tries to recover from such inconsistencies as gracefully as possible\&.
+.\}
 .SH "SEE ALSO"
 .PP
-\fBcnid_metad\fR(8),
-\fBcnid_dbd\fR(8)
+\fBafp.conf\fR(5),
+\fBafpd\fR(8)
