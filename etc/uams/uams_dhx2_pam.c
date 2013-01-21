@@ -136,7 +136,11 @@ error:
  * echo off means password.
  */
 static int PAM_conv (int num_msg,
+#ifdef LINUX
                      const struct pam_message **msg,
+#else
+                     struct pam_message **msg,
+#endif
                      struct pam_response **resp,
                      void *appdata_ptr _U_) {
     int count = 0;
@@ -927,9 +931,6 @@ static int uam_setup(const char *path)
     if (uam_register(UAM_SERVER_CHANGEPW, path, "DHX2", dhx2_changepw) < 0)
         return -1;
 
-    p = gcry_mpi_new(0);
-    g = gcry_mpi_new(0);
-
     LOG(log_debug, logtype_uams, "DHX2: generating mersenne primes");
     /* Generate p and g for DH */
     if (dh_params_generate(PRIMEBITS) != 0) {
@@ -944,6 +945,8 @@ static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "DHX2");
     uam_unregister(UAM_SERVER_CHANGEPW, "DHX2");
+
+    LOG(log_debug, logtype_uams, "DHX2: uam_cleanup");
 
     gcry_mpi_release(p);
     gcry_mpi_release(g);

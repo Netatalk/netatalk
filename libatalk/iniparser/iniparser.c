@@ -8,6 +8,10 @@
 */
 
 /*---------------------------- Includes ------------------------------------*/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <ctype.h>
 
 #include <atalk/iniparser.h>
@@ -474,8 +478,7 @@ static line_status iniparser_line(
         strcpy(section, strstrip(section));
         strcpy(section, section);
         sta = LINE_SECTION ;
-    } else if (sscanf (line, "%[^=] = \"%[^\"]\"", key, value) == 2
-           ||  sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
+    } else if (sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
            ||  sscanf (line, "%[^=] = %[^;#]",     key, value) == 2) {
         /* Usual key=value, with or without comments */
         strcpy(key, strstrip(key));
@@ -529,7 +532,6 @@ dictionary * iniparser_load(const char * ininame)
     char line    [ASCIILINESZ+1] ;
     char section [ASCIILINESZ+1] ;
     char key     [ASCIILINESZ+1] ;
-    char tmp     [ASCIILINESZ+1] ;
     char val     [ASCIILINESZ+1] ;
 
     int  last=0 ;
@@ -571,14 +573,6 @@ dictionary * iniparser_load(const char * ininame)
         len = (int)strlen(line)-1;
         if (len==0)
             continue;
-        /* Safety check against buffer overflows */
-        if (line[len]!='\n') {
-            LOG(log_error, logtype_default, "iniparser: input line too long in \"%s\" (lineno: %d)",
-                ininame, lineno);
-            dictionary_del(dict);
-            fclose(in);
-            return NULL ;
-        }
         /* Get rid of \n and spaces at end of line */
         while ((len>=0) &&
                 ((line[len]=='\n') || (isspace(line[len])))) {

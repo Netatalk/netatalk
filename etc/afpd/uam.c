@@ -1,5 +1,4 @@
 /*
- * $Id: uam.c,v 1.35 2009-11-08 01:15:31 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -31,6 +30,7 @@
 #include <atalk/util.h>
 #include <atalk/globals.h>
 #include <atalk/volume.h>
+#include <atalk/bstrlib.h>
 
 #include "afp_config.h"
 #include "auth.h"
@@ -209,25 +209,24 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         return pwent;
         
     /* if we have a NT domain name try with it */
-    if (obj->options.ntdomain && obj->options.ntseparator) {
+    if (obj->options.addomain || (obj->options.ntdomain && obj->options.ntseparator)) {
         /* FIXME What about charset ? */
-        size_t ulen = strlen(obj->options.ntdomain) + strlen(obj->options.ntseparator) + strlen(name);
-        if ((p = malloc(ulen +1))) {
-            strcpy(p, obj->options.ntdomain);
-            strcat(p, obj->options.ntseparator);
-            strcat(p, name);
-            pwent = getpwnam(p);
-            free(p);
-            if (pwent) {
-                int len = strlen(pwent->pw_name);              
-                if (len < MAXUSERLEN) {
-                    strncpy(name,pwent->pw_name, MAXUSERLEN);  
-                }else{
-                    LOG(log_error, logtype_uams, "MAJOR:The name %s is longer than %d",pwent->pw_name,MAXUSERLEN);
-                }
+        bstring princ;
+        if (obj->options.addomain)
+            princ = bformat("%s@%s", name, obj->options.addomain);
+        else
+            princ = bformat("%s%s%s", obj->options.ntdomain, obj->options.ntseparator, name);
+        pwent = getpwnam(bdata(princ));
+        bdestroy(princ);
 
-                return pwent;
+        if (pwent) {
+            int len = strlen(pwent->pw_name);              
+            if (len < MAXUSERLEN) {
+                strncpy(name,pwent->pw_name, MAXUSERLEN);  
+            } else {
+                LOG(log_error, logtype_uams, "The name '%s' is longer than %d", pwent->pw_name, MAXUSERLEN);
             }
+            return pwent;
         }
     }
 #ifndef NO_REAL_USER_NAME

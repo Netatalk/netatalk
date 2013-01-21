@@ -1,5 +1,4 @@
 /*
-  $Id: bstradd.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -77,7 +76,6 @@
  */
 bstring brefcstr (char *str) {
     bstring b;
-    int i;
     size_t j;
 
 	if (str == NULL)
@@ -90,7 +88,7 @@ bstring brefcstr (char *str) {
 
 	b->slen = (int) j;
     b->mlen = -1;
-    b->data = str;
+    b->data = (unsigned char *)str;
 
 	return b;
 }

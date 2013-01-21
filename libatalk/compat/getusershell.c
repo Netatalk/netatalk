@@ -1,5 +1,4 @@
 /*
- * $Id: getusershell.c,v 1.4 2003-02-17 01:51:08 srittau Exp $
  *
  * Copyright (c) 1985 Regents of the University of California.
  * All rights reserved.

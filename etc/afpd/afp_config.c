@@ -41,31 +41,39 @@
 
 
 /*!
- * Free and cleanup all linked DSI objects from config
+ * Free and cleanup config and DSI
  *
- * Preserve object pointed to by "dsi".
- * "dsi" can be NULL in which case all DSI objects _and_ the options object are freed 
+ * "dsi" can be NULL in which case all DSI objects and the config object is freed,
+ * otherwise its an afpd session child and only any unneeded DSI objects are freed
  */
 void configfree(AFPObj *obj, DSI *dsi)
 {
     DSI *p, *q;
 
-    /* the master loaded the volumes for zeroconf, get rid of that */
+    if (!dsi) {
+        /* Master afpd reloading config */
+        auth_unload();
+        if (! (obj->options.flags & OPTION_NOZEROCONF)) {
+            zeroconf_deregister();
+        }
+    }
+
     unload_volumes(obj);
 
+    /* Master and child releasing unneeded DSI handles */
     for (p = obj->dsi; p; p = q) {
         q = p->next;
         if (p == dsi)
             continue;
-        close(p->socket);
+        dsi_free(p);
         free(p);
     }
+    obj->dsi = NULL;
 
+    /* afpd session child passes dsi handle to obj handle */
     if (dsi) {
         dsi->next = NULL;
         obj->dsi = dsi;
-    } else {
-        afp_options_free(&obj->options);
     }
 }
 
@@ -81,6 +89,9 @@ int configinit(AFPObj *obj)
 
     auth_load(obj->options.uampath, obj->options.uamlist);
     set_signature(&obj->options);
+#ifdef HAVE_LDAP
+    acl_ldap_freeconfig();
+#endif /* HAVE_LDAP */
 
     LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, port: %s",
         obj->options.hostname,
@@ -122,7 +133,7 @@ int configinit(AFPObj *obj)
 
     /* Now register with zeroconf, we also need the volumes for that */
     if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-        load_volumes(obj, NULL);
+        load_volumes(obj);
         zeroconf_register(obj);
     }
 

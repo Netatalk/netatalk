@@ -103,9 +103,29 @@ static void dsi_init_buffer(DSI *dsi)
     dsi->end = dsi->buffer + (dsi->dsireadbuf * dsi->server_quantum);
 }
 
+/*!
+ * Free any allocated ressources of the master afpd DSI objects and close server socket
+ */
+void dsi_free(DSI *dsi)
+{
+    close(dsi->serversock);
+    dsi->serversock = -1;
+
+    free(dsi->commands);
+    dsi->commands = NULL;
+
+    free(dsi->buffer);
+    dsi->buffer = NULL;
+
+#ifdef USE_ZEROCONF
+    free(dsi->bonjourname);
+    dsi->bonjourname = NULL;
+#endif
+}
+
 static struct itimerval itimer;
 /* accept the socket and do a little sanity checking */
-static int dsi_tcp_open(DSI *dsi)
+static pid_t dsi_tcp_open(DSI *dsi)
 {
     pid_t pid;
     SOCKLEN_T len;

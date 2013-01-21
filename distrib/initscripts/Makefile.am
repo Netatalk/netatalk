@@ -39,6 +39,7 @@ TEMPLATES = \
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
+noinst_DATA = $(GENERATED_FILES)
 
 # overwrite automake uninstall
 # not beautiful, but this way we can call the OS specific init script

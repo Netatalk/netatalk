@@ -629,6 +629,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+#if 0
 /*!
  * Add entries of one acl to another acl
  *
@@ -651,6 +652,7 @@ static int acl_add_acl(acl_t *aclp, const acl_t acl)
 EC_CLEANUP:
     EC_EXIT;
 }
+#endif
 
 /*!
  * Map Darwin ACE rights to POSIX 1e perm
@@ -1261,7 +1263,6 @@ static int set_acl(const struct vol *vol,
     acl_entry_t entry;
     acl_tag_t tag;
     int entry_id = ACL_FIRST_ENTRY;
-    int has_def_acl = 0;
     /* flags to indicate if the object has a minimal default acl and/or an extended
      * default acl.
      */
@@ -1355,7 +1356,6 @@ static int check_acl_access(const AFPObj *obj,
     int            ret;
     uint32_t       allowed_rights = 0;
     char           *username = NULL;
-    uuidtype_t     uuidtype;
     struct stat    st;
     bstring        parent = NULL;
     int            is_dir;
@@ -1380,7 +1380,7 @@ static int check_acl_access(const AFPObj *obj,
     }
 #endif
 
-    EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
+    EC_ZERO_LOG_ERR(ostat(path, &st, vol_syml_opt(vol)), AFPERR_PARAM);
 
     is_dir = !strcmp(path, ".");
 
@@ -1577,10 +1577,10 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         LOG(log_debug, logtype_afpd, "afp_getacl: client requested files owner user UUID");
         if (NULL == (pw = getpwuid(s_path->st.st_uid))) {
             LOG(log_debug, logtype_afpd, "afp_getacl: local uid: %u", s_path->st.st_uid);
-            localuuid_from_id(rbuf, UUID_USER, s_path->st.st_uid);
+            localuuid_from_id((unsigned char *)rbuf, UUID_USER, s_path->st.st_uid);
         } else {
             LOG(log_debug, logtype_afpd, "afp_getacl: got uid: %d, name: %s", s_path->st.st_uid, pw->pw_name);
-            if ((ret = getuuidfromname(pw->pw_name, UUID_USER, rbuf)) != 0)
+            if ((ret = getuuidfromname(pw->pw_name, UUID_USER, (unsigned char *)rbuf)) != 0)
                 return AFPERR_MISC;
         }
         rbuf += UUID_BINSIZE;
@@ -1592,10 +1592,10 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         LOG(log_debug, logtype_afpd, "afp_getacl: client requested files owner group UUID");
         if (NULL == (gr = getgrgid(s_path->st.st_gid))) {
             LOG(log_debug, logtype_afpd, "afp_getacl: local gid: %u", s_path->st.st_gid);
-            localuuid_from_id(rbuf, UUID_GROUP, s_path->st.st_gid);
+            localuuid_from_id((unsigned char *)rbuf, UUID_GROUP, s_path->st.st_gid);
         } else {
             LOG(log_debug, logtype_afpd, "afp_getacl: got gid: %d, name: %s", s_path->st.st_gid, gr->gr_name);
-            if ((ret = getuuidfromname(gr->gr_name, UUID_GROUP, rbuf)) != 0)
+            if ((ret = getuuidfromname(gr->gr_name, UUID_GROUP, (unsigned char *)rbuf)) != 0)
                 return AFPERR_MISC;
         }
         rbuf += UUID_BINSIZE;
@@ -1727,7 +1727,6 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 {
     EC_INIT;
-    uint32_t rights = 0;
 
     if ( ! (obj->options.flags & OPTION_ACL2MACCESS)
          || ! (vol->v_flags & AFPVOL_ACLS))
@@ -1737,6 +1736,7 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
         getcwdpath(), path, ma->ma_user);
 
 #ifdef HAVE_SOLARIS_ACLS
+    uint32_t rights = 0;
     EC_ZERO_LOG(solaris_acl_rights(obj, path, st, &rights));
 
     LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);

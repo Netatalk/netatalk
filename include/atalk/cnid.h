@@ -69,6 +69,7 @@ struct _cnid_db {
                                 const char *, size_t, cnid_t);
     int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
                                 void *buffer, size_t buflen);
+    int    (*cnid_wipe)        (struct _cnid_db *cdb);
 };
 typedef struct _cnid_db cnid_db;
 
@@ -123,6 +124,7 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_
                         char *name, const size_t len, cnid_t hint);
 int    cnid_find       (struct _cnid_db *cdb, const char *name, size_t namelen,
                         void *buffer, size_t buflen);
+int    cnid_wipe       (struct _cnid_db *cdb);
 void   cnid_close      (struct _cnid_db *db);
 
 #endif

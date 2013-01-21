@@ -25,6 +25,7 @@
 #define CNID_DBD_OP_GETSTAMP    0x0b
 #define CNID_DBD_OP_REBUILD_ADD 0x0c
 #define CNID_DBD_OP_SEARCH      0x0d
+#define CNID_DBD_OP_WIPE        0x0e
 
 #define CNID_DBD_RES_OK            0x00
 #define CNID_DBD_RES_NOTFOUND      0x01

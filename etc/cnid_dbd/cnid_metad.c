@@ -92,6 +92,7 @@
 #include <atalk/compat.h>
 #include <atalk/errchk.h>
 #include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 
@@ -286,7 +287,6 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
 static int set_dbdir(const char *dbdir, const char *vpath)
 {
     EC_INIT;
-    int status;
     struct stat st;
     bstring oldpath, newpath;
     char *cmd_argv[4];
@@ -301,7 +301,7 @@ static int set_dbdir(const char *dbdir, const char *vpath)
         EC_FAIL;
     }
 
-    if (lstat(bdata(oldpath), &st) == 0 && lstat(bdata(newpath), &st) != 0 && errno == ENOENT) {
+    if (lstat(cfrombstr(oldpath), &st) == 0 && lstat(cfrombstr(newpath), &st) != 0 && errno == ENOENT) {
         /* There's an .AppleDB in the volume root, we move it */
         cmd_argv[0] = "mv";
         cmd_argv[1] = bdata(oldpath);
@@ -315,7 +315,7 @@ static int set_dbdir(const char *dbdir, const char *vpath)
 
     }
 
-    if (lstat(bdata(newpath), &st) < 0 && mkdir(bdata(newpath), 0755 ) < 0) {
+    if (lstat(cfrombstr(newpath), &st) < 0 && mkdir(cfrombstr(newpath), 0755 ) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", bdata(newpath));
         EC_FAIL;
     }
@@ -324,44 +324,6 @@ EC_CLEANUP:
     bdestroy(oldpath);
     bdestroy(newpath);
     EC_EXIT;
-}
-
-/* ------------------ */
-static uid_t user_to_uid (char *username)
-{
-    struct passwd *this_passwd;
-
-    /* check for anything */
-    if ( !username || strlen ( username ) < 1 ) return 0;
-
-    /* grab the /etc/passwd record relating to username */
-    this_passwd = getpwnam ( username );
-
-    /* return false if there is no structure returned */
-    if (this_passwd == NULL) return 0;
-
-    /* return proper uid */
-    return this_passwd->pw_uid;
-
-}
-
-/* ------------------ */
-static gid_t group_to_gid ( char *group)
-{
-    struct group *this_group;
-
-    /* check for anything */
-    if ( !group || strlen ( group ) < 1 ) return 0;
-
-    /* grab the /etc/groups record relating to group */
-    this_group = getgrnam ( group );
-
-    /* return false if there is no structure returned */
-    if (this_group == NULL) return 0;
-
-    /* return proper gid */
-    return this_group->gr_gid;
-
 }
 
 /* ------------------ */
@@ -471,7 +433,6 @@ int main(int argc, char *argv[])
     int    cc;
     uid_t  uid = 0;
     gid_t  gid = 0;
-    int    err = 0;
     int    debug = 0;
     int    ret;
     sigset_t set;
@@ -502,13 +463,13 @@ int main(int argc, char *argv[])
     if (afp_config_parse(&obj, "cnid_metad") != 0)
         daemon_exit(1);
 
-    if (load_volumes(&obj, NULL) != 0)
+    if (load_volumes(&obj) != 0)
         daemon_exit(1);
 
     (void)setlimits();
 
     host = iniparser_getstrdup(obj.iniconfig, INISEC_GLOBAL, "cnid listen", "localhost:4700");
-    if (port = strrchr(host, ':'))
+    if ((port = strrchr(host, ':')))
         *port++ = 0;
     else
         port = DEFAULTPORT;
@@ -604,7 +565,7 @@ int main(int argc, char *argv[])
 
         LOG(log_debug, logtype_cnid, "main: request for volume: %s", volpath);
 
-        if (load_volumes(&obj, NULL) != 0) {
+        if (load_volumes(&obj) != 0) {
             LOG(log_severe, logtype_cnid, "main: error reloading config");
             goto loop_end;
         }

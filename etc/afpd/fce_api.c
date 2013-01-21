@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010 Mark Williams
+ * Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
  *
  * File change event API for netatalk
  *
@@ -29,13 +30,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
-
-
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdbool.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
@@ -56,13 +56,10 @@
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"
 
-#define FCE_TRUE 1
-#define FCE_FALSE 0
-
 /* We store our connection data here */
 static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
 static int udp_sockets = 0;
-static int udp_initialized = FCE_FALSE;
+static bool udp_initialized = false;
 static unsigned long fce_ev_enabled =
     (1 << FCE_FILE_MODIFY) |
     (1 << FCE_FILE_DELETE) |
@@ -70,15 +67,23 @@ static unsigned long fce_ev_enabled =
     (1 << FCE_FILE_CREATE) |
     (1 << FCE_DIR_CREATE);
 
-static uint64_t tm_used;          /* used for passing to event handler */
 #define MAXIOBUF 1024
-static char iobuf[MAXIOBUF];
+static unsigned char iobuf[MAXIOBUF];
 static const char *skip_files[] = 
 {
 	".DS_Store",
 	NULL
 };
 static struct fce_close_event last_close_event;
+
+static char *fce_event_names[] = {
+    "",
+    "FCE_FILE_MODIFY",
+    "FCE_FILE_DELETE",
+    "FCE_DIR_DELETE",
+    "FCE_FILE_CREATE",
+    "FCE_DIR_CREATE"
+};
 
 /*
  *
@@ -91,7 +96,7 @@ void fce_init_udp()
     int rv;
     struct addrinfo hints, *servinfo, *p;
 
-    if (udp_initialized == FCE_TRUE)
+    if (udp_initialized == true)
         return;
 
     memset(&hints, 0, sizeof hints);
@@ -106,7 +111,7 @@ void fce_init_udp()
             close(udp_entry->sock);
 
         if ((rv = getaddrinfo(udp_entry->addr, udp_entry->port, &hints, &servinfo)) != 0) {
-            LOG(log_error, logtype_afpd, "fce_init_udp: getaddrinfo(%s:%s): %s",
+            LOG(log_error, logtype_fce, "fce_init_udp: getaddrinfo(%s:%s): %s",
                 udp_entry->addr, udp_entry->port, gai_strerror(rv));
             continue;
         }
@@ -114,7 +119,7 @@ void fce_init_udp()
         /* loop through all the results and make a socket */
         for (p = servinfo; p != NULL; p = p->ai_next) {
             if ((udp_entry->sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                LOG(log_error, logtype_afpd, "fce_init_udp: socket(%s:%s): %s",
+                LOG(log_error, logtype_fce, "fce_init_udp: socket(%s:%s): %s",
                     udp_entry->addr, udp_entry->port, strerror(errno));
                 continue;
             }
@@ -122,7 +127,7 @@ void fce_init_udp()
         }
 
         if (p == NULL) {
-            LOG(log_error, logtype_afpd, "fce_init_udp: no socket for %s:%s",
+            LOG(log_error, logtype_fce, "fce_init_udp: no socket for %s:%s",
                 udp_entry->addr, udp_entry->port);
         }
         udp_entry->addrinfo = *p;
@@ -131,12 +136,12 @@ void fce_init_udp()
         freeaddrinfo(servinfo);
     }
 
-    udp_initialized = FCE_TRUE;
+    udp_initialized = true;
 }
 
 void fce_cleanup()
 {
-    if (udp_initialized == FCE_FALSE )
+    if (udp_initialized == false )
         return;
 
     for (int i = 0; i < udp_sockets; i++)
@@ -150,22 +155,21 @@ void fce_cleanup()
             udp_entry->sock = -1;
         }
     }
-    udp_initialized = FCE_FALSE;
+    udp_initialized = false;
 }
 
 /*
  * Construct a UDP packet for our listeners and return packet size
  * */
-static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode, uint32_t event_id )
+static ssize_t build_fce_packet( struct fce_packet *packet, const char *path, int event, uint32_t event_id )
 {
     size_t pathlen = 0;
     ssize_t data_len = 0;
-    uint64_t *t;
 
     /* Set content of packet */
     memcpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
     packet->version = FCE_PACKET_VERSION;
-    packet->mode = mode;
+    packet->mode = event;
    
     packet->event_id = event_id; 
 
@@ -180,19 +184,7 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
     /* This is the payload len. Means: the packet has len bytes more until packet is finished */
     data_len = FCE_PACKET_HEADER_SIZE + pathlen;
 
-    switch (mode) {
-    case FCE_TM_SIZE:
-        t = (uint64_t *)packet->data;
-        *t = hton64(tm_used);
-        memcpy(packet->data + sizeof(tm_used), path, pathlen);
-        
-        packet->datalen = pathlen + sizeof(tm_used);
-        data_len += sizeof(tm_used);
-        break;
-    default:
-        memcpy(packet->data, path, pathlen);
-        break;
-    }
+    memcpy(packet->data, path, pathlen);
 
     /* return the packet len */
     return data_len;
@@ -231,27 +223,26 @@ static void pack_fce_packet(struct fce_packet *packet, unsigned char *buf, int m
  * Send the fce information to all (connected) listeners
  * We dont give return code because all errors are handled internally (I hope..)
  * */
-static void send_fce_event( char *path, int mode )
+static void send_fce_event(const char *path, int event)
 {    
-    static int first_event = FCE_TRUE;
+    static bool first_event = true;
 
     struct fce_packet packet;
-    void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     time_t now = time(NULL);
 
-    LOG(log_debug, logtype_afpd, "send_fce_event: start");
+    LOG(log_debug, logtype_fce, "send_fce_event: start");
 
     /* initialized ? */
-    if (first_event == FCE_TRUE) {
-        first_event = FCE_FALSE;
+    if (first_event == true) {
+        first_event = false;
         fce_init_udp();
         /* Notify listeners the we start from the beginning */
         send_fce_event( "", FCE_CONN_START );
     }
 
     /* build our data packet */
-    ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
+    ssize_t data_len = build_fce_packet( &packet, path, event, ++event_id );
     pack_fce_packet(&packet, iobuf, MAXIOBUF);
 
     for (int i = 0; i < udp_sockets; i++)
@@ -273,7 +264,7 @@ static void send_fce_event( char *path, int mode )
             
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
-                LOG(log_error, logtype_afpd, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
+                LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
 
                 udp_entry->next_try_on_error = now + FCE_SOCKET_RETRY_DELAY_S;
                 continue;
@@ -293,7 +284,7 @@ static void send_fce_event( char *path, int mode )
                    udp_entry->addrinfo.ai_addrlen);
 
             /* Rebuild our original data packet */
-            data_len = build_fce_packet( &packet, path, mode, event_id );
+            data_len = build_fce_packet(&packet, path, event, event_id);
             pack_fce_packet(&packet, iobuf, MAXIOBUF);
         }
 
@@ -307,7 +298,7 @@ static void send_fce_event( char *path, int mode )
         /* Problems ? */
         if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_afpd, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
+            LOG(log_error, logtype_fce, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
                 udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
 
             close( udp_entry->sock );
@@ -323,7 +314,7 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
         target_port = FCE_DEFAULT_PORT_STRING;
 
     if (udp_sockets >= FCE_MAX_UDP_SOCKS) {
-        LOG(log_error, logtype_afpd, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
+        LOG(log_error, logtype_fce, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
         return AFPERR_PARAM;
     }
 
@@ -350,7 +341,7 @@ static void save_close_event(const char *path)
         send_fce_event(last_close_event.path, FCE_FILE_MODIFY);
     }
 
-    LOG(log_debug, logtype_afpd, "save_close_event: %s", path);
+    LOG(log_debug, logtype_fce, "save_close_event: %s", path);
 
     last_close_event.time = now;
     strncpy(last_close_event.path, path, MAXPATHLEN);
@@ -361,65 +352,54 @@ static void save_close_event(const char *path)
  * Dispatcher for all incoming file change events
  *
  * */
-static int register_fce(const char *u_name, int is_dir, int mode)
+int fce_register(fce_ev_t event, const char *path, const char *oldpath, fce_obj_t type)
 {
-    static int first_event = FCE_TRUE;
+    static bool first_event = true;
+    const char *bname;
+
+    if (!(fce_ev_enabled & (1 << event)))
+        return AFP_OK;
+
+    AFP_ASSERT(event >= FCE_FIRST_EVENT && event <= FCE_LAST_EVENT);
+
+    LOG(log_debug, logtype_fce, "register_fce(path: %s, type: %s, event: %s",
+        path , type == fce_dir ? "dir" : "file", fce_event_names[event]);
+
+    bname = basename_safe(path);
 
     if (udp_sockets == 0)
         /* No listeners configured */
         return AFP_OK;
 
-    if (u_name == NULL)
+    if (path == NULL)
         return AFPERR_PARAM;
 
 	/* do some initialization on the fly the first time */
 	if (first_event) {
 		fce_initialize_history();
-        first_event = FCE_FALSE;
+        first_event = false;
 	}
 
 	/* handle files which should not cause events (.DS_Store atc. ) */
-	for (int i = 0; skip_files[i] != NULL; i++)
-	{
-		if (!strcmp( u_name, skip_files[i]))
+	for (int i = 0; skip_files[i] != NULL; i++) {
+		if (strcmp(bname, skip_files[i]) == 0)
 			return AFP_OK;
 	}
 
-
-	char full_path_buffer[MAXPATHLEN + 1] = {""};
-	const char *cwd = getcwdpath();
-
-    if (mode == FCE_TM_SIZE) {
-        strlcpy(full_path_buffer, u_name, MAXPATHLEN);
-    } else if (!is_dir || mode == FCE_DIR_DELETE) {
-		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
-			LOG(log_error, logtype_afpd, "FCE file name too long: %s/%s", cwd, u_name );
-			return AFPERR_PARAM;
-		}
-		sprintf( full_path_buffer, "%s/%s", cwd, u_name );
-	} else {
-		if (strlen( cwd ) >= MAXPATHLEN) {
-			LOG(log_error, logtype_afpd, "FCE directory name too long: %s", cwd);
-			return AFPERR_PARAM;
-		}
-		strcpy( full_path_buffer, cwd);
-	}
-
 	/* Can we ignore this event based on type or history? */
-	if (!(mode & FCE_TM_SIZE) && fce_handle_coalescation( full_path_buffer, is_dir, mode ))
-	{
-		LOG(log_debug9, logtype_afpd, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
+	if (fce_handle_coalescation(event, path, type)) {
+		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", event, path);
 		return AFP_OK;
 	}
 
-	LOG(log_debug9, logtype_afpd, "Detected fc event <%d> for <%s>", mode, full_path_buffer );
-
-    if (mode & FCE_FILE_MODIFY) {
-        save_close_event(full_path_buffer);
-        return AFP_OK;
+    switch (event) {
+    case FCE_FILE_MODIFY:
+        save_close_event(path);
+        break;
+    default:
+        send_fce_event(path, event);
+        break;
     }
-
-    send_fce_event( full_path_buffer, mode );
 
     return AFP_OK;
 }
@@ -430,7 +410,7 @@ static void check_saved_close_events(int fmodwait)
 
     /* check if configured holdclose time has passed */
     if (last_close_event.time && ((last_close_event.time + fmodwait) < now)) {
-        LOG(log_debug, logtype_afpd, "check_saved_close_events: sending event: %s", last_close_event.path);
+        LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s", last_close_event.path);
         /* yes, send event */
         send_fce_event(&last_close_event.path[0], FCE_FILE_MODIFY);
         last_close_event.path[0] = 0;
@@ -443,105 +423,10 @@ static void check_saved_close_events(int fmodwait)
 /*
  * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
  * */
-#ifndef FCE_TEST_MAIN
-
 void fce_pending_events(AFPObj *obj)
 {
-    vol_fce_tm_event();
     check_saved_close_events(obj->options.fce_fmodwait);
 }
-
-int fce_register_delete_file( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_DELETE)))
-        return ret;
-	
-    ret = register_fce( path->u_name, false, FCE_FILE_DELETE );
-
-    return ret;
-}
-int fce_register_delete_dir( char *name )
-{
-    int ret = AFP_OK;
-
-    if (name == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_DIR_DELETE)))
-        return ret;
-	
-    ret = register_fce( name, true, FCE_DIR_DELETE);
-
-    return ret;
-}
-
-int fce_register_new_dir( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_DIR_CREATE)))
-        return ret;
-
-    ret = register_fce( path->u_name, true, FCE_DIR_CREATE );
-
-    return ret;
-}
-
-
-int fce_register_new_file( struct path *path )
-{
-    int ret = AFP_OK;
-
-    if (path == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_CREATE)))
-        return ret;
-
-    ret = register_fce( path->u_name, false, FCE_FILE_CREATE );
-
-    return ret;
-}
-
-int fce_register_file_modification( struct ofork *ofork )
-{
-    int ret = AFP_OK;
-
-    if (ofork == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_FILE_MODIFY)))
-        return ret;
-
-    ret = register_fce(of_name(ofork), false, FCE_FILE_MODIFY );
-    
-    return ret;    
-}
-
-int fce_register_tm_size(const char *vol, size_t used)
-{
-    int ret = AFP_OK;
-
-    if (vol == NULL)
-        return AFPERR_PARAM;
-
-    if (!(fce_ev_enabled & (1 << FCE_TM_SIZE)))
-        return ret;
-
-    tm_used = used;             /* oh what a hack */
-    ret = register_fce(vol, false, FCE_TM_SIZE);
-
-    return ret;
-}
-#endif
 
 /*
  *
@@ -586,8 +471,6 @@ int fce_set_events(const char *events)
             fce_ev_enabled |= (1 << FCE_FILE_CREATE);
         } else if (strcmp(p, "dcre") == 0) {
             fce_ev_enabled |= (1 << FCE_DIR_CREATE);
-        } else if (strcmp(p, "tmsz") == 0) {
-            fce_ev_enabled |= (1 << FCE_TM_SIZE);
         }
     }
 
@@ -605,7 +488,7 @@ void shortsleep( unsigned int us )
 }
 int main( int argc, char*argv[] )
 {
-    int c,ret;
+    int c;
 
     char *port = FCE_DEFAULT_PORT_STRING;
     char *host = "localhost";
@@ -668,7 +551,7 @@ int main( int argc, char*argv[] )
         if (end_time && now >= end_time)
             break;
 
-        register_fce( path, 0, event_code );
+        fce_register(event_code, path, NULL, 0);
         ev_cnt++;
 
         

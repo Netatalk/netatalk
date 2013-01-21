@@ -6,11 +6,11 @@ SUFFIXES = .tmpl .
 TMPLFILES = afp.conf.tmpl
 GENFILES = afp.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl
+EXTRA_DIST = afp.conf.tmpl extmap.conf
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
-CONFFILES = 
+CONFFILES = extmap.conf
 
 pkgconfdir = @PKGCONFDIR@
 #

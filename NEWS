@@ -1,3 +1,37 @@
+Changes in 3.0.2
+================
+* NEW: afpd: Put file extension type/creator mapping back in which had
+       been removed in 3.0.
+* NEW: afpd: new option 'ad domain'. From FR #66.
+* FIX: volumes and home share with symlinks in the path
+* FIX: Copying packages to a Netatalk share could fail, bug #469
+* FIX: Reloading volumes from config file was broken.  Fixes bug #474.
+* FIX: Fix _device-info service type registered with dns-sd API
+* FIX: Fix pathname bug for FCE modified event.
+* FIX: Remove length limitation of options like "valid users".
+       Fixes bug #473.
+* FIX: Dont copy our metadata EA in copyfile(). Fixes bug #452.
+* FIX: Fix an error where catalog search gave incomplete results.
+       Fixes bug #479.
+* REM: Remove TimeMachine volume used size FCE event.
+* UPD: Add quoting support to '[in]valid users' option. Fixes bug #472.
+* FIX: Install working PAM config on Solaris 11. Fixes bug #481.
+* FIX: Fix a race condition between dbd and the cnid_dbd daemon
+       which could result in users being disconnected from volumes
+       when dbd was scanning their volumes. Fixes bug #477.
+* FIX: Netatalk didn't start when the last line of the config file
+       afp.conf wasn't terminated by a newline. Fixes bug #476.
+* NEW: Add a new volumes option 'follow symlinks'. The default setting is
+       false, symlinks are not followed on the server. This is the same
+       behaviour as OS X's AFP server.
+       Setting the option to true causes afpd to follow symlinks on the
+       server. symlinks may point outside of the AFP volume, currently
+       afpd doesn't do any checks for "wide symlinks".
+* FIX: Automatic AppleDouble conversion to EAs failing for directories.
+       Fixes bug #486.
+* FIX: dbd failed to convert appledouble files of symlinks.
+       Fixes bug #490.
+
 Changes in 3.0.1
 ================
 * NEW: afpd: Optional "ldap uuid encoding = string | ms-guid" parameter to

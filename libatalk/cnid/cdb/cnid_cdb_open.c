@@ -144,7 +144,7 @@ static struct _cnid_db *cnid_cdb_new(const char *volpath)
     cdb->cnid_close = cnid_cdb_close;
     cdb->cnid_getstamp = cnid_cdb_getstamp;
     cdb->cnid_rebuild_add = cnid_cdb_rebuild_add;
-
+    cdb->cnid_wipe = NULL;
     return cdb;
 }
 

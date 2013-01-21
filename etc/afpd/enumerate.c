@@ -284,7 +284,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     if ( sindex == 1 || curdir->d_did != sd.sd_did || vid != sd.sd_vid ) {
         sd.sd_last = sd.sd_buf;
         /* if dir was in the cache we don't have the inode */
-        if (( !o_path->st_valid && lstat( ".", &o_path->st ) < 0 ) ||
+        if (( !o_path->st_valid && ostat(".", &o_path->st, vol_syml_opt(vol)) < 0 ) ||
             (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
         {
             LOG(log_error, logtype_afpd, "enumerate: loop error: %s (%d)", strerror(errno), errno);
@@ -346,16 +346,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             sd.sd_last += len + 1;
             continue;
         }
+
         memset(&s_path, 0, sizeof(s_path));
-
-        /* conversions on the fly */
-        const char *convname;
         s_path.u_name = sd.sd_last;
-        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
-            s_path.u_name = (char *)convname;
-        }
-
-        if (of_stat( &s_path) < 0 ) {
+        if (of_stat(vol, &s_path) < 0 ) {
             /* so the next time it won't try to stat it again
              * another solution would be to invalidate the cache with 
              * sd.sd_did = 0 but if it's not ENOENT error it will start again
@@ -366,11 +360,17 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             continue;
         }
 
+        /* conversions on the fly */
+        const char *convname;
+        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0 && convname) {
+            s_path.u_name = (char *)convname;
+        }
+
         /* Fixup CNID db if ad_convert resulted in a rename (then convname != NULL) */
         if (convname) {
             s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd.sd_last, strlen(sd.sd_last));
             if (s_path.id != CNID_INVALID) {
-                if (cnid_update(vol->v_cdb, s_path.id, &s_path.st, curdir->d_did, convname, strlen(convname)) != 0)
+                if (cnid_update(vol->v_cdb, s_path.id, &s_path.st, curdir->d_did, (char *)convname, strlen(convname)) != 0)
                     LOG(log_error, logtype_afpd, "enumerate: error updating CNID of \"%s\"", fullpathname(convname));
             }
         }

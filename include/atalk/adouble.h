@@ -247,6 +247,7 @@ struct adouble {
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
+#define ADVOL_FOLLO_SYML (1 << 4)
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -368,6 +369,8 @@ struct adouble {
 /* Refcounting open forks using one struct adouble */
 #define ad_ref(ad)   (ad)->ad_refcount++
 #define ad_unref(ad) --((ad)->ad_refcount)
+
+#define ad_get_syml_opt(ad) (((ad)->ad_options & ADVOL_FOLLO_SYML) ? 0 : O_NOFOLLOW)
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header_v2(struct adouble *);

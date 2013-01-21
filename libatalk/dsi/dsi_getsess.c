@@ -1,5 +1,4 @@
 /*
- * $Id: dsi_getsess.c,v 1.7 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -36,7 +35,7 @@
 int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_child_t **childp)
 {
   pid_t pid;
-  unsigned int ipc_fds[2];  
+  int ipc_fds[2];  
   afp_child_t *child;
 
   if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
@@ -121,7 +120,6 @@ int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_chi
     /* set up the tickle timer */
     dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;
     dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
-    signal(SIGPIPE, SIG_IGN); /* we catch these ourselves */
     dsi_opensession(dsi);
     *childp = NULL;
     return 0;

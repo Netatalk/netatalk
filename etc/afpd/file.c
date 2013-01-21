@@ -77,6 +77,7 @@ static int default_type(void *finder)
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
 void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data, int islink)
 {
+    struct extmap       *em;
     void                *ad_finder = NULL;
     int                 chk_ext = 0;
 
@@ -85,9 +86,13 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
 
     if (ad_finder) {
         memcpy(data, ad_finder, ADEDLEN_FINDERI);
+        /* default type ? */
+        if (default_type(ad_finder)) 
+            chk_ext = 1;
     }
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
+        chk_ext = 1;
         if (vol_inv_dots(vol) && *upath == '.') { /* make it invisible */
             uint16_t ashort;
             
@@ -96,13 +101,19 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         }
     }
 
-    if (islink){
+    if (islink && !vol_syml_opt(vol)) {
         uint16_t linkflag;
         memcpy(&linkflag, (char *)data + FINDERINFO_FRFLAGOFF, 2);
         linkflag |= htons(FINDERINFO_ISALIAS);
         memcpy((char *)data + FINDERINFO_FRFLAGOFF, &linkflag, 2);
         memcpy((char *)data + FINDERINFO_FRTYPEOFF,"slnk",4); 
         memcpy((char *)data + FINDERINFO_FRCREATOFF,"rhap",4); 
+    }
+
+    /** Only enter if no appledouble information and no finder information found. */
+    if (chk_ext && (em = getextmap( upath ))) {
+        memcpy(data, em->em_type, sizeof( em->em_type ));
+        memcpy((char *)data + 4, em->em_creator, sizeof(em->em_creator));
     }
 
     return data;
@@ -594,7 +605,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct pat
     struct adouble	ad, *adp;
     int                 opened = 0;
     int rc;    
-    int flags;
+    int flags; /* uninitialized ok */
 
     LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
 
@@ -630,7 +641,9 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct pat
         }
     }
     rc = getmetadata(obj, vol, bitmap, path, dir, buf, buflen, adp);
-    ad_close(adp, ADFLAGS_HF | flags);
+
+    if (opened)
+        ad_close(adp, ADFLAGS_HF | flags);
 
     return( rc );
 }
@@ -675,7 +688,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     ad_init(&ad, vol);
     
     /* if upath is deleted we already in trouble anyway */
-    if ((of = of_findname(s_path))) {
+    if ((of = of_findname(vol, s_path))) {
         if (creatf)
             return AFPERR_BUSY;
         else
@@ -737,9 +750,8 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
-    fce_register_new_file(s_path);
+    fce_register(FCE_FILE_CREATE, fullpathname(upath), NULL, fce_file);
 
-createfile_done:
     curdir->d_offcnt++;
 
     setvoltime(obj, vol );
@@ -828,7 +840,10 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
     u_char              finder_buf[32];
-    int symlinked = 0;
+    int symlinked = S_ISLNK(path->st.st_mode);
+    int fp;
+    ssize_t len;
+    char symbuf[MAXPATHLEN+1];
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
@@ -870,29 +885,33 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             break;
         case FILPBIT_FINFO :
             change_mdate = 1;
-            memcpy(finder_buf, buf, 32 );
-            if (memcmp(buf, "slnkrhap", 8) == 0 && !S_ISLNK(path->st.st_mode)) {
-                int fp;
-                ssize_t len;
-                int erc=1;
-                char buf[PATH_MAX+1];
-                if ((fp = open(path->u_name, O_RDONLY)) >= 0) {
-                    if ((len = read(fp, buf, PATH_MAX+1))) {
-                        if (unlink(path->u_name) == 0) {
-                            buf[len] = 0;
-                            erc = symlink(buf, path->u_name);
-                            if (!erc)
-                                of_stat(path);
-                        }
-                    }
-                    close(fp);
-                }
-                if (erc != 0) {
-                    err=AFPERR_BITMAP;
+            if (memcmp(buf,"slnkrhap",8) == 0
+                && !(S_ISLNK(path->st.st_mode))
+                && !(vol->v_flags & AFPVOL_FOLLOWSYM)) {
+                /* request to turn this into a symlink */
+                if ((fp = open(path->u_name, O_RDONLY)) == -1) {
+                    err = AFPERR_MISC;
                     goto setfilparam_done;
                 }
+                len = read(fp, symbuf, MAXPATHLEN);
+                close(fp);
+                if (!(len > 0)) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                if (unlink(path->u_name) != 0) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                symbuf[len] = 0;
+                if (symlink(symbuf, path->u_name) != 0) {
+                    err = AFPERR_MISC;
+                    goto setfilparam_done;
+                }
+                of_stat(vol, path);
                 symlinked = 1;
             }
+            memcpy(finder_buf, buf, 32 );
             buf += 32;
             break;
         case FILPBIT_UNIXPR :
@@ -970,6 +989,12 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
         isad = 0;
     } else if ((ad_get_MD_flags( adp ) & O_CREAT) ) {
         ad_setname(adp, path->m_name);
+        cnid_t id;
+        if ((id = get_id(vol, adp, &path->st, curdir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+            LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+            return AFPERR_MISC;
+        }
+        (void)ad_setid(adp, path->st.st_dev, path->st.st_ino, id, curdir->d_did, vol->v_stamp);
     }
     
     bit = 0;
@@ -1002,6 +1027,17 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             ad_setdate(adp, AD_DATE_BACKUP, bdate);
             break;
         case FILPBIT_FINFO :
+            if (default_type( ad_entry( adp, ADEID_FINDERI ))
+                    && ( 
+                     ((em = getextmap( path->m_name )) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+                     || ((em = getdefextmap()) &&
+                      !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
+            )) {
+                memcpy(finder_buf, ufinderi, 8 );
+            }
             memcpy(ad_entry( adp, ADEID_FINDERI ), finder_buf, 32 );
             break;
         case FILPBIT_UNIXPR :
@@ -1064,7 +1100,7 @@ setfilparam_done:
  * adp         adouble struct of src file, if open, or & zeroed one
  *
  */
-int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *newname, struct adouble *adp)
+int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *dst, char *newname, struct adouble *adp)
 {
     int		rc;
 
@@ -1089,7 +1125,7 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *n
     	        /* FIXME  warning in syslog so admin'd know there's a conflict ?*/
     	        return AFPERR_OLOCK; /* little lie */
     	    }
-            if (AFP_OK != ( rc = copyfile(vol, vol, sdir_fd, src, dst, newname, NULL )) ) {
+            if (AFP_OK != ( rc = copyfile(vol, vol, ddir, sdir_fd, src, dst, newname, NULL )) ) {
                 /* on error copyfile delete dest */
                 return( rc );
             }
@@ -1323,7 +1359,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         goto copy_exit;
     }
 
-    if ( (err = copyfile(s_vol, d_vol, -1, p, upath , newname, adp)) < 0 ) {
+    if ( (err = copyfile(s_vol, d_vol, curdir, -1, p, upath , newname, adp)) < 0 ) {
         retvalue = err;
         goto copy_exit;
     }
@@ -1341,8 +1377,9 @@ copy_exit:
  * because we are doing it elsewhere.
  * currently if newname is NULL then adp is NULL. 
  */
-int copyfile(const struct vol *s_vol,
-             const struct vol *d_vol, 
+int copyfile(struct vol *s_vol,
+             struct vol *d_vol, 
+             struct dir *d_dir, 
              int sfd,
              char *src,
              char *dst,
@@ -1364,12 +1401,16 @@ int copyfile(const struct vol *s_vol,
         adp = &ads;
     }
 
-    adflags = ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_NORF;
+    adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RF | ADFLAGS_NORF;
 
     if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
         ret_err = errno;
         goto done;
     }
+
+    if (!AD_META_OPEN(adp))
+        /* no resource fork, don't create one for dst file */
+        adflags &= ~ADFLAGS_HF;
 
     if (!AD_RSRC_OPEN(adp))
         /* no resource fork, don't create one for dst file */
@@ -1403,12 +1444,25 @@ int copyfile(const struct vol *s_vol,
     if (err < 0)
        ret_err = errno;
 
-    if (!ret_err && newname && (adflags & ADFLAGS_HF)) {
-        /* set the new name in the resource fork */
-        ad_copy_header(&add, adp);
-        ad_setname(&add, newname);
-        ad_flush( &add );
+    if (AD_META_OPEN(&add)) {
+        if (AD_META_OPEN(adp))
+            ad_copy_header(&add, adp);
+        ad_setname(&add, dst);
+        cnid_t id;
+        struct stat stdest;
+        if (fstat(ad_meta_fileno(&add), &stdest) != 0) {
+            ret_err = errno;
+            goto error;
+        }
+        if ((id = get_id(d_vol, &add, &stdest, d_dir->d_did, dst, strlen(dst))) == CNID_INVALID) {
+            ret_err = EINVAL;
+            goto error;
+        }
+        (void)ad_setid(&add, stdest.st_dev, stdest.st_ino, id, d_dir->d_did, d_vol->v_stamp);
+        ad_flush(&add);
     }
+
+error:
     ad_close( adp, adflags );
 
     if (ad_close( &add, adflags ) <0) {
@@ -1650,7 +1704,7 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     cnid_t        did  = param->did;
     cnid_t	  aint;
     
-    if ( lstat(de->d_name, &path.st) < 0 )
+    if (ostat(de->d_name, &path.st, vol_syml_opt(vol)) < 0)
         return 0;
     
     /* update or add to cnid */
@@ -1675,7 +1729,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     }
     
     /* FIXME use of_statdir ? */
-    if (lstat(name, &st)) {
+    if (ostat(name, &st, vol_syml_opt(vol))) {
 	return -1;
     }
 
@@ -1754,7 +1808,7 @@ retry:
 
     memset(&path, 0, sizeof(path));
     path.u_name = upath;
-    if ( of_stat(&path) < 0 ) {
+    if (of_stat(vol, &path) < 0 ) {
 #ifdef ESTALE
         /* with nfs and our working directory is deleted */
 	if (errno == ESTALE) {
@@ -1849,7 +1903,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     err = AFP_OK;
-    if ((movecwd(vol, dir) < 0) || (lstat(upath, &st) < 0)) {
+    if ((movecwd(vol, dir) < 0) || (ostat(upath, &st, vol_syml_opt(vol)) < 0)) {
         switch (errno) {
         case EACCES:
         case EPERM:
@@ -1912,7 +1966,7 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol, struct p
         return NULL;
     }
     
-    if ((*of = of_findname(path))) {
+    if ((*of = of_findname(vol, path))) {
         /* reuse struct adouble so it won't break locks */
         adp = (*of)->of_ad;
     }
@@ -2057,11 +2111,13 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    if (!mktemp(temp)) {
+    int fd;
+    if ((fd = mkstemp(temp)) == -1) {
         err = AFPERR_MISC;
         goto err_exchangefile;
     }
-    
+    close(fd);
+
     if (crossdev) {
         /* FIXME we need to close fork for copy, both s_of and d_of are null */
        ad_close(adsp, ADFLAGS_HF);
@@ -2069,17 +2125,17 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
 
     /* now, quickly rename the file. we error if we can't. */
-    if ((err = renamefile(vol, -1, p, temp, temp, adsp)) != AFP_OK)
+    if ((err = renamefile(vol, curdir, -1, p, temp, temp, adsp)) != AFP_OK)
         goto err_exchangefile;
     of_rename(vol, s_of, sdir, spath, curdir, temp);
 
     /* rename destination to source */
-    if ((err = renamefile(vol, -1, upath, p, spath, addp)) != AFP_OK)
+    if ((err = renamefile(vol, curdir, -1, upath, p, spath, addp)) != AFP_OK)
         goto err_src_to_tmp;
     of_rename(vol, d_of, curdir, path->m_name, sdir, spath);
 
     /* rename temp to destination */
-    if ((err = renamefile(vol, -1, temp, upath, path->m_name, adsp)) != AFP_OK)
+    if ((err = renamefile(vol, curdir, -1, temp, upath, path->m_name, adsp)) != AFP_OK)
         goto err_dest_to_src;
     of_rename(vol, s_of, curdir, temp, curdir, path->m_name);
 
@@ -2091,10 +2147,10 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     if (did)
         cnid_delete(vol->v_cdb, did);
 
-    if ((did && ( (crossdev && lstat( upath, &srcst) < 0) || 
+    if ((did && ( (crossdev && ostat(upath, &srcst, vol_syml_opt(vol)) < 0) || 
                 cnid_update(vol->v_cdb, did, &srcst, curdir->d_did,upath, dlen) < 0))
        ||
-       (sid && ( (crossdev && lstat(p, &destst) < 0) ||
+        (sid && ( (crossdev && ostat(p, &destst, vol_syml_opt(vol)) < 0) ||
                 cnid_update(vol->v_cdb, sid, &destst, sdir->d_did,supath, slen) < 0))
     ) {
         switch (errno) {
@@ -2154,17 +2210,17 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * properly. */
 err_temp_to_dest:
     /* rename dest to temp */
-    renamefile(vol, -1, upath, temp, temp, adsp);
+    renamefile(vol, curdir, -1, upath, temp, temp, adsp);
     of_rename(vol, s_of, curdir, upath, curdir, temp);
 
 err_dest_to_src:
     /* rename source back to dest */
-    renamefile(vol, -1, p, upath, path->m_name, addp);
+    renamefile(vol, curdir, -1, p, upath, path->m_name, addp);
     of_rename(vol, d_of, sdir, spath, curdir, path->m_name);
 
 err_src_to_tmp:
     /* rename temp back to source */
-    renamefile(vol, -1, temp, p, spath, adsp);
+    renamefile(vol, curdir, -1, temp, p, spath, adsp);
     of_rename(vol, s_of, curdir, temp, sdir, spath);
 
 err_exchangefile:

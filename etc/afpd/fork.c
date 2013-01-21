@@ -22,6 +22,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
+#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
@@ -250,7 +251,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     struct stat     *st;
     uint16_t        bshort;
     struct path     *s_path;
-    struct stat xxx;
 
     ibuf++;
     fork = *ibuf++;
@@ -316,7 +316,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         }
     }
 
-    if ((opened = of_findname(s_path))) {
+    if ((opened = of_findname(vol, s_path))) {
         adsame = opened->of_ad;
     }
 
@@ -733,8 +733,6 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t
 static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbuf, size_t *rbuflen)
 {
     ssize_t cc;
-    int eof = 0;
-    char *p, *q;
 
     cc = ad_read(ofork->of_ad, eid, offset, rbuf, *rbuflen);
     if ( cc < 0 ) {
@@ -1051,7 +1049,6 @@ static ssize_t write_file(struct ofork *ofork, int eid,
                           off_t offset, char *rbuf,
                           size_t rbuflen)
 {
-    char *p, *q;
     ssize_t cc;
 
     LOG(log_debug, logtype_afpd, "write_file(off: %ju, size: %zu)",
@@ -1090,7 +1087,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     uint16_t        ofrefnum;
     ssize_t         cc;
     DSI             *dsi = obj->dsi;
-    char            *rcvbuf = dsi->commands;
+    char            *rcvbuf = (char *)dsi->commands;
     size_t          rcvbuflen = dsi->server_quantum;
 
     /* figure out parameters */

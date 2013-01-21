@@ -143,8 +143,6 @@ static void afp_dsi_die(int sig)
 /* SIGQUIT handler */
 static void ipc_reconnect_handler(int sig _U_)
 {
-    DSI *dsi = (DSI *)AFPobj->dsi;
-
     if (reconnect_ipc(AFPobj) != 0) {
         LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC reconnect");
         afp_dsi_close(AFPobj);
@@ -549,7 +547,7 @@ void afp_over_dsi(AFPObj *obj)
 
         if (reload_request) {
             reload_request = 0;
-            load_volumes(AFPobj, closevol);
+            load_volumes(AFPobj);
         }
 
         /* The first SIGINT enables debugging, the next restores the config */
@@ -626,7 +624,7 @@ void afp_over_dsi(AFPObj *obj)
                     LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
                     err = (*afp_switch[function])(obj,
-                                                  dsi->commands, dsi->cmdlen,
+                                                  (char *)dsi->commands, dsi->cmdlen,
                                                   (char *)&dsi->data, &dsi->datalen);
 
                     LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
@@ -667,7 +665,7 @@ void afp_over_dsi(AFPObj *obj)
                 LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
                 err = (*afp_switch[function])(obj,
-                                              dsi->commands, dsi->cmdlen,
+                                              (char *)dsi->commands, dsi->cmdlen,
                                               (char *)&dsi->data, &dsi->datalen);
 
                 LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",

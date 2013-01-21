@@ -22,6 +22,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/errchk.h>
+#include <atalk/cnid.h>
 
 #include "db_param.h"
 #include "dbif.h"
@@ -88,13 +89,11 @@ EC_CLEANUP:
 static int dbif_init_rootinfo(DBD *dbd, int version)
 {
     DBT key, data;
-    uint32_t v;
+    uint32_t uint32;
     char buf[ROOTINFO_DATALEN];
 
     LOG(log_debug, logtype_cnid, "Setting CNID database version to %u", version);
 
-    v = version;
-    v = htonl(v);
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -104,7 +103,13 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
     data.size = ROOTINFO_DATALEN;
 
     memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
-    memcpy(buf + CNID_DID_OFS, &v, sizeof(v));
+
+    uint32 = htonl(CNID_START - 1);
+    memcpy(buf + CNID_TYPE_OFS, &uint32, sizeof(uint32));
+
+    uint32 = htonl(version);
+    memcpy(buf + CNID_DID_OFS, &uint32, sizeof(uint32));
+
     if (dbif_stamp(dbd, buf + CNID_DEV_OFS, CNID_DEV_LEN) < 0)
         return -1;
 
@@ -324,97 +329,6 @@ exit:
         close(cwd);
     }
     return ret;
-}
-
-/*!
- * Get lock on db lock file
- *
- * @args cmd       (r) lock command:
- *                     LOCK_FREE:   close lockfd
- *                     LOCK_UNLOCK: unlock lockm keep lockfd open
- *                     LOCK_EXCL:   F_WRLCK on lockfd
- *                     LOCK_SHRD:   F_RDLCK on lockfd
- * @args dbpath    (r) path to lockfile, only used on first call,
- *                     later the stored fd is used
- * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
- *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
- *                     success, 0 if the lock couldn't be acquired, -1 on other errors
- */
-int get_lock(int cmd, const char *dbpath)
-{
-    static int lockfd = -1;
-    int ret;
-    char lockpath[PATH_MAX];
-    struct stat st;
-
-    LOG(log_debug, logtype_cnid, "get_lock(%s, \"%s\")",
-        cmd == LOCK_EXCL ? "LOCK_EXCL" :
-        cmd == LOCK_SHRD ? "LOCK_SHRD" :
-        cmd == LOCK_FREE ? "LOCK_FREE" :
-        cmd == LOCK_UNLOCK ? "LOCK_UNLOCK" : "UNKNOWN" , dbpath ? dbpath : "");
-
-    switch (cmd) {
-    case LOCK_FREE:
-        if (lockfd == -1)
-            return -1;
-        close(lockfd);
-        lockfd = -1;
-        return 0;
-
-    case LOCK_UNLOCK:
-        if (lockfd == -1)
-            return -1;
-        return unlock(lockfd, 0, SEEK_SET, 0);
-
-    case LOCK_EXCL:
-    case LOCK_SHRD:
-        if (lockfd == -1) {
-            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
-                LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
-                return -1;
-            }
-            strncpy(lockpath, dbpath, PATH_MAX - 1);
-            strcat(lockpath, "/");
-            strcat(lockpath, LOCKFILENAME);
-
-            if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
-                LOG(log_error, logtype_cnid, "Error opening lockfile: %s", strerror(errno));
-                return -1;
-            }
-
-            if ((stat(dbpath, &st)) != 0) {
-                LOG(log_error, logtype_cnid, "Error statting lockfile: %s", strerror(errno));
-                return -1;
-            }
-
-            if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
-                LOG(log_error, logtype_cnid, "Error inheriting lockfile permissions: %s",
-                         strerror(errno));
-                return -1;
-            }
-        }
-    
-        if (cmd == LOCK_EXCL)
-            ret = write_lock(lockfd, 0, SEEK_SET, 0);
-        else
-            ret = read_lock(lockfd, 0, SEEK_SET, 0);
-
-        if (ret != 0) {
-            if (cmd == LOCK_SHRD)
-                LOG(log_error, logtype_cnid, "Volume CNID db is locked, try again...");
-            return 0; 
-        }
-
-        LOG(log_debug, logtype_cnid, "get_lock: got %s lock",
-            cmd == LOCK_EXCL ? "LOCK_EXCL" : "LOCK_SHRD");    
-        return cmd;
-
-    default:
-        return -1;
-    } /* switch(cmd) */
-
-    /* deadc0de, never get here */
-    return -1;
 }
 
 /* --------------- */
@@ -813,11 +727,6 @@ int dbif_env_remove(const char *path)
 
     LOG(log_debug, logtype_cnid, "Trying to remove BerkeleyDB environment");
 
-    if (get_lock(LOCK_EXCL, path) != LOCK_EXCL) {
-        LOG(log_debug, logtype_cnid, "CNID db \"%s\" in use, not removing BerkeleyDB environment", path);
-        return 0;
-    }
-    
     if (NULL == (dbd = dbif_init(path, "cnid2.db")))
         return -1;
 

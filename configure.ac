@@ -74,17 +74,13 @@ AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
 dnl these tests have been comfirmed to be needed in 2011
 AC_CHECK_FUNCS(backtrace_symbols dirfd getusershell pread pwrite pselect)
-AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen)
+AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen mempcpy)
 AC_CHECK_FUNCS(mmap utime getpagesize) dnl needed by tbd
 
 dnl search for necessary libraries
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(connect, socket)
-AC_SEARCH_LIBS(pthread_sigmask, pthread,,[AC_MSG_ERROR([missing pthread_sigmask])])
-if test x"$ac_cv_search_pthread_sigmask" != x"none required" ; then
-   PTHREAD_LIBS=$ac_cv_search_pthread_sigmask
-fi
-AC_SUBST(PTHREAD_LIBS)
+AX_PTHREAD(, [AC_MSG_ERROR([missing pthread_sigmask])])
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
 

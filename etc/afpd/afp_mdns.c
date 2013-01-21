@@ -50,15 +50,16 @@ static pthread_t       poller;
         free(str); free(key);                           \
     }
 
+static struct pollfd *fds;
 
 /*
  * This is the thread that polls the filehandles
  */
-void *polling_thread(void *arg) {
+static void *polling_thread(void *arg) {
     // First we loop through getting the filehandles and adding them to our poll, we
     // need to allocate our pollfd's
     DNSServiceErrorType error;
-    struct pollfd           *fds = calloc(svc_ref_count, sizeof(struct pollfd));
+    fds = calloc(svc_ref_count, sizeof(struct pollfd));
     assert(fds);
 
     for(int i=0; i < svc_ref_count; i++) {
@@ -78,28 +79,32 @@ void *polling_thread(void *arg) {
     return(NULL);
 }
 
-
 /*
  * This is the callback for the service register function ... actually there isn't a lot
  * we can do if we get problems, so we don't really need to do anything other than report
  * the issue.
  */
-void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode,
-                   const char *name, const char *regtype, const char *domain, void *context) {
-
-    if(errorCode != kDNSServiceErr_NoError) {
+static void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode,
+                          const char *name, const char *regtype, const char *domain, void *context)
+{
+    if (errorCode != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to register mDNS service: %s%s%s: code=%d",
             name, regtype, domain, errorCode);
     }
 }
-
 
 /*
  * This function unregisters anything we have already
  * registered and frees associated memory
  */
 static void unregister_stuff() {
-    pthread_kill(poller, SIGKILL);
+    pthread_cancel(poller);    
+
+    for (int i = 0; i < svc_ref_count; i++)
+        close(fds[i].fd);
+    free(fds);
+    fds = NULL;
+
     if(svc_refs) {
         for(int i=0; i < svc_ref_count; i++) {
             DNSServiceRefDeallocate(svc_refs[i]);
@@ -232,7 +237,7 @@ static void register_stuff(const AFPObj *obj) {
             LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
                 dsi->bonjourname, obj->options.mimicmodel);
             TXTRecordCreate(&txt_devinfo, 0, NULL);
-            TXTRecordPrintf(&txt_devinfo, "model=%s", obj->options.mimicmodel);
+            TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel);
             error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                        0,               // no flags
                                        0,               // all network interfaces
@@ -240,7 +245,14 @@ static void register_stuff(const AFPObj *obj) {
                                        DEV_INFO_SERVICE_TYPE,
                                        "",            // default domains
                                        NULL,            // default host name
-                                       0,
+                                       /*
+                                        * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
+                                        *   "A value of 0 for a port is passed to register placeholder services.
+                                        *    Place holder services are not found  when browsing, but other
+                                        *    clients cannot register with the same name as the placeholder service."
+                                        * We therefor use port 9 which is used by the adisk service type.
+                                        */
+                                       htons(9),
                                        TXTRecordGetLength(&txt_devinfo),
                                        TXTRecordGetBytesPtr(&txt_devinfo),
                                        RegisterReply,           // callback

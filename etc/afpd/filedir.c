@@ -218,7 +218,7 @@ int check_name(const struct vol *vol, char *name)
     move and rename sdir:oldname to curdir:newname in volume vol
     special care is needed for lock   
 */
-static int moveandrename(const struct vol *vol,
+static int moveandrename(struct vol *vol,
                          struct dir *sdir,
                          int sdir_fd,
                          char *oldname,
@@ -346,10 +346,10 @@ static int moveandrename(const struct vol *vol,
     if ( !isdir ) {
         path.st_valid = 1;
         path.st_errno = errno;
-        if (of_findname(&path)) {
+        if (of_findname(vol, &path)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
         } else {
-            rc = renamefile(vol, sdir_fd, oldunixname, upath, newname, adp );
+            rc = renamefile(vol, curdir, sdir_fd, oldunixname, upath, newname, adp );
             if (rc == AFP_OK)
                 of_rename(vol, opened, sdir, oldname, curdir, newname);
         }
@@ -525,7 +525,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
                 delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
             if (delcnid != CNID_INVALID)
                 cnid_delete(vol->v_cdb, delcnid);
-            fce_register_delete_dir(upath);
+            fce_register(FCE_DIR_DELETE, fullpathname(upath), NULL, fce_dir);
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
@@ -533,10 +533,10 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             if ((dname = bstrcpy(curdir->d_u_name)) == NULL)
                 return AFPERR_MISC;
             if ((rc = deletecurdir(vol)) == AFP_OK)
-                fce_register_delete_dir(cfrombstr(dname));
+                fce_register(FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL, fce_dir);
             bdestroy(dname);
         }
-    } else if (of_findname(s_path)) {
+    } else if (of_findname(vol, s_path)) {
         rc = AFPERR_BUSY;
     } else {
         /* it's a file st_valid should always be true
@@ -547,7 +547,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             rc = AFPERR_NOOBJ;
         } else {
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
-				fce_register_delete_file( s_path );
+				fce_register(FCE_FILE_DELETE, fullpathname(upath), NULL, fce_file);
                 if (vol->v_tm_used < s_path->st.st_size)
                     vol->v_tm_used = 0;
                 else 
@@ -703,8 +703,8 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         if (!isdir && !vol_unix_priv(vol)) {
             int  admode = ad_mode("", 0777) | vol->v_fperm;
 
-            setfilmode(upath, admode, NULL, vol->v_umask);
-            vol->vfs->vfs_setfilmode(vol, upath, admode, NULL);
+            setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
+            vol->vfs->vfs_setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
         }
         setvoltime(obj, vol );
     }

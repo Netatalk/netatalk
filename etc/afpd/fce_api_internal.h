@@ -10,6 +10,8 @@
 
 #include <stdbool.h>
 
+#include <atalk/fce_api.h>
+
 #define FCE_MAX_UDP_SOCKS 5     /* Allow a maximum of udp listeners for file change events */
 #define FCE_SOCKET_RETRY_DELAY_S 600 /* Pause this time in s after socket was broken */
 #define FCE_PACKET_VERSION  1
@@ -20,8 +22,7 @@
 #define FCE_COALESCE_DELETE (1 << 1)
 #define FCE_COALESCE_ALL    (FCE_COALESCE_CREATE | FCE_COALESCE_DELETE)
 
-struct udp_entry
-{
+struct udp_entry {
     int sock;
     char *addr;
     char *port;
@@ -30,12 +31,11 @@ struct udp_entry
     time_t next_try_on_error;      /* In case of error set next timestamp to retry */
 };
 
-struct fce_history
-{
-    unsigned char mode;
-	int is_dir;
-	char path[MAXPATHLEN + 1];
-	struct timeval tv;
+struct fce_history {
+    fce_ev_t       fce_h_event;
+	fce_obj_t      fce_h_type;
+	char           fce_h_path[MAXPATHLEN + 1];
+	struct timeval fce_h_tv;
 };
 
 struct fce_close_event {
@@ -45,7 +45,7 @@ struct fce_close_event {
 
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)
 
-bool fce_handle_coalescation( char *path, int is_dir, int mode );
+bool fce_handle_coalescation(int event, const char *path, fce_obj_t type);
 void fce_initialize_history();
 
 

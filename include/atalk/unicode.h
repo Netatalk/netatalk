@@ -56,8 +56,6 @@ typedef struct {
 #define CONV_DECOMPOSE      (1<<7) /* precompose */
 #define CONV_FORCE          (1<<8) /* force convertion */
 #define CONV__EILSEQ        (1<<9) /* ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
-#define CONV_ALLOW_COLON   (1<<10) /* Allow ':' in name. Needed for Extended Attributes */
-#define CONV_ALLOW_SLASH   (1<<11) /* Allow '/' in name. Needed for volume name */
 
 /* conversion return flags */
 #define CONV_REQMANGLE  (1<<14) /* mangling of returned name is required */
@@ -125,6 +123,7 @@ extern size_t   utf8_strlen_validate ( char *);
 
 /* from charcnv.c */
 extern int      set_charset_name(charset_t, const char *);
+extern void     free_charset_names(void);
 extern void     init_iconv (void);
 extern size_t   convert_string (charset_t, charset_t, void const *, size_t, void *, size_t);
 extern size_t   convert_string_allocate (charset_t, charset_t, void const *, size_t, char **);

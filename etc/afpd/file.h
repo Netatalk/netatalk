@@ -51,12 +51,6 @@ extern const u_char	ufinderi[];
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
 
-struct extmap {
-    char		*em_ext;
-    char		em_creator[ 4 ];
-    char		em_type[ 4 ];
-};
-
 #define kTextEncodingUTF8 0x08000103
 
 typedef enum {
@@ -111,8 +105,8 @@ extern struct extmap	*getdefextmap (void);
 extern int getfilparams (const AFPObj *obj, struct vol *, uint16_t, struct path *,
                          struct dir *, char *buf, size_t *, int);
 extern int setfilparams (const AFPObj *obj, struct vol *, struct path *, uint16_t, char *);
-extern int renamefile   (const struct vol *, int, char *, char *, char *, struct adouble *);
-extern int copyfile     (const struct vol *, const struct vol *, int, char *, char *, char *, struct adouble *);
+extern int renamefile   (struct vol *, struct dir *, int, char *, char *, char *, struct adouble *);
+extern int copyfile     (struct vol *, struct vol *, struct dir *, int, char *, char *, char *, struct adouble *);
 extern int deletefile   (const struct vol *, int, char *, int);
 
 extern int getmetadata  (const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, 

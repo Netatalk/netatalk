@@ -31,7 +31,6 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_srcdir)/etc/afpd/file.c \
 				$(top_srcdir)/etc/afpd/filedir.c \
 				$(top_srcdir)/etc/afpd/fork.c \
-				$(top_srcdir)/etc/afpd/gettok.c \
 				$(top_srcdir)/etc/afpd/hash.c \
 				$(top_srcdir)/etc/afpd/mangle.c \
 				$(top_srcdir)/etc/afpd/messages.c \

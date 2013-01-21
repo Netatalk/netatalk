@@ -20,6 +20,13 @@
 
 typedef uint64_t VolSpace;
 
+/* This should belong in a file.h */
+struct extmap {
+    char		*em_ext;
+    char		em_creator[4];
+    char		em_type[4];
+};
+
 struct vol {
     struct vol      *v_next;
     AFPObj          *v_obj;
@@ -125,6 +132,7 @@ struct vol {
 #define AFPVOL_ACLS      (1 << 24)   /* Volume supports ACLS */
 #define AFPVOL_SEARCHDB  (1 << 25)   /* Use fast CNID db search instead of filesystem */
 #define AFPVOL_NONETIDS  (1 << 26)   /* signal the client it shall do privelege mapping */
+#define AFPVOL_FOLLOWSYM (1 << 27)   /* follow symlinks on the server, default is not to */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */
@@ -183,6 +191,6 @@ struct vol {
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
 #define vol_unix_priv(vol) ((vol)->v_obj->afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)
-
+#define vol_syml_opt(vol) (((vol)->v_flags & AFPVOL_FOLLOWSYM) ? 0 : O_NOFOLLOW)
 
 #endif

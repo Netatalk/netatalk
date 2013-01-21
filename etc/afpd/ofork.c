@@ -228,14 +228,14 @@ struct ofork *of_find(const uint16_t ofrefnum )
 }
 
 /* -------------------------- */
-int of_stat(struct path *path)
+int of_stat(const struct vol *vol, struct path *path)
 {
     int ret;
 
     path->st_errno = 0;
     path->st_valid = 1;
 
-    if ((ret = lstat(path->u_name, &path->st)) < 0) {
+    if ((ret = ostat(path->u_name, &path->st, vol_syml_opt(vol))) < 0) {
         LOG(log_debug, logtype_afpd, "of_stat('%s/%s': %s)",
             cfrombstr(curdir->d_fullpath), path->u_name, strerror(errno));
     	path->st_errno = errno;
@@ -274,7 +274,7 @@ int of_statdir(struct vol *vol, struct path *path)
 
     if (*path->m_name) {
         /* not curdir */
-        return of_stat (path);
+        return of_stat(vol, path);
     }
     path->st_errno = 0;
     path->st_valid = 1;
@@ -286,7 +286,7 @@ int of_statdir(struct vol *vol, struct path *path)
 
     LOG(log_debug, logtype_afpd, "of_statdir: stating: '%s'", pathname);
 
-    if (!(ret = lstat(pathname, &path->st)))
+    if (!(ret = ostat(pathname, &path->st, vol_syml_opt(vol))))
         return 0;
 
     path->st_errno = errno;
@@ -297,7 +297,7 @@ int of_statdir(struct vol *vol, struct path *path)
            return -1;
        path->st_errno = 0;
 
-       if ((ret = lstat(cfrombstr(path->d_dir->d_u_name), &path->st)) < 0) 
+       if ((ret = ostat(cfrombstr(path->d_dir->d_u_name), &path->st, vol_syml_opt(vol))) < 0) 
            path->st_errno = errno;
     }
 
@@ -305,13 +305,13 @@ int of_statdir(struct vol *vol, struct path *path)
 }
 
 /* -------------------------- */
-struct ofork *of_findname(struct path *path)
+struct ofork *of_findname(const struct vol *vol, struct path *path)
 {
     struct ofork *of;
     struct file_key key;
 
     if (!path->st_valid) {
-        of_stat(path);
+        of_stat(vol, path);
     }
 
     if (path->st_errno)
@@ -407,7 +407,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
     if (ofork->of_flags & AFPFORK_MODIFIED) {
-        fce_register_file_modification(ofork);
+        struct dir *dir =  dirlookup(ofork->of_vol, ofork->of_did);
+        bstring forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
+        fce_register(FCE_FILE_MODIFY, bdata(forkpath), NULL, fce_file);
+        bdestroy(forkpath);
     }
 
     ad_unlock(ofork->of_ad, ofork->of_refnum, ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
@@ -441,7 +444,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
     struct ofork        *of;
     struct adouble      *adp;
 
-    if ((of = of_findname(path))) {
+    if ((of = of_findname(vol, path))) {
         adp = of->of_ad;
     } else {
         ad_init(ad, vol);

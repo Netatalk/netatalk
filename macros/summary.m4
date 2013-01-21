@@ -69,8 +69,11 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	dnl # Display summary of libraries detected
 
 	AC_MSG_RESULT([Using libraries:])
-	AC_MSG_RESULT([    LIBS = $LIBS])
-	AC_MSG_RESULT([    CFLAGS = $CFLAGS])
+	AC_MSG_RESULT([    LIBS           = $LIBS])
+	AC_MSG_RESULT([    CFLAGS         = $CFLAGS])
+	AC_MSG_RESULT([    PTHREADS:])
+	AC_MSG_RESULT([        LIBS   = $PTHREAD_LIBS])
+	AC_MSG_RESULT([        CFLAGS = $PTHREAD_CFLAGS])
 	if test x"$neta_cv_have_openssl" = x"yes"; then
 		AC_MSG_RESULT([    SSL:])
 		AC_MSG_RESULT([        LIBS   = $SSL_LIBS])
@@ -116,4 +119,11 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $LDAP_LDLFLAGS $LDAP_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $LDAP_CFLAGS])
 	fi
+    AC_MSG_RESULT([    LIBEVENT:])
+    if test x"$use_bundled_libevent" = x"yes"; then
+		AC_MSG_RESULT([        bundled])
+    else
+		AC_MSG_RESULT([        LIBS   = $LIBEVENT_CFLAGS])
+		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_LDFLAGS])
+    fi
 ])

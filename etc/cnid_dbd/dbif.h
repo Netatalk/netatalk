@@ -64,7 +64,6 @@
 #define DBIF_IDX_DIDNAME   2
 #define DBIF_IDX_NAME      3
 
-/* get_lock cmd and return value */
 #define LOCKFILENAME  "lock"
 #define LOCK_FREE          0
 #define LOCK_UNLOCK        1
@@ -90,9 +89,6 @@ typedef struct {
     FILE     *db_errlog;
     db_table db_table[DBIF_DB_CNT];
 } DBD;
-
-/* Functions */
-extern int get_lock(int cmd, const char *dbpath);
 
 extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);

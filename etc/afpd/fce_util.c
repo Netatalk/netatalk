@@ -54,9 +54,6 @@
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"
 
-#define FCE_TRUE 1
-#define FCE_FALSE 0
-
 /* We store our connection data here */
 static uint32_t coalesce = 0;
 static struct fce_history fce_history_list[FCE_HISTORY_LEN];
@@ -92,7 +89,7 @@ void fce_initialize_history()
 	}
 }
 
-bool fce_handle_coalescation( char *path, int is_dir, int mode )
+bool fce_handle_coalescation(int event, const char *path, fce_obj_t type)
 {
 	/* These two are used to eval our next index in history */
 	/* the history is unsorted, speed should not be a problem, length is 10 */
@@ -104,7 +101,7 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
 		return false;
 
 	/* After a file creation *ALWAYS* a file modification is produced */
-	if ((mode == FCE_FILE_CREATE) && (coalesce & FCE_COALESCE_CREATE))
+	if ((event == FCE_FILE_CREATE) && (coalesce & FCE_COALESCE_CREATE))
         return true;
 
 	/* get timestamp */
@@ -115,7 +112,7 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
 		struct fce_history *fh = &fce_history_list[i];
 
 		/* Not inited ? */
-		if (fh->tv.tv_sec == 0) {
+		if (fh->fce_h_tv.tv_sec == 0) {
 			/* we can use it for new elements */
 			oldest_entry = 0;
 			oldest_entry_idx = i;
@@ -123,9 +120,9 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
 		}
 
 		/* Too old ? */
-		if (get_ms_difftime( &fh->tv, &tv ) > MAX_COALESCE_TIME_MS) {
+		if (get_ms_difftime(&fh->fce_h_tv, &tv ) > MAX_COALESCE_TIME_MS) {
 			/* Invalidate entry */
-			fh->tv.tv_sec = 0;
+			fh->fce_h_tv.tv_sec = 0;
 			oldest_entry = 0;
 			oldest_entry_idx = i;			
 			continue;
@@ -133,33 +130,33 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
 
 
 		/* If we find a parent dir wich was created we are done */
-		if ((coalesce & FCE_COALESCE_CREATE) && (fh->mode == FCE_DIR_CREATE)) {
+		if ((coalesce & FCE_COALESCE_CREATE) && (fh->fce_h_event == FCE_DIR_CREATE)) {
 			/* Parent dir ? */
-			if (!strncmp(fh->path, path, strlen(fh->path)))
+			if (!strncmp(fh->fce_h_path, path, strlen(fh->fce_h_path)))
 				return true;
 		}
 
 		/* If we find a parent dir we should be DELETED we are done */
 		if ((coalesce & FCE_COALESCE_DELETE)
-            && fh->is_dir
-            && (mode == FCE_FILE_DELETE || mode == FCE_DIR_DELETE)) {
+            && fh->fce_h_type
+            && (event == FCE_FILE_DELETE || event == FCE_DIR_DELETE)) {
 			/* Parent dir ? */
-			if (!strncmp(fh->path, path, strlen(fh->path)))
+			if (!strncmp(fh->fce_h_path, path, strlen(fh->fce_h_path)))
 				return true;
 		}
 
 		/* Detect oldest entry for next new entry */
-		if (oldest_entry_idx == -1 || fh->tv.tv_sec < oldest_entry) {
-			oldest_entry = fh->tv.tv_sec;
+		if (oldest_entry_idx == -1 || fh->fce_h_tv.tv_sec < oldest_entry) {
+			oldest_entry = fh->fce_h_tv.tv_sec;
 			oldest_entry_idx = i;
 		}
 	}
 
 	/* We have a new entry for the history, register it */
-	fce_history_list[oldest_entry_idx].tv = tv;
-	fce_history_list[oldest_entry_idx].mode = mode;
-	fce_history_list[oldest_entry_idx].is_dir = is_dir;
-	strncpy( fce_history_list[oldest_entry_idx].path, path, MAXPATHLEN);
+	fce_history_list[oldest_entry_idx].fce_h_tv = tv;
+	fce_history_list[oldest_entry_idx].fce_h_event = event;
+	fce_history_list[oldest_entry_idx].fce_h_type = type;
+	strncpy(fce_history_list[oldest_entry_idx].fce_h_path, path, MAXPATHLEN);
 
 	/* we have to handle this event */
 	return false;

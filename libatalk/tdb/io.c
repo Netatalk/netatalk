@@ -25,7 +25,6 @@
    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "tdb_private.h"
 
 /* check for an out of bounds access - if it is out of bounds then
@@ -212,7 +211,7 @@ void tdb_mmap(struct tdb_context *tdb)
 	if (!(tdb->flags & TDB_NOMMAP)) {
 		tdb->map_ptr = mmap(NULL, tdb->map_size, 
 				    PROT_READ|(tdb->read_only? 0:PROT_WRITE), 
-				    MAP_SHARED|MAP_FILE, tdb->fd, 0);
+				    MAP_SHARED, tdb->fd, 0);
 
 		/*
 		 * NB. When mmap fails it returns MAP_FAILED *NOT* NULL !!!!
