@@ -49,7 +49,6 @@
 
 static char           cwdbuf[MAXPATHLEN+1];
 static struct vol     *vol;
-static DBD            *dbd_rebuild;
 static dbd_flags_t    dbd_flags;
 static char           stamp[CNID_DEV_LEN];
 static char           *netatalk_dirs[] = {
@@ -686,10 +685,8 @@ static int dbd_readdir(int volroot, cnid_t did)
         switch (st.st_mode & S_IFMT) {
         case S_IFREG:
         case S_IFDIR:
-            break;
         case S_IFLNK:
-            dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
-            continue;
+            break;
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
@@ -726,40 +723,20 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (ADDIR_OK)
             adfile_ok = check_adfile(ep->d_name, &st, &name);
 
-        if (name == NULL) {
-            name = ep->d_name;
-        } else {
-            update_cnid(did, &st, ep->d_name, name);
-        }
-
-        /* Check CNIDs */
-        cnid = check_cnid(name, did, &st, adfile_ok);
-
-        /* Now add this object to our rebuild dbd */
-        if (cnid && dbd_rebuild) {
-            static uint count = 0;
-            rqst.cnid = rply.cnid;
-            ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
-            if (dbif_txn_close(dbd_rebuild, ret) != 0)
-                return -1;
-            if (rply.result != CNID_DBD_RES_OK) {
-                dbd_log( LOGSTD, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
-                         cnid, cwdbuf, name);
-                return -1;
+        if (!S_ISLNK(st.st_mode)) {
+            if (name == NULL) {
+                name = ep->d_name;
+            } else {
+                update_cnid(did, &st, ep->d_name, name);
             }
-            count++;
-            if (count == 10000) {
-                if (dbif_txn_checkpoint(dbd_rebuild, 0, 0, 0) < 0) {
-                    dbd_log(LOGSTD, "Error checkpointing!");
-                    return -1;
-                }
-                count = 0;
-            }
-        }
 
-        /* Check EA files */
-        if (vol->v_vfs_ea == AFPVOL_EA_AD)
-            check_eafiles(name);
+            /* Check CNIDs */
+            cnid = check_cnid(name, did, &st, adfile_ok);
+
+            /* Check EA files */
+            if (vol->v_vfs_ea == AFPVOL_EA_AD)
+                check_eafiles(name);
+        }
 
         /**************************************************************************
           Recursion
