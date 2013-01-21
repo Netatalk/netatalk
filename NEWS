@@ -29,6 +29,8 @@ Changes in 3.0.2
        afpd doesn't do any checks for "wide symlinks".
 * FIX: Automatic AppleDouble conversion to EAs failing for directories.
        Fixes bug #486.
+* FIX: dbd failed to convert appledouble files of symlinks.
+       Fixes bug #490.
 
 Changes in 3.0.1
 ================
