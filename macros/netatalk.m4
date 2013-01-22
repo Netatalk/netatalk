@@ -22,8 +22,6 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	[ac_cv_tracker_pkg=$withval],
 	[ac_cv_tracker_pkg=$ac_cv_tracker_pkg_default])
 
-    AC_MSG_NOTICE([searching for $ac_cv_tracker_pkg])
-
     PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker=yes], [ac_cv_have_tracker=no])
 
     if test x"$ac_cv_have_tracker" = x"no" ; then
@@ -43,8 +41,6 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	[ac_cv_tracker_miner_pkg=$withval],
 	[ac_cv_tracker_miner_pkg=$ac_cv_tracker_miner_pkg_default])
 
-    AC_MSG_NOTICE([searching for $ac_cv_tracker_miner_pkg])
-
     PKG_CHECK_MODULES([TRACKER_MINER], [$ac_cv_tracker_miner_pkg >= 0.12], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
 
     if test x"$ac_cv_have_tracker_miner" = x"yes" ; then
@@ -54,7 +50,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	fi
 
     dnl Test for Tracker 0.6 on Solaris and derived platforms
-    if test x"$this_os" = x"solaris"; then
+    if test x"$this_os" = x"solaris" -a x"$ac_cv_have_tracker" = x"no" ; then
         PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_0_6=yes], [ac_cv_have_tracker_0_6=no])
         if test x"$ac_cv_have_tracker_0_6" = x"yes" ; then
             AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
