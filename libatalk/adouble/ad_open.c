@@ -523,7 +523,7 @@ int ad_valid_header_osx(const char *path)
     adosx.ad_version = ntohl(adosx.ad_version);
 
     if ((adosx.ad_magic != AD_MAGIC) || (adosx.ad_version != AD_VERSION2)) {
-        LOG(log_warning, logtype_ad, "ad_valid_header_osx: not an adouble:osx file");
+        LOG(log_warning, logtype_ad, "ad_valid_header_osx(\"%s\"): not an adouble:osx file", fullpathname(path));
         EC_FAIL;
     }
 
@@ -631,7 +631,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     }
 
     if (header_len < AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read_ea: bogus AppleDouble header.");
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): bogus AppleDouble header.", fullpathname(path));
         errno = EIO;
         return -1;
     }
@@ -643,7 +643,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     ad->ad_version = ntohl( ad->ad_version );
 
     if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
-        LOG(log_error, logtype_ad, "ad_header_read_ea: wrong magic or version");
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): wrong magic or version", fullpathname(path));
         errno = EIO;
         return -1;
     }
@@ -656,7 +656,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
         len = sizeof(ad->ad_data) - AD_HEADER_LEN;
     if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read_ea: can't read entry info.");
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): can't read entry info.", fullpathname(path));
         errno = EIO;
         return -1;
     }
