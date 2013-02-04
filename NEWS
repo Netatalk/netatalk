@@ -1,3 +1,7 @@
+Changes in 3.0.3
+================
+* UPD: afpd: Increase default DSI server quantum to 1 MB
+
 Changes in 3.0.2
 ================
 * NEW: afpd: Put file extension type/creator mapping back in which had

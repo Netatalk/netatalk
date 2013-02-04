@@ -138,7 +138,7 @@ typedef struct DSI {
 #define DSI_DEFQUANT        2           /* default attention quantum size */
 #define DSI_SERVQUANT_MAX   0xffffffff  /* server quantum */
 #define DSI_SERVQUANT_MIN   32000       /* minimum server quantum */
-#define DSI_SERVQUANT_DEF   0x0004A2E0L /* default server quantum */
+#define DSI_SERVQUANT_DEF   0x100000L   /* default server quantum (1 MB) */
 
 /* default port number */
 #define DSI_AFPOVERTCP_PORT 548
