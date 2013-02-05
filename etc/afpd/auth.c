@@ -375,6 +375,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
         if (dsi->flags & DSI_EXTSLEEP) {
             LOG(log_note, logtype_afpd, "afp_zzz: waking up from extended sleep");
             dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
+            ipc_child_state(obj, DSI_RUNNING);
         }
     } else {
         /* sleep request */
@@ -382,8 +383,10 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
         if (data & AFPZZZ_EXT_SLEEP) {
             LOG(log_note, logtype_afpd, "afp_zzz: entering extended sleep");
             dsi->flags |= DSI_EXTSLEEP;
+            ipc_child_state(obj, DSI_EXTSLEEP);
         } else {
             LOG(log_note, logtype_afpd, "afp_zzz: entering normal sleep");
+            ipc_child_state(obj, DSI_SLEEPING);
         }
     }
 

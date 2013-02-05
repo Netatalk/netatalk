@@ -1,5 +1,29 @@
 dnl Kitchen sink for configuration macros
 
+dnl Check for dbus-glib, for AFP stats
+AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
+    PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
+    PKG_CHECK_MODULES(DBUS_GLIB, gobject-2.0 >= 2.6, have_dbus_glib=yes, have_dbus_glib=no)
+    AC_SUBST(DBUS_CFLAGS)
+    AC_SUBST(DBUS_LIBS)
+    AC_SUBST(DBUS_GLIB_CFLAGS)
+    AC_SUBST(DBUS_GLIB_LIBS)
+    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$have_dbus_glib = xyes -a x$have_dbus = xyes)
+
+    AC_ARG_WITH(
+        dbus-sysconf-dir,
+        [AS_HELP_STRING([--with-dbus-sysconf-dir],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+        ac_cv_dbus_sysdir=$withval,
+        ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
+    )
+
+    if test x$have_dbus_glib = xyes -a x$have_dbus = xyes ; then
+        AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
+        DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
+        AC_SUBST(DBUS_SYS_DIR)
+    fi
+])
+
 dnl Whether to enable developer build
 AC_DEFUN([AC_DEVELOPER], [
     AC_MSG_CHECKING([whether to enable developer build])

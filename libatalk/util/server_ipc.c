@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
@@ -102,6 +103,45 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
                                 boottime);
 
     return 0;
+}
+
+static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
+{
+    EC_INIT;
+    afp_child_t *child;
+
+    pthread_mutex_lock(&children->servch_lock);
+
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+        EC_FAIL;
+
+    memcpy(&child->afpch_state, ipc->msg, sizeof(uint16_t));
+
+EC_CLEANUP:
+    pthread_mutex_unlock(&children->servch_lock);
+    EC_EXIT;
+}
+
+static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
+{
+    EC_INIT;
+    afp_child_t *child;
+
+    pthread_mutex_lock(&children->servch_lock);
+
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+        EC_FAIL;
+
+    if (child->afpch_volumes) {
+        free(child->afpch_volumes);
+        child->afpch_volumes = NULL;
+    }
+    if (ipc->len)
+        child->afpch_volumes = strdup(ipc->msg);
+
+EC_CLEANUP:
+    pthread_mutex_unlock(&children->servch_lock);
+    EC_EXIT;
 }
 
 /***********************************************************************************
@@ -201,6 +241,16 @@ int ipc_server_read(server_child_t *children, int fd)
             return -1;
         break;
 
+    case IPC_STATE:
+        if (ipc_set_state(&ipc, children) != 0)
+            return -1;
+        break;
+
+    case IPC_VOLUMES:
+        if (ipc_set_volumes(&ipc, children) != 0)
+            return -1;
+        break;
+
 	default:
 		LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
 		return -1;
@@ -251,4 +301,9 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
    }
 
    return 0;
+}
+
+int ipc_child_state(AFPObj *obj, uint16_t state)
+{
+    return ipc_child_write(obj->ipc_fd, IPC_STATE, sizeof(uint16_t), &state);
 }

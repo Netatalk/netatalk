@@ -12,6 +12,13 @@ Changes in 3.0.3
 * FIX: Fix an issue with user homes when user home directory has not the
        same name as the username.
        Fixes bug #497.
+* UPD: Fix PAM config install, new default installation dir is
+       $sysconfdir/pam.d/. Add configure option --with-pam-confdir
+       to specify alternative path.
+* NEW: AFP stats about active session via dbus IPC. Client side python
+       program `afpstats`. Requires dbus, dbus-glib any python-dbus.
+       configure option --dbus-sysconf-dir for specifying dbus
+       system security configuration files.       
 
 Changes in 3.0.2
 ================

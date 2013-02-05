@@ -38,6 +38,7 @@
 #include "fork.h"
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
+#include "afpstats.h"
 
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
@@ -325,6 +326,11 @@ int main(int ac, char **av)
 
     /* set limits */
     (void)setlimits();
+
+#ifdef HAVE_DBUS_GLIB
+    /* Run dbus AFP statics thread */
+    (void)afpstats_init(server_children);
+#endif
 
     afp_child_t *child;
     int recon_ipc_fd;

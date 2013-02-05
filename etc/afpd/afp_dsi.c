@@ -473,6 +473,8 @@ void afp_over_dsi(AFPObj *obj)
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
+    ipc_child_state(obj, DSI_RUNNING);
+
     /* get stuck here until the end */
     while (1) {
         if (sigsetjmp(recon_jmp, 1) != 0)
@@ -497,15 +499,6 @@ void afp_over_dsi(AFPObj *obj)
                 exit(0);
             }
 
-#if 0
-            /*  got ECONNRESET in read from client => exit*/
-            if (dsi->flags & DSI_GOT_ECONNRESET) {
-                LOG(log_note, logtype_afpd, "afp_over_dsi: client connection reset");
-                afp_dsi_close(obj);
-                exit(0);
-            }
-#endif
-
             if (dsi->flags & DSI_RECONINPROG) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
                 afp_dsi_close(obj);
@@ -516,8 +509,11 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi_disconnect(dsi) != 0)
                 afp_dsi_die(EXITERR_CLNT);
 
+            ipc_child_state(obj, DSI_DISCONNECTED);
+
             while (dsi->flags & DSI_DISCONNECTED)
                 pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
+            ipc_child_state(obj, DSI_RUNNING);
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
         }
@@ -526,6 +522,7 @@ void afp_over_dsi(AFPObj *obj)
             LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
             dsi->flags &= ~DSI_SLEEPING;
             dsi->tickle = 0;
+            ipc_child_state(obj, DSI_RUNNING);
         }
 
         if (reload_request) {

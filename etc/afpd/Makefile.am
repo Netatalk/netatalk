@@ -1,6 +1,10 @@
 # Makefile.am for etc/afpd/
 
 pkgconfdir = @PKGCONFDIR@
+BUILT_SOURCES =
+EXTRA_DIST =
+CLEANFILES =
+DISTCLEANFILES =
 
 sbin_PROGRAMS = afpd
 noinst_PROGRAMS = hash fce
@@ -61,11 +65,28 @@ if HAVE_ACLS
 afpd_SOURCES += acls.c
 endif
 
+if HAVE_DBUS_GLIB
+BUILT_SOURCES += afpstats_service_glue.h
+EXTRA_DIST += afpstats-service.xml
+DISTCLEANFILES += afpstats_service_glue.h
+
+afpstats_service_glue.h: afpstats-service.xml
+	$(LIBTOOL) --mode=execute \
+		dbus-binding-tool \
+			--prefix=afpstats_obj \
+			--mode=glib-server \
+			--output=afpstats_service_glue.h \
+			$(top_srcdir)/etc/afpd/afpstats-service.xml
+
+afpd_SOURCES += afpstats.c afpstats_obj.c
+afpd_CFLAGS  += $(DBUS_CFLAGS) $(DBUS_GLIB_CFLAGS) -DDBUS_COMPILATION
+afpd_LDFLAGS += $(DBUS_LIBS) $(DBUS_GLIB_LIBS) -ldbus-glib-1
+endif
 
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
-	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h
+	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h afpstats.h afpstats_obj.h
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
