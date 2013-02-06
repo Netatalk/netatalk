@@ -549,13 +549,6 @@ AFP user home volume name\&. The default is
 \fIuser\*(Aqs home\fR\&.
 .RE
 .PP
-keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
-.RS 4
-Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interrupting active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
-\fInetatalk\fR
-service controller process, the AFP and CNID daemons will exit and then the service controller will restart them\&. AFP session processes are notified of the master afpd shutdown, they will then sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. The IPC channel between the AFP master service daemon and the AFP session child is used for keeping session state of AFP sessions in the AFP master process\&. The session state is needed when AFP clients experience eg network outages and try to reconnect to the AFP server\&.
-.RE
-.PP
 login message = \fImessage\fR \fB(G)/(V)\fR
 .RS 4
 Sets a message to be displayed when clients logon to the server\&. The message should be in

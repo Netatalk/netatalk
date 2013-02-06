@@ -32,7 +32,7 @@
  * @param childp    (w) after fork: parent return pointer to child, child returns NULL
  * @returns             0 on sucess, any other value denotes failure
  */
-int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_child_t **childp)
+int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_child_t **childp)
 {
   pid_t pid;
   int ipc_fds[2];  
@@ -61,7 +61,7 @@ int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_chi
     /* using SIGKILL is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
     close(ipc_fds[1]);
-    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds[0])) ==  NULL) {
+    if ((child = server_child_add(serv_children, pid, ipc_fds[0])) ==  NULL) {
       LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
       close(ipc_fds[0]);
       dsi->header.dsi_flags = DSIFL_REPLY;
@@ -77,7 +77,7 @@ int dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval, afp_chi
   
   /* child: check number of open connections. this is one off the
    * actual count. */
-  if ((serv_children->count >= serv_children->nsessions) &&
+  if ((serv_children->servch_count >= serv_children->servch_nsessions) &&
       (dsi->header.dsi_command == DSIFUNC_OPEN)) {
     LOG(log_info, logtype_dsi, "dsi_getsess: too many connections");
     dsi->header.dsi_flags = DSIFL_REPLY;

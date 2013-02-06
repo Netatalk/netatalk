@@ -36,7 +36,6 @@
  * netatalk paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
-#define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
 #  define _PATH_NETATALK_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netatalk.pid")
 #else
