@@ -209,7 +209,7 @@ static void kill_childs(int sig, ...)
 /* this get called when error conditions are met that require us to exit gracefully */
 static void netatalk_exit(int ret)
 {
-    server_unlock(_PATH_NETATALK_LOCK);
+    server_unlock(PATH_NETATALK_LOCK);
     exit(ret);
 }
 
@@ -270,13 +270,13 @@ int main(int argc, char **argv)
         }
     }
 
-    if (check_lockfile("netatalk", _PATH_NETATALK_LOCK) != 0)
+    if (check_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)
         exit(EXITERR_SYS);
 
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
 
-    if (create_lockfile("netatalk", _PATH_NETATALK_LOCK) != 0)
+    if (create_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)
         exit(EXITERR_SYS);
 
     sigfillset(&blocksigs);

@@ -2,6 +2,10 @@ Changes in 3.0.3
 ================
 * UPD: afpd: Increase default DSI server quantum to 1 MB
 * UPD: bundled libevent2 is now static
+* NEW: --with-lockfile=PATH configure option for specifying an
+       alternative path for the netatalk lockfile.
+* UPD: systemd service file use PIDFile and ExecReload.
+       From FR #70.
 
 Changes in 3.0.2
 ================

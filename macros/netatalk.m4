@@ -60,13 +60,47 @@ AC_ARG_ENABLE(fhs,
 		use_pam_so=yes
 		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
 		AC_MSG_RESULT([yes])
+        atalk_cv_fhs_compat=yes
 	else
 		AC_MSG_RESULT([no])
+        atalk_cv_fhs_compat=no
 	fi
 	],[
 		AC_MSG_RESULT([no])
-	]
-)])
+        atalk_cv_fhs_compat=no
+])])
+
+dnl netatalk lockfile path
+AC_DEFUN([AC_NETATALK_LOCKFILE], [
+    AC_MSG_CHECKING([netatalk lockfile path])
+    AC_ARG_WITH(
+        lockfile,
+        [AS_HELP_STRING([--with-lockfile=PATH],[Path of netatalk lockfile])],
+        ac_cv_netatalk_lock=$withval,
+        ac_cv_netatalk_lock=""
+    )
+    if test -z "$ac_cv_netatalk_lock" ; then
+        ac_cv_netatalk_lock=/var/spool/locks/netatalk
+        if test x"$atalk_cv_fhs_compat" = x"yes" ; then
+            ac_cv_netatalk_lock=/var/run/netatalk.pid
+        else
+            case "$host_os" in
+            *freebsd*)
+                ac_cv_netatalk_lock=/var/spool/lock/netatalk
+                ;;
+            *netbsd*|*openbsd*)
+                ac_cv_netatalk_lock=/var/run/netatalk.pid
+                ;;
+            *linux*)
+                ac_cv_netatalk_lock=/var/lock/netatalk
+                ;;
+            esac
+        fi
+    fi
+    AC_DEFINE_UNQUOTED(PATH_NETATALK_LOCK, ["$ac_cv_netatalk_lock"], [netatalk lockfile path])
+    AC_SUBST(PATH_NETATALK_LOCK, ["$ac_cv_netatalk_lock"])
+    AC_MSG_RESULT([$ac_cv_netatalk_lock])
+])
 
 dnl 64bit platform check
 AC_DEFUN([AC_NETATALK_64BIT_LIBS], [
