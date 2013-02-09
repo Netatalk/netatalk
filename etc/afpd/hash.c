@@ -982,8 +982,10 @@ int main(void)
         "s                      switch to non-functioning allocator\n"
         "q                      quit";
 
-    if (!h)
+    if (!h) {
         puts("hash_create failed");
+        return 1;
+    }
 
     for (;;) {
         if (prompt)
