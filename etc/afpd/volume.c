@@ -791,7 +791,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         ret = AFPERR_MISC;
         goto openvol_err;
     }
-    free(vol_mname);
     volume->v_root = dir;
     curdir = dir;
 
@@ -829,6 +828,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         if ((msg = iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
             setmessage(msg);
 
+        free(vol_mname);
         return( AFP_OK );
     }
 
@@ -843,6 +843,7 @@ openvol_err:
         cnid_close(volume->v_cdb);
         volume->v_cdb = NULL;
     }
+    free(vol_mname);
     *rbuflen = 0;
     return ret;
 }
