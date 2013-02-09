@@ -1824,10 +1824,12 @@ int ad_openat(struct adouble  *ad,
     EC_INIT;
     int cwdfd = -1;
     va_list args;
-    mode_t mode;
+    mode_t mode = 0;
 
     if (dirfd != -1) {
         if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0))
+            if (cwdfd > 0)
+                close(cwdfd);
             EC_FAIL;
     }
 

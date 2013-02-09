@@ -912,7 +912,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
         if ( ibuf[0] != '\0' || ibuf[1] != '\0')
             return AFPERR_PARAM;
         ibuf += 2;
-        len = MIN(sizeof(username), strlen(obj->username));
+        len = MIN(sizeof(username) - 1, strlen(obj->username));
         memcpy(username, obj->username, len);
         username[ len ] = '\0';
     }
