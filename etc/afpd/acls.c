@@ -1363,6 +1363,8 @@ static int check_acl_access(const AFPObj *obj,
     LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
         cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
 
+    AFP_ASSERT(vol);
+
     /* This check is not used anymore, as OS X Server seems to be ignoring too */
 #if 0
     /* Get uid or gid from UUID */
