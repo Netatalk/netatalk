@@ -196,7 +196,7 @@ NO_UNDEFINED =
 MAYBE_CORE =
 endif
 
-GENERIC_LDFLAGS = -version-info $(VERSION_INFO) $(RELEASE) $(NO_UNDEFINED)
+GENERIC_LDFLAGS = -static
 
 libevent_la_SOURCES = $(CORE_SRC) $(EXTRA_SRC)
 libevent_la_LIBADD = @LTLIBOBJS@ $(SYS_LIBS)
@@ -250,4 +250,6 @@ doxygen: FORCE
 FORCE:
 
 DISTCLEANFILES = *~ libevent.pc ./include/event2/event-config.h
+
+install:
 
