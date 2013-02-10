@@ -1,6 +1,7 @@
 Changes in 3.0.3
 ================
 * UPD: afpd: Increase default DSI server quantum to 1 MB
+* UPD: bundled libevent2 is now static
 
 Changes in 3.0.2
 ================
