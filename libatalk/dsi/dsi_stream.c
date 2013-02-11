@@ -115,7 +115,7 @@ static int dsi_peek(DSI *dsi)
         if (FD_ISSET(dsi->socket, &readfds)) {
             len = dsi->end - dsi->eof; /* it's ensured above that there's space */
 
-            if ((len = read(dsi->socket, dsi->eof, len)) <= 0) {
+            if ((len = recv(dsi->socket, dsi->eof, len, 0)) <= 0) {
                 if (len == 0) {
                     LOG(log_error, logtype_dsi, "dsi_peek: EOF");
                     return -1;
@@ -213,7 +213,7 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t len
   buflen = MIN(8192, dsi->end - dsi->eof);
   if (buflen > 0) {
       ssize_t ret;
-      ret = read(dsi->socket, dsi->eof, buflen);
+      ret = recv(dsi->socket, dsi->eof, buflen, 0);
       if (ret > 0)
           dsi->eof += ret;
   }

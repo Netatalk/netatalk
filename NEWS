@@ -19,6 +19,8 @@ Changes in 3.0.3
        program `afpstats`. Requires dbus, dbus-glib any python-dbus.
        configure option --dbus-sysconf-dir for specifying dbus
        system security configuration files.       
+* NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
+       probes.
 
 Changes in 3.0.2
 ================

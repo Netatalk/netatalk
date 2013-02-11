@@ -497,12 +497,15 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
                                            cfrombstr(l->entry[i]),
                                            blength(l->entry[i]))) == NULL) {
 
-            if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
-                                 &st,
-                                 did,
-                                 cfrombstr(l->entry[i]),
-                                 blength(l->entry[i]),
-                                 0)) == CNID_INVALID)
+            AFP_CNID_START("cnid_add");
+            cnid = cnid_add(vol->v_cdb,             /* 6. */
+                            &st,
+                            did,
+                            cfrombstr(l->entry[i]),
+                            blength(l->entry[i]),
+                            0);
+            AFP_CNID_DONE();
+            if (cnid == CNID_INVALID)
                 EC_FAIL;
 
             if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
@@ -607,7 +610,11 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     /* Get it from the database */
     cnid = did;
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u): querying CNID database", ntohl(did));
-    if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL) {
+
+    AFP_CNID_START("cnid_resolve");
+    upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen);
+    AFP_CNID_DONE();
+    if (upath == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
@@ -2329,7 +2336,9 @@ int deletecurdir(struct vol *vol)
 
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
     if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
+        AFP_CNID_START("cnid_delete");
         cnid_delete(vol->v_cdb, fdir->d_did);
+        AFP_CNID_DONE();
         dir_remove( vol, fdir );
     } else {
         LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",

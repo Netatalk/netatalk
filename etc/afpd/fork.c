@@ -791,6 +791,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
+    AFP_READ_START((long)reqcount);
+
     /* reqcount isn't always truthful. we need to deal with that. */
     size = ad_size(ofork->of_ad, eid);
 
@@ -883,6 +885,8 @@ afp_read_exit:
 afp_read_done:
     if (obj->options.flags & OPTION_AFP_READ_LOCK)
         ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
+
+    AFP_READ_DONE();
     return err;
 
 afp_read_err:
@@ -1153,6 +1157,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         goto afp_write_err;
     }
 
+    AFP_WRITE_START((long)reqcount);
+
     saveoff = offset;
     if (obj->options.flags & OPTION_AFP_READ_LOCK) {
         if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff, reqcount, ofork->of_refnum) < 0) {
@@ -1227,6 +1233,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
 
     *rbuflen = set_off_t (offset, rbuf, is64);
+    AFP_WRITE_DONE();
     return( AFP_OK );
 
 afp_write_err:

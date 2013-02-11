@@ -19,6 +19,19 @@
 #include <atalk/unicode.h>
 #include <atalk/uam.h>
 #include <atalk/iniparser.h>
+#ifdef WITH_DTRACE
+#include <atalk/afp_dtrace.h>
+#else
+/* List of empty dtrace macros */
+#define AFP_AFPFUNC_START(a,b)
+#define AFP_AFPFUNC_DONE(a, b)
+#define AFP_CNID_START(a)
+#define AFP_CNID_DONE()
+#define AFP_READ_START(a)
+#define AFP_READ_DONE()
+#define AFP_WRITE_START(a)
+#define AFP_WRITE_DONE()
+#endif
 
 /* #define DOSFILELEN 12 */             /* Type1, DOS-compat*/
 #define MACFILELEN 31                   /* Type2, HFS-compat */

@@ -248,7 +248,9 @@ static int moveandrename(struct vol *vol,
     if (!isdir) {
         if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did, utf8_encoding(vol->v_obj)))) == NULL)
             return AFPERR_PARAM; /* can't convert */
+        AFP_CNID_START("cnid_get");
         id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, strlen(oldunixname));
+        AFP_CNID_DONE();
 
 #ifndef HAVE_ATFUNCS
         /* Need full path */
@@ -378,7 +380,9 @@ static int moveandrename(struct vol *vol,
         }
 
         /* fix up the catalog entry */
+        AFP_CNID_START("cnid_update");
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
+        AFP_CNID_DONE();
     }
 
 exit:
@@ -521,10 +525,16 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
                 delcnid = deldir->d_did;
                 dir_remove(vol, deldir);
             }
-            if (delcnid == CNID_INVALID)
+            if (delcnid == CNID_INVALID) {
+                AFP_CNID_START("cnid_get");
                 delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
-            if (delcnid != CNID_INVALID)
+                AFP_CNID_DONE();
+            }
+            if (delcnid != CNID_INVALID) {
+                AFP_CNID_START("cnid_delete");
                 cnid_delete(vol->v_cdb, delcnid);
+                AFP_CNID_DONE();
+            }
             fce_register(FCE_DIR_DELETE, fullpathname(upath), NULL, fce_dir);
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/

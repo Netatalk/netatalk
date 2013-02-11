@@ -1,4 +1,4 @@
 Makefile
 Makefile.in
 *.o
-lockrpc.gen.h
+afp_dtrace.h

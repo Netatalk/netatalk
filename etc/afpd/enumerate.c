@@ -365,9 +365,14 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0) {
             if (convname) {
                 s_path.u_name = (char *)convname;
+                AFP_CNID_START("cnid_lookup");
                 s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd.sd_last, strlen(sd.sd_last));
+                AFP_CNID_DONE();
                 if (s_path.id != CNID_INVALID) {
-                    if (cnid_update(vol->v_cdb, s_path.id, &s_path.st, curdir->d_did, (char *)convname, strlen(convname)) != 0)
+                    AFP_CNID_START("cnid_update");
+                    int cnid_up_ret = cnid_update(vol->v_cdb, s_path.id, &s_path.st, curdir->d_did, (char *)convname, strlen(convname));
+                    AFP_CNID_DONE();
+                    if (cnid_up_ret != 0)
                         LOG(log_error, logtype_afpd, "enumerate: error updating CNID of \"%s\"", fullpathname(convname));
                 }
             }

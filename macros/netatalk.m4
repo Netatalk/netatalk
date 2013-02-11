@@ -1,5 +1,38 @@
 dnl Kitchen sink for configuration macros
 
+dnl Check for dtrace
+AC_DEFUN([AC_NETATALK_DTRACE], [
+  AC_ARG_WITH(dtrace,
+    AS_HELP_STRING(
+      [--with-dtrace],
+      [Enable dtrace probes (default: enabled if dtrace found)]
+    ),
+    [WDTRACE=$withval],
+    [WDTRACE=auto]
+  )
+  if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
+    AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
+    if test "x$atalk_cv_have_dtrace" = "xno" ; then
+      if test "x$WDTRACE" = "xyes" ; then
+        AC_MSG_FAILURE([dtrace requested but not found])
+      fi
+      WDTRACE="no"
+    else
+      WDTRACE="yes"
+    fi
+  fi
+
+  if test x"$WDTRACE" = x"yes" ; then
+    AC_DEFINE([WITH_DTRACE], [1], [dtrace probes])
+    DTRACE_LIBS=""
+    if test x"$this_os" = x"freebsd" ; then
+      DTRACE_LIBS="-lelf"
+    fi
+    AC_SUBST(DTRACE_LIBS)
+  fi
+  AM_CONDITIONAL(WITH_DTRACE, test "x$WDTRACE" = "xyes")
+])
+
 dnl Check for dbus-glib, for AFP stats
 AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
     PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)

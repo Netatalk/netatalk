@@ -603,10 +603,12 @@ void afp_over_dsi(AFPObj *obj)
 
                     LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
+                    AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
                     err = (*afp_switch[function])(obj,
                                                   (char *)dsi->commands, dsi->cmdlen,
                                                   (char *)&dsi->data, &dsi->datalen);
 
+                    AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
                     LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                         AfpNum2name(function), AfpErr2name(err));
 
@@ -644,9 +646,13 @@ void afp_over_dsi(AFPObj *obj)
 
                 LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
+                AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
+
                 err = (*afp_switch[function])(obj,
                                               (char *)dsi->commands, dsi->cmdlen,
                                               (char *)&dsi->data, &dsi->datalen);
+
+                AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
 
                 LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                     AfpNum2name(function), AfpErr2name(err));
