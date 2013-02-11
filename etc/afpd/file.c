@@ -335,6 +335,7 @@ int getmetadata(const AFPObj *obj,
                     || (bconchar(fullpath, '/') != BSTR_OK)
                     || (bcatcstr(fullpath, upath)) != BSTR_OK) {
                     LOG(log_error, logtype_afpd, "getmetadata: fullpath: %s", strerror(errno));
+                    bdestroy(fullpath);
                     return AFPERR_MISC;
                 }
 
