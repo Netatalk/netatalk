@@ -408,6 +408,9 @@ static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
     struct stat st;
     int len;
 
+    if (stat(path, &st) == -1)
+        EC_FAIL;
+
     if (S_ISDIR(st.st_mode)) {
         len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
         if (len < 0 || len >=  MAXPATHLEN)
