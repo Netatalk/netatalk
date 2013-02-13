@@ -673,7 +673,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     size_t  namelen;
     uint16_t   bitmap;
     char        *vol_uname;
-    char        *vol_mname;
+    char        *vol_mname = NULL;
     char        *volname_tmp;
 
     ibuf += 2;
