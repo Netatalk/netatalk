@@ -1580,7 +1580,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         adp = &ad;
     }
 
-    if ( adp && AD_RSRC_OPEN(adp) != -1 ) { /* there's a resource fork */
+    if ( adp && AD_RSRC_OPEN(adp) ) { /* there's a resource fork */
         adflags |= ADFLAGS_RF;
         /* FIXME we have a pb here because we want to know if a file is open 
          * there's a 'priority inversion' if you can't open the ressource fork RW
