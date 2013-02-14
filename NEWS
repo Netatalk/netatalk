@@ -6,6 +6,7 @@ Changes in 3.0.3
        alternative path for the netatalk lockfile.
 * UPD: systemd service file use PIDFile and ExecReload.
        From FR #70.
+* UPD: RedHat sysvinit: rm graceful, reimplement reload, add condrestart
 * FIX: Couldn't create folders on FreeBSD 9.1 ZFS fileystems.
        Fixed bug #491.
 
