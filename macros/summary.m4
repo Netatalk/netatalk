@@ -9,6 +9,8 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	else
 		AC_MSG_RESULT([         none])
 	fi
+	AC_MSG_RESULT([    Netatalk lockfile:])
+	AC_MSG_RESULT([         $ac_cv_netatalk_lock])
 	AC_MSG_RESULT([    AFP:])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([         ACL support: $with_acl_support])

@@ -815,7 +815,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     cnid_t      id;
     struct adouble  ad;
     struct adouble *adp = NULL;
-    bstring fullpath;
+    bstring fullpath = NULL;
 
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);

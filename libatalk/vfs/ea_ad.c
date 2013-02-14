@@ -79,7 +79,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     char         *u;
     size_t       inplen;
     size_t       outlen;
-    uint16_t     flags = CONV_ESCAPEHEX | CONV_ALLOW_COLON;
+    uint16_t     flags = CONV_ESCAPEHEX;
 
     if (!mpath)
         return NULL;

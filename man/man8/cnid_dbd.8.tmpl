@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: cnid_dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
 .\"      Date: 01 Jan 2012
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
 .TH "CNID_DBD" "8" "01 Jan 2012" "Netatalk 3.0" "Netatalk 3.0"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -49,7 +58,7 @@ per netatalk volume\&.
 .PP
 \fBcnid_dbd\fR
 uses the
-\fBBerkleley DB\fR
+\fBBerkeley DB\fR
 database library and uses transactionally protected updates\&. The
 \fBdbd\fR
 backend with transactions will avoid corruption of the CNID database even if the system crashes unexpectedly\&.
@@ -60,7 +69,7 @@ inherits the effective userid and groupid from
 on startup, which is normally caused by
 \fBafpd\fR
 serving a netatalk volume to a client\&. It changes to the
-\fBBerkleley DB\fR
+\fBBerkeley DB\fR
 database home directory
 \fIdbdir\fR
 that is associated with the volume\&. If the userid inherited from
@@ -83,25 +92,19 @@ via the filedescriptor
 can be configured to run forever or to exit after a period of inactivity\&. If
 \fBcnid_dbd\fR
 receives a TERM or an INT signal it will exit cleanly after flushing dirty database buffers to disk and closing
-\fBBerkleley DB\fR
+\fBBerkeley DB\fR
 database environments\&. It is safe to terminate
 \fBcnid_dbd\fR
 this way, it will be restarted when necessary\&. Other signals are not handled and will cause an immediate exit, possibly leaving the CNID database in an inconsistent state (no transactions) or losing recent updates during recovery (transactions)\&.
 .PP
 The
-\fBBerkleley DB\fR
+\fBBerkeley DB\fR
 database subsystem will create files named log\&.xxxxxxxxxx in the database home directory
-\fIdbdir\fR, where xxxxxxxxxx is a monotonically increasing integer\&. These files contain ithe transactional database changes\&. They will be removed regularily, unless the
+\fIdbdir\fR, where xxxxxxxxxx is a monotonically increasing integer\&. These files contain the transactional database changes\&. They will be removed regularly, unless the
 \fBlogfile_autoremove\fR
 option is specified in the
 \fIdb_param\fR
 configuration file (see below) with a value of 0 (default 1)\&.
-.PP
-Do not use
-\fBcnid_dbd\fR
-for databases on NFS mounted file systems\&. It makes the whole point of securing database changes properly moot\&. Use the dbdir: Option in the appropriate
-\fBAppleVolumes\fR
-configuration file to put the database onto a local disk\&.
 .SH "OPTIONS"
 .PP
 \fB\-v, \-V\fR
@@ -121,7 +124,7 @@ on startup\&. If the file does not exist or a parameter is not listed, suitable 
 .RS 4
 If set to 0, unused Berkeley DB transactional logfiles (log\&.xxxxxxxxxx in the database home directory) are not removed on startup of
 \fBcnid_dbd\fR
-and on a reqular basis\&. Default: 1\&.
+and on a regular basis\&. Default: 1\&.
 .RE
 .PP
 \fBcachesize\fR
@@ -132,7 +135,7 @@ process grabs that much memory on top of its normal memory footprint\&. It can b
 \fBdb_stat\fR
 utility with the
 \fB\-m\fR
-option that comes with Berkely DB can help you determine wether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
+option that comes with Berkley DB can help you determine ether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
 \fBBerkeley DB Tutorial and Reference Guide\fR
 has a section
 \fBSelecting a cache size\fR
@@ -178,7 +181,7 @@ exits\&. Default: 600\&. Set this to 0 to disable the timeout\&.
 .PP
 Note that the first version to appear
 \fIafter\fR
-Netatalk 2\&.1 ie Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\'t upgrade a 2\&.0\&.x version because that one didn\'t prepare the database\&.
+Netatalk 2\&.1 ie Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\*(Aqt upgrade a 2\&.0\&.x version because that one didn\*(Aqt prepare the database\&.
 .PP
 In order to update between older Netatalk releases using different BerkeleyDB library versions, follow this steps:
 .sp

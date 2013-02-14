@@ -93,6 +93,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
     }
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
+        chk_ext = 1;
         if (vol_inv_dots(vol) && *upath == '.') { /* make it invisible */
             uint16_t ashort;
             
@@ -335,6 +336,7 @@ int getmetadata(const AFPObj *obj,
                     || (bconchar(fullpath, '/') != BSTR_OK)
                     || (bcatcstr(fullpath, upath)) != BSTR_OK) {
                     LOG(log_error, logtype_afpd, "getmetadata: fullpath: %s", strerror(errno));
+                    bdestroy(fullpath);
                     return AFPERR_MISC;
                 }
 
@@ -1579,7 +1581,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         adp = &ad;
     }
 
-    if ( adp && AD_RSRC_OPEN(adp) != -1 ) { /* there's a resource fork */
+    if ( adp && AD_RSRC_OPEN(adp) ) { /* there's a resource fork */
         adflags |= ADFLAGS_RF;
         /* FIXME we have a pb here because we want to know if a file is open 
          * there's a 'priority inversion' if you can't open the ressource fork RW

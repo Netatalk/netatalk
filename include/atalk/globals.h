@@ -41,7 +41,6 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
-#define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
 #define OPTION_SHARE_RESERV  (1 << 11) /* whether to use Solaris fcntl F_SHARE locks */
 #define OPTION_SPOTLIGHT     (1 << 12) /* whether to enable Spotlight support */
 #define PASSWD_NONE     0

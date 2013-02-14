@@ -185,10 +185,14 @@ AC_NETATALK_LIBEVENT
 dnl Check for Tracker
 AC_NETATALK_SPOTLIGHT
 
+dnl libatalk API checks
+AC_DEVELOPER
+
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
-AC_DEVELOPER
+dnl netatalk lockfile path, must come after AC_NETATALK_FHS
+AC_NETATALK_LOCKFILE
 
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
 UAMS_PATH="${uams_path}"

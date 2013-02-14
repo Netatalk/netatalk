@@ -173,9 +173,12 @@ static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct v
 
     become_root();
 
-    EC_ZERO( ad_conv_v22ea_hf(path, sp, vol) );
-    EC_ZERO( ad_conv_v22ea_rf(path, sp, vol) );
+    if (ad_conv_v22ea_hf(path, sp, vol) != 0)
+        goto delete;
+    if (ad_conv_v22ea_rf(path, sp, vol) != 0)
+        goto delete;
 
+delete:
     EC_NULL( adpath = ad_path(path, adflags) );
     LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
         path, fullpathname(adpath));

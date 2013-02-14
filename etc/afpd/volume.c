@@ -176,13 +176,18 @@ static int get_tm_used(struct vol * restrict vol)
 
             EC_NULL_LOG( infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist") );
             
-            if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1)
+            if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1) {
+                bdestroy(infoplist);
                 continue;
+            }
 
             EC_NULL_LOG( bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name, "bands") );
 
-            if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1)
+            if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1) {
+                bdestroy(infoplist);
+                bdestroy(bandsdir);
                 continue;
+            }
 
             used += (links - 1) * bandsize;
             LOG(log_debug, logtype_afpd, "getused(\"%s\"): bands: %" PRIu64 " bytes",
@@ -668,7 +673,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     size_t  namelen;
     uint16_t   bitmap;
     char        *vol_uname;
-    char        *vol_mname;
+    char        *vol_mname = NULL;
     char        *volname_tmp;
 
     ibuf += 2;
@@ -791,7 +796,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         ret = AFPERR_MISC;
         goto openvol_err;
     }
-    free(vol_mname);
     volume->v_root = dir;
     curdir = dir;
 
@@ -829,6 +833,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         if ((msg = iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
             setmessage(msg);
 
+        free(vol_mname);
         return( AFP_OK );
     }
 
@@ -843,6 +848,7 @@ openvol_err:
         cnid_close(volume->v_cdb);
         volume->v_cdb = NULL;
     }
+    free(vol_mname);
     *rbuflen = 0;
     return ret;
 }

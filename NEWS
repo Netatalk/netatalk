@@ -1,3 +1,15 @@
+Changes in 3.0.3
+================
+* UPD: afpd: Increase default DSI server quantum to 1 MB
+* UPD: bundled libevent2 is now static
+* NEW: --with-lockfile=PATH configure option for specifying an
+       alternative path for the netatalk lockfile.
+* UPD: systemd service file use PIDFile and ExecReload.
+       From FR #70.
+* UPD: RedHat sysvinit: rm graceful, reimplement reload, add condrestart
+* FIX: Couldn't create folders on FreeBSD 9.1 ZFS fileystems.
+       Fixed bug #491.
+
 Changes in 3.0.2
 ================
 * NEW: afpd: Put file extension type/creator mapping back in which had
@@ -27,6 +39,10 @@ Changes in 3.0.2
        Setting the option to true causes afpd to follow symlinks on the
        server. symlinks may point outside of the AFP volume, currently
        afpd doesn't do any checks for "wide symlinks".
+* FIX: Automatic AppleDouble conversion to EAs failing for directories.
+       Fixes bug #486.
+* FIX: dbd failed to convert appledouble files of symlinks.
+       Fixes bug #490.
 
 Changes in 3.0.1
 ================

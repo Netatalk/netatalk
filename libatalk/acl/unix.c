@@ -308,6 +308,14 @@ int posix_chmod(const char *name, mode_t mode) {
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.
      */
+#ifdef BSD4_4
+    /*
+     * On FreeBSD chmod_acl() ends up in here too, but on
+     * FreeBSD sine ~9.1 with ZFS doesn't allow setting the g+s bit.
+     * Fixes PR #491.
+     */
+    mode &= 0777;
+#endif
     ret = chmod(name, mode);
 
     if (ret)

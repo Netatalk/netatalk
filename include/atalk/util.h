@@ -150,7 +150,7 @@ extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
 extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
 
 /* Structures and functions dealing with dynamic pollfd arrays */
-enum fdtype {IPC_FD, LISTEN_FD, DISASOCIATED_IPC_FD};
+enum fdtype {IPC_FD, LISTEN_FD};
 struct polldata {
     enum fdtype fdtype; /* IPC fd or listening socket fd                 */
     void *data;         /* pointer to AFPconfig for listening socket and *

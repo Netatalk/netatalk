@@ -702,7 +702,7 @@ char * debug_out ( char * seq, size_t len)
  *      for e.g. HFS cdroms.
  */
 
-static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
+static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
 {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len;
@@ -711,6 +711,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const c
     char* outbuf = dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
+    char escch;                 /* 150210: uninitialized OK, depends on j */
 
     if (srclen == (size_t)-1)
         srclen = strlen(src) + 1;
@@ -726,10 +727,30 @@ static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const c
     i_len=srclen;
     o_len=destlen;
 
+    if ((option & CONV_ESCAPEDOTS) && i_len >= 2 && inbuf[0] == '.') {
+        if (o_len < 6) {
+            errno = E2BIG;
+            goto end;
+        }
+        ucs2_t ucs2 = ':';
+        memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+        ucs2 = '2';
+        memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+        ucs2 = 'e';
+        memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+        outbuf += 6;
+        o_len -= 6;
+        inbuf++;
+        i_len--;
+        *flags |= CONV_REQESCAPE;
+    }
+
     while (i_len > 0) {
         for (j = 0; j < i_len; ++j)
-            if (inbuf[j] == ':')
+            if (inbuf[j] == ':' || inbuf[j] == '/') {
+                escch = inbuf[j];
                 break;
+            }
         j = i_len - j;
         i_len -= j;
 
@@ -759,48 +780,108 @@ static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const c
         }
 
         if (j) {
-            /* we have a ':' */
+            /* we have a ':' or '/' */
             i_len = j, j = 0;
 
-            if ((option & CONV_UNESCAPEHEX)) {
-                /* treat it as a CAP hex encoded char */
-                char h[MAXPATHLEN];
-                size_t hlen = 0;
+            if (escch == ':') {
+                if ((option & CONV_UNESCAPEHEX)) {
+                    /* treat it as a CAP hex encoded char */
+                    char h[MAXPATHLEN];
+                    size_t hlen = 0;
 
-                while (i_len >= 3 && inbuf[0] == ':' &&
-                       isxdigit(inbuf[1]) && isxdigit(inbuf[2])) {
-                    h[hlen++] = (hextoint(inbuf[1]) << 4) | hextoint(inbuf[2]);
-                    inbuf += 3;
-                    i_len -= 3;
-                }
-                if (hlen) {
-                    const char *h_buf = h;
-                    if (atalk_iconv(descriptor_cap, &h_buf, &hlen, &outbuf, &o_len) == (size_t)-1) {
-                        i_len += hlen * 3;
-                        inbuf -= hlen * 3;
-                        if (errno == EILSEQ && (option & CONV_IGNORE)) {
+                    while (i_len >= 3 && inbuf[0] == ':' &&
+                           isxdigit(inbuf[1]) && isxdigit(inbuf[2])) {
+                        h[hlen++] = (hextoint(inbuf[1]) << 4) | hextoint(inbuf[2]);
+                        inbuf += 3;
+                        i_len -= 3;
+                    }
+                    if (hlen) {
+                        const char *h_buf = h;
+                        if (atalk_iconv(descriptor_cap, &h_buf, &hlen, &outbuf, &o_len) == (size_t)-1) {
+                            i_len += hlen * 3;
+                            inbuf -= hlen * 3;
+                            if (errno == EILSEQ && (option & CONV_IGNORE)) {
+                                *flags |= CONV_REQMANGLE;
+                                return destlen - o_len;
+                            }
+                            goto end;
+                        }
+                    } else {
+                        /* We have an invalid :xx sequence */
+                        errno = EILSEQ;
+                        if ((option & CONV_IGNORE)) {
                             *flags |= CONV_REQMANGLE;
                             return destlen - o_len;
                         }
                         goto end;
                     }
-                } else {
-                    /* We have an invalid :xx sequence */
-                    errno = EILSEQ;
-                    if ((option & CONV_IGNORE)) {
-                        *flags |= CONV_REQMANGLE;
-                        return destlen - o_len;
+                } else if (option & CONV_ESCAPEHEX) {
+                    if (o_len < 6) {
+                        errno = E2BIG;
+                        goto end;
                     }
-                    goto end;
+                    ucs2_t ucs2 = ':';
+                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+                    ucs2 = '3';
+                    memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+                    ucs2 = 'a';
+                    memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+                    outbuf += 6;
+                    o_len -= 6;
+                    inbuf++;
+                    i_len--;
+                } else if (to_set == CH_UTF8_MAC || to_set == CH_MAC) {
+                    /* convert to a '/' */
+                    ucs2_t slash = 0x002f;
+                    memcpy(outbuf, &slash, sizeof(ucs2_t));
+                    outbuf += 2;
+                    o_len -= 2;
+                    inbuf++;
+                    i_len--;
+                } else {
+                    /* keep as ':' */
+                    ucs2_t ucs2 = 0x003a;
+                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+                    outbuf += 2;
+                    o_len -= 2;
+                    inbuf++;
+                    i_len--;
                 }
             } else {
-                /* a ':' that we just convert to a '/' */
-                ucs2_t slash = 0x002f;
-                memcpy(outbuf, &slash, sizeof(ucs2_t));
-                outbuf += 2;
-                o_len -= 2;
-                inbuf++;
-                i_len--;
+                /* '/' */
+                if (option & CONV_ESCAPEHEX) {
+                    if (o_len < 6) {
+                        errno = E2BIG;
+                        goto end;
+                    }
+                    ucs2_t ucs2 = ':';
+                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+                    ucs2 = '2';
+                    memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+                    ucs2 = 'f';
+                    memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
+                    outbuf += 6;
+                    o_len -= 6;
+                    inbuf++;
+                    i_len--;
+                } else if ((from_set == CH_UTF8_MAC || from_set == CH_MAC)
+                           && (to_set != CH_UTF8_MAC  || to_set != CH_MAC)) {
+                    /* convert to ':' */
+                    ucs2_t ucs2 = 0x003a;
+                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+                    outbuf += 2;
+                    o_len -= 2;
+                    inbuf++;
+                    i_len--;
+                } else {
+                    /* keep as '/' */
+                    ucs2_t ucs2 = 0x002f;
+                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
+                    outbuf += 2;
+                    o_len -= 2;
+                    inbuf++;
+                    i_len--;
+                }
             }
         }
     }
@@ -833,7 +914,6 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
     char* outbuf = (char*)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
-    char escch;                 /* 150210: uninitialized OK, depends on j */
 
     descriptor = conv_handles[CH_UCS2][to_set];
     descriptor_cap = conv_handles[CH_UCS2][cap_set];
@@ -846,42 +926,7 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
     i_len=srclen;
     o_len=destlen;
 
-    if ((option & CONV_ESCAPEDOTS) &&
-        i_len >= 2 && SVAL(inbuf, 0) == 0x002e) { /* 0x002e = . */
-        if (o_len < 3) {
-            errno = E2BIG;
-            goto end;
-        }
-        *outbuf++ = ':';
-        *outbuf++ = '2';
-        *outbuf++ = 'e';
-        o_len -= 3;
-        inbuf += 2;
-        i_len -= 2;
-        *flags |= CONV_REQESCAPE;
-    }
-
     while (i_len >= 2) {
-        for (i = 0; i < i_len; i += 2) {
-            ucs2_t c = SVAL(inbuf, i);
-            switch (c) {
-            case 0x003a: /* 0x003a = ':' */
-                if ( ! (option & CONV_ALLOW_COLON)) {
-                    errno = EILSEQ;
-                    goto end;
-                }
-                escch = c;
-                j = i_len - i;
-                i_len = i;
-                break;
-            case 0x002f: /* 0x002f = '/' */
-                if (option & CONV_ALLOW_SLASH) break;
-                escch = c;
-                j = i_len - i;
-                i_len = i;
-                break;
-            }
-        }
         while (i_len > 0 &&
                atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t)-1) {
             if (errno == EILSEQ) {
@@ -930,57 +975,8 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
             }
             goto end;
         }
+    } /* while (i_len >= 2) */
 
-        if (j) {
-            /* we have a ':' or '/' */
-            i_len = j, j = 0;
-
-            if ((option & CONV_ESCAPEHEX)) {
-                /* CAP hex encode it */
-                if (o_len < 3) {
-                    errno = E2BIG;
-                    goto end;
-                }
-                switch (escch) {
-                case '/':
-                    *outbuf++ = ':';
-                    *outbuf++ = '2';
-                    *outbuf++ = 'f';
-                    break;
-                case ':':
-                    *outbuf++ = ':';
-                    *outbuf++ = '3';
-                    *outbuf++ = 'a';
-                    break;
-                default:
-                    /*
-                     *  THIS SHOULD NEVER BE REACHED !!!
-                     *  As a safety net I put in a ' ' here
-                     */
-                    *outbuf++ = ':';
-                    *outbuf++ = '2';
-                    *outbuf++ = '0';
-                    break;
-                }
-                o_len -= 3;
-                inbuf += 2;
-                i_len -= 2;
-            } else {
-                switch (escch) {
-                case '/':
-                case ':':
-                    *outbuf++ = ':';
-                    break;
-                default: /* should never be reached */
-                    *outbuf++ = ' ';
-                    break;
-                }
-                o_len--;
-                inbuf += 2;
-                i_len -= 2;
-            }
-        }
-    }
     if (i_len > 0) errno = EINVAL;
 end:
     return (i_len + j == 0 || (option & CONV_FORCE)) ? destlen - o_len : (size_t)-1;
@@ -1000,7 +996,7 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
     lazy_initialize_conv();
 
     /* convert from_set to UCS2 */
-    if ((size_t)(-1) == ( o_len = pull_charset_flags( from_set, cap_charset, src, src_len,
+    if ((size_t)(-1) == ( o_len = pull_charset_flags( from_set, to_set, cap_charset, src, src_len,
                                                       (char *) buffer, sizeof(buffer) -2, flags)) ) {
         LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )", charset_name(from_set));
         return (size_t) -1;

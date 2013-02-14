@@ -826,7 +826,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Unicode Volume Name */
     /* Firstly convert name from unixcharset to UTF8-MAC */
-    flags = CONV_IGNORE | CONV_ALLOW_SLASH;
+    flags = CONV_IGNORE;
     tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
     if (tmpvlen <= 0) {
         strcpy(tmpname, "???");
@@ -836,7 +836,7 @@ static struct vol *creatvol(AFPObj *obj,
     /* Do we have to mangle ? */
     if ( (flags & CONV_REQMANGLE) || (tmpvlen > obj->options.volnamelen)) {
         if (tmpvlen + suffixlen > obj->options.volnamelen) {
-            flags = CONV_FORCE | CONV_ALLOW_SLASH;
+            flags = CONV_FORCE;
             tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, obj->options.volnamelen - suffixlen, &flags);
             tmpname[tmpvlen >= 0 ? tmpvlen : 0] = 0;
         }
@@ -852,7 +852,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Maccharset Volume Name */
     /* Firsty convert name from unixcharset to maccharset */
-    flags = CONV_IGNORE | CONV_ALLOW_SLASH;
+    flags = CONV_IGNORE;
     tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
     if (tmpvlen <= 0) {
         strcpy(tmpname, "???");
@@ -862,7 +862,7 @@ static struct vol *creatvol(AFPObj *obj,
     /* Do we have to mangle ? */
     if ( (flags & CONV_REQMANGLE) || (tmpvlen > AFPVOL_MACNAMELEN)) {
         if (tmpvlen + suffixlen > AFPVOL_MACNAMELEN) {
-            flags = CONV_FORCE | CONV_ALLOW_SLASH;
+            flags = CONV_FORCE;
             tmpvlen = convert_charset(obj->options.unixcharset,
                                       obj->options.maccharset,
                                       0,
@@ -1647,8 +1647,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_ANNOUNCESSH;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "map acls", 1))
         options->flags |= OPTION_ACL2MACCESS;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "keep sessions", 0))
-        options->flags |= OPTION_KEEPSESSIONS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
         options->flags |= OPTION_CLOSEVOL;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))

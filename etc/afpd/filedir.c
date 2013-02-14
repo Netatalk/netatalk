@@ -582,8 +582,10 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
         return NULL;
     if (bcatcstr(path, u) != BSTR_OK)
         return NULL;
-    if (path->slen > MAXPATHLEN)
+    if (path->slen > MAXPATHLEN) {
+        bdestroy(path);
         return NULL;
+    }
 
     LOG(log_debug, logtype_afpd, "absupath: %s", cfrombstr(path));
 

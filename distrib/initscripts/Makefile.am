@@ -13,6 +13,7 @@ pkgconfdir = @PKGCONFDIR@
 	    -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
+	    -e s@:PATH_NETATALK_LOCK:@${PATH_NETATALK_LOCK}@ \
 	    <$< >$@
 
 GENERATED_FILES = \

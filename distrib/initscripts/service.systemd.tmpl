@@ -10,6 +10,8 @@ After=syslog.target network.target avahi-daemon.service
 Type=forking
 GuessMainPID=no
 ExecStart=:SBINDIR:/netatalk
+PIDFile=:PATH_NETATALK_LOCK:
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=1
 

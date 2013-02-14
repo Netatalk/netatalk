@@ -141,23 +141,6 @@ static void afp_dsi_die(int sig)
     }
 }
 
-/* SIGQUIT handler */
-static void ipc_reconnect_handler(int sig _U_)
-{
-    if (reconnect_ipc(AFPobj) != 0) {
-        LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC reconnect");
-        afp_dsi_close(AFPobj);
-        exit(EXITERR_SYS);        
-    }
-
-    if (ipc_child_write(AFPobj->ipc_fd, IPC_GETSESSION, AFPobj->sinfo.clientid_len, AFPobj->sinfo.clientid) != 0) {
-        LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC ID resend");
-        afp_dsi_close(AFPobj);
-        exit(EXITERR_SYS);        
-    }
-    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: IPC reconnect done");
-}
-
 /* SIGURG handler (primary reconnect) */
 static void afp_dsi_transfer_session(int sig _U_)
 {
@@ -408,7 +391,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGQUIT */
-    action.sa_handler = ipc_reconnect_handler;
+    action.sa_handler = afp_dsi_die;
     if ( sigaction(SIGQUIT, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);

@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 06 Dez 2012
+.\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "06 Dez 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "19 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -88,9 +88,9 @@ option is considered a
 \fIvol preset\fR
 which can be selected in other volume sections via the
 \fBvol preset\fR
-option and constitutes defaults for the volume\&. For any option speficied both in a preset
+option and constitutes defaults for the volume\&. For any option specified both in a preset
 \fIand\fR
-in a volume section the volume section setting completly substitutes the preset option\&.
+in a volume section the volume section setting completely substitutes the preset option\&.
 .PP
 The access rights granted by the server are masked by the access rights granted to the specified or guest UNIX user by the host system\&. The server does not grant more access than the host system grants\&.
 .PP
@@ -117,7 +117,7 @@ Parameters in this section apply to the server as a whole\&. Parameters denoted 
 This section enable sharing of the UNIX server user home directories\&. Specifying an optional
 \fBpath\fR
 parameter means that not the whole user home will be shared but the subdirectory
-\fBpath\fR\&. It is neccessary to define the
+\fBpath\fR\&. It is necessary to define the
 \fBbasedir regex\fR
 option\&. It should be a regex which matches the parent directory of the user homes\&. Parameters denoted by a (H) belong to volume sections\&. The optional parameter
 \fBhome name\fR
@@ -132,8 +132,9 @@ The following example illustrates this\&. Given all user home directories are st
 .RS 4
 .\}
 .nf
- [Homes] path = afp\-data basedir regex = /home
-      
+ [Homes]
+      path = afp\-data
+      basedir regex = /home
 .fi
 .if n \{\
 .RE
@@ -143,6 +144,24 @@ For a user
 \fIjohn\fR
 this results in an AFP home volume with a path of
 /home/john/afp\-data\&.
+.PP
+If
+\fBbasedir regex\fR
+contains symlink, set the canonicalized absolute path\&. When
+/home
+links to
+/usr/home:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ [Homes]
+      basedir regex = /usr/home
+.fi
+.if n \{\
+.RE
+.\}
 .SH "PARAMETERS"
 .PP
 Parameters define the specific attributes of sections\&.
@@ -255,9 +274,9 @@ k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm
 These are required if the server supports the Kerberos 5 authentication UAM\&.
 .RE
 .PP
-nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPERATOR\fR \fB(G)\fR
+nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPARATOR\fR \fB(G)\fR
 .RS 4
-Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
+Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the available and active UAM authentication modules\&.
 .RE
 .PP
 save password = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -349,7 +368,7 @@ unix charset = \fICHARSET\fR \fB(G)\fR
 Specifies the servers unix charset, e\&.g\&.
 \fIISO\-8859\-15\fR
 or
-\fIEUC\-JP\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. If
+\fIEUC\-JP\fR\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authentication, server messages and volume names\&. If
 \fILOCALE\fR
 is set, the systems locale is used\&. Defaults to
 \fIUTF8\fR\&.
@@ -395,7 +414,7 @@ Setting this option is not recommended since globally encrypting AFP connections
 .RE
 .RE
 .PP
-afp listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the server should advertise
 \fBand\fR
@@ -409,7 +428,7 @@ Allows a different TCP port to be used for AFP\&. The default is 548\&. Also set
 option\&.
 .RE
 .PP
-cnid listen = \fIip address[:port] [ip adress[:port] \&.\&.\&.]\fR \fB(G)\fR
+cnid listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the CNID server should listen on\&. The default is
 \fBlocalhost:4700\fR\&.
@@ -435,7 +454,7 @@ Specifies a fully\-qualified domain name, with an optional port\&. This is disca
 .PP
 hostname = \fIname\fR \fB(G)\fR
 .RS 4
-Use this instead of the result from calling hostname for dertermening which IP address to advertise, therfore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
+Use this instead of the result from calling hostname for determining which IP address to advertise, therefore the hostname is resolved to an IP which is the advertised\&. This is NOT used for listening and it is also overwritten by
 \fBafp listen\fR\&.
 .RE
 .PP
@@ -446,7 +465,7 @@ Sets the maximum number of clients that can simultaneously connect to the server
 .PP
 server quantum = \fInumber\fR \fB(G)\fR
 .RS 4
-This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\*(Aqre absolutely sure, what you\*(Aqre doing
+This specifies the DSI server quantum\&. The default value is 1 MB\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\*(Aqre absolutely sure, what you\*(Aqre doing
 .RE
 .PP
 sleep time = \fInumber\fR \fB(G)\fR
@@ -491,7 +510,9 @@ Whether to apply locks to the byte region read in FPRead calls\&. The AFP spec m
 .PP
 basedir regex = \fIregex\fR \fB(H)\fR
 .RS 4
-Regular expression which matches the parent directory of the user homes\&. In the simple case this is just a path ie
+Regular expression which matches the parent directory of the user homes\&. If
+\fBbasedir regex\fR
+contains symlink, you must set the canonicalized absolute path\&. In the simple case this is just a path ie
 \fBbasedir regex = /home\fR
 .RE
 .PP
@@ -514,7 +535,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/AppleVolumes\&.system)\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/extmap\&.conf)\&.
 .RE
 .PP
 guest account = \fIname\fR \fB(G)\fR
@@ -525,14 +546,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 home name = \fIname\fR \fB(H)\fR
 .RS 4
 AFP user home volume name\&. The default is
-\fIusers\*(Aqs home\fR\&.
-.RE
-.PP
-keep sessions = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
-.RS 4
-Enable "Continuous AFP Service"\&. This means restarting AFP and CNID service daemons master processes, but keeping the AFP session processes\&. This can be used to install (most) updates to Netatalk without interruping active AFP sessions\&. Existing AFP sessions will still run the version from before updating, but new AFP sessions will run the updated code\&. After enabling this option when sending SIGQUIT to the
-\fInetatalk\fR
-service controller process, the AFP and CNID daemons will exit and then the service controller will restart them\&. AFP session processes are notified of the master afpd shutdown, they will then sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. The IPC channel between the AFP master service daemon and the AFP session child is used for keeping session state of AFP sessions in the AFP master process\&. The session state is needed when AFP clients experience eg network outages and try to reconnect to the AFP server\&.
+\fIuser\*(Aqs home\fR\&.
 .RE
 .PP
 login message = \fImessage\fR \fB(G)/(V)\fR
@@ -566,7 +580,7 @@ Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this 
 .PP
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&. The default is
+Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
 :STATEDIR:/netatalk/CNID/\&.
 .RE
 .PP
@@ -586,7 +600,7 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .RE
 .\}
 .sp
-Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limitted to 27 bytes\&.
+Mac OS 9 and earlier are not influenced by this, because Maccharset volume name is always limited to 27 bytes\&.
 .RE
 .PP
 vol preset = \fIname\fR \fB(G)/(V)\fR
@@ -599,7 +613,7 @@ as option preset for all volumes (when set in the [Global] section) or for one v
 .PP
 log file = \fIlogfile\fR \fB(G)\fR
 .RS 4
-If not specified Netatalk logs to syslogs daemon facilify\&. Otherwise it logs to
+If not specified Netatalk logs to syslogs daemon facility\&. Otherwise it logs to
 \fBlogfile\fR\&.
 .RE
 .PP
@@ -633,19 +647,19 @@ Both logtype and loglevels are case insensitive\&.
 .RE
 .SS "Filesystem Change Events (FCE)"
 .PP
-Netatalk includes a nifty filesystem change event mechanism where afpd processes notfiy interested listeners about certain filesytem event by UDP network datagrams\&.
+Netatalk includes a nifty filesystem change event mechanism where afpd processes notify interested listeners about certain filesystem event by UDP network datagrams\&.
 .PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
 Enables sending FCE events to the specified
 \fIhost\fR, default
 \fIport\fR
-is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
+is 12250 if not specified\&. Specifying multiple listeners is done by having this option once for each of them\&.
 .RE
 .PP
 fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
 .RS 4
-Speficies which FCE events are active, default is
+Specifies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
 .RE
 .PP
@@ -656,7 +670,7 @@ Coalesce FCE events\&.
 .PP
 fce holdfmod = \fIseconds\fR \fB(G)\fR
 .RS 4
-This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
+This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file multiple times for every "save"\&. Default: 60 seconds\&.
 .RE
 .SS "Debug Parameters"
 .PP
@@ -683,7 +697,7 @@ Do not use this option any longer as present Netatalk correctly supports server 
 .PP
 For a basic mode of operation there\*(Aqs nothing to configure\&. afpd reads ACLs on the fly, calculating effective permissions and returning the calculated permissions via the so called UARights permission bits\&. On a Mac the Finder uses these bits to adjust permission in Finder windows\&. For example folder whos UNIX mode would only result in in read\-only permissions for a user will not be displayed with a read\-only icon and the user will be able to write to the folder given the folder has an ACL giving the user write access\&.
 .PP
-However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\*(Aqs a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involed as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
+However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\*(Aqs a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involved as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
 .PP
 Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
 .PP
@@ -765,7 +779,7 @@ Name of the LDAP attribute with the users short name\&.
 .PP
 ldap uuid string = \fISTRING\fR \fB(G)\fR
 .RS 4
-Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a seperator\&.
+Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a separator\&.
 .sp
 Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
 .RE
@@ -815,7 +829,7 @@ vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
 Useful for Time Machine: limits the reported volume size, thus preventing Time Machine from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approimated calculation taking into accout the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approximated calculation taking into account the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 valid users = \fIuser @group\fR \fB(V)\fR
@@ -869,10 +883,10 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires writeable volume for perfoming test\&. "\fBread only = yes\fR" overwrites
+\fBad\fR\&. Requires writable volume for performing test\&. "\fBread only = yes\fR" overwrites
 \fBauto\fR
 with
-\fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropiate\&.
+\fBnone\fR\&. Use explicit "\fBea = sys|ad\fR" for read\-only volumes where appropriate\&.
 .RE
 .PP
 sys
@@ -1004,7 +1018,7 @@ Whether automatic conversion from
 \fBappledouble = v2\fR
 to
 \fBappledouble = ea\fR
-is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommdable to run
+is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommendable to run
 \fBdbd\fR
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
 .RE
@@ -1056,7 +1070,7 @@ Whether to stat volume path when enumerating volumes list, useful for automounti
 .PP
 time machine = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-Whether to enable Time Machine suport for this volume\&.
+Whether to enable Time Machine support for this volume\&.
 .RE
 .PP
 unix priv = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
@@ -1075,9 +1089,9 @@ directory\&.
 .PP
 cdb
 .RS 4
-"Concurrent database", backend is based on Oracle Berkely DB\&. With this backend several
+"Concurrent database", backend is based on Oracle Berkley DB\&. With this backend several
 \fBafpd\fR
-deamons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
+daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR
 process is active for a volume\&. The drawback is, that the crash of a single
 \fBafpd\fR
@@ -1117,7 +1131,7 @@ might show that there are other CNID backends available, be warned those are lik
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
-needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
+needs a way to preserve extended Macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
 :f0\&. Some special characters will be converted as to :xx notation as well\&. \*(Aq/\*(Aq will be encoded to
 :2f, if
 \fBusedots\fR
@@ -1148,4 +1162,5 @@ first\&. If this conversion fails, you\*(Aqll receive a \-50 error on the mac\&.
 \fBafpd\fR(8),
 \fBafppasswd\fR(5),
 \fBafp_signature.conf\fR(5),
+\fBextmap.conf\fR(5),
 \fBcnid_metad\fR(8)

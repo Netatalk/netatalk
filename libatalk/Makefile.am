@@ -18,7 +18,7 @@
 #        current+1:0:0
 #
 
-VERSION_INFO = 2:0:0
+VERSION_INFO = 3:0:0
 
 # History:          VERSION_INFO
 #
@@ -29,7 +29,7 @@ VERSION_INFO = 2:0:0
 #   3.0.0-beta2     1:0:0
 #   3.0             1:0:0
 #   3.0.1           2:0:0
-#   3.0.2           3:0:1
+#   3.0.2           3:0:0
 
 SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc tdb util unicode vfs
 
@@ -94,5 +94,6 @@ endif
 EXTRA_DIST = \
 	libatalk-3.0beta1.abi \
 	libatalk-3.0beta2.abi \
+	libatalk-3.0.abi \
 	libatalk-3.0.1.abi \
-	libatalk-3.0.abi
+	libatalk-3.0.2.abi
