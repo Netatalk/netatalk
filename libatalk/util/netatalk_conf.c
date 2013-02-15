@@ -1432,6 +1432,56 @@ struct vol *getvolbyvid(const uint16_t vid )
     return( vol );
 }
 
+/*
+ * get username by path
+ * 
+ * getvolbypath() assumes that the user home directory has the same name as the username.
+ * If that is not true, getuserbypath() is called and tries to retrieve the username
+ * from the directory owner, checking its validity.
+ * 
+ * @param   path (r) absolute volume path
+ * @returns NULL     if no match is found, pointer to username if successfull
+ *
+ */ 
+static char *getuserbypath(const char *path)
+{
+    EC_INIT;
+    struct stat sbuf;
+    struct passwd  *pwd;
+    char *hdir = NULL;
+
+    LOG(log_debug, logtype_afpd, "getuserbypath(\"%s\")", path);
+
+    /* does folder exists? */
+    if (stat(path, &sbuf) != 0)
+        EC_FAIL;
+
+    /* get uid of dir owner */
+    if ((pwd = getpwuid(sbuf.st_uid)) == NULL)
+        EC_FAIL;
+
+    /* does user home directory exists? */
+    if (stat(pwd->pw_dir, &sbuf) != 0)
+        EC_FAIL;
+
+    /* resolve and remove symlinks */
+    if ((hdir = realpath_safe(pwd->pw_dir)) == NULL) 
+        EC_FAIL;
+
+    /* handle subdirectories, path = */
+    if (strncmp(path, hdir, strlen(hdir)) != 0)
+        EC_FAIL;
+
+    LOG(log_debug, logtype_afpd, "getuserbypath: match user: %s, home: %s, realhome: %s",
+        pwd->pw_name, pwd->pw_dir, hdir);
+
+EC_CLEANUP:
+    if (hdir)
+        free(hdir);
+    if (ret != 0)
+        return NULL;
+    return pwd->pw_name;
+}
 /*!
  * Search volume by path, creating user home vols as necessary
  *
@@ -1447,6 +1497,9 @@ struct vol *getvolbyvid(const uint16_t vid )
  * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
  * (4) Built user home path by appending the basedir matched in (3) and appending the username
  * (5) The next path element then is the username
+ * (5b) getvolbypath() assumes that the user home directory has the same name as the username.
+ *     If that is not true, getuserbypath() is called and tries to retrieve the username
+ *     from the directory owner, checking its validity
  * (6) Append [Homes]->path subdirectory if defined
  * (7) Create volume
  *
@@ -1539,6 +1592,14 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         subpath = prw;
 
     strlcat(tmpbuf, user, MAXPATHLEN);
+    if (getpwnam(user) == NULL) {
+        /* (5b) */
+        char *tuser;
+        if ((tuser = getuserbypath(tmpbuf)) != NULL) {
+            free(user);
+            user = strdup(tuser);
+        }
+    }
     strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 

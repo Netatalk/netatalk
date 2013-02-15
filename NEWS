@@ -9,6 +9,9 @@ Changes in 3.0.3
 * UPD: RedHat sysvinit: rm graceful, reimplement reload, add condrestart
 * FIX: Couldn't create folders on FreeBSD 9.1 ZFS fileystems.
        Fixed bug #491.
+* FIX: Fix an issue with user homes when user home directory has not the
+       same name as the username.
+       Fixes bug #497.
 
 Changes in 3.0.2
 ================
