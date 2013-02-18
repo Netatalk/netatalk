@@ -28,7 +28,7 @@
 #include <atalk/unix.h>
 #include <atalk/spotlight.h>
 
-#include "slmod_tracker_0_6_parser.h"
+#include "slmod_rdf_parser.h"
 
 #define MAX_SL_RESULTS 20
 
@@ -40,7 +40,7 @@ static int sl_mod_init(void *p)
     GError *error = NULL;
     const char *msg = p;
 
-    LOG(log_info, logtype_sl, "Initializing Tracker 0.6 Spotlight module");
+    LOG(log_info, logtype_sl, "Initializing Tracker 0.6 RDF Spotlight module");
 
     g_type_init();
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
@@ -67,9 +67,9 @@ static int sl_mod_start_search(void *p)
 
     LOG(log_debug, logtype_sl, "sl_mod_start_search: Spotlight query: \"%s\"", slq->slq_qstring);
 
-    EC_ZERO_LOG( map_spotlight_to_tracker_0_6_query(slq,
-                                                    (ServiceType *)(&slq->slq_service),
-                                                    &slq->slq_trackerquery) );
+    EC_ZERO_LOG( map_spotlight_to_rdf_query(slq,
+//                                            (ServiceType *)(&slq->slq_service),
+                                            &slq->slq_trackerquery) );
 
     LOG(log_debug, logtype_sl, "sl_mod_start_search: Tracker service: %s, query: \"%s\"",
         tracker_type_to_service_name(slq->slq_service),

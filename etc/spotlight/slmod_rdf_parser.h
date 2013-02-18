@@ -84,16 +84,16 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 45 "slmod_tracker_0_6_parser.y"
+#line 44 "slmod_rdf_parser.y"
 
     int ival;
-    char *sval;
+    const char *sval;
     bool bval;
     time_t tval;
 
 
 /* Line 2058 of yacc.c  */
-#line 97 "slmod_tracker_0_6_parser.h"
+#line 97 "slmod_rdf_parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -117,14 +117,14 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 2058 of yacc.c  */
-#line 39 "slmod_tracker_0_6_parser.y"
+#line 38 "slmod_rdf_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_tracker_0_6_query(slq_t *slq, ServiceType *type, gchar **search);
-  extern slq_t *ts_slq;
+  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **sparql_result);
+  extern slq_t *srp_slq;
 
 
 /* Line 2058 of yacc.c  */
-#line 129 "slmod_tracker_0_6_parser.h"
+#line 129 "slmod_rdf_parser.h"
 
 #endif /* !YY_YY_Y_TAB_H_INCLUDED  */

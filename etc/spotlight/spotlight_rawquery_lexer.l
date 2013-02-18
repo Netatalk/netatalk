@@ -13,10 +13,10 @@
 #include "slmod_sparql_parser.h"
 #define SLQ_VAR ssp_slq
 #endif
-#ifdef HAVE_TRACKER_0_6
+#ifdef HAVE_TRACKER_RDF
 #include <tracker.h>
-#include "slmod_tracker_0_6_parser.h"
-#define SLQ_VAR ts_slq
+#include "slmod_rdf_parser.h"
+#define SLQ_VAR srp_slq
 #endif
 %}
 

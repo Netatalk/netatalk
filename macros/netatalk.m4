@@ -51,19 +51,19 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 
     dnl Test for Tracker 0.6 on Solaris and derived platforms
     if test x"$this_os" = x"solaris" -a x"$ac_cv_have_tracker" = x"no" ; then
-        PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_0_6=yes], [ac_cv_have_tracker_0_6=no])
-        if test x"$ac_cv_have_tracker_0_6" = x"yes" ; then
+        PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_rdf=yes], [ac_cv_have_tracker_rdf=no])
+        if test x"$ac_cv_have_tracker_rdf" = x"yes" ; then
             AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
-            AC_DEFINE(HAVE_TRACKER_0_6, 1, [Define if Tracker 0.6 is available])
+            AC_DEFINE(HAVE_TRACKER_RDF, 1, [Define if Tracker 0.6 with support for RDF queries is available])
             ac_cv_tracker_prefix=`pkg-config --variable=prefix tracker`
-            AC_DEFINE_UNQUOTED(TRACKER_0_6_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+            AC_DEFINE_UNQUOTED(TRACKER_RDF_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
 	    fi
     fi
 
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
     AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker" = x"yes"])
-    AM_CONDITIONAL(HAVE_TRACKER_0_6, [test x"$ac_cv_have_tracker_0_6" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER_RDF, [test x"$ac_cv_have_tracker_rdf" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent

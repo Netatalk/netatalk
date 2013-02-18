@@ -241,11 +241,11 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         }
     }
 
-#ifdef HAVE_TRACKER_0_6
+#ifdef HAVE_TRACKER_RDF
     if (trackerd_pid == -1) {
         trackerd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'trackerd' (restarts: %u)", trackerd_restarts);
-        if ((trackerd_pid = run_process(TRACKER_0_6_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
+        if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", "/usr/bin/trackerd");
         }
     }
@@ -396,12 +396,9 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_TRACKER
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
-#endif
-#if 0
-    setenv("XDG_DATA_DIRS", TRACKER_PREFIX "/share/:/usr/share/", 1);
-    setenv("TRACKER_DB_ONTOLOGIES_DIR", TRACKER_PREFIX "/share/tracker/ontologies", 1);
-    setenv("TRACKER_EXTRACTOR_RULES_DIR", TRACKER_PREFIX "/share/tracker/extract-rules", 1);
-    setenv("TRACKER_LANGUAGE_STOPWORDS_DIR", TRACKER_PREFIX "/share/tracker/languages", 1);
+    setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
+    setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+    setenv("XDG_CONFIG_HOME", _PATH_CONFDIR, 0);
 #endif
 
     dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/bin/dbus-daemon");
@@ -418,9 +415,9 @@ int main(int argc, char **argv)
     set_sl_volumes();
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 #endif
-#ifdef HAVE_TRACKER_0_6
-    if ((trackerd_pid = run_process(TRACKER_0_6_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
-        LOG(log_error, logtype_default, "Error starting '%s'", TRACKER_0_6_PREFIX "/bin/trackerd");
+#ifdef HAVE_TRACKER_RDF
+    if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", TRACKER_RDF_PREFIX "/bin/trackerd");
         netatalk_exit(EXITERR_CONF);
     }
 #endif

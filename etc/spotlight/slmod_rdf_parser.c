@@ -58,9 +58,12 @@
 /* Pull parsers.  */
 #define YYPULL 1
 
-/* "%code top" blocks.  */
-/* Line 349 of yacc.c  */
-#line 1 "slmod_tracker_0_6_parser.y"
+
+
+
+/* Copy the first part of user declarations.  */
+/* Line 371 of yacc.c  */
+#line 1 "slmod_rdf_parser.y"
 
   #include <atalk/standards.h>
 
@@ -70,14 +73,13 @@
   #include <time.h>
 
   #include <gio/gio.h>
-  #include <tracker.h>
 
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
   #include <atalk/errchk.h>
   #include <atalk/spotlight.h>
 
-  #include "slmod_tracker_0_6_map.h"
+  #include "slmod_rdf_map.h"
 
   struct yy_buffer_state;
   typedef struct yy_buffer_state *YY_BUFFER_STATE;
@@ -88,26 +90,18 @@
   extern void yy_delete_buffer ( YY_BUFFER_STATE buffer );
 
   /* forward declarations */
-  static char *map_expr(const char *attr, char op, const char *val);
+  static const char *map_expr(const char *attr, char op, const char *val);
+  static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
   static time_t isodate2unix(const char *s);
  
  /* global vars, eg needed by the lexer */
-  slq_t *ts_slq;
+  slq_t *srp_slq;
 
   /* local vars */
-  static ServiceType ts_type;   /* Tracker query object type */
-  static gchar *ts_search;      /* Tracker query search term */
-
-
-/* Line 349 of yacc.c  */
-#line 104 "slmod_tracker_0_6_parser.c"
-
-
-
-/* Copy the first part of user declarations.  */
+  static gchar *ssp_result;
 
 /* Line 371 of yacc.c  */
-#line 111 "slmod_tracker_0_6_parser.c"
+#line 105 "slmod_rdf_parser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -181,16 +175,16 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 45 "slmod_tracker_0_6_parser.y"
+#line 44 "slmod_rdf_parser.y"
 
     int ival;
-    char *sval;
+    const char *sval;
     bool bval;
     time_t tval;
 
 
 /* Line 387 of yacc.c  */
-#line 194 "slmod_tracker_0_6_parser.c"
+#line 188 "slmod_rdf_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -214,22 +208,22 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 387 of yacc.c  */
-#line 39 "slmod_tracker_0_6_parser.y"
+#line 38 "slmod_rdf_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_tracker_0_6_query(slq_t *slq, ServiceType *type, gchar **search);
-  extern slq_t *ts_slq;
+  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **sparql_result);
+  extern slq_t *srp_slq;
 
 
 /* Line 387 of yacc.c  */
-#line 226 "slmod_tracker_0_6_parser.c"
+#line 220 "slmod_rdf_parser.c"
 
 #endif /* !YY_YY_Y_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 233 "slmod_tracker_0_6_parser.c"
+#line 227 "slmod_rdf_parser.c"
 
 #ifdef short
 # undef short
@@ -528,9 +522,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    67,    67,    69,    73,    80,    86,    92,    93,    94,
-      95,   108,   112,   113,   114,   115,   116,   117,   118,   119,
-     123,   127,   128
+       0,    66,    66,    68,    72,    89,    95,   101,   102,   103,
+     104,   105,   114,   115,   116,   117,   118,   119,   120,   121,
+     125,   129,   130
 };
 #endif
 
@@ -1451,16 +1445,26 @@ yyreduce:
     {
         case 4:
 /* Line 1792 of yacc.c  */
-#line 73 "slmod_tracker_0_6_parser.y"
+#line 72 "slmod_rdf_parser.y"
     {
-    ts_search = (yyvsp[(1) - (1)].sval);
-    (yyval.sval) = (yyvsp[(1) - (1)].sval);
+    ssp_result = talloc_asprintf(srp_slq,
+                                 "<rdfq:Condition>"
+                                 "  <rdfq:and>"
+                                 "    <rdfq:startsWith>"
+                                 "      <rdfq:Property name=\"File:Path\" />"
+                                 "      <rdf:String>%s</rdf:String>"
+                                 "    </rdfq:startsWith>"
+                                 "    %s"
+                                 "  </rdfq:and>"
+                                 "</rdfq:Condition>",
+                                 srp_slq->slq_vol->v_path, (yyvsp[(1) - (1)].sval));
+    (yyval.sval) = ssp_result;
 }
     break;
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 80 "slmod_tracker_0_6_parser.y"
+#line 89 "slmod_rdf_parser.y"
     {
     if ((yyvsp[(1) - (1)].bval) == false)
         YYACCEPT;
@@ -1471,126 +1475,119 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 86 "slmod_tracker_0_6_parser.y"
+#line 95 "slmod_rdf_parser.y"
     {
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
-        YYABORT;
+        (yyval.sval) = talloc_asprintf(srp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
     else
-        (yyval.sval) = (yyvsp[(1) - (3)].sval);
+        (yyval.sval) = talloc_asprintf(srp_slq, "%s", (yyvsp[(1) - (3)].sval));
 }
     break;
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 92 "slmod_tracker_0_6_parser.y"
-    {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
+#line 101 "slmod_rdf_parser.y"
+    {(yyval.sval) = (yyvsp[(1) - (1)].sval); if ((yyval.sval) == NULL) YYABORT;}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 93 "slmod_tracker_0_6_parser.y"
+#line 102 "slmod_rdf_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 94 "slmod_tracker_0_6_parser.y"
-    {(yyval.sval) = (yyvsp[(2) - (3)].sval);}
+#line 103 "slmod_rdf_parser.y"
+    {(yyval.sval) = talloc_asprintf(srp_slq, "%s", (yyvsp[(2) - (3)].sval));}
     break;
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 95 "slmod_tracker_0_6_parser.y"
-    {
-    if ((yyvsp[(1) - (3)].sval) && (yyvsp[(3) - (3)].sval)) {
-        if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
-            YYABORT;
-        else
-            (yyval.sval) = (yyvsp[(1) - (3)].sval);
-    } else if ((yyvsp[(1) - (3)].sval))
-        (yyval.sval) = (yyvsp[(1) - (3)].sval);
-    else if ((yyvsp[(3) - (3)].sval))
-        (yyval.sval) = (yyvsp[(3) - (3)].sval);
-    else
-        YYABORT;
-}
+#line 104 "slmod_rdf_parser.y"
+    {(yyval.sval) = talloc_asprintf(srp_slq, "%s . %s", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));}
     break;
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 108 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 105 "slmod_rdf_parser.y"
+    {
+    if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
+        (yyval.sval) = talloc_asprintf(srp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
+    else
+        (yyval.sval) = talloc_asprintf(srp_slq, "%s", (yyvsp[(1) - (3)].sval));
+}
     break;
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 112 "slmod_tracker_0_6_parser.y"
+#line 114 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 113 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 115 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 114 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 116 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 115 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 117 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 116 "slmod_tracker_0_6_parser.y"
+#line 118 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 117 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 119 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '!', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 118 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 120 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '<', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 119 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 121 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '>', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 123 "slmod_tracker_0_6_parser.y"
-    {YYABORT;}
+#line 125 "slmod_rdf_parser.y"
+    {(yyval.sval) = map_daterange((yyvsp[(3) - (8)].sval), (yyvsp[(5) - (8)].tval), (yyvsp[(7) - (8)].tval));}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 127 "slmod_tracker_0_6_parser.y"
+#line 129 "slmod_rdf_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 128 "slmod_tracker_0_6_parser.y"
+#line 130 "slmod_rdf_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1594 "slmod_tracker_0_6_parser.c"
+#line 1591 "slmod_rdf_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1822,7 +1819,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 131 "slmod_tracker_0_6_parser.y"
+#line 133 "slmod_rdf_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -1834,45 +1831,67 @@ static time_t isodate2unix(const char *s)
     return mktime(&tm);
 }
 
-static void map_type_search(const char *val)
-{
-    for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
-        if (strcmp(p->mdtm_value, val) == 0) {
-            if (p->mdtm_type == -1)
-                ts_type = SERVICE_OTHER_FILES;
-            else
-                ts_type = p->mdtm_type;
-            return;
-        }
-    }
-    ts_type = SERVICE_OTHER_FILES;
-}
-
-static char *map_expr(const char *attr, char op, const char *val)
+const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
 {
     EC_INIT;
-    bstring q, search, replace;
     char *result = NULL;
+    struct spotlight_rdf_map *p;
+    struct tm *tmp;
+    char buf1[64], buf2[64];
 
-    for (struct spotlight_tracker_map *p = spotlight_tracker_map; p->stm_spotlight_attr; p++) {
-        if (strcmp(p->stm_spotlight_attr, attr) == 0) {
-            switch (p->stm_type) {
-            case stmt_name:
-            case stmt_fts:
-                q = bfromcstr(val);
-                search = bfromcstr("*");
-                replace = bfromcstr("");
-                bfindreplace(q, search, replace, 0);
-                result = talloc_strdup(ts_slq, bdata(q));
-                bdestroy(q);
-                bdestroy(search);
-                bdestroy(replace);
+    EC_NULL_LOG( tmp = localtime(&date1) );
+    strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
+    EC_NULL_LOG( tmp = localtime(&date2) );
+    strftime(buf2, sizeof(buf2), "%Y-%m-%dT%H:%M:%SZ", tmp);
+
+    for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
+        if (strcmp(dateattr, p->srm_spotlight_attr) == 0) {
+            /* do something */
+            break;
+        }
+    }
+
+EC_CLEANUP:
+    if (ret != 0)
+        return NULL;
+    return result;
+}
+
+const char *map_expr(const char *attr, char op, const char *val)
+{
+    EC_INIT;
+    char *result = NULL;
+    struct spotlight_rdf_map *p;
+    time_t t;
+    struct tm *tmp;
+    char buf1[64];
+    bstring q = NULL, search = NULL, replace = NULL;
+
+    for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
+        if (p->srm_rdf_attr && strcmp(p->srm_spotlight_attr, attr) == 0) {
+            switch (p->srm_type) {
+            case srmt_bool:
+                /* do something */
                 break;
-
-            case stmt_type:
-                map_type_search(val);
-                return NULL;
-
+            case srmt_num:
+                /* do something */
+                break;
+            case srmt_str:
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
+                /* do something */
+                break;
+            case srmt_fts:
+                /* do something */
+                break;
+            case srmt_date:
+                t = atoi(val) + SPRAW_TIME_OFFSET;
+                EC_NULL( tmp = localtime(&t) );
+                strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
+                /* do something */
+                break;
             default:
                 yyerror("unknown Spotlight attribute type");
                 EC_FAIL;
@@ -1881,9 +1900,13 @@ static char *map_expr(const char *attr, char op, const char *val)
         }
     }
 
-
-
 EC_CLEANUP:
+    if (q)
+        bdestroy(q);
+    if (search)
+        bdestroy(search);
+    if (replace)
+        bdestroy(replace);
     return result;
 }
 
@@ -1902,34 +1925,31 @@ int yywrap()
 } 
 
 /**
- * Map a Spotlight RAW query string to a Tracker 0.6 query
+ * Map a Spotlight RAW query string to a SPARQL query string
  *
- * @param[in]     slq      Spotlight query handle
- * @param[out]    type     mapped file type
- * @param[out]    search   mapped search term
+ * @param[in]     slq            Spotlight query handle
+ * @param[out]    sparql_result  Mapped SPARQL query, string is allocated in
+ *                               talloc context of slq
  * @return        0 on success, -1 on error
  **/
-int map_spotlight_to_tracker_0_6_query(slq_t *slq_in,
-                                       ServiceType *type,
-                                       gchar **search)
+int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
+    ssp_result = NULL;
 
-    ts_slq = slq_in;
-    s = yy_scan_string(ts_slq->slq_qstring);
-
-    /* Default object type is file */
-    *type = SERVICE_FILES;
-    *search = NULL;
+    srp_slq = slq;
+    s = yy_scan_string(slq->slq_qstring);
 
     EC_ZERO( yyparse() );
-    *type = ts_type;
-    *search = ts_search;
 
 EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
+    if (ret == 0)
+        *sparql_result = ssp_result;
+    else
+        *sparql_result = NULL;
     EC_EXIT;
 }
 
@@ -1944,10 +1964,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    ts_slq = talloc_zero(NULL, slq_t);
-    struct vol *vol = talloc_zero(ts_slq, struct vol);
+    srp_slq = talloc_zero(NULL, slq_t);
+    struct vol *vol = talloc_zero(srp_slq, struct vol);
     vol->v_path = "/Volumes/test";
-    ts_slq->slq_vol = vol;
+    srp_slq->slq_vol = vol;
 
     s = yy_scan_string(argv[1]);
 
@@ -1955,11 +1975,9 @@ int main(int argc, char **argv)
 
     yy_delete_buffer(s);
 
-    if (ret == 0) {
-        printf("Tracker 0.6 query: service: %s, searchterm: %s\n",
-               tracker_type_to_service_name(ts_type), ts_search);
-    }
+    if (ret == 0)
+        printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
 
-    return ret;
+    return 0;
 } 
 #endif
