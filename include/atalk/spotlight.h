@@ -105,7 +105,8 @@ typedef struct _slq_t {
     void           *slq_tracker_cursor; /* Tracker SPARQL query result cursor                           */
 #endif
 #ifdef HAVE_TRACKER_RDF
-    char           *slq_trackerquery; /* query string*/
+    char          *slq_trackerquery;  /* RDF query string*/
+    char          *slq_fts;           /* FTS search string */
     int            slq_service;       /* Tracker service */
     int            slq_offset;        /* search offset */
 #endif

@@ -135,7 +135,7 @@ static time_t isodate2unix(const char *s)
     return mktime(&tm);
 }
 
-const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
+static const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
 {
     EC_INIT;
     char *result = NULL;
@@ -195,7 +195,7 @@ static char *map_type_search(const char *attr, char op, const char *val)
     return result;
 }
 
-const char *map_expr(const char *attr, char op, const char *val)
+static const char *map_expr(const char *attr, char op, const char *val)
 {
     EC_INIT;
     char *result = NULL;

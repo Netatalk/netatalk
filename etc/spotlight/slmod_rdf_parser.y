@@ -32,12 +32,13 @@
   slq_t *srp_slq;
 
   /* local vars */
-  static gchar *ssp_result;
+  static gchar *srp_result;
+  static gchar *srp_fts;
 %}
 
 %code provides {
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **sparql_result);
+  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result);
   extern slq_t *srp_slq;
 }
 
@@ -48,7 +49,7 @@
     time_t tval;
 }
 
-%expect 5
+%expect 4
 %error-verbose
 
 %type <sval> match expr line function
@@ -70,18 +71,18 @@ input:
      
 line:
 expr                           {
-    ssp_result = talloc_asprintf(srp_slq,
-                                 "<rdfq:Condition>"
-                                 "  <rdfq:and>"
-                                 "    <rdfq:startsWith>"
-                                 "      <rdfq:Property name=\"File:Path\" />"
-                                 "      <rdf:String>%s</rdf:String>"
-                                 "    </rdfq:startsWith>"
-                                 "    %s"
-                                 "  </rdfq:and>"
-                                 "</rdfq:Condition>",
+    srp_result = talloc_asprintf(srp_slq,
+                                 "<rdfq:Condition>\n"
+                                 "  <rdfq:and>\n"
+                                 "    <rdfq:startsWith>\n"
+                                 "      <rdfq:Property name=\"File:Path\" />\n"
+                                 "      <rdf:String>%s</rdf:String>\n"
+                                 "    </rdfq:startsWith>\n"
+                                 "    %s\n"
+                                 "  </rdfq:and>\n"
+                                 "</rdfq:Condition>\n",
                                  srp_slq->slq_vol->v_path, $1);
-    $$ = ssp_result;
+    $$ = srp_result;
 }
 ;
 
@@ -92,21 +93,27 @@ BOOL                             {
     else
         YYABORT;
 }
-| match OR match                 {
-    if (strcmp($1, $3) != 0)
-        $$ = talloc_asprintf(srp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
-        $$ = talloc_asprintf(srp_slq, "%s", $1);
-}
 | match                        {$$ = $1; if ($$ == NULL) YYABORT;}
 | function                     {$$ = $1;}
-| OBRACE expr CBRACE           {$$ = talloc_asprintf(srp_slq, "%s", $2);}
-| expr AND expr                {$$ = talloc_asprintf(srp_slq, "%s . %s", $1, $3);}
+| OBRACE expr CBRACE           {$$ = talloc_asprintf(srp_slq, "%s\n", $2);}
+| expr AND expr                {$$ = talloc_asprintf(srp_slq, "<rdfq:and>\n%s\n%s\n</rdfq:and>\n", $1, $3);}
 | expr OR expr                 {
-    if (strcmp($1, $3) != 0)
-        $$ = talloc_asprintf(srp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
-        $$ = talloc_asprintf(srp_slq, "%s", $1);
+    if (strcmp($1, "") == 0 || strcmp($3, "") == 0) {
+        /*
+         * The default Spotlight search term issued by the Finder (10.8) is:
+         * '* == "searchterm" || kMDItemTextContent == "searchterm"'
+         * As it isn't mappable to a single Tracker RDF query, we silently
+         * map this to just a filename search
+         */
+        if (strcmp($1, "") == 0)
+            $$ = talloc_asprintf(srp_slq, $3);
+        else
+            $$ = talloc_asprintf(srp_slq, $1);
+        talloc_free(srp_fts);
+        srp_fts = NULL;
+    } else {
+        $$ = talloc_asprintf(srp_slq, "<rdfq:or>\n%s\n%s\n</rdfq:or>\n", $1, $3);
+    }
 }
 ;
 
@@ -141,7 +148,7 @@ static time_t isodate2unix(const char *s)
     return mktime(&tm);
 }
 
-const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
+static const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
 {
     EC_INIT;
     char *result = NULL;
@@ -167,7 +174,7 @@ EC_CLEANUP:
     return result;
 }
 
-const char *map_expr(const char *attr, char op, const char *val)
+static const char *map_expr(const char *attr, char op, const char *val)
 {
     EC_INIT;
     char *result = NULL;
@@ -176,32 +183,54 @@ const char *map_expr(const char *attr, char op, const char *val)
     struct tm *tmp;
     char buf1[64];
     bstring q = NULL, search = NULL, replace = NULL;
+    char *rdfop;
 
     for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
         if (p->srm_rdf_attr && strcmp(p->srm_spotlight_attr, attr) == 0) {
             switch (p->srm_type) {
+#if 0
             case srmt_bool:
                 /* do something */
                 break;
             case srmt_num:
                 /* do something */
                 break;
+#endif
             case srmt_str:
                 q = bformat("^%s$", val);
                 search = bfromcstr("*");
                 replace = bfromcstr(".*");
                 bfindreplace(q, search, replace, 0);
-                /* do something */
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:regex>\n"
+                                         "  <rdfq:Property name=\"File:Name\" />\n"
+                                         "  <rdf:String>%s</rdf:String>\n"
+                                         "</rdfq:regex>\n",
+                                         bdata(q));
+                bdestroy(q);
                 break;
+
             case srmt_fts:
-                /* do something */
+                if (srp_fts) {
+                    yyerror("only single fts query allowed");
+                    EC_FAIL;
+                }
+                q = bfromcstr(val);
+                search = bfromcstr("*");
+                replace = bfromcstr("");
+                bfindreplace(q, search, replace, 0);
+                srp_fts = talloc_strdup(srp_slq, bdata(q));
+                result = "";
                 break;
+
+#if 0
             case srmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL( tmp = localtime(&t) );
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
                 /* do something */
                 break;
+#endif
             default:
                 yyerror("unknown Spotlight attribute type");
                 EC_FAIL;
@@ -235,18 +264,19 @@ int yywrap()
 } 
 
 /**
- * Map a Spotlight RAW query string to a SPARQL query string
+ * Map a Spotlight RAW query string to a RDF query
  *
  * @param[in]     slq            Spotlight query handle
- * @param[out]    sparql_result  Mapped SPARQL query, string is allocated in
+ * @param[out]    sparql_result  Mapped RDF query, string is allocated in
  *                               talloc context of slq
  * @return        0 on success, -1 on error
  **/
-int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
+int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
-    ssp_result = NULL;
+    srp_result = NULL;
+    srp_fts = NULL;
 
     srp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
@@ -256,10 +286,13 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
-    if (ret == 0)
-        *sparql_result = ssp_result;
-    else
-        *sparql_result = NULL;
+    if (ret == 0) {
+        *rdf_result = srp_result;
+        *fts_result = srp_fts;
+    } else {
+        *rdf_result = NULL;
+        *fts_result = NULL;
+    }
     EC_EXIT;
 }
 
@@ -286,8 +319,9 @@ int main(int argc, char **argv)
     yy_delete_buffer(s);
 
     if (ret == 0)
-        printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
-
+        printf("RDF:\n%s\nFTS: %s\n",
+               srp_result ? srp_result : "(empty)",
+               srp_fts ? srp_fts : "(none)");
     return 0;
 } 
 #endif

@@ -68,11 +68,12 @@ static int sl_mod_start_search(void *p)
     LOG(log_debug, logtype_sl, "sl_mod_start_search: Spotlight query: \"%s\"", slq->slq_qstring);
 
     EC_ZERO_LOG( map_spotlight_to_rdf_query(slq,
-//                                            (ServiceType *)(&slq->slq_service),
-                                            &slq->slq_trackerquery) );
+                                            &slq->slq_trackerquery,
+                                            &slq->slq_fts) );
 
-    LOG(log_debug, logtype_sl, "sl_mod_start_search: Tracker service: %s, query: \"%s\"",
+    LOG(log_debug, logtype_sl, "sl_mod_start_search: Tracker service: %s, FTS: %s, RDF query:\n%s",
         tracker_type_to_service_name(slq->slq_service),
+        slq->slq_fts,
         slq->slq_trackerquery ? slq->slq_trackerquery : "false");
 
     if (slq->slq_trackerquery)
@@ -129,6 +130,15 @@ static int cnid_cmp_fn(const void *p1, const void *p2)
         return 1;            
 }
 
+#if 0
+static void get_meta_table_data (gpointer value)
+{
+    gchar **meta;
+
+    meta = value;
+}
+#endif
+
 static int sl_mod_fetch_result(void *p)
 {
     EC_INIT;
@@ -142,7 +152,7 @@ static int sl_mod_fetch_result(void *p)
     sl_nil_t nil;
     uint64_t uint64;
     gboolean qres, firstmatch = true;
-    gchar **results = NULL, **result;
+    GPtrArray *array = NULL;
 
     /* Prepare CNIDs */
     cnids = talloc_zero(slq->slq_reply, sl_cnids_t);
@@ -155,16 +165,25 @@ static int sl_mod_fetch_result(void *p)
     fm_array = talloc_zero(fm, sl_array_t);
     dalloc_add(fm, fm_array, sl_array_t);
 
+    LOG(log_debug, logtype_sl, "sl_mod_fetch_result");
+
     if (slq->slq_state == SLQ_STATE_RUNNING) {
         /* Run the query */
+        LOG(log_debug, logtype_sl, "sl_mod_fetch_result: calling tracker");
         become_root();
-        results = tracker_search_text(client,
-                                      time(NULL),
-                                      slq->slq_service,
-                                      slq->slq_trackerquery,
-                                      slq->slq_offset,
-                                      MAX_SL_RESULTS,
-                                      &error);
+        array = tracker_search_query(client,
+                                     time(NULL),
+                                     slq->slq_service,
+                                     NULL, /* Fields */
+                                     slq->slq_fts, /* FTS search test */
+                                     NULL,         /* Keywords */
+                                     slq->slq_trackerquery,
+                                     slq->slq_offset,
+                                     MAX_SL_RESULTS,
+                                     FALSE, /* Sort by service */
+                                     NULL,
+                                     FALSE,
+                                     &error);
         unbecome_root();
 
         if (error) {
@@ -174,14 +193,16 @@ static int sl_mod_fetch_result(void *p)
             EC_FAIL;
         }
 
-        if (!results) {
+        if (!array) {
             slq->slq_state = SLQ_STATE_DONE;
             LOG(log_debug, logtype_sl, "sl_mod_fetch_result: no results found");
             EC_EXIT_STATUS(0);
         }
 
-        for (result = results; *result; result++) {
-            LOG(log_debug, logtype_sl, "sl_mod_fetch_result: result %d: %s", slq->slq_offset, *result);
+        while (i < array->len) {
+            char **resmeta = g_ptr_array_index(array, i);
+            char *respath = resmeta[0];
+            LOG(log_debug, logtype_sl, "sl_mod_fetch_result: result %d: %s", slq->slq_offset, respath);
 
             if (firstmatch) {
                 /* For some reason the list of results always starts with a nil entry */
@@ -189,11 +210,11 @@ static int sl_mod_fetch_result(void *p)
                 firstmatch = false;
             }
 
-            if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, *result, &did)) == CNID_INVALID) {
-                LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", *result);
+            if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, respath, &did)) == CNID_INVALID) {
+                LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", respath);
                 goto loop_continue;
             }
-            LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), *result);
+            LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), respath);
 
             uint64 = ntohl(id);
             if (slq->slq_cnids) {
@@ -202,12 +223,15 @@ static int sl_mod_fetch_result(void *p)
             }
 
             dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
-            add_filemeta(slq->slq_reqinfo, fm_array, id, *result);
+            add_filemeta(slq->slq_reqinfo, fm_array, id, respath);
 
         loop_continue:
             i++;
             slq->slq_offset++;
         }
+
+        g_ptr_array_free(array, TRUE);
+        array = NULL;
 
         if (i < MAX_SL_RESULTS)
             slq->slq_state = SLQ_STATE_DONE;
@@ -219,10 +243,8 @@ static int sl_mod_fetch_result(void *p)
     dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
-    if (results) {
-        g_free(results);
-        results = NULL;
-    }
+    if (array)
+        g_ptr_array_free(array, TRUE);
     EC_EXIT;
 }
 

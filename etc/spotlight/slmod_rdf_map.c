@@ -24,9 +24,9 @@
 #define SPECIAL      NULL
 
 struct spotlight_rdf_map spotlight_rdf_map[] = {
-    /* ssm_spotlight_attr               srm_type,   ssm_sparql_attr */
+    /* srm_spotlight_attr               srm_type,   srm_rdf_attr */
     {"*",                               srmt_str,   "File:Name"},
-    {"kMDItemTextContent",              srmt_fts,   SPECIAL},
+    {"kMDItemTextContent",              srmt_fts,   ""},
 
     /* Filesystem metadata */
     {"kMDItemFSLabel",                  srmt_num,   NOTSUPPORTED},

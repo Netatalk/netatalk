@@ -1625,8 +1625,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 #ifdef HAVE_TRACKER_SPARQL
     options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_sparql.so");
 #endif
-#ifdef HAVE_TRACKER_0_6
-    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_tracker_0_6.so");
+#ifdef HAVE_TRACKER_RDF
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_rdf.so");
 #endif
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
