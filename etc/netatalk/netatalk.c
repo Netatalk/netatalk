@@ -60,6 +60,7 @@ static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path;
+static char *trackerd_loglev;
 
 /******************************************************************
  * Misc stuff
@@ -245,7 +246,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
     if (trackerd_pid == -1) {
         trackerd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'trackerd' (restarts: %u)", trackerd_restarts);
-        if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
+        if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", trackerd_loglev, NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", "/usr/bin/trackerd");
         }
     }
@@ -283,7 +284,8 @@ static void netatalk_exit(int ret)
 static pid_t run_process(const char *path, ...)
 {
     int ret, i = 0;
-    char *myargv[10];
+#define MYARVSIZE 64
+    char *myargv[MYARVSIZE];
     va_list args;
     pid_t pid;
 
@@ -295,8 +297,10 @@ static pid_t run_process(const char *path, ...)
     if (pid == 0) {
         myargv[i++] = (char *)path;
         va_start(args, path);
-        while ((myargv[i++] = va_arg(args, char *)) != NULL)
-            ;
+        while (i < MYARVSIZE) {
+            if ((myargv[i++] = va_arg(args, char *)) == NULL)
+                break;
+        }
         va_end(args);
 
         ret = execv(path, myargv);
@@ -416,7 +420,9 @@ int main(int argc, char **argv)
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 #endif
 #ifdef HAVE_TRACKER_RDF
-    if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", "--verbosity=3", NULL)) == -1) {
+    if (asprintf(&trackerd_loglev, "--verbosity=%d", obj.options.tracker_loglevel) == -1)
+        netatalk_exit(EXITERR_CONF);
+    if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", trackerd_loglev, NULL)) == -1) {
         LOG(log_error, logtype_default, "Error starting '%s'", TRACKER_RDF_PREFIX "/bin/trackerd");
         netatalk_exit(EXITERR_CONF);
     }

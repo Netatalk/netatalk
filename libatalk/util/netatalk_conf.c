@@ -1694,6 +1694,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+    options->tracker_loglevel = iniparser_getint (config, INISEC_GLOBAL, "tracker loglevel", 1);
 
     if ((p = iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
