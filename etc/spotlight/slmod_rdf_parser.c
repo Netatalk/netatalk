@@ -524,8 +524,8 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint8 yyrline[] =
 {
        0,    67,    67,    69,    73,    90,    96,    97,    98,    99,
-     100,   121,   122,   123,   124,   125,   126,   127,   128,   132,
-     136,   137
+     100,   125,   126,   127,   128,   129,   130,   131,   132,   136,
+     140,   141
 };
 #endif
 
@@ -1504,7 +1504,11 @@ yyreduce:
          * The default Spotlight search term issued by the Finder (10.8) is:
          * '* == "searchterm" || kMDItemTextContent == "searchterm"'
          * As it isn't mappable to a single Tracker RDF query, we silently
-         * map this to just a filename search
+         * map ANY FTS query expression being part of an OR compound
+         * expression to a simple filename search.
+         * FTS queries are thus only possible by explicitly requesting
+         * file content FTS search in the Finder on the client (resulting
+         * in a 'kMDItemTextContent == "searchterm"' query).
          */
         if (strcmp((yyvsp[(1) - (3)].sval), "") == 0)
             (yyval.sval) = talloc_asprintf(srp_slq, (yyvsp[(3) - (3)].sval));
@@ -1520,73 +1524,73 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 121 "slmod_rdf_parser.y"
+#line 125 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 122 "slmod_rdf_parser.y"
+#line 126 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 123 "slmod_rdf_parser.y"
+#line 127 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 124 "slmod_rdf_parser.y"
+#line 128 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 125 "slmod_rdf_parser.y"
+#line 129 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 126 "slmod_rdf_parser.y"
+#line 130 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '!', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 127 "slmod_rdf_parser.y"
+#line 131 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '<', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 128 "slmod_rdf_parser.y"
+#line 132 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '>', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 132 "slmod_rdf_parser.y"
+#line 136 "slmod_rdf_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (8)].sval), (yyvsp[(5) - (8)].tval), (yyvsp[(7) - (8)].tval));}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 136 "slmod_rdf_parser.y"
+#line 140 "slmod_rdf_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 137 "slmod_rdf_parser.y"
+#line 141 "slmod_rdf_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1590 "slmod_rdf_parser.c"
+#line 1594 "slmod_rdf_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1818,7 +1822,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 140 "slmod_rdf_parser.y"
+#line 144 "slmod_rdf_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -1845,7 +1849,19 @@ static const char *map_daterange(const char *dateattr, time_t date1, time_t date
 
     for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->srm_spotlight_attr) == 0) {
-            /* do something */
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:and>\n"
+                                         "  <rdfq:greaterThan>\n"
+                                         "    <rdfq:Property name=\"%s\" />\n"
+                                         "    <rdf:Date>%s</rdf:Date>\n"
+                                         "  </rdfq:greaterThan>\n"
+                                         "  <rdfq:lessThan>\n"
+                                         "    <rdfq:Property name=\"%s\" />\n"
+                                         "    <rdf:Date>%s</rdf:Date>\n"
+                                         "  </rdfq:lessThan>\n"
+                                         "</rdfq:and>\n",
+                                         p->srm_rdf_attr, buf1,
+                                         p->srm_rdf_attr, buf2);
             break;
         }
     }
@@ -1853,6 +1869,28 @@ static const char *map_daterange(const char *dateattr, time_t date1, time_t date
 EC_CLEANUP:
     if (ret != 0)
         return NULL;
+    return result;
+}
+
+static char *map_type_search(const char *attr, char op, const char *val)
+{
+    char *result = NULL;
+
+    for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
+        if (strcmp(p->mdtm_value, val) == 0) {
+            if (!p->mdtm_type)
+                return NULL;
+            result = talloc_asprintf(srp_slq,
+                                     "<rdfq:%s>\n"
+                                     "  <rdfq:Property name=\"File:Mime\" />\n"
+                                     "  <rdf:String>%s</rdf:String>\n"
+                                     "</rdfq:%s>\n",
+                                     p->mdtm_rdfop,
+                                     p->mdtm_type,
+                                     p->mdtm_rdfop);
+            break;
+        }
+    }
     return result;
 }
 
@@ -1870,14 +1908,21 @@ static const char *map_expr(const char *attr, char op, const char *val)
     for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
         if (p->srm_rdf_attr && strcmp(p->srm_spotlight_attr, attr) == 0) {
             switch (p->srm_type) {
-#if 0
-            case srmt_bool:
-                /* do something */
-                break;
             case srmt_num:
-                /* do something */
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:regex>\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
+                                         "  <rdf:String>%s</rdf:String>\n"
+                                         "</rdfq:regex>\n",
+                                         p->srm_rdf_attr,
+                                         bdata(q));
+                bdestroy(q);
                 break;
-#endif
+
             case srmt_str:
                 q = bformat("^%s$", val);
                 search = bfromcstr("*");
@@ -1885,9 +1930,10 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 bfindreplace(q, search, replace, 0);
                 result = talloc_asprintf(srp_slq,
                                          "<rdfq:regex>\n"
-                                         "  <rdfq:Property name=\"File:Name\" />\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
                                          "  <rdf:String>%s</rdf:String>\n"
                                          "</rdfq:regex>\n",
+                                         p->srm_rdf_attr,
                                          bdata(q));
                 bdestroy(q);
                 break;
@@ -1905,14 +1951,38 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 result = "";
                 break;
 
-#if 0
             case srmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL( tmp = localtime(&t) );
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-                /* do something */
+
+                switch (op) {
+                case '=':
+                    rdfop = "equals";
+                case '<':
+                    rdfop = "lessThan";
+                case '>':
+                    rdfop = "greaterThan";
+                default:
+                    yyerror("unknown date comparison");
+                    EC_FAIL;
+                }
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:%s>\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
+                                         "  <rdf:Date>%s</rdf:Date>\n"
+                                         "</rdfq:%s>\n",
+                                         rdfop,
+                                         p->srm_rdf_attr,
+                                         buf1,
+                                         rdfop);
+
                 break;
-#endif
+
+            case srmt_type:
+                result = map_type_search(attr, op, val);
+                break;
+
             default:
                 yyerror("unknown Spotlight attribute type");
                 EC_FAIL;

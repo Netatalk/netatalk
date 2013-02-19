@@ -37,6 +37,7 @@ struct spotlight_rdf_map {
 
 struct MDTypeMap {
     const char  *mdtm_value;     /* Value of '_kMDItemGroupId' or 'kMDItemContentTypeTree' */
+    const char  *mdtm_rdfop;     /* RDF query operator */
     const char  *mdtm_type;      /* MIME type */
 };
 

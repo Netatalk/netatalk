@@ -32,70 +32,69 @@ struct spotlight_rdf_map spotlight_rdf_map[] = {
     {"kMDItemFSLabel",                  srmt_num,   NOTSUPPORTED},
     {"kMDItemDisplayName",              srmt_str,   "File:Name"},
     {"kMDItemFSName",                   srmt_str,   "File:Name"},
-#if 0
-    {"kMDItemFSContentChangeDate",      ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemFSContentChangeDate",      srmt_date,  "File:Modified"},
 
     /* Common metadata */
-    {"kMDItemContentCreationDate",      ssmt_date,  "nie:contentCreated"},
-    {"kMDItemContentModificationDate",  ssmt_date,  "nfo:fileLastModified"},
-    {"kMDItemAttributeChangeDate",      ssmt_date,  "nfo:fileLastModified"},
-    {"kMDItemAuthors",                  ssmt_str,   "dc:creator"},
-    {"kMDItemCopyright",                ssmt_str,   "nie:copyright"},
-    {"kMDItemCountry",                  ssmt_str,   "nco:country"},
-    {"kMDItemCreator",                  ssmt_str,   "dc:creator"},
-    {"kMDItemDurationSeconds",          ssmt_num,   "nfo:duration"},
-    {"kMDItemNumberOfPages",            ssmt_num,   "nfo:pageCount"},
-    {"kMDItemTitle",                    ssmt_str,   "nie:title"},
-    {"_kMDItemGroupId",                 ssmt_type,  SPECIAL},
-    {"kMDItemContentTypeTree",          ssmt_type,  SPECIAL},
+    {"kMDItemContentCreationDate",      srmt_date,  "Doc:Created"},
+    {"kMDItemContentModificationDate",  srmt_date,  "File:Modified"},
+    {"kMDItemAttributeChangeDate",      srmt_date,  "File:Modified"},
+    {"kMDItemAuthors",                  srmt_str,   "Doc:Author"},
+    {"kMDItemCopyright",                srmt_str,   "File:Copyright"},
+    {"kMDItemCountry",                  srmt_str,   "Image:Country"},
+    {"kMDItemCreator",                  srmt_str,   "DC:Creator"},
+    {"kMDItemDurationSeconds",          srmt_num,   "Audio:Duration"},
+    {"kMDItemNumberOfPages",            srmt_num,   "Doc:PageCount"},
+    {"kMDItemTitle",                    srmt_str,   "DC:Title"},
+    {"_kMDItemGroupId",                 srmt_type,  "File:Mime"},
+    {"kMDItemContentTypeTree",          srmt_type,  "File:Mime"},
 
     /* Image metadata */
-    {"kMDItemPixelWidth",               ssmt_num,   "nfo:width"},
-    {"kMDItemPixelHeight",              ssmt_num,   "nfo:height"},
-    {"kMDItemColorSpace",               ssmt_str,   "nexif:colorSpace"},
-    {"kMDItemBitsPerSample",            ssmt_num,   "nfo:colorDepth"},
-    {"kMDItemFocalLength",              ssmt_num,   "nmm:focalLength"},
-    {"kMDItemISOSpeed",                 ssmt_num,   "nmm:isoSpeed"},
-    {"kMDItemOrientation",              ssmt_bool,  "nfo:orientation"},
-    {"kMDItemResolutionWidthDPI",       ssmt_num,   "nfo:horizontalResolution"},
-    {"kMDItemResolutionHeightDPI",      ssmt_num,   "nfo:verticalResolution"},
-    {"kMDItemExposureTimeSeconds",      ssmt_num,   "nmm:exposureTime"},
+    {"kMDItemPixelWidth",               srmt_num,   "Image:Width"},
+    {"kMDItemPixelHeight",              srmt_num,   "Image:Height"},
+    {"kMDItemColorSpace",               srmt_str,   NOTSUPPORTED},
+    {"kMDItemBitsPerSample",            srmt_num,   NOTSUPPORTED},
+    {"kMDItemFocalLength",              srmt_num,   "Image:FocalLength"}, /* RDF: float */
+    {"kMDItemISOSpeed",                 srmt_num,   "Image:ISOSpeed"},
+    {"kMDItemOrientation",              srmt_bool,  "Image:Orientation"},
+    {"kMDItemResolutionWidthDPI",       srmt_num,   NOTSUPPORTED},
+    {"kMDItemResolutionHeightDPI",      srmt_num,   NOTSUPPORTED},
+    {"kMDItemExposureTimeSeconds",      srmt_num,   "Image:ExposureTime"}, /* RDF: fload */
 
     /* Audio metadata */
-    {"kMDItemComposer",                 ssmt_str,   "nmm:composer"},
-    {"kMDItemMusicalGenre",             ssmt_str,   "nfo:genre"},
-#endif
+    {"kMDItemComposer",                 srmt_str,   NOTSUPPORTED},
+    {"kMDItemMusicalGenre",             srmt_str,   "Audio:Genre"},
+
     {NULL, srmt_str, NULL}
 };
 
 struct MDTypeMap MDTypeMap[] = {
-    {"1",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#Email"},
-    {"2",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nco#Contact"},
-    {"3",                       NULL}, /* PrefPane */
-    {"4",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Font"},
-    {"5",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Bookmark"},
-    {"6",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nco#Contact"},
-    {"7",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Video"},
-    {"8",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Executable"},
-    {"9",                       "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Folder"},
-    {"10",                      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Audio"},
-    {"11",                      "application/pdf"},
-    {"12",                      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Presentation"},
-    {"13",                      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Image"},
-    {"public.jpeg",             "image/jpeg"},
-    {"public.tiff",             "image/tiff"},
-    {"com.compuserve.gif",      "image/gif"},
-    {"public.png",              "image/png"},
-    {"com.microsoft.bmp",       "image/bmp"},
-    {"public.content",          "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Document"},
-    {"public.mp3",              "audio/mpeg"},
-    {"public.mpeg-4-audio",     "audio/x-aac"},
-    {"com.apple.application",   "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Software"},
-    {"public.text",             "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#TextDocument"},
-    {"public.plain-text",       "text/plain"},
-    {"public.rtf",              "text/rtf"},
-    {"public.html",             "text/html"},
-    {"public.xml",              "text/xml"},
-    {"public.source-code",      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#SourceCode"},
+    {"1",                       "equals",      "message/rfc822"},
+    {"2",                       "equals",      "text/x-vcard"},
+    {"3",                       NOTSUPPORTED}, /* PrefPane */
+    {"4",                       NOTSUPPORTED}, /* Font. There's no single mime type to match all font formats, ugh! */
+    {"5",                       NOTSUPPORTED}, /* Bookmark */
+    {"6",                       "equals",      "text/x-vcard"},
+    {"7",                       "startsWith",  "video"},
+    {"8",                       NOTSUPPORTED}, /* Executable */
+    {"9",                       NOTSUPPORTED}, /* Folder */
+    {"10",                      "startsWith",  "audio"},
+    {"11",                      "equals",      "application/pdf"},
+    {"12",                      NOTSUPPORTED}, /* Presentation */
+    {"13",                      "startsWith",  "image"},
+    {"public.jpeg",             "equals",      "image/jpeg"},
+    {"public.tiff",             "equals",      "image/tiff"},
+    {"com.compuserve.gif",      "equals",      "image/gif"},
+    {"public.png",              "equals",      "image/png"},
+    {"com.microsoft.bmp",       "equals",      "image/bmp"},
+    {"public.content",          "inSet",       "application/msword,application/pdf,application/vnd.ms-excel,application/vnd.oasis.opendocument.text,application/vnd.sun.xml.writer"},
+    {"public.mp3",              "equals",      "audio/mpeg"},
+    {"public.mpeg-4-audio",     "equals",      "audio/x-aac"},
+    {"com.apple.application",   NOTSUPPORTED},
+    {"public.text",             "startsWith",  "text"},
+    {"public.plain-text",       "equals",      "text/plain"},
+    {"public.rtf",              "equals",      "text/rtf"},
+    {"public.html",             "equals",      "text/html"},
+    {"public.xml",              "equals",      "text/xml"},
+    {"public.source-code",      NOTSUPPORTED},
     {NULL,                      NULL}
 };

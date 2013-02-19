@@ -103,7 +103,11 @@ BOOL                             {
          * The default Spotlight search term issued by the Finder (10.8) is:
          * '* == "searchterm" || kMDItemTextContent == "searchterm"'
          * As it isn't mappable to a single Tracker RDF query, we silently
-         * map this to just a filename search
+         * map ANY FTS query expression being part of an OR compound
+         * expression to a simple filename search.
+         * FTS queries are thus only possible by explicitly requesting
+         * file content FTS search in the Finder on the client (resulting
+         * in a 'kMDItemTextContent == "searchterm"' query).
          */
         if (strcmp($1, "") == 0)
             $$ = talloc_asprintf(srp_slq, $3);
@@ -163,7 +167,19 @@ static const char *map_daterange(const char *dateattr, time_t date1, time_t date
 
     for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->srm_spotlight_attr) == 0) {
-            /* do something */
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:and>\n"
+                                         "  <rdfq:greaterThan>\n"
+                                         "    <rdfq:Property name=\"%s\" />\n"
+                                         "    <rdf:Date>%s</rdf:Date>\n"
+                                         "  </rdfq:greaterThan>\n"
+                                         "  <rdfq:lessThan>\n"
+                                         "    <rdfq:Property name=\"%s\" />\n"
+                                         "    <rdf:Date>%s</rdf:Date>\n"
+                                         "  </rdfq:lessThan>\n"
+                                         "</rdfq:and>\n",
+                                         p->srm_rdf_attr, buf1,
+                                         p->srm_rdf_attr, buf2);
             break;
         }
     }
@@ -171,6 +187,28 @@ static const char *map_daterange(const char *dateattr, time_t date1, time_t date
 EC_CLEANUP:
     if (ret != 0)
         return NULL;
+    return result;
+}
+
+static char *map_type_search(const char *attr, char op, const char *val)
+{
+    char *result = NULL;
+
+    for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
+        if (strcmp(p->mdtm_value, val) == 0) {
+            if (!p->mdtm_type)
+                return NULL;
+            result = talloc_asprintf(srp_slq,
+                                     "<rdfq:%s>\n"
+                                     "  <rdfq:Property name=\"File:Mime\" />\n"
+                                     "  <rdf:String>%s</rdf:String>\n"
+                                     "</rdfq:%s>\n",
+                                     p->mdtm_rdfop,
+                                     p->mdtm_type,
+                                     p->mdtm_rdfop);
+            break;
+        }
+    }
     return result;
 }
 
@@ -188,14 +226,21 @@ static const char *map_expr(const char *attr, char op, const char *val)
     for (p = spotlight_rdf_map; p->srm_spotlight_attr; p++) {
         if (p->srm_rdf_attr && strcmp(p->srm_spotlight_attr, attr) == 0) {
             switch (p->srm_type) {
-#if 0
-            case srmt_bool:
-                /* do something */
-                break;
             case srmt_num:
-                /* do something */
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:regex>\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
+                                         "  <rdf:String>%s</rdf:String>\n"
+                                         "</rdfq:regex>\n",
+                                         p->srm_rdf_attr,
+                                         bdata(q));
+                bdestroy(q);
                 break;
-#endif
+
             case srmt_str:
                 q = bformat("^%s$", val);
                 search = bfromcstr("*");
@@ -203,9 +248,10 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 bfindreplace(q, search, replace, 0);
                 result = talloc_asprintf(srp_slq,
                                          "<rdfq:regex>\n"
-                                         "  <rdfq:Property name=\"File:Name\" />\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
                                          "  <rdf:String>%s</rdf:String>\n"
                                          "</rdfq:regex>\n",
+                                         p->srm_rdf_attr,
                                          bdata(q));
                 bdestroy(q);
                 break;
@@ -223,14 +269,38 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 result = "";
                 break;
 
-#if 0
             case srmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL( tmp = localtime(&t) );
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-                /* do something */
+
+                switch (op) {
+                case '=':
+                    rdfop = "equals";
+                case '<':
+                    rdfop = "lessThan";
+                case '>':
+                    rdfop = "greaterThan";
+                default:
+                    yyerror("unknown date comparison");
+                    EC_FAIL;
+                }
+                result = talloc_asprintf(srp_slq,
+                                         "<rdfq:%s>\n"
+                                         "  <rdfq:Property name=\"%s\" />\n"
+                                         "  <rdf:Date>%s</rdf:Date>\n"
+                                         "</rdfq:%s>\n",
+                                         rdfop,
+                                         p->srm_rdf_attr,
+                                         buf1,
+                                         rdfop);
+
                 break;
-#endif
+
+            case srmt_type:
+                result = map_type_search(attr, op, val);
+                break;
+
             default:
                 yyerror("unknown Spotlight attribute type");
                 EC_FAIL;
