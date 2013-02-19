@@ -41,6 +41,9 @@ uninstall-local:
 	done
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/README
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/CNID/README
+if HAVE_TRACKER_RDF
+	rm -f $(DESTDIR)$(pkgconfdir)/tracker/tracker.cfg
+endif
 if USE_DEBIAN
 	rm -f $(DESTDIR)/etc/default/netatalk
 endif
@@ -63,3 +66,8 @@ install-config-files: $(CONFFILES) $(GENFILES)
 			echo "not overwriting $$f"; \
 		fi; \
 	done
+if HAVE_TRACKER_RDF
+	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/tracker/tracker.cfg ; then \
+		$(INSTALL_DATA) tracker.cfg $(DESTDIR)$(pkgconfdir)/tracker/ ; \
+	fi
+endif
