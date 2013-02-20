@@ -15,6 +15,7 @@ AC_DEFUN([AC_DEVELOPER], [
 
 dnl Tracker, for Spotlight
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
+    ac_cv_have_tracker=no
     dnl Tracker SPARQL
     ac_cv_tracker_pkg_default=tracker-sparql-0.12
     AC_ARG_WITH([tracker-pkg-config],
@@ -22,9 +23,9 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	[ac_cv_tracker_pkg=$withval],
 	[ac_cv_tracker_pkg=$ac_cv_tracker_pkg_default])
 
-    PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker=yes], [ac_cv_have_tracker=no])
+    PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
 
-    if test x"$ac_cv_have_tracker" = x"no" ; then
+    if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
         if test x"$need_tracker" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
@@ -50,7 +51,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	fi
 
     dnl Test for Tracker 0.6 on Solaris and derived platforms
-    if test x"$this_os" = x"solaris" -a x"$ac_cv_have_tracker" = x"no" ; then
+    if test x"$this_os" = x"solaris" ; then
         PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_rdf=yes], [ac_cv_have_tracker_rdf=no])
         if test x"$ac_cv_have_tracker_rdf" = x"yes" ; then
             AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
@@ -60,9 +61,12 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 	    fi
     fi
 
+    if test x"$ac_cv_have_tracker_sparql" = x"yes" -o x"$ac_cv_have_tracker_rdf" = x"yes" ; then
+       ac_cv_have_tracker=yes
+    fi
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
-    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
     AM_CONDITIONAL(HAVE_TRACKER_RDF, [test x"$ac_cv_have_tracker_rdf" = x"yes"])
 ])
 

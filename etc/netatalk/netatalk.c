@@ -405,7 +405,12 @@ int main(int argc, char **argv)
     setenv("XDG_CONFIG_HOME", _PATH_CONFDIR, 0);
 #endif
 
+#ifdef HAVE_TRACKER_RDF
+    /* This assumes Tracker 0.6 with RDF is only used on Solaris and derived platforms */
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/usr/lib/dbus-daemon");
+#else
     dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/bin/dbus-daemon");
+#endif
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
     if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
         LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);

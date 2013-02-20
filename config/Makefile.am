@@ -68,6 +68,9 @@ install-config-files: $(CONFFILES) $(GENFILES)
 	done
 if HAVE_TRACKER_RDF
 	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/tracker/tracker.cfg ; then \
+		if test ! -d $(DESTDIR)$(pkgconfdir)/tracker ; then \
+			mkdir $(DESTDIR)$(pkgconfdir)/tracker ; \
+		fi ; \
 		$(INSTALL_DATA) tracker.cfg $(DESTDIR)$(pkgconfdir)/tracker/ ; \
 	fi
 endif
