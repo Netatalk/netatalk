@@ -220,7 +220,10 @@ restart:
            catching moved files */
         adcnid = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp); /* (1) */
 
+        AFP_CNID_START("cnid_add");
 	    dbcnid = cnid_add(vol->v_cdb, st, did, upath, len, adcnid); /* (2) */
+        AFP_CNID_DONE();
+
 	    /* Throw errors if cnid_add fails. */
 	    if (dbcnid == CNID_INVALID) {
             switch (errno) {
@@ -1603,8 +1606,15 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         err = AFPERR_BUSY;
     } else if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file)) && !(err = netatalk_unlinkat(dirfd, file )) ) {
         cnid_t id;
-        if (checkAttrib && (id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file)))) {
-            cnid_delete(vol->v_cdb, id);
+        if (checkAttrib) {
+            AFP_CNID_START("cnid_get");
+            id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
+            AFP_CNID_DONE();
+            if (id) {
+                AFP_CNID_START("cnid_delete");
+                cnid_delete(vol->v_cdb, id);
+                AFP_CNID_DONE();
+            }
         }
     }
 
@@ -1677,7 +1687,10 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             return AFPERR_PARAM;
     }
     st = &s_path->st;
-    if ((id = cnid_lookup(vol->v_cdb, st, did, upath, len = strlen(upath)))) {
+    AFP_CNID_START("cnid_lookup");
+    id = cnid_lookup(vol->v_cdb, st, did, upath, len = strlen(upath));
+    AFP_CNID_DONE();
+    if (id) {
         memcpy(rbuf, &id, sizeof(id));
         *rbuflen = sizeof(id);
         return AFPERR_EXISTID;
@@ -1710,7 +1723,9 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
         return 0;
     
     /* update or add to cnid */
+    AFP_CNID_START("cnid_add");
     aint = cnid_add(vol->v_cdb, &path.st, did, de->d_name, strlen(de->d_name), 0); /* ignore errors */
+    AFP_CNID_DONE();
 
     return 0;
 }
@@ -1789,7 +1804,10 @@ int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return AFPERR_NOID;
     }
 retry:
-    if (NULL == (upath = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {
+    AFP_CNID_START("cnid_resolve");
+    upath = cnid_resolve(vol->v_cdb, &id, buffer, len);
+    AFP_CNID_DONE();
+    if (upath == NULL) {
         return AFPERR_NOID; /* was AFPERR_BADID, but help older Macs */
     }
 
@@ -1892,7 +1910,10 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     ibuf += sizeof(id);
     fileid = id;
 
-    if (NULL == (upath = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {
+    AFP_CNID_START("cnid_resolve");
+    upath = cnid_resolve(vol->v_cdb, &id, buffer, len);
+    AFP_CNID_DONE();
+        if (upath == NULL) {
         return AFPERR_NOID;
     }
 
@@ -1925,7 +1946,9 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         return AFPERR_BADTYPE;
 
 delete:
+    AFP_CNID_START("cnid_delete");
     if (cnid_delete(vol->v_cdb, fileid)) {
+        AFP_CNID_DONE();
         switch (errno) {
         case EROFS:
             return AFPERR_VLOCK;
@@ -1936,7 +1959,7 @@ delete:
             return AFPERR_PARAM;
         }
     }
-
+    AFP_CNID_DONE();
     return err;
 }
 
@@ -2064,7 +2087,9 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     
     /* look for the source cnid. if it doesn't exist, don't worry about
      * it. */
+    AFP_CNID_START("cnid_lookup");
     sid = cnid_lookup(vol->v_cdb, &srcst, sdir->d_did, supath,slen = strlen(supath));
+    AFP_CNID_DONE();
 
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         err = afp_errno; /* was AFPERR_PARAM */
@@ -2107,7 +2132,9 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
     /* look for destination id. */
     upath = path->u_name;
+    AFP_CNID_START("cnid_lookup");
     did = cnid_lookup(vol->v_cdb, &destst, curdir->d_did, upath, dlen = strlen(upath));
+    AFP_CNID_DONE();
 
     /* construct a temp name.
      * NOTE: the temp file will be in the dest file's directory. it
@@ -2141,13 +2168,20 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         goto err_dest_to_src;
     of_rename(vol, s_of, curdir, temp, curdir, path->m_name);
 
-    /* id's need switching. src -> dest and dest -> src. 
+    /* 
+     * id's need switching. src -> dest and dest -> src. 
      * we need to re-stat() if it was a cross device copy.
-    */
-    if (sid)
+     */
+    if (sid) {
+        AFP_CNID_START("cnid_delete");        
         cnid_delete(vol->v_cdb, sid);
-    if (did)
+        AFP_CNID_DONE();
+    }
+    if (did) {
+        AFP_CNID_START("cnid_delete");
         cnid_delete(vol->v_cdb, did);
+        AFP_CNID_DONE();
+    }
 
     if ((did && ( (crossdev && ostat(upath, &srcst, vol_syml_opt(vol)) < 0) || 
                 cnid_update(vol->v_cdb, did, &srcst, curdir->d_did,upath, dlen) < 0))

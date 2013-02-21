@@ -115,7 +115,7 @@ static int dsi_peek(DSI *dsi)
         if (FD_ISSET(dsi->socket, &readfds)) {
             len = dsi->end - dsi->eof; /* it's ensured above that there's space */
 
-            if ((len = read(dsi->socket, dsi->eof, len)) <= 0) {
+            if ((len = recv(dsi->socket, dsi->eof, len, 0)) <= 0) {
                 if (len == 0) {
                     LOG(log_error, logtype_dsi, "dsi_peek: EOF");
                     return -1;
@@ -213,7 +213,7 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t len
   buflen = MIN(8192, dsi->end - dsi->eof);
   if (buflen > 0) {
       ssize_t ret;
-      ret = read(dsi->socket, dsi->eof, buflen);
+      ret = recv(dsi->socket, dsi->eof, buflen, 0);
       if (ret > 0)
           dsi->eof += ret;
   }
@@ -471,10 +471,6 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
           stored += len;
       } else { /* eof or error */
           /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
-#if 0
-          if (errno == ECONNRESET)
-              dsi->flags |= DSI_GOT_ECONNRESET;
-#endif
           if (len || stored || dsi->read_count) {
               if (! (dsi->flags & DSI_DISCONNECTED)) {
                   LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",

@@ -70,11 +70,11 @@ static inline void unhash_child(afp_child_t *child)
     }
 }
 
-static afp_child_t *resolve_child(afp_child_t **table, pid_t pid)
+afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
 {
     afp_child_t *child;
 
-    for (child = table[HASH(pid)]; child; child = child->afpch_next) {
+    for (child = childs->servch_table[HASH(pid)]; child; child = child->afpch_next) {
         if (child->afpch_pid == pid)
             break;
     }
@@ -113,7 +113,7 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
     }
 
     /* if we already have an entry. just return. */
-    if ((child = resolve_child(children->servch_table, pid)))
+    if ((child = server_child_resolve(children, pid)))
         goto exit;
 
     if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
@@ -121,6 +121,7 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
 
     child->afpch_pid = pid;
     child->afpch_ipc_fd = ipc_fd;
+    child->afpch_logintime = time(NULL);
 
     hash_child(children->servch_table, child);
     children->servch_count++;
@@ -136,8 +137,10 @@ int server_child_remove(server_child_t *children, pid_t pid)
     int fd;
     afp_child_t *child;
 
-    if (!(child = resolve_child(children->servch_table, pid)))
+    if (!(child = server_child_resolve(children, pid)))
         return -1;
+
+    pthread_mutex_lock(&children->servch_lock);
 
     unhash_child(child);
     if (child->afpch_clientid) {
@@ -153,8 +156,7 @@ int server_child_remove(server_child_t *children, pid_t pid)
     free(child);
     children->servch_count--;
 
-    if (children->servch_cleanup)
-        children->servch_cleanup(pid);
+    pthread_mutex_unlock(&children->servch_lock);
 
     return fd;
 }
@@ -173,6 +175,8 @@ void server_child_free(server_child_t *children)
             close(child->afpch_ipc_fd);
             if (child->afpch_clientid)
                 free(child->afpch_clientid);
+            if (child->afpch_volumes)
+                free(child->afpch_volumes);
             free(child);
             child = tmp;
         }
@@ -225,7 +229,7 @@ int server_child_transfer_session(server_child_t *children,
     EC_INIT;
     afp_child_t *child;
 
-    if ((child = resolve_child(children->servch_table, pid)) == NULL) {
+    if ((child = server_child_resolve(children, pid)) == NULL) {
         LOG(log_note, logtype_default, "Reconnect: no child[%u]", pid);
         if (kill(pid, 0) == 0) {
             LOG(log_note, logtype_default, "Reconnect: terminating old session[%u]", pid);
@@ -274,13 +278,15 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
     afp_child_t *child, *tmp;
     int i;
 
+    pthread_mutex_lock(&children->servch_lock);
+    
     for (i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
         while (child) {
             tmp = child->afpch_next;
             if (child->afpch_pid != pid) {
                 if (child->afpch_idlen == idlen && memcmp(child->afpch_clientid, id, idlen) == 0) {
-                    if ( child->afpch_time != boottime ) {
+                    if ( child->afpch_boottime != boottime ) {
                         /* Client rebooted */
                         if (uid == child->afpch_uid) {
                             kill_child(child);
@@ -299,7 +305,7 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                 }
             } else {
                 /* update childs own slot */
-                child->afpch_time = boottime;
+                child->afpch_boottime = boottime;
                 if (child->afpch_clientid)
                     free(child->afpch_clientid);
                 LOG(log_debug, logtype_default, "Setting client ID for %u", child->afpch_pid);
@@ -311,6 +317,8 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
             child = tmp;
         }
     }
+
+    pthread_mutex_unlock(&children->servch_lock);
 }
 
 /* ---------------------------

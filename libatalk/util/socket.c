@@ -104,7 +104,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
     end.tv_sec += timeout;
 
     while (stored < length) {
-        len = read(socket, (char *) data + stored, length - stored);
+        len = recv(socket, (char *) data + stored, length - stored, 0);
         if (len == -1) {
             switch (errno) {
             case EINTR:

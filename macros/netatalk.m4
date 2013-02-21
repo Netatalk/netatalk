@@ -1,5 +1,65 @@
 dnl Kitchen sink for configuration macros
 
+dnl Check for dtrace
+AC_DEFUN([AC_NETATALK_DTRACE], [
+  AC_ARG_WITH(dtrace,
+    AS_HELP_STRING(
+      [--with-dtrace],
+      [Enable dtrace probes (default: enabled if dtrace found)]
+    ),
+    [WDTRACE=$withval],
+    [WDTRACE=auto]
+  )
+  if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
+    AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
+    if test "x$atalk_cv_have_dtrace" = "xno" ; then
+      if test "x$WDTRACE" = "xyes" ; then
+        AC_MSG_FAILURE([dtrace requested but not found])
+      fi
+      WDTRACE="no"
+    else
+      WDTRACE="yes"
+    fi
+  fi
+
+  if test x"$WDTRACE" = x"yes" ; then
+    AC_DEFINE([WITH_DTRACE], [1], [dtrace probes])
+    DTRACE_LIBS=""
+    if test x"$this_os" = x"freebsd" ; then
+      DTRACE_LIBS="-lelf"
+    fi
+    AC_SUBST(DTRACE_LIBS)
+  fi
+  AM_CONDITIONAL(WITH_DTRACE, test "x$WDTRACE" = "xyes")
+])
+
+dnl Check for dbus-glib, for AFP stats
+AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
+    PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
+    PKG_CHECK_MODULES(DBUS_GLIB, gobject-2.0 >= 2.6, have_dbus_glib=yes, have_dbus_glib=no)
+    PKG_CHECK_MODULES(DBUS_GTHREAD, gthread-2.0, have_dbus_gthread=yes, have_dbus_gthread=no)
+    AC_SUBST(DBUS_CFLAGS)
+    AC_SUBST(DBUS_LIBS)
+    AC_SUBST(DBUS_GLIB_CFLAGS)
+    AC_SUBST(DBUS_GLIB_LIBS)
+    AC_SUBST(DBUS_GTHREAD_CFLAGS)
+    AC_SUBST(DBUS_GTHREAD_LIBS)
+    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$have_dbus_glib = xyes -a x$have_dbus = xyes)
+
+    AC_ARG_WITH(
+        dbus-sysconf-dir,
+        [AS_HELP_STRING([--with-dbus-sysconf-dir],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+        ac_cv_dbus_sysdir=$withval,
+        ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
+    )
+
+    if test x$have_dbus_glib = xyes -a x$have_dbus = xyes ; then
+        AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
+        DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
+        AC_SUBST(DBUS_SYS_DIR)
+    fi
+])
+
 dnl Whether to enable developer build
 AC_DEFUN([AC_DEVELOPER], [
     AC_MSG_CHECKING([whether to enable developer build])

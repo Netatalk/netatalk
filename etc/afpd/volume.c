@@ -39,6 +39,7 @@
 #include <atalk/iniparser.h>
 #include <atalk/unix.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -659,6 +660,31 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
     return (!volume->v_cdb)?-1:0;
 }
 
+/*
+ * Send list of open volumes to afpd master via IPC
+ */
+static void server_ipc_volumes(AFPObj *obj)
+{
+    struct vol *volume, *vols;
+    volume = vols = getvolumes();
+    bstring openvolnames = bfromcstr("");
+    bool firstvol = true;
+
+    while (volume) {
+        if (volume->v_flags & AFPVOL_OPEN) {
+            if (!firstvol)
+                bcatcstr(openvolnames, ", ");
+            else
+                firstvol = false;
+            bcatcstr(openvolnames, volume->v_localname);
+        }
+        volume = volume->v_next;
+    }
+
+    ipc_child_write(obj->ipc_fd, IPC_VOLUMES, blength(openvolnames), bdata(openvolnames));
+    bdestroy(openvolnames);
+}
+
 /* -------------------------
  * we are the user here
  */
@@ -834,6 +860,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             setmessage(msg);
 
         free(vol_mname);
+        server_ipc_volumes(obj);
         return( AFP_OK );
     }
 
@@ -906,6 +933,7 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     (void)chdir("/");
     curdir = NULL;
     closevol(obj, vol);
+    server_ipc_volumes(obj);
 
     return( AFP_OK );
 }

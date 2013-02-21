@@ -596,11 +596,8 @@ log:
                                  loglevel, logtype);
 
         /* If default wasnt setup its fd is -1 */
-        iov[0].iov_base = log_details_buffer;
-        iov[0].iov_len = strlen(log_details_buffer);
-        iov[1].iov_base = temp_buffer;
-        iov[1].iov_len = strlen(temp_buffer);
-        writev( fd,  iov, 2);
+        write(fd, log_details_buffer, strlen(log_details_buffer));
+        write(fd, temp_buffer, strlen(temp_buffer));
     } else {
         write(fd, temp_buffer, strlen(temp_buffer));
     }

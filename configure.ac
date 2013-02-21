@@ -188,13 +188,19 @@ AC_NETATALK_SPOTLIGHT
 dnl libatalk API checks
 AC_DEVELOPER
 
+dnl Check for dtrace
+AC_NETATALK_DTRACE
+
+dnl Check for dbus-glib, for AFP stats on dbus
+AC_NETATALK_DBUS_GLIB
+
 dnl FHS stuff has to be done last because it overrides other defaults
 AC_NETATALK_FHS
 
 dnl netatalk lockfile path, must come after AC_NETATALK_FHS
 AC_NETATALK_LOCKFILE
 
-CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
+CFLAGS="-I\$(top_srcdir)/include -I\$(top_builddir)/include $CFLAGS"
 UAMS_PATH="${uams_path}"
 
 AC_SUBST(LIBS)

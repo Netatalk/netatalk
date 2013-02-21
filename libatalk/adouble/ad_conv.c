@@ -201,21 +201,31 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
 {
     EC_INIT;
     static char buf[MAXPATHLEN];
-    const char *p;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
     bstring newpath = NULL;
+    static bstring str2e = NULL;
+    static bstring str2f = NULL;
+    static bstring strdot = NULL;
+    static bstring strcolon = NULL;
+
+    if (str2e == NULL) {
+        str2e = bfromcstr(":2e");
+        str2f = bfromcstr(":2f");
+        strdot = bfromcstr(".");
+        strcolon = bfromcstr(":");
+    }
 
     LOG(log_debug, logtype_ad,"ad_conv_dehex(\"%s\"): BEGIN", fullpathname(path));
 
     *newpathp = NULL;
 
-    if ((p = strchr(path, ':')) == NULL)
+    if (((strstr(path, ":2e")) == NULL) && ((strstr(path, ":2f")) == NULL) )
         goto EC_CLEANUP;
 
     EC_NULL( newpath = bfromcstr(path) );
 
-    EC_ZERO( bfindreplace(newpath, bfromcstr(":2e"), bfromcstr("."), 0) );
-    EC_ZERO( bfindreplace(newpath, bfromcstr(":2f"), bfromcstr(":"), 0) );
+    EC_ZERO( bfindreplace(newpath, str2e, strdot, 0) );
+    EC_ZERO( bfindreplace(newpath, str2f, strcolon, 0) );
     
     become_root();
     if (adflags != ADFLAGS_DIR)

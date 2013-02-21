@@ -743,11 +743,14 @@ static int catsearch_db(const AFPObj *obj,
 
         LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
 
-        if ((num_matches = cnid_find(vol->v_cdb,
-                                     buffer,
-                                     strlen(uname),
-                                     resbuf,
-                                     sizeof(resbuf))) == -1) {
+        AFP_CNID_START("cnid_find");
+        num_matches = cnid_find(vol->v_cdb,
+                                buffer,
+                                strlen(uname),
+                                resbuf,
+                                sizeof(resbuf));
+        AFP_CNID_DONE();
+        if (num_matches == -1) {
             result = AFPERR_MISC;
             goto catsearch_end;
         }
@@ -763,8 +766,12 @@ static int catsearch_db(const AFPObj *obj,
         memcpy(&cnid, resbuf + cur_pos * sizeof(cnid_t), sizeof(cnid_t));
         did = cnid;
 
-        if ((name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1)) == NULL)
+        AFP_CNID_START("cnid_resolve");
+        name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1);
+        AFP_CNID_DONE();
+        if (name == NULL)
             goto next;
+
         LOG(log_debug, logtype_afpd, "catsearch_db: {pos: %u, name:%s, cnid: %u}",
             cur_pos, name, ntohl(cnid));
         if ((dir = dirlookup(vol, did)) == NULL)

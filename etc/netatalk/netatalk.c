@@ -363,7 +363,7 @@ int main(int argc, char **argv)
     LOG(log_note, logtype_default, "Netatalk AFP server starting");
 
     if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-        LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
+        LOG(log_error, logtype_afpd, "Error starting 'afpd'");
         netatalk_exit(EXITERR_CONF);
     }
 
