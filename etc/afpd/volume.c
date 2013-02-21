@@ -703,13 +703,12 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if ((utf8_encoding() && (strcasecmp_w(volume->v_u8mname, u8mtmpname) == 0))
              ||
             (!utf8_encoding() && (strcasecmp_w(volume->v_macname, mactmpname) == 0))) {
-            LOG (log_error, logtype_afpd,
-                 "Duplicate volume name, check AppleVolumes files: previous: \"%s\", new: \"%s\"",
-                 volume->v_localname, name);
             if (volume->v_deleted) {
                 volume->v_new = hide = 1;
-            }
-            else {
+            } else {
+                LOG (log_error, logtype_afpd,
+                     "Duplicate volume name, check AppleVolumes files: previous: \"%s\", new: \"%s\"",
+                     volume->v_localname, name);
                 return -1;  /* Won't be able to access it, anyway... */
             }
         }
