@@ -238,23 +238,6 @@ static int set_auth_switch(int expired)
     return AFP_OK;
 }
 
-#define GROUPSTR_BUFSIZE 1024
-static const char *print_groups(int ngroups, gid_t *groups)
-{
-    static char groupsstr[GROUPSTR_BUFSIZE];
-    int i;
-    char *s = groupsstr;
-
-    if (ngroups == 0)
-        return "-";
-
-    for (i = 0; (i < ngroups) && (s < &groupsstr[GROUPSTR_BUFSIZE]); i++) {
-        s += snprintf(s, &groupsstr[GROUPSTR_BUFSIZE] - s, " %u", groups[i]);
-    }
-
-    return groupsstr;
-}
-
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expired)
 {
 #ifdef ADMIN_GRP
@@ -308,32 +291,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     } /* if (obj->proto == AFPPROTO_ASP) */
 #endif
 
-    if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
-#ifdef RUN_AS_USER
-        LOG(log_info, logtype_afpd, "running with uid %d", geteuid());
-#else /* RUN_AS_USER */
-        LOG(log_error, logtype_afpd, "login: %s", strerror(errno));
+    if (set_groups(obj, pwd) != 0)
         return AFPERR_BADUAM;
-#endif /* RUN_AS_USER */
-
-    }
-
-    /* Basically if the user is in the admin group, we stay root */
-
-    if (( ngroups = getgroups( 0, NULL )) < 0 ) {
-        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
-        return AFPERR_BADUAM;
-    }
-
-    if ( NULL == (groups = calloc(ngroups, GROUPS_SIZE)) ) {
-        LOG(log_error, logtype_afpd, "login: %s calloc: %d", ngroups);
-        return AFPERR_BADUAM;
-    }
-
-    if (( ngroups = getgroups( ngroups, groups )) < 0 ) {
-        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
-        return AFPERR_BADUAM;
-    }
 
 #ifdef ADMIN_GRP
     LOG(log_debug, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
@@ -419,6 +378,48 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     afp_over_dsi_sighandlers(obj);
 
     return( AFP_OK );
+}
+
+#define GROUPSTR_BUFSIZE 1024
+const char *print_groups(int ngroups, gid_t *groups)
+{
+    static char groupsstr[GROUPSTR_BUFSIZE];
+    int i;
+    char *s = groupsstr;
+
+    if (ngroups == 0)
+        return "-";
+
+    for (i = 0; (i < ngroups) && (s < &groupsstr[GROUPSTR_BUFSIZE]); i++) {
+        s += snprintf(s, &groupsstr[GROUPSTR_BUFSIZE] - s, " %u", groups[i]);
+    }
+
+    return groupsstr;
+}
+
+int set_groups(AFPObj *obj, struct passwd *pwd)
+{
+    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0)
+        LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name, pwd->pw_gid, strerror(errno));
+
+    if ((ngroups = getgroups(0, NULL)) < 0) {
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+        return -1;
+    }
+
+    if (groups)
+        free(groups);
+    if (NULL == (groups = calloc(ngroups, GROUPS_SIZE)) ) {
+        LOG(log_error, logtype_afpd, "login: %s calloc: %d", ngroups);
+        return -1;
+    }
+
+    if ((ngroups = getgroups(ngroups, groups)) < 0 ) {
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+        return -1;
+    }
+
+    return 0;
 }
 
 /* ---------------------- */

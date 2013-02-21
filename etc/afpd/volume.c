@@ -66,6 +66,7 @@ char *strchr (), *strrchr ();
 #include "fork.h"
 #include "hash.h"
 #include "acls.h"
+#include "auth.h"
 
 extern int afprun(int root, char *cmd, int *outfd);
 
@@ -1935,7 +1936,8 @@ static int stat_vol(u_int16_t bitmap, struct vol *vol, char *rbuf, size_t *rbufl
 /* ------------------------------- */
 void load_volumes(AFPObj *obj)
 {
-    struct passwd   *pwent;
+    int ret;
+    struct passwd *pwent = NULL;
 
     if (Volumes) {
         int changed = 0;
@@ -1961,9 +1963,18 @@ void load_volumes(AFPObj *obj)
         LOG(log_debug, logtype_afpd, "load_volumes: AFP MASTER");
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);
+        if ((pwent = getpwnam(obj->username))) {
+            seteuid(0);
+            ret = set_groups(obj, pwent);
+            seteuid(obj->uid);
+            if (ret != 0) {
+                LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
+                return;
+            }
+        }
+        LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
     }
 
-    pwent = getpwnam(obj->username);
     if ( (obj->options.flags & OPTION_USERVOLFIRST) == 0 ) {
         readvolfile(obj, &obj->options.systemvol, NULL, 0, pwent);
     }

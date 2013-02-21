@@ -5,6 +5,7 @@ Changes in 2.2.5
 * NEW: Configurable symlink handling with a new volume option
        'followsymlinks'. Setting the option causes afpd to follow
        symlinks on the server side.
+* UPD: Reload groups when reloading volumes. FR #71.
 
 Changes in 2.2.4
 ================

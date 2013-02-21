@@ -48,6 +48,9 @@ extern gid_t	*groups;
 #endif /*sun __svr4__ ultrix*/
 extern int	ngroups;
 
+extern int set_groups(AFPObj *obj, struct passwd *pwd);
+extern const char *print_groups(int ngroups, gid_t *groups);
+
 /* FP functions */
 int afp_login (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 int afp_login_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
