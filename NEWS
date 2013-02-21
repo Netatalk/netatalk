@@ -21,6 +21,7 @@ Changes in 3.0.3
        system security configuration files.       
 * NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
        probes.
+* UPD: Reload groups when reloading volumes. FR #71.
 
 Changes in 3.0.2
 ================

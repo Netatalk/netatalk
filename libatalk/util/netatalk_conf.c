@@ -1323,12 +1323,24 @@ int load_volumes(AFPObj *obj)
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
+    if (obj->uid)
+        pwent = getpwuid(obj->uid);
+
     if (Volumes) {
         if (!volfile_changed(&obj->options))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {
             vol->v_deleted = 1;
+        }
+        if (obj->uid) {
+            become_root();
+            ret = set_groups(obj, pwent);
+            unbecome_root();
+            if (ret != 0) {
+                LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
+                EC_FAIL;
+            }
         }
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
@@ -1353,9 +1365,6 @@ int load_volumes(AFPObj *obj)
         }
         break;
     }
-
-    if (obj->uid)
-        pwent = getpwuid(obj->uid);
 
     if (obj->iniconfig)
         iniparser_freedict(obj->iniconfig);

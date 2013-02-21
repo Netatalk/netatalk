@@ -507,3 +507,45 @@ char *strtok_quote(char *s, const char *delim)
     }
     return token;
 }
+
+int set_groups(AFPObj *obj, struct passwd *pwd)
+{
+    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0)
+        LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name, pwd->pw_gid, strerror(errno));
+
+    if ((obj->ngroups = getgroups(0, NULL)) < 0) {
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+        return -1;
+    }
+
+    if (obj->groups)
+        free(obj->groups);
+    if (NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t))) ) {
+        LOG(log_error, logtype_afpd, "login: %s calloc: %d", obj->ngroups);
+        return -1;
+    }
+
+    if ((obj->ngroups = getgroups(obj->ngroups, obj->groups)) < 0 ) {
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+
+#define GROUPSTR_BUFSIZE 1024
+const char *print_groups(int ngroups, gid_t *groups)
+{
+    static char groupsstr[GROUPSTR_BUFSIZE];
+    int i;
+    char *s = groupsstr;
+
+    if (ngroups == 0)
+        return "-";
+
+    for (i = 0; (i < ngroups) && (s < &groupsstr[GROUPSTR_BUFSIZE]); i++) {
+        s += snprintf(s, &groupsstr[GROUPSTR_BUFSIZE] - s, " %u", groups[i]);
+    }
+
+    return groupsstr;
+}

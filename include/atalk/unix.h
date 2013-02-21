@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <atalk/globals.h>
+
 #define NETATALK_DIOSZ_STACK 65536
 #define NETATALK_DIOSZ_HEAP  (1024*1024)
 
@@ -48,5 +50,6 @@ extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mo
 extern void become_root(void);
 extern void unbecome_root(void);
 extern int gmem(gid_t gid, int ngroups, gid_t *groups);
-
+extern int set_groups(AFPObj *obj, struct passwd *pwd);
+extern const char *print_groups(int ngroups, gid_t *groups);
 #endif  /* ATALK_UNIX_H */
