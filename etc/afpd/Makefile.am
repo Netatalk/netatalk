@@ -80,8 +80,8 @@ afpstats_service_glue.h: afpstats-service.xml
 			$(top_srcdir)/etc/afpd/afpstats-service.xml
 
 afpd_SOURCES += afpstats.c afpstats_obj.c
-afpd_CFLAGS  += $(DBUS_CFLAGS) $(DBUS_GLIB_CFLAGS) -DDBUS_COMPILATION
-afpd_LDFLAGS += $(DBUS_LIBS) $(DBUS_GLIB_LIBS) -ldbus-glib-1
+afpd_CFLAGS  += $(DBUS_CFLAGS) $(DBUS_GLIB_CFLAGS) $(DBUS_GTHREAD_CFLAGS) -DDBUS_COMPILATION
+afpd_LDFLAGS += $(DBUS_LIBS) $(DBUS_GLIB_LIBS) $(DBUS_GTHREAD_LIBS) -ldbus-glib-1
 endif
 
 if WITH_DTRACE

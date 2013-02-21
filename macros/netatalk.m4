@@ -37,10 +37,13 @@ dnl Check for dbus-glib, for AFP stats
 AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
     PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
     PKG_CHECK_MODULES(DBUS_GLIB, gobject-2.0 >= 2.6, have_dbus_glib=yes, have_dbus_glib=no)
+    PKG_CHECK_MODULES(DBUS_GTHREAD, gthread-2.0, have_dbus_gthread=yes, have_dbus_gthread=no)
     AC_SUBST(DBUS_CFLAGS)
     AC_SUBST(DBUS_LIBS)
     AC_SUBST(DBUS_GLIB_CFLAGS)
     AC_SUBST(DBUS_GLIB_LIBS)
+    AC_SUBST(DBUS_GTHREAD_CFLAGS)
+    AC_SUBST(DBUS_GTHREAD_LIBS)
     AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$have_dbus_glib = xyes -a x$have_dbus = xyes)
 
     AC_ARG_WITH(
