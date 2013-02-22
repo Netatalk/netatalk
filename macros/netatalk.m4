@@ -35,6 +35,7 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
 
 dnl Check for dbus-glib, for AFP stats
 AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
+    atalk_cv_with_dbus=no
     PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
     PKG_CHECK_MODULES(DBUS_GLIB, gobject-2.0 >= 2.6, have_dbus_glib=yes, have_dbus_glib=no)
     PKG_CHECK_MODULES(DBUS_GTHREAD, gthread-2.0, have_dbus_gthread=yes, have_dbus_gthread=no)
@@ -44,7 +45,10 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
     AC_SUBST(DBUS_GLIB_LIBS)
     AC_SUBST(DBUS_GTHREAD_CFLAGS)
     AC_SUBST(DBUS_GTHREAD_LIBS)
-    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$have_dbus_glib = xyes -a x$have_dbus = xyes)
+    if test test x$have_dbus_glib = xyes -a x$have_dbus = xyes -a x$have_dbus_gthread = xyes ; then
+        atalk_cv_with_dbus=yes
+    fi
+    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
 
     AC_ARG_WITH(
         dbus-sysconf-dir,
@@ -53,7 +57,7 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
         ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
     )
 
-    if test x$have_dbus_glib = xyes -a x$have_dbus = xyes ; then
+    if test x$atalk_cv_with_dbus = xyes ; then
         AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
         DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
         AC_SUBST(DBUS_SYS_DIR)
