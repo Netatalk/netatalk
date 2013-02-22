@@ -73,6 +73,7 @@
   #include <time.h>
 
   #include <gio/gio.h>
+  #include <tracker.h>
 
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
@@ -102,7 +103,7 @@
   static gchar *srp_fts;
 
 /* Line 371 of yacc.c  */
-#line 106 "slmod_rdf_parser.c"
+#line 107 "slmod_rdf_parser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -176,7 +177,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 45 "slmod_rdf_parser.y"
+#line 46 "slmod_rdf_parser.y"
 
     int ival;
     const char *sval;
@@ -185,7 +186,7 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 189 "slmod_rdf_parser.c"
+#line 190 "slmod_rdf_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -209,22 +210,22 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 387 of yacc.c  */
-#line 39 "slmod_rdf_parser.y"
+#line 40 "slmod_rdf_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result);
+  extern int map_spotlight_to_rdf_query(slq_t *slq);
   extern slq_t *srp_slq;
 
 
 /* Line 387 of yacc.c  */
-#line 221 "slmod_rdf_parser.c"
+#line 222 "slmod_rdf_parser.c"
 
 #endif /* !YY_YY_Y_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 228 "slmod_rdf_parser.c"
+#line 229 "slmod_rdf_parser.c"
 
 #ifdef short
 # undef short
@@ -523,9 +524,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    67,    67,    69,    73,    90,    96,    97,    98,    99,
-     100,   125,   126,   127,   128,   129,   130,   131,   132,   136,
-     140,   141
+       0,    68,    68,    70,    74,    91,    97,    98,    99,   100,
+     101,   126,   127,   128,   129,   130,   131,   132,   133,   137,
+     141,   142
 };
 #endif
 
@@ -1443,7 +1444,7 @@ yyreduce:
     {
         case 4:
 /* Line 1792 of yacc.c  */
-#line 73 "slmod_rdf_parser.y"
+#line 74 "slmod_rdf_parser.y"
     {
     srp_result = talloc_asprintf(srp_slq,
                                  "<rdfq:Condition>\n"
@@ -1462,7 +1463,7 @@ yyreduce:
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 90 "slmod_rdf_parser.y"
+#line 91 "slmod_rdf_parser.y"
     {
     if ((yyvsp[(1) - (1)].bval) == false)
         YYACCEPT;
@@ -1473,31 +1474,31 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 96 "slmod_rdf_parser.y"
+#line 97 "slmod_rdf_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval); if ((yyval.sval) == NULL) YYABORT;}
     break;
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 97 "slmod_rdf_parser.y"
+#line 98 "slmod_rdf_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 98 "slmod_rdf_parser.y"
+#line 99 "slmod_rdf_parser.y"
     {(yyval.sval) = talloc_asprintf(srp_slq, "%s\n", (yyvsp[(2) - (3)].sval));}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 99 "slmod_rdf_parser.y"
+#line 100 "slmod_rdf_parser.y"
     {(yyval.sval) = talloc_asprintf(srp_slq, "<rdfq:and>\n%s\n%s\n</rdfq:and>\n", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));}
     break;
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 100 "slmod_rdf_parser.y"
+#line 101 "slmod_rdf_parser.y"
     {
     if (strcmp((yyvsp[(1) - (3)].sval), "") == 0 || strcmp((yyvsp[(3) - (3)].sval), "") == 0) {
         /*
@@ -1524,73 +1525,73 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 125 "slmod_rdf_parser.y"
+#line 126 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 126 "slmod_rdf_parser.y"
+#line 127 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 127 "slmod_rdf_parser.y"
+#line 128 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 128 "slmod_rdf_parser.y"
+#line 129 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 129 "slmod_rdf_parser.y"
+#line 130 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 130 "slmod_rdf_parser.y"
+#line 131 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '!', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 131 "slmod_rdf_parser.y"
+#line 132 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '<', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 132 "slmod_rdf_parser.y"
+#line 133 "slmod_rdf_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '>', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 136 "slmod_rdf_parser.y"
+#line 137 "slmod_rdf_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (8)].sval), (yyvsp[(5) - (8)].tval), (yyvsp[(7) - (8)].tval));}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 140 "slmod_rdf_parser.y"
+#line 141 "slmod_rdf_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 141 "slmod_rdf_parser.y"
+#line 142 "slmod_rdf_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1594 "slmod_rdf_parser.c"
+#line 1595 "slmod_rdf_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1822,7 +1823,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 144 "slmod_rdf_parser.y"
+#line 145 "slmod_rdf_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -1880,6 +1881,10 @@ static char *map_type_search(const char *attr, char op, const char *val)
         if (strcmp(p->mdtm_value, val) == 0) {
             if (!p->mdtm_type)
                 return NULL;
+            if (val[0] == '9') {
+                srp_slq->slq_service = SERVICE_FOLDERS;
+                return "";
+            }
             result = talloc_asprintf(srp_slq,
                                      "<rdfq:%s>\n"
                                      "  <rdfq:Property name=\"File:Mime\" />\n"
@@ -2019,17 +2024,15 @@ int yywrap()
  * Map a Spotlight RAW query string to a RDF query
  *
  * @param[in]     slq            Spotlight query handle
- * @param[out]    sparql_result  Mapped RDF query, string is allocated in
- *                               talloc context of slq
  * @return        0 on success, -1 on error
  **/
-int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result)
+int map_spotlight_to_rdf_query(slq_t *slq)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
     srp_result = NULL;
     srp_fts = NULL;
-
+    slq->slq_service = SERVICE_FILES;
     srp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
 
@@ -2039,11 +2042,8 @@ EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
     if (ret == 0) {
-        *rdf_result = srp_result;
-        *fts_result = srp_fts;
-    } else {
-        *rdf_result = NULL;
-        *fts_result = NULL;
+        slq->slq_trackerquery = srp_result;
+        slq->slq_fts = srp_fts;
     }
     EC_EXIT;
 }

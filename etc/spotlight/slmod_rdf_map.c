@@ -70,16 +70,16 @@ struct spotlight_rdf_map spotlight_rdf_map[] = {
 struct MDTypeMap MDTypeMap[] = {
     {"1",                       "equals",      "message/rfc822"},
     {"2",                       "equals",      "text/x-vcard"},
-    {"3",                       NOTSUPPORTED}, /* PrefPane */
-    {"4",                       NOTSUPPORTED}, /* Font. There's no single mime type to match all font formats, ugh! */
-    {"5",                       NOTSUPPORTED}, /* Bookmark */
+    {"3",                       NOTSUPPORTED,  NOTSUPPORTED}, /* PrefPane */
+    {"4",                       NOTSUPPORTED,  NOTSUPPORTED}, /* Font. There's no single mime type to match all font formats, ugh! */
+    {"5",                       NOTSUPPORTED,  NOTSUPPORTED}, /* Bookmark */
     {"6",                       "equals",      "text/x-vcard"},
     {"7",                       "startsWith",  "video"},
-    {"8",                       NOTSUPPORTED}, /* Executable */
-    {"9",                       NOTSUPPORTED}, /* Folder */
+    {"8",                       "equals",      "application/x-executable"},
+    {"9",                       "equals",      "Folder"},
     {"10",                      "startsWith",  "audio"},
     {"11",                      "equals",      "application/pdf"},
-    {"12",                      NOTSUPPORTED}, /* Presentation */
+    {"12",                      NOTSUPPORTED,   NOTSUPPORTED}, /* Presentation */
     {"13",                      "startsWith",  "image"},
     {"public.jpeg",             "equals",      "image/jpeg"},
     {"public.tiff",             "equals",      "image/tiff"},
@@ -89,12 +89,12 @@ struct MDTypeMap MDTypeMap[] = {
     {"public.content",          "inSet",       "application/msword,application/pdf,application/vnd.ms-excel,application/vnd.oasis.opendocument.text,application/vnd.sun.xml.writer"},
     {"public.mp3",              "equals",      "audio/mpeg"},
     {"public.mpeg-4-audio",     "equals",      "audio/x-aac"},
-    {"com.apple.application",   NOTSUPPORTED},
+    {"com.apple.application",   NOTSUPPORTED,  NOTSUPPORTED},
     {"public.text",             "startsWith",  "text"},
     {"public.plain-text",       "equals",      "text/plain"},
     {"public.rtf",              "equals",      "text/rtf"},
     {"public.html",             "equals",      "text/html"},
     {"public.xml",              "equals",      "text/xml"},
-    {"public.source-code",      NOTSUPPORTED},
+    {"public.source-code",      NOTSUPPORTED,  NOTSUPPORTED},
     {NULL,                      NULL}
 };

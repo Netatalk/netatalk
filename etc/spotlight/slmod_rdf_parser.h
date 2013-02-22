@@ -84,7 +84,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 45 "slmod_rdf_parser.y"
+#line 46 "slmod_rdf_parser.y"
 
     int ival;
     const char *sval;
@@ -117,10 +117,10 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 2058 of yacc.c  */
-#line 39 "slmod_rdf_parser.y"
+#line 40 "slmod_rdf_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result);
+  extern int map_spotlight_to_rdf_query(slq_t *slq);
   extern slq_t *srp_slq;
 
 

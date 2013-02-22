@@ -7,6 +7,7 @@
   #include <time.h>
 
   #include <gio/gio.h>
+  #include <tracker.h>
 
   #include <atalk/talloc.h>
   #include <atalk/logger.h>
@@ -38,7 +39,7 @@
 
 %code provides {
   #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result);
+  extern int map_spotlight_to_rdf_query(slq_t *slq);
   extern slq_t *srp_slq;
 }
 
@@ -198,6 +199,10 @@ static char *map_type_search(const char *attr, char op, const char *val)
         if (strcmp(p->mdtm_value, val) == 0) {
             if (!p->mdtm_type)
                 return NULL;
+            if (val[0] == '9') {
+                srp_slq->slq_service = SERVICE_FOLDERS;
+                return "";
+            }
             result = talloc_asprintf(srp_slq,
                                      "<rdfq:%s>\n"
                                      "  <rdfq:Property name=\"File:Mime\" />\n"
@@ -337,17 +342,15 @@ int yywrap()
  * Map a Spotlight RAW query string to a RDF query
  *
  * @param[in]     slq            Spotlight query handle
- * @param[out]    sparql_result  Mapped RDF query, string is allocated in
- *                               talloc context of slq
  * @return        0 on success, -1 on error
  **/
-int map_spotlight_to_rdf_query(slq_t *slq, gchar **rdf_result, gchar **fts_result)
+int map_spotlight_to_rdf_query(slq_t *slq)
 {
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
     srp_result = NULL;
     srp_fts = NULL;
-
+    slq->slq_service = SERVICE_FILES;
     srp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
 
@@ -357,11 +360,8 @@ EC_CLEANUP:
     if (s)
         yy_delete_buffer(s);
     if (ret == 0) {
-        *rdf_result = srp_result;
-        *fts_result = srp_fts;
-    } else {
-        *rdf_result = NULL;
-        *fts_result = NULL;
+        slq->slq_trackerquery = srp_result;
+        slq->slq_fts = srp_fts;
     }
     EC_EXIT;
 }

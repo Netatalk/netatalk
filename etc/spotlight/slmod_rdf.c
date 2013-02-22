@@ -65,11 +65,7 @@ static int sl_mod_start_search(void *p)
     slq_t *slq = p; 
     GError *error = NULL;
 
-    LOG(log_debug, logtype_sl, "sl_mod_start_search: Spotlight query: \"%s\"", slq->slq_qstring);
-
-    EC_ZERO_LOG( map_spotlight_to_rdf_query(slq,
-                                            &slq->slq_trackerquery,
-                                            &slq->slq_fts) );
+    EC_ZERO_LOG( map_spotlight_to_rdf_query(slq) );
 
     LOG(log_debug, logtype_sl, "sl_mod_start_search: Tracker service: %s, FTS: %s, RDF query:\n%s",
         tracker_type_to_service_name(slq->slq_service),
@@ -129,15 +125,6 @@ static int cnid_cmp_fn(const void *p1, const void *p2)
     else
         return 1;            
 }
-
-#if 0
-static void get_meta_table_data (gpointer value)
-{
-    gchar **meta;
-
-    meta = value;
-}
-#endif
 
 static int sl_mod_fetch_result(void *p)
 {
