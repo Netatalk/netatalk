@@ -21,8 +21,8 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+
 #include <glib.h>
-#include <gio/gio.h>
 #include <dbus/dbus-glib.h>
 
 #include <atalk/logger.h>
