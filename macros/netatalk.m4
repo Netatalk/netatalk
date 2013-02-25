@@ -52,7 +52,7 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
 
     AC_ARG_WITH(
         dbus-sysconf-dir,
-        [AS_HELP_STRING([--with-dbus-sysconf-dir],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+        [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
         ac_cv_dbus_sysdir=$withval,
         ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
     )
