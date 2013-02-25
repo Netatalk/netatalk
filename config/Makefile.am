@@ -6,7 +6,7 @@ SUFFIXES = .tmpl .
 TMPLFILES = afp.conf.tmpl dbus-session.conf.tmpl
 GENFILES = afp.conf dbus-session.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf.tmpl netatalk-dbus.conf
+EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf.tmpl netatalk-dbus.conf tracker.cfg
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
@@ -77,6 +77,6 @@ if HAVE_TRACKER_RDF
 		if test ! -d $(DESTDIR)$(pkgconfdir)/tracker ; then \
 			mkdir $(DESTDIR)$(pkgconfdir)/tracker ; \
 		fi ; \
-		$(INSTALL_DATA) tracker.cfg $(DESTDIR)$(pkgconfdir)/tracker/ ; \
+		$(INSTALL_DATA) $(srcdir)/tracker.cfg $(DESTDIR)$(pkgconfdir)/tracker/ ; \
 	fi
 endif
