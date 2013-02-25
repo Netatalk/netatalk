@@ -86,9 +86,6 @@ if INSTALL_LIBEVENT
 dist_bin_SCRIPTS = event_rpcgen.py
 endif
 
-pkgconfigdir=$(libdir)/pkgconfig
-LIBEVENT_PKGCONFIG=libevent.pc
-
 # These sources are conditionally added by configure.in or conditionally
 # included from other files.
 PLATFORM_DEPENDENT_SRC = \
@@ -108,16 +105,13 @@ EXTRA_DIST = \
 LIBEVENT_LIBS_LA = libevent.la libevent_core.la libevent_extra.la
 if PTHREADS
 LIBEVENT_LIBS_LA += libevent_pthreads.la
-LIBEVENT_PKGCONFIG += libevent_pthreads.pc
 endif
 if OPENSSL
 LIBEVENT_LIBS_LA += libevent_openssl.la
-LIBEVENT_PKGCONFIG += libevent_openssl.pc
 endif
 
 if INSTALL_LIBEVENT
 lib_LTLIBRARIES = $(LIBEVENT_LIBS_LA)
-pkgconfig_DATA = $(LIBEVENT_PKGCONFIG)
 else
 noinst_LTLIBRARIES =  $(LIBEVENT_LIBS_LA)
 endif
@@ -249,7 +243,7 @@ doxygen: FORCE
 	doxygen $(srcdir)/Doxyfile
 FORCE:
 
-DISTCLEANFILES = *~ libevent.pc ./include/event2/event-config.h
+DISTCLEANFILES = *~ ./include/event2/event-config.h
 
 install:
 
