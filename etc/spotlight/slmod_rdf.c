@@ -193,6 +193,13 @@ static int sl_mod_fetch_result(void *p)
                 firstmatch = false;
             }
 
+            struct stat st;
+            if (stat(respath, &st) != 0) {
+                if (errno == ENOENT)
+                    tracker_files_delete(client, respath, NULL);
+                goto loop_continue;
+            }
+
             if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, respath, &did)) == CNID_INVALID) {
                 LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", respath);
                 goto loop_continue;
