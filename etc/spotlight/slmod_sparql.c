@@ -71,7 +71,6 @@ static int sl_mod_init(void *p)
     dup2(type_configs[logtype_sl].fd, 2);
 #endif
 
-    become_root();
     connection = tracker_sparql_connection_get(NULL, &error);
 #if 0 
     /*
@@ -80,7 +79,6 @@ static int sl_mod_init(void *p)
      */
     manager = tracker_miner_manager_new_full(FALSE, &error);
 #endif
-    unbecome_root();
 
     if (!connection) {
         LOG(log_error, logtype_sl, "Couldn't obtain a direct connection to the Tracker store: %s",
@@ -140,9 +138,7 @@ static int sl_mod_start_search(void *p)
     tracker_sparql_connection_query_async(connection, sparql_query, NULL, tracker_cb, slq);
 #endif
 
-    become_root();
     slq->slq_tracker_cursor = tracker_sparql_connection_query(connection, sparql_query, NULL, &error);
-    unbecome_root();
 
     if (error) {
         LOG(log_error, logtype_sl, "Couldn't query the Tracker Store: '%s'",
@@ -236,10 +232,7 @@ static int sl_mod_fetch_result(void *p)
     LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
 
     while ((slq->slq_state == SLQ_STATE_RUNNING) && (i <= MAX_SL_RESULTS)) {
-        become_root();
         qres = tracker_sparql_cursor_next(slq->slq_tracker_cursor, NULL, &error);
-        unbecome_root();
-
         if (!qres)
             break;
 
@@ -249,10 +242,7 @@ static int sl_mod_fetch_result(void *p)
             firstmatch = false;
         }
 
-        become_root();
         uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
-        unbecome_root();
-
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
 
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
@@ -346,11 +336,7 @@ static int sl_mod_index_file(const void *p)
     GFile *file = NULL;
 
     file = g_file_new_for_commandline_arg(f);
-
-    become_root();
     tracker_miner_manager_index_file(manager, file, &error);
-    unbecome_root();
-
     if (error)
         LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): indexing failed", f);
     else

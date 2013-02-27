@@ -9,32 +9,16 @@
   <keep_umask/>
 
   <listen>unix:path=/tmp/spotlight.ipc</listen>
-  <allow_anonymous />
 
   <standard_session_servicedirs />
 
   <policy context="default">
-    <!-- Allow everything to be sent -->
-    <allow send_destination="*" eavesdrop="true"/>
-    <!-- Allow everything to be received -->
-    <allow eavesdrop="true"/>
-    <!-- Allow anyone to own anything -->
+    <allow user="*"/>
     <allow own="*"/>
+    <allow send_destination="*" eavesdrop="true"/>
+    <allow receive_sender="*"/>
+    <allow eavesdrop="true"/>
   </policy>
-
-  <!-- raise the service start timeout to 40 seconds as it can timeout
-       on the live cd on slow machines -->
-  <limit name="service_start_timeout">60000</limit>
-
-  <!-- Config files are placed here that among other things, 
-       further restrict the above policy for specific services. -->
-  <includedir>/etc/dbus-1/session.d</includedir>
-
-  <!-- This is included last so local configuration can override what's 
-       in this standard file -->
-  <include ignore_missing="yes">session-local.conf</include>
-
-  <include if_selinux_enabled="yes" selinux_root_relative="yes">contexts/dbus_contexts</include>
 
   <!-- For the session bus, override the default relatively-low limits 
        with essentially infinite limits, since the bus is just running 
