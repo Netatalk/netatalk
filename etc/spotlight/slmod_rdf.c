@@ -45,7 +45,9 @@ static int sl_mod_init(void *p)
     g_type_init();
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
 
+    become_root();
     client = tracker_connect(FALSE);
+    unbecome_root();
 
     if (!client) {
         LOG(log_error, logtype_sl, "Failed connecting to Tracker");
@@ -155,6 +157,7 @@ static int sl_mod_fetch_result(void *p)
     if (slq->slq_state == SLQ_STATE_RUNNING) {
         /* Run the query */
         LOG(log_debug, logtype_sl, "sl_mod_fetch_result: calling tracker");
+        become_root();
         array = tracker_search_query(client,
                                      time(NULL),
                                      slq->slq_service,
@@ -168,6 +171,7 @@ static int sl_mod_fetch_result(void *p)
                                      NULL,
                                      FALSE,
                                      &error);
+        unbecome_root();
 
         if (error) {
             slq->slq_state = SLQ_STATE_DONE;
