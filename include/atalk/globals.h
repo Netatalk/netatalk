@@ -54,6 +54,7 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
+#define OPTION_ACL2MODE      (1 << 10)
 #define OPTION_SHARE_RESERV  (1 << 11) /* whether to use Solaris fcntl F_SHARE locks */
 #define OPTION_DBUS_AFPSTATS (1 << 12) /* whether to run dbus thread for afpstats */
 
