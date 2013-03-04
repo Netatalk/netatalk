@@ -3,10 +3,10 @@
 SUBDIRS = pam
 SUFFIXES = .tmpl .
 
-TMPLFILES = afp.conf.tmpl dbus-session.conf.tmpl
-GENFILES = afp.conf dbus-session.conf
+TMPLFILES = afp.conf.tmpl
+GENFILES = afp.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf.tmpl netatalk-dbus.conf tracker.cfg
+EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf netatalk-dbus.conf tracker.cfg
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
@@ -41,10 +41,11 @@ install-data-local: install-config-files
 	$(INSTALL_DATA) $(srcdir)/README $(DESTDIR)$(localstatedir)/netatalk/CNID/
 
 uninstall-local:
-	for f in $(CONFFILES) $(GENFILES); do \
+	@for f in $(CONFFILES) $(GENFILES); do \
 		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 	done
+	rm -f $(DESTDIR)$(pkgconfdir)/dbus-session.conf
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/README
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/CNID/README
 if HAVE_TRACKER_RDF
@@ -56,7 +57,8 @@ endif
 
 install-config-files: $(CONFFILES) $(GENFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
-	for f in $(CONFFILES) ; do \
+	$(INSTALL_DATA) $(srcdir)/dbus-session.conf $(DESTDIR)$(pkgconfdir)
+	@for f in $(CONFFILES) ; do \
 		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/$$f; then \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
 			$(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(pkgconfdir); \
@@ -64,7 +66,7 @@ install-config-files: $(CONFFILES) $(GENFILES)
 			echo "not overwriting $$f"; \
 		fi; \
 	done
-	for f in $(GENFILES); do \
+	@for f in $(GENFILES); do \
 		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/$$f; then \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir); \
