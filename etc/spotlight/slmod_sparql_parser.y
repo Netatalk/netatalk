@@ -206,7 +206,11 @@ static const char *map_expr(const char *attr, char op, const char *val)
     bstring q = NULL, search = NULL, replace = NULL;
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
-        if (p->ssm_sparql_attr && strcmp(p->ssm_spotlight_attr, attr) == 0) {
+        if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
+            if (p->ssm_type != ssmt_type && p->ssm_sparql_attr == NULL) {
+                yyerror("unsupported Spotlight attribute");
+                EC_FAIL;
+            }
             switch (p->ssm_type) {
             case ssmt_bool:
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
@@ -252,7 +256,6 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 result = map_type_search(attr, op, val);
                 break;
             default:
-                yyerror("unknown Spotlight attribute type");
                 EC_FAIL;
             }
             break;
