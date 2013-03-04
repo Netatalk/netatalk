@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 19 Jan 2013
+.\"      Date: 19 Feb 2013
 .\"    Manual: Netatalk 3.0
 .\"    Source: Netatalk 3.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "19 Jan 2013" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "19 Feb 2013" "Netatalk 3.0" "Netatalk 3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -508,6 +508,11 @@ afp read locks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 Whether to apply locks to the byte region read in FPRead calls\&. The AFP spec mandates this, but it\*(Aqs not really in line with UNIX semantics and is a performance hug\&.
 .RE
 .PP
+afpstats = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Whether to provide AFP runtime statistics (connected users, open volumes) via dbus\&.
+.RE
+.PP
 basedir regex = \fIregex\fR \fB(H)\fR
 .RS 4
 Regular expression which matches the parent directory of the user homes\&. If
@@ -871,7 +876,7 @@ cnid scheme = \fIbackend\fR \fB(V)\fR
 set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
 .RE
 .PP
-ea = \fInone|auto|sys|ad\fR
+ea = \fInone|auto|sys|ad\fR \fB(V)\fR
 .RS 4
 Specify how Extended Attributes
 are stored\&.
@@ -914,7 +919,7 @@ specifies the Mac client charset for this Volume, e\&.g\&.
 \fIMAC_CYRILLIC\fR\&. If not specified the global setting is applied\&. This setting is only required if you need volumes, where the Mac charset differs from the one globally set in the [Global] section\&.
 .RE
 .PP
-casefold = \fBoption\fR
+casefold = \fBoption\fR \fB(V)\fR
 .RS 4
 The casefold option handles, if the case of filenames should be changed\&. The available options are:
 .sp
@@ -951,7 +956,7 @@ is for directories only\&. Don\*(Aqt use with "\fBunix priv = no\fR"\&.
 .\}
 .nf
 file perm = 0660 directory perm =
-                0770
+              0770
 .fi
 .if n \{\
 .RE

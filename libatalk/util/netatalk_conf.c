@@ -1725,6 +1725,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_NOSENDFILE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
         options->flags |= OPTION_SHARE_RESERV;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "afpstats", 0))
+        options->flags |= OPTION_DBUS_AFPSTATS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "spotlight", 0))
