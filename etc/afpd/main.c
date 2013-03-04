@@ -329,7 +329,8 @@ int main(int ac, char **av)
 
 #ifdef HAVE_DBUS_GLIB
     /* Run dbus AFP statics thread */
-    (void)afpstats_init(server_children);
+    if (obj.options.flags & OPTION_DBUS_AFPSTATS)
+        (void)afpstats_init(server_children);
 #endif
 
     afp_child_t *child;

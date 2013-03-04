@@ -18,7 +18,9 @@ Changes in 3.0.3
 * NEW: AFP stats about active session via dbus IPC. Client side python
        program `afpstats`. Requires dbus, dbus-glib any python-dbus.
        configure option --dbus-sysconf-dir for specifying dbus
-       system security configuration files.       
+       system security configuration files.
+       New option 'afpstats' (default: no) which determines whether
+       to enable the feature or not.
 * NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
        probes.
 * UPD: Reload groups when reloading volumes. FR #71.
