@@ -30,6 +30,8 @@ Changes in 3.0.3
        Fixes bug #501.
 * FIX: Conversion from adouble v2 to ea for directories.
        Fixes bug #500.
+* FIX: Error messages when mounting read-only filesystems.
+       Fixes bug #504.
 
 Changes in 3.0.2
 ================

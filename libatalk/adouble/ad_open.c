@@ -1087,6 +1087,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
             errno = ENOENT;
             EC_FAIL;
         }
+        if ((adflags & ADFLAGS_CREATE) && (ad->ad_options & ADVOL_RO)) {
+            errno = EROFS;
+            EC_FAIL;
+        }
 
         LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): creating metadata EA", path);
 

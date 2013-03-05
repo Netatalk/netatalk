@@ -801,6 +801,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_INVDOTS;
     if ((volume->v_flags & AFPVOL_FOLLOWSYM))
         volume->v_ad_options |= ADVOL_FOLLO_SYML;
+    if ((volume->v_flags & AFPVOL_RO))
+        volume->v_ad_options |= ADVOL_RO;
 
     /* Mac to Unix conversion flags*/
     if ((volume->v_flags & AFPVOL_EILSEQ))

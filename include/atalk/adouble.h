@@ -245,6 +245,7 @@ struct adouble {
 #define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
+#define ADVOL_RO         (1 << 1)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_FOLLO_SYML (1 << 4)

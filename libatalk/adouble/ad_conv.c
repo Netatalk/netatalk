@@ -264,6 +264,9 @@ int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, c
     if (newpath)
         *newpath = NULL;
 
+    if (vol->v_flags & AFPVOL_RO)
+        EC_EXIT_STATUS(0);
+
     if ((vol->v_adouble == AD_VERSION_EA) && !(vol->v_flags & AFPVOL_NOV2TOEACONV))
         EC_ZERO( ad_conv_v22ea(path, sp, vol) );
 
