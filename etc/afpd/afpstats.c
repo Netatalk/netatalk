@@ -44,6 +44,7 @@ static gpointer afpstats_thread(gpointer _data)
     DBusGConnection *bus;
     DBusGProxy *bus_proxy;
     GError *error = NULL;
+    GMainContext *ctxt;
     GMainLoop *thread_loop;
     guint request_name_result;
     sigset_t sigs;
@@ -52,11 +53,12 @@ static gpointer afpstats_thread(gpointer _data)
     sigfillset(&sigs);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 
-    dbus_g_object_type_install_info(AFPSTATS_TYPE_OBJECT, &dbus_glib_afpstats_obj_object_info);
+    ctxt = g_main_context_new();
+    thread_loop = g_main_loop_new(ctxt, FALSE);
 
-    thread_loop = g_main_loop_new(NULL, FALSE);
+    dbus_g_object_type_install_info(AFPSTATS_TYPE_OBJECT, &dbus_glib_afpstats_obj_object_info);
    
-    if (!(bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
+    if (!(bus = dbus_g_bus_get_private(DBUS_BUS_SYSTEM, ctxt, &error))) {
         LOG(log_error, logtype_afpd,"Couldn't connect to system bus: %s", error->message);
         return NULL;
     }
@@ -110,8 +112,10 @@ int afpstats_init(server_child_t *childs_in)
 
     childs = childs_in;
     g_type_init();
-    (void)g_log_set_default_handler(my_glib_log, NULL);
     g_thread_init(NULL);
+    dbus_g_thread_init();
+    (void)g_log_set_default_handler(my_glib_log, NULL);
+
     thread = g_thread_create(afpstats_thread, NULL, TRUE, NULL);
 
     return 0;
