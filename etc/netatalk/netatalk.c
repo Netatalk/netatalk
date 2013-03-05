@@ -87,6 +87,9 @@ static int set_sl_volumes(void)
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
     system(bdata(cmd));
 
+    /* Disable default root user home indexing */
+    system("gsettings set org.freedesktop.Tracker.Miner.Files index-single-directories \"[]\"");
+
 EC_CLEANUP:
     if (cmd)
         bdestroy(cmd);
