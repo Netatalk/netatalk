@@ -4,6 +4,7 @@
 #include <atalk/server_child.h>
 #include <atalk/globals.h>
 
+/* Remember to add IPC commands to server_ipc.c:ipc_cmd_str[] */
 #define IPC_DISCOLDSESSION   0
 #define IPC_GETSESSION       1
 #define IPC_STATE            2  /* pass AFP session state */
