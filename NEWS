@@ -24,6 +24,8 @@ Changes in 3.0.3
 * NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
        probes.
 * UPD: Reload groups when reloading volumes. FR #71.
+* FIX: Attempt to read read-only ._ rfork results in disconnect.
+       Fixes bugs #502.
 
 Changes in 3.0.2
 ================
