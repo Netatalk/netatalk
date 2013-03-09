@@ -1247,12 +1247,32 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         EC_FAIL;
     if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
         if (!(adflags & ADFLAGS_CREATE)) {
-            errno = ENOENT;
-            EC_FAIL;
+            switch (errno) {
+            case EACCES:
+            case EPERM:
+            case EROFS:
+                if (!(adflags & ADFLAGS_RDONLY)) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                    EC_FAIL;
+                }
+                oflags &= ~O_RDWR;
+                oflags |= O_RDONLY;
+                if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                    EC_FAIL;
+                }
+                break;
+            case ENOENT:
+                EC_EXIT_STATUS(0);
+            default:
+                LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                EC_FAIL;
+            }
+        } else {
+            oflags |= O_CREAT;
+            EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
+                                                             AD_EA_RESO, oflags, 0666) );
         }
-        oflags |= O_CREAT;
-        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
-                                                         AD_EA_RESO, oflags, 0666) ); 
     }
 #else
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags) );

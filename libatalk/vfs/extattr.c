@@ -910,6 +910,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
         switch (errno) {
         case ENOENT:
         case EEXIST:
+        case EACCES:
             break;
         default:
             LOG(log_debug, logtype_default, "openat(\"%s\"): %s",
