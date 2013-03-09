@@ -28,6 +28,8 @@ Changes in 3.0.3
        Fixes bug #502.
 * FIX: File's ressource fork can't be read if metadata EA is missing.
        Fixes bug #501.
+* FIX: Conversion from adouble v2 to ea for directories.
+       Fixes bug #500.
 
 Changes in 3.0.2
 ================

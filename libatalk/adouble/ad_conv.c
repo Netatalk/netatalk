@@ -65,6 +65,7 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 
     switch (S_IFMT & sp->st_mode) {
     case S_IFREG:
+    case S_IFDIR:
         break;
     default:
         return 0;
