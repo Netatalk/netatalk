@@ -32,6 +32,9 @@ Changes in 3.0.3
        Fixes bug #500.
 * FIX: Error messages when mounting read-only filesystems.
        Fixes bug #504.
+* FIX: Permissions of ._ AppleDouble ressource fork after conversion
+       from v2 to ea.
+       Fixes bug #505.
 
 Changes in 3.0.2
 ================

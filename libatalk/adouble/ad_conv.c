@@ -157,6 +157,8 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
         EC_ZERO_LOG( copy_fork(ADEID_RFORK, &adea, &adv2) );
         adea.ad_rlen = adv2.ad_rlen;
         ad_flush(&adea);
+        fchmod(ad_reso_fileno(&adea), sp->st_mode & 0666);
+        fchown(ad_reso_fileno(&adea), sp->st_uid, sp->st_gid);
     }
 
 EC_CLEANUP:
