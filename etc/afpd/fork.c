@@ -328,8 +328,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     } else {
         eid = ADEID_RFORK;
         adflags |= ADFLAGS_RF;
-        if (!(access & OPENACC_WR))
-            adflags |= ADFLAGS_NORF;
     }
 
     if (access & OPENACC_WR) {

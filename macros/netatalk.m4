@@ -46,7 +46,13 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
     AC_SUBST(DBUS_GTHREAD_CFLAGS)
     AC_SUBST(DBUS_GTHREAD_LIBS)
     if test x$have_dbus_glib = xyes -a x$have_dbus = xyes -a x$have_dbus_gthread = xyes ; then
-        atalk_cv_with_dbus=yes
+        saved_CFLAGS=$CFLAGS
+        saved_LIBS=$LIBS
+        CFLAGS="$CFLAGS $DBUS_GLIB_CFLAGS"
+        LIBS="$LIBS $DBUS_GLIB_LIBS"
+        AC_CHECK_FUNC([dbus_g_bus_get_private], [atalk_cv_with_dbus=yes], [atalk_cv_with_dbus=no])
+        CFLAGS="$saved_CFLAGS"
+        LIBS="$saved_LIBS"
     fi
     AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
 

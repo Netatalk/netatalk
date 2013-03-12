@@ -245,6 +245,7 @@ struct adouble {
 #define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
+#define ADVOL_RO         (1 << 1)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_FOLLO_SYML (1 << 4)
@@ -409,6 +410,7 @@ extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
 extern mode_t ad_hf_mode(mode_t mode);
 extern int ad_valid_header_osx(const char *path);
+extern off_t ad_reso_size(const char *path, int adflags, struct adouble *ad);
 
 /* ad_conv.c */
 extern int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, const char **newpath);

@@ -2,7 +2,7 @@
 
 pkgconfdir = @PKGCONFDIR@
 BUILT_SOURCES =
-EXTRA_DIST =
+EXTRA_DIST = afpstats-service.xml afpstats_service_glue.h
 CLEANFILES =
 DISTCLEANFILES =
 
@@ -70,7 +70,6 @@ endif
 
 if HAVE_DBUS_GLIB
 BUILT_SOURCES += afpstats_service_glue.h
-EXTRA_DIST += afpstats-service.xml
 DISTCLEANFILES += afpstats_service_glue.h
 
 afpstats_service_glue.h: afpstats-service.xml

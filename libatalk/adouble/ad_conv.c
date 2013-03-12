@@ -65,6 +65,7 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 
     switch (S_IFMT & sp->st_mode) {
     case S_IFREG:
+    case S_IFDIR:
         break;
     default:
         return 0;
@@ -156,6 +157,8 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
         EC_ZERO_LOG( copy_fork(ADEID_RFORK, &adea, &adv2) );
         adea.ad_rlen = adv2.ad_rlen;
         ad_flush(&adea);
+        fchmod(ad_reso_fileno(&adea), sp->st_mode & 0666);
+        fchown(ad_reso_fileno(&adea), sp->st_uid, sp->st_gid);
     }
 
 EC_CLEANUP:
@@ -262,6 +265,9 @@ int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, c
 
     if (newpath)
         *newpath = NULL;
+
+    if (vol->v_flags & AFPVOL_RO)
+        EC_EXIT_STATUS(0);
 
     if ((vol->v_adouble == AD_VERSION_EA) && !(vol->v_flags & AFPVOL_NOV2TOEACONV))
         EC_ZERO( ad_conv_v22ea(path, sp, vol) );

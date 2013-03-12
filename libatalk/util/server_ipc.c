@@ -43,7 +43,9 @@ typedef struct ipc_header {
 } ipc_header_t;
 
 static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
-                               "IPC_GETSESSION"};
+                               "IPC_GETSESSION",
+                               "IPC_STATE",
+                               "IPC_VOLUMES"};
 
 /*
  * Pass afp_socket to old disconnected session if one has a matching token (token = pid)

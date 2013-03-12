@@ -460,18 +460,23 @@ int getmetadata(const AFPObj *obj,
             data += sizeof( aint );
             break;
 
-        case FILPBIT_RFLEN :
-            if ( adp ) {
+        case FILPBIT_RFLEN: {
+            off_t rlen;
+            if (adp) {
                 if (adp->ad_rlen > 0xffffffff)
                     aint = 0xffffffff;
                 else
                     aint = htonl( adp->ad_rlen);
             } else {
-                aint = 0;
+                rlen = ad_reso_size(path->u_name, 0, NULL);
+                if (rlen > 0xffffffff)
+                    rlen = 0xffffffff;
+                aint = htonl(rlen);
             }
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             break;
+        }
 
             /* Current client needs ProDOS info block for this file.
                Use simple heuristic and let the Mac "type" string tell
@@ -539,15 +544,18 @@ int getmetadata(const AFPObj *obj,
             data += sizeof( aint );
             break;
         case FILPBIT_EXTRFLEN:
-            aint = 0;
-            if (adp) 
+            if (adp) {
                 aint = htonl(adp->ad_rlen >> 32);
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            if (adp) 
+                memcpy(data, &aint, sizeof( aint ));
+                data += sizeof( aint );
                 aint = htonl(adp->ad_rlen);
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+                memcpy(data, &aint, sizeof( aint ));
+                data += sizeof( aint );
+            } else {
+                int64_t rlen = hton64(ad_reso_size(path->u_name, 0, NULL));
+                memcpy(data, &rlen, sizeof(rlen));
+                data += sizeof(rlen);
+            }
             break;
         case FILPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */

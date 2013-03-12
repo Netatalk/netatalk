@@ -113,7 +113,7 @@ static int ad_mkrf_ea(const char *path);
 #endif
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
-static int ad_reso_size(const char *path, int adflags, struct adouble *ad);
+off_t ad_reso_size(const char *path, int adflags, struct adouble *ad);
 static int ad_mkrf_osx(const char *path);
 
 
@@ -766,7 +766,8 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
  *
  * We're called because opening ADFLAGS_HF caused an error.
  * 1. In case ad_open is called with ADFLAGS_NOHF the error is suppressed.
- * 2. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
+ * 2. Open non-existent ressource fork, this will just result in first read return EOF
+ * 3. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
  *    ought to close it before returning with an error condition.
  */
 static int ad_error(struct adouble *ad, int adflags)
@@ -775,7 +776,9 @@ static int ad_error(struct adouble *ad, int adflags)
     if (adflags & ADFLAGS_NOHF) { /* 1 */
         return 0;
     }
-    if (adflags & (ADFLAGS_DF | ADFLAGS_SETSHRMD | ADFLAGS_CHECK_OF)) { /* 2 */
+    if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_RF) && (errno == ENOENT)) /* 2 */
+        return 0;
+    if (adflags & (ADFLAGS_DF | ADFLAGS_SETSHRMD | ADFLAGS_CHECK_OF)) { /* 3 */
         ad_close( ad, ADFLAGS_DF );
         err = errno;
     }
@@ -1084,6 +1087,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
             errno = ENOENT;
             EC_FAIL;
         }
+        if ((adflags & ADFLAGS_CREATE) && (ad->ad_options & ADVOL_RO)) {
+            errno = EROFS;
+            EC_FAIL;
+        }
 
         LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): creating metadata EA", path);
 
@@ -1102,7 +1109,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     if (ad_meta_fileno(ad) != -1)
         ad->ad_mdp->adf_refcount++;
-    (void)ad_reso_size(path, adflags, ad);
+    ad->ad_rlen = ad_reso_size(path, adflags, ad);
 
 EC_CLEANUP:
     if (ret != 0 && opened && ad_meta_fileno(ad) != -1) {
@@ -1125,7 +1132,6 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
     int ret = 0;
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
-    ad->ad_rlen = 0;
 
     switch (ad->ad_vers) {
     case AD_VERSION2:
@@ -1148,48 +1154,47 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
 }
 
 /*!
- * Get resofork length for adouble:ea
+ * Get resofork length for adouble:ea, parameter 'ad' may be NULL
  */
-static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
+off_t ad_reso_size(const char *path, int adflags, struct adouble *ad)
 {
     EC_INIT;
     struct stat st;
+    off_t rlen;
 
-    if (adflags & ADFLAGS_DIR) {
-        ad->ad_rlen = 0;
-        goto EC_CLEANUP;
-    }
+    if (adflags & ADFLAGS_DIR)
+        EC_FAIL;
 
     LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): BEGIN", path);
 
 #ifdef HAVE_EAFD
     ssize_t easz;
 
-    if (ad_reso_fileno(ad) != -1) {
+    if (ad && ad_reso_fileno(ad) != -1) {
         EC_NEG1( fstat(ad_reso_fileno(ad), &st) );
-        ad->ad_rlen = st.st_size;
-    } else if (ad_meta_fileno(ad) != -1) {
-        EC_NEG1( (ad->ad_rlen = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0)) );
+        rlen = st.st_size;
+    } else if (ad && ad_meta_fileno(ad) != -1) {
+        EC_NEG1( (rlen = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0)) );
     } else {
-        EC_NEG1( (ad->ad_rlen = sys_lgetxattr(path, AD_EA_RESO, NULL, 0)) );
+        EC_NEG1( (rlen = sys_lgetxattr(path, AD_EA_RESO, NULL, 0)) );
     }
 
 #else
     const char *rfpath;
-    EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags));
+    EC_NULL_LOG( rfpath = ad_path_osx(path, adflags));
     EC_ZERO( lstat(rfpath, &st));
     if (st.st_size > ADEDOFF_RFORK_OSX)
-        ad->ad_rlen = st.st_size - ADEDOFF_RFORK_OSX;
+        rlen = st.st_size - ADEDOFF_RFORK_OSX;
     else
-        ad->ad_rlen = 0;
+        rlen = 0;
 #endif
 
-    LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): size: %zd", path, ad->ad_rlen);
+    LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): size: %zd", path, rlen);
 
 EC_CLEANUP:
     if (ret != 0)
-        ad->ad_rlen = 0;
-    EC_EXIT;
+        rlen = 0;
+    return rlen;
 }
 
 static int ad_open_rf_v2(const char *path, int adflags, int mode, struct adouble *ad)
@@ -1203,7 +1208,7 @@ static int ad_open_rf_v2(const char *path, int adflags, int mode, struct adouble
 
     LOG(log_debug, logtype_ad, "ad_open_rf_v2(\"%s\"): BEGIN", fullpathname(path));
 
-    if (!AD_META_OPEN(ad) && !(adflags & ADFLAGS_NORF))
+    if (!AD_META_OPEN(ad) && !(adflags & (ADFLAGS_NORF | ADFLAGS_RDONLY)))
         EC_FAIL;
     if (AD_META_OPEN(ad))
         ad->ad_reso_refcount++;
@@ -1238,7 +1243,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         }
         ad->ad_rfp->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_rfp->adf_refcount++;
-        EC_NEG1_LOG( ad_reso_size(path, adflags, ad));
+        EC_NEG1_LOG( ad->ad_rlen = ad_reso_size(path, adflags, ad));
         goto EC_CLEANUP;
     }
 #ifdef HAVE_EAFD
@@ -1246,22 +1251,64 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         EC_FAIL;
     if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
         if (!(adflags & ADFLAGS_CREATE)) {
-            errno = ENOENT;
-            EC_FAIL;
+            switch (errno) {
+            case EACCES:
+            case EPERM:
+            case EROFS:
+                if (!(adflags & ADFLAGS_RDONLY)) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                    EC_FAIL;
+                }
+                oflags &= ~O_RDWR;
+                oflags |= O_RDONLY;
+                if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                    EC_FAIL;
+                }
+                break;
+            case ENOENT:
+                EC_EXIT_STATUS(0);
+            default:
+                LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path), strerror(errno));
+                EC_FAIL;
+            }
+        } else {
+            oflags |= O_CREAT;
+            EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
+                                                             AD_EA_RESO, oflags, 0666) );
         }
-        oflags |= O_CREAT;
-        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
-                                                         AD_EA_RESO, oflags, 0666) ); 
     }
 #else
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags) );
     if ((ad_reso_fileno(ad) = open(rfpath, oflags)) == -1) {
-        if (!(adflags & ADFLAGS_CREATE))
-            EC_FAIL;
-        oflags |= O_CREAT;
-        EC_NEG1_LOG( ad_reso_fileno(ad) = open(rfpath, oflags, mode) );
-        LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork: \"%s\"",
-            path, rfpath);
+        if (!(adflags & ADFLAGS_CREATE)) {
+            switch (errno) {
+            case EACCES:
+            case EPERM:
+            case EROFS:
+                if (!(adflags & ADFLAGS_RDONLY)) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(rfpath), strerror(errno));
+                    EC_FAIL;
+                }
+                oflags &= ~O_RDWR;
+                oflags |= O_RDONLY;
+                if ((ad_reso_fileno(ad) = open(rfpath, oflags)) == -1) {
+                    LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(rfpath), strerror(errno));
+                    EC_FAIL;
+                }
+                break;
+            case ENOENT:
+                EC_EXIT_STATUS(0);
+            default:
+                LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(rfpath), strerror(errno));
+                EC_FAIL;
+            }
+        } else {
+            oflags |= O_CREAT;
+            EC_NEG1_LOG( ad_reso_fileno(ad) = open(rfpath, oflags, mode) );
+            LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork: \"%s\"",
+                path, rfpath);
+        }
     }
 #endif
     opened = 1;
@@ -1287,7 +1334,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
     }
 #endif
 
-    (void)ad_reso_size(path, adflags, ad);
+    ad->ad_rlen = ad_reso_size(path, adflags, ad);
 
 EC_CLEANUP:
     if (ret != 0) {
@@ -1561,6 +1608,7 @@ static void ad_init_func(struct adouble *ad)
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
     ad->ad_refcount = 1;
+    ad->ad_rlen = 0;
     return;
 }
 
