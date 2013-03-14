@@ -41,6 +41,8 @@ Changes in 3.0.3
        From FR #76.
 * FIX: Can't set Finder label on symlinked folder with "follow symlinks = yes".
        Fixes bug #508.
+* FIX: Setting POSIX ACLs on Linux
+       Fixes bug #506.
 
 Changes in 3.0.2
 ================
