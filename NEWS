@@ -35,6 +35,8 @@ Changes in 3.0.3
 * FIX: Permissions of ._ AppleDouble ressource fork after conversion
        from v2 to ea.
        Fixes bug #505.
+* UPD: Use FreeBSD sendfile() capability to send protocol header.
+       From FR #75.
 
 Changes in 3.0.2
 ================

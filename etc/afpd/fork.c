@@ -798,7 +798,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %" PRIu64 ")",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount, size);
 
-    if (offset > size) {
+    if (offset >= size) {
         err = AFPERR_EOF;
         goto afp_read_err;
     }
