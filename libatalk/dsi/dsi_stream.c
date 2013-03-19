@@ -523,6 +523,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {
   char block[DSI_BLOCKSIZ];
   struct iovec iov[2];
+  int iovecs = 2;
   size_t towrite;
   ssize_t len;
 
@@ -549,7 +550,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   towrite = sizeof(block) + length;
   dsi->write_count += towrite;
   while (towrite > 0) {
-      if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || (len == 0))
+      if (((len = writev(dsi->socket, iov, iovecs)) == -1 && errno == EINTR) || (len == 0))
           continue;
     
       if ((size_t)len == towrite) /* wrote everything out */
@@ -570,12 +571,13 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
           iov[0].iov_base = (char *) iov[0].iov_base + len;
           iov[0].iov_len -= len;
       } else { /* skip to data */
-          if (iov[0].iov_len) {
+          if (iovecs == 2) {
+              iovecs = 1;
               len -= iov[0].iov_len;
-              iov[0].iov_len = 0;
+              iov[0] = iov[1];
           }
-          iov[1].iov_base = (char *) iov[1].iov_base + len;
-          iov[1].iov_len -= len;
+          iov[0].iov_base = (char *) iov[0].iov_base + len;
+          iov[0].iov_len -= len;
       }
   }
 

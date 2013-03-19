@@ -37,6 +37,8 @@ Changes in 3.0.3
        Fixes bug #505.
 * UPD: Use FreeBSD sendfile() capability to send protocol header.
        From FR #75.
+* UPD: Increase IO size when sendfile() is not used.
+       From FR #76.
 
 Changes in 3.0.2
 ================

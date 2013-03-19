@@ -837,9 +837,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 #endif
 
-    *rbuflen = MIN(reqcount, *rbuflen);
+    *rbuflen = MIN(reqcount, dsi->server_quantum);
 
-    cc = read_file(ofork, eid, offset, rbuf, rbuflen);
+    cc = read_file(ofork, eid, offset, ibuf, rbuflen);
     if (cc < 0) {
         err = cc;
         goto afp_read_done;
@@ -856,18 +856,22 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
      * we know that we're sending some data. if we fail, something
      * horrible happened.
      */
-    if ((cc = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
+    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0)
         goto afp_read_exit;
     *rbuflen = cc;
 
     while (*rbuflen > 0) {
-        cc = read_file(ofork, eid, offset, rbuf, rbuflen);
+        /*
+         * This loop isn't really entered anymore, we've already
+         * sent the whole requested block in dsi_readinit().
+         */
+        cc = read_file(ofork, eid, offset, ibuf, rbuflen);
         if (cc < 0)
             goto afp_read_exit;
 
         offset += *rbuflen;
         /* dsi_read() also returns buffer size of next allocation */
-        cc = dsi_read(dsi, rbuf, *rbuflen); /* send it off */
+        cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
         if (cc < 0)
             goto afp_read_exit;
         *rbuflen = cc;
