@@ -1242,6 +1242,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
             EC_FAIL;
         }
         ad->ad_rfp->adf_flags &= ~( O_TRUNC | O_CREAT );
+        ad->ad_reso_refcount++;
         ad->ad_rfp->adf_refcount++;
         EC_NEG1_LOG( ad->ad_rlen = ad_reso_size(path, adflags, ad));
         goto EC_CLEANUP;
