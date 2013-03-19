@@ -839,9 +839,11 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     *rbuflen = MIN(reqcount, *rbuflen);
 
-    err = read_file(ofork, eid, offset, rbuf, rbuflen);
-    if (err < 0)
+    cc = read_file(ofork, eid, offset, rbuf, rbuflen);
+    if (cc < 0) {
+        err = cc;
         goto afp_read_done;
+    }
 
     LOG(log_debug, logtype_afpd,
         "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
