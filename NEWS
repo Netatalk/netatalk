@@ -39,6 +39,8 @@ Changes in 3.0.3
        From FR #75.
 * UPD: Increase IO size when sendfile() is not used.
        From FR #76.
+* FIX: Can't set Finder label on symlinked folder with "follow symlinks = yes".
+       Fixes bug #508.
 
 Changes in 3.0.2
 ================

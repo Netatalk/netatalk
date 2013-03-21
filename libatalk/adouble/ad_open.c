@@ -624,7 +624,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     if (ad_meta_fileno(ad) != -1)
         header_len = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA);
     else
-        header_len = sys_lgetxattr(path, AD_EA_META, ad->ad_data, AD_DATASZ_EA);
+        header_len = sys_getxattr(path, AD_EA_META, ad->ad_data, AD_DATASZ_EA);
      if (header_len < 1) {
         LOG(log_debug, logtype_ad, "ad_header_read_ea: %s", strerror(errno));
         return -1;
