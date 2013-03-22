@@ -106,7 +106,9 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
         AC_MSG_ERROR([--with-libevent requires a path])
     fi
     AC_MSG_RESULT([$use_bundled_libevent])
-    AC_CONFIG_SUBDIRS([libevent])
+    if test x"$use_bundled_libevent" = x"yes" ; then
+        AC_CONFIG_SUBDIRS([libevent])
+    fi
     AC_SUBST(LIBEVENT_CFLAGS)
     AC_SUBST(LIBEVENT_LDFLAGS)
     AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
