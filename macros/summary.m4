@@ -57,6 +57,9 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	AC_MSG_RESULT([         dtrace probes:           $WDTRACE])
 	AC_MSG_RESULT([    Paths:])
 	AC_MSG_RESULT([         Netatalk lockfile:       $ac_cv_netatalk_lock])
+	if test "x$init_style" != x"none"; then
+		AC_MSG_RESULT([         init directory:          $ac_cv_init_dir])
+	fi
 	if test x"$atalk_cv_with_dbus" = x"yes"; then
 		AC_MSG_RESULT([         dbus system directory:   $ac_cv_dbus_sysdir])
 	fi

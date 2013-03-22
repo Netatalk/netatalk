@@ -355,7 +355,7 @@ AC_ARG_ENABLE(shell-check,
 )
 ])
 
-dnl Check for optional sysv initscript install
+dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
                 [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|solaris|systemd]]],
@@ -367,36 +367,46 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
         ;;
     "redhat-sysv")
 	    AC_MSG_RESULT([enabling redhat-style sysv initscript support])
+	    ac_cv_init_dir="/etc/rc.d/init.d"
 	    ;;
     "redhat-systemd")
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
+	    ac_cv_init_dir="/lib/systemd/system"
 	    ;;
     "suse")
 	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
         ;;
     "suse-sysv")
 	    AC_MSG_RESULT([enabling suse-style sysv initscript support])
+	    ac_cv_init_dir="/etc/init.d"
 	    ;;
     "suse-systemd")
 	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
+	    ac_cv_init_dir="/lib/systemd/system"
 	    ;;
     "gentoo")
 	    AC_MSG_RESULT([enabling gentoo-style initscript support])
+	    ac_cv_init_dir="/etc/init.d"
         ;;
     "netbsd")
 	    AC_MSG_RESULT([enabling netbsd-style initscript support])
+	    ac_cv_init_dir="/etc/rc.d"
         ;;
     "debian")
 	    AC_MSG_RESULT([enabling debian-style initscript support])
+	    ac_cv_init_dir="/etc/init.d"
         ;;
     "solaris")
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
+	    ac_cv_init_dir="/lib/svc/manifest/network/"
         ;;
     "systemd")
 	    AC_MSG_RESULT([enabling general systemd support])
+	    ac_cv_init_dir="/lib/systemd/system"
         ;;
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
+	    ac_cv_init_dir="none"
         ;;
     *)
 	    AC_MSG_ERROR([illegal init-style])
@@ -411,6 +421,12 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
+    AC_ARG_WITH(init-dir,
+                [  --with-init-dir=PATH    path to OS specific init directory],
+                ac_cv_init_dir="$withval", ac_cv_init_dir="$ac_cv_init_dir"
+    )
+    INIT_DIR="$ac_cv_init_dir"
+    AC_SUBST(INIT_DIR, ["$ac_cv_init_dir"])
 ])
 
 dnl OS specific configuration
