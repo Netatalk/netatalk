@@ -227,7 +227,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     if (S_ISDIR(st->st_mode))
         adflags = ADFLAGS_DIR;
 
-    if (vol->vol->v_path == NULL)
+    if (vol->vol == NULL || vol->vol->v_path == NULL)
         return;
 
     ad_init(&ad, vol->vol);

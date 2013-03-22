@@ -44,6 +44,8 @@ Changes in 3.0.3
        Fixes bug #508.
 * FIX: Setting POSIX ACLs on Linux
        Fixes bug #506.
+* FIX: "ad ls" segfault if requested object is not in an AFP volume.
+       Fixes bug #496.
 
 Changes in 3.0.2
 ================
