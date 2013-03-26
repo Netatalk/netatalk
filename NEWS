@@ -1,3 +1,52 @@
+Changes in 3.0.3
+================
+* UPD: afpd: Increase default DSI server quantum to 1 MB
+* UPD: bundled libevent2 is now static
+* NEW: --with-lockfile=PATH configure option for specifying an
+       alternative path for the netatalk lockfile.
+* UPD: systemd service file use PIDFile and ExecReload.
+       From FR #70.
+* UPD: RedHat sysvinit: rm graceful, reimplement reload, add condrestart
+* FIX: Couldn't create folders on FreeBSD 9.1 ZFS fileystems.
+       Fixed bug #491.
+* FIX: Fix an issue with user homes when user home directory has not the
+       same name as the username.
+       Fixes bug #497.
+* UPD: Fix PAM config install, new default installation dir is
+       $sysconfdir/pam.d/. Add configure option --with-pam-confdir
+       to specify alternative path.
+* NEW: AFP stats about active session via dbus IPC. Client side python
+       program `afpstats`. Requires dbus, dbus-glib any python-dbus.
+       configure option --dbus-sysconf-dir for specifying dbus
+       system security configuration files.
+       New option 'afpstats' (default: no) which determines whether
+       to enable the feature or not.
+* NEW: configure option --with-init-dir
+* NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
+       probes.
+* UPD: Reload groups when reloading volumes. FR #71.
+* FIX: Attempt to read read-only ._ rfork results in disconnect.
+       Fixes bug #502.
+* FIX: File's ressource fork can't be read if metadata EA is missing.
+       Fixes bug #501.
+* FIX: Conversion from adouble v2 to ea for directories.
+       Fixes bug #500.
+* FIX: Error messages when mounting read-only filesystems.
+       Fixes bug #504.
+* FIX: Permissions of ._ AppleDouble ressource fork after conversion
+       from v2 to ea.
+       Fixes bug #505.
+* UPD: Use FreeBSD sendfile() capability to send protocol header.
+       From FR #75.
+* UPD: Increase IO size when sendfile() is not used.
+       From FR #76.
+* FIX: Can't set Finder label on symlinked folder with "follow symlinks = yes".
+       Fixes bug #508.
+* FIX: Setting POSIX ACLs on Linux
+       Fixes bug #506.
+* FIX: "ad ls" segfault if requested object is not in an AFP volume.
+       Fixes bug #496.
+
 Changes in 3.0.2
 ================
 * NEW: afpd: Put file extension type/creator mapping back in which had

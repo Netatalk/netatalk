@@ -38,6 +38,7 @@
 #include "fork.h"
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
+#include "afpstats.h"
 
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
@@ -45,7 +46,7 @@
 unsigned char nologin = 0;
 
 static AFPObj obj;
-static server_child *server_children;
+static server_child_t *server_children;
 static sig_atomic_t reloadconfig = 0;
 static sig_atomic_t gotsigchld = 0;
 
@@ -54,9 +55,8 @@ static struct pollfd *fdset;
 static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
-static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
 
-static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_children);
+static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children);
 
 static void afp_exit(int ret)
 {
@@ -81,16 +81,6 @@ static void fd_set_listening_sockets(const AFPObj *config)
                      LISTEN_FD,
                      dsi);
     }
-
-    if (config->options.flags & OPTION_KEEPSESSIONS)
-        fdset_add_fd(config->options.connections + AFP_LISTENERS + FDSET_SAFETY,
-                     &fdset,
-                     &polldata,
-                     &fdset_used,
-                     &fdset_size,
-                     disasociated_ipc_fd,
-                     DISASOCIATED_IPC_FD,
-                     NULL);
 }
  
 static void fd_reset_listening_sockets(const AFPObj *config)
@@ -100,9 +90,6 @@ static void fd_reset_listening_sockets(const AFPObj *config)
     for (dsi = config->dsi; dsi; dsi = dsi->next) {
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, dsi->serversock);
     }
-
-    if (config->options.flags & OPTION_KEEPSESSIONS)
-        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd);
 }
 
 /* ------------------ */
@@ -112,22 +99,9 @@ static void afp_goaway(int sig)
 
     case SIGTERM:
     case SIGQUIT:
-        switch (sig) {
-        case SIGTERM:
-            LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
-            break;
-        case SIGQUIT:
-            if (obj.options.flags & OPTION_KEEPSESSIONS) {
-                LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT, NOT disconnecting clients");
-            } else {
-                LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT");
-                sig = SIGTERM;
-            }
-            break;
-        }
+        LOG(log_note, logtype_afpd, "AFP Server shutting down");
         if (server_children)
-            server_child_kill(server_children, CHILD_DSIFORK, sig);
-
+            server_child_kill(server_children, SIGTERM);
         _exit(0);
         break;
 
@@ -137,7 +111,7 @@ static void afp_goaway(int sig)
         LOG(log_info, logtype_afpd, "disallowing logins");        
 
         if (server_children)
-            server_child_kill(server_children, CHILD_DSIFORK, sig);
+            server_child_kill(server_children, sig);
         break;
 
     case SIGHUP :
@@ -167,11 +141,9 @@ static void child_handler(void)
 #endif /* ! WAIT_ANY */
 
     while ((pid = waitpid(WAIT_ANY, &status, WNOHANG)) > 0) {
-        for (i = 0; i < server_children->nforks; i++) {
-            if ((fd = server_child_remove(server_children, i, pid)) != -1) {
-                fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd);        
-                break;
-            }
+        if ((fd = server_child_remove(server_children, pid)) != -1) {
+            fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd);        
+            break;
         }
 
         if (WIFEXITED(status)) {
@@ -232,7 +204,7 @@ int main(int ac, char **av)
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
      * XXX: this should really be setup after the initial connections. */
-    if (!(server_children = server_child_alloc(obj.options.connections, CHILD_NFORKS))) {
+    if (!(server_children = server_child_alloc(obj.options.connections))) {
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
@@ -340,6 +312,11 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGCHLD);
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+#ifdef HAVE_DBUS_GLIB
+    /* Run dbus AFP statics thread */
+    if (obj.options.flags & OPTION_DBUS_AFPSTATS)
+        (void)afpstats_init(server_children);
+#endif
     if (configinit(&obj) != 0) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
         afp_exit(EXITERR_CONF);
@@ -350,12 +327,6 @@ int main(int ac, char **av)
     cnid_init();
     
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
-
-    if (obj.options.flags & OPTION_KEEPSESSIONS) {
-        LOG(log_note, logtype_afpd, "Activating continous service");
-        disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
-    }
-
     fd_set_listening_sockets(&obj);
 
     /* set limits */
@@ -433,7 +404,7 @@ int main(int ac, char **av)
                                      &polldata,
                                      &fdset_used,
                                      &fdset_size,
-                                     child->ipc_fd,
+                                     child->afpch_ipc_fd,
                                      IPC_FD,
                                      child);
                     }
@@ -441,46 +412,13 @@ int main(int ac, char **av)
 
                 case IPC_FD:
                     child = (afp_child_t *)polldata[i].data;
-                    LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
+                    LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->afpch_pid);
 
-                    if (ipc_server_read(server_children, child->ipc_fd) != 0) {
-                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fd);
-                        close(child->ipc_fd);
-                        child->ipc_fd = -1;
-                        if ((obj.options.flags & OPTION_KEEPSESSIONS) && child->disasociated) {
-                            LOG(log_note, logtype_afpd, "main: removing reattached child[%u]", child->pid);
-                            server_child_remove(server_children, CHILD_DSIFORK, child->pid);
-                        }
+                    if (ipc_server_read(server_children, child->afpch_ipc_fd) != 0) {
+                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->afpch_ipc_fd);
+                        close(child->afpch_ipc_fd);
+                        child->afpch_ipc_fd = -1;
                     }
-                    break;
-
-                case DISASOCIATED_IPC_FD:
-                    LOG(log_debug, logtype_afpd, "main: IPC reconnect request");
-                    if ((recon_ipc_fd = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
-                        LOG(log_error, logtype_afpd, "main: accept: %s", strerror(errno));
-                        break;
-                    }
-                    if (readt(recon_ipc_fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
-                        LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
-                        close(recon_ipc_fd);
-                        break;
-                    }
-                    LOG(log_note, logtype_afpd, "main: IPC reconnect from pid [%u]", pid);
-
-                    if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, recon_ipc_fd)) == NULL) {
-                        LOG(log_error, logtype_afpd, "main: server_child_add");
-                        close(recon_ipc_fd);
-                        break;
-                    }
-                    child->disasociated = 1;
-                    fdset_add_fd(obj.options.connections + AFP_LISTENERS + FDSET_SAFETY,
-                                 &fdset,
-                                 &polldata,
-                                 &fdset_used,
-                                 &fdset_size,
-                                 recon_ipc_fd,
-                                 IPC_FD,
-                                 child);
                     break;
 
                 default:
@@ -494,7 +432,7 @@ int main(int ac, char **av)
     return 0;
 }
 
-static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_children)
+static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children)
 {
     afp_child_t *child = NULL;
 

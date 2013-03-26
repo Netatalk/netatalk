@@ -21,7 +21,7 @@ RETVAL=1
 netatalk_startup() {
     # Check that networking is up.
     if [ ${NETWORKING} = "no" ]; then
-        echo "[Network isn't started]"; 
+        echo "[Network isn't started]";
         exit 1;
     fi
 
@@ -51,11 +51,17 @@ netatalk_stop() {
     fi
 }
 
-# code to cause apfd and cnid_metad to restart
-netatalk_graceful() {
+# restart code
+netatalk_restart() {
+    netatalk_stop
+    netatalk_startup
+}
+
+# reload config files
+netatalk_reload() {
     if [ -x ${NETATALK_SBIN}/netatalk ]; then
-        echo -n $"Restarting cnid_metad and afpd: "
-        killproc  netatalk -QUIT
+        echo -n $"Reloading $prog: "
+        killproc netatalk -HUP
         RETVAL=$?
         echo
     fi
@@ -68,20 +74,21 @@ case "$1" in
     'stop')
         netatalk_stop
         ;;
-    'restart'|'reload')
-        $0 stop
-        $0 start
-        RETVAL=$?
+    'restart')
+        netatalk_restart
+        ;;
+    'reload'|'graceful')
+        netatalk_reload
         ;;
     'status')
         status netatalk
         RETVAL=$?
         ;;
-    'graceful')
-        netatalk_graceful
+    'condrestart')
+        [ -f /var/lock/subsys/netatalk ] && netatalk_restart || :
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|reload|status|graceful}"
+        echo "Usage: $0 {start|stop|restart|reload|status|condrestart}"
         exit 2
 esac
 

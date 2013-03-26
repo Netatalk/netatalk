@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
@@ -42,13 +43,15 @@ typedef struct ipc_header {
 } ipc_header_t;
 
 static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
-                               "IPC_GETSESSION"};
+                               "IPC_GETSESSION",
+                               "IPC_STATE",
+                               "IPC_VOLUMES"};
 
 /*
  * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
-static int ipc_kill_token(struct ipc_header *ipc, server_child *children)
+static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 {
     pid_t pid;
 
@@ -59,7 +62,6 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child *children)
     memcpy (&pid, ipc->msg, sizeof(pid_t));
 
     return server_child_transfer_session(children,
-                                         CHILD_DSIFORK,
                                          pid,
                                          ipc->uid,
                                          ipc->afp_socket,
@@ -67,7 +69,7 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child *children)
 }
 
 /* ----------------- */
-static int ipc_get_session(struct ipc_header *ipc, server_child *children)
+static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
 {
     uint32_t boottime;
     uint32_t idlen;
@@ -96,7 +98,6 @@ static int ipc_get_session(struct ipc_header *ipc, server_child *children)
         ipc->child_pid, ipc->uid, boottime); 
 
     server_child_kill_one_by_id(children,
-                                CHILD_DSIFORK,
                                 ipc->child_pid,
                                 ipc->uid,
                                 idlen,
@@ -106,100 +107,48 @@ static int ipc_get_session(struct ipc_header *ipc, server_child *children)
     return 0;
 }
 
+static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
+{
+    EC_INIT;
+    afp_child_t *child;
+
+    pthread_mutex_lock(&children->servch_lock);
+
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+        EC_FAIL;
+
+    memcpy(&child->afpch_state, ipc->msg, sizeof(uint16_t));
+
+EC_CLEANUP:
+    pthread_mutex_unlock(&children->servch_lock);
+    EC_EXIT;
+}
+
+static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
+{
+    EC_INIT;
+    afp_child_t *child;
+
+    pthread_mutex_lock(&children->servch_lock);
+
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+        EC_FAIL;
+
+    if (child->afpch_volumes) {
+        free(child->afpch_volumes);
+        child->afpch_volumes = NULL;
+    }
+    if (ipc->len)
+        child->afpch_volumes = strdup(ipc->msg);
+
+EC_CLEANUP:
+    pthread_mutex_unlock(&children->servch_lock);
+    EC_EXIT;
+}
+
 /***********************************************************************************
  * Public functions
  ***********************************************************************************/
-
-/*!
- * Listen on UNIX domain socket "name" for IPC from old sesssion
- *
- * @args name    (r) file name to use for UNIX domain socket
- * @returns      socket fd, -1 on error
- */
-int ipc_server_uds(const char *name)
-{
-    EC_INIT;
-    struct sockaddr_un address;
-    socklen_t address_length;
-    int fd = -1;
-
-    EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
-    EC_ZERO_LOG( setnonblock(fd, 1) );
-    unlink(name);
-    address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
-    EC_ZERO_LOG( bind(fd, (struct sockaddr *)&address, address_length) );
-    EC_ZERO_LOG( listen(fd, 1024) );
-
-EC_CLEANUP:
-    if (ret != 0) {
-        return -1;
-    }
-
-    return fd;
-}
-
-/*!
- * Connect to UNIX domain socket "name" for IPC with new afpd master
- *
- * 1. Connect
- * 2. send pid, which establishes a child structure for us in the master
- *
- * @args name    (r) file name to use for UNIX domain socket
- * @returns      socket fd, -1 on error
- */
-int ipc_client_uds(const char *name)
-{
-    EC_INIT;
-    struct sockaddr_un address;
-    socklen_t address_length;
-    int fd = -1;
-    pid_t pid = getpid();
-
-    EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
-    address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
-
-    EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
-    LOG(log_debug, logtype_afpd, "ipc_client_uds: connected to master");
-
-    EC_ZERO_LOG( setnonblock(fd, 1) );
-
-    if (writet(fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
-        LOG(log_error, logtype_afpd, "ipc_client_uds: writet: %s", strerror(errno));
-        EC_FAIL;
-    }
-
-EC_CLEANUP:
-    if (ret != 0) {
-        return -1;
-    }
-    LOG(log_debug, logtype_afpd, "ipc_client_uds: fd: %d", fd);
-    return fd;
-}
-
-int reconnect_ipc(AFPObj *obj)
-{
-    int retrycount = 0;
-
-    LOG(log_debug, logtype_afpd, "reconnect_ipc: start");
-
-    close(obj->ipc_fd);
-    obj->ipc_fd = -1;
-
-    sleep((getpid() % 5) + 15);  /* give it enough time to start */
-
-    while (retrycount++ < 10) {
-        if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
-            LOG(log_error, logtype_afpd, "reconnect_ipc: cant reconnect to master");
-            sleep(1);
-            continue;
-        }
-        LOG(log_debug, logtype_afpd, "reconnect_ipc: succesfull IPC reconnect");
-        return 0;
-    }
-    return -1;
-}
 
 /* ----------------- 
  * Ipc format
@@ -219,7 +168,7 @@ int reconnect_ipc(AFPObj *obj)
  *
  * @returns -1 on error, 0 on success
  */
-int ipc_server_read(server_child *children, int fd)
+int ipc_server_read(server_child_t *children, int fd)
 {
     int       ret;
     struct ipc_header ipc;
@@ -294,6 +243,16 @@ int ipc_server_read(server_child *children, int fd)
             return -1;
         break;
 
+    case IPC_STATE:
+        if (ipc_set_state(&ipc, children) != 0)
+            return -1;
+        break;
+
+    case IPC_VOLUMES:
+        if (ipc_set_volumes(&ipc, children) != 0)
+            return -1;
+        break;
+
 	default:
 		LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
 		return -1;
@@ -344,4 +303,9 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
    }
 
    return 0;
+}
+
+int ipc_child_state(AFPObj *obj, uint16_t state)
+{
+    return ipc_child_write(obj->ipc_fd, IPC_STATE, sizeof(uint16_t), &state);
 }

@@ -18,6 +18,6 @@ SUFFIXES = .tmpl .
 
 CLEANFILES = $(GENERATED_FILES)
 
-bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
+bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES) afpstats
 
-EXTRA_DIST = $(TEMPLATE_FILES) make-casetable.pl make-precompose.h.pl
+EXTRA_DIST = $(TEMPLATE_FILES) make-casetable.pl make-precompose.h.pl afpstats

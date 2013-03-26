@@ -19,6 +19,19 @@
 #include <atalk/unicode.h>
 #include <atalk/uam.h>
 #include <atalk/iniparser.h>
+#ifdef WITH_DTRACE
+#include <atalk/afp_dtrace.h>
+#else
+/* List of empty dtrace macros */
+#define AFP_AFPFUNC_START(a,b)
+#define AFP_AFPFUNC_DONE(a, b)
+#define AFP_CNID_START(a)
+#define AFP_CNID_DONE()
+#define AFP_READ_START(a)
+#define AFP_READ_DONE()
+#define AFP_WRITE_START(a)
+#define AFP_WRITE_DONE()
+#endif
 
 /* #define DOSFILELEN 12 */             /* Type1, DOS-compat*/
 #define MACFILELEN 31                   /* Type2, HFS-compat */
@@ -41,8 +54,8 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
-#define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
 #define OPTION_SHARE_RESERV  (1 << 11) /* whether to use Solaris fcntl F_SHARE locks */
+#define OPTION_DBUS_AFPSTATS (1 << 12) /* whether to run dbus thread for afpstats */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)

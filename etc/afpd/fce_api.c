@@ -361,9 +361,10 @@ int fce_register(fce_ev_t event, const char *path, const char *oldpath, fce_obj_
         return AFP_OK;
 
     AFP_ASSERT(event >= FCE_FIRST_EVENT && event <= FCE_LAST_EVENT);
+    AFP_ASSERT(path);
 
     LOG(log_debug, logtype_fce, "register_fce(path: %s, type: %s, event: %s",
-        path , type == fce_dir ? "dir" : "file", fce_event_names[event]);
+        path, type == fce_dir ? "dir" : "file", fce_event_names[event]);
 
     bname = basename_safe(path);
 
@@ -371,8 +372,6 @@ int fce_register(fce_ev_t event, const char *path, const char *oldpath, fce_obj_
         /* No listeners configured */
         return AFP_OK;
 
-    if (path == NULL)
-        return AFPERR_PARAM;
 
 	/* do some initialization on the fly the first time */
 	if (first_event) {

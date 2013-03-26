@@ -140,23 +140,6 @@ static void afp_dsi_die(int sig)
     }
 }
 
-/* SIGQUIT handler */
-static void ipc_reconnect_handler(int sig _U_)
-{
-    if (reconnect_ipc(AFPobj) != 0) {
-        LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC reconnect");
-        afp_dsi_close(AFPobj);
-        exit(EXITERR_SYS);        
-    }
-
-    if (ipc_child_write(AFPobj->ipc_fd, IPC_GETSESSION, AFPobj->sinfo.clientid_len, AFPobj->sinfo.clientid) != 0) {
-        LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC ID resend");
-        afp_dsi_close(AFPobj);
-        exit(EXITERR_SYS);        
-    }
-    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: IPC reconnect done");
-}
-
 /* SIGURG handler (primary reconnect) */
 static void afp_dsi_transfer_session(int sig _U_)
 {
@@ -407,7 +390,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGQUIT */
-    action.sa_handler = ipc_reconnect_handler;
+    action.sa_handler = afp_dsi_die;
     if ( sigaction(SIGQUIT, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
@@ -490,6 +473,8 @@ void afp_over_dsi(AFPObj *obj)
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
+    ipc_child_state(obj, DSI_RUNNING);
+
     /* get stuck here until the end */
     while (1) {
         if (sigsetjmp(recon_jmp, 1) != 0)
@@ -514,15 +499,6 @@ void afp_over_dsi(AFPObj *obj)
                 exit(0);
             }
 
-#if 0
-            /*  got ECONNRESET in read from client => exit*/
-            if (dsi->flags & DSI_GOT_ECONNRESET) {
-                LOG(log_note, logtype_afpd, "afp_over_dsi: client connection reset");
-                afp_dsi_close(obj);
-                exit(0);
-            }
-#endif
-
             if (dsi->flags & DSI_RECONINPROG) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
                 afp_dsi_close(obj);
@@ -533,8 +509,11 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi_disconnect(dsi) != 0)
                 afp_dsi_die(EXITERR_CLNT);
 
+            ipc_child_state(obj, DSI_DISCONNECTED);
+
             while (dsi->flags & DSI_DISCONNECTED)
                 pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
+            ipc_child_state(obj, DSI_RUNNING);
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
         }
@@ -543,6 +522,7 @@ void afp_over_dsi(AFPObj *obj)
             LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
             dsi->flags &= ~DSI_SLEEPING;
             dsi->tickle = 0;
+            ipc_child_state(obj, DSI_RUNNING);
         }
 
         if (reload_request) {
@@ -623,10 +603,12 @@ void afp_over_dsi(AFPObj *obj)
 
                     LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
+                    AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
                     err = (*afp_switch[function])(obj,
                                                   (char *)dsi->commands, dsi->cmdlen,
                                                   (char *)&dsi->data, &dsi->datalen);
 
+                    AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
                     LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                         AfpNum2name(function), AfpErr2name(err));
 
@@ -664,9 +646,13 @@ void afp_over_dsi(AFPObj *obj)
 
                 LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
+                AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
+
                 err = (*afp_switch[function])(obj,
                                               (char *)dsi->commands, dsi->cmdlen,
                                               (char *)&dsi->data, &dsi->datalen);
+
+                AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
 
                 LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                     AfpNum2name(function), AfpErr2name(err));

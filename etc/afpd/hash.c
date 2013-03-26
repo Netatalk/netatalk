@@ -982,8 +982,10 @@ int main(void)
         "s                      switch to non-functioning allocator\n"
         "q                      quit";
 
-    if (!h)
+    if (!h) {
         puts("hash_create failed");
+        return 1;
+    }
 
     for (;;) {
         if (prompt)
@@ -1012,6 +1014,7 @@ int main(void)
                 puts("out of memory");
                 free((void *) key);
                 free(val);
+                break;
             }
 
             if (!hash_alloc_insert(h, key, val)) {

@@ -1,5 +1,75 @@
 dnl Kitchen sink for configuration macros
 
+dnl Check for dtrace
+AC_DEFUN([AC_NETATALK_DTRACE], [
+  AC_ARG_WITH(dtrace,
+    AS_HELP_STRING(
+      [--with-dtrace],
+      [Enable dtrace probes (default: enabled if dtrace found)]
+    ),
+    [WDTRACE=$withval],
+    [WDTRACE=auto]
+  )
+  if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
+    AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
+    if test "x$atalk_cv_have_dtrace" = "xno" ; then
+      if test "x$WDTRACE" = "xyes" ; then
+        AC_MSG_FAILURE([dtrace requested but not found])
+      fi
+      WDTRACE="no"
+    else
+      WDTRACE="yes"
+    fi
+  fi
+
+  if test x"$WDTRACE" = x"yes" ; then
+    AC_DEFINE([WITH_DTRACE], [1], [dtrace probes])
+    DTRACE_LIBS=""
+    if test x"$this_os" = x"freebsd" ; then
+      DTRACE_LIBS="-lelf"
+    fi
+    AC_SUBST(DTRACE_LIBS)
+  fi
+  AM_CONDITIONAL(WITH_DTRACE, test "x$WDTRACE" = "xyes")
+])
+
+dnl Check for dbus-glib, for AFP stats
+AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
+    atalk_cv_with_dbus=no
+    PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
+    PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1, have_dbus_glib=yes, have_dbus_glib=no)
+    PKG_CHECK_MODULES(DBUS_GTHREAD, gthread-2.0, have_dbus_gthread=yes, have_dbus_gthread=no)
+    AC_SUBST(DBUS_CFLAGS)
+    AC_SUBST(DBUS_LIBS)
+    AC_SUBST(DBUS_GLIB_CFLAGS)
+    AC_SUBST(DBUS_GLIB_LIBS)
+    AC_SUBST(DBUS_GTHREAD_CFLAGS)
+    AC_SUBST(DBUS_GTHREAD_LIBS)
+    if test x$have_dbus_glib = xyes -a x$have_dbus = xyes -a x$have_dbus_gthread = xyes ; then
+        saved_CFLAGS=$CFLAGS
+        saved_LIBS=$LIBS
+        CFLAGS="$CFLAGS $DBUS_GLIB_CFLAGS"
+        LIBS="$LIBS $DBUS_GLIB_LIBS"
+        AC_CHECK_FUNC([dbus_g_bus_get_private], [atalk_cv_with_dbus=yes], [atalk_cv_with_dbus=no])
+        CFLAGS="$saved_CFLAGS"
+        LIBS="$saved_LIBS"
+    fi
+    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
+
+    AC_ARG_WITH(
+        dbus-sysconf-dir,
+        [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+        ac_cv_dbus_sysdir=$withval,
+        ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
+    )
+
+    if test x$atalk_cv_with_dbus = xyes ; then
+        AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
+        DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
+        AC_SUBST(DBUS_SYS_DIR)
+    fi
+])
+
 dnl Whether to enable developer build
 AC_DEFUN([AC_DEVELOPER], [
     AC_MSG_CHECKING([whether to enable developer build])
@@ -36,7 +106,9 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
         AC_MSG_ERROR([--with-libevent requires a path])
     fi
     AC_MSG_RESULT([$use_bundled_libevent])
-    AC_CONFIG_SUBDIRS([libevent])
+    if test x"$use_bundled_libevent" = x"yes" ; then
+        AC_CONFIG_SUBDIRS([libevent])
+    fi
     AC_SUBST(LIBEVENT_CFLAGS)
     AC_SUBST(LIBEVENT_LDFLAGS)
     AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
@@ -60,13 +132,47 @@ AC_ARG_ENABLE(fhs,
 		use_pam_so=yes
 		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
 		AC_MSG_RESULT([yes])
+        atalk_cv_fhs_compat=yes
 	else
 		AC_MSG_RESULT([no])
+        atalk_cv_fhs_compat=no
 	fi
 	],[
 		AC_MSG_RESULT([no])
-	]
-)])
+        atalk_cv_fhs_compat=no
+])])
+
+dnl netatalk lockfile path
+AC_DEFUN([AC_NETATALK_LOCKFILE], [
+    AC_MSG_CHECKING([netatalk lockfile path])
+    AC_ARG_WITH(
+        lockfile,
+        [AS_HELP_STRING([--with-lockfile=PATH],[Path of netatalk lockfile])],
+        ac_cv_netatalk_lock=$withval,
+        ac_cv_netatalk_lock=""
+    )
+    if test -z "$ac_cv_netatalk_lock" ; then
+        ac_cv_netatalk_lock=/var/spool/locks/netatalk
+        if test x"$atalk_cv_fhs_compat" = x"yes" ; then
+            ac_cv_netatalk_lock=/var/run/netatalk.pid
+        else
+            case "$host_os" in
+            *freebsd*)
+                ac_cv_netatalk_lock=/var/spool/lock/netatalk
+                ;;
+            *netbsd*|*openbsd*)
+                ac_cv_netatalk_lock=/var/run/netatalk.pid
+                ;;
+            *linux*)
+                ac_cv_netatalk_lock=/var/lock/netatalk
+                ;;
+            esac
+        fi
+    fi
+    AC_DEFINE_UNQUOTED(PATH_NETATALK_LOCK, ["$ac_cv_netatalk_lock"], [netatalk lockfile path])
+    AC_SUBST(PATH_NETATALK_LOCK, ["$ac_cv_netatalk_lock"])
+    AC_MSG_RESULT([$ac_cv_netatalk_lock])
+])
 
 dnl 64bit platform check
 AC_DEFUN([AC_NETATALK_64BIT_LIBS], [
@@ -249,7 +355,7 @@ AC_ARG_ENABLE(shell-check,
 )
 ])
 
-dnl Check for optional sysv initscript install
+dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
                 [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|solaris|systemd]]],
@@ -261,36 +367,46 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
         ;;
     "redhat-sysv")
 	    AC_MSG_RESULT([enabling redhat-style sysv initscript support])
+	    ac_cv_init_dir="/etc/rc.d/init.d"
 	    ;;
     "redhat-systemd")
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
+	    ac_cv_init_dir="/lib/systemd/system"
 	    ;;
     "suse")
 	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
         ;;
     "suse-sysv")
 	    AC_MSG_RESULT([enabling suse-style sysv initscript support])
+	    ac_cv_init_dir="/etc/init.d"
 	    ;;
     "suse-systemd")
 	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
+	    ac_cv_init_dir="/lib/systemd/system"
 	    ;;
     "gentoo")
 	    AC_MSG_RESULT([enabling gentoo-style initscript support])
+	    ac_cv_init_dir="/etc/init.d"
         ;;
     "netbsd")
 	    AC_MSG_RESULT([enabling netbsd-style initscript support])
+	    ac_cv_init_dir="/etc/rc.d"
         ;;
     "debian")
 	    AC_MSG_RESULT([enabling debian-style initscript support])
+	    ac_cv_init_dir="/etc/init.d"
         ;;
     "solaris")
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
+	    ac_cv_init_dir="/lib/svc/manifest/network/"
         ;;
     "systemd")
 	    AC_MSG_RESULT([enabling general systemd support])
+	    ac_cv_init_dir="/lib/systemd/system"
         ;;
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
+	    ac_cv_init_dir="none"
         ;;
     *)
 	    AC_MSG_ERROR([illegal init-style])
@@ -305,6 +421,12 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
+    AC_ARG_WITH(init-dir,
+                [  --with-init-dir=PATH    path to OS specific init directory],
+                ac_cv_init_dir="$withval", ac_cv_init_dir="$ac_cv_init_dir"
+    )
+    INIT_DIR="$ac_cv_init_dir"
+    AC_SUBST(INIT_DIR, ["$ac_cv_init_dir"])
 ])
 
 dnl OS specific configuration

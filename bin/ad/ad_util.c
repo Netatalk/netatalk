@@ -138,9 +138,11 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 
 void closevol(afpvol_t *vol)
 {
-    if (vol->vol->v_cdb) {
-        cnid_close(vol->vol->v_cdb);
-        vol->vol->v_cdb = NULL;
+    if (vol->vol) {
+        if (vol->vol->v_cdb) {
+            cnid_close(vol->vol->v_cdb);
+            vol->vol->v_cdb = NULL;
+        }
     }
     memset(vol, 0, sizeof(afpvol_t));
 }

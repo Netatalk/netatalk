@@ -6,3 +6,4 @@ Makefile.in
 .libs
 dummy.o
 libatalk.abi.tmp
+*dev.abi

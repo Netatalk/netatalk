@@ -108,7 +108,7 @@ int remove_acl_vfs(const char *name)
 
 
     /* Remove default ACL if it's a dir */
-    EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_MISC);
+    EC_ZERO_ERR(stat(name, &st), AFPERR_MISC);
     if (S_ISDIR(st.st_mode)) {
         EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
         EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, acl), AFPERR_MISC);
@@ -129,6 +129,7 @@ int remove_acl_vfs(const char *name)
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
 
 EC_CLEANUP:
+    if (errno == ENOENT) EC_STATUS(0);
     if (acl) acl_free(acl);
 
     EC_EXIT;

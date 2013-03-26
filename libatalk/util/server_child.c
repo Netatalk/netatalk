@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
+ * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com
  * All rights reserved. See COPYRIGHT.
- *
  *
  * handle inserting, removing, and freeing of children.
  * this does it via a hash table. it incurs some overhead over
@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
@@ -47,41 +48,34 @@
 #endif
 
 /* hash/child functions: hash OR's pid */
-#define CHILD_HASHSIZE 32
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
 
-typedef struct server_child_fork {
-    struct server_child_data *table[CHILD_HASHSIZE];
-    void (*cleanup)(const pid_t);
-} server_child_fork;
-
-static inline void hash_child(struct server_child_data **htable,
-                              struct server_child_data *child)
+static inline void hash_child(afp_child_t **htable, afp_child_t *child)
 {
-    struct server_child_data **table;
+    afp_child_t **table;
 
-    table = &htable[HASH(child->pid)];
-    if ((child->next = *table) != NULL)
-        (*table)->prevp = &child->next;
+    table = &htable[HASH(child->afpch_pid)];
+    if ((child->afpch_next = *table) != NULL)
+        (*table)->afpch_prevp = &child->afpch_next;
     *table = child;
-    child->prevp = table;
+    child->afpch_prevp = table;
 }
 
-static inline void unhash_child(struct server_child_data *child)
+static inline void unhash_child(afp_child_t *child)
 {
-    if (child->prevp) {
-        if (child->next)
-            child->next->prevp = child->prevp;
-        *(child->prevp) = child->next;
+    if (child->afpch_prevp) {
+        if (child->afpch_next)
+            child->afpch_next->afpch_prevp = child->afpch_prevp;
+        *(child->afpch_prevp) = child->afpch_next;
     }
 }
 
-static struct server_child_data *resolve_child(struct server_child_data **table, pid_t pid)
+afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
 {
-    struct server_child_data *child;
+    afp_child_t *child;
 
-    for (child = table[HASH(pid)]; child; child = child->next) {
-        if (child->pid == pid)
+    for (child = childs->servch_table[HASH(pid)]; child; child = child->afpch_next) {
+        if (child->afpch_pid == pid)
             break;
     }
 
@@ -89,23 +83,15 @@ static struct server_child_data *resolve_child(struct server_child_data **table,
 }
 
 /* initialize server_child structure */
-server_child *server_child_alloc(const int connections, const int nforks)
+server_child_t *server_child_alloc(int connections)
 {
-    server_child *children;
+    server_child_t *children;
 
-    children = (server_child *) calloc(1, sizeof(server_child));
-    if (!children)
+    if (!(children = (server_child_t *)calloc(1, sizeof(server_child_t))))
         return NULL;
 
-    children->nsessions = connections;
-    children->nforks = nforks;
-    children->fork = (void *) calloc(nforks, sizeof(server_child_fork));
-
-    if (!children->fork) {
-        free(children);
-        return NULL;
-    }
-
+    children->servch_nsessions = connections;
+    pthread_mutex_init(&children->servch_lock, NULL);
     return children;
 }
 
@@ -113,17 +99,11 @@ server_child *server_child_alloc(const int connections, const int nforks)
  * add a child
  * @return pointer to struct server_child_data on success, NULL on error
  */
-afp_child_t *server_child_add(server_child *children, int forkid, pid_t pid, int ipc_fd)
+afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
 {
-    server_child_fork *fork;
     afp_child_t *child = NULL;
-    sigset_t sig, oldsig;
 
-    /* we need to prevent deletions from occuring before we get a
-     * chance to add the child in. */
-    sigemptyset(&sig);
-    sigaddset(&sig, SIGCHLD);
-    pthread_sigmask(SIG_BLOCK, &sig, &oldsig);
+    pthread_mutex_lock(&children->servch_lock);
 
     /* it's possible that the child could have already died before the
      * pthread_sigmask. we need to check for this. */
@@ -132,118 +112,106 @@ afp_child_t *server_child_add(server_child *children, int forkid, pid_t pid, int
         goto exit;
     }
 
-    fork = (server_child_fork *) children->fork + forkid;
-
     /* if we already have an entry. just return. */
-    if ((child = resolve_child(fork->table, pid)))
+    if ((child = server_child_resolve(children, pid)))
         goto exit;
 
     if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
         goto exit;
 
-    child->pid = pid;
-    child->valid = 0;
-    child->killed = 0;
-    child->ipc_fd = ipc_fd;
+    child->afpch_pid = pid;
+    child->afpch_ipc_fd = ipc_fd;
+    child->afpch_logintime = time(NULL);
 
-    hash_child(fork->table, child);
-    children->count++;
+    hash_child(children->servch_table, child);
+    children->servch_count++;
 
 exit:
-    pthread_sigmask(SIG_SETMASK, &oldsig, NULL);
+    pthread_mutex_unlock(&children->servch_lock);
     return child;
 }
 
 /* remove a child and free it */
-int server_child_remove(server_child *children, const int forkid, pid_t pid)
+int server_child_remove(server_child_t *children, pid_t pid)
 {
     int fd;
-    server_child_fork *fork;
-    struct server_child_data *child;
+    afp_child_t *child;
 
-    fork = (server_child_fork *) children->fork + forkid;
-    if (!(child = resolve_child(fork->table, pid)))
+    if (!(child = server_child_resolve(children, pid)))
         return -1;
 
+    pthread_mutex_lock(&children->servch_lock);
+
     unhash_child(child);
-    if (child->clientid) {
-        free(child->clientid);
-        child->clientid = NULL;
+    if (child->afpch_clientid) {
+        free(child->afpch_clientid);
+        child->afpch_clientid = NULL;
     }
 
     /* In main:child_handler() we need the fd in order to remove it from the pollfd set */
-    fd = child->ipc_fd;
+    fd = child->afpch_ipc_fd;
     if (fd != -1)
         close(fd);
 
     free(child);
-    children->count--;
+    children->servch_count--;
 
-    if (fork->cleanup)
-        fork->cleanup(pid);
+    pthread_mutex_unlock(&children->servch_lock);
 
     return fd;
 }
 
 /* free everything: by using a hash table, this increases the cost of
  * this part over a linked list by the size of the hash table */
-void server_child_free(server_child *children)
+void server_child_free(server_child_t *children)
 {
-    server_child_fork *fork;
-    struct server_child_data *child, *tmp;
-    int i, j;
+    afp_child_t *child, *tmp;
+    int j;
 
-    for (i = 0; i < children->nforks; i++) {
-        fork = (server_child_fork *) children->fork + i;
-        for (j = 0; j < CHILD_HASHSIZE; j++) {
-            child = fork->table[j]; /* start at the beginning */
-            while (child) {
-                tmp = child->next;
-                close(child->ipc_fd);
-                if (child->clientid) {
-                    free(child->clientid);
-                }
-                free(child);
-                child = tmp;
-            }
+    for (j = 0; j < CHILD_HASHSIZE; j++) {
+        child = children->servch_table[j]; /* start at the beginning */
+        while (child) {
+            tmp = child->afpch_next;
+            close(child->afpch_ipc_fd);
+            if (child->afpch_clientid)
+                free(child->afpch_clientid);
+            if (child->afpch_volumes)
+                free(child->afpch_volumes);
+            free(child);
+            child = tmp;
         }
     }
-    free(children->fork);
+
     free(children);
 }
 
 /* send signal to all child processes */
-void server_child_kill(server_child *children, int forkid, int sig)
+void server_child_kill(server_child_t *children, int sig)
 {
-    server_child_fork *fork;
-    struct server_child_data *child, *tmp;
+    afp_child_t *child, *tmp;
     int i;
 
-    fork = (server_child_fork *) children->fork + forkid;
     for (i = 0; i < CHILD_HASHSIZE; i++) {
-        child = fork->table[i];
+        child = children->servch_table[i];
         while (child) {
-            tmp = child->next;
-            kill(child->pid, sig);
+            tmp = child->afpch_next;
+            kill(child->afpch_pid, sig);
             child = tmp;
         }
     }
 }
 
-/* send kill to a child processes.
- * a plain-old linked list
- * FIXME use resolve_child ?
- */
-static int kill_child(struct server_child_data *child)
+/* send kill to a child processes */
+static int kill_child(afp_child_t *child)
 {
-    if (!child->killed) {
-        kill(child->pid, SIGTERM);
+    if (!child->afpch_killed) {
+        kill(child->afpch_pid, SIGTERM);
         /* we don't wait because there's no guarantee that we can really kill it */
-        child->killed = 1;
+        child->afpch_killed = 1;
         return 1;
     } else {
-        LOG(log_info, logtype_default, "Unresponsive child[%d], sending SIGKILL", child->pid);
-        kill(child->pid, SIGKILL);
+        LOG(log_info, logtype_default, "Unresponsive child[%d], sending SIGKILL", child->afpch_pid);
+        kill(child->afpch_pid, SIGKILL);
     }
     return 1;
 }
@@ -252,19 +220,16 @@ static int kill_child(struct server_child_data *child)
  * Try to find an old session and pass socket
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
-int server_child_transfer_session(server_child *children,
-                                  int forkid,
+int server_child_transfer_session(server_child_t *children,
                                   pid_t pid,
                                   uid_t uid,
                                   int afp_socket,
                                   uint16_t DSI_requestID)
 {
     EC_INIT;
-    server_child_fork *fork;
-    struct server_child_data *child;
+    afp_child_t *child;
 
-    fork = (server_child_fork *) children->fork + forkid;
-    if ((child = resolve_child(fork->table, pid)) == NULL) {
+    if ((child = server_child_resolve(children, pid)) == NULL) {
         LOG(log_note, logtype_default, "Reconnect: no child[%u]", pid);
         if (kill(pid, 0) == 0) {
             LOG(log_note, logtype_default, "Reconnect: terminating old session[%u]", pid);
@@ -279,23 +244,23 @@ int server_child_transfer_session(server_child *children,
         return 0;
     }
 
-    if (!child->valid) {
+    if (!child->afpch_valid) {
         /* hmm, client 'guess' the pid, rogue? */
         LOG(log_error, logtype_default, "Reconnect: invalidated child[%u]", pid);
         return 0;
-    } else if (child->uid != uid) {
+    } else if (child->afpch_uid != uid) {
         LOG(log_error, logtype_default, "Reconnect: child[%u] not the same user", pid);
         return 0;
     }
 
     LOG(log_note, logtype_default, "Reconnect: transfering session to child[%u]", pid);
     
-    if (writet(child->ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
+    if (writet(child->afpch_ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_default, "Reconnect: error sending DSI id to child[%u]", pid);
         EC_STATUS(-1);
         goto EC_CLEANUP;
     }
-    EC_ZERO_LOG(send_fd(child->ipc_fd, afp_socket));
+    EC_ZERO_LOG(send_fd(child->afpch_ipc_fd, afp_socket));
     EC_ZERO_LOG(kill(pid, SIGURG));
 
     EC_STATUS(1);
@@ -307,64 +272,54 @@ EC_CLEANUP:
 
 /* see if there is a process for the same mac     */
 /* if the times don't match mac has been rebooted */
-void server_child_kill_one_by_id(server_child *children, int forkid, pid_t pid,
+void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                  uid_t uid, uint32_t idlen, char *id, uint32_t boottime)
 {
-    server_child_fork *fork;
-    struct server_child_data *child, *tmp;
+    afp_child_t *child, *tmp;
     int i;
 
-    fork = (server_child_fork *)children->fork + forkid;
-
+    pthread_mutex_lock(&children->servch_lock);
+    
     for (i = 0; i < CHILD_HASHSIZE; i++) {
-        child = fork->table[i];
+        child = children->servch_table[i];
         while (child) {
-            tmp = child->next;
-            if ( child->pid != pid) {
-                if (child->idlen == idlen && memcmp(child->clientid, id, idlen) == 0) {
-                    if ( child->time != boottime ) {
+            tmp = child->afpch_next;
+            if (child->afpch_pid != pid) {
+                if (child->afpch_idlen == idlen && memcmp(child->afpch_clientid, id, idlen) == 0) {
+                    if ( child->afpch_boottime != boottime ) {
                         /* Client rebooted */
-                        if (uid == child->uid) {
+                        if (uid == child->afpch_uid) {
                             kill_child(child);
                             LOG(log_warning, logtype_default,
                                 "Terminated disconnected child[%u], client rebooted.",
-                                child->pid);
+                                child->afpch_pid);
                         } else {
                             LOG(log_warning, logtype_default,
-                                "Session with different pid[%u]", child->pid);
+                                "Session with different pid[%u]", child->afpch_pid);
                         }
                     } else {
                         /* One client with multiple sessions */
                         LOG(log_debug, logtype_default,
-                            "Found another session[%u] for client[%u]", child->pid, pid);
+                            "Found another session[%u] for client[%u]", child->afpch_pid, pid);
                     }
                 }
             } else {
                 /* update childs own slot */
-                child->time = boottime;
-                if (child->clientid)
-                    free(child->clientid);
-                LOG(log_debug, logtype_default, "Setting client ID for %u", child->pid);
-                child->uid = uid;
-                child->valid = 1;
-                child->idlen = idlen;
-                child->clientid = id;
+                child->afpch_boottime = boottime;
+                if (child->afpch_clientid)
+                    free(child->afpch_clientid);
+                LOG(log_debug, logtype_default, "Setting client ID for %u", child->afpch_pid);
+                child->afpch_uid = uid;
+                child->afpch_valid = 1;
+                child->afpch_idlen = idlen;
+                child->afpch_clientid = id;
             }
             child = tmp;
         }
     }
+
+    pthread_mutex_unlock(&children->servch_lock);
 }
-
-/* for extra cleanup if necessary */
-void server_child_setup(server_child *children, const int forkid,
-                        void (*fcn)(const pid_t))
-{
-    server_child_fork *fork;
-
-    fork = (server_child_fork *) children->fork + forkid;
-    fork->cleanup = fcn;
-}
-
 
 /* ---------------------------
  * reset children signals

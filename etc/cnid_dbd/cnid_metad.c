@@ -184,8 +184,8 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
     time(&t);
     if (!up) {
         /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
-        for (i = 0; i <= maxvol; i++) {
-            if (srv[i].v_path == NULL && i < MAXVOLS) {
+        for (i = 0; i <= maxvol && i < MAXVOLS; i++) {
+            if (srv[i].v_path == NULL) {
                 up = &srv[i];
                 if ((up->v_path = strdup(volpath)) == NULL)
                     return -1;

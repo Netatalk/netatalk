@@ -1157,17 +1157,21 @@ static int set_acl(const struct vol *vol,
     }
     LOG(log_debug7, logtype_afpd, "set_acl: copied %d trivial ACEs", trivial_ace_count);
 
-    /* Ressourcefork first.
-       Note: for dirs we set the same ACL on the .AppleDouble/.Parent _file_. This
-       might be strange for ACE_DELETE_CHILD and for inheritance flags. */
+    /* Ressourcefork first */
     if ((ret = (vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
-        LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
-        if (errno == (EACCES | EPERM))
+        LOG(log_debug, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
+        switch (errno) {
+        case EACCES:
+        case EPERM:
             EC_STATUS(AFPERR_ACCESS);
-        else if (errno == ENOENT)
-            EC_STATUS(AFPERR_NOITEM);
-        else
+            break;
+        case ENOENT:
+            EC_STATUS(AFP_OK);
+            break;
+        default:
             EC_STATUS(AFPERR_MISC);
+            break;
+        }
         goto EC_CLEANUP;
     }
     if ((ret = (acl(name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
@@ -1362,6 +1366,8 @@ static int check_acl_access(const AFPObj *obj,
 
     LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
         cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
+
+    AFP_ASSERT(vol);
 
     /* This check is not used anymore, as OS X Server seems to be ignoring too */
 #if 0

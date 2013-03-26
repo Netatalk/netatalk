@@ -228,8 +228,10 @@ static int delete_db(void)
     LOG(log_warning, logtype_cnid, "Recreated CNID BerkeleyDB databases of volume \"%s\"", vol->v_localname);
 
 EC_CLEANUP:
-    if (cwd != -1)
+    if (cwd != -1) {
         fchdir(cwd);
+        close(cwd);
+    }
     EC_EXIT;
 }
 

@@ -170,7 +170,11 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
         }
 
         /* next part */
-        if ((uname = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) {
+        AFP_CNID_START("cnid_resolve");
+        uname = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen);
+        AFP_CNID_DONE();
+
+        if (uname == NULL) {
             afp_errno = AFPERR_NOOBJ;
             ret = NULL;
             goto exit;

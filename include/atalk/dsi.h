@@ -138,7 +138,7 @@ typedef struct DSI {
 #define DSI_DEFQUANT        2           /* default attention quantum size */
 #define DSI_SERVQUANT_MAX   0xffffffff  /* server quantum */
 #define DSI_SERVQUANT_MIN   32000       /* minimum server quantum */
-#define DSI_SERVQUANT_DEF   0x0004A2E0L /* default server quantum */
+#define DSI_SERVQUANT_DEF   0x100000L   /* default server quantum (1 MB) */
 
 /* default port number */
 #define DSI_AFPOVERTCP_PORT 548
@@ -154,9 +154,6 @@ typedef struct DSI {
 #define DSI_RECONSOCKET      (1 << 7) /* we have a new socket from primary reconnect */
 #define DSI_RECONINPROG      (1 << 8) /* used in the new session in reconnect */
 #define DSI_AFP_LOGGED_OUT   (1 << 9) /* client called afp_logout, quit on next EOF from socket */
-#if 0
-#define DSI_GOT_ECONNRESET   (1 << 10) /* got ECONNRESET from client => exit */
-#endif
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port);
@@ -165,7 +162,7 @@ extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, con
 extern void dsi_free(DSI *dsi);
 
 /* in dsi_getsess.c */
-extern int dsi_getsession (DSI *, server_child *, const int, afp_child_t **);
+extern int dsi_getsession (DSI *, server_child_t *, const int, afp_child_t **);
 extern void dsi_kill (int);
 
 

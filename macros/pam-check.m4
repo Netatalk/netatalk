@@ -138,6 +138,15 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
 	    AC_DEFINE(USE_PAM, 1, [Define to enable PAM support])
 	fi
 
+    AC_ARG_WITH(
+        pam-confdir,
+        [AS_HELP_STRING([--with-pam-confdir=PATH],[Path to PAM config dir (default: ${sysconfdir}/pam.d)])],
+        ac_cv_pamdir=$withval,
+        ac_cv_pamdir='${sysconfdir}/pam.d'
+    )
+
+    PAMDIR="$ac_cv_pamdir"
+
     LIB_REMOVE_USR_LIB(PAM_LIBS)
     CFLAGS_REMOVE_USR_INCLUDE(PAM_CFLAGS)
 	AC_SUBST(PAMDIR)
