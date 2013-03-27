@@ -1,5 +1,8 @@
 Changes in 3.0.4
 ================
+* FIX: Opening files without metadata EA may result in an invalid
+       metadata EA. Check for malformed metadata EAs and delete them.
+       Fixes bug #510.
 
 Changes in 3.0.3
 ================
