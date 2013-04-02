@@ -271,9 +271,18 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     slq->slq_state = SLQ_STATE_NEW;
     slq->slq_obj = obj;
     slq->slq_vol = v;
+
+    /* convert spotlight query charset to host charset */
     EC_NULL_LOG( sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryString") );
-    LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", sl_query);
-    slq->slq_qstring = talloc_steal(slq, sl_query);
+    char slq_host[MAXPATHLEN + 1];
+    uint16_t convflags = v->v_mtou_flags;
+    size_t slq_maclen;
+    if (convert_charset(CH_UTF8_MAC, v->v_volcharset, v->v_maccharset, sl_query, strlen(sl_query), slq_host, MAXPATHLEN, &convflags) == -1) {
+        LOG(log_error, logtype_afpd, "sl_rpc_openQuery(\"%s\"): charset conversion failed", sl_query);
+        EC_FAIL;
+    }
+    slq->slq_qstring = talloc_strdup(slq, slq_host);
+    LOG(log_debug, logtype_sl, "sl_rpc_openQuery: %s", slq->slq_qstring);
 
     slq->slq_time = time(NULL);
     EC_NULL_LOG( uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1) );
