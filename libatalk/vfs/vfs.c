@@ -355,24 +355,17 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
     struct stat st;
     int len;
 
-    if ((stat(path, &st)) != 0)
-	return -1;
-    if (S_ISDIR(st.st_mode)) {
-	len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
-	if (len < 0 || len >=  MAXPATHLEN)
-	    return -1;
-	/* set acl on .AppleDouble dir first */
-	if ((acl(buf, cmd, count, aces)) != 0)
-	    return -1;
-	/* now set ACL on ressource fork */
-	if ((acl(vol->ad_path(path, ADFLAGS_DIR), cmd, count, aces)) != 0)
-	    return -1;
-    } else
-	/* set ACL on ressource fork */
-	if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
-	    return -1;
-
-    return 0;
+    if ((stat(path, &st)) != 0) {
+        if (errno == ENOENT)
+            return AFP_OK;
+        return AFPERR_MISC;
+    }
+    if (!S_ISDIR(st.st_mode)) {
+        /* set ACL on ressource fork */
+        if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
+            return AFPERR_MISC;
+    }
+    return AFP_OK;
 }
 
 static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
@@ -381,20 +374,15 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
     static char buf[ MAXPATHLEN + 1];
     int len;
 
-    if (dir) {
-	len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
-	if (len < 0 || len >=  MAXPATHLEN)
-	    return AFPERR_MISC;
-	/* remove ACL from .AppleDouble/.Parent first */
-	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
-	    return ret;
-	/* now remove from .AppleDouble dir */
-	if ((ret = remove_acl_vfs(buf)) != AFP_OK)
-	    return ret;
-    } else
-	/* remove ACL from ressource fork */
-	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
-	    return ret;
+    if (dir)
+        return AFP_OK;
+
+    /* remove ACL from ressource fork */
+    if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK) {
+        if (errno == ENOENT)
+            return AFP_OK;
+        return ret;
+    }
 
     return AFP_OK;
 }
@@ -404,55 +392,35 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
 {
     EC_INIT;
-    static char buf[ MAXPATHLEN + 1];
     struct stat st;
-    int len;
 
     if (stat(path, &st) == -1)
         EC_FAIL;
 
-    if (S_ISDIR(st.st_mode)) {
-        len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
-        if (len < 0 || len >=  MAXPATHLEN)
-            EC_FAIL;
-        /* set acl on .AppleDouble dir first */
-        EC_ZERO_LOG(acl_set_file(buf, type, acl));
-
-        if (type == ACL_TYPE_ACCESS)
-            /* set ACL on ressource fork (".Parent") too */
-            EC_ZERO_LOG(acl_set_file(vol->ad_path(path, ADFLAGS_DIR), type, acl));
-    } else {
+    if (!S_ISDIR(st.st_mode)) {
         /* set ACL on ressource fork */
-        EC_ZERO_LOG(acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl));
+        EC_ZERO_ERR( acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl), AFPERR_MISC );
     }
     
 EC_CLEANUP:
-    if (ret != 0)
-        return AFPERR_MISC;
-    return AFP_OK;
+    if (errno == ENOENT)
+        EC_STATUS(AFP_OK);
+    EC_EXIT;
 }
 
 static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 {
     EC_INIT;
-    static char buf[ MAXPATHLEN + 1];
-    int len;
 
-    if (dir) {
-        len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
-        if (len < 0 || len >=  MAXPATHLEN)
-            return AFPERR_MISC;
-        /* remove ACL from .AppleDouble/.Parent first */
-        EC_ZERO_LOG_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_DIR)), AFPERR_MISC);
+    if (dir)
+        EC_EXIT_STATUS(AFP_OK);
 
-        /* now remove from .AppleDouble dir */
-        EC_ZERO_LOG_ERR(remove_acl_vfs(buf), AFPERR_MISC);
-    } else {
-        /* remove ACL from ressource fork */
-        EC_ZERO_LOG_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC);
-    }
+    /* remove ACL from ressource fork */
+    EC_ZERO_ERR( remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC );
 
 EC_CLEANUP:
+    if (errno == ENOENT)
+        EC_STATUS(AFP_OK);
     EC_EXIT;
 }
 #endif

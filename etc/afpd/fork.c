@@ -386,6 +386,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if (ad_open(ofork->of_ad, upath, adflags, 0666) == 0) {
         ofork->of_flags |= AFPFORK_META;
+        if (ad_get_MD_flags(ofork->of_ad) & O_CREAT) {
+            LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): setting CNID", upath);
+            cnid_t id;
+            if ((id = get_id(vol, ofork->of_ad, st, dir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+                LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+                goto openfork_err;
+            }
+            (void)ad_setid(ofork->of_ad, st->st_dev, st->st_ino, id, dir->d_did, vol->v_stamp);
+            ad_flush(ofork->of_ad);
+        }
     } else {
         switch (errno) {
         case EACCES:
@@ -798,7 +808,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %" PRIu64 ")",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount, size);
 
-    if (offset > size) {
+    if (offset >= size) {
         err = AFPERR_EOF;
         goto afp_read_err;
     }
@@ -837,11 +847,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 #endif
 
-    *rbuflen = MIN(reqcount, *rbuflen);
+    *rbuflen = MIN(reqcount, dsi->server_quantum);
 
-    err = read_file(ofork, eid, offset, rbuf, rbuflen);
-    if (err < 0)
+    cc = read_file(ofork, eid, offset, ibuf, rbuflen);
+    if (cc < 0) {
+        err = cc;
         goto afp_read_done;
+    }
 
     LOG(log_debug, logtype_afpd,
         "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
@@ -854,18 +866,22 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
      * we know that we're sending some data. if we fail, something
      * horrible happened.
      */
-    if ((cc = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
+    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0)
         goto afp_read_exit;
     *rbuflen = cc;
 
     while (*rbuflen > 0) {
-        cc = read_file(ofork, eid, offset, rbuf, rbuflen);
+        /*
+         * This loop isn't really entered anymore, we've already
+         * sent the whole requested block in dsi_readinit().
+         */
+        cc = read_file(ofork, eid, offset, ibuf, rbuflen);
         if (cc < 0)
             goto afp_read_exit;
 
         offset += *rbuflen;
         /* dsi_read() also returns buffer size of next allocation */
-        cc = dsi_read(dsi, rbuf, *rbuflen); /* send it off */
+        cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
         if (cc < 0)
             goto afp_read_exit;
         *rbuflen = cc;

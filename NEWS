@@ -1,3 +1,9 @@
+Changes in 3.0.4
+================
+* FIX: Opening files without metadata EA may result in an invalid
+       metadata EA. Check for malformed metadata EAs and delete them.
+       Fixes bug #510.
+
 Changes in 3.0.3
 ================
 * UPD: afpd: Increase default DSI server quantum to 1 MB
@@ -21,6 +27,7 @@ Changes in 3.0.3
        system security configuration files.
        New option 'afpstats' (default: no) which determines whether
        to enable the feature or not.
+* NEW: configure option --with-init-dir
 * NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
        probes.
 * UPD: Reload groups when reloading volumes. FR #71.
@@ -35,6 +42,16 @@ Changes in 3.0.3
 * FIX: Permissions of ._ AppleDouble ressource fork after conversion
        from v2 to ea.
        Fixes bug #505.
+* UPD: Use FreeBSD sendfile() capability to send protocol header.
+       From FR #75.
+* UPD: Increase IO size when sendfile() is not used.
+       From FR #76.
+* FIX: Can't set Finder label on symlinked folder with "follow symlinks = yes".
+       Fixes bug #508.
+* FIX: Setting POSIX ACLs on Linux
+       Fixes bug #506.
+* FIX: "ad ls" segfault if requested object is not in an AFP volume.
+       Fixes bug #496.
 
 Changes in 3.0.2
 ================

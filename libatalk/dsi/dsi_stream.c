@@ -344,6 +344,16 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
     int sfvcnt;
     struct sendfilevec vec[2];
     ssize_t nwritten;
+#elif defined(FREEBSD)
+    ssize_t nwritten;
+    void *hdrp;
+    struct sf_hdtr hdr;
+    struct iovec iovec;
+    hdr.headers = &iovec;
+    hdr.hdr_cnt = 1;
+    hdr.trailers = NULL;
+    hdr.trl_cnt = 0;
+    hdrp = &hdr;
 #endif
 
     LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file(off: %jd, len: %zu)", (intmax_t)offset, length);
@@ -372,6 +382,9 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
     vec[1].sfv_flag = 0;
     vec[1].sfv_off = offset;
     vec[1].sfv_len = length;
+#elif defined(FREEBSD)
+    iovec.iov_base = block;
+    iovec.iov_len = DSI_BLOCKSIZ;
 #else
     dsi_stream_write(dsi, block, sizeof(block), DSI_MSG_MORE);
 #endif
@@ -380,6 +393,10 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
 #ifdef HAVE_SENDFILEV
         nwritten = 0;
         len = sendfilev(dsi->socket, vec, sfvcnt, &nwritten);
+#elif defined(FREEBSD)
+        len = sendfile(fromfd, dsi->socket, pos, total - written, hdrp, &nwritten, 0);
+        if (len == 0)
+            len = nwritten;
 #else
         len = sys_sendfile(dsi->socket, fromfd, &pos, total - written);
 #endif
@@ -388,16 +405,14 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
             case EINTR:
             case EAGAIN:
                 len = 0;
-#ifdef HAVE_SENDFILEV
+#if defined(HAVE_SENDFILEV) || defined(FREEBSD)
                 len = (size_t)nwritten;
-#else
-#if defined(SOLARIS) || defined(FREEBSD)
+#elif defined(SOLARIS)
                 if (pos > offset) {
                     /* we actually have sent sth., adjust counters and keep trying */
                     len = pos - offset;
                     offset = pos;
                 }
-#endif /* defined(SOLARIS) || defined(FREEBSD) */
 #endif /* HAVE_SENDFILEV */
 
                 if (dsi_peek(dsi) != 0) {
@@ -426,6 +441,18 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
             vec[0].sfv_off += len;
             vec[0].sfv_len -= len;
         }
+#elif defined(FREEBSD)
+        if (hdrp) {
+            if (len >= iovec.iov_len) {
+                hdrp = NULL;
+                len -= iovec.iov_len;   /* len now contains how much sendfile() actually sent from the file */
+            } else {
+                iovec.iov_len -= len;
+                iovec.iov_base += len;
+                len = 0;
+            }
+        }
+        pos += len;
 #endif  /* HAVE_SENDFILEV */
         LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: wrote: %zd", len);
         written += len;
@@ -496,6 +523,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {
   char block[DSI_BLOCKSIZ];
   struct iovec iov[2];
+  int iovecs = 2;
   size_t towrite;
   ssize_t len;
 
@@ -522,7 +550,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   towrite = sizeof(block) + length;
   dsi->write_count += towrite;
   while (towrite > 0) {
-      if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || (len == 0))
+      if (((len = writev(dsi->socket, iov, iovecs)) == -1 && errno == EINTR) || (len == 0))
           continue;
     
       if ((size_t)len == towrite) /* wrote everything out */
@@ -543,12 +571,13 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
           iov[0].iov_base = (char *) iov[0].iov_base + len;
           iov[0].iov_len -= len;
       } else { /* skip to data */
-          if (iov[0].iov_len) {
+          if (iovecs == 2) {
+              iovecs = 1;
               len -= iov[0].iov_len;
-              iov[0].iov_len = 0;
+              iov[0] = iov[1];
           }
-          iov[1].iov_base = (char *) iov[1].iov_base + len;
-          iov[1].iov_len -= len;
+          iov[0].iov_base = (char *) iov[0].iov_base + len;
+          iov[0].iov_len -= len;
       }
   }
 

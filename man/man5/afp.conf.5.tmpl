@@ -1035,7 +1035,7 @@ The default setting is false thus symlinks are not followed on the server\&. Thi
 .PP
 invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-make dot files invisible\&.
+make dot files invisible\&. WARNING: enabling this option will lead to unwanted sideeffects were OS X applications when saving files to a temporary file starting with a dot first, then renaming the temp file to its final name, result in the saved file being invisible\&. The only thing this option is useful for is making files that start with a dot invisible on Mac OS 9\&. It\*(Aqs completely useless on Mac OS X, as both in Finder and in Terminal files starting with a dot are hidden anyway\&.
 .RE
 .PP
 network ids = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
