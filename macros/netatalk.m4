@@ -104,6 +104,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
         ac_cv_tracker_prefix=`pkg-config --variable=prefix $ac_cv_tracker_pkg`
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+        AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
 	fi
 
     ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
@@ -120,14 +121,22 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_SUBST(TRACKER_MINER_LIBS)
 	fi
 
-    dnl Test for Tracker 0.6 on Solaris and derived platforms
-    if test x"$this_os" = x"solaris" ; then
+    dnl Test for Tracker 0.6 on Solaris and derived platforms, and FreeBSD
+    if test x"$this_os" = x"solaris" -o x"$this_os" = x"freebsd" ; then
         PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_rdf=yes], [ac_cv_have_tracker_rdf=no])
         if test x"$ac_cv_have_tracker_rdf" = x"yes" ; then
             AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
             AC_DEFINE(HAVE_TRACKER_RDF, 1, [Define if Tracker 0.6 with support for RDF queries is available])
-            ac_cv_tracker_prefix=`pkg-config --variable=prefix tracker`
-            AC_DEFINE_UNQUOTED(TRACKER_RDF_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+            case "$this_os" in
+            *solaris*)
+                AC_DEFINE([DBUS_DAEMON_PATH], ["/usr/lib/dbus-daemon"], [Path to dbus-daemon])
+                AC_DEFINE([TRACKERD_PATH], ["/bin/trackerd"], [Path to trackerd])
+                ;;
+            *freebsd*)
+                AC_DEFINE([DBUS_DAEMON_PATH], ["/usr/local/bin/dbus-daemon"], [Path to dbus-daemon])
+                AC_DEFINE([TRACKERD_PATH], ["/usr/local/libexec/trackerd"], [Path to trackerd])
+                ;;
+            esac
 	    fi
     fi
 

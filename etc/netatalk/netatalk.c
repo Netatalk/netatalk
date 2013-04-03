@@ -249,7 +249,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
     if (trackerd_pid == -1) {
         trackerd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'trackerd' (restarts: %u)", trackerd_restarts);
-        if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", trackerd_loglev, NULL)) == -1) {
+        if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", "/usr/bin/trackerd");
         }
     }
@@ -408,12 +408,7 @@ int main(int argc, char **argv)
     setenv("XDG_CONFIG_HOME", _PATH_CONFDIR, 0);
 #endif
 
-#ifdef HAVE_TRACKER_RDF
-    /* This assumes Tracker 0.6 with RDF is only used on Solaris and derived platforms */
-    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/usr/lib/dbus-daemon");
-#else
-    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", "/bin/dbus-daemon");
-#endif
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", DBUS_DAEMON_PATH);
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
     if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
         LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
@@ -430,8 +425,8 @@ int main(int argc, char **argv)
 #ifdef HAVE_TRACKER_RDF
     if (asprintf(&trackerd_loglev, "--verbosity=%d", obj.options.tracker_loglevel) == -1)
         netatalk_exit(EXITERR_CONF);
-    if ((trackerd_pid = run_process(TRACKER_RDF_PREFIX "/bin/trackerd", trackerd_loglev, NULL)) == -1) {
-        LOG(log_error, logtype_default, "Error starting '%s'", TRACKER_RDF_PREFIX "/bin/trackerd");
+    if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", TRACKERD_PATH);
         netatalk_exit(EXITERR_CONF);
     }
 #endif
