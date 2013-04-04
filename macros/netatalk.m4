@@ -744,6 +744,7 @@ LIBS="$save_LIBS"
 
 dnl Check for ACL support
 AC_DEFUN([AC_NETATALK_ACL], [
+ac_cv_have_acls=no
 AC_MSG_CHECKING(whether to support ACLs)
 AC_ARG_WITH(acls,
     [AS_HELP_STRING([--with-acls],
@@ -761,112 +762,125 @@ AC_MSG_RESULT($with_acl_support)
 
 if test x"$with_acl_support" = x"no"; then
 	AC_MSG_RESULT(Disabling ACL support)
-	AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support should be built in])
-else
-    with_acl_support=yes
 fi
 
-if test x"$with_acl_support" = x"yes" ; then
-	AC_MSG_NOTICE(checking whether ACL support is available:)
+# Platform specific checks
+if test x"$with_acl_support" != x"no" ; then
 	case "$host_os" in
-	*sysv5*)
-		AC_MSG_NOTICE(Using UnixWare ACLs)
-		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
-		;;
 	*solaris*)
 		AC_MSG_NOTICE(Using solaris ACLs)
-		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
+		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether Solaris ACLs are available])
+		AC_DEFINE(HAVE_NFSV4_ACLS,1,[Whether NFSv4 ACLs are available])
 		ACL_LIBS="$ACL_LIBS -lsec"
+		ac_cv_have_acls=yes
 		;;
-	*hpux*)
-		AC_MSG_NOTICE(Using HPUX ACLs)
-		AC_DEFINE(HAVE_HPUX_ACLS,1,[Whether HPUX ACLs are available])
+	*freebsd*)
+		AC_MSG_NOTICE(checking whether libsunacl is available)
+		sunacl_include_path="/usr/local/include"
+		sunacl_lib_path="/usr/local/lib"
+
+		save_CPPFLAGS=$CPPFLAGS
+		save_LDFLAGS=$LDFLAGS
+		save_LIBS=$LIBS
+
+		CPPFLAGS="-I$sunacl_include_path $CPPFLAGS"
+		AC_CHECK_HEADER([sunacl.h])
+
+		LDFLAGS="-L$sunacl_lib_path $LDFLAGS"
+		AC_CHECK_LIB([sunacl], [acl])
+
+		if test x"$ac_cv_header_sunacl_h" = x"yes" -a x"$ac_cv_lib_sunacl_acl" = x"yes" ; then
+			AC_MSG_NOTICE([Enabling support for ZFS ACLs using libsunacl])
+			ac_cv_have_acls=yes
+			CFLAGS="-I$sunacl_include_path $CFLAGS"
+			ACL_LIBS="$ACL_LIBS -L$sunacl_lib_path -lsunacl"
+			AC_DEFINE(HAVE_FREEBSD_SUNACL, 1, [Whether FreeBSD ZFS ACLs with libsunacl are available])
+			AC_DEFINE(HAVE_NFSV4_ACLS,1,[Whether NFSv4 ACLs are available])
+		else
+			AC_MSG_NOTICE([libsunacl not found, disabling ZFS ACL support])
+		fi
+
+		CPPFLAGS=$save_CPPFLAGS
+		LDFLAGS=$save_LDFLAGS
+		LIBS=$save_LIBS
 		;;
-	*irix*)
-		AC_MSG_NOTICE(Using IRIX ACLs)
-		AC_DEFINE(HAVE_IRIX_ACLS,1,[Whether IRIX ACLs are available])
+	esac
+fi
+
+if test x"$with_acl_support" != x"no" -a x"$ac_cv_have_acls" != x"yes" ; then
+	# Runtime checks for POSIX ACLs
+	AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
+	case "$host_os" in
+	*linux*)
+		AC_CHECK_LIB(attr,getxattr,[ACL_LIBS="$ACL_LIBS -lattr"])
 		;;
-	*aix*)
-		AC_MSG_NOTICE(Using AIX ACLs)
-		AC_DEFINE(HAVE_AIX_ACLS,1,[Whether AIX ACLs are available])
-		;;
-	*osf*)
-		AC_MSG_NOTICE(Using Tru64 ACLs)
-		AC_DEFINE(HAVE_TRU64_ACLS,1,[Whether Tru64 ACLs are available])
-		ACL_LIBS="$ACL_LIBS -lpacl"
-		;;
-	*darwin*)
-		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
-		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
-		;;
-	*)
-		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
-		case "$host_os" in
-		*linux*)
-			AC_CHECK_LIB(attr,getxattr,[ACL_LIBS="$ACL_LIBS -lattr"])
-			;;
-		esac
-		AC_CACHE_CHECK([for POSIX ACL support],netatalk_cv_HAVE_POSIX_ACLS,[
+	esac
+
+	AC_CACHE_CHECK([for POSIX ACL support],netatalk_cv_HAVE_POSIX_ACLS,[
+		acl_LIBS=$LIBS
+		LIBS="$LIBS $ACL_LIBS"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+			#include <sys/types.h>
+			#include <sys/acl.h>
+		]], [[
+			acl_t acl;
+			int entry_id;
+			acl_entry_t *entry_p;
+			return acl_get_entry(acl, entry_id, entry_p);
+		]])],
+			[netatalk_cv_HAVE_POSIX_ACLS=yes; ac_cv_have_acls=yes],
+			[netatalk_cv_HAVE_POSIX_ACLS=no; ac_cv_have_acls=no]
+		)
+		LIBS=$acl_LIBS
+	])
+
+	if test x"$netatalk_cv_HAVE_POSIX_ACLS" = x"yes"; then
+		AC_MSG_NOTICE(Using POSIX ACLs)
+		AC_DEFINE(HAVE_POSIX_ACLS,1,[Whether POSIX ACLs are available])
+
+		AC_CACHE_CHECK([for acl_get_perm_np],netatalk_cv_HAVE_ACL_GET_PERM_NP,[
 			acl_LIBS=$LIBS
 			LIBS="$LIBS $ACL_LIBS"
 			AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 				#include <sys/types.h>
 				#include <sys/acl.h>
 			]], [[
-				acl_t acl;
-				int entry_id;
-				acl_entry_t *entry_p;
-				return acl_get_entry(acl, entry_id, entry_p);
-			]])],[netatalk_cv_HAVE_POSIX_ACLS=yes],[netatalk_cv_HAVE_POSIX_ACLS=no
-                with_acl_support=no])
+				acl_permset_t permset_d;
+				acl_perm_t perm;
+				return acl_get_perm_np(permset_d, perm);
+			]])],[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
 			LIBS=$acl_LIBS
 		])
-		if test x"$netatalk_cv_HAVE_POSIX_ACLS" = x"yes"; then
-			AC_MSG_NOTICE(Using POSIX ACLs)
-			AC_DEFINE(HAVE_POSIX_ACLS,1,[Whether POSIX ACLs are available])
-			AC_CACHE_CHECK([for acl_get_perm_np],netatalk_cv_HAVE_ACL_GET_PERM_NP,[
-				acl_LIBS=$LIBS
-				LIBS="$LIBS $ACL_LIBS"
-				AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-					#include <sys/types.h>
-					#include <sys/acl.h>
-				]], [[
-					acl_permset_t permset_d;
-					acl_perm_t perm;
-					return acl_get_perm_np(permset_d, perm);
-				]])],[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
-				LIBS=$acl_LIBS
-			])
-			if test x"$netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
-				AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
-			fi
-
-
-                       AC_CACHE_CHECK([for acl_from_mode], netatalk_cv_HAVE_ACL_FROM_MODE,[
-                               acl_LIBS=$LIBS
-                               LIBS="$LIBS $ACL_LIBS"
-                AC_CHECK_FUNCS(acl_from_mode,
-                               [netatalk_cv_HAVE_ACL_FROM_MODE=yes],
-                               [netatalk_cv_HAVE_ACL_FROM_MODE=no])
-                               LIBS=$acl_LIBS
-                       ])
-                       if test x"netatalk_cv_HAVE_ACL_FROM_MODE" = x"yes"; then
-                               AC_DEFINE(HAVE_ACL_FROM_MODE,1,[Whether acl_from_mode() is available])
-                       fi
-
-		else
-			AC_MSG_NOTICE(ACL support is not avaliable)
-			AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
+		if test x"$netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
+			AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
 		fi
-		;;
-    esac
+
+		AC_CACHE_CHECK([for acl_from_mode], netatalk_cv_HAVE_ACL_FROM_MODE,[
+			acl_LIBS=$LIBS
+			LIBS="$LIBS $ACL_LIBS"
+			AC_CHECK_FUNCS(acl_from_mode,
+				[netatalk_cv_HAVE_ACL_FROM_MODE=yes],
+				[netatalk_cv_HAVE_ACL_FROM_MODE=no]
+			)
+			LIBS=$acl_LIBS
+		])
+		if test x"netatalk_cv_HAVE_ACL_FROM_MODE" = x"yes"; then
+		   AC_DEFINE(HAVE_ACL_FROM_MODE,1,[Whether acl_from_mode() is available])
+		fi
+	fi
 fi
 
-if test x"$with_acl_support" = x"yes" ; then
-   AC_CHECK_HEADERS([acl/libacl.h])
-    AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
-    AC_SUBST(ACL_LIBS)
+if test x"$ac_cv_have_acls" = x"no" ; then
+	if test x"$with_acl_support" = x"yes" ; then
+		AC_MSG_ERROR(ACL support requested but not found)
+	else
+		AC_MSG_NOTICE(ACL support is not avaliable)
+	fi
+else
+	AC_CHECK_HEADERS([acl/libacl.h])
+	AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
 fi
+AC_SUBST(ACL_LIBS)
 ])
 
 dnl Check for Extended Attributes support

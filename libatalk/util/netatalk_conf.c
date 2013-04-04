@@ -232,7 +232,7 @@ static int check_vol_acl_support(const struct vol *vol)
 {
     int ret = 0;
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     ace_t *aces = NULL;
     ret = 1;
     if (get_nfsv4_acl(vol->v_path, &aces) == -1)
@@ -245,7 +245,7 @@ static int check_vol_acl_support(const struct vol *vol)
         ret = 0;
 #endif
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     if (aces) free(aces);
 #endif
 #ifdef HAVE_POSIX_ACLS

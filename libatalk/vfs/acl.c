@@ -30,7 +30,7 @@
 #include <atalk/errchk.h>
 #include <atalk/acl.h>
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
 int remove_acl_vfs(const char *name)
@@ -86,7 +86,7 @@ exit:
     return ret;
 }
 
-#endif  /* HAVE_SOLARIS_ACLS */
+#endif  /* HAVE_NFSV4_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
 /*!

@@ -27,6 +27,9 @@
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 #endif
+#ifdef HAVE_FREEBSD_SUNACL
+#include <sunacl.h>
+#endif
 #ifdef HAVE_POSIX_ACLS
 #include <sys/acl.h>
 #endif
@@ -76,7 +79,7 @@
  * Solaris funcs
  ********************************************************/
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 
 /*! 
  * Compile access rights for a user to one file-system object
@@ -362,7 +365,7 @@ EC_CLEANUP:
         free(name);
     EC_EXIT;
 }
-#endif /* HAVE_SOLARIS_ACLS */
+#endif /* HAVE_NFSV4_ACLS */
 
 /********************************************************
  * POSIX 1e funcs
@@ -975,7 +978,7 @@ static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 
     switch (type & MAP_MASK) {
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     case SOLARIS_2_DARWIN:
         mapped_aces = map_aces_solaris_to_darwin( acl, buf, ace_count);
         break;
@@ -983,7 +986,7 @@ static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
     case DARWIN_2_SOLARIS:
         mapped_aces = map_aces_darwin_to_solaris( buf, acl, ace_count);
         break;
-#endif /* HAVE_SOLARIS_ACLS */
+#endif /* HAVE_NFSV4_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
     case POSIX_DEFAULT_2_DARWIN:
@@ -1019,7 +1022,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     int mapped_aces = 0;
     int dirflag;
     char *darwin_ace_count = rbuf;
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     int ace_count = 0;
     ace_t *aces = NULL;
 #endif
@@ -1033,10 +1036,10 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     *rbuf = 0;
     rbuf += 4;
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     EC_NEG1(ace_count = get_nfsv4_acl(name, &aces));
     EC_NEG1(mapped_aces = map_acl(SOLARIS_2_DARWIN, aces, (darwin_ace_t *)rbuf, ace_count));
-#endif /* HAVE_SOLARIS_ACLS */
+#endif /* HAVE_NFSV4_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
     acl_t defacl = NULL , accacl = NULL;
@@ -1074,7 +1077,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     EC_STATUS(0);
 
 EC_CLEANUP:
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     if (aces) free(aces);
 #endif
 #ifdef HAVE_POSIX_ACLS
@@ -1092,7 +1095,7 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
 {
     int ret = AFP_OK;
 
-#if (defined HAVE_SOLARIS_ACLS || defined HAVE_POSIX_ACLS)
+#if (defined HAVE_NFSV4_ACLS || defined HAVE_POSIX_ACLS)
     /* Ressource etc. first */
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
         return ret;
@@ -1110,7 +1113,7 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
   We will store inherited ACEs first, which is Darwins canonical order.
   - returns AFPerror code
 */
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 static int set_acl(const struct vol *vol,
                    char *name,
                    int inherit,
@@ -1218,7 +1221,7 @@ EC_CLEANUP:
     LOG(log_debug9, logtype_afpd, "set_acl: END");
     EC_EXIT;
 }
-#endif /* HAVE_SOLARIS_ACLS */
+#endif /* HAVE_NFSV4_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
 #ifndef HAVE_ACL_FROM_MODE
@@ -1419,7 +1422,7 @@ static int check_acl_access(const AFPObj *obj,
         allowed_rights = curdir->d_rights_cache;
         LOG(log_debug, logtype_afpd, "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
     } else {
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
         EC_ZERO_LOG(solaris_acl_rights(obj, path, &st, NULL, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
@@ -1452,7 +1455,7 @@ static int check_acl_access(const AFPObj *obj,
             LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
             EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
             EC_ZERO_LOG(solaris_acl_rights(obj, cfrombstr(parent), &st, NULL, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
@@ -1765,7 +1768,7 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
         getcwdpath(), path, ma->ma_user);
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     EC_ZERO_LOG(solaris_acl_rights(obj, path, st, ma, NULL));
 #endif
 

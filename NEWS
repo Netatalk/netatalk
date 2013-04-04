@@ -2,6 +2,7 @@ Changes in 3.0.6
 ================
 * FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
 * UPD: Don't force S_ISGID for directories on FreeBSD. Bug #525.
+* NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
 
 Changes in 3.0.5
 ================
