@@ -3,6 +3,10 @@ Changes in 3.0.4
 * FIX: Opening files without metadata EA may result in an invalid
        metadata EA. Check for malformed metadata EAs and delete them.
        Fixes bug #510.
+* FIX: Fix an issue with filenames containing non-ASCII characters that
+       lead to a failure setting the size of a files ressource fork.
+       This affected application like Adobe Photoshop where saving
+       files may fail. Fixes bug #511.
 
 Changes in 3.0.3
 ================

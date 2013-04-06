@@ -583,7 +583,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, s
             goto afp_setfork_err;
         }
 
-        err = ad_rtruncate(ofork->of_ad, size);
+        err = ad_rtruncate(ofork->of_ad, mtoupath(ofork->of_vol, of_name(ofork), ofork->of_did, utf8_encoding(obj)), size);
         if (st_size > size)
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);
         if (err < 0)

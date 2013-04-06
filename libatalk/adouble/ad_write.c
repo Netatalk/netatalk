@@ -157,13 +157,13 @@ char            c = 0;
 }
 
 /* ------------------------ */
-int ad_rtruncate( struct adouble *ad, const off_t size)
+int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
 {
     EC_INIT;
 
 #ifndef HAVE_EAFD
     if (ad->ad_vers == AD_VERSION_EA && size == 0)
-        EC_NEG1( unlink(ad->ad_ops->ad_path(ad->ad_name, 0)) );
+        EC_NEG1( unlink(ad->ad_ops->ad_path(uname, 0)) );
     else
 #endif
         EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
@@ -173,7 +173,7 @@ EC_CLEANUP:
         ad->ad_rlen = size;    
     else
         LOG(log_error, logtype_ad, "ad_rtruncate(\"%s\"): %s",
-            fullpathname(ad->ad_name), strerror(errno));
+            fullpathname(uname), strerror(errno));
     EC_EXIT;
 }
 
