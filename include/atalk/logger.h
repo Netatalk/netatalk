@@ -93,6 +93,7 @@ enum logtypes {
   logtype_uams,
   logtype_fce,
   logtype_ad,
+  logtype_sl,
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
 

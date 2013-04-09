@@ -83,6 +83,72 @@ AC_DEFUN([AC_DEVELOPER], [
     AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
 ])
 
+dnl Tracker, for Spotlight
+AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
+    ac_cv_have_tracker=no
+    dnl Tracker SPARQL
+    ac_cv_tracker_pkg_default=tracker-sparql-0.12
+    AC_ARG_WITH([tracker-pkg-config],
+	[AS_HELP_STRING([--with-tracker-pkg-config],[name of the Tracker SPARQL pkg in pkg-config])],
+	[ac_cv_tracker_pkg=$withval],
+	[ac_cv_tracker_pkg=$ac_cv_tracker_pkg_default])
+
+    PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
+
+    if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
+        if test x"$need_tracker" = x"yes" ; then
+            AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
+        fi
+    else
+        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
+        AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
+        ac_cv_tracker_prefix=`pkg-config --variable=prefix $ac_cv_tracker_pkg`
+        AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+        AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
+	fi
+
+    ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
+    AC_ARG_WITH([tracker-miner-pkg-config],
+	[AS_HELP_STRING([--with-tracker-miner-pkg-config],[name of the Tracker miner pkg in pkg-config])],
+	[ac_cv_tracker_miner_pkg=$withval],
+	[ac_cv_tracker_miner_pkg=$ac_cv_tracker_miner_pkg_default])
+
+    PKG_CHECK_MODULES([TRACKER_MINER], [$ac_cv_tracker_miner_pkg >= 0.12], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
+
+    if test x"$ac_cv_have_tracker_miner" = x"yes" ; then
+        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
+        AC_SUBST(TRACKER_MINER_CFLAGS)
+        AC_SUBST(TRACKER_MINER_LIBS)
+	fi
+
+    dnl Test for Tracker 0.6 on Solaris and derived platforms, and FreeBSD
+    if test x"$this_os" = x"solaris" -o x"$this_os" = x"freebsd" ; then
+        PKG_CHECK_MODULES([TRACKER], [tracker >= 0.6], [ac_cv_have_tracker_rdf=yes], [ac_cv_have_tracker_rdf=no])
+        if test x"$ac_cv_have_tracker_rdf" = x"yes" ; then
+            AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
+            AC_DEFINE(HAVE_TRACKER_RDF, 1, [Define if Tracker 0.6 with support for RDF queries is available])
+            case "$this_os" in
+            *solaris*)
+                AC_DEFINE([DBUS_DAEMON_PATH], ["/usr/lib/dbus-daemon"], [Path to dbus-daemon])
+                AC_DEFINE([TRACKERD_PATH], ["/bin/trackerd"], [Path to trackerd])
+                ;;
+            *freebsd*)
+                AC_DEFINE([DBUS_DAEMON_PATH], ["/usr/local/bin/dbus-daemon"], [Path to dbus-daemon])
+                AC_DEFINE([TRACKERD_PATH], ["/usr/local/libexec/trackerd"], [Path to trackerd])
+                ;;
+            esac
+	    fi
+    fi
+
+    if test x"$ac_cv_have_tracker_sparql" = x"yes" -o x"$ac_cv_have_tracker_rdf" = x"yes" ; then
+       ac_cv_have_tracker=yes
+    fi
+    AC_SUBST(TRACKER_CFLAGS)
+    AC_SUBST(TRACKER_LIBS)
+    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER_RDF, [test x"$ac_cv_have_tracker_rdf" = x"yes"])
+])
+
 dnl Whether to disable bundled libevent
 AC_DEFUN([AC_NETATALK_LIBEVENT], [
     AC_MSG_CHECKING([whether to use bundled libevent])

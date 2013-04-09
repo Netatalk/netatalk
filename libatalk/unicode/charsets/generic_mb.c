@@ -35,9 +35,10 @@
 
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
+#include <atalk/byteorder.h>
 
 #include "generic_mb.h"
-#include "../byteorder.h"
+
 
 
 /* ------------------------ */

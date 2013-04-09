@@ -509,7 +509,7 @@ static int copy(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             ppdid = pdid;
-            if ((did = cnid_for_path(&dvolume, to.p_path, &pdid)) == CNID_INVALID) {
+            if ((did = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path, &pdid)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
@@ -577,7 +577,7 @@ static int copy(const char *path,
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
             cnid_t cnid;
-            if ((cnid = cnid_for_path(&dvolume, to.p_path, &did)) == CNID_INVALID) {
+            if ((cnid = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path, &did)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;

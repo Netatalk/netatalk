@@ -25,6 +25,8 @@ AC_PROG_PS
 AM_PROG_CC_C_O
 AC_C_BIGENDIAN
 AC_C_INLINE
+AC_PROG_LEX
+AC_PROG_YACC
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
 AC_MSG_CHECKING(to see if we can add '__attribute__((unused))' to CFLAGS)
@@ -180,6 +182,9 @@ AC_NETATALK_SENDFILE
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
+dnl Check for Tracker
+AC_NETATALK_SPOTLIGHT
+
 dnl libatalk API checks
 AC_DEVELOPER
 
@@ -250,6 +255,7 @@ AC_OUTPUT([Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
 	etc/netatalk/Makefile
+	etc/spotlight/Makefile
 	etc/uams/Makefile
 	include/Makefile
 	include/atalk/Makefile
@@ -265,6 +271,7 @@ AC_OUTPUT([Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/iniparser/Makefile
+	libatalk/talloc/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile

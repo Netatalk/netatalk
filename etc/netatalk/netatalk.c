@@ -40,6 +40,8 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include <event2/event.h>
 
@@ -52,11 +54,53 @@ static void kill_childs(int sig, ...);
 
 /* static variables */
 static AFPObj obj;
-static pid_t afpd_pid = -1,  cnid_metad_pid = -1;
-static uint afpd_restarts, cnid_metad_restarts;
+static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1, trackerd_pid = -1;
+static uint afpd_restarts, cnid_metad_restarts, dbus_restarts, trackerd_restarts;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
+static const char *dbus_path;
+static char *trackerd_loglev;
+
+/******************************************************************
+ * Misc stuff
+ ******************************************************************/
+
+/* Set Tracker Miners to index all our volumes */
+static int set_sl_volumes(void)
+{
+    EC_INIT;
+    const struct vol *volumes, *vol;
+    struct bstrList *vollist = bstrListCreate();
+    bstring sep = bfromcstr(", ");
+    bstring volnamelist = NULL, cmd = NULL;
+
+    EC_NULL_LOG( volumes = getvolumes() );
+
+    for (vol = volumes; vol; vol = vol->v_next) {
+        bstring volnamequot = bformat("'%s'", vol->v_path);
+        bstrListPush(vollist, volnamequot);
+    }
+
+    volnamelist = bjoin(vollist, sep);
+    cmd = bformat("gsettings set org.freedesktop.Tracker.Miner.Files index-recursive-directories \"[%s]\"", bdata(volnamelist));
+    LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
+    system(bdata(cmd));
+
+    /* Disable default root user home indexing */
+    system("gsettings set org.freedesktop.Tracker.Miner.Files index-single-directories \"[]\"");
+
+EC_CLEANUP:
+    if (cmd)
+        bdestroy(cmd);
+    if (sep)
+        bdestroy(sep);
+    if (vollist)
+        bstrListDestroy(vollist);
+    if (volnamelist)
+        bdestroy(volnamelist);
+    EC_EXIT;
+}
 
 /******************************************************************
  * libevent helper functions
@@ -113,21 +157,27 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(sigquit_ev);
     event_del(timer_ev);
 
-    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, NULL);
+#ifdef HAVE_TRACKER_SPARQL
+    system("tracker-control -t");
+#endif
+    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
 }
 
 /* SIGQUIT callback */
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, NULL);
+#ifdef HAVE_TRACKER_SPARQL
+    system("tracker-control -t");
+#endif
+    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
 }
 
-/* SIGQUIT callback */
+/* SIGHUP callback */
 static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
-    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
+    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, &trackerd_pid, NULL);
 }
 
 /* SIGCHLD callback */
@@ -136,30 +186,32 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
     int status;
     pid_t pid;
 
-    LOG(log_debug, logtype_afpd, "Got SIGCHLD event");
-  
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status))
-                LOG(log_info, logtype_afpd, "child[%d]: exited %d", pid, WEXITSTATUS(status));
+                LOG(log_info, logtype_default, "child[%d]: exited %d", pid, WEXITSTATUS(status));
             else
-                LOG(log_info, logtype_afpd, "child[%d]: done", pid);
+                LOG(log_info, logtype_default, "child[%d]: done", pid);
         } else {
             if (WIFSIGNALED(status))
-                LOG(log_info, logtype_afpd, "child[%d]: killed by signal %d", pid, WTERMSIG(status));
+                LOG(log_info, logtype_default, "child[%d]: killed by signal %d", pid, WTERMSIG(status));
             else
-                LOG(log_info, logtype_afpd, "child[%d]: died", pid);
+                LOG(log_info, logtype_default, "child[%d]: died", pid);
         }
 
         if (pid == afpd_pid)
             afpd_pid = -1;
         else if (pid == cnid_metad_pid)
             cnid_metad_pid = -1;
+        else if (pid == dbus_pid)
+            dbus_pid = -1;
+        else if (pid == trackerd_pid)
+            trackerd_pid = -1;
         else
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
     }
 
-    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1)
+    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1 && dbus_pid == -1 && trackerd_pid == -1)
         event_base_loopbreak(base);
 }
 
@@ -173,7 +225,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         afpd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
         if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-            LOG(log_error, logtype_afpd, "Error starting 'afpd'");
+            LOG(log_error, logtype_default, "Error starting 'afpd'");
         }
     }
 
@@ -181,9 +233,27 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         cnid_metad_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
         if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
-            LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
+            LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
         }
     }
+
+    if (dbus_pid == -1) {
+        dbus_restarts++;
+        LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
+        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus.session.conf", NULL)) == -1) {
+            LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+        }
+    }
+
+#ifdef HAVE_TRACKER_RDF
+    if (trackerd_pid == -1) {
+        trackerd_restarts++;
+        LOG(log_note, logtype_afpd, "Restarting 'trackerd' (restarts: %u)", trackerd_restarts);
+        if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
+            LOG(log_error, logtype_default, "Error starting '%s'", "/usr/bin/trackerd");
+        }
+    }
+#endif
 }
 
 /******************************************************************
@@ -217,7 +287,8 @@ static void netatalk_exit(int ret)
 static pid_t run_process(const char *path, ...)
 {
     int ret, i = 0;
-    char *myargv[10];
+#define MYARVSIZE 64
+    char *myargv[MYARVSIZE];
     va_list args;
     pid_t pid;
 
@@ -229,8 +300,10 @@ static pid_t run_process(const char *path, ...)
     if (pid == 0) {
         myargv[i++] = (char *)path;
         va_start(args, path);
-        while ((myargv[i++] = va_arg(args, char *)) != NULL)
-            ;
+        while (i < MYARVSIZE) {
+            if ((myargv[i++] = va_arg(args, char *)) == NULL)
+                break;
+        }
         va_end(args);
 
         ret = execv(path, myargv);
@@ -285,6 +358,8 @@ int main(int argc, char **argv)
     if (afp_config_parse(&obj, "netatalk") != 0)
         netatalk_exit(EXITERR_CONF);
 
+    load_volumes(&obj);
+
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
 
@@ -326,15 +401,49 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
+#ifdef HAVE_TRACKER
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
+    setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+    setenv("XDG_CONFIG_HOME", _PATH_CONFDIR, 0);
+#endif
+
+    dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", DBUS_DAEMON_PATH);
+    LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+    if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+        netatalk_exit(EXITERR_CONF);
+    }
+
+    /* Allow dbus some time to start up */
+    sleep(1);
+
+#ifdef HAVE_TRACKER_SPARQL
+    set_sl_volumes();
+    system(TRACKER_PREFIX "/bin/tracker-control -s");
+#endif
+#ifdef HAVE_TRACKER_RDF
+    if (asprintf(&trackerd_loglev, "--verbosity=%d", obj.options.tracker_loglevel) == -1)
+        netatalk_exit(EXITERR_CONF);
+    if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
+        LOG(log_error, logtype_default, "Error starting '%s'", TRACKERD_PATH);
+        netatalk_exit(EXITERR_CONF);
+    }
+#endif
+
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    if (afpd_pid != -1 || cnid_metad_pid != -1) {
+    if (afpd_pid != -1 || cnid_metad_pid != -1 || dbus_pid != -1 || trackerd_pid != -1) {
         if (afpd_pid != -1)
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
         if (cnid_metad_pid != -1)
             LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
-        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, NULL);
+        if (dbus_pid != -1)
+            LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
+        if (trackerd_pid != -1)
+            LOG(log_error, logtype_afpd, "trackerd still running, killing it");
+        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
     }
 
     LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");

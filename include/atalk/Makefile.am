@@ -42,7 +42,11 @@ noinst_HEADERS = \
 	ftw.h \
 	dsi.h \
 	ldapconfig.h \
-	fce_api.h
+	talloc.h \
+	dalloc.h \
+	byteorder.h \
+	fce_api.h \
+	spotlight.h
 
 EXTRA_DIST = afp_dtrace.d
 

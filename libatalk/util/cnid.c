@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -133,4 +133,73 @@ EC_CLEANUP:
     if (ret != 0)
         return NULL;
     return fpath;
+}
+
+/*!
+ * Resolves CNID of a given path
+ *
+ * path might be:
+ * (a) relative:
+ *     "dir/subdir" with cwd: "/afp_volume/topdir"
+ * (b) absolute:
+ *     "/afp_volume/dir/subdir"
+ *
+ * path MUST be pointing inside vol, this is usually the case as vol has been build from
+ * path using loadvolinfo and friends.
+ *
+ * @param cdb     (r) CNID db handle
+ * @param volpath (r) UNIX path of volume
+ * @param path    (r) path, see above
+ * @param did     (w) parent CNID of returned CNID
+ *
+ * @returns CNID of path
+ */
+cnid_t cnid_for_path(struct _cnid_db *cdb,
+                     const char *volpath,
+                     const char *path,
+                     cnid_t *did)
+{
+    EC_INIT;
+
+    cnid_t cnid;
+    bstring rpath = NULL;
+    bstring statpath = NULL;
+    struct bstrList *l = NULL;
+    struct stat st;
+
+    cnid = htonl(2);
+
+    EC_NULL(rpath = rel_path_in_vol(path, volpath));
+    EC_NULL(statpath = bfromcstr(volpath));
+    EC_ZERO(bcatcstr(statpath, "/"));
+
+    l = bsplit(rpath, '/');
+    for (int i = 0; i < l->qty ; i++) {
+        *did = cnid;
+
+        EC_ZERO(bconcat(statpath, l->entry[i]));
+        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
+                       "lstat(rpath: %s, elem: %s): %s: %s",
+                       cfrombstr(rpath), cfrombstr(l->entry[i]),
+                       cfrombstr(statpath), strerror(errno));
+
+        if ((cnid = cnid_add(cdb,
+                             &st,
+                             *did,
+                             cfrombstr(l->entry[i]),
+                             blength(l->entry[i]),
+                             0)) == CNID_INVALID) {
+            EC_FAIL;
+        }
+        EC_ZERO(bcatcstr(statpath, "/"));
+    }
+
+EC_CLEANUP:
+    bdestroy(rpath);
+    bstrListDestroy(l);
+    bdestroy(statpath);
+    if (ret != 0)
+        return CNID_INVALID;
+
+    return cnid;
 }

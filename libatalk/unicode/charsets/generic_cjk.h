@@ -19,7 +19,7 @@
 
 #include <atalk/unicode.h>
 #include <iconv.h>
-#include "../byteorder.h"
+#include <atalk/byteorder.h>
 
 #define CJK_PUSH_BUFFER 4
 #define CJK_PULL_BUFFER 8

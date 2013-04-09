@@ -918,16 +918,16 @@ static struct vol *creatvol(AFPObj *obj,
     initvol_vfs(volume);
 
     /* get/store uuid from file in afpd master*/
-    if (!(pwd) && (volume->v_flags & AFPVOL_TM)) {
-        char *uuid = get_vol_uuid(obj, volume->v_localname);
-        if (!uuid) {
-            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
-                volume->v_localname);
-        } else {
-            volume->v_uuid = uuid;
-            LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
-                volume->v_localname, volume->v_uuid);
-        }
+    become_root();
+    char *uuid = get_vol_uuid(obj, volume->v_localname);
+    unbecome_root();
+    if (!uuid) {
+        LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
+            volume->v_localname);
+    } else {
+        volume->v_uuid = uuid;
+        LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
+            volume->v_localname, volume->v_uuid);
     }
 
     /* no errors shall happen beyond this point because the cleanup would mess the volume chain up */
@@ -1694,6 +1694,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
+#ifdef HAVE_TRACKER_SPARQL
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_sparql.so");
+#endif
+#ifdef HAVE_TRACKER_RDF
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_rdf.so");
+#endif
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
@@ -1723,6 +1729,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_DBUS_AFPSTATS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
+    if (iniparser_getboolean(config, INISEC_GLOBAL, "spotlight", 0))
+        options->flags |= OPTION_SPOTLIGHT;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
@@ -1758,6 +1766,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+    options->tracker_loglevel = iniparser_getint (config, INISEC_GLOBAL, "tracker loglevel", 1);
 
     p = iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))
@@ -1961,6 +1970,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.Cnid_port);
     if (obj->options.fqdn)
         CONFIG_ARG_FREE(obj->options.fqdn);
+    if (obj->options.slmod_path)
+        CONFIG_ARG_FREE(obj->options.slmod_path);
 
     if (obj->options.unixcodepage)
         CONFIG_ARG_FREE(obj->options.unixcodepage);

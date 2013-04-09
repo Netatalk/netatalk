@@ -952,7 +952,6 @@ static void uam_cleanup(void)
     gcry_mpi_release(g);
 }
 
-
 UAM_MODULE_EXPORT struct uam_export uams_dhx2 = {
     UAM_MODULE_SERVER,
     UAM_MODULE_VERSION,

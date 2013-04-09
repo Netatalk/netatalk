@@ -57,6 +57,7 @@
 #define OPTION_ACL2MODE      (1 << 10)
 #define OPTION_SHARE_RESERV  (1 << 11) /* whether to use Solaris fcntl F_SHARE locks */
 #define OPTION_DBUS_AFPSTATS (1 << 12) /* whether to run dbus thread for afpstats */
+#define OPTION_SPOTLIGHT     (1 << 13) /* whether to enable Spotlight support */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)
@@ -117,6 +118,8 @@ struct afp_options {
     char *logfile;
     char *mimicmodel;
     char *adminauthuser;
+    char *slmod_path;
+    int tracker_loglevel;
     struct afp_volume_name volfile;
 };
 
