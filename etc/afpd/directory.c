@@ -299,7 +299,7 @@ static int set_dir_errors(struct path *path, const char *where, int err)
  *
  * @note If the passed ret->m_name is mangled, we'll demangle it
  */
-static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct path *ret, int toUTF8)
+static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *ret, int toUTF8)
 {
     static char temp[ MAXPATHLEN + 1];
     char *t;
@@ -329,6 +329,12 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
 
         /* check for OS X mangled filename :( */
         t = demangle_osx(vol, ret->m_name, dir->d_did, &fileid);
+
+        if (curdir == NULL) {
+            /* demangle_osx() calls dirlookup() which might have clobbered curdir */
+            movecwd(vol, dir);
+        }
+
         LOG(log_maxdebug, logtype_afpd, "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
             ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
 

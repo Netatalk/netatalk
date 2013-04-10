@@ -324,7 +324,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             return NULL;        /* (1b) */
 
         }
-        if (lstat(cfrombstr(cdir->d_fullpath), &st) != 0) {
+        if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
             LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {missing:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
             (void)dir_remove(vol, cdir);
@@ -394,7 +394,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     }
 
     if (cdir) {
-        if (lstat(cfrombstr(cdir->d_fullpath), &st) != 0) {
+        if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
             LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
                 ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
             (void)dir_remove(vol, cdir);

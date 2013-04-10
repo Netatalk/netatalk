@@ -1,11 +1,14 @@
 Changes in 2.2.5
 ================
-
 * FIX: Fix errors searching volumes
 * NEW: Configurable symlink handling with a new volume option
        'followsymlinks'. Setting the option causes afpd to follow
        symlinks on the server side.
 * UPD: Reload groups when reloading volumes. FR #71.
+* FIX: Fix a possible crash in cname() where cname_mtouname calls
+       dirlookup() where the curdir is freed because the dircache
+       detected a dev/inode cache difference and evicted the object
+       from the cache. Fixes bug #498.
 
 Changes in 2.2.4
 ================
