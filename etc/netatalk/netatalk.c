@@ -237,6 +237,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         }
     }
 
+#ifdef HAVE_TRACKER
     if (dbus_pid == -1) {
         dbus_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
@@ -244,6 +245,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
         }
     }
+#endif
 
 #ifdef HAVE_TRACKER_RDF
     if (trackerd_pid == -1) {
@@ -406,7 +408,6 @@ int main(int argc, char **argv)
     setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
     setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
     setenv("XDG_CONFIG_HOME", _PATH_CONFDIR, 0);
-#endif
 
     dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon path", DBUS_DAEMON_PATH);
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
@@ -417,6 +418,7 @@ int main(int argc, char **argv)
 
     /* Allow dbus some time to start up */
     sleep(1);
+#endif
 
 #ifdef HAVE_TRACKER_SPARQL
     set_sl_volumes();
