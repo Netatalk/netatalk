@@ -185,7 +185,7 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
     if (len)
         return len;             /* 2. */
   
-    len = readt(dsi->socket, buf, count, 0, 1); /* 3. */
+    len = readt(dsi->socket, buf, count, 0, 0); /* 3. */
 
     LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes): got: %d", count, len);
 

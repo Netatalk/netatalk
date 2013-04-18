@@ -79,7 +79,7 @@ int setnonblock(int fd, int cmd)
  * @param lenght          (r)  how many bytes to read
  * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
  *                             io mode for the socket
- * @param timeout         (r)  number of seconds to try reading
+ * @param timeout         (r)  number of seconds to try reading, 0 means no timeout
  *
  * @returns number of bytes actually read or -1 on timeout or error
  */
@@ -99,9 +99,11 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
     }
 
     /* Calculate end time */
-    (void)gettimeofday(&now, NULL);
-    end = now;
-    end.tv_sec += timeout;
+    if (timeout) {
+        (void)gettimeofday(&now, NULL);
+        end = now;
+        end.tv_sec += timeout;
+    }
 
     while (stored < length) {
         len = recv(socket, (char *) data + stored, length - stored, 0);
@@ -111,10 +113,12 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                 continue;
             case EAGAIN:
                 FD_SET(socket, &rfds);
-                tv.tv_usec = 0;
-                tv.tv_sec  = timeout;
-                        
-                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                if (timeout) {
+                    tv.tv_usec = 0;
+                    tv.tv_sec  = timeout;
+                }
+
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, timeout ? &tv : NULL)) < 1) {
                     switch (ret) {
                     case 0:
                         LOG(log_debug, logtype_dsi, "select timeout %d s", timeout);
@@ -124,19 +128,21 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                     default: /* -1 */
                         switch (errno) {
                         case EINTR:
-                            (void)gettimeofday(&now, NULL);
-                            if (now.tv_sec > end.tv_sec
-                                ||
-                                (now.tv_sec == end.tv_sec && now.tv_usec >= end.tv_usec)) {
-                                LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
-                                goto exit;
-                            }
-                            if (now.tv_usec > end.tv_usec) {
-                                tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
-                                tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
-                            } else {
-                                tv.tv_usec = end.tv_usec - now.tv_usec;
-                                tv.tv_sec  = end.tv_sec - now.tv_sec;
+                            if (timeout) {
+                                (void)gettimeofday(&now, NULL);
+                                if (now.tv_sec > end.tv_sec
+                                    ||
+                                    (now.tv_sec == end.tv_sec && now.tv_usec >= end.tv_usec)) {
+                                    LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
+                                    goto exit;
+                                }
+                                if (now.tv_usec > end.tv_usec) {
+                                    tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
+                                    tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
+                                } else {
+                                    tv.tv_usec = end.tv_usec - now.tv_usec;
+                                    tv.tv_sec  = end.tv_sec - now.tv_sec;
+                                }
                             }
                             FD_SET(socket, &rfds);
                             continue;
