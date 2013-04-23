@@ -18,6 +18,7 @@ Changes in 3.0.4
        dirlookup() where the curdir is freed because the dircache
        detected a dev/inode cache difference and evicted the object
        from the cache. Fixes bug #498.
+* FIX: Add missing include, fixes bug #512.
 
 Changes in 3.0.3
 ================

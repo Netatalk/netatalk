@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 /* useful stuff for child processes. most of this is hidden in 
  * server_child.c to ease changes in implementation */
