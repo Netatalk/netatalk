@@ -129,7 +129,7 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	fi
 	if test x"$netatalk_cv_ldap" = x"yes"; then
 		AC_MSG_RESULT([    LDAP:])
-		AC_MSG_RESULT([        LIBS   = $LDAP_LDLFLAGS $LDAP_LIBS])
+		AC_MSG_RESULT([        LIBS   = $LDAP_LDFLAGS $LDAP_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $LDAP_CFLAGS])
 	fi
     AC_MSG_RESULT([    LIBEVENT:])
