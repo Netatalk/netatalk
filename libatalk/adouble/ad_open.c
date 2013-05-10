@@ -346,22 +346,9 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         eid++;
     }
 
-    /* put something sane in the directory finderinfo */
-    if (stp == NULL) {
-        stp = &st;
-        if (lstat(path, &st) != 0)
-            return -1;
-    }
-
-    if ((adflags & ADFLAGS_DIR)) {
-        /* set default view */
-        ashort = htons(FINDERINFO_CLOSEDVIEW);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
-    } else {
-        /* set default creator/type fields */
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
-    }
+    /* set default creator/type fields */
+    memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
+    memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
 
     /* make things invisible */
     if ((ad->ad_options & ADVOL_INVDOTS)
@@ -375,6 +362,11 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     }
 
     /* put something sane in the date fields */
+    if (stp == NULL) {
+        stp = &st;
+        if (lstat(path, &st) != 0)
+            return -1;
+    }
     ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, stp->st_mtime);
     ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, stp->st_mtime);
     ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, stp->st_mtime);
