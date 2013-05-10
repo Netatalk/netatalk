@@ -421,6 +421,12 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef HAVE_TRACKER_SPARQL
+#ifdef SOLARIS
+    setenv("XDG_DATA_DIRS", TRACKER_PREFIX "/share", 0);
+    setenv("TRACKER_DB_ONTOLOGIES_DIR", TRACKER_PREFIX "/share/tracker/ontologies", 0);
+    setenv("TRACKER_EXTRACTOR_RULES_DIR", TRACKER_PREFIX "/share/tracker/extract-rules", 0);
+    setenv("TRACKER_LANGUAGE_STOPWORDS_DIR", TRACKER_PREFIX "/share/tracker/languages", 0);
+#endif
     set_sl_volumes();
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 #endif
