@@ -9,6 +9,8 @@ Changes in 2.2.5
        dirlookup() where the curdir is freed because the dircache
        detected a dev/inode cache difference and evicted the object
        from the cache. Fixes bug #498.
+* FIX: Change default FinderInfo for directories to be all 0, fixes
+       bug 514.
 
 Changes in 2.2.4
 ================

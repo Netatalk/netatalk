@@ -168,18 +168,6 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         if (adp) {
             FinderInfo = ad_entry(adp, ADEID_FINDERI);
-
-#ifdef DEBUG
-            LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
-            hexdump( FinderInfo, 32);
-#endif
-
-            if ((adflags & ADFLAGS_DIR)) {
-                /* set default view */
-                uint16 = htons(FINDERINFO_CLOSEDVIEW);
-                memcpy(emptyFinderInfo + FINDERINFO_FRVIEWOFF, &uint16, 2);
-            }
-
             /* Check if FinderInfo equals default and empty FinderInfo*/
             if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
                 /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */

@@ -1587,10 +1587,6 @@ int getdirparams(const struct vol *vol,
                 memcpy( data, ad_entry( &ad, ADEID_FINDERI ), 32 );
             } else { /* no appledouble */
                 memset( data, 0, 32 );
-                /* set default view -- this also gets done in ad_open() */
-                ashort = htons(FINDERINFO_CLOSEDVIEW);
-                memcpy(data + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
-
                 /* dot files are by default visible */
                 if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                     ashort = htons(FINDERINFO_INVISIBLE);

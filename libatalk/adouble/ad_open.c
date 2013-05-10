@@ -1651,18 +1651,6 @@ static int new_rfork(const char *path, struct adouble *ad, int adflags)
         eid++;
     }
 
-    /* put something sane in the directory finderinfo */
-    if ((adflags & ADFLAGS_DIR)) {
-        /* set default view */
-        ashort = htons(FINDERINFO_CLOSEDVIEW);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRVIEWOFF,
-               &ashort, sizeof(ashort));
-    } else {
-        /* set default creator/type fields */
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
-    }
-
     /* make things invisible */
     if ((ad->ad_options & ADVOL_INVDOTS) && !(adflags & ADFLAGS_CREATE) &&
         (*path == '.') && strcmp(path, ".") && strcmp(path, ".."))
