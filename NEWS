@@ -19,6 +19,8 @@ Changes in 3.0.4
        detected a dev/inode cache difference and evicted the object
        from the cache. Fixes bug #498.
 * FIX: Add missing include, fixes bug #512.
+* FIX: Change default FinderInfo for directories to be all 0, fixes
+       bug 514.
 
 Changes in 3.0.3
 ================
