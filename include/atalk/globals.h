@@ -94,7 +94,7 @@ struct afp_options {
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char *hostname;
-    char *listen, *port;
+    char *listen, *interfaces, *port;
     char *Cnid_srv, *Cnid_port;
     char *configfile;
     char *uampath, *fqdn;

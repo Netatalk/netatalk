@@ -414,6 +414,11 @@ Setting this option is not recommended since globally encrypting AFP connections
 .RE
 .RE
 .PP
+afp interfaces = \fIname [name \&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Specifies the network interfaces that the server should listens on\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&.
+.RE
+.PP
 afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Specifies the IP address that the server should advertise
