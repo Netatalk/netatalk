@@ -195,6 +195,9 @@ AC_NETATALK_FHS
 dnl netatalk lockfile path, must come after AC_NETATALK_FHS
 AC_NETATALK_LOCKFILE
 
+dnl Check for Docbook and build documentation if found
+AX_CHECK_DOCBOOK
+
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_builddir)/include $CFLAGS"
 UAMS_PATH="${uams_path}"
 
@@ -246,6 +249,9 @@ AC_OUTPUT([Makefile
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
 	doc/Makefile
+    doc/html.xsl
+    doc/man.xsl
+    doc/manual/manual.xml
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
