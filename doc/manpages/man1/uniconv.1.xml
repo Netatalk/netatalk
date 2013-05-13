@@ -8,7 +8,7 @@
 
     <refmiscinfo class="date">19 Jan 2013</refmiscinfo>
 
-    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -53,7 +53,7 @@
         <listitem>
           <para>CNID backend used on this volume, usually cdb or dbd. Should
           match the backend selected with afpd for this volume. If not
-          specified, the default CNID backend ":DEFAULT_CNID_SCHEME:" is
+          specified, the default CNID backend "@DEFAULT_CNID_SCHEME@" is
           used</para>
         </listitem>
       </varlistentry>

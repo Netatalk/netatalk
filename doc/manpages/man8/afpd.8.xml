@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">19 Jan 2013</refmiscinfo>
 
-    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -48,7 +48,7 @@
     interface to the Unix file system. It is normally started at boot time
     by <command>netatalk</command>(8).</para>
 
-    <para><filename>:ETCDIR:/afp.conf</filename> is the configuration file
+    <para><filename>@pkgconfdir@/afp.conf</filename> is the configuration file
     used by <command>afpd</command> to determine the behavior and
     configuration of a file server.</para>
 
@@ -96,7 +96,7 @@
 
         <listitem>
           <para>Specifies the configuration file to use. (Defaults to
-          <filename>:ETCDIR:/afp.conf</filename>.)</para>
+          <filename>@pkgconfdir@/afp.conf</filename>.)</para>
         </listitem>
       </varlistentry>
 
@@ -182,7 +182,7 @@
 
     <variablelist>
       <varlistentry>
-        <term><filename>:ETCDIR:/afp.conf</filename></term>
+        <term><filename>@pkgconfdir@/afp.conf</filename></term>
 
         <listitem>
           <para>configuration file used by afpd</para>
@@ -190,7 +190,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>:STATEDIR:/netatalk/afp_signature.conf</filename></term>
+        <term><filename>@localstatedir@/netatalk/afp_signature.conf</filename></term>
 
         <listitem>
           <para>list of server signature</para>
@@ -198,7 +198,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>:STATEDIR:/netatalk/afp_voluuid.conf</filename></term>
+        <term><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename></term>
 
         <listitem>
           <para>list of UUID for Time Machine volume</para>
@@ -206,7 +206,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>:ETCDIR:/extmap.conf</filename></term>
+        <term><filename>@pkgconfdir@/extmap.conf</filename></term>
 
         <listitem>
           <para>file name extension mapping</para>
@@ -214,7 +214,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>:ETCDIR:/msg/message.pid</filename></term>
+        <term><filename>@pkgconfdir@/msg/message.pid</filename></term>
 
         <listitem>
           <para>contains messages to be sent to users.</para>
