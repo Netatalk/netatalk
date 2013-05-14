@@ -20,7 +20,7 @@ AC_DEFUN(AX_CHECK_DOCBOOK, [
     if test -n "$XSLTPROC"; then
       AC_MSG_CHECKING([whether xsltproc works])
       DB_FILE="$DOCBOOK_ROOT/html/docbook.xsl"
-      $XSLTPROC $XSLTPROC_FLAGS $DB_FILE >/dev/null 2&>&1 << END
+      $XSLTPROC $XSLTPROC_FLAGS $DB_FILE >/dev/null 2>&1 << END
 <?xml version="1.0" encoding='ISO-8859-1'?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <book id="test">
