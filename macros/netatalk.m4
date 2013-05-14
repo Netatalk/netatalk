@@ -5,6 +5,7 @@ AC_DEFUN(AX_CHECK_DOCBOOK, [
   # It's just rude to go over the net to build
   XSLTPROC_FLAGS=--nonet
   DOCBOOK_ROOT=
+  XSLTPROC_WORKS=no
 
   AC_ARG_WITH(docbook,
     AS_HELP_STRING(
@@ -16,7 +17,6 @@ AC_DEFUN(AX_CHECK_DOCBOOK, [
 
   if test -n "$DOCBOOK_ROOT" ; then
     AC_CHECK_PROG(XSLTPROC,xsltproc,xsltproc,)
-    XSLTPROC_WORKS=no
     if test -n "$XSLTPROC"; then
       AC_MSG_CHECKING([whether xsltproc works])
       DB_FILE="$DOCBOOK_ROOT/html/docbook.xsl"
@@ -32,6 +32,9 @@ END
       AC_MSG_RESULT($XSLTPROC_WORKS)
     fi
   fi
+
+  AC_MSG_CHECKING([whether to build Docbook documentation])
+  AC_MSG_RESULT($XSLTPROC_WORKS)
 
   AM_CONDITIONAL(HAVE_XSLTPROC, test x"$XSLTPROC_WORKS" = x"yes")
   AC_SUBST(XSLTPROC_FLAGS)
