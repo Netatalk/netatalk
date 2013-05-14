@@ -1748,6 +1748,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
     options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
+    options->interfaces     = iniparser_getstrdup(config, INISEC_GLOBAL, "afp interfaces", NULL);
     options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
     options->addomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
     options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
@@ -1950,6 +1951,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.k5realm);
     if (obj->options.listen)
         CONFIG_ARG_FREE(obj->options.listen);
+    if (obj->options.interfaces)
+        CONFIG_ARG_FREE(obj->options.interfaces);
     if (obj->options.ntdomain)
         CONFIG_ARG_FREE(obj->options.ntdomain);
     if (obj->options.addomain)

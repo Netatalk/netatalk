@@ -555,6 +555,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>afp interfaces = <replaceable>name [name ...]</replaceable>
+            <type>(G)</type></term>
+          <listitem>
+            <para>Specifies the network interfaces that the server should
+            listens on. The default is advertise the first IP address of the
+            system, but to listen for any incoming request.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>afp listen = <replaceable>ip address[:port] [ip address[:port]
           ...]</replaceable> <type>(G)</type></term>
 

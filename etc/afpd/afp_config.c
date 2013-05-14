@@ -17,6 +17,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef HAVE_GETIFADDRS
+#include <ifaddrs.h>
+#endif
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -38,7 +41,6 @@
 #include "status.h"
 #include "volume.h"
 #include "afp_zeroconf.h"
-
 
 /*!
  * Free and cleanup config and DSI
@@ -83,9 +85,13 @@ void configfree(AFPObj *obj, DSI *dsi)
 int configinit(AFPObj *obj)
 {
     EC_INIT;
-    DSI *dsi, **next = &obj->dsi;
+    DSI *dsi = NULL;
+    DSI **next = &obj->dsi;
     char *p = NULL, *q = NULL, *savep;
     const char *r;
+    struct ifaddrs *ifaddr, *ifa;
+    int family, s;
+    static char interfaddr[NI_MAXHOST];
 
     auth_load(obj->options.uampath, obj->options.uamlist);
     set_signature(&obj->options);
@@ -93,23 +99,99 @@ int configinit(AFPObj *obj)
     acl_ldap_freeconfig();
 #endif /* HAVE_LDAP */
 
-    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, port: %s",
+    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, interfaces: %s, port: %s",
         obj->options.hostname,
-        obj->options.listen ? obj->options.listen : "(default: hostname)",
+        obj->options.listen ? obj->options.listen : "-",
+        obj->options.interfaces ? obj->options.interfaces : "-",
         obj->options.port);
 
-    /* obj->options->listen is of the from "IP[:port][,IP:[PORT], ...]" */
-    /* obj->options->port is the default port to listen (548) */
-
+    /*
+     * Setup addresses we listen on from hostname and/or "afp listen" option
+     */
     if (obj->options.listen) {
         EC_NULL( q = p = strdup(obj->options.listen) );
         EC_NULL( p = strtok_r(p, ", ", &savep) );
+        while (p) {
+            if ((dsi = dsi_init(obj, obj->options.hostname, p, obj->options.port)) == NULL)
+                break;
+
+            status_init(obj, dsi);
+            *next = dsi;
+            next = &dsi->next;
+            dsi->AFPobj = obj;
+
+            LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
+                getip_string((struct sockaddr *)&dsi->server),
+                getip_port((struct sockaddr *)&dsi->server));
+
+            p = strtok_r(NULL, ", ", &savep);
+        }
+        if (q) {
+            free(q);
+            q = NULL;
+        }
     }
 
-    while (1) {
-        if ((dsi = dsi_init(obj, obj->options.hostname, p, obj->options.port)) == NULL)
-            break;
+   /*
+    * Setup addresses we listen on from "afp interfaces".
+    * We use getifaddrs() instead of if_nameindex() because the latter appears still
+    * to be unable to return ipv4 addresses
+    */
+    if (obj->options.interfaces) {
+#ifndef HAVE_GETIFADDRS
+        LOG(log_error, logtype_afpd, "option \"afp interfaces\" not supported");
+#else
+        if (getifaddrs(&ifaddr) == -1) {
+            LOG(log_error, logtype_afpd, "getinterfaddr: getifaddrs() failed: %s", strerror(errno));
+            EC_FAIL;
+        }
 
+        EC_NULL( q = p = strdup(obj->options.interfaces) );
+        EC_NULL( p = strtok_r(p, ", ", &savep) );
+        while (p) {
+            for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+                if (ifa->ifa_addr == NULL)
+                    continue;
+                if (STRCMP(ifa->ifa_name, !=, p))
+                    continue;
+
+                family = ifa->ifa_addr->sa_family;
+                if (family == AF_INET || family == AF_INET6) {
+                    if (getnameinfo(ifa->ifa_addr,
+                                    (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
+                                    interfaddr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) != 0) {
+                        LOG(log_error, logtype_afpd, "getinterfaddr: getnameinfo() failed %s", gai_strerror(errno));
+                        continue;
+                    }
+
+                    if ((dsi = dsi_init(obj, obj->options.hostname, interfaddr, obj->options.port)) == NULL)
+                        continue;
+
+                    status_init(obj, dsi);
+                    *next = dsi;
+                    next = &dsi->next;
+                    dsi->AFPobj = obj;
+
+                    LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on interface %s with address %s:%d",
+                        p,
+                        getip_string((struct sockaddr *)&dsi->server),
+                        getip_port((struct sockaddr *)&dsi->server));
+                } /* if (family == AF_INET || family == AF_INET6) */
+            } /* for (ifa != NULL) */
+            p = strtok_r(NULL, ", ", &savep);
+        }
+        freeifaddrs(ifaddr);
+#endif
+    }
+
+    /*
+     * Check whether we got a valid DSI from options.listen or options.interfaces,
+     * if not add a DSI that accepts all connections and goes though the list of
+     * network interaces for determining an IP we can advertise in DSIStatus
+     */
+    if (dsi == NULL) {
+        if ((dsi = dsi_init(obj, obj->options.hostname, NULL, obj->options.port)) == NULL)
+            EC_FAIL_LOG("no suitable network address found, use \"afp listen\" or \"afp interfaces\"", 0);
         status_init(obj, dsi);
         *next = dsi;
         next = &dsi->next;
@@ -118,12 +200,6 @@ int configinit(AFPObj *obj)
         LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
             getip_string((struct sockaddr *)&dsi->server),
             getip_port((struct sockaddr *)&dsi->server));
-
-        if (p)
-            /* p is NULL if ! obj->options.listen */
-            p = strtok_r(NULL, ", ", &savep);
-        if (!p)
-            break;
     }
 
 #ifdef HAVE_LDAP
