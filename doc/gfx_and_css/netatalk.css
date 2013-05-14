@@ -1,0 +1,251 @@
+BODY {
+	/* font-family: helvetica, arial, "lucida sans", sans-serif; */
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;;
+	background-color: white;
+	font-size: 1em;
+	margin-left: 15px;
+	margin-right: 15px;
+}
+
+.pdparam{
+	/* font-family: helvetica, arial, "lucida sans", sans-serif; */
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;;
+	font-size: 12px;
+}
+
+TD {
+	/* font-family: helvetica, arial, "lucida sans", sans-serif; */
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;;
+	font-size: 12px;
+}
+
+H1, H2, H3 {
+	font-size: 130%;
+	padding: 2px;
+	margin-top: 0px;
+}
+
+H1 {
+	background-color: #424242;
+	color: #FFFFFF;
+}
+
+H2 {
+	background-color: #424242;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+H3 {
+	background-color: #330000;
+	color: #FFFFFF;
+}
+
+H4 {
+	color: #330000;
+	font-size: 120%;
+}
+
+H5 {
+	font-size: 100%;
+	color: #330000;
+}
+
+.term {
+	color: black;
+}
+
+TR.qandadiv TD {
+	padding-top: 1em;
+}
+
+DIV.navheader {
+	font-size: 80%;
+	margin-top: 15px;
+}
+
+div.titlepage {
+	margin-top: 15px;
+}
+
+DIV.navheader th{
+	font-size: 100%;
+}
+
+DIV.navfooter {
+	font-size: 80%;
+}
+
+A:link {
+	color: #660000;
+}
+
+A:visited {
+	color: #CC0000;
+}
+
+A:active {
+	color: #FF0033;
+}
+
+TR.question {
+	color: #33C;
+	font-weight: bold;
+}
+
+TR.question TD {
+	padding-top: 1em;
+}
+
+DIV.variablelist {
+	padding-left: 2em;
+	color: #33C;
+}
+
+P {
+	color: black;
+}
+
+DIV.caution, DIV.tip, DIV.important {
+	border: dashed 1px;
+	background-color: #EEEEFF;
+	width: 60em;
+	padding: 5px;
+}
+
+PRE.programlisting, PRE.screen {
+	border: #630 1px dashed;
+	color: #993300;
+	padding: 2px;
+	font-size: 120%;
+}
+DIV.warning { 
+	border: dashed 1px;
+	background-color: #BFBFBF;
+	width: 60em;
+	padding: 5px;
+} 
+
+DIV.note { 
+	border: dashed 1px;
+	background-color: #f2f2f2;
+	width: 60em;
+	padding: 5px;
+} 
+
+DIV.author {
+	padding-top: 1em;
+}
+
+DIV.revhistory table{
+	font-size: 12px;
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: 0px;
+}
+
+DIV.revhistory tr {
+	border: 0px;
+}
+
+DIV.revhistory td {
+	border: 0px;
+}
+
+DIV.revhistory th {
+	border: 0px;
+}
+
+div.book, div.chapter, div.refentry {
+	font-size: 12px;
+}
+
+div.indexdiv {
+	font-size: 12px;
+}
+
+tt {
+	font-size: 12px;
+}
+
+/**
+ * netatalk
+ */
+/* definitions for the header */
+div#header {
+    margin-top: 15px;
+    margin-left: -15px;
+    margin-right: -15px;
+    height: 109px;
+    white-space: nowrap;
+    background-color: #424242;
+    background-image: url(/gfx/bg.gif);
+    background-repeat: no-repeat;
+    background-position: 380px 0px;
+}
+
+div#logo {
+	position: absolute;
+	margin-top: 0px;
+	margin-left: 25px;
+	width: 225px;
+	height: 109px;
+	padding: 0px;
+	background-image: url(/gfx/netatalklogo.gif);
+	background-repeat: no-repeat;
+}
+
+#logo img {
+    border: 0px;
+}
+
+div#menlinks {
+	position: absolute;
+	left: 272px;
+	top: 102px;
+	font-family: Geneva, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #FFFFFF;
+	text-decoration: none;
+	white-space: nowrap;
+
+}
+
+div#menlinks a, div#menlinks a:visited {
+    color: #FFFFFF;
+    margin-right: 15px;
+    text-decoration: none;
+}
+
+#menlinks img {
+   border: 0px;
+}
+
+.italic {
+        font-family: Geneva, Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-style: italic;
+        font-weight: normal;
+        color: #000000;
+        text-decoration: none;
+}
+
+a, a:visited {
+  text-decoration: none;
+  color: #660000;
+}
+
+/* definitions for the footer */
+div.footer {
+	margin-left: 210px;
+	margin-top: 22px;
+	font-size: 75%;
+	width: 145px;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.footer img {
+   padding-right: 5px;
+}

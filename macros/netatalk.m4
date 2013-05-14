@@ -1,5 +1,47 @@
 dnl Kitchen sink for configuration macros
 
+dnl Check for docbook
+AC_DEFUN(AX_CHECK_DOCBOOK, [
+  # It's just rude to go over the net to build
+  XSLTPROC_FLAGS=--nonet
+  DOCBOOK_ROOT=
+  XSLTPROC_WORKS=no
+
+  AC_ARG_WITH(docbook,
+    AS_HELP_STRING(
+      [--with-docbook],
+      [Path to Docbook XSL directory]
+    ),
+    [DOCBOOK_ROOT=$withval]
+  )
+
+  if test -n "$DOCBOOK_ROOT" ; then
+    AC_CHECK_PROG(XSLTPROC,xsltproc,xsltproc,)
+    if test -n "$XSLTPROC"; then
+      AC_MSG_CHECKING([whether xsltproc works])
+      DB_FILE="$DOCBOOK_ROOT/html/docbook.xsl"
+      $XSLTPROC $XSLTPROC_FLAGS $DB_FILE >/dev/null 2&>&1 << END
+<?xml version="1.0" encoding='ISO-8859-1'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="test">
+</book>
+END
+      if test "$?" = 0; then
+        XSLTPROC_WORKS=yes
+      fi
+      AC_MSG_RESULT($XSLTPROC_WORKS)
+    fi
+  fi
+
+  AC_MSG_CHECKING([whether to build Docbook documentation])
+  AC_MSG_RESULT($XSLTPROC_WORKS)
+
+  AM_CONDITIONAL(HAVE_XSLTPROC, test x"$XSLTPROC_WORKS" = x"yes")
+  AC_SUBST(XSLTPROC_FLAGS)
+  AC_SUBST(DOCBOOK_ROOT)
+  AC_SUBST(XSLTPROC)
+])
+
 dnl Check for dtrace
 AC_DEFUN([AC_NETATALK_DTRACE], [
   AC_ARG_WITH(dtrace,

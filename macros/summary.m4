@@ -75,6 +75,8 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 		AC_MSG_WARN([ You can also re-run configure and specify --without-pam to disable PAM support.])
 	   fi
 	fi
+	AC_MSG_RESULT([    Documentation:])
+	AC_MSG_RESULT([         Docbook:                 $XSLTPROC_WORKS])
 ])
 
 
