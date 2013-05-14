@@ -251,9 +251,11 @@ AC_OUTPUT([Makefile
 	doc/Makefile
     doc/html.xsl
     doc/man.xsl
+    doc/manual/Makefile
     doc/manual/manual.xml
     doc/manpages/Makefile
     doc/manpages/man1/Makefile
+    doc/manpages/man5/Makefile
     doc/manpages/man8/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
