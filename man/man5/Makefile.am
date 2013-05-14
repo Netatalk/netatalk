@@ -6,4 +6,4 @@ man_MANS = \
 	afp_voluuid.conf.5 \
 	extmap.conf.5
 
-CLEANFILES = $(man_MANS)
+DISTCLEANFILES = $(man_MANS)

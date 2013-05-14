@@ -12,4 +12,4 @@ man_MANS = \
 	netatalk-config.1 \
 	uniconv.1
 
-CLEANFILES = $(man_MANS)
+DISTCLEANFILES = $(man_MANS)

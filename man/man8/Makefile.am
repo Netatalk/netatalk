@@ -6,4 +6,4 @@ man_MANS = \
 	cnid_metad.8 \
 	netatalk.8
 
-CLEANFILES = $(man_MANS)
+DISTCLEANFILES = $(man_MANS)
