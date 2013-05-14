@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
 .\"      Date: 09 June 2001
 .\"    Manual: The Netatalk Project
-.\"    Source: Netatalk 3.0
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "NETATALK\-CONFIG" "1" "09 June 2001" "Netatalk 3.0" "The Netatalk Project"
+.TH "NETATALK\-CONFIG" "1" "09 June 2001" "@NETATALK_VERSION@" "The Netatalk Project"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------

@@ -1,7 +1,5 @@
 # Makefile.am for man/man1/
 
-pkgconfdir = @PKGCONFDIR@
-
 man_MANS = \
 	ad.1 \
 	afpldaptest.1 \
@@ -14,4 +12,4 @@ man_MANS = \
 	netatalk-config.1 \
 	uniconv.1
 
-DISTCLEANFILES = $(man_MANS)
+CLEANFILES = $(man_MANS)

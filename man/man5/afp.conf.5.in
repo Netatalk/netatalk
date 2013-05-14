@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 19 Feb 2013
-.\"    Manual: Netatalk 3.0
-.\"    Source: Netatalk 3.0
+.\"      Date: 30 Apr 2013
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "19 Feb 2013" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP\&.CONF" "5" "30 Apr 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -307,7 +307,7 @@ uams_clrtxt\&.so
 .PP
 uams_randum\&.so
 .RS 4
-allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :ETCDIR:/afppasswd file or the one specified via "\fBpasswd file\fR"\&. See
+allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @pkgconfdir@/afppasswd file or the one specified via "\fBpasswd file\fR"\&. See
 \fBafppasswd\fR(1)
 for details\&. (legacy)
 .RE
@@ -330,7 +330,7 @@ Allow Kerberos V for authentication (optional)
 .PP
 uam path = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the default path for UAMs for this server (default is :LIBDIR:/netatalk)\&.
+Sets the default path for UAMs for this server (default is @libdir@/netatalk)\&.
 .RE
 .SS "Charset Options"
 .PP
@@ -383,7 +383,7 @@ Specifies the encoding of the volumes filesystem\&. By default, it is the same a
 .PP
 passwd file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the Randnum UAM passwd file for this server (default is :ETCDIR:/afppasswd)\&.
+Sets the path to the Randnum UAM passwd file for this server (default is @pkgconfdir@/afppasswd)\&.
 .RE
 .PP
 passwd minlen = \fInumber\fR \fB(G)\fR
@@ -540,7 +540,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is :ETCDIR:/extmap\&.conf)\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is @pkgconfdir@/extmap\&.conf)\&.
 .RE
 .PP
 guest account = \fIname\fR \fB(G)\fR
@@ -561,20 +561,15 @@ Sets a message to be displayed when clients logon to the server\&. The message s
 and should be quoted\&. Extended characters are allowed\&.
 .RE
 .PP
-map acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
-.RS 4
-Whether to map filesystem ACLs to effective permissions\&.
-.RE
-.PP
 mimic model = \fImodel\fR \fB(G)\fR
 .RS 4
-Specifies the icon model that appears on clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
+Specifies the icon model that appears on clients\&. Defaults to off\&. Note that afpd must support Zeroconf\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
 .RE
 .PP
 signature = <text> \fB(G)\fR
 .RS 4
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
-:STATEDIR:/netatalk/afp_signature\&.conf
+@localstatedir@/netatalk/afp_signature\&.conf
 automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 .RE
 .PP
@@ -586,7 +581,7 @@ Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this 
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
-:STATEDIR:/netatalk/CNID/\&.
+@localstatedir@/netatalk/CNID/\&.
 .RE
 .PP
 volnamelen = \fInumber\fR \fB(G)\fR
@@ -700,9 +695,29 @@ Do not use this option any longer as present Netatalk correctly supports server 
 .RE
 .SS "Options for ACL handling"
 .PP
-For a basic mode of operation there\*(Aqs nothing to configure\&. afpd reads ACLs on the fly, calculating effective permissions and returning the calculated permissions via the so called UARights permission bits\&. On a Mac the Finder uses these bits to adjust permission in Finder windows\&. For example folder whos UNIX mode would only result in in read\-only permissions for a user will not be displayed with a read\-only icon and the user will be able to write to the folder given the folder has an ACL giving the user write access\&.
+By default, the effective permission of the authenticated user are only mapped to the mentioned UARights permission structure, not the UNIX mode\&. You can adjust this behaviour with the configuration option
+\fBmac acls\fR:
 .PP
-However, neither in Finder "Get Info" windows nor in Terminal will you be able to see the ACLs, that\*(Aqs a result of how ACLs in OS X are designed\&. If you want to be able to display ACLs on the client, things get more involved as you must then setup both client and server to be part on a authentication domain (directory service, eg LDAP, OpenDirectory)\&. The reason is, that in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor afpd must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&. Get it? Read on\&.
+map acls = \fInone|rights|mode\fR \fB(G)\fR
+.RS 4
+.PP
+none
+.RS 4
+no mapping of ACLs
+.RE
+.PP
+rights
+.RS 4
+effective permissions are mapped to UARights structure\&. This is the default\&.
+.RE
+.PP
+mode
+.RS 4
+ACLs are additionally mapped to the UNIX mode of the filesystem object\&.
+.RE
+.RE
+.PP
+If you want to be able to display ACLs on the client, you must setup both client and server as part on a authentication domain (directory service, eg LDAP, Open Directory, Active Directory)\&. The reason is, in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor Netatalk must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&.
 .PP
 Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
 .PP
@@ -811,17 +826,13 @@ Name of the LDAP attribute with the groups short name\&.
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
 .PP
-The section name defines the volume name which is the name that appears in the Chooser or the "connect to server" dialog on Macintoshes to represent the appropriate share\&. No two volumes may have the same name\&. The volume name cannot contain the
+The section name defines the volume name\&. No two volumes may have the same name\&. The volume name cannot contain the
 \*(Aq:\*(Aq
 character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to volnamelen parameter\&.
 .PP
 path = \fIPATH\fR \fB(V)\fR
 .RS 4
-The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
-.sp
-The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
-\*(Aq:\*(Aq
-character\&. The volume name is mangled if it is very long\&. Mac charset volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to volnamelen parameter\&.
+The path name must be a fully qualified path name\&.
 .RE
 .PP
 appledouble = \fIea|v2\fR \fB(V)\fR
@@ -873,7 +884,7 @@ Example: hosts deny = 192\&.168\&.100/24 10\&.1\&.1\&.1 2001:db8::1428:57ab
 .PP
 cnid scheme = \fIbackend\fR \fB(V)\fR
 .RS 4
-set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
+set the CNID backend to be used for the volume, default is [@DEFAULT_CNID_SCHEME@] available schemes: [@compiled_backends@]
 .RE
 .PP
 ea = \fInone|auto|sys|ad\fR \fB(V)\fR
@@ -1089,7 +1100,7 @@ and
 .SH "CNID BACKENDS"
 .PP
 The AFP protocol mostly refers to files and directories by ID and not by name\&. Netatalk needs a way to store these ID\*(Aqs in a persistent way, to achieve this several different CNID backends are available\&. The CNID Databases are by default located in the
-:STATEDIR:/netatalk/CNID/(volumename)/\&.AppleDB/
+@localstatedir@/netatalk/CNID/(volumename)/\&.AppleDB/
 directory\&.
 .PP
 cdb

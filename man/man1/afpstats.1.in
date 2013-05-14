@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: netatalk
+.\"     Title: afpstats
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 22 Mar 2012
-.\"    Manual: Netatalk 3.0
-.\"    Source: Netatalk 3.0
+.\"      Date: 24 Mar 2013
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "NETATALK" "8" "22 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFPSTATS" "1" "24 Mar 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,40 +28,23 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-netatalk \- Netatalk AFP server service controller daemon
+afpstats \- List AFP statistics
 .SH "SYNOPSIS"
-.HP \w'\fBnetatalk\fR\fB\fR\fBnetatalk\fR\fB\fR\ 'u
-\fBnetatalk\fR\fB\fR
-.br
-\fBnetatalk\fR\fB\fR
+.HP \w'\fBafpstats\fR\fB\fR\ 'u
+\fBafpstats\fR\fB\fR
 .SH "DESCRIPTION"
 .PP
-\fBnetatalk\fR
-is the service controller daemon responsible for starting and restarting the AFP daemon
+\fBafpstats\fR
+list AFP statistics via D\-Bus IPC\&.
+.SH "NOTE"
+.PP
 \fBafpd\fR
-and the CNID daemon
-\fBcnid_metad\fR\&. It is normally started at boot time from /etc/rc\&.
-.SH "SIGNALS"
+must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
 .PP
-SIGTERM
-.RS 4
-Stop Netatalk service, AFP and CNID daemons
-.RE
-.PP
-SIGHUP
-.RS 4
-Sending a
-\fBSIGHUP\fR
-will cause the AFP daemon reload its configuration file\&.
-.RE
-.SH "FILES"
-.PP
-:ETCDIR:/afp\&.conf
-.RS 4
-configuration file used by afpd and cnid_metad
-.RE
+"\fBafpstats = yes\fR" must be set in
+@pkgconfdir@/afp\&.conf\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),
-\fBcnid_metad\fR(8),
-\fBafp.conf\fR(5)\&.
+\fBafp.conf\fR(5),
+\fBdbus-daemon\fR(1)

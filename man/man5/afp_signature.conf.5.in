@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: afp_voluuid.conf
+.\"     Title: afp_signature.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
-.\"    Manual: Netatalk 3.0
-.\"    Source: Netatalk 3.0
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_VOLUUID\&.CONF" "5" "23 Mar 2012" "Netatalk 3.0" "Netatalk 3.0"
+.TH "AFP_SIGNATURE\&.CONF" "5" "23 Mar 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,18 +28,18 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for Time Machine volume
+afp_signature.conf \- Configuration file used by afpd(8) to specify server signature
 .SH "DESCRIPTION"
 .PP
-:STATEDIR:/netatalk/afp_voluuid\&.conf
+@localstatedir@/netatalk/afp_signature\&.conf
 is the configuration file used by
 \fBafpd\fR
-to specify UUID of Time Machine volume automagically\&. The configuration lines are composed like:
+to specify server signature automagically\&. The configuration lines are composed like:
 .PP
-\fI"volume name"\fR
-\fIuuid\-string\fR
+\fI"server name"\fR
+\fIhexa\-string\fR
 .PP
-The first field is volume name\&. Volume names must be quoted if they contain spaces\&. The second field is the 36 character hexadecimal ASCII string representation of a UUID\&.
+The first field is server name\&. Server names must be quoted if they contain spaces\&. The second field is the hexadecimal string of 32 characters for 16\-bytes server signature\&.
 .PP
 The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines prefixed with # are ignored\&. The illegal lines are ignored\&.
 .if n \{\
@@ -55,26 +55,26 @@ The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines 
 .ps -1
 .br
 .PP
-This UUID is advertised by Zeroconf in order to provide robust disambiguation of Time Machine volume\&.
+Server Signature is unique 16\-bytes identifier used to prevent logging on to the same server twice\&.
 .PP
-The afpd generates the UUID from random numbers and saves it into afp_voluuid\&.conf, only when setting "time machine = yes" option in afp\&.conf\&.
+Netatalk 2\&.0 and earlier generated server signature by using gethostid()\&. There was a problem that another servers have the same signature because the hostid is not unique enough\&.
 .PP
-This file should not be thoughtlessly edited and be copied onto another server\&.
+Current netatalk generates the signature from random numbers and saves it into afp_signature\&.conf\&. When starting next time, it is read from this file\&.
+.PP
+This file should not be thoughtlessly edited and be copied onto another server\&. If it wants to set the signature intentionally, use the option "signature =" in afp\&.conf\&. In this case, afp_signature\&.conf is not used\&.
 .sp .5v
 .RE
 .PP
 .SH "EXAMPLES"
 .PP
-\fBExample.\ \&afp_voluuid.conf three TM volumes on one netatalk\fR
+\fBExample.\ \&afp_signature.conf\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
 # This is a comment\&.
-"Backup for John Smith" 1573974F\-0ABD\-69CC\-C40A\-8519B681A0E1
-"bob" 39A487F4\-55AA\-8240\-E584\-69AA01800FE9
-mary 6331E2D1\-446C\-B68C\-3066\-D685AADBE911
+"My Server" 74A0BB94EC8C13988B2E75042347E528
 .fi
 .if n \{\
 .RE
@@ -83,5 +83,4 @@ mary 6331E2D1\-446C\-B68C\-3066\-D685AADBE911
 .PP
 \fBafpd\fR(8),
 \fBafp.conf\fR(5),
-\fBavahi-daemon\fR(8),
-\fBmDNSResponder\fR(8)
+\fBasip-status.pl\fR(1)

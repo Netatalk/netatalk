@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: afpstats
+.\"     Title: macusers
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 24 Mar 2013
-.\"    Manual: Netatalk 3.0
-.\"    Source: Netatalk 3.0
+.\"      Date: 13 Oct 2011
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFPSTATS" "1" "24 Mar 2013" "Netatalk 3.0" "Netatalk 3.0"
+.TH "MACUSERS" "1" "13 Oct 2011" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,23 +28,27 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afpstats \- List AFP statistics
+macusers \- List the users connecting via AFP
 .SH "SYNOPSIS"
-.HP \w'\fBafpstats\fR\fB\fR\ 'u
-\fBafpstats\fR\fB\fR
+.HP \w'\fBmacusers\fR\fB\fR\ 'u
+\fBmacusers\fR\fB\fR
+.HP \w'\fBmacusers\fR\fB\fR\ 'u
+\fBmacusers\fR\fB\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help 
 .SH "DESCRIPTION"
 .PP
-\fBafpstats\fR
-list AFP statistics via D\-Bus IPC\&.
-.SH "NOTE"
+\fBmacusers\fR
+list the users connecting via AFP\&.
+.SH "OPTIONS"
 .PP
-\fBafpd\fR
-must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
+\fB\-v, \-version, \-\-version\fR
+.RS 4
+Show version and exit
+.RE
 .PP
-"\fBafpstats = yes\fR" must be set in
-:ETCDIR:/afp\&.conf\&.
+\fB\-h, \-help, \-\-help\fR
+.RS 4
+Display the help and exit
+.RE
 .SH "SEE ALSO"
 .PP
-\fBafpd\fR(8),
-\fBafp.conf\fR(5),
-\fBdbus-daemon\fR(1)
+\fBafpd\fR(8)
