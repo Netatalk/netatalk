@@ -150,7 +150,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AC_ARG_WITH([tracker-pkgconfig-version],
       [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL and tracker-miner pkg in pkg-config (default: 0.12)])],
       [ac_cv_tracker_pkg_version=$withval],
-      [ac_cv_tracker_pkg_version=$ac_cv_tracker_pkg_default]
+      [ac_cv_tracker_pkg_version=$ac_cv_tracker_pkg_version_default]
     )
 
     AC_ARG_WITH([tracker-prefix],
