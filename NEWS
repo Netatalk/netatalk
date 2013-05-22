@@ -1,3 +1,6 @@
+Changes in 3.0.5
+================
+
 Changes in 3.0.4
 ================
 * FIX: Opening files without metadata EA may result in an invalid
