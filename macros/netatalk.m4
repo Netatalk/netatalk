@@ -143,51 +143,37 @@ AC_DEFUN([AC_DEVELOPER], [
 dnl Tracker, for Spotlight
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     ac_cv_have_tracker=no
+    ac_cv_tracker_pkg_version_default=0.12
+    ac_cv_tracker_pkg_version_min=0.12
 
     dnl Tracker SPARQL
-    ac_cv_tracker_pkg_default=tracker-sparql-0.12
-    AC_ARG_WITH([tracker-pkg-config],
-      [AS_HELP_STRING([--with-tracker-pkg-config],[name of the Tracker SPARQL pkg in pkg-config])],
-      [ac_cv_tracker_pkg=$withval],
-      [ac_cv_tracker_pkg=$ac_cv_tracker_pkg_default]
+    AC_ARG_WITH([tracker-pkgconfig-version],
+      [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL and tracker-miner pkg in pkg-config (default: 0.12)])],
+      [ac_cv_tracker_pkg_version=$withval],
+      [ac_cv_tracker_pkg_version=$ac_cv_tracker_pkg_default]
     )
 
     AC_ARG_WITH([tracker-prefix],
-      [AS_HELP_STRING([--with-tracker-prefix],[prefix of Tracker installation (default: none)])],
+      [AS_HELP_STRING([--with-tracker-prefix=PATH],[Prefix of Tracker installation (default: none)])],
       [ac_cv_tracker_prefix=$withval],
-      [ac_cv_tracker_prefix=""]
+      [ac_cv_tracker_prefix="`pkg-config --variable=prefix tracker-sparql-$ac_cv_tracker_pkg_version`"]
     )
 
-    saved_PATH="$PATH"
-    PATH="$ac_cv_tracker_prefix:$PATH"
-    PKG_CHECK_MODULES([TRACKER], [$ac_cv_tracker_pkg >= 0.12], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
-    PATH="$saved_PATH"
+    AC_ARG_VAR([PKG_CONFIG_PATH], [Path to additional pkg-config packages])
+    PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
+    PKG_CHECK_MODULES([TRACKER_MINER], [tracker-miner-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
 
-    if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
-        if test x"$need_tracker" = x"yes" ; then
+    if test x"$ac_cv_have_tracker_sparql" = x"no" -o x"$ac_cv_have_tracker_miner" = x"no" ; then
+        if test x"$need_tracker_sparql" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
     else
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
-        ac_cv_tracker_prefix=`pkg-config --variable=prefix $ac_cv_tracker_pkg`
+        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
         AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
-    fi
-
-    ac_cv_tracker_miner_pkg_default=tracker-miner-0.12
-    AC_ARG_WITH([tracker-miner-pkg-config],
-      [AS_HELP_STRING([--with-tracker-miner-pkg-config],[name of the Tracker miner pkg in pkg-config])],
-      [ac_cv_tracker_miner_pkg=$withval],
-      [ac_cv_tracker_miner_pkg=$ac_cv_tracker_miner_pkg_default]
-    )
-
-    PKG_CHECK_MODULES([TRACKER_MINER], [$ac_cv_tracker_miner_pkg >= 0.12], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
-
-    if test x"$ac_cv_have_tracker_miner" = x"yes" ; then
-        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
-        AC_SUBST(TRACKER_MINER_CFLAGS)
-        AC_SUBST(TRACKER_MINER_LIBS)
+        ac_cv_tracker_type="(SPARQL)"
     fi
 
     dnl Test for Tracker 0.6 on Solaris and derived platforms, and FreeBSD
@@ -197,6 +183,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
             if test x"$ac_cv_have_tracker_rdf" = x"yes" ; then
                 AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
                 AC_DEFINE(HAVE_TRACKER_RDF, 1, [Define if Tracker 0.6 with support for RDF queries is available])
+                ac_cv_tracker_type="(RDF)"
                 case "$this_os" in
                 *solaris*)
                     AC_DEFINE([DBUS_DAEMON_PATH], ["/usr/lib/dbus-daemon"], [Path to dbus-daemon])
@@ -216,6 +203,8 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     fi
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
+    AC_SUBST(TRACKER_MINER_CFLAGS)
+    AC_SUBST(TRACKER_MINER_LIBS)
     AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
     AM_CONDITIONAL(HAVE_TRACKER_RDF, [test x"$ac_cv_have_tracker_rdf" = x"yes"])
 ])
