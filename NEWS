@@ -1,3 +1,30 @@
+Changes in 3.0.4
+================
+* FIX: Opening files without metadata EA may result in an invalid
+       metadata EA. Check for malformed metadata EAs and delete them.
+       Fixes bug #510.
+* FIX: Fix an issue with filenames containing non-ASCII characters that
+       lead to a failure setting the size of a files ressource fork.
+       This affected application like Adobe Photoshop where saving
+       files may fail. Fixes bug #511.
+* UPD: Enhance ACL mapping, change global ACL option 'map acl' to take
+       the following options: "none", "rights" (default), "mode".
+       none   = no mapping, this resembles the previous false/no setting
+       rights = map ACLs to Finder UARights, this resembles the previous
+                true/yes setting. This is the default.
+       mode   = map ACLs to Finder UARights and UNIX mode
+       From FR #73.
+* FIX: Fix a possible crash in cname() where cname_mtouname calls
+       dirlookup() where the curdir is freed because the dircache
+       detected a dev/inode cache difference and evicted the object
+       from the cache. Fixes bug #498.
+* FIX: Add missing include, fixes bug #512.
+* FIX: Change default FinderInfo for directories to be all 0, fixes
+       bug 514.
+* NEW: New option "afp interfaces" which allows specifying where
+       Netatalk listens for AFP connections by interface names.
+       From FR #79.
+
 Changes in 3.0.3
 ================
 * UPD: afpd: Increase default DSI server quantum to 1 MB

@@ -1711,8 +1711,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_NOZEROCONF;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "advertise ssh", 0))
         options->flags |= OPTION_ANNOUNCESSH;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "map acls", 1))
-        options->flags |= OPTION_ACL2MACCESS;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
         options->flags |= OPTION_CLOSEVOL;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))
@@ -1742,6 +1740,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
     options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
+    options->interfaces     = iniparser_getstrdup(config, INISEC_GLOBAL, "afp interfaces", NULL);
     options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
     options->addomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
     options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
@@ -1760,6 +1759,18 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+
+    p = iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
+    if (STRCMP(p, ==, "rights"))
+        options->flags |= OPTION_ACL2MACCESS;
+    else if (STRCMP(p, ==, "mode"))
+        options->flags |= OPTION_ACL2MODE | OPTION_ACL2MACCESS;
+    else {
+        if (STRCMP(p, !=, "none")) {
+            LOG(log_error, logtype_afpd, "bad ACL mapping option: %s, defaulting to 'rights'", p);
+            options->flags |= OPTION_ACL2MACCESS;
+        }
+    }
 
     if ((p = iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
@@ -1931,6 +1942,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.k5realm);
     if (obj->options.listen)
         CONFIG_ARG_FREE(obj->options.listen);
+    if (obj->options.interfaces)
+        CONFIG_ARG_FREE(obj->options.interfaces);
     if (obj->options.ntdomain)
         CONFIG_ARG_FREE(obj->options.ntdomain);
     if (obj->options.addomain)

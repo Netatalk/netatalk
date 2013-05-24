@@ -74,6 +74,8 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 		AC_MSG_WARN([ You can also re-run configure and specify --without-pam to disable PAM support.])
 	   fi
 	fi
+	AC_MSG_RESULT([    Documentation:])
+	AC_MSG_RESULT([         Docbook:                 $XSLTPROC_WORKS])
 ])
 
 
@@ -129,7 +131,7 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	fi
 	if test x"$netatalk_cv_ldap" = x"yes"; then
 		AC_MSG_RESULT([    LDAP:])
-		AC_MSG_RESULT([        LIBS   = $LDAP_LDLFLAGS $LDAP_LIBS])
+		AC_MSG_RESULT([        LIBS   = $LDAP_LDFLAGS $LDAP_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $LDAP_CFLAGS])
 	fi
     AC_MSG_RESULT([    LIBEVENT:])

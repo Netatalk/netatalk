@@ -346,22 +346,9 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         eid++;
     }
 
-    /* put something sane in the directory finderinfo */
-    if (stp == NULL) {
-        stp = &st;
-        if (lstat(path, &st) != 0)
-            return -1;
-    }
-
-    if ((adflags & ADFLAGS_DIR)) {
-        /* set default view */
-        ashort = htons(FINDERINFO_CLOSEDVIEW);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
-    } else {
-        /* set default creator/type fields */
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
-        memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
-    }
+    /* set default creator/type fields */
+    memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
+    memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
 
     /* make things invisible */
     if ((ad->ad_options & ADVOL_INVDOTS)
@@ -375,6 +362,11 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     }
 
     /* put something sane in the date fields */
+    if (stp == NULL) {
+        stp = &st;
+        if (lstat(path, &st) != 0)
+            return -1;
+    }
     ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, stp->st_mtime);
     ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, stp->st_mtime);
     ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, stp->st_mtime);
@@ -616,6 +608,7 @@ EC_CLEANUP:
 
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst _U_)
 {
+    EC_INIT;
     uint16_t nentries;
     int      len;
     ssize_t  header_len;
@@ -625,15 +618,15 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         header_len = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA);
     else
         header_len = sys_getxattr(path, AD_EA_META, ad->ad_data, AD_DATASZ_EA);
-     if (header_len < 1) {
+    if (header_len < 1) {
         LOG(log_debug, logtype_ad, "ad_header_read_ea: %s", strerror(errno));
-        return -1;
+        EC_FAIL;
     }
 
-    if (header_len < AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): bogus AppleDouble header.", fullpathname(path));
-        errno = EIO;
-        return -1;
+    if (header_len < AD_DATASZ_EA) {
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): short metadata EA", fullpathname(path));
+        errno = EINVAL;
+        EC_FAIL;
     }
 
     memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
@@ -644,28 +637,44 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
 
     if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
         LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): wrong magic or version", fullpathname(path));
-        errno = EIO;
-        return -1;
+        errno = EINVAL;
+        EC_FAIL;
     }
 
     memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
     nentries = ntohs( nentries );
-
-    /* Protect against bogus nentries */
-    len = nentries * AD_ENTRY_LEN;
-    if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
-        len = sizeof(ad->ad_data) - AD_HEADER_LEN;
-    if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): can't read entry info.", fullpathname(path));
-        errno = EIO;
-        return -1;
+    if (nentries != ADEID_NUM_EA) {
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): invalid number of entries: %d", fullpathname(path), nentries);
+        errno = EINVAL;
+        EC_FAIL;
     }
-    nentries = len / AD_ENTRY_LEN;
 
     /* Now parse entries */
     parse_entries(ad, buf + AD_HEADER_LEN, nentries);
 
-    return 0;
+    if (nentries != ADEID_NUM_EA
+        || !ad_entry(ad, ADEID_FINDERI)
+        || !ad_entry(ad, ADEID_COMMENT)
+        || !ad_entry(ad, ADEID_FILEDATESI)
+        || !ad_entry(ad, ADEID_AFPFILEI)
+        || !ad_entry(ad, ADEID_PRIVDEV)
+        || !ad_entry(ad, ADEID_PRIVINO)
+        || !ad_entry(ad, ADEID_PRIVSYN)
+        || !ad_entry(ad, ADEID_PRIVID)) {
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): invalid metadata EA", fullpathname(path));
+        errno = EINVAL;
+        EC_FAIL;
+    }
+
+EC_CLEANUP:
+    if (ret != 0 && errno == EINVAL) {
+        become_root();
+        (void)sys_removexattr(path, AD_EA_META);
+        unbecome_root();
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): deleted invalid metadata EA", fullpathname(path), nentries);
+        errno = ENOENT;
+    }
+    EC_EXIT;
 }
 
 /*!
@@ -1131,7 +1140,7 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
 {
     int ret = 0;
 
-    memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
+    ad->ad_meta_refcount++;
 
     switch (ad->ad_vers) {
     case AD_VERSION2:
@@ -1145,10 +1154,10 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
         break;
     }
 
-    if (ret == 0)
-        ad->ad_meta_refcount++;
-    else
+    if (ret != 0) {
+        ad->ad_meta_refcount--;
         ret = ad_error(ad, adflags);
+    }
 
     return ret;
 }

@@ -80,6 +80,8 @@ AC_CHECK_FUNCS(mmap utime getpagesize) dnl needed by tbd
 dnl search for necessary libraries
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(connect, socket)
+AC_CHECK_FUNCS(getifaddrs) dnl comes after gethostbyname and connect so it picks up the libs
+
 AX_PTHREAD(, [AC_MSG_ERROR([missing pthread_sigmask])])
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
@@ -195,6 +197,9 @@ AC_NETATALK_FHS
 dnl netatalk lockfile path, must come after AC_NETATALK_FHS
 AC_NETATALK_LOCKFILE
 
+dnl Check for Docbook and build documentation if found
+AX_CHECK_DOCBOOK
+
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_builddir)/include $CFLAGS"
 UAMS_PATH="${uams_path}"
 
@@ -246,6 +251,14 @@ AC_OUTPUT([Makefile
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
 	doc/Makefile
+    doc/html.xsl
+    doc/man.xsl
+    doc/manual/Makefile
+    doc/manual/manual.xml
+    doc/manpages/Makefile
+    doc/manpages/man1/Makefile
+    doc/manpages/man5/Makefile
+    doc/manpages/man8/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
@@ -273,8 +286,26 @@ AC_OUTPUT([Makefile
 	macros/Makefile
 	man/Makefile
 	man/man1/Makefile
+    man/man1/ad.1
+    man/man1/afpldaptest.1
+    man/man1/afppasswd.1
+    man/man1/afpstats.1
+    man/man1/apple_dump.1
+    man/man1/asip-status.pl.1
+    man/man1/dbd.1
+    man/man1/macusers.1
+    man/man1/netatalk-config.1
+    man/man1/uniconv.1
 	man/man5/Makefile
+    man/man5/afp.conf.5
+    man/man5/afp_signature.conf.5
+    man/man5/afp_voluuid.conf.5
+    man/man5/extmap.conf.5
 	man/man8/Makefile
+    man/man8/afpd.8
+    man/man8/cnid_dbd.8
+    man/man8/cnid_metad.8
+    man/man8/netatalk.8
 	test/Makefile
 	test/afpd/Makefile
 	],

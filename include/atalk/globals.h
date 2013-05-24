@@ -54,6 +54,7 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
+#define OPTION_ACL2MODE      (1 << 10)
 #define OPTION_SHARE_RESERV  (1 << 11) /* whether to use Solaris fcntl F_SHARE locks */
 #define OPTION_DBUS_AFPSTATS (1 << 12) /* whether to run dbus thread for afpstats */
 
@@ -93,7 +94,7 @@ struct afp_options {
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char *hostname;
-    char *listen, *port;
+    char *listen, *interfaces, *port;
     char *Cnid_srv, *Cnid_port;
     char *configfile;
     char *uampath, *fqdn;

@@ -386,6 +386,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if (ad_open(ofork->of_ad, upath, adflags, 0666) == 0) {
         ofork->of_flags |= AFPFORK_META;
+        if (ad_get_MD_flags(ofork->of_ad) & O_CREAT) {
+            LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): setting CNID", upath);
+            cnid_t id;
+            if ((id = get_id(vol, ofork->of_ad, st, dir->d_did, upath, strlen(upath))) == CNID_INVALID) {
+                LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+                goto openfork_err;
+            }
+            (void)ad_setid(ofork->of_ad, st->st_dev, st->st_ino, id, dir->d_did, vol->v_stamp);
+            ad_flush(ofork->of_ad);
+        }
     } else {
         switch (errno) {
         case EACCES:
@@ -573,7 +583,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, s
             goto afp_setfork_err;
         }
 
-        err = ad_rtruncate(ofork->of_ad, size);
+        err = ad_rtruncate(ofork->of_ad, mtoupath(ofork->of_vol, of_name(ofork), ofork->of_did, utf8_encoding(obj)), size);
         if (st_size > size)
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);
         if (err < 0)

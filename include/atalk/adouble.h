@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -219,7 +219,7 @@ struct adouble {
     int                 ad_reso_refcount;
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
-    char                *ad_name;          /* name in server encoding (usually UTF8)  */
+    char                *ad_name;          /* name (UTF8-MAC)                         */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks;     /* open forks (by others)                  */
     char                ad_data[AD_DATASZ_MAX];
@@ -423,7 +423,7 @@ extern ssize_t ad_write(struct adouble *, uint32_t, off_t, int, const char *, si
 extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);
 extern ssize_t adf_pwrite(struct ad_fd *, const void *, size_t, off_t);
 extern int     ad_dtruncate(struct adouble *, off_t);
-extern int     ad_rtruncate(struct adouble *, off_t);
+extern int     ad_rtruncate(struct adouble *, const char *, off_t);
 extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads);
 
 /* ad_size.c */
