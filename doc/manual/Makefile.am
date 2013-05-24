@@ -15,7 +15,8 @@ EXTRA_DIST = \
 	configuration.xml \
 	install.xml \
 	intro.xml \
-	upgrade.xml
+	upgrade.xml \
+	netatalk.html
 
 HTML_PAGES = \
 	ad.1.html \
