@@ -1,9 +1,9 @@
-Netatalk 3.0.3
+Netatalk 3.0.4
 ==============
 
-The Netatalk development team is proud to announce version 3.0.3 of
+The Netatalk development team is proud to announce version 3.0.4 of
 the Netatalk File Sharing suite. This is the latest update to the 3.0
-release series. All users are encouraged to upgrade their systems to 3.0.3.
+release series. All users are encouraged to upgrade their systems to 3.0.4.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -42,6 +42,33 @@ the GNU General Public License (GPLv2).  The full license text is available
 at:
 
   http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+Changes in 3.0.4
+~~~~~~~~~~~~~~~~
+* FIX: Opening files without metadata EA may result in an invalid
+       metadata EA. Check for malformed metadata EAs and delete them.
+       Fixes bug #510.
+* FIX: Fix an issue with filenames containing non-ASCII characters that
+       lead to a failure setting the size of a files ressource fork.
+       This affected application like Adobe Photoshop where saving
+       files may fail. Fixes bug #511.
+* UPD: Enhance ACL mapping, change global ACL option 'map acl' to take
+       the following options: "none", "rights" (default), "mode".
+       none   = no mapping, this resembles the previous false/no setting
+       rights = map ACLs to Finder UARights, this resembles the previous
+                true/yes setting. This is the default.
+       mode   = map ACLs to Finder UARights and UNIX mode
+       From FR #73.
+* FIX: Fix a possible crash in cname() where cname_mtouname calls
+       dirlookup() where the curdir is freed because the dircache
+       detected a dev/inode cache difference and evicted the object
+       from the cache. Fixes bug #498.
+* FIX: Add missing include, fixes bug #512.
+* FIX: Change default FinderInfo for directories to be all 0, fixes
+       bug 514.
+* NEW: New option "afp interfaces" which allows specifying where
+       Netatalk listens for AFP connections by interface names.
+       From FR #79.
 
 Changes in 3.0.3
 ~~~~~~~~~~~~~~~~
@@ -291,4 +318,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, January 2013
+ - The Netatalk Development Team, May 2013
