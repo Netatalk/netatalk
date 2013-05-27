@@ -2,30 +2,30 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
 "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
 
-<!ENTITY Intro SYSTEM "netatalk/intro.xml">
-<!ENTITY Install SYSTEM "netatalk/install.xml">
-<!ENTITY Upgrade SYSTEM "netatalk/upgrade.xml">
-<!ENTITY Configuration SYSTEM "netatalk/configuration.xml">
+<!ENTITY Intro SYSTEM "intro.xml">
+<!ENTITY Install SYSTEM "install.xml">
+<!ENTITY Upgrade SYSTEM "upgrade.xml">
+<!ENTITY Configuration SYSTEM "configuration.xml">
 
-<!ENTITY ad.1 SYSTEM "man/man1/ad.1.xml">
-<!ENTITY afpd.8 SYSTEM "man/man8/afpd.8.xml">
-<!ENTITY cnid_dbd.8 SYSTEM "man/man8/cnid_dbd.8.xml">
-<!ENTITY cnid_metad.8 SYSTEM "man/man8/cnid_metad.8.xml">
-<!ENTITY afp.conf.5 SYSTEM "man/man5/afp.conf.5.xml">
-<!ENTITY afp_signature.conf.5 SYSTEM "man/man5/afp_signature.conf.5.xml">
-<!ENTITY afp_voluuid.conf.5 SYSTEM "man/man5/afp_voluuid.conf.5.xml">
-<!ENTITY afpldaptest.1 SYSTEM "man/man1/afpldaptest.1.xml">
-<!ENTITY afppasswd.1 SYSTEM "man/man1/afppasswd.1.xml">
-<!ENTITY afpstats.1 SYSTEM "man/man1/afpstats.1.xml">
-<!ENTITY apple_dump.1 SYSTEM "man/man1/apple_dump.1.xml">
-<!ENTITY extmap.conf.5 SYSTEM "man/man5/extmap.conf.5.xml">
-<!ENTITY macusers.1 SYSTEM "man/man1/macusers.1.xml">
-<!ENTITY megatron.1 SYSTEM "man/man1/megatron.1.xml">
-<!ENTITY netatalk.8 SYSTEM "man/man8/netatalk.8.xml">
-<!ENTITY netatalk-config.1 SYSTEM "man/man1/netatalk-config.1.xml">
-<!ENTITY uniconv.1 SYSTEM "man/man1/uniconv.1.xml">
-<!ENTITY asip-status.pl.1 SYSTEM "man/man1/asip-status.pl.1.xml">
-<!ENTITY dbd.1 SYSTEM "man/man1/dbd.1.xml">
+<!ENTITY ad.1 SYSTEM "../manpages/man1/ad.1.xml">
+<!ENTITY afpd.8 SYSTEM "../manpages//man8/afpd.8.xml">
+<!ENTITY cnid_dbd.8 SYSTEM "../manpages//man8/cnid_dbd.8.xml">
+<!ENTITY cnid_metad.8 SYSTEM "../manpages//man8/cnid_metad.8.xml">
+<!ENTITY afp.conf.5 SYSTEM "../manpages//man5/afp.conf.5.xml">
+<!ENTITY afp_signature.conf.5 SYSTEM "../manpages//man5/afp_signature.conf.5.xml">
+<!ENTITY afp_voluuid.conf.5 SYSTEM "../manpages//man5/afp_voluuid.conf.5.xml">
+<!ENTITY afpldaptest.1 SYSTEM "../manpages//man1/afpldaptest.1.xml">
+<!ENTITY afppasswd.1 SYSTEM "../manpages//man1/afppasswd.1.xml">
+<!ENTITY afpstats.1 SYSTEM "../manpages//man1/afpstats.1.xml">
+<!ENTITY apple_dump.1 SYSTEM "../manpages//man1/apple_dump.1.xml">
+<!ENTITY extmap.conf.5 SYSTEM "../manpages//man5/extmap.conf.5.xml">
+<!ENTITY macusers.1 SYSTEM "../manpages//man1/macusers.1.xml">
+<!ENTITY megatron.1 SYSTEM "../manpages//man1/megatron.1.xml">
+<!ENTITY netatalk.8 SYSTEM "../manpages//man8/netatalk.8.xml">
+<!ENTITY netatalk-config.1 SYSTEM "../manpages//man1/netatalk-config.1.xml">
+<!ENTITY uniconv.1 SYSTEM "../manpages//man1/uniconv.1.xml">
+<!ENTITY asip-status.pl.1 SYSTEM "../manpages//man1/asip-status.pl.1.xml">
+<!ENTITY dbd.1 SYSTEM "../manpages//man1/dbd.1.xml">
 ]>
 <book id="netatalk-manual">
   <title>Netatalk 3.0 Manual</title>
