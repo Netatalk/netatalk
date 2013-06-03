@@ -119,7 +119,6 @@ struct afp_options {
     char *mimicmodel;
     char *adminauthuser;
     char *slmod_path;
-    int tracker_loglevel;
     struct afp_volume_name volfile;
 };
 

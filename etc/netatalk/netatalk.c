@@ -430,8 +430,6 @@ int main(int argc, char **argv)
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 #endif
 #ifdef HAVE_TRACKER_RDF
-    if (asprintf(&trackerd_loglev, "--verbosity=%d", obj.options.tracker_loglevel) == -1)
-        netatalk_exit(EXITERR_CONF);
     if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
         LOG(log_error, logtype_default, "Error starting '%s'", TRACKERD_PATH);
         netatalk_exit(EXITERR_CONF);
