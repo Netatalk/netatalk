@@ -78,8 +78,10 @@ static int set_sl_volumes(void)
     EC_NULL_LOG( volumes = getvolumes() );
 
     for (vol = volumes; vol; vol = vol->v_next) {
-        bstring volnamequot = bformat("'%s'", vol->v_path);
-        bstrListPush(vollist, volnamequot);
+        if (vol->v_flags & AFPVOL_SPOTLIGHT) {
+            bstring volnamequot = bformat("'%s'", vol->v_path);
+            bstrListPush(vollist, volnamequot);
+        }
     }
 
     volnamelist = bjoin(vollist, sep);
