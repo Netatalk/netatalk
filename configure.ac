@@ -200,7 +200,7 @@ AC_NETATALK_LOCKFILE
 dnl Check for Docbook and build documentation if found
 AX_CHECK_DOCBOOK
 
-CFLAGS="-I\$(top_srcdir)/include -I\$(top_builddir)/include $CFLAGS"
+CPPFLAGS="-I\$(top_srcdir)/include -I\$(top_builddir)/include $CPPFLAGS"
 UAMS_PATH="${uams_path}"
 
 AC_SUBST(LIBS)
