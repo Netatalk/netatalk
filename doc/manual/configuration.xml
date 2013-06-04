@@ -47,6 +47,11 @@
       completely up to the client to resolve them, resulting in links that
       point somewhere inside the clients filesystem view.</para>
 
+      <para>Support for <link linkend="spotlight">Spotlight</link> has been
+      added in Netatalk 3.1. See this <link
+      linkend="spotlight_compile">section</link> for information on how to
+      compile Netatalk with Spotlight support.</para>
+
       <sect3>
         <title>afp.conf</title>
 
@@ -114,6 +119,469 @@ basedir regex = /usr/home</programlisting></para>
 
             <manvolnum>5</manvolnum>
           </citerefentry> man page.</para>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title id="spotlight">Spotlight<indexterm>
+          <primary>Spotlight</primary>
+        </indexterm></title>
+
+      <para>Netatalk uses Tracker as the metadata backend. Recent Linux
+      distributions will provide the libtracker-sparql library which is
+      available since Tracker version 0.7. This version is referred to as
+      Tracker SPARQL.</para>
+
+      <para>Other system like FreeBSD, Solaris and systems derived from
+      Solaris will only ship Tracker version 0.6 which only offers a much more
+      restrcited feature set. We refer to this version as Tracker RDF. Solaris
+      users are advised to install Tracker from OpenCSW as this is at least
+      version 0.15 and thus supports SPARQL</para>
+
+      <para>To enable Spotlight put this in your afp.conf:</para>
+
+      <screen>[Global]
+...
+spotlight = yes
+...</screen>
+
+      <para>This will enable Spotlight functionality. For Solaris with Tracker
+      from OpenCSW also add:<screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
+
+      <sect3>
+        <title>Tracker SPARQL</title>
+
+        <para>Next you must enbale Spotlight indexing on a per volume
+        basis:</para>
+
+        <screen>[foo]
+path = /bar
+spotlight = yes
+...</screen>
+
+        <para>Only volumes with a setting of spotlight = yes will be
+        searchable with Spotlight.</para>
+
+        <warning>
+          <para>All other volumes won't be searchable at all</para>
+        </warning>
+      </sect3>
+
+      <sect3>
+        <title>Tracker RDF</title>
+
+        <para>Add all volume paths that should be searchable to
+        $sysconfdir/tracker/tracker.cfg:<screen>...
+[Watches]
+# List of directory roots to index and watch (separator=;)
+WatchDirectoryRoots=/foo/bar;/another/volume
+...</screen></para>
+      </sect3>
+
+      <sect3>
+        <title>Limitations and notes</title>
+
+        <itemizedlist>
+          <listitem>
+            <para>Large filesystems</para>
+
+            <para>Tracker on Linux uses the inotify Kernel filesystem change
+            event API for tracking filesystem changes. On large filesystems
+            this may be problematic since the inotify API doesn't offer
+            recursive directory watches but instead requires that for every
+            subdirectoy watches must be added individually.</para>
+
+            <para>On Solaris the FEN file event notification system is used.
+            It is unkown which limitations and ressource consumption this
+            Solaris subsystem has,</para>
+          </listitem>
+
+          <listitem>
+            <para>Tracker RDF</para>
+
+            <para>The mapping of certain simple and of complex Spotlight to
+            Tracker RDF queries is imperfect. Also, Tracker RDF filename
+            searches are case sensitive! As a result there are two noticable
+            restrictions:</para>
+
+            <orderedlist>
+              <listitem>
+                <para>On a Mac, a query entered in the Spotlight search menu
+                or in a Finder search toolbar is meant to express "search any
+                metadata field, file name or content for this string". With
+                Netatalk and Tracker RDF only filenames will be
+                searched.</para>
+              </listitem>
+
+              <listitem>
+                <para>Searching files content must be done through explicitly
+                adding a "<emphasis>Contents</emphasis> contains ..."
+                filter.</para>
+              </listitem>
+            </orderedlist>
+
+            <screenshot>
+              <screeninfo>Case sensivity</screeninfo>
+
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="http://netatalk.sourceforge.net/wiki/images/2/2a/Toolbar_search_is_name_search.png" />
+                </imageobject>
+              </mediaobject>
+            </screenshot>
+
+            <screenshot>
+              <screeninfo>Searching metadata</screeninfo>
+
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="http://netatalk.sourceforge.net/wiki/images/0/01/Searching_for_content.png" />
+                </imageobject>
+              </mediaobject>
+            </screenshot>
+          </listitem>
+        </itemizedlist>
+      </sect3>
+
+      <sect3>
+        <title>Supported metadata attributes</title>
+
+        <para>The following list is the complete set of supported metadata
+        attributes in Tracker SPARQL search queries</para>
+
+        <table>
+          <title>Tracker SPARQL</title>
+
+          <tgroup cols="2">
+            <thead>
+              <row>
+                <entry align="center">Description</entry>
+
+                <entry align="center">Spotlight Key </entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>Name</entry>
+
+                <entry>kMDItemDisplayName, kMDItemFSName</entry>
+              </row>
+
+              <row>
+                <entry>Document content (full text search)</entry>
+
+                <entry>kMDItemTextContent</entry>
+              </row>
+
+              <row>
+                <entry>File type</entry>
+
+                <entry>_kMDItemGroupId, kMDItemContentTypeTree</entry>
+              </row>
+
+              <row>
+                <entry>File modification date</entry>
+
+                <entry>kMDItemFSContentChangeDate,
+                kMDItemContentModificationDate,
+                kMDItemAttributeChangeDate</entry>
+              </row>
+
+              <row>
+                <entry>Content Creation date</entry>
+
+                <entry>kMDItemContentCreationDate</entry>
+              </row>
+
+              <row>
+                <entry>The author, or authors, of the contents of the
+                file</entry>
+
+                <entry>kMDItemAuthors, kMDItemCreator</entry>
+              </row>
+
+              <row>
+                <entry>The name of the country where the item was
+                created</entry>
+
+                <entry>kMDItemCountry</entry>
+              </row>
+
+              <row>
+                <entry>Duration</entry>
+
+                <entry>kMDItemDurationSeconds</entry>
+              </row>
+
+              <row>
+                <entry>Number of pages</entry>
+
+                <entry>kMDItemNumberOfPages</entry>
+              </row>
+
+              <row>
+                <entry>Document title</entry>
+
+                <entry>kMDItemTitle</entry>
+              </row>
+
+              <row>
+                <entry>The width, in pixels, of the contents. For example, the
+                image width or the video frame width</entry>
+
+                <entry>kMDItemPixelWidth</entry>
+              </row>
+
+              <row>
+                <entry>The height, in pixels, of the contents. For example,
+                the image height or the video frame height</entry>
+
+                <entry>kMDItemPixelHeight</entry>
+              </row>
+
+              <row>
+                <entry>The color space model used by the document
+                contents</entry>
+
+                <entry>kMDItemColorSpace</entry>
+              </row>
+
+              <row>
+                <entry>The number of bits per sample</entry>
+
+                <entry>kMDItemBitsPerSample</entry>
+              </row>
+
+              <row>
+                <entry>Focal length of the lens, in millimeters</entry>
+
+                <entry>kMDItemFocalLength</entry>
+              </row>
+
+              <row>
+                <entry>ISO speed</entry>
+
+                <entry>kMDItemISOSpeed</entry>
+              </row>
+
+              <row>
+                <entry>Orientation of the document. Possible values are 0
+                (landscape) and 1 (portrait)</entry>
+
+                <entry>kMDItemOrientation</entry>
+              </row>
+
+              <row>
+                <entry>Resolution width, in DPI</entry>
+
+                <entry>kMDItemResolutionWidthDPI</entry>
+              </row>
+
+              <row>
+                <entry>Resolution height, in DPI</entry>
+
+                <entry>kMDItemResolutionHeightDPI</entry>
+              </row>
+
+              <row>
+                <entry>Exposure time, in seconds</entry>
+
+                <entry>kMDItemExposureTimeSeconds</entry>
+              </row>
+
+              <row>
+                <entry>The composer of the music contained in the audio
+                file</entry>
+
+                <entry>kMDItemComposer</entry>
+              </row>
+
+              <row>
+                <entry>The musical genre of the song or composition</entry>
+
+                <entry>kMDItemMusicalGenre</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+
+        <para>The following list is the complete set of supported metadata
+        attributes in Tracker RDF search queries:<table>
+            <title>Tracker RDF</title>
+
+            <tgroup cols="2">
+              <thead>
+                <row>
+                  <entry align="center">Description</entry>
+
+                  <entry align="center">Spotlight Key</entry>
+                </row>
+              </thead>
+
+              <tbody>
+                <row>
+                  <entry>Name</entry>
+
+                  <entry>kMDItemDisplayName, kMDItemFSName</entry>
+                </row>
+
+                <row>
+                  <entry>Document content (full text search)</entry>
+
+                  <entry>kMDItemTextContent</entry>
+                </row>
+
+                <row>
+                  <entry>File type</entry>
+
+                  <entry>_kMDItemGroupId, kMDItemContentTypeTree</entry>
+                </row>
+
+                <row>
+                  <entry>File modification date</entry>
+
+                  <entry>kMDItemFSContentChangeDate,
+                  kMDItemContentModificationDate,
+                  kMDItemAttributeChangeDate</entry>
+                </row>
+
+                <row>
+                  <entry>Content Creation date</entry>
+
+                  <entry>kMDItemContentCreationDate</entry>
+                </row>
+
+                <row>
+                  <entry>The author, or authors, of the contents of the
+                  file</entry>
+
+                  <entry>kMDItemAuthors, kMDItemCreator</entry>
+                </row>
+
+                <row>
+                  <entry>The name of the country where the item was
+                  created</entry>
+
+                  <entry>kMDItemCountry</entry>
+                </row>
+
+                <row>
+                  <entry>Duration</entry>
+
+                  <entry>kMDItemDurationSeconds</entry>
+                </row>
+
+                <row>
+                  <entry>Number of pages</entry>
+
+                  <entry>kMDItemNumberOfPages</entry>
+                </row>
+
+                <row>
+                  <entry>Document title</entry>
+
+                  <entry>kMDItemTitle</entry>
+                </row>
+
+                <row>
+                  <entry>The width, in pixels, of the contents. For example,
+                  the image width or the video frame width</entry>
+
+                  <entry>kMDItemPixelWidth</entry>
+                </row>
+
+                <row>
+                  <entry>The height, in pixels, of the contents. For example,
+                  the image height or the video frame height</entry>
+
+                  <entry>kMDItemPixelHeight</entry>
+                </row>
+
+                <row>
+                  <entry>Focal length of the lens, in millimeters</entry>
+
+                  <entry>kMDItemFocalLength</entry>
+                </row>
+
+                <row>
+                  <entry>ISO speed</entry>
+
+                  <entry>kMDItemISOSpeed</entry>
+                </row>
+
+                <row>
+                  <entry>Orientation of the document. Possible values are 0
+                  (landscape) and 1 (portrait)</entry>
+
+                  <entry>kMDItemOrientation</entry>
+                </row>
+
+                <row>
+                  <entry>Exposure time, in seconds</entry>
+
+                  <entry>kMDItemExposureTimeSeconds</entry>
+                </row>
+
+                <row>
+                  <entry>The musical genre of the song or composition</entry>
+
+                  <entry>kMDItemMusicalGenre</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table></para>
+      </sect3>
+
+      <sect3>
+        <title>Using Tracker commandline tools on the server</title>
+
+        <para>Netatalk must be running. Then setup relevant environment
+        variables, adjust the prefix /usr/local/netatalk to match your
+        configured paths:<screen>$ su
+****
+# cat trackerenv.sh 
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"
+export XDG_DATA_HOME=/usr/local/netatalk/var/netatalk
+export XDG_CACHE_HOME=/usr/local/netatalk/var/netatalk
+export XDG_CONFIG_HOME=/usr/local/netatalk/etc
+# . trackerenv.sh
+#</screen></para>
+
+        <para>Tracker SPARQL:<screen># tracker-search QUERY
+...
+# tracker-info PATH
+...</screen></para>
+
+        <para>Tracker RDF<screen># cat file.rdf
+&lt;rdfq:Condition&gt;
+    &lt;rdfq:and&gt;
+        &lt;rdfq:contains&gt;
+            &lt;rdfq:Property name="File:Name" /&gt;
+            &lt;rdf:String&gt;SEARCHSTRING&lt;/rdf:String&gt;
+        &lt;/rdfq:contains&gt;
+    &lt;/rdfq:and&gt;
+&lt;/rdfq:Condition&gt;
+# tracker-query -p file.rdf File:Name
+...
+# tracker-info -m File:Mime PATH
+...</screen></para>
+      </sect3>
+
+      <sect3>
+        <title>References</title>
+
+        <orderedlist>
+          <listitem>
+            <para><ulink
+            url="https://developer.apple.com/library/mac/#documentation/Carbon/Reference/MDItemRef/Reference/reference.html">MDItem</ulink></para>
+          </listitem>
+
+          <listitem>
+            <para><ulink
+            url="https://live.gnome.org/Tracker/Documentation">Tracker</ulink></para>
+          </listitem>
+        </orderedlist>
       </sect3>
     </sect2>
 
@@ -1321,7 +1789,7 @@ aclmode = passthrough</screen>
           When a new object is created inside a directory with a default ACL,
           the default ACL is applied to the new object as it's access ACL.
           Subdirectories inherit default ACLs from their parent. There are no
-          further mechanisms of inheritance control. </para>
+          further mechanisms of inheritance control.</para>
 
           <para>Architectural differences between Posix ACLs and OS X ACLs
           especially involve:</para>
@@ -1419,7 +1887,7 @@ aclmode = passthrough</screen>
               <listitem>
                 <para>afpd silently discard entries which deny a set of
                 permissions because they they can't be represented within the
-                Posix architecture. </para>
+                Posix architecture.</para>
               </listitem>
 
               <listitem>
