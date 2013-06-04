@@ -583,6 +583,11 @@ solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
 .RE
 .PP
+spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
+.RS 4
+Whether to enable Spotlight searches\&. Enable this global option and then also add "spotlight = yes" to any volume you want to be able to search with Spotlight\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&.
+.RE
+.PP
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is

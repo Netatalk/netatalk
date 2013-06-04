@@ -907,6 +907,19 @@
         </varlistentry>
 
         <varlistentry>
+          <term>spotlight =
+          <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Whether to enable Spotlight searches. Enable this global option
+            and then also add "spotlight = yes" to any volume you want to be able
+            to search with Spotlight. Note: once the global option is enabled, any
+            volume that is not enabled won't be searchable at all.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>vol dbpath = <replaceable>path</replaceable>
           <type>(G)</type></term>
 
