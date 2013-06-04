@@ -84,9 +84,10 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	dnl #################################################
 	dnl # Display summary of libraries detected
 
-	AC_MSG_RESULT([Using libraries:])
-	AC_MSG_RESULT([    LIBS           = $LIBS])
+	AC_MSG_RESULT([Compilation summary:])
+	AC_MSG_RESULT([    CPPFLAGS       = $CPPFLAGS])
 	AC_MSG_RESULT([    CFLAGS         = $CFLAGS])
+	AC_MSG_RESULT([    LIBS           = $LIBS])
 	AC_MSG_RESULT([    PTHREADS:])
 	AC_MSG_RESULT([        LIBS   = $PTHREAD_LIBS])
 	AC_MSG_RESULT([        CFLAGS = $PTHREAD_CFLAGS])

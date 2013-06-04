@@ -45,7 +45,7 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
     buf[0] = dsi->header.dsi_flags;
     buf[1] = dsi->header.dsi_command;
     memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));           
-    memcpy(buf + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
+    memcpy(buf + 4, &dsi->header.dsi_data.dsi_code, sizeof(dsi->header.dsi_data.dsi_code));
     memcpy(buf + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
     memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
 }
@@ -366,7 +366,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset, const siz
     dsi->flags |= DSI_NOREPLY;
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_len = htonl(length);
-    dsi->header.dsi_code = htonl(err);
+    dsi->header.dsi_data.dsi_code = htonl(err);
     dsi_header_pack_reply(dsi, block);
 
 #ifdef HAVE_SENDFILEV
@@ -615,7 +615,7 @@ int dsi_stream_receive(DSI *dsi)
       return 0;
 
   memcpy(&dsi->header.dsi_requestID, block + 2, sizeof(dsi->header.dsi_requestID));
-  memcpy(&dsi->header.dsi_code, block + 4, sizeof(dsi->header.dsi_code));
+  memcpy(&dsi->header.dsi_data.dsi_code, block + 4, sizeof(dsi->header.dsi_data.dsi_code));
   memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
   memcpy(&dsi->header.dsi_reserved, block + 12, sizeof(dsi->header.dsi_reserved));
   dsi->clientID = ntohs(dsi->header.dsi_requestID);

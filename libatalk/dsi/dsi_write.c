@@ -32,7 +32,7 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen _U_)
 
   /* figure out how much data we have. do a couple checks for 0 
    * data */
-  header = ntohl(dsi->header.dsi_doff);
+  header = ntohl(dsi->header.dsi_data.dsi_doff);
   dsi->datasize = header ? ntohl(dsi->header.dsi_len) - header : 0;
 
   if (dsi->datasize > 0) {

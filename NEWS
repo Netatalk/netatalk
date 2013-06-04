@@ -3,6 +3,9 @@ Changes in 3.1.0
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
 
+Changes in 3.0.5
+================
+
 Changes in 3.0.4
 ================
 * FIX: Opening files without metadata EA may result in an invalid

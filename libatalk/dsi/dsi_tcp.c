@@ -209,7 +209,7 @@ static pid_t dsi_tcp_open(DSI *dsi)
         dsi->header.dsi_command = block[1];
         memcpy(&dsi->header.dsi_requestID, block + 2,
                sizeof(dsi->header.dsi_requestID));
-        memcpy(&dsi->header.dsi_code, block + 4, sizeof(dsi->header.dsi_code));
+        memcpy(&dsi->header.dsi_data.dsi_code, block + 4, sizeof(dsi->header.dsi_data.dsi_code));
         memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
         memcpy(&dsi->header.dsi_reserved, block + 12,
                sizeof(dsi->header.dsi_reserved));

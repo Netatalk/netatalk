@@ -13,7 +13,7 @@ rcvar=$name
 command=":SBINDIR:/netatalk"
 etcdir=":ETCDIR:"
 pidfile="/var/run/${name}.pid"
-required_files="$etcdir/afp.conf
+required_files="$etcdir/afp.conf"
 
 load_rc_config $name
 run_rc_command "$1"

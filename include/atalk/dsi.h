@@ -48,7 +48,7 @@ struct dsi_block {
     union {
         uint32_t dsi_code;   /* error code */
         uint32_t dsi_doff;   /* data offset */
-    };
+    } dsi_data;
     uint32_t dsi_len;        /* total data length */
     uint32_t dsi_reserved;   /* reserved field */
 };
