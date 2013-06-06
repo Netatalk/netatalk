@@ -85,7 +85,8 @@ static int set_sl_volumes(void)
     }
 
     volnamelist = bjoin(vollist, sep);
-    cmd = bformat("gsettings set org.freedesktop.Tracker.Miner.Files index-recursive-directories \"[%s]\"", bdata(volnamelist));
+    cmd = bformat("gsettings set org.freedesktop.Tracker.Miner.Files index-recursive-directories \"[%s]\"",
+                  bdata(volnamelist) ? bdata(volnamelist) : "");
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
     system(bdata(cmd));
 
