@@ -530,6 +530,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     char        *namebuf;
     int         vcnt;
     size_t      len;
+    uint32_t    aint;
 
     load_volumes(obj);
 
@@ -579,8 +580,9 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
-    tv.tv_sec = AD_DATE_FROM_UNIX(tv.tv_sec);
-    memcpy(data, &tv.tv_sec, sizeof( uint32_t));
+
+    aint = AD_DATE_FROM_UNIX(tv.tv_sec);
+    memcpy(data, &aint, sizeof( uint32_t));
     data += sizeof( uint32_t);
     *data = vcnt;
     return( AFP_OK );
