@@ -575,7 +575,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     *rbuflen = data - rbuf;
     data = rbuf;
     if ( gettimeofday( &tv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "afp_getsrvrparms(%s): gettimeofday: %s", volume->v_path, strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
