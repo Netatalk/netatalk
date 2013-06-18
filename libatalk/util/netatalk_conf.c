@@ -772,8 +772,10 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
     if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
         volume->v_flags |= AFPVOL_FOLLOWSYM;
-    if (getoption_bool(obj->iniconfig, section, "spotlight", preset, 0))
+    if (getoption_bool(obj->iniconfig, section, "spotlight", preset, obj->options.flags & OPTION_SPOTLIGHT_VOL)) {
         volume->v_flags |= AFPVOL_SPOTLIGHT;
+        obj->options.flags |= OPTION_SPOTLIGHT;
+    }
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;
@@ -1732,7 +1734,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     if (iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "spotlight", 0))
-        options->flags |= OPTION_SPOTLIGHT;
+        options->flags |= OPTION_SPOTLIGHT_VOL;
     if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))

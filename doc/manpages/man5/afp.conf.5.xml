@@ -912,10 +912,9 @@
           <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Whether to enable Spotlight searches. Enable this global option
-            and then also add "spotlight = yes" to any volume you want to be able
-            to search with Spotlight. Note: once the global option is enabled, any
-            volume that is not enabled won't be searchable at all.</para>
+            <para>Whether to enable Spotlight searches. Note: once the global
+            option is enabled, any volume that is not enabled won't be
+            searchable at all.</para>
           </listitem>
         </varlistentry>
 
