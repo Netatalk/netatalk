@@ -1821,7 +1821,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                 *r = ':';
             EC_NULL_LOG( options->fqdn = strdup(q) );
         } else {
-            LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", c);
+            LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", q);
         }
         free(q);
     }
