@@ -530,6 +530,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     char        *namebuf;
     int         vcnt;
     size_t      len;
+    uint32_t    aint;
 
     load_volumes(obj);
 
@@ -575,12 +576,13 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     *rbuflen = data - rbuf;
     data = rbuf;
     if ( gettimeofday( &tv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "afp_getsrvrparms(%s): gettimeofday: %s", volume->v_path, strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
-    tv.tv_sec = AD_DATE_FROM_UNIX(tv.tv_sec);
-    memcpy(data, &tv.tv_sec, sizeof( uint32_t));
+
+    aint = AD_DATE_FROM_UNIX(tv.tv_sec);
+    memcpy(data, &aint, sizeof( uint32_t));
     data += sizeof( uint32_t);
     *data = vcnt;
     return( AFP_OK );
