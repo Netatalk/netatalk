@@ -858,7 +858,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         }
 
         const char *msg;
-        if ((msg = iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
+        if ((msg = atalk_iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
             setmessage(msg);
 
         free(vol_mname);
