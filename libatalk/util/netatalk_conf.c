@@ -778,6 +778,21 @@ static struct vol *creatvol(AFPObj *obj,
     if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
         volume->v_root_preexec_close = 1;
 
+    if ((val = getoption(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
+        if (strstr(val, "all")) {
+            volume->v_ignattr |= ATTRBIT_NOWRITE | ATTRBIT_NORENAME | ATTRBIT_NODELETE;
+        }
+        if (strstr(val, "nowrite")) {
+            volume->v_ignattr |= ATTRBIT_NOWRITE;
+        }
+        if (strstr(val, "norename")) {
+            volume->v_ignattr |= ATTRBIT_NORENAME;
+        }
+        if (strstr(val, "nodelete")) {
+            volume->v_ignattr |= ATTRBIT_NODELETE;
+        }
+    }
+
     /*
      * Handle read-only behaviour. semantics:
      * 1) neither the rolist nor the rwlist exist -> rw
@@ -1746,6 +1761,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->ntseparator    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
     options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
     options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
+    options->ignored_attr   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ignored attributes", NULL);
     options->connections    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
     options->passwdminlen   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
     options->tickleval      = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
@@ -1964,6 +1980,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.Cnid_port);
     if (obj->options.fqdn)
         CONFIG_ARG_FREE(obj->options.fqdn);
+    if (obj->options.ignored_attr)
+        CONFIG_ARG_FREE(obj->options.ignored_attr);
 
     if (obj->options.unixcodepage)
         CONFIG_ARG_FREE(obj->options.unixcodepage);

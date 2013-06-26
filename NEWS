@@ -1,6 +1,7 @@
 Changes in 3.0.5
 ================
 * FIX: Fix a crash when using pam_winbind. Fixes bug #516.
+* NEW: New global/volume option "ignored attributes"
 
 Changes in 3.0.4
 ================

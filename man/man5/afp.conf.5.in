@@ -566,6 +566,16 @@ Sets a message to be displayed when clients logon to the server\&. The message s
 and should be quoted\&. Extended characters are allowed\&.
 .RE
 .PP
+ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
+.RS 4
+Speficy a set of file and directory attributes that shall be ignored by the server,
+<attribute>all</attribute>
+includes all the other options\&.
+.sp
+In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set
+\fIignored attributes = all\fR\&.
+.RE
+.PP
 mimic model = \fImodel\fR \fB(G)\fR
 .RS 4
 Specifies the icon model that appears on clients\&. Defaults to off\&. Note that afpd must support Zeroconf\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.

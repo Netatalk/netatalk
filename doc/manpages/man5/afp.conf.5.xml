@@ -868,6 +868,21 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
+          <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Speficy a set of file and directory attributes that shall
+            be ignored by the server, <attribute>all</attribute> includes all
+            the other options.</para>
+            <para>In OS X when the Finder sets a lock on a file/directory or you
+            set the BSD uchg flag in the Terminal, all three attributes are
+            used. Thus in order to ignore the Finder lock/BSD uchg flag, add
+            set <emphasis>ignored attributes = all</emphasis>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>mimic model = <replaceable>model</replaceable>
           <type>(G)</type></term>
 

@@ -1478,6 +1478,7 @@ int getdirparams(const AFPObj *obj,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            ashort &= ~htons(vol->v_ignattr);
             memcpy( data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;
@@ -1866,6 +1867,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                 ad_getattr(&ad, &bshort);
                 oshort = bshort;
                 if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
+                    ashort &= ~htons(vol->v_ignattr);
                     bshort |= htons( ntohs( ashort ) & ~ATTRBIT_SETCLR );
                 } else {
                     bshort &= ~ashort;
@@ -2295,7 +2297,7 @@ int deletecurdir(struct vol *vol)
 
         ad_getattr(&ad, &ashort);
         ad_close(&ad, ADFLAGS_HF);
-        if ((ashort & htons(ATTRBIT_NODELETE))) {
+        if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }
     }
