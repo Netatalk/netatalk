@@ -518,17 +518,12 @@ WatchDirectoryRoots=/foo/bar;/another/volume
       <sect3>
         <title>Using Tracker commandline tools on the server</title>
 
-        <para>Netatalk must be running. Then setup relevant environment
-        variables, adjust the prefix /usr/local/netatalk to match your
-        configured paths:<screen>$ su
-****
-# cat trackerenv.sh 
-export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"
-export XDG_DATA_HOME=/usr/local/netatalk/var/netatalk
-export XDG_CACHE_HOME=/usr/local/netatalk/var/netatalk
-export XDG_CONFIG_HOME=/usr/local/netatalk/etc
-# . trackerenv.sh
-#</screen></para>
+        <para>Netatalk must be running and the commands must be executed
+        as root:<screen>$ su
+# export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"</screen></para>
+
+        <para>When using Tracker from OpenCSW you must also update
+        your PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
 
         <para>Tracker SPARQL:<screen># tracker-search QUERY
 ...
