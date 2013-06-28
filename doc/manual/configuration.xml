@@ -139,14 +139,14 @@ basedir regex = /usr/home</programlisting></para>
       version 0.15 and thus supports SPARQL</para>
 
       <para>You can enable Spotlight and indexing either globally or on a per
-      volume basis using the <option>spotlight</option>.</para>
+      volume basis using the <option>spotlight</option> option.</para>
 
       <para>For Solaris with Tracker from OpenCSW also add:
       <screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
 
       <warning>
         <para>Once Spotlight is enable for a single volume, all other volumes
-        won't be searchable at all.</para>
+        for which spotlight is disabled won't be searchable at all.</para>
       </warning>
 
       <sect3>
