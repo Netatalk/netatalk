@@ -28,10 +28,10 @@
 <!ENTITY dbd.1 SYSTEM "../manpages//man1/dbd.1.xml">
 ]>
 <book id="netatalk-manual">
-  <title>Netatalk 3.0 Manual</title>
+  <title>Netatalk 3.1 Manual</title>
   
   <bookinfo>
-    <date>03-24-2013</date>
+    <date>07-01-2013</date>
     <releaseinfo>@NETATALK_VERSION@</releaseinfo>
   </bookinfo>
 
