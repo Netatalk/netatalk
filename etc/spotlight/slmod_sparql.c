@@ -326,6 +326,15 @@ EC_CLEANUP:
 
 static int sl_mod_index_file(const void *p)
 {
+    /*
+     * This seems to cause index problems on volumes that are watched and indexed
+     * by Tracker, so we disable this extra manual indexing for now.
+     * It's primary pupose was ensuring files created via AFP are indexed on large
+     * volumes where the filesystem event notification engine (eg FAM or FEN) may
+     * impose limits on the maximum number of watched directories.
+     */
+    return 0;
+
 #ifdef HAVE_TRACKER_MINER
     EC_INIT;
     const char *f = p;
