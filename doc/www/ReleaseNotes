@@ -19,20 +19,20 @@ The suite contains:
 Summary of major new features and enhancements in 3.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* AFP Spotlight Support with Gnome Tracker
-
+* AFP Spotlight Support with Gnome Tracker:
   https://projects.gnome.org/tracker/
 
 Please refer to the online manual for details about compiling Netatalk
 with Spotlight support and how to configure:
 
-  http://netatalk.sourceforge.net/3.1/htmldocs/installation.html#compiling-netatalk
-  http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html#id2615270
+http://netatalk.sourceforge.net/3.1/htmldocs/installation.html#compiling-netatalk
+
+http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html#id2615270
 
 Please make sure to read the upgrading section in the Netatalk online
 manual before trying to upgrade your system from version 2:
 
-  http://netatalk.sourceforge.net/3.1/htmldocs/upgrade.html
+http://netatalk.sourceforge.net/3.1/htmldocs/upgrade.html
 
 License
 ~~~~~~~
@@ -41,7 +41,7 @@ Netatalk is a Free/Open Source Software project and is released under
 the GNU General Public License (GPLv2).  The full license text is available
 at:
 
-  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
 Changes in 3.1-alpha1
 ~~~~~~~~~~~~~~~~~~~~~
