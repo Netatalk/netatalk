@@ -1,9 +1,8 @@
-Netatalk 3.0.4
-==============
+Netatalk 3.1-alpha1
+===================
 
-The Netatalk development team is proud to announce version 3.0.4 of
-the Netatalk File Sharing suite. This is the latest update to the 3.0
-release series. All users are encouraged to upgrade their systems to 3.0.4.
+The Netatalk development team is proud to announce the first alpha release
+of the next Netatalk version 3.1. This release is intended for testing only.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -17,22 +16,23 @@ The suite contains:
 * cnid_dbd   - the CNID database daemon serving CNIDs for AFP volumes
 * various supporting programs and utilities
 
-Summary of major new features and enhancements in 3.0
+Summary of major new features and enhancements in 3.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* New ini style configuration file afp.conf which replaces all previous
-  configuration files
-* New default AppleDouble backend using filesystem Extended Attributes,
-  conversion from AppleDouble v2 is done automatically on access
-* New service controller process "netatalk" responsible for starting and
-  restarting afpd and cnid_metad as necessary
-* AppleTalk support has been removed
-* Coherent cross-platform locking with Solaris CIFS server
+* AFP Spotlight Support with Gnome Tracker
+
+  https://projects.gnome.org/tracker/
+
+Please refer to the online manual for details about compiling Netatalk
+with Spotlight support and how to configure:
+
+  http://netatalk.sourceforge.net/3.1/htmldocs/installation.html#compiling-netatalk
+  http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html#id2615270
 
 Please make sure to read the upgrading section in the Netatalk online
-manual before trying to upgrade your system to 3.0!
+manual before trying to upgrade your system from version 2:
 
-  http://netatalk.sourceforge.net/3.0/htmldocs/upgrade.html
+  http://netatalk.sourceforge.net/3.1/htmldocs/upgrade.html
 
 License
 ~~~~~~~
@@ -42,6 +42,18 @@ the GNU General Public License (GPLv2).  The full license text is available
 at:
 
   http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+Changes in 3.1-alpha1
+~~~~~~~~~~~~~~~~~~~~~
+* NEW: AFP Spotlight support with Gnome Tracker
+* NEW: New option "spotlight" (G/V)
+* NEW: Configure option --with-tracker-pkgconfig-version
+* NEW: Configure option --with-tracker-prefix
+* NEW: If Spotlight is enabled, launch our own dbus instance
+* NEW: New option "dbus daemon" (G)
+* UPD: Add configure option --with-afpstats for overriding the
+       result of autodetecting dbus-glib presence
+
 
 Changes in 3.0.4
 ~~~~~~~~~~~~~~~~
@@ -318,4 +330,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, May 2013
+ - The Netatalk Development Team, July 2013
