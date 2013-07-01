@@ -1,5 +1,11 @@
 Changes in 3.1.0
 ================
+* NEW: AFP Spotlight support with Gnome Tracker
+* NEW: New option "spotlight" (G/V)
+* NEW: Configure option --with-tracker-pkgconfig-version
+* NEW: Configure option --with-tracker-prefix
+* NEW: If Spotlight is enabled, launch our own dbus instance
+* NEW: New option "dbus daemon" (G)
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
 
