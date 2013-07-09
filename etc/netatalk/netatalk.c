@@ -410,6 +410,7 @@ int main(int argc, char **argv)
     setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
     setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
     setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+    setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
     dbus_path = iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
     LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
