@@ -11,6 +11,7 @@ Changes in 3.1.0
 
 Changes in 3.0.5
 ================
+* FIX: Fix a crash when using pam_winbind. Fixes bug #516.
 
 Changes in 3.0.4
 ================

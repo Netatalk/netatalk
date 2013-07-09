@@ -95,7 +95,7 @@
                 <listitem>
                   <para>an Extended Attribute named
                   “<filename>org.netatalk.ResourceFork</filename>”
-                  on Solaris (FreeBSD?) w. ZFS, or in</para>
+                  on Solaris w. ZFS, or in</para>
                 </listitem>
 
                 <listitem>
@@ -194,29 +194,6 @@
       </orderedlist></para>
   </sect1>
 
-  <sect1>
-    <title>Notes</title>
-
-    <itemizedlist>
-      <listitem>
-        <para>Solaris ZFS permissions</para>
-
-        <para>On Solaris with ZFS you have to make sure users have
-        filesystem permissions to read, create, modify (default: yes) and
-        delete (default: no) extended attributes.</para>
-
-        <para>To grant this right to a group “staff” you’d use this
-        command:</para>
-
-        <para><command>pfexec chmod A+group:staff:RW:fd:allow
-        /Volumes/test/</command></para>
-
-        <para>Remember to run this once before you share a volume so that
-        this permission inherits appropiately (fd flags in above
-        command).</para>
-      </listitem>
-    </itemizedlist>
-  </sect1>
   <sect1>
     <title>Table with old and new configuration file names</title>
     <para><table frame="all">
