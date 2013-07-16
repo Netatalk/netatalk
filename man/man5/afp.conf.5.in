@@ -424,6 +424,8 @@ afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 Specifies the IP address that the server should advertise
 \fBand\fR
 listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.sp
+IPv6 address + port combination must use URL the format using square brackets [IPv6]:port
 .RE
 .PP
 afp port = \fIport number\fR \fB(G)\fR

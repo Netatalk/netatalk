@@ -575,6 +575,8 @@
             any incoming request. The network address may be specified either
             in dotted-decimal format for IPv4 or in hexadecimal format for
             IPv6.</para>
+            <para>IPv6 address + port combination must use URL the format
+            using square brackets [IPv6]:port</para>
           </listitem>
         </varlistentry>
 

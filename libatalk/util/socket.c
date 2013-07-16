@@ -39,6 +39,7 @@
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
@@ -415,6 +416,91 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
     free(ip1);
 
     return ret;
+}
+
+/*!
+ * Tokenize IP(4/6) addresses with an optional port into address and port
+ *
+ * @param ipurl    (r) IP URL string
+ * @param address  (w) IP address
+ * @param port     (w) IP port
+ *
+ * @returns 0 on success, -1 on failure
+ *
+ * Tokenize IPv4, IPv4:port, IPv6, [IPv6] or [IPv6:port] URL into address and
+ * port and return two allocated strings with the address and the port.
+ *
+ * If the function returns 0, then address point to a newly allocated
+ * valid address string, port may either be NULL or point to a newly
+ * allocated port number.
+ *
+ * If the function returns -1, then the contents of address and port are
+ * undefined.
+ */
+int tokenize_ip_port(const char *ipurl, char **address, char **port)
+{
+    EC_INIT;
+    char *p = NULL;
+    char *s;
+
+    AFP_ASSERT(ipurl && address && port);
+    EC_NULL( p = strdup(ipurl));
+
+    /* Either ipv4, ipv4:port, ipv6, [ipv6] or [ipv6]:port */
+
+    if (!strchr(p, ':')) {
+        /* IPv4 address without port */
+        *address = p;
+        p = NULL;  /* prevent free() */
+        *port = NULL;
+        EC_EXIT_STATUS(0);
+    }
+
+    /* Either ipv4:port, ipv6, [ipv6] or [ipv6]:port */
+
+    if (strchr(p, '.')) {
+        /* ipv4:port */
+        *address = p;
+        p = strchr(p, ':');
+        *p = '\0';
+        EC_NULL( *port = strdup(p + 1));
+        p = NULL; /* prevent free() */
+        EC_EXIT_STATUS(0);
+    }
+
+    /* Either ipv6, [ipv6] or [ipv6]:port */
+
+    if (p[0] != '[') {
+        /* ipv6 */
+        *address = p;
+        p = NULL;  /* prevent free() */
+        *port = NULL;
+        EC_EXIT_STATUS(0);
+    }
+
+    /* [ipv6] or [ipv6]:port */
+
+    EC_NULL( *address = strdup(p + 1) );
+
+    if ((s = strchr(*address, ']')) == NULL) {
+        LOG(log_error, logtype_dsi, "tokenize_ip_port: malformed ipv6 address %s\n", ipurl);
+        EC_FAIL;
+    }
+    *s = '\0';
+    /* address now points to the ipv6 address without [] */
+
+    if (s[1] == ':') {
+        /* [ipv6]:port */
+        EC_NULL( *port = strdup(s + 2) );
+    } else {
+        /* [ipv6] */
+        *port = NULL;
+    }
+
+EC_CLEANUP:
+    if (p)
+        free(p);
+    EC_EXIT;
 }
 
 /*!
