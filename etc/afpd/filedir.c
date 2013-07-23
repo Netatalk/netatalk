@@ -372,7 +372,7 @@ static int moveandrename(const struct vol *vol,
 #ifdef HAVE_ATFUNCS
         opened = of_findnameat(sdir_fd, &path);
 #else
-        opened = of_findname(&path);
+        opened = of_findname(vol, &path);
 #endif /* HAVE_ATFUNCS */
 
         if (opened) {
