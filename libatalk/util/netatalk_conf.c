@@ -1332,16 +1332,34 @@ int load_charset(struct vol *vol)
 int load_volumes(AFPObj *obj)
 {
     EC_INIT;
-    int fd = -1;
-    struct passwd   *pwent = NULL;
+
+    static long         bufsize;
+    static char        *pwbuf = NULL;
+
+    int                 fd = -1;
+    struct passwd       pwent;
+    struct passwd      *pwresult = NULL;
     struct stat         st;
-    int retries = 0;
-    struct vol *vol;
+    int                 retries = 0;
+    struct vol         *vol;
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
-    if (obj->uid)
-        pwent = getpwuid(obj->uid);
+    if (pwbuf == NULL) {
+        bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+        if (bufsize == -1)          /* Value was indeterminate */
+            bufsize = 16384;        /* Should be more than enough */
+        EC_NULL( pwbuf = malloc(bufsize) );
+    }
+
+    if (obj->uid) {
+        ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
+        if (pwresult == NULL) {
+            LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));
+            EC_FAIL;
+        }
+        pwresult = &pwent;
+    }
 
     if (Volumes) {
         if (!volfile_changed(&obj->options))
@@ -1350,9 +1368,9 @@ int load_volumes(AFPObj *obj)
         for (vol = Volumes; vol; vol = vol->v_next) {
             vol->v_deleted = 1;
         }
-        if (obj->uid) {
+        if (obj->uid && pwresult) {
             become_root();
-            ret = set_groups(obj, pwent);
+            ret = set_groups(obj, pwresult);
             unbecome_root();
             if (ret != 0) {
                 LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
@@ -1388,7 +1406,7 @@ int load_volumes(AFPObj *obj)
     LOG(log_debug, logtype_afpd, "load_volumes: loading: %s", obj->options.configfile);
     obj->iniconfig = atalk_iniparser_load(obj->options.configfile);
 
-    EC_ZERO_LOG( readvolfile(obj, pwent) );
+    EC_ZERO_LOG( readvolfile(obj, pwresult) );
 
     struct vol *p, *prevvol;
 
