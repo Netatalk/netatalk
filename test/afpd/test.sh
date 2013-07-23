@@ -18,7 +18,7 @@ fi
 if [ ! -f test.default ] ; then
     echo -n "Creating volume config template ... "
     cat > test.default <<EOF
-/tmp/AFPtestvolume "test" ea:none
+/tmp/AFPtestvolume "test" ea:none cnidscheme:last
 EOF
     echo [ok]
 fi
