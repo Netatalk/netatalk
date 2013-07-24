@@ -772,6 +772,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
     if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
         volume->v_flags |= AFPVOL_FOLLOWSYM;
+    if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0))
+        volume->v_flags |= AFPVOL_DELVETO;
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;

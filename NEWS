@@ -9,6 +9,9 @@ Changes in 3.0.5
        Then whenever a client tries to access any file or directory
        with a vetoed name, it will be sent an AFP message indicating
        the name and the directory. From FR #81.
+* NEW: New boolean volume option "delete veto files". If this option is
+       set to yes, then Netatalk will attempt to recursively delete any
+       vetoed files and directories. FR #82.
 
 Changes in 3.0.4
 ================

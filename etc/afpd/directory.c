@@ -2311,31 +2311,9 @@ int deletecurdir(struct vol *vol)
     }
     err = vol->vfs->vfs_deletecurdir(vol);
     if (err) {
-        LOG(log_error, logtype_afpd, "deletecurdir: error deleting .AppleDouble in \"%s\"",
+        LOG(log_error, logtype_afpd, "deletecurdir: error deleting AppleDouble files in \"%s\"",
             cfrombstr(curdir->d_fullpath));
         return err;
-    }
-
-    /* now get rid of dangling symlinks */
-    if ((dp = opendir("."))) {
-        while ((de = readdir(dp))) {
-            /* skip this and previous directory */
-            if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
-                continue;
-
-            /* bail if it's not a symlink */
-            if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
-                LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): not empty",
-                    bdata(curdir->d_fullpath));
-                closedir(dp);
-                return AFPERR_DIRNEMPT;
-            }
-
-            if ((err = netatalk_unlink(de->d_name))) {
-                closedir(dp);
-                return err;
-            }
-        }
     }
 
     if (movecwd(vol, pdir) < 0) {
@@ -2347,15 +2325,27 @@ int deletecurdir(struct vol *vol)
         cfrombstr(curdir->d_fullpath));
 
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
-    if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
-        AFP_CNID_START("cnid_delete");
-        cnid_delete(vol->v_cdb, fdir->d_did);
-        AFP_CNID_DONE();
-        dir_remove( vol, fdir );
-    } else {
+
+    switch (err) {
+    case AFP_OK:
+    case AFPERR_NOOBJ:
+        break;
+    case AFPERR_DIRNEMPT:
+        if (delete_vetoed_files(vol, bdata(fdir->d_u_name), false) != 0)
+            goto delete_done;
+        err = AFP_OK;
+        break;
+    default:
         LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
             cfrombstr(curdir->d_fullpath));
+        goto delete_done;
     }
+
+    AFP_CNID_START("cnid_delete");
+    cnid_delete(vol->v_cdb, fdir->d_did);
+    AFP_CNID_DONE();
+
+    dir_remove( vol, fdir );
 
 delete_done:
     if (dp) {

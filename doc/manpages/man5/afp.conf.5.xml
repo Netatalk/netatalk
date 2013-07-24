@@ -1733,6 +1733,23 @@
         </varlistentry>
 
         <varlistentry>
+          <term>delete veto files = <replaceable>BOOLEAN</replaceable>
+          (default: <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>This option is used when Netatalk is attempting to delete a
+            directory that contains one or more vetoed files or directories
+            (see the veto files option). If this option is set to no (the
+            default) then if a directory contains any non-vetoed files or
+            directories then the directory delete will fail. This is usually
+            what you want.</para>
+            <para>If this option is set to yes, then Netatalk will attempt to
+            recursively delete any files and directories within the vetoed
+            directory.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>follow symlinks = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>no</emphasis>) <type>(V)</type></term>
 

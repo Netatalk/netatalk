@@ -1063,6 +1063,13 @@ is performed when accessing filesystems from clients\&. This is generally useful
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
 .RE
 .PP
+delete veto files = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
+.RS 4
+This option is used when Netatalk is attempting to delete a directory that contains one or more vetoed files or directories (see the veto files option)\&. If this option is set to no (the default) then if a directory contains any non\-vetoed files or directories then the directory delete will fail\&. This is usually what you want\&.
+.sp
+If this option is set to yes, then Netatalk will attempt to recursively delete any files and directories within the vetoed directory\&.
+.RE
+.PP
 follow symlinks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
 The default setting is false thus symlinks are not followed on the server\&. This is the same behaviour as OS X\*(Aqs AFP server\&. Setting the option to true causes afpd to follow symlinks on the server\&. symlinks may point outside of the AFP volume, currently afpd doesn\*(Aqt do any checks for "wide symlinks"\&.
