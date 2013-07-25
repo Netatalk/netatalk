@@ -924,6 +924,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>veto message = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Use section <option>name</option> as option preset for all
+            volumes (when set in the [Global] section) or for one volume (when
+            set in that volume's section).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>vol dbpath = <replaceable>path</replaceable>
           <type>(G)</type></term>
 

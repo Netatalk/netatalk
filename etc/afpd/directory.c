@@ -1172,6 +1172,14 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* the name is illegal */
             LOG(log_info, logtype_afpd, "cname: illegal path: '%s'", ret.u_name);
             afp_errno = AFPERR_PARAM;
+            if (vol->v_obj->options.flags & OPTION_VETOMSG) {
+                bstring message = bformat("Attempt to access vetoed file or directory \"%s\" in directory \"%s\"",
+                                          ret.u_name, bdata(dir->d_u_name));
+                if (setmessage(bdata(message)) == 0)
+                    /* Client may make multiple attempts, only send the message the first time */
+                    kill(getpid(), SIGUSR2);
+                bdestroy(message);
+            }
             return NULL;
         }
 

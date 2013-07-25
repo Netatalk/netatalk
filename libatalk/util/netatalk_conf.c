@@ -1756,6 +1756,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_DBUS_AFPSTATS;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "veto message", 0))
+        options->flags |= OPTION_VETOMSG;
     if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))

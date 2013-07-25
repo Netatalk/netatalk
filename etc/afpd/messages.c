@@ -27,9 +27,18 @@
 static char servermesg[MAXPATHLEN] = "";
 static char localized_message[MAXPATHLEN] = "";
 
-void setmessage(const char *message)
+/*!
+ * Copy AFP message to message buffer
+ * @param message (r) message to send
+ * @returns 0 if this message is being set the first time, return 1 if the preceeding
+ *          message was the same
+ */
+int setmessage(const char *message)
 {
+    if (strncmp(message, servermesg, MAXMESGSIZE) == 0)
+        return 1;
     strlcpy(servermesg, message, MAXMESGSIZE);
+    return 0;
 }
 
 void readmessage(AFPObj *obj)
@@ -177,6 +186,6 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 	*rbuflen += 1;
     }
     *rbuflen += outlen;
-    *message = 0;
+//    *message = 0;
     return AFP_OK;
 }

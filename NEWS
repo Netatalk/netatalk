@@ -4,6 +4,11 @@ Changes in 3.0.5
 * NEW: New global/volume option "ignored attributes"
 * FIX: "afp listen" option failed to take IPv6 addresses. Bug #515.
 * FIX: Fix a possible crash in set_groups. Bug #518.
+* NEW: Send optional AFP messages for vetoed files, new option
+       "veto messages" can be used to enable sending messages.
+       Then whenever a client tries to access any file or directory
+       with a vetoed name, it will be sent an AFP message indicating
+       the name and the directory. From FR #81.
 
 Changes in 3.0.4
 ================
