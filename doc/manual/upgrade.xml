@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="upgrade">
   <chapterinfo>
-    <date>2.15.2013</date>
+    <date>7.29.2013</date>
 
     <author>
       <firstname>Frank</firstname>
@@ -9,7 +9,7 @@
       <surname>Lahm</surname>
     </author>
 
-    <pubdate>15 Feb, 2013</pubdate>
+    <pubdate>29 Jul, 2013</pubdate>
   </chapterinfo>
 
   <title>Upgrading from Netatalk 2</title>
@@ -794,7 +794,7 @@
               <entry>-noacl2maccess</entry>
               <entry>map acls</entry>
               <entry>-</entry>
-              <entry>yes</entry>
+              <entry>rights</entry>
               <entry>(G)</entry>
               <entry>-</entry>
             </row>
@@ -1415,6 +1415,14 @@
               <entry>acls</entry>
               <entry>-</entry>
               <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:followsymlinks</entry>
+              <entry>follow symlinks</entry>
+              <entry>-</entry>
+              <entry>no</entry>
               <entry>(V)</entry>
               <entry>-</entry>
             </row>
