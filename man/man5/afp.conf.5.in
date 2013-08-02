@@ -424,6 +424,8 @@ afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 Specifies the IP address that the server should advertise
 \fBand\fR
 listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.sp
+IPv6 address + port combination must use URL the format using square brackets [IPv6]:port
 .RE
 .PP
 afp port = \fIport number\fR \fB(G)\fR
@@ -564,6 +566,16 @@ login message = \fImessage\fR \fB(G)/(V)\fR
 Sets a message to be displayed when clients logon to the server\&. The message should be in
 \fBunix charset\fR
 and should be quoted\&. Extended characters are allowed\&.
+.RE
+.PP
+ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
+.RS 4
+Speficy a set of file and directory attributes that shall be ignored by the server,
+<attribute>all</attribute>
+includes all the other options\&.
+.sp
+In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set
+\fIignored attributes = all\fR\&.
 .RE
 .PP
 mimic model = \fImodel\fR \fB(G)\fR

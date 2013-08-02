@@ -12,6 +12,9 @@ Changes in 3.1.0
 Changes in 3.0.5
 ================
 * FIX: Fix a crash when using pam_winbind. Fixes bug #516.
+* NEW: New global/volume option "ignored attributes"
+* FIX: "afp listen" option failed to take IPv6 addresses. Bug #515.
+* FIX: Fix a possible crash in set_groups. Bug #518.
 
 Changes in 3.0.4
 ================

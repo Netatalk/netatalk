@@ -302,7 +302,7 @@ static int moveandrename(struct vol *vol,
         ad_getattr(adp, &bshort);
         
         ad_close(adp, ADFLAGS_HF);
-        if ((bshort & htons(ATTRBIT_NORENAME))) {
+        if (!(vol->v_ignattr & ATTRBIT_NORENAME) && (bshort & htons(ATTRBIT_NORENAME))) {
             rc = AFPERR_OLOCK;
             goto exit;
         }

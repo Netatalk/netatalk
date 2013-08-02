@@ -119,6 +119,7 @@ struct afp_options {
     char *logfile;
     char *mimicmodel;
     char *adminauthuser;
+    char *ignored_attr;
     char *slmod_path;
     struct afp_volume_name volfile;
 };

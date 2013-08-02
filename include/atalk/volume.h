@@ -98,6 +98,7 @@ struct vol {
     int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
     int             v_qfd;
+    uint32_t        v_ignattr;  /* AFP attributes that shall be ignored */
 };
 
 /* load_volumes() flags */

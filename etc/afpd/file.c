@@ -378,6 +378,7 @@ int getmetadata(const AFPObj *obj,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            ashort &= ~htons(vol->v_ignattr);
 #if 0
             /* FIXME do we want a visual clue if the file is read only
              */
@@ -1023,6 +1024,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             ad_getattr(adp, &bshort);
             oshort = bshort;
             if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
+                ashort &= ~htons(vol->v_ignattr);
                 bshort |= htons( ntohs( ashort ) & ~ATTRBIT_SETCLR );
             } else {
                 bshort &= ~ashort;
@@ -1527,7 +1529,7 @@ done:
    WRITE lock on read only file.
 */
 
-static int check_attrib(struct adouble *adp)
+static int check_attrib(const struct vol *vol, struct adouble *adp)
 {
 uint16_t   bshort = 0;
 
@@ -1535,10 +1537,10 @@ uint16_t   bshort = 0;
     /*
      * Does kFPDeleteInhibitBit (bit 8) set?
      */
-	if ((bshort & htons(ATTRBIT_NODELETE))) {
+	if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (bshort & htons(ATTRBIT_NODELETE))) {
 		return AFPERR_OLOCK;
 	}
-    if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+     if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
     	return AFPERR_BUSY;
 	}
 	return 0;
@@ -1563,7 +1565,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
          * ad_open would create a 0 byte resource fork
         */
         if ( ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0 ) {
-            if ((err = check_attrib(&ad))) {
+            if ((err = check_attrib(vol, &ad))) {
                 ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
                return err;
             }

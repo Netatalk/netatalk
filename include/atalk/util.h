@@ -148,6 +148,7 @@ extern const char *getip_string(const struct sockaddr *sa);
 extern unsigned int getip_port(const struct sockaddr *sa);
 extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
 extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
+extern int tokenize_ip_port(const char *ipurl, char **address, char **port);
 
 /* Structures and functions dealing with dynamic pollfd arrays */
 enum fdtype {IPC_FD, LISTEN_FD};

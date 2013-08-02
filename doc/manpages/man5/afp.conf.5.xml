@@ -575,6 +575,8 @@
             any incoming request. The network address may be specified either
             in dotted-decimal format for IPv4 or in hexadecimal format for
             IPv6.</para>
+            <para>IPv6 address + port combination must use URL the format
+            using square brackets [IPv6]:port</para>
           </listitem>
         </varlistentry>
 
@@ -864,6 +866,21 @@
             <para>Sets a message to be displayed when clients logon to the
             server. The message should be in <option>unix charset</option> and
             should be quoted. Extended characters are allowed.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
+          <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Speficy a set of file and directory attributes that shall
+            be ignored by the server, <attribute>all</attribute> includes all
+            the other options.</para>
+            <para>In OS X when the Finder sets a lock on a file/directory or you
+            set the BSD uchg flag in the Terminal, all three attributes are
+            used. Thus in order to ignore the Finder lock/BSD uchg flag, add
+            set <emphasis>ignored attributes = all</emphasis>.</para>
           </listitem>
         </varlistentry>
 
