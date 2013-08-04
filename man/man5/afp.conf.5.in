@@ -571,7 +571,7 @@ and should be quoted\&. Extended characters are allowed\&.
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
 .RS 4
 Speficy a set of file and directory attributes that shall be ignored by the server,
-<attribute>all</attribute>
+\fBall\fR
 includes all the other options\&.
 .sp
 In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set

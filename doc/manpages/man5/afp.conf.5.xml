@@ -875,7 +875,7 @@
 
           <listitem>
             <para>Speficy a set of file and directory attributes that shall
-            be ignored by the server, <attribute>all</attribute> includes all
+            be ignored by the server, <option>all</option> includes all
             the other options.</para>
             <para>In OS X when the Finder sets a lock on a file/directory or you
             set the BSD uchg flag in the Terminal, all three attributes are
@@ -1132,7 +1132,7 @@
       mode. You can adjust this behaviour with the configuration option
       <option>mac acls</option>:</para>
 
-      <variablelist id="mac_acls">
+      <variablelist id="map_acls">
         <varlistentry>
           <term>map acls = <parameter>none|rights|mode</parameter>
           <type>(G)</type></term>

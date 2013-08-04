@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="installation">
   <chapterinfo>
-    <date>4.6.2013</date>
+    <date>4.8.2013</date>
   </chapterinfo>
 
   <title>Installation</title>
@@ -158,28 +158,9 @@ remote: Counting objects: 2503, done.
           <listitem>
             <para>Berkeley DB<indexterm>
                 <primary>BDB</primary>
-
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
-
-            <para>At the time of writing, the following versions are
-            supported:</para>
-
-            <itemizedlist>
-              <listitem>
-                <para>minimum 4.6.x</para>
-              </listitem>
-            </itemizedlist>
-
-            <para>In case Berkeley DB is not installed on your system, please
-            download it from:</para>
-
-            <para><ulink
-            url="http://www.oracle.com/technetwork/products/berkeleydb/downloads/index.html">
-            http://www.oracle.com/technetwork/products/berkeleydb/downloads/index.html</ulink></para>
-
-            <para>and follow the <link linkend="build-bdb">installation
-            instructions</link>.</para>
+            <para>At the time of writing you need at least version 4.6.</para>
           </listitem>
 
           <listitem>
@@ -211,14 +192,7 @@ remote: Counting objects: 2503, done.
             url="http://projects.gnome.org/tracker/">Tracker</ulink> as the
             metadata backend. Recent Linux distributions will provide the
             libtracker-sparql library which is available since Tracker version
-            0.7. This version is referred to as Tracker SPARQL.</para>
-
-            <para>Other system like FreeBSD, Solaris and systems derived from
-            Solaris will only ship an older Tracker version 0.6 which only
-            offers a much more restrcited feature set. We refer to this
-            version and its featureset by Tracker RDF. Solaris users are
-            advised to install Tracker from OpenCSW as this is at least
-            version 0.15 and thus supports SPARQL.</para>
+            0.7.</para>
           </listitem>
 
           <listitem>
@@ -319,14 +293,19 @@ remote: Counting objects: 2503, done.
         Netatalk Makefiles have been created with.</para>
       </sect3>
 
-      <sect3>
+      <sect3 id="spotlight-compile">
         <title>Spotlight<indexterm>
             <primary>Spotlight</primary>
           </indexterm></title>
 
-        <para>If not already installed, install the following additional
-        packages: tracker and tracker-devel, on Solaris install OpenCSW and
-        Tracker packages from OpenCSW unstable repository.</para>
+        <para>Netatalk uses Gnome <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> as the
+        metadata backend. The minimum required version is 0.7 as that's the
+        first version to support <ulink url="https://wiki.gnome.org/Tracker/Documentation">SPARQL</ulink>.</para>
+
+        <para>If not already installed, install the packages
+        <emphasis>tracker</emphasis> and <emphasis>tracker-devel</emphasis>,
+        on Solaris install <ulink url="http://www.opencsw.org/">OpenCSW</ulink> and then install
+        the Tracker package from the OpenCSW unstable repository.</para>
 
         <para>The tracker packages are found via pkg-config, you may have to
         pass the version suffix as you may have a newer version installed then
@@ -343,7 +322,8 @@ tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</
 
         <para>If you're using Solaris and Tracker from OpenCSW, then you need
         to set the PKG_CONFIG_PATH environment variable, add the
-        --with-tracker-prefix configure option and add LDFLAGS="-R/opt/csw/lib"</para>
+        --with-tracker-prefix configure option and add
+        LDFLAGS="-R/opt/csw/lib"</para>
 
         <screen>PKG_CONFIG_PATH=/opt/csw/lib/pkgconfig LDFLAGS="-R/opt/csw/lib" ./configure --with-tracker-prefix=/opt/csw --with-tracker-pkgconfig-version=0.16 ...</screen>
 
