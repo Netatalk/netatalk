@@ -233,7 +233,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
     offset += 8;
 
     if (cnid_count > 0) {
-        EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(0x0add, cnid_count, cnids->ca_context)) );
+        EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(cnids->ca_unkn1, cnid_count, cnids->ca_context)) );
         offset += 8;
 
         for (int i = 0; i < cnid_count; i++) {
