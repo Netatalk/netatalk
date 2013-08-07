@@ -1,7 +1,7 @@
-Netatalk 3.1-alpha1
+Netatalk 3.1-beta1
 ===================
 
-The Netatalk development team is proud to announce the first alpha release
+The Netatalk development team is proud to announce the first beta release
 of the next Netatalk version 3.1. This release is intended for testing only.
 
 Netatalk is a freely-available Open Source AFP fileserver.
@@ -42,6 +42,11 @@ the GNU General Public License (GPLv2).  The full license text is available
 at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+Changes in 3.1-beta1
+~~~~~~~~~~~~~~~~~~~~
+* REM: Remove support for Tracker versions < 0.7
+* UPD: Add support for additional Spotlight RPC calls
 
 Changes in 3.1-alpha1
 ~~~~~~~~~~~~~~~~~~~~~
@@ -330,4 +335,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, July 2013
+ - The Netatalk Development Team, August 2013
