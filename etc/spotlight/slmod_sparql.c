@@ -148,12 +148,14 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, cnid_t id, const char *path)
+static int add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, cnid_t id, const char *path, const struct stat *sp)
 {
     EC_INIT;
     sl_array_t *meta;
     sl_nil_t nil = 0;
     int i, metacount;
+    uint64_t uint64;
+    sl_time_t sl_time;
 
     if ((metacount = talloc_array_length(reqinfo->dd_talloc_array)) == 0) {
         dalloc_add_copy(fm_array, &nil, sl_nil_t);
@@ -165,12 +167,25 @@ static int add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, cnid_t id, co
     meta = talloc_zero(fm_array, sl_array_t);
 
     for (i = 0; i < metacount; i++) {
-        if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemDisplayName")) {
+        if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemDisplayName") ||
+            STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemFSName")) {
             char *p, *name;
             if ((p = strrchr(path, '/'))) {
                 name = dalloc_strdup(meta, p + 1);
                 dalloc_add(meta, name, "char *");
             }
+        } else if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemFSSize")) {
+            uint64 = sp->st_size;
+            dalloc_add_copy(meta, &uint64, uint64_t);
+        } else if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemFSOwnerUserID")) {
+            uint64 = sp->st_uid;
+            dalloc_add_copy(meta, &uint64, uint64_t);
+        } else if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemFSOwnerGroupID")) {
+            uint64 = sp->st_gid;
+            dalloc_add_copy(meta, &uint64, uint64_t);
+        } else if (STRCMP(reqinfo->dd_talloc_array[i], ==, "kMDItemFSContentChangeDate")) {
+            sl_time.tv_sec = sp->st_mtime;
+            dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else {
             dalloc_add_copy(meta, &nil, sl_nil_t);
         }
@@ -223,6 +238,8 @@ static int sl_mod_fetch_result(void *p)
     /* Prepare FileMeta */
     fm = talloc_zero(slq->slq_reply, sl_filemeta_t);
     fm_array = talloc_zero(fm, sl_array_t);
+    /* For some reason the list of results always starts with a nil entry */
+    dalloc_add_copy(fm_array, &nil, sl_nil_t);
     dalloc_add(fm, fm_array, sl_array_t);
 
     LOG(log_debug, logtype_sl, "sl_mod_fetch_result: now interating Tracker results cursor");
@@ -235,11 +252,13 @@ static int sl_mod_fetch_result(void *p)
         if (!qres)
             break;
 
+#if 0
         if (firstmatch) {
             /* For some reason the list of results always starts with a nil entry */
             dalloc_add_copy(fm_array, &nil, sl_nil_t);
             firstmatch = false;
         }
+#endif
 
         become_root();
         uri = tracker_sparql_cursor_get_string(slq->slq_tracker_cursor, 0, NULL);
@@ -259,8 +278,12 @@ static int sl_mod_fetch_result(void *p)
                 goto loop_cleanup;
         }
 
+        struct stat sb;
+        if (stat(path, &sb) != 0)
+            goto loop_cleanup;
+
         dalloc_add_copy(cnids->ca_cnids, &uint64, uint64_t);
-        add_filemeta(slq->slq_reqinfo, fm_array, id, path);
+        add_filemeta(slq->slq_reqinfo, fm_array, id, path, &sb);
 
     loop_cleanup:
         g_free(path);
@@ -302,6 +325,35 @@ static int sl_mod_close_query(void *p)
         g_object_unref(slq->slq_tracker_cursor);
         slq->slq_tracker_cursor = NULL;
     }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+static int sl_mod_fetch_attrs(void *p)
+{
+    EC_INIT;
+    slq_t *slq = p;
+    sl_filemeta_t *fm;
+    sl_array_t *fm_array;
+    sl_nil_t nil;
+
+    LOG(log_debug, logtype_sl, "sl_mod_fetch_attrs(\"%s\")", slq->slq_path);
+
+    struct stat sb;
+    EC_ZERO( stat(slq->slq_path, &sb) );
+
+    /* Prepare FileMeta */
+    fm = talloc_zero(slq->slq_reply, sl_filemeta_t);
+    fm_array = talloc_zero(fm, sl_array_t);
+    dalloc_add(fm, fm_array, fm_array_t);
+    /* For some reason the list of results always starts with a nil entry */
+    dalloc_add_copy(fm_array, &nil, sl_nil_t);
+
+    add_filemeta(slq->slq_reqinfo, fm_array, CNID_INVALID, slq->slq_path, &sb);
+
+    /* Now add result */
+    dalloc_add(slq->slq_reply, fm, sl_filemeta_t);
 
 EC_CLEANUP:
     EC_EXIT;
@@ -371,6 +423,7 @@ struct sl_module_export sl_mod = {
     sl_mod_start_search,
     sl_mod_fetch_result,
     sl_mod_close_query,
+    sl_mod_fetch_attrs,
     sl_mod_error,
     sl_mod_index_file
 };

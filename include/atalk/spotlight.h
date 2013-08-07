@@ -38,6 +38,7 @@ struct sl_module_export {
     int (*sl_mod_start_search)(void *);
     int (*sl_mod_fetch_result)(void *);
     int (*sl_mod_end_search)  (void *);
+    int (*sl_mod_fetch_attrs) (void *);
     int (*sl_mod_error)       (void *);
     int (*sl_mod_index_file)  (const void *);
 };
@@ -84,31 +85,33 @@ typedef enum {
     SLQ_STATE_NEW      = 1,           /* Query received from client                                     */
     SLQ_STATE_RUNNING  = 2,           /* Query dispatched to Tracker                                    */
     SLQ_STATE_DONE     = 3,           /* Tracker finished                                               */
-    SLQ_STATE_END      = 4            /* Query results returned to client                               */
+    SLQ_STATE_END      = 4,           /* Query results returned to client                               */
+    SLQ_STATE_ATTRS    = 5            /* Fetch metadata for an object                                   */
 } slq_state_t;
 
 /* Internal query data structure */
 typedef struct _slq_t {
-    struct list_head slq_list;        /* queries are stored in a list                                   */
-    slq_state_t    slq_state;         /* State                                                          */
-    AFPObj         *slq_obj;          /* global AFPObj handle                                           */
-    const struct vol *slq_vol;        /* volume handle                                                  */
-    DALLOC_CTX     *slq_reply;        /* reply handle                                                   */
-    time_t         slq_time;          /* timestamp where we received this query                         */
-    uint64_t       slq_ctx1;          /* client context 1                                               */
-    uint64_t       slq_ctx2;          /* client context 2                                               */
-    sl_array_t     *slq_reqinfo;      /* array with requested metadata                                  */
-    const char     *slq_qstring;      /* the Spotlight query string                                     */
-    uint64_t       *slq_cnids;        /* Pointer to array with CNIDs to which a query applies           */
-    size_t         slq_cnids_num;    /* Size of slq_cnids array                                        */
+    struct list_head  slq_list;           /* queries are stored in a list                                   */
+    slq_state_t       slq_state;          /* State                                                          */
+    AFPObj           *slq_obj;            /* global AFPObj handle                                           */
+    const struct vol *slq_vol;            /* volume handle                                                  */
+    DALLOC_CTX       *slq_reply;          /* reply handle                                                   */
+    time_t            slq_time;           /* timestamp where we received this query                         */
+    uint64_t          slq_ctx1;           /* client context 1                                               */
+    uint64_t          slq_ctx2;           /* client context 2                                               */
+    sl_array_t       *slq_reqinfo;        /* array with requested metadata                                  */
+    const char       *slq_qstring;        /* the Spotlight query string                                     */
+    uint64_t         *slq_cnids;          /* Pointer to array with CNIDs to which a query applies           */
+    size_t            slq_cnids_num;      /* Size of slq_cnids array                                        */
+    const char       *slq_path;           /* Path to file or dir, used in fetchAttributes                   */
 #ifdef HAVE_TRACKER_SPARQL
-    void           *slq_tracker_cursor; /* Tracker SPARQL query result cursor                           */
+    void             *slq_tracker_cursor; /* Tracker SPARQL query result cursor                             */
 #endif
 #ifdef HAVE_TRACKER_RDF
-    char          *slq_trackerquery;  /* RDF query string*/
-    char          *slq_fts;           /* FTS search string */
-    int            slq_service;       /* Tracker service */
-    int            slq_offset;        /* search offset */
+    char             *slq_trackerquery;   /* RDF query string  */
+    char             *slq_fts;            /* FTS search string */
+    int               slq_service;        /* Tracker service   */
+    int               slq_offset;         /* search offset     */
 #endif
 } slq_t;
 

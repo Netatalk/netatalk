@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <time.h>
+#include <utime.h>
 
 #include <atalk/list.h>
 #include <atalk/errchk.h>
@@ -37,6 +38,8 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 #include <atalk/spotlight.h>
+
+#include "directory.h"
 
 static TALLOC_CTX *sl_ctx;
 static void *sl_module;
@@ -81,6 +84,14 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
             LOG(log_debug, logtype_sl, "%sbool: %s", neststrings[nestinglevel + 1], bl ? "true" : "false");
         } else if (STRCMP(type, ==, "sl_nil_t")) {
             LOG(log_debug, logtype_sl, "%snil", neststrings[nestinglevel + 1]);
+        } else if (STRCMP(type, ==, "sl_time_t")) {
+            sl_time_t t;
+            struct tm *tm;
+            char datestring[256];
+            memcpy(&t, dd->dd_talloc_array[n], sizeof(sl_time_t));
+            tm = localtime(&t.tv_sec);
+            strftime(datestring, sizeof(datestring), "%Y-%m-%d %H:%M:%S", tm);
+            LOG(log_debug, logtype_sl, "%ssl_time_t: %s.%06d", neststrings[nestinglevel + 1], datestring, t.tv_usec);
         } else if (STRCMP(type, ==, "sl_cnids_t")) {
             sl_cnids_t cnids;
             memcpy(&cnids, dd->dd_talloc_array[n], sizeof(sl_cnids_t));
@@ -95,6 +106,7 @@ static int dd_dump(DALLOC_CTX *dd, int nestinglevel)
     LOG(log_debug, logtype_sl, "%s}", neststrings[nestinglevel]);
 }
 
+#ifndef SPOT_TEST_MAIN
 /**************************************************************************************************
  * Spotlight queries
  **************************************************************************************************/
@@ -348,6 +360,181 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
+{
+    EC_INIT;
+    uint64_t uint64;
+    sl_array_t *array;
+    sl_cnids_t *cnids;
+    sl_time_t *sl_time;
+    cnid_t id;
+    char *path;
+    struct dir *dir;
+    
+    EC_NULL_LOG( cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2) );
+    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    id = (cnid_t)uint64;
+    LOG(log_debug, logtype_sl, "sl_rpc_storeAttributesForOIDArray: CNID: %" PRIu32, id);
+
+    if (htonl(id) == DIRDID_ROOT) {
+        path = vol->v_path;
+    } else if (id < CNID_START) {
+        EC_FAIL;
+    } else {
+        cnid_t did;
+        char buffer[12 + MAXPATHLEN + 1];
+
+        did = htonl(id);
+        EC_NULL_LOG( path = cnid_resolve(vol->v_cdb, &did, buffer, sizeof(buffer)) );
+        EC_NULL_LOG( dir = dirlookup(vol, did) );
+        EC_NEG1_LOG( movecwd(vol, dir) );
+    }
+
+    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "sl_array_t", 1, "sl_dict_t", 1, "kMDItemLastUsedDate"))) {
+        struct utimbuf utimes;
+        utimes.actime = utimes.modtime = sl_time->tv_sec;
+        utime(path, &utimes);
+    }
+
+    array = talloc_zero(reply, sl_array_t);
+    uint64_t sl_res = 0;
+    dalloc_add_copy(array, &sl_res, uint64_t);
+    dalloc_add(reply, array, sl_array_t);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
+{
+    EC_INIT;
+    uint64_t uint64;
+    sl_cnids_t *cnids;
+    sl_time_t *sl_time;
+    cnid_t id;
+    char *path;
+    struct dir *dir;
+    
+    EC_NULL_LOG( cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 1) );
+    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    id = (cnid_t)uint64;
+    LOG(log_debug, logtype_sl, "sl_rpc_fetchAttributeNamesForOIDArray: CNID: %" PRIu32, id);
+
+    if (htonl(id) == DIRDID_ROOT) {
+        path = vol->v_path;
+    } else if (id < CNID_START) {
+        EC_FAIL;
+    } else {
+        cnid_t did;
+        char buffer[12 + MAXPATHLEN + 1];
+
+        did = htonl(id);
+        EC_NULL_LOG( path = cnid_resolve(vol->v_cdb, &did, buffer, sizeof(buffer)) );
+        EC_NULL_LOG( dir = dirlookup(vol, did) );
+        EC_NEG1_LOG( movecwd(vol, dir) );
+    }
+
+    /* Result array */
+    sl_array_t *array = talloc_zero(reply, sl_array_t);
+    dalloc_add(reply, array, sl_array_t);
+
+    /* Return result value 0 */
+    uint64_t sl_res = 0;
+    dalloc_add_copy(array, &sl_res, uint64_t);
+
+    /* Return CNID array */
+    sl_cnids_t *replycnids = talloc_zero(reply, sl_cnids_t);
+    replycnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+    replycnids->ca_unkn1 = 0xfec;
+    replycnids->ca_context = cnids->ca_context;
+    uint64 = (uint64_t)id;
+    dalloc_add_copy(replycnids->ca_cnids, &uint64, uint64_t);
+    dalloc_add(array, replycnids, sl_cnids_t);
+
+    /* Return filemeta array */
+
+    /*
+     * FIXME: this should return the real attributes from all known metadata sources
+     * (Tracker and filesystem)
+     */
+    sl_array_t *mdattrs = talloc_zero(reply, sl_array_t);
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSName"), "char *");
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemDisplayName"), "char *");
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSSize"), "char *");
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSOwnerUserID"), "char *");
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSOwnerGroupID"), "char *");
+    dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSContentChangeDate"), "char *");
+
+    sl_filemeta_t *fmeta = talloc_zero(reply, sl_filemeta_t);
+    dalloc_add(fmeta, mdattrs, sl_array_t);
+    dalloc_add(array, fmeta, sl_filemeta_t);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
+{
+    EC_INIT;
+    slq_t *slq = NULL;
+    uint64_t uint64;
+    sl_cnids_t *cnids;
+    sl_time_t *sl_time;
+    cnid_t id;
+    struct dir *dir;
+    sl_array_t *reqinfo;
+
+
+
+    /* Allocate and initialize query object */
+    slq = talloc_zero(reply, slq_t);
+    slq->slq_state = SLQ_STATE_ATTRS;
+    slq->slq_obj = obj;
+    slq->slq_vol = vol;
+    EC_NULL( slq->slq_reply = talloc_zero(reply, sl_array_t) );
+    EC_NULL( reqinfo = dalloc_get(query, "DALLOC_CTX", 0, "sl_array_t", 1) );
+    slq->slq_reqinfo = talloc_steal(slq, reqinfo);
+    
+    EC_NULL_LOG( cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2) );
+    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    id = (cnid_t)uint64;
+
+    if (htonl(id) == DIRDID_ROOT) {
+        slq->slq_path = talloc_strdup(slq, vol->v_path);
+    } else if (id < CNID_START) {
+        EC_FAIL;
+    } else {
+        cnid_t did;
+        char buffer[12 + MAXPATHLEN + 1];
+        char *name;
+        did = htonl(id);
+        EC_NULL( name = cnid_resolve(vol->v_cdb, &did, buffer, sizeof(buffer)) );
+        EC_NULL( dir = dirlookup(vol, did) );
+        EC_NULL( slq->slq_path = talloc_asprintf(slq, "%s/%s", bdata(dir->d_fullpath), name) );
+    }
+
+    /* Return result value 0 */
+    uint64_t sl_res = 0;
+    dalloc_add_copy(slq->slq_reply, &sl_res, uint64_t);
+
+    /* Return CNID array */
+    sl_cnids_t *replycnids = talloc_zero(reply, sl_cnids_t);
+    replycnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+    replycnids->ca_unkn1 = 0xfec;
+    replycnids->ca_context = cnids->ca_context;
+    uint64 = (uint64_t)id;
+    dalloc_add_copy(replycnids->ca_cnids, &uint64, uint64_t);
+    dalloc_add(slq->slq_reply, replycnids, sl_cnids_t);
+
+    /* Fetch attributes from module */
+    EC_ZERO_LOG( sl_module_export->sl_mod_fetch_attrs(slq) );
+
+    dalloc_add(reply, slq->slq_reply, sl_array_t);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
 static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 {
     EC_INIT;
@@ -490,6 +677,12 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_
             EC_ZERO_LOG( sl_rpc_openQuery(obj, query, reply, vol) );
         } else if (STRCMP(rpccmd, ==, "fetchQueryResultsForContext:")) {
             EC_ZERO_LOG( sl_rpc_fetchQueryResultsForContext(obj, query, reply, vol) );
+        } else if (STRCMP(rpccmd, ==, "storeAttributes:forOIDArray:context:")) {
+            EC_ZERO_LOG( sl_rpc_storeAttributesForOIDArray(obj, query, reply, vol) );
+        } else if (STRCMP(rpccmd, ==, "fetchAttributeNamesForOIDArray:context:")) {
+            EC_ZERO_LOG( sl_rpc_fetchAttributeNamesForOIDArray(obj, query, reply, vol) );
+        } else if (STRCMP(rpccmd, ==, "fetchAttributes:forOIDArray:context:")) {
+            EC_ZERO_LOG( sl_rpc_fetchAttributesForOIDArray(obj, query, reply, vol) );
         } else if (STRCMP(rpccmd, ==, "closeQueryForContext:")) {
             EC_ZERO_LOG( sl_rpc_closeQueryForContext(obj, query, reply, vol) );
         } else {
@@ -515,6 +708,7 @@ EC_CLEANUP:
     }
     EC_EXIT;
 }
+#endif
 
 /**************************************************************************************************
  * Testing
