@@ -336,7 +336,7 @@ checking for TRACKER_MINER... yes
 Configure summary:
 ...
   AFP:
-    Spotlight: yes (SPARQL)
+    Spotlight: yes
 ...</screen>
       </sect3>
 

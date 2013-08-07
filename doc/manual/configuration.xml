@@ -1694,11 +1694,11 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
     <sect2>
       <title>Supported metadata attributes</title>
 
-      <para>The following list is the complete set of supported metadata
-      attributes in Tracker SPARQL search queries</para>
+      <para>The following table lists the supported Spotlight metadata
+      attributes</para>
 
       <table>
-        <title>Tracker SPARQL</title>
+        <title>Supported Spotlight metadata attributes</title>
 
         <tgroup cols="2">
           <thead>
@@ -1854,131 +1854,6 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
         </tgroup>
       </table>
 
-      <para>The following list is the complete set of supported metadata
-      attributes in Tracker RDF search queries:<table>
-          <title>Tracker RDF</title>
-
-          <tgroup cols="2">
-            <thead>
-              <row>
-                <entry align="center">Description</entry>
-
-                <entry align="center">Spotlight Key</entry>
-              </row>
-            </thead>
-
-            <tbody>
-              <row>
-                <entry>Name</entry>
-
-                <entry>kMDItemDisplayName, kMDItemFSName</entry>
-              </row>
-
-              <row>
-                <entry>Document content (full text search)</entry>
-
-                <entry>kMDItemTextContent</entry>
-              </row>
-
-              <row>
-                <entry>File type</entry>
-
-                <entry>_kMDItemGroupId, kMDItemContentTypeTree</entry>
-              </row>
-
-              <row>
-                <entry>File modification date</entry>
-
-                <entry>kMDItemFSContentChangeDate,
-                kMDItemContentModificationDate,
-                kMDItemAttributeChangeDate</entry>
-              </row>
-
-              <row>
-                <entry>Content Creation date</entry>
-
-                <entry>kMDItemContentCreationDate</entry>
-              </row>
-
-              <row>
-                <entry>The author, or authors, of the contents of the
-                file</entry>
-
-                <entry>kMDItemAuthors, kMDItemCreator</entry>
-              </row>
-
-              <row>
-                <entry>The name of the country where the item was
-                created</entry>
-
-                <entry>kMDItemCountry</entry>
-              </row>
-
-              <row>
-                <entry>Duration</entry>
-
-                <entry>kMDItemDurationSeconds</entry>
-              </row>
-
-              <row>
-                <entry>Number of pages</entry>
-
-                <entry>kMDItemNumberOfPages</entry>
-              </row>
-
-              <row>
-                <entry>Document title</entry>
-
-                <entry>kMDItemTitle</entry>
-              </row>
-
-              <row>
-                <entry>The width, in pixels, of the contents. For example, the
-                image width or the video frame width</entry>
-
-                <entry>kMDItemPixelWidth</entry>
-              </row>
-
-              <row>
-                <entry>The height, in pixels, of the contents. For example,
-                the image height or the video frame height</entry>
-
-                <entry>kMDItemPixelHeight</entry>
-              </row>
-
-              <row>
-                <entry>Focal length of the lens, in millimeters</entry>
-
-                <entry>kMDItemFocalLength</entry>
-              </row>
-
-              <row>
-                <entry>ISO speed</entry>
-
-                <entry>kMDItemISOSpeed</entry>
-              </row>
-
-              <row>
-                <entry>Orientation of the document. Possible values are 0
-                (landscape) and 1 (portrait)</entry>
-
-                <entry>kMDItemOrientation</entry>
-              </row>
-
-              <row>
-                <entry>Exposure time, in seconds</entry>
-
-                <entry>kMDItemExposureTimeSeconds</entry>
-              </row>
-
-              <row>
-                <entry>The musical genre of the song or composition</entry>
-
-                <entry>kMDItemMusicalGenre</entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table></para>
     </sect2>
 
     <sect2>
