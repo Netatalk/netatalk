@@ -13,11 +13,6 @@
 #include "slmod_sparql_parser.h"
 #define SLQ_VAR ssp_slq
 #endif
-#ifdef HAVE_TRACKER_RDF
-#include <tracker.h>
-#include "slmod_rdf_parser.h"
-#define SLQ_VAR srp_slq
-#endif
 %}
 
 ASC     [a-zA-Z0-9_\*\:\-\.]

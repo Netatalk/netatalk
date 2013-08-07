@@ -104,15 +104,7 @@ typedef struct _slq_t {
     uint64_t         *slq_cnids;          /* Pointer to array with CNIDs to which a query applies           */
     size_t            slq_cnids_num;      /* Size of slq_cnids array                                        */
     const char       *slq_path;           /* Path to file or dir, used in fetchAttributes                   */
-#ifdef HAVE_TRACKER_SPARQL
     void             *slq_tracker_cursor; /* Tracker SPARQL query result cursor                             */
-#endif
-#ifdef HAVE_TRACKER_RDF
-    char             *slq_trackerquery;   /* RDF query string  */
-    char             *slq_fts;            /* FTS search string */
-    int               slq_service;        /* Tracker service   */
-    int               slq_offset;         /* search offset     */
-#endif
 } slq_t;
 
 /**************************************************************************************************

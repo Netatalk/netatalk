@@ -54,7 +54,7 @@ static void kill_childs(int sig, ...);
 
 /* static variables */
 static AFPObj obj;
-static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1, trackerd_pid = -1;
+static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts, trackerd_restarts;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
@@ -163,7 +163,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 #ifdef HAVE_TRACKER_SPARQL
     system("tracker-control -t");
 #endif
-    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
+    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
 /* SIGQUIT callback */
@@ -173,14 +173,14 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 #ifdef HAVE_TRACKER_SPARQL
     system("tracker-control -t");
 #endif
-    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
+    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
 /* SIGHUP callback */
 static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
-    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, &trackerd_pid, NULL);
+    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
 /* SIGCHLD callback */
@@ -208,13 +208,11 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
             cnid_metad_pid = -1;
         else if (pid == dbus_pid)
             dbus_pid = -1;
-        else if (pid == trackerd_pid)
-            trackerd_pid = -1;
         else
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
     }
 
-    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1 && dbus_pid == -1 && trackerd_pid == -1)
+    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1 && dbus_pid == -1)
         event_base_loopbreak(base);
 }
 
@@ -246,16 +244,6 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
         if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus.session.conf", NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
-        }
-    }
-#endif
-
-#ifdef HAVE_TRACKER_RDF
-    if (trackerd_pid == -1) {
-        trackerd_restarts++;
-        LOG(log_note, logtype_afpd, "Restarting 'trackerd' (restarts: %u)", trackerd_restarts);
-        if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
-            LOG(log_error, logtype_default, "Error starting '%s'", "/usr/bin/trackerd");
         }
     }
 #endif
@@ -433,26 +421,18 @@ int main(int argc, char **argv)
     set_sl_volumes();
     system(TRACKER_PREFIX "/bin/tracker-control -s");
 #endif
-#ifdef HAVE_TRACKER_RDF
-    if ((trackerd_pid = run_process(TRACKERD_PATH, trackerd_loglev, NULL)) == -1) {
-        LOG(log_error, logtype_default, "Error starting '%s'", TRACKERD_PATH);
-        netatalk_exit(EXITERR_CONF);
-    }
-#endif
 
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    if (afpd_pid != -1 || cnid_metad_pid != -1 || dbus_pid != -1 || trackerd_pid != -1) {
+    if (afpd_pid != -1 || cnid_metad_pid != -1 || dbus_pid != -1) {
         if (afpd_pid != -1)
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
         if (cnid_metad_pid != -1)
             LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
         if (dbus_pid != -1)
             LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
-        if (trackerd_pid != -1)
-            LOG(log_error, logtype_afpd, "trackerd still running, killing it");
-        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, &trackerd_pid, NULL);
+        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
     }
 
     LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");

@@ -6,7 +6,7 @@ SUFFIXES = .tmpl .
 TMPLFILES = afp.conf.tmpl
 GENFILES = afp.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf netatalk-dbus.conf tracker.cfg
+EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf netatalk-dbus.conf
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
@@ -48,9 +48,6 @@ uninstall-local:
 	rm -f $(DESTDIR)$(pkgconfdir)/dbus-session.conf
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/README
 	rm -f $(DESTDIR)$(localstatedir)/netatalk/CNID/README
-if HAVE_TRACKER_RDF
-	rm -f $(DESTDIR)$(pkgconfdir)/tracker/tracker.cfg
-endif
 if USE_DEBIAN
 	rm -f $(DESTDIR)/etc/default/netatalk
 endif
@@ -74,11 +71,3 @@ install-config-files: $(CONFFILES) $(GENFILES)
 			echo "not overwriting $$f"; \
 		fi; \
 	done
-if HAVE_TRACKER_RDF
-	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/tracker/tracker.cfg ; then \
-		if test ! -d $(DESTDIR)$(pkgconfdir)/tracker ; then \
-			mkdir $(DESTDIR)$(pkgconfdir)/tracker ; \
-		fi ; \
-		$(INSTALL_DATA) $(srcdir)/tracker.cfg $(DESTDIR)$(pkgconfdir)/tracker/ ; \
-	fi
-endif
