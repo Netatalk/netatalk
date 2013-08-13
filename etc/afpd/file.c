@@ -2208,6 +2208,42 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         }
         goto err_temp_to_dest;
     }
+
+    if (AD_META_OPEN(adsp) || AD_META_OPEN(addp)) {
+        struct adouble adtmp;
+        bool opened_ads, opened_add;
+
+        ad_init(&adtmp, vol);
+        ad_init_offsets(&adtmp);
+
+        if (!AD_META_OPEN(adsp)) {
+            if (ad_open(adsp, p, ADFLAGS_HF) != 0)
+                return -1;
+            opened_ads = true;
+        }
+
+        if (!AD_META_OPEN(addp)) {
+            if (ad_open(addp, upath, ADFLAGS_HF) != 0)
+                return -1;
+            opened_add = true;
+        }
+
+        if (ad_copy_header(&adtmp, adsp) != 0)
+            goto err_temp_to_dest;
+        if (ad_copy_header(adsp, addp) != 0)
+            goto err_temp_to_dest;
+        if (ad_copy_header(addp, &adtmp) != 0)
+            goto err_temp_to_dest;
+        ad_flush(adsp);
+        ad_flush(addp);
+
+        if (opened_ads)
+            ad_close(adsp, ADFLAGS_HF);
+        if (opened_add)
+            ad_close(addp, ADFLAGS_HF);
+    }
+
+    /* FIXME: we should switch ressource fork too */
     
     /* here we need to reopen if crossdev */
     if (sid && ad_setid(addp, destst.st_dev, destst.st_ino,  sid, sdir->d_did, vol->v_stamp)) 
