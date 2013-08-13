@@ -1572,9 +1572,17 @@ aclmode = passthrough</screen>
     <sect2>
       <title>Using Tracker commandline tools on the server</title>
 
-      <para>Netatalk must be running and the commands must be executed as
-      root:<screen>$ su
-# export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"</screen></para>
+      <para>Netatalk must be running, commands must be executed as root and
+      some environent variables must be set up (adjust PREFIX to point to
+      the base directory Netatalk in installed to):<screen>$ su
+# cat .tracker_profile
+PREFIX="/"
+export XDG_DATA_HOME="$PREFIX/var/netatalk/"
+export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"
+# . .tracker_profile
+#
+</screen></para>
 
       <para>When using Tracker from OpenCSW you must also update your
       PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
@@ -1636,12 +1644,9 @@ aclmode = passthrough</screen>
 
       <para>Gnome dconf settings are per-user settings, so, as Netatalk runs
       the Tracker processes as root, the settings are stored in the root user
-      context and reading or changing these settings must be perfomed as root.
-      Netatalk must alo be running:<screen>$ su
-# export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"</screen></para>
-
-      <para>When using Tracker from OpenCSW you must also update your
-      PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
+      context and reading or changing these settings must be perfomed as root
+      and Netatalk must be running (and again the enviroment must be set up
+      as shown above).</para>
 
       <para><screen># gsettings list-recursively | grep Tracker
 org.freedesktop.Tracker.Writeback verbosity 'debug'
