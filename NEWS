@@ -12,6 +12,7 @@ Changes in 3.0.5
 * NEW: New boolean volume option "delete veto files". If this option is
        set to yes, then Netatalk will attempt to recursively delete any
        vetoed files and directories. FR #82.
+* UPD: systemd unit dir is /usr/lib/systemd/system .
 
 Changes in 3.0.4
 ================

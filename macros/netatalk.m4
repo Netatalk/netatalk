@@ -413,7 +413,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    ;;
     "redhat-systemd")
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
-	    ac_cv_init_dir="/lib/systemd/system"
+	    ac_cv_init_dir="/usr/lib/systemd/system"
 	    ;;
     "suse")
 	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
@@ -424,7 +424,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    ;;
     "suse-systemd")
 	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
-	    ac_cv_init_dir="/lib/systemd/system"
+	    ac_cv_init_dir="/usr/lib/systemd/system"
 	    ;;
     "gentoo")
 	    AC_MSG_RESULT([enabling gentoo-style initscript support])
@@ -444,7 +444,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
         ;;
     "systemd")
 	    AC_MSG_RESULT([enabling general systemd support])
-	    ac_cv_init_dir="/lib/systemd/system"
+	    ac_cv_init_dir="/usr/lib/systemd/system"
         ;;
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
