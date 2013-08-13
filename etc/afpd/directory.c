@@ -2288,7 +2288,6 @@ int deletecurdir(struct vol *vol)
     struct dirent *de;
     struct stat st;
     struct dir  *fdir, *pdir;
-    DIR *dp;
     struct adouble  ad;
     uint16_t       ashort;
     int err;
@@ -2348,13 +2347,6 @@ int deletecurdir(struct vol *vol)
     dir_remove( vol, fdir );
 
 delete_done:
-    if (dp) {
-        /* inode is used as key for cnid.
-         * Close the descriptor only after cnid_delete
-         * has been called.
-         */
-        closedir(dp);
-    }
     return err;
 }
 
