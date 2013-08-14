@@ -1,9 +1,9 @@
-Netatalk 3.0.4
+Netatalk 3.0.5
 ==============
 
-The Netatalk development team is proud to announce version 3.0.4 of
+The Netatalk development team is proud to announce version 3.0.5 of
 the Netatalk File Sharing suite. This is the latest update to the 3.0
-release series. All users are encouraged to upgrade their systems to 3.0.4.
+release series. All users are encouraged to upgrade their systems to 3.0.5.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -42,6 +42,24 @@ the GNU General Public License (GPLv2).  The full license text is available
 at:
 
   http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+Changes in 3.0.5
+~~~~~~~~~~~~~~~~
+* FIX: Fix a crash when using pam_winbind. Fixes bug #516.
+* NEW: New global/volume option "ignored attributes"
+* FIX: "afp listen" option failed to take IPv6 addresses. Bug #515.
+* FIX: Fix a possible crash in set_groups. Bug #518.
+* NEW: Send optional AFP messages for vetoed files, new option
+       "veto messages" can be used to enable sending messages.
+       Then whenever a client tries to access any file or directory
+       with a vetoed name, it will be sent an AFP message indicating
+       the name and the directory. From FR #81.
+* NEW: New boolean volume option "delete veto files". If this option is
+       set to yes, then Netatalk will attempt to recursively delete any
+       vetoed files and directories. FR #82.
+* UPD: systemd unit dir is /usr/lib/systemd/system .
+* FIX: Saving files from application like MS Word may result in the file
+       loosing metadata like the Finder label. Bug #521.
 
 Changes in 3.0.4
 ~~~~~~~~~~~~~~~~
@@ -318,4 +336,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, May 2013
+ - The Netatalk Development Team, August 2013
