@@ -424,6 +424,8 @@ afp listen = \fIip address[:port] [ip address[:port] \&.\&.\&.]\fR \fB(G)\fR
 Specifies the IP address that the server should advertise
 \fBand\fR
 listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.sp
+IPv6 address + port combination must use URL the format using square brackets [IPv6]:port
 .RE
 .PP
 afp port = \fIport number\fR \fB(G)\fR
@@ -566,6 +568,16 @@ Sets a message to be displayed when clients logon to the server\&. The message s
 and should be quoted\&. Extended characters are allowed\&.
 .RE
 .PP
+ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
+.RS 4
+Speficy a set of file and directory attributes that shall be ignored by the server,
+<attribute>all</attribute>
+includes all the other options\&.
+.sp
+In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set
+\fIignored attributes = all\fR\&.
+.RE
+.PP
 mimic model = \fImodel\fR \fB(G)\fR
 .RS 4
 Specifies the icon model that appears on clients\&. Defaults to off\&. Note that afpd must support Zeroconf\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
@@ -581,6 +593,13 @@ automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
+.RE
+.PP
+veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Use section
+\fBname\fR
+as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\*(Aqs section)\&.
 .RE
 .PP
 vol dbpath = \fIpath\fR \fB(G)\fR
@@ -1042,6 +1061,13 @@ to
 is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommendable to run
 \fBdbd\fR
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
+.RE
+.PP
+delete veto files = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
+.RS 4
+This option is used when Netatalk is attempting to delete a directory that contains one or more vetoed files or directories (see the veto files option)\&. If this option is set to no (the default) then if a directory contains any non\-vetoed files or directories then the directory delete will fail\&. This is usually what you want\&.
+.sp
+If this option is set to yes, then Netatalk will attempt to recursively delete any files and directories within the vetoed directory\&.
 .RE
 .PP
 follow symlinks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR

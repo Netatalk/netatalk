@@ -1172,6 +1172,14 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* the name is illegal */
             LOG(log_info, logtype_afpd, "cname: illegal path: '%s'", ret.u_name);
             afp_errno = AFPERR_PARAM;
+            if (vol->v_obj->options.flags & OPTION_VETOMSG) {
+                bstring message = bformat("Attempt to access vetoed file or directory \"%s\" in directory \"%s\"",
+                                          ret.u_name, bdata(dir->d_u_name));
+                if (setmessage(bdata(message)) == 0)
+                    /* Client may make multiple attempts, only send the message the first time */
+                    kill(getpid(), SIGUSR2);
+                bdestroy(message);
+            }
             return NULL;
         }
 
@@ -1478,6 +1486,7 @@ int getdirparams(const AFPObj *obj,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            ashort &= ~htons(vol->v_ignattr);
             memcpy( data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;
@@ -1866,6 +1875,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                 ad_getattr(&ad, &bshort);
                 oshort = bshort;
                 if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
+                    ashort &= ~htons(vol->v_ignattr);
                     bshort |= htons( ntohs( ashort ) & ~ATTRBIT_SETCLR );
                 } else {
                     bshort &= ~ashort;
@@ -2278,7 +2288,6 @@ int deletecurdir(struct vol *vol)
     struct dirent *de;
     struct stat st;
     struct dir  *fdir, *pdir;
-    DIR *dp;
     struct adouble  ad;
     uint16_t       ashort;
     int err;
@@ -2295,37 +2304,15 @@ int deletecurdir(struct vol *vol)
 
         ad_getattr(&ad, &ashort);
         ad_close(&ad, ADFLAGS_HF);
-        if ((ashort & htons(ATTRBIT_NODELETE))) {
+        if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }
     }
     err = vol->vfs->vfs_deletecurdir(vol);
     if (err) {
-        LOG(log_error, logtype_afpd, "deletecurdir: error deleting .AppleDouble in \"%s\"",
+        LOG(log_error, logtype_afpd, "deletecurdir: error deleting AppleDouble files in \"%s\"",
             cfrombstr(curdir->d_fullpath));
         return err;
-    }
-
-    /* now get rid of dangling symlinks */
-    if ((dp = opendir("."))) {
-        while ((de = readdir(dp))) {
-            /* skip this and previous directory */
-            if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
-                continue;
-
-            /* bail if it's not a symlink */
-            if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
-                LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): not empty",
-                    bdata(curdir->d_fullpath));
-                closedir(dp);
-                return AFPERR_DIRNEMPT;
-            }
-
-            if ((err = netatalk_unlink(de->d_name))) {
-                closedir(dp);
-                return err;
-            }
-        }
     }
 
     if (movecwd(vol, pdir) < 0) {
@@ -2337,24 +2324,29 @@ int deletecurdir(struct vol *vol)
         cfrombstr(curdir->d_fullpath));
 
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
-    if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
-        AFP_CNID_START("cnid_delete");
-        cnid_delete(vol->v_cdb, fdir->d_did);
-        AFP_CNID_DONE();
-        dir_remove( vol, fdir );
-    } else {
+
+    switch (err) {
+    case AFP_OK:
+    case AFPERR_NOOBJ:
+        break;
+    case AFPERR_DIRNEMPT:
+        if (delete_vetoed_files(vol, bdata(fdir->d_u_name), false) != 0)
+            goto delete_done;
+        err = AFP_OK;
+        break;
+    default:
         LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
             cfrombstr(curdir->d_fullpath));
+        goto delete_done;
     }
 
+    AFP_CNID_START("cnid_delete");
+    cnid_delete(vol->v_cdb, fdir->d_did);
+    AFP_CNID_DONE();
+
+    dir_remove( vol, fdir );
+
 delete_done:
-    if (dp) {
-        /* inode is used as key for cnid.
-         * Close the descriptor only after cnid_delete
-         * has been called.
-         */
-        closedir(dp);
-    }
     return err;
 }
 

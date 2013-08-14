@@ -575,6 +575,8 @@
             any incoming request. The network address may be specified either
             in dotted-decimal format for IPv4 or in hexadecimal format for
             IPv6.</para>
+            <para>IPv6 address + port combination must use URL the format
+            using square brackets [IPv6]:port</para>
           </listitem>
         </varlistentry>
 
@@ -868,6 +870,21 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
+          <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Speficy a set of file and directory attributes that shall
+            be ignored by the server, <attribute>all</attribute> includes all
+            the other options.</para>
+            <para>In OS X when the Finder sets a lock on a file/directory or you
+            set the BSD uchg flag in the Terminal, all three attributes are
+            used. Thus in order to ignore the Finder lock/BSD uchg flag, add
+            set <emphasis>ignored attributes = all</emphasis>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>mimic model = <replaceable>model</replaceable>
           <type>(G)</type></term>
 
@@ -903,6 +920,17 @@
             <para>Use share reservations on Solaris. Solaris CIFS server uses
             this too, so this makes a lock coherent multi protocol
             server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>veto message = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Use section <option>name</option> as option preset for all
+            volumes (when set in the [Global] section) or for one volume (when
+            set in that volume's section).</para>
           </listitem>
         </varlistentry>
 
@@ -1701,6 +1729,23 @@
             costs some performance. It's recommendable to run
             <command>dbd</command> on volumes and do the conversion with that.
             Then this option can be set to no.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>delete veto files = <replaceable>BOOLEAN</replaceable>
+          (default: <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>This option is used when Netatalk is attempting to delete a
+            directory that contains one or more vetoed files or directories
+            (see the veto files option). If this option is set to no (the
+            default) then if a directory contains any non-vetoed files or
+            directories then the directory delete will fail. This is usually
+            what you want.</para>
+            <para>If this option is set to yes, then Netatalk will attempt to
+            recursively delete any files and directories within the vetoed
+            directory.</para>
           </listitem>
         </varlistentry>
 

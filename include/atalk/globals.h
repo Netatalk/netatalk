@@ -48,7 +48,7 @@
 #define OPTION_CLOSEVOL      (1 << 1)
 #define OPTION_SERVERNOTIF   (1 << 2)
 #define OPTION_NOSENDFILE    (1 << 3)
-/* #define OPTION_CUSTOMICON    (1 << 4) */
+#define OPTION_VETOMSG       (1 << 4) /* whether to send an AFP message for veto file access */
 #define OPTION_AFP_READ_LOCK (1 << 5) /* whether to do AFP spec conforming read locks (default: no) */
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
@@ -117,6 +117,7 @@ struct afp_options {
     char *logfile;
     char *mimicmodel;
     char *adminauthuser;
+    char *ignored_attr;
     struct afp_volume_name volfile;
 };
 
@@ -161,7 +162,7 @@ extern const char         *Cnid_port;
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
-extern void setmessage (const char *);
+extern int setmessage (const char *);
 extern void readmessage (AFPObj *);
 
 /* afp_util.c */

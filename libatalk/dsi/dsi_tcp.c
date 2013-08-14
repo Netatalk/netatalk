@@ -209,7 +209,7 @@ static pid_t dsi_tcp_open(DSI *dsi)
         dsi->header.dsi_command = block[1];
         memcpy(&dsi->header.dsi_requestID, block + 2,
                sizeof(dsi->header.dsi_requestID));
-        memcpy(&dsi->header.dsi_code, block + 4, sizeof(dsi->header.dsi_code));
+        memcpy(&dsi->header.dsi_data.dsi_code, block + 4, sizeof(dsi->header.dsi_data.dsi_code));
         memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
         memcpy(&dsi->header.dsi_reserved, block + 12,
                sizeof(dsi->header.dsi_reserved));
@@ -304,25 +304,45 @@ iflist_done:
 #define AI_NUMERICSERV 0
 #endif
 
-/* this needs to accept passed in addresses */
+/*!
+ * Initialize DSI over TCP
+ *
+ * @param dsi        (rw) DSI handle
+ * @param hostname   (r)  pointer to hostname string
+ * @param inaddress  (r)  Optional IPv4 or IPv6 address with an optional port, may be NULL
+ * @param inport     (r)  pointer to port string
+ *
+ * Creates listening AFP/DSI socket. If the parameter inaddress is NULL, then we listen
+ * on the wildcard address, ie on all interfaces. That should mean listening on the IPv6
+ * address "::" on IPv4/IPv6 dual stack kernels, accepting both v4 and v6 requests.
+ *
+ * If the parameter inaddress is not NULL, then we only listen on the given address.
+ * The parameter may contain a port number using the URL format for address and port:
+ *
+ *   IPv4, IPv4:port, IPv6, [IPv6], [IPv6]:port
+ *
+ * Parameter inport must be a valid pointer to a port string and is used if the inaddress
+ * parameter doesn't contain a port.
+ *
+ * @returns 0 on success, -1 on failure
+ */
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const char *inport)
 {
     EC_INIT;
     int                flag, err;
-    char               *a = NULL, *b;
-    const char         *address;
-    const char         *port;
+    char              *address = NULL, *port = NULL;
     struct addrinfo    hints, *servinfo, *p;
 
-    /* Check whether address is of the from IP:PORT and split */
-    address = inaddress;
-    port = inport;
-    if (address && strchr(address, ':')) {
-        EC_NULL_LOG( address = a = strdup(address) );
-        b = strchr(a, ':');
-        *b = 0;
-        port = b + 1;
-    }
+    /* inaddress may be NULL */
+    AFP_ASSERT(dsi && hostname && inport);
+
+    if (inaddress)
+        /* Check whether address is of the from IP:PORT and split */
+        EC_ZERO( tokenize_ip_port(inaddress, &address, &port) );
+
+    if (port == NULL)
+        /* inport is supposed to always contain a valid port string */
+        EC_NULL( port = strdup(inport) );
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
@@ -343,8 +363,8 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
         hints.ai_family = AF_UNSPEC;
 #endif
     }
-    if ((ret = getaddrinfo(address ? address : NULL, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_dsi, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
+    if ((ret = getaddrinfo(address, port, &hints, &servinfo)) != 0) {
+        LOG(log_error, logtype_dsi, "dsi_tcp_init(%s): getaddrinfo: %s\n", address ? address : "*", gai_strerror(ret));
         EC_FAIL;
     }
 
@@ -447,8 +467,10 @@ interfaces:
     guess_interface(dsi, hostname, port ? port : "548");
 
 EC_CLEANUP:
-    if (a)
-        free(a);
+    if (address)
+        free(address);
+    if (port)
+        free(port);
     EC_EXIT;
 }
 

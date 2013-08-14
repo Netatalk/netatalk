@@ -155,6 +155,9 @@ if test "x$bdb_required" = "xyes"; then
                         if test x"${atalk_cv_bdb_version}" = x"yes"; then
                             BDB_CFLAGS="-I${bdbdir}/include${subdir}"
                             BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
+                            if test x"$need_dash_r" = x"yes"; then
+                                BDB_LIBS="$BDB_LIBS -R${bdblibdir}"
+                            fi
                             BDB_BIN="$bdbbindir"
                             BDB_PATH="$bdbdir"
                             bdbfound=yes
@@ -178,6 +181,9 @@ if test "x$bdb_required" = "xyes"; then
                            if test x"${atalk_cv_bdb_version}" = x"yes"; then
                               BDB_CFLAGS="-I${bdbdir}/include${subdir}"
                               BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
+                              if test x"$need_dash_r" = x"yes"; then
+                                 BDB_LIBS="$BDB_LIBS -R${bdblibdir}"
+                              fi
                               BDB_BIN="$bdbbindir"
                               BDB_PATH="$bdbdir"
                               bdbfound=yes

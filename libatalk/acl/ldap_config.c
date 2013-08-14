@@ -49,7 +49,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
     i = 0;
     /* now see if its a correct pref */
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
-        if ((val = iniparser_getstring(iniconfig, INISEC_GLOBAL, ldap_prefs[i].name, NULL))) {
+        if ((val = atalk_iniparser_getstring(iniconfig, INISEC_GLOBAL, ldap_prefs[i].name, NULL))) {
             /* check if we have pre-defined values */
             if (ldap_prefs[i].intfromarray == 0) {
                 /* no, its just a string */

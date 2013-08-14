@@ -516,8 +516,8 @@ static const char *getoption(const dictionary *conf, const char *vol, const char
 {
     const char *result;
 
-    if ((!(result = iniparser_getstring(conf, vol, opt, NULL))) && (defsec != NULL))
-        result = iniparser_getstring(conf, defsec, opt, NULL);
+    if ((!(result = atalk_iniparser_getstring(conf, vol, opt, NULL))) && (defsec != NULL))
+        result = atalk_iniparser_getstring(conf, defsec, opt, NULL);
     
     if (result == NULL)
         result = defval;
@@ -539,8 +539,8 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
 {
     int result;
 
-    if (((result = iniparser_getboolean(conf, vol, opt, -1)) == -1) && (defsec != NULL))
-        result = iniparser_getboolean(conf, defsec, opt, -1);
+    if (((result = atalk_iniparser_getboolean(conf, vol, opt, -1)) == -1) && (defsec != NULL))
+        result = atalk_iniparser_getboolean(conf, defsec, opt, -1);
     
     if (result == -1)
         result = defval;
@@ -668,7 +668,7 @@ static struct vol *creatvol(AFPObj *obj,
         if(tmpname[i] == '/') tmpname[i] = ':';
 
     bstring dbpath;
-    EC_NULL( val = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
+    EC_NULL( val = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
     EC_NULL( dbpath = bformat("%s/%s/", val, tmpname) );
     EC_NULL( volume->v_dbpath = strdup(cfrombstr(dbpath)) );
     bdestroy(dbpath);
@@ -772,11 +772,28 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
     if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
         volume->v_flags |= AFPVOL_FOLLOWSYM;
+    if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0))
+        volume->v_flags |= AFPVOL_DELVETO;
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;
     if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
         volume->v_root_preexec_close = 1;
+
+    if ((val = getoption(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
+        if (strstr(val, "all")) {
+            volume->v_ignattr |= ATTRBIT_NOWRITE | ATTRBIT_NORENAME | ATTRBIT_NODELETE;
+        }
+        if (strstr(val, "nowrite")) {
+            volume->v_ignattr |= ATTRBIT_NOWRITE;
+        }
+        if (strstr(val, "norename")) {
+            volume->v_ignattr |= ATTRBIT_NORENAME;
+        }
+        if (strstr(val, "nodelete")) {
+            volume->v_ignattr |= ATTRBIT_NODELETE;
+        }
+    }
 
     /*
      * Handle read-only behaviour. semantics:
@@ -985,16 +1002,16 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
-    int secnum = iniparser_getnsec(obj->iniconfig);    
+    int secnum = atalk_iniparser_getnsec(obj->iniconfig);    
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((default_preset = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL))) {
+    if ((default_preset = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL))) {
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
 
     for (i = 0; i < secnum; i++) { 
-        secname = iniparser_getsecname(obj->iniconfig, i);
+        secname = atalk_iniparser_getsecname(obj->iniconfig, i);
 
         if (!vol_section(secname))
             continue;
@@ -1012,7 +1029,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
 
             /* check if user home matches our "basedir regex" */
-            if ((basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
+            if ((basedir = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
                 LOG(log_error, logtype_afpd, "\"basedir regex =\" must be defined in [Homes] section");
                 continue;
             }
@@ -1031,13 +1048,13 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
             }
 
-            if ((p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
+            if ((p = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
                 strlcat(tmp, "/", MAXPATHLEN);
                 strlcat(tmp, p, MAXPATHLEN);
             }
         } else {
             /* Get path */
-            if ((p = iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
+            if ((p = atalk_iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
                 continue;
             strlcpy(tmp, p, MAXPATHLEN);
         }
@@ -1047,7 +1064,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         /* do variable substitution for volume name */
         if (STRCMP(secname, ==, INISEC_HOMES)) {
-            p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+            p = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
             if (strstr(p, "$u") == NULL) {
                 LOG(log_warning, logtype_afpd, "home name must contain $u.");
                 p = "$u's home";
@@ -1063,7 +1080,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
             continue;
 
-        preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
+        preset = atalk_iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
 
         if ((realvolpath = realpath_safe(path)) == NULL)
             continue;
@@ -1317,16 +1334,34 @@ int load_charset(struct vol *vol)
 int load_volumes(AFPObj *obj)
 {
     EC_INIT;
-    int fd = -1;
-    struct passwd   *pwent = NULL;
+
+    static long         bufsize;
+    static char        *pwbuf = NULL;
+
+    int                 fd = -1;
+    struct passwd       pwent;
+    struct passwd      *pwresult = NULL;
     struct stat         st;
-    int retries = 0;
-    struct vol *vol;
+    int                 retries = 0;
+    struct vol         *vol;
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
-    if (obj->uid)
-        pwent = getpwuid(obj->uid);
+    if (pwbuf == NULL) {
+        bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+        if (bufsize == -1)          /* Value was indeterminate */
+            bufsize = 16384;        /* Should be more than enough */
+        EC_NULL( pwbuf = malloc(bufsize) );
+    }
+
+    if (obj->uid) {
+        ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
+        if (pwresult == NULL) {
+            LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));
+            EC_FAIL;
+        }
+        pwresult = &pwent;
+    }
 
     if (Volumes) {
         if (!volfile_changed(&obj->options))
@@ -1335,9 +1370,9 @@ int load_volumes(AFPObj *obj)
         for (vol = Volumes; vol; vol = vol->v_next) {
             vol->v_deleted = 1;
         }
-        if (obj->uid) {
+        if (obj->uid && pwresult) {
             become_root();
-            ret = set_groups(obj, pwent);
+            ret = set_groups(obj, pwresult);
             unbecome_root();
             if (ret != 0) {
                 LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
@@ -1369,11 +1404,11 @@ int load_volumes(AFPObj *obj)
     }
 
     if (obj->iniconfig)
-        iniparser_freedict(obj->iniconfig);
+        atalk_iniparser_freedict(obj->iniconfig);
     LOG(log_debug, logtype_afpd, "load_volumes: loading: %s", obj->options.configfile);
-    obj->iniconfig = iniparser_load(obj->options.configfile);
+    obj->iniconfig = atalk_iniparser_load(obj->options.configfile);
 
-    EC_ZERO_LOG( readvolfile(obj, pwent) );
+    EC_ZERO_LOG( readvolfile(obj, pwresult) );
 
     struct vol *p, *prevvol;
 
@@ -1554,10 +1589,10 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (!have_uservol) /* (2) */
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
-    int secnum = iniparser_getnsec(obj->iniconfig);
+    int secnum = atalk_iniparser_getnsec(obj->iniconfig);
 
     for (int i = 0; i < secnum; i++) { 
-        secname = iniparser_getsecname(obj->iniconfig, i);
+        secname = atalk_iniparser_getsecname(obj->iniconfig, i);
         if (STRCMP(secname, ==, INISEC_HOMES))
             break;
     }
@@ -1566,7 +1601,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
     /* (3) */
-    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL) );
+    EC_NULL_LOG( basedir = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL) );
     LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
     if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
@@ -1615,7 +1650,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */
-    if ((subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
+    if ((subpathconfig = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))) {
         /*
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
@@ -1637,15 +1672,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         path, user, pw->pw_dir, realvolpath);
 
     /* do variable substitution for volume name */
-    p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
+    p = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "home name", "$u's home");
     if (strstr(p, "$u") == NULL)
         p = "$u's home";
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath, NULL) );
 
     const char  *preset, *default_preset;
-    default_preset = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL);
-    preset = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "vol preset", NULL);
+    default_preset = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL);
+    preset = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "vol preset", NULL);
 
     vol = creatvol(obj, pw, INISEC_HOMES, volname, realvolpath, preset ? preset : default_preset ? default_preset : NULL);
 
@@ -1696,71 +1731,74 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
-    if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
+    if ((config = atalk_iniparser_load(AFPObj->options.configfile)) == NULL)
         return -1;
     AFPObj->iniconfig = config;
 
     /* [Global] */
-    options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
-    options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
+    options->logconfig = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
+    options->logfile   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
 
     setuplog(options->logconfig, options->logfile);
 
     /* "server options" boolean options */
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
+    if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))
         options->flags |= OPTION_NOZEROCONF;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "advertise ssh", 0))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "advertise ssh", 0))
         options->flags |= OPTION_ANNOUNCESSH;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "close vol", 0))
         options->flags |= OPTION_CLOSEVOL;
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))
+    if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "client polling", 0))
         options->flags |= OPTION_SERVERNOTIF;
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
+    if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
         options->flags |= OPTION_SHARE_RESERV;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "afpstats", 0))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afpstats", 0))
         options->flags |= OPTION_DBUS_AFPSTATS;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
-    if (!iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "veto message", 0))
+        options->flags |= OPTION_VETOMSG;
+    if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
         options->passwdbits |= PASSWD_NOSAVE;
-    if (iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
         options->passwdbits |= PASSWD_SET;
 
     /* figure out options w values */
-    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
-    options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
-    options->extmapfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "extmap.conf");
-    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",    _PATH_AFPDPWFILE);
-    options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
-    options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
-    options->port           = iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
-    options->signatureopt   = iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "");
-    options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
-    options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
-    options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
-    options->interfaces     = iniparser_getstrdup(config, INISEC_GLOBAL, "afp interfaces", NULL);
-    options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
-    options->addomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
-    options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
-    options->mimicmodel     = iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
-    options->adminauthuser  = iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
-    options->connections    = iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
-    options->passwdminlen   = iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
-    options->tickleval      = iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
-    options->timeout        = iniparser_getint   (config, INISEC_GLOBAL, "timeout",        4);
-    options->dsireadbuf     = iniparser_getint   (config, INISEC_GLOBAL, "dsireadbuf",     12);
-    options->server_quantum = iniparser_getint   (config, INISEC_GLOBAL, "server quantum", DSI_SERVQUANT_DEF);
-    options->volnamelen     = iniparser_getint   (config, INISEC_GLOBAL, "volnamelen",     80);
-    options->dircachesize   = iniparser_getint   (config, INISEC_GLOBAL, "dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
-    options->tcp_sndbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
-    options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
-    options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
-    options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
-    options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+    options->loginmesg      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
+    options->guest          = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "guest account",  "nobody");
+    options->extmapfile     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "extmap.conf");
+    options->passwdfile     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",    _PATH_AFPDPWFILE);
+    options->uampath        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
+    options->uamlist        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
+    options->port           = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
+    options->signatureopt   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "");
+    options->k5service      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);
+    options->k5realm        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "k5 realm",       NULL);
+    options->listen         = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
+    options->interfaces     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "afp interfaces", NULL);
+    options->ntdomain       = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
+    options->addomain       = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
+    options->ntseparator    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
+    options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
+    options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
+    options->ignored_attr   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ignored attributes", NULL);
+    options->connections    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
+    options->passwdminlen   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
+    options->tickleval      = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
+    options->timeout        = atalk_iniparser_getint   (config, INISEC_GLOBAL, "timeout",        4);
+    options->dsireadbuf     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "dsireadbuf",     12);
+    options->server_quantum = atalk_iniparser_getint   (config, INISEC_GLOBAL, "server quantum", DSI_SERVQUANT_DEF);
+    options->volnamelen     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "volnamelen",     80);
+    options->dircachesize   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
+    options->tcp_sndbuf     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
+    options->tcp_rcvbuf     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
+    options->fce_fmodwait   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
+    options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
+    options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
 
-    p = iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
+    p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))
         options->flags |= OPTION_ACL2MACCESS;
     else if (STRCMP(p, ==, "mode"))
@@ -1772,7 +1810,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
     }
 
-    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
+    if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
     } else {
         if (gethostname(val, sizeof(val)) < 0 ) {
@@ -1784,21 +1822,21 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->hostname = strdup(val);
     }
 
-    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "k5 keytab", NULL))) {
+    if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "k5 keytab", NULL))) {
         EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
         snprintf(options->k5keytab, strlen(p) + 14, "KRB5_KTNAME=%s", p);
         putenv(options->k5keytab);
     }
 
 #ifdef ADMIN_GRP
-    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "admin group",  NULL))) {
+    if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "admin group",  NULL))) {
          struct group *gr = getgrnam(p);
          if (gr != NULL)
              options->admingid = gr->gr_gid;
     }
 #endif /* ADMIN_GRP */
 
-    q = iniparser_getstrdup(config, INISEC_GLOBAL, "cnid server", "localhost:4700");
+    q = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid server", "localhost:4700");
     r = strrchr(q, ':');
     if (r)
         *r = 0;
@@ -1811,7 +1849,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     if (q)
         free(q);
 
-    if ((q = iniparser_getstrdup(config, INISEC_GLOBAL, "fqdn", NULL))) {
+    if ((q = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "fqdn", NULL))) {
         /* do a little checking for the domain name. */
         r = strchr(q, ':');
         if (r)
@@ -1821,7 +1859,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                 *r = ':';
             EC_NULL_LOG( options->fqdn = strdup(q) );
         } else {
-            LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", c);
+            LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", q);
         }
         free(q);
     }
@@ -1829,7 +1867,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* Charset Options */
 
     /* unix charset is in [G] only */
-    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
+    if (!(p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "unix charset", NULL))) {
         options->unixcodepage = strdup("UTF8");
         set_charset_name(CH_UNIX, "UTF8");
     } else {
@@ -1853,7 +1891,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
 
     /* vol charset is in [G] and [V] */
-    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
+    if (!(p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "vol charset", NULL))) {
         options->volcodepage = strdup(options->unixcodepage);
     } else {
         if (strcasecmp(p, "UTF-8") == 0) {
@@ -1864,7 +1902,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
     
     /* mac charset is in [G] and [V] */
-    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
+    if (!(p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccodepage = strdup("MAC_ROMAN");
         set_charset_name(CH_MAC, "MAC_ROMAN");
     } else {
@@ -1964,6 +2002,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.Cnid_port);
     if (obj->options.fqdn)
         CONFIG_ARG_FREE(obj->options.fqdn);
+    if (obj->options.ignored_attr)
+        CONFIG_ARG_FREE(obj->options.ignored_attr);
 
     if (obj->options.unixcodepage)
         CONFIG_ARG_FREE(obj->options.unixcodepage);
@@ -1977,6 +2017,6 @@ void afp_config_free(AFPObj *obj)
 
     /* Free everything called from afp_config_parse() */
     free_extmap();
-    iniparser_freedict(obj->iniconfig);
+    atalk_iniparser_freedict(obj->iniconfig);
     free_charset_names();
 }

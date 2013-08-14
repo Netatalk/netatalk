@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="upgrade">
   <chapterinfo>
-    <date>2.15.2013</date>
+    <date>7.29.2013</date>
 
     <author>
       <firstname>Frank</firstname>
@@ -9,7 +9,7 @@
       <surname>Lahm</surname>
     </author>
 
-    <pubdate>15 Feb, 2013</pubdate>
+    <pubdate>29 Jul, 2013</pubdate>
   </chapterinfo>
 
   <title>Upgrading from Netatalk 2</title>
@@ -95,7 +95,7 @@
                 <listitem>
                   <para>an Extended Attribute named
                   “<filename>org.netatalk.ResourceFork</filename>”
-                  on Solaris (FreeBSD?) w. ZFS, or in</para>
+                  on Solaris w. ZFS, or in</para>
                 </listitem>
 
                 <listitem>
@@ -194,29 +194,6 @@
       </orderedlist></para>
   </sect1>
 
-  <sect1>
-    <title>Notes</title>
-
-    <itemizedlist>
-      <listitem>
-        <para>Solaris ZFS permissions</para>
-
-        <para>On Solaris with ZFS you have to make sure users have
-        filesystem permissions to read, create, modify (default: yes) and
-        delete (default: no) extended attributes.</para>
-
-        <para>To grant this right to a group “staff” you’d use this
-        command:</para>
-
-        <para><command>pfexec chmod A+group:staff:RW:fd:allow
-        /Volumes/test/</command></para>
-
-        <para>Remember to run this once before you share a volume so that
-        this permission inherits appropiately (fd flags in above
-        command).</para>
-      </listitem>
-    </itemizedlist>
-  </sect1>
   <sect1>
     <title>Table with old and new configuration file names</title>
     <para><table frame="all">
@@ -817,7 +794,7 @@
               <entry>-noacl2maccess</entry>
               <entry>map acls</entry>
               <entry>-</entry>
-              <entry>yes</entry>
+              <entry>rights</entry>
               <entry>(G)</entry>
               <entry>-</entry>
             </row>
@@ -1438,6 +1415,14 @@
               <entry>acls</entry>
               <entry>-</entry>
               <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:followsymlinks</entry>
+              <entry>follow symlinks</entry>
+              <entry>-</entry>
+              <entry>no</entry>
               <entry>(V)</entry>
               <entry>-</entry>
             </row>

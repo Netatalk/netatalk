@@ -377,6 +377,7 @@ int getmetadata(const AFPObj *obj,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            ashort &= ~htons(vol->v_ignattr);
 #if 0
             /* FIXME do we want a visual clue if the file is read only
              */
@@ -1022,6 +1023,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             ad_getattr(adp, &bshort);
             oshort = bshort;
             if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
+                ashort &= ~htons(vol->v_ignattr);
                 bshort |= htons( ntohs( ashort ) & ~ATTRBIT_SETCLR );
             } else {
                 bshort &= ~ashort;
@@ -1526,7 +1528,7 @@ done:
    WRITE lock on read only file.
 */
 
-static int check_attrib(struct adouble *adp)
+static int check_attrib(const struct vol *vol, struct adouble *adp)
 {
 uint16_t   bshort = 0;
 
@@ -1534,10 +1536,10 @@ uint16_t   bshort = 0;
     /*
      * Does kFPDeleteInhibitBit (bit 8) set?
      */
-	if ((bshort & htons(ATTRBIT_NODELETE))) {
+	if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (bshort & htons(ATTRBIT_NODELETE))) {
 		return AFPERR_OLOCK;
 	}
-    if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+     if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
     	return AFPERR_BUSY;
 	}
 	return 0;
@@ -1562,7 +1564,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
          * ad_open would create a 0 byte resource fork
         */
         if ( ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0 ) {
-            if ((err = check_attrib(&ad))) {
+            if ((err = check_attrib(vol, &ad))) {
                 ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
                return err;
             }
@@ -2206,6 +2208,42 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         }
         goto err_temp_to_dest;
     }
+
+    if (AD_META_OPEN(adsp) || AD_META_OPEN(addp)) {
+        struct adouble adtmp;
+        bool opened_ads, opened_add;
+
+        ad_init(&adtmp, vol);
+        ad_init_offsets(&adtmp);
+
+        if (!AD_META_OPEN(adsp)) {
+            if (ad_open(adsp, p, ADFLAGS_HF) != 0)
+                return -1;
+            opened_ads = true;
+        }
+
+        if (!AD_META_OPEN(addp)) {
+            if (ad_open(addp, upath, ADFLAGS_HF) != 0)
+                return -1;
+            opened_add = true;
+        }
+
+        if (ad_copy_header(&adtmp, adsp) != 0)
+            goto err_temp_to_dest;
+        if (ad_copy_header(adsp, addp) != 0)
+            goto err_temp_to_dest;
+        if (ad_copy_header(addp, &adtmp) != 0)
+            goto err_temp_to_dest;
+        ad_flush(adsp);
+        ad_flush(addp);
+
+        if (opened_ads)
+            ad_close(adsp, ADFLAGS_HF);
+        if (opened_add)
+            ad_close(addp, ADFLAGS_HF);
+    }
+
+    /* FIXME: we should switch ressource fork too */
     
     /* here we need to reopen if crossdev */
     if (sid && ad_setid(addp, destst.st_dev, destst.st_ino,  sid, sdir->d_did, vol->v_stamp)) 

@@ -31,7 +31,7 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen, const size_t size
     dsi->flags |= DSI_NOREPLY; /* we will handle our own replies */
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_len = htonl(size);
-    dsi->header.dsi_code = htonl(err);
+    dsi->header.dsi_data.dsi_code = htonl(err);
 
     dsi->in_write++;
     if (dsi_stream_send(dsi, buf, buflen)) {

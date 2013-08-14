@@ -98,6 +98,7 @@ struct vol {
     int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
     int             v_qfd;
+    uint32_t        v_ignattr;  /* AFP attributes that shall be ignored */
 };
 
 /* load_volumes() flags */
@@ -133,6 +134,7 @@ struct vol {
 #define AFPVOL_SEARCHDB  (1 << 25)   /* Use fast CNID db search instead of filesystem */
 #define AFPVOL_NONETIDS  (1 << 26)   /* signal the client it shall do privelege mapping */
 #define AFPVOL_FOLLOWSYM (1 << 27)   /* follow symlinks on the server, default is not to */
+#define AFPVOL_DELVETO   (1 << 28)   /* delete veto files and dirs */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */

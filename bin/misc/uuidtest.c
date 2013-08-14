@@ -48,7 +48,7 @@ static void parse_ldapconf()
 #ifdef HAVE_LDAP
         /* Parse afp.conf */
         printf("Start parsing afp.conf\n");
-        iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
+        iniconfig = atalk_iniparser_load(_PATH_CONFDIR "afp.conf");
         acl_ldap_readconfig(iniconfig);
         printf("Finished parsing afp.conf\n");
         if (ldap_config_valid) {

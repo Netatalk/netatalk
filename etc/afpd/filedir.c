@@ -26,6 +26,7 @@
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/errchk.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -302,7 +303,7 @@ static int moveandrename(struct vol *vol,
         ad_getattr(adp, &bshort);
         
         ad_close(adp, ADFLAGS_HF);
-        if ((bshort & htons(ATTRBIT_NORENAME))) {
+        if (!(vol->v_ignattr & ATTRBIT_NORENAME) && (bshort & htons(ATTRBIT_NORENAME))) {
             rc = AFPERR_OLOCK;
             goto exit;
         }
@@ -468,6 +469,83 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     return( rc );
 }
 
+/* 
+ * Recursivley delete vetoed files and directories if the volume option is set
+ *
+ * @param vol   (r) volume handle
+ * @param upath (r) path of directory
+ *
+ * If the volume option delete veto files is set, this function recursively scans the
+ * directory "upath" for vetoed files and tries deletes these, the it will try to delete
+ * the directory. That may fail if the directory contains normal files that aren't vetoed.
+ *
+ * @returns 0 if the directory upath and all of its contents were deleted, otherwise -1.
+ *            If the volume option is not set it returns -1.
+ */
+int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
+{
+    EC_INIT;
+    DIR            *dp = NULL;
+    struct dirent  *de;
+    struct stat     sb;
+    int             pwd = -1;
+    bool            vetoed;
+
+    if (!(vol->v_flags & AFPVOL_DELVETO))
+        return -1;
+
+    EC_NEG1( pwd = open(".", O_RDONLY));
+    EC_ZERO( chdir(upath) );
+    EC_NULL( dp = opendir(".") );
+
+    while ((de = readdir(dp))) {
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+            continue;
+
+        if (stat(de->d_name, &sb) != 0) {
+            LOG(log_error, logtype_afpd, "delete_vetoed_files(\"%s/%s\"): %s",
+                upath, de->d_name, strerror(errno));
+                EC_EXIT_STATUS(AFPERR_DIRNEMPT);
+        }
+
+        if (in_vetodir || veto_file(vol->v_veto, de->d_name))
+            vetoed = true;
+        else
+            vetoed = false;
+
+        if (vetoed) {
+            LOG(log_debug, logtype_afpd, "delete_vetoed_files(\"%s/%s\"): deleting vetoed file",
+                upath, de->d_name);
+            switch (sb.st_mode & S_IFMT) {
+            case S_IFDIR:
+                /* recursion */
+                EC_ZERO( delete_vetoed_files(vol, de->d_name, vetoed));
+                break;
+            case S_IFREG:
+            case S_IFLNK:
+                EC_ZERO( netatalk_unlink(de->d_name) );
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    EC_ZERO_LOG( fchdir(pwd) );
+    pwd = -1;
+    EC_ZERO_LOG( rmdir(upath) );
+
+EC_CLEANUP:
+    if (dp)
+        closedir(dp);
+    if (pwd != -1) {
+        if (fchdir(pwd) != 0)
+            ret = -1;
+    }
+
+    EC_EXIT;
+}
+
 /* ------------------------------- */
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
@@ -512,7 +590,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             if (rmdir(upath) != 0) {
                 switch (errno) {
                 case ENOTEMPTY:
-                    return AFPERR_DIRNEMPT;
+                    if (delete_vetoed_files(vol, upath, false) != 0)
+                        return AFPERR_DIRNEMPT;
+                    break;
                 case EACCES:
                     return AFPERR_ACCESS;
                 default:

@@ -311,19 +311,16 @@ static uint32_t get_eid(uint32_t eid)
     return 0;
 }
 
-/* ----------------------------------- */
-static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp, int adflags)
+
+/**
+ * Initialize offset pointers
+ */
+int ad_init_offsets(struct adouble *ad)
 {
     const struct entry  *eid;
-    uint16_t            ashort;
-    struct stat         st;
 
-    LOG(log_debug, logtype_ad, "new_ad_header(\"%s\")", path);
-
-    if (ad->ad_magic == AD_MAGIC) {
-        LOG(log_debug, logtype_ad, "new_ad_header(\"%s\"): already initialized", path);
+    if (ad->ad_magic == AD_MAGIC)
         return 0;
-    }
 
     ad->ad_magic = AD_MAGIC;
     ad->ad_version = ad->ad_vers & 0x0f0000;
@@ -345,6 +342,21 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         ad->ad_eid[eid->id].ade_len = eid->len;
         eid++;
     }
+
+    return 0;
+}
+
+/* ----------------------------------- */
+static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp, int adflags)
+{
+    const struct entry  *eid;
+    uint16_t            ashort;
+    struct stat         st;
+
+    LOG(log_debug, logtype_ad, "new_ad_header(\"%s\")", path);
+
+    if (ad_init_offsets(ad) != 0)
+        return -1;
 
     /* set default creator/type fields */
     memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);

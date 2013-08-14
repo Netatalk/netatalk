@@ -467,9 +467,15 @@ static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol, struct dir
 static int deletecurdir_ea_osx_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     int ret;
-    
-    if ((ret = netatalk_unlink(name)) != 0)
-        return ret;
+    struct stat sb;
+
+    if (strncmp(name, "._", strlen("._")) == 0) {
+        if (lstat(name, &sb) != 0)
+            return -1;
+        if (S_ISREG(sb.st_mode))
+            if ((ret = netatalk_unlink(name)) != 0)
+                return ret;
+    }
 
     return 0;
 }
@@ -480,17 +486,6 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
 #ifndef HAVE_EAFD
     int err;
     /* delete stray ._AppleDouble files */
-
-    /* first check if there's really no other file besides files starting with ._ */
-    if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
-                                deletecurdir_ea_osx_chkifempty_loop,
-                                vol, NULL, 0)) != 0) {
-        if (err == 1)
-            return AFPERR_DIRNEMPT;
-        return AFPERR_MISC;
-    }
-
-    /* Now delete orphaned ._ files */
     if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
                                 deletecurdir_ea_osx_loop,
                                 vol, NULL, 0)) != 0)

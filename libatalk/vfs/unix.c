@@ -74,6 +74,7 @@ int netatalk_rmdir_all_errors(int dirfd, const char *name)
         case ENOENT :
             return AFPERR_NOOBJ;
         case ENOTEMPTY :
+        case EEXIST:
             return AFPERR_DIRNEMPT;
         case EPERM:
         case EACCES :
