@@ -1,3 +1,7 @@
+Changes in 3.0.6
+================
+* FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
+
 Changes in 3.0.5
 ================
 * FIX: Fix a crash when using pam_winbind. Fixes bug #516.
