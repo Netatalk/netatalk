@@ -691,7 +691,7 @@ dnl Check for LDAP support, for client-side ACL visibility
 AC_DEFUN([AC_NETATALK_LDAP], [
 AC_MSG_CHECKING(for LDAP (necessary for client-side ACL visibility))
 AC_ARG_WITH(ldap,
-    [AS_HELP_STRING([--with-ldap],
+    [AS_HELP_STRING([--with-ldap[[=PATH]]],
         [LDAP support (default=auto)])],
         netatalk_cv_ldap=$withval,
         netatalk_cv_ldap=auto
