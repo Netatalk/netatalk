@@ -36,7 +36,7 @@
 
 /* setgid directories */
 #ifndef DIRBITS
-# ifdef AFS
+# if (defined AFS) || (defined FREEBSD)
 #  define DIRBITS 0
 # else /* AFS */
 #  define DIRBITS S_ISGID
