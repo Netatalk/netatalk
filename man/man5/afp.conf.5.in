@@ -821,6 +821,11 @@ ldap name attr = \fIdn\fR \fB(G)\fR
 Name of the LDAP attribute with the users short name\&.
 .RE
 .PP
+ldap group attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the groups short name\&.
+.RE
+.PP
 ldap uuid string = \fISTRING\fR \fB(G)\fR
 .RS 4
 Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a separator\&.
@@ -831,6 +836,11 @@ Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
 ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
 .RS 4
 Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
+.sp
+See also the options
+\fBldap user filter\fR
+and
+\fBldap group filter\fR\&.
 .PP
 string
 .RS 4
@@ -843,9 +853,20 @@ Binary objectGUID from Active Directory
 .RE
 .RE
 .PP
-ldap group attr = \fIdn\fR \fB(G)\fR
+ldap user filter = \fISTRING (default: unused)\fR \fB(G)\fR
 .RS 4
-Name of the LDAP attribute with the groups short name\&.
+Optional LDAP filter that matches user objects\&. This is necessary for Active Directory environments where users and groups are stored in the same directory subtree\&.
+.sp
+Recommended setting for Active Directory:
+\fIobjectClass=user\fR\&.
+.RE
+.PP
+ldap group filter = \fISTRING (default: unused)\fR \fB(G)\fR
+.RS 4
+Optional LDAP filter that matches group objects\&. This is necessary for Active Directory environments where users and groups are stored in the same directory subtree\&.
+.sp
+Recommended setting for Active Directory:
+\fIobjectClass=group\fR\&.
 .RE
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"

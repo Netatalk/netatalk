@@ -1315,6 +1315,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ldap group attr = <parameter>dn</parameter>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Name of the LDAP attribute with the groups short
+            name.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>ldap uuid string = <parameter>STRING</parameter>
           <type>(G)</type></term>
 
@@ -1339,7 +1349,8 @@
             internal UUID representation is converted to and from the binary
             format used in the objectGUID attribute found on objects in Active
             Directory when interacting with the server.</para>
-
+            <para>See also the options <option>ldap user filter</option> and
+            <option>ldap group filter</option>.</para>
             <para><variablelist>
                 <varlistentry>
                   <term>string</term>
@@ -1361,14 +1372,27 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ldap group attr = <parameter>dn</parameter>
+          <term>ldap user filter = <parameter>STRING (default: unused)</parameter>
           <type>(G)</type></term>
 
           <listitem>
-            <para>Name of the LDAP attribute with the groups short
-            name.</para>
+            <para>Optional LDAP filter that matches user objects. This is necessary for Active Directory
+            environments where users and groups are stored in the same directory subtree.</para>
+            <para>Recommended setting for Active Directory: <parameter>objectClass=user</parameter>.</para>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term>ldap group filter = <parameter>STRING (default: unused)</parameter>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Optional LDAP filter that matches group objects. This is necessary for Active Directory
+            environments where users and groups are stored in the same directory subtree.</para>
+            <para>Recommended setting for Active Directory: <parameter>objectClass=group</parameter>.</para>
+          </listitem>
+        </varlistentry>
+
       </variablelist>
     </refsect2>
   </refsect1>

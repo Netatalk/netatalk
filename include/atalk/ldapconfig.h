@@ -21,6 +21,8 @@ extern char *ldap_uuid_string;
 extern char *ldap_name_attr;
 extern char *ldap_group_attr;
 extern char *ldap_uid_attr;
+extern char *ldap_userfilter;
+extern char *ldap_groupfilter;
 extern int  ldap_uuid_encoding;
 
 typedef enum {
