@@ -535,7 +535,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     load_volumes(obj);
 
     data = rbuf + 5;
-    for ( vcnt = 0, volume = getvolumes(); volume; volume = volume->v_next ) {
+    for ( vcnt = 0, volume = getvolumes(); volume && vcnt < 255; volume = volume->v_next ) {
         if (!(volume->v_flags & AFPVOL_NOSTAT)) {
             struct maccess ma;
 
@@ -561,6 +561,14 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 
         if (len == (size_t)-1)
             continue;
+
+        /*
+         * There seems to be an undocumented limit on how big our reply can get
+         * before the client chokes and closes the connection.
+         * Testing with 10.8.4 found the limit at ~4600 bytes. Go figure. 
+         */
+        if (((data + len + 3) - rbuf) > 4600)
+            break;
 
         /* set password bit if there's a volume password */
         *data = (volume->v_password) ? AFPSRVR_PASSWD : 0;

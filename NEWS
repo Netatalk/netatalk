@@ -17,6 +17,7 @@ Changes in 3.0.6
        "follow symlinks" is enabled. Bug #532.
 * FIX: Disable Kerberos UAM if AFP service principal name can't be
        evaluated. Fixes bug #531.
+* FIX: Fix handling of large number of volumes. Bug #527.
 
 Changes in 3.0.5
 ================
