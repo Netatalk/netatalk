@@ -1186,28 +1186,27 @@ static int set_acl(const struct vol *vol,
     if ((ret = (vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
         LOG(log_debug, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         switch (errno) {
+        case ENOENT:
+            break;
         case EACCES:
         case EPERM:
-            EC_STATUS(AFPERR_ACCESS);
-            break;
-        case ENOENT:
-            EC_STATUS(AFP_OK);
-            break;
+            EC_EXIT_STATUS(AFPERR_ACCESS);
         default:
-            EC_STATUS(AFPERR_MISC);
-            break;
+            EC_EXIT_STATUS(AFPERR_MISC);
         }
-        goto EC_CLEANUP;
     }
+
     if ((ret = (acl(name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
-        if (errno == (EACCES | EPERM))
-            EC_STATUS(AFPERR_ACCESS);
-        else if (errno == ENOENT)
-            EC_STATUS(AFPERR_NOITEM);
-        else
-            EC_STATUS(AFPERR_MISC);
-        goto EC_CLEANUP;
+        switch (errno) {
+        case EACCES:
+        case EPERM:
+            EC_EXIT_STATUS(AFPERR_ACCESS);
+        case ENOENT:
+            EC_EXIT_STATUS(AFPERR_NOITEM);
+        default:
+            EC_EXIT_STATUS(AFPERR_MISC);
+        }
     }
 
     EC_STATUS(AFP_OK);
