@@ -608,6 +608,11 @@ Sets the database information to be stored in path\&. You have to specify a writ
 @localstatedir@/netatalk/CNID/\&.
 .RE
 .PP
+vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Setting this option to true brings back Netatalk 2 behaviour of storing the CNID database in a folder called \&.AppleDB inside the volume root of each share\&.
+.RE
+.PP
 volnamelen = \fInumber\fR \fB(G)\fR
 .RS 4
 Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especially sensitive to this\&.

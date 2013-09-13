@@ -5,6 +5,9 @@ Changes in 3.0.6
 * NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
 * FIX: Active Directory LDAP queries for ACL support with new options
        "ldap user filter" and "ldap group filter". Bug #526.
+* NEW: Option "vol dbnest", when set to true, the CNID database for
+       a volume is stored in the volume root of a share in a directory
+       .AppleDB like in Netatalk 2. Defaults to false. From FR#84.
 
 Changes in 3.0.5
 ================

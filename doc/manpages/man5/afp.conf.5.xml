@@ -948,6 +948,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>vol dbnest = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Setting this option to true brings back Netatalk 2
+            behaviour of storing the CNID database in a folder called
+            .AppleDB inside the volume root of each share.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>volnamelen = <replaceable>number</replaceable>
           <type>(G)</type></term>
 
