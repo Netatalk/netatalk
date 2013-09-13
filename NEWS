@@ -13,7 +13,7 @@ Changes in 3.0.5
 * FIX: "afp listen" option failed to take IPv6 addresses. Bug #515.
 * FIX: Fix a possible crash in set_groups. Bug #518.
 * NEW: Send optional AFP messages for vetoed files, new option
-       "veto messages" can be used to enable sending messages.
+       "veto message" can be used to enable sending messages.
        Then whenever a client tries to access any file or directory
        with a vetoed name, it will be sent an AFP message indicating
        the name and the directory. From FR #81.
@@ -33,7 +33,7 @@ Changes in 3.0.4
        lead to a failure setting the size of a files ressource fork.
        This affected application like Adobe Photoshop where saving
        files may fail. Fixes bug #511.
-* UPD: Enhance ACL mapping, change global ACL option 'map acl' to take
+* UPD: Enhance ACL mapping, change global ACL option 'map acls' to take
        the following options: "none", "rights" (default), "mode".
        none   = no mapping, this resembles the previous false/no setting
        rights = map ACLs to Finder UARights, this resembles the previous

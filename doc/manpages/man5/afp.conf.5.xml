@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">30 Apr 2013</refmiscinfo>
+    <refmiscinfo class="date">13 Sep 2013</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -673,10 +673,10 @@
 
           <listitem>
             <para>This specifies the DSI server quantum. The default value is
-            1 MB. The maximum value is 0xFFFFFFFFF, the minimum is 32000. If
-            you specify a value that is out of range, the default value will
-            be set. Do not change this value unless you're absolutely sure,
-            what you're doing</para>
+            0x100000 (1 MiB). The maximum value is 0xFFFFFFFFF, the minimum is
+            32000. If you specify a value that is out of range, the default
+            value will be set. Do not change this value unless you're
+            absolutely sure, what you're doing</para>
           </listitem>
         </varlistentry>
 
@@ -928,9 +928,10 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Use section <option>name</option> as option preset for all
-            volumes (when set in the [Global] section) or for one volume (when
-            set in that volume's section).</para>
+            <para>Send optional AFP messages for vetoed files. Then whenever a
+            client tries to access any file or directory with a vetoed name,
+            it will be sent an AFP message indicating the name and the
+            directory.</para>
           </listitem>
         </varlistentry>
 
