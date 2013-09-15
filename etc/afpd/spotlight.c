@@ -390,7 +390,7 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX
         EC_NEG1_LOG( movecwd(vol, dir) );
     }
 
-    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "sl_array_t", 1, "sl_dict_t", 1, "kMDItemLastUsedDate"))) {
+    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "DALLOC_CTX", 1, "kMDItemLastUsedDate"))) {
         struct utimbuf utimes;
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
