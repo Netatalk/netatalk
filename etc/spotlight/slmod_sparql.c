@@ -62,7 +62,7 @@ static int sl_mod_init(void *p)
     LOG(log_info, logtype_sl, "Initializing Spotlight module");
 
     g_type_init();
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "/spotlight.ipc", 1);
     setenv("TRACKER_SPARQL_BACKEND", "bus", 1);
 
 #ifdef DEBUG

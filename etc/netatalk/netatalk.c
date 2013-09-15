@@ -395,7 +395,7 @@ int main(int argc, char **argv)
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
 #ifdef HAVE_TRACKER
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/spotlight.ipc", 1);
+    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
     setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
     setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
     setenv("TRACKER_USE_LOG_FILES", "1", 0);

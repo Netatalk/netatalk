@@ -20,7 +20,12 @@ slmod_sparql_la_SOURCES = \
 	slmod_sparql_parser.y \
 	spotlight_rawquery_lexer.l
 
-slmod_sparql_la_CFLAGS  = -DDBUS_API_SUBJECT_TO_CHANGE @TRACKER_CFLAGS@ @TRACKER_MINER_CFLAGS@
+slmod_sparql_la_CFLAGS  = \
+	-DDBUS_API_SUBJECT_TO_CHANGE \
+	@TRACKER_CFLAGS@ \
+	@TRACKER_MINER_CFLAGS@ \
+	-D_PATH_STATEDIR='"$(localstatedir)/netatalk"'
+
 slmod_sparql_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@ @TRACKER_MINER_LIBS@
 
 srp_SOURCES = \

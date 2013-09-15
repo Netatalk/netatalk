@@ -1579,7 +1579,7 @@ aclmode = passthrough</screen>
 PREFIX="/"
 export XDG_DATA_HOME="$PREFIX/var/netatalk/"
 export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
-export DBUS_SESSION_BUS_ADDRESS="unix:path=/tmp/spotlight.ipc"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 # . .tracker_profile
 #
 </screen></para>

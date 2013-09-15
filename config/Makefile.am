@@ -3,10 +3,10 @@
 SUBDIRS = pam
 SUFFIXES = .tmpl .
 
-TMPLFILES = afp.conf.tmpl
-GENFILES = afp.conf
+TMPLFILES = afp.conf.tmpl dbus-session.conf.tmpl
+GENFILES = afp.conf dbus-session.conf
 CLEANFILES = $(GENFILES)
-EXTRA_DIST = afp.conf.tmpl extmap.conf dbus-session.conf netatalk-dbus.conf
+EXTRA_DIST = $(TMPLFILES) extmap.conf netatalk-dbus.conf
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
@@ -28,6 +28,7 @@ endif
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:COMPILED_BACKENDS:@"$(compiled_backends)"@ \
 	    -e s@:DEFAULT_CNID_SCHEME:@$(DEFAULT_CNID_SCHEME)@ \
+		-e s@:LOCALSTATEDIR:@"$(localstatedir)"@ \
 	    <$< >$@
 
 #
