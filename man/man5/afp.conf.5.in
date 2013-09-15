@@ -600,6 +600,13 @@ spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
 Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&.
 .RE
 .PP
+veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Use section
+\fBname\fR
+as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\*(Aqs section)\&.
+.RE
+.PP
 vol dbpath = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
@@ -819,6 +826,11 @@ ldap name attr = \fIdn\fR \fB(G)\fR
 Name of the LDAP attribute with the users short name\&.
 .RE
 .PP
+ldap group attr = \fIdn\fR \fB(G)\fR
+.RS 4
+Name of the LDAP attribute with the groups short name\&.
+.RE
+.PP
 ldap uuid string = \fISTRING\fR \fB(G)\fR
 .RS 4
 Format of the uuid string in the directory\&. A series of x and \-, where every x denotes a value 0\-9a\-f and every \- is a separator\&.
@@ -829,6 +841,11 @@ Default: xxxxxxxx\-xxxx\-xxxx\-xxxx\-xxxxxxxxxxxx
 ldap uuid encoding = \fIstring | ms\-guid (default: string)\fR \fB(G)\fR
 .RS 4
 Format of the UUID of the LDAP attribute, allows usage of the binary objectGUID fields from Active Directory\&. If left unspecified, string is the default, which passes through the ASCII UUID returned by most other LDAP stores\&. If set to ms\-guid, the internal UUID representation is converted to and from the binary format used in the objectGUID attribute found on objects in Active Directory when interacting with the server\&.
+.sp
+See also the options
+\fBldap user filter\fR
+and
+\fBldap group filter\fR\&.
 .PP
 string
 .RS 4
@@ -841,9 +858,20 @@ Binary objectGUID from Active Directory
 .RE
 .RE
 .PP
-ldap group attr = \fIdn\fR \fB(G)\fR
+ldap user filter = \fISTRING (default: unused)\fR \fB(G)\fR
 .RS 4
-Name of the LDAP attribute with the groups short name\&.
+Optional LDAP filter that matches user objects\&. This is necessary for Active Directory environments where users and groups are stored in the same directory subtree\&.
+.sp
+Recommended setting for Active Directory:
+\fIobjectClass=user\fR\&.
+.RE
+.PP
+ldap group filter = \fISTRING (default: unused)\fR \fB(G)\fR
+.RS 4
+Optional LDAP filter that matches group objects\&. This is necessary for Active Directory environments where users and groups are stored in the same directory subtree\&.
+.sp
+Recommended setting for Active Directory:
+\fIobjectClass=group\fR\&.
 .RE
 .SH "EXPLANATION OF VOLUME PARAMETERS"
 .SS "Parameters"
@@ -1059,6 +1087,13 @@ to
 is performed when accessing filesystems from clients\&. This is generally useful, but costs some performance\&. It\*(Aqs recommendable to run
 \fBdbd\fR
 on volumes and do the conversion with that\&. Then this option can be set to no\&.
+.RE
+.PP
+delete veto files = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
+.RS 4
+This option is used when Netatalk is attempting to delete a directory that contains one or more vetoed files or directories (see the veto files option)\&. If this option is set to no (the default) then if a directory contains any non\-vetoed files or directories then the directory delete will fail\&. This is usually what you want\&.
+.sp
+If this option is set to yes, then Netatalk will attempt to recursively delete any files and directories within the vetoed directory\&.
 .RE
 .PP
 follow symlinks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR

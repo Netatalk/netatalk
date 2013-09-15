@@ -31,6 +31,7 @@
 #include <atalk/afp.h>
 #include <atalk/uuid.h>
 #include <atalk/ldapconfig.h>   /* For struct ldap_pref */
+#include <atalk/errchk.h>
 
 typedef enum {
     KEEPALIVE = 1
@@ -54,6 +55,8 @@ char *ldap_uuid_string;
 char *ldap_name_attr;
 char *ldap_group_attr;
 char *ldap_uid_attr;
+char *ldap_userfilter;
+char *ldap_groupfilter;
 int  ldap_uuid_encoding;
 
 struct ldap_pref ldap_prefs[] = {
@@ -72,6 +75,9 @@ struct ldap_pref ldap_prefs[] = {
     {&ldap_group_attr,     "ldap group attr",     0, 0, -1, -1},
     {&ldap_uid_attr,       "ldap uid attr",       0, 0,  0,  0},
     {&ldap_uuid_encoding,  "ldap uuid encoding",  1, 1,  0,  0},
+    {&ldap_userfilter,     "ldap user filter",    0, 0,  0,  0},
+    {&ldap_groupfilter,    "ldap group filter",   0, 0,  0,  0},
+    {&ldap_auth_pw,        "ldap auth pw",        0, 0,  0,  0},
     {NULL,                 NULL,                  0, 0,  0,  0}
 };
 
@@ -256,6 +262,69 @@ cleanup:
     return ret;
 }
 
+/*!
+ * Generate LDAP filter string for UUID query
+
+ * @param[in] uuidstr      the UUID as string
+ * @param[in] attr_filter  optional attribute
+ * @returns   pointer to static filter string
+ */
+static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
+{
+    EC_INIT;
+    int len;
+    const char *uuidstr = uuidstr_in;
+
+#define MAX_FILTER_SIZE 512
+    static char filter[MAX_FILTER_SIZE];
+    char stripped[MAX_FILTER_SIZE];
+
+#define LDAP_BIN_UUID_LEN 49 /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
+    char ldap_bytes[LDAP_BIN_UUID_LEN];
+
+    if (ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
+        /* Convert to LDAP-safe binary encoding for direct query of AD objectGUID attribute */
+        int i = 0, s = 0;
+        char c;
+        while ((c = uuidstr[i])) {
+            if((c >='a' && c <= 'f')
+                || (c >= 'A' && c <= 'F')
+                || (c >= '0' && c <= '9')) {
+                stripped[s++] = toupper(c);
+            }
+            i++;
+        }
+
+        snprintf(ldap_bytes, LDAP_BIN_UUID_LEN,
+                 "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c"
+                 "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c",
+                 /* Data1 (uint32) */
+                 stripped[6], stripped[7], stripped[4], stripped[5],
+                 stripped[2], stripped[3], stripped[0], stripped[1],
+                 /* Data2 (uint16) */
+                 stripped[10], stripped[11], stripped[8], stripped[9],
+                 /* Data3 (uint16) */
+                 stripped[14], stripped[15], stripped[12], stripped[13],
+                 /* Data4 (uint64) */
+                 stripped[16], stripped[17], stripped[18], stripped[19],
+                 stripped[20], stripped[21], stripped[22], stripped[23],
+                 stripped[24], stripped[25], stripped[26], stripped[27],
+                 stripped[28], stripped[29], stripped[30], stripped[31]);
+        uuidstr = ldap_bytes;
+    }
+
+    if (attr_filter) {
+        len = snprintf(filter, 256, "(&(%s=%s)(%s))", ldap_uuid_attr, uuidstr, attr_filter);
+    } else {
+        len = snprintf(filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
+    }
+
+EC_CLEANUP:
+    if (ret != 0)
+        return NULL;
+    return filter;
+}
+
 /********************************************************
  * Interface
  ********************************************************/
@@ -332,76 +401,50 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
  * returns 0 on success, -1 on errror
  */
 int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
-    int ret;
-    int len;
-    char filter[256];       /* this should really be enough. we dont want to malloc everything! */
+    EC_INIT;
+    char *filter;
     char *attributes[]  = { NULL, NULL};
 
     if (!ldap_config_valid)
-        return -1;
+        EC_FAIL;
 
-    if(ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
-        /* Convert to LDAP-safe binary encoding for direct query of AD objectGUID attribute */
-        char* stripped = malloc(strlen(uuidstr));
+    /*
+     * Search groups first as group acls are probably used more often.
+     * Note the special case of AD where users and groups are stored
+     * under the same subtree.
+     */
 
-        int i = 0;
-        int s = 0;
-        char c;
-        while ((c = uuidstr[i])) {
-            if((c >='a' && c <= 'f')
-                || (c >= 'A' && c <= 'F')
-                || (c >= '0' && c <= '9')) {
-                stripped[s++] = toupper(c);
-            }
-            i++;
-        }
-
-        /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
-        char* ldap_bytes = malloc(49);
-        snprintf(ldap_bytes, 49,
-            "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c"
-            "\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c\\%c%c",
-            /* Data1 (uint32) */
-            stripped[6], stripped[7], stripped[4], stripped[5],
-            stripped[2], stripped[3], stripped[0], stripped[1],
-            /* Data2 (uint16) */
-            stripped[10], stripped[11], stripped[8], stripped[9],
-            /* Data3 (uint16) */
-            stripped[14], stripped[15], stripped[12], stripped[13],
-            /* Data4 (uint64) */
-            stripped[16], stripped[17], stripped[18], stripped[19],
-            stripped[20], stripped[21], stripped[22], stripped[23],
-            stripped[24], stripped[25], stripped[26], stripped[27],
-            stripped[28], stripped[29], stripped[30], stripped[31]);
-        len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, ldap_bytes);
-
-        free(ldap_bytes);
-        free(stripped);
-    } else {
-        len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
-    }
-
-    if (len >= 256 || len == -1) {
-        LOG(log_error, logtype_default, "ldap_getnamefromuuid: filter overflow:%d, \"%s\"", len, filter);
-        return -1;
-    }
-    /* search groups first. group acls are probably used more often */
     attributes[0] = ldap_group_attr;
-    ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_groupscope, KEEPALIVE, name);
-    if (ret == -1)
-        return -1;
+    EC_NULL( filter = gen_uuid_filter(uuidstr, ldap_groupfilter) );
+    EC_NEG1( ret = ldap_getattr_fromfilter_withbase_scope(
+                 ldap_groupbase,
+                 filter,
+                 attributes,
+                 ldap_groupscope,
+                 KEEPALIVE,
+                 name) );
     if (ret == 1) {
         *type = UUID_GROUP;
-        return 0;
+        EC_EXIT_STATUS(0);
     }
 
     attributes[0] = ldap_name_attr;
-    ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, name);
+    EC_NULL( filter = gen_uuid_filter(uuidstr, ldap_userfilter) );
+    EC_NEG1( ret = ldap_getattr_fromfilter_withbase_scope(
+                 ldap_userbase,
+                 filter,
+                 attributes,
+                 ldap_userscope,
+                 KEEPALIVE,
+                 name) );
     if (ret == 1) {
         *type = UUID_USER;
-        return 0;
+        EC_EXIT_STATUS(0);
     }
 
-    return -1;
+    EC_FAIL;
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 #endif  /* HAVE_LDAP */

@@ -33,8 +33,12 @@
 #include <sys/extattr.h>
 #endif
 
+/* FIXME: are the ACL includes really neccessary here ? */
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
+#ifdef HAVE_FREEBSD_SUNACL
+#include <sunacl.h>
 #endif
 
 #ifndef ENOATTR

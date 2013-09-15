@@ -66,10 +66,10 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork, uint16_t bitmap
     vol = ofork->of_vol;
     dir = dirlookup(vol, ofork->of_did);
 
-    if (NULL == (path.m_name = utompath(vol, of_name(ofork), dir->d_did, utf8_encoding(obj)))) {
+    if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding(obj)))) {
         return( AFPERR_MISC );
     }
-    path.u_name = of_name(ofork);
+    path.m_name = of_name(ofork);
     path.id = 0;
     st = &path.st;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) |

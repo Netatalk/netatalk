@@ -219,7 +219,7 @@ struct adouble {
     int                 ad_reso_refcount;
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
-    char                *ad_name;          /* name (UTF8-MAC)                         */
+    char                *ad_name;          /* mac name (maccharset or UTF8-MAC)       */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks;     /* open forks (by others)                  */
     char                ad_data[AD_DATASZ_MAX];
@@ -402,6 +402,7 @@ extern int ad_mkdir       (const char *, mode_t);
 struct vol;
 extern void ad_init       (struct adouble *, const struct vol * restrict);
 extern void ad_init_old   (struct adouble *ad, int flags, int options);
+extern int ad_init_offsets(struct adouble *ad);
 extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
 extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
 extern int ad_refresh     (const char *path, struct adouble *);

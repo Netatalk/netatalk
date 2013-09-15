@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">30 Apr 2013</refmiscinfo>
+    <refmiscinfo class="date">13 Sep 2013</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -673,10 +673,10 @@
 
           <listitem>
             <para>This specifies the DSI server quantum. The default value is
-            1 MB. The maximum value is 0xFFFFFFFFF, the minimum is 32000. If
-            you specify a value that is out of range, the default value will
-            be set. Do not change this value unless you're absolutely sure,
-            what you're doing</para>
+            0x100000 (1 MiB). The maximum value is 0xFFFFFFFFF, the minimum is
+            32000. If you specify a value that is out of range, the default
+            value will be set. Do not change this value unless you're
+            absolutely sure, what you're doing</para>
           </listitem>
         </varlistentry>
 
@@ -932,6 +932,18 @@
             <para>Whether to enable Spotlight searches. Note: once the global
             option is enabled, any volume that is not enabled won't be
             searchable at all.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>veto message = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Send optional AFP messages for vetoed files. Then whenever a
+            client tries to access any file or directory with a vetoed name,
+            it will be sent an AFP message indicating the name and the
+            directory.</para>
           </listitem>
         </varlistentry>
 
@@ -1316,6 +1328,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ldap group attr = <parameter>dn</parameter>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Name of the LDAP attribute with the groups short
+            name.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>ldap uuid string = <parameter>STRING</parameter>
           <type>(G)</type></term>
 
@@ -1340,7 +1362,8 @@
             internal UUID representation is converted to and from the binary
             format used in the objectGUID attribute found on objects in Active
             Directory when interacting with the server.</para>
-
+            <para>See also the options <option>ldap user filter</option> and
+            <option>ldap group filter</option>.</para>
             <para><variablelist>
                 <varlistentry>
                   <term>string</term>
@@ -1362,14 +1385,27 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ldap group attr = <parameter>dn</parameter>
+          <term>ldap user filter = <parameter>STRING (default: unused)</parameter>
           <type>(G)</type></term>
 
           <listitem>
-            <para>Name of the LDAP attribute with the groups short
-            name.</para>
+            <para>Optional LDAP filter that matches user objects. This is necessary for Active Directory
+            environments where users and groups are stored in the same directory subtree.</para>
+            <para>Recommended setting for Active Directory: <parameter>objectClass=user</parameter>.</para>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term>ldap group filter = <parameter>STRING (default: unused)</parameter>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Optional LDAP filter that matches group objects. This is necessary for Active Directory
+            environments where users and groups are stored in the same directory subtree.</para>
+            <para>Recommended setting for Active Directory: <parameter>objectClass=group</parameter>.</para>
+          </listitem>
+        </varlistentry>
+
       </variablelist>
     </refsect2>
   </refsect1>
@@ -1730,6 +1766,23 @@
             costs some performance. It's recommendable to run
             <command>dbd</command> on volumes and do the conversion with that.
             Then this option can be set to no.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>delete veto files = <replaceable>BOOLEAN</replaceable>
+          (default: <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>This option is used when Netatalk is attempting to delete a
+            directory that contains one or more vetoed files or directories
+            (see the veto files option). If this option is set to no (the
+            default) then if a directory contains any non-vetoed files or
+            directories then the directory delete will fail. This is usually
+            what you want.</para>
+            <para>If this option is set to yes, then Netatalk will attempt to
+            recursively delete any files and directories within the vetoed
+            directory.</para>
           </listitem>
         </varlistentry>
 

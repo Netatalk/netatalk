@@ -9,12 +9,31 @@ Changes in 3.1.0
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
 
+Changes in 3.0.6
+================
+* FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
+* UPD: Don't force S_ISGID for directories on FreeBSD. Bug #525.
+* NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
+* FIX: Active Directory LDAP queries for ACL support with new options
+       "ldap user filter" and "ldap group filter". Bug #526.
+
 Changes in 3.0.5
 ================
 * FIX: Fix a crash when using pam_winbind. Fixes bug #516.
 * NEW: New global/volume option "ignored attributes"
 * FIX: "afp listen" option failed to take IPv6 addresses. Bug #515.
 * FIX: Fix a possible crash in set_groups. Bug #518.
+* NEW: Send optional AFP messages for vetoed files, new option
+       "veto message" can be used to enable sending messages.
+       Then whenever a client tries to access any file or directory
+       with a vetoed name, it will be sent an AFP message indicating
+       the name and the directory. From FR #81.
+* NEW: New boolean volume option "delete veto files". If this option is
+       set to yes, then Netatalk will attempt to recursively delete any
+       vetoed files and directories. FR #82.
+* UPD: systemd unit dir is /usr/lib/systemd/system .
+* FIX: Saving files from application like MS Word may result in the file
+       loosing metadata like the Finder label. Bug #521.
 
 Changes in 3.0.4
 ================
@@ -25,7 +44,7 @@ Changes in 3.0.4
        lead to a failure setting the size of a files ressource fork.
        This affected application like Adobe Photoshop where saving
        files may fail. Fixes bug #511.
-* UPD: Enhance ACL mapping, change global ACL option 'map acl' to take
+* UPD: Enhance ACL mapping, change global ACL option 'map acls' to take
        the following options: "none", "rights" (default), "mode".
        none   = no mapping, this resembles the previous false/no setting
        rights = map ACLs to Finder UARights, this resembles the previous
