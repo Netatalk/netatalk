@@ -55,7 +55,6 @@ endif
 
 install-config-files: $(CONFFILES) $(GENFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
-	$(INSTALL_DATA) $(srcdir)/dbus-session.conf $(DESTDIR)$(pkgconfdir)
 	@for f in $(CONFFILES) ; do \
 		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/$$f; then \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
