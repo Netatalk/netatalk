@@ -267,7 +267,7 @@ static int sl_mod_fetch_result(void *p)
         EC_NULL_LOG( path = tracker_to_unix_path(uri) );
 
         if ((id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did)) == CNID_INVALID) {
-            LOG(log_error, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", path);
+            LOG(log_debug, logtype_sl, "sl_mod_fetch_result: cnid_for_path error: %s", path);
             goto loop_cleanup;
         }
         LOG(log_debug, logtype_sl, "Result %d: CNID: %" PRIu32 ", path: \"%s\"", i, ntohl(id), path);
