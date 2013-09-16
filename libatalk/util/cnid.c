@@ -80,8 +80,7 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
         return NULL;
 
     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
-
-    EC_ZERO_LOGSTR(lstat(path, &st), "lstat(%s): %s", path, strerror(errno));
+    EC_ZERO( lstat(path, &st) );
 
     if (path[0] == '/') {
         EC_NULL(fpath = bfromcstr(path));
