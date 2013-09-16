@@ -1,7 +1,7 @@
-Netatalk 3.1-beta1
+Netatalk 3.1-beta2
 ===================
 
-The Netatalk development team is proud to announce the first beta release
+The Netatalk development team is proud to announce the second beta release
 of the next Netatalk version 3.1. This release is intended for testing only.
 
 Netatalk is a freely-available Open Source AFP fileserver.
@@ -43,6 +43,10 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
+Changes in 3.1-beta2
+~~~~~~~~~~~~~~~~~~~~
+* FIX: Fix special Spotlight RPC function
+
 Changes in 3.1-beta1
 ~~~~~~~~~~~~~~~~~~~~
 * REM: Remove support for Tracker versions < 0.7
@@ -59,6 +63,13 @@ Changes in 3.1-alpha1
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
 
+Changes in 3.0.6
+~~~~~~~~~~~~~~~~
+* FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
+* UPD: Don't force S_ISGID for directories on FreeBSD. Bug #525.
+* NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
+* FIX: Active Directory LDAP queries for ACL support with new options
+       "ldap user filter" and "ldap group filter". Bug #526.
 
 Changes in 3.0.5
 ~~~~~~~~~~~~~~~~
@@ -353,4 +364,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, August 2013
+ - The Netatalk Development Team, September 2013
