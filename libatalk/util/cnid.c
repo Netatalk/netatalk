@@ -177,11 +177,8 @@ cnid_t cnid_for_path(struct _cnid_db *cdb,
     for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
 
-        EC_ZERO(bconcat(statpath, l->entry[i]));
-        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
-                       "lstat(rpath: %s, elem: %s): %s: %s",
-                       cfrombstr(rpath), cfrombstr(l->entry[i]),
-                       cfrombstr(statpath), strerror(errno));
+        EC_ZERO( bconcat(statpath, l->entry[i]) );
+        EC_ZERO( lstat(cfrombstr(statpath), &st) );
 
         if ((cnid = cnid_add(cdb,
                              &st,
