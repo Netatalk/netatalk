@@ -138,6 +138,7 @@ typedef struct AFPObj {
     gid_t *groups;
     int ngroups;
     int afp_version;
+    int cnx_cnt, cnx_max;
     /* Functions */
     void (*logout)(void);
     void (*exit)(int);

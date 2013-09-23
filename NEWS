@@ -9,6 +9,8 @@ Changes in 3.0.6
        a volume is stored in the volume root of a share in a directory
        .AppleDB like in Netatalk 2. Defaults to false. From FR#84.
 * FIX: Small fix in the DSI tickle handling. Bug #528.
+* UPD: Enhance handling of connection attempts when hitting the
+       connection limit. Bug #529.
 
 Changes in 3.0.5
 ================
