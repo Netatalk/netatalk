@@ -123,6 +123,7 @@ typedef struct _AFPObj {
     struct session_info  sinfo;
     uid_t uid; 	/* client running user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
+    int cnx_cnt, cnx_max;
 #ifdef FORCE_UIDGID
     int                 force_uid;
     uidgidset		uidgid;
