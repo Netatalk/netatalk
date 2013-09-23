@@ -513,18 +513,8 @@ Specify that any message of a loglevel up to the given
 \fBloglevel\fR
 should be logged to the given file\&. If the filename is ommited the loglevel applies to messages passed to syslog\&.
 .sp
-By default (no explicit
-\fB\-setuplog\fR
-and no buildtime configure flag
-\fB\-\-with\-logfile\fR) afpd logs to syslog with a default logging setup equivalent to
-\fB"\-setuplog default log_info\fR"\&.
-.sp
-If build with
-\fB\-\-with\-logfile\fR
-(default logfile
-\fI/var/log/netatalk\&.log\fR) or
-\fB\-\-with\-logfile=somefile\fR
-afpd defaults to a setup that is equivalent to "\fB\-setuplog default log_info [\fR\fB\fInetatalk\&.log|somefile]\fR\fR"\&.
+By default afpd logs to syslog with a default logging setup equivalent to
+\fB"\-setuplog default log_note\fR"\&.
 .sp
 logtypes: Default, AFPDaemon, Logger, UAMSDaemon
 .sp
