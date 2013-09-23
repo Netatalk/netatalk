@@ -222,7 +222,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_NOTAUTH;
     }
 
-    if (obj->cnx_cnt >= obj->cnx_max) {
+    if (obj->cnx_cnt > obj->cnx_max) {
         LOG(log_error, logtype_dsi, "login: too many connections, limit: %d", obj->cnx_max);
         return AFPERR_MAXSESS;
     }
