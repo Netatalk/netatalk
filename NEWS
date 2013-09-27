@@ -15,6 +15,8 @@ Changes in 3.0.6
        another filesystem results in a crash of the afpd process and
        the save to fail. This happens only if the option
        "follow symlinks" is enabled. Bug #532.
+* FIX: Disable Kerberos UAM if AFP service principal name can't be
+       evaluated. Fixes bug #531.
 
 Changes in 3.0.5
 ================

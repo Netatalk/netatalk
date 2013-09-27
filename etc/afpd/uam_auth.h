@@ -51,11 +51,11 @@ struct uam_obj {
     (a)->uam_next->uam_prev = (a)->uam_prev; \
 } while (0)
 
-extern struct uam_mod *uam_load (const char *, const char *);
+extern struct uam_mod *uam_load (AFPObj *, const char *, const char *);
 extern void uam_unload (struct uam_mod *);
 
 /* auth.c */
-int auth_load (const char *, const char *);
+int auth_load (AFPObj *, const char *, const char *);
 int auth_register (const int, struct uam_obj *);
 #define auth_unregister(a) uam_detach(a)
 struct uam_obj *auth_uamfind (const int, const char *, const int);

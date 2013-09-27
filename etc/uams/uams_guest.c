@@ -121,7 +121,7 @@ static int noauth_printer(char *start, char *stop, char *username, struct papfil
 }
 
 
-static int uam_setup(const char *path)
+static int uam_setup(void *handle, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN_EXT, path, "No User Authent",
                    noauth_login, NULL, NULL, noauth_login_ext) < 0)

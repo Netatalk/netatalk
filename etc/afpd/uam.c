@@ -46,7 +46,7 @@
 /* --- server uam functions -- */
 
 /* uam_load. uams must have a uam_setup function. */
-struct uam_mod *uam_load(const char *path, const char *name)
+struct uam_mod *uam_load(AFPObj *obj, const char *path, const char *name)
 {
     char buf[MAXPATHLEN + 1], *p;
     struct uam_mod *mod;
@@ -82,7 +82,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
     /* version check would go here */
 
     if (!mod->uam_fcn->uam_setup ||
-            ((*mod->uam_fcn->uam_setup)(name) < 0)) {
+        ((*mod->uam_fcn->uam_setup)(obj, name) < 0)) {
         LOG(log_error, logtype_afpd, "uam_load(%s): uam_setup failed", name);
         goto uam_load_err;
     }

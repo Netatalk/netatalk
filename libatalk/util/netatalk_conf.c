@@ -1983,6 +1983,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.k5service);
     if (obj->options.k5realm)
         CONFIG_ARG_FREE(obj->options.k5realm);
+    if (obj->options.k5principal)
+        CONFIG_ARG_FREE(obj->options.k5principal);
     if (obj->options.listen)
         CONFIG_ARG_FREE(obj->options.listen);
     if (obj->options.interfaces)

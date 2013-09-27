@@ -21,6 +21,7 @@
 #include <atalk/uam.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/globals.h>
 
 /* Kerberos includes */
 #ifdef HAVE_GSSAPI_GSSAPI_H
@@ -28,6 +29,14 @@
 #else
 #include <gssapi.h>
 #endif // HAVE_GSSAPI_GSSAPI_H
+
+#ifdef HAVE_KERBEROS
+#ifdef HAVE_KRB5_KRB5_H
+#include <krb5/krb5.h>
+#else
+#include <krb5.h>
+#endif /* HAVE_KRB5_KRB5_H */
+#endif /* HAVE_KERBEROS */
 
 #define LOG_UAMS(log_level, ...) \
     LOG(log_level, logtype_uams, __VA_ARGS__)
@@ -479,8 +488,140 @@ static int gss_login_ext(void *obj,
     return gss_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-static int uam_setup(const char *path)
+static int set_principal(AFPObj *obj, char *principal)
 {
+    size_t len = strlen(principal);
+
+    if (len > 255) {
+        LOG(log_error, logtype_afpd, "set_principal: principal '%s' too long (max=255)", principal, len);
+        return -1;
+    }
+
+    /* We store: 1 byte number principals (1) + 1 byte principal name length + zero terminated principal */
+    if ((obj->options.k5principal = malloc(len + 3)) == NULL) {
+        LOG(log_error, logtype_afpd, "set_principal: OOM");
+        return -1;
+    }
+
+    LOG(log_info, logtype_afpd, "Using AFP Kerberos service principal name: %s", principal);
+
+    obj->options.k5principal[0] = 1;
+    obj->options.k5principal[1] = (unsigned char)len;
+    obj->options.k5principal_buflen = len + 2;
+    strncpy(obj->options.k5principal + 2, principal, len);
+
+    return 0;
+}
+
+static int gss_create_principal(AFPObj *obj)
+{
+    int rv = -1;
+#ifdef HAVE_KERBEROS
+    krb5_context context;
+    krb5_error_code ret;
+    const char *error_msg;
+    krb5_keytab keytab;
+    krb5_keytab_entry entry;
+    krb5_principal service_principal;
+    char *principal;
+    krb5_kt_cursor cursor;
+
+    if (krb5_init_context(&context)) {
+        LOG(log_error, logtype_afpd, "gss_create_principal: failed to intialize a krb5_context");
+        goto exit;
+    }
+    if ((ret = krb5_kt_default(context, &keytab)))
+        goto krb5_error;
+
+    if (obj->options.k5service && obj->options.fqdn && obj->options.k5realm) {
+        LOG(log_debug, logtype_afpd, "gss_create_principal: using service principal specified in options");
+            
+        if ((ret = krb5_build_principal(context,
+                                        &service_principal,
+                                        strlen(obj->options.k5realm),
+                                        obj->options.k5realm,
+                                        obj->options.k5service,
+                                        obj->options.fqdn,
+                                        NULL)))
+            goto krb5_error;
+
+        if ((ret = krb5_kt_get_entry(context,
+                                     keytab,
+                                     service_principal,
+                                     0, // kvno - wildcard
+                                     0, // enctype - wildcard
+                                     &entry)) == KRB5_KT_NOTFOUND) {
+            krb5_unparse_name(context, service_principal, &principal);
+            LOG(log_error, logtype_afpd, "gss_create_principal: specified service principal '%s' not found in keytab", principal);
+#ifdef HAVE_KRB5_FREE_UNPARSED_NAME
+            krb5_free_unparsed_name(context, principal);
+#else
+            krb5_xfree(principal);
+#endif
+            goto krb5_cleanup;
+        }
+        krb5_free_principal(context, service_principal);
+        if (ret)
+            goto krb5_error;
+    } else {
+        LOG(log_debug, logtype_afpd, "gss_create_principal: using first entry from keytab as service principal");
+        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor)))
+            goto krb5_error;
+        ret = krb5_kt_next_entry(context, keytab, &entry, &cursor);
+        krb5_kt_end_seq_get(context, keytab, &cursor);
+        if (ret)
+            goto krb5_error;
+    }
+
+    krb5_unparse_name(context, entry.principal, &principal);
+#ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
+    krb5_free_keytab_entry_contents(context, &entry);
+#elif defined(HAVE_KRB5_KT_FREE_ENTRY)
+    krb5_kt_free_entry(context, &entry);
+#endif
+    set_principal(obj, principal);
+    free(principal);
+    rv = 0;
+    goto krb5_cleanup;
+
+krb5_error:
+    if (ret) {
+        error_msg = krb5_get_error_message(context, ret);
+        LOG(log_note, logtype_afpd, "Can't get principal from default keytab: %s",
+            (char *)error_msg);
+#ifdef HAVE_KRB5_FREE_ERROR_MESSAGE
+        krb5_free_error_message(context, error_msg);
+#else
+        krb5_xfree(error_msg);
+#endif
+    }
+
+krb5_cleanup:
+    krb5_kt_close(context, keytab);
+    krb5_free_context(context);
+
+#else /* ! HAVE_KERBEROS */
+
+    if (!options->k5service || !options->fqdn || !options->k5realm)
+        goto exit;
+
+    char principal[255];
+    size_t len = snprintf(principal, sizeof(principal), "%s/%s@%s",
+                          options->k5service, options->fqdn, options->k5realm);
+    (void)set_principal(&obj, principal);
+    rv = 0;
+#endif /* HAVE_KERBEROS */
+
+exit:
+    return rv;
+}
+
+static int uam_setup(void *handle, const char *path)
+{
+    AFPObj *obj = (AFPObj *)handle;
+    if (gss_create_principal(obj) != 0)
+        return -1;
+
     return uam_register(UAM_SERVER_LOGIN_EXT, path, "Client Krb v2",
                         gss_login, gss_logincont, gss_logout, gss_login_ext);
 }
