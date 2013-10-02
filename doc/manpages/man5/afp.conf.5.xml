@@ -714,6 +714,24 @@
         </varlistentry>
 
         <varlistentry>
+          <term>recvfile = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Whether to use splice() on Linux for receiving data.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>splice size = <replaceable>number</replaceable> (default:
+          <emphasis>64k</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Maximum number of bytes spliced.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>use sendfile = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
@@ -723,6 +741,7 @@
               </indexterm> syscall for sending file data to clients.</para>
           </listitem>
         </varlistentry>
+
 
         <varlistentry>
           <term>zeroconf = <replaceable>BOOLEAN</replaceable> (default:

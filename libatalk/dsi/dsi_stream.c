@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2010,2011,2012 Frank Lahm <franklahm@googlemail.com>
- * All rights reserved. See COPYRIGHT.
+> * All rights reserved. See COPYRIGHT.
  *
  * this file provides the following functions:
  * dsi_stream_write:    just write a bunch of bytes.
@@ -615,14 +615,23 @@ int dsi_stream_receive(DSI *dsi)
       return 0;
 
   memcpy(&dsi->header.dsi_requestID, block + 2, sizeof(dsi->header.dsi_requestID));
-  memcpy(&dsi->header.dsi_data.dsi_code, block + 4, sizeof(dsi->header.dsi_data.dsi_code));
+  memcpy(&dsi->header.dsi_data.dsi_doff, block + 4, sizeof(dsi->header.dsi_data.dsi_doff));
+  dsi->header.dsi_data.dsi_doff = htonl(dsi->header.dsi_data.dsi_doff);
   memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
+
   memcpy(&dsi->header.dsi_reserved, block + 12, sizeof(dsi->header.dsi_reserved));
   dsi->clientID = ntohs(dsi->header.dsi_requestID);
   
   /* make sure we don't over-write our buffers. */
   dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
-  if (dsi_stream_read(dsi, dsi->commands, dsi->cmdlen) != dsi->cmdlen) 
+
+  /* Receiving DSIWrite data is done in AFP function, not here */
+  if (dsi->header.dsi_data.dsi_doff) {
+      LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: write request");
+      dsi->cmdlen = dsi->header.dsi_data.dsi_doff;
+  }
+
+  if (dsi_stream_read(dsi, dsi->commands, dsi->cmdlen) != dsi->cmdlen)
     return 0;
 
   LOG(log_debug, logtype_dsi, "dsi_stream_receive: DSI cmdlen: %zd", dsi->cmdlen);

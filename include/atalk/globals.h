@@ -59,6 +59,7 @@
 #define OPTION_DBUS_AFPSTATS (1 << 12) /* whether to run dbus thread for afpstats */
 #define OPTION_SPOTLIGHT     (1 << 13) /* whether to initialize Spotlight support */
 #define OPTION_SPOTLIGHT_VOL (1 << 14) /* whether spotlight shall be enabled by default for volumes */
+#define OPTION_RECVFILE      (1 << 15)
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)
@@ -123,6 +124,7 @@ struct afp_options {
     char *adminauthuser;
     char *ignored_attr;
     char *slmod_path;
+    int  splice_size;
     struct afp_volume_name volfile;
 };
 

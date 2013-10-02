@@ -492,6 +492,16 @@ tcpsndbuf = \fInumber\fR \fB(G)\fR
 Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .PP
+recvfile = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Whether to use splice() on Linux for receiving data\&.
+.RE
+.PP
+splice size = \fInumber\fR (default: \fI64k\fR) \fB(G)\fR
+.RS 4
+Maximum number of bytes spliced\&.
+.RE
+.PP
 use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Whether to use sendfile

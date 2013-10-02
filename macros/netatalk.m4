@@ -1164,6 +1164,23 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
 fi
 ])
 
+dnl ------ Check for recvfile() --------
+AC_DEFUN([AC_NETATALK_RECVFILE], [
+case "$host_os" in
+*linux*)
+    AC_CHECK_FUNCS([splice], [atalk_cv_use_recvfile=yes])
+    ;;
+
+*)
+    ;;
+
+esac
+
+if test x"$atalk_cv_use_recvfile" = x"yes"; then
+    AC_DEFINE(WITH_RECVFILE, 1, [Whether recvfile should be used])
+fi
+])
+
 dnl --------------------- Check if realpath() takes NULL
 AC_DEFUN([AC_NETATALK_REALPATH], [
 AC_CACHE_CHECK([if the realpath function allows a NULL argument],

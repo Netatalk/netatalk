@@ -8,6 +8,8 @@ Changes in 3.1.0
 * NEW: New option "dbus daemon" (G)
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
+* NEW: Add recvfile support with splice() on Linux. New global options
+       "recvfile" (default: no) and "splice size" (default 64k).
 
 Changes in 3.0.6
 ================

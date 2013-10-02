@@ -23,34 +23,26 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 
-/* initialize relevant things for dsi_write. this returns the amount
- * of data in the data buffer. the interface has been reworked to allow
- * for arbitrary buffers. */
 size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen _U_)
 {
-  size_t len, header;
+    size_t bytes = 0;
+    dsi->datasize = ntohl(dsi->header.dsi_len) - dsi->header.dsi_data.dsi_doff;
 
-  /* figure out how much data we have. do a couple checks for 0 
-   * data */
-  header = ntohl(dsi->header.dsi_data.dsi_doff);
-  dsi->datasize = header ? ntohl(dsi->header.dsi_len) - header : 0;
+    if (dsi->eof > dsi->start) {
+        /* We have data in the buffer */
+        bytes = MIN(dsi->eof - dsi->start, dsi->datasize);
+        memmove(buf, dsi->start, bytes);
+        dsi->start += bytes;
+        dsi->datasize -= bytes;
+        if (dsi->start >= dsi->eof)
+            dsi->start = dsi->eof = dsi->buffer;
+    }
 
-  if (dsi->datasize > 0) {
-      len = MIN(dsi->server_quantum - header, dsi->datasize);
+    LOG(log_maxdebug, logtype_dsi, "dsi_writeinit: remaining DSI datasize: %jd", (intmax_t)dsi->datasize);
 
-      /* write last part of command buffer into buf */
-      memmove(buf, dsi->commands + header, len);
-
-      /* recalculate remaining data */
-      dsi->datasize -= len;
-  } else
-    len = 0;
-
-  LOG(log_maxdebug, logtype_dsi, "dsi_writeinit: len: %ju, remaining DSI datasize: %jd",
-      (intmax_t)len, (intmax_t)dsi->datasize);
-
-  return len;
+    return bytes;
 }
+
 
 /* fill up buf and then return. this should be called repeatedly
  * until all the data has been read. i block alarm processing 

@@ -180,6 +180,7 @@ AC_NETATALK_REALPATH
 
 dnl Check for sendfile()
 AC_NETATALK_SENDFILE
+AC_NETATALK_RECVFILE
 
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT

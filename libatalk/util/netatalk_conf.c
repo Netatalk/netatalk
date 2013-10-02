@@ -1764,6 +1764,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_SERVERNOTIF;
     if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "recvfile", 0))
+        options->flags |= OPTION_RECVFILE;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
         options->flags |= OPTION_SHARE_RESERV;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afpstats", 0))
@@ -1811,6 +1813,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->fce_fmodwait   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+    options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
 
     p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))

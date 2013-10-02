@@ -450,5 +450,8 @@ extern uint32_t  ad_forcegetid(struct adouble *adp);
 #ifdef WITH_SENDFILE
 extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off, int end);
 #endif
+#ifdef WITH_RECVFILE
+extern ssize_t ad_recvfile(struct adouble *ad, int eid,  int sock, off_t off, size_t len, int);
+#endif
 
 #endif /* _ATALK_ADOUBLE_H */
