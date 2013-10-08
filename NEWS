@@ -11,6 +11,10 @@ Changes in 3.0.6
 * FIX: Small fix in the DSI tickle handling. Bug #528.
 * UPD: Enhance handling of connection attempts when hitting the
        connection limit. Bug #529.
+* FIX: Saving from Word to a folder that is a symlink to a folder on
+       another filesystem results in a crash of the afpd process and
+       the save to fail. This happens only if the option
+       "follow symlinks" is enabled. Bug #532.
 
 Changes in 3.0.5
 ================
