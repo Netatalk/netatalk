@@ -1901,16 +1901,12 @@ int ad_openat(struct adouble  *ad,
             EC_FAIL;
     }
 
-    LOG(log_note, logtype_ad, "ad_openat: cwdfd: %d", cwdfd);
-
     va_start(args, adflags);
     if (adflags & ADFLAGS_CREATE)
         mode = (sizeof(mode_t) < sizeof(int) ? va_arg (args, int) : va_arg (args, mode_t));
     va_end(args);
 
     EC_NEG1( ad_open(ad, path, adflags, mode) );
-
-    LOG(log_note, logtype_ad, "ad_openat: cwdfd: %d", cwdfd);
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
