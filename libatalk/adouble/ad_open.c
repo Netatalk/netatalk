@@ -1695,7 +1695,7 @@ int ad_openat(int dirfd,  /* dir fd openat like */
     int cwdfd = -1;
 
     if (dirfd != -1) {
-        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
+        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
             ret = -1;
             goto exit;
         }
