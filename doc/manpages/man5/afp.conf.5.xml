@@ -1795,6 +1795,10 @@
             Setting the option to true causes afpd to follow symlinks on the
             server. symlinks may point outside of the AFP volume, currently
             afpd doesn't do any checks for "wide symlinks".</para>
+            <note>
+              <para>This option will subtly break when the symlinks point
+              across filesystem boundaries.</para>
+            </note>
           </listitem>
         </varlistentry>
 

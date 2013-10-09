@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 30 Apr 2013
+.\"      Date: 13 Sep 2013
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "30 Apr 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "13 Sep 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -472,7 +472,7 @@ Sets the maximum number of clients that can simultaneously connect to the server
 .PP
 server quantum = \fInumber\fR \fB(G)\fR
 .RS 4
-This specifies the DSI server quantum\&. The default value is 1 MB\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\*(Aqre absolutely sure, what you\*(Aqre doing
+This specifies the DSI server quantum\&. The default value is 0x100000 (1 MiB)\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\*(Aqre absolutely sure, what you\*(Aqre doing
 .RE
 .PP
 sleep time = \fInumber\fR \fB(G)\fR
@@ -597,9 +597,7 @@ Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this 
 .PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
-Use section
-\fBname\fR
-as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\*(Aqs section)\&.
+Send optional AFP messages for vetoed files\&. Then whenever a client tries to access any file or directory with a vetoed name, it will be sent an AFP message indicating the name and the directory\&.
 .RE
 .PP
 vol dbpath = \fIpath\fR \fB(G)\fR
@@ -1099,6 +1097,21 @@ If this option is set to yes, then Netatalk will attempt to recursively delete a
 follow symlinks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
 The default setting is false thus symlinks are not followed on the server\&. This is the same behaviour as OS X\*(Aqs AFP server\&. Setting the option to true causes afpd to follow symlinks on the server\&. symlinks may point outside of the AFP volume, currently afpd doesn\*(Aqt do any checks for "wide symlinks"\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+This option will subtly break when the symlinks point across filesystem boundaries\&.
+.sp .5v
+.RE
 .RE
 .PP
 invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
