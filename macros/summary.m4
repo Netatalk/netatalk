@@ -148,7 +148,6 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $LIBEVENT_CFLAGS])
 		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_LDFLAGS])
     fi
-
     AC_MSG_RESULT([    TDB:])
     if test x"$use_bundled_tdb" = x"yes"; then
 		AC_MSG_RESULT([        bundled])
@@ -156,4 +155,9 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $TDB_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $TDB_CFLAGS])
     fi
+	if test x"$ac_cv_with_cnid_mysql" = x"yes"; then
+		AC_MSG_RESULT([    MySQL:])
+		AC_MSG_RESULT([        LIBS   = $MYSQL_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $MYSQL_CFLAGS])
+	fi
 ])

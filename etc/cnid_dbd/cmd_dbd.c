@@ -228,16 +228,18 @@ int main(int argc, char **argv)
     }
 
     /* open volume */
-    if (STRCMP(vol->v_cnidscheme, != , "dbd")) {
+    if (STRCMP(vol->v_cnidscheme, != , "dbd") && STRCMP(vol->v_cnidscheme, != , "mysql")) {
         dbd_log(LOGSTD, "\"%s\" isn't a \"dbd\" CNID volume", vol->v_path);
         exit(EXIT_FAILURE);
     }
     if ((vol->v_cdb = cnid_open(vol->v_path,
                                 0000,
-                                "dbd",
+                                vol->v_cnidscheme,
                                 vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0,
                                 vol->v_cnidserver,
-                                vol->v_cnidport)) == NULL) {
+                                vol->v_cnidport,
+                                &obj,
+                                vol->v_uuid)) == NULL) {
         dbd_log(LOGSTD, "Cant initialize CNID database connection for %s", vol->v_path);
         exit(EXIT_FAILURE);
     }

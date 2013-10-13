@@ -9,7 +9,7 @@
 
 #include <arpa/inet.h>
 
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 
 extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);

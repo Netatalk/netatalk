@@ -34,5 +34,5 @@ srp_SOURCES = \
 	spotlight_rawquery_lexer.l
 
 srp_CFLAGS = -DMAIN -I$(top_srcdir)/include @TRACKER_CFLAGS@
-srp_LDADD = $(top_builddir)/libatalk/libatalk.la
+srp_LDADD = $(top_builddir)/libatalk/libatalk.la @MYSQL_LIBS@
 endif

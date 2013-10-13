@@ -252,7 +252,7 @@ restart:
                     }
                     LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
                         vol->v_path);
-                    vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
+                    vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL, NULL, NULL);
                     if (vol->v_cdb) {
                         if (!(vol->v_flags & AFPVOL_TM)) {
                             vol->v_flags |= AFPVOL_RO;

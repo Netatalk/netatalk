@@ -92,7 +92,7 @@ static int cnid_dir(const char *dir, mode_t mask)
 
 /* Opens CNID database using particular back-end */
 struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags,
-                           const char *cnidsrv, const char *cnidport)
+                           const char *cnidsrv, const char *cnidport, const void *obj, char *uuid)
 {
     struct _cnid_db *db;
     cnid_module *mod = NULL;
@@ -128,7 +128,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         }
     }
 
-    struct cnid_open_args args = {volpath, mask, flags, cnidsrv, cnidport};
+    struct cnid_open_args args = {volpath, mask, flags, cnidsrv, cnidport, obj, uuid};
     db = mod->cnid_open(&args);
 
     if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {

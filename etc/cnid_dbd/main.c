@@ -22,7 +22,7 @@
 #include <sys/file.h>
 #include <arpa/inet.h>
 
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/bstrlib.h>

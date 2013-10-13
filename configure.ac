@@ -285,6 +285,7 @@ AC_OUTPUT([Makefile
 	libatalk/cnid/last/Makefile
 	libatalk/cnid/dbd/Makefile
 	libatalk/cnid/tdb/Makefile
+	libatalk/cnid/mysql/Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/iniparser/Makefile

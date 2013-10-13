@@ -94,6 +94,9 @@ static void show_version( void )
 #ifdef CNID_BACKEND_TDB
 	printf( "tdb " );
 #endif
+#ifdef CNID_BACKEND_MYSQL
+	printf( "mysql " );
+#endif
 	puts( "" );
 }
 

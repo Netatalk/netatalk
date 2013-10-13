@@ -108,6 +108,39 @@ AC_DEFUN([AC_NETATALK_CNID], [
     fi
     AM_CONDITIONAL(USE_TDB_BACKEND, test x"$use_tdb_backend" = x"yes")
 
+    dnl Check for mysql CNID backend
+    AC_ARG_VAR(MYSQL_CFLAGS, [C compiler flags for MySQL, overriding checks])
+    AC_ARG_VAR(MYSQL_LIBS, [linker flags for MySQL, overriding checks])
+
+    AC_MSG_CHECKING([MySQL library and headers])
+    AC_ARG_WITH(
+        mysql-config,
+        [AS_HELP_STRING([--with-mysql-config=PATH],[Path to mysql-config binary (default: mysql_config)])],
+        MYSQL_CONFIG=$withval
+    )
+
+    if test -z "$MYSQL_CONFIG" -a -z "$MYSQL_CFLAGS" -a -z "$MYSQL_LIBS" ; then
+        AC_PATH_PROG(MYSQL_CONFIG, mysql_config)
+    fi
+
+    if test -x "$MYSQL_CONFIG" ; then
+        AC_MSG_RESULT([$MYSQL_CONFIG])
+        MYSQL_CFLAGS="`$MYSQL_CONFIG --cflags`"
+        MYSQL_LIBS="`$MYSQL_CONFIG --libs`"
+        ac_cv_with_cnid_mysql="yes"
+    elif test -n "$MYSQL_CFLAGS" -a -n "$MYSQL_LIBS" ; then
+        ac_cv_with_cnid_mysql="yes"
+    fi
+
+    if test x"$ac_cv_with_cnid_mysql" = x"yes" ; then
+        compiled_backends="$compiled_backends mysql"
+        AC_DEFINE(CNID_BACKEND_MYSQL, 1, [whether the MySQL CNID module is available])
+    fi
+
+    AC_SUBST(MYSQL_CFLAGS)
+    AC_SUBST(MYSQL_LIBS)
+    AM_CONDITIONAL(USE_MYSQL_BACKEND, test x"$ac_cv_with_cnid_mysql" = x"yes")
+
     dnl Set default DID scheme
     AC_MSG_CHECKING([default DID scheme])
     AC_ARG_WITH(cnid-default-backend,

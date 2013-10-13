@@ -31,7 +31,7 @@
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 #include <atalk/util.h>
 
 #include "cnid_dbd.h"
@@ -224,7 +224,7 @@ static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
 }
 
 /* --------------------- */
-static int init_tsock(CNID_private *db)
+static int init_tsock(CNID_bdb_private *db)
 {
     int fd;
     int len;
@@ -256,7 +256,7 @@ static int init_tsock(CNID_private *db)
 }
 
 /* --------------------- */
-static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
+static int send_packet(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst)
 {
     struct iovec iov[2];
     size_t towrite;
@@ -312,7 +312,7 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
  * assume send is non blocking
  * if no answer after sometime (at least MAX_DELAY secondes) return an error
  */
-static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+static int dbd_rpc(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     ssize_t ret;
     char *nametmp;
@@ -351,7 +351,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
 }
 
 /* -------------------- */
-static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+static int transmit(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
@@ -434,7 +434,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
 /* ---------------------- */
 struct _cnid_db *cnid_dbd_open(struct cnid_open_args *args)
 {
-    CNID_private *db = NULL;
+    CNID_bdb_private *db = NULL;
     struct _cnid_db *cdb = NULL;
 
     if (!args->dir) {
@@ -446,7 +446,7 @@ struct _cnid_db *cnid_dbd_open(struct cnid_open_args *args)
         return NULL;
     }
 
-    if ((db = (CNID_private *)calloc(1, sizeof(CNID_private))) == NULL) {
+    if ((db = (CNID_bdb_private *)calloc(1, sizeof(CNID_bdb_private))) == NULL) {
         LOG(log_error, logtype_cnid, "cnid_open: Unable to allocate memory for database");
         goto cnid_dbd_open_fail;
     }
@@ -481,7 +481,7 @@ cnid_dbd_open_fail:
 /* ---------------------- */
 void cnid_dbd_close(struct _cnid_db *cdb)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
 
     if (!cdb) {
         LOG(log_error, logtype_cnid, "cnid_close called with NULL argument !");
@@ -505,7 +505,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 /**
  * Get the db stamp
  **/
-static int cnid_dbd_stamp(CNID_private *db)
+static int cnid_dbd_stamp(CNID_bdb_private *db)
 {
     struct cnid_dbd_rqst rqst_stamp;
     struct cnid_dbd_rply rply_stamp;
@@ -532,7 +532,7 @@ static int cnid_dbd_stamp(CNID_private *db)
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
                     cnid_t did, const char *name, size_t len, cnid_t hint)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     cnid_t id;
@@ -596,7 +596,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 /* ---------------------- */
 cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     cnid_t id;
@@ -649,7 +649,7 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t l
 /* ---------------------- */
 char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     char *name;
@@ -708,7 +708,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
  **/
 int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
 
     if (!cdb || !(db = cdb->_private) || len != ADEDLEN_PRIVSYN) {
         LOG(log_error, logtype_cnid, "cnid_getstamp: Parameter error");
@@ -725,7 +725,7 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
                        const char *name, size_t len)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     cnid_t id;
@@ -786,7 +786,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
 /* ---------------------- */
 int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     int count;
@@ -842,7 +842,7 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *
 int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
                     cnid_t did, const char *name, size_t len)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
@@ -896,7 +896,7 @@ int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
 cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
                             cnid_t did, const char *name, size_t len, cnid_t hint)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     cnid_t id;
@@ -958,7 +958,7 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
 /* ---------------------- */
 int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
@@ -995,7 +995,7 @@ int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
 
 int cnid_dbd_wipe(struct _cnid_db *cdb)
 {
-    CNID_private *db;
+    CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 

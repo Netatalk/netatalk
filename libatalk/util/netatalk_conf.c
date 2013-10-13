@@ -1800,6 +1800,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
     options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
     options->ignored_attr   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ignored attributes", NULL);
+    options->cnid_mysql_host = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql host", NULL);
+    options->cnid_mysql_user = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql user", NULL);
+    options->cnid_mysql_pw  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql pw", NULL);
+    options->cnid_mysql_db  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql db", NULL);
     options->connections    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
     options->passwdminlen   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
     options->tickleval      = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);

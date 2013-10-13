@@ -56,7 +56,7 @@ struct cnid_dbd_rply {
     size_t  namelen;
 };
 
-typedef struct CNID_private {
+typedef struct CNID_bdb_private {
     uint32_t magic;
     char      db_dir[MAXPATHLEN + 1]; /* Database directory without /.AppleDB appended */
     char      *cnidserver;
@@ -67,7 +67,7 @@ typedef struct CNID_private {
     size_t    stamp_size;
     int       notfirst;   /* already open before */
     int       changed;  /* stamp differ */
-} CNID_private;
+} CNID_bdb_private;
 
 
 #endif /* include/atalk/cnid_dbd.h */

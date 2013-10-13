@@ -10,6 +10,7 @@ Changes in 3.1.0
        result of autodetecting dbus-glib presence
 * NEW: Add recvfile support with splice() on Linux. New global options
        "recvfile" (default: no) and "splice size" (default 64k).
+* NEW: CNID backend "mysql" for use with a MySQL server
 
 Changes in 3.0.6
 ================

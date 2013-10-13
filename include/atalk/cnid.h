@@ -24,6 +24,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/list.h>
+#include <atalk/uuid.h>
 
 /* CNID object flags */
 #define CNID_FLAG_PERSISTENT   0x01      /* This backend implements DID persistence */
@@ -81,8 +82,14 @@ struct cnid_open_args {
     const char *dir;
     mode_t mask;
     uint32_t flags;
-    const char *cnidserver;      /* for dbd */
-    const char *cnidport;        /* for dbd */
+
+    /* for dbd */
+    const char *cnidserver;
+    const char *cnidport;
+
+    /* for MySQL */
+    const void *obj;
+    char *voluuid;
 };
 
 /*
@@ -109,7 +116,9 @@ struct _cnid_db *cnid_open(const char *volpath,
                            char *type,
                            int flags,
                            const char *cnidsrv,
-                           const char *cnidport);
+                           const char *cnidport,
+                           const void *obj,
+                           char *uuid);
 cnid_t cnid_add        (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                         const char *name, const size_t len, cnid_t hint);
 int    cnid_delete     (struct _cnid_db *cdb, cnid_t id);

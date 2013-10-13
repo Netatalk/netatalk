@@ -56,6 +56,10 @@ extern struct _cnid_module cnid_dbd_module;
 extern struct _cnid_module cnid_tdb_module;
 #endif
 
+#ifdef CNID_BACKEND_MYSQL
+extern struct _cnid_module cnid_mysql_module;
+#endif
+
 void cnid_init(void)
 {
 #ifdef CNID_BACKEND_DB3
@@ -84,5 +88,9 @@ void cnid_init(void)
 
 #ifdef CNID_BACKEND_TDB
     cnid_register(&cnid_tdb_module);
+#endif
+
+#ifdef CNID_BACKEND_MYSQL
+    cnid_register(&cnid_mysql_module);
 #endif
 }

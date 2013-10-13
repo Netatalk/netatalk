@@ -9,7 +9,7 @@
 /* number of seconds to try reading in readt */
 #define CNID_DBD_TIMEOUT 1
 
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 
 
 extern int      comm_init  (struct db_param *, int, int);

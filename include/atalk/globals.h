@@ -125,6 +125,10 @@ struct afp_options {
     char *ignored_attr;
     char *slmod_path;
     int  splice_size;
+    char *cnid_mysql_host;
+    char *cnid_mysql_user;
+    char *cnid_mysql_pw;
+    char *cnid_mysql_db;
     struct afp_volume_name volfile;
 };
 

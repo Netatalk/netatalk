@@ -35,7 +35,8 @@ noinst_HEADERS = \
 	server_child.h \
 	server_ipc.h \
 	tdb.h \
-	cnid_dbd_private.h \
+	cnid_bdb_private.h \
+	cnid_mysql_private.h \
 	cnid_private.h \
 	bstradd.h \
 	errchk.h \

@@ -118,7 +118,7 @@ to be safe we must assign new CNIDs to both files.
 #include <arpa/inet.h>
 
 #include <atalk/logger.h>
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
 
 #include "pack.h"
