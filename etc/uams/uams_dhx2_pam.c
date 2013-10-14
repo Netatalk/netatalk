@@ -923,7 +923,7 @@ static int dhx2_changepw(void *obj _U_, char *uname,
     return ret;
 }
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHX2", pam_login,
                      pam_logincont, pam_logout, pam_login_ext) < 0)

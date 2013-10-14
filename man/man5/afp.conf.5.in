@@ -611,6 +611,11 @@ Sets the database information to be stored in path\&. You have to specify a writ
 @localstatedir@/netatalk/CNID/\&.
 .RE
 .PP
+vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Setting this option to true brings back Netatalk 2 behaviour of storing the CNID database in a folder called \&.AppleDB inside the volume root of each share\&.
+.RE
+.PP
 volnamelen = \fInumber\fR \fB(G)\fR
 .RS 4
 Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especially sensitive to this\&.
@@ -1097,6 +1102,21 @@ If this option is set to yes, then Netatalk will attempt to recursively delete a
 follow symlinks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
 The default setting is false thus symlinks are not followed on the server\&. This is the same behaviour as OS X\*(Aqs AFP server\&. Setting the option to true causes afpd to follow symlinks on the server\&. symlinks may point outside of the AFP volume, currently afpd doesn\*(Aqt do any checks for "wide symlinks"\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+This option will subtly break when the symlinks point across filesystem boundaries\&.
+.sp .5v
+.RE
 .RE
 .PP
 invisible dots = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR

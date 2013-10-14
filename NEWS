@@ -16,6 +16,18 @@ Changes in 3.0.6
 * NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
 * FIX: Active Directory LDAP queries for ACL support with new options
        "ldap user filter" and "ldap group filter". Bug #526.
+* NEW: Option "vol dbnest", when set to true, the CNID database for
+       a volume is stored in the volume root of a share in a directory
+       .AppleDB like in Netatalk 2. Defaults to false. From FR#84.
+* FIX: Small fix in the DSI tickle handling. Bug #528.
+* UPD: Enhance handling of connection attempts when hitting the
+       connection limit. Bug #529.
+* FIX: Saving from Word to a folder that is a symlink to a folder on
+       another filesystem results in a crash of the afpd process and
+       the save to fail. This happens only if the option
+       "follow symlinks" is enabled. Bug #532.
+* FIX: Disable Kerberos UAM if AFP service principal name can't be
+       evaluated. Fixes bug #531.
 
 Changes in 3.0.5
 ================

@@ -531,7 +531,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return (rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange", 
 		   randnum_login, randnum_logincont, NULL, randnum_login_ext) < 0)

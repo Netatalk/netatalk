@@ -60,7 +60,7 @@
  * support is braindead. it also allows me to do a little versioning. */
 struct uam_export {
   int uam_type, uam_version;
-  int (*uam_setup)(const char *);
+  int (*uam_setup)(void *, const char *);
   void (*uam_cleanup)(void);
 };
 

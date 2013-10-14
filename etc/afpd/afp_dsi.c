@@ -322,9 +322,10 @@ static void alarm_handler(int sig _U_)
         return;
     }
 
-    if ((err = pollvoltime(AFPobj)) == 0)
+    if ((err = pollvoltime(AFPobj)) == 0) {
         LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
         err = dsi_tickle(AFPobj->dsi);
+    }
     if (err <= 0) {
         if (geteuid() == 0) {
             LOG(log_note, logtype_afpd, "afp_alarm: unauthenticated user, connection problem");

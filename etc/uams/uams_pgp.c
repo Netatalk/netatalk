@@ -174,7 +174,7 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN, path, "PGPuam 1.0",
 		   pgp_login, pgp_logincont, NULL) < 0)

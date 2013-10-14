@@ -1897,7 +1897,7 @@ int ad_openat(struct adouble  *ad,
     mode_t mode = 0;
 
     if (dirfd != -1) {
-        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0))
+        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0))
             EC_FAIL;
     }
 

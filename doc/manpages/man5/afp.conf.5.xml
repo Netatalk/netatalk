@@ -960,6 +960,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>vol dbnest = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Setting this option to true brings back Netatalk 2
+            behaviour of storing the CNID database in a folder called
+            .AppleDB inside the volume root of each share.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>volnamelen = <replaceable>number</replaceable>
           <type>(G)</type></term>
 
@@ -1796,6 +1807,10 @@
             Setting the option to true causes afpd to follow symlinks on the
             server. symlinks may point outside of the AFP volume, currently
             afpd doesn't do any checks for "wide symlinks".</para>
+            <note>
+              <para>This option will subtly break when the symlinks point
+              across filesystem boundaries.</para>
+            </note>
           </listitem>
         </varlistentry>
 

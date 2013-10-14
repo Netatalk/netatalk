@@ -311,39 +311,6 @@ static size_t status_netaddress(char *data, int *servoffset,
     return (data - begin);
 }
 
-static bool append_directoryname(char **pdata,
-                                 size_t offset,
-                                 size_t *size,
-                                 char* DirectoryNamesCount,
-                                 size_t len,
-                                 char *principal)
-{
-    if (sizeof(uint8_t) + len  > maxstatuslen - offset - *size) {
-        LOG(log_error, logtype_afpd,
-            "status:DirectoryNames: out of space for principal '%s' (len=%d)",
-            principal, len);
-        return false;
-    } else if (len > 255) {
-        LOG(log_error, logtype_afpd,
-            "status:DirectoryNames: principal '%s' (len=%d) too long (max=255)",
-            principal, len);
-        return false;
-    }
-
-    LOG(log_info, logtype_afpd,
-        "DirectoryNames[%d]=%s",
-        *DirectoryNamesCount, principal);
-
-    *DirectoryNamesCount += 1;
-    char *data = *pdata;
-    *data++ = len;
-    strncpy(data, principal, len);
-
-    *pdata += len + 1;
-    *size += sizeof(uint8_t) + len;
-
-    return true;
-}
 
 /**
  * DirectoryNamesCount offset: uint16_t
@@ -354,7 +321,7 @@ static bool append_directoryname(char **pdata,
 static size_t status_directorynames(char *data,
                                     int *diroffset,
                                     const DSI *dsi _U_,
-                                    const struct afp_options *options _U_)
+                                    const struct afp_options *options)
 {
     char *begin = data;
     uint16_t offset;
@@ -363,130 +330,14 @@ static size_t status_directorynames(char *data,
     offset = ntohs(offset);
     data += offset;
 
-    char *DirectoryNamesCount = data++;
-    size_t size = sizeof(uint8_t);
-    *DirectoryNamesCount = 0;
-
-    if (!uam_gss_enabled())
-        goto offset_calc;
-
-#ifdef HAVE_KERBEROS
-    krb5_context context;
-    krb5_error_code ret;
-    const char *error_msg;
-
-    if (krb5_init_context(&context)) {
-        LOG(log_error, logtype_afpd,
-            "status:DirectoryNames failed to intialize a krb5_context");
-        goto offset_calc;
-    }
-
-    krb5_keytab keytab;
-    if ((ret = krb5_kt_default(context, &keytab)))
-        goto krb5_error;
-
-    // figure out which service principal to use
-    krb5_keytab_entry entry;
-    char *principal;
-    if (options->k5service && options->fqdn && options->k5realm) {
-        LOG(log_debug, logtype_afpd,
-            "status:DirectoryNames: using service principal specified in options");
-
-        krb5_principal service_principal;
-        if ((ret = krb5_build_principal(context,
-                                        &service_principal,
-                                        strlen(options->k5realm),
-                                        options->k5realm,
-                                        options->k5service,
-                                        options->fqdn,
-                                        NULL)))
-            goto krb5_error;
-
-        // try to get the given service principal from keytab
-        ret = krb5_kt_get_entry(context,
-                                keytab,
-                                service_principal,
-                                0, // kvno - wildcard
-                                0, // enctype - wildcard
-                                &entry);
-        if (ret == KRB5_KT_NOTFOUND) {
-            krb5_unparse_name(context, service_principal, &principal);
-            LOG(log_error, logtype_afpd,
-                "status:DirectoryNames: specified service principal '%s' not found in keytab",
-                principal);
-            // XXX: should this be krb5_xfree?
-#ifdef HAVE_KRB5_FREE_UNPARSED_NAME
-            krb5_free_unparsed_name(context, principal);
-#else
-	    krb5_xfree(principal);
-#endif
-            goto krb5_cleanup;
-        }
-        krb5_free_principal(context, service_principal);
-        if (ret)
-            goto krb5_error;
+    if (!uam_gss_enabled() || !options->k5principal) {
+        *data = 0;
+        data++;
     } else {
-        LOG(log_debug, logtype_afpd,
-            "status:DirectoryNames: using first entry from keytab as service principal");
-
-        krb5_kt_cursor cursor;
-        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor)))
-            goto krb5_error;
-
-        ret = krb5_kt_next_entry(context, keytab, &entry, &cursor);
-        krb5_kt_end_seq_get(context, keytab, &cursor);
-        if (ret)
-            goto krb5_error;
+        memcpy(data, options->k5principal, options->k5principal_buflen);
+        data += options->k5principal_buflen;
     }
 
-    krb5_unparse_name(context, entry.principal, &principal);
-#ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
-    krb5_free_keytab_entry_contents(context, &entry);
-#elif defined(HAVE_KRB5_KT_FREE_ENTRY)
-    krb5_kt_free_entry(context, &entry);
-#endif
-    append_directoryname(&data,
-                         offset,
-                         &size,
-                         DirectoryNamesCount,
-                         strlen(principal),
-                         principal);
-
-    free(principal);
-    goto krb5_cleanup;
-
-krb5_error:
-    if (ret) {
-        error_msg = krb5_get_error_message(context, ret);
-        LOG(log_note, logtype_afpd, "Can't get principal from default keytab: %s",
-            (char *)error_msg);
-#ifdef HAVE_KRB5_FREE_ERROR_MESSAGE
-        krb5_free_error_message(context, error_msg);
-#else
-	krb5_xfree(error_msg);
-#endif
-    }
-
-krb5_cleanup:
-    krb5_kt_close(context, keytab);
-    krb5_free_context(context);
-#else
-    if (!options->k5service || !options->fqdn || !options->k5realm)
-        goto offset_calc;
-
-    char principal[255];
-    size_t len = snprintf(principal, sizeof(principal), "%s/%s@%s",
-                          options->k5service, options->fqdn, options->k5realm);
-
-    append_directoryname(&data,
-                         offset,
-                         &size,
-                         DirectoryNamesCount,
-                         strlen(principal),
-                         principal);
-#endif // HAVE_KERBEROS
-
-offset_calc:
     /* Calculate and store offset for UTF8ServerName */
     *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);

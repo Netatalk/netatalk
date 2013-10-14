@@ -93,7 +93,7 @@ int configinit(AFPObj *obj)
     int family, s;
     static char interfaddr[NI_MAXHOST];
 
-    auth_load(obj->options.uampath, obj->options.uamlist);
+    auth_load(obj, obj->options.uampath, obj->options.uamlist);
     set_signature(&obj->options);
 #ifdef HAVE_LDAP
     acl_ldap_freeconfig();
