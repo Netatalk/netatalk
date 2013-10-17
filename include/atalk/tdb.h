@@ -1,5 +1,8 @@
-#ifndef __TDB_H__
-#define __TDB_H__
+#ifndef USE_BUILTIN_TDB
+#  include <tdb.h>
+#else
+#  ifndef __TDB_H__
+#    define __TDB_H__
 
 /* 
    Unix SMB/CIFS implementation.
@@ -174,4 +177,5 @@ extern TDB_DATA tdb_null;
 }
 #endif
 
-#endif /* tdb.h */
+#  endif /* tdb.h */
+#endif /* USE_BUILTIN_TDB */
