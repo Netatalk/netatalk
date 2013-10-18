@@ -210,6 +210,7 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     static bstring str2f = NULL;
     static bstring strdot = NULL;
     static bstring strcolon = NULL;
+    char *newadpath = NULL;
 
     if (str2e == NULL) {
         str2e = bfromcstr(":2e");
@@ -231,8 +232,13 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     EC_ZERO( bfindreplace(newpath, str2f, strcolon, 0) );
     
     become_root();
-    if (adflags != ADFLAGS_DIR)
-        rename(vol->ad_path(path, 0), vol->ad_path(bdata(newpath), 0));
+    if (adflags != ADFLAGS_DIR) {
+        if ((newadpath = strdup(vol->ad_path(bdata(newpath), 0))) == NULL) {
+            unbecome_root();
+            EC_FAIL;
+        }
+        rename(vol->ad_path(path, 0), newadpath);
+    }
     rename(path, bdata(newpath));
     unbecome_root();
 
@@ -242,6 +248,8 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
 EC_CLEANUP:
     if (newpath)
         bdestroy(newpath);
+    if (newadpath)
+        free(newadpath);
     EC_EXIT;
 }
 
