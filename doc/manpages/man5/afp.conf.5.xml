@@ -819,6 +819,44 @@
         </varlistentry>
 
         <varlistentry>
+          <term>cnid mysql host = <replaceable>MySQL server address</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>name or address of a MySQL server for use with the mysql CNID
+            backend.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql user = <replaceable>MySQL user</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>MySQL user for authentication with the server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql pw = <replaceable>password</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Password for MySQL server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql db = <replaceable>database name</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Name of an existing database for which the specified user
+            has full privileges.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>cnid server = <replaceable>ipaddress[:port]</replaceable>
           <type>(G)/(V)</type></term>
 

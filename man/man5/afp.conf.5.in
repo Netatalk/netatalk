@@ -543,6 +543,26 @@ close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 Whether to close volumes possibly opened by clients when they\*(Aqre removed from the configuration and the configuration is reloaded\&.
 .RE
 .PP
+cnid mysql host = \fIMySQL server address\fR \fB(G)\fR
+.RS 4
+name or address of a MySQL server for use with the mysql CNID backend\&.
+.RE
+.PP
+cnid mysql user = \fIMySQL user\fR \fB(G)\fR
+.RS 4
+MySQL user for authentication with the server\&.
+.RE
+.PP
+cnid mysql pw = \fIpassword\fR \fB(G)\fR
+.RS 4
+Password for MySQL server\&.
+.RE
+.PP
+cnid mysql db = \fIdatabase name\fR \fB(G)\fR
+.RS 4
+Name of an existing database for which the specified user has full privileges\&.
+.RE
+.PP
 cnid server = \fIipaddress[:port]\fR \fB(G)/(V)\fR
 .RS 4
 Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
