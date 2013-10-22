@@ -28,6 +28,9 @@ Changes in 3.0.6
        "follow symlinks" is enabled. Bug #532.
 * FIX: Disable Kerberos UAM if AFP service principal name can't be
        evaluated. Fixes bug #531.
+* FIX: Fix handling of large number of volumes. Bug #527.
+* NEW: Configure option --with-tbd which can be used to disable the
+       use of the bundled tdb and use a system installed version.
 
 Changes in 3.0.5
 ================

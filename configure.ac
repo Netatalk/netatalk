@@ -184,6 +184,9 @@ AC_NETATALK_SENDFILE
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
+dnl Check whether bundled tdb shall be used
+AC_NETATALK_TDB
+
 dnl Check for Tracker
 AC_NETATALK_SPOTLIGHT
 

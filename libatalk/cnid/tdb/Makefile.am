@@ -14,4 +14,7 @@ libcnid_tdb_la_SOURCES = cnid_tdb_add.c \
 			 cnid_tdb_update.c \
 			 cnid_tdb.h
 
+libcnid_tdb_la_CFLAGS = @TDB_CFLAGS@
+libcnid_tdb_la_LIBADD = @TDB_LIBS@
+
 EXTRA_DIST = README cnid_tdb_nextid.c

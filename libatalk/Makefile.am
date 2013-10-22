@@ -34,7 +34,7 @@ VERSION_INFO = 6:0:0
 #   3.0.4           5:0:0
 #   3.0.5           6:0:0
 
-SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc tdb util unicode vfs
+SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -53,7 +53,6 @@ libatalk_la_LIBADD  = \
 	dsi/libdsi.la		\
 	iniparser/libiniparser.la \
 	talloc/libtalloc.la       \
-	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
 	vfs/libvfs.la
@@ -67,12 +66,17 @@ libatalk_la_DEPENDENCIES = \
 	dsi/libdsi.la		\
 	talloc/libtalloc.la       \
 	iniparser/libiniparser.la \
-	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
 	vfs/libvfs.la
 
 libatalk_la_LDFLAGS = -version-info $(VERSION_INFO)
+
+if USE_BUILTIN_TDB
+SUBDIRS += tdb
+libatalk_la_LIBADD += tdb/libtdb.la
+libatalk_la_DEPENDENCIES += tdb/libtdb.la
+endif
 
 if DEVELOPER
 all-local: .libs/libatalk.so
