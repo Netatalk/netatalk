@@ -286,6 +286,16 @@ basedir regex = /usr/home</programlisting></para>
         only mode</emphasis> automatically. This is useful e.g. for
         CD-ROMs.</para>
       </sect3>
+
+      <sect3>
+        <title>mysql<indexterm>
+            <primary>MySQL</primary>
+
+            <secondary>"mysql" CNID backend</secondary>
+          </indexterm></title>
+
+        <para>CNID backend using a MySQL server.</para>
+      </sect3>
     </sect2>
 
     <sect2 id="charsets">
