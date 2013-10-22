@@ -54,4 +54,10 @@ extern size_t strlcpy (char *, const char *, size_t);
 extern size_t strlcat (char *, const char *, size_t);
 #endif
 
+#ifndef HAVE_VASPRINTF
+#include <stdio.h>
+#include <stdarg.h>
+extern int vasprintf(char **ret, const char *fmt, va_list ap);
+#endif
+
 #endif
