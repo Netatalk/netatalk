@@ -36,13 +36,13 @@ static pthread_t       poller;
 /*
  * Its easier to use asprintf to set the TXT record values
  */
-#define TXTRecordPrintf(rec, key, args...) {            \
+#define TXTRecordPrintf(rec, key, args, ...) {           \
         char *str;                                      \
         asprintf(&str, args);                           \
         TXTRecordSetValue(rec, key, strlen(str), str);  \
         free(str);                                      \
     }
-#define TXTRecordKeyPrintf(rec, k, var, args...) {      \
+#define TXTRecordKeyPrintf(rec, k, var, args, ...) {     \
         char *key, *str;                                \
         asprintf(&key, k, var);                         \
         asprintf(&str, args);                           \

@@ -105,6 +105,8 @@ struct afp_options {
     char *signatureopt;
     unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
+    size_t k5principal_buflen;
+    char *k5principal;
     char *unixcodepage, *maccodepage, *volcodepage;
     charset_t maccharset, unixcharset; 
     mode_t umask;
@@ -138,6 +140,7 @@ typedef struct AFPObj {
     gid_t *groups;
     int ngroups;
     int afp_version;
+    int cnx_cnt, cnx_max;
     /* Functions */
     void (*logout)(void);
     void (*exit)(int);

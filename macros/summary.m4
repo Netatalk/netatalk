@@ -11,7 +11,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	fi
 	AC_MSG_RESULT([    AFP:])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
-	AC_MSG_RESULT([         ACL support: $with_acl_support])
+	AC_MSG_RESULT([         ACL support: $ac_cv_have_acls])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
 	AC_MSG_RESULT([    UAMS:])
@@ -141,5 +141,13 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
     else
 		AC_MSG_RESULT([        LIBS   = $LIBEVENT_CFLAGS])
 		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_LDFLAGS])
+    fi
+
+    AC_MSG_RESULT([    TDB:])
+    if test x"$use_bundled_tdb" = x"yes"; then
+		AC_MSG_RESULT([        bundled])
+    else
+		AC_MSG_RESULT([        LIBS   = $TDB_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $TDB_CFLAGS])
     fi
 ])

@@ -35,7 +35,7 @@
 #include <atalk/acl.h>
 #include <atalk/unix.h>
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 
 /* Get ACL. Allocates storage as needed. Caller must free.
  * Returns no of ACEs or -1 on error.  */
@@ -276,7 +276,7 @@ exit:
     return ret;
 }
 
-#endif /* HAVE_SOLARIS_ACLS */
+#endif /* HAVE_NFSV4_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
 

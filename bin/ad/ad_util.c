@@ -51,6 +51,9 @@
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 #endif  /* HAVE_SOLARIS_ACLS */
+#ifdef HAVE_FREEBSD_SUNACL
+#include <sunacl.h>
+#endif
 
 #ifdef HAVE_POSIX_ACLS
 #include <sys/types.h>

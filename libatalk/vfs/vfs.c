@@ -348,7 +348,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 {
     static char buf[ MAXPATHLEN + 1];
@@ -791,7 +791,7 @@ static struct vfs_ops netatalk_ea_sys = {
  * Tertiary VFS modules for ACLs
  */
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 static struct vfs_ops netatalk_solaris_acl_adouble = {
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
@@ -859,7 +859,7 @@ void initvol_vfs(struct vol *vol)
     }
 
     /* ACLs */
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     vol->vfs_modules[2] = &netatalk_solaris_acl_adouble;
 #endif
 #ifdef HAVE_POSIX_ACLS

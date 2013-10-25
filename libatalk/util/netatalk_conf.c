@@ -232,7 +232,7 @@ static int check_vol_acl_support(const struct vol *vol)
 {
     int ret = 0;
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     ace_t *aces = NULL;
     ret = 1;
     if (get_nfsv4_acl(vol->v_path, &aces) == -1)
@@ -245,7 +245,7 @@ static int check_vol_acl_support(const struct vol *vol)
         ret = 0;
 #endif
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
     if (aces) free(aces);
 #endif
 #ifdef HAVE_POSIX_ACLS
@@ -667,11 +667,16 @@ static struct vol *creatvol(AFPObj *obj,
     for(i = 0; i < vlen; i++)
         if(tmpname[i] == '/') tmpname[i] = ':';
 
-    bstring dbpath;
-    EC_NULL( val = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
-    EC_NULL( dbpath = bformat("%s/%s/", val, tmpname) );
-    EC_NULL( volume->v_dbpath = strdup(cfrombstr(dbpath)) );
-    bdestroy(dbpath);
+
+    if (!atalk_iniparser_getboolean(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", 0)) {
+        bstring dbpath;
+        EC_NULL( val = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", _PATH_STATEDIR "CNID/") );
+        EC_NULL( dbpath = bformat("%s/%s/", val, tmpname) );
+        EC_NULL( volume->v_dbpath = strdup(cfrombstr(dbpath)) );
+        bdestroy(dbpath);
+    } else {
+        EC_NULL( volume->v_dbpath = strdup(path) );
+    }
 
     if ((val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL)))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
@@ -1978,6 +1983,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.k5service);
     if (obj->options.k5realm)
         CONFIG_ARG_FREE(obj->options.k5realm);
+    if (obj->options.k5principal)
+        CONFIG_ARG_FREE(obj->options.k5principal);
     if (obj->options.listen)
         CONFIG_ARG_FREE(obj->options.listen);
     if (obj->options.interfaces)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="upgrade">
   <chapterinfo>
-    <date>7.29.2013</date>
+    <date>9.6.2013</date>
 
     <author>
       <firstname>Frank</firstname>
@@ -9,7 +9,7 @@
       <surname>Lahm</surname>
     </author>
 
-    <pubdate>29 Jul, 2013</pubdate>
+    <pubdate>6 Sep, 2013</pubdate>
   </chapterinfo>
 
   <title>Upgrading from Netatalk 2</title>
@@ -569,8 +569,8 @@
             <row>
               <entry>-server_quantum</entry>
               <entry>server quantum</entry>
-              <entry>303840</entry>
-              <entry>303840</entry>
+              <entry><emphasis role="bold">303840</emphasis></entry>
+              <entry><emphasis role="bold">1048576</emphasis></entry>
               <entry>(G)</entry>
               <entry>-</entry>
             </row>

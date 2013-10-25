@@ -182,6 +182,9 @@ AC_NETATALK_SENDFILE
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
+dnl Check whether bundled tdb shall be used
+AC_NETATALK_TDB
+
 dnl libatalk API checks
 AC_DEVELOPER
 
@@ -210,7 +213,7 @@ AC_SUBST(UAMS_PATH)
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
-AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
+AM_CONDITIONAL(HAVE_ACLS, test x"$ac_cv_have_acls" = x"yes")
 AM_CONDITIONAL(HAVE_LDAP, test x"$netatalk_cv_ldap" = x"yes")
 AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
 AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)

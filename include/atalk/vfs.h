@@ -62,7 +62,7 @@
 #define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, int sfd, const char *src, const char *dst
 #define VFS_FUNC_VARS_COPYFILE vol, sfd, src, dst
 
-#ifdef HAVE_SOLARIS_ACLS
+#ifdef HAVE_NFSV4_ACLS
 #define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, int cmd, int count, void *aces
 #define VFS_FUNC_VARS_ACL vol, path, cmd, count, aces
 #endif

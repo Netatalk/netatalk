@@ -222,6 +222,11 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_NOTAUTH;
     }
 
+    if (obj->cnx_cnt > obj->cnx_max) {
+        LOG(log_error, logtype_dsi, "login: too many connections, limit: %d", obj->cnx_max);
+        return AFPERR_MAXSESS;
+    }
+
     LOG(log_note, logtype_afpd, "%s Login by %s",
         afp_versions[afp_version_index].av_name, pwd->pw_name);
 
@@ -1012,7 +1017,7 @@ int auth_register(const int type, struct uam_obj *uam)
 }
 
 /* load all of the modules */
-int auth_load(const char *path, const char *list)
+int auth_load(AFPObj *obj, const char *path, const char *list)
 {
     char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p;
     struct uam_mod *mod;
@@ -1039,7 +1044,7 @@ int auth_load(const char *path, const char *list)
           if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
         */
         if (stat(name, &st) == 0) {
-            if ((mod = uam_load(name, p))) {
+            if ((mod = uam_load(obj, name, p))) {
                 uam_attach(&uam_modules, mod);
                 LOG(log_debug, logtype_afpd, "uam: %s loaded", p);
             } else {

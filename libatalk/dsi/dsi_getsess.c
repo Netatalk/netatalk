@@ -65,7 +65,7 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_c
       LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
       close(ipc_fds[0]);
       dsi->header.dsi_flags = DSIFL_REPLY;
-      dsi->header.dsi_data.dsi_code = DSIERR_SERVBUSY;
+      dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
       dsi_send(dsi);
       dsi->header.dsi_data.dsi_code = DSIERR_OK;
       kill(pid, SIGKILL);
@@ -75,16 +75,9 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_c
     return 0;
   }
   
-  /* child: check number of open connections. this is one off the
-   * actual count. */
-  if ((serv_children->servch_count >= serv_children->servch_nsessions) &&
-      (dsi->header.dsi_command == DSIFUNC_OPEN)) {
-    LOG(log_info, logtype_dsi, "dsi_getsess: too many connections");
-    dsi->header.dsi_flags = DSIFL_REPLY;
-    dsi->header.dsi_data.dsi_code = DSIERR_TOOMANY;
-    dsi_send(dsi);
-    exit(EXITERR_CLNT);
-  }
+  /* Save number of existing and maximum connections */
+  dsi->AFPobj->cnx_cnt = serv_children->servch_count;
+  dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
 
   /* get rid of some stuff */
   dsi->AFPobj->ipc_fd = ipc_fds[1];

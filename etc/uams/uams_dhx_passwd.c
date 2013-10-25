@@ -371,7 +371,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128",
 		   passwd_login, passwd_logincont, NULL, passwd_login_ext) < 0)

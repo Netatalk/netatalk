@@ -719,7 +719,7 @@ static int pam_changepw(void *obj, char *username,
 }
 
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128", pam_login, 
 		   pam_logincont, pam_logout, pam_login_ext) < 0)

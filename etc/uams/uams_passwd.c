@@ -353,7 +353,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     return(0);
 }
 
-static int uam_setup(const char *path)
+static int uam_setup(void *obj, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
                      passwd_login, NULL, NULL, passwd_login_ext) < 0)
