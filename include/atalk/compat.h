@@ -15,18 +15,6 @@
 extern char *getusershell (void);
 #endif
 
-#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
-# include <stdio.h>
-# include <stdarg.h>
-# ifndef HAVE_SNPRINTF
-int snprintf (char *str,size_t count,const char *fmt,...);
-# endif
-
-# ifndef HAVE_VSNPRINTF
-int vsnprintf(char *str, size_t count, const char *fmt, va_list args);
-# endif
-#endif
-
 /* OpenBSD */
 #if defined(__OpenBSD__) && !defined(ENOTSUP)
 #define ENOTSUP EOPNOTSUPP
