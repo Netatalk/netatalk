@@ -1,8 +1,9 @@
-Netatalk 3.1-beta2
-===================
+Netatalk 3.1.0
+==============
 
-The Netatalk development team is proud to announce the second beta release
-of the next Netatalk version 3.1. This release is intended for testing only.
+The Netatalk development team is proud to announce the first release of
+the Netatalk 3.1 release series. Early adopters are encouraged to update
+production systems.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -27,7 +28,7 @@ with Spotlight support and how to configure:
 
 http://netatalk.sourceforge.net/3.1/htmldocs/installation.html#compiling-netatalk
 
-http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html#id2615270
+http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html
 
 Please make sure to read the upgrading section in the Netatalk online
 manual before trying to upgrade your system from version 2:
@@ -43,17 +44,8 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1-beta2
-~~~~~~~~~~~~~~~~~~~~
-* FIX: Fix special Spotlight RPC function
-
-Changes in 3.1-beta1
-~~~~~~~~~~~~~~~~~~~~
-* REM: Remove support for Tracker versions < 0.7
-* UPD: Add support for additional Spotlight RPC calls
-
-Changes in 3.1-alpha1
-~~~~~~~~~~~~~~~~~~~~~
+Changes in 3.1.0
+~~~~~~~~~~~~~~~~
 * NEW: AFP Spotlight support with Gnome Tracker
 * NEW: New option "spotlight" (G/V)
 * NEW: Configure option --with-tracker-pkgconfig-version
@@ -62,6 +54,12 @@ Changes in 3.1-alpha1
 * NEW: New option "dbus daemon" (G)
 * UPD: Add configure option --with-afpstats for overriding the
        result of autodetecting dbus-glib presence
+* NEW: Add recvfile support with splice() on Linux. New global options
+       "recvfile" (default: no) and "splice size" (default 64k).
+* NEW: CNID backend "mysql" for use with a MySQL server
+* FIX: Build fixes for the Kerberos UAM
+* UPD: Use dedicated exit code for AFP connections that were dropped
+       by the client right after the TCP handshake
 
 Changes in 3.0.6
 ~~~~~~~~~~~~~~~~
@@ -387,4 +385,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, September 2013
+ - The Netatalk Development Team, October 2013
