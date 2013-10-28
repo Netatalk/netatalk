@@ -25,6 +25,7 @@
 #define EXITERR_CLNT 1  /* client related error */
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
 #define EXITERR_SYS  3  /* local system error */
+#define EXITERR_CLOSED 4  /* connection was immediately closed after TCP handshake */
 
 /* Print a SBT and exit */
 #define AFP_PANIC(why) \
