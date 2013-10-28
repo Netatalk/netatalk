@@ -118,6 +118,7 @@ struct vol {
   Keep in sync with libatalk/util/volinfo.c
 */
 #define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
+#define AFPVOL_SPOTLIGHT (1 << 6)   /* Index volume for Spotlight searches */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */

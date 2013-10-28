@@ -19,11 +19,13 @@
 
 #include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
 #define EXITERR_SYS  3  /* local system error */
+#define EXITERR_CLOSED 4  /* connection was immediately closed after TCP handshake */
 
 /* Print a SBT and exit */
 #define AFP_PANIC(why) \
@@ -198,6 +200,7 @@ extern int ochmod(char *path, mode_t mode, const struct stat *st, int options);
  *****************************************************************/
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
+extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath, const char *path, cnid_t *did);
 
 /******************************************************************
  * cnid.c

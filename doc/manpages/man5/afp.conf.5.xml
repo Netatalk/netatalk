@@ -714,6 +714,24 @@
         </varlistentry>
 
         <varlistentry>
+          <term>recvfile = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Whether to use splice() on Linux for receiving data.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>splice size = <replaceable>number</replaceable> (default:
+          <emphasis>64k</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Maximum number of bytes spliced.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>use sendfile = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
@@ -723,6 +741,7 @@
               </indexterm> syscall for sending file data to clients.</para>
           </listitem>
         </varlistentry>
+
 
         <varlistentry>
           <term>zeroconf = <replaceable>BOOLEAN</replaceable> (default:
@@ -796,6 +815,44 @@
             <para>Whether to close volumes possibly opened by clients when
             they're removed from the configuration and the configuration is
             reloaded.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql host = <replaceable>MySQL server address</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>name or address of a MySQL server for use with the mysql CNID
+            backend.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql user = <replaceable>MySQL user</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>MySQL user for authentication with the server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql pw = <replaceable>password</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Password for MySQL server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>cnid mysql db = <replaceable>database name</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Name of an existing database for which the specified user
+            has full privileges.</para>
           </listitem>
         </varlistentry>
 
@@ -875,7 +932,7 @@
 
           <listitem>
             <para>Speficy a set of file and directory attributes that shall
-            be ignored by the server, <attribute>all</attribute> includes all
+            be ignored by the server, <option>all</option> includes all
             the other options.</para>
             <para>In OS X when the Finder sets a lock on a file/directory or you
             set the BSD uchg flag in the Terminal, all three attributes are
@@ -920,6 +977,18 @@
             <para>Use share reservations on Solaris. Solaris CIFS server uses
             this too, so this makes a lock coherent multi protocol
             server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>spotlight =
+          <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Whether to enable Spotlight searches. Note: once the global
+            option is enabled, any volume that is not enabled won't be
+            searchable at all.</para>
           </listitem>
         </varlistentry>
 
@@ -1143,7 +1212,7 @@
       mode. You can adjust this behaviour with the configuration option
       <option>mac acls</option>:</para>
 
-      <variablelist id="mac_acls">
+      <variablelist id="map_acls">
         <varlistentry>
           <term>map acls = <parameter>none|rights|mode</parameter>
           <type>(G)</type></term>

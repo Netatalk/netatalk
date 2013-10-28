@@ -1,3 +1,23 @@
+Changes in 3.1.0
+================
+* NEW: AFP Spotlight support with Gnome Tracker
+* NEW: New option "spotlight" (G/V)
+* NEW: Configure option --with-tracker-pkgconfig-version
+* NEW: Configure option --with-tracker-prefix
+* NEW: If Spotlight is enabled, launch our own dbus instance
+* NEW: New option "dbus daemon" (G)
+* UPD: Add configure option --with-afpstats for overriding the
+       result of autodetecting dbus-glib presence
+* NEW: Add recvfile support with splice() on Linux. New global options
+       "recvfile" (default: no) and "splice size" (default 64k).
+* NEW: CNID backend "mysql" for use with a MySQL server
+
+Changes in 3.0.7
+================
+* FIX: Build fixes for the Kerberos UAM
+* UPD: Use dedicated exit code for AFP connections that were dropped
+       by the client right after the TCP handshake
+
 Changes in 3.0.6
 ================
 * FIX: charset conversion failed when copying from Mac OS 9. Bug #523.

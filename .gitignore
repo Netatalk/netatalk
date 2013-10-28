@@ -19,6 +19,7 @@ ltconfig
 ltmain.sh
 autom4te.cache
 autoscan.log
+ylwrap
 *.rpm
 *.deb
 *.dsc

@@ -18,7 +18,7 @@
 #        current+1:0:0
 #
 
-VERSION_INFO = 7:0:0
+VERSION_INFO = 12:0:0
 
 # History:          VERSION_INFO
 #
@@ -35,7 +35,9 @@ VERSION_INFO = 7:0:0
 #   3.0.5           6:0:0
 #   3.0.6           7:0:0
 
-SUBDIRS = acl adouble bstring compat cnid dsi iniparser util unicode vfs
+#   3.1.0           12:0:0
+
+SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -45,7 +47,7 @@ libatalk_la_CFLAGS = \
 	@PTHREAD_CFLAGS@
 
 libatalk_la_LIBADD  = \
-	@WRAP_LIBS@ @ACL_LIBS@ @PTHREAD_LIBS@ \
+	@WRAP_LIBS@ @ACL_LIBS@ @PTHREAD_LIBS@ @MYSQL_LIBS@ \
 	acl/libacl.la \
 	adouble/libadouble.la	\
 	bstring/libbstring.la \
@@ -53,6 +55,7 @@ libatalk_la_LIBADD  = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	iniparser/libiniparser.la \
+	talloc/libtalloc.la       \
 	unicode/libunicode.la \
 	util/libutil.la		\
 	vfs/libvfs.la
@@ -64,6 +67,7 @@ libatalk_la_DEPENDENCIES = \
 	cnid/libcnid.la \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
+	talloc/libtalloc.la       \
 	iniparser/libiniparser.la \
 	unicode/libunicode.la \
 	util/libutil.la		\
@@ -106,4 +110,5 @@ EXTRA_DIST = \
 	libatalk-3.0.3.abi \
 	libatalk-3.0.4.abi \
 	libatalk-3.0.5.abi \
-	libatalk-3.0.6.abi
+	libatalk-3.0.6.abi \
+	libatalk-3.1.0.abi

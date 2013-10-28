@@ -646,7 +646,9 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
                               volume->v_cnidscheme,
                               flags,
                               volume->v_cnidserver,
-                              volume->v_cnidport);
+                              volume->v_cnidport,
+                              (const void *)obj,
+                              volume->v_uuid);
 
     if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
         /* The first attempt failed and it wasn't yet an attempt to open in-memory */
@@ -655,7 +657,7 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
         LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
             volume->v_path);
         flags |= CNID_FLAG_MEMORY;
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL);
+        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL, NULL, NULL);
 #ifdef SERVERTEXT
         /* kill ourself with SIGUSR2 aka msg pending */
         if (volume->v_cdb) {

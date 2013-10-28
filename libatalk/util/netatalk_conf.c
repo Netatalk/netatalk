@@ -777,6 +777,10 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
     if (getoption_bool(obj->iniconfig, section, "follow symlinks", preset, 0))
         volume->v_flags |= AFPVOL_FOLLOWSYM;
+    if (getoption_bool(obj->iniconfig, section, "spotlight", preset, obj->options.flags & OPTION_SPOTLIGHT_VOL)) {
+        volume->v_flags |= AFPVOL_SPOTLIGHT;
+        obj->options.flags |= OPTION_SPOTLIGHT;
+    }
     if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0))
         volume->v_flags |= AFPVOL_DELVETO;
 
@@ -940,16 +944,16 @@ static struct vol *creatvol(AFPObj *obj,
     initvol_vfs(volume);
 
     /* get/store uuid from file in afpd master*/
-    if (!(pwd) && (volume->v_flags & AFPVOL_TM)) {
-        char *uuid = get_vol_uuid(obj, volume->v_localname);
-        if (!uuid) {
-            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
-                volume->v_localname);
-        } else {
-            volume->v_uuid = uuid;
-            LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
-                volume->v_localname, volume->v_uuid);
-        }
+    become_root();
+    char *uuid = get_vol_uuid(obj, volume->v_localname);
+    unbecome_root();
+    if (!uuid) {
+        LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
+            volume->v_localname);
+    } else {
+        volume->v_uuid = uuid;
+        LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
+            volume->v_localname, volume->v_uuid);
     }
 
     /* no errors shall happen beyond this point because the cleanup would mess the volume chain up */
@@ -1734,6 +1738,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
+#ifdef HAVE_TRACKER_SPARQL
+    options->slmod_path  = strdup(_PATH_AFPDUAMPATH "slmod_sparql.so");
+#endif
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
     if ((config = atalk_iniparser_load(AFPObj->options.configfile)) == NULL)
@@ -1757,12 +1764,16 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_SERVERNOTIF;
     if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "use sendfile", 1))
         options->flags |= OPTION_NOSENDFILE;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "recvfile", 0))
+        options->flags |= OPTION_RECVFILE;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "solaris share reservations", 1))
         options->flags |= OPTION_SHARE_RESERV;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afpstats", 0))
         options->flags |= OPTION_DBUS_AFPSTATS;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "afp read locks", 0))
         options->flags |= OPTION_AFP_READ_LOCK;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "spotlight", 0))
+        options->flags |= OPTION_SPOTLIGHT_VOL;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "veto message", 0))
         options->flags |= OPTION_VETOMSG;
     if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "save password", 1))
@@ -1789,6 +1800,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
     options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
     options->ignored_attr   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ignored attributes", NULL);
+    options->cnid_mysql_host = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql host", NULL);
+    options->cnid_mysql_user = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql user", NULL);
+    options->cnid_mysql_pw  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql pw", NULL);
+    options->cnid_mysql_db  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql db", NULL);
     options->connections    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "max connections",200);
     options->passwdminlen   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "passwd minlen",  0);
     options->tickleval      = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
@@ -1802,6 +1817,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->fce_fmodwait   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
     options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
+    options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
 
     p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))
@@ -2011,6 +2027,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.fqdn);
     if (obj->options.ignored_attr)
         CONFIG_ARG_FREE(obj->options.ignored_attr);
+    if (obj->options.slmod_path)
+        CONFIG_ARG_FREE(obj->options.slmod_path);
 
     if (obj->options.unixcodepage)
         CONFIG_ARG_FREE(obj->options.unixcodepage);

@@ -601,14 +601,13 @@ krb5_cleanup:
     krb5_free_context(context);
 
 #else /* ! HAVE_KERBEROS */
-
-    if (!options->k5service || !options->fqdn || !options->k5realm)
+    if (!obj->options.k5service || !obj->options.fqdn || !obj->options.k5realm)
         goto exit;
 
     char principal[255];
     size_t len = snprintf(principal, sizeof(principal), "%s/%s@%s",
-                          options->k5service, options->fqdn, options->k5realm);
-    (void)set_principal(&obj, principal);
+                          obj->options.k5service, obj->options.fqdn, obj->options.k5realm);
+    (void)set_principal(obj, principal);
     rv = 0;
 #endif /* HAVE_KERBEROS */
 

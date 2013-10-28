@@ -19,9 +19,9 @@
 #define EC_STATUS(a) ret = (a)
 #define EC_EXIT_STATUS(a) do { ret = (a); goto cleanup; } while (0)
 #define EC_FAIL do { ret = -1; goto cleanup; } while (0)
-#define EC_FAIL_LOG(a, ...)                     \
+#define EC_FAIL_LOG(...)                     \
     do {               \
-        LOG(log_error, logtype_default, a, __VA_ARGS__);   \
+        LOG(log_error, logtype_default, __VA_ARGS__);   \
         ret = -1;      \
         goto cleanup;  \
     } while (0)

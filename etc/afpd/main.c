@@ -325,7 +325,7 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
-    
+
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
     fd_set_listening_sockets(&obj);
 

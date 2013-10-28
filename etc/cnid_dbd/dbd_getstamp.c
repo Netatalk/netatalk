@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 
 #include "dbif.h"
 #include "dbd.h"

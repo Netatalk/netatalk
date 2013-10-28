@@ -43,7 +43,7 @@
 
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
-#include "byteorder.h"
+#include <atalk/byteorder.h>
 
 
 /**

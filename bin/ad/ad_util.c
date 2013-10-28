@@ -129,7 +129,8 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
                                      "dbd",
                                      flags,
                                      vol->vol->v_cnidserver,
-                                     vol->vol->v_cnidport)) == NULL)
+                                     vol->vol->v_cnidport,
+                                     NULL, NULL)) == NULL)
         ERROR("Cant initialize CNID database connection for %s", vol->vol->v_path);
 
     cnid_getstamp(vol->vol->v_cdb,
@@ -234,73 +235,6 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
     if (strlcpy(bname, buf, MAXPATHLEN - pos) > MAXPATHLEN - pos)
         return -1;
     return 0;
-}
-
-/*!
- * ResolvesCNID of a given paths
- *
- * path might be:
- * (a) relative:
- *     "dir/subdir" with cwd: "/afp_volume/topdir"
- * (b) absolute:
- *     "/afp_volume/dir/subdir"
- *
- * path MUST be pointing inside vol, this is usually the case as vol has been build from
- * path using loadvolinfo and friends.
- *
- * @param vol  (r) pointer to afpvol_t
- * @param path (r) path, see above
- * @param did  (rw) parent CNID of returned CNID
- *
- * @returns CNID of path
- */
-cnid_t cnid_for_path(const afpvol_t *vol,
-                     const char *path,
-                     cnid_t *did)
-{
-    EC_INIT;
-
-    cnid_t cnid;
-    bstring rpath = NULL;
-    bstring statpath = NULL;
-    struct bstrList *l = NULL;
-    struct stat st;
-
-    cnid = htonl(2);
-
-    EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
-    EC_NULL(statpath = bfromcstr(vol->vol->v_path));
-    EC_ZERO(bcatcstr(statpath, "/"));
-
-    l = bsplit(rpath, '/');
-    for (int i = 0; i < l->qty ; i++) {
-        *did = cnid;
-
-        EC_ZERO(bconcat(statpath, l->entry[i]));
-        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
-                       "lstat(rpath: %s, elem: %s): %s: %s",
-                       cfrombstr(rpath), cfrombstr(l->entry[i]),
-                       cfrombstr(statpath), strerror(errno));
-
-        if ((cnid = cnid_add(vol->vol->v_cdb,
-                             &st,
-                             *did,
-                             cfrombstr(l->entry[i]),
-                             blength(l->entry[i]),
-                             0)) == CNID_INVALID) {
-            EC_FAIL;
-        }
-        EC_ZERO(bcatcstr(statpath, "/"));
-    }
-
-EC_CLEANUP:
-    bdestroy(rpath);
-    bstrListDestroy(l);
-    bdestroy(statpath);
-    if (ret != 0)
-        return CNID_INVALID;
-
-    return cnid;
 }
 
 /*!

@@ -22,8 +22,9 @@
 #include <arpa/inet.h>
 
 #include <atalk/unicode.h>
+#include <atalk/byteorder.h>
+
 #include "precompose.h"
-#include "byteorder.h"
 
 /*******************************************************************
  Convert a string to lower case.

@@ -1,9 +1,9 @@
-Netatalk 3.0.6
+Netatalk 3.1.0
 ==============
 
-The Netatalk development team is proud to announce version 3.0.6 of
-the Netatalk File Sharing suite. This is the latest update to the 3.0
-release series. All users are encouraged to upgrade their systems to 3.0.6.
+The Netatalk development team is proud to announce the first release of
+the Netatalk 3.1 release series. Early adopters are encouraged to update
+production systems.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -17,22 +17,23 @@ The suite contains:
 * cnid_dbd   - the CNID database daemon serving CNIDs for AFP volumes
 * various supporting programs and utilities
 
-Summary of major new features and enhancements in 3.0
+Summary of major new features and enhancements in 3.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* New ini style configuration file afp.conf which replaces all previous
-  configuration files
-* New default AppleDouble backend using filesystem Extended Attributes,
-  conversion from AppleDouble v2 is done automatically on access
-* New service controller process "netatalk" responsible for starting and
-  restarting afpd and cnid_metad as necessary
-* AppleTalk support has been removed
-* Coherent cross-platform locking with Solaris CIFS server
+* AFP Spotlight Support with Gnome Tracker:
+  https://projects.gnome.org/tracker/
+
+Please refer to the online manual for details about compiling Netatalk
+with Spotlight support and how to configure:
+
+http://netatalk.sourceforge.net/3.1/htmldocs/installation.html#compiling-netatalk
+
+http://netatalk.sourceforge.net/3.1/htmldocs/configuration.html
 
 Please make sure to read the upgrading section in the Netatalk online
-manual before trying to upgrade your system to 3.0!
+manual before trying to upgrade your system from version 2:
 
-  http://netatalk.sourceforge.net/3.0/htmldocs/upgrade.html
+http://netatalk.sourceforge.net/3.1/htmldocs/upgrade.html
 
 License
 ~~~~~~~
@@ -41,7 +42,32 @@ Netatalk is a Free/Open Source Software project and is released under
 the GNU General Public License (GPLv2).  The full license text is available
 at:
 
-  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+Changes in 3.1.0
+~~~~~~~~~~~~~~~~
+* NEW: AFP Spotlight support with Gnome Tracker
+* NEW: New option "spotlight" (G/V)
+* NEW: Configure option --with-tracker-pkgconfig-version
+* NEW: Configure option --with-tracker-prefix
+* NEW: If Spotlight is enabled, launch our own dbus instance
+* NEW: New option "dbus daemon" (G)
+* UPD: Add configure option --with-afpstats for overriding the
+       result of autodetecting dbus-glib presence
+* NEW: Add recvfile support with splice() on Linux. New global options
+       "recvfile" (default: no) and "splice size" (default 64k).
+* NEW: CNID backend "mysql" for use with a MySQL server
+* FIX: Build fixes for the Kerberos UAM
+* UPD: Use dedicated exit code for AFP connections that were dropped
+       by the client right after the TCP handshake
+
+Changes in 3.0.6
+~~~~~~~~~~~~~~~~
+* FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
+* UPD: Don't force S_ISGID for directories on FreeBSD. Bug #525.
+* NEW: Add support for ZFS ACLs on FreeBSD with libsunacl. From FR#83.
+* FIX: Active Directory LDAP queries for ACL support with new options
+       "ldap user filter" and "ldap group filter". Bug #526.
 
 Changes in 3.0.6
 ~~~~~~~~~~~~~~~~

@@ -27,7 +27,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/directory.h>

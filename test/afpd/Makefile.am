@@ -38,6 +38,8 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_srcdir)/etc/afpd/ofork.c \
 				$(top_srcdir)/etc/afpd/quota.c \
 				$(top_srcdir)/etc/afpd/status.c \
+				$(top_srcdir)/etc/afpd/spotlight.c \
+				$(top_srcdir)/etc/afpd/spotlight_marshalling.c \
 				$(top_srcdir)/etc/afpd/switch.c \
 				$(top_srcdir)/etc/afpd/uam.c \
 				$(top_srcdir)/etc/afpd/unix.c \
@@ -61,7 +63,7 @@ test_CFLAGS = \
 
 test_LDADD = \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 test_LDFLAGS = -export-dynamic
 

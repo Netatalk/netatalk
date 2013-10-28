@@ -25,6 +25,8 @@ AC_PROG_PS
 AM_PROG_CC_C_O
 AC_C_BIGENDIAN
 AC_C_INLINE
+AC_PROG_LEX
+AC_PROG_YACC
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
 AC_MSG_CHECKING(to see if we can add '__attribute__((unused))' to CFLAGS)
@@ -74,7 +76,7 @@ AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
 dnl these tests have been comfirmed to be needed in 2011
 AC_CHECK_FUNCS(backtrace_symbols dirfd getusershell pread pwrite pselect)
-AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen mempcpy)
+AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen mempcpy vasprintf)
 AC_CHECK_FUNCS(mmap utime getpagesize) dnl needed by tbd
 
 dnl search for necessary libraries
@@ -178,12 +180,16 @@ AC_NETATALK_REALPATH
 
 dnl Check for sendfile()
 AC_NETATALK_SENDFILE
+AC_NETATALK_RECVFILE
 
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
 dnl Check whether bundled tdb shall be used
 AC_NETATALK_TDB
+
+dnl Check for Tracker
+AC_NETATALK_SPOTLIGHT
 
 dnl libatalk API checks
 AC_DEVELOPER
@@ -266,6 +272,7 @@ AC_OUTPUT([Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
 	etc/netatalk/Makefile
+	etc/spotlight/Makefile
 	etc/uams/Makefile
 	include/Makefile
 	include/atalk/Makefile
@@ -278,9 +285,11 @@ AC_OUTPUT([Makefile
 	libatalk/cnid/last/Makefile
 	libatalk/cnid/dbd/Makefile
 	libatalk/cnid/tdb/Makefile
+	libatalk/cnid/mysql/Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/iniparser/Makefile
+	libatalk/talloc/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile

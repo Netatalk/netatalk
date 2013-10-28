@@ -492,6 +492,16 @@ tcpsndbuf = \fInumber\fR \fB(G)\fR
 Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .PP
+recvfile = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+.RS 4
+Whether to use splice() on Linux for receiving data\&.
+.RE
+.PP
+splice size = \fInumber\fR (default: \fI64k\fR) \fB(G)\fR
+.RS 4
+Maximum number of bytes spliced\&.
+.RE
+.PP
 use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Whether to use sendfile
@@ -533,6 +543,26 @@ close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 Whether to close volumes possibly opened by clients when they\*(Aqre removed from the configuration and the configuration is reloaded\&.
 .RE
 .PP
+cnid mysql host = \fIMySQL server address\fR \fB(G)\fR
+.RS 4
+name or address of a MySQL server for use with the mysql CNID backend\&.
+.RE
+.PP
+cnid mysql user = \fIMySQL user\fR \fB(G)\fR
+.RS 4
+MySQL user for authentication with the server\&.
+.RE
+.PP
+cnid mysql pw = \fIpassword\fR \fB(G)\fR
+.RS 4
+Password for MySQL server\&.
+.RE
+.PP
+cnid mysql db = \fIdatabase name\fR \fB(G)\fR
+.RS 4
+Name of an existing database for which the specified user has full privileges\&.
+.RE
+.PP
 cnid server = \fIipaddress[:port]\fR \fB(G)/(V)\fR
 .RS 4
 Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
@@ -571,7 +601,7 @@ and should be quoted\&. Extended characters are allowed\&.
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
 .RS 4
 Speficy a set of file and directory attributes that shall be ignored by the server,
-<attribute>all</attribute>
+\fBall\fR
 includes all the other options\&.
 .sp
 In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set
@@ -593,6 +623,11 @@ automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
 Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
+.RE
+.PP
+spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
+.RS 4
+Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&.
 .RE
 .PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR

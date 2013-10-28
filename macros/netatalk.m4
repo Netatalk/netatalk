@@ -77,16 +77,19 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
 
 dnl Check for dbus-glib, for AFP stats
 AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
-    atalk_cv_with_dbus=no
+  atalk_cv_with_dbus=no
+
+  AC_ARG_WITH(afpstats,
+    AS_HELP_STRING(
+      [--with-afpstats],
+      [Enable AFP statistics via dbus (default: enabled if dbus found)]
+    ),,[withval=auto]
+  )
+
+  if test x"$withval" != x"no" ; then
     PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1, have_dbus=yes, have_dbus=no)
     PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1, have_dbus_glib=yes, have_dbus_glib=no)
     PKG_CHECK_MODULES(DBUS_GTHREAD, gthread-2.0, have_dbus_gthread=yes, have_dbus_gthread=no)
-    AC_SUBST(DBUS_CFLAGS)
-    AC_SUBST(DBUS_LIBS)
-    AC_SUBST(DBUS_GLIB_CFLAGS)
-    AC_SUBST(DBUS_GLIB_LIBS)
-    AC_SUBST(DBUS_GTHREAD_CFLAGS)
-    AC_SUBST(DBUS_GTHREAD_LIBS)
     if test x$have_dbus_glib = xyes -a x$have_dbus = xyes -a x$have_dbus_gthread = xyes ; then
         saved_CFLAGS=$CFLAGS
         saved_LIBS=$LIBS
@@ -96,20 +99,32 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
         CFLAGS="$saved_CFLAGS"
         LIBS="$saved_LIBS"
     fi
-    AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
+  fi
 
-    AC_ARG_WITH(
-        dbus-sysconf-dir,
-        [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
-        ac_cv_dbus_sysdir=$withval,
-        ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
-    )
+  if test x"$withval" = x"yes" -a x"$atalk_cv_with_dbus" = x"no"; then
+    AC_MSG_ERROR([afpstats requested but dbus-glib not found])
+  fi
 
-    if test x$atalk_cv_with_dbus = xyes ; then
-        AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
-        DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
-        AC_SUBST(DBUS_SYS_DIR)
-    fi
+  AC_ARG_WITH(
+      dbus-sysconf-dir,
+      [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+      ac_cv_dbus_sysdir=$withval,
+      ac_cv_dbus_sysdir='${sysconfdir}/dbus-1/system.d'
+  )
+  DBUS_SYS_DIR=""
+  if test x$atalk_cv_with_dbus = xyes ; then
+      AC_DEFINE(HAVE_DBUS_GLIB, 1, [Define if support for dbus-glib was found])
+      DBUS_SYS_DIR="$ac_cv_dbus_sysdir"
+  fi
+
+  AC_SUBST(DBUS_SYS_DIR)
+  AC_SUBST(DBUS_CFLAGS)
+  AC_SUBST(DBUS_LIBS)
+  AC_SUBST(DBUS_GLIB_CFLAGS)
+  AC_SUBST(DBUS_GLIB_LIBS)
+  AC_SUBST(DBUS_GTHREAD_CFLAGS)
+  AC_SUBST(DBUS_GTHREAD_LIBS)
+  AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
 ])
 
 dnl Whether to enable developer build
@@ -123,6 +138,52 @@ AC_DEFUN([AC_DEVELOPER], [
     )
     AC_MSG_RESULT([$enable_dev])
     AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
+])
+
+dnl Tracker, for Spotlight
+AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
+    ac_cv_have_tracker=no
+    ac_cv_tracker_pkg_version_default=0.12
+    ac_cv_tracker_pkg_version_min=0.12
+
+    dnl Tracker SPARQL
+    AC_ARG_WITH([tracker-pkgconfig-version],
+      [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL and tracker-miner pkg in pkg-config (default: 0.12)])],
+      [ac_cv_tracker_pkg_version=$withval],
+      [ac_cv_tracker_pkg_version=$ac_cv_tracker_pkg_version_default]
+    )
+
+    AC_ARG_WITH([tracker-prefix],
+      [AS_HELP_STRING([--with-tracker-prefix=PATH],[Prefix of Tracker installation (default: none)])],
+      [ac_cv_tracker_prefix=$withval],
+      [ac_cv_tracker_prefix="`pkg-config --variable=prefix tracker-sparql-$ac_cv_tracker_pkg_version`"]
+    )
+
+    AC_ARG_VAR([PKG_CONFIG_PATH], [Path to additional pkg-config packages])
+    PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
+    PKG_CHECK_MODULES([TRACKER_MINER], [tracker-miner-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
+
+    if test x"$ac_cv_have_tracker_sparql" = x"no" -o x"$ac_cv_have_tracker_miner" = x"no" ; then
+        if test x"$need_tracker_sparql" = x"yes" ; then
+            AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
+        fi
+    else
+        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
+        AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
+        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
+        AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
+        AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
+    fi
+
+    if test x"$ac_cv_have_tracker_sparql" = x"yes" ; then
+       ac_cv_have_tracker=yes
+    fi
+
+    AC_SUBST(TRACKER_CFLAGS)
+    AC_SUBST(TRACKER_LIBS)
+    AC_SUBST(TRACKER_MINER_CFLAGS)
+    AC_SUBST(TRACKER_MINER_LIBS)
+    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent
@@ -1100,6 +1161,23 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
     if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
         AC_DEFINE(WITH_SENDFILE,1,[Whether sendfile() should be used])
     fi
+fi
+])
+
+dnl ------ Check for recvfile() --------
+AC_DEFUN([AC_NETATALK_RECVFILE], [
+case "$host_os" in
+*linux*)
+    AC_CHECK_FUNCS([splice], [atalk_cv_use_recvfile=yes])
+    ;;
+
+*)
+    ;;
+
+esac
+
+if test x"$atalk_cv_use_recvfile" = x"yes"; then
+    AC_DEFINE(WITH_RECVFILE, 1, [Whether recvfile should be used])
 fi
 ])
 

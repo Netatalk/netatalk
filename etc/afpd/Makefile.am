@@ -7,7 +7,7 @@ CLEANFILES =
 DISTCLEANFILES =
 
 sbin_PROGRAMS = afpd
-noinst_PROGRAMS = hash fce
+noinst_PROGRAMS = hash fce spot
 
 afpd_SOURCES = \
 	afp_avahi.c \
@@ -39,6 +39,8 @@ afpd_SOURCES = \
 	nfsquota.c \
 	ofork.c \
 	quota.c \
+	spotlight.c \
+	spotlight_marshalling.c \
 	status.c \
 	switch.c \
 	uam.c \
@@ -49,7 +51,7 @@ afpd_SOURCES = \
 
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 afpd_LDFLAGS = -export-dynamic
 
@@ -103,3 +105,7 @@ hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
 fce_SOURCES = fce_api.c fce_util.c
 fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
 fce_LDADD = $(top_builddir)/libatalk/libatalk.la
+
+spot_SOURCES = spotlight.c spotlight_marshalling.c
+spot_CFLAGS = -DSPOT_TEST_MAIN
+spot_LDADD = $(top_builddir)/libatalk/libatalk.la

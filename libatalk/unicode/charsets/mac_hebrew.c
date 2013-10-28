@@ -34,8 +34,8 @@
 
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
+#include <atalk/byteorder.h>
 
-#include "../byteorder.h"
 #include "mac_hebrew.h"
 
 static size_t   mac_hebrew_pull(void *,char **, size_t *, char **, size_t *);

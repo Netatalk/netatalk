@@ -9,7 +9,7 @@ bin_PROGRAMS =
 endif
 
 afppasswd_SOURCES = afppasswd.c
-afppasswd_LDADD = $(top_builddir)/libatalk/libatalk.la @SSL_LIBS@
+afppasswd_LDADD = $(top_builddir)/libatalk/libatalk.la @SSL_LIBS@ @MYSQL_LIBS@
 
 AM_CFLAGS = @SSL_CFLAGS@ -I$(top_srcdir)/sys \
     -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"

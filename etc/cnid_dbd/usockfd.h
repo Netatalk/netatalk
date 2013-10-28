@@ -9,7 +9,7 @@
 
 
 
-#include <atalk/cnid_dbd_private.h>
+#include <atalk/cnid_bdb_private.h>
 
 
 extern int      usockfd_create  (char *, mode_t, int);

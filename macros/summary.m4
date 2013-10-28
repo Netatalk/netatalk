@@ -12,6 +12,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([    AFP:])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([         ACL support: $ac_cv_have_acls])
+	AC_MSG_RESULT([         Spotlight: $ac_cv_have_tracker])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
 	AC_MSG_RESULT([    UAMS:])
@@ -53,7 +54,7 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	AC_MSG_RESULT([         ACL support:             $with_acl_support])
 	AC_MSG_RESULT([         Kerberos support:        $with_kerberos])
 	AC_MSG_RESULT([         LDAP support:            $netatalk_cv_ldap])
-	AC_MSG_RESULT([         dbus support:            $atalk_cv_with_dbus])
+	AC_MSG_RESULT([         AFP stats via dbus:      $atalk_cv_with_dbus])
 	AC_MSG_RESULT([         dtrace probes:           $WDTRACE])
 	AC_MSG_RESULT([    Paths:])
 	AC_MSG_RESULT([         Netatalk lockfile:       $ac_cv_netatalk_lock])
@@ -90,6 +91,11 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	AC_MSG_RESULT([    PTHREADS:])
 	AC_MSG_RESULT([        LIBS   = $PTHREAD_LIBS])
 	AC_MSG_RESULT([        CFLAGS = $PTHREAD_CFLAGS])
+	if test x"$ac_cv_have_tracker" = x"yes"; then
+		AC_MSG_RESULT([    TRACKER:])
+		AC_MSG_RESULT([        LIBS   = $TRACKER_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $TRACKER_CFLAGS])
+	fi
 	if test x"$neta_cv_have_openssl" = x"yes"; then
 		AC_MSG_RESULT([    SSL:])
 		AC_MSG_RESULT([        LIBS   = $SSL_LIBS])
@@ -142,7 +148,6 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $LIBEVENT_CFLAGS])
 		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_LDFLAGS])
     fi
-
     AC_MSG_RESULT([    TDB:])
     if test x"$use_bundled_tdb" = x"yes"; then
 		AC_MSG_RESULT([        bundled])
@@ -150,4 +155,9 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $TDB_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $TDB_CFLAGS])
     fi
+	if test x"$ac_cv_with_cnid_mysql" = x"yes"; then
+		AC_MSG_RESULT([    MySQL:])
+		AC_MSG_RESULT([        LIBS   = $MYSQL_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $MYSQL_CFLAGS])
+	fi
 ])

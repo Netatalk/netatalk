@@ -35,14 +35,19 @@ noinst_HEADERS = \
 	server_child.h \
 	server_ipc.h \
 	tdb.h \
-	cnid_dbd_private.h \
+	cnid_bdb_private.h \
+	cnid_mysql_private.h \
 	cnid_private.h \
 	bstradd.h \
 	errchk.h \
 	ftw.h \
 	dsi.h \
 	ldapconfig.h \
-	fce_api.h
+	talloc.h \
+	dalloc.h \
+	byteorder.h \
+	fce_api.h \
+	spotlight.h
 
 EXTRA_DIST = afp_dtrace.d
 
