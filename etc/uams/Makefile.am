@@ -93,7 +93,7 @@ AM_CFLAGS = @SSL_CFLAGS@ @LIBGCRYPT_CFLAGS@
 uams_pam_la_CFLAGS         = @PAM_CFLAGS@
 uams_dhx_pam_la_CFLAGS     = @SSL_CFLAGS@ @PAM_CFLAGS@
 uams_dhx2_pam_la_CFLAGS    = @LIBGCRYPT_CFLAGS@ @PAM_CFLAGS@
-uams_gss_la_CFLAGS   	   = @GSSAPI_CFLAGS@
+uams_gss_la_CFLAGS   	   = @GSSAPI_CFLAGS@ @KRB5_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
 uams_randnum_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@
@@ -104,7 +104,7 @@ uams_dhx_passwd_la_LDFLAGS = -module -avoid-version @CRYPT_LIBS@ @SSL_LIBS@
 uams_dhx_pam_la_LDFLAGS		= -module -avoid-version @CRYPT_LIBS@ @SSL_LIBS@ @PAM_LIBS@
 uams_dhx2_passwd_la_LDFLAGS	= -module -avoid-version @CRYPT_LIBS@ @LIBGCRYPT_LIBS@
 uams_dhx2_pam_la_LDFLAGS	= -module -avoid-version @LIBGCRYPT_LIBS@ @PAM_LIBS@
-uams_gss_la_LDFLAGS   	   = -module -avoid-version @GSSAPI_LIBS@ 
+uams_gss_la_LDFLAGS   	   = -module -avoid-version @GSSAPI_LIBS@ @KRB5_LIBS@
 
 #
 # module compilation
