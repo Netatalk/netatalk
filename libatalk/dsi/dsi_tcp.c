@@ -186,7 +186,7 @@ static pid_t dsi_tcp_open(DSI *dsi)
         len = dsi_stream_read(dsi, block, 2);
         if (!len ) {
             /* connection already closed, don't log it (normal OSX 10.3 behaviour) */
-            exit(EXITERR_CLNT);
+            exit(EXITERR_CLOSED);
         }
         if (len < 2 || (block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
             LOG(log_error, logtype_dsi, "dsi_tcp_open: invalid header");
