@@ -1,3 +1,6 @@
+Changes in 3.0.7
+================
+
 Changes in 3.0.6
 ================
 * FIX: charset conversion failed when copying from Mac OS 9. Bug #523.
