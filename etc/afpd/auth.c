@@ -1019,7 +1019,7 @@ int auth_register(const int type, struct uam_obj *uam)
 /* load all of the modules */
 int auth_load(AFPObj *obj, const char *path, const char *list)
 {
-    char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p;
+    char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p, *last;
     struct uam_mod *mod;
     struct stat st;
     size_t len;
@@ -1027,8 +1027,10 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     if (!path || !*path || !list || (len = strlen(path)) > sizeof(name) - 2)
         return -1;
 
+    LOG(log_debug, logtype_afpd, "auth_load: %s, %s", path, list);
+
     strlcpy(buf, list, sizeof(buf));
-    if ((p = strtok(buf, ", ")) == NULL)
+    if ((p = strtok_r(buf, ", ", &last)) == NULL)
         return -1;
 
     strcpy(name, path);
@@ -1053,7 +1055,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
         }
-        p = strtok(NULL, ", ");
+        p = strtok_r(NULL, ", ", &last);
     }
 
     return 0;
