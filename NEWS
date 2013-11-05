@@ -4,6 +4,8 @@ Changes in 3.0.7
 * UPD: Use dedicated exit code for AFP connections that were dropped
        by the client right after the TCP handshake
 * FIX: Fix ressource fork name conversion. Bug #534.
+* FIX: Fix a bug where only the first configured UAM was loaded.
+       Bug #537.
 
 Changes in 3.0.6
 ================
