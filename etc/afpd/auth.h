@@ -20,7 +20,8 @@ static const struct afp_versions  afp_versions[] = {
     { "AFPX03", 30 },
     { "AFP3.1", 31 },
     { "AFP3.2", 32 },
-    { "AFP3.3", 33 }
+    { "AFP3.3", 33 },
+    { "AFP3.4", 34 }
 };
 
 /* for GetUserInfo */

@@ -313,8 +313,13 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
             LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): EA already exists",
                 getcwdpath(), uname, attruname);
             return AFPERR_EXIST;
+        case ENOATTR:
+        case ENOENT:
+            if ((attr_flag & XATTR_REPLACE) && (vol->v_obj->afp_version >= 34))
+                return AFPERR_NOITEM;
+            return AFPERR_MISC;
         default:
-            LOG(log_error, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s', size: %u, flags: %s|%s|%s): %s",
+            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s', size: %u, flags: %s|%s|%s): %s",
                 getcwdpath(), uname, attruname, attrsize, 
                 oflag & O_CREAT ? "XATTR_CREATE" : "-",
                 oflag & O_TRUNC ? "XATTR_REPLACE" : "-",

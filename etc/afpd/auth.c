@@ -170,6 +170,7 @@ static int set_auth_switch(const AFPObj *obj, int expired)
         afp_switch = postauth_switch;
         switch (obj->afp_version) {
 
+        case 34:
         case 33:
         case 32:
 #ifdef HAVE_ACLS
@@ -228,8 +229,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_MAXSESS;
     }
 
-    LOG(log_note, logtype_afpd, "%s Login by %s",
-        afp_versions[afp_version_index].av_name, pwd->pw_name);
+    LOG(log_note, logtype_afpd, "Login by %s (%s)",
+        pwd->pw_name, afp_versions[afp_version_index].av_name);
 
     if (set_groups(obj, pwd) != 0)
         return AFPERR_BADUAM;
