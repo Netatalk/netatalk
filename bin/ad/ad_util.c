@@ -337,14 +337,17 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
     cnid = htonl(2);
 
     EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
-    EC_NULL(statpath = bfromcstr(vol->vol->v_path));
 
     l = bsplit(rpath, '/');
     if (l->qty == 1)
         /* only one path element, means parent dir cnid is volume root = 2 */
         goto EC_CLEANUP;
+
+    EC_NULL( statpath = bfromcstr(vol->vol->v_path) );
+
     for (int i = 0; i < (l->qty - 1); i++) {
         *did = cnid;
+        EC_ZERO( bcatcstr(statpath, "/") );
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",
@@ -359,7 +362,6 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                              0)) == CNID_INVALID) {
             EC_FAIL;
         }
-        EC_ZERO(bcatcstr(statpath, "/"));
     }
 
 EC_CLEANUP:
