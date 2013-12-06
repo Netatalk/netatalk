@@ -148,14 +148,15 @@ static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, 
     if (S_ISREG(st->st_mode)) {
         if (strchr(new_attributes, 'W'))
             AFPattributes |= ATTRBIT_NOWRITE;
-        if (strchr(new_attributes, 'w'))
-            AFPattributes &= ~ATTRBIT_NOWRITE;
 
         if (strchr(new_attributes, 'O'))
             AFPattributes |= ATTRBIT_NOCOPY;
         if (strchr(new_attributes, 'o'))
             AFPattributes &= ~ATTRBIT_NOCOPY;
     }
+
+    if (strchr(new_attributes, 'w'))
+        AFPattributes &= ~ATTRBIT_NOWRITE;
 
     if (strchr(new_attributes, 'Y'))
         AFPattributes |= ATTRBIT_SYSTEM;

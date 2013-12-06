@@ -6,6 +6,7 @@ Changes in 3.0.7
 * FIX: Fix ressource fork name conversion. Bug #534.
 * FIX: Fix a bug where only the first configured UAM was loaded.
        Bug #537.
+* FIX: Allow ad set to remove the "w" flag on folders. Bug #539.
 
 Changes in 3.0.6
 ================
