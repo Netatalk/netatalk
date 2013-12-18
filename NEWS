@@ -8,6 +8,7 @@ Changes in 3.0.7
        Bug #537.
 * FIX: Allow ad set to remove the "w" flag on folders. Bug #539.
 * FIX: Fix path handling in ad utility. Bug #538.
+* FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
 
 Changes in 3.0.6
 ================
