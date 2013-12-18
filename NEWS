@@ -25,6 +25,7 @@ Changes in 3.0.7
 * FIX: Build fixes for the Kerberos UAM
 * UPD: Use dedicated exit code for AFP connections that were dropped
        by the client right after the TCP handshake
+* FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
 
 Changes in 3.0.6
 ================
