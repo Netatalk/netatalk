@@ -36,19 +36,57 @@ static pthread_t       poller;
 /*
  * Its easier to use asprintf to set the TXT record values
  */
-#define TXTRecordPrintf(rec, key, args, ...) {           \
-        char *str;                                      \
-        asprintf(&str, args);                           \
-        TXTRecordSetValue(rec, key, strlen(str), str);  \
-        free(str);                                      \
+
+int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt, ... ) 
+{
+    int ret = 0;
+    char *str;
+    va_list ap;
+    va_start( ap, fmt );
+
+    if( 0 > vasprintf(&str, fmt, ap ) ) {
+        va_end(ap);
+        return -1;    
     }
-#define TXTRecordKeyPrintf(rec, k, var, args, ...) {     \
-        char *key, *str;                                \
-        asprintf(&key, k, var);                         \
-        asprintf(&str, args);                           \
-        TXTRecordSetValue(rec, key, strlen(str), str);  \
-        free(str); free(key);                           \
+    va_end(ap);
+
+    if( kDNSServiceErr_NoError != TXTRecordSetValue(rec, key, strlen(str), str) ) {
+        ret = -1;
     }
+
+    free(str);
+    return ret;
+}
+
+int TXTRecordKeyPrintf(TXTRecordRef * rec, const char * key_fmt, int key_var, const char * fmt, ...) 
+{
+    int ret = 0;
+    char *key = NULL, *str = NULL;
+    va_list ap;
+
+    if( 0 > asprintf(&key, key_fmt, key_var))
+        return -1;
+
+    va_start( ap, fmt );
+    if( 0 > vasprintf(&str, fmt, ap )) {
+        va_end(ap);
+        ret = -1;
+        goto exit;
+    }
+    va_end(ap);
+
+    if( kDNSServiceErr_NoError != TXTRecordSetValue(rec, key, strlen(str), str) ) {
+        ret = -1;
+        goto exit;
+    }
+
+exit:
+    if (str)
+        free(str);
+    if (key)
+        free(key);
+    return ret;
+}
 
 static struct pollfd *fds;
 
@@ -134,7 +172,10 @@ static void register_stuff(const AFPObj *obj) {
 
     /* Register our service, prepare the TXT record */
     TXTRecordCreate(&txt_adisk, 0, NULL);
-    TXTRecordPrintf(&txt_adisk, "sys", "waMa=0,adVF=0x100");
+    if( 0 > TXTRecordPrintf(&txt_adisk, "sys", "waMa=0,adVF=0x100") ) {
+        LOG ( log_error, logtype_afpd, "Could not create Zeroconf TXTRecord for sys");
+        goto fail;
+    }
 
     /* Build AFP volumes list */
     int i = 0;
@@ -150,12 +191,18 @@ static void register_stuff(const AFPObj *obj) {
             if (volume->v_uuid) {
                 LOG(log_info, logtype_afpd, "Registering volume '%s' with UUID: '%s' for TimeMachine",
                     volume->v_localname, volume->v_uuid);
-                TXTRecordKeyPrintf(&txt_adisk, "dk%u", i++, "adVN=%s,adVF=0xa1,adVU=%s",
-                                   tmpname, volume->v_uuid);
+                if( 0 > TXTRecordKeyPrintf(&txt_adisk, "dk%u", i++, "adVN=%s,adVF=0xa1,adVU=%s",
+                                   tmpname, volume->v_uuid) ) {
+                    LOG ( log_error, logtype_afpd, "Could not set Zeroconf TXTRecord for dk%u", i);
+                    goto fail;
+                }
             } else {
                 LOG(log_warning, logtype_afpd, "Registering volume '%s' for TimeMachine. But UUID is invalid.",
                     volume->v_localname);
-                TXTRecordKeyPrintf(&txt_adisk, "dk%u", i++, "adVN=%s,adVF=0xa1", tmpname);
+                if( 0 > TXTRecordKeyPrintf(&txt_adisk, "dk%u", i++, "adVN=%s,adVF=0xa1", tmpname) ) {
+                    LOG ( log_error, logtype_afpd, "Could not set Zeroconf TXTRecord for dk%u", i);
+                    goto fail;
+                }
             }
         }
     }
@@ -170,7 +217,7 @@ static void register_stuff(const AFPObj *obj) {
 
     // Allocate the memory to store our service refs
     svc_refs = calloc(svc_ref_count, sizeof(DNSServiceRef));
-    assert(svc_ref);
+    assert(svc_refs);
     svc_ref_count = 0;
 
     /* AFP server */
@@ -237,7 +284,11 @@ static void register_stuff(const AFPObj *obj) {
             LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
                 dsi->bonjourname, obj->options.mimicmodel);
             TXTRecordCreate(&txt_devinfo, 0, NULL);
-            TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel);
+            if( 0 > TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel) ) {
+              LOG ( log_error, logtype_afpd, "Could not create Zeroconf TXTRecord for model");
+              goto fail;
+            }
+
             error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                        0,               // no flags
                                        0,               // all network interfaces
