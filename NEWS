@@ -10,6 +10,8 @@ Changes in 3.0.7
 * FIX: Fix path handling in ad utility. Bug #538.
 * FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
 * FIX: Registering with mDNS crashed. Bug #540
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the ressource fork AppleDouble file failed. Bug #542.
 
 Changes in 3.0.6
 ================
