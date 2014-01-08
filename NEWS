@@ -6,6 +6,8 @@ Changes in 3.1.1
        Bug #537.
 * UPD: Add support for AFP 3.4. From FR #85.
 * FIX: Registering with mDNS crashed. Bug #540
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the ressource fork AppleDouble file failed. Bug #542.
 
 Changes in 3.1.0
 ================
@@ -27,6 +29,9 @@ Changes in 3.0.7
 * UPD: Use dedicated exit code for AFP connections that were dropped
        by the client right after the TCP handshake
 * FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
+* FIX: Registering with mDNS crashed. Bug #540
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the ressource fork AppleDouble file failed. Bug #542.
 
 Changes in 3.0.6
 ================
