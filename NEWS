@@ -1,5 +1,7 @@
 Changes in 2.2.6
 ================
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the resource fork AppleDouble file failed. Bug #542.
 * FIX: Fix handling of large number of volumes. Bug #527.
 
 Changes in 2.2.5
