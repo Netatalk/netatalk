@@ -86,6 +86,8 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 
         case ENOATTR:
         case ENOENT:
+            if (vol->v_obj->afp_version >= 34)
+                return AFPERR_NOITEM;
             return AFPERR_MISC;
 
         default:
@@ -161,6 +163,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             return AFPERR_MISC;
 
         case ENOATTR:
+            if (vol->v_obj->afp_version >= 34)
+                return AFPERR_NOITEM;
             return AFPERR_MISC;
 
         default:
