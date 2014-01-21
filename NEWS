@@ -12,6 +12,7 @@ Changes in 3.0.7
 * FIX: Registering with mDNS crashed. Bug #540
 * FIX: Saving from applications like Photoshop may fail, because
        removing the ressource fork AppleDouble file failed. Bug #542.
+* FIX: macusers showed root user. Bug #495.
 
 Changes in 3.0.6
 ================
