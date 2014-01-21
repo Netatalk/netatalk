@@ -3,7 +3,7 @@
 use strict;
 use Socket;
 use File::Basename;
-use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
+use vars qw($MAIN_PID $NETATALK_PROCESS $AFPD_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 # Written for linux; may have to be modified for your brand of Unix.
 # Support for FreeBSD added by Joe Clarke <marcus@marcuscom.com>.
@@ -19,7 +19,8 @@ if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
         exit(1);
 }
 
-$MAC_PROCESS = "afpd";
+$NETATALK_PROCESS = "netatalk";
+$AFPD_PROCESS = "afpd";
 if ($^O eq "freebsd" || $^O eq "openbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
         $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
@@ -38,10 +39,10 @@ $LSOF = 1;
 my %mac = ();
 
 if ($^O eq "freebsd") {
-        open(SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |");
+        open(SOCKSTAT, "sockstat -4 | grep $AFPD_PROCESS | grep -v grep |");
 
         while (<SOCKSTAT>) {
-                next if ($_ !~ /$MAC_PROCESS/);
+                next if ($_ !~ /$AFPD_PROCESS/);
                 $_ =~
                     /\S+\s+\S+\s+(\d+)\s+\d+\s+[\w\d]+\s+[\d\.:]+\s+([\d\.]+)/;
                 my ($pid, $addr, $host);
@@ -82,8 +83,19 @@ if ($^O eq "freebsd") {
 
 open(PS, "ps $PS_STR |") || die "Unable to open a pipe to ``ps''";
 
+$MAIN_PID = 1;
 while (<PS>) {
-        next if ($_ !~ /$MAC_PROCESS/);
+        next if ($_ !~ /$NETATALK_PROCESS/);
+        my ($user, $pid, $ppid, $time, $name, $uid, $t, $ip);
+        $_ =~ /$MATCH_STR/;
+        $MAIN_PID = $2;
+}
+
+close(PS);
+open(PS, "ps $PS_STR |") || die "Unable to open a pipe to ``ps''";
+
+while (<PS>) {
+        next if ($_ !~ /$AFPD_PROCESS/);
         my ($user, $pid, $ppid, $time, $name, $uid, $t, $ip);
         $_ =~ /$MATCH_STR/;
         $user = $1;
@@ -91,7 +103,7 @@ while (<PS>) {
         $ppid = $3;
         $time = $4;
 
-        if ($ppid != 1) {
+        if ($ppid != $MAIN_PID) {
                 if ($^O eq "solaris") {
                         open(PFILES, "pfiles $pid |");
                         while (<PFILES>) {
