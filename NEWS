@@ -33,6 +33,7 @@ Changes in 3.0.7
 * FIX: Saving from applications like Photoshop may fail, because
        removing the ressource fork AppleDouble file failed. Bug #542.
 * FIX: macusers showed root user. Bug #495.
+* UPD: Add file pathname to logmessage parse_entries: bogus eid. FR#87.
 
 Changes in 3.0.6
 ================

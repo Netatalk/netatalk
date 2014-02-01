@@ -387,13 +387,13 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     return 0;
 }
 
-/* -------------------------------------
-   read in the entries
-*/
-static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
+/**
+ * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
+ **/
+static int parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
 {
     uint32_t   eid, len, off;
-    int        warning = 0;
+    int        ret = 0;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -413,11 +413,13 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
             && (off + len <= sizeof(ad->ad_data) || eid == ADEID_RFORK)) {
             ad->ad_eid[ eid ].ade_off = off;
             ad->ad_eid[ eid ].ade_len = len;
-        } else if (!warning) {
-            warning = 1;
+        } else if (ret == 0) {
+            ret  = -11;
             LOG(log_warning, logtype_ad, "parse_entries: bogus eid: %d", eid);
         }
     }
+
+    return ret;
 }
 
 /* this reads enough of the header so that we can figure out all of
@@ -427,7 +429,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
  * NOTE: we're assuming that the resource fork is kept at the end of
  *       the file. also, mmapping won't work for the hfs fs until it
  *       understands how to mmap header files. */
-static int ad_header_read(const char *path _U_, struct adouble *ad, const struct stat *hst)
+static int ad_header_read(const char *path, struct adouble *ad, const struct stat *hst)
 {
     char                *buf = ad->ad_data;
     uint16_t            nentries;
@@ -475,7 +477,10 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, const struct
     /* figure out all of the entry offsets and lengths. if we aren't
      * able to read a resource fork entry, bail. */
     nentries = len / AD_ENTRY_LEN;
-    parse_entries(ad, buf, nentries);
+    if (parse_entries(ad, buf, nentries) != 0) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+    }
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
         ) {
@@ -549,7 +554,7 @@ EC_CLEANUP:
 }
 
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
-static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const struct stat *hst)
+static int ad_header_read_osx(const char *path, struct adouble *ad, const struct stat *hst)
 {
     EC_INIT;
     struct adouble      adosx;
@@ -595,7 +600,10 @@ static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const st
     }
 
     nentries = len / AD_ENTRY_LEN;
-    parse_entries(&adosx, buf, nentries);
+    if (parse_entries(&adosx, buf, nentries) != 0) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+    }
 
     if (ad_getentryoff(&adosx, ADEID_RFORK) == 0
         || ad_getentryoff(&adosx, ADEID_RFORK) > sizeof(ad->ad_data)
@@ -662,7 +670,10 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     }
 
     /* Now parse entries */
-    parse_entries(ad, buf + AD_HEADER_LEN, nentries);
+    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries)) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+    }
 
     if (nentries != ADEID_NUM_EA
         || !ad_entry(ad, ADEID_FINDERI)
@@ -1352,7 +1363,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         /* Read the adouble header */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): reading adouble rfork: \"%s\"",
             path, rfpath);
-        EC_NEG1_LOG( ad_header_read_osx(NULL, ad, &st) );
+        EC_NEG1_LOG( ad_header_read_osx(rfpath, ad, &st) );
     }
 #endif
 
