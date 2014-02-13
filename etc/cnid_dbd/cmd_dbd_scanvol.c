@@ -671,11 +671,6 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
             continue;
 
-        if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
-            dbd_log(LOGDEBUG, "Ignoring \"%s\"", ep->d_name);
-            continue;
-        }
-
         if ((ret = lstat(ep->d_name, &st)) < 0) {
             dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
                      cwdbuf, ep->d_name, strerror(errno));
@@ -716,6 +711,12 @@ static int dbd_readdir(int volroot, cnid_t did)
         /**************************************************************************
            Tests
         **************************************************************************/
+
+        /* Check for invalid names and orphaned ._ files */
+        if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
+            dbd_log(LOGSTD, "Ignoring \"%s/%s\"", cwdbuf, ep->d_name);
+            continue;
+        }
 
         /* Check for appledouble file, create if missing, but only if we have addir */
         const char *name = NULL;
