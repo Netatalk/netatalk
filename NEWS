@@ -8,6 +8,7 @@ Changes in 3.1.1
 * FIX: Registering with mDNS crashed. Bug #540
 * FIX: Saving from applications like Photoshop may fail, because
        removing the ressource fork AppleDouble file failed. Bug #542.
+* FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
 
 Changes in 3.1.0
 ================
