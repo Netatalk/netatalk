@@ -610,6 +610,22 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     return db_cnid;
 }
 
+static void check_orphaned(const char *name)
+{
+    int rc;
+    struct stat sb;
+
+    if (strlen(name) < 3)
+        return;
+
+    rc = lstat(&name[2], &sb);
+
+    if (rc != 0 && errno == ENOENT) {
+        dbd_log(LOGSTD, "Removing orphaned AppleDouble \"%s/%s\"", cwdbuf, name);
+        unlink(name);
+    }
+}
+
 /*
   This is called recursively for all dirs.
   volroot=1 means we're in the volume root dir, 0 means we aren't.
@@ -713,6 +729,9 @@ static int dbd_readdir(int volroot, cnid_t did)
         **************************************************************************/
 
         /* Check for invalid names and orphaned ._ files */
+        if (S_ISREG(st.st_mode) && (strncmp(ep->d_name, "._", strlen("._")) == 0))
+            check_orphaned(ep->d_name);
+
         if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
             dbd_log(LOGSTD, "Ignoring \"%s/%s\"", cwdbuf, ep->d_name);
             continue;
