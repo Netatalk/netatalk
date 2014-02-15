@@ -146,7 +146,7 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
 /*!
  * Prepare adbuf buffer from struct adouble for writing on disk
  */
-static int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
+int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 {
     uint32_t       temp;
     uint16_t       nent;

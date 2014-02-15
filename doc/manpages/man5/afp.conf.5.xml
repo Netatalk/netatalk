@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">13 Sep 2013</refmiscinfo>
+    <refmiscinfo class="date">09 Feb 2013</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -869,6 +869,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>dbus daemon = <parameter>path</parameter>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Sets the path to dbus-daemon binary used by Spotlight feature.
+            The default is <filename>/bin/dbus-daemon</filename>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>dircachesize = <replaceable>number</replaceable>
           <type>(G)</type></term>
 
@@ -916,17 +926,6 @@
         </varlistentry>
 
         <varlistentry>
-          <term>login message = <replaceable>message</replaceable>
-          <type>(G)/(V)</type></term>
-
-          <listitem>
-            <para>Sets a message to be displayed when clients logon to the
-            server. The message should be in <option>unix charset</option> and
-            should be quoted. Extended characters are allowed.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
           <type>(G)/(V)</type></term>
 
@@ -938,6 +937,17 @@
             set the BSD uchg flag in the Terminal, all three attributes are
             used. Thus in order to ignore the Finder lock/BSD uchg flag, add
             set <emphasis>ignored attributes = all</emphasis>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>login message = <replaceable>message</replaceable>
+          <type>(G)/(V)</type></term>
+
+          <listitem>
+            <para>Sets a message to be displayed when clients logon to the
+            server. The message should be in <option>unix charset</option> and
+            should be quoted. Extended characters are allowed.</para>
           </listitem>
         </varlistentry>
 
@@ -988,7 +998,8 @@
           <listitem>
             <para>Whether to enable Spotlight searches. Note: once the global
             option is enabled, any volume that is not enabled won't be
-            searchable at all.</para>
+            searchable at all. See also <emphasis>dbus daemon</emphasis>
+            option.</para>
           </listitem>
         </varlistentry>
 
@@ -1790,7 +1801,8 @@
           <listitem>
             <para>hide files and directories,where the path matches one of the
             '/' delimited vetoed names. The veto string must always be
-            terminated with a '/', eg. "veto1/", "veto1/veto2/".</para>
+            terminated with a '/', eg. "veto files = veto1/", "veto files =
+            veto1/veto2/".</para>
           </listitem>
         </varlistentry>
       </variablelist>

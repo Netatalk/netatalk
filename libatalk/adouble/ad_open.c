@@ -387,13 +387,13 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     return 0;
 }
 
-/* -------------------------------------
-   read in the entries
-*/
-static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
+/**
+ * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
+ **/
+static int parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
 {
     uint32_t   eid, len, off;
-    int        warning = 0;
+    int        ret = 0;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -407,17 +407,21 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
         len = ntohl( len );
         buf += sizeof( len );
 
-        if (eid
-            && eid < ADEID_MAX
-            && off < sizeof(ad->ad_data)
-            && (off + len <= sizeof(ad->ad_data) || eid == ADEID_RFORK)) {
-            ad->ad_eid[ eid ].ade_off = off;
-            ad->ad_eid[ eid ].ade_len = len;
-        } else if (!warning) {
-            warning = 1;
-            LOG(log_warning, logtype_ad, "parse_entries: bogus eid: %d", eid);
+        ad->ad_eid[eid].ade_off = off;
+        ad->ad_eid[eid].ade_len = len;
+
+        if (!eid
+            || eid > ADEID_MAX
+            || off >= sizeof(ad->ad_data)
+            || ((eid != ADEID_RFORK) && (off + len >  sizeof(ad->ad_data))))
+        {
+            ret = -1;
+            LOG(log_warning, logtype_ad, "parse_entries: bogus eid: %u, off: %u, len: %u",
+                (uint)eid, (uint)off, (uint)len);
         }
     }
+
+    return ret;
 }
 
 /* this reads enough of the header so that we can figure out all of
@@ -427,7 +431,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
  * NOTE: we're assuming that the resource fork is kept at the end of
  *       the file. also, mmapping won't work for the hfs fs until it
  *       understands how to mmap header files. */
-static int ad_header_read(const char *path _U_, struct adouble *ad, const struct stat *hst)
+static int ad_header_read(const char *path, struct adouble *ad, const struct stat *hst)
 {
     char                *buf = ad->ad_data;
     uint16_t            nentries;
@@ -475,7 +479,12 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, const struct
     /* figure out all of the entry offsets and lengths. if we aren't
      * able to read a resource fork entry, bail. */
     nentries = len / AD_ENTRY_LEN;
-    parse_entries(ad, buf, nentries);
+    if (parse_entries(ad, buf, nentries) != 0) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+        errno = EIO;
+        return -1;
+    }
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
         ) {
@@ -548,8 +557,83 @@ EC_CLEANUP:
     return 0;
 }
 
+/**
+ * Convert from Apple's ._ file to Netatalk
+ *
+ * Apple's AppleDouble may contain a FinderInfo entry longer then 32 bytes
+ * containing packed xattrs. Netatalk can't deal with that, so we
+ * simply discard the packed xattrs.
+ *
+ * As we call ad_open() which might result in a recursion, just to be sure
+ * use static variable in_conversion to check for that.
+ *
+ * Returns -1 in case an error occured, 0 if no conversion was done, 1 otherwise
+ **/
+static int ad_convert_osx(const char *path, struct adouble *ad)
+{
+    EC_INIT;
+    static bool in_conversion = false;
+    char *map;
+    int finderlen = ad_getentrylen(ad, ADEID_FINDERI);
+    ssize_t origlen;
+
+    if (in_conversion || finderlen == ADEDLEN_FINDERI)
+        return 0;
+    in_conversion = true;
+
+    LOG(log_debug, logtype_ad, "Converting OS X AppleDouble %s, FinderInfo length: %d",
+        fullpathname(path), finderlen);
+
+    origlen = ad_getentryoff(ad, ADEID_RFORK) + ad_getentrylen(ad, ADEID_RFORK);
+
+    map = mmap(NULL, origlen, PROT_WRITE, MAP_SHARED, ad_reso_fileno(ad), 0);
+    if (map == MAP_FAILED) {
+        LOG(log_error, logtype_ad, "mmap AppleDouble: %s\n", strerror(errno));
+        EC_FAIL;
+    }
+
+    memmove(map + ad_getentryoff(ad, ADEID_FINDERI) + ADEDLEN_FINDERI,
+            map + ad_getentryoff(ad, ADEID_RFORK),
+            ad_getentrylen(ad, ADEID_RFORK));
+
+    ad_setentrylen(ad, ADEID_FINDERI, ADEDLEN_FINDERI);
+    ad->ad_rlen = ad_getentrylen(ad, ADEID_RFORK);
+    ad_setentryoff(ad, ADEID_RFORK, ad_getentryoff(ad, ADEID_FINDERI) + ADEDLEN_FINDERI);
+
+    EC_ZERO_LOG( ftruncate(ad_reso_fileno(ad),
+                           ad_getentryoff(ad, ADEID_RFORK)
+                           + ad_getentrylen(ad, ADEID_RFORK)) );
+
+    (void)ad_rebuild_adouble_header_osx(ad, map);
+    munmap(map, origlen);
+
+    /* Create a metadata EA if one doesn't exit */
+    if (strlen(path) < 3)
+        EC_EXIT_STATUS(0);
+    struct adouble adea;
+    ad_init_old(&adea, AD_VERSION_EA, ad->ad_options);
+
+    if (ad_open(&adea, path + 2, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) < 0) {
+        LOG(log_error, logtype_ad, "create metadata: %s\n", strerror(errno));
+        EC_FAIL;
+    }
+    if (adea.ad_mdp->adf_flags & O_CREAT) {
+        memcpy(ad_entry(&adea, ADEID_FINDERI),
+               ad_entry(ad, ADEID_FINDERI),
+               ADEDLEN_FINDERI);
+        ad_flush(&adea);
+    }
+    ad_close(&adea, ADFLAGS_HF);
+
+EC_CLEANUP:
+    in_conversion = false;
+    if (ret != 0)
+        return -1;
+    return 1;
+}
+
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
-static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const struct stat *hst)
+static int ad_header_read_osx(const char *path, struct adouble *ad, const struct stat *hst)
 {
     EC_INIT;
     struct adouble      adosx;
@@ -558,8 +642,13 @@ static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const st
     int                 len;
     ssize_t             header_len;
     struct stat         st;
+    int                 retry_read = 0;
 
+reread:
+    LOG(log_debug, logtype_ad, "ad_header_read_osx: %s", path ? fullpathname(path) : "");
+    ad_init_old(&adosx, AD_VERSION_EA, ad->ad_options);
     memset(buf, 0, sizeof(adosx.ad_data));
+    adosx.ad_rfp->adf_fd = ad_reso_fileno(ad);
 
     /* read the header */
     EC_NEG1( header_len = adf_pread(ad->ad_rfp, buf, AD_DATASZ_OSX, 0) );
@@ -595,7 +684,27 @@ static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const st
     }
 
     nentries = len / AD_ENTRY_LEN;
-    parse_entries(&adosx, buf, nentries);
+    if (parse_entries(&adosx, buf, nentries) != 0) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+    }
+
+    if (ad_getentrylen(&adosx, ADEID_FINDERI) != ADEDLEN_FINDERI) {
+        LOG(log_warning, logtype_ad, "Convert OS X to Netatalk AppleDouble: %s",
+            path ? fullpathname(path) : "");
+
+        if (retry_read > 0) {
+            LOG(log_error, logtype_ad, "ad_header_read_osx: %s, giving up", path ? fullpathname(path) : "");
+            errno = EIO;
+            EC_FAIL;
+        }
+        retry_read++;
+        if (ad_convert_osx(path, &adosx) == 1) {
+            goto reread;
+        }
+        errno = EIO;
+        EC_FAIL;
+    }
 
     if (ad_getentryoff(&adosx, ADEID_RFORK) == 0
         || ad_getentryoff(&adosx, ADEID_RFORK) > sizeof(ad->ad_data)
@@ -662,7 +771,12 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     }
 
     /* Now parse entries */
-    parse_entries(ad, buf + AD_HEADER_LEN, nentries);
+    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries)) {
+        LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
+            path ? fullpathname(path) : "");
+        errno = EINVAL;
+        EC_FAIL;
+    }
 
     if (nentries != ADEID_NUM_EA
         || !ad_entry(ad, ADEID_FINDERI)
@@ -1352,7 +1466,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         /* Read the adouble header */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): reading adouble rfork: \"%s\"",
             path, rfpath);
-        EC_NEG1_LOG( ad_header_read_osx(NULL, ad, &st) );
+        EC_NEG1_LOG( ad_header_read_osx(rfpath, ad, &st) );
     }
 #endif
 
@@ -1419,7 +1533,7 @@ off_t ad_getentryoff(const struct adouble *ad, int eid)
 #ifdef HAVE_EAFD
         return 0;
 #else
-        return ADEDOFF_RFORK_OSX;
+        return ad->ad_eid[eid].ade_off;
 #endif
     default:
         return ad->ad_eid[eid].ade_off;

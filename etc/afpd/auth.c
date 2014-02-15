@@ -170,6 +170,7 @@ static int set_auth_switch(const AFPObj *obj, int expired)
         afp_switch = postauth_switch;
         switch (obj->afp_version) {
 
+        case 34:
         case 33:
         case 32:
 #ifdef HAVE_ACLS
@@ -228,8 +229,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_MAXSESS;
     }
 
-    LOG(log_note, logtype_afpd, "%s Login by %s",
-        afp_versions[afp_version_index].av_name, pwd->pw_name);
+    LOG(log_note, logtype_afpd, "Login by %s (%s)",
+        pwd->pw_name, afp_versions[afp_version_index].av_name);
 
     if (set_groups(obj, pwd) != 0)
         return AFPERR_BADUAM;
@@ -1020,7 +1021,7 @@ int auth_register(const int type, struct uam_obj *uam)
 /* load all of the modules */
 int auth_load(AFPObj *obj, const char *path, const char *list)
 {
-    char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p;
+    char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p, *last;
     struct uam_mod *mod;
     struct stat st;
     size_t len;
@@ -1028,8 +1029,10 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     if (!path || !*path || !list || (len = strlen(path)) > sizeof(name) - 2)
         return -1;
 
+    LOG(log_debug, logtype_afpd, "auth_load: %s, %s", path, list);
+
     strlcpy(buf, list, sizeof(buf));
-    if ((p = strtok(buf, ", ")) == NULL)
+    if ((p = strtok_r(buf, ", ", &last)) == NULL)
         return -1;
 
     strcpy(name, path);
@@ -1054,7 +1057,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
         }
-        p = strtok(NULL, ", ");
+        p = strtok_r(NULL, ", ", &last);
     }
 
     return 0;

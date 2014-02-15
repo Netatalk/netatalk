@@ -1,3 +1,17 @@
+Changes in 3.1.1
+================
+* FIX: Add asprint() compatibility function for systems lacking it
+* FIX: Fix ressource fork name conversion. Bug #534.
+* FIX: Fix a bug where only the first configured UAM was loaded.
+       Bug #537.
+* UPD: Add support for AFP 3.4. From FR #85.
+* FIX: Registering with mDNS crashed. Bug #540
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the ressource fork AppleDouble file failed. Bug #542.
+* FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
+* NEW: afpd: Automatic conversion of ._ AppleDouble files
+       created by OS X. Bug #550.
+
 Changes in 3.1.0
 ================
 * NEW: AFP Spotlight support with Gnome Tracker
@@ -17,6 +31,12 @@ Changes in 3.0.7
 * FIX: Build fixes for the Kerberos UAM
 * UPD: Use dedicated exit code for AFP connections that were dropped
        by the client right after the TCP handshake
+* FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
+* FIX: Registering with mDNS crashed. Bug #540
+* FIX: Saving from applications like Photoshop may fail, because
+       removing the ressource fork AppleDouble file failed. Bug #542.
+* FIX: macusers showed root user. Bug #495.
+* UPD: Add file pathname to logmessage parse_entries: bogus eid. FR#87.
 
 Changes in 3.0.6
 ================
