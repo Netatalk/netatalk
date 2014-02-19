@@ -21,7 +21,7 @@ int cnid_cdb_delete(struct _cnid_db *cdb, const cnid_t id) {
     DBT key;
     int rc;
 
-    if (!cdb || !(db = cdb->_private) || !id || (db->flags & CNIDFLAG_DB_RO)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || (db->flags & CNIDFLAG_DB_RO)) {
         return -1;
     }
 

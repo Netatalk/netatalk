@@ -174,7 +174,7 @@ in parentheses indicates that a parameter is specific to the [Global] section\&.
 indicates that a parameter can be specified in a volume specific section\&.
 .SH "VARIABLE SUBSTITUTIONS"
 .PP
-You can use variables in volume names\&. The use of variables in paths is not supported for now\&.
+You can use variables in volume names\&. The use of variables in paths is limited to $u\&.
 .sp
 .RS 4
 .ie n \{\

@@ -14,7 +14,7 @@ char *cnid_cdb_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     DBT key, data;
     int rc;
 
-    if (!cdb || !(db = cdb->_private) || !id || !(*id)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !(*id)) {
         return NULL;
     }
 

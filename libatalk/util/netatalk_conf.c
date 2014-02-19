@@ -1677,13 +1677,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         subpath = prw;
 
     strlcat(tmpbuf, user, MAXPATHLEN);
-    if (getpwnam(user) == NULL) {
+    if ((pw = getpwnam(user)) == NULL) {
         /* (5b) */
         char *tuser;
         if ((tuser = getuserbypath(tmpbuf)) != NULL) {
             free(user);
             user = strdup(tuser);
         }
+        if ((pw = getpwnam(user)) == NULL)
+            EC_FAIL_LOG("unknown user: %s", user);
     }
     strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);

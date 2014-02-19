@@ -20,7 +20,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     int notfound = 0;
     char getbuf[CNID_HEADER_LEN + MAXPATHLEN +1];
 
-    if (!cdb || !(db = cdb->_private) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO)) {
         return -1;
     }
 
@@ -28,7 +28,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     memset(&pkey, 0, sizeof(pkey));
     memset(&data, 0, sizeof(data));
 
-    buf = make_cnid_data(cdb->flags, st, did, name, len);
+    buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len);
 
     key.data = buf +CNID_DEVINO_OFS;
     key.size = CNID_DEVINO_LEN;
@@ -54,7 +54,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     }
 
     memset(&pkey, 0, sizeof(pkey));
-    buf = make_cnid_data(cdb->flags, st, did, name, len);
+    buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len);
     key.data = buf + CNID_DID_OFS;
     key.size = CNID_DID_LEN + len + 1;
 
@@ -83,7 +83,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
 
     memset(&data, 0, sizeof(data));
     /* Make a new entry. */
-    buf = make_cnid_data(cdb->flags, st, did, name, len);
+    buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len);
     data.data = buf;
     memcpy(data.data, &id, sizeof(id));
     data.size = CNID_HEADER_LEN + len + 1;

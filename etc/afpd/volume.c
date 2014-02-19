@@ -369,7 +369,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             }
             /* prior 2.1 only VOLPBIT_ATTR_RO is defined */
             if (obj->afp_version > 20) {
-                if (vol->v_cdb != NULL && (vol->v_cdb->flags & CNID_FLAG_PERSISTENT))
+                if (vol->v_cdb != NULL && (vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT))
                     ashort |= VOLPBIT_ATTR_FILEID;
                 ashort |= VOLPBIT_ATTR_CATSEARCH;
 
@@ -639,16 +639,7 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
         flags |= CNID_FLAG_NODEV;
     }
 
-    LOG(log_debug, logtype_afpd, "CNID server: %s:%s", volume->v_cnidserver, volume->v_cnidport);
-
-    volume->v_cdb = cnid_open(volume->v_path,
-                              volume->v_umask,
-                              volume->v_cnidscheme,
-                              flags,
-                              volume->v_cnidserver,
-                              volume->v_cnidport,
-                              (const void *)obj,
-                              volume->v_uuid);
+    volume->v_cdb = cnid_open(volume, volume->v_cnidscheme, flags);
 
     if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
         /* The first attempt failed and it wasn't yet an attempt to open in-memory */
@@ -657,7 +648,7 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
         LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
             volume->v_path);
         flags |= CNID_FLAG_MEMORY;
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL, NULL, NULL);
+        volume->v_cdb = cnid_open(volume, "tdb", flags);
 #ifdef SERVERTEXT
         /* kill ourself with SIGUSR2 aka msg pending */
         if (volume->v_cdb) {
@@ -855,7 +846,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
          * fixing the trash at DID 17.
          * FIXME (RL): should it be done inside a CNID backend ? (always returning Trash DID when asked) ?
          */
-        if ((volume->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+        if ((volume->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
 
             /* FIXME find db time stamp */
             if (cnid_getstamp(volume->v_cdb, volume->v_stamp, sizeof(volume->v_stamp)) < 0) {

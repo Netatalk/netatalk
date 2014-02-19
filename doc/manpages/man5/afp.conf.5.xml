@@ -157,7 +157,7 @@
     <title>VARIABLE SUBSTITUTIONS</title>
 
     <para>You can use variables in volume names. The use of variables in paths
-    is not supported for now.</para>
+     is limited to $u.</para>
 
     <orderedlist>
       <listitem>

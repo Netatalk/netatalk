@@ -30,6 +30,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/volume.h>
 
 /* List of all registered modules. */
 static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
@@ -91,8 +92,7 @@ static int cnid_dir(const char *dir, mode_t mask)
 }
 
 /* Opens CNID database using particular back-end */
-struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags,
-                           const char *cnidsrv, const char *cnidport, const void *obj, char *uuid)
+struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 {
     struct _cnid_db *db;
     cnid_module *mod = NULL;
@@ -119,7 +119,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
             LOG(log_error, logtype_afpd, "seteuid failed %s", strerror(errno));
             return NULL;
         }
-        if (cnid_dir(volpath, mask) < 0) {
+        if (cnid_dir(vol->v_path, vol->v_umask) < 0) {
             if ( setegid(gid) < 0 || seteuid(uid) < 0) {
                 LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
                 exit(EXITERR_SYS);
@@ -128,7 +128,11 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         }
     }
 
-    struct cnid_open_args args = {volpath, mask, flags, cnidsrv, cnidport, obj, uuid};
+    struct cnid_open_args args =  {
+        .cnid_args_flags = flags,
+        .cnid_args_vol   = vol
+    };
+
     db = mod->cnid_open(&args);
 
     if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
@@ -140,16 +144,15 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
     }
 
     if (NULL == db) {
-        LOG(log_error, logtype_afpd, "Cannot open CNID db at [%s].", volpath);
+        LOG(log_error, logtype_afpd, "Cannot open CNID db at [%s].", vol->v_path);
         return NULL;
     }
-    /* FIXME should module know about it ? */
-    if ((flags & CNID_FLAG_NODEV)) {
-        db->flags |= CNID_FLAG_NODEV;
-    }
-    db->flags |= mod->flags;
 
-    if ((db->flags & CNID_FLAG_BLOCK)) {
+    db->cnid_db_flags |= mod->flags;
+    if (flags & CNID_FLAG_NODEV)
+        db->cnid_db_flags |= CNID_FLAG_NODEV;
+
+    if (db->cnid_db_flags & CNID_FLAG_BLOCK) {
         sigemptyset(&sigblockset);
         sigaddset(&sigblockset, SIGTERM);
         sigaddset(&sigblockset, SIGHUP);
@@ -207,7 +210,7 @@ void cnid_close(struct _cnid_db *db)
         return;
     }
     /* cnid_close free db */
-    flags = db->flags;
+    flags = db->cnid_db_flags;
     block_signal(flags);
     db->cnid_close(db);
     unblock_signal(flags);
@@ -222,9 +225,9 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
     if (len == 0)
         return CNID_INVALID;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_add(cdb, st, did, name, len, hint));
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -233,9 +236,9 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 {
 int ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_delete(cdb, id);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -245,9 +248,9 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,const size_t 
 {
 cnid_t ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_get(cdb, did, name, len));
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -266,9 +269,9 @@ time_t t;
     	memcpy(buffer, &t, sizeof(time_t));
         return 0;
     }
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_getstamp(cdb, buffer, len);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -278,9 +281,9 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did
 {
     cnid_t ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -294,9 +297,9 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buff
         return -1;
     }
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_find(cdb, name, namelen, buffer, buflen);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -305,9 +308,9 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
 char *ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     if (ret && !strcmp(ret, "..")) {
         LOG(log_error, logtype_afpd, "cnid_resolve: name is '..', corrupted db? ");
         ret = NULL;
@@ -321,9 +324,9 @@ int cnid_update   (struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
 {
 int ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 			
@@ -333,9 +336,9 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_
 {
 cnid_t ret;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_rebuild_add(cdb, st, did, name, len, hint);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -344,9 +347,9 @@ int cnid_wipe(struct _cnid_db *cdb)
 {
     int ret = 0;
 
-    block_signal(cdb->flags);
+    block_signal(cdb->cnid_db_flags);
     if (cdb->cnid_wipe)
         ret = cdb->cnid_wipe(cdb);
-    unblock_signal(cdb->flags);
+    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }

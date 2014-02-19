@@ -13,7 +13,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     struct _cnid_tdb_private *db;
     TDB_DATA key, data, altdata;
 
-    if (!cdb || !(db = cdb->_private) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO)) {
         return -1;
     }
 
@@ -22,7 +22,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
 
 
     /* Get the old info. search by dev/ino */
-    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dptr = make_tdb_data(cdb->cnid_db_flags, st, did, name, len);
     data.dsize = CNID_HEADER_LEN + len + 1;
     key.dptr = data.dptr +CNID_DEVINO_OFS;
     key.dsize = CNID_DEVINO_LEN;
@@ -47,7 +47,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     }
 
     /* search by did/name */
-    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dptr = make_tdb_data(cdb->cnid_db_flags, st, did, name, len);
     data.dsize = CNID_HEADER_LEN + len + 1;
     key.dptr = (unsigned char *)data.dptr +CNID_DID_OFS;
     key.dsize = data.dsize - CNID_DID_OFS;
@@ -71,7 +71,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     
 
     /* Make a new entry. */
-    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dptr = make_tdb_data(cdb->cnid_db_flags, st, did, name, len);
     data.dsize = CNID_HEADER_LEN + len + 1;
     memcpy(data.dptr, &id, sizeof(id));
 

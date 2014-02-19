@@ -58,10 +58,10 @@ cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
 
     struct _cnid_last_private *priv;
 
-    if (!cdb || !(cdb->_private))
+    if (!cdb || !(cdb->cnid_db_private))
         return CNID_INVALID;
 
-    priv = (struct _cnid_last_private *) (cdb->_private);
+    priv = (struct _cnid_last_private *) (cdb->cnid_db_private);
 
     if (S_ISDIR(st->st_mode))
         return htonl(priv->last_did++);
@@ -73,8 +73,7 @@ cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
 
 void cnid_last_close(struct _cnid_db *cdb)
 {
-    free(cdb->volpath);
-    free(cdb->_private);
+    free(cdb->cnid_db_private);
     free(cdb);
 }
 
@@ -105,7 +104,7 @@ cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, cni
 }
 
 
-static struct _cnid_db *cnid_last_new(const char *volpath)
+static struct _cnid_db *cnid_last_new(struct vol *vol)
 {
     struct _cnid_db *cdb;
     struct _cnid_last_private *priv;
@@ -113,23 +112,17 @@ static struct _cnid_db *cnid_last_new(const char *volpath)
     if ((cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db))) == NULL)
         return NULL;
 
-    if ((cdb->volpath = strdup(volpath)) == NULL) {
-        free(cdb);
-        return NULL;
-    }
-
-    if ((cdb->_private = calloc(1, sizeof(struct _cnid_last_private))) == NULL) {
-        free(cdb->volpath);
+    if ((cdb->cnid_db_private = calloc(1, sizeof(struct _cnid_last_private))) == NULL) {
         free(cdb);
         return NULL;
     }
 
     /* Set up private state */
-    priv = (struct _cnid_last_private *) (cdb->_private);
+    priv = (struct _cnid_last_private *) (cdb->cnid_db_private);
     priv->last_did = 17;
 
     /* Set up standard fields */
-    cdb->flags = 0;
+    cdb->cnid_db_flags = 0;
     cdb->cnid_add = cnid_last_add;
     cdb->cnid_delete = cnid_last_delete;
     cdb->cnid_get = cnid_last_get;
@@ -147,11 +140,7 @@ struct _cnid_db *cnid_last_open(struct cnid_open_args *args)
 {
     struct _cnid_db *cdb;
 
-    if (!args->dir) {
-        return NULL;
-    }
-
-    if ((cdb = cnid_last_new(args->dir)) == NULL) {
+    if ((cdb = cnid_last_new(args->cnid_args_vol)) == NULL) {
         LOG(log_error, logtype_default, "cnid_open: Unable to allocate memory for database");
         return NULL;
     }

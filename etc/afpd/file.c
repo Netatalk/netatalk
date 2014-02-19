@@ -252,7 +252,7 @@ restart:
                     }
                     LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
                         vol->v_path);
-                    vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL, NULL, NULL);
+                    vol->v_cdb = cnid_open(vol, "tdb", flags);
                     if (vol->v_cdb) {
                         if (!(vol->v_flags & AFPVOL_TM)) {
                             vol->v_flags |= AFPVOL_RO;
@@ -1662,7 +1662,7 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         return( AFPERR_PARAM);
     }
 
-    if (vol->v_cdb == NULL || !(vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+    if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
         return AFPERR_NOOP;
     }
 
@@ -1801,7 +1801,7 @@ int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return( AFPERR_PARAM);
     }
 
-    if (vol->v_cdb == NULL || !(vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+    if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
         return AFPERR_NOOP;
     }
 
@@ -1909,7 +1909,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         return( AFPERR_PARAM);
     }
 
-    if (vol->v_cdb == NULL || !(vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+    if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
         return AFPERR_NOOP;
     }
 

@@ -160,7 +160,7 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
     TDB_DATA key, data; 
     int rc;      
     
-    if (!cdb || !(priv = cdb->_private) || !st || !name) {
+    if (!cdb || !(priv = cdb->cnid_db_private) || !st || !name) {
         errno = CNID_ERR_PARAM;
         return CNID_INVALID;
     }
@@ -183,7 +183,7 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
 
     key.dptr = (unsigned char *)&hint;
     key.dsize = sizeof(cnid_t);
-    if ((data.dptr = make_tdb_data(cdb->flags, lstp, did, name, len)) == NULL) {
+    if ((data.dptr = make_tdb_data(cdb->cnid_db_flags, lstp, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_add: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;

@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <pwd.h>
 
 #include <atalk/logger.h>
 #include <atalk/globals.h>
@@ -103,6 +104,7 @@ static void usage (void)
            "   -F location of the afp.conf config file\n"
            "   -f delete and recreate CNID database\n"
            "   -t show statistics while running\n"
+           "   -u username for use with AFP volumes using user variable $u\n"
            "   -v verbose\n"
            "   -V show version info\n\n"
         );
@@ -136,9 +138,9 @@ int main(int argc, char **argv)
     AFPObj obj = { 0 };
     struct vol *vol = NULL;
     const char *volpath = NULL;
-
+    char *username;
     int c;
-    while ((c = getopt(argc, argv, ":cfF:rstvV")) != -1) {
+    while ((c = getopt(argc, argv, ":cfF:rstu:vV")) != -1) {
         switch(c) {
         case 'c':
             flags |= DBD_FLAGS_V2TOEA;
@@ -158,6 +160,9 @@ int main(int argc, char **argv)
             break;
         case 't':
             flags |= DBD_FLAGS_STATS;
+            break;
+        case 'u':
+            username = strdup(optarg);
             break;
         case 'v':
             flags |= DBD_FLAGS_VERBOSE;
@@ -203,6 +208,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+
     /* Initialize CNID subsystem */
     cnid_init();
 
@@ -211,6 +217,18 @@ int main(int argc, char **argv)
         setuplog("default:note, cnid:debug", "/dev/tty");
     else
         setuplog("default:note", "/dev/tty");
+
+    /* Set username */
+    if (username) {
+        strncpy(obj.username, username, MAXUSERLEN);
+        struct passwd *pwd;
+        pwd = getpwnam(obj.username);
+        if (!pwd) {
+            dbd_log( LOGSTD, "unknown user");
+            exit(EXIT_FAILURE);
+        }
+        obj.uid = pwd->pw_uid;
+    }
 
     if (load_volumes(&obj, lv_all) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
@@ -232,14 +250,9 @@ int main(int argc, char **argv)
         dbd_log(LOGSTD, "\"%s\" isn't a \"dbd\" CNID volume", vol->v_path);
         exit(EXIT_FAILURE);
     }
-    if ((vol->v_cdb = cnid_open(vol->v_path,
-                                0000,
-                                vol->v_cnidscheme,
-                                vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0,
-                                vol->v_cnidserver,
-                                vol->v_cnidport,
-                                &obj,
-                                vol->v_uuid)) == NULL) {
+    vol->v_cdb = cnid_open(vol, vol->v_cnidscheme,
+                           vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0);
+    if (vol->v_cdb == NULL) {
         dbd_log(LOGSTD, "Cant initialize CNID database connection for %s", vol->v_path);
         exit(EXIT_FAILURE);
     }

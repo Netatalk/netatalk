@@ -31,7 +31,7 @@
 dbd \- CNID database maintenance
 .SH "SYNOPSIS"
 .HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-fsv] \fIvolumepath\fR
+\fBdbd\fR\fB\fR [\-cfFstuvV] \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBdbd\fR
@@ -61,6 +61,11 @@ scan volume: treat the volume as read only and don\*(Aqt perform any filesystem 
 \-t
 .RS 4
 show statistics while running
+.RE
+.PP
+\-u
+.RS 4
+username for use with AFP volumes using user variable $u
 .RE
 .PP
 \-v

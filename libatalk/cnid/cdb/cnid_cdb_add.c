@@ -173,7 +173,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
     cnid_t id;
     int rc;
 
-    if (!cdb || !(db = cdb->_private) || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         errno = CNID_ERR_PARAM;
         return CNID_INVALID;
     }
@@ -192,7 +192,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
-    if ((data.data = make_cnid_data(cdb->flags, st, did, name, len)) == NULL) {
+    if ((data.data = make_cnid_data(cdb->cnid_db_flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_add: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;
@@ -248,7 +248,7 @@ int cnid_cdb_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
     int rc;
     CNID_private *db;
 
-    if (!cdb || !(db = cdb->_private) || !buffer || !len) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !buffer || !len) {
         errno = CNID_ERR_PARAM;
         return -1;
     }
