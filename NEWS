@@ -1,6 +1,7 @@
 Changes in 3.0.8
 ================
 * FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
+* FIX: afpd: Fix a crash in of_closefork(). Bug #551.
 
 Changes in 3.0.7
 ================
