@@ -1,9 +1,9 @@
-Netatalk 3.0.7
+Netatalk 3.0.8
 ==============
 
-The Netatalk development team is proud to announce version 3.0.7 of
+The Netatalk development team is proud to announce version 3.0.8 of
 the Netatalk File Sharing suite. This is the latest update to the 3.0
-release series. All users are encouraged to upgrade their systems to 3.0.7.
+release series. All users are encouraged to upgrade their systems to 3.0.8.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -43,22 +43,10 @@ at:
 
   http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.0.7
+Changes in 3.0.8
 ~~~~~~~~~~~~~~~~
-* FIX: Build fixes for the Kerberos UAM
-* UPD: Use dedicated exit code for AFP connections that were dropped
-       by the client right after the TCP handshake
-* FIX: Fix ressource fork name conversion. Bug #534.
-* FIX: Fix a bug where only the first configured UAM was loaded.
-       Bug #537.
-* FIX: Allow ad set to remove the "w" flag on folders. Bug #539.
-* FIX: Fix path handling in ad utility. Bug #538.
-* FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
-* FIX: Registering with mDNS crashed. Bug #540
-* FIX: Saving from applications like Photoshop may fail, because
-       removing the ressource fork AppleDouble file failed. Bug #542.
-* FIX: macusers showed root user. Bug #495.
-* UPD: Add file pathname to logmessage parse_entries: bogus eid. FR#87.
+* FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
+* FIX: afpd: Fix a crash in of_closefork(). Bug #551.
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
