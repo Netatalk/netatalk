@@ -1,3 +1,8 @@
+Changes in 3.0.9
+================
+* FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
+       Bug #552.
+
 Changes in 3.0.8
 ================
 * FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
