@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     if (afp_config_parse(&obj, "netatalk") != 0)
         netatalk_exit(EXITERR_CONF);
 
-    load_volumes(&obj);
+    load_volumes(&obj, lv_all);
 
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);

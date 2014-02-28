@@ -515,7 +515,7 @@ int main(int argc, char *argv[])
 
     EC_ZERO( afp_config_parse(&obj, "cnid_dbd") );
 
-    EC_ZERO( load_volumes(&obj) );
+    EC_ZERO( load_volumes(&obj, lv_all) );
     EC_NULL( vol = getvolbypath(&obj, volpath) );
     EC_ZERO( load_charset(vol) );
     pack_setvol(vol);

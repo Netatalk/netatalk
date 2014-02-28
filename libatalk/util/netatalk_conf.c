@@ -1335,12 +1335,10 @@ int load_charset(struct vol *vol)
 /*!
  * Initialize volumes and load ini configfile
  *
- * Depending on the value of obj->uid either access checks are done (!=0) or skipped (=0)
- *
- * @param obj       (r) handle
- * @param delvol_fn (r) callback called for deleted volumes
+ * @param obj      (r) handle
+ * @param flags    (r) flags controlling volume load behaviour
  */
-int load_volumes(AFPObj *obj)
+int load_volumes(AFPObj *obj, lv_flags_t flags)
 {
     EC_INIT;
 
@@ -1363,7 +1361,7 @@ int load_volumes(AFPObj *obj)
         EC_NULL( pwbuf = malloc(bufsize) );
     }
 
-    if (obj->uid) {
+    if (!(flags & lv_all) && obj->uid) {
         ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
         if (pwresult == NULL) {
             LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));

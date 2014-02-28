@@ -102,7 +102,7 @@ struct vol {
 };
 
 /* load_volumes() flags */
-#define LV_ALL (1 << 0)
+typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 
 /* volume flags */
 #define AFPVOL_OPEN (1<<0)

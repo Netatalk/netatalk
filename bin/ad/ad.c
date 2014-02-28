@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     setuplog("default:note", "/dev/tty");
 
-    if (load_volumes(&obj) != 0)
+    if (load_volumes(&obj, lv_none) != 0)
         return 1;
 
     if (STRCMP(argv[1], ==, "ls"))

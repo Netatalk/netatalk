@@ -23,7 +23,7 @@
 extern int        afp_config_parse(AFPObj *obj, char *processname);
 extern void       afp_config_free(AFPObj *obj);
 extern int        load_charset(struct vol *vol);
-extern int        load_volumes(AFPObj *obj);
+extern int        load_volumes(AFPObj *obj, lv_flags_t flags);
 extern void       unload_volumes(AFPObj *obj);
 extern struct vol *getvolumes(void);
 extern struct vol *getvolbyvid(const uint16_t);

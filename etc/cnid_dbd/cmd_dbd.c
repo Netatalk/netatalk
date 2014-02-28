@@ -212,7 +212,7 @@ int main(int argc, char **argv)
     else
         setuplog("default:note", "/dev/tty");
 
-    if (load_volumes(&obj) != 0) {
+    if (load_volumes(&obj, lv_all) != 0) {
         dbd_log( LOGSTD, "Couldn't load volumes");
         exit(EXIT_FAILURE);
     }
