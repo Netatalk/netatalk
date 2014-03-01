@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     TEST_int( afp_config_parse(&obj, NULL), 0);
     TEST_int( configinit(&obj), 0);
     TEST( cnid_init() );
-    TEST( load_volumes(&obj) );
+    TEST( load_volumes(&obj, lv_all) );
     TEST_int( dircache_init(8192), 0);
     obj.afp_version = 32;
 

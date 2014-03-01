@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 13 Sep 2013
+.\"      Date: 09 Feb 2013
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "13 Sep 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "09 Feb 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -568,6 +568,12 @@ cnid server = \fIipaddress[:port]\fR \fB(G)/(V)\fR
 Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
 .RE
 .PP
+dbus daemon = \fIpath\fR \fB(G)\fR
+.RS 4
+Sets the path to dbus\-daemon binary used by Spotlight feature\&. The default is
+/bin/dbus\-daemon\&.
+.RE
+.PP
 dircachesize = \fInumber\fR \fB(G)\fR
 .RS 4
 Maximum possible entries in the directory cache\&. The cache stores directories and files\&. It is used to cache the full path to directories and CNIDs which considerably speeds up directory enumeration\&.
@@ -591,13 +597,6 @@ AFP user home volume name\&. The default is
 \fIuser\*(Aqs home\fR\&.
 .RE
 .PP
-login message = \fImessage\fR \fB(G)/(V)\fR
-.RS 4
-Sets a message to be displayed when clients logon to the server\&. The message should be in
-\fBunix charset\fR
-and should be quoted\&. Extended characters are allowed\&.
-.RE
-.PP
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
 .RS 4
 Speficy a set of file and directory attributes that shall be ignored by the server,
@@ -606,6 +605,13 @@ includes all the other options\&.
 .sp
 In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg flag in the Terminal, all three attributes are used\&. Thus in order to ignore the Finder lock/BSD uchg flag, add set
 \fIignored attributes = all\fR\&.
+.RE
+.PP
+login message = \fImessage\fR \fB(G)/(V)\fR
+.RS 4
+Sets a message to be displayed when clients logon to the server\&. The message should be in
+\fBunix charset\fR
+and should be quoted\&. Extended characters are allowed\&.
 .RE
 .PP
 mimic model = \fImodel\fR \fB(G)\fR
@@ -627,7 +633,9 @@ Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this 
 .PP
 spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
 .RS 4
-Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&.
+Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&. See also
+\fIdbus daemon\fR
+option\&.
 .RE
 .PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -1095,7 +1103,7 @@ Allows certain users and groups to have read/write access to a share\&. This fol
 .PP
 veto files = \fIvetoed names\fR \fB(V)\fR
 .RS 4
-hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, eg\&. "veto1/", "veto1/veto2/"\&.
+hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, eg\&. "veto files = veto1/", "veto files = veto1/veto2/"\&.
 .RE
 .SS "Volume options"
 .PP

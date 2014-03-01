@@ -11,6 +11,9 @@ Changes in 3.1.1
 * FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
 * NEW: afpd: Automatic conversion of ._ AppleDouble files
        created by OS X. Bug #550.
+* FIX: afpd: Fix a crash in of_closefork(). Bug #551.
+* FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
+       Bug #552.
 
 Changes in 3.1.0
 ================
