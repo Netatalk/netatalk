@@ -14,6 +14,7 @@ Changes in 3.1.1
 * FIX: afpd: Fix a crash in of_closefork(). Bug #551.
 * FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
        Bug #552.
+* FIX: afpd: Don't flood log with failed sys_set_ea() messages.
 
 Changes in 3.1.0
 ================
