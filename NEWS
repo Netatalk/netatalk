@@ -2,6 +2,7 @@ Changes in 3.0.9
 ================
 * FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
        Bug #552.
+* FIX: afpd: Don't flood log with failed sys_set_ea() messages.
 
 Changes in 3.0.8
 ================
