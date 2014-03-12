@@ -107,7 +107,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
             return AFPERR_MISC;
 
         default:
-            LOG(log_error, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
             return AFPERR_MISC;
         }
     }
