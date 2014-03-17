@@ -575,6 +575,8 @@ static struct vol *creatvol(AFPObj *obj,
     uint16_t    flags;
     const char  *val;
     char        *p, *q;
+    bstring     dbpath = NULL;
+    bstring     global_path_tmp = NULL;
 
     strlcpy(path, path_in, MAXPATHLEN);
 
@@ -671,16 +673,32 @@ static struct vol *creatvol(AFPObj *obj,
     if (atalk_iniparser_getboolean(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", 0)) {
         EC_NULL( volume->v_dbpath = strdup(path) );
     } else {
-        bstring dbpath;
-        val = atalk_iniparser_getstring(obj->iniconfig, section, "vol dbpath", NULL);
+        char *global_path;
+        val = getoption(obj->iniconfig, section, "vol dbpath", preset, NULL);
+        if (val == NULL) {
+            /* check global option */
+            global_path = atalk_iniparser_getstring(obj->iniconfig,
+                                                    INISEC_GLOBAL,
+                                                    "vol dbpath",
+                                                    NULL);
+            if (global_path) {
+                /* check for pre 3.1.1 behaviour without variable */
+                if (strchr(global_path, '$') == NULL) {
+                    global_path_tmp = bformat("%s/%s/", global_path, tmpname);
+                    val = cfrombstr(global_path_tmp);
+                } else {
+                    val = global_path;
+                }
+            }
+        }
+
         if (val == NULL) {
             EC_NULL( dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname) );
         } else {
             EC_NULL( dbpath = bfromcstr(val));
         }
         EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
-                                             cfrombstr(dbpath), pwd, NULL, NULL) );
-        bdestroy(dbpath);
+                                             cfrombstr(dbpath), pwd, NULL, tmpname) );
     }
 
     if ((val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL)))
@@ -968,6 +986,10 @@ static struct vol *creatvol(AFPObj *obj,
 
 EC_CLEANUP:
     LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
+    if (dbpath)
+        bdestroy(dbpath);
+    if (global_path_tmp)
+        bdestroy(global_path_tmp);
     if (ret != 0) {
         if (volume)
             volume_free(volume);

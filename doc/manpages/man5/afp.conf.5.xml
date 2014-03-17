@@ -1017,13 +1017,13 @@
 
         <varlistentry>
           <term>vol dbpath = <replaceable>path</replaceable>
-          <type>(G)</type></term>
+          <type>(G)/(V)</type></term>
 
           <listitem>
             <para>Sets the database information to be stored in path. You have
             to specify a writable location, even if the volume is read only.
             The default is
-            <filename>@localstatedir@/netatalk/CNID/</filename>.</para>
+            <filename>@localstatedir@/netatalk/CNID/$v/</filename>.</para>
           </listitem>
         </varlistentry>
 

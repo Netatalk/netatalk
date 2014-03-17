@@ -643,10 +643,10 @@ veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 Send optional AFP messages for vetoed files\&. Then whenever a client tries to access any file or directory with a vetoed name, it will be sent an AFP message indicating the name and the directory\&.
 .RE
 .PP
-vol dbpath = \fIpath\fR \fB(G)\fR
+vol dbpath = \fIpath\fR \fB(G)/(V)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
-@localstatedir@/netatalk/CNID/\&.
+@localstatedir@/netatalk/CNID/$v/\&.
 .RE
 .PP
 vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
