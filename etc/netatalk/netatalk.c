@@ -55,12 +55,11 @@ static void kill_childs(int sig, ...);
 /* static variables */
 static AFPObj obj;
 static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1;
-static uint afpd_restarts, cnid_metad_restarts, dbus_restarts, trackerd_restarts;
+static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path;
-static char *trackerd_loglev;
 
 /******************************************************************
  * Misc stuff
@@ -242,7 +241,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
     if (dbus_pid == -1) {
         dbus_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
-        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus.session.conf", NULL)) == -1) {
+        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
         }
     }
@@ -279,7 +278,7 @@ static void netatalk_exit(int ret)
 /* this forks() and exec() "path" with varags as argc[] */
 static pid_t run_process(const char *path, ...)
 {
-    int ret, i = 0;
+    int i = 0;
 #define MYARVSIZE 64
     char *myargv[MYARVSIZE];
     va_list args;
@@ -299,7 +298,7 @@ static pid_t run_process(const char *path, ...)
         }
         va_end(args);
 
-        ret = execv(path, myargv);
+        (void)execv(path, myargv);
 
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
