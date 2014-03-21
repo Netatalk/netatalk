@@ -1824,7 +1824,7 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     int cwdfd = -1;
 
     if (dirfd != -1) {
-        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
+        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
             ret = -1;
             goto exit;
         }
