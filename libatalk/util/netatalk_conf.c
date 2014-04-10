@@ -1057,12 +1057,17 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 || strcmp(obj->username, obj->options.guest) == 0)
                 /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
-            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
-                /* no user home */
+            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir)) {
+                LOG(log_debug, logtype_afpd, "readvolfile: pwent->pw_dir: NULL or \"\" - no user home");
                 continue;
+            }
+            LOG(log_debug, logtype_afpd, "readvolfile: pwent->pw_dir: '%s'", pwent->pw_dir);
 
-            if ((realpath(pwent->pw_dir, tmp)) == NULL)
+            if ((realpath(pwent->pw_dir, tmp)) == NULL) {
+                LOG(log_debug, logtype_afpd, "readvolfile: Cannot get realpath '%s' (%s).", pwent->pw_dir, strerror(errno));
                 continue;
+            }
+            LOG(log_debug, logtype_afpd, "readvolfile: realpath pwent->pw_dir: '%s'", tmp);
 
             /* check if user home matches our "basedir regex" */
             if ((basedir = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
