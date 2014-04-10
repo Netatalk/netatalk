@@ -155,7 +155,6 @@ static void child_handler(void)
 
         fd = server_child_remove(server_children, pid);
         if (fd == -1) {
-            LOG(log_error, logtype_afpd, "child[%d]: bad IPC fd", pid);
             continue;
         }
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd);
