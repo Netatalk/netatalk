@@ -3,6 +3,7 @@ Changes in 3.0.9
 * FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
        Bug #552.
 * FIX: afpd: Don't flood log with failed sys_set_ea() messages.
+* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
 
 Changes in 3.0.8
 ================
