@@ -3,6 +3,7 @@ Changes in 3.1.2
 * FIX: Option "vol dbpath" was broken in 3.1.1
 * FIX: Spotlight: file modification date, bug #545
 * FIX: Improve reliability of afpd child handler
+* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
 
 Changes in 3.1.1
 ================
