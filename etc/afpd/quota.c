@@ -510,6 +510,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     struct quotctl      qc;
 #endif
 
+    memset(dq, 0, sizeof(struct dqblk));
     memset(&dqg, 0, sizeof(dqg));
 	
 #ifdef __svr4__
@@ -558,7 +559,9 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 
 #else /* BSD4_4 */
     if (get_linux_quota (WANT_USER_QUOTA, vol->v_gvs, uid, dq) !=0) {
-        return( AFPERR_PARAM );
+#ifdef DEBUG_QUOTA
+        LOG(log_debug, logtype_afpd, "user quota did not work!" );
+#endif /* DEBUG_QUOTA */
     }
 
     if (get_linux_quota(WANT_GROUP_QUOTA, vol->v_gvs, getegid(),  &dqg) != 0) {
@@ -590,10 +593,15 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
       ) /* if */
     {
         /* use group quota limits rather than user limits */
-        dq->dqb_curblocks = dqg.dqb_curblocks;
         dq->dqb_bhardlimit = dqg.dqb_bhardlimit;
         dq->dqb_bsoftlimit = dqg.dqb_bsoftlimit;
-        dq->dqb_btimelimit = dqg.dqb_btimelimit;
+        dq->dqb_curblocks = dqg.dqb_curblocks;
+        dq->dqb_ihardlimit = dqg.dqb_ihardlimit;
+        dq->dqb_isoftlimit = dqg.dqb_isoftlimit;
+        dq->dqb_curinodes = dqg.dqb_curinodes;
+        dq->dqb_btime = dqg.dqb_btime;
+        dq->dqb_itime = dqg.dqb_itime;
+        dq->bsize = dqg.bsize;
     } /* if */
 
 #endif /* TRU64 */
