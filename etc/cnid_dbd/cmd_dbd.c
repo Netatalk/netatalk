@@ -93,7 +93,7 @@ static void set_signal(void)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-cfFstvV] <path to netatalk volume>\n\n"
+    printf("Usage: dbd [-cfFstuvV] <path to netatalk volume>\n\n"
            "dbd scans all file and directories of AFP volumes, updating the\n"
            "CNID database of the volume. dbd must be run with appropiate\n"
            "permissions i.e. as root.\n\n"
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
     AFPObj obj = { 0 };
     struct vol *vol = NULL;
     const char *volpath = NULL;
-    char *username;
+    char *username = NULL;
     int c;
     while ((c = getopt(argc, argv, ":cfF:rstu:vV")) != -1) {
         switch(c) {
