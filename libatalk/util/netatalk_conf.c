@@ -578,7 +578,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     strlcpy(path, path_in, MAXPATHLEN);
 
-    LOG(log_debug, logtype_afpd, "createvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
+    LOG(log_debug, logtype_afpd, "creatvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
         name, path, preset ? preset : "-");
 
     if ( name == NULL || *name == '\0' ) {
@@ -872,7 +872,7 @@ static struct vol *creatvol(AFPObj *obj,
     if ( 0 >= ( u8mvlen = convert_string(CH_UTF8_MAC, CH_UCS2, tmpname, tmpvlen, u8mtmpname, AFPVOL_U8MNAMELEN*2)) )
         EC_FAIL;
 
-    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "creatvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
 
     /* Maccharset Volume Name */
     /* Firsty convert name from unixcharset to maccharset */
@@ -910,7 +910,7 @@ static struct vol *creatvol(AFPObj *obj,
                                          AFPVOL_U8MNAMELEN*2)) )
         EC_FAIL;
 
-    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "creatvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
 
     EC_NULL( volume->v_localname = strdup(name) );
     EC_NULL( volume->v_u8mname = strdup_w(u8mtmpname) );
@@ -958,7 +958,7 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_obj = obj;
 
 EC_CLEANUP:
-    LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
+    LOG(log_debug, logtype_afpd, "creatvol: END: %d", ret);
     if (ret != 0) {
         if (volume)
             volume_free(volume);
