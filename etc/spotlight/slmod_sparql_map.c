@@ -38,6 +38,7 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemContentCreationDate",      ssmt_date,  "nie:contentCreated"},
     {"kMDItemContentModificationDate",  ssmt_date,  "nfo:fileLastModified"},
     {"kMDItemAttributeChangeDate",      ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemLastUsedDate",             ssmt_date,  "nfo:fileLastAccessed"},
     {"kMDItemAuthors",                  ssmt_str,   "dc:creator"},
     {"kMDItemCopyright",                ssmt_str,   "nie:copyright"},
     {"kMDItemCountry",                  ssmt_str,   "nco:country"},
