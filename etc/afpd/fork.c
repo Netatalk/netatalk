@@ -153,27 +153,6 @@ static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid, int acc
     int denyreadset;
     int denywriteset;
 
-#ifdef HAVE_FSHARE_T
-    fshare_t shmd;
-
-    if (obj->options.flags & OPTION_SHARE_RESERV) {
-        shmd.f_access = (access & OPENACC_RD ? F_RDACC : 0) | (access & OPENACC_WR ? F_WRACC : 0);
-        if (shmd.f_access == 0)
-            /* we must give an access mode, otherwise fcntl will complain */
-            shmd.f_access = F_RDACC;
-        shmd.f_deny = (access & OPENACC_DRD ? F_RDDNY : F_NODNY) | (access & OPENACC_DWR) ? F_WRDNY : 0;
-        shmd.f_id = ofrefnum;
-
-        int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
-
-        if (fd != -1 && fd != AD_SYMLINK && fcntl(fd, F_SHARE, &shmd) != 0) {
-            LOG(log_debug, logtype_afpd, "fork_setmode: fcntl: %s", strerror(errno));
-            errno = EACCES;
-            return -1;
-        }
-    }
-#endif
-
     if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
         return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_NONE, 1, ofrefnum);
     }
@@ -232,6 +211,35 @@ static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid, int acc
                 return ret;
         }
     }
+
+    /*
+     * Fix for Bug 560: put the Solaris share reservation after our locking stuff.
+     * Note that this still leaves room for a race condition where between placing our own
+     * locks above and putting the Solaris share move below another client puts a lock.
+     * We then end up with set locks from above and return with an error code, the proper
+     * fix requires a sane cleanup function for the error path in this function.
+     */
+
+#ifdef HAVE_FSHARE_T
+    fshare_t shmd;
+
+    if (obj->options.flags & OPTION_SHARE_RESERV) {
+        shmd.f_access = (access & OPENACC_RD ? F_RDACC : 0) | (access & OPENACC_WR ? F_WRACC : 0);
+        if (shmd.f_access == 0)
+            /* we must give an access mode, otherwise fcntl will complain */
+            shmd.f_access = F_RDACC;
+        shmd.f_deny = (access & OPENACC_DRD ? F_RDDNY : F_NODNY) | (access & OPENACC_DWR) ? F_WRDNY : 0;
+        shmd.f_id = ofrefnum;
+
+        int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
+
+        if (fd != -1 && fd != AD_SYMLINK && fcntl(fd, F_SHARE, &shmd) != 0) {
+            LOG(log_debug, logtype_afpd, "fork_setmode: fcntl: %s", strerror(errno));
+            errno = EACCES;
+            return -1;
+        }
+    }
+#endif
 
     return 0;
 }
