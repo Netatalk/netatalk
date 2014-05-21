@@ -10,6 +10,7 @@ Changes in 3.1.2
 * NEW: afpd: support for using $u username variable in AFP volume
        definitions. FR#90.
 * FIX: getvolbypath returns incorrect volume, bug #563
+* FIX: fd leak when using appledouble = v2, bug #554
 
 Changes in 3.1.1
 ================

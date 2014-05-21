@@ -429,6 +429,17 @@ int ad_close(struct adouble *ad, int adflags)
     }
 
     if (adflags & ADFLAGS_RF) {
+        /* HF is automatically opened when opening an RF, close it. */
+        if ((ad->ad_vers == AD_VERSION2) && (ad_meta_fileno(ad) != -1)) {
+            if (ad->ad_meta_refcount)
+                ad->ad_meta_refcount--;
+            if (!(--ad->ad_mdp->adf_refcount)) {
+                if (close( ad_meta_fileno(ad)) < 0)
+                    err = -1;
+                ad_meta_fileno(ad) = -1;
+            }
+        }
+
         if (ad->ad_reso_refcount)
             if (--ad->ad_reso_refcount == 0)
                 adf_lock_free(ad->ad_rfp);
