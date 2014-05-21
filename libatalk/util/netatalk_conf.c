@@ -1606,6 +1606,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
     regmatch_t match[1];
+    size_t abspath_len;
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
@@ -1615,13 +1616,28 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         strlcat(abspath, "/", MAXPATHLEN);
         strlcat(abspath, path, MAXPATHLEN);
         path = abspath;
+    } else {
+        strlcpy(abspath, path, MAXPATHLEN);
+        path = abspath;
+    }
+    /* path now points to a copy of path in the abspath buffer */
+
+    /*
+     * Strip trailing slashes
+     */
+    abspath_len = strlen(abspath);
+    while (abspath[abspath_len - 1] == '/') {
+        abspath[abspath_len - 1] = 0;
+        abspath_len--;
     }
 
-
     for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
-        if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
+        if (strcmp(path, tmp->v_path) == 0) {
+            LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") == volume(\"%s\")", path, tmp->v_path);
             vol = tmp;
             goto EC_CLEANUP;
+        } else {
+            LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")", path, tmp->v_path);
         }
     }
 

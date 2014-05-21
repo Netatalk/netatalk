@@ -9,6 +9,7 @@ Changes in 3.1.2
 * FIX: xattrs on *BSD, bug #562
 * NEW: afpd: support for using $u username variable in AFP volume
        definitions. FR#90.
+* FIX: getvolbypath returns incorrect volume, bug #563
 
 Changes in 3.1.1
 ================
