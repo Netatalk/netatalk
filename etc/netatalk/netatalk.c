@@ -418,28 +418,26 @@ int main(int argc, char **argv)
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
-        dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
-        LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
-        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
-            LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
-            netatalk_exit(EXITERR_CONF);
+        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start dbus", 1)) {
+            dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
+            LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+            if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
+                LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+                netatalk_exit(EXITERR_CONF);
+            }
+
+            /* Allow dbus some time to start up */
+            sleep(1);
         }
 
-        /* Allow dbus some time to start up */
-        sleep(1);
+        set_sl_volumes();
+
+        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
+            system(TRACKER_PREFIX "/bin/tracker-control -s");
+        }
+    }
 #endif
 
-#ifdef HAVE_TRACKER_SPARQL
-#ifdef SOLARIS
-        setenv("XDG_DATA_DIRS", TRACKER_PREFIX "/share", 0);
-        setenv("TRACKER_DB_ONTOLOGIES_DIR", TRACKER_PREFIX "/share/tracker/ontologies", 0);
-        setenv("TRACKER_EXTRACTOR_RULES_DIR", TRACKER_PREFIX "/share/tracker/extract-rules", 0);
-        setenv("TRACKER_LANGUAGE_STOPWORDS_DIR", TRACKER_PREFIX "/share/tracker/languages", 0);
-#endif
-        set_sl_volumes();
-        system(TRACKER_PREFIX "/bin/tracker-control -s");
-#endif
-    }
 
     /* run the event loop */
     ret = event_base_dispatch(base);

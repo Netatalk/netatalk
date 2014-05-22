@@ -638,6 +638,17 @@ Whether to enable Spotlight searches\&. Note: once the global option is enabled,
 option\&.
 .RE
 .PP
+start dbus = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to start a dbus instance for use with Tracker\&.
+.RE
+.PP
+start tracker = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to start Tracker with
+\fItracker\-control \-s\fR\&.
+.RE
+.PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Send optional AFP messages for vetoed files\&. Then whenever a client tries to access any file or directory with a vetoed name, it will be sent an AFP message indicating the name and the directory\&.
