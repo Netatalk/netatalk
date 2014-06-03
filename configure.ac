@@ -245,7 +245,6 @@ AC_OUTPUT([Makefile
 	bin/cnid/cnid2_create
 	bin/megatron/Makefile
 	bin/misc/Makefile
-	bin/uniconv/Makefile
 	config/Makefile
 	config/pam/Makefile
 	contrib/Makefile
