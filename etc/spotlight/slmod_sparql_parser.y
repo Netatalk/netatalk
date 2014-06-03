@@ -72,8 +72,8 @@ input:
 line:
 expr                           {
     ssp_result = talloc_asprintf(ssp_slq,
-                                 "SELECT DISTINCT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s}",
+                                 "SELECT ?url WHERE "
+                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s} LIMIT 100",
                                  ssp_slq->slq_vol->v_path, $1);
     $$ = ssp_result;
 }
