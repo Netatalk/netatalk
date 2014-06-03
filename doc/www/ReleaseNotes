@@ -1,9 +1,10 @@
-Netatalk 3.1.1
+Netatalk 3.1.2
 ==============
 
-The Netatalk development team is proud to announce the seconf release of
-the Netatalk 3.1 release series. Early adopters are encouraged to update
-production systems.
+The Netatalk development team is proud to announce the third release of
+the Netatalk 3.1 release series. Users are encourage to update their
+servers to the 3.1 release series which can be consideren stable enough
+for production systems.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -44,23 +45,22 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.1
+Changes in 3.1.2
 ~~~~~~~~~~~~~~~~
-* FIX: Add asprint() compatibility function for systems lacking it
-* FIX: Fix ressource fork name conversion. Bug #534.
-* FIX: Fix a bug where only the first configured UAM was loaded.
-       Bug #537.
-* UPD: Add support for AFP 3.4. From FR #85.
-* FIX: Registering with mDNS crashed. Bug #540
-* FIX: Saving from applications like Photoshop may fail, because
-       removing the ressource fork AppleDouble file failed. Bug #542.
-* FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
-* NEW: afpd: Automatic conversion of ._ AppleDouble files
-       created by OS X. Bug #550.
-* FIX: afpd: Fix a crash in of_closefork(). Bug #551.
-* FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
-       Bug #552.
-* FIX: afpd: Don't flood log with failed sys_set_ea() messages.
+* FIX: Option "vol dbpath" was broken in 3.1.1
+* FIX: Spotlight: file modification date, bug #545
+* FIX: Improve reliability of afpd child handler
+* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
+* FIX: put the Solaris share reservation after our locking stuff, bug #560.
+* UPD: Improve Linux quota behaviour
+* FIX: xattrs on *BSD, bug #562
+* NEW: afpd: support for using $u username variable in AFP volume
+       definitions. FR#90.
+* FIX: getvolbypath returns incorrect volume, bug #563
+* FIX: fd leak when using appledouble = v2, bug #554
+* UPD: New options that control whether dbus and Tracker are started:
+       'start dbus' and 'start tracker', both default to yes, FR#91
+* UPD: Spotlight: SPARQL query optimisations
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -115,4 +115,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, March 2014
+ - The Netatalk Development Team, June 2014

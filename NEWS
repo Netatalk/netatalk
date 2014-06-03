@@ -13,6 +13,7 @@ Changes in 3.1.2
 * FIX: fd leak when using appledouble = v2, bug #554
 * UPD: New options that control whether dbus and Tracker are started:
        'start dbus' and 'start tracker', both default to yes, FR#91
+* UPD: Spotlight: SPARQL query optimisations
 
 Changes in 3.1.1
 ================
