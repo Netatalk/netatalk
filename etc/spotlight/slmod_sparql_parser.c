@@ -122,8 +122,8 @@
 
 /* In a future release of Bison, this section will be replaced
    by #include "y.tab.h".  */
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
+# define YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -219,7 +219,7 @@ int yyparse ();
 /* Line 387 of yacc.c  */
 #line 221 "slmod_sparql_parser.c"
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
@@ -1449,8 +1449,8 @@ yyreduce:
 #line 73 "slmod_sparql_parser.y"
     {
     ssp_result = talloc_asprintf(ssp_slq,
-                                 "SELECT DISTINCT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s}",
+                                 "SELECT ?url WHERE "
+                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s} LIMIT 100",
                                  ssp_slq->slq_vol->v_path, (yyvsp[(1) - (1)].sval));
     (yyval.sval) = ssp_result;
 }
