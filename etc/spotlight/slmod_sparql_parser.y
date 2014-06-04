@@ -73,8 +73,8 @@ line:
 expr                           {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s} LIMIT 100",
-                                 ssp_slq->slq_vol->v_path, $1);
+                                 "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } LIMIT 100",
+                                 $1, ssp_slq->slq_vol->v_path);
     $$ = ssp_result;
 }
 ;

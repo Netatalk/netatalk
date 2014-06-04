@@ -1450,8 +1450,8 @@ yyreduce:
     {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s} LIMIT 100",
-                                 ssp_slq->slq_vol->v_path, (yyvsp[(1) - (1)].sval));
+                                 "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } LIMIT 100",
+                                 (yyvsp[(1) - (1)].sval), ssp_slq->slq_vol->v_path);
     (yyval.sval) = ssp_result;
 }
     break;
