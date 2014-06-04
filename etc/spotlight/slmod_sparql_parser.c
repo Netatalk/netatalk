@@ -524,9 +524,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    70,    74,    88,    94,   104,   105,   106,
-     107,   112,   121,   122,   123,   124,   125,   126,   127,   128,
-     132,   136,   137
+       0,    68,    68,    70,    74,    88,    94,   102,   103,   104,
+     105,   112,   125,   126,   127,   128,   129,   130,   131,   132,
+     136,   140,   141
 };
 #endif
 
@@ -1476,8 +1476,6 @@ yyreduce:
 /* Line 1792 of yacc.c  */
 #line 94 "slmod_sparql_parser.y"
     {
-    if (!ssp_slq->slq_allow_expr)
-        YYABORT;
     if ((yyvsp[(1) - (3)].sval) == NULL || (yyvsp[(3) - (3)].sval) == NULL)
         YYABORT;
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
@@ -1489,28 +1487,30 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 104 "slmod_sparql_parser.y"
+#line 102 "slmod_sparql_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval); if ((yyval.sval) == NULL) YYABORT;}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 105 "slmod_sparql_parser.y"
+#line 103 "slmod_sparql_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 106 "slmod_sparql_parser.y"
+#line 104 "slmod_sparql_parser.y"
     {(yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(2) - (3)].sval));}
     break;
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 107 "slmod_sparql_parser.y"
+#line 105 "slmod_sparql_parser.y"
     {
-    if (!ssp_slq->slq_allow_expr)
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
+    }
     (yyval.sval) = talloc_asprintf(ssp_slq, "%s . %s", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
 }
     break;
@@ -1519,6 +1519,10 @@ yyreduce:
 /* Line 1792 of yacc.c  */
 #line 112 "slmod_sparql_parser.y"
     {
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
+        YYABORT;
+    }
     if (strcmp((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval)) != 0)
         (yyval.sval) = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", (yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].sval));
     else
@@ -1528,73 +1532,73 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 121 "slmod_sparql_parser.y"
+#line 125 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 122 "slmod_sparql_parser.y"
+#line 126 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 123 "slmod_sparql_parser.y"
+#line 127 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 124 "slmod_sparql_parser.y"
+#line 128 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 125 "slmod_sparql_parser.y"
+#line 129 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 126 "slmod_sparql_parser.y"
+#line 130 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '!', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 127 "slmod_sparql_parser.y"
+#line 131 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '<', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 128 "slmod_sparql_parser.y"
+#line 132 "slmod_sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '>', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 132 "slmod_sparql_parser.y"
+#line 136 "slmod_sparql_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (8)].sval), (yyvsp[(5) - (8)].tval), (yyvsp[(7) - (8)].tval));}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 136 "slmod_sparql_parser.y"
+#line 140 "slmod_sparql_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 137 "slmod_sparql_parser.y"
+#line 141 "slmod_sparql_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1598 "slmod_sparql_parser.c"
+#line 1602 "slmod_sparql_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1826,7 +1830,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 140 "slmod_sparql_parser.y"
+#line 144 "slmod_sparql_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -2034,7 +2038,7 @@ int main(int argc, char **argv)
     struct vol *vol = talloc_zero(ssp_slq, struct vol);
     vol->v_path = "/Volumes/test";
     ssp_slq->slq_vol = vol;
-    ssp_slq->slq_allow_expr = true;
+    ssp_slq->slq_allow_expr = false;
     sparqlvar = 'a';
 
     s = yy_scan_string(argv[1]);

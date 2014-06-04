@@ -92,8 +92,6 @@ BOOL                             {
         YYABORT;
 }
 | match OR match                 {
-    if (!ssp_slq->slq_allow_expr)
-        YYABORT;
     if ($1 == NULL || $3 == NULL)
         YYABORT;
     if (strcmp($1, $3) != 0)
@@ -105,11 +103,17 @@ BOOL                             {
 | function                     {$$ = $1;}
 | OBRACE expr CBRACE           {$$ = talloc_asprintf(ssp_slq, "%s", $2);}
 | expr AND expr                {
-    if (!ssp_slq->slq_allow_expr)
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
+    }
     $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
 }
 | expr OR expr                 {
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
+        YYABORT;
+    }
     if (strcmp($1, $3) != 0)
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     else
