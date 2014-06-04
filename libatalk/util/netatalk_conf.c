@@ -1828,6 +1828,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->passwdbits |= PASSWD_NOSAVE;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
         options->passwdbits |= PASSWD_SET;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "spotlight expr", 1))
+        options->flags |= OPTION_SPOTLIGHT_EXPR;
 
     /* figure out options w values */
     options->loginmesg      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
@@ -1866,6 +1868,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
     options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
+    options->sparql_limit   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sparql results limit", 0);
 
     p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))

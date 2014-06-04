@@ -991,15 +991,52 @@
         </varlistentry>
 
         <varlistentry>
+          <term>sparql results limit =
+          <replaceable>NUMBER</replaceable> (default:
+          <emphasis>UNLIMITED</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Impose a limit on the number of results queried from Tracker
+	    via SPARQL queries.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>spotlight =
           <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
+          <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
             <para>Whether to enable Spotlight searches. Note: once the global
             option is enabled, any volume that is not enabled won't be
             searchable at all. See also <emphasis>dbus daemon</emphasis>
             option.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>spotlight attributes =
+          <replaceable>COMMA SEPERATED STRING</replaceable> (default:
+          <emphasis>EMPTY</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>A list of attributes that are allowed to be used in
+            Spotlight searches. By default all attributes can be
+            searched, passing a string limits attributes to elements
+            of the string. Example: <programlisting>spotlight
+            attributes = *,kMDItemTextContent</programlisting>
+	    </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>spotlight expr =
+          <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>yes</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Whether to allow the use of logic expression in
+            searches.</para>
           </listitem>
         </varlistentry>
 

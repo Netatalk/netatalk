@@ -59,7 +59,8 @@ static int sl_mod_init(void *p)
 {
     EC_INIT;
     GError *error = NULL;
-    const char *msg = p;
+    AFPObj *obj = (AFPObj *)p;
+    const char *attributes;
 
     LOG(log_info, logtype_sl, "Initializing Spotlight module");
 
@@ -94,6 +95,11 @@ static int sl_mod_init(void *p)
         EC_FAIL;
     }
 #endif
+
+    attributes = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "spotlight attributes", NULL);
+    if (attributes) {
+        configure_spotlight_attributes(attributes);
+    }
 
 EC_CLEANUP:
     EC_EXIT;

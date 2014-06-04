@@ -477,7 +477,7 @@ void afp_over_dsi(AFPObj *obj)
 
     /* Initialize Spotlight */
     if ((obj->options.flags & OPTION_SPOTLIGHT) && (obj->options.slmod_path))
-        sl_mod_load(obj->options.slmod_path);
+        sl_mod_load(obj);
 
     ipc_child_state(obj, DSI_RUNNING);
 

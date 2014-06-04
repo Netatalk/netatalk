@@ -84,7 +84,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 45 "slmod_sparql_parser.y"
+#line 46 "slmod_sparql_parser.y"
 
     int ival;
     const char *sval;
@@ -117,7 +117,7 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 2058 of yacc.c  */
-#line 39 "slmod_sparql_parser.y"
+#line 40 "slmod_sparql_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
   extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
