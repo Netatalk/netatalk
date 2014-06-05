@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">09 Feb 2013</refmiscinfo>
+    <refmiscinfo class="date">05 Jun 2014</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -1004,7 +1004,7 @@
         <varlistentry>
           <term>spotlight =
           <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>no</emphasis>) <type>(G)</type></term>
+          <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
 
           <listitem>
             <para>Whether to enable Spotlight searches. Note: once the global
