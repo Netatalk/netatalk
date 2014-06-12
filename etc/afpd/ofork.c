@@ -390,6 +390,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     int         adflags = 0;
     int                 ret;
     struct dir *dir;
+    bstring forkpath = NULL;
 
     adflags = 0;
     if (ofork->of_flags & AFPFORK_DATA)
@@ -411,13 +412,13 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         LOG(log_debug, logtype_afpd, "dirlookup failed for %ju", (uintmax_t)ofork->of_did);
     }
 
+    if (dir) {
+        forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
+    }
+
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
-    if (ofork->of_flags & AFPFORK_MODIFIED) {
-        if (dir) {
-            bstring forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
-            fce_register(FCE_FILE_MODIFY, bdata(forkpath), NULL, fce_file);
-            bdestroy(forkpath);
-        }
+    if ((ofork->of_flags & AFPFORK_MODIFIED) && (forkpath)) {
+        fce_register(FCE_FILE_MODIFY, bdata(forkpath), NULL, fce_file);
     }
 
     ad_unlock(ofork->of_ad, ofork->of_refnum, ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
@@ -439,6 +440,9 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
     of_dealloc(ofork);
+
+    if (forkpath)
+        bdestroy(forkpath);
 
     return ret;
 }
