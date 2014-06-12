@@ -23,10 +23,12 @@
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/ea.h>
 
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
+#include "desktop.h"
 
 /* we need to have a hashed list of oforks (by dev inode) */
 #define OFORK_HASHSIZE  64
@@ -435,6 +437,37 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 #endif
 
     ret = 0;
+
+    /*
+     * Check for 0 byte size resource forks, delete them.
+     * Here's the deal:
+     * (1) the size must be 0
+     * (2) the fork must refer to a resource fork
+     * (3) the refcount must be 1 which means this fork has the last
+     *     reference to the adouble struct and the subsequent
+     *     ad_close() will close the assoiciated fd.
+     * (4) nobody else has the resource fork open
+     *
+     * We only do this for ._ AppleDouble resource forks, not for
+     * xattr resource forks, because the test-suite then fails several
+     * tests on Solaris, the reason for that still needs to be
+     * determined.
+     */
+    if ((ofork->of_ad->ad_rlen == 0)
+        && (ofork->of_flags & AFPFORK_RSRC)
+        && (ofork->of_ad->ad_rfp->adf_refcount == 1)
+        && (ad_openforks(ofork->of_ad, ATTRBIT_DOPEN) == 0)) {
+
+#ifndef HAVE_EAFD
+        (void)unlink(ofork->of_ad->ad_ops->ad_path(
+                         mtoupath(ofork->of_vol,
+                                  of_name(ofork),
+                                  ofork->of_did,
+                                  utf8_encoding(obj)),
+                         0));
+#endif
+    }
+
     if ( ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0 ) {
         ret = -1;
     }

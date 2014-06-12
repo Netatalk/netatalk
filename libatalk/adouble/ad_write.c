@@ -161,17 +161,22 @@ int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
 {
     EC_INIT;
 
-#ifndef HAVE_EAFD
-    if (ad->ad_vers == AD_VERSION_EA && size == 0)
-        EC_NEG1( unlink(ad->ad_ops->ad_path(uname, 0)) );
-    else
-#endif
-        EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
+    /*
+     * We can't delete 0 byte size resource forks either, because a
+     * fork may reference the adouble handle with an open fd for the
+     * file, which means we would only delete the directory entry, not
+     * the file. Subsequently all code that works with fork handles
+     * finds the fork open, so eg flushing a fork (ad_flush()) will
+     * recreate ._ files.  The correct place to delete 0 byte sized
+     * resource forks is in of_closefork().
+     */
+
+    EC_NEG1( sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off) );
+
+    ad->ad_rlen = size;
 
 EC_CLEANUP:
-    if (ret == 0)
-        ad->ad_rlen = size;    
-    else
+    if (ret != 0)
         LOG(log_error, logtype_ad, "ad_rtruncate(\"%s\"): %s",
             fullpathname(uname), strerror(errno));
     EC_EXIT;
