@@ -9,6 +9,10 @@ Changes in 3.1.3
 * NEW: afpd: delete empty resource forks, from FR #92
 * FIX: afpd: fix a crash when accessing ._ AppleDouble files created
        by OS X via SMB, bug #564
+* FIX: afpd and dbd: Converting from AppleDouble v2 to ea may corrupt
+       the resource fork. In some circumstances an offset calculation
+       is wrong resulting in corrupt resource forks after the
+       conversion. Bug #568.
 
 Changes in 3.1.2
 ================

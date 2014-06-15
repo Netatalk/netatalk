@@ -152,7 +152,7 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
         EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
 
         /* Create a adouble:ea resource fork */
-        EC_ZERO_LOG( ad_open(&adea, path, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) );
+        EC_ZERO_LOG( ad_open(&adea, path, ADFLAGS_RF|ADFLAGS_RDWR|ADFLAGS_CREATE|ADFLAGS_SETSHRMD, 0666) );
 
         EC_ZERO_LOG( copy_fork(ADEID_RFORK, &adea, &adv2) );
         adea.ad_rlen = adv2.ad_rlen;

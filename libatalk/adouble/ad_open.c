@@ -343,6 +343,14 @@ int ad_init_offsets(struct adouble *ad)
         eid++;
     }
 
+    /*
+     * Ensure the resource fork offset is always set
+     */
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA)
+        ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
+#endif
+
     return 0;
 }
 
@@ -794,6 +802,14 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         errno = EINVAL;
         EC_FAIL;
     }
+
+    /*
+     * Ensure the resource fork offset is always set
+     */
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA)
+        ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
+#endif
 
 EC_CLEANUP:
     if (ret != 0 && errno == EINVAL) {
@@ -1808,6 +1824,12 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
  * The open mode flags (rw vs ro) have to take into account all the following requirements:
  * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
  *   fds of the same file
+ *
+ * BUGS:
+ *
+ * * on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
+ *   ADFLAGS_HF, because it checks whether ad_meta_fileno() is already
+ *   openend. As a workaround pass ADFLAGS_SETSHRMD.
  *
  * @returns 0 on success, any other value indicates an error
  */

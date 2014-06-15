@@ -217,15 +217,12 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
             continue;
 
         len = ads->ad_eid[ eid ].ade_len;
-        if (!len || len != add->ad_eid[ eid ].ade_len)
+        if (len == 0)
             continue;
 
         switch (eid) {
         case ADEID_COMMENT:
-        case ADEID_PRIVDEV:
-        case ADEID_PRIVINO:
-        case ADEID_PRIVSYN:
-        case ADEID_PRIVID:
+        case ADEID_RFORK:
             continue;
         default:
             ad_setentrylen( add, eid, len );
