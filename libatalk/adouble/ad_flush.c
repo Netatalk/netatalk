@@ -164,7 +164,7 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     memcpy(buf, &temp, sizeof( temp ));
     buf += sizeof( temp );
 
-    memcpy(buf, "Netatalk        ", 16);
+    memcpy(buf, AD_FILLER_NETATALK, strlen(AD_FILLER_NETATALK));
     buf += sizeof( ad->ad_filler );
 
     nent = htons(ADEID_NUM_OSX);

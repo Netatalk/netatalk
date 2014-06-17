@@ -540,7 +540,9 @@ int ad_valid_header_osx(const char *path)
         EC_FAIL;
     }
 
-    if (strncmp(buf + ADEDOFF_FILLER, "Mac OS X", strlen("Mac OS X")) == 0)
+    if (strncmp(buf + ADEDOFF_FILLER,
+                AD_FILLER_NETATALK,
+                strlen(AD_FILLER_NETATALK)) != 0)
         /*
          * It's a split fork created by OS X, it's not our "own" ._ file
          * and thus not a valid header in this context.

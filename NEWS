@@ -3,6 +3,7 @@ Changes in 3.1.3
 * UPD: Spotlight: more SPARQL query optimisations
 * UPD: Spotlight: new options "sparql results limit", "spotlight
        attributes" and "spotlight expr"
+* FIX: afpd: Unarchiving certain ZIP archives fails, bug #569
 
 Changes in 3.1.2
 ================

@@ -348,6 +348,12 @@ struct adouble {
 #define AD_AFPFILEI_GROUP       (1 << 1) /* ignore group */
 #define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
 
+/*
+ * String identifiers for the 16 AppleDouble filler bytes
+ */
+#define AD_FILLER_NETATALK "Netatalk        "
+#define AD_FILLER_OSX      "Mac OS X"
+
 #define ad_data_fileno(ad)  ((ad)->ad_data_fork.adf_fd)
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
