@@ -4,6 +4,7 @@ Changes in 3.1.3
 * UPD: Spotlight: new options "sparql results limit", "spotlight
        attributes" and "spotlight expr"
 * FIX: afpd: Unarchiving certain ZIP archives fails, bug #569
+* UPD: Update Unicode support to version 7.0.0
 
 Changes in 3.1.2
 ================
