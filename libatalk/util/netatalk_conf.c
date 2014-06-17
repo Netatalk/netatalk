@@ -1682,7 +1682,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (5) */
-    p = path + strlen(basedir);
+    p = path + match[0].rm_eo - match[0].rm_so;
     while (*p == '/')
         p++;
     EC_NULL_LOG( user = strdup(p) );
