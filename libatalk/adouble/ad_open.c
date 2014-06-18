@@ -588,7 +588,7 @@ static int ad_convert_osx(const char *path, struct adouble *ad)
 
     origlen = ad_getentryoff(ad, ADEID_RFORK) + ad_getentrylen(ad, ADEID_RFORK);
 
-    map = mmap(NULL, origlen, PROT_WRITE, MAP_SHARED, ad_reso_fileno(ad), 0);
+    map = mmap(NULL, origlen, PROT_READ | PROT_WRITE, MAP_SHARED, ad_reso_fileno(ad), 0);
     if (map == MAP_FAILED) {
         LOG(log_error, logtype_ad, "mmap AppleDouble: %s\n", strerror(errno));
         EC_FAIL;
@@ -639,7 +639,7 @@ static int ad_header_read_osx(const char *path, struct adouble *ad, const struct
 {
     EC_INIT;
     struct adouble      adosx;
-    char                *buf = &adosx.ad_data[0];
+    char                *buf;
     uint16_t            nentries;
     int                 len;
     ssize_t             header_len;
@@ -649,6 +649,7 @@ static int ad_header_read_osx(const char *path, struct adouble *ad, const struct
 reread:
     LOG(log_debug, logtype_ad, "ad_header_read_osx: %s", path ? fullpathname(path) : "");
     ad_init_old(&adosx, AD_VERSION_EA, ad->ad_options);
+    buf = &adosx.ad_data[0];
     memset(buf, 0, sizeof(adosx.ad_data));
     adosx.ad_rfp->adf_fd = ad_reso_fileno(ad);
 

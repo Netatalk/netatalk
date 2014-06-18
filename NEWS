@@ -6,6 +6,8 @@ Changes in 3.1.3
 * FIX: afpd: Unarchiving certain ZIP archives fails, bug #569
 * UPD: Update Unicode support to version 7.0.0
 * FIX: Memory overflow caused by 'basedir regex', bug #567
+* FIX: afpd: fix a crash when accessing ._ AppleDouble files created
+       by OS X via SMB, bug #564
 
 Changes in 3.1.2
 ================
