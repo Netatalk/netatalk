@@ -13,6 +13,7 @@ Changes in 3.1.3
        the resource fork. In some circumstances an offset calculation
        is wrong resulting in corrupt resource forks after the
        conversion. Bug #568.
+* FIX: ad: fix for bug #563 broke ad file utilities, bug #570.
 
 Changes in 3.1.2
 ================

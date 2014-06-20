@@ -1632,10 +1632,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     }
 
     for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
-        if (strcmp(path, tmp->v_path) == 0) {
-            LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") == volume(\"%s\")", path, tmp->v_path);
-            vol = tmp;
-            goto EC_CLEANUP;
+        size_t v_path_len = strlen(tmp->v_path);
+        if (strncmp(path, tmp->v_path, v_path_len) == 0) {
+            if (v_path_len < strlen(path) && path[v_path_len] != '/') {
+                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")", path, tmp->v_path);
+            } else {
+                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") == volume(\"%s\")", path, tmp->v_path);
+                vol = tmp;
+                goto EC_CLEANUP;
+            }
         } else {
             LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")", path, tmp->v_path);
         }
