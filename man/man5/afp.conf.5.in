@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 09 Feb 2013
+.\"      Date: 05 Jun 2014
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "09 Feb 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "05 Jun 2014" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -538,6 +538,50 @@ contains symlink, you must set the canonicalized absolute path\&. In the simple 
 \fBbasedir regex = /home\fR
 .RE
 .PP
+chmod request = \fIpreserve (default) | ignore | simple\fR \fB(V)\fR
+.RS 4
+Advanced permission control that deals with ACLs\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBignore\fR
+\- UNIX chmod() requests are completely ignored
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBpreserve\fR
+\- preserve ZFS ACEs for named users and groups or POSIX ACL group mask
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBsimple\fR
+\- just to a chmod() as requested without any extra steps
+.RE
+.RE
+.PP
 close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Whether to close volumes possibly opened by clients when they\*(Aqre removed from the configuration and the configuration is reloaded\&.
@@ -636,7 +680,7 @@ sparql results limit = \fINUMBER\fR (default: \fIUNLIMITED\fR) \fB(G)\fR
 Impose a limit on the number of results queried from Tracker via SPARQL queries\&.
 .RE
 .PP
-spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
+spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
 .RS 4
 Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&. See also
 \fIdbus daemon\fR

@@ -827,6 +827,19 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
+    val = getoption(obj->iniconfig, section, "chmod request", preset, NULL);
+    if (val == NULL) {
+        val = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "chmod request", "preserve");
+    }
+    if (strcasecmp(val, "ignore") == 0) {
+        volume->v_flags |= AFPVOL_CHMOD_IGNORE;
+    } else if (strcasecmp(val, "preserve") == 0) {
+        volume->v_flags |= AFPVOL_CHMOD_PRESERVE_ACL;
+    } else if (strcasecmp(val, "simple") != 0) {
+        LOG(log_warning, logtype_afpd, "unknown 'chmod request' setting: '%s', using default", val);
+        volume->v_flags |= AFPVOL_CHMOD_PRESERVE_ACL;
+    }
+
     /*
      * Handle read-only behaviour. semantics:
      * 1) neither the rolist nor the rwlist exist -> rw

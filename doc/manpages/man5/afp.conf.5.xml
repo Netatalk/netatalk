@@ -808,6 +808,29 @@
         </varlistentry>
 
         <varlistentry>
+          <term>chmod request = <replaceable>preserve (default) | ignore | simple</replaceable>
+          <type>(G/V)</type></term>
+
+          <listitem>
+            <para>Advanced permission control that deals with ACLs.</para>
+
+            <itemizedlist>
+              <listitem><para>
+                <option>ignore</option> - UNIX chmod() requests are completely ignored
+		      </para></listitem>
+              <listitem><para>
+                <option>preserve</option> - preserve ZFS ACEs for
+                named users and groups or POSIX ACL group mask
+		      </para></listitem>
+              <listitem><para>
+                <option>simple</option> - just to a chmod() as
+                requested without any extra steps
+		      </para></listitem>
+		    </itemizedlist>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>close vol = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>no</emphasis>) <type>(G)</type></term>
 

@@ -95,17 +95,29 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
             }
 
             if (S_ISDIR(st.st_mode)) {
-                if ( chmod_acl( modbuf,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+                if (ochmod(modbuf,
+                           DIRBITS | mode,
+                           &st,
+                           vol_syml_opt(vol) | vol_chmod_opt(vol)
+                        ) < 0 && errno != EPERM) {
                      LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
                 }
-            } else if ( chmod_acl( modbuf,  mode & ~EXEC_MODE ) < 0 && errno != EPERM ) {
+            } else if (ochmod(modbuf,
+                           mode & ~EXEC_MODE,
+                           &st,
+                           vol_syml_opt(vol) | vol_chmod_opt(vol)
+                        ) < 0 && errno != EPERM) {
                 LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(modbuf), strerror(errno) );
             }
 
         }
         closedir( sub );
         /* XXX: need to preserve special modes */
-        if ( chmod_acl( deskp->d_name,  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+        if (ochmod(deskp->d_name,
+                   DIRBITS | mode,
+                   NULL,
+                   vol_syml_opt(vol) | vol_chmod_opt(vol)
+                ) < 0 && errno != EPERM) {
             LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s",fullpathname(deskp->d_name), strerror(errno) );
         }
     }
@@ -115,7 +127,11 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
         EC_FAIL;
     }
     /* XXX: need to preserve special modes */
-    if ( chmod_acl(bdata(dtpath),  (DIRBITS | mode)) < 0 && errno != EPERM ) {
+    if (ochmod(bdata(dtpath),
+               DIRBITS | mode,
+               NULL,
+               vol_syml_opt(vol) | vol_chmod_opt(vol)
+            ) < 0 && errno != EPERM) {
         LOG(log_error, logtype_afpd, "setdeskmode: chmod %s: %s", bdata(dtpath), strerror(errno));
     }
 

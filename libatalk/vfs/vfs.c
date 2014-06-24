@@ -172,7 +172,11 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     const char *adouble = vol->ad_path(name, ADFLAGS_DIR );
 
     if (dir_rx_set(mode)) {
-        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0 ) 
+        if (ochmod(ad_dir(adouble),
+                   (DIRBITS | mode) & ~vol->v_umask,
+                   st,
+                   vol_syml_opt(vol) | vol_chmod_opt(vol)
+                ) < 0)
             return -1;
     }
 
@@ -180,7 +184,11 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0 ) 
+        if (ochmod(ad_dir(adouble),
+                   (DIRBITS | mode) & ~vol->v_umask,
+                   st,
+                   vol_syml_opt(vol) | vol_chmod_opt(vol)
+                ) < 0)
             return  -1 ;
     }
     return 0;
@@ -212,7 +220,11 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
     const char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
-        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0) 
+        if (ochmod(ad_dir(adouble),
+                   (DIRBITS | mode) & ~vol->v_umask,
+                   st,
+                   vol_syml_opt(vol) | vol_chmod_opt(vol)
+                ) < 0)
             return -1;
     }
 
@@ -220,7 +232,11 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0) 
+        if (ochmod(ad_dir(adouble),
+                   (DIRBITS | mode) & ~vol->v_umask,
+                   st,
+                   vol_syml_opt(vol) | vol_chmod_opt(vol)
+                ) < 0)
             return  -1 ;
     }
     return 0;

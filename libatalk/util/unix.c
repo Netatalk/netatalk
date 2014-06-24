@@ -44,6 +44,7 @@
 #include <atalk/unix.h>
 #include <atalk/compat.h>
 #include <atalk/errchk.h>
+#include <atalk/acl.h>
 
 /* close all FDs >= a specified value */
 static void closeall(int fd)
@@ -262,10 +263,14 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
  * Options description:
  * O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
  * O_NETATALK_ACL: call chmod_acl() instead of chmod()
+ * O_IGNORE: ignore chmod() request, directly return 0
  */
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {
     struct stat sb;
+
+    if (options & O_IGNORE)
+        return 0;
 
     if (!st) {
         if (lstat(path, &sb) != 0)
