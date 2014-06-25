@@ -929,6 +929,22 @@
         </varlistentry>
 
         <varlistentry>
+          <term>force xattr with sticky bit =
+          <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G/V)</type></term>
+
+          <listitem>
+            <para>Writing metadata xattr on directories with the
+            sticky bit set may fail even though we may have write
+            access to a directory, because if the sticky bit is set
+            only the owner is allowed to write xattrs.</para>
+
+            <para>By enabling this option Netatalk will write the
+            metadata xattr as root.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>guest account = <replaceable>name</replaceable>
           <type>(G)</type></term>
 

@@ -2,6 +2,8 @@ Changes in 3.1.4
 ================
 * FIX: afpd: Hangs in Netatalk which causes it to stop responding to
        connections, bug #572.
+* NEW: afpd: new option "force xattr with sticky bit = yes|no"
+       (default: no), FR #94
 
 Changes in 3.1.3
 ================

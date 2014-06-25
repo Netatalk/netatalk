@@ -249,6 +249,7 @@ struct adouble {
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_FOLLO_SYML (1 << 4)
+#define ADVOL_FORCE_STICKY_XATTR (1 << 5)
 
 /* lock flags */
 #define ADLOCK_CLR      (0)

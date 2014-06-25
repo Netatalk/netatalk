@@ -841,6 +841,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_preexec_close = 1;
     if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
         volume->v_root_preexec_close = 1;
+    if (vdgoption_bool(obj->iniconfig, section, "force xattr with sticky bit", preset, 0))
+        volume->v_flags |= AFPVOL_FORCE_STICKY_XATTR;
 
     if ((val = getoption(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
         if (strstr(val, "all")) {
@@ -895,6 +897,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_FOLLO_SYML;
     if ((volume->v_flags & AFPVOL_RO))
         volume->v_ad_options |= ADVOL_RO;
+    if ((volume->v_flags & AFPVOL_FORCE_STICKY_XATTR))
+        volume->v_ad_options |= ADVOL_FORCE_STICKY_XATTR;
 
     /* Mac to Unix conversion flags*/
     if ((volume->v_flags & AFPVOL_EILSEQ))

@@ -118,6 +118,7 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_CHMOD_PRESERVE_ACL (1 << 9) /* try to preserve ACLs */
 #define AFPVOL_CHMOD_IGNORE (1 << 10) /* try to preserve ACLs */
+#define AFPVOL_FORCE_STICKY_XATTR (1 << 11) /* write metadata xattr as root on sticky dirs */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */

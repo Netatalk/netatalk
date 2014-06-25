@@ -630,6 +630,13 @@ extmap file = \fIpath\fR \fB(G)\fR
 Sets the path to the file which defines file extension type/creator mappings\&. (default is @pkgconfdir@/extmap\&.conf)\&.
 .RE
 .PP
+force xattr with sticky bit = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G/V)\fR
+.RS 4
+Writing metadata xattr on directories with the sticky bit set may fail even though we may have write access to a directory, because if the sticky bit is set only the owner is allowed to write xattrs\&.
+.sp
+By enabling this option Netatalk will write the metadata xattr as root\&.
+.RE
+.PP
 guest account = \fIname\fR \fB(G)\fR
 .RS 4
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.

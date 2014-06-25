@@ -286,8 +286,33 @@ static int ad_flush_hf(struct adouble *ad)
                 if (ad->ad_adflags & ADFLAGS_DIR) {
                     EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
                     EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
-                    EC_ZERO_LOGSTR( sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0),
-                                    "sys_lsetxattr(\"%s\"): %s", fullpathname(".") ,strerror(errno));
+
+                    ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+
+                    if (ret != 0) {
+                        if (errno != EPERM)
+                            EC_FAIL;
+
+                        if (!(ad->ad_options & ADVOL_FORCE_STICKY_XATTR))
+                            EC_FAIL;
+
+                        /*
+                         * This may be a directory with a sticky bit
+                         * set, which means even though we may have
+                         * write access to the directory, only the
+                         * owner is allowed to write xattrs
+                         */
+
+                        become_root();
+                        ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+                        unbecome_root();
+
+                        if (ret != 0) {
+                            LOG(log_error, logtype_ad, "ad_flush_hf: %s", strerror(errno));
+                            EC_FAIL;
+                        }
+                    }
+
                     EC_NEG1_LOG( fchdir(cwd) );
                     EC_NEG1_LOG( close(cwd) );
                     cwd = -1;
