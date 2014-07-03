@@ -538,7 +538,7 @@ contains symlink, you must set the canonicalized absolute path\&. In the simple 
 \fBbasedir regex = /home\fR
 .RE
 .PP
-chmod request = \fIpreserve (default) | ignore | simple\fR \fB(V)\fR
+chmod request = \fIpreserve (default) | ignore | simple\fR \fB(G/V)\fR
 .RS 4
 Advanced permission control that deals with ACLs\&.
 .sp
