@@ -1,10 +1,10 @@
-Netatalk 3.1.2
+Netatalk 3.1.3
 ==============
 
-The Netatalk development team is proud to announce the third release of
-the Netatalk 3.1 release series. Users are encourage to update their
-servers to the 3.1 release series which can be consideren stable enough
-for production systems.
+The Netatalk development team is proud to announce latest release of
+the Netatalk 3.1 release series. Users are encouraged to update their
+servers to the 3.1 release series which is the stable and supported
+version for production systems.
 
 Netatalk is a freely-available Open Source AFP fileserver.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh
@@ -45,22 +45,24 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.2
+Changes in 3.1.3
 ~~~~~~~~~~~~~~~~
-* FIX: Option "vol dbpath" was broken in 3.1.1
-* FIX: Spotlight: file modification date, bug #545
-* FIX: Improve reliability of afpd child handler
-* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
-* FIX: put the Solaris share reservation after our locking stuff, bug #560.
-* UPD: Improve Linux quota behaviour
-* FIX: xattrs on *BSD, bug #562
-* NEW: afpd: support for using $u username variable in AFP volume
-       definitions. FR#90.
-* FIX: getvolbypath returns incorrect volume, bug #563
-* FIX: fd leak when using appledouble = v2, bug #554
-* UPD: New options that control whether dbus and Tracker are started:
-       'start dbus' and 'start tracker', both default to yes, FR#91
-* UPD: Spotlight: SPARQL query optimisations
+* UPD: Spotlight: more SPARQL query optimisations
+* UPD: Spotlight: new options "sparql results limit", "spotlight
+       attributes" and "spotlight expr"
+* FIX: afpd: Unarchiving certain ZIP archives fails, bug #569
+* UPD: Update Unicode support to version 7.0.0
+* FIX: Memory overflow caused by 'basedir regex', bug #567
+* NEW: afpd: delete empty resource forks, from FR #92
+* FIX: afpd: fix a crash when accessing ._ AppleDouble files created
+       by OS X via SMB, bug #564
+* FIX: afpd and dbd: Converting from AppleDouble v2 to ea may corrupt
+       the resource fork. In some circumstances an offset calculation
+       is wrong resulting in corrupt resource forks after the
+       conversion. Bug #568.
+* FIX: ad: fix for bug #563 broke ad file utilities, bug #570.
+* NEW: afpd: new advanced option controlling permissions and ACLs,
+       from FR #93
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -115,4 +117,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, June 2014
+ - The Netatalk Development Team, July 2014
