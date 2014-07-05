@@ -1,3 +1,8 @@
+Changes in 3.1.4
+================
+* FIX: afpd: Hangs in Netatalk which causes it to stop responding to
+       connections, bug #572.
+
 Changes in 3.1.3
 ================
 * UPD: Spotlight: more SPARQL query optimisations

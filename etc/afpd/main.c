@@ -40,8 +40,7 @@
 #include "afp_zeroconf.h"
 #include "afpstats.h"
 
-#define AFP_LISTENERS 32
-#define FDSET_SAFETY  5
+#define ASEV_THRESHHOLD 10
 
 unsigned char nologin = 0;
 
@@ -49,12 +48,7 @@ static AFPObj obj;
 static server_child_t *server_children;
 static sig_atomic_t reloadconfig = 0;
 static sig_atomic_t gotsigchld = 0;
-
-/* Two pointers to dynamic allocated arrays which store pollfds and associated data */
-static struct pollfd *fdset;
-static struct polldata *polldata;
-static int fdset_size;          /* current allocated size */
-static int fdset_used;          /* number of used elements */
+static struct asev *asev;
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children);
 
@@ -67,29 +61,39 @@ static void afp_exit(int ret)
 /* ------------------
    initialize fd set we are waiting for.
 */
-static void fd_set_listening_sockets(const AFPObj *config)
+static bool init_listening_sockets(const AFPObj *config)
 {
     DSI *dsi;
+    int numlisteners;
+
+    for (numlisteners = 0, dsi = config->dsi; dsi; dsi = dsi->next) {
+        numlisteners++;
+    }
+
+    asev = asev_init(config->options.connections + numlisteners + ASEV_THRESHHOLD);
+    if (asev == NULL) {
+        return false;
+    }
 
     for (dsi = config->dsi; dsi; dsi = dsi->next) {
-        fdset_add_fd(config->options.connections + AFP_LISTENERS + FDSET_SAFETY,
-                     &fdset,
-                     &polldata,
-                     &fdset_used,
-                     &fdset_size,
-                     dsi->serversock,
-                     LISTEN_FD,
-                     dsi);
+        if (!(asev_add_fd(asev, dsi->serversock, LISTEN_FD, dsi))) {
+            return false;
+        }
     }
+
+    return true;
 }
  
-static void fd_reset_listening_sockets(const AFPObj *config)
+static bool reset_listening_sockets(const AFPObj *config)
 {
     const DSI *dsi;
 
     for (dsi = config->dsi; dsi; dsi = dsi->next) {
-        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, dsi->serversock);
+        if (!(asev_del_fd(asev, dsi->serversock))) {
+            return false;
+        }
     }
+    return true;
 }
 
 /* ------------------ */
@@ -133,7 +137,7 @@ static void afp_goaway(int sig)
 static void child_handler(void)
 {
     int fd;
-    int status, i;
+    int status;
     pid_t pid;
   
 #ifndef WAIT_ANY
@@ -157,7 +161,9 @@ static void child_handler(void)
         if (fd == -1) {
             continue;
         }
-        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd);
+        if (!(asev_del_fd(asev, fd))) {
+            LOG(log_error, logtype_afpd, "child[%d]: asev_del_fd: %d", pid, fd);
+        }
     }
 }
 
@@ -328,14 +334,15 @@ int main(int ac, char **av)
     cnid_init();
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
-    fd_set_listening_sockets(&obj);
+    if (!(init_listening_sockets(&obj))) {
+        LOG(log_error, logtype_afpd, "main: couldn't initialize socket handler");
+        afp_exit(EXITERR_CONF);
+    }
 
     /* set limits */
     (void)setlimits();
 
     afp_child_t *child;
-    int recon_ipc_fd;
-    pid_t pid;
     int saveerrno;
 
     /* wait for an appleshare connection. parent remains in the loop
@@ -345,9 +352,8 @@ int main(int ac, char **av)
      * afterwards. establishing timeouts for logins is a possible 
      * solution. */
     while (1) {
-        LOG(log_maxdebug, logtype_afpd, "main: polling %i fds", fdset_used);
         pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
-        ret = poll(fdset, fdset_used, -1);
+        ret = poll(asev->fdset, asev->used, -1);
         pthread_sigmask(SIG_BLOCK, &sigs, NULL);
         saveerrno = errno;
 
@@ -360,7 +366,10 @@ int main(int ac, char **av)
         if (reloadconfig) {
             nologin++;
 
-            fd_reset_listening_sockets(&obj);
+            if (!(reset_listening_sockets(&obj))) {
+                LOG(log_error, logtype_afpd, "main: reset socket handlers");
+                afp_exit(EXITERR_CONF);
+            }
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
 
@@ -375,7 +384,10 @@ int main(int ac, char **av)
                 afp_exit(EXITERR_CONF);
             }
 
-            fd_set_listening_sockets(&obj);
+            if (!(init_listening_sockets(&obj))) {
+                LOG(log_error, logtype_afpd, "main: couldn't initialize socket handler");
+                afp_exit(EXITERR_CONF);
+            }
 
             nologin = 0;
             reloadconfig = 0;
@@ -393,30 +405,40 @@ int main(int ac, char **av)
             break;
         }
 
-        for (int i = 0; i < fdset_used; i++) {
-            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
-                switch (polldata[i].fdtype) {
+        for (int i = 0; i < asev->used; i++) {
+            if (asev->fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
+                switch (asev->data[i].fdtype) {
 
                 case LISTEN_FD:
-                    if ((child = dsi_start(&obj, (DSI *)polldata[i].data, server_children))) {
-                        /* Add IPC fd to select fd set */
-                        fdset_add_fd(obj.options.connections + AFP_LISTENERS + FDSET_SAFETY,
-                                     &fdset,
-                                     &polldata,
-                                     &fdset_used,
-                                     &fdset_size,
-                                     child->afpch_ipc_fd,
-                                     IPC_FD,
-                                     child);
+                    if ((child = dsi_start(&obj, (DSI *)(asev->data[i].private), server_children))) {
+                        if (!(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child))) {
+                            LOG(log_error, logtype_afpd, "out of asev slots");
+
+                            /*
+                             * Close IPC fd here and mark it as unused
+                             */
+                            close(child->afpch_ipc_fd);
+                            child->afpch_ipc_fd = -1;
+
+                            /*
+                             * Being unfriendly here, but we really
+                             * want to get rid of it. The 'child'
+                             * handle gets cleaned up in the SIGCLD
+                             * handler.
+                             */
+                            kill(child->afpch_pid, SIGKILL);
+                        }
                     }
                     break;
 
                 case IPC_FD:
-                    child = (afp_child_t *)polldata[i].data;
+                    child = (afp_child_t *)(asev->data[i].private);
                     LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->afpch_pid);
 
                     if (ipc_server_read(server_children, child->afpch_ipc_fd) != 0) {
-                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->afpch_ipc_fd);
+                        if (!(asev_del_fd(asev, child->afpch_ipc_fd))) {
+                            LOG(log_error, logtype_afpd, "child[%u]: no IPC fd");
+                        }
                         close(child->afpch_ipc_fd);
                         child->afpch_ipc_fd = -1;
                     }
