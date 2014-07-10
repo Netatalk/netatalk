@@ -548,6 +548,36 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
 }
 
 /*!
+ * Get boolean option from volume, default section or global - use default value if not set
+ *
+ * Order of precedence: volume -> default section -> global -> default value
+ *
+ * "vdg" means volume, default section or global
+ *
+ * @param conf    (r) config handle
+ * @param vol     (r) volume name (must be section name ie wo vars expanded)
+ * @param opt     (r) option
+ * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
+ * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ *
+ * @returns       const option string from "vol" or "defsec", or "defval" if not found
+ */
+static int vdgoption_bool(const dictionary *conf, const char *vol, const char *opt, const char *defsec, int defval)
+{
+    int result;
+
+    result = atalk_iniparser_getboolean(conf, vol, opt, -1);
+
+    if ((result == -1) && (defsec != NULL))
+        result = atalk_iniparser_getboolean(conf, defsec, opt, -1);
+
+    if (result == -1)
+        result = atalk_iniparser_getboolean(conf, INISEC_GLOBAL, opt, defval);
+
+    return result;
+}
+
+/*!
  * Create volume struct
  *
  * @param obj      (r) handle
