@@ -219,7 +219,8 @@ int check_name(const struct vol *vol, char *name)
     move and rename sdir:oldname to curdir:newname in volume vol
     special care is needed for lock   
 */
-static int moveandrename(struct vol *vol,
+static int moveandrename(const AFPObj *obj,
+                         struct vol *vol,
                          struct dir *sdir,
                          int sdir_fd,
                          char *oldname,
@@ -237,10 +238,6 @@ static int moveandrename(struct vol *vol,
     struct path     path;
     cnid_t          id;
     int             cwd_fd = -1;
-
-    LOG(log_debug, logtype_afpd,
-        "moveandrename: [\"%s\"/\"%s\"] -> \"%s\"",
-        cfrombstr(sdir->d_u_name), oldname, newname);
 
     ad_init(&ad, vol);
     adp = &ad;
@@ -326,6 +323,15 @@ static int moveandrename(struct vol *vol,
         goto exit;
     }
 
+    if (isdir)
+        LOG(log_debug, logtype_afpd,
+            "moveandrename(\"%s\" -> \"%s/%s\")",
+            oldunixname, bdata(curdir->d_fullpath), upath);
+    else
+        LOG(log_debug, logtype_afpd,
+            "moveandrename(\"%s/%s\" -> \"%s/%s\")",
+            bdata(sdir->d_fullpath), oldunixname, bdata(curdir->d_fullpath), upath);
+
     /* source == destination. we just silently accept this. */
     if ((!isdir && curdir == sdir) || (isdir && curdir->d_did == sdir->d_pdid)) {
         if (strcmp(oldname, newname) == 0) {
@@ -384,6 +390,15 @@ static int moveandrename(struct vol *vol,
         AFP_CNID_START("cnid_update");
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
         AFP_CNID_DONE();
+
+        /* Send FCE event */
+        if (isdir) {
+            fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
+        } else {
+            bstring srcpath = bformat("%s/%s", bdata(sdir->d_fullpath), oldunixname);
+            fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
+            bdestroy(srcpath);
+        }
     }
 
 exit:
@@ -461,7 +476,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         return AFP_OK; /* newname == oldname same dir */
     }
     
-    rc = moveandrename(vol, sdir, -1, oldname, newname, isdir);
+    rc = moveandrename(obj, vol, sdir, -1, oldname, newname, isdir);
     if ( rc == AFP_OK ) {
         setvoltime(obj, vol );
     }
@@ -615,7 +630,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
                 cnid_delete(vol->v_cdb, delcnid);
                 AFP_CNID_DONE();
             }
-            fce_register(FCE_DIR_DELETE, fullpathname(upath), NULL, fce_dir);
+            fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
@@ -623,7 +638,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             if ((dname = bstrcpy(curdir->d_u_name)) == NULL)
                 return AFPERR_MISC;
             if ((rc = deletecurdir(vol)) == AFP_OK)
-                fce_register(FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL, fce_dir);
+                fce_register(obj, FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL);
             bdestroy(dname);
         }
     } else if (of_findname(vol, s_path)) {
@@ -637,7 +652,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             rc = AFPERR_NOOBJ;
         } else {
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
-				fce_register(FCE_FILE_DELETE, fullpathname(upath), NULL, fce_file);
+				fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
                 if (vol->v_tm_used < s_path->st.st_size)
                     vol->v_tm_used = 0;
                 else 
@@ -782,7 +797,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     /* This does the work */
     LOG(log_debug, logtype_afpd, "afp_move(oldname:'%s', newname:'%s', isdir:%u)",
         oldname, newname, isdir);
-    rc = moveandrename(vol, sdir, sdir_fd, oldname, newname, isdir);
+    rc = moveandrename(obj, vol, sdir, sdir_fd, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {
         char *upath = mtoupath(vol, newname, pdid, utf8_encoding(obj));

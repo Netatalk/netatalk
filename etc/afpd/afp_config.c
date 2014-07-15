@@ -225,6 +225,19 @@ int configinit(AFPObj *obj)
 		LOG(log_note, logtype_afpd, "Fce events: %s", r);
 		fce_set_events(r);
     }
+    r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
+    LOG(log_debug, logtype_afpd, "Fce version: %s", r);
+    obj->fce_version = atoi(r);
+
+    if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce ignore names", ".DS_Store"))) {
+        obj->fce_ign_names = strdup(r);
+    }
+
+    if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce notify script", NULL))) {
+        obj->fce_notify_script = strdup(r);
+    }
+
+
 
 EC_CLEANUP:
     if (q)

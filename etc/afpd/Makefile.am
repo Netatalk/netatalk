@@ -7,7 +7,7 @@ CLEANFILES =
 DISTCLEANFILES =
 
 sbin_PROGRAMS = afpd
-noinst_PROGRAMS = hash fce spot
+noinst_PROGRAMS = hash spot
 
 afpd_SOURCES = \
 	afp_avahi.c \
@@ -101,10 +101,6 @@ noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h fi
 
 hash_SOURCES = hash.c
 hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
-
-fce_SOURCES = fce_api.c fce_util.c
-fce_CFLAGS = -DFCE_TEST_MAIN -I$(top_srcdir)/include
-fce_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 spot_SOURCES = spotlight.c spotlight_marshalling.c
 spot_CFLAGS = -DSPOT_TEST_MAIN

@@ -2038,7 +2038,7 @@ int main(int argc, char **argv)
     struct vol *vol = talloc_zero(ssp_slq, struct vol);
     vol->v_path = "/Volumes/test";
     ssp_slq->slq_vol = vol;
-    ssp_slq->slq_allow_expr = false;
+    ssp_slq->slq_allow_expr = true;
     sparqlvar = 'a';
 
     s = yy_scan_string(argv[1]);

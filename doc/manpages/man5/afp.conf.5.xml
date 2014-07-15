@@ -1214,6 +1214,20 @@
       afpd processes notify interested listeners about certain filesystem
       event by UDP network datagrams.</para>
 
+      <para>The following FCE events are defined:</para>
+
+      <itemizedlist>
+        <listitem><para>file modification (<option>fmod</option>)</para></listitem>
+        <listitem><para>file deletion (<option>fdel</option>)</para></listitem>
+        <listitem><para>directory deletion (<option>ddel</option>)</para></listitem>
+        <listitem><para>file creation (<option>fcre</option>)</para></listitem>
+        <listitem><para>directory creation (<option>dcre</option>)</para></listitem>
+        <listitem><para>file move or rename (<option>fmov</option>)</para></listitem>
+        <listitem><para>directory move or rename (<option>dmov</option>)</para></listitem>
+        <listitem><para>login (<option>login</option>)</para></listitem>
+        <listitem><para>logout (<option>logout</option>)</para></listitem>
+      </itemizedlist>
+
       <variablelist>
         <varlistentry>
           <term>fce listener = <replaceable>host[:port]</replaceable>
@@ -1229,7 +1243,7 @@
 
         <varlistentry>
           <term>fce events =
-          <replaceable>fmod,fdel,ddel,fcre,dcre,tmsz</replaceable>
+          <replaceable>fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout</replaceable>
           <type>(G)</type></term>
 
           <listitem>
@@ -1261,6 +1275,28 @@
             seconds.</para>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term>fce ignore names = <replaceable>NAME[/NAME2/...]</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Slash delimited list of filenames for which FCE
+            events shall not be generated. Default: .DS_Store.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>fce notify script = <replaceable>PATH</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Script which will be executed for every FCE event,
+            see contrib/shell_utils/fce_ev_script.shfrom the Netatalk
+            sources for an example script.</para>
+          </listitem>
+        </varlistentry>
+
       </variablelist>
     </refsect2>
 

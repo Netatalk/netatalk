@@ -764,7 +764,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
-    fce_register(FCE_FILE_CREATE, fullpathname(upath), NULL, fce_file);
+    fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
     sl_index_file(path);
 
     curdir->d_offcnt++;

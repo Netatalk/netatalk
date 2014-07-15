@@ -808,6 +808,107 @@ Both logtype and loglevels are case insensitive\&.
 .PP
 Netatalk includes a nifty filesystem change event mechanism where afpd processes notify interested listeners about certain filesystem event by UDP network datagrams\&.
 .PP
+The following FCE events are defined:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file modification (\fBfmod\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file deletion (\fBfdel\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory deletion (\fBddel\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file creation (\fBfcre\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory creation (\fBdcre\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file move or rename (\fBfmov\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory move or rename (\fBdmov\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+login (\fBlogin\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+logout (\fBlogout\fR)
+.RE
+.PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
 Enables sending FCE events to the specified
@@ -816,7 +917,7 @@ Enables sending FCE events to the specified
 is 12250 if not specified\&. Specifying multiple listeners is done by having this option once for each of them\&.
 .RE
 .PP
-fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
+fce events = \fIfmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\fR \fB(G)\fR
 .RS 4
 Specifies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
@@ -830,6 +931,16 @@ Coalesce FCE events\&.
 fce holdfmod = \fIseconds\fR \fB(G)\fR
 .RS 4
 This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file multiple times for every "save"\&. Default: 60 seconds\&.
+.RE
+.PP
+fce ignore names = \fINAME[/NAME2/\&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Slash delimited list of filenames for which FCE events shall not be generated\&. Default: \&.DS_Store\&.
+.RE
+.PP
+fce notify script = \fIPATH\fR \fB(G)\fR
+.RS 4
+Script which will be executed for every FCE event, see contrib/shell_utils/fce_ev_script\&.shfrom the Netatalk sources for an example script\&.
 .RE
 .SS "Debug Parameters"
 .PP

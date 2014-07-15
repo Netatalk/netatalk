@@ -4,6 +4,8 @@ Changes in 3.1.4
        connections, bug #572.
 * NEW: afpd: new option "force xattr with sticky bit = yes|no"
        (default: no), FR #94
+* UPD: afpd: FCE version 2 with new event types and new config options
+       "fce ignore names" and "fce notify script"
 
 Changes in 3.1.3
 ================

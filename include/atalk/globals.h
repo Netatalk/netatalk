@@ -157,6 +157,9 @@ typedef struct AFPObj {
     void (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
+    int fce_version;
+    char *fce_ign_names;
+    char *fce_notify_script;
 } AFPObj;
 
 /* typedef for AFP functions handlers */

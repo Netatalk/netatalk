@@ -89,7 +89,7 @@ void fce_initialize_history()
 	}
 }
 
-bool fce_handle_coalescation(int event, const char *path, fce_obj_t type)
+bool fce_handle_coalescation(int event, const char *path)
 {
 	/* These two are used to eval our next index in history */
 	/* the history is unsorted, speed should not be a problem, length is 10 */
@@ -138,7 +138,6 @@ bool fce_handle_coalescation(int event, const char *path, fce_obj_t type)
 
 		/* If we find a parent dir we should be DELETED we are done */
 		if ((coalesce & FCE_COALESCE_DELETE)
-            && fh->fce_h_type
             && (event == FCE_FILE_DELETE || event == FCE_DIR_DELETE)) {
 			/* Parent dir ? */
 			if (!strncmp(fh->fce_h_path, path, strlen(fh->fce_h_path)))
@@ -155,8 +154,7 @@ bool fce_handle_coalescation(int event, const char *path, fce_obj_t type)
 	/* We have a new entry for the history, register it */
 	fce_history_list[oldest_entry_idx].fce_h_tv = tv;
 	fce_history_list[oldest_entry_idx].fce_h_event = event;
-	fce_history_list[oldest_entry_idx].fce_h_type = type;
-	strncpy(fce_history_list[oldest_entry_idx].fce_h_path, path, MAXPATHLEN);
+    strncpy(fce_history_list[oldest_entry_idx].fce_h_path, path, MAXPATHLEN);
 
 	/* we have to handle this event */
 	return false;
