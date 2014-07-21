@@ -1242,6 +1242,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>fce version = <replaceable>1|2</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>FCE protocol version, default is 1. You need version
+            2 for the fmov, dmov, login or logout events.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>fce events =
           <replaceable>fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout</replaceable>
           <type>(G)</type></term>

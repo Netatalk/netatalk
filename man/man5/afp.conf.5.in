@@ -917,6 +917,11 @@ Enables sending FCE events to the specified
 is 12250 if not specified\&. Specifying multiple listeners is done by having this option once for each of them\&.
 .RE
 .PP
+fce version = \fI1|2\fR \fB(G)\fR
+.RS 4
+FCE protocol version, default is 1\&. You need version 2 for the fmov, dmov, login or logout events\&.
+.RE
+.PP
 fce events = \fIfmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\fR \fB(G)\fR
 .RS 4
 Specifies which FCE events are active, default is
