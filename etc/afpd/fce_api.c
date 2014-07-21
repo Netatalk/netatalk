@@ -395,7 +395,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         }
 
         /* build our data packet */
-        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, getpid(), user, ++event_id);
+        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, getpid(), user, event_id);
 
         sent_data = sendto(udp_entry->sock,
                            iobuf,
@@ -415,6 +415,8 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             udp_entry->next_try_on_error = now + FCE_SOCKET_RETRY_DELAY_S;
         }
     }
+
+    event_id++;
 }
 
 static int add_udp_socket(const char *target_ip, const char *target_port )
