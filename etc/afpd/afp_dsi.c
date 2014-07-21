@@ -28,6 +28,8 @@
 #include <arpa/inet.h>
 #include <setjmp.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <atalk/logger.h>
 #include <atalk/dsi.h>
@@ -337,7 +339,7 @@ static void alarm_handler(int sig _U_)
     }
 }
 
-static void child_handler(void)
+static void child_handler(int sig _U_)
 {
     wait(NULL);
 }
