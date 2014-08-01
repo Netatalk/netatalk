@@ -503,113 +503,112 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*!
- * Add a fd to a dynamic pollfd array that is allocated and grown as needed
- *
- * This uses an additional array of struct polldata which stores type information
- * (enum fdtype) and a pointer to anciliary user data.
- *
- * 1. Allocate the arrays with the size of "maxconns" if *fdsetp is NULL.
- * 2. Fill in both array elements and increase count of used elements
- * 
- * @param maxconns    (r)  maximum number of connections, determines array size
- * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
- * @param polldatap   (rw) pointer to callers pointer to the polldata array
- * @param fdset_usedp (rw) pointer to an int with the number of used elements
- * @param fdset_sizep (rw) pointer to an int which stores the array sizes
- * @param fd          (r)  file descriptor to add to the arrays
- * @param fdtype      (r)  type of fd, currently IPC_FD or LISTEN_FD
- * @param data        (rw) pointer to data the caller want to associate with an fd
- */
-void fdset_add_fd(int maxconns,
-                  struct pollfd **fdsetp,
-                  struct polldata **polldatap,
-                  int *fdset_usedp,
-                  int *fdset_sizep,
-                  int fd,
-                  enum fdtype fdtype,
-                  void *data)
+/**
+ * Allocate and initialize atalk socket event struct
+ **/
+struct asev *asev_init(int max)
 {
-    struct pollfd *fdset = *fdsetp;
-    struct polldata *polldata = *polldatap;
-    int fdset_size = *fdset_sizep;
+    struct asev *asev = calloc(1, sizeof(struct asev));
 
-    LOG(log_debug, logtype_default, "fdset_add_fd: adding fd %i in slot %i", fd, *fdset_usedp);
-
-    if (fdset == NULL) { /* 1 */
-        /* Initialize with space for all possibly active fds */
-        fdset = calloc(maxconns, sizeof(struct pollfd));
-        if (! fdset)
-            exit(EXITERR_SYS);
-
-        polldata = calloc(maxconns, sizeof(struct polldata));
-        if (! polldata)
-            exit(EXITERR_SYS);
-
-        fdset_size = maxconns;
-
-        *fdset_sizep = fdset_size;
-        *fdsetp = fdset;
-        *polldatap = polldata;
-
-        LOG(log_debug, logtype_default, "fdset_add_fd: initialized with space for %i conncections", 
-            maxconns);
+    if (asev == NULL) {
+        return NULL;
     }
 
-    /* 2 */
-    fdset[*fdset_usedp].fd = fd;
-    fdset[*fdset_usedp].events = POLLIN;
-    polldata[*fdset_usedp].fdtype = fdtype;
-    polldata[*fdset_usedp].data = data;
-    (*fdset_usedp)++;
+    /* Initialize with space for all possibly active fds */
+    asev->fdset = calloc(max, sizeof(struct pollfd));
+    asev->data = calloc(max, sizeof(struct asev_data));
+
+    if (asev->fdset == NULL || asev->data == NULL) {
+        free(asev->fdset);
+        free(asev->data);
+        free(asev);
+        return NULL;
+    }
+
+    asev->max = max;
+    asev->used = 0;
+
+    return asev;
 }
 
-/*!
- * Remove a fd from our pollfd array
+/**
+ * Add a fd to a dynamic pollfd array and associated data array
  *
- * 1. Search fd
- * 2a Matched last (or only) in the set ? null it and return
- * 2b If we remove the last array elemnt, just decrease count
- * 3. If found move all following elements down by one
- * 4. Decrease count of used elements in array
- *
- * This currently doesn't shrink the allocated storage of the array.
- *
- * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
- * @param polldatap   (rw) pointer to callers pointer to the polldata array
- * @param fdset_usedp (rw) pointer to an int with the number of used elements
- * @param fdset_sizep (rw) pointer to an int which stores the array sizes
- * @param fd          (r)  file descriptor to remove from the arrays
- */
-void fdset_del_fd(struct pollfd **fdsetp,
-                  struct polldata **polldatap,
-                  int *fdset_usedp,
-                  int *fdset_sizep _U_,
-                  int fd)
+ * This uses an additional array of struct polldata which stores type
+ * information (enum fdtype) and a pointer to anciliary user data.
+ **/
+bool asev_add_fd(struct asev *asev,
+                 int fd,
+                 enum asev_fdtype fdtype,
+                 void *private)
 {
-    struct pollfd *fdset = *fdsetp;
-    struct polldata *polldata = *polldatap;
+    if (asev == NULL) {
+        return false;
+    }
 
-    if (*fdset_usedp < 1)
-        return;
+    if (!(asev->used < asev->max)) {
+        return false;
+    }
 
-    for (int i = 0; i < *fdset_usedp; i++) {
-        if (fdset[i].fd == fd) { /* 1 */
-            if ((i + 1) == *fdset_usedp) { /* 2a */
-                fdset[i].fd = -1;
-                memset(&polldata[i], 0, sizeof(struct polldata));
-            } else if (i < (*fdset_usedp - 1)) { /* 2b */
-                memmove(&fdset[i],
-                        &fdset[i+1],
-                        (*fdset_usedp - i - 1) * sizeof(struct pollfd)); /* 3 */
-                memmove(&polldata[i],
-                        &polldata[i+1],
-                        (*fdset_usedp - i - 1) * sizeof(struct polldata)); /* 3 */
+    asev->fdset[asev->used].fd = fd;
+    asev->fdset[asev->used].events = POLLIN;
+    asev->data[asev->used].fdtype = fdtype;
+    asev->data[asev->used].private = private;
+    asev->used++;
+
+    return true;
+}
+
+/**
+ * Remove fd from asev
+ *
+ * @returns true if the fd was deleted, otherwise false
+ **/
+bool asev_del_fd(struct asev *asev, int fd)
+{
+    int i;
+    int numafter;
+
+    if (asev == NULL) {
+        return false;
+    }
+
+    if (asev->used == 0) {
+        LOG(log_error, logtype_cnid, "asev_del_fd: empty");
+        return false;
+    }
+
+    for (i = 0; i < asev->used; i++) {
+        /*
+         * Scan the array for a matching fd
+         */
+        if (asev->fdset[i].fd == fd) {
+            /*
+             * found fd
+             */
+            if ((i + 1) == asev->used) {
+                /*
+                 * it's the last (or only) array element, simply null it
+                 */
+                asev->fdset[i].fd = -1;
+                asev->data[i].fdtype = 0;
+                asev->data[i].private = NULL;
+            } else {
+                /*
+                 * Move down by one all subsequent elements
+                 */
+                numafter = asev->used - (i + 1);
+                memmove(&asev->fdset[i], &asev->fdset[i+1],
+                        numafter * sizeof(struct pollfd));
+                memmove(&asev->data[i], &asev->data[i+1],
+                        numafter * sizeof(struct asev_data));
             }
-            (*fdset_usedp)--;
-            break;
+            asev->used--;
+            return true;
         }
     }
+
+    return false;
 }
 
 /* Length of the space taken up by a padded control message of length len */

@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 #include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
@@ -71,6 +72,10 @@
 #define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
                          (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
 #define ntoh64(x)       (hton64(x))
+#endif
+
+#ifndef SAFE_FREE
+#define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
 #endif
 
 #ifdef WITH_SENDFILE
@@ -152,26 +157,32 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
 extern int tokenize_ip_port(const char *ipurl, char **address, char **port);
 
 /* Structures and functions dealing with dynamic pollfd arrays */
-enum fdtype {IPC_FD, LISTEN_FD};
-struct polldata {
-    enum fdtype fdtype; /* IPC fd or listening socket fd                 */
-    void *data;         /* pointer to AFPconfig for listening socket and *
-                         * pointer to afp_child_t for IPC fd             */
+
+enum asev_fdtype {IPC_FD, LISTEN_FD};
+
+/**
+ * atalk socket event data
+ **/
+struct asev_data {
+    enum asev_fdtype fdtype;  /* IPC fd or listening socket fd                 */
+    void            *private; /* pointer to AFPconfig for listening socket and *
+                               * pointer to afp_child_t for IPC fd             */
 };
 
-extern void fdset_add_fd(int maxconns,
-                         struct pollfd **fdsetp,
-                         struct polldata **polldatap,
-                         int *fdset_usedp,
-                         int *fdset_sizep,
-                         int fd,
-                         enum fdtype fdtype,
-                         void *data);
-extern void fdset_del_fd(struct pollfd **fdsetp,
-                         struct polldata **polldatap,
-                         int *fdset_usedp,
-                         int *fdset_sizep,
-                         int fd);
+/**
+ * atalk socket event
+ **/
+struct asev {
+    struct pollfd         *fdset; /* struct pollfd array for poll() */
+    struct asev_data      *data;  /* associated array of data       */
+    int                    max;
+    int                    used;
+};
+
+extern struct asev *asev_init(int max);
+extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype, void *private);
+extern bool asev_del_fd(struct asev *sev, int fd);
+
 extern int send_fd(int socket, int fd);
 extern int recv_fd(int fd, int nonblocking);
 

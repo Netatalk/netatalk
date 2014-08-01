@@ -48,23 +48,36 @@
 /* how many seconds we wait to shutdown from SIGTERM before we send SIGKILL */
 #define KILL_GRACETIME 5
 
+/* defines that control whether services should run by default */
+#define NETATALK_SRV_NEEDED  -1
+#define NETATALK_SRV_OPTIONAL 0
+#define NETATALK_SRV_ERROR    NETATALK_SRV_NEEDED
+
 /* forward declaration */
 static pid_t run_process(const char *path, ...);
 static void kill_childs(int sig, ...);
 
 /* static variables */
 static AFPObj obj;
-static pid_t afpd_pid = -1,  cnid_metad_pid = -1, dbus_pid = -1;
-static uint afpd_restarts, cnid_metad_restarts, dbus_restarts, trackerd_restarts;
+static pid_t afpd_pid = NETATALK_SRV_NEEDED;
+static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
+static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
+static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path;
-static char *trackerd_loglev;
 
 /******************************************************************
  * Misc stuff
  ******************************************************************/
+
+static bool service_running(pid_t pid)
+{
+    if ((pid != NETATALK_SRV_NEEDED) && (pid != NETATALK_SRV_OPTIONAL))
+        return true;
+    return false;
+}
 
 /* Set Tracker Miners to index all our volumes */
 static int set_sl_volumes(void)
@@ -203,17 +216,21 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
         }
 
         if (pid == afpd_pid)
-            afpd_pid = -1;
+            afpd_pid = NETATALK_SRV_ERROR;
         else if (pid == cnid_metad_pid)
-            cnid_metad_pid = -1;
+            cnid_metad_pid = NETATALK_SRV_ERROR;
         else if (pid == dbus_pid)
-            dbus_pid = -1;
+            dbus_pid = NETATALK_SRV_ERROR;
         else
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
     }
 
-    if (in_shutdown && afpd_pid == -1 && cnid_metad_pid == -1 && dbus_pid == -1)
+    if (in_shutdown
+        && !service_running(afpd_pid)
+        && !service_running(cnid_metad_pid)
+        && !service_running(dbus_pid)) {
         event_base_loopbreak(base);
+    }
 }
 
 /* timer callback */
@@ -222,7 +239,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
     if (in_shutdown)
         return;
 
-    if (afpd_pid == -1) {
+    if (afpd_pid == NETATALK_SRV_NEEDED) {
         afpd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
         if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
@@ -230,7 +247,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         }
     }
 
-    if (cnid_metad_pid == -1) {
+    if (cnid_metad_pid == NETATALK_SRV_NEEDED) {
         cnid_metad_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
         if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
@@ -239,10 +256,10 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
     }
 
 #ifdef HAVE_TRACKER
-    if (dbus_pid == -1) {
+    if (dbus_pid == NETATALK_SRV_NEEDED) {
         dbus_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
-        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus.session.conf", NULL)) == -1) {
+        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
         }
     }
@@ -262,7 +279,7 @@ static void kill_childs(int sig, ...)
     va_start(args, sig);
 
     while ((pid = va_arg(args, pid_t *)) != NULL) {
-        if (*pid == -1)
+        if (*pid == NETATALK_SRV_ERROR || *pid == NETATALK_SRV_OPTIONAL)
             continue;
         kill(*pid, sig);
     }
@@ -279,7 +296,7 @@ static void netatalk_exit(int ret)
 /* this forks() and exec() "path" with varags as argc[] */
 static pid_t run_process(const char *path, ...)
 {
-    int ret, i = 0;
+    int i = 0;
 #define MYARVSIZE 64
     char *myargv[MYARVSIZE];
     va_list args;
@@ -299,7 +316,7 @@ static pid_t run_process(const char *path, ...)
         }
         va_end(args);
 
-        ret = execv(path, myargv);
+        (void)execv(path, myargv);
 
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -358,12 +375,12 @@ int main(int argc, char **argv)
 
     LOG(log_note, logtype_default, "Netatalk AFP server starting");
 
-    if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+    if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'afpd'");
         netatalk_exit(EXITERR_CONF);
     }
 
-    if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+    if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
         netatalk_exit(EXITERR_CONF);
     }
@@ -395,42 +412,42 @@ int main(int argc, char **argv)
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
 #ifdef HAVE_TRACKER
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
-    setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
-    setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
-    setenv("TRACKER_USE_LOG_FILES", "1", 0);
+    if (obj.options.flags & OPTION_SPOTLIGHT) {
+        setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
+        setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
+        setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+        setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
-    dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
-    LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
-    if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
-        LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
-        netatalk_exit(EXITERR_CONF);
+        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start dbus", 1)) {
+            dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
+            LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+            if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
+                LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+                netatalk_exit(EXITERR_CONF);
+            }
+
+            /* Allow dbus some time to start up */
+            sleep(1);
+        }
+
+        set_sl_volumes();
+
+        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
+            system(TRACKER_PREFIX "/bin/tracker-control -s");
+        }
     }
-
-    /* Allow dbus some time to start up */
-    sleep(1);
 #endif
 
-#ifdef HAVE_TRACKER_SPARQL
-#ifdef SOLARIS
-    setenv("XDG_DATA_DIRS", TRACKER_PREFIX "/share", 0);
-    setenv("TRACKER_DB_ONTOLOGIES_DIR", TRACKER_PREFIX "/share/tracker/ontologies", 0);
-    setenv("TRACKER_EXTRACTOR_RULES_DIR", TRACKER_PREFIX "/share/tracker/extract-rules", 0);
-    setenv("TRACKER_LANGUAGE_STOPWORDS_DIR", TRACKER_PREFIX "/share/tracker/languages", 0);
-#endif
-    set_sl_volumes();
-    system(TRACKER_PREFIX "/bin/tracker-control -s");
-#endif
 
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    if (afpd_pid != -1 || cnid_metad_pid != -1 || dbus_pid != -1) {
-        if (afpd_pid != -1)
+    if (service_running(afpd_pid) || service_running(cnid_metad_pid) || service_running(dbus_pid)) {
+        if (service_running(afpd_pid))
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
-        if (cnid_metad_pid != -1)
+        if (service_running(cnid_metad_pid))
             LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
-        if (dbus_pid != -1)
+        if (service_running(dbus_pid))
             LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
         kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
     }

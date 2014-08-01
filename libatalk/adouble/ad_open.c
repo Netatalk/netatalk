@@ -343,6 +343,14 @@ int ad_init_offsets(struct adouble *ad)
         eid++;
     }
 
+    /*
+     * Ensure the resource fork offset is always set
+     */
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA)
+        ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
+#endif
+
     return 0;
 }
 
@@ -540,7 +548,9 @@ int ad_valid_header_osx(const char *path)
         EC_FAIL;
     }
 
-    if (strncmp(buf + ADEDOFF_FILLER, "Mac OS X", strlen("Mac OS X")) == 0)
+    if (strncmp(buf + ADEDOFF_FILLER,
+                AD_FILLER_NETATALK,
+                strlen(AD_FILLER_NETATALK)) != 0)
         /*
          * It's a split fork created by OS X, it's not our "own" ._ file
          * and thus not a valid header in this context.
@@ -586,7 +596,7 @@ static int ad_convert_osx(const char *path, struct adouble *ad)
 
     origlen = ad_getentryoff(ad, ADEID_RFORK) + ad_getentrylen(ad, ADEID_RFORK);
 
-    map = mmap(NULL, origlen, PROT_WRITE, MAP_SHARED, ad_reso_fileno(ad), 0);
+    map = mmap(NULL, origlen, PROT_READ | PROT_WRITE, MAP_SHARED, ad_reso_fileno(ad), 0);
     if (map == MAP_FAILED) {
         LOG(log_error, logtype_ad, "mmap AppleDouble: %s\n", strerror(errno));
         EC_FAIL;
@@ -637,7 +647,7 @@ static int ad_header_read_osx(const char *path, struct adouble *ad, const struct
 {
     EC_INIT;
     struct adouble      adosx;
-    char                *buf = &adosx.ad_data[0];
+    char                *buf;
     uint16_t            nentries;
     int                 len;
     ssize_t             header_len;
@@ -647,6 +657,7 @@ static int ad_header_read_osx(const char *path, struct adouble *ad, const struct
 reread:
     LOG(log_debug, logtype_ad, "ad_header_read_osx: %s", path ? fullpathname(path) : "");
     ad_init_old(&adosx, AD_VERSION_EA, ad->ad_options);
+    buf = &adosx.ad_data[0];
     memset(buf, 0, sizeof(adosx.ad_data));
     adosx.ad_rfp->adf_fd = ad_reso_fileno(ad);
 
@@ -791,6 +802,14 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         errno = EINVAL;
         EC_FAIL;
     }
+
+    /*
+     * Ensure the resource fork offset is always set
+     */
+#ifndef HAVE_EAFD
+    if (ad->ad_vers == AD_VERSION_EA)
+        ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
+#endif
 
 EC_CLEANUP:
     if (ret != 0 && errno == EINVAL) {
@@ -1806,6 +1825,12 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
  * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
  *   fds of the same file
  *
+ * BUGS:
+ *
+ * * on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
+ *   ADFLAGS_HF, because it checks whether ad_meta_fileno() is already
+ *   openend. As a workaround pass ADFLAGS_SETSHRMD.
+ *
  * @returns 0 on success, any other value indicates an error
  */
 int ad_open(struct adouble *ad, const char *path, int adflags, ...)
@@ -1927,7 +1952,7 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     int cwdfd = -1;
 
     if (dirfd != -1) {
-        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
+        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
             ret = -1;
             goto exit;
         }

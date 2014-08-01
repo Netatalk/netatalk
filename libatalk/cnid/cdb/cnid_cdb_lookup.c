@@ -26,11 +26,11 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
     cnid_t id_devino, id_didname,id = 0;
     int rc;
 
-    if (!cdb || !(db = cdb->_private) || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         return 0;
     }
     
-    if ((buf = make_cnid_data(cdb->flags, st, did, name, len)) == NULL) {
+    if ((buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
         return 0;
     }
@@ -63,7 +63,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
         type_devino = ntohl(type_devino);
     }
 
-    buf = make_cnid_data(cdb->flags, st, did, name, len);
+    buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len);
     key.data = buf +CNID_DID_OFS;
     key.size = CNID_DID_LEN + len + 1;
     

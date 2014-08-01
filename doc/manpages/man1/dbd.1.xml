@@ -22,7 +22,7 @@
           <primary>dbd</primary>
         </indexterm></command>
 
-      <arg choice="opt">-fsv</arg>
+      <arg choice="opt">-cfFstuvV</arg>
 
       <arg choice="plain"><replaceable>volumepath</replaceable></arg>
     </cmdsynopsis>
@@ -78,6 +78,14 @@
 
         <listitem>
           <para>show statistics while running</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-u</term>
+
+        <listitem>
+          <para>username for use with AFP volumes using user variable $u</para>
         </listitem>
       </varlistentry>
 

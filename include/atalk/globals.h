@@ -60,6 +60,7 @@
 #define OPTION_SPOTLIGHT     (1 << 13) /* whether to initialize Spotlight support */
 #define OPTION_SPOTLIGHT_VOL (1 << 14) /* whether spotlight shall be enabled by default for volumes */
 #define OPTION_RECVFILE      (1 << 15)
+#define OPTION_SPOTLIGHT_EXPR (1 << 16) /* whether to allow Spotlight logic expressions */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)
@@ -130,6 +131,7 @@ struct afp_options {
     char *cnid_mysql_pw;
     char *cnid_mysql_db;
     struct afp_volume_name volfile;
+    uint64_t sparql_limit;
 };
 
 typedef struct AFPObj {
@@ -155,6 +157,9 @@ typedef struct AFPObj {
     void (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
+    int fce_version;
+    char *fce_ign_names;
+    char *fce_notify_script;
 } AFPObj;
 
 /* typedef for AFP functions handlers */

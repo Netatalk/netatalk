@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 09 Feb 2013
+.\"      Date: 05 Jun 2014
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "09 Feb 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "05 Jun 2014" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -174,7 +174,7 @@ in parentheses indicates that a parameter is specific to the [Global] section\&.
 indicates that a parameter can be specified in a volume specific section\&.
 .SH "VARIABLE SUBSTITUTIONS"
 .PP
-You can use variables in volume names\&. The use of variables in paths is not supported for now\&.
+You can use variables in volume names\&. The use of variables in paths is limited to $u\&.
 .sp
 .RS 4
 .ie n \{\
@@ -538,6 +538,50 @@ contains symlink, you must set the canonicalized absolute path\&. In the simple 
 \fBbasedir regex = /home\fR
 .RE
 .PP
+chmod request = \fIpreserve (default) | ignore | simple\fR \fB(G/V)\fR
+.RS 4
+Advanced permission control that deals with ACLs\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBignore\fR
+\- UNIX chmod() requests are completely ignored
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBpreserve\fR
+\- preserve ZFS ACEs for named users and groups or POSIX ACL group mask
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBsimple\fR
+\- just to a chmod() as requested without any extra steps
+.RE
+.RE
+.PP
 close vol = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Whether to close volumes possibly opened by clients when they\*(Aqre removed from the configuration and the configuration is reloaded\&.
@@ -586,6 +630,13 @@ extmap file = \fIpath\fR \fB(G)\fR
 Sets the path to the file which defines file extension type/creator mappings\&. (default is @pkgconfdir@/extmap\&.conf)\&.
 .RE
 .PP
+force xattr with sticky bit = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G/V)\fR
+.RS 4
+Writing metadata xattr on directories with the sticky bit set may fail even though we may have write access to a directory, because if the sticky bit is set only the owner is allowed to write xattrs\&.
+.sp
+By enabling this option Netatalk will write the metadata xattr as root\&.
+.RE
+.PP
 guest account = \fIname\fR \fB(G)\fR
 .RS 4
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
@@ -631,6 +682,11 @@ solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 Use share reservations on Solaris\&. Solaris CIFS server uses this too, so this makes a lock coherent multi protocol server\&.
 .RE
 .PP
+sparql results limit = \fINUMBER\fR (default: \fIUNLIMITED\fR) \fB(G)\fR
+.RS 4
+Impose a limit on the number of results queried from Tracker via SPARQL queries\&.
+.RE
+.PP
 spotlight = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)/(V)\fR
 .RS 4
 Whether to enable Spotlight searches\&. Note: once the global option is enabled, any volume that is not enabled won\*(Aqt be searchable at all\&. See also
@@ -638,15 +694,48 @@ Whether to enable Spotlight searches\&. Note: once the global option is enabled,
 option\&.
 .RE
 .PP
+spotlight attributes = \fICOMMA SEPERATED STRING\fR (default: \fIEMPTY\fR) \fB(G)\fR
+.RS 4
+A list of attributes that are allowed to be used in Spotlight searches\&. By default all attributes can be searched, passing a string limits attributes to elements of the string\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+spotlight
+            attributes = *,kMDItemTextContent
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
+spotlight expr = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to allow the use of logic expression in searches\&.
+.RE
+.PP
+start dbus = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to start a dbus instance for use with Tracker\&.
+.RE
+.PP
+start tracker = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
+.RS 4
+Whether to start Tracker with
+\fItracker\-control \-s\fR\&.
+.RE
+.PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Send optional AFP messages for vetoed files\&. Then whenever a client tries to access any file or directory with a vetoed name, it will be sent an AFP message indicating the name and the directory\&.
 .RE
 .PP
-vol dbpath = \fIpath\fR \fB(G)\fR
+vol dbpath = \fIpath\fR \fB(G)/(V)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
-@localstatedir@/netatalk/CNID/\&.
+@localstatedir@/netatalk/CNID/$v/\&.
 .RE
 .PP
 vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -719,6 +808,107 @@ Both logtype and loglevels are case insensitive\&.
 .PP
 Netatalk includes a nifty filesystem change event mechanism where afpd processes notify interested listeners about certain filesystem event by UDP network datagrams\&.
 .PP
+The following FCE events are defined:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file modification (\fBfmod\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file deletion (\fBfdel\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory deletion (\fBddel\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file creation (\fBfcre\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory creation (\fBdcre\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+file move or rename (\fBfmov\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory move or rename (\fBdmov\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+login (\fBlogin\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+logout (\fBlogout\fR)
+.RE
+.PP
 fce listener = \fIhost[:port]\fR \fB(G)\fR
 .RS 4
 Enables sending FCE events to the specified
@@ -727,7 +917,12 @@ Enables sending FCE events to the specified
 is 12250 if not specified\&. Specifying multiple listeners is done by having this option once for each of them\&.
 .RE
 .PP
-fce events = \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR \fB(G)\fR
+fce version = \fI1|2\fR \fB(G)\fR
+.RS 4
+FCE protocol version, default is 1\&. You need version 2 for the fmov, dmov, login or logout events\&.
+.RE
+.PP
+fce events = \fIfmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\fR \fB(G)\fR
 .RS 4
 Specifies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
@@ -741,6 +936,16 @@ Coalesce FCE events\&.
 fce holdfmod = \fIseconds\fR \fB(G)\fR
 .RS 4
 This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file multiple times for every "save"\&. Default: 60 seconds\&.
+.RE
+.PP
+fce ignore names = \fINAME[/NAME2/\&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Slash delimited list of filenames for which FCE events shall not be generated\&. Default: \&.DS_Store\&.
+.RE
+.PP
+fce notify script = \fIPATH\fR \fB(G)\fR
+.RS 4
+Script which will be executed for every FCE event, see contrib/shell_utils/fce_ev_script\&.shfrom the Netatalk sources for an example script\&.
 .RE
 .SS "Debug Parameters"
 .PP

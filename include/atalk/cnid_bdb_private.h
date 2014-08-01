@@ -36,6 +36,7 @@
 #define CNID_DBD_RES_SRCH_DONE     0x06
 
 #define DBD_MAX_SRCH_RSLTS 100
+#define DBD_NUM_OPEN_ARGS 3
 
 struct cnid_dbd_rqst {
     int     op;
@@ -57,10 +58,7 @@ struct cnid_dbd_rply {
 };
 
 typedef struct CNID_bdb_private {
-    uint32_t magic;
-    char      db_dir[MAXPATHLEN + 1]; /* Database directory without /.AppleDB appended */
-    char      *cnidserver;
-    char      *cnidport;
+    struct vol *vol;
     int       fd;		/* File descriptor to cnid_dbd */
     char      stamp[ADEDLEN_PRIVSYN]; /* db timestamp */
     char      *client_stamp;

@@ -14,7 +14,6 @@
 
 #define FCE_MAX_UDP_SOCKS 5     /* Allow a maximum of udp listeners for file change events */
 #define FCE_SOCKET_RETRY_DELAY_S 600 /* Pause this time in s after socket was broken */
-#define FCE_PACKET_VERSION  1
 #define FCE_HISTORY_LEN 10  /* This is used to coalesce events */
 #define MAX_COALESCE_TIME_MS 1000  /* Events oldeer than this are not coalesced */
 
@@ -33,7 +32,6 @@ struct udp_entry {
 
 struct fce_history {
     fce_ev_t       fce_h_event;
-	fce_obj_t      fce_h_type;
 	char           fce_h_path[MAXPATHLEN + 1];
 	struct timeval fce_h_tv;
 };
@@ -45,7 +43,7 @@ struct fce_close_event {
 
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)
 
-bool fce_handle_coalescation(int event, const char *path, fce_obj_t type);
+bool fce_handle_coalescation(int event, const char *path);
 void fce_initialize_history();
 
 

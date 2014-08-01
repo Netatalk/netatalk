@@ -36,6 +36,7 @@ enum kMDTypeMap {
 
 struct spotlight_sparql_map {
     const char *ssm_spotlight_attr;
+    bool ssm_enabled;
     enum ssm_type ssm_type;
     const char *ssm_sparql_attr;
 };

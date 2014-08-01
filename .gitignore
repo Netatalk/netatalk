@@ -20,6 +20,7 @@ ltmain.sh
 autom4te.cache
 autoscan.log
 ylwrap
+test-driver
 *.rpm
 *.deb
 *.dsc

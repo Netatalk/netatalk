@@ -21,11 +21,11 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     int update = 0;
     cnid_t id_devino = 0, id_didname = 0,id = 0;
 
-    if (!cdb || !(db = cdb->_private) || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         return 0;
     }
 
-    if ((buf = (char *)make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
+    if ((buf = (char *)make_tdb_data(cdb->cnid_db_flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_lookup: Pathname is too long");
         return 0;
     }

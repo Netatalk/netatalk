@@ -13,10 +13,9 @@ void cnid_tdb_close(struct _cnid_db *cdb)
 {
     struct _cnid_tdb_private *db;
 
-    free(cdb->volpath);
-    db = (struct _cnid_tdb_private *)cdb->_private;
+    db = (struct _cnid_tdb_private *)cdb->cnid_db_private;
     tdb_close(db->tdb_cnid);
-    free(cdb->_private);
+    free(cdb->cnid_db_private);
     free(cdb);
 }
 

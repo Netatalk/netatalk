@@ -283,6 +283,11 @@ static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *re
     slq->slq_state = SLQ_STATE_NEW;
     slq->slq_obj = obj;
     slq->slq_vol = v;
+    slq->slq_allow_expr = obj->options.flags & OPTION_SPOTLIGHT_EXPR ? true : false;
+    slq->slq_result_limit = obj->options.sparql_limit;
+
+    LOG(log_info, logtype_sl, "sl_rpc_openQuery: expr: %s, limit: %" PRIu64,
+        slq->slq_allow_expr ? "yes" : "no", slq->slq_result_limit);
 
     /* convert spotlight query charset to host charset */
     EC_NULL_LOG( sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "kMDQueryString") );
@@ -390,7 +395,14 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX
         EC_NEG1_LOG( movecwd(vol, dir) );
     }
 
-    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "DALLOC_CTX", 1, "kMDItemLastUsedDate"))) {
+    /*
+     * We're possibly supposed to update attributes in two places: the
+     * database and the filesystem.  Due to the lack of documentation
+     * and not yet implemented database updates, we cherry pick attributes
+     * that seems to be candidates for updating filesystem metadata.
+     */
+
+    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "DALLOC_CTX", 1, "kMDItemFSContentChangeDate"))) {
         struct utimbuf utimes;
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
@@ -573,23 +585,23 @@ EC_CLEANUP:
  * Spotlight module functions
  **************************************************************************************************/
 
-int sl_mod_load(const char *path)
+int sl_mod_load(AFPObj *obj)
 {
     EC_INIT;
 
     sl_ctx = talloc_new(NULL);
 
-    if ((sl_module = mod_open(path)) == NULL) {
-        LOG(log_error, logtype_sl, "Failed to load module \'%s\': %s", path, mod_error());
+    if ((sl_module = mod_open(obj->options.slmod_path)) == NULL) {
+        LOG(log_error, logtype_sl, "Failed to load module \'%s\': %s", obj->options.slmod_path, mod_error());
         EC_FAIL;
     }
 
     if ((sl_module_export = mod_symbol(sl_module, "sl_mod")) == NULL) {
-        LOG(log_error, logtype_sl, "sl_mod_load(%s): mod_symbol error for symbol %s", path, "sl_mod");
+        LOG(log_error, logtype_sl, "sl_mod_load(%s): mod_symbol error for symbol sl_mod", obj->options.slmod_path);
         EC_FAIL;
     }
 
-    sl_module_export->sl_mod_init("test");
+    sl_module_export->sl_mod_init(obj);
    
 EC_CLEANUP:
     EC_EXIT;

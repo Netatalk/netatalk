@@ -155,8 +155,17 @@ static struct server *test_usockfn(const char *path)
     return NULL;
 }
 
-/* -------------------- */
-static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
+/**
+ * Pass connection request to existing cnid_dbd process or start a new one
+ *
+ * @param[in] obj      handle
+ * @param[in] dbdpn    Path to cnid_dbd binary
+ * @param[in] volpath  Path of AFP volume
+ * @param[in] username  Optional username, may be NULL
+ *
+ * @return 0 on success, -1 on error
+ **/
+ int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath, const char *username)
 {
     pid_t pid;
     struct server *up;
@@ -266,9 +275,21 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
             LOG(log_warning, logtype_cnid,
                 "Multiple attempts to start CNID db daemon for \"%s\" failed, wiping the slate clean...",
                 up->v_path);
-            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, "-d", NULL);
+            ret = execlp(dbdpn, dbdpn,
+                         "-F", obj->options.configfile,
+                         "-p", volpath,
+                         "-t", buf1,
+                         "-l", buf2,
+                         "-u", username,
+                         NULL);
         } else {
-            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, NULL);
+            ret = execlp(dbdpn, dbdpn,
+                         "-F", obj->options.configfile,
+                         "-p", volpath,
+                         "-t", buf1,
+                         "-l", buf2,
+                         "-u", username,
+                         NULL);
         }
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -419,11 +440,23 @@ static int setlimits(void)
     return 0;
 }
 
+static uid_t uid_from_name(const char *name)
+{
+    struct passwd *pwd;
+
+    pwd = getpwnam(name);
+    if (pwd == NULL)
+        return 0;
+    return pwd->pw_uid;
+}
+
 /* ------------------ */
 int main(int argc, char *argv[])
 {
-    char  volpath[MAXPATHLEN + 1];
-    int   len, actual_len;
+    char  *volname = NULL;
+    char  *volpath = NULL;
+    char  *username = NULL;
+    int   len[DBD_NUM_OPEN_ARGS], actual_len;
     pid_t pid;
     int   status;
     char  *dbdpn = _PATH_CNID_DBD;
@@ -461,9 +494,6 @@ int main(int argc, char *argv[])
         exit(EXITERR_SYS);
 
     if (afp_config_parse(&obj, "cnid_metad") != 0)
-        daemon_exit(1);
-
-    if (load_volumes(&obj, lv_all) != 0)
         daemon_exit(1);
 
     (void)setlimits();
@@ -529,7 +559,7 @@ int main(int argc, char *argv[])
         if (rqstfd <= 0)
             continue;
 
-        ret = readt(rqstfd, &len, sizeof(int), 1, 4);
+        ret = readt(rqstfd, &len[0], sizeof(int) * DBD_NUM_OPEN_ARGS, 1, 4);
 
         if (!ret) {
             /* already close */
@@ -539,31 +569,58 @@ int main(int argc, char *argv[])
             LOG(log_severe, logtype_cnid, "error read: %s", strerror(errno));
             goto loop_end;
         }
-        else if (ret != sizeof(int)) {
+        else if (ret != DBD_NUM_OPEN_ARGS * sizeof(int)) {
             LOG(log_error, logtype_cnid, "short read: got %d", ret);
             goto loop_end;
         }
+
         /*
          *  checks for buffer overruns. The client libatalk side does it too
          *  before handing the dir path over but who trusts clients?
          */
-        if (!len || len +DBHOMELEN +2 > MAXPATHLEN) {
-            LOG(log_error, logtype_cnid, "wrong len parameter: %d", len);
+        if (!len[0] || !len[1]) {
+            LOG(log_error, logtype_cnid, "wrong len parameter: len[0]: %d, len[1]: %d", len[0], len[1]);
             goto loop_end;
         }
 
-        actual_len = readt(rqstfd, volpath, len, 1, 5);
-        if (actual_len < 0) {
-            LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
+        volname = malloc(len[0]);
+        volpath = malloc(len[1]);
+        if (len[2]) {
+            username = malloc(len[2]);
+        }
+        if (!volname || !volpath || (len[2] && !username)) {
+            LOG(log_severe, logtype_cnid, "malloc: %s", strerror(errno));
             goto loop_end;
         }
-        if (actual_len != len) {
-            LOG(log_error, logtype_cnid, "error/short read (dir): %s", strerror(errno));
-            goto loop_end;
-        }
-        volpath[len] = '\0';
 
-        LOG(log_debug, logtype_cnid, "main: request for volume: %s", volpath);
+        actual_len = readt(rqstfd, volname, len[0], 1, 5);
+        if (actual_len != len[0]) {
+            LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
+            goto loop_end;
+        }
+
+        actual_len = readt(rqstfd, volpath, len[1], 1, 5);
+        if (actual_len != len[1]) {
+            LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
+            goto loop_end;
+        }
+
+        if (len[2]) {
+            actual_len = readt(rqstfd, username, len[2], 1, 5);
+            if (actual_len != len[2]) {
+                LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
+                goto loop_end;
+            }
+            strlcpy(obj.username, username, MAXUSERLEN);
+            obj.uid = uid_from_name(username);
+            if (!obj.uid)
+                goto loop_end;
+        } else {
+            obj.username[0] = 0;
+        }
+
+        LOG(log_debug, logtype_cnid, "user: %s, volume %s, path %s",
+            username ? username : "-", volname, volpath);
 
         if (load_volumes(&obj, lv_all) != 0) {
             LOG(log_severe, logtype_cnid, "main: error reloading config");
@@ -577,12 +634,17 @@ int main(int argc, char *argv[])
 
         LOG(log_maxdebug, logtype_cnid, "main: dbpath: %s", vol->v_dbpath);
 
-        if (set_dbdir(vol->v_dbpath, volpath) < 0) {
+        if (set_dbdir(vol->v_dbpath, vol->v_path) < 0) {
             goto loop_end;
         }
 
-        maybe_start_dbd(&obj, dbdpn, vol->v_path);
+        maybe_start_dbd(&obj, dbdpn, vol->v_path, username);
+
     loop_end:
         close(rqstfd);
+        unload_volumes(&obj);
+        SAFE_FREE(volname);
+        SAFE_FREE(volpath);
+        SAFE_FREE(username);
     }
 }

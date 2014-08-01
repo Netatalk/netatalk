@@ -34,6 +34,7 @@
   /* local vars */
   static gchar *ssp_result;
   static char sparqlvar;
+  static char *result_limit;
 %}
 
 %code provides {
@@ -71,10 +72,14 @@ input:
      
 line:
 expr                           {
+    if (ssp_slq->slq_result_limit)
+        result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld", ssp_slq->slq_result_limit);
+    else
+        result_limit = "";
     ssp_result = talloc_asprintf(ssp_slq,
-                                 "SELECT DISTINCT ?url WHERE "
-                                 "{ ?obj nie:url ?url FILTER(regex(?url, '^file://%s/')) . %s}",
-                                 ssp_slq->slq_vol->v_path, $1);
+                                 "SELECT ?url WHERE "
+                                 "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                 $1, ssp_slq->slq_vol->v_path, result_limit);
     $$ = ssp_result;
 }
 ;
@@ -87,6 +92,8 @@ BOOL                             {
         YYABORT;
 }
 | match OR match                 {
+    if ($1 == NULL || $3 == NULL)
+        YYABORT;
     if (strcmp($1, $3) != 0)
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     else
@@ -95,8 +102,18 @@ BOOL                             {
 | match                        {$$ = $1; if ($$ == NULL) YYABORT;}
 | function                     {$$ = $1;}
 | OBRACE expr CBRACE           {$$ = talloc_asprintf(ssp_slq, "%s", $2);}
-| expr AND expr                {$$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);}
+| expr AND expr                {
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
+        YYABORT;
+    }
+    $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
+}
 | expr OR expr                 {
+    if (!ssp_slq->slq_allow_expr) {
+        yyerror("Spotlight queries with logic expressions are disabled");
+        YYABORT;
+    }
     if (strcmp($1, $3) != 0)
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     else
@@ -206,7 +223,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
     bstring q = NULL, search = NULL, replace = NULL;
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
-        if (strcmp(p->ssm_spotlight_attr, attr) == 0) {
+        if (p->ssm_enabled && (strcmp(p->ssm_spotlight_attr, attr) == 0)) {
             if (p->ssm_type != ssmt_type && p->ssm_sparql_attr == NULL) {
                 yyerror("unsupported Spotlight attribute");
                 EC_FAIL;
@@ -331,6 +348,7 @@ int main(int argc, char **argv)
     struct vol *vol = talloc_zero(ssp_slq, struct vol);
     vol->v_path = "/Volumes/test";
     ssp_slq->slq_vol = vol;
+    ssp_slq->slq_allow_expr = true;
     sparqlvar = 'a';
 
     s = yy_scan_string(argv[1]);

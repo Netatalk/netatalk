@@ -43,7 +43,7 @@ struct sl_module_export {
     int (*sl_mod_index_file)  (const void *);
 };
 
-extern int sl_mod_load(const char *path);
+extern int sl_mod_load(AFPObj *obj);
 extern void sl_index_file(const char *path);
 
 /**************************************************************************************************
@@ -105,6 +105,8 @@ typedef struct _slq_t {
     size_t            slq_cnids_num;      /* Size of slq_cnids array                                        */
     const char       *slq_path;           /* Path to file or dir, used in fetchAttributes                   */
     void             *slq_tracker_cursor; /* Tracker SPARQL query result cursor                             */
+    bool              slq_allow_expr;     /* Whether to allow logic expressions                             */
+    uint64_t          slq_result_limit;   /* Whether to LIMIT SPARQL results, default of 0 means no limit   */
 } slq_t;
 
 /**************************************************************************************************
@@ -114,5 +116,6 @@ typedef struct _slq_t {
 extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen);
 extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);
+extern void configure_spotlight_attributes(const char *attributes);
 
 #endif /* SPOTLIGHT_H */

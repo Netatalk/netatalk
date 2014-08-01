@@ -1,3 +1,48 @@
+Changes in 3.1.4
+================
+* FIX: afpd: Hangs in Netatalk which causes it to stop responding to
+       connections, bug #572.
+* NEW: afpd: new option "force xattr with sticky bit = yes|no"
+       (default: no), FR #94
+* UPD: afpd: FCE version 2 with new event types and new config options
+       "fce ignore names" and "fce notify script"
+
+Changes in 3.1.3
+================
+* UPD: Spotlight: more SPARQL query optimisations
+* UPD: Spotlight: new options "sparql results limit", "spotlight
+       attributes" and "spotlight expr"
+* FIX: afpd: Unarchiving certain ZIP archives fails, bug #569
+* UPD: Update Unicode support to version 7.0.0
+* FIX: Memory overflow caused by 'basedir regex', bug #567
+* NEW: afpd: delete empty resource forks, from FR #92
+* FIX: afpd: fix a crash when accessing ._ AppleDouble files created
+       by OS X via SMB, bug #564
+* FIX: afpd and dbd: Converting from AppleDouble v2 to ea may corrupt
+       the resource fork. In some circumstances an offset calculation
+       is wrong resulting in corrupt resource forks after the
+       conversion. Bug #568.
+* FIX: ad: fix for bug #563 broke ad file utilities, bug #570.
+* NEW: afpd: new advanced option controlling permissions and ACLs,
+       from FR #93
+
+Changes in 3.1.2
+================
+* FIX: Option "vol dbpath" was broken in 3.1.1
+* FIX: Spotlight: file modification date, bug #545
+* FIX: Improve reliability of afpd child handler
+* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
+* FIX: put the Solaris share reservation after our locking stuff, bug #560.
+* UPD: Improve Linux quota behaviour
+* FIX: xattrs on *BSD, bug #562
+* NEW: afpd: support for using $u username variable in AFP volume
+       definitions. FR#90.
+* FIX: getvolbypath returns incorrect volume, bug #563
+* FIX: fd leak when using appledouble = v2, bug #554
+* UPD: New options that control whether dbus and Tracker are started:
+       'start dbus' and 'start tracker', both default to yes, FR#91
+* UPD: Spotlight: SPARQL query optimisations
+
 Changes in 3.1.1
 ================
 * FIX: Add asprint() compatibility function for systems lacking it
@@ -14,6 +59,7 @@ Changes in 3.1.1
 * FIX: afpd: Fix a crash in of_closefork(). Bug #551.
 * FIX: dbd: Don't print message "Ignoring ._file" for every ._ file.
        Bug #552.
+* FIX: afpd: Don't flood log with failed sys_set_ea() messages.
 
 Changes in 3.1.0
 ================

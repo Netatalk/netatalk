@@ -16,7 +16,7 @@ void cnid_cdb_close(struct _cnid_db *cdb) {
 	    return;
     }
 
-    if (!(db = cdb->_private)) {
+    if (!(db = cdb->cnid_db_private)) {
         return;
     }
     db->db_didname->sync(db->db_didname, 0); 
@@ -30,7 +30,6 @@ void cnid_cdb_close(struct _cnid_db *cdb) {
     db->dbenv->close(db->dbenv, 0);
 
     free(db);
-    free(cdb->volpath);
     free(cdb);
 }
 

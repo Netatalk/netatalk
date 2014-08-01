@@ -474,6 +474,16 @@ static void set_signal(void)
     }
 }
 
+static uid_t uid_from_name(const char *name)
+{
+    struct passwd *pwd;
+
+    pwd = getpwnam(name);
+    if (pwd == NULL)
+        return 0;
+    return pwd->pw_uid;
+}
+
 /* ------------------------ */
 int main(int argc, char *argv[])
 {
@@ -482,8 +492,9 @@ int main(int argc, char *argv[])
     int ctrlfd = -1, clntfd = -1;
     AFPObj obj = { 0 };
     char *volpath = NULL;
+    char *username = NULL;
 
-    while (( ret = getopt( argc, argv, "dF:l:p:t:vV")) != -1 ) {
+    while (( ret = getopt( argc, argv, ":dF:l:p:t:u:vV")) != -1 ) {
         switch (ret) {
         case 'd':
             /* this is now just ignored, as we do it automatically anyway */
@@ -501,10 +512,15 @@ int main(int argc, char *argv[])
         case 't':
             ctrlfd = atoi(optarg);
             break;
+        case 'u':
+            username = strdup(optarg);
+            break;
         case 'v':
         case 'V':
             printf("cnid_dbd (Netatalk %s)\n", VERSION);
             return -1;
+        case ':':
+            break;
         }
     }
 
@@ -514,6 +530,17 @@ int main(int argc, char *argv[])
     }
 
     EC_ZERO( afp_config_parse(&obj, "cnid_dbd") );
+
+    if (username) {
+        strlcpy(obj.username, username, MAXUSERLEN);
+        obj.uid = uid_from_name(username);
+        if (!obj.uid) {
+            EC_FAIL_LOG("unknown user: '%s'", username);
+        }
+    }
+
+    LOG(log_debug, logtype_cnid, "user: %s, path %s",
+        username ? username : "-", volpath);
 
     EC_ZERO( load_volumes(&obj, lv_all) );
     EC_NULL( vol = getvolbypath(&obj, volpath) );

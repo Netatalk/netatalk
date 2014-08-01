@@ -49,10 +49,10 @@
 /*
  * This is instance of CNID database object.
  */
-struct _cnid_db {
-    uint32_t flags;             /* Flags describing some CNID backend aspects. */
-    char *volpath;               /* Volume path this particular CNID db refers to. */
-    void *_private;              /* back-end speficic data */
+typedef struct _cnid_db {
+    uint32_t      cnid_db_flags;     /* Flags describing some CNID backend aspects. */
+    struct vol   *cnid_db_vol;
+    void         *cnid_db_private;   /* back-end speficic data */
 
     cnid_t (*cnid_add)         (struct _cnid_db *cdb, const struct stat *st, cnid_t did,
                                 const char *name, size_t, cnid_t hint);
@@ -71,25 +71,15 @@ struct _cnid_db {
     int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
                                 void *buffer, size_t buflen);
     int    (*cnid_wipe)        (struct _cnid_db *cdb);
-};
-typedef struct _cnid_db cnid_db;
+} cnid_db;
 
 /*
  * Consolidation of args passedn from main cnid_open to modules cnid_XXX_open, so
  * that it's easier to add aditional args as required.
  */
 struct cnid_open_args {
-    const char *dir;
-    mode_t mask;
-    uint32_t flags;
-
-    /* for dbd */
-    const char *cnidserver;
-    const char *cnidport;
-
-    /* for MySQL */
-    const void *obj;
-    char *voluuid;
+    uint32_t cnid_args_flags;
+    struct vol *cnid_args_vol;
 };
 
 /*
@@ -111,14 +101,7 @@ void cnid_init();
 void cnid_register(struct _cnid_module *module);
 
 /* This function opens a CNID database for selected volume. */
-struct _cnid_db *cnid_open(const char *volpath,
-                           mode_t mask,
-                           char *type,
-                           int flags,
-                           const char *cnidsrv,
-                           const char *cnidport,
-                           const void *obj,
-                           char *uuid);
+struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags);
 cnid_t cnid_add        (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                         const char *name, const size_t len, cnid_t hint);
 int    cnid_delete     (struct _cnid_db *cdb, cnid_t id);

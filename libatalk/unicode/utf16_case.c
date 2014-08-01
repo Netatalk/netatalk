@@ -58,6 +58,9 @@ uint32_t toupper_sp(uint32_t val)
     if ( val >= 0xD801DC00 && val <= 0xD801DC7F)
         return upper_table_sp_1[val-0xD801DC00];
 
+    if ( val >= 0xD806DCC0 && val <= 0xD806DCFF)
+        return upper_table_sp_2[val-0xD806DCC0];
+
 	return (val);
 }
 
@@ -109,6 +112,9 @@ uint32_t tolower_sp(uint32_t val)
 {
     if ( val >= 0xD801DC00 && val <= 0xD801DC3F)
         return lower_table_sp_1[val-0xD801DC00];
+
+    if ( val >= 0xD806DC80 && val <= 0xD806DCBF)
+        return lower_table_sp_2[val-0xD806DC80];
 
 	return (val);
 }

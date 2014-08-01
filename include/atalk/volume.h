@@ -113,13 +113,12 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define AFPVOL_USTATFS  (1<<3)
 #define AFPVOL_UQUOTA   (1<<4)
 
-/*
-  Flags that alter volume behaviour.
-  Keep in sync with libatalk/util/volinfo.c
-*/
 #define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
 #define AFPVOL_SPOTLIGHT (1 << 6)   /* Index volume for Spotlight searches */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
+#define AFPVOL_CHMOD_PRESERVE_ACL (1 << 9) /* try to preserve ACLs */
+#define AFPVOL_CHMOD_IGNORE (1 << 10) /* try to preserve ACLs */
+#define AFPVOL_FORCE_STICKY_XATTR (1 << 11) /* write metadata xattr as root on sticky dirs */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */
@@ -195,5 +194,7 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define vol_unix_priv(vol) ((vol)->v_obj->afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)
 #define vol_syml_opt(vol) (((vol)->v_flags & AFPVOL_FOLLOWSYM) ? 0 : O_NOFOLLOW)
+#define vol_chmod_opt(vol) (((vol)->v_flags & AFPVOL_CHMOD_PRESERVE_ACL) ? O_NETATALK_ACL : \
+                            ((vol)->v_flags & AFPVOL_CHMOD_IGNORE) ? O_IGNORE : 0)
 
 #endif

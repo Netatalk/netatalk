@@ -240,17 +240,22 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	return lgetea(path, name, value, size);
 #elif defined(HAVE_EXTATTR_GET_LINK)
 	ssize_t retval;
-	if((retval=extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0)) >= 0) {
-		if(retval > size) {
-			errno = ERANGE;
-			return -1;
-		}
-		if((retval=extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, value, size)) >= 0)
-			return retval;
-	}
-	
-	LOG(log_maxdebug, logtype_default, "sys_lgetxattr: extattr_get_link() failed with: %s\n", strerror(errno));
-	return -1;
+
+	retval = extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0);
+    if (retval == -1) {
+        LOG(log_maxdebug, logtype_default, "extattr_get_link(): %s",
+            strerror(errno));
+        return -1;
+    }
+    if (size == 0)
+        /* Only interested in size of xattr */
+        return retval;
+    if (retval > size) {
+        errno = ERANGE;
+        return -1;
+    }
+    return extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, value, size);
+
 #elif defined(HAVE_ATTR_GET)
 	int retval, flags = ATTR_DONTFOLLOW;
 	int valuelength = (int)size;

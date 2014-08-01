@@ -34,7 +34,9 @@
 #define MAX_SL_RESULTS 20
 
 static TrackerSparqlConnection *connection;
+#if 0
 static TrackerMinerManager *manager;
+#endif
 
 static char *tracker_to_unix_path(const char *uri)
 {
@@ -57,7 +59,8 @@ static int sl_mod_init(void *p)
 {
     EC_INIT;
     GError *error = NULL;
-    const char *msg = p;
+    AFPObj *obj = (AFPObj *)p;
+    const char *attributes;
 
     LOG(log_info, logtype_sl, "Initializing Spotlight module");
 
@@ -73,7 +76,9 @@ static int sl_mod_init(void *p)
 
     become_root();
     connection = tracker_sparql_connection_get(NULL, &error);
+#if 0 /* this may hang, so disable it as we don't use the miner anyway  */
     manager = tracker_miner_manager_new_full(FALSE, &error);
+#endif
     unbecome_root();
 
     if (!connection) {
@@ -83,10 +88,17 @@ static int sl_mod_init(void *p)
         EC_FAIL;
     }
 
+#if 0
     if (!manager) {
         LOG(log_error, logtype_sl, "Couldn't connect to Tracker miner");
         g_clear_error(&error);
         EC_FAIL;
+    }
+#endif
+
+    attributes = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "spotlight attributes", NULL);
+    if (attributes) {
+        configure_spotlight_attributes(attributes);
     }
 
 EC_CLEANUP:
@@ -387,6 +399,7 @@ static int sl_mod_index_file(const void *p)
      */
     return 0;
 
+#if 0
 #ifdef HAVE_TRACKER_MINER
     EC_INIT;
     const char *f = p;
@@ -414,7 +427,8 @@ EC_CLEANUP:
     EC_EXIT;
 #else
     return 0;
-#endif
+#endif /* HAVE_TRACKER_MINER */
+#endif /* 0 */
 }
 
 struct sl_module_export sl_mod = {

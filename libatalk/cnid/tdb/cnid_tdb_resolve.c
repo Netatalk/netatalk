@@ -15,7 +15,7 @@ char *cnid_tdb_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer, size_t l
     struct _cnid_tdb_private *db;
     TDB_DATA key, data;      
 
-    if (!cdb || !(db = cdb->_private) || !id || !(*id)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !(*id)) {
         return NULL;
     }
     key.dptr  = (unsigned char *)id;

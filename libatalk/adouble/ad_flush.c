@@ -164,7 +164,7 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     memcpy(buf, &temp, sizeof( temp ));
     buf += sizeof( temp );
 
-    memcpy(buf, "Netatalk        ", 16);
+    memcpy(buf, AD_FILLER_NETATALK, strlen(AD_FILLER_NETATALK));
     buf += sizeof( ad->ad_filler );
 
     nent = htons(ADEID_NUM_OSX);
@@ -217,15 +217,12 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
             continue;
 
         len = ads->ad_eid[ eid ].ade_len;
-        if (!len || len != add->ad_eid[ eid ].ade_len)
+        if (len == 0)
             continue;
 
         switch (eid) {
         case ADEID_COMMENT:
-        case ADEID_PRIVDEV:
-        case ADEID_PRIVINO:
-        case ADEID_PRIVSYN:
-        case ADEID_PRIVID:
+        case ADEID_RFORK:
             continue;
         default:
             ad_setentrylen( add, eid, len );
@@ -289,8 +286,33 @@ static int ad_flush_hf(struct adouble *ad)
                 if (ad->ad_adflags & ADFLAGS_DIR) {
                     EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
                     EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
-                    EC_ZERO_LOGSTR( sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0),
-                                    "sys_lsetxattr(\"%s\"): %s", fullpathname(".") ,strerror(errno));
+
+                    ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+
+                    if (ret != 0) {
+                        if (errno != EPERM)
+                            EC_FAIL;
+
+                        if (!(ad->ad_options & ADVOL_FORCE_STICKY_XATTR))
+                            EC_FAIL;
+
+                        /*
+                         * This may be a directory with a sticky bit
+                         * set, which means even though we may have
+                         * write access to the directory, only the
+                         * owner is allowed to write xattrs
+                         */
+
+                        become_root();
+                        ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+                        unbecome_root();
+
+                        if (ret != 0) {
+                            LOG(log_error, logtype_ad, "ad_flush_hf: %s", strerror(errno));
+                            EC_FAIL;
+                        }
+                    }
+
                     EC_NEG1_LOG( fchdir(cwd) );
                     EC_NEG1_LOG( close(cwd) );
                     cwd = -1;
@@ -429,6 +451,17 @@ int ad_close(struct adouble *ad, int adflags)
     }
 
     if (adflags & ADFLAGS_RF) {
+        /* HF is automatically opened when opening an RF, close it. */
+        if ((ad->ad_vers == AD_VERSION2) && (ad_meta_fileno(ad) != -1)) {
+            if (ad->ad_meta_refcount)
+                ad->ad_meta_refcount--;
+            if (!(--ad->ad_mdp->adf_refcount)) {
+                if (close( ad_meta_fileno(ad)) < 0)
+                    err = -1;
+                ad_meta_fileno(ad) = -1;
+            }
+        }
+
         if (ad->ad_reso_refcount)
             if (--ad->ad_reso_refcount == 0)
                 adf_lock_free(ad->ad_rfp);

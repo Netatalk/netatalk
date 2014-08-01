@@ -7,6 +7,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#undef _FORTIFY_SOURCE
+
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -36,6 +38,8 @@
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
+#include <atalk/volume.h>
+
 
 static MYSQL_BIND lookup_param[4], lookup_result[5];
 static MYSQL_BIND add_param[4], put_param[5];
@@ -240,7 +244,7 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
     EC_INIT;
     CNID_mysql_private *db;
 
-    if (!cdb || !(db = cdb->_private) || !id) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id) {
         LOG(log_error, logtype_cnid, "cnid_mysql_delete: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -268,8 +272,9 @@ void cnid_mysql_close(struct _cnid_db *cdb)
         return;
     }
 
-    if ((db = cdb->_private) != NULL) {
-        LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'", db->cnid_mysql_volname);
+    if ((db = cdb->cnid_db_private) != NULL) {
+        LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'",
+            cdb->cnid_db_vol->v_localname);
 
         free(db->cnid_mysql_voluuid_str);
 
@@ -280,7 +285,6 @@ void cnid_mysql_close(struct _cnid_db *cdb)
         free(db);
     }
 
-    free(cdb->volpath);
     free(cdb);
 
     return;
@@ -297,7 +301,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
     CNID_mysql_private *db;
     cnid_t update_id;
 
-    if (!cdb || !(db = cdb->_private) || !id || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_update: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -366,7 +370,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     cnid_t id = CNID_INVALID;
     bool have_result = false;
 
-    if (!cdb || !(db = cdb->_private) || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_mysql_lookup: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -505,7 +509,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
     MYSQL_STMT *stmt;
     my_ulonglong lastid;
 
-    if (!cdb || !(db = cdb->_private) || !st || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_mysql_add: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -609,7 +613,7 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
 
-    if (!cdb || !(db = cdb->_private) || !name) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !name) {
         LOG(log_error, logtype_cnid, "cnid_mysql_get: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -658,7 +662,7 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t 
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
 
-    if (!cdb || !(db = cdb->_private)) {
+    if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_mysql_get: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
@@ -700,7 +704,7 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
 
-    if (!cdb || !(db = cdb->_private)) {
+    if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_find: Parameter error");
         errno = CNID_ERR_PARAM;
         return CNID_INVALID;
@@ -711,7 +715,7 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 
     if (cnid_mysql_execute(db->cnid_mysql_con,
                            "SELECT Stamp FROM volumes WHERE VolPath='%s'",
-                           db->cnid_mysql_volname)) {
+                           cdb->cnid_db_vol->v_path)) {
         if (mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
             LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
             EC_FAIL;
@@ -724,7 +728,7 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
         EC_FAIL;
     }
     if (!mysql_num_rows(result)) {
-        LOG(log_error, logtype_cnid, "Can't get DB stamp for volumes \"%s\"", db->cnid_mysql_volname);
+        LOG(log_error, logtype_cnid, "Can't get DB stamp for volumes \"%s\"", cdb->cnid_db_vol->v_path);
         EC_FAIL;
     }
     row = mysql_fetch_row(result);
@@ -758,7 +762,7 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     CNID_mysql_private *db;
     MYSQL_RES *result = NULL;
 
-    if (!cdb || !(db = cdb->_private)) {
+    if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
         errno = CNID_ERR_PARAM;
         return -1;
@@ -787,19 +791,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static struct _cnid_db *cnid_mysql_new(const char *volpath)
+static struct _cnid_db *cnid_mysql_new(struct vol *vol)
 {
     struct _cnid_db *cdb;
 
     if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL)
         return NULL;
 
-    if ((cdb->volpath = strdup(volpath)) == NULL) {
-        free(cdb);
-        return NULL;
-    }
-
-    cdb->flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
+    cdb->cnid_db_vol = vol;
+    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
     cdb->cnid_add = cnid_mysql_add;
     cdb->cnid_delete = cnid_mysql_delete;
     cdb->cnid_get = cnid_mysql_get;
@@ -817,7 +817,6 @@ static struct _cnid_db *cnid_mysql_new(const char *volpath)
 
 static const char *printuuid(const unsigned char *uuid) {
     static char uuidstring[64];
-    const char *uuidmask;
     int i = 0;
     unsigned char c;
 
@@ -838,16 +837,13 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     struct _cnid_db *cdb = NULL;
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
+    struct vol *vol = args->cnid_args_vol;
 
-    EC_NULL( cdb = cnid_mysql_new(args->dir) );
+    EC_NULL( cdb = cnid_mysql_new(vol) );
     EC_NULL( db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)) );
-    cdb->_private = db;
+    cdb->cnid_db_private = db;
 
-    db->cnid_mysql_volname = strdup(args->dir); /* db_dir contains the volume name */
-    db->cnid_mysql_magic = CNID_DB_MAGIC;
-    db->cnid_mysql_obj = args->obj;
-    memcpy(db->cnid_mysql_voluuid, args->voluuid, sizeof(atalk_uuid_t));
-    db->cnid_mysql_voluuid_str = strdup(printuuid(db->cnid_mysql_voluuid));
+    db->cnid_mysql_voluuid_str = strdup(printuuid(vol->v_uuid));
 
     /* Initialize and connect to MySQL server */
     EC_NULL( db->cnid_mysql_con = mysql_init(NULL) );
@@ -856,7 +852,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     int my_timeout = 600;
     EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT, &my_timeout) );
 
-    const AFPObj *obj = db->cnid_mysql_obj;
+    const AFPObj *obj = vol->v_obj;
 
     EC_NULL( mysql_real_connect(db->cnid_mysql_con,
                                 obj->options.cnid_mysql_host,
@@ -883,7 +879,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            "INSERT INTO volumes (VolUUID,Volpath,Stamp,Depleted) "
                            "VALUES('%s','%s','%s',0)",
                            db->cnid_mysql_voluuid_str,
-                           db->cnid_mysql_volname,
+                           vol->v_path,
                            blob)) {
         if (mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
             LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
@@ -934,18 +930,14 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     EC_ZERO( init_prepared_stmt(db) );
 
     LOG(log_debug, logtype_cnid, "Finished initializing MySQL CNID module for volume '%s'",
-        db->cnid_mysql_volname);
+        vol->v_path);
 
 EC_CLEANUP:
     if (result)
         mysql_free_result(result);
     if (ret != 0) {
-        if (cdb) {
-            if (cdb->volpath != NULL) {
-                free(cdb->volpath);
-            }
+        if (cdb)
             free(cdb);
-        }
         cdb = NULL;
         if (db)
             free(db);

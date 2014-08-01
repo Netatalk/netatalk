@@ -259,3 +259,62 @@ int afprun(int root, char *cmd, int *outfd)
     exit(82);
     return 1;
 }
+
+/*
+ * Run a command in the background without waiting,
+ * being careful about uid/gid handling
+ */
+int afprun_bg(int root, char *cmd)
+{
+    pid_t pid;
+    uid_t uid = geteuid();
+    gid_t gid = getegid();
+    int fd, fdlimit = sysconf(_SC_OPEN_MAX);
+
+    LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, root ? 0 : uid);
+
+    /* in this method we will exec /bin/sh with the correct
+       arguments, after first setting stdout to point at the file */
+
+    if ((pid = fork()) < 0) {
+        LOG(log_error, logtype_afpd, "afprun: fork failed with error %s", strerror(errno) );
+        return errno;
+    }
+
+    if (pid)
+        /* parent, just return */
+        return 0;
+
+    /* we are in the child. we exec /bin/sh to do the work for us. we
+       don't directly exec the command we want because it may be a
+       pipeline or anything else the config file specifies */
+
+    if (chdir("/") < 0) {
+        LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s", strerror(errno) );
+        exit(83);
+    }
+
+    /* now completely lose our privileges. This is a fairly paranoid
+       way of doing it, but it does work on all systems that I know of */
+    if (root) {
+        become_user_permanently(0, 0);
+        uid = gid = 0;
+    } else {
+        become_user_permanently(uid, gid);
+    }
+
+    if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
+        /* we failed to lose our privileges - do not execute the command */
+        exit(81);
+    }
+
+    fd = 3;
+    while (fd < fdlimit)
+        close(fd++);
+
+    execl("/bin/sh","sh","-c", cmd, NULL);
+
+    /* not reached */
+    exit(82);
+    return 1;
+}

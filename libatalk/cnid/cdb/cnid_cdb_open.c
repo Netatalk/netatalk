@@ -38,6 +38,7 @@
 
 #ifdef CNID_BACKEND_CDB
 
+#include <atalk/volume.h>
 #include <atalk/cnid_private.h>
 #include "cnid_cdb_private.h"
 
@@ -109,7 +110,7 @@ static int my_open(DB * p, const char *f, const char *d, DBTYPE t, u_int32_t fla
 }
 
 /* --------------- */
-static struct _cnid_db *cnid_cdb_new(const char *volpath)
+static struct _cnid_db *cnid_cdb_new(struct vol *vol)
 {
     struct _cnid_db *cdb;
     int major, minor, patch;
@@ -127,13 +128,8 @@ static struct _cnid_db *cnid_cdb_new(const char *volpath)
     if ((cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db))) == NULL)
         return NULL;
 
-    if ((cdb->volpath = strdup(volpath)) == NULL) {
-        free(cdb);
-        return NULL;
-    }
-
-    cdb->flags = CNID_FLAG_PERSISTENT;
-
+    cdb->cnid_db_vol = vol;
+    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT;
     cdb->cnid_add = cnid_cdb_add;
     cdb->cnid_delete = cnid_cdb_delete;
     cdb->cnid_get = cnid_cdb_get;
@@ -188,19 +184,16 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
     int open_flag, len;
     static int first = 0;
     int rc;
-
-    if (!args->dir || *args->dir == 0) {
-        return NULL;
-    }
+    struct vol *vol = args->cnid_args_vol;
 
     /* this checks .AppleDB.
        We need space for dir + '/' + DBHOMELEN + '/' + DBLEN */
-    if ((len = strlen(args->dir)) > (MAXPATHLEN - DBHOMELEN - DBLEN - 2)) {
-        LOG(log_error, logtype_default, "cnid_open: Pathname too large: %s", args->dir);
+    if ((len = strlen(vol->v_path)) > (MAXPATHLEN - DBHOMELEN - DBLEN - 2)) {
+        LOG(log_error, logtype_default, "cnid_open: Pathname too large: %s", vol->v_path);
         return NULL;
     }
 
-    if ((cdb = cnid_cdb_new(args->dir)) == NULL) {
+    if ((cdb = cnid_cdb_new(vol)) == NULL) {
         LOG(log_error, logtype_default, "cnid_open: Unable to allocate memory for database");
         return NULL;
     }
@@ -210,17 +203,16 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         goto fail_cdb;
     }
 
-    cdb->_private = (void *) db;
-    db->magic = CNID_DB_MAGIC;
+    cdb->cnid_db_private = (void *) db;
 
-    strcpy(path, args->dir);
+    strcpy(path, vol->v_path);
     if (path[len - 1] != '/') {
         strcat(path, "/");
         len++;
     }
 
     strcpy(path + len, DBHOME);
-    if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~args->mask) < 0)) {
+    if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~vol->v_umask) < 0)) {
         LOG(log_error, logtype_default, "cnid_open: DBHOME mkdir failed for %s", path);
         goto fail_adouble;
     }
@@ -247,7 +239,7 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
     }
 
     /* Open the database environment. */
-    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666 & ~args->mask)) != 0) {
+    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666 & ~vol->v_umask)) != 0) {
 	LOG(log_error, logtype_default, "cnid_open: dbenv->open (rw) of %s failed: %s", path, db_strerror(rc));
 	/* FIXME: This should probably go. Even if it worked, any use for a read-only DB? Didier? */
         if (rc == DB_RUNRECOVERY) {
@@ -260,10 +252,10 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         /* We can't get a full transactional environment, so multi-access
          * is out of the question.  Let's assume a read-only environment,
          * and try to at least get a shared memory pool. */
-        if ((rc = db->dbenv->open(db->dbenv, path, DB_INIT_MPOOL, 0666 & ~args->mask)) != 0) {
+        if ((rc = db->dbenv->open(db->dbenv, path, DB_INIT_MPOOL, 0666 & ~vol->v_umask)) != 0) {
             /* Nope, not a MPOOL, either.  Last-ditch effort: we'll try to
              * open the environment with no flags. */
-            if ((rc = db->dbenv->open(db->dbenv, path, 0, 0666 & ~args->mask)) != 0) {
+            if ((rc = db->dbenv->open(db->dbenv, path, 0, 0666 & ~vol->v_umask)) != 0) {
                 LOG(log_error, logtype_default, "cnid_open: dbenv->open of %s failed: %s", path, db_strerror(rc));
                 goto fail_lock;
             }
@@ -282,7 +274,7 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         goto fail_appinit;
     }
 
-    if ((rc = my_open(db->db_cnid, DBCNID, DBCNID, DB_BTREE, open_flag, 0666 & ~args->mask)) != 0) {
+    if ((rc = my_open(db->db_cnid, DBCNID, DBCNID, DB_BTREE, open_flag, 0666 & ~vol->v_umask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open dev/ino database: %s",
             db_strerror(rc));
         goto fail_appinit;
@@ -297,7 +289,7 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         goto fail_appinit;
     }
 
-    if ((rc = my_open(db->db_didname, DBCNID, DBDIDNAME, DB_BTREE, open_flag, 0666 & ~args->mask))) {
+    if ((rc = my_open(db->db_didname, DBCNID, DBDIDNAME, DB_BTREE, open_flag, 0666 & ~vol->v_umask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/name database: %s",
             db_strerror(rc));
         goto fail_appinit;
@@ -312,7 +304,7 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         goto fail_appinit;
     }
 
-    if ((rc = my_open(db->db_devino, DBCNID, DBDEVINO, DB_BTREE, open_flag, 0666 & ~args->mask)) != 0) {
+    if ((rc = my_open(db->db_devino, DBCNID, DBDEVINO, DB_BTREE, open_flag, 0666 & ~vol->v_umask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open devino database: %s",
             db_strerror(rc));
         goto fail_appinit;
@@ -373,8 +365,6 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
     free(db);
 
   fail_cdb:
-    if (cdb->volpath != NULL)
-        free(cdb->volpath);
     free(cdb);
 
     return NULL;

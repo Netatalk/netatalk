@@ -5,9 +5,6 @@
 #ifndef _ATALK_CNID_PRIVATE_H
 #define _ATALK_CNID_PRIVATE_H 1
 
-#define CNID_DB_MAGIC   0x434E4944U  /* CNID */
-#define CNID_DATA_MAGIC 0x434E4945U  /* CNIE */
-
 #define CNID_OFS                 0
 #define CNID_LEN                 4
  

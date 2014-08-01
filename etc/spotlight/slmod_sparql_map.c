@@ -17,6 +17,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <atalk/logger.h>
 
 #include "slmod_sparql_map.h"
 
@@ -24,47 +28,48 @@
 #define SPECIAL      NULL
 
 struct spotlight_sparql_map spotlight_sparql_map[] = {
-    /* ssm_spotlight_attr               ssm_type,   ssm_sparql_attr */
-    {"*",                               ssmt_fts,   "fts:match"},
+    /* ssm_spotlight_attr               ssm_enabled, ssm_type,   ssm_sparql_attr */
+    {"*",                               true, ssmt_fts,   "fts:match"},
 
     /* Filesystem metadata */
-    {"kMDItemFSLabel",                  ssmt_num,   NOTSUPPORTED},
-    {"kMDItemDisplayName",              ssmt_str,   "nfo:fileName"},
-    {"kMDItemFSName",                   ssmt_str,   "nfo:fileName"},
-    {"kMDItemFSContentChangeDate",      ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemFSLabel",                  true, ssmt_num,   NOTSUPPORTED},
+    {"kMDItemDisplayName",              true, ssmt_str,   "nfo:fileName"},
+    {"kMDItemFSName",                   true, ssmt_str,   "nfo:fileName"},
+    {"kMDItemFSContentChangeDate",      true, ssmt_date,  "nfo:fileLastModified"},
 
     /* Common metadata */
-    {"kMDItemTextContent",              ssmt_fts,   "fts:match"},
-    {"kMDItemContentCreationDate",      ssmt_date,  "nie:contentCreated"},
-    {"kMDItemContentModificationDate",  ssmt_date,  "nfo:fileLastModified"},
-    {"kMDItemAttributeChangeDate",      ssmt_date,  "nfo:fileLastModified"},
-    {"kMDItemAuthors",                  ssmt_str,   "dc:creator"},
-    {"kMDItemCopyright",                ssmt_str,   "nie:copyright"},
-    {"kMDItemCountry",                  ssmt_str,   "nco:country"},
-    {"kMDItemCreator",                  ssmt_str,   "dc:creator"},
-    {"kMDItemDurationSeconds",          ssmt_num,   "nfo:duration"},
-    {"kMDItemNumberOfPages",            ssmt_num,   "nfo:pageCount"},
-    {"kMDItemTitle",                    ssmt_str,   "nie:title"},
-    {"_kMDItemGroupId",                 ssmt_type,  SPECIAL},
-    {"kMDItemContentTypeTree",          ssmt_type,  SPECIAL},
+    {"kMDItemTextContent",              true, ssmt_fts,   "fts:match"},
+    {"kMDItemContentCreationDate",      true, ssmt_date,  "nie:contentCreated"},
+    {"kMDItemContentModificationDate",  true, ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemAttributeChangeDate",      true, ssmt_date,  "nfo:fileLastModified"},
+    {"kMDItemLastUsedDate",             true, ssmt_date,  "nfo:fileLastAccessed"},
+    {"kMDItemAuthors",                  true, ssmt_str,   "dc:creator"},
+    {"kMDItemCopyright",                true, ssmt_str,   "nie:copyright"},
+    {"kMDItemCountry",                  true, ssmt_str,   "nco:country"},
+    {"kMDItemCreator",                  true, ssmt_str,   "dc:creator"},
+    {"kMDItemDurationSeconds",          true, ssmt_num,   "nfo:duration"},
+    {"kMDItemNumberOfPages",            true, ssmt_num,   "nfo:pageCount"},
+    {"kMDItemTitle",                    true, ssmt_str,   "nie:title"},
+    {"_kMDItemGroupId",                 true, ssmt_type,  SPECIAL},
+    {"kMDItemContentTypeTree",          true, ssmt_type,  SPECIAL},
 
     /* Image metadata */
-    {"kMDItemPixelWidth",               ssmt_num,   "nfo:width"},
-    {"kMDItemPixelHeight",              ssmt_num,   "nfo:height"},
-    {"kMDItemColorSpace",               ssmt_str,   "nexif:colorSpace"},
-    {"kMDItemBitsPerSample",            ssmt_num,   "nfo:colorDepth"},
-    {"kMDItemFocalLength",              ssmt_num,   "nmm:focalLength"},
-    {"kMDItemISOSpeed",                 ssmt_num,   "nmm:isoSpeed"},
-    {"kMDItemOrientation",              ssmt_bool,  "nfo:orientation"},
-    {"kMDItemResolutionWidthDPI",       ssmt_num,   "nfo:horizontalResolution"},
-    {"kMDItemResolutionHeightDPI",      ssmt_num,   "nfo:verticalResolution"},
-    {"kMDItemExposureTimeSeconds",      ssmt_num,   "nmm:exposureTime"},
+    {"kMDItemPixelWidth",               true, ssmt_num,   "nfo:width"},
+    {"kMDItemPixelHeight",              true, ssmt_num,   "nfo:height"},
+    {"kMDItemColorSpace",               true, ssmt_str,   "nexif:colorSpace"},
+    {"kMDItemBitsPerSample",            true, ssmt_num,   "nfo:colorDepth"},
+    {"kMDItemFocalLength",              true, ssmt_num,   "nmm:focalLength"},
+    {"kMDItemISOSpeed",                 true, ssmt_num,   "nmm:isoSpeed"},
+    {"kMDItemOrientation",              true, ssmt_bool,  "nfo:orientation"},
+    {"kMDItemResolutionWidthDPI",       true, ssmt_num,   "nfo:horizontalResolution"},
+    {"kMDItemResolutionHeightDPI",      true, ssmt_num,   "nfo:verticalResolution"},
+    {"kMDItemExposureTimeSeconds",      true, ssmt_num,   "nmm:exposureTime"},
 
     /* Audio metadata */
-    {"kMDItemComposer",                 ssmt_str,   "nmm:composer"},
-    {"kMDItemMusicalGenre",             ssmt_str,   "nfo:genre"},
+    {"kMDItemComposer",                 true, ssmt_str,   "nmm:composer"},
+    {"kMDItemMusicalGenre",             true, ssmt_str,   "nfo:genre"},
 
-    {NULL, ssmt_str, NULL}
+    {NULL, false, ssmt_str, NULL}
 };
 
 struct MDTypeMap MDTypeMap[] = {
@@ -98,3 +103,34 @@ struct MDTypeMap MDTypeMap[] = {
     {"public.source-code",      kMDTypeMapRDF,      "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#SourceCode"},
     {NULL,                      kMDTypeMapNotSup,   NULL}
 };
+
+void configure_spotlight_attributes(const char *attributes_in)
+{
+    char *attr, *attributes;
+    int i;
+
+    for (i = 0; spotlight_sparql_map[i].ssm_spotlight_attr != NULL; i++)
+        spotlight_sparql_map[i].ssm_enabled = false;
+
+    /*
+     * Go through the attribute map and for every element scan
+     * attributes_in with strtok(). If it's contained, keep it
+     * enabled, otherwise disable it.
+     */
+
+    attributes = strdup(attributes_in);
+
+    for (attr = strtok(attributes, ","); attr; attr = strtok(NULL, ",")) {
+
+        for (i = 0; spotlight_sparql_map[i].ssm_spotlight_attr != NULL; i++)
+
+            if (strcmp(attr, spotlight_sparql_map[i].ssm_spotlight_attr) == 0) {
+                LOG(log_info, logtype_sl, "Enabling Spotlight attribute: %s",
+                    spotlight_sparql_map[i].ssm_spotlight_attr);
+                spotlight_sparql_map[i].ssm_enabled = true;
+                break;
+        }
+    }
+
+    free(attributes);
+}

@@ -22,6 +22,7 @@
 #ifdef HAVE_ACLS
 
 #define O_NETATALK_ACL (O_NOFOLLOW << 1)
+#define O_IGNORE (O_NOFOLLOW << 2)
 
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>

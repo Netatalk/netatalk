@@ -548,6 +548,36 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
 }
 
 /*!
+ * Get boolean option from volume, default section or global - use default value if not set
+ *
+ * Order of precedence: volume -> default section -> global -> default value
+ *
+ * "vdg" means volume, default section or global
+ *
+ * @param conf    (r) config handle
+ * @param vol     (r) volume name (must be section name ie wo vars expanded)
+ * @param opt     (r) option
+ * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
+ * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ *
+ * @returns       const option string from "vol" or "defsec", or "defval" if not found
+ */
+static int vdgoption_bool(const dictionary *conf, const char *vol, const char *opt, const char *defsec, int defval)
+{
+    int result;
+
+    result = atalk_iniparser_getboolean(conf, vol, opt, -1);
+
+    if ((result == -1) && (defsec != NULL))
+        result = atalk_iniparser_getboolean(conf, defsec, opt, -1);
+
+    if (result == -1)
+        result = atalk_iniparser_getboolean(conf, INISEC_GLOBAL, opt, defval);
+
+    return result;
+}
+
+/*!
  * Create volume struct
  *
  * @param obj      (r) handle
@@ -575,10 +605,12 @@ static struct vol *creatvol(AFPObj *obj,
     uint16_t    flags;
     const char  *val;
     char        *p, *q;
+    bstring     dbpath = NULL;
+    bstring     global_path_tmp = NULL;
 
     strlcpy(path, path_in, MAXPATHLEN);
 
-    LOG(log_debug, logtype_afpd, "createvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
+    LOG(log_debug, logtype_afpd, "creatvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
         name, path, preset ? preset : "-");
 
     if ( name == NULL || *name == '\0' ) {
@@ -671,16 +703,32 @@ static struct vol *creatvol(AFPObj *obj,
     if (atalk_iniparser_getboolean(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", 0)) {
         EC_NULL( volume->v_dbpath = strdup(path) );
     } else {
-        bstring dbpath;
-        val = atalk_iniparser_getstring(obj->iniconfig, section, "vol dbpath", NULL);
+        char *global_path;
+        val = getoption(obj->iniconfig, section, "vol dbpath", preset, NULL);
+        if (val == NULL) {
+            /* check global option */
+            global_path = atalk_iniparser_getstring(obj->iniconfig,
+                                                    INISEC_GLOBAL,
+                                                    "vol dbpath",
+                                                    NULL);
+            if (global_path) {
+                /* check for pre 3.1.1 behaviour without variable */
+                if (strchr(global_path, '$') == NULL) {
+                    global_path_tmp = bformat("%s/%s/", global_path, tmpname);
+                    val = cfrombstr(global_path_tmp);
+                } else {
+                    val = global_path;
+                }
+            }
+        }
+
         if (val == NULL) {
             EC_NULL( dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname) );
         } else {
             EC_NULL( dbpath = bfromcstr(val));
         }
         EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
-                                             cfrombstr(dbpath), pwd, NULL, NULL) );
-        bdestroy(dbpath);
+                                             cfrombstr(dbpath), pwd, NULL, tmpname) );
     }
 
     if ((val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL)))
@@ -793,6 +841,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_preexec_close = 1;
     if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
         volume->v_root_preexec_close = 1;
+    if (vdgoption_bool(obj->iniconfig, section, "force xattr with sticky bit", preset, 0))
+        volume->v_flags |= AFPVOL_FORCE_STICKY_XATTR;
 
     if ((val = getoption(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
         if (strstr(val, "all")) {
@@ -807,6 +857,19 @@ static struct vol *creatvol(AFPObj *obj,
         if (strstr(val, "nodelete")) {
             volume->v_ignattr |= ATTRBIT_NODELETE;
         }
+    }
+
+    val = getoption(obj->iniconfig, section, "chmod request", preset, NULL);
+    if (val == NULL) {
+        val = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "chmod request", "preserve");
+    }
+    if (strcasecmp(val, "ignore") == 0) {
+        volume->v_flags |= AFPVOL_CHMOD_IGNORE;
+    } else if (strcasecmp(val, "preserve") == 0) {
+        volume->v_flags |= AFPVOL_CHMOD_PRESERVE_ACL;
+    } else if (strcasecmp(val, "simple") != 0) {
+        LOG(log_warning, logtype_afpd, "unknown 'chmod request' setting: '%s', using default", val);
+        volume->v_flags |= AFPVOL_CHMOD_PRESERVE_ACL;
     }
 
     /*
@@ -834,6 +897,8 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_ad_options |= ADVOL_FOLLO_SYML;
     if ((volume->v_flags & AFPVOL_RO))
         volume->v_ad_options |= ADVOL_RO;
+    if ((volume->v_flags & AFPVOL_FORCE_STICKY_XATTR))
+        volume->v_ad_options |= ADVOL_FORCE_STICKY_XATTR;
 
     /* Mac to Unix conversion flags*/
     if ((volume->v_flags & AFPVOL_EILSEQ))
@@ -881,7 +946,7 @@ static struct vol *creatvol(AFPObj *obj,
     if ( 0 >= ( u8mvlen = convert_string(CH_UTF8_MAC, CH_UCS2, tmpname, tmpvlen, u8mtmpname, AFPVOL_U8MNAMELEN*2)) )
         EC_FAIL;
 
-    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "creatvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
 
     /* Maccharset Volume Name */
     /* Firsty convert name from unixcharset to maccharset */
@@ -919,7 +984,7 @@ static struct vol *creatvol(AFPObj *obj,
                                          AFPVOL_U8MNAMELEN*2)) )
         EC_FAIL;
 
-    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "creatvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
 
     EC_NULL( volume->v_localname = strdup(name) );
     EC_NULL( volume->v_u8mname = strdup_w(u8mtmpname) );
@@ -967,7 +1032,11 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_obj = obj;
 
 EC_CLEANUP:
-    LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
+    LOG(log_debug, logtype_afpd, "creatvol: END: %d", ret);
+    if (dbpath)
+        bdestroy(dbpath);
+    if (global_path_tmp)
+        bdestroy(global_path_tmp);
     if (ret != 0) {
         if (volume)
             volume_free(volume);
@@ -1035,12 +1104,17 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 || strcmp(obj->username, obj->options.guest) == 0)
                 /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
-            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir))
-                /* no user home */
+            if (pwent->pw_dir == NULL || STRCMP("", ==, pwent->pw_dir)) {
+                LOG(log_debug, logtype_afpd, "readvolfile: pwent->pw_dir: NULL or \"\" - no user home");
                 continue;
+            }
+            LOG(log_debug, logtype_afpd, "readvolfile: pwent->pw_dir: '%s'", pwent->pw_dir);
 
-            if ((realpath(pwent->pw_dir, tmp)) == NULL)
+            if ((realpath(pwent->pw_dir, tmp)) == NULL) {
+                LOG(log_debug, logtype_afpd, "readvolfile: Cannot get realpath '%s' (%s).", pwent->pw_dir, strerror(errno));
                 continue;
+            }
+            LOG(log_debug, logtype_afpd, "readvolfile: realpath pwent->pw_dir: '%s'", tmp);
 
             /* check if user home matches our "basedir regex" */
             if ((basedir = atalk_iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL)) == NULL) {
@@ -1573,7 +1647,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     struct vol *tmp;
     const struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
-    char        abspath[MAXPATHLEN + 1];
+    char        *realabspath = NULL;
     char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
@@ -1582,19 +1656,22 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
-    if (path[0] != '/') {
-        /* relative path, build absolute path */
-        EC_NULL_LOG( getcwd(abspath, MAXPATHLEN) );
-        strlcat(abspath, "/", MAXPATHLEN);
-        strlcat(abspath, path, MAXPATHLEN);
-        path = abspath;
-    }
-
+    /*  build absolute path */
+    EC_NULL( realabspath = realpath_safe(path) );
+    path = realabspath;
 
     for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
-        if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
-            vol = tmp;
-            goto EC_CLEANUP;
+        size_t v_path_len = strlen(tmp->v_path);
+        if (strncmp(path, tmp->v_path, v_path_len) == 0) {
+            if (v_path_len < strlen(path) && path[v_path_len] != '/') {
+                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")", path, tmp->v_path);
+            } else {
+                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") == volume(\"%s\")", path, tmp->v_path);
+                vol = tmp;
+                goto EC_CLEANUP;
+            }
+        } else {
+            LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")", path, tmp->v_path);
         }
     }
 
@@ -1639,7 +1716,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (5) */
-    p = path + strlen(basedir);
+    p = path + match[0].rm_eo - match[0].rm_so;
     while (*p == '/')
         p++;
     EC_NULL_LOG( user = strdup(p) );
@@ -1650,13 +1727,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         subpath = prw;
 
     strlcat(tmpbuf, user, MAXPATHLEN);
-    if (getpwnam(user) == NULL) {
+    if ((pw = getpwnam(user)) == NULL) {
         /* (5b) */
         char *tuser;
         if ((tuser = getuserbypath(tmpbuf)) != NULL) {
             free(user);
             user = strdup(tuser);
         }
+        if ((pw = getpwnam(user)) == NULL)
+            EC_FAIL_LOG("unknown user: %s", user);
     }
     strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
@@ -1701,6 +1780,8 @@ EC_CLEANUP:
         free(user);
     if (realvolpath)
         free(realvolpath);
+    if (realabspath)
+        free(realabspath);
     if (ret != 0)
         vol = NULL;
     return vol;
@@ -1783,6 +1864,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->passwdbits |= PASSWD_NOSAVE;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "set password", 0))
         options->passwdbits |= PASSWD_SET;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "spotlight expr", 1))
+        options->flags |= OPTION_SPOTLIGHT_EXPR;
 
     /* figure out options w values */
     options->loginmesg      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);
@@ -1821,6 +1904,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
     options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
+    options->sparql_limit   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sparql results limit", 0);
 
     p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))

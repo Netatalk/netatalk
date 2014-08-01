@@ -19,7 +19,7 @@ int cnid_tdb_delete(struct _cnid_db *cdb, const cnid_t id)
     struct _cnid_tdb_private *db;
     TDB_DATA key, data;
 
-    if (!cdb || !(db = cdb->_private) || !id) {
+    if (!cdb || !(db = cdb->cnid_db_private) || !id) {
         return -1;
     }
     memset(&key, 0, sizeof(key));

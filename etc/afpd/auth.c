@@ -39,6 +39,7 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include <atalk/server_ipc.h>
 #include <atalk/uuid.h>
 #include <atalk/globals.h>
+#include <atalk/fce_api.h>
 #include <atalk/spotlight.h>
 #include <atalk/unix.h>
 
@@ -312,6 +313,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     /* Some PAM module might have reset our signal handlers and timer, so we need to reestablish them */
     afp_over_dsi_sighandlers(obj);
+
+    /* Send FCE login event */
+    fce_register(obj, FCE_LOGIN, "", NULL);
 
     return( AFP_OK );
 }
@@ -831,6 +835,10 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_
     close_all_vol(obj);
     dsi->flags = DSI_AFP_LOGGED_OUT;
     *rbuflen = 0;
+
+    /* Send FCE login event */
+    fce_register(obj, FCE_LOGOUT, "", NULL);
+
     return AFP_OK;
 }
 

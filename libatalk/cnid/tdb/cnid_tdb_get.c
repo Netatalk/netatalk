@@ -14,7 +14,7 @@ cnid_t cnid_tdb_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t l
     TDB_DATA key, data;
     cnid_t id;
 
-    if (!cdb || !(db = cdb->_private) || (len > MAXPATHLEN)) {
+    if (!cdb || !(db = cdb->cnid_db_private) || (len > MAXPATHLEN)) {
         return 0;
     }
 

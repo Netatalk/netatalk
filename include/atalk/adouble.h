@@ -249,6 +249,7 @@ struct adouble {
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_FOLLO_SYML (1 << 4)
+#define ADVOL_FORCE_STICKY_XATTR (1 << 5)
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -347,6 +348,12 @@ struct adouble {
 #define AD_AFPFILEI_OWNER       (1 << 0) /* any owner */
 #define AD_AFPFILEI_GROUP       (1 << 1) /* ignore group */
 #define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
+
+/*
+ * String identifiers for the 16 AppleDouble filler bytes
+ */
+#define AD_FILLER_NETATALK "Netatalk        "
+#define AD_FILLER_OSX      "Mac OS X"
 
 #define ad_data_fileno(ad)  ((ad)->ad_data_fork.adf_fd)
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
