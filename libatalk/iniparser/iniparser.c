@@ -598,6 +598,10 @@ dictionary * atalk_iniparser_load(const char * ininame)
             break ;
         case LINE_VALUE:
             if (strcmp(key, "include") == 0) {
+                errs = atalkdict_set(dict, section, key, val);
+                if (errs < 0) {
+                    LOG(log_error, logtype_default, "iniparser: memory allocation failure");
+                }
                 if ((include = fopen(val, "r")) == NULL) {
                     LOG(log_error, logtype_default, "iniparser: cannot open \"%s\"", val);
                     continue;

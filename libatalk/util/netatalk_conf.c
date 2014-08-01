@@ -1047,14 +1047,45 @@ EC_CLEANUP:
 
 /* ----------------------
  */
-static int volfile_changed(struct afp_options *p)
+static int volfile_changed(AFPObj *obj)
 {
     struct stat st;
+    struct afp_options *p = &obj->options;
+    int result;
+    const char *includefile;
 
-    if (!stat(p->configfile, &st) && st.st_mtime > p->volfile.mtime) {
+    result = stat(p->configfile, &st);
+    if (result != 0) {
+        LOG(log_debug, logtype_afpd, "where is the config file %s ?",
+            p->configfile);
+        /*
+         * We return 1 which means "config file changed". The caller
+         * will re-read config and fail too which is what we want.
+         */
+        return 1;
+    }
+
+    if (st.st_mtime > p->volfile.mtime) {
         p->volfile.mtime = st.st_mtime;
         return 1;
     }
+
+    includefile = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL,
+                                            "include", NULL);
+    if (includefile) {
+        result = stat(includefile, &st);
+        if (result != 0) {
+            LOG(log_debug, logtype_afpd, "where is the include file %s ?",
+                includefile);
+            return 1;
+        }
+
+        if (st.st_mtime > p->includefile.mtime) {
+            p->includefile.mtime = st.st_mtime;
+            return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -1430,6 +1461,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     struct stat         st;
     int                 retries = 0;
     struct vol         *vol;
+    char               *includefile;
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
@@ -1450,7 +1482,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     }
 
     if (Volumes) {
-        if (!volfile_changed(&obj->options))
+        if (!volfile_changed(obj))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {
@@ -1469,6 +1501,13 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
         EC_ZERO_LOG( lstat(obj->options.configfile, &st) );
         obj->options.volfile.mtime = st.st_mtime;
+
+        includefile = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL,
+                                                "include", NULL);
+        if (includefile) {
+            EC_ZERO_LOG( stat(includefile, &st) );
+            obj->options.includefile.mtime = st.st_mtime;
+        }
     }
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
