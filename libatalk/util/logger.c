@@ -39,18 +39,18 @@ Netatalk 2001 (c)
 #define MAXLOGSIZE 512
 
 #define LOGLEVEL_STRING_IDENTIFIERS { \
-  "NOTHING",                      \
-  "SEVERE",                       \
-  "ERROR",                        \
-  "WARN",                         \
-  "NOTE",                         \
-  "INFO",                         \
-  "DEBUG",                        \
-  "DEBUG6",                       \
-  "DEBUG7",                       \
-  "DEBUG8",                       \
-  "DEBUG9",                       \
-  "MAXDEBUG"}                        
+  "-",                      \
+  "severe",                       \
+  "error",                        \
+  "warn",                         \
+  "note",                         \
+  "info",                         \
+  "debug",                        \
+  "debug6",                       \
+  "debug7",                       \
+  "debug8",                       \
+  "debug9",                       \
+  "maxdebug"}                        
 
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
@@ -94,21 +94,6 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
 
 static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
 
-/* We use this in order to track the last n log messages in order to prevent flooding */
-#define LOG_FLOODING_MINCOUNT 5 /* this controls after how many consecutive messages must be detected
-                                   before we start to hide them */
-#define LOG_FLOODING_MAXCOUNT 1000 /* this controls after how many consecutive messages we force a 
-                                      "repeated x times" message */
-#define LOG_FLOODING_ARRAY_SIZE 3 /* this contols how many messages in flow we track */
-
-struct log_flood_entry {
-    int count;
-    unsigned int hash;
-};
-
-static struct log_flood_entry log_flood_array[LOG_FLOODING_ARRAY_SIZE];
-static int log_flood_entries;
-
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
 static const char *log_src_filename;
 static int  log_src_linenumber;
@@ -128,90 +113,46 @@ static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_string
    Internal function definitions
    ========================================================================= */
 
-/* Hash a log message */
-static unsigned int hash_message(const char *message)
+static int generate_message(char **message_details_buffer,
+                            char *user_message,
+                            int display_options,
+                            enum loglevels loglevel,
+                            enum logtypes logtype)
 {
-    const char *p = message;
-    unsigned int hash = 0, i = 7;
-
-    while (*p) {
-        hash += *p * i;
-        i++;
-        p++;
-    }
-    return hash;
-}
-
-static void generate_message_details(char *message_details_buffer,
-                                     int message_details_buffer_length,
-                                     int display_options,
-                                     enum loglevels loglevel, enum logtypes logtype)
-{
-    char   *ptr = message_details_buffer;
-    int    templen;
-    int    len = message_details_buffer_length;
+    char *details;
+    int    len;
     struct timeval tv;
     pid_t  pid;
+    char buf[256];
 
-    *ptr = 0;
-
-    /* Print time */
     gettimeofday(&tv, NULL);
-    strftime(ptr, len, "%b %d %H:%M:%S.", localtime(&tv.tv_sec));
-    templen = strlen(ptr);
-    len -= templen;
-    ptr += templen;
-
-    templen = snprintf(ptr, len, "%06u ", (int)tv.tv_usec);
-    if (templen == -1 || templen >= len)
-        return;
-        
-    len -= templen;
-    ptr += templen;
-
-    /* Process name &&  PID */
+    strftime(buf, sizeof(buf), "%b %d %H:%M:%S.", localtime(&tv.tv_sec));
     pid = getpid();
-    templen = snprintf(ptr, len, "%s[%d]", log_config.processname, pid);
-    if (templen == -1 || templen >= len)
-        return;
-    len -= templen;
-    ptr += templen;
-
-    /* Source info ? */
-    if ( ! (display_options & logoption_nsrcinfo)) {
-        char *basename = strrchr(log_src_filename, '/');
-        if (basename)
-            templen = snprintf(ptr, len, " {%s:%d}", basename + 1, log_src_linenumber);
-        else
-            templen = snprintf(ptr, len, " {%s:%d}", log_src_filename, log_src_linenumber);
-        if (templen == -1 || templen >= len)
-            return;
-        len -= templen;
-        ptr += templen;
+    const char *basename = strrchr(log_src_filename, '/');
+    if (basename) {
+        basename++;
+    } else {
+        basename = log_src_filename;
     }
 
-    /* Errorlevel */
-    if (loglevel >= (num_loglevel_chars - 1))
-        templen = snprintf(ptr, len,  " (D%d:", loglevel - 1);
-    else
-        templen = snprintf(ptr, len, " (%c:", arr_loglevel_chars[loglevel]);
 
-    if (templen == -1 || templen >= len)
-        return;
-    len -= templen;
-    ptr += templen;
-
-    /* Errortype */
-    if (logtype<num_logtype_strings) {
-        templen = snprintf(ptr, len, "%s", arr_logtype_strings[logtype]);
-        if (templen == -1 || templen >= len)
-            return;
-        len -= templen;
-        ptr += templen;
+    len = asprintf(&details,
+                   "%s%06u %s[%d] {%s:%d} (%s:%s): %s\n",
+                   buf,
+                   (int)tv.tv_usec,
+                   log_config.processname,
+                   pid,
+                   basename,
+                   log_src_linenumber,
+                   arr_loglevel_strings[loglevel],
+                   arr_logtype_strings[logtype],
+                   user_message);
+    if (len == -1) {
+        *message_details_buffer = "";
+        return -1;
     }
-    
-    strncat(ptr, "): ", len);
-    ptr[len -1] = 0;
+    *message_details_buffer = details;
+    return len;
 }
 
 static int get_syslog_equivalent(enum loglevels loglevel)
@@ -467,10 +408,8 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
      * are already changed. */
     static int inlog = 0;
     int fd, len;
-    char temp_buffer[MAXLOGSIZE];
-    char log_details_buffer[MAXLOGSIZE];
+    char *user_message, *log_message;
     va_list args;
-    struct iovec iov[2];
 
     if (inlog)
         return;
@@ -485,10 +424,13 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         if (type_configs[logtype].level >= loglevel) {
             /* Initialise the Messages and send it to syslog */
             va_start(args, message);
-            vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
+            len = vasprintf(&user_message, message, args);
             va_end(args);
-            temp_buffer[MAXLOGSIZE -1] = 0;
-            make_syslog_entry(loglevel, logtype, temp_buffer);
+            if (len == -1) {
+                return;
+            }
+            make_syslog_entry(loglevel, logtype, user_message);
+            free(user_message);
         }
         inlog = 0;
         return;
@@ -500,12 +442,13 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     log_src_linenumber = line;
 
     /* Check if requested logtype is setup */
-    if (type_configs[logtype].set)
+    if (type_configs[logtype].set) {
         /* Yes */
         fd = type_configs[logtype].fd;
-    else
+    } else {
         /* No: use default */
         fd = type_configs[logtype_default].fd;
+    }
 
     if (fd < 0) {
         /* no where to send the output, give up */
@@ -514,93 +457,24 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 
     /* Initialise the Messages */
     va_start(args, message);
-    len = vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
+    len = vasprintf(&user_message, message, args);
+    if (len == -1) {
+        goto exit;
+    }
     va_end(args);
 
-    /* Append \n */
-    if (len ==-1 || len >= MAXLOGSIZE -1) {
-        /* vsnprintf hit the buffer size*/
-        temp_buffer[MAXLOGSIZE-2] = '\n';
-        temp_buffer[MAXLOGSIZE-1] = 0;
+    len = generate_message(&log_message,
+                           user_message,
+                           type_configs[logtype].set ?
+                           type_configs[logtype].display_options :
+                           type_configs[logtype_default].display_options,
+                           loglevel, logtype);
+    if (len == -1) {
+        goto exit;
     }
-    else {
-        temp_buffer[len] = '\n';
-        temp_buffer[len+1] = 0;
-    }
-
-    if (type_configs[logtype].level >= log_debug)
-        goto log; /* bypass flooding checks */
-
-    /* Prevent flooding: hash the message and check if we got the same one recently */
-    int hash = hash_message(temp_buffer) + log_src_linenumber;
-
-    /* Search for the same message by hash */
-    for (int i = log_flood_entries - 1; i >= 0; i--) {
-        if (log_flood_array[i].hash == hash) {
-
-            /* found same message */
-            log_flood_array[i].count++;
-
-            /* Check if that message has reached LOG_FLOODING_MAXCOUNT */
-            if (log_flood_array[i].count >= LOG_FLOODING_MAXCOUNT) {
-                /* yes, log it and remove from array */
-
-                /* reusing log_details_buffer */
-                sprintf(log_details_buffer, "message repeated %i times\n",
-                        LOG_FLOODING_MAXCOUNT - 1);
-                write(fd, log_details_buffer, strlen(log_details_buffer));
-
-                if ((i + 1) == LOG_FLOODING_ARRAY_SIZE) {
-                    /* last array element, just decrement count */
-                    log_flood_entries--;
-                    goto exit;
-                }
-                /* move array elements down */
-                for (int j = i + 1; j != LOG_FLOODING_ARRAY_SIZE ; j++)
-                    log_flood_array[j-1] = log_flood_array[j];
-                log_flood_entries--;
-            }
-
-            if (log_flood_array[i].count < LOG_FLOODING_MINCOUNT)
-                /* log it */
-                goto log;
-            /* discard it */
-            goto exit;
-        } /* if */
-    }  /* for */
-
-    /* No matching message found, add this message to array*/
-    if (log_flood_entries == LOG_FLOODING_ARRAY_SIZE) {
-        /* array is full, discard oldest entry printing "message repeated..." if count > 1 */
-        if (log_flood_array[0].count >= LOG_FLOODING_MINCOUNT) {
-            /* reusing log_details_buffer */
-            sprintf(log_details_buffer, "message repeated %i times\n",
-                    log_flood_array[0].count - LOG_FLOODING_MINCOUNT + 1);
-            write(fd, log_details_buffer, strlen(log_details_buffer));
-        }
-        for (int i = 1; i < LOG_FLOODING_ARRAY_SIZE; i++) {
-            log_flood_array[i-1] = log_flood_array[i];
-        }
-        log_flood_entries--;
-    }
-    log_flood_array[log_flood_entries].count = 1;
-    log_flood_array[log_flood_entries].hash = hash;
-    log_flood_entries++;
-
-log:
-    if ( ! log_config.console) {
-        generate_message_details(log_details_buffer, sizeof(log_details_buffer),
-                                 type_configs[logtype].set ?
-                                     type_configs[logtype].display_options :
-                                     type_configs[logtype_default].display_options,
-                                 loglevel, logtype);
-
-        /* If default wasnt setup its fd is -1 */
-        write(fd, log_details_buffer, strlen(log_details_buffer));
-        write(fd, temp_buffer, strlen(temp_buffer));
-    } else {
-        write(fd, temp_buffer, strlen(temp_buffer));
-    }
+    write(fd, log_message, len);
+    free(log_message);
+    free(user_message);
 
 exit:
     inlog = 0;

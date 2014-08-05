@@ -7,6 +7,7 @@ Changes in 3.1.4
 * UPD: afpd: FCE version 2 with new event types and new config options
        "fce ignore names" and "fce notify script"
 * UPD: afpd: check for modified included config file, FR #95.
+* UPD: libatalk: logger: remove flood protection and allocate messages
 
 Changes in 3.1.3
 ================
