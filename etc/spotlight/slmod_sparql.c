@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
+  Copyright (C) Ralph Boehme 2012-2014
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,9 +34,6 @@
 #define MAX_SL_RESULTS 20
 
 static TrackerSparqlConnection *connection;
-#if 0
-static TrackerMinerManager *manager;
-#endif
 
 static char *tracker_to_unix_path(const char *uri)
 {
@@ -398,37 +395,6 @@ static int sl_mod_index_file(const void *p)
      * impose limits on the maximum number of watched directories.
      */
     return 0;
-
-#if 0
-#ifdef HAVE_TRACKER_MINER
-    EC_INIT;
-    const char *f = p;
-
-    if (!f)
-        goto EC_CLEANUP;
-
-    GError *error = NULL;
-    GFile *file = NULL;
-
-    file = g_file_new_for_commandline_arg(f);
-
-    become_root();
-    tracker_miner_manager_index_file(manager, file, &error);
-    unbecome_root();
-
-    if (error)
-        LOG(log_error, logtype_sl, "sl_mod_index_file(\"%s\"): indexing failed", f);
-    else
-        LOG(log_debug, logtype_sl, "sl_mod_index_file(\"%s\"): indexing file was successful", f);
-
-EC_CLEANUP:
-    if (file)
-        g_object_unref(file);
-    EC_EXIT;
-#else
-    return 0;
-#endif /* HAVE_TRACKER_MINER */
-#endif /* 0 */
 }
 
 struct sl_module_export sl_mod = {

@@ -13,7 +13,7 @@
   #include <atalk/errchk.h>
   #include <atalk/spotlight.h>
 
-  #include "slmod_sparql_map.h"
+  #include "sparql_map.h"
 
   struct yy_buffer_state;
   typedef struct yy_buffer_state *YY_BUFFER_STATE;
@@ -85,11 +85,16 @@ expr                           {
 ;
 
 expr:
-BOOL                             {
-    if ($1 == false)
-        YYACCEPT;
-    else
-        YYABORT;
+BOOL {
+	/*
+	 * We can't properly handle these in expressions, fortunately this
+	 * is probably only ever used by OS X as sole element in an
+	 * expression ie "False" (when Finder window selected our share
+	 * but no search string entered yet). Packet traces showed that OS
+	 * X Spotlight server then returns a failure (ie -1) which is what
+	 * we do here too by calling YYABORT.
+	 */
+	YYABORT;
 }
 | match OR match                 {
     if ($1 == NULL || $3 == NULL)
@@ -280,6 +285,8 @@ static const char *map_expr(const char *attr, char op, const char *val)
     }
 
 EC_CLEANUP:
+    if (ret != 0)
+        result = NULL;
     if (q)
         bdestroy(q);
     if (search)

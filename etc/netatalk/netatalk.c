@@ -173,7 +173,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(sigquit_ev);
     event_del(timer_ev);
 
-#ifdef HAVE_TRACKER_SPARQL
+#ifdef HAVE_TRACKER
     system("tracker-control -t");
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
@@ -183,7 +183,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-#ifdef HAVE_TRACKER_SPARQL
+#ifdef HAVE_TRACKER
     system("tracker-control -t");
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
@@ -420,7 +420,7 @@ int main(int argc, char **argv)
 
         if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start dbus", 1)) {
             dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
-            LOG(log_debug, logtype_default, "DBUS: '%s'", dbus_path);
+            LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
             if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
                 LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
                 netatalk_exit(EXITERR_CONF);
@@ -433,6 +433,7 @@ int main(int argc, char **argv)
         set_sl_volumes();
 
         if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
+            LOG(log_note, logtype_default, "Starting Tracker");
             system(TRACKER_PREFIX "/bin/tracker-control -s");
         }
     }

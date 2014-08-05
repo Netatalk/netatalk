@@ -1,36 +1,33 @@
 # Makefile.am for etc/spotlight/
 
 pkgconfdir = @PKGCONFDIR@
-moduledir = @UAMS_PATH@
-module_LTLIBRARIES =
+noinst_LTLIBRARIES = 
 noinst_PROGRAMS =
-noinst_HEADERS = slmod_sparql_map.h
+noinst_HEADERS = sparql_map.h
 BUILT_SOURCES =
 
 AM_YFLAGS = -d
 
-if HAVE_TRACKER_SPARQL
-BUILT_SOURCES += slmod_sparql_parser.h
+if HAVE_TRACKER
+BUILT_SOURCES += sparql_parser.h
 noinst_PROGRAMS += srp
-module_LTLIBRARIES += slmod_sparql.la
+noinst_LTLIBRARIES += libspotlight.la
 
-slmod_sparql_la_SOURCES = \
-	slmod_sparql.c \
-	slmod_sparql_map.c \
-	slmod_sparql_parser.y \
+libspotlight_la_SOURCES = \
+	sparql_map.c \
+	sparql_parser.y \
 	spotlight_rawquery_lexer.l
 
-slmod_sparql_la_CFLAGS  = \
+libspotlight_la_CFLAGS  = \
 	-DDBUS_API_SUBJECT_TO_CHANGE \
 	@TRACKER_CFLAGS@ \
-	@TRACKER_MINER_CFLAGS@ \
 	-D_PATH_STATEDIR='"$(localstatedir)/netatalk"'
 
-slmod_sparql_la_LDFLAGS = -module -avoid-version @TRACKER_LIBS@ @TRACKER_MINER_LIBS@
+libspotlight_la_LDFLAGS = @TRACKER_LIBS@ @TRACKER_MINER_LIBS@
 
 srp_SOURCES = \
-	slmod_sparql_map.c \
-	slmod_sparql_parser.y \
+	sparql_map.c \
+	sparql_parser.y \
 	spotlight_rawquery_lexer.l
 
 srp_CFLAGS = -DMAIN -I$(top_srcdir)/include @TRACKER_CFLAGS@

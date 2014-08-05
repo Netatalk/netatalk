@@ -131,6 +131,10 @@ extern void *mod_symbol  (void *, const char *);
 #define mod_close(a)     dlclose(a)
 #endif /* ! HAVE_DLFCN_H */
 
+#ifndef strequal
+#define strequal(a,b) (strcmp((a),(b)) == 0)
+#endif
+
 /******************************************************************
  * locking.c
  ******************************************************************/

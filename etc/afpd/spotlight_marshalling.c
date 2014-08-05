@@ -216,7 +216,7 @@ EC_CLEANUP:
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf, int *toc_idx)
 {
     EC_INIT;
-    int off = 0, len;
+    int len;
     int cnid_count = talloc_array_length(cnids->ca_cnids->dd_talloc_array);
     uint64_t id;
 
@@ -472,7 +472,6 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, uint
 {
     int count, i;
     uint64_t query_data64;
-    double fval;
     union {
         double d;
         uint32_t w[2];
@@ -786,8 +785,8 @@ EC_CLEANUP:
 int sl_unpack(DALLOC_CTX *query, const char *buf)
 {
     EC_INIT;
-    int encoding, i, toc_entries;
-    uint64_t toc_offset, tquerylen, toc_entry;
+    int encoding, toc_entries;
+    uint64_t toc_offset;
 
     if (strncmp(buf, "md031234", 8) == 0)
         encoding = SL_ENC_BIG_ENDIAN;

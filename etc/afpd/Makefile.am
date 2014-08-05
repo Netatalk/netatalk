@@ -7,7 +7,6 @@ CLEANFILES =
 DISTCLEANFILES =
 
 sbin_PROGRAMS = afpd
-noinst_PROGRAMS = hash spot
 
 afpd_SOURCES = \
 	afp_avahi.c \
@@ -39,7 +38,6 @@ afpd_SOURCES = \
 	nfsquota.c \
 	ofork.c \
 	quota.c \
-	spotlight.c \
 	spotlight_marshalling.c \
 	status.c \
 	switch.c \
@@ -63,6 +61,12 @@ afpd_CFLAGS = \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
 	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
+
+if HAVE_TRACKER
+afpd_SOURCES += spotlight.c
+afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la
+afpd_CFLAGS += @TRACKER_CFLAGS@
+endif
 
 if HAVE_ACLS
 afpd_SOURCES += acls.c
@@ -98,10 +102,3 @@ noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h fi
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
 	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h afpstats.h afpstats_obj.h
-
-hash_SOURCES = hash.c
-hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include
-
-spot_SOURCES = spotlight.c spotlight_marshalling.c
-spot_CFLAGS = -DSPOT_TEST_MAIN
-spot_LDADD = $(top_builddir)/libatalk/libatalk.la

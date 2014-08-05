@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
-# define YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
+#ifndef YY_YY_SPARQL_PARSER_H_INCLUDED
+# define YY_YY_SPARQL_PARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -84,7 +84,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 46 "slmod_sparql_parser.y"
+#line 46 "sparql_parser.y"
 
     int ival;
     const char *sval;
@@ -93,7 +93,7 @@ typedef union YYSTYPE
 
 
 /* Line 2058 of yacc.c  */
-#line 97 "slmod_sparql_parser.h"
+#line 97 "sparql_parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -117,7 +117,7 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 2058 of yacc.c  */
-#line 40 "slmod_sparql_parser.y"
+#line 40 "sparql_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
   extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
@@ -125,6 +125,6 @@ int yyparse ();
 
 
 /* Line 2058 of yacc.c  */
-#line 129 "slmod_sparql_parser.h"
+#line 129 "sparql_parser.h"
 
-#endif /* !YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED  */
+#endif /* !YY_YY_SPARQL_PARSER_H_INCLUDED  */

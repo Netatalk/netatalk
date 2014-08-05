@@ -169,8 +169,6 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         fi
     else
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
-        AC_DEFINE(HAVE_TRACKER_SPARQL, 1, [Define if Tracker SPARQL is available])
-        AC_DEFINE(HAVE_TRACKER_MINER, 1, [Define if Tracker miner library is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
         AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
     fi
@@ -183,7 +181,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AC_SUBST(TRACKER_LIBS)
     AC_SUBST(TRACKER_MINER_CFLAGS)
     AC_SUBST(TRACKER_MINER_LIBS)
-    AM_CONDITIONAL(HAVE_TRACKER_SPARQL, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent

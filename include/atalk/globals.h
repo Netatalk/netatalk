@@ -124,7 +124,6 @@ struct afp_options {
     char *mimicmodel;
     char *adminauthuser;
     char *ignored_attr;
-    char *slmod_path;
     int  splice_size;
     char *cnid_mysql_host;
     char *cnid_mysql_user;
@@ -161,6 +160,7 @@ typedef struct AFPObj {
     int fce_version;
     char *fce_ign_names;
     char *fce_notify_script;
+    struct sl_ctx *sl_ctx;
 } AFPObj;
 
 /* typedef for AFP functions handlers */

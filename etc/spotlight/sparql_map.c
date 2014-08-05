@@ -22,7 +22,7 @@
 
 #include <atalk/logger.h>
 
-#include "slmod_sparql_map.h"
+#include "sparql_map.h"
 
 #define NOTSUPPORTED NULL
 #define SPECIAL      NULL

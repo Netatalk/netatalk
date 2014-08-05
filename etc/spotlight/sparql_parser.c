@@ -63,7 +63,7 @@
 
 /* Copy the first part of user declarations.  */
 /* Line 371 of yacc.c  */
-#line 1 "slmod_sparql_parser.y"
+#line 1 "sparql_parser.y"
 
   #include <atalk/standards.h>
 
@@ -79,7 +79,7 @@
   #include <atalk/errchk.h>
   #include <atalk/spotlight.h>
 
-  #include "slmod_sparql_map.h"
+  #include "sparql_map.h"
 
   struct yy_buffer_state;
   typedef struct yy_buffer_state *YY_BUFFER_STATE;
@@ -103,7 +103,7 @@
   static char *result_limit;
 
 /* Line 371 of yacc.c  */
-#line 107 "slmod_sparql_parser.c"
+#line 107 "sparql_parser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -123,8 +123,8 @@
 
 /* In a future release of Bison, this section will be replaced
    by #include "y.tab.h".  */
-#ifndef YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
-# define YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED
+#ifndef YY_YY_SPARQL_PARSER_H_INCLUDED
+# define YY_YY_SPARQL_PARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -177,7 +177,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 46 "slmod_sparql_parser.y"
+#line 46 "sparql_parser.y"
 
     int ival;
     const char *sval;
@@ -186,7 +186,7 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 190 "slmod_sparql_parser.c"
+#line 190 "sparql_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -210,7 +210,7 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 /* "%code provides" blocks.  */
 /* Line 387 of yacc.c  */
-#line 40 "slmod_sparql_parser.y"
+#line 40 "sparql_parser.y"
 
   #define SPRAW_TIME_OFFSET 978307200
   extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
@@ -218,14 +218,14 @@ int yyparse ();
 
 
 /* Line 387 of yacc.c  */
-#line 222 "slmod_sparql_parser.c"
+#line 222 "sparql_parser.c"
 
-#endif /* !YY_YY_SLMOD_SPARQL_PARSER_H_INCLUDED  */
+#endif /* !YY_YY_SPARQL_PARSER_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 229 "slmod_sparql_parser.c"
+#line 229 "sparql_parser.c"
 
 #ifdef short
 # undef short
@@ -524,9 +524,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    70,    74,    88,    94,   102,   103,   104,
-     105,   112,   125,   126,   127,   128,   129,   130,   131,   132,
-     136,   140,   141
+       0,    68,    68,    70,    74,    88,    99,   107,   108,   109,
+     110,   117,   130,   131,   132,   133,   134,   135,   136,   137,
+     141,   145,   146
 };
 #endif
 
@@ -1447,7 +1447,7 @@ yyreduce:
     {
         case 4:
 /* Line 1792 of yacc.c  */
-#line 74 "slmod_sparql_parser.y"
+#line 74 "sparql_parser.y"
     {
     if (ssp_slq->slq_result_limit)
         result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld", ssp_slq->slq_result_limit);
@@ -1463,18 +1463,23 @@ yyreduce:
 
   case 5:
 /* Line 1792 of yacc.c  */
-#line 88 "slmod_sparql_parser.y"
+#line 88 "sparql_parser.y"
     {
-    if ((yyvsp[(1) - (1)].bval) == false)
-        YYACCEPT;
-    else
-        YYABORT;
+	/*
+	 * We can't properly handle these in expressions, fortunately this
+	 * is probably only ever used by OS X as sole element in an
+	 * expression ie "False" (when Finder window selected our share
+	 * but no search string entered yet). Packet traces showed that OS
+	 * X Spotlight server then returns a failure (ie -1) which is what
+	 * we do here too by calling YYABORT.
+	 */
+	YYABORT;
 }
     break;
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 94 "slmod_sparql_parser.y"
+#line 99 "sparql_parser.y"
     {
     if ((yyvsp[(1) - (3)].sval) == NULL || (yyvsp[(3) - (3)].sval) == NULL)
         YYABORT;
@@ -1487,25 +1492,25 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 102 "slmod_sparql_parser.y"
+#line 107 "sparql_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval); if ((yyval.sval) == NULL) YYABORT;}
     break;
 
   case 8:
 /* Line 1792 of yacc.c  */
-#line 103 "slmod_sparql_parser.y"
+#line 108 "sparql_parser.y"
     {(yyval.sval) = (yyvsp[(1) - (1)].sval);}
     break;
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 104 "slmod_sparql_parser.y"
+#line 109 "sparql_parser.y"
     {(yyval.sval) = talloc_asprintf(ssp_slq, "%s", (yyvsp[(2) - (3)].sval));}
     break;
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 105 "slmod_sparql_parser.y"
+#line 110 "sparql_parser.y"
     {
     if (!ssp_slq->slq_allow_expr) {
         yyerror("Spotlight queries with logic expressions are disabled");
@@ -1517,7 +1522,7 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 112 "slmod_sparql_parser.y"
+#line 117 "sparql_parser.y"
     {
     if (!ssp_slq->slq_allow_expr) {
         yyerror("Spotlight queries with logic expressions are disabled");
@@ -1532,73 +1537,73 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 125 "slmod_sparql_parser.y"
+#line 130 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '=', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 126 "slmod_sparql_parser.y"
+#line 131 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '!', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 127 "slmod_sparql_parser.y"
+#line 132 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '<', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 128 "slmod_sparql_parser.y"
+#line 133 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (5)].sval), '>', (yyvsp[(4) - (5)].sval));}
     break;
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 129 "slmod_sparql_parser.y"
+#line 134 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '=', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 130 "slmod_sparql_parser.y"
+#line 135 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '!', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 131 "slmod_sparql_parser.y"
+#line 136 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '<', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 132 "slmod_sparql_parser.y"
+#line 137 "sparql_parser.y"
     {(yyval.sval) = map_expr((yyvsp[(1) - (6)].sval), '>', (yyvsp[(4) - (6)].sval));}
     break;
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 136 "slmod_sparql_parser.y"
+#line 141 "sparql_parser.y"
     {(yyval.sval) = map_daterange((yyvsp[(3) - (8)].sval), (yyvsp[(5) - (8)].tval), (yyvsp[(7) - (8)].tval));}
     break;
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 140 "slmod_sparql_parser.y"
+#line 145 "sparql_parser.y"
     {(yyval.tval) = isodate2unix((yyvsp[(3) - (4)].sval));}
     break;
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 141 "slmod_sparql_parser.y"
+#line 146 "sparql_parser.y"
     {(yyval.tval) = atoi((yyvsp[(1) - (1)].sval)) + SPRAW_TIME_OFFSET;}
     break;
 
 
 /* Line 1792 of yacc.c  */
-#line 1602 "slmod_sparql_parser.c"
+#line 1607 "sparql_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1830,7 +1835,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 144 "slmod_sparql_parser.y"
+#line 149 "sparql_parser.y"
 
 
 static time_t isodate2unix(const char *s)
@@ -1970,6 +1975,8 @@ static const char *map_expr(const char *attr, char op, const char *val)
     }
 
 EC_CLEANUP:
+    if (ret != 0)
+        result = NULL;
     if (q)
         bdestroy(q);
     if (search)

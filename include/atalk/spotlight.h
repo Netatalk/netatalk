@@ -26,29 +26,15 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-/**************************************************************************************************
- * Spotlight module stuff
- **************************************************************************************************/
+#ifdef HAVE_TRACKER
+#include <gio/gio.h>
+#include <tracker-sparql.h>
+#include <libtracker-miner/tracker-miner.h>
+#endif
 
-#define SL_MODULE_VERSION 1
-
-struct sl_module_export {
-    int sl_mod_version;
-    int (*sl_mod_init)        (void *);
-    int (*sl_mod_start_search)(void *);
-    int (*sl_mod_fetch_result)(void *);
-    int (*sl_mod_end_search)  (void *);
-    int (*sl_mod_fetch_attrs) (void *);
-    int (*sl_mod_error)       (void *);
-    int (*sl_mod_index_file)  (const void *);
-};
-
-extern int sl_mod_load(AFPObj *obj);
-extern void sl_index_file(const char *path);
-
-/**************************************************************************************************
+/******************************************************************************
  * Spotlight RPC and marshalling stuff
- **************************************************************************************************/
+ ******************************************************************************/
 
 /* FPSpotlightRPC subcommand codes */
 #define SPOTLIGHT_CMD_OPEN    1
@@ -61,59 +47,81 @@ extern void sl_index_file(const char *path);
 #define SL_ENC_BIG_ENDIAN    2
 #define SL_ENC_UTF_16        4
 
-typedef DALLOC_CTX     sl_array_t;    /* an array of elements                                           */
-typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements                                 */
-typedef DALLOC_CTX     sl_filemeta_t; /* contains one sl_array_t                                        */
-typedef int            sl_nil_t;      /* a nil element                                                  */
-typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t as it's a define for something else */
-typedef struct timeval sl_time_t;     /* a boolean, we avoid bool_t as it's a define for something else */
+typedef DALLOC_CTX     sl_array_t;    /* an array of elements                 */
+typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements       */
+typedef DALLOC_CTX     sl_filemeta_t; /* contains one sl_array_t              */
+typedef int            sl_nil_t;      /* a nil element                        */
+typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t           */
+typedef struct timeval sl_time_t;
 typedef struct {
     char sl_uuid[16];
-}  sl_uuid_t;                         /* a UUID                                                         */
+}  sl_uuid_t;                         /* a UUID                               */
 typedef struct {
     uint16_t   ca_unkn1;
     uint32_t   ca_context;
     DALLOC_CTX *ca_cnids;
-}  sl_cnids_t;                        /* an array of CNIDs                                              */
+}  sl_cnids_t;                        /* an array of CNIDs                    */
 
-/**************************************************************************************************
+/******************************************************************************
  * Some helper stuff dealing with queries
- **************************************************************************************************/
+ ******************************************************************************/
 
-/* Internal query state */
+/* query state */
 typedef enum {
-    SLQ_STATE_NEW      = 1,           /* Query received from client                                     */
-    SLQ_STATE_RUNNING  = 2,           /* Query dispatched to Tracker                                    */
-    SLQ_STATE_DONE     = 3,           /* Tracker finished                                               */
-    SLQ_STATE_END      = 4,           /* Query results returned to client                               */
-    SLQ_STATE_ATTRS    = 5            /* Fetch metadata for an object                                   */
+	SLQ_STATE_NEW,            /* Query received from client           */
+	SLQ_STATE_RUNNING,        /* Query dispatched to Tracker          */
+	SLQ_STATE_RESULTS,        /* Async Tracker query read             */
+	SLQ_STATE_DONE,           /* Got all results from Tracker         */
+    SLQ_STATE_CANCEL_PENDING, /* a cancel op for the query is pending */
+    SLQ_STATE_CANCELLED,      /* the query has been cancelled         */
+	SLQ_STATE_ERROR	          /* an error happended somewhere         */
 } slq_state_t;
+
+/* Handle for query results */
+struct sl_rslts {
+    int         num_results;
+    sl_cnids_t *cnids;
+    sl_array_t *fm_array;
+};
 
 /* Internal query data structure */
 typedef struct _slq_t {
-    struct list_head  slq_list;           /* queries are stored in a list                                   */
-    slq_state_t       slq_state;          /* State                                                          */
-    AFPObj           *slq_obj;            /* global AFPObj handle                                           */
-    const struct vol *slq_vol;            /* volume handle                                                  */
-    DALLOC_CTX       *slq_reply;          /* reply handle                                                   */
-    time_t            slq_time;           /* timestamp where we received this query                         */
-    uint64_t          slq_ctx1;           /* client context 1                                               */
-    uint64_t          slq_ctx2;           /* client context 2                                               */
-    sl_array_t       *slq_reqinfo;        /* array with requested metadata                                  */
-    const char       *slq_qstring;        /* the Spotlight query string                                     */
-    uint64_t         *slq_cnids;          /* Pointer to array with CNIDs to which a query applies           */
-    size_t            slq_cnids_num;      /* Size of slq_cnids array                                        */
-    const char       *slq_path;           /* Path to file or dir, used in fetchAttributes                   */
-    void             *slq_tracker_cursor; /* Tracker SPARQL query result cursor                             */
-    bool              slq_allow_expr;     /* Whether to allow logic expressions                             */
-    uint64_t          slq_result_limit;   /* Whether to LIMIT SPARQL results, default of 0 means no limit   */
+    struct list_head  slq_list;           /* queries are stored in a list     */
+    slq_state_t       slq_state;          /* State                            */
+    AFPObj           *slq_obj;            /* global AFPObj handle             */
+    const struct vol *slq_vol;            /* volume handle                    */
+    time_t            slq_time;           /* timestamp received query         */
+    uint64_t          slq_ctx1;           /* client context 1                 */
+    uint64_t          slq_ctx2;           /* client context 2                 */
+    sl_array_t       *slq_reqinfo;        /* array with requested metadata    */
+    const char       *slq_qstring;        /* the Spotlight query string       */
+    uint64_t         *slq_cnids;          /* Pointer to array with CNIDs      */
+    size_t            slq_cnids_num;      /* Size of slq_cnids array          */
+    void             *tracker_cursor;     /* Tracker SPARQL cursor            */
+    bool              slq_allow_expr;     /* Whether to allow expressions     */
+    uint64_t          slq_result_limit;   /* Whether to LIMIT SPARQL results  */
+    struct sl_rslts  *query_results;      /* query results                    */
+#ifdef HAVE_TRACKER
+    GCancellable     *cancellable;
+#endif
 } slq_t;
 
-/**************************************************************************************************
- * Function declarations
- **************************************************************************************************/
+struct sl_ctx {
+#ifdef HAVE_TRACKER
+    TrackerSparqlConnection *tracker_con;
+    GCancellable *cancellable;
+    GMainLoop *mainloop;
+#endif
+    slq_t *query_list; /* list of active queries */
+};
 
-extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen);
+/******************************************************************************
+ * Function declarations
+ ******************************************************************************/
+
+extern int spotlight_init(AFPObj *obj);
+extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
+                             char *rbuf, size_t *rbuflen);
 extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 extern void configure_spotlight_attributes(const char *attributes);

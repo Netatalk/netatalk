@@ -8,6 +8,7 @@ Changes in 3.1.4
        "fce ignore names" and "fce notify script"
 * UPD: afpd: check for modified included config file, FR #95.
 * UPD: libatalk: logger: remove flood protection and allocate messages
+* UPD: Spotlight: use async Tracker SPARQL API
 
 Changes in 3.1.3
 ================

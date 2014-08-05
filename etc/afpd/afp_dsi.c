@@ -493,9 +493,12 @@ void afp_over_dsi(AFPObj *obj)
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
+#ifdef HAVE_TRACKER
     /* Initialize Spotlight */
-    if ((obj->options.flags & OPTION_SPOTLIGHT) && (obj->options.slmod_path))
-        sl_mod_load(obj);
+    if (obj->options.flags & OPTION_SPOTLIGHT) {
+        spotlight_init(obj);
+    }
+#endif
 
     ipc_child_state(obj, DSI_RUNNING);
 
