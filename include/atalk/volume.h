@@ -171,6 +171,8 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define VOLPBIT_ATTR_UNIXPRIV     (1 << 5)
 #define VOLPBIT_ATTR_UTF8         (1 << 6)
 #define VOLPBIT_ATTR_NONETIDS     (1 << 7)
+#define VOLPBIT_ATTR_PRIVPARENT   (1 << 8)
+#define VOLPBIT_ATTR_NOTFILEXCHG  (1 << 9)
 #define VOLPBIT_ATTR_EXT_ATTRS    (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
 #define VOLPBIT_ATTR_CASESENS     (1 << 12)
