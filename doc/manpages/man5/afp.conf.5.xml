@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">05 Jun 2014</refmiscinfo>
+    <refmiscinfo class="date">06 Aug 2014</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -1964,6 +1964,17 @@
           <listitem>
             <para>Whether to flag volumes as supporting ACLs. If ACL support
             is compiled in, this is yes by default.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>case sensitive = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>yes</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>Whether to flag volumes as supporting case-sensitive
+            filenames. If the filesystem is case-insensitive, set to no.
+            However, it is not fully verified.</para>
           </listitem>
         </varlistentry>
 

@@ -9,6 +9,7 @@ Changes in 3.1.4
 * UPD: afpd: check for modified included config file, FR #95.
 * UPD: libatalk: logger: remove flood protection and allocate messages
 * UPD: Spotlight: use async Tracker SPARQL API
+* NEW: afpd: new option "case sensitive = yes|no", FR #62.
 
 Changes in 3.1.3
 ================
