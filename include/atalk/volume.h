@@ -155,6 +155,7 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define AFPVOL_UMUPPER         (AFPVOL_MTOUUPPER | AFPVOL_UTOMUPPER)
 #define AFPVOL_UUPPERMLOWER    (AFPVOL_MTOUUPPER | AFPVOL_UTOMLOWER)
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
+#define AFPVOL_CASESENS        (1 << 4)
 
 #define AFPVOLSIG_FLAT          0x0001 /* flat fs */
 #define AFPVOLSIG_FIX           0x0002 /* fixed ids */
@@ -172,6 +173,7 @@ typedef enum {lv_none = 0, lv_all = 1} lv_flags_t;
 #define VOLPBIT_ATTR_NONETIDS     (1 << 7)
 #define VOLPBIT_ATTR_EXT_ATTRS    (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
+#define VOLPBIT_ATTR_CASESENS     (1 << 12)
 #define VOLPBIT_ATTR_TM           (1 << 13)
 
 #define VOLPBIT_ATTR    0

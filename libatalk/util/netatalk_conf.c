@@ -803,6 +803,8 @@ static struct vol *creatvol(AFPObj *obj,
         else if (strcasecmp(val, "xlateupper") == 0)
             volume->v_casefold = AFPVOL_ULOWERMUPPER;
     }
+    if (getoption_bool(obj->iniconfig, section, "case sensitive", preset, 1))
+        volume->v_casefold |= AFPVOL_CASESENS;
 
     if (getoption_bool(obj->iniconfig, section, "read only", preset, 0))
         volume->v_flags |= AFPVOL_RO;

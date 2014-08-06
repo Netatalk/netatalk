@@ -386,6 +386,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
                             ashort |= VOLPBIT_ATTR_EXT_ATTRS;
                         if (vol->v_flags & AFPVOL_ACLS)
                             ashort |= VOLPBIT_ATTR_ACLS;
+                        if (vol->v_casefold & AFPVOL_CASESENS)
+                            ashort |= VOLPBIT_ATTR_CASESENS;
                     }
                 }
             }
