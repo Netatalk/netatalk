@@ -516,11 +516,10 @@ static void slq_cancelled_cleanup(void)
 
     list_for_each(p, &sl_cancelled_queries) {
         q = list_entry(p, slq_t, slq_list);
-        list_del(p);
-        if (q->slq_state != SLQ_STATE_CANCELLED) {
-            LOG(log_error, logtype_sl, "unexpected state: %d", q->slq_state);
+        if (q->slq_state == SLQ_STATE_CANCELLED) {
+            list_del(p);
+            talloc_free(q);
         }
-        talloc_free(q);
     }
 
     return;
