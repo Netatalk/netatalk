@@ -436,13 +436,13 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 #endif /* DEBUGGING */
 
-    /*  SIGCLD */
+    /*  SIGCHLD */
     action.sa_handler = child_handler;
 #ifdef SA_NOCLDWAIT
 /* this enhancement simplifies things for Solaris, it also improves performance */
     action.sa_flags |= SA_NOCLDWAIT;
 #endif
-    if (sigaction(SIGCLD, &action, NULL) < 0 ) {
+    if (sigaction(SIGCHLD, &action, NULL) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
