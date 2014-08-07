@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 05 Jun 2014
+.\"      Date: 06 Aug 2014
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "05 Jun 2014" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "06 Aug 2014" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1317,6 +1317,26 @@ Boolean volume options\&.
 acls = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
 Whether to flag volumes as supporting ACLs\&. If ACL support is compiled in, this is yes by default\&.
+.RE
+.PP
+case sensitive = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
+.RS 4
+Whether to flag volumes as supporting case\-sensitive filenames\&. If the filesystem is case\-insensitive, set to no\&. However, it is not fully verified\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+In spite of being case sensitive as a matter of fact, netatalk 3\&.1\&.3 and earlier did not notify kCaseSensitive flag to the client\&. Starting with 3\&.1\&.4, it is notified correctly by default\&.
+.sp .5v
+.RE
 .RE
 .PP
 cnid dev = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
