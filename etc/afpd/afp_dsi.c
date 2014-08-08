@@ -641,7 +641,7 @@ void afp_over_dsi(AFPObj *obj)
                     replaycache[rc_idx].AFPcommand = function;
                     replaycache[rc_idx].result = err;
                 } else {
-                    LOG(log_error, logtype_afpd, "bad function %X", function);
+                    LOG(log_maxdebug, logtype_afpd, "bad function %X", function);
                     dsi->datalen = 0;
                     err = AFPERR_NOOP;
                 }
