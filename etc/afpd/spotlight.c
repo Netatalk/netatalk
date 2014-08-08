@@ -602,8 +602,8 @@ static void tracker_cursor_cb(GObject      *object,
     cnid_t did, id;
 
     LOG(log_debug, logtype_sl,
-        "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
-        slq->slq_ctx1, slq->slq_ctx2);
+        "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
+        slq->query_results->num_results, slq->slq_ctx1, slq->slq_ctx2);
 
     more_results = tracker_sparql_cursor_next_finish(slq->tracker_cursor,
                                                      res,
@@ -684,12 +684,21 @@ static void tracker_cursor_cb(GObject      *object,
 
 exit:
     if (slq->query_results->num_results < MAX_SL_RESULTS) {
+        LOG(log_debug, logtype_sl,
+            "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": requesting more results",
+            slq->query_results->num_results - 1, slq->slq_ctx1, slq->slq_ctx2);
+
         slq->slq_state = SLQ_STATE_RESULTS;
+
         tracker_sparql_cursor_next_async(slq->tracker_cursor,
                                          slq->slq_obj->sl_ctx->cancellable,
                                          tracker_cursor_cb,
                                          slq);
     } else {
+        LOG(log_debug, logtype_sl,
+            "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": full",
+            slq->query_results->num_results - 1, slq->slq_ctx1, slq->slq_ctx2);
+
         slq->slq_state = SLQ_STATE_FULL;
     }
 }
@@ -958,6 +967,8 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
         }
         if (slq->slq_state == SLQ_STATE_RESULTS
             || slq->slq_state == SLQ_STATE_FULL) {
+            slq->slq_state = SLQ_STATE_RESULTS;
+
             tracker_sparql_cursor_next_async(
                 slq->tracker_cursor,
                 slq->slq_obj->sl_ctx->cancellable,
