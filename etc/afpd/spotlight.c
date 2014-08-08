@@ -1192,8 +1192,13 @@ EC_CLEANUP:
 
 int spotlight_init(AFPObj *obj)
 {
+    static bool initialized = false;
     const char *attributes;
     struct sl_ctx *sl_ctx;
+
+    if (initialized) {
+        return 0;
+    }
 
     LOG(log_info, logtype_sl, "Initializing Spotlight");
 
@@ -1220,6 +1225,7 @@ int spotlight_init(AFPObj *obj)
     tracker_sparql_connection_get_async(sl_ctx->cancellable,
                                         tracker_con_cb, sl_ctx);
 
+    initialized = true;
     return 0;
 }
 
@@ -1246,6 +1252,8 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     if (!(obj->options.flags & OPTION_SPOTLIGHT)) {
         return AFPERR_NOOP;
     }
+
+    spotlight_init(obj);
 
     /*
      * Process finished glib events
