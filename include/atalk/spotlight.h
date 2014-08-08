@@ -71,6 +71,7 @@ typedef enum {
 	SLQ_STATE_NEW,            /* Query received from client           */
 	SLQ_STATE_RUNNING,        /* Query dispatched to Tracker          */
 	SLQ_STATE_RESULTS,        /* Async Tracker query read             */
+	SLQ_STATE_FULL,           /* result queue is full                 */
 	SLQ_STATE_DONE,           /* Got all results from Tracker         */
     SLQ_STATE_CANCEL_PENDING, /* a cancel op for the query is pending */
     SLQ_STATE_CANCELLED,      /* the query has been cancelled         */
@@ -101,9 +102,6 @@ typedef struct _slq_t {
     bool              slq_allow_expr;     /* Whether to allow expressions     */
     uint64_t          slq_result_limit;   /* Whether to LIMIT SPARQL results  */
     struct sl_rslts  *query_results;      /* query results                    */
-#ifdef HAVE_TRACKER
-    GCancellable     *cancellable;
-#endif
 } slq_t;
 
 struct sl_ctx {
