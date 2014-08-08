@@ -12,7 +12,6 @@
 #endif
 
 #include "afp_zeroconf.h"
-#include "afp_config.h"
 
 #ifdef HAVE_MDNS
 #include "afp_mdns.h"

@@ -37,7 +37,6 @@
 #include "status.h"
 #include "fork.h"
 #include "uam_auth.h"
-#include "afp_zeroconf.h"
 #include "afpstats.h"
 
 #define ASEV_THRESHHOLD 10

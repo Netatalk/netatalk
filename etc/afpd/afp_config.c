@@ -40,7 +40,6 @@
 #include "uam_auth.h"
 #include "status.h"
 #include "volume.h"
-#include "afp_zeroconf.h"
 
 /*!
  * Free and cleanup config and DSI
@@ -55,9 +54,6 @@ void configfree(AFPObj *obj, DSI *dsi)
     if (!dsi) {
         /* Master afpd reloading config */
         auth_unload();
-        if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-            zeroconf_deregister();
-        }
     }
 
     unload_volumes(obj);
@@ -206,12 +202,6 @@ int configinit(AFPObj *obj)
     /* Parse afp.conf */
     acl_ldap_readconfig(obj->iniconfig);
 #endif /* HAVE_LDAP */
-
-    /* Now register with zeroconf, we also need the volumes for that */
-    if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-        load_volumes(obj, lv_all);
-        zeroconf_register(obj);
-    }
 
     if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce listener", NULL))) {
 		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);

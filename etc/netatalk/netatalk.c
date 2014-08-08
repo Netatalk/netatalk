@@ -42,6 +42,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include "afp_zeroconf.h"
 
 #include <event2/event.h>
 
@@ -439,6 +440,12 @@ int main(int argc, char **argv)
     }
 #endif
 
+    /* Now register with zeroconf, we also need the volumes for that */
+    if (! (obj.options.flags & OPTION_NOZEROCONF)) {
+        LOG(log_note, logtype_default, "Registering with Zeroconf");
+        zeroconf_register(&obj);
+        LOG(log_note, logtype_default, "done");
+    }
 
     /* run the event loop */
     ret = event_base_dispatch(base);

@@ -22,8 +22,6 @@
 
 #include <atalk/logger.h>
 
-#include "afp_config.h"
-
 struct context {
 	/* Avahi stuff */
   int               thread_running;

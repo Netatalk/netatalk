@@ -10,7 +10,7 @@
 #ifndef AFPD_ZEROCONF_H
 #define AFPD_ZEROCONF_H
 
-#include "afp_config.h"
+#include <atalk/globals.h>
 
 #define AFP_DNS_SERVICE_TYPE "_afpovertcp._tcp"
 #define ADISK_SERVICE_TYPE "_adisk._tcp"

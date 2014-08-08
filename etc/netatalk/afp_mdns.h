@@ -15,8 +15,6 @@
 
 #include <atalk/logger.h>
 
-#include "afp_config.h"
-
 /* prototype definitions */
 void md_zeroconf_register(const AFPObj *obj);
 int md_zeroconf_unregister(void);

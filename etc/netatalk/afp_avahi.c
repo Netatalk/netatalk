@@ -45,7 +45,6 @@ static void publish_reply(AvahiEntryGroup *g,
 static void register_stuff(void) {
     uint port;
     const struct vol *volume;
-    DSI *dsi;
     char name[MAXINSTANCENAMELEN+1];
     AvahiStringList *strlist = NULL;
     AvahiStringList *strlist2 = NULL;
@@ -90,78 +89,69 @@ static void register_stuff(void) {
             }
         }
 
-        /* AFP server */
-        for (dsi = ctx->obj->dsi; dsi; dsi = dsi->next) {
-            port = getip_port((struct sockaddr *)&dsi->server);
+        port = atoi(ctx->obj->options.port);
 
-            LOG(log_info, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
+        LOG(log_info, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
 
-            if (convert_string(ctx->obj->options.unixcharset,
-                               CH_UTF8,
-                               ctx->obj->options.hostname,
-                               -1,
-                               name,
-                               MAXINSTANCENAMELEN) <= 0) {
-                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
-                goto fail;
-            }
-            if ((dsi->bonjourname = strdup(name)) == NULL) {
-                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
-                goto fail;
+        if (convert_string(ctx->obj->options.unixcharset,
+                           CH_UTF8,
+                           ctx->obj->options.hostname,
+                           -1,
+                           name,
+                           MAXINSTANCENAMELEN) <= 0) {
+            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
+            goto fail;
+        }
 
-            }
-            LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
-                dsi->bonjourname);
+        LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);            
 
-            if (avahi_entry_group_add_service(ctx->group,
-                                              AVAHI_IF_UNSPEC,
-                                              AVAHI_PROTO_UNSPEC,
-                                              0,
-                                              dsi->bonjourname,
-                                              AFP_DNS_SERVICE_TYPE,
-                                              NULL,
-                                              NULL,
-                                              port,
-                                              NULL) < 0) {
+        if (avahi_entry_group_add_service(ctx->group,
+                                          AVAHI_IF_UNSPEC,
+                                          AVAHI_PROTO_UNSPEC,
+                                          0,
+                                          name,
+                                          AFP_DNS_SERVICE_TYPE,
+                                          NULL,
+                                          NULL,
+                                          port,
+                                          NULL) < 0) {
+            LOG(log_error, logtype_afpd, "Failed to add service: %s",
+                avahi_strerror(avahi_client_errno(ctx->client)));
+            goto fail;
+        }
+
+        if (i && avahi_entry_group_add_service_strlst(ctx->group,
+                                                      AVAHI_IF_UNSPEC,
+                                                      AVAHI_PROTO_UNSPEC,
+                                                      0,
+                                                      name,
+                                                      ADISK_SERVICE_TYPE,
+                                                      NULL,
+                                                      NULL,
+                                                      9, /* discard */
+                                                      strlist) < 0) {
+            LOG(log_error, logtype_afpd, "Failed to add service: %s",
+                avahi_strerror(avahi_client_errno(ctx->client)));
+            goto fail;
+        }	/* if */
+
+        if (ctx->obj->options.mimicmodel) {
+            strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", ctx->obj->options.mimicmodel);
+            if (avahi_entry_group_add_service_strlst(ctx->group,
+                                                     AVAHI_IF_UNSPEC,
+                                                     AVAHI_PROTO_UNSPEC,
+                                                     0,
+                                                     name,
+                                                     DEV_INFO_SERVICE_TYPE,
+                                                     NULL,
+                                                     NULL,
+                                                     0,
+                                                     strlist2) < 0) {
                 LOG(log_error, logtype_afpd, "Failed to add service: %s",
                     avahi_strerror(avahi_client_errno(ctx->client)));
                 goto fail;
             }
-
-            if (i && avahi_entry_group_add_service_strlst(ctx->group,
-                                                          AVAHI_IF_UNSPEC,
-                                                          AVAHI_PROTO_UNSPEC,
-                                                          0,
-                                                          dsi->bonjourname,
-                                                          ADISK_SERVICE_TYPE,
-                                                          NULL,
-                                                          NULL,
-                                                          9, /* discard */
-                                                          strlist) < 0) {
-                LOG(log_error, logtype_afpd, "Failed to add service: %s",
-                    avahi_strerror(avahi_client_errno(ctx->client)));
-                goto fail;
-            }	/* if */
-
-            if (ctx->obj->options.mimicmodel) {
-                strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", ctx->obj->options.mimicmodel);
-                if (avahi_entry_group_add_service_strlst(ctx->group,
-                                                         AVAHI_IF_UNSPEC,
-                                                         AVAHI_PROTO_UNSPEC,
-                                                         0,
-                                                         dsi->bonjourname,
-                                                         DEV_INFO_SERVICE_TYPE,
-                                                         NULL,
-                                                         NULL,
-                                                         0,
-                                                         strlist2) < 0) {
-                    LOG(log_error, logtype_afpd, "Failed to add service: %s",
-                        avahi_strerror(avahi_client_errno(ctx->client)));
-                    goto fail;
-                }
-            } /* if (config->obj.options.mimicmodel) */
-
-        }	/* for config*/
+        } /* if (config->obj.options.mimicmodel) */
 
         if (avahi_entry_group_commit(ctx->group) < 0) {
             LOG(log_error, logtype_afpd, "Failed to commit entry group: %s",

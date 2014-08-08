@@ -207,12 +207,15 @@ static void register_stuff(const AFPObj *obj) {
         }
     }
 
-    // Now we can count the configs so we know how many service
-    // records to allocate
-    for (dsi = obj->dsi; dsi; dsi = dsi->next) {
-        svc_ref_count++;                    // AFP_DNS_SERVICE_TYPE
-        if (i) svc_ref_count++;      // ADISK_SERVICE_TYPE
-        if (obj->options.mimicmodel) svc_ref_count++;        // DEV_INFO_SERVICE_TYPE
+    /* AFP_DNS_SERVICE_TYPE */
+    svc_ref_count = 1;
+    if (i) {
+        /* ADISK_SERVICE_TYPE */
+        svc_ref_count++;
+    }
+    if (obj->options.mimicmodel) {
+        /* DEV_INFO_SERVICE_TYPE */
+        svc_ref_count++;
     }
 
     // Allocate the memory to store our service refs
@@ -220,107 +223,98 @@ static void register_stuff(const AFPObj *obj) {
     assert(svc_refs);
     svc_ref_count = 0;
 
-    /* AFP server */
-    for (dsi = obj->dsi; dsi; dsi = dsi->next) {
+    port = atoi(obj->options.port);
 
-        port = getip_port((struct sockaddr *)&dsi->server);
+    if (convert_string(obj->options.unixcharset,
+                       CH_UTF8,
+                       obj->options.hostname,
+                       -1,
+                       name,
+                       MAXINSTANCENAMELEN) <= 0) {
+        LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
+        goto fail;
+    }
+    LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
+        dsi->bonjourname);
 
-        if (convert_string(obj->options.unixcharset,
-                           CH_UTF8,
-                           obj->options.hostname,
-                           -1,
-                           name,
-                           MAXINSTANCENAMELEN) <= 0) {
-            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
+    error = DNSServiceRegister(&svc_refs[svc_ref_count++],
+                               0,               // no flags
+                               0,               // all network interfaces
+                               name,
+                               AFP_DNS_SERVICE_TYPE,
+                               "",            // default domains
+                               NULL,            // default host name
+                               htons(port),
+                               0,               // length of TXT
+                               NULL,            // no TXT
+                               RegisterReply,           // callback
+                               NULL);       // no context
+    if (error != kDNSServiceErr_NoError) {
+        LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
+            AFP_DNS_SERVICE_TYPE, error);
+        goto fail;
+    }
+
+    if (i) {
+        error = DNSServiceRegister(&svc_refs[svc_ref_count++],
+                                   0,               // no flags
+                                   0,               // all network interfaces
+                                   name,
+                                   ADISK_SERVICE_TYPE,
+                                   "",            // default domains
+                                   NULL,            // default host name
+                                   htons(port),
+                                   TXTRecordGetLength(&txt_adisk),
+                                   TXTRecordGetBytesPtr(&txt_adisk),
+                                   RegisterReply,           // callback
+                                   NULL);       // no context
+        if (error != kDNSServiceErr_NoError) {
+            LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
+                ADISK_SERVICE_TYPE, error);
             goto fail;
         }
-        if ((dsi->bonjourname = strdup(name)) == NULL) {
-            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
-            goto fail;
+    }
 
+    if (obj->options.mimicmodel) {
+        LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
+            dsi->bonjourname, obj->options.mimicmodel);
+        TXTRecordCreate(&txt_devinfo, 0, NULL);
+        if ( 0 > TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel) ) {
+            LOG ( log_error, logtype_afpd, "Could not create Zeroconf TXTRecord for model");
+            goto fail;
         }
-        LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
-            dsi->bonjourname);
 
         error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                    0,               // no flags
                                    0,               // all network interfaces
-                                   dsi->bonjourname,
-                                   AFP_DNS_SERVICE_TYPE,
+                                   name,
+                                   DEV_INFO_SERVICE_TYPE,
                                    "",            // default domains
                                    NULL,            // default host name
-                                   htons(port),
-                                   0,               // length of TXT
-                                   NULL,            // no TXT
+                                   /*
+                                    * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
+                                    *   "A value of 0 for a port is passed to register placeholder services.
+                                    *    Place holder services are not found  when browsing, but other
+                                    *    clients cannot register with the same name as the placeholder service."
+                                    * We therefor use port 9 which is used by the adisk service type.
+                                    */
+                                   htons(9),
+                                   TXTRecordGetLength(&txt_devinfo),
+                                   TXTRecordGetBytesPtr(&txt_devinfo),
                                    RegisterReply,           // callback
                                    NULL);       // no context
-        if(error != kDNSServiceErr_NoError) {
+        TXTRecordDeallocate(&txt_devinfo);
+        if (error != kDNSServiceErr_NoError) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
-                AFP_DNS_SERVICE_TYPE, error);
+                DEV_INFO_SERVICE_TYPE, error);
             goto fail;
         }
+    } /* if (config->obj.options.mimicmodel) */
 
-        if(i) {
-            error = DNSServiceRegister(&svc_refs[svc_ref_count++],
-                                       0,               // no flags
-                                       0,               // all network interfaces
-                                       dsi->bonjourname,
-                                       ADISK_SERVICE_TYPE,
-                                       "",            // default domains
-                                       NULL,            // default host name
-                                       htons(port),
-                                       TXTRecordGetLength(&txt_adisk),
-                                       TXTRecordGetBytesPtr(&txt_adisk),
-                                       RegisterReply,           // callback
-                                       NULL);       // no context
-            if(error != kDNSServiceErr_NoError) {
-                LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
-                    ADISK_SERVICE_TYPE, error);
-                goto fail;
-            }
-        }
-
-        if (obj->options.mimicmodel) {
-            LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
-                dsi->bonjourname, obj->options.mimicmodel);
-            TXTRecordCreate(&txt_devinfo, 0, NULL);
-            if( 0 > TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel) ) {
-              LOG ( log_error, logtype_afpd, "Could not create Zeroconf TXTRecord for model");
-              goto fail;
-            }
-
-            error = DNSServiceRegister(&svc_refs[svc_ref_count++],
-                                       0,               // no flags
-                                       0,               // all network interfaces
-                                       dsi->bonjourname,
-                                       DEV_INFO_SERVICE_TYPE,
-                                       "",            // default domains
-                                       NULL,            // default host name
-                                       /*
-                                        * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
-                                        *   "A value of 0 for a port is passed to register placeholder services.
-                                        *    Place holder services are not found  when browsing, but other
-                                        *    clients cannot register with the same name as the placeholder service."
-                                        * We therefor use port 9 which is used by the adisk service type.
-                                        */
-                                       htons(9),
-                                       TXTRecordGetLength(&txt_devinfo),
-                                       TXTRecordGetBytesPtr(&txt_devinfo),
-                                       RegisterReply,           // callback
-                                       NULL);       // no context
-            TXTRecordDeallocate(&txt_devinfo);
-            if(error != kDNSServiceErr_NoError) {
-                LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
-                    DEV_INFO_SERVICE_TYPE, error);
-                goto fail;
-            }
-        } /* if (config->obj.options.mimicmodel) */
-    }   /* for config*/
-
-        /*
-         * Now we can create the thread that will poll for the results
-         * and handle the calling of the callbacks
-         */
+    /*
+     * Now we can create the thread that will poll for the results
+     * and handle the calling of the callbacks
+     */
     if(pthread_create(&poller, NULL, polling_thread, NULL) != 0) {
         LOG(log_error, logtype_afpd, "Unable to start mDNS polling thread");
         goto fail;

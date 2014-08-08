@@ -9,13 +9,10 @@ DISTCLEANFILES =
 sbin_PROGRAMS = afpd
 
 afpd_SOURCES = \
-	afp_avahi.c \
 	afp_config.c \
 	afp_dsi.c \
-	afp_mdns.c \
 	afp_options.c \
 	afp_util.c \
-	afp_zeroconf.c \
 	afprun.c \
 	afs.c \
 	appl.c \
@@ -49,12 +46,12 @@ afpd_SOURCES = \
 
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
@@ -101,4 +98,4 @@ endif
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
-	 dircache.h afp_zeroconf.h afp_avahi.h afp_mdns.h afpstats.h afpstats_obj.h
+	 dircache.h afpstats_obj.h
