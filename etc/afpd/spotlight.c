@@ -965,8 +965,7 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
             LOG(log_error, logtype_sl, "error adding results");
             EC_FAIL;
         }
-        if (slq->slq_state == SLQ_STATE_RESULTS
-            || slq->slq_state == SLQ_STATE_FULL) {
+        if (slq->slq_state == SLQ_STATE_FULL) {
             slq->slq_state = SLQ_STATE_RESULTS;
 
             tracker_sparql_cursor_next_async(
