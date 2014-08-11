@@ -42,6 +42,8 @@
 #include "directory.h"
 #include "etc/spotlight/sparql_parser.h"
 
+#include <glib.h>
+
 #define MAX_SL_RESULTS 20
 
 struct slq_state_names {
@@ -1285,6 +1287,9 @@ int spotlight_init(AFPObj *obj)
     /*
      * Tracker uses glibs event dispatching, so we need a mainloop
      */
+#if ((GLIB_MAJOR_VERSION <= 2) && (GLIB_MINOR_VERSION < 36))
+        g_type_init();
+#endif
     sl_ctx->mainloop = g_main_loop_new(NULL, false);
     sl_ctx->cancellable = g_cancellable_new();
 
