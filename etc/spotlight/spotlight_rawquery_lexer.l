@@ -35,6 +35,7 @@ true                                  {yylval.bval = true; return BOOL;}
 \&\&                                  return AND;
 \|\|                                  return OR;
 \=\=                                  return EQUAL;
+\=                                    return EQUAL;
 \!\=                                  return UNEQUAL;
 \<                                    return LT;
 \>                                    return GT;
