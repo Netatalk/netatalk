@@ -148,7 +148,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 
     dnl Tracker SPARQL
     AC_ARG_WITH([tracker-pkgconfig-version],
-      [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL and tracker-miner pkg in pkg-config (default: 0.12)])],
+      [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL pkg-config (default: 0.12)])],
       [ac_cv_tracker_pkg_version=$withval],
       [ac_cv_tracker_pkg_version=$ac_cv_tracker_pkg_version_default]
     )
@@ -161,27 +161,23 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 
     AC_ARG_VAR([PKG_CONFIG_PATH], [Path to additional pkg-config packages])
     PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
-    PKG_CHECK_MODULES([TRACKER_MINER], [tracker-miner-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_miner=yes], [ac_cv_have_tracker_miner=no])
 
-    if test x"$ac_cv_have_tracker_sparql" = x"no" -o x"$ac_cv_have_tracker_miner" = x"no" ; then
+    if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
         if test x"$need_tracker_sparql" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
     else
+        ac_cv_have_tracker=yes
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
         AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
-    fi
-
-    if test x"$ac_cv_have_tracker_sparql" = x"yes" ; then
-       ac_cv_have_tracker=yes
     fi
 
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
     AC_SUBST(TRACKER_MINER_CFLAGS)
     AC_SUBST(TRACKER_MINER_LIBS)
-    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker_sparql" = x"yes"])
+    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
 ])
 
 dnl Whether to disable bundled libevent
