@@ -10,16 +10,13 @@ EXTRA_DIST = test.sh
 CLEANFILES = test.default test.conf
 
 test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
-				$(top_srcdir)/etc/afpd/afp_avahi.c \
 				$(top_srcdir)/etc/afpd/afp_config.c \
 				$(top_srcdir)/etc/afpd/afp_dsi.c \
-				$(top_srcdir)/etc/afpd/afp_mdns.c \
 				$(top_srcdir)/etc/afpd/afp_options.c \
 				$(top_srcdir)/etc/afpd/afp_util.c \
 				$(top_srcdir)/etc/afpd/afprun.c \
 				$(top_srcdir)/etc/afpd/appl.c \
 				$(top_srcdir)/etc/afpd/auth.c \
-				$(top_srcdir)/etc/afpd/afp_zeroconf.c \
 				$(top_srcdir)/etc/afpd/catsearch.c \
 				$(top_srcdir)/etc/afpd/desktop.c \
 				$(top_srcdir)/etc/afpd/dircache.c \
@@ -48,7 +45,7 @@ test_CFLAGS = \
 	-I$(top_srcdir)/etc/afpd \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/sys \
-	@ZEROCONF_CFLAGS@ @GSSAPI_CFLAGS@ @KRB5_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
@@ -58,7 +55,7 @@ test_CFLAGS = \
 
 test_LDADD = \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
+	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 test_LDFLAGS = -export-dynamic
 

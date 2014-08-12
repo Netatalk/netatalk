@@ -98,4 +98,4 @@ endif
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h fce_api_internal.h file.h \
 	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
-	 dircache.h afpstats_obj.h
+	 dircache.h afpstats_obj.h afpstats.h

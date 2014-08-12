@@ -1,3 +1,7 @@
+Changes in 3.1.5
+================
+* FIX: Spotlight: several important fixes
+
 Changes in 3.1.4
 ================
 * FIX: afpd: Hangs in Netatalk which causes it to stop responding to

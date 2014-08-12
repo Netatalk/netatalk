@@ -1,4 +1,4 @@
-Netatalk 3.1.4
+Netatalk 3.1.5
 ==============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,21 +45,9 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.4
+Changes in 3.1.5
 ~~~~~~~~~~~~~~~~
-* FIX: afpd: Hangs in Netatalk which causes it to stop responding to
-       connections, bug #572.
-* NEW: afpd: new option "force xattr with sticky bit = yes|no"
-       (default: no), FR #94
-* UPD: afpd: FCE version 2 with new event types and new config options
-       "fce ignore names" and "fce notify script"
-* UPD: afpd: check for modified included config file, FR #95.
-* UPD: libatalk: logger: remove flood protection and allocate messages
-* UPD: Spotlight: use async Tracker SPARQL API
-* NEW: afpd: new option "case sensitive = yes|no" (default: yes)
-       In spite of being case sensitive as a matter of fact, netatalk
-       3.1.3 and earlier did not notify kCaseSensitive flag to the client.
-       Now, it is notified correctly by default, FR #62.
+* FIX: Spotlight: several important fixes
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
