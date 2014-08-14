@@ -709,7 +709,6 @@ static void tracker_query_cb(GObject      *object,
                              GAsyncResult *res,
                              gpointer      user_data)
 {
-    bool ok;
     GError *error = NULL;
     slq_t *slq = user_data;
 
@@ -735,13 +734,6 @@ static void tracker_query_cb(GObject      *object,
     }
 
     slq->slq_state = SLQ_STATE_RESULTS;
-
-    ok = create_result_handle(slq);
-    if (!ok) {
-        LOG(log_error, logtype_sl, "create_result_handle error");
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
 
     tracker_sparql_cursor_next_async(slq->tracker_cursor,
                                      slq->slq_obj->sl_ctx->cancellable,
@@ -824,6 +816,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     uint64_t result;
     gchar *sparql_query;
     GError *error = NULL;
+    bool ok;
 
     array = talloc_zero(reply, sl_array_t);
 
@@ -907,6 +900,14 @@ static int sl_rpc_openQuery(AFPObj *obj,
     }
 
     slq->slq_state = SLQ_STATE_RUNNING;
+
+    ok = create_result_handle(slq);
+    if (!ok) {
+        LOG(log_error, logtype_sl, "create_result_handle error");
+        slq->slq_state = SLQ_STATE_ERROR;
+        EC_FAIL;
+    }
+
     slq_add(slq);
 
 EC_CLEANUP:
