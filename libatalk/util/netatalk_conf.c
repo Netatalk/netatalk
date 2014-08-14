@@ -1484,7 +1484,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     }
 
     if (Volumes) {
-        if (!volfile_changed(obj))
+        if (!(flags & lv_force) && !volfile_changed(obj))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {

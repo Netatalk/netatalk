@@ -391,6 +391,11 @@ int main(int ac, char **av)
             nologin = 0;
             reloadconfig = 0;
             errno = saveerrno;
+
+            if (server_children) {
+                server_child_kill(server_children, SIGHUP);
+            }
+
             continue;
         }
 
