@@ -194,6 +194,14 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
+
+    if (!(obj.options.flags & OPTION_NOZEROCONF)) {
+        zeroconf_deregister();
+        load_volumes(&obj, lv_all | lv_force);
+        zeroconf_register(&obj);
+        LOG(log_note, logtype_default, "Re-registered with Zeroconf");
+    }
+
     kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
@@ -442,9 +450,8 @@ int main(int argc, char **argv)
 
     /* Now register with zeroconf, we also need the volumes for that */
     if (! (obj.options.flags & OPTION_NOZEROCONF)) {
-        LOG(log_note, logtype_default, "Registering with Zeroconf");
         zeroconf_register(&obj);
-        LOG(log_note, logtype_default, "done");
+        LOG(log_note, logtype_default, "Registered with Zeroconf");
     }
 
     /* run the event loop */

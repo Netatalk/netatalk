@@ -316,16 +316,13 @@ fail:
  * Call this function from inside this thread.
  */
 int av_zeroconf_unregister() {
-    LOG(log_error, logtype_afpd, "av_zeroconf_unregister");
+    LOG(log_debug, logtype_afpd, "av_zeroconf_unregister");
 
     if (ctx) {
-        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_threaded_poll_stop");
         if (ctx->threaded_poll)
             avahi_threaded_poll_stop(ctx->threaded_poll);
-        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_client_free");
         if (ctx->client)
             avahi_client_free(ctx->client);
-        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_threaded_poll_free");
         if (ctx->threaded_poll)
             avahi_threaded_poll_free(ctx->threaded_poll);
         free(ctx);
