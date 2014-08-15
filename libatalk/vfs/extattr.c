@@ -70,6 +70,7 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size);
 static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size);
 static int solaris_unlinkat(int attrdirfd, const char *name);
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode);
+static int solaris_attropenat(int filedes, const char *path, const char *attrpath, int oflag, mode_t mode);
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
 #endif
 
@@ -494,6 +495,41 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 #endif
 }
 
+ssize_t sys_flistxattr (int filedes, const char *path, char *list, size_t size)
+{
+#if defined(HAVE_LISTXATTR)
+	ssize_t ret;
+
+#ifndef XATTR_ADD_OPT
+	ret = listxattr(path, list, size);
+#else
+	int options = 0;
+	ret = listxattr(path, list, size, options);
+#endif
+	return remove_user(ret, list, size);
+
+#elif defined(HAVE_LISTEA)
+	return listea(path, list, size);
+#elif defined(HAVE_EXTATTR_LIST_FILE)
+	extattr_arg arg;
+	arg.path = path;
+	return bsd_attr_list(0, arg, list, size);
+#elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
+	return irix_attr_list(path, 0, list, size, 0);
+#elif defined(HAVE_ATTROPEN)
+	ssize_t ret = -1;
+	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
+	if (attrdirfd >= 0) {
+		ret = solaris_list_xattr(attrdirfd, list, size);
+		close(attrdirfd);
+	}
+	return ret;
+#else
+	errno = ENOSYS;
+	return -1;
+#endif
+}
+
 ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LLISTXATTR)
@@ -554,6 +590,41 @@ int sys_removexattr (const char *path, const char *uname)
 #elif defined(HAVE_ATTROPEN)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
+	if (attrdirfd >= 0) {
+		ret = solaris_unlinkat(attrdirfd, name);
+		close(attrdirfd);
+	}
+	return ret;
+#else
+	errno = ENOSYS;
+	return -1;
+#endif
+}
+
+int sys_fremovexattr (int filedes, const char *path, const char *uname)
+{
+	const char *name = prefix(uname);
+#if defined(HAVE_REMOVEXATTR)
+#ifndef XATTR_ADD_OPT
+	return removexattr(path, name);
+#else
+	int options = 0;
+	return removexattr(path, name, options);
+#endif
+#elif defined(HAVE_REMOVEEA)
+	return removeea(path, name);
+#elif defined(HAVE_EXTATTR_DELETE_FILE)
+	return extattr_delete_file(path, EXTATTR_NAMESPACE_USER, uname);
+#elif defined(HAVE_ATTR_REMOVE)
+	int flags = 0;
+	char *attrname = strchr(name,'.') + 1;
+	
+	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
+
+	return attr_remove(path, attrname, flags);
+#elif defined(HAVE_ATTROPEN)
+	int ret = -1;
+	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
 	if (attrdirfd >= 0) {
 		ret = solaris_unlinkat(attrdirfd, name);
 		close(attrdirfd);
@@ -906,6 +977,32 @@ EC_CLEANUP:
     }
     return eafd;
 }
+
+static int solaris_attropenat(int filedes, const char *path, const char *attrpath, int oflag, mode_t mode)
+{
+    EC_INIT;
+	int eafd = -1;
+
+	if ((eafd = openat(filedes, attrpath, oflag | O_XATTR, mode)) == -1) {
+        switch (errno) {
+        case ENOENT:
+        case EEXIST:
+            EC_FAIL;
+        default:
+            LOG(log_debug, logtype_default, "openat(\"%s\"): %s", fullpathname(path), strerror(errno));
+            EC_FAIL;
+        }
+	}
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (eafd != -1)
+            close(eafd);
+        eafd = -1;
+    }
+    return eafd;
+}
+
 
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 {

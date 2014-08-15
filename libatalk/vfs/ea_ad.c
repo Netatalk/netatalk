@@ -1065,7 +1065,7 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  */
 int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
-    int ret = AFPERR_MISC, fd = -1;
+    int ret = AFPERR_MISC;
     unsigned int count = 0;
     uint32_t uint32;
     size_t toread;

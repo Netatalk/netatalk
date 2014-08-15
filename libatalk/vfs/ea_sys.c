@@ -68,12 +68,20 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 
     LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\"", uname, attruname);
 
-    if ((oflag & O_NOFOLLOW) ) {
-        ret = sys_lgetxattr(uname, attruname, rbuf +4, 0);
+    /* PBaranski fix */
+    if (fd != -1) {
+	LOG(log_debug, logtype_afpd, "sys_get_easize(%s): file is already opened", uname);
+	ret = sys_fgetxattr(fd, attruname, rbuf +4, 0);
+    } else {
+	if ((oflag & O_NOFOLLOW) ) {
+    	    ret = sys_lgetxattr(uname, attruname, rbuf +4, 0);
+	}
+	else {
+    	    ret = sys_getxattr(uname, attruname,  rbuf +4, 0);
+	}
     }
-    else {
-        ret = sys_getxattr(uname, attruname,  rbuf +4, 0);
-    }
+    /* PBaranski fix */
+
     
     if (ret == -1) {
         memset(rbuf, 0, 4);
@@ -125,7 +133,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *    oflag        (r) link and create flag
  *    attruname    (r) name of attribute
  *    maxreply     (r) maximum EA size as of current specs/real-life
- *
+ *    fd           (r) file descriptor
  * Returns: AFP code: AFP_OK on success or appropiate AFP error code
  *
  * Effects:
@@ -146,13 +154,20 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
     LOG(log_debug7, logtype_afpd, "sys_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
 
-    if ((oflag & O_NOFOLLOW) ) {
-        ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply);
+    /* PBaranski fix */
+    if (fd != -1) {
+	LOG(log_debug, logtype_afpd, "sys_get_eacontent(%s): file is already opened", uname);
+	ret = sys_fgetxattr(fd, attruname, rbuf +4, maxreply);
+    } else {
+	if ((oflag & O_NOFOLLOW) ) {
+    	    ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply);
+	}
+	else {
+    	    ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply);
+	}
     }
-    else {
-        ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply);
-    }
-    
+    /* PBaranski fix */
+
     if (ret == -1) {
         memset(rbuf, 0, 4);
         *rbuflen += 4;
@@ -210,17 +225,25 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
     int     ret, len, nlen;
     char    *buf;
     char    *ptr;
-        
+    struct adouble ad, *adp;
+
     buf = malloc(ATTRNAMEBUFSIZ);
     if (!buf)
         return AFPERR_MISC;
 
-    if ((oflag & O_NOFOLLOW)) {
-        ret = sys_llistxattr(uname, buf, ATTRNAMEBUFSIZ);
+    /* PBaranski fix */
+    if ( fd != -1) {
+	LOG(log_debug, logtype_afpd, "sys_list_eas(%s): file is already opened", uname);
+	ret = sys_flistxattr(fd, uname, buf, ATTRNAMEBUFSIZ);
+    } else {
+	if ((oflag & O_NOFOLLOW)) {
+    	    ret = sys_llistxattr(uname, buf, ATTRNAMEBUFSIZ);
+	}
+	else {
+    	    ret = sys_listxattr(uname, buf, ATTRNAMEBUFSIZ);
+	}
     }
-    else {
-        ret = sys_listxattr(uname, buf, ATTRNAMEBUFSIZ);
-    }
+    /* PBaranski fix */
 
     if (ret == -1) switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
@@ -299,12 +322,19 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     else if ((oflag & O_TRUNC) ) 
         attr_flag |= XATTR_REPLACE;
     
-    if ((oflag & O_NOFOLLOW) ) {
-        ret = sys_lsetxattr(uname, attruname,  ibuf, attrsize,attr_flag);
+    /* PBaranski fix */
+    if ( fd != -1) {
+	LOG(log_debug, logtype_afpd, "sys_set_ea(%s): file is already opened", uname);
+	ret = sys_fsetxattr(fd, attruname,  ibuf, attrsize, attr_flag);
+    } else {
+	if ((oflag & O_NOFOLLOW) ) {
+    	    ret = sys_lsetxattr(uname, attruname,  ibuf, attrsize,attr_flag);
+	}
+	else {
+    	    ret = sys_setxattr(uname, attruname,  ibuf, attrsize, attr_flag);
+	}
     }
-    else {
-        ret = sys_setxattr(uname, attruname,  ibuf, attrsize, attr_flag);
-    }
+    /* PBaranski fix */
 
     if (ret == -1) {
         switch(errno) {
@@ -347,6 +377,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
  *    uname        (r) filename
  *    attruname    (r) EA name
  *    oflag        (r) link and create flag
+ *    fd           (r) file descriptor
  *
  * Returns: AFP code: AFP_OK on success or appropiate AFP error code
  *
@@ -358,12 +389,19 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
     int ret;
 
-    if ((oflag & O_NOFOLLOW) ) {
-        ret = sys_lremovexattr(uname, attruname);
+    /* PBaranski fix */
+    if ( fd != -1) {
+	LOG(log_debug, logtype_afpd, "sys_remove_ea(%s): file is already opened", uname);
+	ret = sys_fremovexattr(fd, uname, attruname);
+    } else {
+	if ((oflag & O_NOFOLLOW) ) {
+    	    ret = sys_lremovexattr(uname, attruname);
+	}
+	else {
+    	    ret = sys_removexattr(uname, attruname);
+	}
     }
-    else {
-        ret = sys_removexattr(uname, attruname);
-    }
+    /* PBaranski fix */
 
     if (ret == -1) {
         switch(errno) {

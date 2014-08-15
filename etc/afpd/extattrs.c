@@ -73,7 +73,7 @@ static void hexdump(void *m, size_t l) {
 */
 int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    int                 ret, oflag = 0, adflags = 0;
+    int                 ret, oflag = 0, adflags = 0, fd = -1;
     uint16_t            vid, bitmap, uint16;
     uint32_t            did, maxreply, tmpattr;
     struct vol          *vol;
@@ -81,6 +81,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct path         *s_path;
     struct stat         *st;
     struct adouble      ad, *adp = NULL;
+    struct ofork	*opened = NULL;
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
 
@@ -147,11 +148,21 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
           via FPGetExtAttr !
         */
 
-        if (S_ISDIR(st->st_mode))
-            adflags = ADFLAGS_DIR;
-
         adp = &ad;
         ad_init(adp, vol);
+
+        if (path_isadir(s_path)) {
+	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
+            adflags = ADFLAGS_DIR;
+	} else {
+	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a file", uname);
+	    opened = of_findname(vol, s_path);
+	    if (opened) {
+		adp = opened->of_ad;
+		fd = ad_meta_fileno(adp);
+	    }
+	}
+
         if (ad_metadata(uname, adflags, adp) != 0 ) {
             switch (errno) {
             case ENOENT:
@@ -183,8 +194,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 attrbuflen += strlen(ea_resourcefork) + 1;
             }
         }
-        
-        ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag);
+	
+        ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag, fd);
 
         switch (ret) {
         case AFPERR_BADTYPE:
@@ -248,13 +259,15 @@ static char attrmname[256];
 
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    int                 ret, oflag = 0;
+    int                 ret, oflag = 0, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, maxreply;
     char                attruname[256];
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
+    struct adouble	ad, *adp = NULL;
+    struct ofork	*opened = NULL;
 
 
     *rbuflen = 0;
@@ -315,22 +328,33 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     rbuf += sizeof(bitmap);
     *rbuflen += sizeof(bitmap);
 
+    if (path_isadir(s_path)) {
+	LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a dir", s_path->u_name);
+    } else {
+	LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a file", s_path->u_name);
+	opened = of_findname(vol, s_path);
+	if (opened) {
+	    adp = opened->of_ad;
+	    fd = ad_meta_fileno(adp);
+	}
+    }
+
     /*
       Switch on maxreply:
       if its 0 we must return the size of the requested attribute,
       if its non 0 we must return the attribute.
     */
     if (maxreply == 0)
-        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname);
+        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, fd);
     else
-        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, maxreply);
+        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, maxreply, fd);
 
     return ret;
 }
 
 int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    int                 oflag = 0, ret;
+    int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, attrsize;
     char                attruname[256];
@@ -338,6 +362,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
+    struct adouble	ad, *adp = NULL;
+    struct ofork	*opened = NULL;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -377,6 +403,18 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         return AFPERR_NOOBJ;
     }
 
+    if (path_isadir(s_path)) {
+	LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a dir", s_path->u_name);
+    } else {
+	LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a file", s_path->u_name);
+	opened = of_findname(vol, s_path);
+	if (opened) {
+	    adp = opened->of_ad;
+	    fd = ad_meta_fileno(adp);
+	}
+    }
+
+
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
@@ -403,20 +441,22 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
     LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u", s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
 
-    ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize, oflag);
+    ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize, oflag, fd);
 
     return ret;
 }
 
 int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    int                 oflag = 0, ret;
+    int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did;
     char                attruname[256];
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
+    struct adouble	ad, *adp = NULL;
+    struct ofork	*opened = NULL;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -444,8 +484,19 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_remextattr: cname error: %s", strerror(errno));
         return AFPERR_NOOBJ;
+    }
+
+    if (path_isadir(s_path)) {
+	LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a dir", s_path->u_name);
+    } else {
+	LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a file", s_path->u_name);
+	opened = of_findname(vol, s_path);
+	if (opened) {
+	    adp = opened->of_ad;
+	    fd = ad_meta_fileno(adp);
+	}
     }
 
     if ((unsigned long)ibuf & 1)
@@ -464,7 +515,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, to_stringz(ibuf, attrnamelen));
 
-    ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag);
+    ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
 
     return ret;
 }

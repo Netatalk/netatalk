@@ -5,6 +5,7 @@ Changes in 3.1.7
 * FIX: netatalk: fix a crash on Solaris when registering with mDNS
 * FIX: netatalk: SIGHUP would kill the process instead of being resent
        to the other Netatalk processes, bug #579
+* FIX: afpd: Solaris locking problem, bug #559
 
 Changes in 3.1.6
 ================

@@ -1083,7 +1083,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     int         size = 0;
     int         toUTF8 = 0;
 
-    LOG(log_maxdebug, logtype_afpd, "came('%s'): {start}", cfrombstr(dir->d_fullpath));
+    LOG(log_maxdebug, logtype_afpd, "cname('%s'): {start}", cfrombstr(dir->d_fullpath));
 
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
@@ -1286,7 +1286,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         ret.d_dir = dir;
     }
 
-    LOG(log_debug, logtype_afpd, "came('%s') {end: curdir:'%s', path:'%s'}",
+    LOG(log_debug, logtype_afpd, "cname('%s') {end: curdir:'%s', path:'%s'}",
         cfrombstr(dir->d_fullpath),
         cfrombstr(curdir->d_fullpath),
         ret.u_name);
