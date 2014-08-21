@@ -1537,7 +1537,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
 
     EC_ZERO_LOG( readvolfile(obj, pwresult) );
 
-    struct vol *p, *prevvol;
+    struct vol *nextvol, *prevvol;
 
     vol = Volumes;
     prevvol = NULL;
@@ -1545,17 +1545,18 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     while (vol) {
         if (vol->v_deleted && !(vol->v_flags & AFPVOL_OPEN)) {
             LOG(log_debug, logtype_afpd, "load_volumes: deleted: %s", vol->v_localname);
-            if (prevvol)
+            nextvol = vol->v_next;
+            if (prevvol) {
                 prevvol->v_next = vol->v_next;
-            else
-                Volumes = NULL;
-            p = vol->v_next;
+            } else {
+                Volumes = nextvol;
+            }
             volume_free(vol);
-            vol = p;
-        } else {
-            prevvol = vol;
-            vol = vol->v_next;
+            vol = nextvol;
+            continue;
         }
+        prevvol = vol;
+        vol = vol->v_next;
     }
 
 EC_CLEANUP:
