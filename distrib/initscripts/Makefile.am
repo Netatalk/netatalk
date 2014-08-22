@@ -93,6 +93,28 @@ uninstall-startup:
 endif
 
 #
+# checking for "Debian" style systemd scripts:
+#
+
+if USE_DEBIAN_SYSTEMD
+
+servicedir	= $(INIT_DIR)
+service_DATA	= netatalk.service
+
+netatalk.service: service.systemd
+	cp -f service.systemd netatalk.service
+
+install-data-hook:
+	-systemctl daemon-reload
+
+uninstall-startup:
+	-systemctl disable $(service_DATA)
+	rm -f $(DESTDIR)$(servicedir)/netatalk.service
+	-systemctl daemon-reload
+
+endif
+
+#
 # checking for "SuSE" style sysv scripts:
 #
 
@@ -178,7 +200,7 @@ endif
 # checking for "Debian" style sysv scripts:
 #
 
-if USE_DEBIAN
+if USE_DEBIAN_SYSV
 
 sysvdir = $(INIT_DIR)
 sysv_SCRIPTS = netatalk

@@ -480,7 +480,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|solaris|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian-sysv|debian-systemd|solaris|systemd]]],
                 init_style="$withval", init_style=none
     )
     case "$init_style" in 
@@ -515,9 +515,16 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    ac_cv_init_dir="/etc/rc.d"
         ;;
     "debian")
-	    AC_MSG_RESULT([enabling debian-style initscript support])
+	    AC_MSG_ERROR([--with-init-style=debian is obsoleted. Use debian-sysv or debian-systemd.])
+        ;;
+    "debian-sysv")
+	    AC_MSG_RESULT([enabling debian-style sysv initscript support])
 	    ac_cv_init_dir="/etc/init.d"
         ;;
+    "debian-systemd")
+	    AC_MSG_RESULT([enabling debian-style systemd support])
+	    ac_cv_init_dir="/lib/systemd/system"
+	    ;;
     "solaris")
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
 	    ac_cv_init_dir="/lib/svc/manifest/network/"
@@ -539,8 +546,9 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
     AM_CONDITIONAL(USE_GENTOO, test x$init_style = xgentoo)
-    AM_CONDITIONAL(USE_DEBIAN, test x$init_style = xdebian)
+    AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)
     AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
+    AM_CONDITIONAL(USE_DEBIAN_SYSTEMD, test x$init_style = xdebian-systemd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
     AC_ARG_WITH(init-dir,
