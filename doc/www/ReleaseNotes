@@ -1,4 +1,4 @@
-Netatalk 3.1.5
+Netatalk 3.1.6
 ==============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,9 +45,15 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.5
+Changes in 3.1.6
 ~~~~~~~~~~~~~~~~
-* FIX: Spotlight: several important fixes
+* FIX: Spotlight: fix for long running queries
+* UPD: afpd: distribute SIGHUP from parent afpd to children and force
+       reload shares
+* FIX: netatalk: refresh Zeroconf registration when receiving SIGHUP
+* NEW: configure option "--with-init-style=debian-systemd" for Debian
+       8 jessieand later.  "--with-init-style=debian" is renamed
+       "--with-init-style=debian-sysv".
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~

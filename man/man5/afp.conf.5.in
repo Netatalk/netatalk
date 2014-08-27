@@ -552,7 +552,7 @@ Advanced permission control that deals with ACLs\&.
 .\}
 
 \fBignore\fR
-\- UNIX chmod() requests are completely ignored
+\- UNIX chmod() requests are completely ignored, use this option to allow the parent directory\*(Aqs ACL inheritance full control over new items\&.
 .RE
 .sp
 .RS 4
