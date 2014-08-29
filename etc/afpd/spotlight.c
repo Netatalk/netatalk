@@ -402,12 +402,25 @@ static bool create_result_handle(slq_t *slq)
 static bool add_results(sl_array_t *array, slq_t *slq)
 {
     sl_filemeta_t *fm;
-    uint64_t status = 0;
+    uint64_t status;
 
     /* FileMeta */
     fm = talloc_zero(array, sl_filemeta_t);
     if (!fm) {
         return false;
+    }
+
+    switch (slq->slq_state) {
+    case SLQ_STATE_RUNNING:
+        /*
+         * Wtf, why 35? Taken from an AFP capture.
+         */
+        status = 35;
+        break;
+
+    default:
+        status = 0;
+        break;
     }
 
     dalloc_add_copy(array, &status, uint64_t);
