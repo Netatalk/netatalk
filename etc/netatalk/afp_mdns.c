@@ -18,7 +18,6 @@
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/dsi.h>
 #include <atalk/unicode.h>
 #include <atalk/netatalk_conf.h>
 
@@ -160,7 +159,6 @@ static void unregister_stuff() {
 static void register_stuff(const AFPObj *obj) {
     uint                                        port;
     const struct vol                *volume;
-    DSI                                         *dsi;
     char                                        name[MAXINSTANCENAMELEN+1];
     DNSServiceErrorType         error;
     TXTRecordRef                        txt_adisk;
@@ -234,8 +232,6 @@ static void register_stuff(const AFPObj *obj) {
         LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
         goto fail;
     }
-    LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
-        dsi->bonjourname);
 
     error = DNSServiceRegister(&svc_refs[svc_ref_count++],
                                0,               // no flags
@@ -276,8 +272,8 @@ static void register_stuff(const AFPObj *obj) {
     }
 
     if (obj->options.mimicmodel) {
-        LOG(log_info, logtype_afpd, "Registering server '%s' with model '%s'",
-            dsi->bonjourname, obj->options.mimicmodel);
+        LOG(log_info, logtype_afpd, "Registering server as model '%s'",
+            obj->options.mimicmodel);
         TXTRecordCreate(&txt_devinfo, 0, NULL);
         if ( 0 > TXTRecordPrintf(&txt_devinfo, "model", obj->options.mimicmodel) ) {
             LOG ( log_error, logtype_afpd, "Could not create Zeroconf TXTRecord for model");
