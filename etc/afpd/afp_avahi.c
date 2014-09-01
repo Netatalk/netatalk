@@ -94,7 +94,9 @@ static void register_stuff(void) {
 
         /* AFP server */
         for (config = ctx->configs; config; config = config->next) {
-
+            if (config->obj.proto == AFPPROTO_ASP) {
+                continue;
+            }
             dsi = (DSI *)config->obj.handle;
             port = getip_port((struct sockaddr *)&dsi->server);
 
