@@ -269,6 +269,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     int dummy[2];
 	switch ((pid = fork())) {
 	case 0 : /* child */
+	  parent_or_child = 1;
 	  server_reset_signal();
 	  /* free/close some things */
 	  for (i = 0; i < children->nsessions; i++ ) {
