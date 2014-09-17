@@ -65,7 +65,7 @@ static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
 static struct event_base *base;
-struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *timer_ev;
+struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *sighup_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path;
 
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
 
     sigterm_ev = event_new(base, SIGTERM, EV_SIGNAL, sigterm_cb, NULL);
     sigquit_ev = event_new(base, SIGQUIT, EV_SIGNAL | EV_PERSIST, sigquit_cb, NULL);
-    sigquit_ev = event_new(base, SIGHUP,  EV_SIGNAL | EV_PERSIST, sighup_cb, NULL);
+    sighup_ev = event_new(base, SIGHUP,  EV_SIGNAL | EV_PERSIST, sighup_cb, NULL);
     sigchld_ev = event_new(base, SIGCHLD, EV_SIGNAL | EV_PERSIST, sigchld_cb, NULL);
     timer_ev = event_new(base, -1, EV_PERSIST, timer_cb, NULL);
 
@@ -411,6 +411,7 @@ int main(int argc, char **argv)
     event_add(sigterm_ev, NULL);
     event_add(sigquit_ev, NULL);
     event_add(sigchld_ev, NULL);
+    event_add(sighup_ev, NULL);
     event_add(timer_ev, &tv);
 
     sigfillset(&blocksigs);
