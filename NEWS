@@ -14,7 +14,8 @@ Changes in 3.1.6
 * UPD: afpd: distribute SIGHUP from parent afpd to children and force
        reload shares
 * FIX: netatalk: refresh Zeroconf registration when receiving SIGHUP
-* NEW: configure option "--with-init-style=debian-systemd" for Debian 8 jessieand later.
+* NEW: configure option "--with-init-style=debian-systemd" for Debian 8 jessie
+       and later.
        "--with-init-style=debian" is renamed "--with-init-style=debian-sysv".
 
 Changes in 3.1.5
