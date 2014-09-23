@@ -71,7 +71,29 @@ struct charset_functions charset_utf8_mac =
 	NULL, NULL
 };
 
+/* The Unicode Standard Version 6.2 – Core Specification          */
+/* http://www.unicode.org/versions/Unicode6.2.0/ch03.pdf          */
+/*                                                                */
+/* Scalar Value               First    Second   Third    Fourth   */
+/* 00000000 0xxxxxxx          0xxxxxxx                            */
+/* 00000yyy yyxxxxxx          110yyyyy 10xxxxxx                   */
+/* zzzzyyyy yyxxxxxx          1110zzzz 10yyyyyy 10xxxxxx          */
+/* 000uuuuu zzzzyyyy yyxxxxxx 11110uuu 10uuzzzz 10yyyyyy 10xxxxxx */
+
+
 /* ------------------- Convert from UTF-8 to UTF-16 -------------------*/
+
+/* Code Points        First   Second  Third    Fourth  */
+/* U+0000..U+007F      00..7F                          */
+/* U+0080..U+07FF      C2..DF  80..BF                  */
+/* U+0800..U+0FFF      E0      A0..BF  80..BF          */
+/* U+1000..U+CFFF      E1..EC  80..BF  80..BF          */
+/* U+D000..U+D7FF      ED      80..9F  80..BF          */
+/* U+E000..U+FFFF      EE..EF  80..BF  80..BF          */
+/* U+10000..U+3FFFF    F0      90..BF  80..BF  80..BF  */
+/* U+40000..U+FFFFF    F1..F3  80..BF  80..BF  80..BF  */
+/* U+100000..U+10FFFF  F4      80..8F  80..BF  80..BF  */
+
 static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			 char **outbuf, size_t *outbytesleft)
 {
@@ -85,33 +107,34 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 
 		/* Arrange conditionals in the order of most frequent occurrence 
 		 * for users of Latin-based chars */
-		if ((c[0] & 0x80) == 0) {
+		if ((c[0] & 0x80) == 0) {                                /* 0xxx xxxx */ /* 1 byte  */
 			uc = c[0];
-		} else if ((c[0] & 0xe0) == 0xc0) {
-			if (*inbytesleft < 2) {
-				LOG(log_debug, logtype_default, "short utf8 char");
-				goto badseq;
-			}
+		} else if ((c[0] & 0xe0) == 0xc0) {                             /* 110y yyyy */ /* 2 bytes */
+			if (*inbytesleft < 2) goto inval;
+			if (c[0] < 0xc2) goto ilseq;                                /* C2-DF */
+			if ((c[1] & 0xc0) != 0x80) goto ilseq;                      /* 80-BF */
 			uc = (ucs2_t) (((c[0] & 0x1f) << 6) | GETUCVAL(c[1],0)) ;
 			len = 2;
-		} else if ((c[0] & 0xf0) == 0xe0) {
-			if (*inbytesleft < 3) {
-				LOG(log_debug, logtype_default, "short utf8 char");
-				goto badseq;
-			}
+		} else if ((c[0] & 0xf0) == 0xe0) {                                  /* 1110 zzzz */ /* 3 bytes */
+			if (*inbytesleft < 3) goto inval;
+			if (!((c[0] == 0xe0                && (c[1] & 0xe0) == 0xa0)  || /* E0    A0-BF*/
+				  (0xe1 <= c[0] && c[0] <= 0xec && (c[1] & 0xc0) == 0x80) || /* E1-EC 80-BF */
+				  (c[0] == 0xed                 && (c[1] & 0xe0) == 0x80) || /* ED    80-9F */
+				  ((c[0] & 0xfe) == 0xee        && (c[1] & 0xc0) == 0x80)))  /* EE-EF 80-BF */
+				goto ilseq;
+			if ((c[2] & 0xc0) != 0x80) goto ilseq;                           /* 80-BF */
 			uc = (ucs2_t) (((c[0] & 0x0f) << 12) | GETUCVAL(c[1],6) | GETUCVAL(c[2],0)) ;
 			len = 3;
-		} else if ((c[0] & 0xf8) == 0xf0) {
-			/* 4 bytes, which happens for surrogate pairs only */
-			if (*inbytesleft < 4) {
-				LOG(log_debug, logtype_default, "short utf8 char");
-				goto badseq;
-			}
-			if (*outbytesleft < 4) {
-				LOG(log_debug, logtype_default, "short ucs-2 write");
-				errno = E2BIG;
-				return -1;
-			}
+		} else if ((c[0] & 0xf8) == 0xf0) {                                         /* 1111 0uuu */ /* 4 bytes */
+			if (*inbytesleft < 4) goto inval;
+			if (*outbytesleft < 4) goto toobig;
+			if (c[0] > 0xf4) goto ilseq;                                            /* happens for surrogate pairs only */
+			if (!((c[0] == 0xf0                 && 0x90 <= c[1] && c[1] <= 0xbf) || /* F0    90-BF */
+				  (0xf1 <= c[0] && c[0] <= 0xf3 && (c[1] & 0xc0) == 0x80) ||        /* F1-F3 80-BF */
+				  (c[0] == 0xf4                 && (c[1] & 0xc0) == 0x80)))         /* F4    80-8F */
+				goto ilseq;
+			if ((c[2] & 0xc0) != 0x80) goto ilseq;                                  /* 80-BF */
+			if ((c[3] & 0xc0) != 0x80) goto ilseq;                                  /* 80-BF */
 			codepoint = ((c[0] & 0x07) << 18) | GETUCVAL(c[1],12) |
 				GETUCVAL(c[2],6) |  GETUCVAL(c[3],0);
 			SSVAL(*outbuf,0,(((codepoint - 0x10000) >> 10) + 0xD800)); /* hi  */
@@ -122,10 +145,8 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			(*outbytesleft) -= 4;
 			(*outbuf) += 4;
 			continue;
-		}
-		else {
-			errno = EINVAL;
-			return -1;
+		} else {
+			goto ilseq;
 		}
 
 		SSVAL(*outbuf,0,uc);
@@ -136,13 +157,23 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 	}
 
 	if (*inbytesleft > 0) {
-		errno = E2BIG;
-		return -1;
+		goto toobig;
 	}
-	
+
 	return 0;
 
-badseq:
+toobig:
+	LOG(log_debug, logtype_default, "short ucs-2 write");
+	errno = E2BIG;
+	return -1;
+
+ilseq:
+	LOG(log_debug, logtype_default, "malformed utf8 sequence");
+	errno = EILSEQ;
+	return -1;
+
+inval:
+	LOG(log_debug, logtype_default, "short utf8 char");
 	errno = EINVAL;
 	return -1;
 }
