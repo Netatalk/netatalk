@@ -616,7 +616,7 @@ static int check_orphaned(const char *name)
     struct stat sb;
 
     if (strlen(name) < 3)
-        return;
+        return 0;
 
     rc = lstat(&name[2], &sb);
 
