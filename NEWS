@@ -7,6 +7,7 @@ Changes in 3.1.7
        to the other Netatalk processes, bug #579
 * FIX: afpd: Solaris locking problem, bug #559
 * FIX: Handling of malformed UTF8 strings, bug #524
+* FIX: afpd: umask handling, bug #576
 
 Changes in 3.1.6
 ================

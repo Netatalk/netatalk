@@ -229,7 +229,8 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);
 
-    mode |= (vol->v_dperm | DIRBITS) & ~vol->v_umask;
+    mode |= vol->v_dperm | DIRBITS;
+    mode &= ~vol->v_umask;
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
