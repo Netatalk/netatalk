@@ -172,6 +172,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_base_loopexit(base, &tv);
     event_del(sigterm_ev);
     event_del(sigquit_ev);
+    event_del(sighup_ev);
     event_del(timer_ev);
 
 #ifdef HAVE_TRACKER
