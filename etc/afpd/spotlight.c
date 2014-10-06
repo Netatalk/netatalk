@@ -830,6 +830,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     gchar *sparql_query;
     GError *error = NULL;
     bool ok;
+    sl_array_t *scope_array;
 
     array = talloc_zero(reply, sl_array_t);
 
@@ -886,6 +887,20 @@ static int sl_rpc_openQuery(AFPObj *obj,
         EC_FAIL;
     }
     slq->slq_reqinfo = talloc_steal(slq, reqinfo);
+
+    scope_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
+                                       "kMDScopeArray");
+    if (scope_array == NULL) {
+        slq->slq_scope = talloc_strdup(slq, v->v_path);
+    } else {
+        slq->slq_scope = talloc_strdup(slq, scope_array->dd_talloc_array[0]);
+    }
+    if (slq->slq_scope == NULL) {
+        LOG(log_error, logtype_sl, "failed to setup search scope");
+        EC_FAIL;
+    }
+
+    LOG(log_debug, logtype_sl, "Search scope: \"%s\"", slq->slq_scope);
 
     cnids = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                  "kMDQueryItemArray");

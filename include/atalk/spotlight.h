@@ -91,6 +91,7 @@ typedef struct _slq_t {
     slq_state_t       slq_state;          /* State                            */
     AFPObj           *slq_obj;            /* global AFPObj handle             */
     const struct vol *slq_vol;            /* volume handle                    */
+    char             *slq_scope;          /* search scope                     */
     time_t            slq_time;           /* timestamp received query         */
     uint64_t          slq_ctx1;           /* client context 1                 */
     uint64_t          slq_ctx2;           /* client context 2                 */

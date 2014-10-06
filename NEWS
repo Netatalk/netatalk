@@ -8,6 +8,7 @@ Changes in 3.1.7
 * FIX: afpd: Solaris locking problem, bug #559
 * FIX: Handling of malformed UTF8 strings, bug #524
 * FIX: afpd: umask handling, bug #576
+* FIX: Spotlight: Limiting searches to subfolders, bug #581
 
 Changes in 3.1.6
 ================

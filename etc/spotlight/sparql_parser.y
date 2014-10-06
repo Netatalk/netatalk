@@ -79,7 +79,7 @@ expr                           {
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
                                  "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
-                                 $1, ssp_slq->slq_vol->v_path, result_limit);
+                                 $1, ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
 }
 ;
@@ -352,9 +352,7 @@ int main(int argc, char **argv)
     }
 
     ssp_slq = talloc_zero(NULL, slq_t);
-    struct vol *vol = talloc_zero(ssp_slq, struct vol);
-    vol->v_path = "/Volumes/test";
-    ssp_slq->slq_vol = vol;
+    ssp_slq->slq_scope = talloc_strdup(ssp_slq, "/Volumes/test");
     ssp_slq->slq_allow_expr = true;
     sparqlvar = 'a';
 
