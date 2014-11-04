@@ -17,3 +17,9 @@ install-exec-hook:
 	@-@NETA_LDCONFIG@
 	@printf "done\n"
 endif
+
+if DEVELOPER
+abi-clean:
+	@echo "Removing ABI file libatalk/libatalk-$(NETATALK_VERSION).abi"
+	@rm -f libatalk/libatalk-$(NETATALK_VERSION).abi
+endif
