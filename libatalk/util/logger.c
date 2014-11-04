@@ -266,7 +266,7 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
         type_configs[logtype].fd = open(filename,
                                         O_CREAT | O_WRONLY | O_APPEND,
                                         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        become_root();
+        unbecome_root();
     }
 
     /* Check for error opening/creating logfile */
