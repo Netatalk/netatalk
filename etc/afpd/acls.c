@@ -588,7 +588,12 @@ static int posix_acls_to_uaperms(const AFPObj *obj, const char *path, struct sta
     u_char acl_rights = 0x00;
     u_char mask = 0xff;
 
-    EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
+    acl = acl_get_file(path, ACL_TYPE_ACCESS);
+    if (acl == NULL) {
+        LOG(log_debug, logtype_afpd, "acl_get_file: %s: %s",
+            path, strerror(errno));
+        EC_FAIL;
+    }
 
     /* iterate through all ACEs */
     while (acl_get_entry(acl, entry_id, &entry) == 1) {
@@ -1701,15 +1706,19 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
     /* Change owner: dont even try */
     if (bitmap & kFileSec_UUID) {
-        LOG(log_note, logtype_afpd, "afp_setacl: change owner request, discarded");
-        ret = AFPERR_ACCESS;
+        LOG(log_debug, logtype_afpd,
+            "afp_setacl(\"%s\"): ignoring change owner request",
+            fullpathname(s_path->u_name));
+        ret = AFP_OK;
         ibuf += UUID_BINSIZE;
     }
 
     /* Change group: certain changes might be allowed, so try it. FIXME: not implemented yet. */
     if (bitmap & kFileSec_UUID) {
-        LOG(log_note, logtype_afpd, "afp_setacl: change group request, not supported");
-        ret = AFPERR_PARAM;
+        LOG(log_debug, logtype_afpd,
+            "afp_setacl(\"%s\"): ignoring change group request",
+            fullpathname(s_path->u_name));
+        ret = AFP_OK;
         ibuf += UUID_BINSIZE;
     }
 
@@ -1773,7 +1782,10 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
 #endif
 
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acls_to_uaperms(obj, path, st, ma));
+    ret = posix_acls_to_uaperms(obj, path, st, ma);
+    if (ret != 0) {
+        EC_FAIL;
+    }
 #endif
 
     LOG(log_maxdebug, logtype_afpd, "resulting user maccess: 0x%02x group maccess: 0x%02x", ma->ma_user, ma->ma_group);

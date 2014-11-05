@@ -11,6 +11,8 @@ Changes in 3.1.7
 * FIX: Spotlight: Limiting searches to subfolders, bug #581
 * FIX: afpd: reloading logging config may result in privilege
        escalation in afpd processes
+* FIX: afpd: ACL related error messages, now logged with loglevel
+       debug instead of error
 
 Changes in 3.1.6
 ================
