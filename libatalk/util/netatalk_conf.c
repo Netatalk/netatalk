@@ -607,6 +607,7 @@ static struct vol *creatvol(AFPObj *obj,
     char        *p, *q;
     bstring     dbpath = NULL;
     bstring     global_path_tmp = NULL;
+    bstring     cmd = NULL;
 
     strlcpy(path, path_in, MAXPATHLEN);
 
@@ -1028,6 +1029,21 @@ static struct vol *creatvol(AFPObj *obj,
             volume->v_localname, volume->v_uuid);
     }
 
+#ifdef HAVE_TRACKER
+    if (STRCMP(section, ==, INISEC_HOMES) && IS_AFP_SESSION(obj)) {
+        if (volume->v_flags & AFPVOL_SPOTLIGHT) {
+            setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
+            setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
+            setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+            setenv("TRACKER_USE_LOG_FILES", "1", 0);
+            system(TRACKER_PREFIX "/bin/tracker-control -s");
+            cmd = bformat("tracker-control -f \"%s\"", path);
+            LOG(log_debug, logtype_sl, "creatvol: sl (re)indexing home: %s", bdata(cmd));
+            system(bdata(cmd));
+        }
+    }
+#endif
+
     /* no errors shall happen beyond this point because the cleanup would mess the volume chain up */
     volume->v_next = Volumes;
     Volumes = volume;
@@ -1039,6 +1055,8 @@ EC_CLEANUP:
         bdestroy(dbpath);
     if (global_path_tmp)
         bdestroy(global_path_tmp);
+    if (cmd)
+        bdestroy(cmd);
     if (ret != 0) {
         if (volume)
             volume_free(volume);
