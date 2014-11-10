@@ -13,6 +13,7 @@ Changes in 3.1.7
        escalation in afpd processes
 * FIX: afpd: ACL related error messages, now logged with loglevel
        debug instead of error
+* FIX: cnid_metad: fix tsockfd_create() return value on error
 
 Changes in 3.1.6
 ================

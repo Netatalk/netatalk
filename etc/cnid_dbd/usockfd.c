@@ -86,7 +86,7 @@ int tsockfd_create(char *host, char *port, int backlog)
 
     if ((ret = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
         LOG(log_error, logtype_cnid, "tsockfd_create: getaddrinfo: %s\n", gai_strerror(ret));
-        return 0;
+        return -1;
     }
 
     /* create a socket */
