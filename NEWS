@@ -14,6 +14,7 @@ Changes in 3.1.7
 * FIX: afpd: ACL related error messages, now logged with loglevel
        debug instead of error
 * FIX: cnid_metad: fix tsockfd_create() return value on error
+* FIX: CNID/MySQL: volume table name generation, bug #566.
 
 Changes in 3.1.6
 ================

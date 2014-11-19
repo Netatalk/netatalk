@@ -815,18 +815,19 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     return cdb;
 }
 
-static const char *printuuid(const unsigned char *uuid) {
-    static char uuidstring[64];
+/* Return allocated UUID string with dashes stripped */
+static char *uuid_strip_dashes(const char *uuid) {
+    static char stripped[33];
     int i = 0;
-    unsigned char c;
 
-    while ((c = *uuid)) {
+    while (*uuid && i < 32) {
+        if (*uuid != '-') {
+            stripped[i++] = *uuid;
+        }
         uuid++;
-        sprintf(uuidstring + i, "%02X", c);
-        i += 2;
     }
-    uuidstring[i] = 0;
-    return uuidstring;
+    stripped[i] = 0;
+    return strdup(stripped);
 }
 
 /* ---------------------- */
@@ -843,7 +844,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     EC_NULL( db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)) );
     cdb->cnid_db_private = db;
 
-    db->cnid_mysql_voluuid_str = strdup(printuuid(vol->v_uuid));
+    EC_NULL( db->cnid_mysql_voluuid_str = uuid_strip_dashes(vol->v_uuid) );
 
     /* Initialize and connect to MySQL server */
     EC_NULL( db->cnid_mysql_con = mysql_init(NULL) );
