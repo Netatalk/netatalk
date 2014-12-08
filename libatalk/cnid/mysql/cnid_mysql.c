@@ -109,7 +109,7 @@ static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 
     EC_NULL( db->cnid_lookup_stmt = mysql_stmt_init(db->cnid_mysql_con) );
     EC_NEG1( asprintf(&sql,
-                      "SELECT Id,Did,Name,DevNo,InodeNo FROM %s "
+                      "SELECT Id,Did,Name,DevNo,InodeNo FROM `%s` "
                       "WHERE (Name=? AND Did=?) OR (DevNo=? AND InodeNo=?)",
                       db->cnid_mysql_voluuid_str) );
     EC_ZERO_LOG( mysql_stmt_prepare(db->cnid_lookup_stmt, sql, strlen(sql)) );
@@ -128,7 +128,7 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
 
     EC_NULL( db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con) );
     EC_NEG1( asprintf(&sql,
-                      "INSERT INTO %s (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
+                      "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
                       db->cnid_mysql_voluuid_str) );
 
     add_param[0].buffer_type    = MYSQL_TYPE_STRING;
@@ -164,7 +164,7 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
 
     EC_NULL( db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con) );
     EC_NEG1( asprintf(&sql,
-                      "INSERT INTO %s (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
+                      "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
                       db->cnid_mysql_voluuid_str) );
 
     put_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
@@ -253,7 +253,7 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
     LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): BEGIN", ntohl(id));
     
     EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                "DELETE FROM %s WHERE Id=%" PRIu32,
+                                "DELETE FROM `%s` WHERE Id=%" PRIu32,
                                 db->cnid_mysql_voluuid_str,
                                 ntohl(id)) );
 
@@ -318,14 +318,14 @@ int cnid_mysql_update(struct _cnid_db *cdb,
 
     do {
         EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM %s WHERE Id=%" PRIu32,
+                                    "DELETE FROM `%s` WHERE Id=%" PRIu32,
                                     db->cnid_mysql_voluuid_str,
                                     ntohl(id)) );
         EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM %s WHERE Did=%" PRIu32 " AND Name='%s'",
+                                    "DELETE FROM `%s` WHERE Did=%" PRIu32 " AND Name='%s'",
                                     db->cnid_mysql_voluuid_str, ntohl(did), name) );
         EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM %s WHERE DevNo=%" PRIu64 " AND InodeNo=%" PRIu64,
+                                    "DELETE FROM `%s` WHERE DevNo=%" PRIu64 " AND InodeNo=%" PRIu64,
                                     db->cnid_mysql_voluuid_str, dev, ino) );
 
         stmt_param_id = ntohl(id);
@@ -629,7 +629,7 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t
         ntohl(did),name);
 
     EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                "SELECT Id FROM %s "
+                                "SELECT Id FROM `%s` "
                                 "WHERE Name='%s' AND Did=%" PRIu32,
                                 db->cnid_mysql_voluuid_str,
                                 name,
@@ -670,7 +670,7 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t 
 
     EC_NEG1( cnid_mysql_execute(
                  db->cnid_mysql_con,
-                 "SELECT Did,Name FROM %s WHERE Id=%" PRIu32,
+                 "SELECT Did,Name FROM `%s` WHERE Id=%" PRIu32,
                  db->cnid_mysql_voluuid_str, ntohl(*id)) );
 
     EC_NULL( result = mysql_store_result(db->cnid_mysql_con) );
@@ -774,8 +774,8 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
                  db->cnid_mysql_con,
                  "START TRANSACTION;"
                  "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
-                 "TRUNCATE TABLE %s;"
-                 "ALTER TABLE %s AUTO_INCREMENT = 17;"
+                 "TRUNCATE TABLE `%s`;"
+                 "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
                  "COMMIT;",
                  db->cnid_mysql_voluuid_str,
                  db->cnid_mysql_voluuid_str,
@@ -915,7 +915,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     /* Create volume table */
     if (cnid_mysql_execute(db->cnid_mysql_con,
-                           "CREATE TABLE IF NOT EXISTS %s"
+                           "CREATE TABLE IF NOT EXISTS `%s`"
                            "(Id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,"
                            "Name VARCHAR(255) NOT NULL,"
                            "Did INT UNSIGNED NOT NULL,"

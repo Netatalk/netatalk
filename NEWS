@@ -1,5 +1,10 @@
 Changes in 3.1.7
 ================
+* FIX: CNID/MySQL: Quote UUID table names.
+       https://sourceforge.net/p/netatalk/bugs/585/
+
+Changes in 3.1.7
+================
 * UPD: Spotlight: enhance behaviour for long running queries, client
        will now show "progress wheel" while waiting for first results.
 * FIX: netatalk: fix a crash on Solaris when registering with mDNS
