@@ -14,7 +14,9 @@
 
 #define FCE_PACKET_VERSION  2
 
-/* fce_packet.mode */
+/*
+ * Public FCE events
+ */
 #define FCE_FILE_MODIFY     1
 #define FCE_FILE_DELETE     2
 #define FCE_DIR_DELETE      3
@@ -24,11 +26,17 @@
 #define FCE_DIR_MOVE        7
 #define FCE_LOGIN           8
 #define FCE_LOGOUT          9
+/* keep in sync with public FCE events */
+#define FCE_FIRST_EVENT     FCE_FILE_MODIFY
+#define FCE_LAST_EVENT      FCE_LOGOUT
+
+
+/*
+ * Private FCE events
+ */
 #define FCE_CONN_START     42
 #define FCE_CONN_BROKEN    99
 
-#define FCE_FIRST_EVENT     FCE_FILE_MODIFY /* keep in sync with last file event above */
-#define FCE_LAST_EVENT      FCE_LOGOUT      /* keep in sync with last file event above */
 
 /* fce_packet.fce_magic */
 #define FCE_PACKET_MAGIC  "at_fcapi"
