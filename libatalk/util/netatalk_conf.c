@@ -1495,7 +1495,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         EC_NULL( pwbuf = malloc(bufsize) );
     }
 
-    if (!(flags & LV_ALL) && obj->uid) {
+    if (!(flags & LV_ALL)) {
         ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
         if (pwresult == NULL) {
             LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));
