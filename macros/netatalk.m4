@@ -335,25 +335,6 @@ powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
 esac
 ])
 
-dnl Check for optional admin group support
-AC_DEFUN([AC_NETATALK_ADMIN_GROUP], [
-    netatalk_cv_admin_group=yes
-    AC_MSG_CHECKING([for administrative group support])
-    AC_ARG_ENABLE(admin-group,
- 	    [  --disable-admin-group   disable admin group],[
-            if test x"$enableval" = x"no"; then
-		         AC_DEFINE(ADMIN_GRP, 0, [Define if the admin group should be enabled])
-		         netatalk_cv_admin_group=no
-		         AC_MSG_RESULT([no])
-	        else
-		         AC_DEFINE(ADMIN_GRP, 1, [Define if the admin group should be enabled])
-		         AC_MSG_RESULT([yes])
-            fi],[
-		AC_DEFINE(ADMIN_GRP, 1, [Define if the admin group should be enabled])
-		AC_MSG_RESULT([yes])
-	])
-])
-
 dnl Check for optional cracklib support
 AC_DEFUN([AC_NETATALK_CRACKLIB], [
 netatalk_cv_with_cracklib=no

@@ -26,10 +26,8 @@
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
-#ifdef ADMIN_GRP
 #include <grp.h>
 #include <sys/types.h>
-#endif /* ADMIN_GRP */
 
 #include <atalk/paths.h>
 #include <atalk/util.h>
@@ -132,11 +130,7 @@ static void show_version_extended(void )
 #endif
 
 	printf( "   Admin group support:\t" );
-#ifdef ADMIN_GRP
 	puts( "Yes" );
-#else
-	puts( "No" );
-#endif
 
 	printf( "    Valid shell checks:\t" );
 #ifndef DISABLE_SHELLCHECK

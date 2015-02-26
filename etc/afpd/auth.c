@@ -218,9 +218,7 @@ static int set_auth_switch(const AFPObj *obj, int expired)
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expired)
 {
-#ifdef ADMIN_GRP
     int admin = 0;
-#endif /* ADMIN_GRP */
 
     if ( pwd->pw_uid == 0 ) {   /* don't allow root login */
         LOG(log_error, logtype_afpd, "login: root login denied!" );
@@ -238,7 +236,6 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     if (set_groups(obj, pwd) != 0)
         return AFPERR_BADUAM;
 
-#ifdef ADMIN_GRP
     LOG(log_debug, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
 
     if (obj->options.admingid != 0) {
@@ -252,57 +249,17 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
     }
     if (!admin)
-#endif /* ADMIN_GRP */
-#ifdef TRU64
-    {
-        struct DSI *dsi = obj->handle;
-        struct hostent *hp;
-        char *clientname;
-        int argc;
-        char **argv;
-        char hostname[256];
-
-        afp_get_cmdline( &argc, &argv );
-
-        hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
-                            sizeof( struct in_addr ),
-                            dsi->client.sin_family );
-
-        if( hp )
-            clientname = hp->h_name;
-        else
-            clientname = inet_ntoa( dsi->client.sin_addr );
-
-        sprintf( hostname, "%s@%s", pwd->pw_name, clientname );
-
-        if( sia_become_user( NULL, argc, argv, hostname, pwd->pw_name,
-                             NULL, FALSE, NULL, NULL,
-                             SIA_BEU_REALLOGIN ) != SIASUCCESS )
-            return AFPERR_BADUAM;
-
-        LOG(log_info, logtype_afpd, "session from %s (%s)", hostname,
-            inet_ntoa( dsi->client.sin_addr ) );
-
-        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
-            return AFPERR_BADUAM;
-        }
-    }
-#else /* TRU64 */
     if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
         LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
-#endif /* TRU64 */
 
     LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(obj->ngroups, obj->groups));
 
     /* There's probably a better way to do this, but for now, we just play root */
-#ifdef ADMIN_GRP
     if (admin)
         obj->uid = 0;
     else
-#endif /* ADMIN_GRP */
         obj->uid = geteuid();
 
     set_auth_switch(obj, expired);

@@ -1995,13 +1995,11 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         putenv(options->k5keytab);
     }
 
-#ifdef ADMIN_GRP
     if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "admin group",  NULL))) {
          struct group *gr = getgrnam(p);
          if (gr != NULL)
              options->admingid = gr->gr_gid;
     }
-#endif /* ADMIN_GRP */
 
     q = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid server", "localhost:4700");
     r = strrchr(q, ':');
