@@ -1,3 +1,7 @@
+Changes in 3.1.9
+================
+* FIX: afpd: fix "admin group" option
+
 Changes in 3.1.8
 ================
 * FIX: CNID/MySQL: Quote UUID table names.
