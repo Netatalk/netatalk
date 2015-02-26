@@ -103,9 +103,9 @@ struct vol {
 
 /* load_volumes() flags */
 typedef enum {
-    lv_none = 0,
-    lv_all = 1,
-    lv_force = 2
+    LV_DEFAULT = 0,
+    LV_ALL = 1,
+    LV_FORCE = 2
 } lv_flags_t;
 
 /* volume flags */

@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
     LOG(log_debug, logtype_cnid, "user: %s, path %s",
         username ? username : "-", volpath);
 
-    EC_ZERO( load_volumes(&obj, lv_all) );
+    EC_ZERO( load_volumes(&obj, LV_ALL) );
     EC_NULL( vol = getvolbypath(&obj, volpath) );
     EC_ZERO( load_charset(vol) );
     pack_setvol(vol);

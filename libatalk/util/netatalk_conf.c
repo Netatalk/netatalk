@@ -1466,7 +1466,10 @@ int load_charset(struct vol *vol)
  * Initialize volumes and load ini configfile
  *
  * @param obj      (r) handle
- * @param flags    (r) flags controlling volume load behaviour
+ * @param flags    (r) flags controlling volume load behaviour:
+ *                     LV_DEFAULT: load shares in a user/session context, this honors authorisation
+ *                     LV_ALL: load shares that are available in the config file
+ *                     LV_FORCE: reload file even though the timestamp wasn't changed
  */
 int load_volumes(AFPObj *obj, lv_flags_t flags)
 {
@@ -1492,7 +1495,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         EC_NULL( pwbuf = malloc(bufsize) );
     }
 
-    if (!(flags & lv_all) && obj->uid) {
+    if (!(flags & LV_ALL) && obj->uid) {
         ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
         if (pwresult == NULL) {
             LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));
@@ -1502,7 +1505,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     }
 
     if (Volumes) {
-        if (!(flags & lv_force) && !volfile_changed(obj))
+        if (!(flags & LV_FORCE) && !volfile_changed(obj))
             goto EC_CLEANUP;
         have_uservol = 0;
         for (vol = Volumes; vol; vol = vol->v_next) {

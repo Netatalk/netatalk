@@ -198,7 +198,7 @@ static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
-        load_volumes(&obj, lv_all | lv_force);
+        load_volumes(&obj, LV_ALL | LV_FORCE);
         zeroconf_register(&obj);
         LOG(log_note, logtype_default, "Re-registered with Zeroconf");
     }
@@ -378,7 +378,7 @@ int main(int argc, char **argv)
     if (afp_config_parse(&obj, "netatalk") != 0)
         netatalk_exit(EXITERR_CONF);
 
-    load_volumes(&obj, lv_all);
+    load_volumes(&obj, LV_ALL);
 
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
