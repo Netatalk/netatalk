@@ -146,7 +146,8 @@ typedef struct AFPObj {
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */
     struct session_info  sinfo;
-    uid_t uid; 	/* client running user id */
+    uid_t uid;  /* client login user id */
+    uid_t euid; /* client effective process user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
     gid_t *groups;
     int ngroups;

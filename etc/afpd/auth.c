@@ -218,7 +218,8 @@ static int set_auth_switch(const AFPObj *obj, int expired)
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expired)
 {
-    int admin = 0;
+    bool admin = false;
+    int i;
 
     if ( pwd->pw_uid == 0 ) {   /* don't allow root login */
         LOG(log_error, logtype_afpd, "login: root login denied!" );
@@ -239,33 +240,28 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     LOG(log_debug, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
 
     if (obj->options.admingid != 0) {
-        int i;
         for (i = 0; i < obj->ngroups; i++) {
-            if (obj->groups[i] == obj->options.admingid) admin = 1;
+            if (obj->groups[i] == obj->options.admingid) {
+                admin = true;
+            }
         }
     }
     if (admin) {
         ad_setfuid(0);
         LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
-    }
-    if (!admin)
-    if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-        LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
-        return AFPERR_BADUAM;
+    } else {
+        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
+            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
+            return AFPERR_BADUAM;
+        }
     }
 
     LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(obj->ngroups, obj->groups));
 
-    /* There's probably a better way to do this, but for now, we just play root */
-    if (admin)
-        obj->uid = 0;
-    else
-        obj->uid = geteuid();
-
     set_auth_switch(obj, expired);
-    /* save our euid, we need it for preexec_close */
-    obj->uid = geteuid();
     obj->logout = logout;
+    obj->uid = pwd->pw_uid;
+    obj->euid = geteuid();
 
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
