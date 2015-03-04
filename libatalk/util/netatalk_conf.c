@@ -2004,6 +2004,22 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
              options->admingid = gr->gr_gid;
     }
 
+    if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "force user",  NULL))) {
+         struct passwd *pw = getpwnam(p);
+         if (pw != NULL) {
+             options->force_uid = pw->pw_uid;
+             options->force_user = true;
+         }
+    }
+
+    if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "force group",  NULL))) {
+         struct group *gr = getgrnam(p);
+         if (gr != NULL) {
+             options->force_gid = gr->gr_gid;
+             options->force_group = true;
+         }
+    }
+
     q = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid server", "localhost:4700");
     r = strrchr(q, ':');
     if (r)

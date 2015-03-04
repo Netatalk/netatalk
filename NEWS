@@ -1,6 +1,7 @@
 Changes in 3.1.9
 ================
 * FIX: afpd: fix "admin group" option
+* NEW: afpd: new options "force user" and "force group"
 
 Changes in 3.1.8
 ================

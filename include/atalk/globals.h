@@ -9,6 +9,7 @@
 #include <sys/param.h>
 #include <grp.h>
 #include <sys/types.h>
+#include <stdbool.h>
 
 #ifdef HAVE_NETDB_H
 #include <netdb.h>  /* this isn't header-protected under ultrix */
@@ -116,6 +117,10 @@ struct afp_options {
     mode_t umask;
     mode_t save_mask;
     gid_t admingid;
+    bool force_user;
+    uid_t force_uid;
+    bool force_group;
+    gid_t force_gid;
     int    volnamelen;
     /* default value for winbind authentication */
     char *ntdomain, *ntseparator, *addomain;

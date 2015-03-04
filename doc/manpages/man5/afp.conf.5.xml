@@ -307,6 +307,30 @@
         </varlistentry>
 
         <varlistentry>
+          <term>force user = <replaceable>USER</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>This specifies a UNIX user name that will be
+            assigned as the default user for all users connecting to
+            this server. This is useful for sharing files. You should
+            also use it carefully as using it incorrectly can cause
+            security problems.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>force group = <replaceable>GROUP</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>This specifies a UNIX group name that will be
+            assigned as the default primary group for all users
+            connecting to this server.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>k5 keytab = <replaceable>path</replaceable>
           <type>(G)</type></term>
 

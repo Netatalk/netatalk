@@ -269,6 +269,21 @@ Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails,
 \fBadmin auth user\fR, you can authenticate as any other user\&.
 .RE
 .PP
+admin group = \fIgroup\fR \fB(G)\fR
+.RS 4
+Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
+.RE
+.PP
+force user = \fIUSER\fR \fB(G)\fR
+.RS 4
+This specifies a UNIX user name that will be assigned as the default user for all users connecting to this server\&. This is useful for sharing files\&. You should also use it carefully as using it incorrectly can cause security problems\&.
+.RE
+.PP
+force group = \fIGROUP\fR \fB(G)\fR
+.RS 4
+This specifies a UNIX group name that will be assigned as the default primary group for all users connecting to this server\&.
+.RE
+.PP
 k5 keytab = \fIpath\fR \fB(G)\fR, k5 service = \fIservice\fR \fB(G)\fR, k5 realm = \fIrealm\fR \fB(G)\fR
 .RS 4
 These are required if the server supports the Kerberos 5 authentication UAM\&.
