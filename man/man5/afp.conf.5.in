@@ -515,11 +515,6 @@ service registration if Avahi or mDNSResponder were compiled in\&.
 .RE
 .SS "Miscellaneous Options"
 .PP
-admin group = \fIgroup\fR \fB(G)\fR
-.RS 4
-Allows users of a certain group to be seen as the superuser when they log in\&. This option is disabled by default\&.
-.RE
-.PP
 afp read locks = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
 .RS 4
 Whether to apply locks to the byte region read in FPRead calls\&. The AFP spec mandates this, but it\*(Aqs not really in line with UNIX semantics and is a performance hug\&.

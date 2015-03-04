@@ -297,6 +297,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>admin group = <replaceable>group</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Allows users of a certain group to be seen as the superuser
+            when they log in. This option is disabled by default.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>k5 keytab = <replaceable>path</replaceable>
           <type>(G)</type></term>
 
@@ -761,16 +771,6 @@
       <title>Miscellaneous Options</title>
 
       <variablelist>
-        <varlistentry>
-          <term>admin group = <replaceable>group</replaceable>
-          <type>(G)</type></term>
-
-          <listitem>
-            <para>Allows users of a certain group to be seen as the superuser
-            when they log in. This option is disabled by default.</para>
-          </listitem>
-        </varlistentry>
-
         <varlistentry>
           <term>afp read locks = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>no</emphasis>) <type>(G)</type></term>
