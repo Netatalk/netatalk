@@ -114,7 +114,9 @@ static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess 
     /* ma_user is a union of all permissions but we must follow
      * unix perm
     */
-    if ( (obj->uid == stat->st_uid) || (obj->uid == 0)) {
+    if (obj->euid == 0) {
+        ma->ma_user = AR_UREAD | AR_UWRITE | AR_USEARCH | AR_UOWN;
+    } else if (obj->uid == stat->st_uid) {
         ma->ma_user = ma->ma_owner | AR_UOWN;
     }
     else if (gmem(stat->st_gid, obj->ngroups, obj->groups)) {
