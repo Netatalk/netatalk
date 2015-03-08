@@ -4,6 +4,8 @@ Changes in 3.1.8
        https://sourceforge.net/p/netatalk/bugs/585/
 * FIX: Crash in cnid_metad, bug #593
 * UPD: Update Unicode support to version 8.0.0
+* FIX: larger server side copyfile buffer for improved IO performance,
+       bug #599
 
 Changes in 3.1.7
 ================

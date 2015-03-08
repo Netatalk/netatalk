@@ -26,6 +26,7 @@
 #include <atalk/fce_api.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/spotlight.h>
+#include <atalk/dsi.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -1448,7 +1449,9 @@ int copyfile(struct vol *s_vol,
         return AFPERR_EXIST;
     }
 
-    if ((err = copy_fork(ADEID_DFORK, &add, adp)) != 0)
+    if ((err = copy_fork(ADEID_DFORK, &add, adp,
+                         s_vol->v_obj->dsi->commands,
+                         s_vol->v_obj->dsi->server_quantum)) != 0)
         LOG(log_error, logtype_afpd, "copyfile('%s'): %s", src, strerror(errno));
 
     if (err == 0)

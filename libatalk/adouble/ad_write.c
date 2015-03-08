@@ -217,12 +217,20 @@ static int copy_all(const int dfd, const void *buf,
 /* -------------------------- 
  * copy only the fork data stream
 */
-int copy_fork(int eid, struct adouble *add, struct adouble *ads)
+int copy_fork(int eid, struct adouble *add, struct adouble *ads, char *buf, size_t buflen)
 {
     ssize_t cc;
     int     err = 0;
-    char    filebuf[8192];
+    char    fixedbuf[8192];
+    char    *filebuf;
     int     sfd, dfd;
+
+    if (buf != NULL && buflen > sizeof(fixedbuf)) {
+        filebuf = buf;
+    } else {
+        filebuf = fixedbuf;
+        buflen = sizeof(fixedbuf);
+    }
 
     if (eid == ADEID_DFORK) {
         sfd = ad_data_fileno(ads);
@@ -269,7 +277,7 @@ int copy_fork(int eid, struct adouble *add, struct adouble *ads)
 #endif 
 
     while (1) {
-        if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
+        if ((cc = read(sfd, filebuf, buflen)) < 0) {
             if (errno == EINTR)
                 continue;
             err = -1;
