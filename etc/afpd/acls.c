@@ -110,7 +110,12 @@ static int solaris_acl_rights(const AFPObj *obj,
     uint32_t rights, allowed_rights = 0, denied_rights = 0, darwin_rights;
 
     /* Get ACL from file/dir */
-    EC_NEG1_LOG(ace_count = get_nfsv4_acl(path, &aces));
+    ace_count = get_nfsv4_acl(path, &aces);
+    if (ace_count == -1) {
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl(\"%s\"): %s",
+            fullpathname(path), strerror(errno));
+        return -1;
+    }
 
     if (ace_count == 0)
         goto EC_CLEANUP;
