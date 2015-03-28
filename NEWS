@@ -1,7 +1,8 @@
-Changes in 3.1.7
+Changes in 3.1.8
 ================
 * FIX: CNID/MySQL: Quote UUID table names.
        https://sourceforge.net/p/netatalk/bugs/585/
+* FIX: Crash in cnid_metad, bug #593
 
 Changes in 3.1.7
 ================

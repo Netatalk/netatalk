@@ -922,7 +922,15 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* suffix for mangling use (lastvid + 1)   */
     /* because v_vid has not been decided yet. */
-    suffixlen = sprintf(suffix, "#%X", lastvid + 1 );
+    if (lastvid == UINT16_MAX) {
+        LOG(log_error, logtype_default, "vid overflow");
+        EC_FAIL;
+    }
+    suffixlen = snprintf(suffix, sizeof(suffix), "#%X", lastvid + 1 );
+    if (suffixlen >= sizeof(suffix)) {
+        LOG(log_error, logtype_default, "vid overflow");
+        EC_FAIL;
+    }
 
     /* Unicode Volume Name */
     /* Firstly convert name from unixcharset to UTF8-MAC */
@@ -1000,7 +1008,13 @@ static struct vol *creatvol(AFPObj *obj,
 #endif /* __svr4__ */
 
     /* os X start at 1 and use network order ie. 1 2 3 */
-    volume->v_vid = ++lastvid;
+    lastvid++;
+    if (lastvid == UINT16_MAX) {
+        LOG(log_error, logtype_default, "creatvol(\"%s\"): exceeded maximum number of volumes",
+            volume->v_path);
+        EC_FAIL;
+    }
+    volume->v_vid = lastvid;
     volume->v_vid = htons(volume->v_vid);
 
 #ifdef HAVE_ACLS
@@ -1581,7 +1595,9 @@ void unload_volumes(AFPObj *obj)
     }
     Volumes = NULL;
     obj->options.volfile.mtime = 0;
-    
+    lastvid = 0;
+    have_uservol = 0;
+
     LOG(log_debug, logtype_afpd, "unload_volumes: END");
 }
 
