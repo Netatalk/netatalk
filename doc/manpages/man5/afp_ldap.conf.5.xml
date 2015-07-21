@@ -42,10 +42,15 @@
 
     <variablelist>
       <varlistentry>
-        <term>ldap_server</term>
+        <term>ldap_uri</term>
 
         <listitem>
-          <para>Name or IP address of your LDAP Server</para>
+          <para>Specifies the LDAP URI of the server to connect to.
+          The URI scheme may be ldap, ldapi or ldaps,
+          specifying LDAP over TCP, ICP or TLS respectively
+          (if supported by the LDAP library).
+          This is only needed for explicit ACL support
+          in order to be able to query LDAP for UUIDs.</para>
 
           <para></para>
         </listitem>
@@ -188,7 +193,7 @@
     <example>
       <title>afp_ldap.conf setup with simple bind</title>
 
-      <programlisting>ldap_server      = localhost
+      <programlisting>ldap_uri         = ldap://somehost:1234/
 ldap_auth_method = simple
 ldap_auth_dn     = cn=admin,dc=domain,dc=org
 ldap_auth_pw     = notthisone
