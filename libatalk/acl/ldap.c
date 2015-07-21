@@ -42,7 +42,7 @@ typedef enum {
  ********************************************************/
 int ldap_config_valid;
 
-char *ldap_server;
+char *ldap_uri;
 int  ldap_auth_method;
 char *ldap_auth_dn;
 char *ldap_auth_pw;
@@ -61,7 +61,7 @@ int  ldap_uuid_encoding;
 
 struct ldap_pref ldap_prefs[] = {
     /* pointer to pref,    prefname,              strorint, intfromarray, valid, valid_save */
-    {&ldap_server,         "ldap server",         0, 0, -1, -1},
+    {&ldap_uri,            "ldap uri",            0, 0, -1, -1},
     {&ldap_auth_method,    "ldap auth method",    1, 1, -1, -1},
     {&ldap_auth_dn,        "ldap auth dn",        0, 0,  0,  0},
     {&ldap_auth_pw,        "ldap auth pw",        0, 0,  0,  0},
@@ -141,13 +141,16 @@ retry:
     ret = 0;
 
     if (ld == NULL) {
-        LOG(log_maxdebug, logtype_default, "ldap: server: \"%s\"",
-            ldap_server);
-        if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
-            LOG(log_error, logtype_default, "ldap: ldap_init error: %s",
-                strerror(errno));
+        LOG(log_maxdebug, logtype_default, "ldap: uri: \"%s\"",
+            ldap_uri);
+
+        ret = ldap_initialize(&ld, ldap_uri);
+        if (ret != LDAP_SUCCESS) {
+            LOG(log_error, logtype_default, "ldap: ldap_initialize error: %s (%d)",
+                ldap_err2string(ret), ret);
             return -1;
         }
+
         if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &desired_version) != 0) {
             /* LDAP_OPT_SUCCESS is not in the proposed standard, so we check for 0
                http://tools.ietf.org/id/draft-ietf-ldapext-ldap-c-api-05.txt */

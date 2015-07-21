@@ -1048,9 +1048,9 @@ ldap auth pw = \fIpassword\fR \fB(G)\fR
 Password for simple bind\&.
 .RE
 .PP
-ldap server = \fIhost\fR \fB(G)\fR
+ldap uri = \fIldap://somehost:1234/\fR \fB(G)\fR
 .RS 4
-Name or IP address of your LDAP Server\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
+Specifies the LDAP URI of the server to connect to.\&The URI scheme may be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or SSL respectively (if supported by the LDAP library).\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
 .sp
 You can use
 \fBafpldaptest\fR(1)
