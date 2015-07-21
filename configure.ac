@@ -875,7 +875,7 @@ if test x"$with_ldap" != x"no" ; then
         fi
 		with_ldap=no
         ])
-	AC_CHECK_LIB(ldap, ldap_init, with_ldap=yes,
+	AC_CHECK_LIB(ldap, ldap_initialize, with_ldap=yes,
         [ if test x"$with_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP library])
         fi
