@@ -11,6 +11,7 @@ Changes in 3.1.8
        xattrs.
 * FIX: remove #541 workaround patch. There was this problem with only early
        Fedora 20.
+* FIX: rpmbuild fails on Fedora x86_64, bug #598
 
 Changes in 3.1.7
 ================
