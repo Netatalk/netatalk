@@ -18,8 +18,8 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 
     if test x"$compilegssapi" != x"no" ; then
         if test "x$compilegssapi" != "xyes" -a "x$compilegssapi" != "xauto" ; then
-            export CFLAGS="-I$withval/include"
-            export LDFLAGS="-L$withval/${atalk_libname}"
+            export CFLAGS="$CFLAGS -I$withval/include"
+            export LDFLAGS="$LDFLAGS -L$withval/${atalk_libname}"
             AC_MSG_NOTICE([checking for GSSAPI support in $compilegssapi])
         fi
 
@@ -64,8 +64,8 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 
     if test x"$FOUND_GSSAPI" = x"yes" ; then
         # check for functions
-        export CFLAGS="$GSSAPI_CFLAGS"
-        export LIBS="$GSSAPI_LIBS"
+        export CFLAGS="$CFLAGS $GSSAPI_CFLAGS"
+        export LIBS="$LIBS $GSSAPI_LIBS"
         AC_CHECK_FUNC(gss_acquire_cred, [], [AC_MSG_ERROR([GSSAPI: required function gss_acquire_cred missing])])
 
         # Heimdal/MIT compatibility fix

@@ -4,6 +4,7 @@ Changes in 3.1.8
        https://sourceforge.net/p/netatalk/bugs/585/
 * FIX: Crash in cnid_metad, bug #593
 * UPD: Update Unicode support to version 8.0.0
+* FIX: rpmbuild fails on Fedora x86_64, bug #598
 
 Changes in 3.1.7
 ================
