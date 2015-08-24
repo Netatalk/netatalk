@@ -107,6 +107,20 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     if (ret > MAX_EA_SIZE) 
       ret = MAX_EA_SIZE;
 
+    if (vol->v_flags & AFPVOL_EA_SAMBA) {
+        /* What can we do about xattrs that are 1 byte large? */
+        if (ret < 2) {
+            memset(rbuf, 0, 4);
+            *rbuflen += 4;
+
+            if (vol->v_obj->afp_version >= 34) {
+                return AFPERR_NOITEM;
+            }
+            return AFPERR_MISC;
+        }
+        ret--;
+    }
+
     /* Start building reply packet */
     LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, ret);
 
@@ -153,6 +167,9 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         maxreply = MAX_EA_SIZE;
 
     LOG(log_debug7, logtype_afpd, "sys_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
+    if (vol->v_flags & AFPVOL_EA_SAMBA) {
+        maxreply++;
+    }
 
     /* PBaranski fix */
     if (fd != -1) {
@@ -186,6 +203,20 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
             return AFPERR_MISC;
         }
+    }
+
+    if (vol->v_flags & AFPVOL_EA_SAMBA) {
+        /* What can we do about xattrs that are 1 byte large? */
+        if (ret < 2) {
+            memset(rbuf, 0, 4);
+            *rbuflen += 4;
+
+            if (vol->v_obj->afp_version >= 34) {
+                return AFPERR_NOITEM;
+            }
+            return AFPERR_MISC;
+        }
+        ret--;
     }
 
     /* remember where we must store length of attribute data in rbuf */
@@ -314,24 +345,39 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 {
     int attr_flag;
     int ret;
+    char *eabuf;
+
+    /*
+     * Buffer for a copy of the xattr plus one byte in case
+     * AFPVOL_EA_SAMBA is used
+     */
+    eabuf = malloc(attrsize + 1);
+    if (eabuf == NULL) {
+        return AFPERR_MISC;
+    }
+    memcpy(eabuf, ibuf, attrsize);
+    eabuf[attrsize] = 0;
 
     attr_flag = 0;
     if ((oflag & O_CREAT) ) 
         attr_flag |= XATTR_CREATE;
-
     else if ((oflag & O_TRUNC) ) 
         attr_flag |= XATTR_REPLACE;
-    
+
+    if (vol->v_flags & AFPVOL_EA_SAMBA) {
+        attrsize++;
+    }
+
     /* PBaranski fix */
     if ( fd != -1) {
 	LOG(log_debug, logtype_afpd, "sys_set_ea(%s): file is already opened", uname);
-	ret = sys_fsetxattr(fd, attruname,  ibuf, attrsize, attr_flag);
+	ret = sys_fsetxattr(fd, attruname, eabuf, attrsize, attr_flag);
     } else {
 	if ((oflag & O_NOFOLLOW) ) {
-    	    ret = sys_lsetxattr(uname, attruname,  ibuf, attrsize,attr_flag);
+   	    ret = sys_lsetxattr(uname, attruname, eabuf, attrsize,attr_flag);
 	}
 	else {
-    	    ret = sys_setxattr(uname, attruname,  ibuf, attrsize, attr_flag);
+   	    ret = sys_setxattr(uname, attruname, eabuf, attrsize, attr_flag);
 	}
     }
     /* PBaranski fix */

@@ -791,6 +791,10 @@ static struct vol *creatvol(AFPObj *obj,
             volume->v_vfs_ea = AFPVOL_EA_SYS;
         else if (strcasecmp(val, "none") == 0)
             volume->v_vfs_ea = AFPVOL_EA_NONE;
+        else if (strcasecmp(val, "samba") == 0) {
+            volume->v_vfs_ea = AFPVOL_EA_SYS;
+            volume->v_flags |= AFPVOL_EA_SAMBA;
+	}
     }
 
     if ((val = getoption(obj->iniconfig, section, "casefold", preset, NULL))) {

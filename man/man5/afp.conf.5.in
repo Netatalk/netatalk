@@ -1183,7 +1183,7 @@ cnid scheme = \fIbackend\fR \fB(V)\fR
 set the CNID backend to be used for the volume, default is [@DEFAULT_CNID_SCHEME@] available schemes: [@compiled_backends@]
 .RE
 .PP
-ea = \fInone|auto|sys|ad\fR \fB(V)\fR
+ea = \fInone|auto|sys|ad|samba\fR \fB(V)\fR
 .RS 4
 Specify how Extended Attributes
 are stored\&.
@@ -1204,6 +1204,11 @@ with
 sys
 .RS 4
 Use filesystem Extended Attributes\&.
+.RE
+.PP
+samba
+.RS 4
+Use filesystem Extended Attributes, but append a 0 byte to each xattr in order to be compatible with Samba\*(Aqs vfs_streams_xattr\&.
 .RE
 .PP
 ad

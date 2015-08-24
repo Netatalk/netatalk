@@ -1750,7 +1750,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ea = <replaceable>none|auto|sys|ad</replaceable>
+          <term>ea = <replaceable>none|auto|sys|ad|samba</replaceable>
           <type>(V)</type></term>
 
           <listitem>
@@ -1779,6 +1779,16 @@
 
                 <listitem>
                   <para>Use filesystem Extended Attributes.</para>
+                </listitem>
+              </varlistentry>
+
+	      <varlistentry>
+                <term>samba</term>
+
+                <listitem>
+                  <para>Use filesystem Extended Attributes, but append
+                  a 0 byte to each xattr in order to be compatible
+                  with Samba's vfs_streams_xattr.</para>
                 </listitem>
               </varlistentry>
 
