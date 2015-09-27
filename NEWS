@@ -6,6 +6,9 @@ Changes in 3.1.8
 * UPD: Update Unicode support to version 8.0.0
 * FIX: larger server side copyfile buffer for improved IO performance,
        bug #599
+* NEW: afpd: new option "ea = samba". Use Samba vfs_streams_xattr
+       compatible xattrs which means adding a 0 byte at the end of
+       xattrs.
 
 Changes in 3.1.7
 ================
