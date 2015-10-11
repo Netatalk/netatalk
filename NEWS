@@ -9,6 +9,8 @@ Changes in 3.1.8
 * NEW: afpd: new option "ea = samba". Use Samba vfs_streams_xattr
        compatible xattrs which means adding a 0 byte at the end of
        xattrs.
+* FIX: remove #541 workaround patch. There was this problem with only early
+       Fedora 20.
 
 Changes in 3.1.7
 ================
