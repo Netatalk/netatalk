@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">06 Aug 2014</refmiscinfo>
+    <refmiscinfo class="date">26 Oct 2015</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -58,7 +58,7 @@
     <para>The values following the equals sign in parameters are all either a
     string (no quotes needed) or a boolean, which may be given as yes/no, 1/0
     or true/false. Case is not significant in boolean values, but is preserved
-    in string values. Some items such as create masks are numeric.</para>
+    in string values. Some items such as "file perm"s are numeric.</para>
 
     <para>The parameter <option>include =
     <replaceable>path</replaceable></option> allows you to include one config
@@ -384,7 +384,7 @@
                   <para>allows Random Number and Two-Way Random Number
                   Exchange for authentication (requires a separate file
                   containing the passwords, either @pkgconfdir@/afppasswd file or
-                  the one specified via "<option>passwd file</option>". See
+                  the one specified via "<option>passwd file</option>"). See
                   <citerefentry>
                       <refentrytitle>afppasswd</refentrytitle>
 
@@ -451,7 +451,7 @@
       for most western users.</para>
 
       <para>As <command>afpd</command> needs to interact with UNIX operating
-      system as well, it need's to be able to convert from UTF8-MAC / Mac
+      system as well, it needs to be able to convert from UTF8-MAC / Mac
       charset to the UNIX charset. By default <command>afpd</command> uses
       <emphasis>UTF8</emphasis>. You can set the UNIX charset using the
       <option>unix charset</option> option. If you're using extended
@@ -620,7 +620,7 @@
           <listitem>
             <para>Scale factor that determines the size of the DSI/TCP
             readahead buffer, default is 12. This is multiplies with the DSI
-            server quantum (default ~300k) to give the size of the buffer.
+            server quantum (default 1MiB) to give the size of the buffer.
             Increasing this value might increase throughput in fast local
             networks for volume to volume copies. <emphasis>Note</emphasis>:
             This buffer is allocated per afpd child process, so specifying
@@ -630,7 +630,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term>fqdn = <replaceable>name:port</replaceable>
+          <term>fqdn = <replaceable>name[:port]</replaceable>
           <type>(G)</type></term>
 
           <listitem>
@@ -696,7 +696,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Try to set TCP receive buffer using setsockpt(). Often OSes
+            <para>Try to set TCP receive buffer using setsockopt(). Often OSes
             impose restrictions on the applications ability to set this
             value.</para>
           </listitem>
@@ -707,7 +707,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Try to set TCP send buffer using setsockpt(). Often OSes
+            <para>Try to set TCP send buffer using setsockopt(). Often OSes
             impose restrictions on the applications ability to set this
             value.</para>
           </listitem>
@@ -790,7 +790,7 @@
 
           <listitem>
             <para>Whether to provide AFP runtime statistics (connected
-            users, open volumes) via dbus.</para>            
+            users, open volumes) via dbus.</para>
           </listitem>
         </varlistentry>
 
@@ -809,7 +809,7 @@
 
         <varlistentry>
           <term>chmod request = <replaceable>preserve (default) | ignore | simple</replaceable>
-          <type>(G/V)</type></term>
+          <type>(G)/(V)</type></term>
 
           <listitem>
             <para>Advanced permission control that deals with ACLs.</para>
@@ -960,7 +960,7 @@
           <type>(H)</type></term>
 
           <listitem>
-            <para>AFP user home volume name. The default is <emphasis>user's
+            <para>AFP user home volume name. The default is <emphasis>$u's
             home</emphasis>.</para>
           </listitem>
         </varlistentry>
@@ -1063,9 +1063,8 @@
             <para>A list of attributes that are allowed to be used in
             Spotlight searches. By default all attributes can be
             searched, passing a string limits attributes to elements
-            of the string. Example: <programlisting>spotlight
-            attributes = *,kMDItemTextContent</programlisting>
-	    </para>
+            of the string. Example:
+	    <programlisting>spotlight attributes = *,kMDItemTextContent</programlisting></para>
           </listitem>
         </varlistentry>
 
@@ -1144,9 +1143,10 @@
             <para>Max length of UTF8-MAC volume name for Mac OS X. Note that
             Hangul is especially sensitive to this.</para>
 
-            <para><programlisting> 73: limit of Mac OS X 10.1 80: limit of Mac
-            OS X 10.4/10.5 (default) 255: limit of recent Mac OS
-            X</programlisting> Mac OS 9 and earlier are not influenced by
+            <para><programlisting>73: limit of Mac OS X 10.1
+80: limit of Mac OS X 10.4/10.5 (default)
+255: limit of recent Mac OS X</programlisting>
+            Mac OS 9 and earlier are not influenced by
             this, because Maccharset volume name is always limited to 27
             bytes.</para>
           </listitem>
@@ -1303,7 +1303,7 @@
 
           <listitem>
             <para>Script which will be executed for every FCE event,
-            see contrib/shell_utils/fce_ev_script.shfrom the Netatalk
+            see contrib/shell_utils/fce_ev_script.sh from the Netatalk
             sources for an example script.</para>
           </listitem>
         </varlistentry>
@@ -1365,7 +1365,7 @@
       <para>By default, the effective permission of the authenticated user are
       only mapped to the mentioned UARights permission structure, not the UNIX
       mode. You can adjust this behaviour with the configuration option
-      <option>mac acls</option>:</para>
+      <option>map acls</option>:</para>
 
       <variablelist id="map_acls">
         <varlistentry>
@@ -1471,7 +1471,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Distinguished Name of the user for simple bind.</para>
+            <para>Password for simple bind.</para>
           </listitem>
         </varlistentry>
 
@@ -1525,7 +1525,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Search scope for user search: <option>base | one |
+            <para>Search scope for group search: <option>base | one |
             sub</option></para>
           </listitem>
         </varlistentry>
@@ -1894,8 +1894,7 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>command to be run when the volume is mounted, ignored for
-            user defined volumes</para>
+            <para>command to be run when the volume is mounted</para>
           </listitem>
         </varlistentry>
 
@@ -1904,8 +1903,7 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>command to be run when the volume is closed, ignored for
-            user defined volumes</para>
+            <para>command to be run when the volume is closed</para>
           </listitem>
         </varlistentry>
 
@@ -1914,8 +1912,7 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>command to be run as root when the volume is mounted,
-            ignored for user defined volumes</para>
+            <para>command to be run as root when the volume is mounted</para>
           </listitem>
         </varlistentry>
 
@@ -1924,8 +1921,7 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>command to be run as root when the volume is closed, ignored
-            for user defined volumes</para>
+            <para>command to be run as root when the volume is closed</para>
           </listitem>
         </varlistentry>
 
@@ -2233,47 +2229,29 @@
     decomposed. Previous AFP/OS versions used codepages, like MacRoman,
     MacCentralEurope, etc.</para>
 
-    <para><command>afpd</command> needs a way to preserve extended Macintosh
-    characters, or characters illegal in unix filenames, when saving files on
-    a unix filesystem. Earlier versions used the the so called CAP encoding.
-    An extended character (&gt;0x7F) would be converted to a :xx sequence,
-    e.g. the Apple Logo (MacRoman: 0xF0) was saved as <literal>:f0</literal>.
-    Some special characters will be converted as to :xx notation as well.
-    '<keycode>/</keycode>' will be encoded to <literal>:2f</literal>, if
-    <option>usedots</option> is not specified, a leading dot
-    '<keycode>.</keycode>' will be encoded as <literal>:2e</literal>.</para>
+    <para><command>afpd</command> needs a way to preserve extended
+    Macintosh characters, or characters illegal in unix filenames,
+    when saving files on a unix filesystem. This version now uses UTF-8
+    as the default encoding for names. '<keycode>/</keycode>' will be
+    converted to '<keycode>:</keycode>'.</para>
 
-    <para>This version now uses UTF-8 as the default encoding for names.
-    '<keycode>/</keycode>' will be converted to '<keycode>:</keycode>'.</para>
+    <para>Earlier versions used the the so called CAP encoding. An extended
+    character (&gt;0x7F) would be converted to a :xx sequence, e.g. the Apple
+    Logo (MacRoman: 0xF0) was saved as <literal>:f0</literal>. Some special
+    characters would be converted as to :xx notation as well.
+    '<keycode>/</keycode>' would be encoded to <literal>:2f</literal>,
+    a leading dot '<keycode>.</keycode>' might be encoded as
+    <literal>:2e</literal>.</para>
 
     <para>The <option>vol charset</option> option will allow you to select
-    another volume encoding. E.g. for western users another useful setting
-    could be vol charset ISO-8859-15. <command>afpd</command> will accept any
+    another volume encoding. <command>afpd</command> will accept any
     <citerefentry>
         <refentrytitle><command>iconv</command></refentrytitle>
 
         <manvolnum>1</manvolnum>
-      </citerefentry> provided charset. If a character cannot be converted
-    from the <option>mac charset</option> to the selected <option>vol
-    charset</option>, afpd will save it as a CAP encoded character. For AFP3
-    clients, <command>afpd</command> will convert the UTF-8<indexterm>
-        <primary>UTF8</primary>
-
-        <secondary>afpd's vol charset setting</secondary>
-      </indexterm><indexterm>
-        <primary>UTF8-MAC</primary>
-
-        <secondary>afpd's vol charset setting</secondary>
-      </indexterm><indexterm>
-        <primary>ISO-8859-15</primary>
-
-        <secondary>afpd's vol charset setting</secondary>
-      </indexterm><indexterm>
-        <primary>ISO-8859-1</primary>
-
-        <secondary>afpd's vol charset setting</secondary>
-      </indexterm> character to <option>mac charset</option> first. If this
-    conversion fails, you'll receive a -50 error on the mac.</para>
+      </citerefentry>
+      provided charset. It is highly recommended to stick to the default
+    UTF-8.</para>
 
     <para><emphasis>Note</emphasis>: Whenever you can, please stick with the
     default UTF-8 volume format.</para>
