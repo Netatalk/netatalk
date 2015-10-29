@@ -831,6 +831,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     GError *error = NULL;
     bool ok;
     sl_array_t *scope_array;
+    char *scope = NULL;
 
     array = talloc_zero(reply, sl_array_t);
 
@@ -858,6 +859,9 @@ static int sl_rpc_openQuery(AFPObj *obj,
     if (sl_query == NULL) {
         EC_FAIL;
     }
+
+    LOG(log_debug, logtype_sl, "Spotlight query pre-conversion: \"%s\"", sl_query);
+
     ret = convert_charset(CH_UTF8_MAC, v->v_volcharset, v->v_maccharset,
                           sl_query, strlen(sl_query), slq_host, MAXPATHLEN,
                           &convflags);
@@ -891,14 +895,25 @@ static int sl_rpc_openQuery(AFPObj *obj,
     scope_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                        "kMDScopeArray");
     if (scope_array == NULL) {
-        slq->slq_scope = talloc_strdup(slq, v->v_path);
+        scope = g_uri_escape_string(v->v_path,
+                                    G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     } else {
-        slq->slq_scope = talloc_strdup(slq, scope_array->dd_talloc_array[0]);
+        scope = g_uri_escape_string(scope_array->dd_talloc_array[0],
+                                    G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     }
-    if (slq->slq_scope == NULL) {
+
+    if (scope == NULL) {
         LOG(log_error, logtype_sl, "failed to setup search scope");
         EC_FAIL;
     }
+
+    slq->slq_scope = talloc_strdup(slq, scope);
+    if (slq->slq_scope == NULL) {
+        LOG(log_error, logtype_sl, "talloc_strdup failed");
+        EC_FAIL;
+    }
+
+    g_free(scope);
 
     LOG(log_debug, logtype_sl, "Search scope: \"%s\"", slq->slq_scope);
 
