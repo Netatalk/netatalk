@@ -52,6 +52,7 @@
 
 %expect 5
 %error-verbose
+%debug
 
 %type <sval> match expr line function
 %type <tval> date
@@ -78,8 +79,8 @@ expr                           {
         result_limit = "";
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
-                                 "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
-                                 $1, ssp_slq->slq_scope, result_limit);
+                                 "{ %s%s ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                 $1 ?: "", $1 ? " . " : "", ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
 }
 ;
@@ -97,14 +98,17 @@ BOOL {
 	YYABORT;
 }
 | match OR match                 {
-    if ($1 == NULL || $3 == NULL)
-        YYABORT;
-    if (strcmp($1, $3) != 0)
-        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
-        $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    // Handle NULL return for unknown types rather than calling YYABORT 
+    if (!($1 == NULL && $3 == NULL)) {
+        if ($1 == NULL || $3 == NULL)  
+            $$ = talloc_asprintf(ssp_slq, "%s", $1 ?: $3);
+        else if (strcmp($1, $3) != 0)
+            $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
+        else
+            $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    }
 }
-| match                        {$$ = $1; if ($$ == NULL) YYABORT;}
+| match                        {$$ = $1;}
 | function                     {$$ = $1;}
 | OBRACE expr CBRACE           {$$ = talloc_asprintf(ssp_slq, "%s", $2);}
 | expr AND expr                {
@@ -112,17 +116,27 @@ BOOL {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
-    $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
+    // Handle NULL return for unknown types rather than calling YYABORT 
+    if (!($1 == NULL && $3 == NULL)) {
+        if ($1 == NULL || $3 == NULL) 
+            $$ = talloc_asprintf(ssp_slq, "%s", $1 ?: $3);
+        else
+            $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
+    }
 }
 | expr OR expr                 {
     if (!ssp_slq->slq_allow_expr) {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
-    if (strcmp($1, $3) != 0)
-        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
-        $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    if (!($1 == NULL && $3 == NULL)) {
+        if ($1 == NULL || $3 == NULL)
+            $$ = talloc_asprintf(ssp_slq, "%s", $1 ?: $3);
+        else if (strcmp($1, $3) != 0)
+            $$ = talloc_asprintf(ssp_slq, "%s UNION %s", $1, $3);
+        else
+            $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    }
 }
 ;
 
@@ -208,9 +222,28 @@ static char *map_type_search(const char *attr, char op, const char *val)
             default:
                 return NULL;
             }
-            result = talloc_asprintf(ssp_slq, "?obj %s '%s'",
+            if (op != '!') 
+                result = talloc_asprintf(ssp_slq, "{ ?obj %s '%s' }",
+                                         sparqlAttr,
+                                         p->mdtm_sparql);
+
+              /*  Seems like the best way to handle NOT type would be to  
+               *  use sparql MINUS however these seem to need to be placed 
+               *  later in the sparql query (like FILTER).  
+               * 
+               *  Since it doesn't appear that it's possible to exclude
+               *  types using Finder, the only place this is likely used
+               *  is when searching through application dialogs.
+               *
+               *  It seems unlikely those constraints would be useful on a
+               *  network share so for now we just ignore them. 
+               *  
+               *  This was close but did not result in correct order: 
+               else
+                  result = talloc_asprintf(ssp_slq, "MINUS { ?obj %s '%s' }",
                                      sparqlAttr,
                                      p->mdtm_sparql);
+               */
             break;
         }
     }
