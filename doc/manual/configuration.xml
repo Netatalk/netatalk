@@ -20,12 +20,12 @@
 
       <para>AFP (the Apple Filing Protocol) is the protocol Apple Macintoshes
       use for file services. The protocol has evolved over the years. The
-      latest changes to the protocol, called "AFP 3.3", were added with the
-      release of Snow Leopard<indexterm>
-          <primary>Snow Leopard</primary>
+      latest change to the protocol, called "AFP 3.4", was added with a
+      minor release of OS X Lion<indexterm>
+          <primary>Lion</primary>
 
-          <secondary>Mac OS X 10.6</secondary>
-        </indexterm> (Mac OS X 10.6).</para>
+          <secondary>Mac OS X 10.7</secondary>
+        </indexterm> (10.7).</para>
 
       <para>The afpd daemon offers the fileservices to Apple clients. The only
       configuration file is <filename>afp.conf</filename>. It uses a ini style
@@ -187,7 +187,7 @@ basedir regex = /usr/home</programlisting></para>
           <listitem>
             <para>Don't nest volumes<indexterm>
                 <primary>Nested volumes</primary>
-              </indexterm>.</para>
+              </indexterm> unless "<option>vol dbnest = yes</option>" is set.</para>
           </listitem>
 
           <listitem>
@@ -1204,11 +1204,11 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         UARights<indexterm>
             <primary>UARights</primary>
           </indexterm> permission bits. On a Mac, the Finder uses these bits
-        to adjust permission in Finder windows. For example folder whos UNIX
-        mode would only result in in read-only permissions for a user will not
-        be displayed with a read-only icon and the user will be able to write
-        to the folder given the folder has an ACL giving the user write
-        access.</para>
+          to adjust permission in Finder windows. Example: a folder whose
+          UNIX mode is read-only and an ACL giving the user write access,
+          will display the effectve read-write permission. Without the
+          permission mapping the Finder would display a read-only icon and
+          the user woldn't be able to write to the folder.</para>
 
         <para>By default, the effective permission of the authenticated user
         are only mapped to the mentioned UARights<indexterm>
@@ -1895,8 +1895,9 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
     specific startup script templates that are tailored according to the
     options given to the "configure" script before compiling. Currently,
     templates are provided for RedHat (sysv style), RedHat (systemd style),
-    SUSE (sysv style), SUSE (systemd style), Gentoo, NetBSD, Debian and
-    Solaris. You can select to install the generated startup script(s)
+    SUSE (sysv style), SUSE (systemd style), Debian (sysv style), Debian
+    (systemd style), Gentoo, NetBSD and Solaris. You can select to install
+    the generated startup script(s)
     <indexterm>
         <primary>Startscript</primary>
 
