@@ -346,23 +346,18 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
-#if !defined(FREEBSD)
-    hints.ai_family = AF_UNSPEC;
-#endif
+
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_NUMERICSERV;
 
-    if ( ! address) {
+    if (!address) {
         hints.ai_flags |= AI_PASSIVE;
-#if defined(FREEBSD)
         hints.ai_family = AF_INET6;
-#endif
     } else {
         hints.ai_flags |= AI_NUMERICHOST;
-#if defined(FREEBSD)
         hints.ai_family = AF_UNSPEC;
-#endif
     }
+
     if ((ret = getaddrinfo(address, port, &hints, &servinfo)) != 0) {
         LOG(log_error, logtype_dsi, "dsi_tcp_init(%s): getaddrinfo: %s\n", address ? address : "*", gai_strerror(ret));
         EC_FAIL;

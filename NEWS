@@ -12,6 +12,7 @@ Changes in 3.1.8
 * FIX: remove #541 workaround patch. There was this problem with only early
        Fedora 20.
 * FIX: rpmbuild fails on Fedora x86_64, bug #598
+* FIX: Listen on IPv6 wildcard address by default, bug #602
 
 Changes in 3.1.7
 ================
