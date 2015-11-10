@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">01 Jan 2012</refmiscinfo>
+    <refmiscinfo class="date">10 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -148,7 +148,7 @@
           much memory on top of its normal memory footprint. It can be used to
           tune database performance. The <emphasis
           remap="B">db_stat</emphasis> utility with the <option>-m</option>
-          option that comes with Berkley DB can help you determine ether you
+          option that comes with Berkley DB can help you determine whether you
           need to change this value. The default is pretty conservative so
           that a large percentage of requests should be satisfied from the
           cache directly. If memory is not a bottleneck on your system you
