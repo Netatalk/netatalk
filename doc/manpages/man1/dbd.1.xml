@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">28 Dec 2012</refmiscinfo>
+    <refmiscinfo class="date">12 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -44,7 +44,8 @@
         <term>-c</term>
 
         <listitem>
-          <para>convert from adouble:v2 to adouble:ea</para>
+          <para>convert from "<option>appledouble = v2</option>" to
+          "<option>appledouble = ea</option>"</para>
         </listitem>
       </varlistentry>
 
