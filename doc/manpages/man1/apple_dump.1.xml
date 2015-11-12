@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">16 Jul 2012</refmiscinfo>
+    <refmiscinfo class="date">12 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -18,7 +18,7 @@
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+      <command>apple_dump</command>
 
       <arg choice="opt"><arg choice="plain">-a</arg></arg>
 
@@ -26,10 +26,10 @@
         <arg choice="plain"><replaceable>FILE</replaceable></arg>
         <arg choice="plain"><replaceable>DIR</replaceable></arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <arg choice="plain">-e</arg>
 
@@ -37,36 +37,36 @@
         <arg choice="plain"><replaceable>FILE</replaceable></arg>
         <arg choice="plain"><replaceable>DIR</replaceable></arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <arg choice="plain">-f</arg>
 
       <arg choice="opt"><replaceable>FILE</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <arg choice="plain">-d</arg>
 
       <arg choice="opt"><replaceable>FILE</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <group choice="plain">
         <arg choice="plain">-h</arg>
         <arg choice="plain">-help</arg>
         <arg choice="plain">--help</arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
@@ -84,7 +84,7 @@
     AppleSingle/AppleDouble format data. </para>
     <para>This script can dump various AppleSingle/AppleDouble data created
     by mailer, archiver, Mac OS X, Netatalk and so on.</para>
-    <para>With no <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable>, or when <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable> is -, read standard input.</para>
+    <para>With no <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable>, or when <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable> is '-', read standard input.</para>
 
   </refsect1>
 
@@ -97,15 +97,15 @@
 
         <listitem>
           <para>This is default.
-          Dump a AppleSingle/AppleDouble file for
+          Dump a AppleSingle/AppleDouble data for
           <replaceable>FILE</replaceable> or <replaceable>DIR</replaceable>
           automatically.
           If FILE is not AppleSingle/AppleDouble format,
-          look for extended attribute, 
+          look for extended attribute,
           <replaceable>.AppleDouble/FILE</replaceable> and
           <replaceable>._FILE</replaceable>.
           If <replaceable>DIR</replaceable>, look for
-          extended attribute, 
+          extended attribute,
           <replaceable>DIR/.AppleDouble/.Parent</replaceable> and
           <replaceable>._DIR</replaceable>.</para>
         </listitem>
@@ -115,7 +115,7 @@
         <term><option>-e</option> <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable></term>
 
         <listitem>
-          <para>Dump extended attribute of<replaceable>FILE</replaceable> or <replaceable>DIR</replaceable>.</para>
+          <para>Dump extended attribute of <replaceable>FILE</replaceable> or <replaceable>DIR</replaceable>.</para>
         </listitem>
       </varlistentry>
 
@@ -165,7 +165,7 @@
     is .AppleDouble, filename is ._*, filename is .Parent, and so on.</para>
 
     <para>If setting option -e, -f or -d,  assume FinderInfo and doesn't look
-    for another file.</para>
+    for another data.</para>
 
   </refsect1>
 
