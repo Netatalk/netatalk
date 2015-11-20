@@ -193,12 +193,12 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     datalen += 8;
 
     /* version */
-    *p = FCE_PACKET_VERSION;
+    *p = obj->fce_version;
     p += 1;
     datalen += 1;
 
     /* optional: options */
-    if (FCE_PACKET_VERSION > 1) {
+    if (obj->fce_version > 1) {
         if (oldpath)
             packet_info |= FCE_EV_INFO_SRCPATH;
         *p = packet_info;
@@ -212,13 +212,15 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     datalen += 1;
 
     /* optional: padding */
-    if (FCE_PACKET_VERSION > 1) {
+    if (obj->fce_version > 1) {
+        *p = 0;
         p += 1;
         datalen += 1;
     }
 
     /* optional: reserved */
-    if (FCE_PACKET_VERSION > 1) {
+    if (obj->fce_version > 1) {
+        memset(p, 0, 8);
         p += 8;
         datalen += 8;
     }

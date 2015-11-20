@@ -13,6 +13,7 @@ Changes in 3.1.8
        Fedora 20.
 * FIX: rpmbuild fails on Fedora x86_64, bug #598
 * FIX: Listen on IPv6 wildcard address by default, bug #602
+* FIX: FCE protocol version 1 packets, bug #603
 
 Changes in 3.1.7
 ================
