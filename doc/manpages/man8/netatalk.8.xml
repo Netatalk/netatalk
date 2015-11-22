@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
+    <refmiscinfo class="date">22 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -18,15 +18,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>netatalk<indexterm>
-          <primary>netatalk</primary>
-        </indexterm></command>
-
-      <sbr />
-
-      <command>netatalk<indexterm>
-          <primary>netatalk</primary>
-        </indexterm></command>
+      <command>netatalk</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -36,7 +28,8 @@
     <para><command>netatalk</command> is the service controller daemon
     responsible for starting and restarting the AFP daemon
     <command>afpd</command> and the CNID daemon <command>cnid_metad</command>.
-    It is normally started at boot time from /etc/rc.</para>
+    It is normally started at boot time by init system (BSD-style init,
+    SysV-sytle init, systemd, Upstart, OpenRC, SMF and so on).</para>
   </refsect1>
 
   <refsect1>
@@ -70,7 +63,9 @@
         <term><filename>@pkgconfdir@/afp.conf</filename></term>
 
         <listitem>
-          <para>configuration file used by afpd and cnid_metad</para>
+          <para>configuration file used by <command>netatalk</command>(8),
+          <command>afpd</command>(8) and <command>cnid_metad</command>(8)
+          </para>
         </listitem>
       </varlistentry>
     </variablelist>
