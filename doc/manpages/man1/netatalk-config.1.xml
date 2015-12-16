@@ -21,7 +21,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>netatalk-config<indexterm><primary>netatalk-config</primary></indexterm></command>
+      <command>netatalk-config</command>
 
       <arg choice="opt"><arg choice="plain">--prefix </arg><arg choice="opt"><replaceable>=DIR</replaceable></arg></arg>
 

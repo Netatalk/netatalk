@@ -18,19 +18,15 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>afpd<indexterm>
-          <primary>afpd</primary>
-        </indexterm></command>
+      <command>afpd</command>
 
       <arg choice="opt">-d</arg>
 
       <arg choice="opt">-F <replaceable>configfile</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>afpd<indexterm>
-          <primary>afpd</primary>
-        </indexterm></command>
+    <cmdsynopsis>
+      <command>afpd</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>

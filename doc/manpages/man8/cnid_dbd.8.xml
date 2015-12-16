@@ -19,21 +19,11 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>cnid_dbd<indexterm>
-          <primary>cnid_dbd</primary>
-        </indexterm><indexterm>
-          <primary>CNID backend</primary>
-        </indexterm><indexterm>
-          <primary>NFS</primary>
+      <command>cnid_dbd</command>
+    </cmdsynopsis>
 
-          <secondary>Network File System</secondary>
-        </indexterm></command>
-
-      <sbr />
-
-      <command>cnid_dbd<indexterm>
-          <primary>cnid_dbd</primary>
-        </indexterm></command>
+    <cmdsynopsis>
+      <command>cnid_dbd</command>
 
         <group choice="plain">
           <arg choice="plain">-v</arg>

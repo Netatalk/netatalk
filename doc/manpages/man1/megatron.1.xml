@@ -30,43 +30,43 @@
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>megatron<indexterm><primary>megatron</primary></indexterm></command>
+      <command>megatron</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>unbin<indexterm><primary>unbin</primary></indexterm></command>
-
-      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>unhex<indexterm><primary>unhex</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>unbin</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>unsingle<indexterm><primary>unsingle</primary></indexterm></command>
-
-      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>hqx2bin<indexterm><primary>hqx2bin</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>unhex</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>single2bin<indexterm><primary>single2bin</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>unsingle</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
+    <cmdsynopsis>
+      <command>hqx2bin</command>
 
-      <command>macbinary<indexterm><primary>macbinary</primary></indexterm></command>
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>single2bin</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>macbinary</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
     </cmdsynopsis>

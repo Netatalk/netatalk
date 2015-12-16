@@ -18,7 +18,7 @@
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>afpstats<indexterm><primary>afpstats</primary></indexterm></command>
+      <command>afpstats</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
