@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
+    <refmiscinfo class="date">27 June 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -15,7 +15,7 @@
     <refname>afp_voluuid.conf</refname>
 
     <refpurpose>Configuration file used by afpd(8) to specify UUID
-        for Time Machine volume</refpurpose>
+        for AFP volumes</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -23,7 +23,7 @@
 
     <para><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename> is the
     configuration file used by <command>afpd</command> to specify
-    UUID of Time Machine volume automagically. The configuration
+    UUID of all AFP volumes. The configuration
     lines are composed like:</para>
 
     <para><replaceable>"volume name" </replaceable>
@@ -39,9 +39,7 @@
     <note>
         <para>This UUID is advertised by Zeroconf in order to provide
         robust disambiguation of Time Machine volume.</para>
-        <para>The afpd generates the UUID from random numbers and saves it
-        into afp_voluuid.conf, only when setting "time machine = yes" option
-        in afp.conf.</para>
+	<para>It is also used by the MySQL CNID backend.</para>
         <para>This file should not be thoughtlessly edited and be copied
         onto another server.</para>
     </note>
@@ -53,7 +51,7 @@
     <title>Examples</title>
 
     <example>
-      <title>afp_voluuid.conf three TM volumes on one netatalk</title>
+      <title>afp_voluuid.conf with three volumes</title>
 
       <programlisting># This is a comment.
 "Backup for John Smith" 1573974F-0ABD-69CC-C40A-8519B681A0E1

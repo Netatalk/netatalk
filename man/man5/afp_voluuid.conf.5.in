@@ -2,12 +2,12 @@
 .\"     Title: afp_voluuid.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 23 Mar 2012
+.\"      Date: 27 June 2016
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_VOLUUID\&.CONF" "5" "23 Mar 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_VOLUUID\&.CONF" "5" "27 June 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for Time Machine volume
+afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for AFP volumes
 .SH "DESCRIPTION"
 .PP
 @localstatedir@/netatalk/afp_voluuid\&.conf
 is the configuration file used by
 \fBafpd\fR
-to specify UUID of Time Machine volume automagically\&. The configuration lines are composed like:
+to specify UUID of all AFP volumes\&. The configuration lines are composed like:
 .PP
 \fI"volume name" \fR
 \fIuuid\-string\fR
@@ -57,7 +57,7 @@ The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines 
 .PP
 This UUID is advertised by Zeroconf in order to provide robust disambiguation of Time Machine volume\&.
 .PP
-The afpd generates the UUID from random numbers and saves it into afp_voluuid\&.conf, only when setting "time machine = yes" option in afp\&.conf\&.
+It is also used by the MySQL CNID backend\&.
 .PP
 This file should not be thoughtlessly edited and be copied onto another server\&.
 .sp .5v
@@ -65,7 +65,7 @@ This file should not be thoughtlessly edited and be copied onto another server\&
 .PP
 .SH "EXAMPLES"
 .PP
-\fBExample.\ \&afp_voluuid.conf three TM volumes on one netatalk\fR
+\fBExample.\ \&afp_voluuid.conf with three volumes\fR
 .sp
 .if n \{\
 .RS 4

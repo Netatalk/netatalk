@@ -196,9 +196,10 @@ static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
 
+    load_volumes(&obj, LV_ALL);
+
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
-        load_volumes(&obj, LV_ALL | LV_FORCE);
         zeroconf_register(&obj);
         LOG(log_note, logtype_default, "Re-registered with Zeroconf");
     }
