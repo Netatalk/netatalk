@@ -18,11 +18,11 @@
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>macusers<indexterm><primary>macusers</primary></indexterm></command>
+      <command>macusers</command>
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>macusers<indexterm><primary>macusers</primary></indexterm></command>
+      <command>macusers</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>

@@ -18,20 +18,16 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>cnid_metad<indexterm>
-          <primary>cnid_metad</primary>
-        </indexterm></command>
+      <command>cnid_metad</command>
 
       <arg choice="opt">-d</arg>
 
       <arg choice="opt"><arg choice="plain">-F </arg><arg
       choice="plain"><replaceable>configuration file</replaceable></arg></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>cnid_metad<indexterm>
-          <primary>cnid_metad</primary>
-        </indexterm></command>
+    <cmdsynopsis>
+      <command>cnid_metad</command>
 
 	<group choice="plain">
 	  <arg choice="plain">-v</arg>

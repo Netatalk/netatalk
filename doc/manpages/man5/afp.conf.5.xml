@@ -13,9 +13,7 @@
   <refnamediv>
     <refname>afp.conf</refname>
 
-    <refpurpose>Netatalk configuration file <indexterm>
-        <primary>afp.conf</primary>
-      </indexterm></refpurpose>
+    <refpurpose>Netatalk configuration file</refpurpose>
   </refnamediv>
 
   <refsect1>

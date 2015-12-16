@@ -14,15 +14,12 @@
     <refname>extmap.conf</refname>
 
     <refpurpose>Configuration file used by afpd(8) to
-    specify file name extension mappings.<indexterm>
-        <primary>extmap.conf</primary>
-      </indexterm>
-      </refpurpose>
+    specify file name extension mappings.</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>@pkgconfdir@/extmap.conf<indexterm><primary>extmap.conf</primary></indexterm></command>
+      <command>@pkgconfdir@/extmap.conf</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -36,7 +33,7 @@
 
     <para>The configuration lines are composed like:</para>
 
-    <para><filename>.extension</filename> <replaceable>[ type [
+    <para><filename>.extension</filename> <replaceable> [ type [
     creator ] ]</replaceable></para>
 
     <para>Any line beginning with a hash (“#”) character is ignored.
