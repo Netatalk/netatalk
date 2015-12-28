@@ -104,8 +104,8 @@ struct vol {
 /* load_volumes() flags */
 typedef enum {
     LV_DEFAULT = 0,
-    LV_ALL = 1,
-    LV_FORCE = 2
+    LV_ALL = 1,      /* Skip access checks */
+    LV_FORCE = 2     /* Reload even if unchanged */
 } lv_flags_t;
 
 /* volume flags */
