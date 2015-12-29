@@ -1,4 +1,4 @@
-Netatalk 3.1.7
+Netatalk 3.1.8
 ==============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,23 +45,22 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.7
+Changes in 3.1.8
 ~~~~~~~~~~~~~~~~
-* UPD: Spotlight: enhance behaviour for long running queries, client
-       will now show "progress wheel" while waiting for first results.
-* FIX: netatalk: fix a crash on Solaris when registering with mDNS
-* FIX: netatalk: SIGHUP would kill the process instead of being resent
-       to the other Netatalk processes, bug #579
-* FIX: afpd: Solaris locking problem, bug #559
-* FIX: Handling of malformed UTF8 strings, bug #524
-* FIX: afpd: umask handling, bug #576
-* FIX: Spotlight: Limiting searches to subfolders, bug #581
-* FIX: afpd: reloading logging config may result in privilege
-       escalation in afpd processes
-* FIX: afpd: ACL related error messages, now logged with loglevel
-       debug instead of error
-* FIX: cnid_metad: fix tsockfd_create() return value on error
-* FIX: CNID/MySQL: volume table name generation, bug #566.
+* FIX: CNID/MySQL: Quote UUID table names, bug #585
+* FIX: Crash in cnid_metad, bug #593
+* UPD: Update Unicode support to version 8.0.0
+* FIX: larger server side copyfile buffer for improved IO performance,
+       bug #599
+* NEW: afpd: new option "ea = samba". Use Samba vfs_streams_xattr
+       compatible xattrs which means adding a 0 byte at the end of
+       xattrs.
+* FIX: remove #541 workaround patch. There was this problem with only early
+       Fedora 20.
+* FIX: rpmbuild fails on Fedora x86_64, bug #598
+* FIX: Listen on IPv6 wildcard address by default, bug #602
+* FIX: FCE protocol version 1 packets, bug #603
+* UPD: Update list of BerkeleyDB versions searched at configure time
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -116,4 +115,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, November 2014
+ - The Netatalk Development Team, December 2015
