@@ -30,10 +30,10 @@
 .SH "NAME"
 macusers \- List the users connecting via AFP
 .SH "SYNOPSIS"
-.HP \w'\fBmacusers\fR\fB\fR\ 'u
-\fBmacusers\fR\fB\fR
-.HP \w'\fBmacusers\fR\fB\fR\ 'u
-\fBmacusers\fR\fB\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help 
+.HP \w'\fBmacusers\fR\ 'u
+\fBmacusers\fR
+.HP \w'\fBmacusers\fR\ 'u
+\fBmacusers\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help 
 .SH "DESCRIPTION"
 .PP
 \fBmacusers\fR

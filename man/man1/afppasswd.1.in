@@ -30,8 +30,8 @@
 .SH "NAME"
 afppasswd \- netatalk password maintenance utility
 .SH "SYNOPSIS"
-.HP \w'\fBafppasswd\fR\fB\fR\fB\fR\ 'u
-\fBafppasswd\fR\fB\fR\fB\fR [\-acfn] [\-p\ \fIpasswd\fR\ \fIfile\fR] [\-u\ \fIminimum\fR\ \fIuid\fR]
+.HP \w'\fBafppasswd\fR\ 'u
+\fBafppasswd\fR [\-acfn] [\-p\ \fIpasswd\fR\ \fIfile\fR] [\-u\ \fIminimum\fR\ \fIuid\fR]
 .SH "DESCRIPTION"
 .PP
 \fBafppasswd\fR

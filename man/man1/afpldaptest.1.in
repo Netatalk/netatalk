@@ -30,10 +30,10 @@
 .SH "NAME"
 afpldaptest \- Syntactically check ldap parameters in afp\&.conf
 .SH "SYNOPSIS"
-.HP \w'\fBafpldaptest\fR\fB\fR\fBafpldaptest\fR\fB\fR\ 'u
-\fBafpldaptest\fR\fB\fR {\-u\ \fIUSER\fR | \-g\ \fIGROUP\fR | \-i\ \fIUUID\fR}
-.br
-\fBafpldaptest\fR\fB\fR {\-h | \-? | \-:}
+.HP \w'\fBafpldaptest\fR\ 'u
+\fBafpldaptest\fR {\-u\ \fIUSER\fR | \-g\ \fIGROUP\fR | \-i\ \fIUUID\fR}
+.HP \w'\fBafpldaptest\fR\ 'u
+\fBafpldaptest\fR {\-h | \-? | \-:}
 .SH "DESCRIPTION"
 .PP
 \fBafpldaptest\fR

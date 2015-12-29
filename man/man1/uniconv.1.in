@@ -30,8 +30,8 @@
 .SH "NAME"
 uniconv \- convert Netatalk volume encoding
 .SH "SYNOPSIS"
-.HP \w'\fBuniconv\fR\fB\fR\ 'u
-\fBuniconv\fR\fB\fR [\-ndv] \-c\ \fIcnidbackend\fR \-f\ \fIfromcode\fR \-t\ \fItocode\fR [\-m\ \fImaccode\fR] \fIvolumepath\fR
+.HP \w'\fBuniconv\fR\ 'u
+\fBuniconv\fR [\-ndv] \-c\ \fIcnidbackend\fR \-f\ \fIfromcode\fR \-t\ \fItocode\fR [\-m\ \fImaccode\fR] \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBuniconv\fR

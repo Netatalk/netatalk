@@ -30,10 +30,10 @@
 .SH "NAME"
 afpd \- Apple Filing Protocol daemon
 .SH "SYNOPSIS"
-.HP \w'\fBafpd\fR\fB\fR\fBafpd\fR\fB\fR\ 'u
-\fBafpd\fR\fB\fR [\-d] [\-F\ \fIconfigfile\fR]
-.br
-\fBafpd\fR\fB\fR \-v | \-V | \-h 
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR [\-d] [\-F\ \fIconfigfile\fR]
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR \-v | \-V | \-h 
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR

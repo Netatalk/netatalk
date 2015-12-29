@@ -30,8 +30,8 @@
 .SH "NAME"
 afpstats \- List AFP statistics
 .SH "SYNOPSIS"
-.HP \w'\fBafpstats\fR\fB\fR\ 'u
-\fBafpstats\fR\fB\fR
+.HP \w'\fBafpstats\fR\ 'u
+\fBafpstats\fR
 .SH "DESCRIPTION"
 .PP
 \fBafpstats\fR

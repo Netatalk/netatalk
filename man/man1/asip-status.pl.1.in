@@ -30,12 +30,10 @@
 .SH "NAME"
 asip-status.pl \- Queries AFP servers for their capabilities
 .SH "SYNOPSIS"
-.HP \w'\fBasip\-status\&.pl\fR\fB\fR\ 'u
-\fBasip\-status\&.pl\fR\fB\fR [\-d] [\-i] [\-x] HOSTNAME[:PORT]
-
-.br
-.HP \w'\fBasip\-status\&.pl\fR\fB\fR\ 'u
-\fBasip\-status\&.pl\fR\fB\fR \-v | \-version | \-\-version 
+.HP \w'\fBasip\-status\&.pl\fR\ 'u
+\fBasip\-status\&.pl\fR [\-d] [\-i] [\-x] HOSTNAME[:PORT]
+.HP \w'\fBasip\-status\&.pl\fR\ 'u
+\fBasip\-status\&.pl\fR \-v | \-version | \-\-version 
 .SH "DESCRIPTION"
 .PP
 \fBasip\-status\&.pl\fR

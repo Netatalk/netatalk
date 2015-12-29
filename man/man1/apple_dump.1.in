@@ -2,12 +2,12 @@
 .\"     Title: apple_dump
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 16 Jul 2012
+.\"      Date: 12 Nov 2015
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "16 Jul 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "APPLE_DUMP" "1" "12 Nov 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,18 +30,18 @@
 .SH "NAME"
 apple_dump \- Dump AppleSingle/AppleDouble format data
 .SH "SYNOPSIS"
-.HP \w'\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\ 'u
-\fBapple_dump\fR\fB\fR [\-a] [\fIFILE\fR | \fIDIR\fR]
-.br
-\fBapple_dump\fR\fB\fR \-e \fIFILE\fR | \fIDIR\fR 
-.br
-\fBapple_dump\fR\fB\fR \-f [\fIFILE\fR]
-.br
-\fBapple_dump\fR\fB\fR \-d [\fIFILE\fR]
-.br
-\fBapple_dump\fR\fB\fR \-h | \-help | \-\-help 
-.br
-\fBapple_dump\fR\fB\fR \-v | \-version | \-\-version 
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR [\-a] [\fIFILE\fR | \fIDIR\fR]
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR \-e \fIFILE\fR | \fIDIR\fR 
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR \-f [\fIFILE\fR]
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR \-d [\fIFILE\fR]
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR \-h | \-help | \-\-help 
+.HP \w'\fBapple_dump\fR\ 'u
+\fBapple_dump\fR \-v | \-version | \-\-version 
 .SH "DESCRIPTION"
 .PP
 \fBapple_dump\fR
@@ -52,12 +52,12 @@ This script can dump various AppleSingle/AppleDouble data created by mailer, arc
 With no
 \fIFILE\fR|\fIDIR\fR, or when
 \fIFILE\fR|\fIDIR\fR
-is \-, read standard input\&.
+is \*(Aq\-\*(Aq, read standard input\&.
 .SH "OPTIONS"
 .PP
 \fB\-a\fR [\fIFILE\fR|\fIDIR\fR]
 .RS 4
-This is default\&. Dump a AppleSingle/AppleDouble file for
+This is default\&. Dump a AppleSingle/AppleDouble data for
 \fIFILE\fR
 or
 \fIDIR\fR
@@ -73,7 +73,8 @@ and
 .PP
 \fB\-e\fR \fIFILE\fR|\fIDIR\fR
 .RS 4
-Dump extended attribute of\fIFILE\fR
+Dump extended attribute of
+\fIFILE\fR
 or
 \fIDIR\fR\&.
 .RE
@@ -103,7 +104,7 @@ Show version and exit
 .PP
 There is no way to detect whether FinderInfo is FileInfo or DirInfo\&. By default, apple_dump examines whether file or directory, a parent directory is \&.AppleDouble, filename is \&._*, filename is \&.Parent, and so on\&.
 .PP
-If setting option \-e, \-f or \-d, assume FinderInfo and doesn\*(Aqt look for another file\&.
+If setting option \-e, \-f or \-d, assume FinderInfo and doesn\*(Aqt look for another data\&.
 .SH "SEE ALSO"
 .PP
 \fBad\fR(1),

@@ -2,12 +2,12 @@
 .\"     Title: netatalk-config
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 09 June 2001
+.\"      Date: 10 Nov 2015
 .\"    Manual: The Netatalk Project
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "NETATALK\-CONFIG" "1" "09 June 2001" "@NETATALK_VERSION@" "The Netatalk Project"
+.TH "NETATALK\-CONFIG" "1" "10 Nov 2015" "@NETATALK_VERSION@" "The Netatalk Project"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,8 +30,8 @@
 .SH "NAME"
 netatalk-config \- script to get information about the installed version of netatalk
 .SH "SYNOPSIS"
-.HP \w'\fBnetatalk\-config\fR\fB\fR\ 'u
-\fBnetatalk\-config\fR\fB\fR [\-\-prefix\ [\fI=DIR\fR]] [\-\-exec_prefix\ [\fI=DIR\fR]] [\-\-help] [\-\-version] [\-\-libs] [\-\-libs\-dirs] [\-\-libs\-names] [\-\-cflags] [\-\-macros]
+.HP \w'\fBnetatalk\-config\fR\ 'u
+\fBnetatalk\-config\fR [\-\-prefix\ [\fI=DIR\fR]] [\-\-exec_prefix\ [\fI=DIR\fR]] [\-\-help] [\-\-version] [\-\-libs] [\-\-libs\-dirs] [\-\-libs\-names] [\-\-cflags] [\-\-macros]
 .SH "DESCRIPTION"
 .PP
 \fBnetatalk\-config\fR
@@ -93,7 +93,7 @@ If specified, use PREFIX instead of the installation prefix that
 was built with when computing the output for the \-\-cflags and \-\-libs options\&. This option is also used for the exec prefix if \-\-exec\-prefix was not specified\&. This option must be specified before any \-\-libs or \-\-cflags options\&.
 .RE
 .PP
-\fB\-\-exec\e_prefix=PREFIX\fR
+\fB\-\-exec_prefix=PREFIX\fR
 .RS 4
 If specified, use PREFIX instead of the installation exec prefix that
 \fInetatalk\fR

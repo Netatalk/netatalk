@@ -2,12 +2,12 @@
 .\"     Title: cnid_dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 01 Jan 2012
+.\"      Date: 10 Nov 2015
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "CNID_DBD" "8" "01 Jan 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "CNID_DBD" "8" "10 Nov 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,10 +30,10 @@
 .SH "NAME"
 cnid_dbd \- implement access to CNID databases through a dedicated daemon process
 .SH "SYNOPSIS"
-.HP \w'\fBcnid_dbd\fR\fB\fR\fB\fR\fB\fR\fBcnid_dbd\fR\fB\fR\ 'u
-\fBcnid_dbd\fR\fB\fR\fB\fR\fB\fR
-.br
-\fBcnid_dbd\fR\fB\fR \-v | \-V 
+.HP \w'\fBcnid_dbd\fR\ 'u
+\fBcnid_dbd\fR
+.HP \w'\fBcnid_dbd\fR\ 'u
+\fBcnid_dbd\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBcnid_dbd\fR
@@ -135,7 +135,7 @@ process grabs that much memory on top of its normal memory footprint\&. It can b
 \fBdb_stat\fR
 utility with the
 \fB\-m\fR
-option that comes with Berkley DB can help you determine ether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
+option that comes with Berkley DB can help you determine whether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
 \fBBerkeley DB Tutorial and Reference Guide\fR
 has a section
 \fBSelecting a cache size\fR

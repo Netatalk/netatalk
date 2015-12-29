@@ -30,20 +30,20 @@
 .SH "NAME"
 megatron, unhex, unbin, unsingle, hqx2bin, single2bin, macbinary \- Macintosh file format transformer
 .SH "SYNOPSIS"
-.HP \w'\fBmegatron\fR\fB\fR\fBunbin\fR\fB\fR\fBunhex\fR\fB\fR\fBunsingle\fR\fB\fR\fBhqx2bin\fR\fB\fR\fBsingle2bin\fR\fB\fR\fBmacbinary\fR\fB\fR\ 'u
-\fBmegatron\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBunbin\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBunhex\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBunsingle\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBhqx2bin\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBsingle2bin\fR\fB\fR [\fIsourcefile\fR...]
-.br
-\fBmacbinary\fR\fB\fR [\fIsourcefile\fR...]
+.HP \w'\fBmegatron\fR\ 'u
+\fBmegatron\fR [\fIsourcefile\fR...]
+.HP \w'\fBunbin\fR\ 'u
+\fBunbin\fR [\fIsourcefile\fR...]
+.HP \w'\fBunhex\fR\ 'u
+\fBunhex\fR [\fIsourcefile\fR...]
+.HP \w'\fBunsingle\fR\ 'u
+\fBunsingle\fR [\fIsourcefile\fR...]
+.HP \w'\fBhqx2bin\fR\ 'u
+\fBhqx2bin\fR [\fIsourcefile\fR...]
+.HP \w'\fBsingle2bin\fR\ 'u
+\fBsingle2bin\fR [\fIsourcefile\fR...]
+.HP \w'\fBmacbinary\fR\ 'u
+\fBmacbinary\fR [\fIsourcefile\fR...]
 .SH "DESCRIPTION"
 .PP
 \fBmegatron\fR

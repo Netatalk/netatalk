@@ -36,7 +36,7 @@ is the configuration file used by
 \fBafpd\fR
 to specify UUID of Time Machine volume automagically\&. The configuration lines are composed like:
 .PP
-\fI"volume name"\fR
+\fI"volume name" \fR
 \fIuuid\-string\fR
 .PP
 The first field is volume name\&. Volume names must be quoted if they contain spaces\&. The second field is the 36 character hexadecimal ASCII string representation of a UUID\&.

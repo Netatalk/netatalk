@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 06 Aug 2014
+.\"      Date: 26 Oct 2015
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "06 Aug 2014" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "26 Oct 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ Any line ending in a
 \(lq \e \(rq
 is continued on the next line in the customary UNIX fashion\&.
 .PP
-The values following the equals sign in parameters are all either a string (no quotes needed) or a boolean, which may be given as yes/no, 1/0 or true/false\&. Case is not significant in boolean values, but is preserved in string values\&. Some items such as create masks are numeric\&.
+The values following the equals sign in parameters are all either a string (no quotes needed) or a boolean, which may be given as yes/no, 1/0 or true/false\&. Case is not significant in boolean values, but is preserved in string values\&. Some items such as "file perm"s are numeric\&.
 .PP
 The parameter
 \fBinclude = \fR\fB\fIpath\fR\fR
@@ -307,7 +307,7 @@ uams_clrtxt\&.so
 .PP
 uams_randum\&.so
 .RS 4
-allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @pkgconfdir@/afppasswd file or the one specified via "\fBpasswd file\fR"\&. See
+allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @pkgconfdir@/afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
 \fBafppasswd\fR(1)
 for details\&. (legacy)
 .RE
@@ -346,7 +346,7 @@ option\&. The default is MacRoman, which should be fine for most western users\&
 .PP
 As
 \fBafpd\fR
-needs to interact with UNIX operating system as well, it need\*(Aqs to be able to convert from UTF8\-MAC / Mac charset to the UNIX charset\&. By default
+needs to interact with UNIX operating system as well, it needs to be able to convert from UTF8\-MAC / Mac charset to the UNIX charset\&. By default
 \fBafpd\fR
 uses
 \fIUTF8\fR\&. You can set the UNIX charset using the
@@ -450,11 +450,11 @@ hours before dropping them\&. Default is 24 hours\&.
 .PP
 dsireadbuf = \fInumber\fR \fB(G)\fR
 .RS 4
-Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
+Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default 1MiB) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
 \fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
 .RE
 .PP
-fqdn = \fIname:port\fR \fB(G)\fR
+fqdn = \fIname[:port]\fR \fB(G)\fR
 .RS 4
 Specifies a fully\-qualified domain name, with an optional port\&. This is discarded if the server cannot resolve it\&. This option is not honored by AppleShare clients <= 3\&.8\&.3\&. This option is disabled by default\&. Use with caution as this will involve a second name resolution step on the client side\&. Also note that afpd will advertise this name:port combination but not automatically listen to it\&.
 .RE
@@ -484,12 +484,12 @@ hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
 .PP
 tcprcvbuf = \fInumber\fR \fB(G)\fR
 .RS 4
-Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+Try to set TCP receive buffer using setsockopt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .PP
 tcpsndbuf = \fInumber\fR \fB(G)\fR
 .RS 4
-Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+Try to set TCP send buffer using setsockopt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .PP
 recvfile = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -538,7 +538,7 @@ contains symlink, you must set the canonicalized absolute path\&. In the simple 
 \fBbasedir regex = /home\fR
 .RE
 .PP
-chmod request = \fIpreserve (default) | ignore | simple\fR \fB(G/V)\fR
+chmod request = \fIpreserve (default) | ignore | simple\fR \fB(G)/(V)\fR
 .RS 4
 Advanced permission control that deals with ACLs\&.
 .sp
@@ -645,7 +645,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 home name = \fIname\fR \fB(H)\fR
 .RS 4
 AFP user home volume name\&. The default is
-\fIuser\*(Aqs home\fR\&.
+\fI$u\*(Aqs home\fR\&.
 .RE
 .PP
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
@@ -702,13 +702,11 @@ A list of attributes that are allowed to be used in Spotlight searches\&. By def
 .RS 4
 .\}
 .nf
-spotlight
-            attributes = *,kMDItemTextContent
+spotlight attributes = *,kMDItemTextContent
 .fi
 .if n \{\
 .RE
 .\}
-.sp
 .RE
 .PP
 spotlight expr = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -751,9 +749,9 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .RS 4
 .\}
 .nf
- 73: limit of Mac OS X 10\&.1 80: limit of Mac
-            OS X 10\&.4/10\&.5 (default) 255: limit of recent Mac OS
-            X
+73: limit of Mac OS X 10\&.1
+80: limit of Mac OS X 10\&.4/10\&.5 (default)
+255: limit of recent Mac OS X
 .fi
 .if n \{\
 .RE
@@ -945,7 +943,7 @@ Slash delimited list of filenames for which FCE events shall not be generated\&.
 .PP
 fce notify script = \fIPATH\fR \fB(G)\fR
 .RS 4
-Script which will be executed for every FCE event, see contrib/shell_utils/fce_ev_script\&.shfrom the Netatalk sources for an example script\&.
+Script which will be executed for every FCE event, see contrib/shell_utils/fce_ev_script\&.sh from the Netatalk sources for an example script\&.
 .RE
 .SS "Debug Parameters"
 .PP
@@ -971,7 +969,7 @@ Do not use this option any longer as present Netatalk correctly supports server 
 .SS "Options for ACL handling"
 .PP
 By default, the effective permission of the authenticated user are only mapped to the mentioned UARights permission structure, not the UNIX mode\&. You can adjust this behaviour with the configuration option
-\fBmac acls\fR:
+\fBmap acls\fR:
 .PP
 map acls = \fInone|rights|mode\fR \fB(G)\fR
 .RS 4
@@ -1026,7 +1024,7 @@ Distinguished Name of the user for simple bind\&.
 .PP
 ldap auth pw = \fIpassword\fR \fB(G)\fR
 .RS 4
-Distinguished Name of the user for simple bind\&.
+Password for simple bind\&.
 .RE
 .PP
 ldap server = \fIhost\fR \fB(G)\fR
@@ -1056,7 +1054,7 @@ DN of the group container in LDAP\&.
 .PP
 ldap groupscope = \fIscope\fR \fB(G)\fR
 .RS 4
-Search scope for user search:
+Search scope for group search:
 \fBbase | one | sub\fR
 .RE
 .PP
@@ -1283,22 +1281,22 @@ set perm mask\&. Don\*(Aqt use with "\fBunix priv = no\fR"\&.
 .PP
 preexec = \fIcommand\fR \fB(V)\fR
 .RS 4
-command to be run when the volume is mounted, ignored for user defined volumes
+command to be run when the volume is mounted
 .RE
 .PP
 postexec = \fIcommand\fR \fB(V)\fR
 .RS 4
-command to be run when the volume is closed, ignored for user defined volumes
+command to be run when the volume is closed
 .RE
 .PP
 root preexec = \fIcommand\fR \fB(V)\fR
 .RS 4
-command to be run as root when the volume is mounted, ignored for user defined volumes
+command to be run as root when the volume is mounted
 .RE
 .PP
 root postexec = \fIcommand\fR \fB(V)\fR
 .RS 4
-command to be run as root when the volume is closed, ignored for user defined volumes
+command to be run as root when the volume is closed
 .RE
 .PP
 rolist = \fBusers/groups\fR \fB(V)\fR
@@ -1490,30 +1488,20 @@ might show that there are other CNID backends available, be warned those are lik
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
-needs a way to preserve extended Macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
-:f0\&. Some special characters will be converted as to :xx notation as well\&. \*(Aq/\*(Aq will be encoded to
-:2f, if
-\fBusedots\fR
-is not specified, a leading dot \*(Aq\&.\*(Aq will be encoded as
-:2e\&.
+needs a way to preserve extended Macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. This version now uses UTF\-8 as the default encoding for names\&. \*(Aq/\*(Aq will be converted to \*(Aq:\*(Aq\&.
 .PP
-This version now uses UTF\-8 as the default encoding for names\&. \*(Aq/\*(Aq will be converted to \*(Aq:\*(Aq\&.
+Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0xF0) was saved as
+:f0\&. Some special characters would be converted as to :xx notation as well\&. \*(Aq/\*(Aq would be encoded to
+:2f, a leading dot \*(Aq\&.\*(Aq might be encoded as
+:2e\&.
 .PP
 The
 \fBvol charset\fR
-option will allow you to select another volume encoding\&. E\&.g\&. for western users another useful setting could be vol charset ISO\-8859\-15\&.
+option will allow you to select another volume encoding\&.
 \fBafpd\fR
 will accept any
 \fBiconv\fR(1)
-provided charset\&. If a character cannot be converted from the
-\fBmac charset\fR
-to the selected
-\fBvol charset\fR, afpd will save it as a CAP encoded character\&. For AFP3 clients,
-\fBafpd\fR
-will convert the UTF\-8
-character to
-\fBmac charset\fR
-first\&. If this conversion fails, you\*(Aqll receive a \-50 error on the mac\&.
+provided charset\&. It is highly recommended to stick to the default UTF\-8\&.
 .PP
 \fINote\fR: Whenever you can, please stick with the default UTF\-8 volume format\&.
 .SH "SEE ALSO"

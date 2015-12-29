@@ -2,12 +2,12 @@
 .\"     Title: dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 28 Dec 2012
+.\"      Date: 12 Nov 2015
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "DBD" "1" "28 Dec 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "DBD" "1" "12 Nov 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,8 +30,8 @@
 .SH "NAME"
 dbd \- CNID database maintenance
 .SH "SYNOPSIS"
-.HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-cfFstuvV] \fIvolumepath\fR
+.HP \w'\fBdbd\fR\ 'u
+\fBdbd\fR [\-cfFstuvV] \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBdbd\fR
@@ -40,7 +40,7 @@ scans all file and directories of AFP volumes, updating the CNID database of the
 .PP
 \-c
 .RS 4
-convert from adouble:v2 to adouble:ea
+convert from "\fBappledouble = v2\fR" to "\fBappledouble = ea\fR"
 .RE
 .PP
 \-f
