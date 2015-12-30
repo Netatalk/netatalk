@@ -299,6 +299,105 @@ iflist_done:
     freeifacelist(start);
 }
 
+static int dsi_tcp_listen(const char *address,
+                          const char *port,
+                          struct addrinfo *hints,
+                          DSI *dsi,
+                          bool *psocket_err_afnotsup)
+{
+    EC_INIT;
+    int                flag;
+    struct addrinfo   *servinfo = NULL;
+    struct addrinfo   *p;
+    bool               socket_err_afnotsup = false;
+    bool               socket_err_other = false;
+
+    *psocket_err_afnotsup = false;
+
+    ret = getaddrinfo(address, port, hints, &servinfo);
+    if (ret != 0) {
+        LOG(log_error, logtype_dsi, "dsi_tcp_init(%s): getaddrinfo: %s\n",
+            address ? address : "*", gai_strerror(ret));
+        EC_FAIL;
+    }
+
+    /* loop through all the results and bind to the first we can */
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (dsi->serversock == -1) {
+            /*
+             * If all calls to socket() return EAFNOSUPPORT, IPv6 may
+             * be disabled on all interfaces and we may be trying to
+             * bind to the IPv6 wildcard address (the default). Return
+             * this condition to the caller so he can call us again
+             * with different hints.
+             */
+            if (hints->ai_family == AF_INET6) {
+                if (errno == EAFNOSUPPORT) {
+                    socket_err_afnotsup = true;
+                } else {
+                    socket_err_other = true;
+                }
+            }
+            LOG(log_debug, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
+            continue;
+        }
+
+        /*
+         * Set some socket options:
+         * SO_REUSEADDR deals w/ quick close/opens
+         * TCP_NODELAY diables Nagle
+         */
+#ifdef SO_REUSEADDR
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+#endif
+#if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
+        int on = 0;
+        setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
+#endif
+
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
+
+        ret = bind(dsi->serversock, p->ai_addr, p->ai_addrlen);
+        if (ret == -1) {
+            close(dsi->serversock);
+            dsi->serversock = -1;
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
+            continue;
+        }
+
+        ret = listen(dsi->serversock, DSI_TCPMAXPEND);
+        if (ret == -1) {
+            close(dsi->serversock);
+            dsi->serversock = -1;
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
+            continue;
+        }
+
+        /* Copy struct sockaddr to struct sockaddr_storage */
+        memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+        break;
+    }
+
+    if (p == NULL) {
+        /* Didn't find a suitable address */
+        if (socket_err_afnotsup && !socket_err_other) {
+            *psocket_err_afnotsup = true;
+        }
+        EC_FAIL;
+    }
+
+EC_CLEANUP:
+    if (servinfo) {
+        freeaddrinfo(servinfo);
+    }
+    EC_EXIT;
+}
 
 #ifndef AI_NUMERICSERV
 #define AI_NUMERICSERV 0
@@ -329,9 +428,10 @@ iflist_done:
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const char *inport)
 {
     EC_INIT;
-    int                flag, err;
+    int                err;
     char              *address = NULL, *port = NULL;
     struct addrinfo    hints, *servinfo, *p;
+    bool               socket_err_afnotsup;
 
     /* inaddress may be NULL */
     AFP_ASSERT(dsi && hostname && inport);
@@ -358,62 +458,25 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
         hints.ai_family = AF_UNSPEC;
     }
 
-    if ((ret = getaddrinfo(address, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_dsi, "dsi_tcp_init(%s): getaddrinfo: %s\n", address ? address : "*", gai_strerror(ret));
-        EC_FAIL;
-    }
-
-    /* loop through all the results and bind to the first we can */
-    for (p = servinfo; p != NULL; p = p->ai_next) {
-        if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
-            continue;
+    ret = dsi_tcp_listen(address, port, &hints, dsi, &socket_err_afnotsup);
+    if (ret != 0) {
+        if ((hints.ai_flags & AI_PASSIVE) &&
+            (hints.ai_family == AF_INET6) &&
+            (socket_err_afnotsup == true))
+        {
+            /*
+             * IPv6 is disabled, try again with AF_UNSPEC.
+             */
+            LOG(log_note, logtype_dsi, "IPv6 is disabled, try again with AF_UNSPEC");
+            hints.ai_family = AF_UNSPEC;
+            ret = dsi_tcp_listen(address, port, &hints, dsi, &socket_err_afnotsup);
         }
 
-        /*
-         * Set some socket options:
-         * SO_REUSEADDR deals w/ quick close/opens
-         * TCP_NODELAY diables Nagle
-         */
-#ifdef SO_REUSEADDR
-        flag = 1;
-        setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-#endif
-#if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
-        int on = 0;
-        setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
-#endif
-
-#ifndef SOL_TCP
-#define SOL_TCP IPPROTO_TCP
-#endif
-        flag = 1;
-        setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
-            
-        if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
-            close(dsi->serversock);
-            LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
-            continue;
+        if (ret != 0) {
+            LOG(log_error, logtype_dsi, "No suitable network config for TCP socket");
+            EC_FAIL;
         }
-
-        if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
-            close(dsi->serversock);
-            LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
-            continue;
-        }
-            
-        break;
     }
-
-    if (p == NULL)  {
-        LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
-        freeaddrinfo(servinfo);
-        EC_FAIL;
-    }
-
-    /* Copy struct sockaddr to struct sockaddr_storage */
-    memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
-    freeaddrinfo(servinfo);
 
     /* Point protocol specific functions to tcp versions */
     dsi->proto_open = dsi_tcp_open;

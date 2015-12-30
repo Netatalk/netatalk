@@ -2,6 +2,8 @@ Changes in 3.1.9
 ================
 * FIX: afpd: fix "admin group" option
 * NEW: afpd: new options "force user" and "force group"
+* FIX: listening on IPv6 wildcard address may fail if IPv6 is
+       disabled, bug #606
 
 Changes in 3.1.8
 ================
