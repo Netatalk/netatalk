@@ -410,6 +410,7 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
 			rq->miprd.mipr_broadcast = htonl(gMacip.broadcast);
 			rq->miprd.mipr_subnet = htonl(gMacip.mask);
 			len = sizeof(struct macip_req);
+			arp_set (ip, &sat);
 			if (gDebug & DEBUG_MACIP)
 				printf("assigned %s.\n", iptoa(ip));
 		} else {
