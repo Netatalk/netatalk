@@ -92,7 +92,7 @@ basedir regex = /home
 </programlisting></para>
 
         <para>Now any user logging into the AFP server will have a user volume
-        available whos path is <filename>/home/NAME</filename>.</para>
+        available whose path is <filename>/home/NAME</filename>.</para>
 
         <para>A more complex setup would be a server with a large amount of
         user homes which are split across eg two different
@@ -1022,11 +1022,11 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
 
                 <entry>Password will be encrypted with 128 bit SSL, user will
                 be authenticated against the server but not vice versa.
-                Therefor weak against man-in-the-middle attacks.</entry>
+                Therefore weak against man-in-the-middle attacks.</entry>
 
                 <entry>Password will be encrypted using libgcrypt with CAST
                 128 in CBC mode. User will be authenticated against the server
-                but not vice versa. Therefor weak against man-in-the-middle
+                but not vice versa. Therefore weak against man-in-the-middle
                 attacks.</entry>
 
                 <entry>Password is not sent over the network. Due to the
@@ -1206,9 +1206,9 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           </indexterm> permission bits. On a Mac, the Finder uses these bits
           to adjust permission in Finder windows. Example: a folder whose
           UNIX mode is read-only and an ACL giving the user write access,
-          will display the effectve read-write permission. Without the
+          will display the effective read-write permission. Without the
           permission mapping the Finder would display a read-only icon and
-          the user woldn't be able to write to the folder.</para>
+          the user wouldn't be able to write to the folder.</para>
 
         <para>By default, the effective permission of the authenticated user
         are only mapped to the mentioned UARights<indexterm>
@@ -1223,7 +1223,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         things get more involved as you must then setup both client and server
         to be part on a authentication domain (directory service, eg LDAP,
         OpenDirectory). The reason is, that in OS X ACLs are bound to UUIDs,
-        not just uid's or gid's. Therefor afpd must be able to map every
+        not just uid's or gid's. Therefore afpd must be able to map every
         filesystem uid and gid to a UUID so that it can return the server side
         ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs.</para>
 
@@ -1255,7 +1255,7 @@ aclmode = passthrough</screen>
             <para>Your server and the clients must be part of a security
             association where identity data is coming from a common source.
             ACLs in Darwin are based on UUIDs and so is the ACL specification
-            in AFP 3.2. Therefor your source of identity data has to provide
+            in AFP 3.2. Therefore your source of identity data has to provide
             an attribute for every user and group where a UUID is stored as a
             ASCII string. In other words:</para>
 
@@ -1567,10 +1567,10 @@ aclmode = passthrough</screen>
           watches must be added individually.</para>
 
           <para>On Solaris the FEN file event notification system is used. It
-          is unkown which limitations and ressource consumption this Solaris
+          is unknown which limitations and resource consumption this Solaris
           subsystem may have.</para>
 
-          <para>We therefor recommend to disable live filesystem monitoring
+          <para>We therefore recommend to disable live filesystem monitoring
           and let Tracker periodically scan filesystems for changes instead,
           see the Tracker configuration options <link
           linkend="enable-monitors">enable-monitors</link> and <link
@@ -1583,7 +1583,7 @@ aclmode = passthrough</screen>
       <title>Using Tracker commandline tools on the server</title>
 
       <para>Netatalk must be running, commands must be executed as root and
-      some environent variables must be set up (adjust PREFIX to point to
+      some environment variables must be set up (adjust PREFIX to point to
       the base directory Netatalk in installed to):<screen>$ su
 # cat .tracker_profile
 PREFIX="/"
@@ -1654,8 +1654,8 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
       <para>Gnome dconf settings are per-user settings, so, as Netatalk runs
       the Tracker processes as root, the settings are stored in the root user
-      context and reading or changing these settings must be perfomed as root
-      and Netatalk must be running (and again the enviroment must be set up
+      context and reading or changing these settings must be performed as root
+      and Netatalk must be running (and again the environment must be set up
       as shown above).</para>
 
       <para><screen># gsettings list-recursively | grep Tracker
