@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sysexits.h>
+#include <pwd.h>
 
 #include "common.h"
 #include "macip.h"
@@ -149,9 +150,19 @@ void usage(char *c)
 	if (c)
 		fprintf(stderr, "%s\n", c);
 	fprintf(stderr,
-		"Usage:\tmacipgw [-d debug] [-z zone] [-n nameserver] [-V]\n"
+		"Usage:\tmacipgw [-d debug] [-z zone] [-n nameserver] [-u unprivileged-user] [-V]\n"
 		"\t\tmacip-net macip-netmask\n");
 	exit(EX_USAGE);
+}
+
+struct passwd * get_user(const char *username) {
+	struct passwd *pwd;
+	pwd = getpwnam(username);
+	if (pwd == NULL) {
+		fprintf(stderr, "Unrecognized username: %s", username);
+		exit (EX_USAGE);
+	}
+	return pwd;
 }
 
 
@@ -162,9 +173,13 @@ int main(int argc, char *argv[])
 	char *zone = "*";
 	char c;
 
+	struct passwd *pwd = NULL;
+	uid_t user;
+	gid_t group;
+
 	gDebug = 0;
 
-	while ((c = getopt(argc, argv, "d:n:z:V")) != EOF) {
+	while ((c = getopt(argc, argv, "Vd:n:u:z:")) != EOF) {
 		switch (c) {
 		case 'd':
 			gDebug = strtol(optarg, 0, 0);
@@ -179,6 +194,11 @@ int main(int argc, char *argv[])
 			break;
 		case 'V':
 			usage(version);
+			break;
+		case 'u':
+			pwd = get_user(optarg);
+			user = pwd->pw_uid;
+			group = pwd->pw_gid;
 			break;
 
 		default:
@@ -226,6 +246,17 @@ int main(int argc, char *argv[])
 	if (atsocket < 0) {
 		syslog(LOG_ERR, "could not initialise MacIP\n");
 		die(EX_OSERR);
+	}
+
+	if (pwd) {
+		if (setgid(user) == -1) {
+			printf("macipgw: could not drop root privileges (group)\n");
+			die(EX_OSERR);
+		}
+		if (setuid(group) == -1) {
+			printf("macipgw: could not drop root privileges (user)\n");
+			die(EX_OSERR);
+		}
 	}
 
 	server();
