@@ -86,15 +86,16 @@ Currently, Netatalk supports BDB 4.6 and later.
 
 Optional
 ========
-6. OpenSSL and/or Libgcrypt
+6. OpenSSL, LibreSSL and/or Libgcrypt
 The OpenSSL Project is a collaborative effort to develop a robust,
 commercial-grade, full-featured, and Open Source toolkit implementing
 the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
 v1) protocols as well as a full-strength general purpose cryptography
 library.
+LibreSSL is a version of the TLS/crypto stack forked from OpenSSL.
 This is required to enable DHX login support.
 
-Get everything at http://www.openssl.org/
+Get everything at http://www.openssl.org/ or http://www.libressl.org/
 
 The Libgcrypt is a general purpose cryptographic library based on
 the code from GnuPG.
