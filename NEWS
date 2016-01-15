@@ -4,6 +4,7 @@ Changes in 3.1.9
 * NEW: afpd: new options "force user" and "force group"
 * FIX: listening on IPv6 wildcard address may fail if IPv6 is
        disabled, bug #606
+* FIX: cannot build when acl is not defined, bug #574
 
 Changes in 3.1.8
 ================
