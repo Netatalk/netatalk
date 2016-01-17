@@ -461,7 +461,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian-sysv|debian-systemd|solaris|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd]]],
                 init_style="$withval", init_style=none
     )
     case "$init_style" in 
@@ -488,8 +488,15 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    ac_cv_init_dir="/usr/lib/systemd/system"
 	    ;;
     "gentoo")
-	    AC_MSG_RESULT([enabling gentoo-style initscript support])
+	    AC_MSG_ERROR([--with-init-style=gentoo is obsoleted. Use gentoo-openrc or gentoo-systemd.])
+        ;;
+    "gentoo-openrc")
+	    AC_MSG_RESULT([enabling gentoo-style openrc support])
 	    ac_cv_init_dir="/etc/init.d"
+        ;;
+    "gentoo-systemd")
+	    AC_MSG_RESULT([enabling gentoo-style systemd support])
+	    ac_cv_init_dir="/usr/lib/systemd/system"
         ;;
     "netbsd")
 	    AC_MSG_RESULT([enabling netbsd-style initscript support])
@@ -510,6 +517,10 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
 	    ac_cv_init_dir="/lib/svc/manifest/network/"
         ;;
+    "openrc")
+	    AC_MSG_RESULT([enabling general openrc support])
+	    ac_cv_init_dir="/etc/init.d"
+        ;;
     "systemd")
 	    AC_MSG_RESULT([enabling general systemd support])
 	    ac_cv_init_dir="/usr/lib/systemd/system"
@@ -526,9 +537,9 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
     AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
-    AM_CONDITIONAL(USE_GENTOO, test x$init_style = xgentoo)
+    AM_CONDITIONAL(USE_OPENRC, test x$init_style = xopenrc || test x$init_style = xgentoo-openrc)
     AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)
-    AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
+    AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd || test x$init_style = xgentoo-systemd)
     AM_CONDITIONAL(USE_DEBIAN_SYSTEMD, test x$init_style = xdebian-systemd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 

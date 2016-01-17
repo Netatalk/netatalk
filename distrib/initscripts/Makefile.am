@@ -175,10 +175,10 @@ uninstall-startup:
 endif
 
 #
-# checking for "Gentoo" style sysv scripts:
+# checking for general openrc scripts:
 #
 
-if USE_GENTOO
+if USE_OPENRC
 
 sysvdir = $(INIT_DIR)
 sysv_SCRIPTS = netatalk
