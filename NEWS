@@ -6,6 +6,10 @@ Changes in 3.1.9
        disabled, bug #606
 * NEW: LibreSSL support, FR #98
 * FIX: cannot build when acl is not defined, bug #574
+* UPD: configure option "--with-init-style=" for Gentoo.
+       "gentoo" is renamed to "gentoo-openrc".
+       "gentoo-openrc" is same as "openrc".
+       "gentoo-systemd" is same as "systemd".
 
 Changes in 3.1.8
 ================
