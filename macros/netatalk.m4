@@ -159,6 +159,12 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
       [ac_cv_tracker_prefix="`pkg-config --variable=prefix tracker-sparql-$ac_cv_tracker_pkg_version`"]
     )
 
+    AC_ARG_WITH([dbus-daemon],
+      [AS_HELP_STRING([--with-dbus-daemon=PATH],[Path to DBus daemon (default: /bin/dbus-daemon)])],
+      [ac_cv_dbus_daemon=$withval],
+      [ac_cv_dbus_daemon=/bin/dbus-daemon]
+    )
+
     AC_ARG_VAR([PKG_CONFIG_PATH], [Path to additional pkg-config packages])
     PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
 
@@ -170,7 +176,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         ac_cv_have_tracker=yes
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_prefix"], [Path to Tracker])
-        AC_DEFINE([DBUS_DAEMON_PATH], ["/bin/dbus-daemon"], [Path to dbus-daemon])
+        AC_DEFINE_UNQUOTED([DBUS_DAEMON_PATH], ["$ac_cv_dbus_daemon"], [Path to dbus-daemon])
     fi
 
     AC_SUBST(TRACKER_CFLAGS)
