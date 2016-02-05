@@ -719,7 +719,7 @@ AC_MSG_RESULT($with_kerberos)
 
 if test x"$with_kerberos" != x"no"; then
    have_krb5_header="no"
-   AC_CHECK_HEADERS([krb5/krb5.h krb5.h], [have_krb5_header="yes"; break])
+   AC_CHECK_HEADERS([krb5/krb5.h krb5.h kerberosv5/krb5.h], [have_krb5_header="yes"; break])
    if test x"$have_krb5_header" = x"no" && test x"$with_kerberos" != x"auto"; then
       AC_MSG_FAILURE([--with-kerberos was given, but no headers found])
    fi
