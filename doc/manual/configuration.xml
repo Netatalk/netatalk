@@ -631,10 +631,8 @@ basedir regex = /usr/home</programlisting></para>
 
               <para>If a character cannot be converted from the <option>mac
               charset</option> to the selected <option>vol charset</option>,
-              afpd will save it as a CAP encoded character. For AFP3 clients,
-              afpd will convert the UTF8 character to <option>mac
-              charset</option> first. If this conversion fails, you'll receive
-              a -50 error on the mac. <emphasis>Note</emphasis>: Whenever you
+              you'll receive a -50 error on the mac.
+              <emphasis>Note</emphasis>: Whenever you
               can, please stick with the default UTF8 volume format. see
               <citerefentry>
                   <refentrytitle>afp.conf</refentrytitle>
