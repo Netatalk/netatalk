@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">26 Oct 2015</refmiscinfo>
+    <refmiscinfo class="date">11 Feb 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -410,7 +410,7 @@
               </varlistentry>
 
               <varlistentry>
-                <term>uams_randum.so</term>
+                <term>uams_randnum.so</term>
 
                 <listitem>
                   <para>allows Random Number and Two-Way Random Number
@@ -2274,9 +2274,6 @@
       </citerefentry>
       provided charset. It is highly recommended to stick to the default
     UTF-8.</para>
-
-    <para><emphasis>Note</emphasis>: Whenever you can, please stick with the
-    default UTF-8 volume format.</para>
   </refsect1>
 
   <refsect1>
