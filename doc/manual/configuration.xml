@@ -1547,8 +1547,12 @@ aclmode = passthrough</screen>
         for which spotlight is disabled won't be searchable at all.</para>
       </warning>
 
-      <para>In case the <command>dbus-daemon</command> binary is not installed
-      at the path <filename>/bin/dbus-daemon</filename>, you must use the
+      <para>The <command>dbus-daemon</command> binary has to be installed for
+      Spotlight feature. The path to dbus-daemon is determined by --with-dbus-daemon
+      option to "configure".</para>
+
+      <para>In case the <command>dbus-daemon</command> binary is installed
+      at the other path, you must use the
       global option <option>dbus daemon</option> to point to the path, eg for
       Solaris with Tracker from OpenCSW: <screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
     </sect2>
