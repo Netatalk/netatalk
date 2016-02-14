@@ -164,6 +164,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
       [ac_cv_dbus_daemon=$withval],
       [ac_cv_dbus_daemon=/bin/dbus-daemon]
     )
+    DBUS_DAEMON_PATH=$ac_cv_dbus_daemon
 
     AC_ARG_VAR([PKG_CONFIG_PATH], [Path to additional pkg-config packages])
     PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
@@ -183,6 +184,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AC_SUBST(TRACKER_LIBS)
     AC_SUBST(TRACKER_MINER_CFLAGS)
     AC_SUBST(TRACKER_MINER_LIBS)
+    AC_SUBST(DBUS_DAEMON_PATH)
     AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
 ])
 

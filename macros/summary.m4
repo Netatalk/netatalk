@@ -64,6 +64,9 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	if test x"$atalk_cv_with_dbus" = x"yes"; then
 		AC_MSG_RESULT([         dbus system directory:   $ac_cv_dbus_sysdir])
 	fi
+	if test x"$ac_cv_have_tracker" = x"yes"; then
+		AC_MSG_RESULT([         dbus daemon path:        $ac_cv_dbus_daemon])
+	fi
 	if test x"$use_pam_so" = x"yes"; then
 	   if test x"$netatalk_cv_install_pam" = x"yes"; then
 		AC_MSG_RESULT([         pam config directory:    $ac_cv_pamdir])

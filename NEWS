@@ -10,6 +10,7 @@ Changes in 3.1.9
        "gentoo" is renamed to "gentoo-openrc".
        "gentoo-openrc" is same as "openrc".
        "gentoo-systemd" is same as "systemd".
+* NEW : configure option "--with-dbus-daemon=PATH" for Spotlight feature
 
 Changes in 3.1.8
 ================

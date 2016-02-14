@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">11 Feb 2016</refmiscinfo>
+    <refmiscinfo class="date">14 Feb 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -920,7 +920,8 @@
 
           <listitem>
             <para>Sets the path to dbus-daemon binary used by Spotlight feature.
-            The default is <filename>/bin/dbus-daemon</filename>.</para>
+            The default value <filename>[@DBUS_DAEMON_PATH@]</filename>
+            is determined when building netatalk.</para>
           </listitem>
         </varlistentry>
 
