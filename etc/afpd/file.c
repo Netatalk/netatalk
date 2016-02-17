@@ -1403,7 +1403,6 @@ int copyfile(struct vol *s_vol,
 {
     struct adouble	ads, add;
     int			err = 0;
-    int                 ret_err = 0;
     int                 adflags;
     int                 stat_result;
     struct stat         st;
@@ -1419,7 +1418,7 @@ int copyfile(struct vol *s_vol,
     adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RF | ADFLAGS_NORF;
 
     if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
-        ret_err = errno;
+        err = errno;
         goto done;
     }
 
@@ -1440,26 +1439,24 @@ int copyfile(struct vol *s_vol,
 
     ad_init(&add, d_vol);
     if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL, st.st_mode | S_IRUSR | S_IWUSR) < 0) {
-        ret_err = errno;
+        err = errno;
         ad_close( adp, adflags );
-        if (EEXIST != ret_err) {
+        if (EEXIST != err) {
             deletefile(d_vol, -1, dst, 0);
             goto done;
         }
         return AFPERR_EXIST;
     }
 
-    if ((err = copy_fork(ADEID_DFORK, &add, adp,
+    if (copy_fork(ADEID_DFORK, &add, adp,
                          s_vol->v_obj->dsi->commands,
-                         s_vol->v_obj->dsi->server_quantum)) != 0)
-        LOG(log_error, logtype_afpd, "copyfile('%s'): %s", src, strerror(errno));
-
-    if (err == 0)
-        if ((err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst)) != 0)
-            LOG(log_error, logtype_afpd, "copyfile('%s'): %s", src, strerror(errno));
-
-    if (err < 0)
-       ret_err = errno;
+                         s_vol->v_obj->dsi->server_quantum) != 0) {
+        err = errno;
+        LOG(log_error, logtype_afpd, "copyfile('%s'): copy_fork: %s", src, strerror(errno));
+    } else if (d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst) != AFP_OK) {
+        err = errno;
+        LOG(log_error, logtype_afpd, "copyfile('%s'): vfs_copyfile: %s", src, strerror(errno));
+    }
 
     if (AD_META_OPEN(&add)) {
         if (AD_META_OPEN(adp))
@@ -1468,11 +1465,11 @@ int copyfile(struct vol *s_vol,
         cnid_t id;
         struct stat stdest;
         if (fstat(ad_meta_fileno(&add), &stdest) != 0) {
-            ret_err = errno;
+            err = errno;
             goto error;
         }
         if ((id = get_id(d_vol, &add, &stdest, d_dir->d_did, dst, strlen(dst))) == CNID_INVALID) {
-            ret_err = EINVAL;
+            err = EINVAL;
             goto error;
         }
         (void)ad_setid(&add, stdest.st_dev, stdest.st_ino, id, d_dir->d_did, d_vol->v_stamp);
@@ -1483,10 +1480,10 @@ error:
     ad_close( adp, adflags );
 
     if (ad_close( &add, adflags ) <0) {
-       ret_err = errno;
+       err = errno;
     } 
 
-    if (ret_err) {
+    if (err) {
         deletefile(d_vol, -1, dst, 0);
     }
     else if (stat_result == 0) {
@@ -1501,7 +1498,7 @@ error:
     }
 
 done:
-    switch ( ret_err ) {
+    switch ( err ) {
     case 0:
         return AFP_OK;
     case EDQUOT:
