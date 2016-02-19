@@ -47,7 +47,6 @@ dnl	if test x"$netatalk_cv_linux_sendfile" != x; then
 dnl		AC_MSG_RESULT([         Linux sendfile support:  $netatalk_cv_linux_sendfile])
 dnl	fi
 	AC_MSG_RESULT([         quota support:           $netatalk_cv_quotasupport])
-	AC_MSG_RESULT([         admin group support:     $netatalk_cv_admin_group])
 	AC_MSG_RESULT([         valid shell check:       $netatalk_cv_use_shellcheck])
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
 dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
