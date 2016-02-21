@@ -335,9 +335,47 @@ static pid_t run_process(const char *path, ...)
     return pid;
 }
 
+static void show_netatalk_version( void )
+{
+	int num, i;
+
+	printf( "netatalk %s - Netatalk AFP server service controller daemon\n\n", VERSION );
+
+	puts( "This program is free software; you can redistribute it and/or modify it under" );
+	puts( "the terms of the GNU General Public License as published by the Free Software" );
+	puts( "Foundation; either version 2 of the License, or (at your option) any later" );
+	puts( "version. Please see the file COPYING for further information and details.\n" );
+
+	puts( "netatalk has been compiled with support for these features:\n" );
+
+	printf( "     Spotlight support:\t" );
+#ifdef HAVE_TRACKER
+	puts( "Yes" );
+#else
+	puts( "No" );
+#endif
+
+}
+
+static void show_netatalk_paths( void )
+{
+	printf( "                  afpd:\t%s\n", _PATH_AFPD);
+	printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
+
+#ifdef HAVE_TRACKER
+	printf( "       tracker-control:\t%s\n", TRACKER_PREFIX "/bin/tracker-control");
+	printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
+	printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
+#endif
+
+	printf( "    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
+
+}
+
 static void usage(void)
 {
     printf("usage: netatalk [-F configfile] \n");
+    printf("       netatalk -v|-V \n");
 }
 
 int main(int argc, char **argv)
@@ -349,13 +387,19 @@ int main(int argc, char **argv)
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
-    while ((c = getopt(argc, argv, ":dF:")) != -1) {
+    while ((c = getopt(argc, argv, ":dF:vV")) != -1) {
         switch(c) {
         case 'd':
             debug = 1;
             break;
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
+            break;
+        case 'v':       /* version */
+        case 'V':       /* version */
+            show_netatalk_version( ); puts( "" );
+            show_netatalk_paths( ); puts( "" );
+            exit( 0 );
             break;
         default:
             usage();

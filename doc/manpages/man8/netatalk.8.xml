@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">22 Nov 2015</refmiscinfo>
+    <refmiscinfo class="date">21 Sun 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -19,6 +19,17 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>netatalk</command>
+
+      <arg choice="opt">-F <replaceable>configfile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>netatalk</command>
+
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -30,6 +41,29 @@
     <command>afpd</command> and the CNID daemon <command>cnid_metad</command>.
     It is normally started at boot time by init system (BSD-style init,
     SysV-sytle init, systemd, Upstart, OpenRC, SMF and so on).</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-v | -V</term>
+
+        <listitem>
+          <para>Print version information and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-F <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>Specifies the configuration file to use.</para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
   </refsect1>
 
   <refsect1>
