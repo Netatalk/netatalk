@@ -176,7 +176,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(timer_ev);
 
 #ifdef HAVE_TRACKER
-    system("tracker-control -t");
+    system(TRACKER_PREFIX "/bin/tracker-control -t");
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -186,7 +186,7 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef HAVE_TRACKER
-    system("tracker-control -t");
+    system(TRACKER_PREFIX "/bin/tracker-control -t");
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
