@@ -1476,6 +1476,24 @@ exit:
 	return ret;
 }
 
+/*
+ * Function: ea_copyfile
+ *
+ * Purpose: copy EAs
+ *
+ * Arguments:
+ *
+ *    vol          (r) current volume
+ *    sdf          (r) source file descriptor
+ *    src          (r) source path
+ *    dst          (r) destination path
+ *
+ * Return AFP code AFP_OK on success or appropriate AFP error code
+ *
+ * Effects:
+ *
+ * Copies EAs from source file to dest file.
+ */
 int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
     unsigned int count = 0;
