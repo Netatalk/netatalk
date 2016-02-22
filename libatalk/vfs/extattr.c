@@ -46,7 +46,7 @@
 #include <sys/ea.h>
 #endif
 
-#ifdef HAVE_ATTROPEN
+#ifdef SOLARIS
 
 #include <dirent.h>
 #endif
@@ -63,7 +63,7 @@
 #include <atalk/errchk.h>
 
 /******** Solaris EA helper function prototypes ********/
-#ifdef HAVE_ATTROPEN
+#ifdef SOLARIS
 #define SOLARIS_ATTRMODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
 static int solaris_write_xattr(int attrfd, const char *value, size_t size);
 static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size);
@@ -82,7 +82,7 @@ static char attr_name[256 +5] = "user.";
 
 static const char *prefix(const char *uname)
 {
-#if defined(HAVE_ATTROPEN)
+#if defined(SOLARIS)
 	return uname;
 #else
 	strlcpy(attr_name +5, uname, 256);
@@ -92,7 +92,7 @@ static const char *prefix(const char *uname)
 
 int sys_getxattrfd(int fd, const char *uname, int oflag, ...)
 {
-#if defined HAVE_ATTROPEN
+#if defined(SOLARIS)
     int eafd;
     va_list args;
     mode_t mode = 0;
@@ -159,7 +159,7 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
 
 	return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrfd = solaris_attropen(path, name, O_RDONLY, 0);
 	if (attrfd >= 0) {
@@ -218,7 +218,7 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
     retval = attr_getf(filedes, attrname, (char *)value, &valuelength, flags);
 
     return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
     ssize_t ret = -1;
     int attrfd = solaris_openat(filedes, name, O_RDONLY|O_XATTR, 0);
     if (attrfd >= 0) {
@@ -271,7 +271,7 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
 
 	return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrfd = solaris_attropen(path, name, O_RDONLY | O_NOFOLLOW, 0);
 	if (attrfd >= 0) {
@@ -485,7 +485,7 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 	return bsd_attr_list(0, arg, list, size);
 #elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
 	return irix_attr_list(path, 0, list, size, 0);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
 	if (attrdirfd >= 0) {
@@ -520,7 +520,7 @@ ssize_t sys_flistxattr (int filedes, const char *path, char *list, size_t size)
 	return bsd_attr_list(0, arg, list, size);
 #elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
 	return irix_attr_list(path, 0, list, size, 0);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
 	if (attrdirfd >= 0) {
@@ -556,7 +556,7 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 	return bsd_attr_list(1, arg, list, size);
 #elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
 	return irix_attr_list(path, 0, list, size, ATTR_DONTFOLLOW);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
 	if (attrdirfd >= 0) {
@@ -591,7 +591,7 @@ int sys_removexattr (const char *path, const char *uname)
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
 	if (attrdirfd >= 0) {
@@ -626,7 +626,7 @@ int sys_fremovexattr (int filedes, const char *path, const char *uname)
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
 	if (attrdirfd >= 0) {
@@ -659,7 +659,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
 	if (attrdirfd >= 0) {
@@ -717,7 +717,7 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
 
 	return attr_set(path, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	int ret = -1;
 	int myflags = O_RDWR;
 	int attrfd;
@@ -783,7 +783,7 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
     if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
 
     return attr_setf(filedes, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
     int ret = -1;
     int myflags = O_RDWR | O_XATTR;
     int attrfd;
@@ -844,7 +844,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
 
 	return attr_set(path, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
+#elif defined(SOLARIS)
 	int ret = -1;
 	int myflags = O_RDWR | O_NOFOLLOW;
 	int attrfd;
@@ -865,7 +865,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 /**************************************************************************
  helper functions for Solaris' EA support
 ****************************************************************************/
-#ifdef HAVE_ATTROPEN
+#ifdef SOLARIS
 static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
 {
 	struct stat sbuf;
@@ -1038,5 +1038,5 @@ static int solaris_write_xattr(int attrfd, const char *value, size_t size)
 	}
 }
 
-#endif /*HAVE_ATTROPEN*/
+#endif /*SOLARIS*/
 

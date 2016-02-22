@@ -1005,9 +1005,8 @@ case "$this_os" in
   ;;
 
   *solaris*)
-	AC_CHECK_FUNCS([attropen],
-                   [neta_cv_eas_sys_found=yes; AC_DEFINE(HAVE_EAFD, 1, [extattr API has full fledged fds for EAs])],
-                   [neta_cv_eas_sys_not_found=yes])
+	AC_DEFINE(HAVE_EAFD, 1, [extattr API has full fledged fds for EAs])
+	neta_cv_eas_sys_found=yes
   ;;
 
   'freebsd')
