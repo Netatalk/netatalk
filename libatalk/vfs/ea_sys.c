@@ -465,9 +465,22 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 }
 
 /*
- * @brief Copy EAs
+ * Function: sys_ea_copyfile
  *
- * @note Supports *at semantics, therfor switches back and forth between sfd and cwd
+ * Purpose: copy EAs
+ *
+ * Arguments:
+ *
+ *    vol          (r) current volume
+ *    sdf          (r) source file descriptor
+ *    src          (r) source path
+ *    dst          (r) destination path
+ *
+ * Return AFP code AFP_OK on success or appropriate AFP error code
+ *
+ * Effects:
+ *
+ * Copies EAs from source file to dest file.
  */
 int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
