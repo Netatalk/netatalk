@@ -1775,9 +1775,9 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
 {
     EC_INIT;
 
-    if ( ! (obj->options.flags & (OPTION_ACL2MACCESS | OPTION_ACL2MODE))
-         || ! (vol->v_flags & AFPVOL_ACLS))
-         return 0;
+    if (!(obj->options.flags & (OPTION_ACL2MACCESS | OPTION_ACL2MODE))) {
+        return 0;
+    }
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
         getcwdpath(), path, ma->ma_user);

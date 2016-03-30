@@ -1025,6 +1025,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (!check_vol_acl_support(volume)) {
         LOG(log_debug, logtype_afpd, "creatvol(\"%s\"): disabling ACL support", volume->v_path);
         volume->v_flags &= ~AFPVOL_ACLS;
+	obj->options.flags &= ~(OPTION_ACL2MODE | OPTION_ACL2MACCESS);
     }
 #endif
 
