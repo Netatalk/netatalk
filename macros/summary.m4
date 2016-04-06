@@ -65,6 +65,8 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	fi
 	if test x"$ac_cv_have_tracker" = x"yes"; then
 		AC_MSG_RESULT([         dbus daemon path:        $ac_cv_dbus_daemon])
+		AC_MSG_RESULT([         tracker prefix:          $ac_cv_tracker_prefix])
+		AC_MSG_RESULT([         tracker managing command:$ac_cv_tracker_prefix/bin/$TRACKER_MANAGING_COMMAND])
 	fi
 	if test x"$use_pam_so" = x"yes"; then
 	   if test x"$netatalk_cv_install_pam" = x"yes"; then

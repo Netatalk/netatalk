@@ -176,7 +176,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(timer_ev);
 
 #ifdef HAVE_TRACKER
-    system("tracker-control -t");
+    system(TRACKER_MANAGING_COMMAND " -t");
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -186,7 +186,7 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef HAVE_TRACKER
-    system("tracker-control -t");
+    system(TRACKER_MANAGING_COMMAND " -t");
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -444,8 +444,8 @@ int main(int argc, char **argv)
         set_sl_volumes();
 
         if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
-            LOG(log_note, logtype_default, "Starting Tracker");
-            system(TRACKER_PREFIX "/bin/tracker-control -s");
+            LOG(log_note, logtype_default, "Starting Tracker: " TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND " -s");
+            system(TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND " -s");
         }
     }
 #endif
