@@ -10,7 +10,9 @@ Changes in 3.1.9
        "gentoo" is renamed to "gentoo-openrc".
        "gentoo-openrc" is same as "openrc".
        "gentoo-systemd" is same as "systemd".
-* NEW : configure option "--with-dbus-daemon=PATH" for Spotlight feature
+* NEW: configure option "--with-dbus-daemon=PATH" for Spotlight feature
+* UPD: use "tracker daemon" command instead of "tracker-control" command
+       if Gnome Tracker is the recent version.
 
 Changes in 3.1.8
 ================

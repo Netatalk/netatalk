@@ -1600,28 +1600,58 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
       PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
 
       <sect3>
-        <title>Starting and stopping Tracker</title>
+        <title>Querying Tracker status</title>
 
         <variablelist>
           <varlistentry>
-            <term>Querying Tracker status</term>
-
+            <term>Recent Tracker:</term>
             <listitem>
-              <screen># tracker-control -S</screen>
+              <screen># tracker daemon</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Stop Tracker</term>
+          <term>Old Tracker:</term>
+          <listitem>
+            <screen># tracker-control -S</screen>
+          </listitem>
+          </varlistentry>
+        </variablelist>
+      </sect3>
 
+      <sect3>
+        <title>Stop Tracker</title>
+
+        <variablelist>
+          <varlistentry>
+            <term>Recent Tracker:</term>
+            <listitem>
+              <screen># tracker daemon -t</screen>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>Old Tracker:</term>
             <listitem>
               <screen># tracker-control -t</screen>
             </listitem>
           </varlistentry>
+        </variablelist>
+      </sect3>
+
+      <sect3>
+        <title>Start Tracker</title>
+
+        <variablelist>
+          <varlistentry>
+            <term>Recent Tracker:</term>
+            <listitem>
+              <screen># tracker daemon -s</screen>
+            </listitem>
+          </varlistentry>
 
           <varlistentry>
-            <term>Start Tracker status</term>
-
+            <term>Old Tracker:</term>
             <listitem>
               <screen># tracker-control -s</screen>
             </listitem>
@@ -1632,20 +1662,63 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
       <sect3>
         <title>Reindex directory</title>
 
-        <screen># tracker-control -f PATH</screen>
-      </sect3>
+        <variablelist>
+          <varlistentry>
+            <term>Recent Tracker:</term>
+            <listitem>
+              <screen># tracker index -f PATH</screen>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>Old Tracker:</term>
+            <listitem>
+              <screen># tracker-control -f PATH</screen>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        </sect3>
 
       <sect3>
         <title>Query Tracker for information about a file or directory</title>
 
-        <screen># tracker-info PATH</screen>
-      </sect3>
+        <variablelist>
+          <varlistentry>
+            <term>Recent Tracker:</term>
+            <listitem>
+              <screen># tracker info PATH</screen>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>Old Tracker:</term>
+            <listitem>
+              <screen># tracker-info PATH</screen>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        </sect3>
 
       <sect3>
         <title>Search Tracker</title>
 
-        <screen># tracker-search QUERY</screen>
-      </sect3>
+        <variablelist>
+          <varlistentry>
+            <term>Recent Tracker:</term>
+            <listitem>
+              <screen># tracker search QUERY</screen>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>Old Tracker:</term>
+            <listitem>
+              <screen># tracker-search QUERY</screen>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+
+        </sect3>
     </sect2>
 
     <sect2>
