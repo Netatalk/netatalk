@@ -17,51 +17,62 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DESC="Netatalk"
 NAME=netatalk
 SCRIPTNAME=/etc/init.d/$NAME
+DAEMON=:SBINDIR:/netatalk
+PIDFILE=/var/run/lock/netatalk
 
 # Guard to prevent execution if netatalk was removed.
-test -x :SBINDIR:/netatalk || exit 0
+test -x $DAEMON || exit 0
 
-# Start Netatalk servers.
-netatalk_startup() {
-    if [ -x :SBINDIR:/netatalk ] ; then
-        :SBINDIR:/netatalk
-        echo -n " netatalk"
-    fi
-    
+status(){
+    set +e
+    EXIT_CODE=`start-stop-daemon --status --exec $DAEMON; echo $?`
+    set -e
+    echo $EXIT_CODE
 }
 
 case "$1" in
     start)
-        echo -n "Starting Netatalk services: "
-        netatalk_startup
-        echo "."
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo -n "Starting Netatalk"
+            start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON
+            echo "."
+        else
+            echo "Netatalk is already running."
+        fi
         ;;
-    
+
     stop)
-        echo -n "Stopping Netatalk Daemons:"
-        echo -n " netatalk"
-        start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/netatalk
-        
+        echo -n "Stopping Netatalk"
+        start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
         echo "."
         ;;
-    
+
     restart)
         $0 force-reload
         ;;
-    
+
     force-reload)
-        echo -n "Restarting Netatalk Daemons"
-        $0 stop
+        echo -n "Restarting Netatalk Daemons."
+        start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
         echo -n "."
-        sleep 2
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON
         echo -n "."
-        if $0 start; then
-            echo "done."
+        echo " Done."
+        ;;
+
+    status)
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -eq 0 ]; then
+            echo "Netatalk is running."
+        elif [ $EXIT_CODE -eq 4 ]; then
+            echo "Could not access PID file for $NAME."
+        else
+            echo "Netatalk is not running."
         fi
         ;;
-    
     *)
-        echo "Usage: $0 {start|stop|restart|force-reload}" >&2
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
         exit 1
         ;;
 esac
