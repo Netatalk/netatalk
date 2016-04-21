@@ -49,8 +49,11 @@ dnl	compile_ssl=no
 			if test -f "$ssldir/include/openssl/cast.h" ; then
 				SSL_CFLAGS="$SSL_CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
 				SSL_LIBS="$SSL_LIBS -L$ssldir/$atalk_libname -L$ssldir -lcrypto"
-				if test "x$need_dash_r" = "xyes"; then
+				if test "x$enable_rpath" = "xyes"; then
 					SSL_LIBS="$SSL_LIBS -R$ssldir/$atalk_libname -R$ssldir"
+					if test "x$enable_dtags" = "xyes"; then
+						SSL_LIBS="$SSL_LIBS -Wl,--enable-new-dtags"
+					fi
 				fi
 				AC_MSG_RESULT([$ssldir (enabling RANDNUM and DHX support)])
 				CFLAGS="$CFLAGS $SSL_CFLAGS"

@@ -578,6 +578,7 @@ AC_DEFUN([AC_NETATALK_OS_SPECIFIC], [
 case "$host_os" in
 	*aix*)				this_os=aix ;;
 	*freebsd*) 			this_os=freebsd ;;
+	*kfreebsd*)			this_os=kfreebsd ;;
 	*hpux11*)			this_os=hpux11 ;;
 	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
@@ -600,7 +601,7 @@ dnl --------------------- GNU source
 case "$this_os" in
 	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
-     kfreebsd-gnu) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+	kfreebsd) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
 esac
 
@@ -615,7 +616,7 @@ if test x"$this_os" = "xfreebsd"; then
 fi
 
 dnl ----- GNU/kFreeBSD specific -----
-if test x"$this_os" = "xkfreebsd-gnu"; then 
+if test x"$this_os" = "xkfreebsd"; then
 	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
@@ -637,8 +638,6 @@ if test x"$this_os" = "xlinux"; then
 	dnl ----- on every single version of linux I've ever played with.
 	dnl ----- see etc/afpd/quota.c
 	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
-
-	need_dash_r=no
 fi
 
 dnl ----- NetBSD specific -----
@@ -649,7 +648,6 @@ if test x"$this_os" = "xnetbsd"; then
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
 
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
-	need_dash_r=yes 
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
@@ -672,7 +670,6 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(SOLARIS, 1, [Solaris compatibility macro])
     AC_DEFINE(_XOPEN_SOURCE, 600, [Solaris compilation environment])
     AC_DEFINE(__EXTENSIONS__,  1, [Solaris compilation environment])
-	need_dash_r=yes
 	init_style=solaris
 fi
 
@@ -680,6 +677,25 @@ dnl Whether to run ldconfig after installing libraries
 AC_PATH_PROG(NETA_LDCONFIG, ldconfig, , [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/bin])
 echo NETA_LDCONFIG = $NETA_LDCONFIG
 AM_CONDITIONAL(RUN_LDCONFIG, test x"$this_os" = x"linux" -a x"$NETA_LDCONFIG" != x"")
+])
+
+dnl Check whether to enable rpath (the default on Solaris and NetBSD)
+AC_DEFUN([AC_NETATALK_SET_RPATH], [
+	AS_CASE("$this_os", [solaris|netbsd],
+		[default_rpath=yes],
+		[default_rpath=no])
+	AS_CASE("$this_os", [linux|kfreebsd],
+		[enable_dtags=yes],
+		[enable_dtags=no])
+	AC_ARG_ENABLE(rpath,
+		AS_HELP_STRING([--enable-rpath],
+			[enable RPATH/RUNPATH (default: $default_rpath)]),
+		AS_CASE("$enableval",
+			[yes], [enable_rpath=yes],
+			[no], [enable_rpath=no],
+			[AC_MSG_ERROR([bad value $enableval for --enable-rpath])]),
+		[enable_rpath=$default_rpath])
+	AC_MSG_RESULT([$enable_rpath])
 ])
 
 dnl Check for building PGP UAM module
