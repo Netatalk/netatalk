@@ -94,6 +94,9 @@ AC_NETATALK_64BIT_LIBS
 dnl OS specific checks
 AC_NETATALK_OS_SPECIFIC
 
+dnl Whether to set rpath
+AC_NETATALK_SET_RPATH
+
 dnl Check for optional AFS support
 AC_NETATALK_AFS_CHECK
 
