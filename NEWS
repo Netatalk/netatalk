@@ -16,6 +16,8 @@ Changes in 3.1.9
 * NEW: configure options "--enable-rpath" and "--disable-rpath" which
        can be used to force setting of RPATH (default on Solaris/NetBSD)
        or disable it.
+* NEW: configure option "--with-tracker-install-prefix" allows setting
+       an alternate install prefix for tracker when cross-compiling.
 
 Changes in 3.1.8
 ================
