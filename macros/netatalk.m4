@@ -160,7 +160,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     )
 
     AC_ARG_WITH([tracker-install-prefix],
-      [AS_HELP_STRING([--with-tracker-install-prefix=PATH],[Install prefix for Tracker (default: none)])],
+      [AS_HELP_STRING([--with-tracker-install-prefix=PATH],[alternate Prefix for Tracker installation when cross-compiling (default: none)])],
       [ac_cv_tracker_install_prefix=$withval],
       [ac_cv_tracker_install_prefix=$ac_cv_tracker_prefix]
     )
