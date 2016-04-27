@@ -165,18 +165,6 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
       [ac_cv_tracker_install_prefix=$ac_cv_tracker_prefix]
     )
 
-    dnl Tracker Managing Command
-    AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker-control, , ["$ac_cv_tracker_prefix"/bin])
-    if test x"$ac_cv_tracker_manage" = x"tracker" ; then
-       TRACKER_MANAGING_COMMAND="tracker daemon"
-       AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker daemon", [tracker managing command])
-    elif test x"$ac_cv_tracker_manage" = x"tracker-control" ; then
-       TRACKER_MANAGING_COMMAND="tracker-control"
-       AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
-    else
-       AC_MSG_ERROR([could find neither tracker command nor tracker-control command])
-    fi
-
     AC_ARG_WITH([dbus-daemon],
       [AS_HELP_STRING([--with-dbus-daemon=PATH],[Path to DBus daemon (default: /bin/dbus-daemon)])],
       [ac_cv_dbus_daemon=$withval],
@@ -196,6 +184,20 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_install_prefix"], [Path to Tracker])
         AC_DEFINE_UNQUOTED([DBUS_DAEMON_PATH], ["$ac_cv_dbus_daemon"], [Path to dbus-daemon])
+    fi
+
+    dnl Tracker Managing Command
+    if test x"$ac_cv_have_tracker" = x"yes" ; then
+        AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker-control, , ["$ac_cv_tracker_prefix"/bin])
+        if test x"$ac_cv_tracker_manage" = x"tracker" ; then
+           TRACKER_MANAGING_COMMAND="tracker daemon"
+           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker daemon", [tracker managing command])
+        elif test x"$ac_cv_tracker_manage" = x"tracker-control" ; then
+           TRACKER_MANAGING_COMMAND="tracker-control"
+           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
+        else
+           AC_MSG_ERROR([could find neither tracker command nor tracker-control command])
+        fi
     fi
 
     AC_SUBST(TRACKER_CFLAGS)
