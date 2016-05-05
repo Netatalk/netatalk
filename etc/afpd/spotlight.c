@@ -908,12 +908,12 @@ static int sl_rpc_openQuery(AFPObj *obj,
     }
 
     slq->slq_scope = talloc_strdup(slq, scope);
+    g_free(scope);
     if (slq->slq_scope == NULL) {
         LOG(log_error, logtype_sl, "talloc_strdup failed");
         EC_FAIL;
     }
 
-    g_free(scope);
 
     LOG(log_debug, logtype_sl, "Search scope: \"%s\"", slq->slq_scope);
 
