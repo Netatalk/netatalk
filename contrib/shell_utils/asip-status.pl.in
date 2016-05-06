@@ -20,7 +20,7 @@
 #
 
 use strict;
-use IO::Socket;			# sucks because Timeout doesn't
+use IO::Socket::INET6;			# sucks because Timeout doesn't
 
 my ($arg);
 my ($hostport);
@@ -29,13 +29,16 @@ my ($port);
 
 while ($arg = shift @ARGV)
 {
+	$main::ipv = AF_INET if ($arg eq "-4");
+	$main::ipv = AF_INET6 if ($arg eq "-6");
 	$main::show_icon = 1 if ($arg eq "-i");
 	$main::debug = 1 if ($arg eq "-d");
 	$main::hexdump = 1 if ($arg eq "-x");
 	$main::showver = 1 if ($arg eq "-v");
 	$main::showver = 1 if ($arg eq "-version");
 	$main::showver = 1 if ($arg eq "--version");
-	$hostport = $arg if ($arg !~ /^-/);
+	$port = $arg if (($arg !~ /^-/) && ($hostport));
+	$hostport = $arg if (($arg !~ /^-/) && !($hostport));
 }
 
 if ($main::showver ==1)
@@ -48,9 +51,12 @@ if ($main::showver ==1)
 
 if ($hostport eq "")
 {
-	print "usage: $0 [-d] [-i] [-x] hostname[:port]\n";
+	print "usage: $0 [-4|-6] [-d] [-i] [-x] hostname [port]\n";
+	print "       $0 [-4|-6] [-d] [-i] [-x] hostname:port\n";
 	print "       $0 -v|-version|--version\n";
 	print "Queries AFP servers for their capabilities.\n";
+	print "  -4: Use IPv4 only.\n";
+	print "  -6: Use IPv6 only.\n";
 	print "  -d: Enable debug output.\n";
 	print "  -i: Show icon if it exists.\n";
 	print "  -x: Enable hex dump output.\n";
@@ -58,13 +64,52 @@ if ($hostport eq "")
 	exit(-1);
 }
 
-($host, $port) = split(/\:/, $hostport);
-$port = "548" if ($port eq "");
+($host, $port) = parse_hostport($hostport, $port);
 
 my ($packet) = build_packet();
 my ($code) = sendpacket($host, $port, $packet);
 exit $code;
 
+sub parse_hostport
+{
+	my ( $hostport, $port ) = @_;
+	my ($host);
+
+	if (($port) && ($hostport =~ /\[\S+\]/)) # [fd01:1::1] 10548
+	{
+		$host = $hostport;
+	}
+	elsif (($port) && ( $hostport =~ /:/)) # fd01:1::1 10548
+	{
+		$host = "\[" . $hostport . "\]";
+	}
+	elsif ($port) # myserver 10548 / 192.168.0.1 10548
+	{
+	    $host = $hostport;
+	}
+	elsif ($hostport =~ /\[(\S+)\]:(\S+)/) # [fd01:1::1]:10548
+	{
+		$host = "\[" . $1 . "\]";
+		$port = $2;
+	}
+	elsif ($hostport =~ /\[\S+\]/) # [fd01:1::1]
+	{
+		$host = $hostport;
+		$port = "548";
+	}
+	elsif ( (() = $hostport =~ m/:/g) >= 2 ) # fd01:1::1
+	{
+		$host = "\[" . $hostport . "\]";
+		$port = "548";
+	}
+	else # myserver:10548 / myserver / 192.168.0.1:10548 / 192.168.0.1
+	{
+		($host, $port) = split(/\:/, $hostport);
+		$port = "548" if ($port eq "");
+	}
+
+	return ( $host, $port );
+}
 
 sub build_packet 
 {
@@ -92,7 +137,8 @@ sub sendpacket
 
 	print "opening $host:$port\n" if ($main::debug);
 
-	my ($asip_sock) = IO::Socket::INET->new( 
+	my ($asip_sock) = IO::Socket::INET6->new( 
+		Domain => $main::ipv,
 		PeerAddr => $host, 
 		PeerPort => $port, 
 		Proto => 'tcp', 
@@ -131,7 +177,19 @@ sub sendpacket
 	}
 	else
 	{
-		print "AFP reply from $host:$port\n";
+		print "AFP reply from $host:$port";
+		if ($asip_sock->sockdomain == PF_INET)
+		{
+			print " via IPv4\n";
+		}
+		elsif ($asip_sock->sockdomain == PF_INET6)
+		{
+			print " via IPv6\n";
+		}
+		else
+		{
+			print " via unknown IP version\n";
+		}
 		return (parse_packet($buf));
 	}	
 }
@@ -505,7 +563,7 @@ sub extract_network_address
 		if ($type == 1)
 		{
 			# quad
-			my ($ip) = sprintf "%d.%d.%d.%d (TCP/IP address)",
+			my ($ip) = sprintf "%d.%d.%d.%d (IPv4 address)",
 				$nap[0], $nap[1], @nap[2], @nap[3];
 	
 			print "Network address: $ip\n";
@@ -515,7 +573,7 @@ sub extract_network_address
 			# quad+port
 			my ($ipport) = sprintf "%d.%d.%d.%d:%d",
 				@nap[0], @nap[1], @nap[2], @nap[3], (@nap[4]*256 + @nap[5]);
-			print "Network address: $ipport (TCP/IP address and port)\n";
+			print "Network address: $ipport (IPv4 address and port)\n";
 		}
 		elsif ($type == 3)
 		{
@@ -534,12 +592,12 @@ sub extract_network_address
 		}
 		elsif ($type == 6 || $type == 7)
 		{
-			print "Network address: ";
+			print "Network address: \[";
 			my ($j) = 0;
 			for ( $j = 0; $j<=13; $j = $j+2) {
 				printf("%.2x%.2x:", @nap[$j], @nap[$j+1]);
 			}
-			printf("%.2x%.2x", @nap[14], @nap[15]);
+			printf("%.2x%.2x\]", @nap[14], @nap[15]);
 			if ($type == 7 ) {
 				printf(":%d", (@nap[16]*256) + @nap[17]);
 				print " (IPv6 address + port)\n";

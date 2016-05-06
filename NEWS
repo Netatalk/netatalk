@@ -18,6 +18,7 @@ Changes in 3.1.9
        or disable it.
 * NEW: configure option "--with-tracker-install-prefix" allows setting
        an alternate install prefix for tracker when cross-compiling.
+* UPD: asip-status.pl: IPv6 support
 
 Changes in 3.1.8
 ================
