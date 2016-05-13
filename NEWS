@@ -23,6 +23,7 @@ Changes in 3.1.9
 * FIX: afpd: don't use network IDs without LDAP, bug #621
 * NEW: AFP clients should not be able to copy or manipulate special
        extended attributes set by NFS and SMB servers on Solaris.
+* FIX: afpd: reading from file may fail, bug #619
 
 Changes in 3.1.8
 ================
