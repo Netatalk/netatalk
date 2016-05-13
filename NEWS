@@ -20,6 +20,7 @@ Changes in 3.1.9
        an alternate install prefix for tracker when cross-compiling.
 * UPD: asip-status.pl: IPv6 support
 * FIX: afpd: don't use network IDs without LDAP, bug #621
+* FIX: afpd: reading from file may fail, bug #619
 
 Changes in 3.1.8
 ================
