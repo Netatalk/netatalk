@@ -86,6 +86,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     static int          buf_valid = 0;
     static size_t       attrbuflen = 0;
+    bool                close_ad = false;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -167,6 +168,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
 
         if (adp) {
+            close_ad = true;
             FinderInfo = ad_entry(adp, ADEID_FINDERI);
             /* Check if FinderInfo equals default and empty FinderInfo*/
             if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
@@ -228,7 +230,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 exit:
     if (ret != AFP_OK)
         buf_valid = 0;
-    if (adp)
+    if (close_ad)
         ad_close_metadata( adp);
 
     return ret;
