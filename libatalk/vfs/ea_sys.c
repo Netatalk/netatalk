@@ -159,6 +159,16 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     ssize_t   ret;
     uint32_t  attrsize;
 
+#ifdef SOLARIS
+    /* Protect special attributes set by NFS server */
+    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
+        return AFPERR_ACCESS;
+
+    /* Protect special attributes set by SMB server */
+    if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN))
+        return AFPERR_ACCESS;
+#endif
+
     /* Start building reply packet */
 
     maxreply -= MAX_REPLY_EXTRA_BYTES;
@@ -347,6 +357,16 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     int ret;
     char *eabuf;
 
+#ifdef SOLARIS
+    /* Protect special attributes set by NFS server */
+    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
+        return AFPERR_ACCESS;
+
+    /* Protect special attributes set by SMB server */
+    if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN))
+        return AFPERR_ACCESS;
+#endif
+
     /*
      * Buffer for a copy of the xattr plus one byte in case
      * AFPVOL_EA_SAMBA is used
@@ -434,6 +454,16 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
     int ret;
+
+#ifdef SOLARIS
+    /* Protect special attributes set by NFS server */
+    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
+        return AFPERR_ACCESS;
+
+    /* Protect special attributes set by SMB server */
+    if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN))
+        return AFPERR_ACCESS;
+#endif
 
     /* PBaranski fix */
     if ( fd != -1) {
@@ -547,6 +577,16 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
         if (STRCMP(name, ==, AD_EA_META))
             continue;
+
+#ifdef SOLARIS
+        /* Skip special attributes set by NFS server */
+        if (!strcmp(name, VIEW_READONLY) || !strcmp(name, VIEW_READWRITE))
+            continue;
+
+        /* Skip special attributes set by SMB server */
+        if (!strncmp(name, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN))
+            continue;
+#endif
 
         if (sfd != -1) {
             if (fchdir(sfd) == -1) {

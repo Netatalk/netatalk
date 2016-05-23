@@ -897,8 +897,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 
 	while ((de = readdir(dirp))) {
 		size_t listlen;
-		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..") ||
-		     !strcmp(de->d_name, "SUNWattr_ro") || !strcmp(de->d_name, "SUNWattr_rw")) 
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
 		{
 			/* we don't want "." and ".." here: */
 			LOG(log_maxdebug, logtype_default, "skipped EA %s\n",de->d_name);
