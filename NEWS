@@ -19,6 +19,7 @@ Changes in 3.1.9
 * NEW: configure option "--with-tracker-install-prefix" allows setting
        an alternate install prefix for tracker when cross-compiling.
 * UPD: asip-status.pl: IPv6 support
+* UPD: asip-status.pl: show GSS-UAM SPNEGO blob
 * FIX: afpd: don't use network IDs without LDAP, bug #621
 * FIX: afpd: reading from file may fail, bug #619
 * NEW: AFP clients should not be able to copy or manipulate special
