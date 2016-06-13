@@ -365,6 +365,11 @@ static void show_netatalk_paths( void )
 #ifdef HAVE_TRACKER
 	printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
 	printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
+#endif
+
+	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+
+#ifdef HAVE_TRACKER
 	printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
 #endif
 
@@ -374,7 +379,8 @@ static void show_netatalk_paths( void )
 
 static void usage(void)
 {
-    printf("usage: netatalk [-v|-V] \n");
+    printf("usage: netatalk [-F configfile] \n");
+    printf("       netatalk -v|-V \n");
 }
 
 int main(int argc, char **argv)

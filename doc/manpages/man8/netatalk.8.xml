@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">06 Apr 2016</refmiscinfo>
+    <refmiscinfo class="date">13 Jun 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -19,6 +19,8 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>netatalk</command>
+
+      <arg choice="opt">-F <replaceable>configfile</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -50,6 +52,15 @@
 
         <listitem>
           <para>Print version information and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-F <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>Specifies the configuration file to use. (Defaults to
+          <filename>@pkgconfdir@/afp.conf</filename>.)</para>
         </listitem>
       </varlistentry>
 
