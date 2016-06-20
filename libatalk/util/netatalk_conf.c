@@ -1713,18 +1713,36 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     struct vol *tmp;
     const struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
-    char        *realabspath = NULL;
+    char        abspath[MAXPATHLEN + 1];
     char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
     regmatch_t match[1];
+    size_t abspath_len;
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
-    /*  build absolute path */
-    EC_NULL( realabspath = realpath_safe(path) );
-    path = realabspath;
+    if (path[0] != '/') {
+        /* relative path, build absolute path */
+        EC_NULL_LOG( getcwd(abspath, MAXPATHLEN) );
+        strlcat(abspath, "/", MAXPATHLEN);
+        strlcat(abspath, path, MAXPATHLEN);
+        path = abspath;
+    } else {
+        strlcpy(abspath, path, MAXPATHLEN);
+        path = abspath;
+    }
+    /* path now points to a copy of path in the abspath buffer */
+
+    /*
+     * Strip trailing slashes
+     */
+    abspath_len = strlen(abspath);
+    while (abspath[abspath_len - 1] == '/') {
+        abspath[abspath_len - 1] = 0;
+        abspath_len--;
+    }
 
     for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
         size_t v_path_len = strlen(tmp->v_path);
@@ -1846,8 +1864,6 @@ EC_CLEANUP:
         free(user);
     if (realvolpath)
         free(realvolpath);
-    if (realabspath)
-        free(realabspath);
     if (ret != 0)
         vol = NULL;
     return vol;
