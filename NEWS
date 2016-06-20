@@ -24,6 +24,7 @@ Changes in 3.1.9
 * NEW: AFP clients should not be able to copy or manipulate special
        extended attributes set by NFS and SMB servers on Solaris.
 * FIX: afpd: reading from file may fail, bug #619
+* FIX: ad: ad cp may crash, bug #622
 
 Changes in 3.1.8
 ================
