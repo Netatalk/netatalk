@@ -25,6 +25,7 @@ Changes in 3.1.9
 * NEW: AFP clients should not be able to copy or manipulate special
        extended attributes set by NFS and SMB servers on Solaris, issue #36
 * FIX: ad: ad cp may crash, bug #622
+* UPD: Update Unicode support to version 9.0.0
 
 Changes in 3.1.8
 ================
