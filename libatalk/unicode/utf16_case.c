@@ -26,32 +26,35 @@ ucs2_t toupper_w(ucs2_t val)
     if ( val >= 0x13C0 && val <= 0x13FF)
         return upper_table_3[val-0x13C0];
 
+    if ( val >= 0x1C80 && val <= 0x1CBF)
+        return upper_table_4[val-0x1C80];
+
     if ( val >= 0x1D40 && val <= 0x1D7F)
-        return upper_table_4[val-0x1D40];
+        return upper_table_5[val-0x1D40];
 
     if ( val >= 0x1E00 && val <= 0x1FFF)
-        return upper_table_5[val-0x1E00];
+        return upper_table_6[val-0x1E00];
 
     if ( val >= 0x2140 && val <= 0x21BF)
-        return upper_table_6[val-0x2140];
+        return upper_table_7[val-0x2140];
 
     if ( val >= 0x24C0 && val <= 0x24FF)
-        return upper_table_7[val-0x24C0];
+        return upper_table_8[val-0x24C0];
 
     if ( val >= 0x2C00 && val <= 0x2D3F)
-        return upper_table_8[val-0x2C00];
+        return upper_table_9[val-0x2C00];
 
     if ( val >= 0xA640 && val <= 0xA6BF)
-        return upper_table_9[val-0xA640];
+        return upper_table_10[val-0xA640];
 
     if ( val >= 0xA700 && val <= 0xA7BF)
-        return upper_table_10[val-0xA700];
+        return upper_table_11[val-0xA700];
 
     if ( val >= 0xAB40 && val <= 0xABBF)
-        return upper_table_11[val-0xAB40];
+        return upper_table_12[val-0xAB40];
 
     if ( val >= 0xFF40 && val <= 0xFF7F)
-        return upper_table_12[val-0xFF40];
+        return upper_table_13[val-0xFF40];
 
 	return (val);
 }
@@ -64,11 +67,17 @@ uint32_t toupper_sp(uint32_t val)
     if ( val >= 0xD801DC00 && val <= 0xD801DC7F)
         return upper_table_sp_1[val-0xD801DC00];
 
+    if ( val >= 0xD801DCC0 && val <= 0xD801DCFF)
+        return upper_table_sp_2[val-0xD801DCC0];
+
     if ( val >= 0xD803DCC0 && val <= 0xD803DCFF)
-        return upper_table_sp_2[val-0xD803DCC0];
+        return upper_table_sp_3[val-0xD803DCC0];
 
     if ( val >= 0xD806DCC0 && val <= 0xD806DCFF)
-        return upper_table_sp_3[val-0xD806DCC0];
+        return upper_table_sp_4[val-0xD806DCC0];
+
+    if ( val >= 0xD83ADD00 && val <= 0xD83ADD7F)
+        return upper_table_sp_5[val-0xD83ADD00];
 
 	return (val);
 }
@@ -125,11 +134,17 @@ uint32_t tolower_sp(uint32_t val)
     if ( val >= 0xD801DC00 && val <= 0xD801DC3F)
         return lower_table_sp_1[val-0xD801DC00];
 
+    if ( val >= 0xD801DC80 && val <= 0xD801DCFF)
+        return lower_table_sp_2[val-0xD801DC80];
+
     if ( val >= 0xD803DC80 && val <= 0xD803DCBF)
-        return lower_table_sp_2[val-0xD803DC80];
+        return lower_table_sp_3[val-0xD803DC80];
 
     if ( val >= 0xD806DC80 && val <= 0xD806DCBF)
-        return lower_table_sp_3[val-0xD806DC80];
+        return lower_table_sp_4[val-0xD806DC80];
+
+    if ( val >= 0xD83ADD00 && val <= 0xD83ADD3F)
+        return lower_table_sp_5[val-0xD83ADD00];
 
 	return (val);
 }
