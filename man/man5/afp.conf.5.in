@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 26 Oct 2015
+.\"      Date: 04 Apr 2016
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "26 Oct 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "04 Apr 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -320,7 +320,7 @@ uams_clrtxt\&.so
 (uams_pam\&.so or uams_passwd\&.so) Allow logins with passwords transmitted in the clear\&. (legacy)
 .RE
 .PP
-uams_randum\&.so
+uams_randnum\&.so
 .RS 4
 allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @pkgconfdir@/afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
 \fBafppasswd\fR(1)
@@ -624,8 +624,9 @@ Specifies the IP address and port of a cnid_metad server, required for CNID dbd 
 .PP
 dbus daemon = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to dbus\-daemon binary used by Spotlight feature\&. The default is
-/bin/dbus\-daemon\&.
+Sets the path to dbus\-daemon binary used by Spotlight feature\&. The default value
+[@DBUS_DAEMON_PATH@]
+is determined when building netatalk\&.
 .RE
 .PP
 dircachesize = \fInumber\fR \fB(G)\fR
@@ -731,8 +732,7 @@ Whether to start a dbus instance for use with Tracker\&.
 .PP
 start tracker = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
-Whether to start Tracker with
-\fItracker\-control \-s\fR\&.
+Whether to start Tracker with "\fBtracker daemon \-s\fR"\&. In case of old Tracker, "\fBtracker\-control \-s\fR" is used instead\&.
 .RE
 .PP
 veto message = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -1512,8 +1512,6 @@ option will allow you to select another volume encoding\&.
 will accept any
 \fBiconv\fR(1)
 provided charset\&. It is highly recommended to stick to the default UTF\-8\&.
-.PP
-\fINote\fR: Whenever you can, please stick with the default UTF\-8 volume format\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),
