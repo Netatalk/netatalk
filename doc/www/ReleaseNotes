@@ -1,4 +1,4 @@
-Netatalk 3.1.8
+Netatalk 3.1.9
 ==============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,22 +45,34 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.8
+Changes in 3.1.9
 ~~~~~~~~~~~~~~~~
-* FIX: CNID/MySQL: Quote UUID table names, bug #585
-* FIX: Crash in cnid_metad, bug #593
-* UPD: Update Unicode support to version 8.0.0
-* FIX: larger server side copyfile buffer for improved IO performance,
-       bug #599
-* NEW: afpd: new option "ea = samba". Use Samba vfs_streams_xattr
-       compatible xattrs which means adding a 0 byte at the end of
-       xattrs.
-* FIX: remove #541 workaround patch. There was this problem with only early
-       Fedora 20.
-* FIX: rpmbuild fails on Fedora x86_64, bug #598
-* FIX: Listen on IPv6 wildcard address by default, bug #602
-* FIX: FCE protocol version 1 packets, bug #603
-* UPD: Update list of BerkeleyDB versions searched at configure time
+* FIX: afpd: fix "admin group" option
+* NEW: afpd: new options "force user" and "force group"
+* FIX: listening on IPv6 wildcard address may fail if IPv6 is
+       disabled, bug #606
+* NEW: LibreSSL support, FR #98
+* FIX: cannot build when acl is not defined, bug #574
+* UPD: configure option "--with-init-style=" for Gentoo.
+       "gentoo" is renamed to "gentoo-openrc".
+       "gentoo-openrc" is same as "openrc".
+       "gentoo-systemd" is same as "systemd".
+* NEW: configure option "--with-dbus-daemon=PATH" for Spotlight feature
+* UPD: use "tracker daemon" command instead of "tracker-control" command
+       if Gnome Tracker is the recent version.
+* NEW: configure options "--enable-rpath" and "--disable-rpath" which
+       can be used to force setting of RPATH (default on Solaris/NetBSD)
+       or disable it.
+* NEW: configure option "--with-tracker-install-prefix" allows setting
+       an alternate install prefix for tracker when cross-compiling.
+* UPD: asip-status.pl: IPv6 support
+* UPD: asip-status.pl: show GSS-UAM SPNEGO blob
+* FIX: afpd: don't use network IDs without LDAP, bug #621
+* FIX: afpd: reading from file may fail, bug #619
+* NEW: AFP clients should not be able to copy or manipulate special
+       extended attributes set by NFS and SMB servers on Solaris, issue #36
+* FIX: ad: ad cp may crash, bug #622
+* UPD: Update Unicode support to version 9.0.0
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -115,4 +127,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, December 2015
+ - The Netatalk Development Team, July 2016
