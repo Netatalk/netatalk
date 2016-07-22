@@ -1,3 +1,7 @@
+Changes in 3.1.10
+================
+* FIX: cannot build when ldap is not defined, bug #630
+
 Changes in 3.1.9
 ================
 * FIX: afpd: fix "admin group" option
