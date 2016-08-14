@@ -205,17 +205,6 @@ static void register_stuff(const AFPObj *obj) {
         }
     }
 
-    /* AFP_DNS_SERVICE_TYPE */
-    svc_ref_count = 1;
-    if (i) {
-        /* ADISK_SERVICE_TYPE */
-        svc_ref_count++;
-    }
-    if (obj->options.mimicmodel) {
-        /* DEV_INFO_SERVICE_TYPE */
-        svc_ref_count++;
-    }
-
     // Allocate the memory to store our service refs
     svc_refs = calloc(svc_ref_count, sizeof(DNSServiceRef));
     assert(svc_refs);
@@ -248,6 +237,7 @@ static void register_stuff(const AFPObj *obj) {
     if (error != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
             AFP_DNS_SERVICE_TYPE, error);
+            svc_ref_count--;
         goto fail;
     }
 
@@ -267,6 +257,7 @@ static void register_stuff(const AFPObj *obj) {
         if (error != kDNSServiceErr_NoError) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
                 ADISK_SERVICE_TYPE, error);
+            svc_ref_count--;
             goto fail;
         }
     }
@@ -303,6 +294,7 @@ static void register_stuff(const AFPObj *obj) {
         if (error != kDNSServiceErr_NoError) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
                 DEV_INFO_SERVICE_TYPE, error);
+            svc_ref_count--;
             goto fail;
         }
     } /* if (config->obj.options.mimicmodel) */

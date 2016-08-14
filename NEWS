@@ -1,6 +1,7 @@
 Changes in 3.1.10
 ================
 * FIX: cannot build when ldap is not defined, bug #630
+* FIX: SIGHUP can cause core dump when mdns is enabled, bug #72
 
 Changes in 3.1.9
 ================
