@@ -373,7 +373,9 @@ static void show_netatalk_paths( void )
 	printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
 #endif
 
+#ifndef SOLARIS
 	printf( "    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
+#endif
 
 }
 
