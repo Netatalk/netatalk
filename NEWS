@@ -3,6 +3,7 @@ Changes in 3.1.10
 * FIX: cannot build when ldap is not defined, bug #630
 * FIX: SIGHUP can cause core dump when mdns is enabled, bug #72
 * FIX: Solaris: stale pid file puts netatalk into maintenance mode, bug #73
+* FIX: dsi_stream_read: len:0, unexpected EOF, bug #633
 
 Changes in 3.1.9
 ================
