@@ -39,8 +39,6 @@
 static const char *ea_finderinfo = "com.apple.FinderInfo";
 static const char *ea_resourcefork = "com.apple.ResourceFork";
 
-/* This should be big enough to consecutively store the names of all attributes */
-static char attrnamebuf[ATTRNAMEBUFSIZ];
 
 #ifdef DEBUG
 static void hexdump(void *m, size_t l) {
@@ -88,6 +86,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     static int          buf_valid = 0;
     static size_t       attrbuflen = 0;
     bool                close_ad = false;
+    char                attrnamebuf[ATTRNAMEBUFSIZ];
 
     *rbuflen = 0;
     ibuf += 2;
