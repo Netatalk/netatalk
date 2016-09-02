@@ -82,9 +82,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct ofork	*opened = NULL;
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
-
-    static int          buf_valid = 0;
-    static size_t       attrbuflen = 0;
+    size_t              attrbuflen = 0;
     bool                close_ad = false;
     char                attrnamebuf[ATTRNAMEBUFSIZ];
 
@@ -92,129 +90,125 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     ibuf += 2;
 
     /* Get Bitmap and MaxReplySize first */
-    memcpy( &bitmap, ibuf +6, sizeof(bitmap));
-    bitmap = ntohs( bitmap );
+    memcpy(&bitmap, ibuf +6, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
 
-    memcpy( &maxreply, ibuf + 14, sizeof (maxreply));
-    maxreply = ntohl( maxreply );
+    memcpy(&maxreply, ibuf + 14, sizeof (maxreply));
+    maxreply = ntohl(maxreply);
+
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
+    vol = getvolbyvid(vid);
+    if (vol == NULL) {
+        LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
+        return AFPERR_ACCESS;
+    }
+
+    memcpy(&did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
+    dir = dirlookup(vol, did);
+    if (dir == NULL) {
+        LOG(log_debug, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
+        return afp_errno;
+    }
+
+    if (bitmap & kXAttrNoFollow) {
+        oflag = O_NOFOLLOW;
+    }
+
+    /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
+    ibuf += 12;
+
+    /* get name */
+    s_path = cname(vol, dir, &ibuf);
+    if (s_path == NULL) {
+        LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
+        return AFPERR_NOOBJ;
+    }
+
+    st = &s_path->st;
+    if (!s_path->st_valid) {
+        /* it's a dir in our cache, we didn't stat it, do it now */
+        of_statdir(vol, s_path);
+    }
+    if (s_path->st_errno != 0) {
+        return(AFPERR_NOOBJ);
+    }
+
+    uname = s_path->u_name;
 
     /*
-      If its the first request with maxreply=0 or if we didn't mark our buffers valid for
-      whatever reason (just a safety check, it should be valid), then scan for attributes
+     * We have to check the FinderInfo for the file, because if they
+     * aren't all 0 we must return the synthetic attribute
+     * "com.apple.FinderInfo".  Note: the client will never (never
+     * seen in traces) request that attribute via FPGetExtAttr !
     */
-    if ((maxreply == 0) || (buf_valid == 0)) {
 
-        attrbuflen = 0;
+    adp = &ad;
+    ad_init(adp, vol);
 
-        memcpy( &vid, ibuf, sizeof(vid));
-        ibuf += sizeof(vid);
-        if (NULL == ( vol = getvolbyvid( vid )) ) {
-            LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
-            return AFPERR_ACCESS;
-        }
-
-        memcpy( &did, ibuf, sizeof(did));
-        ibuf += sizeof(did);
-        if (NULL == ( dir = dirlookup( vol, did )) ) {
-            LOG(log_debug, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
-            return afp_errno;
-        }
-
-        if (bitmap & kXAttrNoFollow)
-            oflag = O_NOFOLLOW;
-        /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
-        ibuf += 12;
-
-        /* get name */
-        if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-            LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
-            return AFPERR_NOOBJ;
-        }
-
-        st   = &s_path->st;
-        if (!s_path->st_valid) {
-            /* it's a dir in our cache, we didn't stat it, do it now */
-            of_statdir(vol, s_path);
-        }
-        if ( s_path->st_errno != 0 ) {
-            return( AFPERR_NOOBJ );
-        }
-
-        uname = s_path->u_name;
-        /*
-          We have to check the FinderInfo for the file, because if they aren't all 0
-          we must return the synthetic attribute "com.apple.FinderInfo".
-          Note: the client will never (never seen in traces) request that attribute
-          via FPGetExtAttr !
-        */
-
-        adp = &ad;
-        ad_init(adp, vol);
-
-        if (path_isadir(s_path)) {
+    if (path_isadir(s_path)) {
 	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
-            adflags = ADFLAGS_DIR;
+        adflags = ADFLAGS_DIR;
 	} else {
 	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a file", uname);
 	    opened = of_findname(vol, s_path);
 	    if (opened) {
-		adp = opened->of_ad;
-		fd = ad_meta_fileno(adp);
+            adp = opened->of_ad;
+            fd = ad_meta_fileno(adp);
 	    }
 	}
 
-        if (ad_metadata(uname, adflags, adp) != 0 ) {
-            switch (errno) {
-            case ENOENT:
-                break;
-            case EACCES:
-                LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
-                    uname, strerror(errno));
-                return AFPERR_ACCESS;
-            default:
-                LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s", uname, strerror(errno));
-                return AFPERR_MISC;
-            }
-        } else {
-            close_ad = true;
-            FinderInfo = ad_entry(adp, ADEID_FINDERI);
-            /* Check if FinderInfo equals default and empty FinderInfo*/
-            if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
-                /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
-                strcpy(attrnamebuf, ea_finderinfo);
-                attrbuflen += strlen(ea_finderinfo) + 1;
-                LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
-            }
-
-            /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
-
-            if (adp->ad_rlen > 0) {
-                LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
-                strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
-                attrbuflen += strlen(ea_resourcefork) + 1;
-            }
+    if (ad_metadata(uname, adflags, adp) != 0 ) {
+        switch (errno) {
+        case ENOENT:
+            break;
+        case EACCES:
+            LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
+                uname, strerror(errno));
+            return AFPERR_ACCESS;
+        default:
+            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s", uname, strerror(errno));
+            return AFPERR_MISC;
         }
-	
-        ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag, fd);
+    } else {
+        close_ad = true;
+        FinderInfo = ad_entry(adp, ADEID_FINDERI);
+        /* Check if FinderInfo equals default and empty FinderInfo*/
+        if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
+            /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
+            strcpy(attrnamebuf, ea_finderinfo);
+            attrbuflen += strlen(ea_finderinfo) + 1;
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
+        }
+
+        /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
+        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
+
+        if (adp->ad_rlen > 0) {
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
+            strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
+            attrbuflen += strlen(ea_resourcefork) + 1;
+        }
+    }
+
+    ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag, fd);
+    if (ret != AFP_OK) {
+        attrbuflen = 0;
 
         switch (ret) {
         case AFPERR_BADTYPE:
             /* its a symlink and client requested O_NOFOLLOW */
             LOG(log_debug, logtype_afpd, "afp_listextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-            attrbuflen = 0;
-            buf_valid = 0;
             ret = AFP_OK;
-            goto exit;
-        case AFPERR_MISC:
-            attrbuflen = 0;
-            goto exit;
-        default:
-            buf_valid = 1;
-        }
-    } /* if ((maxreply == 0) || (buf_valid == 0)) */
+            break;
 
-    /* Start building reply packet */
+        default:
+            break;
+        }
+    }
+
+exit:
     bitmap = htons(bitmap);
     memcpy( rbuf, &bitmap, sizeof(bitmap));
     rbuf += sizeof(bitmap);
@@ -225,22 +219,14 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     rbuf += sizeof(tmpattr);
     *rbuflen += sizeof(tmpattr);
 
-    /* Only copy buffer if the client asked for it (2nd request, maxreply>0)
-       and we didnt have an error (buf_valid) */
-    if (maxreply && buf_valid) {
+    if (maxreply > 0) {
         memcpy( rbuf, attrnamebuf, attrbuflen);
         *rbuflen += attrbuflen;
-        buf_valid = 0;
     }
 
-    ret = AFP_OK;
-
-exit:
-    if (ret != AFP_OK)
-        buf_valid = 0;
-
-    if (close_ad)
+    if (close_ad) {
         ad_close(adp, ADFLAGS_HF);
+    }
 
     return ret;
 }
