@@ -1,3 +1,6 @@
+Changes in 3.1.11
+================
+
 Changes in 3.1.10
 ================
 * FIX: cannot build when ldap is not defined, bug #630
