@@ -158,6 +158,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
     ssize_t   ret;
     uint32_t  attrsize;
+    size_t    extra = 0;
 
 #ifdef SOLARIS
     /* Protect special attributes set by NFS server */
@@ -178,19 +179,19 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
     LOG(log_debug7, logtype_afpd, "sys_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
-        maxreply++;
+        extra = 1;
     }
 
     /* PBaranski fix */
     if (fd != -1) {
 	LOG(log_debug, logtype_afpd, "sys_get_eacontent(%s): file is already opened", uname);
-	ret = sys_fgetxattr(fd, attruname, rbuf +4, maxreply);
+	ret = sys_fgetxattr(fd, attruname, rbuf +4, maxreply + extra);
     } else {
 	if ((oflag & O_NOFOLLOW) ) {
-    	    ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply);
+    	    ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply + extra);
 	}
 	else {
-    	    ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply);
+    	    ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply + extra);
 	}
     }
     /* PBaranski fix */
