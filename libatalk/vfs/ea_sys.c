@@ -172,6 +172,16 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
     /* Start building reply packet */
 
+    if (maxreply <= MAX_REPLY_EXTRA_BYTES) {
+        /*
+         * maxreply must be at least size of xattr + MAX_REPLY_EXTRA_BYTES (6)
+         * bytes. The 6 bytes are the AFP reply packets bitmap and length field.
+         */
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
+        return AFPERR_PARAM;
+    }
+
     maxreply -= MAX_REPLY_EXTRA_BYTES;
 
     if (maxreply > MAX_EA_SIZE)
@@ -209,6 +219,9 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             if (vol->v_obj->afp_version >= 34)
                 return AFPERR_NOITEM;
             return AFPERR_MISC;
+
+        case ERANGE:
+            return AFPERR_PARAM;
 
         default:
             LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));

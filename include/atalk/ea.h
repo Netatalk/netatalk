@@ -58,10 +58,10 @@
 #define MAX_EA_SIZE 3802
 
 /*
- * At time of writing the 10.5.6 client adds 8 bytes to the
- * length of the EA that we send him 
-*/
-#define MAX_REPLY_EXTRA_BYTES 8
+ * req_count has space for AFP response bitmap and length as well, so
+ * 6 bytes
+ */
+#define MAX_REPLY_EXTRA_BYTES 6
 
 /* 
  * Library user must provide a static buffer of size ATTRNAMEBUFSIZ.
