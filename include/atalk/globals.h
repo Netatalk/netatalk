@@ -127,6 +127,7 @@ struct afp_options {
     char *logconfig;
     char *logfile;
     char *mimicmodel;
+    char *zeroconfname;
     char *adminauthuser;
     char *ignored_attr;
     int  splice_size;

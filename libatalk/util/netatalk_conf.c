@@ -2063,6 +2063,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->addomain       = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
     options->ntseparator    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
     options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
+    options->zeroconfname    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "zeroconf name",    NULL);
     options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
     options->ignored_attr   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ignored attributes", NULL);
     options->cnid_mysql_host = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "cnid mysql host", NULL);
@@ -2293,6 +2294,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.ntseparator);
     if (obj->options.mimicmodel)
         CONFIG_ARG_FREE(obj->options.mimicmodel);
+    if (obj->options.zeroconfname)
+        CONFIG_ARG_FREE(obj->options.zeroconfname);
     if (obj->options.adminauthuser)
         CONFIG_ARG_FREE(obj->options.adminauthuser);
     if (obj->options.hostname)
