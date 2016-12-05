@@ -93,14 +93,26 @@ static void register_stuff(void) {
 
         LOG(log_info, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
 
-        if (convert_string(ctx->obj->options.unixcharset,
-                           CH_UTF8,
-                           ctx->obj->options.hostname,
-                           -1,
-                           name,
-                           MAXINSTANCENAMELEN) <= 0) {
-            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
-            goto fail;
+        if (ctx->obj->options.zeroconfname) {
+            if (convert_string(ctx->obj->options.unixcharset,
+                               CH_UTF8,
+                               ctx->obj->options.zeroconfname,
+                               -1,
+                               name,
+                               MAXINSTANCENAMELEN) <= 0) {
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.zeroconfname);
+                goto fail;
+            }
+        } else {
+            if (convert_string(ctx->obj->options.unixcharset,
+                               CH_UTF8,
+                               ctx->obj->options.hostname,
+                               -1,
+                               name,
+                               MAXINSTANCENAMELEN) <= 0) {
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
+                goto fail;
+            }
         }
 
         LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);            
