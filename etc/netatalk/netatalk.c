@@ -349,6 +349,15 @@ static void show_netatalk_version( void )
 
 	puts( "netatalk has been compiled with support for these features:\n" );
 
+	printf( "      Zeroconf support:\t" );
+#if defined (HAVE_MDNS)
+	puts( "mDNSResponder" );
+#elif defined (HAVE_AVAHI)
+	puts( "Avahi" );
+#else
+	puts( "No" );
+#endif
+
 	printf( "     Spotlight support:\t" );
 #ifdef HAVE_TRACKER
 	puts( "Yes" );
