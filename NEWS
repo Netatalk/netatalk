@@ -1,6 +1,7 @@
 Changes in 3.1.11
 ================
 * NEW: Global option "zeroconf name", FR#99
+* NEW: show Zeroconf support by "netatalk -V", FR#100
 
 Changes in 3.1.10
 ================
