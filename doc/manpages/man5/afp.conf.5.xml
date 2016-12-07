@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">04 Apr 2016</refmiscinfo>
+    <refmiscinfo class="date">07 Dec 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -1020,7 +1020,7 @@
 
           <listitem>
             <para>Specifies the icon model that appears on clients. Defaults
-            to off. Note that afpd must support Zeroconf.
+            to off. Note that netatalk must support Zeroconf.
             Examples: RackMac (same as Xserve), PowerBook, PowerMac,
             Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro,
             AppleTV1,1, AirPort.</para>
