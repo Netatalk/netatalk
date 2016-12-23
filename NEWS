@@ -3,6 +3,7 @@ Changes in 3.1.11
 * NEW: Global option "zeroconf name", FR#99
 * NEW: show Zeroconf support by "netatalk -V", FR#100
 * UPD: gentoo: Switch openrc init script to openrc-run, GitHub#77
+* FIX: log message: name of function doese not match, GitHub#78
 
 Changes in 3.1.10
 ================

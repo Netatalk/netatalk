@@ -357,7 +357,7 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
         ldap_attr = ldap_name_attr;
     len = snprintf( filter, 256, "%s=%s", ldap_attr, name);
     if (len >= 256 || len == -1) {
-        LOG(log_error, logtype_default, "ldap_getnamefromuuid: filter error:%d, \"%s\"", len, filter);
+        LOG(log_error, logtype_default, "ldap_getuuidfromname: filter error:%d, \"%s\"", len, filter);
         return -1;
     }
 
@@ -383,7 +383,7 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
             uuid_bytes[10], uuid_bytes[11], uuid_bytes[12], /* Data4 - Low Bytes */
             uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
         free(uuid_bytes);
-        LOG(log_error, logtype_default, "ldap_getnamefromuuid: uuid_string: %s", *uuid_string);
+        LOG(log_error, logtype_default, "ldap_getuuidfromname: uuid_string: %s", *uuid_string);
     }
 
     return 0;
