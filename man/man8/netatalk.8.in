@@ -2,12 +2,12 @@
 .\"     Title: netatalk
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 22 Nov 2015
+.\"      Date: 13 Jun 2016
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "NETATALK" "8" "22 Nov 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "NETATALK" "8" "13 Jun 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,9 @@
 netatalk \- Netatalk AFP server service controller daemon
 .SH "SYNOPSIS"
 .HP \w'\fBnetatalk\fR\ 'u
-\fBnetatalk\fR
+\fBnetatalk\fR [\-F\ \fIconfigfile\fR]
+.HP \w'\fBnetatalk\fR\ 'u
+\fBnetatalk\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBnetatalk\fR
@@ -39,6 +41,18 @@ is the service controller daemon responsible for starting and restarting the AFP
 \fBafpd\fR
 and the CNID daemon
 \fBcnid_metad\fR\&. It is normally started at boot time by init system (BSD\-style init, SysV\-sytle init, systemd, Upstart, OpenRC, SMF and so on)\&.
+.SH "OPTIONS"
+.PP
+\-v | \-V
+.RS 4
+Print version information and exit\&.
+.RE
+.PP
+\-F \fIconfigfile\fR
+.RS 4
+Specifies the configuration file to use\&. (Defaults to
+@pkgconfdir@/afp\&.conf\&.)
+.RE
 .SH "SIGNALS"
 .PP
 SIGTERM
