@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">07 Dec 2016</refmiscinfo>
+    <refmiscinfo class="date">27 Dec 2016</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -1186,6 +1186,18 @@
             <para>Use section <option>name</option> as option preset for all
             volumes (when set in the [Global] section) or for one volume (when
             set in that volume's section).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>zeroconf name = <replaceable>name</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Specifies a human-readable name that uniquely describes
+            registered services. The zeroconf name is advertised as UTF-8,
+            up to 63 octets (bytes) in length. Defaults to hostname. Note
+            that netatalk must support Zeroconf.</para>
           </listitem>
         </varlistentry>
       </variablelist>

@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 07 Dec 2016
+.\"      Date: 27 Dec 2016
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "07 Dec 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "27 Dec 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -775,6 +775,11 @@ vol preset = \fIname\fR \fB(G)/(V)\fR
 Use section
 \fBname\fR
 as option preset for all volumes (when set in the [Global] section) or for one volume (when set in that volume\*(Aqs section)\&.
+.RE
+.PP
+zeroconf name = \fIname\fR \fB(G)\fR
+.RS 4
+Specifies a human\-readable name that uniquely describes registered services\&. The zeroconf name is advertised as UTF\-8, up to 63 octets (bytes) in length\&. Defaults to hostname\&. Note that netatalk must support Zeroconf\&.
 .RE
 .SS "Logging Options"
 .PP
