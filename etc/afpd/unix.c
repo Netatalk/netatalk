@@ -84,8 +84,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal
     *btotal = (VolSpace)
               ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen ));
 #else /* !ultrix */
-    *btotal = (VolSpace)
-              ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail ));
+    *btotal = (VolSpace) sfs.f_blocks;
 #endif /* ultrix */
 
     /* see similar block above comments */
