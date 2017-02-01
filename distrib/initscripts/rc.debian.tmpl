@@ -70,6 +70,7 @@ case "$1" in
         else
             echo "Netatalk is not running."
         fi
+        exit $EXIT_CODE
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
