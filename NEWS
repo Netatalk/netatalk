@@ -4,6 +4,9 @@ Changes in 3.1.11
 * NEW: show Zeroconf support by "netatalk -V", FR#100
 * UPD: gentoo: Switch openrc init script to openrc-run, GitHub#77
 * FIX: log message: name of function doese not match, GitHub#78
+* UPD: volume capacity reporting to match Samba behavior, GitHub#83
+* FIX: debian: sysv init status command exits with proper exit code, GitHub#84
+* FIX: dsi_stream_read: len:0, unexpected EOF, GitHub#82
 
 Changes in 3.1.10
 ================
