@@ -83,6 +83,8 @@ uams_dhx2_passwd_la_SOURCES	= uams_dhx2_passwd.c
 uams_dhx2_pam_la_SOURCES	= uams_dhx2_pam.c
 uams_gss_la_SOURCES   = uams_gss.c
 
+noinst_HEADERS = openssl_compat.h
+
 #
 # flags
 #
