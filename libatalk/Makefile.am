@@ -46,6 +46,7 @@ VERSION_INFO = 18:0:0
 #   3.1.8           17:0:0
 #   3.1.9           17:0:0
 #   3.1.10          18:0:0
+#   3.1.11          18:0:0
 
 SUBDIRS = acl adouble bstring compat cnid dsi iniparser talloc util unicode vfs
 
