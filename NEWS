@@ -1,5 +1,8 @@
+Changes in 3.1.12
+=================
+
 Changes in 3.1.11
-================
+=================
 * NEW: Global option "zeroconf name", FR#99
 * NEW: show Zeroconf support by "netatalk -V", FR#100
 * UPD: gentoo: Switch openrc init script to openrc-run, GitHub#77
@@ -10,7 +13,7 @@ Changes in 3.1.11
 * UPD: dhx uams: OpenSSL 1.1 support, GitHub#87
 
 Changes in 3.1.10
-================
+=================
 * FIX: cannot build when ldap is not defined, bug #630
 * FIX: SIGHUP can cause core dump when mdns is enabled, bug #72
 * FIX: Solaris: stale pid file puts netatalk into maintenance mode, bug #73
