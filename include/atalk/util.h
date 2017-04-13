@@ -13,6 +13,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -119,7 +120,7 @@ extern void mod_close    (void *);
  * OpenBSD currently does not use the second arg for dlopen(). For
  * future compatibility we define DL_LAZY */
 #ifdef __NetBSD__
-#define mod_open(a)      dlopen(a, RTLD_LAZY)
+#define mod_open(a)      dlopen(a, RTLD_LAZY|RTLD_GLOBAL)
 #elif defined(__OpenBSD__)
 #define mod_open(a)      dlopen(a, DL_LAZY)
 #else /* ! __NetBSD__ && ! __OpenBSD__ */
