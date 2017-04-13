@@ -64,7 +64,9 @@ char *strchr (), *strrchr ();
 /* We work around something I don't entirely understand... */
 /* BF: This is a Heimdal/MIT compatibility fix */
 #ifndef HAVE_GSS_C_NT_HOSTBASED_SERVICE
+#ifndef GSS_C_NT_HOSTBASED_SERVICE
 #define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
+#endif
 #endif
 
 #ifdef MIN
