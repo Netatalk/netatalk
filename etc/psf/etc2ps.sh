@@ -9,19 +9,16 @@
 # tag in the case.
 #
 
-DVIPSPATH=/usr/local/tex/bin
-DVIPS=/usr/local/tex/bin/dvips
+DVIPS="/usr/bin/dvips"
 DVIPSARGS="-f -q"
 
-TROFF2PS=/usr/local/psroff/troff2/troff2ps
-TROFF2PSARGS="-Z -O-.10"
-
-PATH=/usr/bin:$DVIPSPATH; export PATH
+GROFF="/usr/bin/groff"
+TROFF2PSARGS="-Tps"
 
 case $1 in
 
 #
-# Use "dvips" by Radical Eye Software to convert TeX DVI files to PostScript.
+# Use "dvips" to convert TeX DVI files to PostScript.
 # Note that you *must* have METAFONT, etc, in your path.
 #
 df*)
@@ -31,19 +28,19 @@ df*)
 	$DVIPS $DVIPSARGS < $TEMPFILE
 	rm -f $TEMPFILE
     else
-	echo "$0: filter dvips uninstalled" 1>&2
+	echo "$0: filter dvips not installed" 1>&2
 	exit 2
     fi
     ;;
 
 #
-# troff2ps is from psroff by Chris Lewis.
+# Use GNU groff(1) to convert roff to ps
 #
 tf*)
-    if [ -x "$TROFF2PS" ]; then
-	exec $TROFF2PS $TROFF2PSARGS
+    if [ -x "$GROFF" ]; then
+	exec $GROFF $TROFF2PSARGS
     else
-	echo "$0: filter troff2ps uninstalled" 1>&2
+	echo "$0: filter troff2ps not installed" 1>&2
 	exit 2
     fi
     ;;
