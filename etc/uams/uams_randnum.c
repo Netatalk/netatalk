@@ -47,7 +47,7 @@ char *strchr (), *strrchr ();
 #include <atalk/uam.h>
 
 
-#include <des.h>
+#include <openssl/des.h>
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
