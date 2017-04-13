@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
     while (1) {
         rqstfd = usockfd_check(srvfd, &set);
         /* Collect zombie processes and log what happened to them */
-        if (sigchild) while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
             for (i = 0; i < maxvol; i++) {
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
