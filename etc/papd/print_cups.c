@@ -39,7 +39,15 @@
 
 #ifdef HAVE_CUPS
 
+/* enable pre-1.6 CUPS API for now */
+#define _PPD_DEPRECATED
+
+/* expose structs that are private post-1.5 CUPS */
+#define _IPP_PRIVATE_STRUCTURES 1
+
+#include <cups/ipp.h>
 #include <cups/cups.h>
+#include <cups/ppd.h>
 #include <cups/language.h>
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
