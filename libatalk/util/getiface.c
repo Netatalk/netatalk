@@ -16,6 +16,10 @@
 #include <stdint.h>
 #endif
 
+#ifdef HAVE_GETIFADDRS
+#include <ifaddrs.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -74,6 +78,28 @@ static int getifaces(const int sockfd, char ***list)
 	  *list = new;
       return i;
 
+#elif defined(HAVE_GETIFADDRS)
+    struct ifaddrs *ifa, *a;
+    int i;
+    char **new;
+
+    if (!list)
+	return 0;
+    if (getifaddrs(&ifa) == -1)
+	return 0;
+    for (i = 0, a = ifa; a != NULL; a = a->ifa_next, i++)
+	continue;
+    new = malloc((i + 1) * sizeof(char *));
+    if (new == NULL) {
+	freeifaddrs(ifa);
+	return 0;
+    }
+    for (i = 0, a = ifa; a != NULL; a = a->ifa_next)
+	if (addname(new, &i, a->ifa_name) < 0)
+	    break;
+    freeifaddrs(ifa);
+    *list = new;
+    return i;
 #else
     struct ifconf	ifc;
     struct ifreq	ifrs[ 64 ], *ifr, *nextifr;
