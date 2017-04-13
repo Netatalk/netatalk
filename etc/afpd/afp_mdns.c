@@ -167,7 +167,7 @@ static void register_stuff(const AFPConfig *configs) {
 
     // Allocate the memory to store our service refs
     svc_refs = calloc(svc_ref_count, sizeof(DNSServiceRef));
-    assert(svc_ref);
+    assert(svc_refs);
     svc_ref_count = 0;
 
     /* AFP server */
