@@ -1,5 +1,8 @@
+Changes in 3.1.12
+=================
+
 Changes in 3.1.11
-================
+=================
 * NEW: Global option "zeroconf name", FR#99
 * NEW: show Zeroconf support by "netatalk -V", FR#100
 * UPD: gentoo: Switch openrc init script to openrc-run, GitHub#77
@@ -10,7 +13,7 @@ Changes in 3.1.11
 * UPD: dhx uams: OpenSSL 1.1 support, GitHub#87
 
 Changes in 3.1.10
-================
+=================
 * FIX: cannot build when ldap is not defined, bug #630
 * FIX: SIGHUP can cause core dump when mdns is enabled, bug #72
 * FIX: Solaris: stale pid file puts netatalk into maintenance mode, bug #73
@@ -39,9 +42,9 @@ Changes in 3.1.9
 * UPD: asip-status.pl: IPv6 support
 * UPD: asip-status.pl: show GSS-UAM SPNEGO blob
 * FIX: afpd: don't use network IDs without LDAP, bug #621
-* NEW: AFP clients should not be able to copy or manipulate special
-       extended attributes set by NFS and SMB servers on Solaris.
 * FIX: afpd: reading from file may fail, bug #619
+* NEW: AFP clients should not be able to copy or manipulate special
+       extended attributes set by NFS and SMB servers on Solaris, issue #36
 * FIX: ad: ad cp may crash, bug #622
 * UPD: Update Unicode support to version 9.0.0
 
