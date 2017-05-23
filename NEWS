@@ -1,5 +1,6 @@
 Changes in 3.1.12
 =================
+* FIX: dhx uams: build with LibreSSL, GitHub#91
 
 Changes in 3.1.11
 =================
