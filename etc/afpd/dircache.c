@@ -240,7 +240,7 @@ static unsigned long queue_count;
  * The default is to remove the 256 oldest entries from the cache.
  * 1. Get the oldest entry
  * 2. If it's in use ie open forks reference it or it's curdir requeue it,
- *    dont remove it
+ *    don't remove it
  * 3. Remove the dir from the main cache and the didname index
  * 4. Free the struct dir structure and all its members
  */

@@ -375,7 +375,7 @@ Changes in 2.1.2
 * FIX: afpd: ExtendedAttributes in FreeBSD
 * FIX: afpd: sharing home folders corrupted the per volume umask.
 * UPD: afpd: umask for home folders is no longer taken from startup umask.
-* UPD: afpd: dont and permissions with parent folder when creating new
+* UPD: afpd: don't and permissions with parent folder when creating new
        directories on "upriv" volumes.
 * UPD: afpd: use 'afpserver@fqdn' instead of 'afpserver/fqdn@realm'.
        Prevents a crash in older GNU GSSAPI libs on eg. CentOS 5.x.

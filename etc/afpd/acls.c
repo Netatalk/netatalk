@@ -781,7 +781,7 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
         darwin_ace_rights = ntohl(darwin_aces->darwin_ace_rights);
         perm = map_darwin_right_to_posix_permset(darwin_ace_rights, (*def_aclp != NULL));
         if (perm == 0)
-            continue;       /* dont add empty perm */
+            continue;       /* don't add empty perm */
 
         LOG(log_debug, logtype_afpd, "map_ace: no: %u, flags: %08x, darwin: %08x, posix: %02x",
             ace_count, darwin_ace_flags, darwin_ace_rights, perm);
@@ -1071,7 +1071,7 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
 
 /*
   Set ACL. Subtleties:
-  - the client sends a complete list of ACEs, not only new ones. So we dont need to do
+  - the client sends a complete list of ACEs, not only new ones. So we don't need to do
   any combination business (one exception being 'kFileSec_Inherit': see next)
   - client might request that we add inherited ACEs via 'kFileSec_Inherit'.
   We will store inherited ACEs first, which is Darwins canonical order.
@@ -1659,7 +1659,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
     /* Start processing request */
 
-    /* Change owner: dont even try */
+    /* Change owner: don't even try */
     if (bitmap & kFileSec_UUID) {
         LOG(log_note, logtype_afpd, "afp_setacl: change owner request, discarded");
         ret = AFPERR_ACCESS;

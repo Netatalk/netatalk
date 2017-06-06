@@ -50,7 +50,7 @@
  *
  *
  * Note:
- * dont get confused by log_init(). It only gets called if your app
+ * don't get confused by log_init(). It only gets called if your app
  * forgets to setup logging before calling LOG.
  */
 

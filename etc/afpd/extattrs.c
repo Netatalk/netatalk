@@ -241,7 +241,7 @@ static char *to_stringz(char *ibuf, uint16_t len)
 static char attrmname[256];
 
     if (len > 255)
-        /* dont fool with us */
+        /* don't fool with us */
         len = 255;
 
     /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */

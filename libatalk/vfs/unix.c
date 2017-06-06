@@ -279,7 +279,7 @@ int netatalk_unlinkat(int dirfd, const char *name)
 /*
  * @brief This is equivalent of unix rename()
  *
- * unix_rename mulitplexes rename and renameat. If we dont HAVE_ATFUNCS, sfd and dfd
+ * unix_rename mulitplexes rename and renameat. If we don't HAVE_ATFUNCS, sfd and dfd
  * are ignored.
  *
  * @param sfd        (r) if we HAVE_ATFUNCS, -1 gives AT_FDCWD
@@ -308,7 +308,7 @@ int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 /* 
  * @brief stat/fsstatat multiplexer
  *
- * statat mulitplexes stat and fstatat. If we dont HAVE_ATFUNCS, dirfd is ignored.
+ * statat mulitplexes stat and fstatat. If we don't HAVE_ATFUNCS, dirfd is ignored.
  *
  * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
  * @param path    (r) pathname

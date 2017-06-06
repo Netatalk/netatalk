@@ -316,7 +316,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         dbd_log(LOGSTD, "Missing AppleDouble file '%s/%s'", cwdbuf, adname);
 
         if (dbd_flags & DBD_FLAGS_SCAN)
-            /* Scan only requested, dont change anything */
+            /* Scan only requested, don't change anything */
             return -1;
 
         /* Create ad file */
@@ -489,7 +489,7 @@ static int check_addir(int volroot)
         /* Yes, but are we only scanning ? */
         if (dbd_flags & DBD_FLAGS_SCAN) {
             /* Yes:  missing .Parent is not a problem, but missing ad-dir
-               causes later checking of ad-files to fail. So we have to return appropiately */
+               causes later checking of ad-files to fail. So we have to return appropriately */
             if (addir_ok != 0)
                 return -1;
             else  /* (adpar_ok != 0) */
@@ -566,7 +566,7 @@ static int check_eafile_in_adouble(const char *name)
                         cwdbuf, ADv2_DIRNAME, name);
 
                 if (dbd_flags & DBD_FLAGS_SCAN)
-                    /* Scan only requested, dont change anything */
+                    /* Scan only requested, don't change anything */
                     goto ea_check_done;
 
                 if ((unlink(name)) != 0) {
@@ -645,7 +645,7 @@ static int read_addir(void)
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
             if (dbd_flags & DBD_FLAGS_SCAN)
-                /* Scan only requested, dont change anything */
+                /* Scan only requested, don't change anything */
                 continue;;
 
             if ((unlink(ep->d_name)) != 0) {

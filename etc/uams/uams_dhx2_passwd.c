@@ -92,7 +92,7 @@ dh_params_generate (gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
     gcry_error_t err;
 
     /* Version check should be the very first call because it
-       makes sure that important subsystems are intialized. */
+       makes sure that important subsystems are initialized. */
     if (!gcry_check_version (GCRYPT_VERSION)) {
         LOG(log_info, logtype_uams, "PAM DHX2: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
         result = AFPERR_MISC;
