@@ -292,7 +292,7 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 /* 
  * @brief ostat/fsstatat multiplexer
  *
- * ostatat mulitplexes ostat and fstatat. If we dont HAVE_ATFUNCS, dirfd is ignored.
+ * ostatat mulitplexes ostat and fstatat. If we don't HAVE_ATFUNCS, dirfd is ignored.
  *
  * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
  * @param path    (r) pathname

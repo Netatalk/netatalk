@@ -95,7 +95,7 @@ static void usage (void)
 {
     printf("Usage: dbd [-cfFstuvV] <path to netatalk volume>\n\n"
            "dbd scans all file and directories of AFP volumes, updating the\n"
-           "CNID database of the volume. dbd must be run with appropiate\n"
+           "CNID database of the volume. dbd must be run with appropriate\n"
            "permissions i.e. as root.\n\n"
            "Options:\n"
            "   -s scan volume: treat the volume as read only and don't\n"

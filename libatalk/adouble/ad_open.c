@@ -850,7 +850,7 @@ static int ad_mkrf(const char *path)
 #ifdef HAVE_EAFD
 static int ad_mkrf_ea(const char *path _U_)
 {
-    AFP_PANIC("ad_mkrf_ea: dont use");
+    AFP_PANIC("ad_mkrf_ea: don't use");
     return 0;
 }
 #endif
@@ -911,7 +911,7 @@ static int ad_header_upgrade(struct adouble *ad _U_, const char *name _U_)
 
 static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 {
-    AFP_PANIC("ad_header_upgrade_ea: dont use");
+    AFP_PANIC("ad_header_upgrade_ea: don't use");
     return 0;
 }
 

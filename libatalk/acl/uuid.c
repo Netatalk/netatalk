@@ -222,7 +222,7 @@ int getuuidfromname( const char *name, uuidtype_t type, unsigned char *uuid) {
  * type: returns USER, GROUP or LOCAL
  * return 0 on success !=0 on errror
  *
- * Caller must free name appropiately.
+ * Caller must free name appropriately.
  */
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;

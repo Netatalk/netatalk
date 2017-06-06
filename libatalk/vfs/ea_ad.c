@@ -996,7 +996,7 @@ exit:
  *    oflag        (r) link and create flag
  *    attruname    (r) name of attribute
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -1057,7 +1057,7 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *    attruname    (r) name of attribute
  *    maxreply     (r) maximum EA size as of current specs/real-life
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -1145,7 +1145,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  *    uname        (r) filename
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -1226,7 +1226,7 @@ exit:
  *    attrsize     (r) length EA in ibuf
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -1279,7 +1279,7 @@ exit:
  *    attruname    (r) EA name
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
