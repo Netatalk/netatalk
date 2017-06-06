@@ -205,7 +205,7 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
                 if (up->count > MAXSPAWN) {
                     /* ...and already tried to fork too often */
                     LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawning too fast");
-                    return -1; /* just exit, dont sleep, because we might have work to do for another client  */
+                    return -1; /* just exit, don't sleep, because we might have work to do for another client  */
                 }
             } else {
                 /* out of respawn too fast windows reset the count */
@@ -219,7 +219,7 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
         if (up->count > MAXSPAWN) {
             /* We spawned too fast. From now until the first time we tried + TESTTIME seconds
                we will just return -1 above */
-            LOG(log_info, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshhold");
+            LOG(log_info, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshold");
        }
     }
 

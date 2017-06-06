@@ -474,7 +474,7 @@ static int copy(const char *path,
         dne = 0;
     }
 
-    /* Convert basename to appropiate volume encoding */
+    /* Convert basename to appropriate volume encoding */
     if (dvolume.volinfo.v_path) {
         if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
             SLOG("Error converting name for %s", to.p_path);

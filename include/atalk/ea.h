@@ -72,7 +72,7 @@ typedef enum {
     EA_RDONLY    = (1<<2),      /* open read only */
     EA_RDWR      = (1<<3),      /* open read/write */
     /* ea_open internal flags */
-    EA_DIR       = (1<<4)       /* ea header file is for a dir, ea_open adds it as appropiate */
+    EA_DIR       = (1<<4)       /* ea header file is for a dir, ea_open adds it as appropriate */
 } eaflags_t;
 
 #define EA_MAGIC_OFF   0

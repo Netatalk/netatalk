@@ -1128,7 +1128,7 @@ int dir_modify(const struct vol *vol,
  *     return with curdir = dir parent, struct path = dirname
  * 11. If it's there and it's a file, it must should be the last element of the requested
  *     path. Return with curdir = cnode name parent dir, struct path = filename
- * 12. Treat symlinks like files, dont follow them
+ * 12. Treat symlinks like files, don't follow them
  * 13. If it's a dir:
  * 14. Search the dircache for it
  * 15. If it's not in the cache, create a struct dir for it and add it to the cache
@@ -1358,7 +1358,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
  * @param vol   (r) pointer to struct vol
  * @param dir   (r) pointer to struct dir
  *
- * @returns 0 on success, -1 on error with afp_errno set appropiately
+ * @returns 0 on success, -1 on error with afp_errno set appropriately
  */
 int movecwd(const struct vol *vol, struct dir *dir)
 {

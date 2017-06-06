@@ -673,7 +673,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     const struct itimerval none = {{0, 0}, {0, 0}};
     setitimer(ITIMER_REAL, &none, NULL);
 
-    /* check for old session, possibly transfering session from here to there */
+    /* check for old session, possibly transferring session from here to there */
     if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) != 0)
         goto exit;
     /* write uint16_t DSI request ID */
@@ -685,7 +685,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     if (send_fd(obj->ipc_fd, dsi->socket) != 0)
         goto exit;
     /* Now see what happens: either afpd master sends us SIGTERM because our session */
-    /* has been transfered to a old disconnected session, or we continue    */
+    /* has been transferred to a old disconnected session, or we continue    */
     sleep(5);
 
     if (!(dsi->flags & DSI_RECONINPROG)) { /* deleted in SIGTERM handler */

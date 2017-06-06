@@ -85,7 +85,7 @@ static struct fce_close_event last_close_event;
 /*
  *
  * Initialize network structs for any listeners
- * We dont give return code because all errors are handled internally (I hope..)
+ * We don't give return code because all errors are handled internally (I hope..)
  *
  * */
 void fce_init_udp()
@@ -231,7 +231,7 @@ static void pack_fce_packet(struct fce_packet *packet, unsigned char *buf, int m
 
 /*
  * Send the fce information to all (connected) listeners
- * We dont give return code because all errors are handled internally (I hope..)
+ * We don't give return code because all errors are handled internally (I hope..)
  * */
 static void send_fce_event( char *path, int mode )
 {    
@@ -309,7 +309,7 @@ static void send_fce_event( char *path, int mode )
         /* Problems ? */
         if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_afpd, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
+            LOG(log_error, logtype_afpd, "send_fce_event: error sending packet to %s:%s, transferred %d of %d: %s",
                 udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
 
             close( udp_entry->sock );

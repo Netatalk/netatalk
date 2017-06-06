@@ -74,7 +74,7 @@
  *    oflag        (r) link and create flag
  *    attruname    (r) name of attribute
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -142,7 +142,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *    attruname    (r) name of attribute
  *    maxreply     (r) maximum EA size as of current specs/real-life
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -209,7 +209,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  *    uname        (r) filename
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -245,8 +245,8 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
             goto exit;
 #endif
         default:
-            LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-            ret= AFPERR_MISC;
+            LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening attribute dir: %s", uname, strerror(errno));
+            ret = AFPERR_MISC;
             goto exit;
     }
     
@@ -297,7 +297,7 @@ exit:
  *    attrsize     (r) length EA in ibuf
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *
@@ -358,7 +358,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
  *    attruname    (r) EA name
  *    oflag        (r) link and create flag
  *
- * Returns: AFP code: AFP_OK on success or appropiate AFP error code
+ * Returns: AFP code: AFP_OK on success or appropriate AFP error code
  *
  * Effects:
  *

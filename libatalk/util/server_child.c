@@ -297,7 +297,7 @@ int server_child_transfer_session(server_child *children,
         return 0;
     }
 
-    LOG(log_note, logtype_default, "Reconnect: transfering session to child[%u]", pid);
+    LOG(log_note, logtype_default, "Reconnect: transferring session to child[%u]", pid);
     
     if (writet(child->ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_default, "Reconnect: error sending DSI id to child[%u]", pid);

@@ -265,7 +265,7 @@ cleanup:
 int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string) {
     int ret;
     int len;
-    char filter[256];           /* this should really be enough. we dont want to malloc everything! */
+    char filter[256];           /* this should really be enough. we don't want to malloc everything! */
     char *attributes[]  = { ldap_uuid_attr, NULL};
     char *ldap_attr;
 
