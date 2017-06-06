@@ -1079,7 +1079,7 @@
 
         <varlistentry>
           <term>spotlight attributes =
-          <replaceable>COMMA SEPERATED STRING</replaceable> (default:
+          <replaceable>COMMA SEPARATED STRING</replaceable> (default:
           <emphasis>EMPTY</emphasis>) <type>(G)</type></term>
 
           <listitem>

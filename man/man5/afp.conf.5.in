@@ -705,7 +705,7 @@ Whether to enable Spotlight searches\&. Note: once the global option is enabled,
 option\&.
 .RE
 .PP
-spotlight attributes = \fICOMMA SEPERATED STRING\fR (default: \fIEMPTY\fR) \fB(G)\fR
+spotlight attributes = \fICOMMA SEPARATED STRING\fR (default: \fIEMPTY\fR) \fB(G)\fR
 .RS 4
 A list of attributes that are allowed to be used in Spotlight searches\&. By default all attributes can be searched, passing a string limits attributes to elements of the string\&. Example:
 .sp

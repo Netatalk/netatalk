@@ -527,7 +527,7 @@ static int gss_create_principal(AFPObj *obj)
     krb5_kt_cursor cursor;
 
     if (krb5_init_context(&context)) {
-        LOG(log_error, logtype_afpd, "gss_create_principal: failed to intialize a krb5_context");
+        LOG(log_error, logtype_afpd, "gss_create_principal: failed to initialize a krb5_context");
         goto exit;
     }
     if ((ret = krb5_kt_default(context, &keytab)))
