@@ -450,11 +450,9 @@ mountp( char *file, int *nfs)
             return mnt.mnt_mountp;
         }
 
-        /* check for nfs. we probably should use
-         * strcmp(mnt.mnt_fstype, MNTTYPE_NFS), but that's not as fast. */
-        if ((stat(mnt.mnt_mountp, &sb) == 0) && (devno == sb.st_dev) &&
-                strchr(mnt.mnt_special, ':')) {
-            *nfs = 1;
+        /* check for nfs. */
+        if ((stat(mnt.mnt_mountp, &sb) == 0) && (devno == sb.st_dev)) {
+            *nfs = strcmp(mnt.mnt_fstype, MNTTYPE_NFS) == 0 ? 1 : 0;
             fclose( mtab );
             return mnt.mnt_special;
         }
