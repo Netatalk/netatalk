@@ -86,7 +86,7 @@ AC_DEFUN([AC_NETATALK_PATH_BDB],[
 if test "x$bdb_required" = "xyes"; then
     trybdbdir=""
     dobdbsearch=yes
-    bdb_search_dirs="/usr/local /usr"
+    bdb_search_dirs="/usr/local/include /usr/include"
     search_subdirs="/ /db6.1 /db6 /db5 /db5.3 /db5.2 /db5.1 /db51 /db5.0 /db50 /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
 
     bdbfound=no
@@ -127,19 +127,19 @@ if test "x$bdb_required" = "xyes"; then
                 break;
             fi
             for subdir in ${search_subdirs}; do
-                AC_MSG_CHECKING([for Berkeley DB headers in ${bdbdir}/include${subdir}])
+                AC_MSG_CHECKING([for Berkeley DB headers in ${bdbdir}${subdir}])
                 dnl -- First check the mere existence of the header
-                if test -f "${bdbdir}/include${subdir}/db.h" ; then
+                if test -f "${bdbdir}${subdir}/db.h" ; then
                     AC_MSG_RESULT([yes])
 
                     dnl -- Check if it meets minimun requirement, also return the version
-                    NETATALK_BDB_HEADER([${bdbdir}/include${subdir}])
+                    NETATALK_BDB_HEADER([${bdbdir}${subdir}])
 
                     if test ${atalk_cv_bdbheader} != "no"; then
                         bdblibdir="${bdbdir}/${atalk_libname}"
                         bdbbindir="${bdbdir}/bin"
 
-                        CPPFLAGS="-I${bdbdir}/include${subdir} $CPPFLAGS"
+                        CPPFLAGS="-I${bdbdir}${subdir} $CPPFLAGS"
                         LDFLAGS="-L$bdblibdir $LDFLAGS"
 
                         dnl -- Uses version set by NETATALK_BDB_HEADER to try to run
@@ -153,7 +153,7 @@ if test "x$bdb_required" = "xyes"; then
                         eval export $shlibpath_var=$saved_shlibpath_var
 
                         if test x"${atalk_cv_bdb_version}" = x"yes"; then
-                            BDB_CFLAGS="-I${bdbdir}/include${subdir}"
+                            BDB_CFLAGS="-I${bdbdir}${subdir}"
                             BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
                             if test x"$enable_rpath" = x"yes"; then
                                 BDB_LIBS="$BDB_LIBS -R${bdblibdir}"
@@ -174,7 +174,7 @@ if test "x$bdb_required" = "xyes"; then
                            bdblibdir="${bdbdir}/lib"
                            bdbbindir="${bdbdir}/bin"
 
-                           CPPFLAGS="-I${bdbdir}/include${subdir} $CPPFLAGS"
+                           CPPFLAGS="-I${bdbdir}${subdir} $CPPFLAGS"
                            LDFLAGS="-L$bdblibdir $LDFLAGS"
 
                            eval export $shlibpath_var=$bdblibdir
@@ -182,7 +182,7 @@ if test "x$bdb_required" = "xyes"; then
                            eval export $shlibpath_var=$saved_shlibpath_var
 
                            if test x"${atalk_cv_bdb_version}" = x"yes"; then
-                              BDB_CFLAGS="-I${bdbdir}/include${subdir}"
+                              BDB_CFLAGS="-I${bdbdir}${subdir}"
                               BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
                               if test x"$enable_rpath" = x"yes"; then
                                  BDB_LIBS="$BDB_LIBS -R${bdblibdir}"
