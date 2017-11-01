@@ -115,7 +115,7 @@ fi
     ifelse([$2], , :, [$2])
   else
     if test x$libgcrypt_config_prefix != x"no" ; then
-      AC_MSG_ERROR([Could not find libcgrypt development files needed for the DHX2 UAM, please install the libgcrypt devel package])
+      AC_MSG_ERROR([Could not find libgcrypt development files needed for the DHX2 UAM, please install the libgcrypt devel package])
     fi
     LIBGCRYPT_CFLAGS=""
     LIBGCRYPT_LIBS=""
