@@ -1,1 +1,2 @@
 language: c
+script: ./bootstrap && ./configure && make && make test
