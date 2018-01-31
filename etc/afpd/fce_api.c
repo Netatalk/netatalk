@@ -97,7 +97,7 @@ static char *fce_event_names[] = {
 /*
  *
  * Initialize network structs for any listeners
- * We dont give return code because all errors are handled internally (I hope..)
+ * We don't give return code because all errors are handled internally (I hope..)
  *
  * */
 void fce_init_udp()
@@ -284,10 +284,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
 /*
  * Send the fce information to all (connected) listeners
- * We dont give return code because all errors are handled internally (I hope..)
+ * We don't give return code because all errors are handled internally (I hope..)
  * */
 static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
-{    
+{
     static bool first_event = true;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     static char *user;
@@ -375,7 +375,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
                                      udp_entry->addrinfo.ai_socktype,
                                      udp_entry->addrinfo.ai_protocol);
-            
+
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
                 LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
@@ -410,7 +410,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         /* Problems ? */
         if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_fce, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
+            LOG(log_error, logtype_fce, "send_fce_event: error sending packet to %s:%s, transferred %d of %d: %s",
                 udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
 
             close( udp_entry->sock );
@@ -596,7 +596,7 @@ int fce_set_events(const char *events)
 {
     char *e;
     char *p;
-    
+
     if (events == NULL)
         return AFPERR_PARAM;
 
