@@ -46,6 +46,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
@@ -370,6 +371,13 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         }
         (void)afprun_bg(1, bdata(cmd));
         bdestroy(cmd);
+    }
+
+    if (obj->options.fce_sendwait > 0 && obj->options.fce_sendwait < 1000) {
+	struct timespec t;
+	t.tv_sec  = 0;
+	t.tv_nsec = 1000 * 1000 * obj->options.fce_sendwait;
+	while(nanosleep(&t, NULL));
     }
 
     for (int i = 0; i < udp_sockets; i++) {

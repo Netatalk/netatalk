@@ -1347,6 +1347,22 @@
         </varlistentry>
 
         <varlistentry>
+          <term>fce sendwait = <replaceable>milliseconds</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Defines a delay in milliseconds between
+            the emission of each FCE event.
+            Use this if you are experiencing lost FCE events when
+            creating or deleting a very large number of files at once.
+            The deluge of events that such an operation triggers can lead to
+            UDP buffer overflow and subsequently to packet loss.
+            Has to be a number between 0 and 999. Default: 0
+            milliseconds.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>fce ignore names = <replaceable>NAME[/NAME2/...]</replaceable>
           <type>(G)</type></term>
 
