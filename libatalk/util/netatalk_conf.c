@@ -1981,6 +1981,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->tcp_sndbuf     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
     options->tcp_rcvbuf     = atalk_iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
     options->fce_fmodwait   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "fce holdfmod",   60);
+    options->fce_sendwait   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "fce sendwait",   0);
     options->sleep          = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sleep time",     10);
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
     options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
@@ -2102,7 +2103,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->volcodepage = strdup(p);
     }
     LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
-    
+
     /* mac charset is in [G] and [V] */
     if (!(p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccodepage = strdup("MAC_ROMAN");

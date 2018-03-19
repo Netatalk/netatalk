@@ -94,6 +94,7 @@ struct afp_options {
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
+    int fce_sendwait;           /* numer of ms to wait between udp event sending */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
@@ -113,7 +114,7 @@ struct afp_options {
     size_t k5principal_buflen;
     char *k5principal;
     char *unixcodepage, *maccodepage, *volcodepage;
-    charset_t maccharset, unixcharset; 
+    charset_t maccharset, unixcharset;
     mode_t umask;
     mode_t save_mask;
     gid_t admingid;

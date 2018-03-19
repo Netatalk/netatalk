@@ -36,6 +36,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
@@ -287,7 +288,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
  * We don't give return code because all errors are handled internally (I hope..)
  * */
 static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
-{    
+{
     static bool first_event = true;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     static char *user;
@@ -361,6 +362,10 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         bdestroy(cmd);
     }
 
+    if (obj->options.fce_sendwait != 0){
+        usleep(1000 * obj->options.fce_sendwait);
+    }
+
     for (int i = 0; i < udp_sockets; i++) {
         int sent_data = 0;
         struct udp_entry *udp_entry = udp_socket_list + i;
@@ -375,7 +380,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
                                      udp_entry->addrinfo.ai_socktype,
                                      udp_entry->addrinfo.ai_protocol);
-            
+
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
                 LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
@@ -532,11 +537,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 
     switch (event) {
     case FCE_FILE_MODIFY:
-        if (obj->options.fce_fmodwait != 0){
-            save_close_event(obj, path);
-        } else {
-            send_fce_event(obj, event, path, oldpath);
-        }
+        save_close_event(obj, path);
         break;
     default:
         send_fce_event(obj, event, path, oldpath);
@@ -596,7 +597,7 @@ int fce_set_events(const char *events)
 {
     char *e;
     char *p;
-    
+
     if (events == NULL)
         return AFPERR_PARAM;
 
