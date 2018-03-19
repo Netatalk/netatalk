@@ -94,6 +94,7 @@ struct afp_options {
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
+    int fce_sendwait;           /* number of ms to wait between udp event sending */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
