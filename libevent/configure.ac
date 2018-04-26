@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR(event.c)
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE
-dnl Enable silent Automake rules if present                                                                           
+dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 AM_CONFIG_HEADER(config.h)
 AC_DEFINE(NUMERIC_VERSION, 0x02001200, [Numeric representation of the version])
