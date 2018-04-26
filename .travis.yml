@@ -26,6 +26,6 @@ before_install:
 
 before_script: ./bootstrap
 script:
-  - ./configure
+  - ./configure --disable-dependency-tracking
   - make -j4
   - make check
