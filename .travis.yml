@@ -2,7 +2,7 @@ compiler:
   - gcc
   - clang
 language: c
-script: ./bootstrap && ./configure && make && make test
+script: ./bootstrap && ./configure && make -j4 && make test
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libldap2-dev libcrack2-dev systemtap-sdt-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev libtracker-sparql-0.16-dev libtracker-miner-0.16-dev
