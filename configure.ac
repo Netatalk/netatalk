@@ -50,7 +50,7 @@ AC_CHECK_HEADERS(netdb.h sgtty.h statfs.h dlfcn.h langinfo.h locale.h)
 AC_CHECK_HEADERS(sys/param.h sys/fcntl.h sys/termios.h)
 AC_CHECK_HEADERS(sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h)
 dnl Checks for header files, confirmed to be required as of 2011
-AC_CHECK_HEADERS([sys/mount.h], , , 
+AC_CHECK_HEADERS([sys/mount.h], , ,
 [#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -60,7 +60,7 @@ AC_CHECK_TYPES([fshare_t], [], [], [[#include <fcntl.h>]])
 AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 
 dnl --------------------------------------------------------------------------
-dnl check if dlsym needs to add an underscore, uses libtool macros 
+dnl check if dlsym needs to add an underscore, uses libtool macros
 dnl --------------------------------------------------------------------------
 AC_LTDL_DLLIB
 AC_CHECK_FUNCS(dlopen dlsym dlclose)
@@ -136,7 +136,7 @@ AC_NETATALK_PATH_PAM
 
 dnl Check for optional shadow password support
 AC_NETATALK_SHADOW
-	
+
 dnl Check for optional valid-shell-check support
 AC_NETATALK_SHELL_CHECK
 
@@ -237,7 +237,7 @@ AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
 
-dnl Enable silent Automake rules if present                                                                           
+dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 dnl --------------------- generate files
