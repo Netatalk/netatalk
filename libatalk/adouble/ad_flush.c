@@ -39,6 +39,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/errchk.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
 
 #include "ad_lock.h"
 
