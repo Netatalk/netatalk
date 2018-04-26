@@ -5,3 +5,8 @@ Makefile.in
 test
 test.conf
 test.default
+test-suite.log
+test.log
+test.trs
+test.sh.log
+test.sh.trs
