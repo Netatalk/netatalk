@@ -1,12 +1,13 @@
 dnl configure.ac for netatalk
 
-AC_INIT(etc/afpd/main.c)
+AC_INIT([netatalk],[m4_esyscmd(cat VERSION)])
+AC_CONFIG_SRCDIR([etc/afpd/main.c])
 
 NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
 
 AC_CANONICAL_SYSTEM
-AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
+AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE([enable])
 
