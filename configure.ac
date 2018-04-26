@@ -113,7 +113,7 @@ AC_NETATALK_CRACKLIB
 dnl Check whether to enable debug code
 AC_NETATALK_DEBUG
 
-dnl Check whethe to disable tickle SIGALARM stuff, which eases debugging
+dnl Check whether to disable tickle SIGALARM stuff, which eases debugging
 AC_NETATALK_DEBUGGING
 
 dnl	Check for libiconv support
