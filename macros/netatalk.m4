@@ -208,35 +208,11 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
 ])
 
-dnl Whether to disable bundled libevent
+dnl Check for libevent
 AC_DEFUN([AC_NETATALK_LIBEVENT], [
-    AC_MSG_CHECKING([whether to use bundled libevent])
-    AC_ARG_WITH(
-        libevent,
-        [AS_HELP_STRING([--with-libevent],[whether to use the bundled libevent (default: yes)])],
-        use_bundled_libevent=$withval,
-        use_bundled_libevent=yes
+    PKG_CHECK_MODULES([EVENT], [libevent], [],
+        [AC_MSG_ERROR([pkg-config could not find libevent])]
     )
-    AC_ARG_WITH(
-        libevent-header,
-        [AS_HELP_STRING([--with-libevent-header],[path to libevent header files])],
-        [use_bundled_libevent=no; LIBEVENT_CFLAGS=-I$withval]
-    )
-    AC_ARG_WITH(
-        libevent-lib,
-        [AS_HELP_STRING([--with-libevent-lib],[path to libevent library])],
-        [use_bundled_libevent=no; LIBEVENT_LDFLAGS=-L$withval]
-    )
-    if test x"$LIBEVENT_CFLAGS" = x"-Iyes" -o x"$LIBEVENT_LDFLAGS" = x"-Lyes" ; then
-        AC_MSG_ERROR([--with-libevent requires a path])
-    fi
-    AC_MSG_RESULT([$use_bundled_libevent])
-    if test x"$use_bundled_libevent" = x"yes" ; then
-        AC_CONFIG_SUBDIRS([libevent])
-    fi
-    AC_SUBST(LIBEVENT_CFLAGS)
-    AC_SUBST(LIBEVENT_LDFLAGS)
-    AM_CONDITIONAL(USE_BUILTIN_LIBEVENT, test x"$use_bundled_libevent" = x"yes")
 ])
 
 dnl Whether to disable bundled tdb
