@@ -1,3 +1,6 @@
+compiler:
+  - gcc
+  - clang
 language: c
 script: ./bootstrap && ./configure && make && make test
 before_install:
