@@ -1105,9 +1105,9 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           forwarded to the remote server's AFP port (we used the default 548)
           over SSH.</para>
 
-          <para>These sorts of tunnels are an ideal solution if you've to
-          access an AFP server providing weak authentications mechanisms
-          through the Internet without having the ability to use a "real" VPN.
+          <para>This sort of tunnel is an ideal solution if you must access
+          an AFP server through the Internet without having the ability
+          or desire to use a "real" VPN.
           Note that you can let <command>ssh</command> compress the data by
           using its "-C" switch and that the tunnel endpoints can be different
           from both AFP client and server (compare with the SSH documentation
@@ -1142,9 +1142,18 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
 
           <itemizedlist>
             <listitem>
-              <para>Tunneling TCP over TCP (as SSH does) is not the best idea.
-              There exist better solutions like VPNs based on the IP
-              layer.</para>
+              <para>Most users who need such a feature are probably already
+              familiar with using a VPN; it might be easier for the user to
+              employ the same VPN software in order to connect to the network
+              on which the AFP server is running, and then to access the AFP
+              server as normal.</para>
+
+              <para>That being said, for the simple case of connecting
+              to one specific AFP server, a direct SSH connection is likely to
+              perform better than a general-purpose VPN; contrary to popular
+              belief, tunneling via SSH does <emphasis role="strong">not</emphasis>
+              result in what's called "TCP-over-TCP meltdown", because the
+              AFP data that are being tunneled do not encapsulate TCP data.</para>
             </listitem>
 
             <listitem>
@@ -1163,22 +1172,25 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
             </listitem>
 
             <listitem>
-              <para>On the other side you've to limit access to afpd to
-              localhost only (TCP wrappers) when you want to ensure that all
-              AFP sessions are SSH encrypted or...</para>
-            </listitem>
+              <para>Indeed, to ensure that all AFP sessions are encrypted
+              via SSH, you need to limit afpd to connections that originate
+              only from localhost (e.g., by using Wietse Venema's TCP Wrappers,
+              or by using suitable firewall or packet-filtering facilities, etc.).</para>
 
-            <listitem>
-              <para>...when you're using 10.2 - 10.3.3 then you get the
-              opposite of what you'd expect: potentially unencrypted AFP
-              communication (including logon credentials) on the network
+              <para>Otherwise, when you're using Mac OS X 10.2 through 10.3.3,
+              you get the opposite of what you'd expect: potentially unencrypted AFP
+              communications (including login credentials) being sent across the network
               without a single notification that establishing the tunnel
               failed. Apple fixed that not until Mac OS X 10.3.4.</para>
             </listitem>
 
             <listitem>
               <para>Encrypting all AFP sessions via SSH can lead to a
-              significantly higher load on the Netatalk server</para>
+              significantly higher load on the computer that is running
+              the AFP server, because that computer must also handle
+              encryption; if the user is connecting through a trusted
+              network, then such encryption might be an unnecessary
+              overhead.</para>
             </listitem>
           </itemizedlist>
         </sect4>
