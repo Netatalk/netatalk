@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include <atalk/dsi.h>
 #include <atalk/util.h>
@@ -37,6 +38,8 @@ void dsi_opensession(DSI *dsi)
   uint32_t servquant;
   uint32_t replcsize;
   int offs;
+  uint8_t cmd;
+  size_t option_len;
 
   dsi_init_buffer(dsi);
   if (setnonblock(dsi->socket, 1) < 0) {
@@ -45,17 +48,32 @@ void dsi_opensession(DSI *dsi)
   }
 
   /* parse options */
-  while (i < dsi->cmdlen) {
-    switch (dsi->commands[i++]) {
+  while (i + 1 < dsi->cmdlen) {
+    cmd = dsi->commands[i++];
+    option_len = dsi->commands[i++];
+
+    if (i + option_len > dsi->cmdlen) {
+      LOG(log_error, logtype_dsi, "option %"PRIu8" too large: %zu",
+          cmd, option_len);
+      exit(EXITERR_CLNT);
+    }
+
+    switch (cmd) {
     case DSIOPT_ATTNQUANT:
-      memcpy(&dsi->attn_quantum, dsi->commands + i + 1, dsi->commands[i]);
+      if (option_len != sizeof(dsi->attn_quantum)) {
+        LOG(log_error, logtype_dsi, "option %"PRIu8" bad length: %zu",
+            cmd, option_len);
+        exit(EXITERR_CLNT);
+      }
+      memcpy(&dsi->attn_quantum, &dsi->commands[i], option_len);
       dsi->attn_quantum = ntohl(dsi->attn_quantum);
 
     case DSIOPT_SERVQUANT: /* just ignore these */
     default:
-      i += dsi->commands[i] + 1; /* forward past length tag + length */
       break;
     }
+
+    i += option_len;
   }
 
   /* let the client know the server quantum. we don't use the
