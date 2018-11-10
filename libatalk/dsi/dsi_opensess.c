@@ -19,7 +19,9 @@
 /* OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)
 {
-  uint32_t i = 0; /* this serves double duty. it must be 4-bytes long */
+  size_t i = 0;
+  uint32_t servquant;
+  uint32_t replcsize;
   int offs;
 
   if (setnonblock(dsi->socket, 1) < 0) {
@@ -47,21 +49,21 @@ void dsi_opensession(DSI *dsi)
   dsi->header.dsi_data.dsi_code = 0;
   /* dsi->header.dsi_command = DSIFUNC_OPEN;*/
 
-  dsi->cmdlen = 2 * (2 + sizeof(i)); /* length of data. dsi_send uses it. */
+  dsi->cmdlen = 2 * (2 + sizeof(uint32_t)); /* length of data. dsi_send uses it. */
 
   /* DSI Option Server Request Quantum */
   dsi->commands[0] = DSIOPT_SERVQUANT;
-  dsi->commands[1] = sizeof(i);
-  i = htonl(( dsi->server_quantum < DSI_SERVQUANT_MIN || 
+  dsi->commands[1] = sizeof(servquant);
+  servquant = htonl(( dsi->server_quantum < DSI_SERVQUANT_MIN ||
 	      dsi->server_quantum > DSI_SERVQUANT_MAX ) ? 
 	    DSI_SERVQUANT_DEF : dsi->server_quantum);
-  memcpy(dsi->commands + 2, &i, sizeof(i));
+  memcpy(dsi->commands + 2, &servquant, sizeof(servquant));
 
   /* AFP replaycache size option */
-  offs = 2 + sizeof(i);
+  offs = 2 + sizeof(replcsize);
   dsi->commands[offs] = DSIOPT_REPLCSIZE;
-  dsi->commands[offs+1] = sizeof(i);
-  i = htonl(REPLAYCACHE_SIZE);
-  memcpy(dsi->commands + offs + 2, &i, sizeof(i));
+  dsi->commands[offs+1] = sizeof(replcsize);
+  replcsize = htonl(REPLAYCACHE_SIZE);
+  memcpy(dsi->commands + offs + 2, &replcsize, sizeof(replcsize));
   dsi_send(dsi);
 }
