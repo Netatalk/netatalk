@@ -18,7 +18,7 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
    
    sys_copyxattr modified from LGPL2.1 libattr copyright
    Copyright (C) 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
