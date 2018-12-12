@@ -23,7 +23,7 @@ def main():
 
     reply = iface.GetUsers()
     for name in reply:
-        print name
+        print(name)
 
 if __name__ == '__main__':
     main()
