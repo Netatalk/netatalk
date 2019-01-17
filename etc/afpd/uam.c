@@ -396,7 +396,14 @@ int uam_afpserver_option(void *private, const int what, void *option,
         
         sa = (struct sockaddr *)&dsi->client;
         if (getnameinfo(sa, sizeof(dsi->client), hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
+        {
             *buf = hbuf;
+            /*
+             * Fix bogon hostname
+             */
+            if (!strcasecmp(hbuf, "bogon"))
+                *buf = getip_string((struct sockaddr *)&dsi->client);
+        }
         else
             *buf = getip_string((struct sockaddr *)&dsi->client);
 
