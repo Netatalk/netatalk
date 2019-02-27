@@ -1,4 +1,4 @@
-Netatalk 3.1.11
+Netatalk 3.1.12
 ===============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,17 +45,12 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.11
+Changes in 3.1.12
 ~~~~~~~~~~~~~~~~~
 
-* NEW: Global option "zeroconf name", FR#99
-* NEW: show Zeroconf support by "netatalk -V", FR#100
-* UPD: gentoo: Switch openrc init script to openrc-run, GitHub#77
-* FIX: log message: name of function doese not match, GitHub#78
-* UPD: volume capacity reporting to match Samba behavior, GitHub#83
-* FIX: debian: sysv init status command exits with proper exit code, GitHub#84
-* FIX: dsi_stream_read: len:0, unexpected EOF, GitHub#82
-* UPD: dhx uams: OpenSSL 1.1 support, GitHub#87
+* FIX: dhx uams: build with LibreSSL, GitHub#91
+* FIX: various spelling errors
+* FIX: CVE-2018-1160
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -110,4 +105,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, March 2017
+ - The Netatalk Development Team, December 2018
