@@ -166,6 +166,7 @@ typedef struct AFPObj {
     int (*attention)(void *, AFPUserBytes);
     int fce_version;
     char *fce_ign_names;
+    char *fce_ign_directories;
     char *fce_notify_script;
     struct sl_ctx *sl_ctx;
 } AFPObj;
