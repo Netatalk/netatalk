@@ -956,6 +956,11 @@ fce ignore names = \fINAME[/NAME2/\&.\&.\&.]\fR \fB(G)\fR
 Slash delimited list of filenames for which FCE events shall not be generated\&. Default: \&.DS_Store\&.
 .RE
 .PP
+fce ignore directories = \fINAME[,NAME2,\&.\&.\&.]\fR \fB(G)\fR
+.RS 4
+Comma delimited list of directories for which FCE events shall not be generated\&. Default: empty\&.
+.RE
+.PP
 fce notify script = \fIPATH\fR \fB(G)\fR
 .RS 4
 Script which will be executed for every FCE event, see contrib/shell_utils/fce_ev_script\&.sh from the Netatalk sources for an example script\&.

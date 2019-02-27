@@ -1336,6 +1336,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>fce ignore directoriex = <replaceable>NAME[,NAME2,...]</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Comma delimited list of directories for which FCE
+            events shall not be generated. Default: empty.</para>
+          </listitem>
+        </varlistentry>
+
+
+        <varlistentry>
           <term>fce notify script = <replaceable>PATH</replaceable>
           <type>(G)</type></term>
 
