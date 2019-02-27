@@ -222,6 +222,9 @@ int configinit(AFPObj *obj)
     if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce ignore names", ".DS_Store"))) {
         obj->fce_ign_names = strdup(r);
     }
+    if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce ignore directories", NULL))) {
+            obj->fce_ign_directories = strdup(r);
+    }
 
     if ((r = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fce notify script", NULL))) {
         obj->fce_notify_script = strdup(r);

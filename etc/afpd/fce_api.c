@@ -78,6 +78,7 @@ static uint8_t fce_ev_info;    /* flags of additional info to send in events */
 #define MAXIOBUF 4096
 static unsigned char iobuf[MAXIOBUF];
 static const char **skip_files;
+static const char **skip_directories;
 static struct fce_close_event last_close_event;
 
 static char *fce_event_names[] = {
@@ -287,7 +288,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
  * We don't give return code because all errors are handled internally (I hope..)
  * */
 static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
-{    
+{
     static bool first_event = true;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     static char *user;
@@ -375,7 +376,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
                                      udp_entry->addrinfo.ai_socktype,
                                      udp_entry->addrinfo.ai_protocol);
-            
+
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
                 LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
@@ -485,6 +486,33 @@ static void fce_init_ign_names(const char *ignores)
     free(names);
 }
 
+static void fce_init_ign_directories(const char *ignores)
+{
+    int count = 0;
+    char *names = strdup(ignores);
+    char *p;
+    int i = 0;
+
+    while (names[i]) {
+        count++;
+        for (; names[i] && names[i] != ','; i++)
+            ;
+        if (!names[i])
+            break;
+        i++;
+    }
+
+    skip_directories = calloc(count + 1, sizeof(char *));
+
+    for (i = 0, p = strtok(names, ","); p ; p = strtok(NULL, ",")) {
+        char *tmp = strdup("/");
+        skip_directories[i++] = strdup(strcat(strcat(tmp,p), "/"));
+     }
+
+    free(names);
+}
+
+
 /*
  *
  * Dispatcher for all incoming file change events
@@ -494,6 +522,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 {
     static bool first_event = true;
     const char *bname;
+    const char *dirname;
 
     if (!(fce_ev_enabled & (1 << event)))
         return AFP_OK;
@@ -505,6 +534,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
         path, fce_event_names[event]);
 
     bname = basename_safe(path);
+    dirname = realpath_safe(path);
 
     if ((udp_sockets == 0) && (obj->fce_notify_script == NULL)) {
         /* No listeners configured */
@@ -515,6 +545,9 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 	if (first_event) {
 		fce_initialize_history();
         fce_init_ign_names(obj->fce_ign_names);
+        if (obj->fce_ign_directories != NULL){
+            fce_init_ign_directories(obj->fce_ign_directories);
+        }
         first_event = false;
 	}
 
@@ -523,6 +556,12 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
         if (strcmp(bname, skip_files[i]) == 0)
 			return AFP_OK;
 	}
+	if (skip_directories != NULL){
+	   for (int i = 0; skip_directories[i] != NULL; i++) {
+		    if (strstr(dirname, skip_directories[i]))
+		 	   return AFP_OK;
+       }
+    }
 
 	/* Can we ignore this event based on type or history? */
 	if (fce_handle_coalescation(event, path)) {
@@ -533,7 +572,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
     switch (event) {
     case FCE_FILE_MODIFY:
         if (obj->options.fce_fmodwait != 0){
-            save_close_event(obj, path);
+        save_close_event(obj, path);
         } else {
             send_fce_event(obj, event, path, oldpath);
         }
@@ -596,7 +635,7 @@ int fce_set_events(const char *events)
 {
     char *e;
     char *p;
-    
+
     if (events == NULL)
         return AFPERR_PARAM;
 
