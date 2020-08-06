@@ -17,10 +17,6 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <netatalk/at.h>
 #include <atalk/ddp.h>

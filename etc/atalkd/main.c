@@ -32,10 +32,6 @@
 #endif
 
 #include <errno.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
 

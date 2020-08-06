@@ -26,11 +26,7 @@
 #ifndef BSD4_4
 int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 {
-#ifdef TRU64
-    struct ortentry	rtent;
-#else /* TRU64 */
     struct rtentry	rtent;
-#endif /* TRU64 */
 
     memset( &rtent, 0, sizeof( struct rtentry ));
     rtent.rt_dst = *dst;
