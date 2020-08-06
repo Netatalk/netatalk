@@ -168,15 +168,15 @@ int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
     case Q_OK: /* we only copy the bits that we need. */
         gettimeofday(&tv, NULL);
 
-#if defined(__svr4__) || defined(TRU64)
+#if defined(__svr4__)
         /* why doesn't using bsize work? */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE
-#else /* __svr4__ || TRU64 */
+#else /* __svr4__ */
         /* NOTE: linux' rquotad program doesn't currently report the
         * correct rq_bsize. */
 	/* NOTE: This is integer division and can introduce rounding errors */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / bsize
-#endif /* __svr4__  || TRU64 */
+#endif /* __svr4__ */
 
         dqp->dqb_bhardlimit =
             gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
