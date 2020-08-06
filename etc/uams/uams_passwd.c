@@ -57,12 +57,6 @@ char *strchr (), *strrchr ();
 #endif /* MIN */
 
 
-#ifdef TRU64
-#include <sia.h>
-#include <siad.h>
-
-static const char *clientname;
-#endif /* TRU64 */
 
 /*XXX in etc/papd/file.h */
 struct papfile;
@@ -79,11 +73,6 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     struct spwd *sp;
 #endif /* SHADOWPW */
 
-#ifdef TRU64
-    if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
-                              (void *) &clientname, NULL ) < 0 )
-        return AFPERR_MISC;
-#endif /* TRU64 */
 
     if (ibuflen < PASSWDLEN) {
         return( AFPERR_PARAM );
@@ -124,26 +113,9 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
     *uam_pwd = pwd;
 
-#ifdef TRU64
-    {
-        int ac;
-        char **av;
-        char hostname[256];
-
-        uam_afp_getcmdline( &ac, &av );
-        sprintf( hostname, "%s@%s", username, clientname );
-
-        if( uam_sia_validate_user( NULL, ac, av, hostname, username,
-                                   NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
-            return AFPERR_NOTAUTH;
-
-        return err;
-    }
-#else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );
     if ( strcmp( p, pwd->pw_passwd ) == 0 )
         return err;
-#endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
 
