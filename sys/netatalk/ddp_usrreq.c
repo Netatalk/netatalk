@@ -24,9 +24,6 @@
 #include <sys/protosw.h>
 #include <net/if.h>
 #include <net/route.h>
-#ifdef _IBMR2
-#include <net/spl.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -349,11 +346,7 @@ at_pcbconnect( ddp, addr )
 		( hintnet ? hintnet : sat->sat_addr.s_net ) ||
 		satosat( &ro->ro_dst )->sat_addr.s_node !=
 		sat->sat_addr.s_node )) {
-#ifdef ultrix
-	    rtfree( ro->ro_rt );
-#else /* ultrix */
 	    RTFREE( ro->ro_rt );
-#endif /* ultrix */
 	    ro->ro_rt = (struct rtentry *)0;
 	}
     }

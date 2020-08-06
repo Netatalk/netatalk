@@ -223,45 +223,6 @@ ddp_route( m, ro )
     }
     ro->ro_rt->rt_use++;
 
-#ifdef ultrix
-    /*
-     * SAIEW: We can't make changes to net/if_loop.c, so we don't route
-     * further than this: if it's going to go through the lookback,
-     * short-circuit to ddp_input(). Who needs queuing?
-     *
-     * Note: Passing NULL for the elaphdr is cool, since we'll only ever
-     * try to send long form ddp throught the loopback.
-     */
-    if ( ifp->if_flags & IFF_LOOPBACK ) {
-#ifdef notdef
-	m->m_off += SZ_ELAPHDR;
-	m->m_len -= SZ_ELAPHDR;
-#endif /* notdef */
-	ddp_input( m, ifp, (struct elaphdr *)NULL, 2 );
-	return( 0 );
-    }
-#endif /* ultrix */
 
-#ifdef _IBMR2
-    /*
-     * We can't make changes to the interface routines on RS6ks, and
-     * they don't provide hooks for if_output, so we just resolve
-     * our address here, and pass the packet as a raw ethernet packet.
-     * This doesn't work particularly well, if we aren't *on* ethernet,
-     * but it's ok for the moment.
-     */
-    if ( ! ( ifp->if_flags & IFF_LOOPBACK )) {
-	struct ether_header	eh;
-
-	if ( !aarpresolve(( struct arpcom *)ifp, m,
-		&gate, eh.ether_dhost )) {
-	    return( 0 );
-	}
-	eh.ether_type = htons( ETHERTYPE_AT );
-	gate.sat_family = AF_UNSPEC;
-	bcopy( &eh, (*(struct sockaddr *)&gate).sa_data,
-		sizeof( (*(struct sockaddr *)&gate).sa_data ));
-    }
-#endif /* _IBMR2 */
     return((*ifp->if_output)( ifp, m, &gate ));
 }

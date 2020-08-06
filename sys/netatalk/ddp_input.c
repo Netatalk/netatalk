@@ -17,9 +17,6 @@
 #include <atalk/logger.h>
 #include <net/if.h>
 #include <net/route.h>
-#ifdef _IBMR2
-#include <net/spl.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -44,9 +41,7 @@ atintr()
     int			s;
 
     for (;;) {
-#ifndef _IBMR2
 	s = splimp();
-#endif /* ! _IBMR2 */
 
 #ifdef BSD4_4
 	IF_DEQUEUE( &atintrq2, m );
@@ -54,9 +49,7 @@ atintr()
 	IF_DEQUEUEIF( &atintrq2, m, ifp );
 #endif /* BSD4_4 */
 
-#ifndef _IBMR2
 	splx( s );
-#endif /* ! _IBMR2 */
 
 	if ( m == 0 ) {			/* no more queued packets */
 	    break;
@@ -79,9 +72,7 @@ atintr()
     }
 
     for (;;) {
-#ifndef _IBMR2
 	s = splimp();
-#endif /* ! _IBMR2 */
 
 #ifdef BSD4_4
 	IF_DEQUEUE( &atintrq1, m );
@@ -89,9 +80,7 @@ atintr()
 	IF_DEQUEUEIF( &atintrq1, m, ifp );
 #endif /* BSD4_4 */
 
-#ifndef _IBMR2
 	splx( s );
-#endif /* ! _IBMR2 */
 
 	if ( m == 0 ) {			/* no more queued packets */
 	    break;
@@ -277,11 +266,7 @@ ddp_input( m, ifp, elh, phase )
 		to.sat_addr.s_net ||
 		satosat( &forwro.ro_dst )->sat_addr.s_node !=
 		to.sat_addr.s_node )) {
-#ifdef ultrix
-	    rtfree( forwro.ro_rt );
-#else /* ultrix */
 	    RTFREE( forwro.ro_rt );
-#endif /* ultrix */
 	    forwro.ro_rt = (struct rtentry *)0;
 	}
 	if ( forwro.ro_rt == (struct rtentry *)0 ||

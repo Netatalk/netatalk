@@ -19,9 +19,7 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/mbuf.h>
-#ifndef _IBMR2
 #include <sys/kernel.h>
-#endif /* ! _IBMR2 */
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <net/if.h>
@@ -30,9 +28,6 @@
 #include <netinet/in.h>
 #undef s_net
 #include <netinet/if_ether.h>
-#ifdef _IBMR2
-#include <net/spl.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
