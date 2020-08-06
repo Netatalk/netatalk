@@ -27,15 +27,6 @@
 #include <pwd.h>
 #include <grp.h>
 
-#ifdef TRU64
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sia.h>
-#include <siad.h>
-
-extern void afp_get_cmdline( int *ac, char ***av );
-#endif /* TRU64 */
-
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
 #include <atalk/uuid.h>
@@ -314,47 +305,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
     if (!admin)
 #endif /* ADMIN_GRP */
-#ifdef TRU64
-    {
-        struct DSI *dsi = obj->handle;
-        struct hostent *hp;
-        char *clientname;
-        int argc;
-        char **argv;
-        char hostname[256];
-
-        afp_get_cmdline( &argc, &argv );
-
-        hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
-                            sizeof( struct in_addr ),
-                            dsi->client.sin_family );
-
-        if( hp )
-            clientname = hp->h_name;
-        else
-            clientname = inet_ntoa( dsi->client.sin_addr );
-
-        sprintf( hostname, "%s@%s", pwd->pw_name, clientname );
-
-        if( sia_become_user( NULL, argc, argv, hostname, pwd->pw_name,
-                             NULL, FALSE, NULL, NULL,
-                             SIA_BEU_REALLOGIN ) != SIASUCCESS )
-            return AFPERR_BADUAM;
-
-        LOG(log_info, logtype_afpd, "session from %s (%s)", hostname,
-            inet_ntoa( dsi->client.sin_addr ) );
-
-        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
-            return AFPERR_BADUAM;
-        }
-    }
-#else /* TRU64 */
     if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
         LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
-#endif /* TRU64 */
 
     LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
 

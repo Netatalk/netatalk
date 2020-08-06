@@ -28,9 +28,6 @@ typedef int	mode_t;
 #define f_mntfromname f_fname
 #endif /* _IBMR2 || HAVE_STATFS_H */
 
-#if defined(TRU64)
-#define f_frsize f_fsize
-#else /* TRU64 */
 /* temp fix, was: defined(HAVE_SYS_STATVFS) || defined(__svr4__) */
 #if defined(__svr4__) || (defined(__NetBSD__) && (__NetBSD_Version__ >= 200040000))
 #include <sys/statvfs.h>
@@ -38,7 +35,6 @@ typedef int	mode_t;
 #else /* HAVE_SYS_STATVFS || __svr4__ */
 #define	f_frsize f_bsize
 #endif /* USE_STATVFS_H */
-#endif /* TRU64 */
 
 #if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>

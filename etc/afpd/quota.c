@@ -501,14 +501,8 @@ special(char *file, int *nfs)
         return( NULL );
     }
 
-#ifdef TRU64
-    /* Digital UNIX: The struct sfs contains a field sfs.f_type,
-     * the MOUNT_* constants are defined in <sys/mount.h> */
-    if ((sfs.f_type == MOUNT_NFS)||(sfs.f_type == MOUNT_NFS3))
-#else /* TRU64 */
     /* XXX: make sure this really detects an nfs mounted fs */
     if (strchr(sfs.f_mntfromname, ':'))
-#endif /* TRU64 */
         *nfs = 1;
     return( sfs.f_mntfromname );
 }
@@ -601,10 +595,8 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 #define QCMD(a,b)  (a)
 #endif
 
-#ifndef TRU64
     /* for group quotas. we only use these if the user belongs
     * to one group. */
-#endif /* TRU64 */
 
 #ifdef BSD4_4
     if ( seteuid( getuid() ) == 0 ) {
@@ -618,16 +610,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
                     return( AFPERR_PARAM );
                 }
             }
-        }
-        seteuid( uid );
-    }
-
-#elif defined(TRU64)
-    if ( seteuid( getuid() ) == 0 ) {
-        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA, USRQUOTA),
-                       uid, (char *)dq ) != 0 ) {
-            seteuid( uid );
-            return ( AFPERR_PARAM );
         }
         seteuid( uid );
     }
@@ -647,7 +629,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 #endif  /* BSD4_4 */
 
 
-#ifndef TRU64
     /* return either the group quota entry or user quota entry,
        whichever has the least amount of space remaining
     */
@@ -672,7 +653,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
         dq->dqb_btimelimit = dqg.dqb_btimelimit;
     } /* if */
 
-#endif /* TRU64 */
 
 #endif /* ultrix */
 #endif /* __svr4__ */
@@ -725,43 +705,8 @@ static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
     }
 #endif
 
-#ifdef TRU64
-    /* Digital UNIX: Two forms of specifying an NFS filesystem are possible,
-       either 'hostname:path' or 'path@hostname' (Ultrix heritage) */
-    if (vol->v_nfs) {
-	char *hostpath;
-	char pathstring[MNAMELEN];
-	/* MNAMELEN ist defined in <sys/mount.h> */
-	int result;
-	
-	if ((hostpath = strchr(vol->v_gvs,'@')) != NULL ) {
-	    /* convert 'path@hostname' to 'hostname:path',
-	     * call getnfsquota(),
-	     * convert 'hostname:path' back to 'path@hostname' */
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s:%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	    
-	    result = getnfsquota(vol, uuid, bsize, dq);
-	    
-	    hostpath = strchr(vol->v_gvs,':');
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s@%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	    
-	    return result;
-	}
-	else
-	    /* vol->v_gvs is of the form 'hostname:path' */
-	    return getnfsquota(vol, uuid, bsize, dq);
-    } else
-	/* local filesystem */
-	return getfsquota(vol, uuid, dq);
-	   
-#else /* TRU64 */
     return vol->v_nfs ? getnfsquota(vol, uuid, bsize, dq) :
            getfsquota(vol, uuid, dq);
-#endif /* TRU64 */
 }
 
 static int overquota( struct dqblk *dqblk)

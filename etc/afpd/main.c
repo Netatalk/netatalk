@@ -42,15 +42,6 @@
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
 
-#ifdef TRU64
-#include <sys/security.h>
-#include <prot.h>
-#include <sia.h>
-
-static int argc = 0;
-static char **argv = NULL;
-#endif /* TRU64 */
-
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
 
@@ -67,14 +58,6 @@ static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
 static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
-
-#ifdef TRU64
-void afp_get_cmdline( int *ac, char ***av)
-{
-    *ac = argc;
-    *av = argv;
-}
-#endif /* TRU64 */
 
 /* This is registered with atexit() */
 static void afp_exit(void)
@@ -252,11 +235,6 @@ int main(int ac, char **av)
     sigset_t            sigs;
     int                 ret;
 
-#ifdef TRU64
-    argc = ac;
-    argv = av;
-    set_auth_parameters( ac, av );
-#endif /* TRU64 */
 
     /* Parse argv args and initialize default options */
     afp_options_init(&default_options);
