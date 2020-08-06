@@ -328,11 +328,7 @@ struct adouble_fops {
 #define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
 #else
 /* Tru64 is an always-64-bit OS; version 4.0 does not set _FILE_OFFSET_BITS */
-#if defined(TRU64)
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
 #define BYTELOCK_MAX (0x7FFFFFFFU)
-#endif
 #endif
 
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
