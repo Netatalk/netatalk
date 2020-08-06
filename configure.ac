@@ -28,10 +28,6 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h time.h sys/param.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h statfs.h sys/types.h dlfcn.h errno.h sys/errno.h sys/uio.h langinfo.h locale.h sys/filio.h)
-AC_CHECK_HEADER(sys/cdefs.h,,
-	AC_MSG_RESULT([enabling generic cdefs.h from tree])
-	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
-)
 AC_CHECK_HEADERS([sys/mount.h], , , 
 [#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -1341,8 +1337,6 @@ AC_CONFIG_FILES([Makefile
 	man/man5/Makefile
 	man/man8/Makefile
 	sys/Makefile
-	sys/generic/Makefile
-	sys/generic/sys/Makefile
 	sys/netatalk/Makefile
 	sys/solaris/Makefile
 	test/Makefile
