@@ -29,9 +29,6 @@ typedef uint64_t       u_int64_t;
 #endif /* ! __BIT_TYPES_DEFINED__ */
 #else
 
-/* luckily ultrix is dead. as a result, we know what the sizes of
- * various types are forever. this makes some assumptions about integer
- * sizes. */
 #if defined(HAVE_32BIT_LONGS) || defined(HAVE_64BIT_LONGS)
 #ifndef __BIT_TYPES_DEFINED__
 #define __BIT_TYPES_DEFINED__

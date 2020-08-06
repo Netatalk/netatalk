@@ -68,6 +68,12 @@ struct llc {
 #define LLC_ISO_LSAP	0xfe
 #define LLC_SNAP_LSAP	0xaa
 
+<<<<<<< HEAD
+=======
+# endif /* BSD4_4 */
+
+#if defined( BSD4_4 )
+>>>>>>> 8a2dd3b8 (Remove obsolete platform code.)
 #define SIOCPHASE1	_IOW('i', 100, struct ifreq)	/* AppleTalk phase 1 */
 #define SIOCPHASE2	_IOW('i', 101, struct ifreq)	/* AppleTalk phase 2 */
 #endif /* BSD4_4 */
