@@ -701,9 +701,8 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_MSG_RESULT([ * NetBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(NETBSD, 1, [Define if OS is NetBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
+	AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
 
-	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
 	need_dash_r=yes 
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
@@ -1345,8 +1344,6 @@ AC_CONFIG_FILES([Makefile
 	sys/generic/Makefile
 	sys/generic/sys/Makefile
 	sys/netatalk/Makefile
-	sys/netbsd/Makefile
-	sys/netbsd/netatalk/Makefile
 	sys/solaris/Makefile
 	test/Makefile
 	test/afpd/Makefile
