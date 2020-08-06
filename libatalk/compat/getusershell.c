@@ -42,9 +42,6 @@ static char sccsid[] = "@(#)getusershell.c	5.6 (Berkeley) 6/1/90";
  */
 static char *okshells[] = {
     "/bin/sh", "/bin/csh",
-#ifdef _IBMR2
-    "/bin/ksh",
-#endif /* _IBMR2 */
     0
 };
 

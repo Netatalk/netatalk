@@ -10,14 +10,3 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef ultrix
-char *strdup(const char *string)
-{
-  char *new;
-  
-  if (new = (char *) malloc(strlen(string) + 1))
-    strcpy(new, string);
-
-  return new;
-}
-#endif /* ultrix */

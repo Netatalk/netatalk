@@ -44,34 +44,3 @@
 static char sccsid[] = "@(#)strstr.c	5.2 (Berkeley) 1/26/91";
 #endif /* LIBC_SCCS and not lint */
 
-# if defined(ibm032) || (defined(sun) && defined(i386))
-#ifdef sun
-#define const
-#endif /* sun */
-
-#include <sys/types.h>
-#include <string.h>
-
-/*
- * Find the first occurrence of find in s.
- */
-char *
-strstr(s, find)
-	register const char *s, *find;
-{
-	register char c, sc;
-	register size_t len;
-
-	if ((c = *find++) != 0) {
-		len = strlen(find);
-		do {
-			do {
-				if ((sc = *s++) == 0)
-					return (0);
-			} while (sc != c);
-		} while (strncmp(s, find, len) != 0);
-		s--;
-	}
-	return ((char *)s);
-}
-# endif /* ibm03 sun i386 */
