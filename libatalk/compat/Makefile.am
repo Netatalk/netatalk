@@ -6,9 +6,7 @@ libcompat_la_CFLAGS = @QUOTA_CFLAGS@
 libcompat_la_LIBADD = @QUOTA_LIBS@
 
 libcompat_la_SOURCES =	\
+<<<<<<< HEAD
 	misc.c \
-	getusershell.c	\
 	inet_aton.c	\
-	rquota_xdr.c	\
-	pselect.c	\
-	snprintf.c
+	rquota_xdr.c
