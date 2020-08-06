@@ -16,11 +16,7 @@
 #include <sys/ethernet.h>
 #include <net/if.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include <netatalk/endian.h>
 #include <netatalk/ddp.h>

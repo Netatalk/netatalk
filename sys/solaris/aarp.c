@@ -18,11 +18,7 @@
 #include <netinet/arp.h>
 #include <net/if.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include <netatalk/at.h>
 #include <netatalk/aarp.h>

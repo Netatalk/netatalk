@@ -9,11 +9,7 @@
 #include <sys/stream.h>
 #include <sys/cmn_err.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include "ioc.h"
 
