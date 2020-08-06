@@ -72,8 +72,8 @@ static const u_int8_t g = 0x07;
  * and the server_login function
  */
 static pam_handle_t *pamh = NULL; 
-static char *PAM_username;
-static char *PAM_password;
+static unsigned char *PAM_username;
+static unsigned char *PAM_password;
 
 /* PAM conversation function
  * Here we assume (for now, at least) that echo on means login name, and
@@ -114,7 +114,7 @@ static int PAM_conv (int num_msg,
 
     switch (msg[count]->msg_style) {
     case PAM_PROMPT_ECHO_ON:
-      if (!(string = COPY_STRING(PAM_username))) {
+      if (!(string = COPY_STRING((const char *)PAM_username))) {
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: username failure -- %s",
 		  strerror(errno));
@@ -123,7 +123,7 @@ static int PAM_conv (int num_msg,
       }
       break;
     case PAM_PROMPT_ECHO_OFF:
-      if (!(string = COPY_STRING(PAM_password))) {
+      if (!(string = COPY_STRING((const char *)PAM_password))) {
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: passwd failure: --: %s",
 		  strerror(errno));
@@ -184,8 +184,8 @@ static struct pam_conv PAM_conversation = {
 };
 
 
-static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_, 
-		     char *rbuf, size_t *rbuflen)
+static int dhx_setup(void *obj, unsigned char *ibuf, size_t ibuflen _U_, 
+		     unsigned char *rbuf, size_t *rbuflen)
 {
     u_int16_t sessid;
     size_t i;
@@ -328,11 +328,11 @@ pam_fail:
 }
 
 /* -------------------------------- */
-static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _U_,
-		     char *ibuf, size_t ibuflen,
-		     char *rbuf, size_t *rbuflen)
+static int login(void *obj, unsigned char *username, int ulen,
+	struct passwd **uam_pwd _U_, unsigned char *ibuf, size_t ibuflen,
+	unsigned char *rbuf, size_t *rbuflen)
 {
-    if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
+    if (( dhxpwd = uam_getname(obj, (char *)username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username [%s]", username);
         return AFPERR_NOTAUTH;
     }
@@ -346,10 +346,10 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _
 /* dhx login: things are done in a slightly bizarre order to avoid
  * having to clean things up if there's an error. */
 static int pam_login(void *obj, struct passwd **uam_pwd,
-		     char *ibuf, size_t ibuflen,
-		     char *rbuf, size_t *rbuflen)
+		     unsigned char *ibuf, size_t ibuflen,
+		     unsigned char *rbuf, size_t *rbuflen)
 {
-    char *username;
+    unsigned char *username;
     size_t len, ulen;
 
     *rbuflen = 0;
@@ -380,11 +380,11 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-		     char *ibuf, size_t ibuflen,
-		     char *rbuf, size_t *rbuflen)
+		     unsigned char *ibuf, size_t ibuflen,
+		     unsigned char *rbuf, size_t *rbuflen)
 {
-    char *username;
-    int len, ulen;
+    unsigned char *username;
+    size_t len, ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
@@ -416,8 +416,8 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
-			 char *ibuf, size_t ibuflen _U_, 
-			 char *rbuf, size_t *rbuflen)
+			 unsigned char *ibuf, size_t ibuflen _U_, 
+			 unsigned char *rbuf, size_t *rbuflen)
 {
     const char *hostname;
     BIGNUM *bn1, *bn2, *bn3;
@@ -485,8 +485,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_password = rbuf;
 
     err = AFPERR_NOTAUTH;
-    PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation,
-			  &pamh);
+    PAM_error = pam_start("netatalk", (const char *)PAM_username,
+			&PAM_conversation, &pamh);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
@@ -572,9 +572,9 @@ static void pam_logout(void) {
 
 /* change pw for dhx needs a couple passes to get everything all
  * right. basically, it's like the login/logincont sequence */
-static int pam_changepw(void *obj, char *username,
-			struct passwd *pwd _U_, char *ibuf, size_t ibuflen,
-			char *rbuf, size_t *rbuflen)
+static int pam_changepw(void *obj, unsigned char *username,
+			struct passwd *pwd _U_, unsigned char *ibuf,
+			size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 {
     BIGNUM *bn1, *bn2, *bn3;
 
@@ -681,7 +681,7 @@ static int pam_changepw(void *obj, char *username,
     ibuf[PASSWDLEN + PASSWDLEN] = '\0';
     PAM_password = ibuf + PASSWDLEN;
 
-    PAM_error = pam_start("netatalk", username, &PAM_conversation,
+    PAM_error = pam_start("netatalk", (char *)username, &PAM_conversation,
 			  &lpamh);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
