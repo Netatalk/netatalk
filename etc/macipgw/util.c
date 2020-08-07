@@ -37,28 +37,32 @@
 int gDebug;
 
 
-char *iptoa (u_long ip) {
+char *iptoa(u_long ip)
+{
 	static char s[16];
-	
-	sprintf (s, "%ld.%ld.%ld.%ld", 
-		(ip>>24) & 0xff, (ip>>16) & 0xff, 
-		(ip>> 8) & 0xff, ip & 0xff);
+
+	sprintf(s, "%ld.%ld.%ld.%ld",
+		(ip >> 24) & 0xff, (ip >> 16) & 0xff,
+		(ip >> 8) & 0xff, ip & 0xff);
 	return s;
 }
 
 
-u_long atoip (char *s) {
+u_long atoip(char *s)
+{
 	u_long ip;
-	
-	ip = strtol (s, &s, 0);
-	if (*s++ != '.' ) return 0;
-	ip = (ip << 8) | strtol (s, &s, 0);
-	if (*s++ != '.' ) return 0;
-	ip = (ip << 8) | strtol (s, &s, 0);
-	if (*s++ != '.' ) return 0;
-	ip = (ip << 8) | strtol (s, &s, 0);
-	if (*s != 0) return 0;
+
+	ip = strtol(s, &s, 0);
+	if (*s++ != '.')
+		return 0;
+	ip = (ip << 8) | strtol(s, &s, 0);
+	if (*s++ != '.')
+		return 0;
+	ip = (ip << 8) | strtol(s, &s, 0);
+	if (*s++ != '.')
+		return 0;
+	ip = (ip << 8) | strtol(s, &s, 0);
+	if (*s != 0)
+		return 0;
 	return ip;
 }
-
-
