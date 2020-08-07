@@ -9,9 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <string.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>

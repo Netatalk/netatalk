@@ -40,9 +40,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <fcntl.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 #include <netatalk/endian.h>
 #include <netatalk/at.h>

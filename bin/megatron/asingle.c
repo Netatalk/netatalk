@@ -17,9 +17,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "asingle.h"

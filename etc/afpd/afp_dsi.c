@@ -15,9 +15,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/socket.h>
 #include <sys/time.h>
 #ifdef HAVE_SYS_STAT_H

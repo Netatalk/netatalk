@@ -24,9 +24,7 @@
 #include <grp.h>
 #include "uid.h"
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 extern uid_t    uuid; 
 

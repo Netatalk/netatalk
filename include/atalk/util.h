@@ -14,9 +14,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <poll.h>
 #include <stdbool.h>
 #include <sys/stat.h>

@@ -10,9 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>

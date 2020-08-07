@@ -11,9 +11,7 @@
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/time.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */

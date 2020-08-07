@@ -23,9 +23,7 @@
 
 #define FUCKED
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/time.h>
 
 /* POSIX.1 sys/wait.h check */

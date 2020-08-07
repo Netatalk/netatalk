@@ -39,11 +39,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_UNISTD_H
 #undef __USE_MISC
 #define __USE_MISC
 #include <unistd.h>
-#endif
 
 #include <sys/cdefs.h>
 

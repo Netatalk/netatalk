@@ -11,9 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

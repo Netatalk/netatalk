@@ -16,9 +16,7 @@
 /* STDC check */
 #include <string.h>
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <atalk/logger.h>

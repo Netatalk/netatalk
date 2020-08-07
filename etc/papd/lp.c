@@ -50,9 +50,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 #include <sys/file.h>
 #include <sys/un.h>
