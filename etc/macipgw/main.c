@@ -56,189 +56,189 @@
 #include "util.h"
 
 static char *version = "macipgw 1.1\n"
-		"Copyright (c) 1997 Stefan Bethke. All rights reserved.\n"
-		"Copyright (c) 1988, 1992, 1993\n"
-		"\tThe Regents of the University of California.  All rights reserved.\n"
-		"Copyright (c) 1990,1996 Regents of The University of Michigan.\n"
-		"\tAll Rights Reserved.\n"
-		"See the file COPYRIGHT for further information.\n";
+    "Copyright (c) 1997 Stefan Bethke. All rights reserved.\n"
+    "Copyright (c) 1988, 1992, 1993\n"
+    "\tThe Regents of the University of California.  All rights reserved.\n"
+    "Copyright (c) 1990,1996 Regents of The University of Michigan.\n"
+    "\tAll Rights Reserved.\n"
+    "See the file COPYRIGHT for further information.\n";
 
-int		atsocket;
-int		tundev;
+int atsocket;
+int tundev;
+int debug = 0;
 
-
-static void die (int n) {
-	syslog (LOG_INFO, "going down on signal");
+static void die(int n)
+{
+	syslog(LOG_INFO, "going down on signal");
 	if (gDebug)
-		fprintf (stderr, "Stopping\n");
-	macip_close ();
-	tunnel_close ();
+		fprintf(stderr, "Stopping\n");
+	macip_close();
+	tunnel_close();
 	if (gDebug)
-		fprintf (stderr, "\nstopped.\n");
-    exit (n);
+		fprintf(stderr, "\nstopped.\n");
+	exit(n);
 }
 
 
-static void server(void) {
+static void server(void)
+{
 	fd_set fds;
 	int maxfd = 0;
-	struct timeval	tv;
+	struct timeval tv;
 	int i;
-	
+
 	maxfd = atsocket;
 	maxfd = MAX(maxfd, tundev);
 	maxfd++;
 	while (1) {
-		FD_ZERO (&fds);
-		FD_SET (atsocket, &fds);
-		FD_SET (tundev, &fds);
-		tv.tv_sec  = 2;
+		FD_ZERO(&fds);
+		FD_SET(atsocket, &fds);
+		FD_SET(tundev, &fds);
+		tv.tv_sec = 2;
 		tv.tv_usec = 0;
 
 		if (gDebug) {
-			printf ("waiting for packet: ");
-			fflush (stdout);
-		}		
-		if ((i = select (maxfd, &fds, 0, 0, &tv)) > 0) {
-			if (FD_ISSET (atsocket, &fds)) {
+			printf("waiting for packet: ");
+			fflush(stdout);
+		}
+		if ((i = select(maxfd, &fds, 0, 0, &tv)) > 0) {
+			if (FD_ISSET(atsocket, &fds)) {
 				if (gDebug)
-					printf ("got AT packet.\n");
+					printf("got AT packet.\n");
 				macip_input();
-			} else if (FD_ISSET (tundev, &fds)) {
+			} else if (FD_ISSET(tundev, &fds)) {
 				if (gDebug)
-					printf ("got IP packet from tunnel.\n");
+					printf
+					    ("got IP packet from tunnel.\n");
 				tunnel_input();
 			}
 		} else {
-			printf ("\r");
+			printf("\r");
 			if (i == 0) {
-				macip_idle ();
+				macip_idle();
 			} else {
 				if (gDebug)
-					perror ("select");
+					perror("select");
 			}
 		}
 	}
 }
 
 
-void disassociate (void) {
-	int		i, dt;
+void disassociate(void)
+{
+	int i, dt;
 
-	switch ( fork()) {
-	case 0 :
-	    dt = getdtablesize();
-		for ( i = 0; i < dt; i++ ) {
-			(void)close( i );
+	switch (fork()) {
+	case 0:
+		dt = getdtablesize();
+		for (i = 0; i < dt; i++) {
+			(void) close(i);
 		}
-		if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
-			(void)ioctl( i, TIOCNOTTY, 0 );
-			setpgid( 0, getpid());
-			(void)close( i );
+		if ((i = open("/dev/tty", O_RDWR)) >= 0) {
+			(void) ioctl(i, TIOCNOTTY, 0);
+			setpgid(0, getpid());
+			(void) close(i);
 		}
-		if (( i = open( "/", O_RDONLY )) >= 0 ) {
-			dup2( i, 1 );
-			dup2( i, 2 );
+		if ((i = open("/", O_RDONLY)) >= 0) {
+			dup2(i, 1);
+			dup2(i, 2);
 		}
 		break;
-	case -1 :
-		perror ("fork");
-		die (EX_OSERR);
-	default :
-		exit (0);
+	case -1:
+		perror("fork");
+		die(EX_OSERR);
+	default:
+		exit(0);
 	}
 }
 
 
-void usage (char *c) {
+void usage(char *c)
+{
 	if (c)
-		fprintf (stderr, "%s\n", c);
-	fprintf( stderr, "Usage:\tmacipgw [-d debug] [-z zone] [-n nameserver] [-V]\n"
+		fprintf(stderr, "%s\n", c);
+	fprintf(stderr,
+		"Usage:\tmacipgw [-d debug] [-z zone] [-n nameserver] [-V]\n"
 		"\t\tmacip-net macip-netmask\n");
-	exit (EX_USAGE);
+	exit(EX_USAGE);
 }
 
 
-int main(int argc, char *argv[]) {
-	struct sigaction	sv;
-	uint32_t			net=0, mask=0, ns=0;
-	char 				*zone = "*";
-	char				c;
+int main(int argc, char *argv[])
+{
+	struct sigaction sv;
+	uint32_t net = 0, mask = 0, ns = 0;
+	char *zone = "*";
+	char c;
 
 	gDebug = 0;
 
-	while ((c = getopt( argc, argv, "d:n:z:V" )) != EOF ) {
-		switch ( c ) {
-			case 'd':
-#if defined(DEBUG)
-				gDebug = strtol (optarg, 0, 0);
-#else
-				fprintf (stderr, "Please recompile macipgw with -DDEBUG to "
-					"use debugging.\n");
-				exit (EX_USAGE);
-#endif
-				break;
+	while ((c = getopt(argc, argv, "d:n:z:V")) != EOF) {
+		switch (c) {
+		case 'd':
+			gDebug = strtol(optarg, 0, 0);
+			break;
 
-			case 'n':
-				ns = atoip(optarg);
-				break;
+		case 'n':
+			ns = atoip(optarg);
+			break;
 
-			case 'z':
-				zone = optarg;
-				break;
-			case 'V':
-				usage(version);
-				break;
+		case 'z':
+			zone = optarg;
+			break;
+		case 'V':
+			usage(version);
+			break;
 
-			default:
-				usage("unknown option.");
+		default:
+			usage("unknown option.");
 		}
 	}
 	argc -= optind;
 	argv += optind;
 	if (argc != 2)
 		usage("wrong number of parameters.");
-	net   = atoip (argv[0]);
-	mask  = atoip (argv[1]);
+	net = atoip(argv[0]);
+	mask = atoip(argv[1]);
 	net &= mask;
 	if ((net & mask) == 0)
 		usage("invalid ip address.");
 
-	openlog ("macipgw", LOG_PID | gDebug ? LOG_PERROR : 0, LOG_DAEMON);
+	openlog("macipgw", LOG_PID | gDebug ? LOG_PERROR : 0, LOG_DAEMON);
 
 	sv.sa_handler = die;
 	sigemptyset(&sv.sa_mask);
 	sv.sa_flags = 0;
-	if (sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-		syslog( LOG_ERR, "sigaction: %m" );
-		exit (EX_OSERR);
+	if (sigaction(SIGTERM, &sv, 0) < 0) {
+		syslog(LOG_ERR, "sigaction: %m");
+		exit(EX_OSERR);
 	}
-	if (sigaction( SIGQUIT, &sv, 0 ) < 0 ) {
-		syslog( LOG_ERR, "sigaction: %m" );
-		exit (EX_OSERR);
+	if (sigaction(SIGQUIT, &sv, 0) < 0) {
+		syslog(LOG_ERR, "sigaction: %m");
+		exit(EX_OSERR);
 	}
-	if (sigaction( SIGINT, &sv, 0 ) < 0 ) {
-		syslog( LOG_ERR, "sigaction: %m" );
-		exit (EX_OSERR);
+	if (sigaction(SIGINT, &sv, 0) < 0) {
+		syslog(LOG_ERR, "sigaction: %m");
+		exit(EX_OSERR);
 	}
 
 	if (!gDebug)
 		disassociate();
 
-	tundev = tunnel_open (net, mask, macip_output);
+	tundev = tunnel_open(net, mask, macip_output);
 	if (tundev < 0) {
 		syslog(LOG_ERR, "could not open tunnel.\n");
-		die (EX_OSERR);
+		die(EX_OSERR);
 	}
-	
-	atsocket = macip_open (zone, net, mask, ns, tunnel_output);
+
+	atsocket = macip_open(zone, net, mask, ns, tunnel_output);
 	if (atsocket < 0) {
 		syslog(LOG_ERR, "could not initialise MacIP\n");
-		die (EX_OSERR);
+		die(EX_OSERR);
 	}
 
 	server();
 
 	return 0;
 }
-
