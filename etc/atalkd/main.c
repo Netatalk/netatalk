@@ -1536,7 +1536,6 @@ void dumproutes(void)
 
 void dumpzones(void)
 {
-    struct interface	*iface;
     struct rtmptab	*rtmp;
     struct list		*l;
     struct ziptab	*zt;
