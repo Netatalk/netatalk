@@ -450,7 +450,7 @@ int main(int ac, char **av)
                 case LISTEN_FD:
                     config = (AFPConfig *)polldata[i].data;
                     /* config->server_start is afp_config.c:dsi_start() for DSI */
-                    if (child = (config->server_start(config, configs, server_children))) {
+                    if ((child = config->server_start(config, configs, server_children))) {
                         /* Add IPC fd to select fd set */
                         fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
                                      &fdset,

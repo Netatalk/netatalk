@@ -378,7 +378,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     u_int16_t namelen;
     size_t len;
     char *begin = data;
-    u_int16_t offset, status;
+    u_int16_t offset;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
@@ -581,7 +581,7 @@ void set_signature(struct afp_options *options) {
     char *servername_conf;
     int header = 0;
     char buf[1024], *p;
-    FILE *fp = NULL, *randomp;
+    FILE *fp = NULL;
     size_t len;
     char *server_tmp;
     
