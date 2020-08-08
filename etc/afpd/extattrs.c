@@ -42,26 +42,6 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
 /* This should be big enough to consecutively store the names of all attributes */
 static char attrnamebuf[ATTRNAMEBUFSIZ];
 
-#ifdef DEBUG
-static void hexdump(void *m, size_t l) {
-    char *p = m;
-    int count = 0, len;
-    char buf[100];
-    char *bufp = buf;
-
-    while (l--) {
-        len = sprintf(bufp, "%02x ", *p++);
-        bufp += len;
-        count++;
-
-        if ((count % 16) == 0) {
-            LOG(log_debug9, logtype_afpd, "%s", buf);
-            bufp = buf;
-        }
-    }
-}
-#endif
-
 /***************************************
  * AFP funcs
  ****************************************/
@@ -74,7 +54,7 @@ static void hexdump(void *m, size_t l) {
 int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 ret, oflag = 0, adflags = 0;
-    uint16_t            vid, bitmap, uint16;
+    uint16_t            vid, bitmap;
     uint32_t            did, maxreply, tmpattr;
     struct vol          *vol;
     struct dir          *dir;
