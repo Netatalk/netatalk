@@ -174,6 +174,7 @@ static struct server *test_usockfn(const char *path)
     time_t t;
     char buf1[8];
     char buf2[8];
+    int ret;
 
     LOG(log_debug, logtype_cnid, "maybe_start_dbd(\"%s\"): BEGIN", volpath);
 
@@ -251,7 +252,6 @@ static struct server *test_usockfn(const char *path)
         return -1;
     }
     if (pid == 0) {
-        int ret;
         /*
          *  Child. Close descriptors and start the daemon. If it fails
          *  just log it. The client process will fail connecting
@@ -291,9 +291,11 @@ static struct server *test_usockfn(const char *path)
                          "-u", username,
                          NULL);
         }
-        /* Yikes! We're still here, so exec failed... */
-        LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
-        daemon_exit(0);
+        if (ret) {
+            /* Yikes! We're still here, so exec failed... */
+            LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
+            daemon_exit(0);
+        }
     }
     /*
      *  Parent.
