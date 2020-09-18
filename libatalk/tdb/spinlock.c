@@ -46,75 +46,7 @@
  * ARCH SPECIFIC
  */
 
-#if defined(SPARC_SPINLOCKS)
-
-static inline int __spin_trylock(spinlock_t *lock)
-{
-	unsigned int result;
-
-	asm volatile("ldstub    [%1], %0"
-		: "=r" (result)
-		: "r" (lock)
-		: "memory");
-
-	return (result == 0) ? 0 : EBUSY;
-}
-
-static inline void __spin_unlock(spinlock_t *lock)
-{
-	asm volatile("":::"memory");
-	*lock = 0;
-}
-
-static inline void __spin_lock_init(spinlock_t *lock)
-{
-	*lock = 0;
-}
-
-static inline int __spin_is_locked(spinlock_t *lock)
-{
-	return (*lock != 0);
-}
-
-#elif defined(POWERPC_SPINLOCKS) 
-
-static inline int __spin_trylock(spinlock_t *lock)
-{
-	unsigned int result;
-
-	__asm__ __volatile__(
-"1:	lwarx		%0,0,%1\n\
-	cmpwi		0,%0,0\n\
-	li		%0,0\n\
-	bne-		2f\n\
-	li		%0,1\n\
-	stwcx.		%0,0,%1\n\
-	bne-		1b\n\
-	isync\n\
-2:"	: "=&r"(result)
-	: "r"(lock)
-	: "cr0", "memory");
-
-	return (result == 1) ? 0 : EBUSY;
-}
-
-static inline void __spin_unlock(spinlock_t *lock)
-{
-	asm volatile("eieio":::"memory");
-	*lock = 0;
-}
-
-static inline void __spin_lock_init(spinlock_t *lock)
-{
-	*lock = 0;
-}
-
-static inline int __spin_is_locked(spinlock_t *lock)
-{
-	return (*lock != 0);
-}
-
-#elif defined(INTEL_SPINLOCKS) 
+#if   defined(INTEL_SPINLOCKS) 
 
 static inline int __spin_trylock(spinlock_t *lock)
 {
@@ -142,60 +74,6 @@ static inline void __spin_lock_init(spinlock_t *lock)
 static inline int __spin_is_locked(spinlock_t *lock)
 {
 	return (*lock != 1);
-}
-
-#elif defined(MIPS_SPINLOCKS) 
-
-static inline unsigned int load_linked(unsigned long addr)
-{
-	unsigned int res;
-
-	__asm__ __volatile__("ll\t%0,(%1)"
-		: "=r" (res)
-		: "r" (addr));
-
-	return res;
-}
-
-static inline unsigned int store_conditional(unsigned long addr, unsigned int value)
-{
-	unsigned int res;
-
-	__asm__ __volatile__("sc\t%0,(%2)"
-		: "=r" (res)
-		: "0" (value), "r" (addr));
-	return res;
-}
-
-static inline int __spin_trylock(spinlock_t *lock)
-{
-	unsigned int mw;
-
-	do {
-		mw = load_linked(lock);
-		if (mw) 
-			return EBUSY;
-	} while (!store_conditional(lock, 1));
-
-	asm volatile("":::"memory");
-
-	return 0;
-}
-
-static inline void __spin_unlock(spinlock_t *lock)
-{
-	asm volatile("":::"memory");
-	*lock = 0;
-}
-
-static inline void __spin_lock_init(spinlock_t *lock)
-{
-	*lock = 0;
-}
-
-static inline int __spin_is_locked(spinlock_t *lock)
-{
-	return (*lock != 0);
 }
 
 #else

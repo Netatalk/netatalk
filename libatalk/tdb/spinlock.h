@@ -17,14 +17,8 @@
 
 /* ARCH SPECIFIC */
 /* We should make sure these are padded to a cache line */
-#if defined(SPARC_SPINLOCKS)
-typedef volatile char spinlock_t;
-#elif defined(POWERPC_SPINLOCKS)
-typedef volatile unsigned long spinlock_t;
-#elif defined(INTEL_SPINLOCKS)
+#if   defined(INTEL_SPINLOCKS)
 typedef volatile int spinlock_t;
-#elif defined(MIPS_SPINLOCKS)
-typedef volatile unsigned long spinlock_t;
 #else
 #error Need to implement spinlock code in spinlock.h
 #endif
