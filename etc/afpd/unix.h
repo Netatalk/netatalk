@@ -10,7 +10,7 @@
 #include <sys/vfs.h>
 #endif /* HAVE_SYS_VFS_H */
 
-#if defined(HAVE_STATFS_H) 
+#if defined(HAVE_STATFS_H)
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
@@ -27,12 +27,11 @@
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-
 #include <sys/mount.h>
 
-#if defined(linux) || defined(HAVE_MNTENT_H)
+#if defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif /* linux || HAVE_MNTENT_H */
+#endif /* HAVE_MNTENT_H */
 
 extern struct afp_options default_options;
 
