@@ -1834,21 +1834,13 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
 #ifndef NO_LARGE_VOL_SUPPORT
         case VOLPBIT_XBFREE :
             xbfree = hton64( xbfree );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbfree, data, sizeof(xbfree));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbfree, sizeof( xbfree ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 
         case VOLPBIT_XBTOTAL :
             xbtotal = hton64( xbtotal );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbtotal, data, sizeof(xbtotal));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbtotal, sizeof( xbtotal ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 #endif /* ! NO_LARGE_VOL_SUPPORT */

@@ -675,15 +675,6 @@ fi
 
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 
-
-	dnl ----- Linux/alpha specific -----
-	if test x"$this_cpu" = "xalpha"; then 
-		AC_MSG_RESULT([enabling gcc memcpy bug workaround])
-		AC_DEFINE(HAVE_GCC_MEMCPY_BUG, 1, [Define if memcpy is buggy])
-	fi
-	need_dash_r=no
-
-
 fi
 
 dnl ----- Mac OSX specific -----
