@@ -113,13 +113,11 @@ static int tdb_munmap(TDB_CONTEXT *tdb)
 	if (tdb->flags & TDB_INTERNAL)
 		return 0;
 
-#ifdef HAVE_MMAP
 	if (tdb->map_ptr) {
 		int ret = munmap(tdb->map_ptr, tdb->map_size);
 		if (ret != 0)
 			return ret;
 	}
-#endif
 	tdb->map_ptr = NULL;
 	return 0;
 }
@@ -129,7 +127,6 @@ static void tdb_mmap(TDB_CONTEXT *tdb)
 	if (tdb->flags & TDB_INTERNAL)
 		return;
 
-#ifdef HAVE_MMAP
 	if (!(tdb->flags & TDB_NOMMAP)) {
 		tdb->map_ptr = mmap(NULL, tdb->map_size, 
 				    PROT_READ|(tdb->read_only? 0:PROT_WRITE), 
@@ -147,9 +144,6 @@ static void tdb_mmap(TDB_CONTEXT *tdb)
 	} else {
 		tdb->map_ptr = NULL;
 	}
-#else
-	tdb->map_ptr = NULL;
-#endif
 }
 
 /* Endian conversion: we only ever deal with 4 byte quantities */
