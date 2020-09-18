@@ -937,9 +937,6 @@ static int tdb_new_database(TDB_CONTEXT *tdb, int hash_size)
 	/* Fill in the header */
 	newdb->version = TDB_VERSION;
 	newdb->hash_size = hash_size;
-#ifdef USE_SPINLOCKS
-	newdb->rwlocks = size;
-#endif
 	if (tdb->flags & TDB_INTERNAL) {
 		tdb->map_size = size;
 		tdb->map_ptr = (char *)newdb;
