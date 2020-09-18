@@ -12,31 +12,34 @@
 #include "config.h"
 #include "volume.h"
 
-#if defined(HAVE_SYS_VFS_H) || defined( sun )
+#if defined(HAVE_SYS_VFS_H)
 #include <sys/vfs.h>
-#endif /* HAVE_SYS_VFS_H || sun || ibm032 */
+#endif /* HAVE_SYS_VFS_H */
 
-/* temp fix, was: defined(HAVE_SYS_STATVFS) || defined(__svr4__) */
-#if defined(__svr4__) || (defined(__NetBSD__) && (__NetBSD_Version__ >= 200040000))
+#if defined(HAVE_STATFS_H) 
+#include <sys/statfs.h>
+/* this might not be right. */
+#define f_mntfromname f_fname
+#endif /* HAVE_STATFS_H */
+
+#if defined(__svr4__) || defined(__NetBSD__)
 #include <sys/statvfs.h>
 #define statfs statvfs
-#else /* HAVE_SYS_STATVFS || __svr4__ */
+#else
 #define	f_frsize f_bsize
-#endif /* USE_STATVFS_H */
+#endif /* __svr4__ || __NetBSD__ */
 
 #if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-
-#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
-    defined(linux)
+#if defined(HAVE_SYS_MOUNT_H)
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux */
+#endif /* HAVE_SYS_MOUNT_H */
 
-#if defined(linux) || defined(HAVE_MNTENT_H)
+#if defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif /* linux || HAVE_MNTENT_H */
+#endif /* HAVE_MNTENT_H */
 
 
 #ifndef NO_QUOTA_SUPPORT
