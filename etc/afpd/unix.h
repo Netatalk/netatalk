@@ -28,9 +28,6 @@
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-#if defined(__DragonFly__)
-#define dqblk ufs_dqblk
-#endif
 
 #if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
     defined(linux)
