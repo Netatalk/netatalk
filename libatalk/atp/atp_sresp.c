@@ -52,8 +52,8 @@ int atp_sresp(
 {
     int			i;
     u_int8_t		ctrlinfo;
-    struct atpbuf	*resp_buf;
-    struct atpbuf	*save_buf; /* uninitialized, OK 310105 */
+    struct atpbuf	*resp_buf = NULL;
+    struct atpbuf	*save_buf = NULL;
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_sresp" );
