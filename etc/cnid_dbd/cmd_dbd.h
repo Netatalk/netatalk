@@ -28,12 +28,12 @@ extern int nocniddb; /* Dont open CNID database, only scan filesystem */
 extern int db_locked; /* have we got the fcntl lock on lockfd ? */
 extern volatile sig_atomic_t alarmed;
 
-extern void dbd_log(enum logtype lt, char *fmt, ...);
-extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
+void dbd_log(enum logtype lt, char *fmt, ...);
+int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
 
 /*
   Functions for querying the database which couldn't be reused from the existing
   funcs pool of dbd_* for one reason or another
 */
-extern int cmd_dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
+int cmd_dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 #endif /* CMD_DBD_H */

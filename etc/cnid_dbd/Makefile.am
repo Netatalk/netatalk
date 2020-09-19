@@ -32,4 +32,4 @@ noinst_HEADERS = dbif.h pack.h db_param.h dbd.h usockfd.h comm.h cmd_dbd.h
 
 EXTRA_DIST = README
 
-AM_CFLAGS = @BDB_CFLAGS@ -D_PATH_CNID_DBD=\"$(sbindir)/cnid_dbd\"
+AM_CFLAGS = @BDB_CFLAGS@ -D_PATH_CNID_DBD=\"$(sbindir)/cnid_dbd\" -Wno-missing-braces
