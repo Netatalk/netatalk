@@ -786,11 +786,9 @@ struct interface *newiface( const char *name)
     strlcpy( niface->i_name, name, sizeof(niface->i_name));
 #ifdef BSD4_4
     niface->i_addr.sat_len = sizeof( struct sockaddr_at );
-#endif /* BSD4_4 */
-    niface->i_addr.sat_family = AF_APPLETALK;
-#ifdef BSD4_4
     niface->i_caddr.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
+    niface->i_addr.sat_family = AF_APPLETALK;
     niface->i_caddr.sat_family = AF_APPLETALK;
 #ifdef linux
     niface->i_flags = IFACE_ALLMULTI;
