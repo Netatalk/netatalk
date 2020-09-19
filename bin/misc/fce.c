@@ -33,16 +33,6 @@ static char *fce_ev_names[] = {
     "FCE_TM_SIZE"
 };
 
-// get sockaddr, IPv4 or IPv6:
-static void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
 static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
 {
     unsigned char *p = buf;
@@ -79,7 +69,6 @@ int main(void)
     struct sockaddr_storage their_addr;
     unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
-    char s[INET6_ADDRSTRLEN];
     uint64_t tmsize;
 
     memset(&hints, 0, sizeof hints);
