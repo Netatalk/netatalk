@@ -108,7 +108,6 @@ int main(int argc, char **argv)
     struct sockaddr_storage their_addr;
     unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
-    char s[INET6_ADDRSTRLEN];
     char *host = "localhost";
 
     while ((c = getopt(argc, argv, "h:")) != -1) {
