@@ -657,12 +657,9 @@ void setuplog(const char *logstr)
 
 void unsetuplog(const char *logstr)
 {
-    char *str, *logtype, *filename;
+    char *str, *filename;
 
     str = strdup(logstr);
-
-    /* logtype */
-    logtype = str;
 
     /* get filename, can be NULL */
     strtok(str, " \t");
