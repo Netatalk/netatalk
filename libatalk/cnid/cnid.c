@@ -36,7 +36,6 @@
 static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
 
 static sigset_t sigblockset;
-static const struct itimerval none = {{0, 0}, {0, 0}};
 
 /* Registers new CNID backend module. */
 
