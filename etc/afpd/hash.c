@@ -58,7 +58,6 @@ static const char rcsid[] = "$Id: hash.c,v 1.4 2009-11-19 10:37:43 franklahm Exp
 static hnode_t *hnode_alloc(void *context);
 static void hnode_free(hnode_t *node, void *context);
 static hash_val_t hash_fun_default(const void *key);
-static hash_val_t hash_fun2(const void *key);
 static int hash_comp_default(const void *key1, const void *key2);
 
 int hash_val_t_bit;
@@ -847,6 +846,13 @@ static hash_val_t hash_fun_default(const void *key)
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
+static int hash_comp_default(const void *key1, const void *key2)
+{
+	return strcmp(key1, key2);
+}
+
+#ifdef KAZLIB_TEST_MAIN
+
 static hash_val_t hash_fun2(const void *key)
 {
     int len, rem;
@@ -893,13 +899,6 @@ static hash_val_t hash_fun2(const void *key)
 
     return hash;
 }
-
-static int hash_comp_default(const void *key1, const void *key2)
-{
-    return strcmp(key1, key2);
-}
-
-#ifdef KAZLIB_TEST_MAIN
 
 #include <stdio.h>
 #include <ctype.h>
