@@ -57,8 +57,8 @@ struct pspage_st {
     struct pspage_st	*nextpage;
     struct pspage_st	*prevpage;
     off_t		offset;
-    char		lable[ LABELLEN ];
-    char		ord[ ORDLEN ];
+    char		lable[ LABELLEN + 1 ];
+    char		ord[ ORDLEN + 1 ];
 };
 
 #define NUMLEN		10
@@ -66,8 +66,8 @@ struct pspage_st {
 struct pages_st {
     off_t		offset;
     off_t		end;
-    char		num[ NUMLEN ];
-    char		order[ ORDERLEN ];
+    char		num[ NUMLEN + 1 ];
+    char		order[ ORDERLEN + 1 ];
 };
 
 struct psinfo_st {
