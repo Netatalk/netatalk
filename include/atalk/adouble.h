@@ -552,11 +552,4 @@ extern int ad_readfile_init(const struct adouble *ad,
 				       const int end);
 #endif
 
-#if 0
-#ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile (struct adouble *, const int,
-                                 const int, off_t, const int, const size_t);
-#endif /* HAVE_SENDFILE_WRITE */
-#endif /* 0 */
-
 #endif /* _ATALK_ADOUBLE_H */
