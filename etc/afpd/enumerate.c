@@ -77,11 +77,6 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 
     memcpy( sd->sd_last, de->d_name, len + 1 );
     sd->sd_last += len + 1;
-#if 0
-    *(sd->sd_last)++ = lenm;
-    memcpy( sd->sd_last, mname, lenm + 1 );
-    sd->sd_last += lenm + 1;
-#endif
     return 0;
 }
 
@@ -508,4 +503,3 @@ int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen,
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 2);
 }
-
