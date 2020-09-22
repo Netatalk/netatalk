@@ -398,9 +398,7 @@ static void volset(struct vol_option *options, struct vol_option *save,
         volname[vlen] = 0;
         return;
     }
-#if 0
     LOG(log_debug, logtype_afpd, "Parsing volset %s", val);
-#endif
     if (optionok(tmp, "allow:", val)) {
         setoption(options, save, VOLOPT_ALLOW, val);
 

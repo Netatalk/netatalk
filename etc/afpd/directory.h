@@ -65,16 +65,6 @@
  * to get something meaningful */
 #ifndef AFS
 
-#if 0
-#define CNID_XOR(a)  (((a) >> 16) ^ (a))
-#define CNID_DEV(a)   ((((CNID_XOR(major((a)->st_dev)) & 0xf) << 3) | \
-	(CNID_XOR(minor((a)->st_dev)) & 0x7)) << 24)
-#define CNID_INODE(a) (((a)->st_ino ^ (((a)->st_ino & 0xff000000) >> 8)) \
-				       & 0x00ffffff)
-#define CNID_FILE(a)  (((a) & 0x1) << 31)
-#define CNID(a,b)     (CNID_DEV(a) | CNID_INODE(a) | CNID_FILE(b))
-#endif
-
 #define CNID(a,b)     ((a)->st_ino & 0xffffffff)
 
 #else /* AFS */

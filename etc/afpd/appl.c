@@ -149,53 +149,6 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
     }
     return( p );
 
-
-#if 0
-    char buffer[12 + MAXPATHLEN + 1];
-    int buflen = 12 + MAXPATHLEN + 1;
-    char *ret = mpath;
-    char *path = name;
-    char *uname = NULL;
-    struct bstrList *pathlist = NULL;
-    cnid_t cnid = dir->d_pdid;
-
-    /* Create list for path elements, request 16 list elements for now*/
-    if ((pathlist = bstListCreateMin(16)) == NULL) {
-        LOG(log_error, logtype_afpd, "makemacpath: OOM: %s", strerror(errno));
-        return NULL;
-    }
-
-    while ( cnid != DIRDID_ROOT ) {
-
-        /* construct path, copy already found uname to path element list*/
-        if ((bstrListPush(pathlist, bfromcstr(path))) != BSTR_OK) {
-            afp_errno = AFPERR_MISC;
-            ret = NULL;
-            goto exit;
-        }
-
-        /* next part */
-        if ((uname = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) {
-            afp_errno = AFPERR_NOOBJ;
-            ret = NULL;
-            goto exit;
-        }
-
-        if ((path = utompath(vol, uname, cnid, utf8_encoding())) == NULL) {
-            afp_errno = AFPERR_MISC;
-            ret = NULL;
-            goto exit;
-        }
-    }
-
-
-
-exit:
-    if (pathlist)
-        bstrListDestroy(pathlist);
-
-    return(ret);
-#endif
 }
 
 

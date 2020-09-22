@@ -404,17 +404,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->uamlist = opt;
 
     if ((c = getoption(buf, "-ipaddr"))) {
-#if 0
-        struct in_addr inaddr;
-        if (inet_aton(c, &inaddr) && (opt = strdup(c))) {
-            if (!gethostbyaddr((const char *) &inaddr, sizeof(inaddr), AF_INET))
-                LOG(log_info, logtype_afpd, "WARNING: can't find %s", opt);
-            options->ipaddr = opt;
-        }
-        else {
-            LOG(log_error, logtype_afpd, "Error parsing -ipaddr, is %s in numbers-and-dots notation?", c);
-        }
-#endif
         options->ipaddr = strdup(c);
     }
 

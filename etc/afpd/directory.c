@@ -1029,87 +1029,6 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     return 0;
 }
 
-#if 0 /* unused */
-/*!
- * @brief Modify a struct dir, adjust cache
- *
- * Any value that is 0 or NULL is not changed. If new_uname is NULL it is set to new_mname.
- * If given new_uname == new_mname, new_uname will point to new_mname.
- *
- * @param vol       (r) pointer to struct vol
- * @param dir       (rw) pointer to struct dir
- * @param pdid      (r) new parent DID
- * @param did       (r) new DID
- * @param new_mname (r) new mac-name
- * @param new_uname (r) new unix-name
- * @param pdir_fullpath (r) new fullpath of parent dir
- */
-int dir_modify(const struct vol *vol,
-               struct dir *dir,
-               cnid_t pdid,
-               cnid_t did,
-               const char *new_mname,
-               const char *new_uname,
-               bstring pdir_fullpath)
-{
-    int ret = 0;
-
-    /* Remove it from the cache */
-    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-
-    if (pdid)
-        dir->d_pdid = pdid;
-    if (did)
-        dir->d_did = did;
-
-    if (new_mname) {
-        /* free uname if it's not the same as mname */
-        if (dir->d_m_name != dir->d_u_name)
-            bdestroy(dir->d_u_name);
-
-        if (new_uname == NULL)
-            new_uname = new_mname;
-
-        /* assign new name */
-        if ((bassigncstr(dir->d_m_name, new_mname)) != BSTR_OK) {
-            LOG(log_error, logtype_afpd, "dir_modify: bassigncstr: %s", strerror(errno) );
-            return -1;
-        }
-
-        if (new_mname == new_uname || (strcmp(new_mname, new_uname) == 0)) {
-            dir->d_u_name = dir->d_m_name;
-        } else {
-            if ((dir->d_u_name = bfromcstr(new_uname)) == NULL) {
-                LOG(log_error, logtype_afpd, "dir_modify: bassigncstr: %s", strerror(errno) );
-                return -1;
-            }
-        }
-    }
-
-    if (pdir_fullpath) {
-        if (bassign(dir->d_fullpath, pdir_fullpath) != BSTR_OK)
-            return -1;
-        if (bcatcstr(dir->d_fullpath, "/") != BSTR_OK)
-            return -1;
-        if (bcatcstr(dir->d_fullpath, new_uname) != BSTR_OK)
-            return -1;
-    }
-
-    if (dir->d_m_name_ucs2)
-        free(dir->d_m_name_ucs2);
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, -1, (char**)&dir->d_m_name_ucs2))
-        dir->d_m_name_ucs2 = NULL;
-
-    /* Re-add it to the cache */
-    if ((dircache_add(vol, dir)) != 0) {
-        dircache_dump();
-        AFP_PANIC("dir_modify");
-    }
-
-    return ret;
-}
-#endif
-
 /*!
  * @brief Resolve a catalog node name path
  *
@@ -2650,34 +2569,9 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 */
 int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-#if 0
-    struct vol   *vol;
-    struct dir   *dir;
-    u_int16_t    vid;
-    u_int32_t    did;
-#endif /* 0 */
-
     *rbuflen = 0;
 
     /* do nothing as dids are static for the life of the process. */
-#if 0
-    ibuf += 2;
-
-    memcpy(&vid,  ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
-        return( AFPERR_PARAM );
-    }
-
-    memcpy( &did, ibuf, sizeof( did ));
-    ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_PARAM );
-    }
-
-    /* dir_remove -- deletedid */
-#endif /* 0 */
-
     return AFP_OK;
 }
 

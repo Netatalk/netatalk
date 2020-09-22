@@ -19,15 +19,6 @@
 #include <sys/socket.h>
 #include <atalk/logger.h>
 
-#if 0
-#ifdef BSD4_4
-#include <sys/param.h>
-#ifndef HAVE_GETHOSTID
-#include <sys/sysctl.h>
-#endif /* HAVE_GETHOSTID */
-#endif /* BSD4_4 */
-#endif
-
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
 #include <atalk/dsi.h>

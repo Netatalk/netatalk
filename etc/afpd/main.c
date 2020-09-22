@@ -355,10 +355,6 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGALRM);
     sigaddset(&sigs, SIGHUP);
     sigaddset(&sigs, SIGUSR1);
-#if 0
-    /* don't block SIGTERM */
-    sigaddset(&sigs, SIGTERM);
-#endif
     sigaddset(&sigs, SIGCHLD);
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
