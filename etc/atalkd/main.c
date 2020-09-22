@@ -1147,10 +1147,6 @@ int main( int ac, char **av)
 
     sigemptyset( &signal_set );
     sigaddset(&signal_set, SIGALRM);
-#if 0
-    /* don't block SIGTERM */
-    sigaddset(&signal_set, SIGTERM);
-#endif
     sigaddset(&signal_set, SIGUSR1);
 
     for (;;) {
@@ -1336,10 +1332,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 
     /* open ports */
     i = 1; /* enable broadcasts */
-#if 0
-    /* useless message, no? */
-    LOG(log_info, logtype_atalkd, "setsockopt incompatible w/ Solaris STREAMS module.");
-#endif /* __svr4__ */
+
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if (( ap->ap_fd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
 	    LOG(log_error, logtype_atalkd, "socket: %s", strerror(errno) );
