@@ -935,6 +935,8 @@ int main( int ac, char **av)
      */
     if ( readconf( configfile ) < 0 && getifconf() < 0 ) {
 	fprintf( stderr, "%s: can't get interfaces, exiting.\n", prog );
+	if (interfaces != NULL)
+		free(interfaces);
 	exit( 1 );
     }
 
