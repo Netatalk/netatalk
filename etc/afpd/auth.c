@@ -260,7 +260,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
                         fp = fopen(nodename, "w");
                         fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                         fclose(fp);
-                        chown( nodename, pwd->pw_uid, -1 );
+                        if (chown(nodename, pwd->pw_uid, -1) < 0)
+                            LOG(log_error, logtype_afpd, "could not chown %s (%s)", nodename, strerror(errno));)
                     } else { /* somebody is messing with us */
                         LOG(log_error, logtype_afpd, "print authfile %s is not a normal file, it will not be modified", nodename );
                     }
@@ -268,7 +269,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
                     fp = fopen(nodename, "w");
                     fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                     fclose(fp);
-                    chown( nodename, pwd->pw_uid, -1 );
+		    if (chown(nodename, pwd->pw_uid, -1) < 0)
+		        LOG(log_error, logtype_afpd, "could not chown %s (%s)", nodename, strerror(errno));)
                 }
             } /* if (addr_net && addr_node ) */
         } /* if (options->authprintdir) */
