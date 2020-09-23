@@ -334,7 +334,8 @@ static int check_adfile(const char *fname, const struct stat *st)
         ad_flush(&ad);
         ad_close_metadata(&ad);
 
-        chown(adname, st->st_uid, st->st_gid);
+        if (chown(adname, st->st_uid, st->st_gid) < 0)
+            dbd_log(LOGSTD, "Could not chown \"%s\" (%s)", adname, strerror(errno));
         /* FIXME: should we inherit mode too here ? */
 #if 0
         chmod(adname, st->st_mode);
@@ -517,8 +518,10 @@ static int check_addir(int volroot)
             dbd_log( LOGSTD, "Couldnt stat %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
-        chown(ADv2_DIRNAME, st.st_uid, st.st_gid);
-        chown(myvolinfo->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid);
+        if (chown(ADv2_DIRNAME, st.st_uid, st.st_gid) < 0)
+            dbd_log(LOGSTD, "chown failed: \"%s\"", ADv2_DIRNAME);
+        if (chown(myvolinfo->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid) < 0)
+            dbd_log(LOGSTD, "chown failed: \"%s\"", myvolinfo->ad_path(".", ADFLAGS_DIR));
     }
 
     return 0;
@@ -1026,7 +1029,8 @@ static int dbd_readdir(int volroot, cnid_t did)
 
             ret = dbd_readdir(0, cnid);
 
-            fchdir(cwd);
+            if (fchdir(cwd) < 0)
+                dbd_log(LOGSTD, "Cant chdir to directory '%i': %s", cwd, strerror(errno));
             close(cwd);
             *(strrchr(cwdbuf, '/')) = 0;
             if (ret < 0)
@@ -1066,7 +1070,8 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     if (myvolinfo->v_path[strlen(myvolinfo->v_path) - 1] == '/')
         myvolinfo->v_path[strlen(myvolinfo->v_path) - 1] = 0;
     strcpy(cwdbuf, myvolinfo->v_path);
-    chdir(myvolinfo->v_path);
+    if (chdir(myvolinfo->v_path) < 0)
+        dbd_log(LOGSTD, "chdir failed: \"%s\"", myvolinfo->v_path);
 
     /* Start recursion */
     if (dbd_readdir(1, htonl(2)) < 0)  /* 2 = volumeroot CNID */
@@ -1276,9 +1281,12 @@ exit:
             char cmd[8 + MAXPATHLEN];
             snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", tmpdb_path);
             dbd_log( LOGDEBUG, "Removing temp database '%s'", tmpdb_path);
-            system(cmd);
-            snprintf(cmd, 8 + MAXPATHLEN, "rmdir %s", tmpdb_path);
-            system(cmd);
+			if (system(cmd) < 0)
+				dbd_log(LOGDEBUG, "Command failed \"%s\"", cmd);
+			snprintf(cmd, 8 + MAXPATHLEN, "rmdir %s",
+				 tmpdb_path);
+			if (system(cmd) < 0)
+				dbd_log(LOGDEBUG, "Command failed \"%s\"", cmd);
         }        
     }
     return ret;
