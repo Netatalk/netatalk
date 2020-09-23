@@ -277,7 +277,7 @@ int main(int ac, char **av)
 
     /* Default log setup: log to syslog */
     set_processname("afpd");
-    setuplog("default log_note");
+    setuplog("default log_info");
 
     /* Save the user's current umask */
     default_options.save_mask = umask( default_options.umask );
