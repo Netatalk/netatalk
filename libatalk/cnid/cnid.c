@@ -130,11 +130,27 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
     db = mod->cnid_open(&args);
 
     if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
-        seteuid(0);
-        if ( setegid(gid) < 0 || seteuid(uid) < 0) {
-            LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
-            exit(EXITERR_SYS);
-        }
+		if (geteuid() != 0) {
+			if (seteuid(0) < 0) {
+				LOG(log_error, logtype_afpd,
+				    "can't seteuid to 0 (%s)", strerror(errno));
+				exit(EXITERR_SYS);
+			}
+		}
+		if (gid != getegid() ) {
+			if (setegid(gid) < 0) {
+				LOG(log_error, logtype_afpd,
+				    "can't setegid to %i (%s)", gid, strerror(errno));
+				exit(EXITERR_SYS);
+			}
+		}
+		if (uid != geteuid() ) {
+			if (seteuid(uid) < 0) {
+				LOG(log_error, logtype_afpd,
+				    "can't seteuid to %i (%s)", uid, strerror(errno));
+				exit(EXITERR_SYS);
+			}
+		}
     }
 
     if (NULL == db) {
