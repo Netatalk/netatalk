@@ -1941,9 +1941,11 @@ void load_volumes(AFPObj *obj)
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);
         if ((pwent = getpwnam(obj->username))) {
-            seteuid(0);
+            if (seteuid(0) < 0)
+                LOG(log_error, logtype_afpd, "could not seteuid(%i)", 0);
             ret = set_groups(obj, pwent);
-            seteuid(obj->uid);
+            if (seteuid(obj->uid) < 0)
+                LOG(log_error, logtype_afpd, "could not seteuid(%i)", obj->uid);
             if (ret != 0) {
                 LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
                 return;

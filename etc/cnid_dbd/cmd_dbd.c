@@ -383,7 +383,8 @@ int main(int argc, char **argv)
 
         snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
-        system(cmd);
+        if (system(cmd) < 0)
+            dbd_log(LOGSTD, "Could not execute \"%s\" (%s)", cmd, strerror(errno));
         if ((mkdir(dbpath, 0755)) != 0) {
             dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
             exit(EXIT_FAILURE);
