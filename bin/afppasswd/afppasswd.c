@@ -81,7 +81,8 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 
   if (keyfd > -1) {
     lseek(keyfd, 0, SEEK_SET);
-    read(keyfd, key, sizeof(key));
+    if (read(keyfd, key, sizeof(key)) < 0)
+      fprintf(stderr, "could not read key (%s)\n", strerror(errno));
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
