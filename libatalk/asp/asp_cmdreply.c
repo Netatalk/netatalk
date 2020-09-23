@@ -35,10 +35,6 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-#if defined(BSD) || defined(BSD4_3)
-#define memmove(a, b, n)   bcopy((b), (a), (n))
-#endif /* BSD || BSD4_3 */
-
 int asp_cmdreply(ASP asp, int result)
 {
     struct iovec	iov[ ASP_MAXPACKETS ];
