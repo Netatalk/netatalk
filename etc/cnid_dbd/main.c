@@ -345,8 +345,10 @@ int main(int argc, char *argv[])
 
     if (delete_bdb && (db_locked == LOCK_EXCL)) {
         LOG(log_warning, logtype_cnid, "main: too many CNID db opening attempts, wiping the slate clean");
-        chdir(dbpath);
-        system("rm -f cnid2.db lock log.* __db.*");
+        if (chdir(dbpath) < 0)
+            LOG(log_error, logtype_cnid, "main: could not chdir to \"%s\"", dbpath, strerror(errno));
+        if (system("rm -f cnid2.db lock log.* __db.*") < 0)
+            LOG(log_error, logtype_cnid, "main: could not rm things");
         if ((db_locked = get_lock(LOCK_EXCL, dbpath)) != LOCK_EXCL) {
             LOG(log_error, logtype_cnid, "main: fatal db lock error");
             exit(EXIT_FAILURE);
