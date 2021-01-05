@@ -548,8 +548,10 @@ static int catsearch(struct vol *vol,
 		if (!error && dirpos == NULL)
 			dirpos = opendir(".");
 
-		if (dirpos == NULL)
-			dirpos = opendir(bdata(currentdir->d_fullpath));
+		if (dirpos == NULL) {
+			const char *temp = bdata(currentdir->d_fullpath);
+			dirpos = opendir(temp);
+		}
 
 		if (error || dirpos == NULL) {
 			switch (errno) {
