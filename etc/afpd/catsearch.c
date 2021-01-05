@@ -141,7 +141,7 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 	/* check if we have some space on stack... */
 	if (dsidx >= dssize) {
 		dssize += DS_BSIZE;
-		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));	
+		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));
 		if (tmpds == NULL) {
             clearstack();
             free(dstack);
@@ -183,13 +183,13 @@ static int reducestack(void)
 static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adouble *adp)
 {
 	static struct adouble ad;
-	
+
 	struct ofork *of;
 	int isdir;
-	
+
 	if (adp)
 	    return adp;
-	
+
 	isdir  = S_ISDIR(path->st.st_mode);
 
 	if (!isdir && (of = of_findname(vol, path))) {
@@ -203,7 +203,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
         adp = NULL; /* FIXME without resource fork adl_lkup will be call again */
     }
 
-	return adp;	
+	return adp;
 }
 
 /* -------------------- */
@@ -225,7 +225,7 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, stru
 {
 	packed_finder  buf;
 	void           *ptr;
-	
+
     *adp = adl_lkup(vol, path, *adp);
 	ptr = get_finderinfo(vol, path->u_name, *adp, &buf,islnk);
 	return unpack_buffer(finfo, ptr);
@@ -269,7 +269,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	/*retry with the right id */
 
         	cnid_t id;
-        	
+
         	adp = adl_lkup(vol, path, adp);
         	id = get_id(vol, adp, &path->st, path->d_dir->d_did, path->u_name, strlen(path->u_name));
         	if (!id) {
@@ -283,7 +283,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	}
         }
 	}
-		
+
 	/* Kind of optimization:
 	 * -- first check things we've already have - filename
 	 * -- last check things we get from ad_open()
@@ -302,7 +302,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 			if (strcasecmp_w((ucs2_t*) convbuf, (ucs2_t*) c1.lname) != 0)
 				goto crit_check_ret;
 	}
-	
+
 	if ((c1.rbitmap & (1<<FILPBIT_PDINFO))) {
 		if ( (size_t)(-1) == (len = convert_charset( CH_UTF8_MAC, CH_UCS2, CH_UTF8, path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
 			goto crit_check_ret;
@@ -330,7 +330,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if (path->st.st_mtime < c1.mdate || path->st.st_mtime > c2.mdate)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check for creation date... */
 	if ((c1.rbitmap & (1<<DIRPBIT_CDATE))) {
 		c_date = path->st.st_mtime;
@@ -352,7 +352,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if (b_date < c1.bdate || b_date > c2.bdate)
 			goto crit_check_ret;
 	}
-				
+
 	/* Check attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_ATTR)) && c2.attr != 0) {
 		if ((adp = adl_lkup(vol, path, adp))) {
@@ -361,7 +361,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 				goto crit_check_ret;
 		} else
 			goto crit_check_ret;
-	}		
+	}
 
         /* Check file type ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
@@ -369,7 +369,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if (finfo->f_type != c1.finfo.f_type)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check creator ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
 		if (!finfo) {
@@ -378,7 +378,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if (finfo->creator != c1.finfo.creator)
 			goto crit_check_ret;
 	}
-		
+
 	/* Check finder info attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
 		if (!finfo) {
@@ -388,7 +388,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check label */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
 		if (!finfo) {
@@ -396,9 +396,9 @@ static int crit_check(struct vol *vol, struct path *path) {
 		}
 		if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 			goto crit_check_ret;
-	}	
+	}
 	/* FIXME: Attributes check ! */
-	
+
 	/* All criteria are met. */
 	result |= 1;
 crit_check_ret:
@@ -429,7 +429,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 	if (ext) {
 		*p++ = 0;                  /* Pad */
 	}
-	
+
 	if ( isdir ) {
         ret = getdirparams(obj, vol, c1.dbitmap, path, path->d_dir, p , &tbuf );
 	}
@@ -459,7 +459,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 
 	return 1;
 }
-	
+
 #define VETO_STR \
         "./../.AppleDouble/.AppleDB/Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/.AppleDesktop/.Parent/"
 
@@ -519,7 +519,7 @@ static int catsearch(const AFPObj *obj,
 			closedir(dirpos);
 			dirpos = NULL;
 		}
-		
+
 		if (addstack(vpath, dir, -1) == -1) {
 			result = AFPERR_MISC;
 			goto catsearch_end;
@@ -532,7 +532,7 @@ static int catsearch(const AFPObj *obj,
         result = AFPERR_MISC;
         goto catsearch_end;
     }
-	
+
 	/* So we are beginning... */
     start_time = time(NULL);
 
@@ -548,8 +548,10 @@ static int catsearch(const AFPObj *obj,
 		if (!error && dirpos == NULL)
 			dirpos = opendir(".");
 
-		if (dirpos == NULL)
-			dirpos = opendir(cfrombstr(currentdir->d_fullpath));
+		if (dirpos == NULL) {
+			const char *temp = cfrombstr(currentdir->d_fullpath);
+			dirpos = opendir(temp);
+		}
 
 		if (error || dirpos == NULL) {
 			switch (errno) {
@@ -569,7 +571,7 @@ static int catsearch(const AFPObj *obj,
 			goto catsearch_end;
 		}
 
-		
+
 		while ((entry = readdir(dirpos)) != NULL) {
 			(*pos)++;
 
@@ -618,7 +620,7 @@ static int catsearch(const AFPObj *obj,
 					}
                 }
                 path.m_name = cfrombstr(path.d_dir->d_m_name);
-                	
+
 				if (addstack(path.u_name, path.d_dir, cidx) == -1) {
 					result = AFPERR_MISC;
 					goto catsearch_end;
@@ -636,7 +638,7 @@ static int catsearch(const AFPObj *obj,
 			/* bit 0 means that criteria has been met */
 			if ((ccr & 1)) {
 				r = rslt_add (obj, vol, &path, &rrbuf, ext);
-				
+
 				if (r == 0) {
 					result = AFPERR_MISC;
 					goto catsearch_end;
@@ -754,7 +756,7 @@ static int catsearch_db(const AFPObj *obj,
             goto catsearch_end;
         }
     }
-	
+
 	while (cur_pos < num_matches) {
         char *name;
         cnid_t cnid, did;
@@ -973,9 +975,9 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     /* Finder info */
     if (c1.rbitmap & (1 << FILPBIT_FINFO)) {
     	packed_finder buf;
-    	
+
 	    memcpy(buf, spec1, sizeof(buf));
-	    unpack_buffer(&c1.finfo, buf);    	
+	    unpack_buffer(&c1.finfo, buf);
 	    spec1 += sizeof(buf);
 
 	    memcpy(buf, spec2, sizeof(buf));
@@ -1003,14 +1005,14 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
     /* Long name */
     if (c1.rbitmap & (1 << FILPBIT_LNAME)) {
-        /* Get the long filename */	
+        /* Get the long filename */
 		memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
 		tmppath[(bspec1 + spec1[1])[0]]= 0;
 		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, -1, c1.lname, sizeof(c1.lname));
         if (len == (size_t)(-1))
             return AFPERR_PARAM;
 
-#if 0	
+#if 0
 		/* FIXME: do we need it ? It's always null ! */
 		memcpy(c2.lname, bspec2 + spec2[1] + 1, (bspec2 + spec2[1])[0]);
 		c2.lname[(bspec2 + spec2[1])[0]]= 0;
