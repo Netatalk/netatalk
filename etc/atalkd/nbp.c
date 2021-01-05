@@ -75,6 +75,9 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     int         n, i, cc, locallkup;
     u_char      tmplen;
 
+    /* initialize per valgrind */
+    memset(&sat, 0, sizeof (struct sockaddr_at));
+
     end = data + len;
     if ( data >= end ) {
         LOG(log_info, logtype_atalkd, "nbp_packet malformed packet" );
