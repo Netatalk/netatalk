@@ -16,20 +16,8 @@
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 
-/* POSIX.1 check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
-#ifndef WEXITSTATUS 
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#endif /* ! WEXITSTATUS */
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif /* ! WIFEXITED */
-#ifndef WIFSTOPPED
-#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
-#endif
 
 #include <errno.h>
 #include <net/if.h>
@@ -74,23 +62,6 @@
 /* Forward Declarations */
 int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
 
-/* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
-#ifndef SOCKLEN_T
-#define SOCKLEN_T unsigned int
-#endif /* SOCKLEN_T */
-
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(x)	((x).w_retcode)
-#endif /* WEXITSTATUS */
-
-/* linux has a special ioctl for appletalk device destruction.  as of
- * 2.1.57, SIOCDIFADDR works w/ linux. okay, we need to deal with the
- * fact that SIOCDIFADDR may be defined on linux despite the fact that
- * it doesn't work. */
-#if !defined(SIOCDIFADDR) && defined(SIOCATALKDIFADDR)
-#define SIOCDIFADDR SIOCATALKDIFADDR
-#endif
-
 #define elements(a)	(sizeof(a)/sizeof((a)[0]))
 
 #define PKTSZ	1024
@@ -134,16 +105,13 @@ int writeconf( char * );
  * everywhere. we delete interfaces here instead of in as_down. */
 static void atalkd_exit(const int i)
 {
-#ifdef SIOCDIFADDR
   struct interface *iface;
 
   for (iface = interfaces; iface; iface = iface->i_next) {
     if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
-#ifdef SIOCATALKDIFADDR
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
+#if defined(__linux__)
       if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr)) 
 	continue;
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKIFADDR */
       LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
@@ -154,7 +122,6 @@ static void atalkd_exit(const int i)
         ifsetallmulti(iface->i_name, 0);
 #endif /* linux */
   }
-#endif /* SOPCDOFADDR */
 
   server_unlock(pidfile);
   exit(i);
@@ -842,9 +809,6 @@ as_down(int sig _U_)
 
 int main( int ac, char **av)
 {
-    extern char         *optarg;
-    extern int          optind;
-
     struct sockaddr_at	sat;
     struct sigaction	sv;
     struct itimerval	it;
@@ -855,7 +819,7 @@ int main( int ac, char **av)
     struct atport	*ap;
     fd_set		readfds;
     int			i, c;
-    SOCKLEN_T 		fromlen;
+    socklen_t 		fromlen;
     char		*prog;
 
     while (( c = getopt( ac, av, "12qsdtf:P:v" )) != EOF ) {
@@ -1028,17 +992,13 @@ int main( int ac, char **av)
 #endif /* __svr4__ */
 
     /* delete pre-existing interface addresses. */
-#ifdef SIOCDIFADDR
     for (iface = interfaces; iface; iface = iface->i_next) {
       if (ifconfig(iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
-#ifdef SIOCATALKDIFADDR
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
+#if defined(__linux__)
 	ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr);
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKDIFADDR */
       }
     }
-#endif /* SIOCDIFADDR */
 
     /*
      * Disassociate. The child will send itself a signal when it is
@@ -1358,18 +1318,16 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	    LOG(log_error, logtype_atalkd, "bind %u.%u:%u: %s",
 		    ntohs( sat.sat_addr.s_net ),
 		    sat.sat_addr.s_node, sat.sat_port, strerror(errno) );
-#ifdef SIOCDIFADDR
 	    /* remove all interfaces if we have a problem with bind */
 	    for (iface = interfaces; iface; iface = iface->i_next) {
 	      if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr )) {
-#ifdef SIOCATALKDIFADDR
+#if defined(__linux__)
 #if (SIOCDIFADDR != SIOCATALKDIFADDR)
 		ifconfig( iface->i_name, SIOCATALKDIFADDR, &iface->i_addr );
 #endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKDIFADDR */
 	      }
 	    }
-#endif /* SIOCDIFADDR */
 	    atalkd_exit( 1 );
 	}
     }
