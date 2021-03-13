@@ -78,7 +78,7 @@ expr                           {
         result_limit = "";
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
-                                 "{ %s . ?obj nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                 "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
                                  $1, ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
 }
