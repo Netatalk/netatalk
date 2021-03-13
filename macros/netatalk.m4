@@ -184,14 +184,22 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_install_prefix"], [Path to Tracker])
         AC_DEFINE_UNQUOTED([DBUS_DAEMON_PATH], ["$ac_cv_dbus_daemon"], [Path to dbus-daemon])
+
+        ac_cv_tracker_pkg_version_MAJOR=`echo $ac_cv_tracker_pkg_version | cut -d. -f1`
+        if test $ac_cv_tracker_pkg_version_MAJOR -ge 3 ; then
+          AC_DEFINE(HAVE_TRACKER3, 1, [Define if Tracker3 is used])
+        fi
     fi
 
     dnl Tracker Managing Command
     if test x"$ac_cv_have_tracker" = x"yes" ; then
-        AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker-control, , ["$ac_cv_tracker_prefix"/bin])
+        AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker3 tracker-control, , ["$ac_cv_tracker_prefix"/bin])
         if test x"$ac_cv_tracker_manage" = x"tracker" ; then
            TRACKER_MANAGING_COMMAND="tracker daemon"
            AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker daemon", [tracker managing command])
+        elif test x"$ac_cv_tracker_manage" = x"tracker3" ; then
+           TRACKER_MANAGING_COMMAND="tracker3 daemon"
+           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker3 daemon", [tracker managing command])
         elif test x"$ac_cv_tracker_manage" = x"tracker-control" ; then
            TRACKER_MANAGING_COMMAND="tracker-control"
            AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])

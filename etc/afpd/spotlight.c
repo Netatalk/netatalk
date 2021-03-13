@@ -581,6 +581,7 @@ static void slq_dump(void)
  * Tracker async callbacks
  ************************************************/
 
+#ifndef HAVE_TRACKER3
 static void tracker_con_cb(GObject      *object,
                            GAsyncResult *res,
                            gpointer      user_data)
@@ -600,6 +601,7 @@ static void tracker_con_cb(GObject      *object,
 
     LOG(log_info, logtype_sl, "connected to Tracker");
 }
+#endif
 
 static void tracker_cursor_cb(GObject      *object,
                               GAsyncResult *res,
@@ -1312,6 +1314,9 @@ int spotlight_init(AFPObj *obj)
     static bool initialized = false;
     const char *attributes;
     struct sl_ctx *sl_ctx;
+#ifdef HAVE_TRACKER3
+    GError *error = NULL;
+#endif
 
     if (initialized) {
         return 0;
@@ -1342,8 +1347,23 @@ int spotlight_init(AFPObj *obj)
     setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
     setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
+#ifdef HAVE_TRACKER3
+    sl_ctx->tracker_con = tracker_sparql_connection_bus_new ("org.freedesktop.Tracker3.Miner.Files",
+							     NULL, NULL, &error);
+
+    if (error) {
+        LOG(log_error, logtype_sl, "Could not connect to Tracker: %s",
+            error->message);
+        sl_ctx->tracker_con = NULL;
+        g_error_free(error);
+        return -1;
+    }
+
+    LOG(log_info, logtype_sl, "connected to Tracker3");
+#else
     tracker_sparql_connection_get_async(sl_ctx->cancellable,
                                         tracker_con_cb, sl_ctx);
+#endif
 
     initialized = true;
     return 0;

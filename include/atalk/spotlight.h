@@ -29,7 +29,9 @@
 #ifdef HAVE_TRACKER
 #include <gio/gio.h>
 #include <tracker-sparql.h>
+#ifndef HAVE_TRACKER3
 #include <libtracker-miner/tracker-miner.h>
+#endif
 #endif
 
 /******************************************************************************
