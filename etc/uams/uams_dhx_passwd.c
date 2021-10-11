@@ -81,6 +81,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     struct spwd *sp;
 #endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
+    const BIGNUM *pub_key;
     u_int16_t sessid;
     size_t i;
     DH *dh;
@@ -144,10 +145,18 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
       return AFPERR_PARAM;
     }
 
+    if (!DH_set0_pqg(dh, pbn, NULL, gbn)) {
+      BN_free(pbn);
+      BN_free(gbn);
+      goto passwd_fail;
+    }
+
     /* generate key and make sure we have enough space */
-    dh->p = pbn;
-    dh->g = gbn;
-    if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
+    if (!DH_generate_key(dh)) {
+      goto passwd_fail;
+    }
+    DH_get0_key(dh, &pub_key, NULL);
+    if (BN_num_bytes(pub_key) > KEYSIZE) {
       goto passwd_fail;
     }
 
@@ -164,7 +173,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     *rbuflen += sizeof(sessid);
     
     /* send our public key */
-    BN_bn2bin(dh->pub_key, (unsigned char *)rbuf); 
+    BN_bn2bin(pub_key, (unsigned char *)rbuf); 
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
 
