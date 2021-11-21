@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2012, Frank Lahm <franklahm@googlemail.com>
  * All rights reserved. See COPYRIGHT.
  */
