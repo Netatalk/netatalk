@@ -117,7 +117,8 @@ static void become_user_permanently(uid_t uid, gid_t gid)
  
     gain_root_privilege();
     gain_root_group_privilege();
- 
+    setgroups(0, NULL);
+
 #if USE_SETRESUID
     setresgid(gid,gid,gid);
     setgid(gid);
