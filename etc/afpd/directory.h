@@ -91,7 +91,7 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
-q_t *invalid_dircache_entries;
+extern q_t *invalid_dircache_entries;
 
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
