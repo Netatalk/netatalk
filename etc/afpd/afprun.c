@@ -108,8 +108,10 @@ static void gain_root_group_privilege(void)
  Become the specified uid and gid - permanently !
  there should be no way back if possible
 ****************************************************************************/
-static void become_user_permanently(uid_t uid, gid_t gid)
+static int become_user_permanently(uid_t uid, gid_t gid)
 {
+    int ret;
+
     /*
      * First - gain root privilege. We do this to ensure
      * we can lose it again.
@@ -117,37 +119,98 @@ static void become_user_permanently(uid_t uid, gid_t gid)
  
     gain_root_privilege();
     gain_root_group_privilege();
-    setgroups(0, NULL);
+    ret = setgroups(0, NULL);
+    if (ret != 0) {
+        return -1;
+    }
 
 #if USE_SETRESUID
-    setresgid(gid,gid,gid);
-    setgid(gid);
-    setresuid(uid,uid,uid);
-    setuid(uid);
+    ret = setresgid(gid,gid,gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setgid(gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setresuid(uid,uid,uid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
 #endif
  
 #if USE_SETREUID
-    setregid(gid,gid);
-    setgid(gid);
-    setreuid(uid,uid);
-    setuid(uid);
+    ret = setregid(gid,gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setgid(gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setreuid(uid,uid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
 #endif
  
 #if USE_SETEUID
-    setegid(gid);
-    setgid(gid);
-    setuid(uid);
-    seteuid(uid);
-    setuid(uid);
+    ret = setegid(gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setgid(gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = seteuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
 #endif
  
 #if USE_SETUIDX
-    setgidx(ID_REAL, gid);
-    setgidx(ID_EFFECTIVE, gid);
-    setgid(gid);
-    setuidx(ID_REAL, uid);
-    setuidx(ID_EFFECTIVE, uid);
-    setuid(uid);
+    ret = setgidx(ID_REAL, gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setgidx(ID_EFFECTIVE, gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setgid(gid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuidx(ID_REAL, uid);
+    if (ret != 0) {
+        return -1;
+    }
+    ret = setuidx(ID_EFFECTIVE, uid);
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = setuid(uid);
+    if (ret != 0) {
+        return -1;
+    }
 #endif
 }
 
@@ -161,7 +224,8 @@ int afprun(int root, char *cmd, int *outfd)
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();
-	
+    int ret;
+
     /* point our stdout at the file we want output to go into */
     if (outfd && ((*outfd = setup_out_fd()) == -1)) {
         return -1;
@@ -237,11 +301,14 @@ int afprun(int root, char *cmd, int *outfd)
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
     if (root) {
-    	become_user_permanently(0, 0);
+    	ret = become_user_permanently(0, 0);
     	uid = gid = 0;
     }
     else {
-    	become_user_permanently(uid, gid);
+    	ret = become_user_permanently(uid, gid);
+    }
+    if (ret != 0) {
+        exit(82);
     }
     if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
         /* we failed to lose our privileges - do not execute the command */
@@ -271,6 +338,7 @@ int afprun_bg(int root, char *cmd)
     uid_t uid = geteuid();
     gid_t gid = getegid();
     int fd, fdlimit = sysconf(_SC_OPEN_MAX);
+    int ret;
 
     LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, root ? 0 : uid);
 
@@ -298,10 +366,13 @@ int afprun_bg(int root, char *cmd)
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
     if (root) {
-        become_user_permanently(0, 0);
+        ret = become_user_permanently(0, 0);
         uid = gid = 0;
     } else {
-        become_user_permanently(uid, gid);
+        ret = become_user_permanently(uid, gid);
+    }
+    if (ret != 0) {
+        exit(82);
     }
 
     if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
