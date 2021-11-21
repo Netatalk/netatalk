@@ -2,6 +2,18 @@
  * Copyright (c) 2010 Mark Williams
  * Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/*
  * File change event API for netatalk
  *
  * for every detected filesystem change a UDP packet is sent to an arbitrary list
@@ -16,8 +28,6 @@
  *
  * A gap or not starting with 1 mode FCE_CONN_START or receiving mode FCE_CONN_BROKEN means that
  * the listener has lost at least one filesystem event
- * 
- * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
