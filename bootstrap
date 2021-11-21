@@ -62,13 +62,5 @@ $LIBTOOLIZE --force --copy
 automake --include-deps --add-missing --foreign --copy || exit 1
 autoconf || exit 1
 
-# libevent
-cd libevent
-aclocal -I m4 && \
-	autoheader && \
-	$LIBTOOLIZE --force --copy && \
-	autoconf && \
-	automake --include-deps --add-missing --force-missing --copy || exit 1
-
 # Let's not fall off the end...
 exit 0

@@ -1,10 +1,6 @@
 # Makefile.am for top level of netatalk package
 
-if USE_BUILTIN_LIBEVENT
-SUBDIRS = libevent include libatalk bin config etc contrib distrib doc man macros test
-else
 SUBDIRS = include libatalk bin config etc contrib distrib doc man macros test
-endif
 
 EXTRA_DIST = CONTRIBUTORS COPYRIGHT COPYING NEWS VERSION abigen.sh
 
