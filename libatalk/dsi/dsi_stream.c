@@ -624,6 +624,7 @@ int dsi_stream_receive(DSI *dsi)
   
   /* make sure we don't over-write our buffers. */
   dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
+  dsi->header.dsi_data.dsi_doff = MIN(dsi->header.dsi_data.dsi_doff, dsi->server_quantum);
 
   /* Receiving DSIWrite data is done in AFP function, not here */
   if (dsi->header.dsi_data.dsi_doff) {
