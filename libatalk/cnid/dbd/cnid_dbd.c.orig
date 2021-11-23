@@ -540,7 +540,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
-                    const cnid_t did, const char *name, const size_t len,
+                    const cnid_t did, char *name, const size_t len,
                     cnid_t hint)
 {
     CNID_private *db;
@@ -571,7 +571,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
     rqst.type = S_ISDIR(st->st_mode)?1:0;
     rqst.cnid = hint;
     rqst.did = did;
-    rqst.name = (char *) name;
+    rqst.name = name;
     rqst.namelen = len;
 
     LOG(log_debug, logtype_cnid, "cnid_dbd_add: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir)",
@@ -793,7 +793,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 }
 
 /* ---------------------- */
-int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
+int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer, size_t buflen)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -817,7 +817,7 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *
     RQST_RESET(&rqst);
     rqst.op = CNID_DBD_OP_SEARCH;
 
-    rqst.name = (char *) name;
+    rqst.name = name;
     rqst.namelen = namelen;
 
     rply.name = buffer;

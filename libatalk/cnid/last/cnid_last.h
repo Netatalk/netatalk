@@ -23,7 +23,7 @@ extern struct _cnid_module cnid_last_module;
 extern struct _cnid_db *cnid_last_open (struct cnid_open_args *args);
 extern void cnid_last_close (struct _cnid_db *);
 extern cnid_t cnid_last_add (struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const size_t, cnid_t);
+                                 const char *, const size_t, cnid_t);
 extern cnid_t cnid_last_get (struct _cnid_db *, const cnid_t, char *, const size_t);
 extern char *cnid_last_resolve (struct _cnid_db *, cnid_t *, void *, size_t);
 extern cnid_t cnid_last_lookup (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t);
