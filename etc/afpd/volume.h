@@ -36,6 +36,6 @@ int afp_closevol     (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size
 /* netatalk functions */
 extern void     close_all_vol   (void);
 
-struct vol *current_vol;        /* last volume from getvolbyvid() */
+extern struct vol *current_vol;        /* last volume from getvolbyvid() */
 
 #endif
