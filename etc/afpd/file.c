@@ -2243,10 +2243,12 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    if ( (mkstemp(temp)) == -1) {
+    int fd;
+    if ((fd = mkstemp(temp)) == -1) {
         err = AFPERR_MISC;
         goto err_exchangefile;
     }
+    close(fd);
     
     if (crossdev) {
         /* FIXME we need to close fork for copy, both s_of and d_of are null */
