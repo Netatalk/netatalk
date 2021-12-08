@@ -293,7 +293,6 @@ static void as_timer(int sig _U_)
 		     * Configure for no router operation.  Wait for a route
 		     * to become available in rtmp_packet().
 		     */
-
 		    LOG(log_info, logtype_atalkd, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
