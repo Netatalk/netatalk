@@ -76,7 +76,7 @@ struct rtmp_tuple {
 #define OS_STARTUP_FIRSTNET 	1
 #endif /* BSD4_4 */
 
-#define STARTUP_FIRSTNET 	0xff00
+#define STARTUP_FIRSTNET	0xff00
 #define STARTUP_LASTNET		0xfffe
 
 extern int	rtfd;
