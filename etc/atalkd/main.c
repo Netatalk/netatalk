@@ -294,12 +294,6 @@ static void as_timer(int sig _U_)
 		     * to become available in rtmp_packet().
 		     */
 
-#ifdef NETBSD
-#define STARTUP_FIRSTNET 1
-#else
-#define STARTUP_FIRSTNET 0
-#endif
-
 		    LOG(log_info, logtype_atalkd, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
