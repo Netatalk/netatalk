@@ -294,7 +294,7 @@ static void as_timer(int sig _U_)
 		     * to become available in rtmp_packet().
 		     */
 
-#ifdef __NetBSD__
+#ifdef NETBSD
 #define STARTUP_FIRSTNET 1
 #else
 #define STARTUP_FIRSTNET 0
