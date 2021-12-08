@@ -74,7 +74,6 @@ struct rtmp_tuple {
 #define RTMP_DEL	RTM_DELETE
 #endif /* BSD4_4 */
 
-#define STARTUP_FIRSTNET	0xff00
 #define STARTUP_LASTNET		0xfffe
 
 extern int	rtfd;
