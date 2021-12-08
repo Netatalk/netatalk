@@ -2737,12 +2737,6 @@ struct genBstrList g;
 #define START_VSNBUFF (256)
 #else
 
-#ifdef __GNUC__
-/* Something is making gcc complain about this prototype not being here, so 
-   I've just gone ahead and put it in. */
-extern int vsnprintf (char *buf, size_t count, const char *format, va_list arg);
-#endif
-
 #define exvsnprintf(r,b,n,f,a) {r = vsnprintf (b,n,f,a);}
 #endif
 #endif
