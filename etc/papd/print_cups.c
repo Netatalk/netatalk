@@ -165,7 +165,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         if ((response = cupsDoRequest(http, request, "/")) == NULL)
         {
-    		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
+      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
                          ippErrorString(cupsLastError()));
                 httpClose(http);
                 return (0);
