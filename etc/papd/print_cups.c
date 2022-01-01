@@ -165,7 +165,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         if ((response = cupsDoRequest(http, request, "/")) == NULL)
         {
-     		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
+    		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
                          ippErrorString(cupsLastError()));
                 httpClose(http);
                 return (0);
@@ -186,7 +186,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
                 return (1);
         }
 
- 	return (0);
+	return (0);
 }
 
 const char * 
@@ -206,13 +206,13 @@ cups_get_printer_status (struct printer *pr)
         ipp_attribute_t *attr;          /* Current attribute */
         cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
- 	int 		status = -1;
+	int 		status = -1;
 
         static const char *pattrs[] =   /* Requested printer attributes */
                         {
                           "printer-state",
                           "printer-state-message",
- 			  "printer-is-accepting-jobs"
+			  "printer-is-accepting-jobs"
                         };
 
        /*
@@ -293,25 +293,25 @@ cups_get_printer_status (struct printer *pr)
         * Get the current printer status and convert it to the status values.
         */
 
- 	memset ( pr->p_status, 0 ,sizeof(pr->p_status));
+	memset ( pr->p_status, 0 ,sizeof(pr->p_status));
 
         if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
         {
                 if (ippGetInteger(attr, 0) == IPP_PRINTER_STOPPED)
- 			status = 1;
+			status = 1;
                 else if (ippGetInteger(attr,0) == IPP_NOT_ACCEPTING)
- 			status = 0;
- 		else
- 			status = 2;
+			status = 0;
+		else
+			status = 2;
         }
 
- 	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
- 	{
+	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
+	{
 		if ( ippGetInteger(attr, 0) == 0 )
- 			status = 0;
- 	}
- 		
- 	snprintf ( pr->p_status, 255, cups_status_msg[status], pr->p_printer );
+			status = 0;
+	}
+		
+	snprintf ( pr->p_status, 255, cups_status_msg[status], pr->p_printer );
 
         if ((attr = ippFindAttribute(response, "printer-state-message", IPP_TAG_TEXT)) != NULL)
 		strncat ( pr->p_status, ippGetString(attr, 0, NULL), 255-strlen(pr->p_status));
@@ -324,7 +324,7 @@ cups_get_printer_status (struct printer *pr)
 
         httpClose(http);
 
- 	return (status);
+	return (status);
 }
 
 
