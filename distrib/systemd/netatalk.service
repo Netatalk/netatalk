@@ -10,6 +10,8 @@ Requires=netatalk-cnid.service
 Type=forking
 GuessMainPID=no
 ExecStart=/usr/local/sbin/afpd -c 20
+ExecReload=/usr/bin/kill -HUP $MAINPID
+ExecStop=/usr/bin/pkill -HUP afpd
 Restart=always
 RestartSec=1
 
