@@ -895,7 +895,6 @@ int setfilparams(struct vol *vol,
         }
         switch(  bit ) {
         case FILPBIT_ATTR :
-            change_mdate = 1;
             memcpy(&ashort, buf, sizeof( ashort ));
             buf += sizeof( ashort );
             break;

@@ -582,7 +582,7 @@ static void as_timer(int sig _U_)
 		    }
 
 		    /* split horizon */
-		    if (rtmp->rt_iface == iface) {
+		    if (rtmp->rt_iface != iface) {
 		        continue;
 		    }
 
