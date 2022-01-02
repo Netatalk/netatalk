@@ -1,0 +1,22 @@
+# This is experimental service file.
+# See distrib/systemd/README
+
+[Unit]
+Description=Netatalk AppleTalk daemon for AFP fileserver
+After=syslog.target network.target
+Before=netatalk.service
+Requires=netatalk.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+Environment=ATALK_UNIX_CHARSET="LOCALE" ATALK_MAC_CHARSET="MAC_ROMAN" ATALK_NAME="netatalk_host" ATALK_ZONE=
+ExecStart=/usr/local/sbin/atalkd
+ExecStartPost=/usr/local/bin/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+ExecStartPost=/usr/local/bin/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=netatalk.service
