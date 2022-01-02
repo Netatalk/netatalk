@@ -10,7 +10,7 @@ Requires=netatalk.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/sbin/cnid_metad -l log_note
+ExecStart=/usr/local/sbin/cnid_metad -l log_note
 Restart=always
 RestartSec=1
 
