@@ -27,10 +27,8 @@ Therefore, you need to edit files for setting options.
 
     ATALK_NAME:         set in afpd.conf instead
     AFPD_MAX_CLIENTS:   set in netatalk.service by using -c
-    AFPD_UAMLIST:       set in afpd.conf instead
-    AFPD_GUEST:         set in afpd.conf instead
-    ATALK_NAME:         set in netatalk-atalkd.service on the Environment line
-    ATALK_ZONE:         set in netatalk-atalkd.service on the Environment line
-    ATALK_MAC_CHARSET:  set in netatalk-atalkd.service on the Environment line
-    ATALK_UNIX_CHARSET: set in netatalk-atalkd.service on the Environment line
+    AFPD_UAMLIST:       set in afpd.conf instead with -uamlist
+    AFPD_GUEST:         set in afpd.conf instead with -guestname
+    ATALK_MAC_CHARSET:  set in afpd.conf instead with -maccodepage
+    ATALK_UNIX_CHARSET: set in afpd.conf instead with -unixcodepage
     CNID_CONFIG:        set in netatalk-cnid.service by using -l and -f options
