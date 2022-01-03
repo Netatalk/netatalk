@@ -895,6 +895,9 @@ int setfilparams(struct vol *vol,
         }
         switch(  bit ) {
         case FILPBIT_ATTR :
+            /* Preserve file dates after a GS/OS folder copy
+             *
+             * change_mdate = 1; */
             memcpy(&ashort, buf, sizeof( ashort ));
             buf += sizeof( ashort );
             break;
