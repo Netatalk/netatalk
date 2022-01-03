@@ -11,6 +11,7 @@ Requires=netatalk.service
 Type=forking
 GuessMainPID=no
 Environment=ATALK_UNIX_CHARSET="LOCALE" ATALK_MAC_CHARSET="MAC_ROMAN" ATALK_NAME="netatalk_host" ATALK_ZONE=
+ExecStartPre=/usr/sbin/modprobe appletalk
 ExecStart=/usr/local/sbin/atalkd
 ExecStartPost=/usr/local/bin/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
 ExecStartPost=/usr/local/bin/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
