@@ -23,7 +23,7 @@ else
 CONFFILES = AppleVolumes.system netatalk.conf
 endif
 
-if HAVE_ACLS
+if HAVE_LDAP
 CONFFILES += afp_ldap.conf
 endif
 
