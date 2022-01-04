@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/dsi/
 
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys
 
 LIBS = @LIBS@
 
