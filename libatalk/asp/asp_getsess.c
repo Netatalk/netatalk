@@ -163,8 +163,8 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
       timer.it_interval.tv_sec = timer.it_value.tv_sec = tickleval;
       timer.it_interval.tv_usec = timer.it_value.tv_usec = 0;
-      if ((sigaction(SIGALRM, &action, NULL) < 0) ||
-	  (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
+      if (tickleval != -1 && ((sigaction(SIGALRM, &action, NULL) < 0) ||
+	  (setitimer(ITIMER_REAL, &timer, NULL) < 0))) {
 	free(asp_ac);
 	server_asp = NULL;
 	asp_ac = NULL;
