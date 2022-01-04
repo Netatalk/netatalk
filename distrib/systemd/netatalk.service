@@ -9,7 +9,7 @@ Requires=netatalk-cnid.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/sbin/afpd -c 20
+ExecStart=/usr/local/sbin/afpd -c 20
 Restart=always
 RestartSec=1
 

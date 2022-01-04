@@ -2,7 +2,7 @@
 # See distrib/systemd/README
 
 [Unit]
-Description=Netatalk CNID database daemon for AFP fileserver
+Description=Netatalk AppleTalk daemon for AFP fileserver
 After=syslog.target network.target
 Before=netatalk.service
 Requires=netatalk.service
@@ -10,7 +10,8 @@ Requires=netatalk.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/local/sbin/cnid_metad -l log_note
+ExecStartPre=/usr/sbin/modprobe appletalk
+ExecStart=/usr/local/sbin/atalkd
 Restart=always
 RestartSec=1
 
