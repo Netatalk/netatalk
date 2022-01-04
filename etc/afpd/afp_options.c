@@ -318,7 +318,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->loginmaxfail = atoi(c);
     if ((c = getoption(buf, "-tickleval"))) {
         options->tickleval = atoi(c);
-        if (options->tickleval != -1 && options->tickleval <= 0) {
+        if (options->tickleval != 0 && options->tickleval < 0) {
             options->tickleval = 30;
         }
     }
