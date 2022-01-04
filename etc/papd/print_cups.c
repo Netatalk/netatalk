@@ -165,7 +165,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         if ((response = cupsDoRequest(http, request, "/")) == NULL)
         {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
+                LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
                          ippErrorString(cupsLastError()));
                 httpClose(http);
                 return (0);
@@ -186,7 +186,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
                 return (1);
         }
 
-	return (0);
+        return (0);
 }
 
 const char * 
@@ -206,13 +206,13 @@ cups_get_printer_status (struct printer *pr)
         ipp_attribute_t *attr;          /* Current attribute */
         cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
-	int 		status = -1;
+        int 		status = -1;
 
         static const char *pattrs[] =   /* Requested printer attributes */
                         {
                           "printer-state",
                           "printer-state-message",
-			  "printer-is-accepting-jobs"
+                          "printer-is-accepting-jobs"
                         };
 
        /*
@@ -274,7 +274,7 @@ cups_get_printer_status (struct printer *pr)
 
         if ((response = cupsDoRequest(http, request, "/")) == NULL)
         {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
+                LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
                          ippErrorString(cupsLastError()));
                 httpClose(http);
                 return (0);
@@ -293,7 +293,7 @@ cups_get_printer_status (struct printer *pr)
         * Get the current printer status and convert it to the status values.
         */
 
-	memset ( pr->p_status, 0 ,sizeof(pr->p_status));
+        memset ( pr->p_status, 0 ,sizeof(pr->p_status));
 
         if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
         {
@@ -324,7 +324,7 @@ cups_get_printer_status (struct printer *pr)
 
         httpClose(http);
 
-	return (status);
+        return (status);
 }
 
 

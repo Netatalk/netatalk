@@ -154,7 +154,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
-                     const cnid_t did, char *name, const size_t len, cnid_t hint)
+                     const cnid_t did, const char *name, const size_t len, cnid_t hint)
 {
     const struct stat *lstp;
     cnid_t id;
@@ -167,7 +167,7 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
         return CNID_INVALID;
     }
     /* Do a lookup. */
-    id = cnid_tdb_lookup(cdb, st, did, name, len);
+    id = cnid_tdb_lookup(cdb, st, did, (char *) name, len);
     /* ... Return id if it is valid, or if Rootinfo is read-only. */
     if (id || (priv->flags & CNIDFLAG_DB_RO)) {
         return id;
