@@ -69,12 +69,16 @@ struct rtmp_tuple {
 #ifndef BSD4_4
 #define RTMP_ADD	SIOCADDRT
 #define RTMP_DEL	SIOCDELRT
-#define OS_STARTUP_FIRSTNET 	0
 #else /* BSD4_4 */
 #define RTMP_ADD	RTM_ADD
 #define RTMP_DEL	RTM_DELETE
-#define OS_STARTUP_FIRSTNET 	1
 #endif /* BSD4_4 */
+
+#ifndef __NetBSD__
+#define OS_STARTUP_FIRSTNET 	0
+#else
+#define OS_STARTUP_FIRSTNET 	1
+#endif
 
 #define STARTUP_FIRSTNET	0xff00
 #define STARTUP_LASTNET		0xfffe
