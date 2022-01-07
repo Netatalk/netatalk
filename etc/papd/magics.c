@@ -45,7 +45,11 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 		    spoolerror( outfile, "Ignoring job." );
 		}
 		state = 1;
-	}	
+	}
+	if ( infile->pf_state & PF_QUERY )
+	{
+		infile->pf_state |= PF_BOT;
+	}
 	if ( (comment = compeek()) ) {
 	    switch( (*comment->c_handler)( infile, outfile, sat )) {
 	    case CH_DONE :
@@ -81,6 +85,10 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 		if (( comment = commatch( start, start+linelength, magics )) != NULL ) {
 		    compush( comment );
 		    continue;	/* top of for (;;) */
+		} 
+		else {
+            CONSUME( infile, linelength + crlflength );
+            continue; /* clear out the input queue if client sent data before magic string */
 		}
 #if 0
 		infile->pf_state &= ~PF_BOT;
@@ -107,6 +115,12 @@ int cm_psquery( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
     int			linelength, crlflength;
 
     for (;;) {
+	if ( in->pf_state & PF_QUERY )
+	{
+	    /* handle eof at end of query job */
+	    compop();
+	    return (CH_DONE);
+	}
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    /* eof on infile */
@@ -181,6 +195,11 @@ int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat
     char		*start, *stop, *p;
     int			linelength, crlflength;
 
+	if ( in->pf_state & PF_QUERY )
+	{
+	    /*handle eof at end of query job */
+	    in->pf_state &= ~PF_QUERY;
+	}
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	/* eof on infile */
