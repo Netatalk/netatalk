@@ -139,8 +139,8 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         request = ippNew();
 
-        request->request.op.operation_id = IPP_GET_PRINTER_ATTRIBUTES;
-        request->request.op.request_id   = 1;
+        ippSetOperation(request, IPP_GET_PRINTER_ATTRIBUTES);
+        ippSetRequestId(request, 1);
 
         language = cupsLangDefault();
 
@@ -172,10 +172,10 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         httpClose(http);
 
-        if (response->request.status.status_code >= IPP_OK_CONFLICT)
+        if (ippGetStatusCode(response) >= IPP_OK_CONFLICT)
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
-                         ippErrorString(response->request.status.status_code));
+                         ippErrorString(ippGetStatusCode(response)));
                 ippDelete(response);
                 return (0);
         }
@@ -251,8 +251,8 @@ cups_get_printer_status (struct printer *pr)
 
         request = ippNew();
 
-        request->request.op.operation_id = IPP_GET_PRINTER_ATTRIBUTES;
-        request->request.op.request_id   = 1;
+        ippSetOperation(request, IPP_GET_PRINTER_ATTRIBUTES);
+        ippSetRequestId(request, 1);
 
         language = cupsLangDefault();
 
@@ -282,10 +282,10 @@ cups_get_printer_status (struct printer *pr)
                 return (0);
         }
 
-        if (response->request.status.status_code >= IPP_OK_CONFLICT)
+        if (ippGetStatusCode(response) >= IPP_OK_CONFLICT)
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
-                         ippErrorString(response->request.status.status_code));
+                         ippErrorString(ippGetStatusCode(response)));
                 ippDelete(response);
                 httpClose(http);
                 return (0);
@@ -299,9 +299,9 @@ cups_get_printer_status (struct printer *pr)
 
         if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
         {
-                if (attr->values[0].integer == IPP_PRINTER_STOPPED)
+                if (ippGetInteger(attr, 0) == IPP_PRINTER_STOPPED)
 			status = 1;
-                else if (attr->values[0].integer == IPP_NOT_ACCEPTING)
+                else if (ippGetInteger(attr, 0) == IPP_NOT_ACCEPTING)
 			status = 0;
 		else
 			status = 2;
@@ -309,14 +309,14 @@ cups_get_printer_status (struct printer *pr)
 
 	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
 	{
-		if ( attr->values[0].integer == 0 ) 
+		if ( ippGetBoolean(attr, 0) == 0 )
 			status = 0;
 	}
 		
 	snprintf ( pr->p_status, 255, cups_status_msg[status], pr->p_printer );
 
         if ((attr = ippFindAttribute(response, "printer-state-message", IPP_TAG_TEXT)) != NULL)
-		strncat ( pr->p_status, attr->values[0].string.text, 255-strlen(pr->p_status));
+		strncat ( pr->p_status, ippGetString(attr, 0, NULL), 255-strlen(pr->p_status));
 
         ippDelete(response);
 
