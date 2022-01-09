@@ -20,7 +20,7 @@ if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
 }
 
 $MAC_PROCESS = "afpd";
-if ($^O eq "freebsd" || $^O eq "openbsd") {
+if ($^O eq "freebsd" || $^O eq "openbsd" || $^O eq "netbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
         $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 } elsif ($^O eq "solaris") {
@@ -37,7 +37,7 @@ $ASIP_PORT_NO = 548;
 $LSOF = 1;
 my %mac = ();
 
-if ($^O eq "freebsd") {
+if ($^O eq "freebsd" || $^O eq "netbsd") {
         open(SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |");
 
         while (<SOCKSTAT>) {
