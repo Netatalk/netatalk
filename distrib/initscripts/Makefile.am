@@ -96,18 +96,18 @@ endif
 
 if USE_SYSTEMD
 
-service_netatalkdir	= $(systemddir)
-service_cniddir	= $(systemddir)
-service_atalkddir	= $(systemddir)
-service_papddir	= $(systemddir)
-service_timelorddir	= $(systemddir)
-service_a2bootdir	= $(systemddir)
+service_netatalkdir		= $(systemddir)
+service_cniddir			= $(systemddir)
+service_atalkddir		= $(systemddir)
+service_papddir			= $(systemddir)
+service_timelorddir		= $(systemddir)
+service_a2bootdir		= $(systemddir)
 service_netatalk_DATA	= netatalk.service
-service_cnid_DATA	= netatalk-cnid.service
-service_atalkd_DATA	= netatalk-atalkd.service
-service_papd_DATA	= netatalk-papd.service
+service_cnid_DATA		= netatalk-cnid.service
+service_atalkd_DATA		= netatalk-atalkd.service
+service_papd_DATA		= netatalk-papd.service
 service_timelord_DATA	= netatalk-timelord.service
-service_a2boot_DATA	= netatalk-a2boot.service
+service_a2boot_DATA		= netatalk-a2boot.service
 
 $(service_netatalk_DATA): service.netatalk.systemd
 	cp -f service.netatalk.systemd $(service_netatalk_DATA)
