@@ -1228,8 +1228,14 @@ void bootaddr(struct interface *iface)
     }
 
     if ( iface->i_flags & IFACE_PHASE1 ) {
+#ifndef __NetBSD__
 	setaddr( iface, IFACE_PHASE1, 0,
 		iface->i_caddr.sat_addr.s_node, 0, 0 );
+#else
+       setaddr( iface, IFACE_PHASE1, iface->i_caddr.sat_addr.s_net,
+		iface->i_caddr.sat_addr.s_node,
+		iface->i_rt->rt_firstnet, iface->i_rt->rt_lastnet );
+#endif
 
 	if ( iface->i_flags & IFACE_LOOPBACK ) {
 	    iface->i_flags |= IFACE_CONFIG | IFACE_ADDR;
