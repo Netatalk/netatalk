@@ -421,8 +421,10 @@ DBD *dbif_init(const char *envhome, const char *filename)
 
     /* filename == NULL means in memory db */
     if (filename) {
-        if (! envhome)
+        if (! envhome) {
+            free(dbd);
             return NULL;
+        }
 
         dbd->db_envhome = strdup(envhome);
         if (NULL == dbd->db_envhome) {
