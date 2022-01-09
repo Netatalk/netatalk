@@ -366,7 +366,8 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     u_char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
-    
+
+    memset(appltag, 0, sizeof(u_char) * 4);
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof( vid ));
