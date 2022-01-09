@@ -1,15 +1,14 @@
-# This is experimental service file.
-# See distrib/systemd/README
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
-Description=Apple II boot daemon
+Description=Macintosh time server daemon
 After=syslog.target network.target netatalk-atalkd.service
 Requires=netatalk-atalkd.service
 
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/local/sbin/a2boot
+ExecStart=:SBINDIR:/timelord
 Restart=always
 RestartSec=1
 

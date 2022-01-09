@@ -1,8 +1,7 @@
-# This is experimental service file.
-# See distrib/systemd/README
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
-Description=Netatalk AppleTalk daemon for AFP fileserver
+Description=Netatalk CNID database daemon for AFP fileserver
 After=syslog.target network.target
 Before=netatalk.service
 Requires=netatalk.service
@@ -10,8 +9,7 @@ Requires=netatalk.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStartPre=/usr/sbin/modprobe appletalk
-ExecStart=/usr/local/sbin/atalkd
+ExecStart=:SBINDIR:/cnid_metad -l log_note
 Restart=always
 RestartSec=1
 

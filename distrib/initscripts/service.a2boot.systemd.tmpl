@@ -1,15 +1,16 @@
 # This is experimental service file.
 # See distrib/systemd/README
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
-Description=AppleTalk print server daemon
+Description=Apple II boot daemon
 After=syslog.target network.target netatalk-atalkd.service
 Requires=netatalk-atalkd.service
 
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/local/sbin/papd
+ExecStart=/usr/local/sbin/a2boot
 Restart=always
 RestartSec=1
 

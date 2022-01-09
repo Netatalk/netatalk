@@ -1,15 +1,14 @@
-# This is experimental service file.
-# See distrib/systemd/README
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
-Description=Macintosh time server daemon
+Description=AppleTalk print server daemon
 After=syslog.target network.target netatalk-atalkd.service
 Requires=netatalk-atalkd.service
 
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/local/sbin/timelord
+ExecStart=:SBINDIR:/papd
 Restart=always
 RestartSec=1
 
