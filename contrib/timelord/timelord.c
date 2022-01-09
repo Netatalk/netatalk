@@ -102,7 +102,6 @@ int main( int ac, char **av )
     struct sockaddr_at	sat;
     struct atp_block	atpb;
     struct timeval	tv;
-    struct timezone	tz;
     struct iovec	iov;
     struct tm		*tm;
     char		hostname[ MAXHOSTNAMELEN ];
@@ -223,7 +222,7 @@ int main( int ac, char **av )
 		    LOG(log_info, logtype_default, "gettime" );
 	    }
 
-	    if ( gettimeofday( &tv, &tz ) < 0 ) {
+	    if ( gettimeofday( &tv, NULL ) < 0 ) {
 		LOG(log_error, logtype_default, "main: gettimeofday: %s", strerror( errno ) );
 		exit( 1 );
 	    }
