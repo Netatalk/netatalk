@@ -1,5 +1,10 @@
-The service file of the current Netatalk is not appropriate because it use
-a shell-script "netatalk.sh".
+Running Netatalk daemons through systemd is an alternative to the legacy
+sysv scripts. By configuring Netatalk with the "--enable-systemd" flag
+make will install systemd unit configurations and enable them for daemons
+that were enabled.
+
+After installation, you may start the services as per the below. They will
+also be started automatically on the next system boot.
 
 The following systemd unit configurations are mandatory and enable AFP over TCP.
 
@@ -13,17 +18,16 @@ Optional systemd unit configurations for legacy services.
     netatalk-a2boot.service
     netatalk-timelord.service
 
-You must control the core service by starting/stopping netatalk.service only
+You must control the Netatalk service by starting/stopping netatalk.service only,
 because netatalk-cnid.service is controlled automatically.
 
-    # systemctl enable|disable netatalk.service
     # systemctl start|stop|restart netatalk.service
 
 The netatalk-atalkd.service unit is requried for the remaining three,
-however those three do not depend on each other.
+however those three are independent from each other.
 
 These unit configurations start daemons directly and do not read "netatalk.conf".
-Therefore, you need to edit files for setting options.
+Therefore, you need to edit files for setting certain options.
 
     ATALK_NAME:         set in afpd.conf instead
     AFPD_MAX_CLIENTS:   set in netatalk.service by using -c
