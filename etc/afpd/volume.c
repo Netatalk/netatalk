@@ -2976,7 +2976,11 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
         fprintf(fp, "# and stores UUIDs for TM volumes.\n\n");
     } else {
         fseek(fp, -1L, SEEK_END);
-        if(fgetc(fp) != '\n') fputc('\n', fp); /* last char is \n? */
+        if (fgetc(fp) != '\n')
+        {
+            fflush(fp);
+            fputc('\n', fp); /* last char is \n? */
+        }
     }                    
     
     /* generate uuid and write to file */

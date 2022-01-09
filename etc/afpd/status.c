@@ -671,7 +671,11 @@ server_signature_auto:
                     goto server_signature_random;
                 } else {
                     fseek(fp, -1L, SEEK_END);
-                    if(fgetc(fp) != '\n') fputc('\n', fp); /* last char is \n? */
+                    if(fgetc(fp) != '\n')
+                    {
+                        fflush(fp);
+                        fputc('\n', fp); /* last char is \n? */
+                    }
                     goto server_signature_random;
                 }                    
             } else {
