@@ -118,6 +118,7 @@ $(service_cnid_DATA): service.cnid.systemd
 	cp -f service.cnid.systemd $(service_cnid_DATA)
 
 install-data-hook:
+	-systemctl daemon-reload
 	-systemctl enable $(service_cnid_DATA)
 
 uninstall-startup:
@@ -134,6 +135,7 @@ $(service_atalkd_DATA): service.atalkd.systemd
 	cp -f service.atalkd.systemd $(service_atalkd_DATA)
 
 install-data-hook:
+	-systemctl daemon-reload
 	-systemctl enable $(service_atalkd_DATA)
 
 uninstall-startup:
@@ -152,6 +154,7 @@ $(service_papd_DATA): service.papd.systemd
 	cp -f service.papd.systemd $(service_papd_DATA)
 
 install-data-hook:
+	-systemctl daemon-reload
 	-systemctl enable $(service_papd_DATA)
 
 uninstall-startup:
@@ -170,6 +173,7 @@ $(service_timelord_DATA): service.timelord.systemd
 	cp -f service.timelord.systemd $(service_timelord_DATA)
 
 install-data-hook:
+	-systemctl daemon-reload
 	-systemctl enable $(service_timelord_DATA)
 
 uninstall-startup:
@@ -188,6 +192,7 @@ $(service_a2boot_DATA): service.a2boot.systemd
 	cp -f service.a2boot.systemd $(service_a2boot_DATA)
 
 install-data-hook:
+	-systemctl daemon-reload
 	-systemctl enable $(service_a2boot_DATA)
 
 uninstall-startup:
