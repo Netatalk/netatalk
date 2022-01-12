@@ -226,12 +226,12 @@ int main( int ac, char **av )
 		LOG(log_error, logtype_default, "main: gettimeofday: %s", strerror( errno ) );
 		exit( 1 );
 	    }
-	    if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
+	    if (( tm = localtime( &tv.tv_sec )) == 0 ) {
 		perror( "localtime" );
 		exit( 1 );
 	    }
 
-	    mtime = tv.tv_sec + EPOCH;
+	    mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
 	    mtime = htonl( mtime );
 
 	    resp = htonl( TL_OK );
