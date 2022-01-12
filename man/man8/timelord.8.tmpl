@@ -1,0 +1,22 @@
+.Dd 1/11/2022
+.Dt TIMELORD(8)
+.Sh NAME
+.Nm timelord
+.Nd Macintosh time server daemon
+.Sh SYNOPSIS
+.Nm
+.Op Fl d
+.Op Fl l
+.Op Fl n Ar nbpname
+.Sh DESCRIPTION
+timelord is a simple time server for Macintosh computers that use the tardis client.
+.Sh OPTIONS
+.Bl -tag -width -indent
+.It Fl d
+Debug mode, i.e. don´t disassociate from controlling TTY.
+.It Fl l
+Use the time zone sensitive localtime of the server. The default behavior when not using this option is GMT.
+.It Fl n Ar nbpname
+Register this server as
+.Ar nbpname .
+This defaults to the hostname.
