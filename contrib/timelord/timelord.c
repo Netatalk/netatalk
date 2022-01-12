@@ -238,6 +238,7 @@ int main( int ac, char **av )
             }
 
             mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
+            LOG(log_info, logtype_default, "Time zone is localtime" );
         }
         else {
             if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
@@ -246,6 +247,7 @@ int main( int ac, char **av )
             }
 
             mtime = tv.tv_sec + EPOCH;
+            LOG(log_info, logtype_default, "Time zone is GMT" );
         }
 
 	    mtime = htonl( mtime );
