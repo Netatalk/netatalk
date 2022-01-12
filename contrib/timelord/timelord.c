@@ -190,6 +190,12 @@ int main( int ac, char **av )
 	exit( 1 );
     }
     LOG(log_info, logtype_default, "%s:TimeLord started", server );
+    if ( lflag == 1 ) {
+        LOG(log_info, logtype_default, "Time zone is localtime" );
+    }
+    else {
+        LOG(log_info, logtype_default, "Time zone is GMT" );
+    }
 
 	signal(SIGHUP, goaway);
 	signal(SIGTERM, goaway);
@@ -238,7 +244,6 @@ int main( int ac, char **av )
             }
 
             mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
-            LOG(log_info, logtype_default, "Time zone is localtime" );
         }
         else {
             if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
@@ -247,7 +252,6 @@ int main( int ac, char **av )
             }
 
             mtime = tv.tv_sec + EPOCH;
-            LOG(log_info, logtype_default, "Time zone is GMT" );
         }
 
 	    mtime = htonl( mtime );
