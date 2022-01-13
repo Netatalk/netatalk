@@ -78,7 +78,7 @@ void usage( char *p )
     } else {
 	s++;
     }
-    fprintf( stderr, "Usage:\t%s -d -n nbpname\n", s );
+    fprintf( stderr, "Usage:\t%s -d -l -n nbpname\n", s );
     exit( 1 );
 }
 
@@ -107,6 +107,7 @@ int main( int ac, char **av )
     char		hostname[ MAXHOSTNAMELEN ];
     char		*p;
     int			c;
+    int         lflag = 0;
     long		req, mtime, resp;
     extern char		*optarg;
     extern int		optind;
@@ -120,11 +121,14 @@ int main( int ac, char **av )
     }
     server = hostname;
 
-    while (( c = getopt( ac, av, "dn:" )) != EOF ) {
+    while (( c = getopt( ac, av, "dln:" )) != EOF ) {
 	switch ( c ) {
 	case 'd' :
 	    debug++;
 	    break;
+    case 'l':
+        lflag = 1;
+        break;
 	case 'n' :
 	    server = optarg;
 	    break;
@@ -186,6 +190,12 @@ int main( int ac, char **av )
 	exit( 1 );
     }
     LOG(log_info, logtype_default, "%s:TimeLord started", server );
+    if ( lflag == 1 ) {
+        LOG(log_info, logtype_default, "Time zone is localtime" );
+    }
+    else {
+        LOG(log_info, logtype_default, "Time zone is GMT" );
+    }
 
 	signal(SIGHUP, goaway);
 	signal(SIGTERM, goaway);
@@ -226,12 +236,24 @@ int main( int ac, char **av )
 		LOG(log_error, logtype_default, "main: gettimeofday: %s", strerror( errno ) );
 		exit( 1 );
 	    }
-	    if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
-		perror( "localtime" );
-		exit( 1 );
-	    }
 
-	    mtime = tv.tv_sec + EPOCH;
+        if ( lflag == 1 ) {
+            if (( tm = localtime( &tv.tv_sec )) == 0 ) {
+            perror( "localtime" );
+            exit( 1 );
+            }
+
+            mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
+        }
+        else {
+            if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
+            perror( "gmtime" );
+            exit( 1 );
+            }
+
+            mtime = tv.tv_sec + EPOCH;
+        }
+
 	    mtime = htonl( mtime );
 
 	    resp = htonl( TL_OK );
