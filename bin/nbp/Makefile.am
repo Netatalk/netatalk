@@ -1,6 +1,6 @@
 # Makefile.am for bin/nbp/
 
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys
 
 bin_PROGRAMS = nbplkup nbprgstr nbpunrgstr
 
