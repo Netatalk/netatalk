@@ -55,17 +55,14 @@
 #include <sys/fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
-#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#endif /* HAVE_TERMIOS_H */
-#ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
-#endif /* HAVE_SYS_TERMIOS_H */
+#include <sys/ioctl.h>
 
 #define	TL_GETTIME	0
 #define	TL_OK		12
 #define TL_BAD		10
 #define EPOCH		0x7C25B080	/* 00:00:00 GMT Jan 1, 1970 for Mac */
+#define SIZEOF_MAC_LONG 4
 
 int	debug = 0;
 char	*bad = "Bad request!";
@@ -209,14 +206,14 @@ int main( int ac, char **av )
 	}
 
 	p = buf;
-	bcopy( p, &req, sizeof( long ));
+	bcopy( p, &req, SIZEOF_MAC_LONG);
 	req = ntohl( req );
-	p += sizeof( long );
+	p += SIZEOF_MAC_LONG;
 
 	switch( req ) {
 	case TL_GETTIME :
 	    if ( atpb.atp_rreqdlen > 5 ) {
-		    bcopy( p + 1, &mtime, sizeof( long ));
+		    bcopy( p + 1, &mtime, SIZEOF_MAC_LONG);
 		    mtime = ntohl( mtime );
 		    LOG(log_info, logtype_default, "gettime from %s %s was %lu",
 			    (*( p + 5 ) == '\0' ) ? "<unknown>" : p + 5,
@@ -238,20 +235,20 @@ int main( int ac, char **av )
 	    mtime = tv.tv_sec + EPOCH;
 	    mtime = htonl( mtime );
 
-	    resp = TL_OK;
-	    bcopy( &resp, buf, sizeof( long ));
-	    bcopy( &mtime, buf + sizeof( long ), sizeof( long ));
-	    iov.iov_len = sizeof( long ) + sizeof( long );
+	    resp = htonl( TL_OK );
+	    bcopy( &resp, buf, SIZEOF_MAC_LONG);
+	    bcopy( &mtime, buf + SIZEOF_MAC_LONG, SIZEOF_MAC_LONG);
+	    iov.iov_len = SIZEOF_MAC_LONG + SIZEOF_MAC_LONG;
 	    break;
 
 	default :
 	    LOG(log_error, logtype_default, bad );
 
-	    resp = TL_BAD;
-	    bcopy( &resp, buf, sizeof( long ));
+	    resp = htonl( TL_BAD );
+	    bcopy( &resp, buf, SIZEOF_MAC_LONG);
 	    *( buf + 4 ) = (unsigned char)strlen( bad );
 	    strcpy( buf + 5, bad );
-	    iov.iov_len = sizeof( long ) + 2 + strlen( bad );
+	    iov.iov_len = SIZEOF_MAC_LONG + 2 + strlen( bad );
 	    break;
 	}
 
