@@ -77,6 +77,13 @@ struct rtmp_tuple {
 #define STARTUP_FIRSTNET	0xff00
 #define STARTUP_LASTNET		0xfffe
 
+/* On NetBSD, Net 0 is reserved for lo0, it can't be used on other interfaces. */
+#ifndef __NetBSD__
+#define OS_STARTUP_FIRSTNET 	0
+#else
+#define OS_STARTUP_FIRSTNET 	1
+#endif
+
 extern int	rtfd;
 struct rtmptab	*newrt (const struct interface *);
 void rtmp_delzonemap  (struct rtmptab *);
