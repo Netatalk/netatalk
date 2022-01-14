@@ -43,6 +43,7 @@ int gq_pagecost( struct papfile * );
 int gq_true( struct papfile * );
 int gq_rbispoolerid( struct papfile * );
 int gq_rbiuamlist( struct papfile * );
+int gq_product( struct papfile * );
 
 int cq_query( struct papfile *, struct papfile * );
 void cq_font_answer( char *, char *, struct papfile * );
@@ -297,6 +298,15 @@ int gq_rbiuamlist( struct papfile *out)
     }
 }
 
+int gq_product( struct papfile *out)
+{
+    struct ppd_feature	*pdprod;
+    pdprod = ppd_feature( "*Product\n", strlen( "*Product\n" ));
+    append( out, pdprod->pd_value, strlen( pdprod->pd_value ));
+    append( out, "\r", 1 );
+    return(0);
+}
+
 
 struct genquery {
     char	*gq_name;
@@ -308,6 +318,7 @@ struct genquery {
 #endif /* notdef */
     { "RBISpoolerID",	gq_rbispoolerid },
     { "RBIUAMListQuery", gq_rbiuamlist },
+    { "Product", gq_product },
     { "ADOIsBinaryOK?", gq_true },
     { "UMICHListQueue", gq_true },
     { "UMICHDeleteJob", gq_true },
