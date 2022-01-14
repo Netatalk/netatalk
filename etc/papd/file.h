@@ -25,6 +25,7 @@ struct papfile {
 #define PF_QUERY	(1<<2)
 #define PF_STW		(1<<3)
 #define PF_TRANSLATE	(1<<4)
+#define PF_FONT_QUERY	(1<<5)
 
 #define CONSUME( pf, len )  {   (pf)->pf_data += (len); \
 				(pf)->pf_datalen -= (len); \
