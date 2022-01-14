@@ -107,6 +107,7 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 	    CONSUME( infile, linelength + crlflength );
 	}
     }
+    return 0;
 }
 
 int cm_psquery( struct papfile *in, struct papfile *out, struct sockaddr_at *sat _U_)
