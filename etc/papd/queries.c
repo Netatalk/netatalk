@@ -54,7 +54,7 @@ int cq_rmjob( struct papfile *, struct papfile * );
 int cq_listq( struct papfile *, struct papfile * );
 int cq_rbilogin( struct papfile *, struct papfile * );
 #endif  /* HAVE_CUPS */
-
+int cq_end( struct papfile *, struct papfile * );
 
 
 int cq_default( struct papfile *in, struct papfile *out)
@@ -766,6 +766,26 @@ int cq_rbilogin( struct papfile *in, struct papfile *out)
     }
 }
 
+int cq_end( struct papfile *in, struct papfile *out)
+{
+    char                *start;
+    int                 linelength, crlflength;
+
+    switch ( markline( in, &start, &linelength, &crlflength )) {
+    case 0 :
+        return( 0 );
+
+    case -1 :
+        return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
+    }
+    in->pf_state |= PF_QUERY;
+    compop();
+    CONSUME( in, linelength + crlflength );
+    return ( CH_DONE );
+}
 
 /*
  * All queries start with %%?Begin and end with %%?End.  Note that the
@@ -786,5 +806,6 @@ struct papd_comment	queries[] = {
     { "%%?BeginFontQuery",	"%%?EndFontQuery",	cq_font,	0 },
     { "%%?BeginPrinterQuery",	"%%?EndPrinterQuery",	cq_printer,C_FULL },
     { "%%?Begin",		"%%?End",		cq_default,	0 },
+    { "%%EOF",			NULL,			cq_end,		0 },
     { NULL,			NULL,			NULL,		0 },
 };
