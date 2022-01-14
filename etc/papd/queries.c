@@ -47,6 +47,7 @@ int gq_product( struct papfile * );
 
 int cq_query( struct papfile *, struct papfile * );
 void cq_font_answer( char *, char *, struct papfile * );
+int cq_fontlist(struct papfile *, struct papfile * );
 int cq_font( struct papfile *, struct papfile * );
 int cq_feature( struct papfile *, struct papfile * );
 int cq_printer( struct papfile *, struct papfile * );
@@ -430,6 +431,76 @@ void cq_font_answer( char *start, char *stop, struct papfile *out)
 
     return;
 }
+
+int cq_fontlist(struct papfile *in, struct papfile *out)
+{
+    char		*start;
+    int			linelength, crlflength;
+    struct papd_comment	*comment = compeek();
+    for (;;){
+        switch ( markline( in, &start, &linelength, &crlflength )) {
+        case 0 :
+	return( 0 );
+
+        case -1 :
+	return( CH_MORE );
+
+        case -2 :
+        return( CH_ERROR );
+        }
+	if ( comgetflags() == 0 ) {
+	    comsetflags( 1 );
+	    /* Send the default 35 PostScript fonts since some cups-filters PPDs lack any font entries. */
+	    append( out,"AvantGarde-Book\n", 16 );
+	    append( out,"AvantGarde-BookOblique\n", 23 );
+	    append( out,"AvantGarde-Demi\n", 16 );
+	    append( out,"AvantGarde-DemiOblique\n", 23 );
+	    append( out,"Bookman-Demi\n", 13 );
+	    append( out,"Bookman-DemiItalic\n", 19 );
+	    append( out,"Bookman-Light\n", 14 );
+	    append( out,"Bookman-LightItalic\n", 20 );
+	    append( out,"Courier\n", 8 );
+	    append( out,"Courier-Bold\n", 13 );
+	    append( out,"Courier-BoldOblique\n", 20 );
+	    append( out,"Courier-Oblique\n", 16 );
+	    append( out,"Helvetica\n", 10 );
+	    append( out,"Helvetica-Bold\n", 15 );
+	    append( out,"Helvetica-BoldOblique\n", 22 );
+	    append( out,"Helvetica-Narrow\n", 17 );
+	    append( out,"Helvetica-Narrow-Bold\n", 22 );
+	    append( out,"Helvetica-Narrow-BoldOblique\n", 29 );
+	    append( out,"Helvetica-Narrow-Oblique\n", 25 );
+	    append( out,"Helvetica-Oblique\n", 18 );
+	    append( out,"NewCenturySchlbk-Bold\n", 22 );
+	    append( out,"NewCenturySchlbk-BoldItalic\n", 28 );
+	    append( out,"NewCenturySchlbk-Italic\n", 24 );
+	    append( out,"NewCenturySchlbk-Roman\n", 23 );
+	    append( out,"Palatino-Bold\n", 14 );
+	    append( out,"Palatino-BoldItalic\n", 20 );
+	    append( out,"Palatino-Italic\n", 16 );
+	    append( out,"Palatino-Roman\n", 15 );
+	    append( out,"Symbol\n", 7 );
+	    append( out,"Times-Bold\n", 11 );
+	    append( out,"Times-BoldItalic\n", 17 );
+	    append( out,"Times-Italic\n", 13 );
+	    append( out,"Times-Roman\n", 12 );
+	    append( out,"ZapfChancery-MediumItalic\n", 26 );
+	    append( out,"ZapfDingbats\n", 13 );
+	    append( out,"*\n", 2 ); /* Terminate the list */
+	    out->pf_state |= PF_FONT_QUERY;
+        }
+        else {
+	    if ( comcmp( start, start+linelength, comment->c_end, 0 ) == 0 ) {
+		compop();
+		CONSUME( in, linelength + crlflength );
+		return( CH_DONE );
+	    }
+
+        }
+    CONSUME( in, linelength + crlflength );
+    }
+}
+
 
 int cq_font(struct papfile *in, struct papfile *out)
 {
@@ -815,6 +886,7 @@ struct papd_comment	queries[] = {
     { "%%?BeginQuery",		"%%?EndQuery",		cq_query,	0 },
     { "%%?BeginFeatureQuery",	"%%?EndFeatureQuery",	cq_feature,	0 },
     { "%%?BeginFontQuery",	"%%?EndFontQuery",	cq_font,	0 },
+    { "%%?BeginFontListQuery",  "%%?EndFontListQuery",  cq_fontlist,    0 },
     { "%%?BeginPrinterQuery",	"%%?EndPrinterQuery",	cq_printer,C_FULL },
     { "%%?Begin",		"%%?End",		cq_default,	0 },
     { "%%EOF",			NULL,			cq_end,		0 },

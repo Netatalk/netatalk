@@ -63,6 +63,8 @@ int session(ATP atp, struct sockaddr_at *sat)
     int			i, cc, timeout = 0, readpending = 0;
     u_int16_t		seq = 0, rseq = 1, netseq;
     u_char		readport; /* uninitialized, OK 310105 */
+    char		*start;
+    int			linelength, lflength;
 
     infile.pf_state = PF_BOT;
     infile.pf_bufsize = 0;
@@ -274,6 +276,46 @@ int session(ATP atp, struct sockaddr_at *sat)
 	/* send any data that we have */
 	if ( readpending &&
 		( outfile.pf_datalen || ( outfile.pf_state & PF_EOF ))) {
+	    /*
+	     * Send back font list queries in seperate PAP packets.
+	     * This is needed to keep Pre-LaserWriter 8.0 and Apple IIgs
+	     * LaserWriter drivers from locking up when printing.
+	     */
+	    if (outfile.pf_state & PF_FONT_QUERY)
+	    {
+	    for ( i = 0; i < 1; i++ ) { /* quantum is 1 */
+                markline( &outfile, &start, &linelength, &lflength );
+		((char *)niov[ i ].iov_base)[ 0 ] = connid;
+		((char *)niov[ i ].iov_base)[ 1 ] = PAP_DATA;
+		((char *)niov[ i ].iov_base)[ 2 ] =
+			((char *)niov[ i ].iov_base)[ 3 ] = 0;
+
+		    cc = linelength+lflength;
+		    if( cc-outfile.pf_datalen == 0 ) {
+			((char *)niov[ 0 ].iov_base)[ 2 ] = 1;	/* eof */
+			outfile.pf_state = PF_BOT;
+			infile.pf_state = PF_BOT;
+		    }
+
+		niov[ i ].iov_len = 4 + cc;
+		memcpy( (char *)niov[ i ].iov_base + 4, outfile.pf_data, cc );
+		CONSUME( &outfile, cc );
+		if ( outfile.pf_datalen == 0 ) {
+		    i++;
+		    break;
+		}
+	    }
+	    ssat.sat_port = readport;
+	    atpb.atp_saddr = &ssat;
+	    atpb.atp_sresiov = niov;
+	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
+	    if ( atp_sresp( atp, &atpb ) < 0 ) {
+		LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
+		return( -1 );
+	    }
+	    readpending = 0;
+	    }
+	    else {
 	    for ( i = 0; i < quantum; i++ ) {
 		((char *)niov[ i ].iov_base)[ 0 ] = connid;
 		((char *)niov[ i ].iov_base)[ 1 ] = PAP_DATA;
@@ -308,6 +350,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 		return( -1 );
 	    }
 	    readpending = 0;
+	}
 	}
     }
 }
