@@ -115,6 +115,12 @@ int cm_psquery( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
     int			linelength, crlflength;
 
     for (;;) {
+	if ( in->pf_state & PF_QUERY )
+	{
+	    /* handle eof at end of query job */
+	    compop();
+	    return (CH_DONE);
+	}
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    /* eof on infile */
@@ -189,6 +195,11 @@ int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat
     char		*start, *stop, *p;
     int			linelength, crlflength;
 
+	if ( in->pf_state & PF_QUERY )
+	{
+	    /*handle eof at end of query job */
+	    in->pf_state &= ~PF_QUERY;
+	}
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	/* eof on infile */
