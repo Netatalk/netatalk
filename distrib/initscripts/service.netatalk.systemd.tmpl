@@ -1,5 +1,4 @@
-# This is experimental service file.
-# See distrib/systemd/README
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients
@@ -9,7 +8,7 @@ Requires=netatalk-cnid.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/sbin/afpd -c 20
+ExecStart=:SBINDIR:/afpd -c 20
 Restart=always
 RestartSec=1
 

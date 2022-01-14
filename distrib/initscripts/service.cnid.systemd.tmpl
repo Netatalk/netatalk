@@ -1,0 +1,18 @@
+# This file is part of netatalk :NETATALK_VERSION:.
+
+[Unit]
+Description=Netatalk CNID database daemon for AFP fileserver
+After=syslog.target network.target
+Before=netatalk.service
+Requires=netatalk.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/cnid_metad -l log_note
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=netatalk.service

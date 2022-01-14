@@ -3,6 +3,7 @@
 SUFFIXES = .tmpl .
 
 pkgconfdir = @PKGCONFDIR@
+systemddir = /lib/systemd/system
 
 #
 # Template Generation
@@ -30,7 +31,12 @@ GENERATED_FILES = \
 	rc.atalk.sysv		\
 	rc.atalk.gentoo		\
 	rc.atalk.debian		\
-	service.atalk.systemd
+	service.netatalk.systemd	\
+	service.cnid.systemd	\
+	service.atalkd.systemd	\
+	service.papd.systemd	\
+	service.timelord.systemd	\
+	service.a2boot.systemd
 
 TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
@@ -46,9 +52,14 @@ TEMPLATES = \
 	rc.atalk.sysv.tmpl		\
 	rc.atalk.gentoo.tmpl		\
 	rc.atalk.debian.tmpl		\
-	service.atalk.systemd.tmpl
+	service.netatalk.systemd.tmpl	\
+	service.cnid.systemd.tmpl	\
+	service.atalkd.systemd.tmpl	\
+	service.papd.systemd.tmpl	\
+	service.timelord.systemd.tmpl	\
+	service.a2boot.systemd.tmpl
 
-CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd atalkd cnid_metad papd timelord
+CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_netatalk_DATA) $(service_cnid_DATA) ${service_atalkd_DATA} ${service_papd_DATA} ${service_timelord_DATA} ${service_a2boot_DATA} afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
@@ -85,26 +96,91 @@ endif
 
 if USE_SYSTEMD
 
-sysvdir	= $(pkglibexecdir)
-sysv_SCRIPTS = netatalk.sh
+service_netatalkdir		= $(systemddir)
+service_netatalk_DATA	= netatalk.service
+$(service_netatalk_DATA): service.netatalk.systemd
+	cp -f service.netatalk.systemd $(service_netatalk_DATA)
 
-servicedir	= /lib/systemd/system
-service_DATA	= netatalk.service
+service_cniddir			= $(systemddir)
+service_cnid_DATA		= netatalk-cnid.service
+$(service_cnid_DATA): service.cnid.systemd
+	cp -f service.cnid.systemd $(service_cnid_DATA)
 
-$(sysv_SCRIPTS): rc.atalk.systemd
-	cp -f rc.atalk.systemd $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
+if USE_APPLETALK
+service_atalkddir		= $(systemddir)
+service_atalkd_DATA		= netatalk-atalkd.service
+$(service_atalkd_DATA): service.atalkd.systemd
+	cp -f service.atalkd.systemd $(service_atalkd_DATA)
+endif
 
-$(service_DATA): service.atalk.systemd
-	cp -f service.atalk.systemd $(service_DATA)
+if USE_CUPS
+service_papddir			= $(systemddir)
+service_papd_DATA		= netatalk-papd.service
+$(service_papd_DATA): service.papd.systemd
+	cp -f service.papd.systemd $(service_papd_DATA)
+endif
+
+if COMPILE_TIMELORD
+service_timelorddir		= $(systemddir)
+service_timelord_DATA	= netatalk-timelord.service
+$(service_timelord_DATA): service.timelord.systemd
+	cp -f service.timelord.systemd $(service_timelord_DATA)
+endif
+
+if COMPILE_A2BOOT
+service_a2bootdir		= $(systemddir)
+service_a2boot_DATA		= netatalk-a2boot.service
+$(service_a2boot_DATA): service.a2boot.systemd
+	cp -f service.a2boot.systemd $(service_a2boot_DATA)
+endif
 
 install-data-hook:
 	-systemctl daemon-reload
+	-systemctl enable $(service_cnid_DATA)
+	-systemctl enable $(service_netatalk_DATA)
+
+if USE_APPLETALK
+	-systemctl enable $(service_atalkd_DATA)
+endif
+
+if USE_CUPS
+	-systemctl enable $(service_papd_DATA)
+endif
+
+if COMPILE_TIMELORD
+	-systemctl enable $(service_timelord_DATA)
+endif
+
+if COMPILE_A2BOOT
+	-systemctl enable $(service_a2boot_DATA)
+endif
 
 uninstall-startup:
-	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
-		$(DESTDIR)$(servicedir)/$(service_DATA)
+	-systemctl disable $(service_netatalk_DATA)
+	rm -f $(DESTDIR)$(service_netatalkdir)/$(service_netatalk_DATA)
+	-systemctl disable $(service_cnid_DATA)
+	rm -f $(DESTDIR)$(service_cniddir)/$(service_cnid_DATA)
+
+if USE_APPLETALK
+	-systemctl disable $(service_atalkd_DATA)
+	rm -f $(DESTDIR)$(service_atalkddir)/$(service_atalkd_DATA)
+endif
+
+if USE_CUPS
+	-systemctl disable $(service_papd_DATA)
+	rm -f $(DESTDIR)$(service_papddir)/$(service_papd_DATA)
+endif
+
+if COMPILE_TIMELORD
+	-systemctl disable $(service_timelord_DATA)
+	rm -f $(DESTDIR)$(service_timelorddir)/$(service_timelord_DATA)
+endif
+
+if COMPILE_A2BOOT
+	-systemctl disable $(service_a2boot_DATA)
+	rm -f $(DESTDIR)$(service_a2bootdir)/$(service_a2boot_DATA)
+endif
+
 	-systemctl daemon-reload
 
 endif
