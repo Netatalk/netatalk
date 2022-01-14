@@ -19,7 +19,6 @@ ltconfig
 ltmain.sh
 autom4te.cache
 autoscan.log
-test-driver
 *.rpm
 *.deb
 *.dsc
@@ -29,6 +28,3 @@ test-driver
 *~
 .gitignore
 *.o
-*.orig
-*.rej
-*.diff
