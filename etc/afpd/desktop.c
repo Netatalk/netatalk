@@ -227,7 +227,7 @@ addicon_err:
 
 #ifdef DEBUG1
         if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %d\n", buflen);
+            printf("(write) len: %d\n", (unsigned long) buflen);
             bprint(rbuf, buflen);
         }
 #endif
