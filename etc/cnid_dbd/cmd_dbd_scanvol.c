@@ -1204,10 +1204,10 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     /* Make it accessible for all funcs */
     dbd = dbd_ref;
 
-    /* We only support unicode volumes ! */
+    /* Officially, we only support unicode volumes */
     if ( vi->v_volcharset != CH_UTF8) {
         dbd_log( LOGSTD, "Not a Unicode volume: %s, %u != %u", vi->v_volcodepage, vi->v_volcharset, CH_UTF8);
-        return -1;
+        /* Log the unexpected charset and proceed */
     }
 
     /* Get volume stamp */
