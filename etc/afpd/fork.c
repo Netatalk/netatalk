@@ -114,7 +114,7 @@ static int set_off_t(off_t offset, char *rbuf, int is64)
 
     ret = 0;
     if (is64) {
-        temp = htonl((unsigned long long) offset >> 32);
+        temp = htonl((uint64_t) offset >> 32);
         memcpy(rbuf, &temp, sizeof( temp ));
         rbuf += sizeof(temp);
         ret = sizeof( temp );
