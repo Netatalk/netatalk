@@ -64,9 +64,6 @@ int usockfd_create(char *usock_fn, mode_t mode, int backlog)
         return -1;
     }
 
-#ifdef chmod
-#undef chmod
-#endif
     if (chmod(usock_fn, mode) < 0) {
         LOG(log_error, logtype_cnid, "error changing permissions for %s: %s",
             usock_fn, strerror(errno));
