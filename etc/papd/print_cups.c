@@ -681,7 +681,7 @@ static int cups_mangle_printer_name ( struct printer *pr, struct printer *printe
 	while ( ( cups_check_printer ( pr, printers, 0 )) && count < 100)
 	{
 		memset ( pr->p_name, 0, name_len);
-		sprintf(pr->p_name, "%s#%2.2lu", name, count++);
+		sprintf(pr->p_name, "%s#%2.2lu", name, (unsigned long) count++);
 	}
 
 	if ( count > 99) 
