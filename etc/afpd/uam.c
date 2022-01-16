@@ -222,11 +222,12 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             return pwent;
         }
     }
-#ifndef NO_REAL_USER_NAME
+#if !defined(NO_REAL_USER_NAME)
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
-				CH_UCS2, name, -1, username, sizeof(username))))
-	return NULL;
+    namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
+                            CH_UCS2, name, -1, username, sizeof(username));
+    if (namelen == -1)
+	      return NULL;
 
     setpwent();
     while ((pwent = getpwent())) {
@@ -264,7 +265,7 @@ int uam_checkuser(const struct passwd *pwd)
     if (!pwd)
         return -1;
 
-#ifndef DISABLE_SHELLCHECK
+#if !defined(DISABLE_SHELLCHECK)
 	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
 		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
