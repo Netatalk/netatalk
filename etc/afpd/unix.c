@@ -125,10 +125,6 @@ mode_t mode;
     }
 }
 
-#ifdef accessmode
-
-#undef accessmode
-#endif
 /*
  * Calculate the mode for a directory using a stat() call to
  * estimate permission.
