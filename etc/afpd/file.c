@@ -516,7 +516,7 @@ int getmetadata(const AFPObj *obj,
             }
             break;
         case FILPBIT_EXTDFLEN:
-            aint = htonl(st->st_size >> 32);
+            aint = htonl((unsigned long long)st->st_size >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             aint = htonl(st->st_size);
@@ -525,7 +525,7 @@ int getmetadata(const AFPObj *obj,
             break;
         case FILPBIT_EXTRFLEN:
             if (adp) {
-                aint = htonl(adp->ad_rlen >> 32);
+                aint = htonl((unsigned long long)adp->ad_rlen >> 32);
                 memcpy(data, &aint, sizeof( aint ));
                 data += sizeof( aint );
                 aint = htonl(adp->ad_rlen);
