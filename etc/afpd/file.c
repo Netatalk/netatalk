@@ -524,7 +524,7 @@ int getmetadata(struct vol *vol,
             }
             break;
         case FILPBIT_EXTDFLEN:
-            aint = htonl((unsigned long long)st->st_size >> 32);
+            aint = htonl((uint64_t)st->st_size >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             aint = htonl(st->st_size);
@@ -534,7 +534,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_EXTRFLEN:
             aint = 0;
             if (adp) 
-                aint = htonl((unsigned long long)adp->ad_rlen >> 32);
+                aint = htonl((uint64_t)adp->ad_rlen >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             if (adp) 
