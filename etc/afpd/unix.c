@@ -126,10 +126,6 @@ static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess 
     }
 }
 
-#ifdef accessmode
-
-#undef accessmode
-#endif
 /*
  * Calculate the mode for a directory using a stat() call to
  * estimate permission.
