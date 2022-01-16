@@ -40,9 +40,6 @@
 #include "auth.h"
 #include "uam_auth.h"
 
-#define utf8_encoding() (afp_version >= 30)
-
-
 /* --- server uam functions -- */
 
 /* uam_load. uams must have a uam_setup function. */
@@ -230,10 +227,11 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             }
         }
     }
-#ifndef NO_REAL_USER_NAME
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
-				CH_UCS2, name, -1, username, sizeof(username))))
+#if !defined(NO_REAL_USER_NAME)
+    namelen = convert_string(obj->options.maccharset, CH_UCS2, name, -1,
+                            username, sizeof(username));
+    if (namelen == -1)
 	return NULL;
 
     setpwent();
@@ -272,7 +270,7 @@ int uam_checkuser(const struct passwd *pwd)
     if (!pwd)
         return -1;
 
-#ifndef DISABLE_SHELLCHECK
+#if !defined(DISABLE_SHELLCHECK)
 	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
 		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
