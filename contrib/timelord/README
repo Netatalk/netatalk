@@ -24,3 +24,6 @@ Installing timelord:
 
 2.  The file rc.atalk as distributed with netatalk 1.5 includes lines to
     start timelord.
+
+3.  If Netatalk was configured with --enable-systemd a service called
+    'timelord' will have been instead instead of the sysv script.

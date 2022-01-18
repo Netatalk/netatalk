@@ -1,3 +1,3 @@
 # Makefile.am for distrib/
 
-SUBDIRS = config initscripts m4 systemd
+SUBDIRS = config initscripts m4

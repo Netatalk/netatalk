@@ -1,0 +1,19 @@
+# This file is part of netatalk :NETATALK_VERSION:.
+
+[Unit]
+Description=Netatalk AppleTalk daemon for AFP fileserver
+After=syslog.target network.target
+Before=afpd.service
+Requires=afpd.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStartPre=/usr/sbin/modprobe appletalk
+ExecStart=:SBINDIR:/atalkd
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=afpd.service
