@@ -32,7 +32,7 @@ CNID_CONFIG="-l log_note"
 ATALKD_RUN=no
 PAPD_RUN=no
 TIMELORD_RUN=no
-#A2BOOT_RUN=no
+A2BOOT_RUN=no
 ATALK_ZONE=
 ATALK_BGROUND=no
 
@@ -67,6 +67,14 @@ atalk_startup() {
 	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
 	    echo -n "  Starting timelord"
 	    :SBINDIR:/timelord
+	    rc_status -v
+	fi
+
+	rc_reset
+
+	if [ x"${A2BOOT_RUN}" = x"yes"  -a -x :SBINDIR:/a2boot ]; then
+	    echo -n "  Starting a2boot"
+	    :SBINDIR:/a2boot
 	    rc_status -v
 	fi
 
@@ -118,6 +126,9 @@ case "$1" in
 	if test -x :SBINDIR:/timelord ; then
 	    killproc -TERM :SBINDIR:/timelord
 	fi
+	if test -x :SBINDIR:/a2boot ; then
+	    killproc -TERM :SBINDIR:/a2boot
+	fi
 	if test -x :SBINDIR:/atalkd ; then
 	    killproc -TERM :SBINDIR:/atalkd
 	fi
@@ -141,6 +152,9 @@ case "$1" in
 	fi
 	if [ x"${TIMELORD_RUN}" = x"yes" -a -x :SBINDIR:/timelord ] ; then
 	    checkproc :SBINDIR:/timelord && echo -n   " timelord: OK	" || echo -n " timelord: No process	"
+	fi
+	if [ x"${A2BOOT_RUN}" = x"yes" -a -x :SBINDIR:/a2boot ] ; then
+	    checkproc :SBINDIR:/a2boot && echo -n   " a2boot: OK	" || echo -n " a2boot: No process	"
 	fi
 	if [ x"${CNID_METAD_RUN}" = x"yes" ] ; then
 	    checkproc :SBINDIR:/cnid_metad && echo -n " cnid_metad: OK	" || echo -n " cnid_metad: No process	"

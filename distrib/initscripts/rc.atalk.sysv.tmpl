@@ -32,7 +32,7 @@ CNID_CONFIG="-l log_note"
 ATALKD_RUN=no
 PAPD_RUN=no
 TIMELORD_RUN=no
-#A2BOOT_RUN=no
+A2BOOT_RUN=no
 ATALK_ZONE=
 ATALK_BGROUND=no
 
@@ -65,6 +65,10 @@ atalk_startup() {
 
 		if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
 			:SBINDIR:/timelord;		echo ' timelord\c'
+		fi
+
+		if [ x"${A2BOOT_RUN}" = x"yes"  -a -x :SBINDIR:/a2boot ]; then
+			:SBINDIR:/a2boot;		echo ' a2boot\c'
 		fi
 	fi
 
@@ -114,6 +118,10 @@ case "$1" in
 
 	if [ -x :SBINDIR:/timelord ]; then
 		killproc timelord;		echo ' timelord\c'
+	fi
+
+	if [ -x :SBINDIR:/a2boot ]; then
+		killproc a2boot;		echo ' a2boot\c'
 	fi
 
 	# kill atalkd last, since without it the plumbing goes away.
