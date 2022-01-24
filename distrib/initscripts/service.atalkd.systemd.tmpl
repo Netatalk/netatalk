@@ -9,7 +9,6 @@ Requires=afpd.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStartPre=/usr/sbin/modprobe appletalk
 ExecStart=:SBINDIR:/atalkd
 Restart=always
 RestartSec=1
