@@ -29,7 +29,7 @@ CNID_CONFIG="-l log_note"
 ATALKD_RUN=no
 PAPD_RUN=no
 TIMELORD_RUN=no
-#A2BOOT_RUN=no
+A2BOOT_RUN=no
 ATALK_ZONE=
 #ATALK_BGROUND=no
 
@@ -67,6 +67,10 @@ fi
 
 if [ -x :SBINDIR:/timelord -a X"${TIMELORD_RUN}" != X"no" ]; then
 	:SBINDIR:/timelord;		echo -n ' timelord'
+fi
+
+if [ -x :SBINDIR:/a2boot -a X"${A2BOOT_RUN}" != X"no" ]; then
+	:SBINDIR:/a2boot;		echo -n ' a2boot'
 fi
 
 					echo '.'

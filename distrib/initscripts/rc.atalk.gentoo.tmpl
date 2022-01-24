@@ -19,7 +19,7 @@ CNID_CONFIG="-l log_note"
 ATALKD_RUN=no
 PAPD_RUN=no
 TIMELORD_RUN=no
-#A2BOOT_RUN=no
+A2BOOT_RUN=no
 ATALK_ZONE=
 ATALK_BGROUND=no
 
@@ -74,6 +74,12 @@ atalk_startup () {
 		start-stop-daemon --start --quiet --exec :SBINDIR:/timelord
 		eend $?
 	fi
+
+	if [ "${A2BOOT_RUN}" = "yes" ]; then
+		ebegin "Starting a2boot"
+		start-stop-daemon --start --quiet --exec :SBINDIR:/a2boot
+		eend $?
+	fi
 }
 
 start () {
@@ -99,6 +105,12 @@ stop () {
 	if [ "${TIMELORD_RUN}" = "yes" ]; then
 		ebegin "Stopping timelord"
 		start-stop-daemon --stop --quiet --exec :SBINDIR:/timelord
+		eend $?
+	fi
+
+	if [ "${A2BOOT_RUN}" = "yes" ]; then
+		ebegin "Stopping a2boot"
+		start-stop-daemon --stop --quiet --exec :SBINDIR:/a2boot
 		eend $?
 	fi
 
