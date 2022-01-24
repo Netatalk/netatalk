@@ -10,7 +10,7 @@ Requires=atalkd.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=/usr/local/sbin/a2boot
+ExecStart=:SBINDIR:/a2boot
 Restart=always
 RestartSec=1
 
