@@ -1,11 +1,5 @@
 Makefile
 Makefile.in
-apple_cp.1
-apple_dump.1
-apple_mv.1
-apple_rm.1
-asip-status.pl.1
-afpldaptest.1
-uniconv.1
 .gitignore
 *.o
+*.1
