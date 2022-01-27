@@ -112,7 +112,7 @@ struct scrit {
  */
 struct dsitem {
     cnid_t ds_did;               /* CNID of this directory           */
-    unsigned int ds_checked;     /* Have we checked this directory ? */
+    uint32_t ds_checked;    /* Have we checked this directory ? */
 };
 
 
@@ -291,11 +291,11 @@ static int crit_check(struct vol *vol, struct path *path) {
 	 */
 
 	/* Check for filename */
-	if ((c1.rbitmap & (1<<DIRPBIT_LNAME))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_LNAME))) {
 		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, -1, convbuf, 512)) )
 			goto crit_check_ret;
 
-		if ((c1.rbitmap & (1<<CATPBIT_PARTIAL))) {
+		if ((c1.rbitmap & (1U<<CATPBIT_PARTIAL))) {
 			if (strcasestr_w( (ucs2_t*) convbuf, (ucs2_t*) c1.lname) == NULL)
 				goto crit_check_ret;
 		} else
@@ -303,12 +303,12 @@ static int crit_check(struct vol *vol, struct path *path) {
 				goto crit_check_ret;
 	}
 
-	if ((c1.rbitmap & (1<<FILPBIT_PDINFO))) {
+	if ((c1.rbitmap & (1U<<FILPBIT_PDINFO))) {
 		if ( (size_t)(-1) == (len = convert_charset( CH_UTF8_MAC, CH_UCS2, CH_UTF8, path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
 			goto crit_check_ret;
 		}
 
-		if (c1.rbitmap & (1<<CATPBIT_PARTIAL)) {
+		if (c1.rbitmap & (1U<<CATPBIT_PARTIAL)) {
 			if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t*)c1.utf8name) == NULL)
 				goto crit_check_ret;
 		} else
@@ -326,13 +326,13 @@ static int crit_check(struct vol *vol, struct path *path) {
 		c2.bdate = 0x7fffffff;
 
 	/* Check for modification date */
-	if ((c1.rbitmap & (1<<DIRPBIT_MDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_MDATE))) {
 		if (path->st.st_mtime < c1.mdate || path->st.st_mtime > c2.mdate)
 			goto crit_check_ret;
 	}
 
 	/* Check for creation date... */
-	if ((c1.rbitmap & (1<<DIRPBIT_CDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_CDATE))) {
 		c_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_CREATE, &ac_date) >= 0)
@@ -343,7 +343,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check for backup date... */
-	if ((c1.rbitmap & (1<<DIRPBIT_BDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_BDATE))) {
 		b_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_BACKUP, &ab_date) >= 0)
@@ -354,7 +354,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check attributes */
-	if ((c1.rbitmap & (1<<DIRPBIT_ATTR)) && c2.attr != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_ATTR)) && c2.attr != 0) {
 		if ((adp = adl_lkup(vol, path, adp))) {
 			ad_getattr(adp, &attr);
 			if ((attr & c2.attr) != c1.attr)
@@ -364,14 +364,14 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
         /* Check file type ID */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
 	    finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		if (finfo->f_type != c1.finfo.f_type)
 			goto crit_check_ret;
 	}
 
 	/* Check creator ID */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
@@ -380,7 +380,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check finder info attributes */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
@@ -390,7 +390,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check label */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
@@ -859,7 +859,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     uint16_t	namelen;
     uint16_t	flags;
     char  	    tmppath[256];
-    char        *uname = NULL;
+    const char  *uname = NULL;
 
     *rbuflen = 0;
 
@@ -911,8 +911,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
     else {
         /* with catsearch only name and parent id are allowed */
-    	c1.fbitmap &= (1<<FILPBIT_LNAME) | (1<<FILPBIT_PDID);
-    	c1.dbitmap &= (1<<DIRPBIT_LNAME) | (1<<DIRPBIT_PDID);
+    	c1.fbitmap &= (1U<<FILPBIT_LNAME) | (1U<<FILPBIT_PDID);
+    	c1.dbitmap &= (1U<<DIRPBIT_LNAME) | (1U<<DIRPBIT_PDID);
         spec_len = *(unsigned char*)ibuf;
     }
 
@@ -926,7 +926,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     bspec1 = spec1;
     bspec2 = spec2;
     /* File attribute bits... */
-    if (c1.rbitmap & (1 << FILPBIT_ATTR)) {
+    if (c1.rbitmap & (1U << FILPBIT_ATTR)) {
 	    memcpy(&c1.attr, spec1, sizeof(c1.attr));
 	    spec1 += sizeof(c1.attr);
 	    memcpy(&c2.attr, spec2, sizeof(c2.attr));
@@ -934,7 +934,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Parent DID */
-    if (c1.rbitmap & (1 << FILPBIT_PDID)) {
+    if (c1.rbitmap & (1U << FILPBIT_PDID)) {
             memcpy(&c1.pdid, spec1, sizeof(pdid));
 	    spec1 += sizeof(c1.pdid);
 	    memcpy(&c2.pdid, spec2, sizeof(pdid));
@@ -942,7 +942,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     } /* FIXME: PDID - do we demarshall this argument ? */
 
     /* Creation date */
-    if (c1.rbitmap & (1 << FILPBIT_CDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_CDATE)) {
 	    memcpy(&c1.cdate, spec1, sizeof(c1.cdate));
 	    spec1 += sizeof(c1.cdate);
 	    c1.cdate = AD_DATE_TO_UNIX(c1.cdate);
@@ -953,7 +953,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Modification date */
-    if (c1.rbitmap & (1 << FILPBIT_MDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_MDATE)) {
 	    memcpy(&c1.mdate, spec1, sizeof(c1.mdate));
 	    c1.mdate = AD_DATE_TO_UNIX(c1.mdate);
 	    spec1 += sizeof(c1.mdate);
@@ -963,7 +963,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Backup date */
-    if (c1.rbitmap & (1 << FILPBIT_BDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_BDATE)) {
 	    memcpy(&c1.bdate, spec1, sizeof(c1.bdate));
 	    spec1 += sizeof(c1.bdate);
 	    c1.bdate = AD_DATE_TO_UNIX(c1.bdate);
@@ -973,7 +973,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Finder info */
-    if (c1.rbitmap & (1 << FILPBIT_FINFO)) {
+    if (c1.rbitmap & (1U << FILPBIT_FINFO)) {
     	packed_finder buf;
 
 	    memcpy(buf, spec1, sizeof(buf));
@@ -985,7 +985,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 	    spec2 += sizeof(buf);
     } /* Finder info */
 
-    if ((c1.rbitmap & (1 << DIRPBIT_OFFCNT)) != 0) {
+    if ((c1.rbitmap & (1U << DIRPBIT_OFFCNT)) != 0) {
         /* Offspring count - only directories */
 		if (c1.fbitmap == 0) {
 	    	memcpy(&c1.offcnt, spec1, sizeof(c1.offcnt));
@@ -1004,7 +1004,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     } /* Offspring count/ressource fork length */
 
     /* Long name */
-    if (c1.rbitmap & (1 << FILPBIT_LNAME)) {
+    if (c1.rbitmap & (1U << FILPBIT_LNAME)) {
         /* Get the long filename */
 		memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
 		tmppath[(bspec1 + spec1[1])[0]]= 0;
@@ -1019,7 +1019,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 #endif
     }
         /* UTF8 Name */
-    if (c1.rbitmap & (1 << FILPBIT_PDINFO)) {
+    if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
 
 		/* offset */
 		memcpy(&namelen, spec1, sizeof(namelen));
@@ -1047,8 +1047,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
     /* Call search */
     *rbuflen = 24;
-    if ((c1.rbitmap & (1 << FILPBIT_PDINFO))
-        && !(c1.rbitmap & (1<<CATPBIT_PARTIAL))
+    if ((c1.rbitmap & (1U << FILPBIT_PDINFO))
+        && !(c1.rbitmap & (1U<<CATPBIT_PARTIAL))
         && (strcmp(vol->v_cnidscheme, "dbd") == 0)
         && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */
