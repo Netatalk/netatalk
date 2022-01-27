@@ -1055,8 +1055,12 @@ static void setextmap(char *ext, char *type, char *creator, int user)
     }
 
     if ( em->em_ext == NULL ) {
-        if (!(Extmap  = realloc( Extmap, sizeof( struct extmap ) * (cnt +2))) ) {
+        void *Extmap_check = realloc(Extmap, sizeof(struct extmap) * (cnt + 2));
+        if (Extmap_check) {
+            Extmap = Extmap_check;
+        } else {
             LOG(log_error, logtype_afpd, "setextmap: realloc: %s", strerror(errno) );
+            free(Extmap);
             return;
         }
         (Extmap +cnt +1)->em_ext = NULL;
