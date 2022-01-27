@@ -183,7 +183,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     /*
      * If ibuf is odd, make it even.
      */
-    if ((u_long)ibuf & 1 ) {
+    if ((intptr_t)ibuf & 1 ) {
         ibuf++;
     }
 
