@@ -96,7 +96,7 @@ struct scrit {
 	time_t mdate;               /* Last modification date */
 	time_t bdate;               /* Last backup date */
 	u_int32_t pdid;             /* Parent DID */
-    u_int16_t offcnt;           /* Offspring count */
+	u_int16_t offcnt;           /* Offspring count */
 	struct finderinfo finfo;    /* Finder info */
 	char lname[64];             /* Long name */ 
 	char utf8name[514];         /* UTF8 or UCS2 name */ /* for convert_charset dest_len parameter +2 */
@@ -111,8 +111,8 @@ struct scrit {
  *
  */
 struct dsitem {
-    cnid_t ds_did;         /* CNID of this directory           */
-    int    ds_checked;     /* Have we checked this directory ? */
+    cnid_t ds_did;               /* CNID of this directory           */
+    unsigned int ds_checked;     /* Have we checked this directory ? */
 };
  
 
