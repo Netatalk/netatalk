@@ -111,8 +111,8 @@ struct scrit {
  *
  */
 struct dsitem {
-    cnid_t ds_did;         /* CNID of this directory           */
-    int    ds_checked;     /* Have we checked this directory ? */
+    cnid_t ds_did;               /* CNID of this directory           */
+    unsigned int ds_checked;     /* Have we checked this directory ? */
 };
 
 
