@@ -718,7 +718,6 @@ exit:
     return ret;
 }
 
-#define ENUMVETO "./../Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/:2eDS_Store/Contents/Desktop Folder/Trash/Benutzer/"
 
 /*!
  * @brief Construct struct dir
