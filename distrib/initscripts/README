@@ -30,6 +30,7 @@ These unit configurations start daemons directly and do not read "netatalk.conf"
 Therefore, you need to edit files for setting certain options.
 
     ATALK_NAME:         set in afpd.conf
+    ATALK_ZONE:         set in atalkd.conf with -zone
     AFPD_MAX_CLIENTS:   set in afpd.service by starting the daemon with -c
     AFPD_UAMLIST:       set in afpd.conf with -uamlist
     AFPD_GUEST:         set in afpd.conf with -guestname
