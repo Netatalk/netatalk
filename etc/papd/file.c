@@ -40,7 +40,7 @@ int markline( struct papfile *pf, char **start, int *linelength, int *crlflength
     if ( *linelength >= pf->pf_datalen ) {
 	if ( pf->pf_state & PF_EOF ) {
 	    append( pf, "\n", 1 );
-	} else if (*linelength < 1024) {
+	} else {
 	    return( -1 );
 	}
     }
@@ -108,6 +108,20 @@ void append(struct papfile *pf, const char *data, int len)
     }
 }
 
+
+void spoolreply(struct papfile *out, char *str)
+{
+    char	*pserr1 = "%%[ status: ";
+    char	*pserr2 = " ]%%\n";
+
+    if ( str == NULL ) {
+	str = "Spooler error.";
+    }
+
+    append( out, pserr1, strlen( pserr1 ));
+    append( out, str, strlen( str ));
+    append( out, pserr2, strlen( pserr2 ));
+}
 
 void spoolerror(struct papfile *out, char *str)
 {
