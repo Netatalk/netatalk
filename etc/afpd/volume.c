@@ -2973,7 +2973,7 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
     }                    
     
     /* generate uuid and write to file */
-    atalk_uuid_t id;
+    atalk_uuid_t id = "\0";
     const char *cp;
     randombytes((void *)id, 16);
     cp = uuid_bin2string(id);
