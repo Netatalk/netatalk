@@ -3,8 +3,6 @@
 [Unit]
 Description=Netatalk AppleTalk daemon for AFP fileserver
 After=syslog.target network.target
-Before=afpd.service
-Requires=afpd.service
 
 [Service]
 Type=forking
@@ -15,4 +13,3 @@ RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
-Also=afpd.service
