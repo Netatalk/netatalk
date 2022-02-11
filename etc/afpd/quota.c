@@ -39,6 +39,10 @@ char *strchr (), *strrchr ();
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 
+#if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
+#include <sys/mntent.h>
+#endif
+
 #include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
