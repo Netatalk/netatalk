@@ -9,6 +9,9 @@
 #include <net/if_llc.h>
 # else /* BSD4_4 */
 
+#if defined( sun ) && !defined( __svr4__ )
+#include <net/if_ieee802.h>
+#endif /* sun && !__svr4__ */
 
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -68,6 +71,11 @@ struct llc {
 #define LLC_SNAP_LSAP	0xaa
 
 # endif /* BSD4_4 */
+
+#if defined( sun )
+#define SIOCPHASE1	_IOW(i, 100, struct ifreq)	/* AppleTalk phase 1 */
+#define SIOCPHASE2	_IOW(i, 101, struct ifreq)	/* AppleTalk phase 2 */
+#endif /* sun */
 
 #if defined( BSD4_4 )
 #define SIOCPHASE1	_IOW('i', 100, struct ifreq)	/* AppleTalk phase 1 */
