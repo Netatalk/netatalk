@@ -140,27 +140,6 @@ uninstall-startup:
 endif
 
 #
-# checking for "tru64" style sysv scripts:
-#
-
-if USE_TRU64
-
-sysvdir	= /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.tru64
-	cp -f rc.atalk.tru64 $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
-
-endif
-
-#
 # checking for NetBSD init scripts
 #
 

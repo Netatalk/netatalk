@@ -2,12 +2,10 @@ This is a README for the major platforms where Netatalk is in use.
 
 Platforms Covered:
 A.   Linux
-B.   Tru64
-C.   Solaris
-D.I  OpenBSD
-D.II Other BSDs
-E.   SunOS
-F.   Generic
+B.   Solaris
+C.I  OpenBSD
+C.II Other BSDs
+D.   Generic
 
 ----------------------------------------------------------------
 
@@ -63,67 +61,7 @@ package to be able to compile Netatalk correctly.
 
 ----------------------------------------------------------------
 
-B. TRU64
-
-This is the Tru64 README file for netatalk.
-
-1.  Unfortunately, AppleTalk is not available for Digital Unix or Tru64.
-    The reason for this is the kernel patches which Netatalk requires
-    cannot be ported to Tru64. If anyone has the kernel source of Tru64
-    they are welcomed to port the AppleTalk modules themselves.
-
-    As a result, only AppleShare over IP (ASIP) works with Tru64. That
-    is, the program afpd. papd and atalkd compile, but doesn't really
-    work. Anything that requires AppleTalk doesn't work.
-
-2.  Netatalk compiles on Tru64 V4.0D or higher using either the built-in
-    DEC C compiler or GCC V2.95.3. Also, either the Tru64 make command or
-    GNU make can be used. Netatalk supports Tru64's Security Integration
-    Architecture (SIA) and runs on machines configured for Base (BSD) or
-    Enhanced (OSFC2) Security without recompilation.
-
-3.  A peculiar bug in Netatalk has been noticed on a single Tru64
-    machine. However, because other Tru64 machines have not affected, a
-    patch will not be forthcoming until the circumstances where the bug
-    hits is isolated and a more elegant and appropriate patch can be
-    found. In the meantime, there is a description of the bug below. Any
-    users affected can attempt the workarounds provided. The user is
-    urged to report this to the mailing list so that this bug can be
-    isolated and removed.
-
-    HAVE_GCC_MEMCPY_BUG
-    Description -
-       It appears that memcpy() under Tru64 can fail under some
-    circumstances. This maybe due to the fact that Netatalk is compiled
-    with gcc, but since only gcc can compile Netatalk, this is a mute
-    point.
-
-    Symptoms -
-       The symptoms of this bug is that a 18432 byte file uploaded to
-    the server would upload correctly, but a 18433 byte file would
-    result in a sparse file many megabytes big (16MB+). However, due to
-    the low-level nature of memcpy(), there is no reason why other
-    symptoms could not occur.
-
-    Workarounds -
-       There are two known workarounds at this stage.
-    - The first is to #define the macro HAVE_GCC_MEMCPY_BUG. This forces
-    netatalk to use bcopy() in a few (but not all) cases within the code
-    and is enough to stop the bug from occurring. This is the easiest
-    workaround and would merely alter the standard compilation steps to
-
-    CFLAGS="-DHAVE_GCC_MEMCPY_BUG" ./configure [...]
-    make
-    make install
-
-    - The second workaround is to manually remove the optimisation flag
-    "-O2" from within configure and/or configure.in. Although, this
-    isn't the preferred workaround, it shows that the compiler is
-    (at least) partially at fault.
-
-----------------------------------------------------------------
-
-C. SOLARIS
+B. SOLARIS
 
 1.  SELECT COMPILER.  This distribution is configured to build with
     gcc.  It should also work with cc. At the present time only cc
@@ -197,7 +135,7 @@ C. SOLARIS
 
 ----------------------------------------------------------------
 
-D.I OpenBSD
+C.I OpenBSD
 
 1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
     OpenBSD 2.2,  or openbsd-current dated after Aug 1, 1997. But the
@@ -241,7 +179,7 @@ D.I OpenBSD
 
     and copy netatalk/distrib/initscripts/rc.atalk.bsd to /etc/rc.atalk.
 
-D.II Other BSDs
+C.II Other BSDs
 
 1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
     FreeBSD 2.2-current dated after 12 September 1996.
@@ -255,21 +193,7 @@ D.II Other BSDs
 
 ----------------------------------------------------------------
 
-E. SunOS
-
-1.  KERNEL MODULE. This version of netatalk requires that your kernel
-    be configured with
-
-        options VDDRV
-
-    The loadable kernel module is made and installed during the normal
-    make and make install.  NOTE:  Unloading the kernel module may not
-    work correctly and may cause your kernel to panic, hang, or do
-    other nasty things.
-
-----------------------------------------------------------------
-
-F. Generic
+D. Generic
 
 (It's unknown how applicable this is compared to the current codebase)
 

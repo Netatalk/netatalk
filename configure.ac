@@ -579,17 +579,13 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
-	*aix*)				this_os=aix ;;
 	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
 	*freebsd*) 			this_os=freebsd ;;
-	*hpux11*)			this_os=hpux11 ;;
-	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*darwin*)			this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
 	*openbsd*) 			this_os=openbsd ;;
-	*osf*) 				this_os=tru64 ;;
 	*solaris*) 			this_os=solaris ;;
 esac
 
@@ -815,23 +811,6 @@ timeout_id_t dummy;
 	AC_SUBST(KLDFLAGS)
 fi
 
-dnl ----- Tru64 specific -----
-if test x"$this_os" = "xtru64"; then 
-	AC_MSG_RESULT([ * Tru64 specific configuration])
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-	AC_DEFINE(HAVE_64BIT_LONGS, 1, [Define if the data type long has 64 bit])
-	dnl AC_DEFINE(USE_MOUNT_H)
-	AC_DEFINE(USE_OLD_RQUOTA, 1, [Define to use old rquota])
-	dnl AC_DEFINE(USE_UFS_QUOTA_H)
-	AC_DEFINE(TRU64, 1, [Define on Tru64 platforms])
-	AC_DEFINE(_OSF_SOURCE, 1, [Define if the *passwd UAMs should be used])
-	AC_DEFINE(_XOPEN_SOURCE_EXTENDED, 1, [Define for Berkeley DB 4])
-	AC_CHECK_LIB(security,set_auth_parameters)
-	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
-	need_dash_r=no
-	sysv_style=tru64
-fi
-
 dnl ------ Check for sendfile() --------
 netatalk_cv_search_sendfile=yes
 AC_ARG_ENABLE(sendfile,
@@ -1035,23 +1014,6 @@ if test x"$with_acl_support" = x"yes" ; then
 		AC_MSG_NOTICE(Using solaris ACLs)
 		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
 		ACL_LIBS="$ACL_LIBS -lsec"
-		;;
-	*hpux*)
-		AC_MSG_NOTICE(Using HPUX ACLs)
-		AC_DEFINE(HAVE_HPUX_ACLS,1,[Whether HPUX ACLs are available])
-		;;
-	*irix*)
-		AC_MSG_NOTICE(Using IRIX ACLs)
-		AC_DEFINE(HAVE_IRIX_ACLS,1,[Whether IRIX ACLs are available])
-		;;
-	*aix*)
-		AC_MSG_NOTICE(Using AIX ACLs)
-		AC_DEFINE(HAVE_AIX_ACLS,1,[Whether AIX ACLs are available])
-		;;
-	*osf*)
-		AC_MSG_NOTICE(Using Tru64 ACLs)
-		AC_DEFINE(HAVE_TRU64_ACLS,1,[Whether Tru64 ACLs are available])
-		ACL_LIBS="$ACL_LIBS -lpacl"
 		;;
 	*darwin*)
 		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
@@ -1293,7 +1255,6 @@ AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
 AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
 AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
 AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
 AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
@@ -1387,8 +1348,6 @@ AC_CONFIG_FILES([Makefile
 	sys/netbsd/Makefile
 	sys/netbsd/netatalk/Makefile
 	sys/solaris/Makefile
-	sys/sunos/Makefile
-	sys/ultrix/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	])
