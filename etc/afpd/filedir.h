@@ -19,8 +19,6 @@ extern char		*absupath (const struct vol *, struct dir *,
 extern int		veto_file (const char *veto_str, const char *path);
 extern int 		check_name (const struct vol *vol, char *name);
 
-extern int matchfile2dirperms (char *, struct vol *, int);
-
 /* FP functions */
 int afp_moveandrename (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 int afp_rename (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
