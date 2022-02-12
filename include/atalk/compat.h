@@ -36,35 +36,13 @@ extern int inet_aton (const char *, struct in_addr *);
 #endif /* SA_INTERRUPT */
 #endif /* linux */
 
-#ifdef ultrix 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-/*
- * Here's the really confusing one...  Under Ultrix, sigaction() works just
- * like sigvec(), except that SV_INTERRUPT is always set.  Hence, there is
- * no SA_INTERRUPT flag.  Unfortunately, there's also no SA_RESTART, so
- * there's no way to suppress the interrupt.  Sigh.
- */
-#ifndef SA_INTERRUPT
-#define SA_INTERRUPT	0
-#endif
-#ifndef SA_RESTART
-#define SA_RESTART	0
-#endif
-
-extern char *strdup (const char *);
-extern int inet_aton (const char *, struct in_addr *);
-#endif /* ultrix */
-
 #ifdef BSD4_4
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif
 #endif /* BSD4_4 */
 
-#if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
+#if defined(NEED_GETUSERSHELL)
 extern char *getusershell (void);
 #endif
 
