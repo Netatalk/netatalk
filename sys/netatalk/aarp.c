@@ -59,11 +59,7 @@ int			aarptab_size = AARPTAB_SIZE;
 #define AARPT_KILLC	20
 #define AARPT_KILLI	3
 
-#ifdef sun
-extern struct ether_addr	etherbroadcastaddr;
-#else /* sun */
 extern u_char			etherbroadcastaddr[6];
-#endif /* sun */
 
 u_char	atmulticastaddr[ 6 ] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,
@@ -159,13 +155,8 @@ aarpwhohas( ac, sat )
     ea->aarp_hln = sizeof( ea->aarp_sha );
     ea->aarp_pln = sizeof( ea->aarp_spu );
     ea->aarp_op = htons( AARPOP_REQUEST );
-#ifdef sun
-    bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     /*
      * We need to check whether the output ethernet type should
@@ -183,13 +174,8 @@ aarpwhohas( ac, sat )
     eh = (struct ether_header *)sa.sa_data;
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
-#ifdef sun
-	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
@@ -211,13 +197,8 @@ aarpwhohas( ac, sat )
 		sizeof( ea->aarp_tpnet ));
 	ea->aarp_tpnode = sat->sat_addr.s_node;
     } else {
-#ifdef sun
-	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
 	eh->ether_type = ETHERTYPE_AARP;
 
 	ea->aarp_spa = AA_SAT( aa )->sat_addr.s_node;
@@ -235,11 +216,7 @@ aarpresolve( ac, m, destsat, desten )
     struct arpcom	*ac;
     struct mbuf		*m;
     struct sockaddr_at	*destsat;
-#ifdef sun
-    struct ether_addr	*desten;
-#else /* sun */
     u_char		*desten;
-#endif /* sun */
 {
     struct at_ifaddr	*aa;
     struct ifaddr	ifa;
@@ -256,13 +233,8 @@ aarpresolve( ac, m, destsat, desten )
 	    bcopy( (caddr_t)atmulticastaddr, (caddr_t)desten,
 		    sizeof( atmulticastaddr ));
 	} else {
-#ifdef sun
-	    bcopy( (caddr_t)&etherbroadcastaddr, (caddr_t)desten,
-		    sizeof( etherbroadcastaddr ));
-#else /* sun */
 	    bcopy( (caddr_t)etherbroadcastaddr, (caddr_t)desten,
 		    sizeof( etherbroadcastaddr ));
-#endif /* sun */
 	}
 	return( 1 );
     }
@@ -357,32 +329,16 @@ at_aarpinput( ac, m )
     ea = mtod( m, struct ether_aarp *);
 
     /* Check to see if from my hardware address */
-#ifdef sun
-    if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )&ac->ac_enaddr,
-	    sizeof( ac->ac_enaddr ))) {
-	m_freem( m );
-	return;
-    }
-#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )ac->ac_enaddr,
 	    sizeof( ac->ac_enaddr ))) {
 	m_freem( m );
 	return;
     }
-#endif /* sun */
 
     /*
      * Check if from broadcast address.  This could be a more robust
      * check, since we could look for multicasts.
      */
-#ifdef sun
-    if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )&etherbroadcastaddr,
-	    sizeof( etherbroadcastaddr ))) {
-	log( LOG_ERR, "aarp: source is broadcast!\n" );
-	m_freem( m );
-	return;
-    }
-#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )etherbroadcastaddr,
 	    sizeof( etherbroadcastaddr ))) {
 	log( LOG_ERR,
@@ -390,7 +346,6 @@ at_aarpinput( ac, m )
 	m_freem( m );
 	return;
     }
-#endif /* sun */
 
     op = ntohs( ea->aarp_op );
     bcopy( ea->aarp_tpnet, &net, sizeof( net ));
@@ -504,22 +459,12 @@ at_aarpinput( ac, m )
 
     bcopy(( caddr_t )ea->aarp_sha, ( caddr_t )ea->aarp_tha,
 	    sizeof( ea->aarp_sha ));
-#ifdef sun
-    bcopy(( caddr_t )&ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy(( caddr_t )ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
-#ifdef sun
-    bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )&eh->ether_dhost,
-	    sizeof( eh->ether_dhost ));
-#else /* sun */
     bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )eh->ether_dhost,
 	    sizeof( eh->ether_dhost ));
-#endif /* sun */
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
@@ -670,24 +615,14 @@ aarpprobe( ac )
     ea->aarp_hln = sizeof( ea->aarp_sha );
     ea->aarp_pln = sizeof( ea->aarp_spu );
     ea->aarp_op = htons( AARPOP_PROBE );
-#ifdef sun
-    bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
-#ifdef sun
-	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
@@ -707,13 +642,8 @@ aarpprobe( ac )
 		sizeof( ea->aarp_tpnet ));
 	ea->aarp_spnode = ea->aarp_tpnode = AA_SAT( aa )->sat_addr.s_node;
     } else {
-#ifdef sun
-	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
 	eh->ether_type = ETHERTYPE_AARP;
 	ea->aarp_spa = ea->aarp_tpa = AA_SAT( aa )->sat_addr.s_node;
     }

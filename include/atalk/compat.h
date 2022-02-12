@@ -23,18 +23,6 @@
 
 extern int flock (int, int);
 extern int inet_aton (const char *, struct in_addr *);
-#else /* __svr4__ */
-
-#ifdef sun
-/*
- * SunOS 4 has SA_INTERRUPT, but no SA_RESTART.
- */
-#ifndef SA_RESTART
-#define SA_RESTART	0
-#endif
-#endif /* sun */
-
-#endif /* __svr4__ */
 
 #ifdef linux
 /*
