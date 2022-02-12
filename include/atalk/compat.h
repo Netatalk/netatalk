@@ -16,6 +16,7 @@
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif
+#endif /* __svr4__ */
 
 #include <sys/types.h>
 #include <netinet/in.h>
