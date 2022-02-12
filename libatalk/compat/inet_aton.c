@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#ifdef sun
 #if defined(sun) && defined(__svr4__)
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned) 0xffffffff)
