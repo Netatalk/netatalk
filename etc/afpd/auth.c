@@ -46,17 +46,8 @@ int afp_version = 11;
 static int afp_version_index;
 
 uid_t   uuid;
-
-#if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-
-int *groups;
-#define GROUPS_SIZE sizeof(int)
-
-#else /* sun __svr4__ ultrix */
-
 gid_t   *groups;
 #define GROUPS_SIZE sizeof(gid_t)
-#endif /* sun ultrix */
 
 int ngroups;
 

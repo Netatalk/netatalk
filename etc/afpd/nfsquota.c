@@ -173,12 +173,8 @@ int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
         dqp->dqb_curblocks =
             gq_rslt.GQR_RQUOTA.rq_curblocks*NFS_BSIZE;
 
-#ifdef ultrix
-        dqp->dqb_bwarn = gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#else /* ultrix */
         dqp->dqb_btimelimit =
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#endif /* ultrix */
 
         *hostpath = ':';
         return AFP_OK;

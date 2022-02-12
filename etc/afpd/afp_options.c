@@ -719,15 +719,6 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         *p = '\0';
     }
 
-#ifdef ultrix
-    if (NULL == ( p = strrchr( av[ 0 ], '/' )) ) {
-        p = av[ 0 ];
-    } else {
-        p++;
-    }
-    openlog( p, LOG_PID ); /* ultrix only */
-#endif /* ultrix */
-
     while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
         switch ( c ) {
         case 'd' :

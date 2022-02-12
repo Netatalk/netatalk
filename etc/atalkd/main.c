@@ -1074,12 +1074,8 @@ int main( int ac, char **av)
       exit( 0 );
     }
 
-#ifdef ultrix
-    openlog( prog, LOG_PID );
-#else /* ultrix */
     set_processname(prog);
     syslog_setup(log_debug, logtype_default, logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     LOG(log_info, logtype_atalkd, "restart (%s)", version );
 

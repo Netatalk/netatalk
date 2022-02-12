@@ -106,11 +106,7 @@ int main( int ac, char **av)
     } else {
 	prog++;
     }
-#ifdef ultrix
-    openlog( prog, LOG_PID );
-#else /* ultrix */
     openlog( prog, LOG_PID, LOG_LPR );
-#endif /* ultrix */
 
     while (( c = getopt( ac, av, "P:C:D:F:L:J:x:y:n:h:w:l:i:c" )) != EOF ) {
 	switch ( c ) {

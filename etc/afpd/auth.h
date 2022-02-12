@@ -41,11 +41,7 @@ static const struct afp_versions  afp_versions[] = {
 #define USERIBIT_ALL   (USERIBIT_USER | USERIBIT_GROUP | USERIBIT_UUID)
 
 extern uid_t    uuid;
-#if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-extern int	*groups;
-#else /*sun __svr4__ ultrix*/
 extern gid_t	*groups;
-#endif /*sun __svr4__ ultrix*/
 extern int	ngroups;
 
 extern int set_groups(AFPObj *obj, struct passwd *pwd);

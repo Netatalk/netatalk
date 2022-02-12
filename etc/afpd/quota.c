@@ -455,30 +455,7 @@ mountp( char *file, int *nfs)
 }
 
 #else /* __svr4__ */
-#ifdef ultrix
-/*
-* Return the block-special device name associated with the filesystem
-* on which "file" resides.  Returns NULL on failure.
-*/
-
-static char *
-special( char *file, int *nfs)
-{
-    static struct fs_data	fsd;
-
-    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
-        return( NULL );
-    }
-
-    /* XXX: does this really detect an nfs mounted fs? */
-    if (strchr(fsd.fd_req.devname, ':'))
-        *nfs = 1;
-    return( fsd.fd_req.devname );
-}
-
-#else /* ultrix */
-#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
+#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4)
 
 static char *
 special(char *file, int *nfs)
@@ -545,7 +522,6 @@ special(char *file, int *nfs)
 }
 
 #endif /* BSD4_4 */
-#endif /* ultrix */
 #endif /* __svr4__ */
 
 
@@ -569,11 +545,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
     }
 
 #else /* __svr4__ */
-#ifdef ultrix
-    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
-        return( AFPERR_PARAM );
-    }
-#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
@@ -642,7 +613,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
     } /* if */
 
 
-#endif /* ultrix */
 #endif /* __svr4__ */
 
     return AFP_OK;
@@ -710,11 +680,6 @@ static int overquota( struct dqblk *dqblk)
          dqblk->dqb_bsoftlimit == 0 ) {
         return( 0 );
     }
-#ifdef ultrix
-    if ( dqblk->dqb_bwarn ) {
-        return( 0 );
-    }
-#else /* ultrix */
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -722,7 +687,6 @@ static int overquota( struct dqblk *dqblk)
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
-#endif /* ultrix */
     return( 1 );
 }
 
