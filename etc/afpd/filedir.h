@@ -14,7 +14,6 @@ extern char		*absupath (const struct vol *, struct dir *,
 extern int		veto_file (const char *veto_str, const char *path);
 extern int 		check_name (const struct vol *vol, char *name);
 
-extern int matchfile2dirperms (char *, struct vol *, int);
 extern int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir);
 
 /* FP functions */
