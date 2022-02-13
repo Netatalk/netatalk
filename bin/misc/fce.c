@@ -77,7 +77,7 @@ int main(void)
     int rv;
     int numbytes;
     struct sockaddr_storage their_addr;
-    char buf[MAXBUFLEN];
+    unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
     uint64_t tmsize;
