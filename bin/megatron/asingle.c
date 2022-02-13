@@ -407,7 +407,7 @@ ssize_t single_read( int fork, char *buffer, size_t length)
     }
 
     if (single.entry[entry_id].ade_len > 0x7FFFFFFF) {
-	fprintf(stderr, "single_read: Trying to read past end of fork!, ade_len == %lu\n", single.entry[entry_id].ade_len);
+	fprintf(stderr, "single_read: Trying to read past end of fork!, ade_len == %lu\n", (unsigned long) single.entry[entry_id].ade_len);
 	return -1;
     }
     if ( single.entry[ entry_id ].ade_len == 0 ) {
