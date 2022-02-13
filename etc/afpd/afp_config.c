@@ -108,7 +108,7 @@ static char * srvloc_encode(const struct afp_options *options, const char *name)
 		return (char*)name;
 
 	/* Escape characters */
-	p = conv_name;
+	p = (unsigned char *)conv_name;
 	while (*p && i<(sizeof(buf)-4)) {
 	    if (*p == '@')
 		break;
