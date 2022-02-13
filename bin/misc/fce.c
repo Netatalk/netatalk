@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     struct addrinfo hints, *servinfo, *p;
     int numbytes;
     struct sockaddr_storage their_addr;
-    char buf[MAXBUFLEN];
+    unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
     char *host = "localhost";
