@@ -29,7 +29,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
         return 0;
     }
 
-    if ((buf = make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
+    if ((buf = (char *)make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_lookup: Pathname is too long");
         return 0;
     }

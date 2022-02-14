@@ -1924,9 +1924,10 @@ int tdb_lockkeys(TDB_CONTEXT *tdb, u32 number, TDB_DATA keys[])
 	/* Insertion sort by bucket */
 	for (i = 0; i < number; i++) {
 		hash = tdb_hash(&keys[i]);
-		for (j = 0; j < i && BUCKET(tdb->lockedkeys[j+1]) < BUCKET(hash); j++);
-			memmove(&tdb->lockedkeys[j+2], &tdb->lockedkeys[j+1], sizeof(u32) * (i-j));
-		tdb->lockedkeys[j+1] = hash;
+		for (j = 0; j < i && BUCKET(tdb->lockedkeys[j+1]) < BUCKET(hash); j++) {
+		    memmove(&tdb->lockedkeys[j+2], &tdb->lockedkeys[j+1], sizeof(u32) * (i-j));
+		    tdb->lockedkeys[j+1] = hash;
+        }
 	}
 	/* Finally, lock in order */
 	for (i = 0; i < number; i++)

@@ -185,7 +185,7 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
 
     key.dptr = (char *)&hint;
     key.dsize = sizeof(cnid_t);
-    if ((data.dptr = make_tdb_data(cdb->flags, lstp, did, name, len)) == NULL) {
+    if ((data.dptr = (char *)make_tdb_data(cdb->flags, lstp, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_add: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;
