@@ -157,22 +157,7 @@ static int set_auth_switch(int expired)
 {
     int i;
 
-    if (expired) {
-        /*
-         * BF: expired password handling
-         * to allow the user to change his/her password we have to allow login
-         * but every following call except for FPChangePassword will be thrown
-         * away with an AFPERR_PWDEXPR error. (thanks to Leland Wallace from Apple
-         * for clarifying this)
-         */
-
-        for (i=0; i<=0xff; i++) {
-            uam_afpserver_action(i, UAM_AFPSERVER_PREAUTH, afp_errpwdexpired, NULL);
-        }
-        uam_afpserver_action(AFP_LOGOUT, UAM_AFPSERVER_PREAUTH, afp_logout, NULL);
-        uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH, afp_changepw, NULL);
-    }
-    else {
+    if (!expired) {
         afp_switch = postauth_switch;
         switch (afp_version) {
 
@@ -213,6 +198,20 @@ static int set_auth_switch(int expired)
             uam_afpserver_action(AFP_ZZZ,  UAM_AFPSERVER_POSTAUTH, afp_zzz, NULL);
             break;
         }
+    } else {
+        /*
+         * BF: expired password handling
+         * to allow the user to change his/her password we have to allow login
+         * but every following call except for FPChangePassword will be thrown
+         * away with an AFPERR_PWDEXPR error. (thanks to Leland Wallace from Apple
+         * for clarifying this)
+         */
+
+        for (i=0; i<=0xff; i++) {
+            uam_afpserver_action(i, UAM_AFPSERVER_PREAUTH, afp_errpwdexpired, NULL);
+        }
+        uam_afpserver_action(AFP_LOGOUT, UAM_AFPSERVER_PREAUTH, afp_logout, NULL);
+        uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH, afp_changepw, NULL);
     }
 
     return AFP_OK;
