@@ -63,13 +63,10 @@ static void log_status( char *s, OM_uint32 major_status,
                         OM_uint32 minor_status )
 {
     gss_buffer_desc msg = GSS_C_EMPTY_BUFFER;
-    OM_uint32 min_status, maj_status;
+    OM_uint32 min_status;
     OM_uint32 maj_ctx = 0, min_ctx = 0;
 
     while (1) {
-        maj_status = gss_display_status( &min_status, major_status,
-                                         GSS_C_GSS_CODE, GSS_C_NULL_OID,
-                                         &maj_ctx, &msg );
         LOG(log_info, logtype_uams, "uams_gss.c :do_gss_auth: %s %.*s (error %s)", s,
             (int)msg.length, msg.value, strerror(errno));
         gss_release_buffer(&min_status, &msg);
@@ -78,9 +75,6 @@ static void log_status( char *s, OM_uint32 major_status,
             break;
     }
     while (1) {
-        maj_status = gss_display_status( &min_status, minor_status,
-                                         GSS_C_MECH_CODE, GSS_C_NULL_OID, // gss_mech_krb5,
-                                         &min_ctx, &msg );
         LOG(log_info, logtype_uams, "uams_gss.c :do_gss_auth: %s %.*s (error %s)", s,
             (int)msg.length, msg.value, strerror(errno));
         gss_release_buffer(&min_status, &msg);
