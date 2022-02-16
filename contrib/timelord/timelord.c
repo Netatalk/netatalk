@@ -169,12 +169,8 @@ int main( int ac, char **av )
 	p++;
     }
 
-#ifdef ultrix
-    openlog( p, LOG_PID );
-#else /* ultrix */
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     /* allocate memory */
     memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));
