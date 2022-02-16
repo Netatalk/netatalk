@@ -11,9 +11,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#ifdef ibm032
-#include <sys/dir.h>
-#endif /* ibm032 */
 #include <sys/user.h>
 #include <sys/types.h>
 #include <sys/errno.h>
