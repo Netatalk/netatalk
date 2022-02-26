@@ -833,7 +833,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     uint16_t		bshort;
     uint16_t		oshort;
     uint32_t		aint;
-    uint32_t		upriv;
+    uint32_t		upriv = 0;
     uint16_t           upriv_bit = 0;
     struct utimbuf	ut;
     int                 change_mdate = 0;
