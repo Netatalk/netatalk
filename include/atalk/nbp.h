@@ -44,26 +44,22 @@ struct nbphdr {
     u_int32_t	nh_cnt : 4,
     		nh_op : 4,
 #endif /* BYTE_ORDER */
-    		nh_id;
+    		nh_id : 8;
 };
 
 #define SZ_NBPHDR	2
 
-/* NBP tuple described in IAT 7-16 */
-/* struct nbptuple is misnamed; describes only the entity address */
 struct nbptuple {
     u_int16_t   nt_net;
     u_int8_t    nt_node;
     u_int8_t    nt_port;
     u_int8_t    nt_enum;
 };
-
-#define SZ_NBPTUPLE	sizeof(struct nbptuple)
+#define SZ_NBPTUPLE	5
 
 #define NBPSTRLEN	32
 /*
  * Name Binding Protocol Network Visible Entity
- * This is the rest of NBP tuple in IAT 7-16
  */
 struct nbpnve {
     struct sockaddr_at	nn_sat;
