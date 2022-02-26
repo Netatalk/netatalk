@@ -32,48 +32,6 @@
 
 #include <sys/select.h>
 
-int usockfd_create(char *usock_fn, mode_t mode, int backlog)
-{
-    int sockfd;
-    struct sockaddr_un addr;
-
-
-    if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-        LOG(log_error, logtype_cnid, "error in socket call: %s",
-            strerror(errno));
-        return -1;
-    }
-     
-    if (unlink(usock_fn) < 0 && errno != ENOENT) {
-        LOG(log_error, logtype_cnid, "error unlinking unix socket file %s: %s",
-            usock_fn, strerror(errno));
-        return -1;
-    }
-    memset((char *) &addr, 0, sizeof(struct sockaddr_un));
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, usock_fn, sizeof(addr.sun_path) - 1);
-    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_un)) < 0) {
-        LOG(log_error, logtype_cnid, "error binding to socket for %s: %s",
-            usock_fn, strerror(errno));
-        return -1;
-    }
-
-    if (listen(sockfd, backlog) < 0) {
-        LOG(log_error, logtype_cnid, "error in listen for %s: %s",
-            usock_fn, strerror(errno));
-        return -1;
-    }
-
-    if (chmod(usock_fn, mode) < 0) {
-        LOG(log_error, logtype_cnid, "error changing permissions for %s: %s",
-            usock_fn, strerror(errno));
-        close(sockfd);
-        return -1;
-    }
-
-    return sockfd;
-}
-
 /* ---------------
  * create a tcp socket
  */

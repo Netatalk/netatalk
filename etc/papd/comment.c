@@ -99,21 +99,3 @@ struct papd_comment *commatch( char *start, char *stop, struct papd_comment comm
 	return( NULL );
     }
 }
-
-char *comtoken( char *start, char *stop, char *pos, char *delim)
-{
-    if ( pos < start || pos > stop ) {
-	abort();
-    }
-
-    for ( ; pos < stop; pos++ ) {
-	if ( index( delim, *pos )) {
-	    break;
-	}
-    }
-    if ( ++pos < stop ) {
-	return( pos );
-    } else {
-	return( NULL );
-    }
-}

@@ -451,51 +451,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
     return 0;
 }
 
-/* if we need to maintain a connection, this is how we do it.
- * because an action pointer gets passed in, we can stream 
- * DSI connections */
-int uam_afp_read(void *handle, char *buf, size_t *buflen,
-                 int (*action)(void *, void *, const int))
-{
-    AFPObj *obj = handle;
-    int len;
-
-    if (!obj)
-        return AFPERR_PARAM;
-
-    switch (obj->proto) {
-#ifndef NO_DDP
-    case AFPPROTO_ASP:
-        if ((len = asp_wrtcont(obj->handle, buf, buflen )) < 0)
-            goto uam_afp_read_err;
-        return action(handle, buf, *buflen);
-        break;
-#endif
-    case AFPPROTO_DSI:
-        len = dsi_writeinit(obj->handle, buf, *buflen);
-        if (!len || ((len = action(handle, buf, len)) < 0)) {
-            dsi_writeflush(obj->handle);
-            goto uam_afp_read_err;
-        }
-
-        while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
-            if ((len = action(handle, buf, len)) < 0) {
-                dsi_writeflush(obj->handle);
-                goto uam_afp_read_err;
-            }
-        }
-        break;
-    default:
-        return -1;
-    }
-    return 0;
-
-uam_afp_read_err:
-    *buflen = 0;
-    return len;
-}
-
-
 /* --- papd-specific functions (just placeholders) --- */
 struct papfile;
 

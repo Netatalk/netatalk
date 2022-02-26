@@ -902,30 +902,6 @@ int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
         return 1;
 }
 
-/* search by secondary return primary */
-int dbif_pget(DBD *dbd, const int dbi, DBT *key, DBT *pkey, DBT *val, u_int32_t flags)
-{
-    int ret;
-
-    ret = dbd->db_table[dbi].db->pget(dbd->db_table[dbi].db,
-                                      dbd->db_txn,
-                                      key,
-                                      pkey,
-                                      val,
-                                      flags);
-
-    if (ret == DB_NOTFOUND || ret == DB_SECONDARY_BAD) {
-        return 0;
-    }
-    if (ret) {
-        LOG(log_error, logtype_cnid, "error retrieving value from %s: %s",
-            dbd->db_table[dbi].name, db_strerror(ret));
-        return -1;
-   } else
-        return 1;
-}
-
-/* -------------------------- */
 int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
 {
     int ret;
