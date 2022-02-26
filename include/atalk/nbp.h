@@ -49,6 +49,9 @@ struct nbphdr {
 
 #define SZ_NBPHDR	2
 
+
+/* NBP tuple described in IAT 7-16 */
+/* struct nbptuple is misnamed; describes only the entity address */
 struct nbptuple {
     u_int16_t   nt_net;
     u_int8_t    nt_node;
@@ -60,6 +63,7 @@ struct nbptuple {
 #define NBPSTRLEN	32
 /*
  * Name Binding Protocol Network Visible Entity
+ * This is the rest of NBP tuple in IAT 7-16
  */
 struct nbpnve {
     struct sockaddr_at	nn_sat;
