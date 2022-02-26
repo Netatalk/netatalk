@@ -844,7 +844,7 @@ int setfilparams(struct vol *vol,
     u_int16_t		ashort = 0;
     u_int16_t		bshort, oshort;
     u_int32_t		aint;
-    u_int32_t		upriv;
+    u_int32_t		upriv = 0;
     u_int16_t           upriv_bit = 0;
     
     struct utimbuf	ut;
