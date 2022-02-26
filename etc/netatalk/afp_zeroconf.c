@@ -40,9 +40,11 @@ void zeroconf_deregister(void)
 {
 #if defined (HAVE_MDNS)
   LOG(log_debug, logtype_afpd, "Attempting to de-register mDNS using mDNSResponder");
-	md_zeroconf_unregister();
+
+  md_zeroconf_unregister();
 #elif defined (HAVE_AVAHI)
   LOG(log_debug, logtype_afpd, "Attempting to de-register mDNS using Avahi");
-	av_zeroconf_unregister();
+
+  av_zeroconf_unregister();
 #endif
 }
