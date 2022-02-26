@@ -59,7 +59,7 @@ ucs2_t toupper_w(ucs2_t val)
     if ( val >= 0xFF40 && val <= 0xFF7F)
         return upper_table_14[val-0xFF40];
 
-	return (val);
+    return (val);
 }
 
 /*******************************************************************
@@ -88,7 +88,7 @@ uint32_t toupper_sp(uint32_t val)
     if ( val >= 0xD83ADD00 && val <= 0xD83ADD7F)
         return upper_table_sp_7[val-0xD83ADD00];
 
-	return (val);
+    return (val);
 }
 
 /*******************************************************************
@@ -135,7 +135,7 @@ ucs2_t tolower_w(ucs2_t val)
     if ( val >= 0xFF00 && val <= 0xFF3F)
         return lower_table_13[val-0xFF00];
 
-	return (val);
+    return (val);
 }
 
 /*******************************************************************
@@ -167,7 +167,7 @@ uint32_t tolower_sp(uint32_t val)
     if ( val >= 0xD83ADD00 && val <= 0xD83ADD3F)
         return lower_table_sp_8[val-0xD83ADD00];
 
-	return (val);
+    return (val);
 }
 
 /* EOF */
