@@ -37,6 +37,7 @@
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
+#include "dircache.h"
 
 #ifdef FORCE_UIDGID
 #warning UIDGID

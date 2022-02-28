@@ -23,7 +23,7 @@
 
 /* ------------------------ */
 cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
-                     const cnid_t did _U_, char *name _U_, const size_t len _U_, cnid_t hint _U_)
+                     const cnid_t did _U_, const char *name _U_, const size_t len _U_, cnid_t hint _U_)
 {
 
     /* FIXME: it relies on fact, that this is never called twice for the same file/dir. */
