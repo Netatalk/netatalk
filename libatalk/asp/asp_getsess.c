@@ -131,7 +131,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     struct iovec        iov[ 8 ];
     pid_t               pid;
     int                 i, iovcnt, sid;
-    u_int16_t           asperr;
+    u_int16_t           asperr = 0;
     char                *buf;
     int                 buflen;
 
@@ -299,7 +299,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	  
 	default : /* parent process */
 	  /* we need atomic setting or pb with tickle_handler */ 
-      if (server_child_add(children, CHILD_ASPFORK, pid, dummy)) {
+      if (server_child_add(children, CHILD_ASPFORK, pid, (long)dummy)) {
 	    if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
             kill(pid, SIGQUIT); 
             break;

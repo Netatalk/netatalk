@@ -54,7 +54,7 @@ extern void cnid_tdb_close (struct _cnid_db *);
 
 /* cnid_add.c */
 extern cnid_t cnid_tdb_add (struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const size_t, cnid_t);
+                                 const char *, const size_t, cnid_t);
 
 /* cnid_get.c */
 extern cnid_t cnid_tdb_get (struct _cnid_db *, const cnid_t, char *, const size_t);

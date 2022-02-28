@@ -315,8 +315,8 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     config->optcount = refcount;
     (*refcount)++;
 
-    config->server_start = asp_start;
-    config->server_cleanup = asp_cleanup;
+    config->server_start = (void *) asp_start;
+    config->server_cleanup = (void *) asp_cleanup;
 
     return config;
 

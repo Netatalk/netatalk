@@ -28,6 +28,7 @@
 #include <sys/file.h>
 #include <sys/uio.h>
 
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <netatalk/at.h>
