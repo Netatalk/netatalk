@@ -31,7 +31,12 @@ GENERATED_FILES = \
 	rc.atalk.sysv		\
 	rc.atalk.gentoo		\
 	rc.atalk.debian		\
-	service.atalk.systemd
+	a2boot.service		\
+	afpd.service		\
+	atalkd.service		\
+	cnid.service		\
+	papd.service		\
+	timelord.service
 
 TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
@@ -48,9 +53,14 @@ TEMPLATES = \
 	rc.atalk.sysv.tmpl		\
 	rc.atalk.gentoo.tmpl		\
 	rc.atalk.debian.tmpl		\
-	service.atalk.systemd.tmpl
+	a2boot.service.tmpl		\
+	afpd.service.tmpl		\
+	atalkd.service.tmpl		\
+	cnid.service.tmpl		\
+	papd.service.tmpl		\
+	timelord.service.tmpl
 
-CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd atalkd cnid_metad papd timelord
+CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) a2boot afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
@@ -87,26 +97,15 @@ endif
 
 if USE_SYSTEMD
 
-sysvdir	= $(pkglibexecdir)
-sysv_SCRIPTS = netatalk.sh
-
 servicedir	= /lib/systemd/system
-service_DATA	= netatalk.service
-
-$(sysv_SCRIPTS): rc.atalk.systemd
-	cp -f rc.atalk.systemd $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-$(service_DATA): service.atalk.systemd
-	cp -f service.atalk.systemd $(service_DATA)
+service_DATA	= a2boot.service afpd.service atalkd.service cnid.service papd.service timelord.service
 
 install-data-hook:
 	-systemctl daemon-reload
 
 uninstall-startup:
 	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
-		$(DESTDIR)$(servicedir)/$(service_DATA)
+	rm -f $(addprefix $(DESTDIR)$(servicedir)/, $(service_DATA))
 	-systemctl daemon-reload
 
 endif
