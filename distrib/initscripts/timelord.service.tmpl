@@ -1,0 +1,17 @@
+# This file is part of Netatalk :NETATALK_VERSION:.
+
+[Unit]
+Description=AppleTalk Timelord time server daemon
+After=syslog.target network.target atalkd.service
+Requires=atalkd.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/timelord -l
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=atalkd.service

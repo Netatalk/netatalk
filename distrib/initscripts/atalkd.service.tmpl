@@ -1,0 +1,15 @@
+# This file is part of Netatalk :NETATALK_VERSION:.
+
+[Unit]
+Description=Netatalk AppleTalk daemon
+After=syslog.target network.target
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/atalkd
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

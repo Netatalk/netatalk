@@ -6,10 +6,8 @@ rc.atalk.systemd
 rc.atalk.suse-sysv
 rc.atalk.tru64
 rc.atalk.sysv
-service.atalk.systemd
 netatalk
 atalk
-netatalk.service
-netatalk.sh
+*.service
 .gitignore
 *.o
