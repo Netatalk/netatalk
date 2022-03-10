@@ -398,10 +398,10 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
 /**
  * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
  **/
-static int parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
+static int parse_entries(struct adouble *ad, uint16_t nentries, size_t valid_data_len)
 {
     uint32_t   eid, len, off;
-    int        ret = 0;
+    uint8_t *buf = ad->ad_data + AD_HEADER_LEN;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -415,21 +415,20 @@ static int parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
         len = ntohl( len );
         buf += sizeof( len );
 
-        ad->ad_eid[eid].ade_off = off;
-        ad->ad_eid[eid].ade_len = len;
-
         if (!eid
             || eid > ADEID_MAX
-            || off >= sizeof(ad->ad_data)
-            || ((eid != ADEID_RFORK) && (off + len >  sizeof(ad->ad_data))))
+            || off >= valid_data_len
+            || ((eid != ADEID_RFORK) && (off + len >  valid_data_len)))
         {
-            ret = -1;
             LOG(log_warning, logtype_ad, "parse_entries: bogus eid: %u, off: %u, len: %u",
                 (uint)eid, (uint)off, (uint)len);
+	    return -1;
         }
+        ad->ad_eid[eid].ade_off = off;
+        ad->ad_eid[eid].ade_len = len;
     }
 
-    return ret;
+    return 0;
 }
 
 /* this reads enough of the header so that we can figure out all of
@@ -480,7 +479,7 @@ static int ad_header_read(const char *path, struct adouble *ad, const struct sta
         return -1;
     }
 
-    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries) != 0) {
+    if (parse_entries(ad, nentries, header_len) != 0) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
             path ? fullpathname(path) : "");
         errno = EIO;
@@ -686,7 +685,7 @@ reread:
         return -1;
     }
 
-    if (parse_entries(&adosx, buf + AD_HEADER_LEN, nentries) != 0) {
+    if (parse_entries(&adosx, nentries, header_len) != 0) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
             path ? fullpathname(path) : "");
             errno = EIO;
@@ -775,7 +774,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     }
 
     /* Now parse entries */
-    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries)) {
+    if (parse_entries(ad, nentries, header_len)) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
             path ? fullpathname(path) : "");
         errno = EINVAL;
