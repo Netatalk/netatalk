@@ -95,6 +95,11 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
         p = buf + sizeof(appltag);
         memcpy( &len, p, sizeof(len));
         len = ntohs( len );
+        if (len > MAXPATHLEN - (sizeof(appltag) + sizeof(len))) {
+            errno = EINVAL;
+            cc = -1;
+            break;
+        }
         p += sizeof( len );
         if (( cc = read( sa.sdt_fd, p, len )) < len ) {
             break;
