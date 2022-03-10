@@ -224,6 +224,7 @@ struct adouble {
     char                *ad_name;          /* mac name (maccharset or UTF8-MAC)       */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks;     /* open forks (by others)                  */
+    size_t              valid_data_len;	   /* Bytes read into ad_data                 */
     char                ad_data[AD_DATASZ_MAX];
 };
 
@@ -371,7 +372,6 @@ struct adouble {
 #define ad_getentrylen(ad,eid)     ((ad)->ad_eid[(eid)].ade_len)
 #define ad_setentrylen(ad,eid,len) ((ad)->ad_eid[(eid)].ade_len = (len))
 #define ad_setentryoff(ad,eid,off) ((ad)->ad_eid[(eid)].ade_off = (off))
-#define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
 #define ad_get_RF_flags(ad) ((ad)->ad_rfp->adf_flags)
 #define ad_get_MD_flags(ad) ((ad)->ad_mdp->adf_flags)
@@ -399,6 +399,7 @@ extern void ad_unlock(struct adouble *, int fork, int unlckbrl);
 extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int fork);
 
 /* ad_open.c */
+extern void *ad_entry(const struct adouble *ad, int eid);
 extern off_t ad_getentryoff(const struct adouble *ad, int eid);
 extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );

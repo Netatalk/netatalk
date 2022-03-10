@@ -428,6 +428,7 @@ static int parse_entries(struct adouble *ad, uint16_t nentries, size_t valid_dat
         ad->ad_eid[eid].ade_len = len;
     }
 
+    ad->valid_data_len = valid_data_len;
     return 0;
 }
 
@@ -1531,6 +1532,122 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 /***********************************************************************************
  * API functions
  ********************************************************************************* */
+
+/*
+ * All entries besides FinderInfo and resource fork must fit into the
+ * buffer. FinderInfo is special as it may be larger then the default 32 bytes
+ * if it contains marshalled xattrs, which we will fixup that in
+ * ad_convert(). The first 32 bytes however must also be part of the buffer.
+ *
+ * The resource fork is never accessed directly by the ad_data buf.
+ */
+static bool ad_entry_check_size(uint32_t eid,
+				size_t bufsize,
+				uint32_t off,
+				uint32_t got_len)
+{
+	struct {
+		off_t expected_len;
+		bool fixed_size;
+		bool minimum_size;
+	} ad_checks[] = {
+		[ADEID_DFORK] = {-1, false, false}, /* not applicable */
+		[ADEID_RFORK] = {-1, false, false}, /* no limit */
+		[ADEID_NAME] = {ADEDLEN_NAME, false, false},
+		[ADEID_COMMENT] = {ADEDLEN_COMMENT, false, false},
+		[ADEID_ICONBW] = {ADEDLEN_ICONBW, true, false},
+		[ADEID_ICONCOL] = {ADEDLEN_ICONCOL, false, false},
+		[ADEID_FILEI] = {ADEDLEN_FILEI, true, false},
+		[ADEID_FILEDATESI] = {ADEDLEN_FILEDATESI, true, false},
+		[ADEID_FINDERI] = {ADEDLEN_FINDERI, false, true},
+		[ADEID_MACFILEI] = {ADEDLEN_MACFILEI, true, false},
+		[ADEID_PRODOSFILEI] = {ADEDLEN_PRODOSFILEI, true, false},
+		[ADEID_MSDOSFILEI] = {ADEDLEN_MSDOSFILEI, true, false},
+		[ADEID_SHORTNAME] = {ADEDLEN_SHORTNAME, false, false},
+		[ADEID_AFPFILEI] = {ADEDLEN_AFPFILEI, true, false},
+		[ADEID_DID] = {ADEDLEN_DID, true, false},
+		[ADEID_PRIVDEV] = {ADEDLEN_PRIVDEV, true, false},
+		[ADEID_PRIVINO] = {ADEDLEN_PRIVINO, true, false},
+		[ADEID_PRIVSYN] = {ADEDLEN_PRIVSYN, true, false},
+		[ADEID_PRIVID] = {ADEDLEN_PRIVID, true, false},
+	};
+    uint32_t required_len;
+
+	if (eid >= ADEID_MAX) {
+		return false;
+	}
+	if (got_len == 0) {
+		/* Entry present, but empty, allow */
+		return true;
+	}
+	if (ad_checks[eid].expected_len == 0) {
+		/*
+		 * Shouldn't happen: implicitly initialized to zero because
+		 * explicit initializer missing.
+		 */
+		return false;
+	}
+	if (ad_checks[eid].expected_len == -1) {
+		/* Unused or no limit */
+		return true;
+	}
+	if (ad_checks[eid].fixed_size) {
+		if (ad_checks[eid].expected_len != got_len) {
+			/* Wrong size fo fixed size entry. */
+			return false;
+		}
+        required_len = got_len;
+	} else {
+		if (ad_checks[eid].minimum_size) {
+			if (got_len < ad_checks[eid].expected_len) {
+				/*
+				 * Too small for variable sized entry with
+				 * minimum size.
+				 */
+				return false;
+			}
+        required_len = got_len;
+		} else {
+			if (got_len > ad_checks[eid].expected_len) {
+				/* Too big for variable sized entry. */
+				return false;
+			}
+            /*
+             * Expect the buffer to provide enough room for the maximum possible
+             * size.
+             */
+            required_len = ad_checks[eid].expected_len;
+		}
+	}
+	if (off + required_len < off) {
+		/* wrap around */
+		return false;
+	}
+	if (off + required_len > bufsize) {
+		/* overflow */
+		return false;
+	}
+	return true;
+}
+
+void *ad_entry(const struct adouble *ad, int eid)
+{
+	size_t bufsize = ad->valid_data_len;
+	off_t off = ad_getentryoff(ad, eid);
+	size_t len = ad_getentrylen(ad, eid);
+	bool valid;
+
+	valid = ad_entry_check_size(eid, bufsize, off, len);
+	if (!valid) {
+		return NULL;
+	}
+
+	if (off == 0 || len == 0) {
+		return NULL;
+	}
+
+	return ((struct adouble *)ad)->ad_data + off;
+}
 
 off_t ad_getentryoff(const struct adouble *ad, int eid)
 {
