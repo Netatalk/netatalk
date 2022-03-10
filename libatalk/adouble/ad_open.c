@@ -492,11 +492,11 @@ bail_err:
 /**
  * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
  **/
-static int parse_entries(struct adouble *ad, char *buf,
-                          u_int16_t nentries)
+static int parse_entries(struct adouble *ad, uint16_t nentries,
+                          size_t valid_data_len)
 {
     u_int32_t   eid, len, off;
-    int         warning = 0;
+    char *buf = ad->ad_data + AD_HEADER_LEN;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -511,13 +511,13 @@ static int parse_entries(struct adouble *ad, char *buf,
         buf += sizeof( len );
 
         if (eid && eid < ADEID_MAX && off < sizeof(ad->ad_data) &&
-            (off +len <= sizeof(ad->ad_data) || eid == ADEID_RFORK)) {
+            (off + len <= valid_data_len || eid == ADEID_RFORK)) {
             ad->ad_eid[ eid ].ade_off = off;
             ad->ad_eid[ eid ].ade_len = len;
-        } else if (!warning) {
-            warning = 1;
-            LOG(log_debug, logtype_default, "ad_refresh: nentries %hd  eid %d",
-                nentries, eid );
+        } else {
+            LOG(log_warning, logtype_default, "ad_refresh: nentries %hd  eid %d",
+                 nentries, eid );
+	    return -1;
         }
     }
 
@@ -601,7 +601,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
         return -1;
     }
 
-    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries) != 0) {
+    if (parse_entries(ad, nentries, header_len) != 0) {
         LOG(log_warning, logtype_default, "ad_header_read(): malformed AppleDouble");
         errno = EIO;
         return -1;
