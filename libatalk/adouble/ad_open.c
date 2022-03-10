@@ -443,7 +443,6 @@ static int ad_header_read(const char *path, struct adouble *ad, const struct sta
 {
     char                *buf = ad->ad_data;
     uint16_t            nentries;
-    int                 len;
     ssize_t             header_len;
     struct stat         st;
 
@@ -469,25 +468,19 @@ static int ad_header_read(const char *path, struct adouble *ad, const struct sta
 
     memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
     nentries = ntohs( nentries );
-
-    /* read in all the entry headers. if we have more than the
-     * maximum, just hope that the rfork is specified early on. */
-    len = nentries*AD_ENTRY_LEN;
-
-    if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
-        len = sizeof(ad->ad_data) - AD_HEADER_LEN;
-
-    buf += AD_HEADER_LEN;
-    if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read: can't read entry info.");
+    if (nentries > 16) {
+        LOG(log_error, logtype_ad, "ad_open: too many entries: %"PRIu16, nentries);
         errno = EIO;
         return -1;
     }
 
-    /* figure out all of the entry offsets and lengths. if we aren't
-     * able to read a resource fork entry, bail. */
-    nentries = len / AD_ENTRY_LEN;
-    if (parse_entries(ad, buf, nentries) != 0) {
+    if ((nentries * AD_ENTRY_LEN) + AD_HEADER_LEN > header_len) {
+        LOG(log_error, logtype_ad, "ad_header_read: too many entries: %zd", header_len);
+        errno = EIO;
+        return -1;
+    }
+
+    if (parse_entries(ad, buf + AD_HEADER_LEN, nentries) != 0) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
             path ? fullpathname(path) : "");
         errno = EIO;
@@ -649,7 +642,6 @@ static int ad_header_read_osx(const char *path, struct adouble *ad, const struct
     struct adouble      adosx;
     char                *buf;
     uint16_t            nentries;
-    int                 len;
     ssize_t             header_len;
     struct stat         st;
     int                 retry_read = 0;
@@ -682,22 +674,23 @@ reread:
 
     memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
     nentries = ntohs(nentries);
-    len = nentries * AD_ENTRY_LEN;
-
-    if (len + AD_HEADER_LEN > sizeof(adosx.ad_data))
-        len = sizeof(adosx.ad_data) - AD_HEADER_LEN;
-
-    buf += AD_HEADER_LEN;
-    if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_error, logtype_ad, "ad_header_read_osx: can't read entry info.");
+    if (nentries > 16) {
+        LOG(log_error, logtype_ad, "ad_header_read_osx: too many entries: %"PRIu16, nentries);
         errno = EIO;
         return -1;
     }
 
-    nentries = len / AD_ENTRY_LEN;
-    if (parse_entries(&adosx, buf, nentries) != 0) {
+    if ((nentries * AD_ENTRY_LEN) + AD_HEADER_LEN > header_len) {
+        LOG(log_error, logtype_ad, "ad_header_read_osx: too many entries: %zd", header_len);
+        errno = EIO;
+        return -1;
+    }
+
+    if (parse_entries(&adosx, buf + AD_HEADER_LEN, nentries) != 0) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
             path ? fullpathname(path) : "");
+            errno = EIO;
+            EC_FAIL;
     }
 
     if (ad_getentrylen(&adosx, ADEID_FINDERI) != ADEDLEN_FINDERI) {
