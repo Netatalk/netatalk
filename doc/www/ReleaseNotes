@@ -1,4 +1,4 @@
-Netatalk 3.1.12
+Netatalk 3.1.13
 ===============
 
 The Netatalk development team is proud to announce latest release of
@@ -45,12 +45,17 @@ at:
 
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-Changes in 3.1.12
+Changes in 3.1.13
 ~~~~~~~~~~~~~~~~~
-
-* FIX: dhx uams: build with LibreSSL, GitHub#91
-* FIX: various spelling errors
-* FIX: CVE-2018-1160
+* FIX: CVE-2021-31439
+* FIX: CVE-2022-23121
+* FIX: CVE-2022-23123
+* FIX: CVE-2022-23122
+* FIX: CVE-2022-23125
+* FIX: CVE-2022-23124
+* FIX: CVE-2022-0194
+* FIX: afpd: make a variable declaration a definition
+* UPD: Remove bundled libevent
 
 Supported Platforms
 ~~~~~~~~~~~~~~~~~~~
@@ -105,4 +110,4 @@ We would like to thank all contributors to the Netatalk project for
 their commitment.  Without the many suggestions, bug and problem reports,
 patches, and reviews this project wouldn't be where it is.
 
- - The Netatalk Development Team, December 2018
+ - The Netatalk Development Team, March 2022
