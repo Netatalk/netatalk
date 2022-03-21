@@ -1,3 +1,15 @@
+Changes in 3.1.13
+=================
+* FIX: CVE-2021-31439
+* FIX: CVE-2022-23121
+* FIX: CVE-2022-23123
+* FIX: CVE-2022-23122
+* FIX: CVE-2022-23125
+* FIX: CVE-2022-23124
+* FIX: CVE-2022-0194
+* FIX: afpd: make a variable declaration a definition
+* UPD: Remove bundled libevent
+
 Changes in 3.1.12
 =================
 * FIX: dhx uams: build with LibreSSL, GitHub#91
