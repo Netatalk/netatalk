@@ -1,3 +1,9 @@
+Changes in 2.2.7
+================
+* FIX: CVE-2022-23121
+* FIX: CVE-2022-23123
+* FIX: CVE-2022-23125
+
 Changes in 2.2.6
 ================
 * FIX: Saving from applications like Photoshop may fail, because
