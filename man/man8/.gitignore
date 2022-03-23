@@ -1,5 +1,4 @@
 Makefile
 Makefile.in
-.gitignore
 *.o
 *.8

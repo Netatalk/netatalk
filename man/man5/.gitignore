@@ -8,5 +8,4 @@ afpd.conf.5
 atalkd.conf.5
 netatalk.conf.5
 papd.conf.5
-.gitignore
 *.o

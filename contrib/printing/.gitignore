@@ -3,5 +3,4 @@ Makefile.in
 timeout
 .deps
 .libs
-.gitignore
 *.o

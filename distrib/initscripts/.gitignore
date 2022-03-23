@@ -9,5 +9,4 @@ rc.atalk.sysv
 netatalk
 atalk
 *.service
-.gitignore
 *.o

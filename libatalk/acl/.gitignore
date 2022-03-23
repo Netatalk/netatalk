@@ -4,5 +4,4 @@ Makefile.in
 .libs
 *.lo
 *.la
-.gitignore
 *.o

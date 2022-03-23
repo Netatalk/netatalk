@@ -4,5 +4,4 @@ psf
 psa
 .deps
 .libs
-.gitignore
 psa.o psf.o

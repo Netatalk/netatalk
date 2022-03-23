@@ -6,5 +6,4 @@ hash
 test_parse_mtab
 .deps
 .libs
-.gitignore
 afpd-afp_asp.o afpd-afp_config.o afpd-afp_dsi.o afpd-afp_options.o afpd-afprun.o afpd-afp_util.o afpd-afs.o afpd-appl.o afpd-auth.o afpd-catsearch.o afpd-desktop.o afpd-directory.o afpd-enumerate.o afpd-extattrs.o afpd-filedir.o afpd-file.o afpd-fork.o afpd-gettok.o afpd-hash.o afpd-main.o afpd-mangle.o afpd-messages.o afpd-nfsquota.o afpd-ofork.o afpd-quota.o afpd-status.o afpd-switch.o afpd-uam.o afpd-uid.o afpd-unix.o afpd-volume.o hash-hash.o

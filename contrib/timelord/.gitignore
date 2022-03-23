@@ -3,5 +3,4 @@ Makefile.in
 timelord
 .deps
 .libs
-.gitignore
 *.o

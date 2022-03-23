@@ -6,5 +6,4 @@ cnid_maint
 cnid_index
 .deps
 .libs
-.gitignore
 ad_cp.o ad_ls.o ad.o ad_util.o

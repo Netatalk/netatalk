@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 atp_bufs.o atp_close.o atp_open.o atp_packet.o atp_rreq.o atp_rresp.o atp_rsel.o atp_sreq.o atp_sresp.o

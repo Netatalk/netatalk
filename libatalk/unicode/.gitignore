@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 charcnv.o iconv.o utf16_case.o utf8.o util_unistr.o

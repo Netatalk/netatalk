@@ -3,5 +3,4 @@ Makefile.in
 a2boot
 .deps
 .libs
-.gitignore
 *.o
