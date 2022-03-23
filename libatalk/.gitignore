@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 dummy.o

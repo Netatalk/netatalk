@@ -9,5 +9,4 @@ netatalkshorternamelinks.pl
 lp2pap.sh
 asip-status.pl
 apple_dump
-.gitignore
 *.o

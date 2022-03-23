@@ -19,12 +19,15 @@ ltconfig
 ltmain.sh
 autom4te.cache
 autoscan.log
+test-driver
 *.rpm
 *.deb
 *.dsc
 *.changes
 *.tar.gz
 *.diff.gz
+*.diff
+*.orig
+*.rej
 *~
-.gitignore
 *.o

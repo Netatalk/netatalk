@@ -3,5 +3,4 @@ Makefile.in
 atalkd
 .deps
 .libs
-.gitignore
 aep.o config.o main.o multicast.o nbp.o route.o rtmp.o zip.o

@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 netddp_open.o netddp_recvfrom.o netddp_sendto.o

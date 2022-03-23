@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 atalk_addr.o bprint.o fault.o getiface.o locking.o logger.o module.o server_child.o server_ipc.o server_lock.o socket.o strcasestr.o strdicasecmp.o strlcpy.o unix.o volinfo.o

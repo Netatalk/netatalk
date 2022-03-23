@@ -4,5 +4,4 @@ Makefile.in
 *.la
 .deps
 .libs
-.gitignore
 generic_cjk.o generic_mb.o mac_centraleurope.o mac_chinese_simp.o mac_chinese_trad.o mac_cyrillic.o mac_greek.o mac_hebrew.o mac_japanese.o mac_korean.o mac_roman.o mac_turkish.o

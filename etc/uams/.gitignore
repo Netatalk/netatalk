@@ -4,5 +4,4 @@ Makefile.in
 .libs
 *.lo
 *.la
-.gitignore
 uams_dhx2_pam_la-uams_dhx2_pam.o uams_dhx2_passwd.o uams_dhx_pam_la-uams_dhx_pam.o uams_dhx_passwd.o uams_gss_la-uams_gss.o uams_guest.o uams_pam_la-uams_pam.o uams_passwd.o uams_randnum.o

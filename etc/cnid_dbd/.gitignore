@@ -5,5 +5,4 @@ cnid_dbd
 dbd
 .deps
 .libs
-.gitignore
 cmd_dbd.o cmd_dbd_scanvol.o cnid_metad.o comm.o dbd_add.o dbd_dbcheck.o dbd_delete.o dbd_get.o dbd_getstamp.o dbd_lookup.o dbd_rebuild_add.o dbd_resolve.o dbd_update.o dbif.o db_param.o main.o pack.o usockfd.o

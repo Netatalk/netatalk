@@ -3,5 +3,4 @@ Makefile.in
 asip-status.pl.1
 afpldaptest.1
 uniconv.1
-.gitignore
 *.o

@@ -1,5 +1,4 @@
 Makefile
 Makefile.in
 macusers
-.gitignore
 *.o

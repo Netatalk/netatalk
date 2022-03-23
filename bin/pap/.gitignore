@@ -4,5 +4,4 @@ pap
 papstatus
 .deps
 .libs
-.gitignore
 pap.o papstatus.o
