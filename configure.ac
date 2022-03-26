@@ -145,7 +145,7 @@ dnl Check for optional sysv initscript install
 AC_NETATALK_INIT_STYLE
 
 dnl Path where UAM modules shall be installed
-AC_ARG_WITH(uams-path, [  --with-uams-path=PATH   path to UAMs [[$libdir/netatalk/]]], [uams_path="$withval/"], [uams_path="$libdir/netatalk/"])
+AC_ARG_WITH(uams-path, [  --with-uams-path=PATH   path to UAMs [[$libdir/netatalk]]], [uams_path="$withval"], [uams_path="$libdir/netatalk"])
 
 dnl Check for libgcrypt, if found enables DHX2 UAM
 AC_NETATALK_PATH_LIBGCRYPT([1:1.2.3])
