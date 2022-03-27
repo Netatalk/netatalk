@@ -94,7 +94,7 @@ if test "x$bdb_required" = "xyes"; then
     savedldflags="$LDFLAGS"
     savedcppflags="$CPPFLAGS"
     savedlibs="$LIBS"
-    saved_shlibpath_var=$shlibpath_var
+    eval saved_shlibpath_var=\$$shlibpath_var
 
     dnl required BDB version: 4.6, because of cursor API change
     DB_MAJOR_REQ=4
@@ -148,7 +148,7 @@ if test "x$bdb_required" = "xyes"; then
                         dnl -- LD_LIBRARY_PATH on many platforms. This will be fairly
                         dnl -- portable hopefully. Reference:
                         dnl -- http://lists.gnu.org/archive/html/autoconf/2009-03/msg00040.html
-                        eval export $shlibpath_var=$bdblibdir
+                        test "$cross_compiling" = yes || eval export $shlibpath_var=$bdblibdir
                         NETATALK_BDB_TRY_LINK
                         eval export $shlibpath_var=$saved_shlibpath_var
 
@@ -177,7 +177,7 @@ if test "x$bdb_required" = "xyes"; then
                            CPPFLAGS="-I${bdbdir}/include${subdir} $CPPFLAGS"
                            LDFLAGS="-L$bdblibdir $LDFLAGS"
 
-                           eval export $shlibpath_var=$bdblibdir
+                           test "$cross_compiling" = yes || eval export $shlibpath_var=$bdblibdir
                            NETATALK_BDB_TRY_LINK
                            eval export $shlibpath_var=$saved_shlibpath_var
 
