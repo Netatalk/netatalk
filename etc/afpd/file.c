@@ -497,10 +497,7 @@ int getmetadata(const AFPObj *obj,
                 data += sizeof( aint );
             }
             else {
-                if ( adp ) {
-                    ade = ad_entry(adp, ADEID_FINDERI);
-                    AFP_ASSERT(ade != NULL);
-
+                if ( adp && (ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
                     memcpy(fdType, ade, 4);
 
                     if ( memcmp( fdType, "TEXT", 4 ) == 0 ) {
@@ -588,10 +585,8 @@ int getmetadata(const AFPObj *obj,
              * improper ops on symlink adoubles will be
              * more visible (assert).
              */
-            if (adp && (ad_meta_fileno(adp) != AD_SYMLINK)) {
-                ade = ad_entry(adp, ADEID_FINDERI);
-                AFP_ASSERT(ade != NULL);
-
+            if (adp && (ad_meta_fileno(adp) != AD_SYMLINK)
+                && (ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
 	        memcpy(fdType, ade, 4);
                 if ( memcmp( fdType, "slnk", 4 ) == 0 ) {
 	 	    aint |= S_IFLNK;
@@ -1071,7 +1066,10 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 break;
             }
             ade = ad_entry(adp, ADEID_FINDERI);
-            AFP_ASSERT(ade != NULL);
+            if (ade == NULL) {
+                LOG(log_debug, logtype_afpd, "setfilparams(\"%s\"): invalid FinderInfo", path->u_name);
+                break;
+            }
             if (default_type(ade)
                     && ( 
                      ((em = getextmap( path->m_name )) &&
@@ -1094,12 +1092,11 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             if (isad == 0) {
                 break;
             }
-            ade = ad_entry(adp, ADEID_FINDERI);
-            AFP_ASSERT(ade != NULL);
-
             if (obj->afp_version < 30) { /* else it's UTF8 name */
-                memcpy(ade, fdType, 4 );
-                memcpy(ade + 4, "pdos", 4 );
+                if ((ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
+                    memcpy(ade, fdType, 4 );
+                    memcpy(ade + 4, "pdos", 4 );
+                }
                 break;
             }
             /* fallthrough */

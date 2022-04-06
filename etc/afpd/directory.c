@@ -1519,10 +1519,7 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_FINFO :
-            if ( isad ) {
-                ade = ad_entry(&ad, ADEID_FINDERI);
-                AFP_ASSERT(ade != NULL);
-
+            if ( isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
                 memcpy( data, ade, 32 );
             } else { /* no appledouble */
                 memset( data, 0, 32 );
@@ -1902,15 +1899,13 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             }
             break;
         case DIRPBIT_FINFO :
-            if (isad) {
+            if (isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
                 /* Fixes #2802236 */
                 uint16_t fflags;
                 memcpy(&fflags, finder_buf + FINDERINFO_FRFLAGOFF, sizeof(uint16_t));
                 fflags &= htons(~FINDERINFO_ISHARED);
                 memcpy(finder_buf + FINDERINFO_FRFLAGOFF, &fflags, sizeof(uint16_t));
                 /* #2802236 end */
-                ade = ad_entry(&ad, ADEID_FINDERI);
-                AFP_ASSERT(ade != NULL);
 
                 if (  dir->d_did == DIRDID_ROOT ) {
                     /*

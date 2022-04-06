@@ -8,6 +8,7 @@
 #include <atalk/util.h>
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
+#include <atalk/errchk.h>
 
 #define FILEIOFF_ATTR 14
 #define AFPFILEIOFF_ATTR 2
@@ -21,20 +22,19 @@
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 {
     uint16_t fflags;
+    char *adp = NULL;
     *attr = 0;
 
-    if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
-        char *adp = NULL;
-
-        adp = ad_entry(ad, ADEID_AFPFILEI);
-        AFP_ASSERT(adp != NULL);
+    if (ad_getentryoff(ad, ADEID_AFPFILEI) && (adp = ad_entry(ad, ADEID_AFPFILEI)) != NULL) {
         memcpy(attr, adp + AFPFILEIOFF_ATTR, 2);
 
         /* Now get opaque flags from FinderInfo */
-        adp = ad_entry(ad, ADEID_FINDERI);
-        AFP_ASSERT(adp != NULL);
-        memcpy(&fflags, adp + FINDERINFO_FRFLAGOFF, 2);
-
+        if ((adp = ad_entry(ad, ADEID_FINDERI)) != NULL) {
+            memcpy(&fflags, adp + FINDERINFO_FRFLAGOFF, 2);
+        } else {
+            LOG(log_debug, logtype_default, "ad_getattr(%s): invalid FinderInfo", ad->ad_name);
+            memset(&fflags, 0, 2);
+        }
         if (fflags & htons(FINDERINFO_INVISIBLE))
             *attr |= htons(ATTRBIT_INVISIBLE);
         else
@@ -60,6 +60,7 @@ int ad_getattr(const struct adouble *ad, uint16_t *attr)
 int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 {
     uint16_t fflags;
+    char *ade = NULL, *adp = NULL;
 
     /* we don't save open forks indicator */
     uint16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
@@ -69,13 +70,9 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
     if (ad->ad_adflags & ADFLAGS_DIR)
         attr &= ~(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
 
-    if (ad_getentryoff(ad, ADEID_AFPFILEI) && ad_getentryoff(ad, ADEID_FINDERI)) {
-        char *adp = NULL;
-
-        adp = ad_entry(ad, ADEID_FINDERI);
-        AFP_ASSERT(adp != NULL);
-
-        memcpy(adp + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
+    if (ad_getentryoff(ad, ADEID_AFPFILEI) && (ade = ad_entry(ad, ADEID_AFPFILEI)) != NULL
+        && ad_getentryoff(ad, ADEID_FINDERI) && (adp = ad_entry(ad, ADEID_FINDERI)) != NULL) {
+        memcpy(ade + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
             
         /* Now set opaque flags in FinderInfo too */
         memcpy(&fflags, adp + FINDERINFO_FRFLAGOFF, 2);
@@ -104,9 +101,12 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
  */
 int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint32_t id, const cnid_t did, const void *stamp)
 {
+    EC_INIT;
     uint32_t tmp;
     char *ade = NULL;
+    ssize_t id_len = -1, dev_len = -1, ino_len = -1, did_len = -1, syn_len = -1;
 
+    id_len = ad_getentrylen(adp, ADEID_PRIVID);
     ad_setentrylen( adp, ADEID_PRIVID, sizeof(id));
     tmp = id;
     if (adp->ad_vers == AD_VERSION_EA)
@@ -114,16 +114,17 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
 
     ade = ad_entry(adp, ADEID_PRIVID);
     if (ade == NULL) {
-        LOG(log_warning, logtype_ad, "ad_setid: failed to set ADEID_PRIVID\n");
-        return -1;
+        LOG(log_warning, logtype_ad, "ad_setid(%s): failed to set ADEID_PRIVID", adp->ad_name);
+        EC_FAIL;
     }
     memcpy(ade, &tmp, sizeof(tmp));
 
+    dev_len = ad_getentrylen(adp, ADEID_PRIVDEV);
     ad_setentrylen( adp, ADEID_PRIVDEV, sizeof(dev_t));
     ade = ad_entry(adp, ADEID_PRIVDEV);
     if (ade == NULL) {
-        LOG(log_warning, logtype_ad, "ad_setid: failed to set ADEID_PRIVDEV\n");
-        return -1;
+        LOG(log_warning, logtype_ad, "ad_setid(%s): failed to set ADEID_PRIVDEV", adp->ad_name);
+        EC_FAIL;
     }
 
     if ((adp->ad_options & ADVOL_NODEV)) {
@@ -132,33 +133,45 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
         memcpy(ade, &dev, sizeof(dev_t));
     }
 
+    ino_len = ad_getentrylen(adp, ADEID_PRIVINO);
     ad_setentrylen( adp, ADEID_PRIVINO, sizeof(ino_t));
-
     ade = ad_entry(adp, ADEID_PRIVINO);
     if (ade == NULL) {
-        LOG(log_warning, logtype_ad, "ad_setid: failed to set ADEID_PRIVINO\n");
-        return -1;
+        LOG(log_warning, logtype_ad, "ad_setid(%s): failed to set ADEID_PRIVINO", adp->ad_name);
+        EC_FAIL;
     }
     memcpy(ade, &ino, sizeof(ino_t));
 
     if (adp->ad_vers != AD_VERSION_EA) {
+        did_len = ad_getentrylen(adp, ADEID_DID);
         ad_setentrylen( adp, ADEID_DID, sizeof(did));
 
         ade = ad_entry(adp, ADEID_DID);
         if (ade == NULL) {
-            LOG(log_warning, logtype_ad, "ad_setid: failed to set ADEID_DID\n");
-            return -1;
+            LOG(log_warning, logtype_ad, "ad_setid(%s): failed to set ADEID_DID", adp->ad_name);
+            EC_FAIL;
         }
         memcpy(ade, &did, sizeof(did));
     }
 
+    syn_len = ad_getentrylen(adp, ADEID_PRIVSYN);
     ad_setentrylen( adp, ADEID_PRIVSYN, ADEDLEN_PRIVSYN);
     ade = ad_entry(adp, ADEID_PRIVSYN);
     if (ade == NULL) {
-        LOG(log_warning, logtype_ad, "ad_setid: failed to set ADEID_PRIVSYN\n");
-        return -1;
+        LOG(log_warning, logtype_ad, "ad_setid(%s): failed to set ADEID_PRIVSYN", adp->ad_name);
+        EC_FAIL;
     }
     memcpy(ade, stamp, ADEDLEN_PRIVSYN);
+
+EC_CLEANUP:
+    if (ret != 0) {
+        if (id_len != -1) ad_setentrylen( adp, ADEID_PRIVID, id_len);
+        if (dev_len != -1) ad_setentrylen( adp, ADEID_PRIVDEV, dev_len);
+        if (ino_len != -1) ad_setentrylen( adp, ADEID_PRIVINO, ino_len);
+        if (did_len != -1) ad_setentrylen( adp, ADEID_DID, did_len);
+        if (syn_len != -1) ad_setentrylen( adp, ADEID_PRIVSYN, syn_len);
+        return 0;
+    }
 
     return 1;
 }

@@ -146,6 +146,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     adp = &ad;
     ad_init(adp, vol);
+    ad_init_offsets(adp);
 
     if (path_isadir(s_path)) {
 	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
@@ -175,7 +176,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         close_ad = true;
         FinderInfo = ad_entry(adp, ADEID_FINDERI);
         /* Check if FinderInfo equals default and empty FinderInfo*/
-        if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
+        if (FinderInfo && memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
             /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
             strcpy(attrnamebuf, ea_finderinfo);
             attrbuflen += strlen(ea_finderinfo) + 1;

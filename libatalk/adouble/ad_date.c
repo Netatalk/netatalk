@@ -16,7 +16,7 @@ int ad_setdate(struct adouble *ad,
     if (xlate)
         date = AD_DATE_FROM_UNIX(date);
 
-    if (!ad_getentryoff(ad, ADEID_FILEDATESI))
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI))
         return -1;
 
     if (dateoff > AD_DATE_ACCESS)
@@ -38,7 +38,7 @@ int ad_getdate(const struct adouble *ad,
     char *ade = NULL;
 
     dateoff &= AD_DATE_MASK;
-    if (!ad_getentryoff(ad, ADEID_FILEDATESI))
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI))
         return -1;
 
     if (dateoff > AD_DATE_ACCESS)
