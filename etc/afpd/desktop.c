@@ -859,7 +859,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
         return( AFPERR_ACCESS );
     }
 
-    if (ad_getentryoff(adp, ADEID_COMMENT)) {
+    if (ad_getentryoff(adp, ADEID_COMMENT) && ad_entry(adp, ADEID_COMMENT)) {
         if ( (ad_get_MD_flags( adp ) & O_CREAT) ) {
             if ( *path->m_name == '\0' ) {
                 name = (char *)curdir->d_m_name->data;
@@ -932,7 +932,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
         return( AFPERR_NOITEM );
     }
 
-    if (!ad_getentryoff(adp, ADEID_COMMENT)) {
+    if (!ad_getentryoff(adp, ADEID_COMMENT) || !ad_entry(adp, ADEID_COMMENT)) {
         ad_close(adp, ADFLAGS_HF);
         return AFPERR_NOITEM;
     }

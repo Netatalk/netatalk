@@ -330,11 +330,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             slash++;
         else
             slash = vol->v_path;
-        if (ad_getentryoff(&ad, ADEID_NAME)) {
+        if (ad_getentryoff(&ad, ADEID_NAME) && (ade = ad_entry(&ad, ADEID_NAME)) != NULL) {
             ad_setentrylen( &ad, ADEID_NAME, strlen( slash ));
-            ade = ad_entry(&ad, ADEID_NAME);
-            AFP_ASSERT(ade != NULL);
-
             memcpy(ade, slash, ad_getentrylen( &ad, ADEID_NAME ));
         }
         vol_setdate(vol->v_vid, &ad, st->st_mtime);
