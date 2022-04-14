@@ -77,7 +77,7 @@ int matchfile2dirperms(
         return AFPERR_NOOBJ ;
     }
 
-    adpath = vol->vfs->ad_path( upath, ADFLAGS_HF );
+    adpath = vol->ad_path( upath, ADFLAGS_HF );
     /* FIXME dirsearch doesn't move cwd to did ! */
     if (( dir = dirlookup( vol, did )) == NULL ) {
         LOG(log_error, logtype_afpd, "matchfile2dirperms: Unable to get directory info.");
