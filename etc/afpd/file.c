@@ -1381,8 +1381,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     curdir->d_offcnt++;
 
 #ifdef DROPKLUDGE
-    if (vol->v_flags & AFPVOL_DROPBOX) {
-        retvalue=matchfile2dirperms(upath, vol, ddid); /* FIXME sdir or ddid */
+    if (d_vol->v_flags & AFPVOL_DROPBOX) {
+        retvalue=matchfile2dirperms(upath, d_vol, ddid); /* FIXME sdir or ddid */
     }
 #endif /* DROPKLUDGE */
 

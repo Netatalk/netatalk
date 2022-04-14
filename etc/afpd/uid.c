@@ -40,7 +40,7 @@ uidgidset *pair;
 void restore_uidgid ( pair )
 uidgidset *pair;
 {
-    uid_t uid
+    uid_t uid;
     gid_t gid;   
     
     uid = geteuid ();
