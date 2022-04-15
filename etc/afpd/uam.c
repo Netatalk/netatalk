@@ -260,7 +260,9 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
 int uam_checkuser(const struct passwd *pwd)
 {
+#if !defined(DISABLE_SHELLCHECK)
     const char *p;
+#endif /* DISABLE_SHELLCHECK */
 
     if (!pwd)
         return -1;

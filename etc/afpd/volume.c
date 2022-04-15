@@ -280,14 +280,14 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 {
     struct adouble  ad;
-    int         bit = 0, isad = 1;
-    uint32_t       aint;
-    u_short     ashort;
-    uint32_t       bfree, btotal, bsize;
-    VolSpace            xbfree, xbtotal; /* extended bytes */
-    char        *data, *nameoff = NULL;
-    char                *slash;
-    char        *ade = NULL;
+    int bit = 0, isad = 1;
+    uint32_t aint;
+    u_short ashort;
+    uint32_t bfree = 0, btotal = 0, bsize = 0;
+    VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
+    char *data = NULL, *nameoff = NULL;
+    char *slash = NULL;
+    char *ade = NULL;
 
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
 
