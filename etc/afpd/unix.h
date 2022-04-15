@@ -6,7 +6,7 @@
 #define AFPD_UNIX_H
 
 #ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #endif /* HAVE_SYS_CDEFS_H */
 #include <netatalk/endian.h>
 #include "config.h"

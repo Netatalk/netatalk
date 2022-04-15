@@ -28,7 +28,7 @@
 
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
 #include <sys/param.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <netatalk/endian.h>
 #include <atalk/adouble.h>
 #include <atalk/globals.h>

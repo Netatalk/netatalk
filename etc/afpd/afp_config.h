@@ -6,7 +6,7 @@
 #define AFPD_CONFIG_H 1
 
 #ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #endif /* HAVE_SYS_CDEFS_H */
 
 #include <atalk/server_child.h>

@@ -8,7 +8,7 @@
 #ifndef PAPD_COMMENT_H
 #define PAPD_COMMENT_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct papd_comment {
     char		*c_begin;

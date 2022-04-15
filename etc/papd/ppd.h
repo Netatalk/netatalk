@@ -8,7 +8,7 @@
 #ifndef PAPD_PPD_H
 #define PAPD_PPD_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct ppd_font {
     char		*pd_font;

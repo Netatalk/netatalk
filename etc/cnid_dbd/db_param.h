@@ -8,7 +8,7 @@
 #define CNID_DBD_DB_PARAM_H 1
 
 #include <sys/param.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 #define DEFAULT_LOGFILE_AUTOREMOVE 1
 #define DEFAULT_CACHESIZE          (8 * 1024) /* KB, so 8 MB */

@@ -6,7 +6,7 @@
 #ifndef AFPD_VOLUME_H
 #define AFPD_VOLUME_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
 

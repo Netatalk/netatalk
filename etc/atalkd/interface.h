@@ -7,7 +7,7 @@
 #ifndef ATALKD_INTERFACE_H
 #define ATALKD_INTERFACE_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct interface {
     struct interface	*i_next;

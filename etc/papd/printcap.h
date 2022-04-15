@@ -5,7 +5,7 @@
 #ifndef PAPD_PRINTCAP_H
 #define PAPD_PRINTCAP_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 int getprent ( register char *, register char *, register int );
 int pnchktc ( char * );

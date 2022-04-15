@@ -26,7 +26,7 @@
 #ifndef NBP_CONF_H
 #define NBP_CONF_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <atalk/nbp.h>
 
 extern char		nbp_send[ 1024 ];

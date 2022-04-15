@@ -6,7 +6,7 @@
 #ifndef _ATALK_SERVER_CHILD_H
 #define _ATALK_SERVER_CHILD_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
 

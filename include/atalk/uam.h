@@ -5,7 +5,7 @@
 #ifndef UAM_H
 #define UAM_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <pwd.h>
 #include <stdarg.h>
 

@@ -5,7 +5,7 @@
 #ifndef AFPD_FILEDIR_H
 #define AFPD_FILEDIR_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <atalk/globals.h>
 #include "volume.h"

@@ -17,7 +17,7 @@
 #include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/resource.h>

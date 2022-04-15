@@ -11,7 +11,7 @@
 #ifndef _ATALK_UTIL_H
 #define _ATALK_UTIL_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>

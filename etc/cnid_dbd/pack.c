@@ -13,7 +13,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <sys/param.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <db.h>
 
 #include <atalk/unicode.h>

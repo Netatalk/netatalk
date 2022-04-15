@@ -29,7 +29,7 @@
 #define NBP_UNRGSTR_4ARGS 1
 #define ATP_OPEN_2ARGS 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>

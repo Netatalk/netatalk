@@ -24,7 +24,7 @@
 #ifndef ATALK_DIRECTORY_H
 #define ATALK_DIRECTORY_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
 #include <dirent.h>

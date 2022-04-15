@@ -24,7 +24,7 @@
 #ifndef AFPD_DIRECTORY_H
 #define AFPD_DIRECTORY_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
 #include <netatalk/endian.h>

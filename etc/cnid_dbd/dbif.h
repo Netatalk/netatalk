@@ -53,7 +53,7 @@
 #ifndef CNID_DBD_DBIF_H
 #define CNID_DBD_DBIF_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <db.h>
 #include <atalk/adouble.h>
 #include "db_param.h"

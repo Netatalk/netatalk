@@ -6,7 +6,7 @@
  * are checks for EINTR everywhere. 
  */
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <signal.h>
 
 #ifdef __svr4__

@@ -7,7 +7,7 @@
 #define AFPD_FORK_H 1
 
 #include <stdio.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 #include <netatalk/endian.h>
 #include <atalk/adouble.h>

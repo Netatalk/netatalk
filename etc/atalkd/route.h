@@ -5,7 +5,7 @@
 #ifndef ATALKD_ROUTE_H
 #define ATALKD_ROUTE_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifndef BSD4_4
 int route ( int, struct sockaddr *, struct sockaddr *, int );

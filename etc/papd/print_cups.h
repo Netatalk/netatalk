@@ -3,7 +3,7 @@
 #define PAPD_CUPS_H 1
 
 #ifdef HAVE_CUPS
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct cups_status {
 	int	pr_status;
