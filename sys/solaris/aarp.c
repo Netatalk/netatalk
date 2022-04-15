@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/byteorder.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/stream.h>
 #include <sys/ethernet.h>
 #include <sys/kmem.h>

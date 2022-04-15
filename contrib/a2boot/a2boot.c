@@ -55,14 +55,14 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #ifdef HAVE_SYS_FCNTL_H
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif /* HAVE_TERMIOS_H */
 #ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
+#include <termios.h>
 #endif /* HAVE_SYS_TERMIOS_H */
 
 #define	TL_OK		'\0'

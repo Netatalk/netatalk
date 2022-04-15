@@ -13,7 +13,7 @@
 #include <sys/systm.h>
 #include <sys/user.h>
 #include <sys/types.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/mbuf.h>
 #include <sys/kernel.h>

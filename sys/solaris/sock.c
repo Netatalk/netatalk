@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/kmem.h>
 #include <sys/cmn_err.h>
 #include <sys/tihdr.h>

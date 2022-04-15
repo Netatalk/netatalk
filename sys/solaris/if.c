@@ -12,7 +12,7 @@
 #include <sys/kmem.h>
 #include <sys/dlpi.h>
 #include <sys/cmn_err.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/byteorder.h>
 #include <sys/ethernet.h>
 #include <sys/ddi.h>

@@ -13,7 +13,7 @@
 #include <sys/param.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <atalk/logger.h>
 
 #include <net/if.h>

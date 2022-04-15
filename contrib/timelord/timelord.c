@@ -51,7 +51,7 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #ifdef HAVE_SYS_FCNTL_H
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
 #include <termios.h>

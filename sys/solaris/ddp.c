@@ -10,7 +10,7 @@
 #include <sys/stream.h>
 #include <sys/cmn_err.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/tihdr.h>
 #include <sys/ddi.h>
 #include <sys/ethernet.h>
