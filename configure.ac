@@ -44,7 +44,7 @@ dnl uses the resulting macros, so the code has to cleaned up too before
 dnl we can remove the checks here.
 AC_CHECK_HEADERS(mntent.h unistd.h termios.h ufs/quota.h)
 AC_CHECK_HEADERS(netdb.h sgtty.h statfs.h dlfcn.h langinfo.h locale.h)
-AC_CHECK_HEADERS(sys/param.h sys/fcntl.h sys/termios.h)
+AC_CHECK_HEADERS(sys/param.h fcntl.h)
 AC_CHECK_HEADERS(sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h)
 dnl Checks for header files, confirmed to be required as of 2011
 AC_CHECK_HEADERS([sys/mount.h], , ,
