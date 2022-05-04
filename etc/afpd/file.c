@@ -580,7 +580,15 @@ int getmetadata(const AFPObj *obj,
                10.3 clients freak out. */
 
     	    aint = st->st_mode;
- 	    if (adp) {
+            /*
+             * ad_open() does not initialize adouble header
+             * for symlinks. Hence this should be skipped to
+             * avoid AFP_ASSERT here. Decision was made to
+             * not alter ad_open() behavior so that
+             * improper ops on symlink adoubles will be
+             * more visible (assert).
+             */
+            if (adp && (ad_meta_fileno(adp) != AD_SYMLINK)) {
                 ade = ad_entry(adp, ADEID_FINDERI);
                 AFP_ASSERT(ade != NULL);
 
