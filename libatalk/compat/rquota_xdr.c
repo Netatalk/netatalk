@@ -28,10 +28,7 @@
 #define u_int unsigned
 #endif
 
-bool_t
-xdr_getquota_args(xdrs, objp)
-	XDR *xdrs;
-	getquota_args *objp;
+bool_t xdr_getquota_args(XDR *xdrs, getquota_args *objp)
 {
 	if (!xdr_string(xdrs, &objp->gqa_pathp, RQ_PATHLEN)) {
 		return (FALSE);
@@ -43,10 +40,7 @@ xdr_getquota_args(xdrs, objp)
 }
 
 
-bool_t
-xdr_rquota(xdrs, objp)
-	XDR *xdrs;
-	rquota *objp;
+bool_t xdr_rquota(XDR *xdrs, rquota *objp)
 {
 	if (!xdr_int(xdrs, &objp->rq_bsize)) {
 		return (FALSE);
@@ -83,14 +77,10 @@ xdr_rquota(xdrs, objp)
 
 
 
-
-bool_t
-xdr_gqr_status(xdrs, objp)
-	XDR *xdrs;
 #if defined(HAVE_RQUOTA_H_QR_STATUS)
-	qr_status *objp;
+bool_t xdr_gqr_status(XDR *xdrs, qr_status *objp)
 #else
-	gqr_status *objp;
+xdr_gqr_status(XDR *xdrs, gqr_status *objp)
 #endif
 {
 	if (!xdr_enum(xdrs, (enum_t *)objp)) {
@@ -100,10 +90,7 @@ xdr_gqr_status(xdrs, objp)
 }
 
 
-bool_t
-xdr_getquota_rslt(xdrs, objp)
-	XDR *xdrs;
-	getquota_rslt *objp;
+bool_t xdr_getquota_rslt(XDR *xdrs, getquota_rslt *objp)
 {
 	if (!xdr_gqr_status(xdrs, &objp->status)) {
 		return (FALSE);
