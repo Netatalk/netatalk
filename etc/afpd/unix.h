@@ -38,10 +38,7 @@ typedef int	mode_t;
 #define dqblk ufs_dqblk
 #endif
 
-#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
-    defined(linux) || defined(ultrix)
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux || ultrix */
 
 #if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>

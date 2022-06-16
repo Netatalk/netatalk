@@ -10,10 +10,7 @@
 #include <grp.h>
 #include <sys/types.h>
 #include <stdbool.h>
-
-#ifdef HAVE_NETDB_H
-#include <netdb.h>  /* this isn't header-protected under ultrix */
-#endif /* HAVE_NETDB_H */
+#include <netdb.h>
 
 #include <atalk/afp.h>
 #include <atalk/compat.h>

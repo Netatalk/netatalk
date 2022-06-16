@@ -38,24 +38,15 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal
 {
     VolSpace maxVolSpace = UINT64_MAX;
 
-#ifdef ultrix
-    struct fs_data	sfs;
-#else /*ultrix*/
     struct statfs	sfs;
-#endif /*ultrix*/
 
     if ( statfs( vol->v_path, &sfs ) < 0 ) {
         LOG(log_error, logtype_afpd, "ustatfs_getvolspace unable to stat %s", vol->v_path);
         return( AFPERR_PARAM );
     }
 
-#ifdef ultrix
-    *bfree = (VolSpace) sfs.fd_req.bfreen;
-    *bsize = 1024;
-#else /* !ultrix */
     *bfree = (VolSpace) sfs.f_bavail;
     *bsize = sfs.f_frsize;
-#endif /* ultrix */
 
     if ( *bfree > maxVolSpace / *bsize ) {
         *bfree = maxVolSpace;
@@ -63,12 +54,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal
         *bfree *= *bsize;
     }
 
-#ifdef ultrix
-    *btotal = (VolSpace)
-              ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen ));
-#else /* !ultrix */
     *btotal = (VolSpace) sfs.f_blocks;
-#endif /* ultrix */
 
     /* see similar block above comments */
     if ( *btotal > maxVolSpace / *bsize ) {
