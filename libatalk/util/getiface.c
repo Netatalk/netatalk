@@ -17,10 +17,6 @@
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <errno.h>
 
