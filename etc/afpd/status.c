@@ -144,11 +144,7 @@ static void status_machine(char *data)
     char                *start = data;
     uint16_t           status;
     int			len;
-#ifdef AFS
-    const char		*machine = "afs";
-#else /* !AFS */
     const char		*machine = "Netatalk%s";
-#endif /* AFS */
     char buf[AFPSTATUS_MACHLEN+1];
 
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));

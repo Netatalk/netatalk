@@ -100,9 +100,6 @@ AC_NETATALK_OS_SPECIFIC
 dnl Whether to set rpath
 AC_NETATALK_SET_RPATH
 
-dnl Check for optional AFS support
-AC_NETATALK_AFS_CHECK
-
 dnl --with-pkgconfdir check to change configuration directory location
 AC_NETATALK_CONFIG_DIRS
 
