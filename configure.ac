@@ -307,10 +307,10 @@ AC_NETATALK_CNID([bdb_required=yes],[bdb_required=no])
 dnl Check for quota support
 AC_CHECK_QUOTA
 
-dnl Check for optional server location protocol support (used by MacOS X)
+dnl Check for optional server location protocol support (used by Mac OS X 10.0 & 10.1)
 NETATALK_SRVLOC
 
-dnl Check for optional Zeroconf support
+dnl Check for optional Zeroconf support (used by Mac OS X 10.3 and later)
 NETATALK_ZEROCONF
 
 dnl Check for PAM libs
