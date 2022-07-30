@@ -282,7 +282,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
     struct adouble  ad;
     int bit = 0, isad = 1;
     uint32_t aint;
-    u_short ashort;
+    uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
     VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
     char *data = NULL, *nameoff = NULL;
