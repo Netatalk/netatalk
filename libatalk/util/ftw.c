@@ -628,7 +628,7 @@ ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 
 static int ftw_startup (const char *dir,
                         int is_nftw,
-                        void *func,
+                        nftw_func_t func,
                         dir_notification_func_t up,
                         int descriptors,
                         int flags)
