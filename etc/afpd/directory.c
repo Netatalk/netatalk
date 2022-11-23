@@ -59,9 +59,10 @@
 int         afp_errno;
 /* As long as directory.c hasn't got its own init call, this get initialized in dircache_init */
 struct dir rootParent  = {
-    NULL, NULL, NULL, NULL,          /* path, d_m_name, d_u_name, d_m_name_ucs2 */
-    NULL, 0, 0,                      /* qidx_node, ctime, d_flags */
-    0, 0, 0, 0                       /* pdid, did, offcnt, d_vid */
+    NULL, NULL, NULL, NULL,          /* d_fullpath, d_m_name, d_u_name, d_m_name_ucs2 */
+    NULL, 0, 0, 0,                   /* qidx_node, d_ctime, d_flags d_pdid */
+    0, 0, 0, 0,                      /* d_did, d_offcnt, d_vid, d_rights_cache */
+    0, 0                             /* d_cache_ctime, d_cache_ino */
 };
 struct dir  *curdir = &rootParent;
 struct path Cur_Path = {
