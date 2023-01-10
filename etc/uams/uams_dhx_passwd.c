@@ -37,7 +37,6 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
-#include "openssl_compat.h"
 #else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
