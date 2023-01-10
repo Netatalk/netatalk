@@ -1,3 +1,38 @@
+Changes in 3.1.14
+=================
+
+*  FIX: fix build with libressl >= 2.7.0
+*  NEW: Added Ignore Directories Feature
+*  UPD: Generate Unicode source code based on the latest https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+*  FIX: Protect against removing AFP metadata xattr
+*  FIX: avoid setting adouble entries on symlinks
+*  FIX: add handling for cases where ad_entry() returns NULL
+*  FIX: Fix setting of LD_LIBRARY_FLAGS ($shlibpath_var).
+*  FIX: Fedora migrating away from IO::Socket::INET6 to IO::Socket::IP
+*  FIX: afpd: check return values from setXXid() functions
+*  FIX: afpd: drop groups in become_user_permanently()
+*  FIX: Fix use after free in get_tm_used()
+*  FIX: Fix sign extension problem in bsd_attr_list()
+*  FIX: Fix garbage read in bsd_attr_list
+*  FIX: make afpstats python 3 compatible
+*  UPD: docs: manual: Remove wrong TCP-over-TCP info; minor copy editing
+*  FIX: configure.ac: fix macro ordering for CentOS 6
+*  FIX: configure.ac: fix typo Reviewed-by: Ralph Boehme <slow@samba.org>
+*  FIX: configure.ac: remove some trailing whitespace Reviewed-by: Ralph Boehme <slow@samba.org>
+*  FIX: configure.ac: fix deprecated macro invocation Reviewed-by: Ralph Boehme <slow@samba.org>
+*  FIX: configure.ac: replace obsolete macro Reviewed-by: Ralph Boehme <slow@samba.org>
+*  FIX: libatalk/dsi/Makefile.am: fix deprecation warning
+*  FIX: Store AutoMake helper script in build-aux/
+*  FIX: configure.ac: define a dir for macros
+*  FIX: configure.ac: AM_CONFIG_HEADER is deprecated
+*  FIX: autotools: Fix another deprecation warning
+*  FIX: libgcrypt typo in configuration error message
+*  UPD: Various CI improvements
+*  FIX: libatalk/conf: re-generation of afp_voluuid.conf
+*  UPD: libatalk/conf: code cleanup and add locking to get_vol_uuid()
+*  UPD: add documentation for the lv_flags_t
+*  FIX: No need to check for attropen on Solaris #44
+
 Changes in 3.1.13
 =================
 * FIX: CVE-2021-31439
