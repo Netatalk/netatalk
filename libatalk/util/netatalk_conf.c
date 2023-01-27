@@ -24,6 +24,7 @@
 #include <utime.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
