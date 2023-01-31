@@ -2084,7 +2084,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     char		*spath, temp[17], *p;
     char                *supath, *upath;
     struct path         *path;
-    int                 err;
+    int                 err, fd;
     struct adouble	ads;
     struct adouble	add;
     struct adouble	*adsp = NULL;
@@ -2203,7 +2203,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    int fd;
     if ((fd = mkstemp(temp)) == -1) {
         err = AFPERR_MISC;
         goto err_exchangefile;
