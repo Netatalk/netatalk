@@ -2215,7 +2215,7 @@ static int volume_openDB(struct vol *volume)
 static void check_ea_sys_support(struct vol *vol)
 {
     uid_t process_uid = 0;
-    char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
+    char eaname[] = {"/tmp/org.netatalk.supports-eas.XXXXXX"};
     const char *eacontent = "yes";
     int fd;
 
