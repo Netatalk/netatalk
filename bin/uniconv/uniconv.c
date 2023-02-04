@@ -80,7 +80,7 @@ static int veto(const char *path)
     char *veto_str = VETO;
     
 
-    if ((path == NULL))
+    if (path == NULL)
         return 0;
 
     for(i=0, j=0; veto_str[i] != '\0'; i++) {

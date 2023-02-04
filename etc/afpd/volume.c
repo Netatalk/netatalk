@@ -314,7 +314,7 @@ static char *volxlate(AFPObj *obj,
                 q = obj->options.server;
             } else
                 q = obj->options.hostname;
-        } else if (obj->username && is_var(p, "$u")) {
+        } else if ((strlen(obj->username) > 0) && is_var(p, "$u")) {
             if (afpmaster && xlatevolname)
                 return NULL;
             char* sep = NULL;
@@ -1288,7 +1288,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
             /* send path through variable substitution */
             if (*path != '~') /* need to copy path to tmp */
                 strcpy(tmp, path);
-            if (!pwent && obj->username)
+            if (!pwent && (strlen(obj->username) > 0))
                 pwent = getpwnam(obj->username);
 
             if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
