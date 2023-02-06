@@ -9,7 +9,9 @@
 #include <net/if_llc.h>
 # else /* BSD4_4 */
 
+#if !defined( __svr4__ )
 #include <net/if_ieee802.h>
+#endif /* !__svr4__ */
 
 /*
  * Copyright (c) 1988 Regents of the University of California.

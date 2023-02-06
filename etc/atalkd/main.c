@@ -105,6 +105,7 @@ int writeconf( char * );
  * everywhere. we delete interfaces here instead of in as_down. */
 static void atalkd_exit(const int i)
 {
+#ifdef SIOCDIFADDR
   struct interface *iface;
 
   for (iface = interfaces; iface; iface = iface->i_next) {
@@ -112,7 +113,7 @@ static void atalkd_exit(const int i)
 #if defined(__linux__)
       if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr)) 
 	continue;
-#endif /* SIOCATALKIFADDR */
+#endif /* __linux__ */
       LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
 	      iface->i_addr.sat_addr.s_node, strerror(errno));
@@ -122,6 +123,7 @@ static void atalkd_exit(const int i)
         ifsetallmulti(iface->i_name, 0);
 #endif /* linux */
   }
+#endif /* SIOCDIFADDR */
 
   server_unlock(pidfile);
   exit(i);
@@ -992,6 +994,7 @@ int main( int ac, char **av)
 #endif /* __svr4__ */
 
     /* delete pre-existing interface addresses. */
+#ifdef SIOCDIFADDR
     for (iface = interfaces; iface; iface = iface->i_next) {
       if (ifconfig(iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
 #if defined(__linux__)
@@ -999,6 +1002,7 @@ int main( int ac, char **av)
 #endif /* SIOCATALKDIFADDR */
       }
     }
+#endif /* SIOCDIFADDR */
 
     /*
      * Disassociate. The child will send itself a signal when it is
@@ -1318,16 +1322,16 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	    LOG(log_error, logtype_atalkd, "bind %u.%u:%u: %s",
 		    ntohs( sat.sat_addr.s_net ),
 		    sat.sat_addr.s_node, sat.sat_port, strerror(errno) );
+#ifdef SIOCDIFADDR
 	    /* remove all interfaces if we have a problem with bind */
 	    for (iface = interfaces; iface; iface = iface->i_next) {
 	      if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr )) {
 #if defined(__linux__)
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
 		ifconfig( iface->i_name, SIOCATALKDIFADDR, &iface->i_addr );
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
-#endif /* SIOCATALKDIFADDR */
+#endif /* __linux__ */
 	      }
 	    }
+#endif /* SIOCDIFADDR */
 	    atalkd_exit( 1 );
 	}
     }
