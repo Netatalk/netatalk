@@ -2,12 +2,12 @@
 .\"     Title: netatalk.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 30 Mar 2011
+.\"      Date: 09 Feb 2023
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "NETATALK\&.CONF" "5" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "NETATALK\&.CONF" "5" "09 Deb 2023" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -19,7 +19,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-netatalk.conf \- Configuration file used by Netatalk to determine its general configuration
+netatalk.conf \- Configuration file used by the Netatalk init script to determine its general configuration
 .SH "SYNOPSIS"
 .HP \w'\fB:ETCDIR:/netatalk\&.conf\fR\fB\fR\fB:DESTDIR:/etc/default/netatalk\fR\fB\fR\ 'u
 \fB:ETCDIR:/netatalk\&.conf\fR\fB\fR
@@ -28,12 +28,9 @@ netatalk.conf \- Configuration file used by Netatalk to determine its general co
 .SH "DESCRIPTION"
 .PP
 \fB:ETCDIR:/netatalk\&.conf\fR
-is the configuration file used by afpd to determine what portions of the file system will be shared via AFP, as well as their behaviors\&.
+is the configuration file used by the Netatalk init script to determine what portions of the file system will be shared via AFP, as well as their behaviors\&.
 .PP
-If netatalk has been configured with \-\-enable\-debian, it is not
-\fB:ETCDIR:/netatalk\&.conf\fR
-but
-\fB:DESTDIR:/etc/default/netatalk\fR\&.
+If Netatalk has been configured with \-\-enable\-systemd, netatalk\&.conf is NOT used. In this scenario, configure using the systemd unit configurations, as well as Netatalk's other configuration files.
 .PP
 Any line not prefixed with
 \fB#\fR

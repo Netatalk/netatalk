@@ -1,22 +1,34 @@
-.Dd 1/11/2022
-.Dt TIMELORD(8)
-.Sh NAME
-.Nm timelord
-.Nd Macintosh time server daemon
-.Sh SYNOPSIS
-.Nm
-.Op Fl d
-.Op Fl l
-.Op Fl n Ar nbpname
-.Sh DESCRIPTION
-timelord is a simple time server for Macintosh computers that use the tardis client.
-.Sh OPTIONS
-.Bl -tag -width -indent
-.It Fl d
-Debug mode, i.e. don´t disassociate from controlling TTY.
-.It Fl l
+.TH "TIMELORD" "8" "01 Nov 2022" "Netatalk 2.2" "Netatalk 2.2"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+timelord \- Macintosh time server daemon
+.SH "SYNOPSIS"
+.PP
+timelord [\-d] [\-l] [\-n
+\fIfilename\fR]
+.SH "DESCRIPTION"
+.PP
+\fBtimelord\fR
+is a simple time server for Macintosh computers that use the
+\fBtardis\fR
+client\&.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Debug mode, i\&.e\&. don\'t disassociate from controlling TTY\&.
+.RE
+.PP
+\fB\-l\fR
+.RS 4
 Use the time zone sensitive localtime of the server. The default behavior when not using this option is GMT.
-.It Fl n Ar nbpname
+.RE
+.PP
+\fB\-n\fR \fInbpname\fR
+.RS 4
 Register this server as
-.Ar nbpname .
-This defaults to the hostname.
+\fInbpname\fR\&. This defaults to the hostname\&.
+.RE

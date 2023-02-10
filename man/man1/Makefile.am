@@ -34,7 +34,6 @@ ATALK_MANS = aecho.1 \
 				nbprgstr.1 \
 				nbpunrgstr.1 \
 				pap.1 \
-				papstatus.1 \
 				psorder.1
 
 if USE_APPLETALK
