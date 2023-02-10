@@ -536,7 +536,6 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 {
     char                *buf = ad->ad_data;
     u_int16_t           nentries;
-    int                 len;
     ssize_t             header_len;
     static int          warning = 0;
     struct stat         st;
@@ -596,17 +595,12 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
         return -1;
     }
 
-    len = nentries * AD_ENTRY_LEN;
-    if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
-        len = sizeof(ad->ad_data) - AD_HEADER_LEN;
-
-    if (len + AD_HEADER_LEN > header_len) {
+    if ((nentries * AD_ENTRY_LEN) + AD_HEADER_LEN > header_len) {
         LOG(log_error, logtype_default, "ad_header_read: too many entries: %zd", header_len);
         errno = EIO;
         return -1;
     }
 
-    nentries = len / AD_ENTRY_LEN;
     if (parse_entries(ad, nentries, header_len) != 0) {
         LOG(log_warning, logtype_default, "ad_header_read(): malformed AppleDouble");
         errno = EIO;
