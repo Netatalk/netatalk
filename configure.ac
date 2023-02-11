@@ -668,26 +668,7 @@ if test "x$ac_have_atalk_addr" = "xyes"; then
 	AC_DEFINE(HAVE_ATALK_ADDR, 1, [set if struct at_addr is called atalk_addr])
 fi
 
-	dnl ----- check if we need the quotactl wrapper
-#	AC_CHECK_HEADERS(sys/quota.h linux/quota.h)
-#	AC_CHECK_FUNC(quotactl,,
-#		AC_DEFINE(NEED_QUOTACTL_WRAPPER, 1, [Define if the quotactl wrapper is needed])
-#		AC_MSG_RESULT([enabling quotactl wrapper])
-#	)
-
-        # For quotas on Linux XFS filesystems
-        
-        # For linux > 2.5.56
-        AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
-		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
-        	AC_CHECK_HEADERS(xfs/libxfs.h xfs/xqm.h xfs/xfs_fs.h)]
-	)
-
-
-	dnl ----- as far as I can tell, dbtob always does the wrong thing
-	dnl ----- on every single version of linux I've ever played with.
-	dnl ----- see etc/afpd/quota.c
-	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
+	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 
 
 	dnl ----- Linux/alpha specific -----
