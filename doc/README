@@ -1,0 +1,66 @@
+
+                                     Docbook Toolchain Setup and Usage
+                                     =================================
+ 
+   Installation
+   ------------
+
+	1. Install `xsltproc`.
+	2. Get the latest Docbook XSL stylesheet distribution from:
+	   https://sourceforge.net/project/showfiles.php?group_id=21935
+
+	   Tested docbook-xsl stylesheet version is 1.75.2.
+
+    3. Fix indexterm bug in xsl stylesheet:
+       inside the xsl stylesheet distribution in manpages/inline.xsl remove these lines:
+
+        <!-- * indexterm instances produce groff comments like this: -->
+        <!-- * .\" primary: secondary: tertiary -->
+        <xsl:template match="indexterm">
+          <xsl:text>.\" </xsl:text>
+          <xsl:apply-templates/>
+          <xsl:text>&#10;</xsl:text>
+        </xsl:template>
+
+        <xsl:template match="primary">
+          <xsl:value-of select="normalize-space(.)"/>
+        </xsl:template>
+
+        <xsl:template match="secondary|tertiary">
+          <xsl:text>: </xsl:text>
+          <xsl:value-of select="normalize-space(.)"/>
+        </xsl:template>
+
+   Usage
+   -----
+
+	Preparation:
+
+	1. Get netatalk-doc from CVS
+	2. `cd` to "netatalk-doc"
+
+	Create manpages:
+
+	3. XSL=<path to XSL stylesheets> VERSION=2.x make man
+	4. Copy the generated man pages to your CVS working copy:
+	   DIR=<path to netatalk> make install
+
+	Create HTML:
+
+    5. XSL=<path to XSL stylesheets> VERSION=2.x make html
+       The generated html files are then inside the directory html.
+
+   Editing Docbook Sources
+   -----------------------
+
+	Free WYSIWYG editor with only one minor drawback is XMLEditor from XMLmind:
+	http://www.xmlmind.com/xmleditor/persoedition.html
+
+	Drawback: in order to be able to edit any of the  nested xml files, you have to "promote" them to valid Docbook
+	files by referencing the Docbook DTD: insert as line 2+3:
+	
+		<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+		"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+
+	These changes will however prevent XMLeditor from opening the master xml file manual.xml. Before further processing
+	can be done these changes then have to be reverted for any changed file.

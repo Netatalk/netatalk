@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="nbp_name.3">
+  <refmeta>
+    <refentrytitle>nbp_name</refentrytitle>
+
+    <manvolnum>3</manvolnum>
+
+    <refmiscinfo class="date">12 Jan 1994</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>nbp_name</refname>
+
+    <refpurpose>NBP name parsing<indexterm><primary>nbp_name</primary></indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+      <funcprototype>
+        <funcdef>int <function>nbp_name</function></funcdef>
+
+        <paramdef>char *<parameter>name</parameter></paramdef>
+
+        <paramdef>char **<parameter>obj</parameter></paramdef>
+
+        <paramdef>char **<parameter>type</parameter></paramdef>
+
+        <paramdef>char **<parameter>zone</parameter></paramdef>
+      </funcprototype>
+    </funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>nbp_name()</function> parses user supplied names into
+    their component object, type, and zone. <emphasis remap="B">obj</emphasis>,
+    <emphasis remap="B">type</emphasis>, and <varname role="parameter">zone</varname>
+    should be passed by reference, and should point to the caller&#39;s
+    default values. <function>nbp_name()</function> will change the pointers
+    to the parsed-out values. <emphasis remap="B">name</emphasis> is of the
+    form <emphasis remap="I">object</emphasis><emphasis remap="B">:</emphasis><emphasis
+    remap="I"></emphasis><emphasis remap="I">type</emphasis><emphasis
+    remap="B">@</emphasis><emphasis remap="I"></emphasis><varname
+    role="parameter">zone</varname>, where each of <emphasis remap="I">object</emphasis>,
+    <emphasis remap="B">:</emphasis><emphasis remap="I">type</emphasis><emphasis
+    remap="B">,</emphasis> and <emphasis remap="B">@</emphasis><varname
+    role="parameter">zone</varname> replace <emphasis remap="B">obj</emphasis>,
+    <emphasis remap="B">type</emphasis>, and <emphasis remap="B">zone,</emphasis>
+    respectively. <emphasis remap="I">type</emphasis> must be proceeded by `<emphasis
+    remap="B">:</emphasis>&#39;, and <varname role="parameter">zone</varname>
+    must be preceded by `<emphasis remap="B">@</emphasis>&#39;.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLE</title>
+
+    <para>The argument of <citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>&#39;s
+    <option>-n</option> option is parsed with <function>nbp_name()</function>.
+    The default value of <emphasis remap="B">obj</emphasis> is the first
+    component of the machine&#39;s hostname (as returned by
+    <citerefentry><refentrytitle>gethostbyname</refentrytitle><manvolnum>3</manvolnum></citerefentry>).
+    The default value of <emphasis remap="B">type</emphasis> is
+    ``AFPServer&#39;&#39;, and of <varname role="parameter">zone</varname> is
+    ``*&#39;&#39;, the default zone. To cause <emphasis remap="B">afpd</emphasis>
+    to register itself in some zone other than the default, one would invoke
+    it as</para>
+
+    <literallayout remap=".nf">afpd -n @some-other-zone
+</literallayout>
+
+    <para><emphasis remap="B">obj</emphasis> and <emphasis remap="B">type</emphasis>
+    would retain their default values.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+
+    <para><emphasis remap="B">obj</emphasis>, <emphasis remap="B">type</emphasis>,
+    and <varname role="parameter">zone</varname> return pointers into static
+    area which may be over-written on each call.</para>
+  </refsect1>
+</refentry>

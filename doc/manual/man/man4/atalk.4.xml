@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="atalk.4">
+  <refmeta>
+    <refentrytitle>atalk</refentrytitle>
+
+    <manvolnum>4</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>atalk</refname>
+
+    <refpurpose>AppleTalk protocol family<indexterm><primary>atalk</primary></indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+      <funcsynopsisinfo>#include &#60;sys/types.h&#62;
+#include &#60;netatalk/at.h&#62;</funcsynopsisinfo>
+    </funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>The AppleTalk protocol family is a collection of protocols layered
+    above the Datagram Delivery Protocol (DDP), and using AppleTalk address
+    format. The AppleTalk family may provide SOCK_STREAM (ADSP), SOCK_DGRAM
+    (DDP), SOCK_RDM (ATP), and SOCK_SEQPACKET (ASP). Currently, only DDP is
+    implemented in the kernel; ATP and ASP are implemented in user level
+    libraries; and ADSP is planned.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>ADDRESSING</title>
+
+    <para>AppleTalk addresses are three byte quantities, stored in network
+    byte order. The include file &#60;<emphasis remap="B">netatalk/at.h</emphasis>&#62;
+    defines the AppleTalk address format.</para>
+
+    <para>Sockets in the AppleTalk protocol family use the following address
+    structure:</para>
+
+    <programlisting remap=".nf">struct sockaddr_at {
+    short sat_family;
+    u_char sat_port;
+    struct at_addr sat_addr;
+    char sat_zero[ 8 ];
+};
+</programlisting>
+
+    <para>The port of a socket may be set with <citerefentry><refentrytitle>bind</refentrytitle><manvolnum>2</manvolnum></citerefentry>.
+    The node for <emphasis remap="B">bind</emphasis> must always be <emphasis
+    remap="B">ATADDR_ANYNODE</emphasis>: ``this node.&#39;&#39; The net may be
+    <emphasis remap="B">ATADDR_ANYNET</emphasis> or <emphasis remap="B">ATADDR_LATENET</emphasis>.
+    <emphasis remap="B">ATADDR_ANYNET</emphasis> coresponds to the
+    machine&#39;s ``primary&#39;&#39; address (the first configured).
+    <emphasis remap="B">ATADDR_LATENET</emphasis> causes the address in
+    outgoing packets to be determined when a packet is sent, i.e. determined
+    late. <emphasis remap="B">ATADDR_LATENET</emphasis> is equivalent to
+    opening one socket for each network interface. The port of a socket and
+    either the primary address or <emphasis remap="B">ATADDR_LATENET</emphasis>
+    are returned with <citerefentry><refentrytitle>getsockname</refentrytitle><manvolnum>2</manvolnum></citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <!--  .BR ddp (4P), -->
+
+    <!--  .BR atp (3N), -->
+
+    <!--  .BR asp (3N), -->
+
+    <para><citerefentry><refentrytitle>bind</refentrytitle><manvolnum>2</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>getsockname</refentrytitle><manvolnum>2</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>atalkd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>

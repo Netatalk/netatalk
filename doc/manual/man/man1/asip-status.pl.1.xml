@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="asip-status.pl.1">
+  <refmeta>
+    <refentrytitle>asip-status.pl</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">02 Sep 2011</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>asip-status.pl</refname>
+
+    <refpurpose>Queries AFP servers for their capabilities</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>asip-status.pl<indexterm>
+          <primary>asip-status.pl</primary>
+        </indexterm></command>
+
+      <arg choice="opt">-d</arg>
+      <arg choice="opt">-i</arg>
+      <arg choice="opt">-x</arg>
+
+      <arg choice="plain">HOSTNAME[:PORT]</arg>
+    </cmdsynopsis>
+
+    <sbr />
+
+    <cmdsynopsis>
+      <command>asip-status.pl<indexterm>
+          <primary>asip-status.pl</primary>
+        </indexterm></command>
+
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">-version</arg>
+        <arg choice="plain">--version</arg>
+      </group>
+    </cmdsynopsis>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><emphasis remap="B">asip-status.pl</emphasis> is a perl script that
+    sends a FPGetSrvrInfo request to an AFP server at HOSTNAME:PORT and
+    displays the results, namely "Machine type", the server's name, supported
+    AFP versions, UAMs and AFP flags, the "server signature" and the network
+    addresses, the server provides AFP services on.</para>
+
+    <para>When you don't supply :PORT, then the default AFP port, 548, will be
+    used.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Enable debug output.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-i</option></term>
+
+        <listitem>
+          <para>Show icon if it exists.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-x</option></term>
+
+        <listitem>
+          <para>Enable hex dump output.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-v, -version, --version</option></term>
+
+        <listitem>
+          <para>Show version.</para>
+        </listitem>
+
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLES</title>
+
+    <para><programlisting><emphasis remap="B">asip-status.pl</emphasis> 192.168.21.2
+AFP reply from 192.168.21.2:548
+Flags: 1  Cmd: 3  ID: 57005
+Reply: DSIGetStatus
+Request ID: 57005
+Machine type: Macintosh
+AFP versions: AFPVersion 1.1,AFPVersion 2.0,AFPVersion 2.1,AFP2.2
+UAMs: Cleartxt passwrd,Randnum exchange,2-Way Randnum exchange
+Flags: SupportsCopyFile,SupportsChgPwd,SupportsServerMessages,
+SupportsServerSignature,SupportsTCP/IP,SupportsSuperClient
+Server name: PowerMac 9600/200
+Signature:
+04 c1 6e 59 04 c1 6e 59 04 c1 6e 59 04 c1 6e 59  ..nY..nY..nY..nY
+                                                  
+Network address: 192.168.21.2:548 (tcp/ip address and port)
+Network address: 10.20 (ddp address)
+</programlisting></para>
+
+    <para><programlisting><emphasis remap="B">asip-status.pl</emphasis> myserver:10548
+AFP reply from myserver:10548
+Flags: 1  Cmd: 3  ID: 57005
+Reply: DSIGetStatus
+Request ID: 57005
+Machine type: Netatalk
+AFP versions: AFPVersion 1.1,AFPVersion 2.0,AFPVersion 2.1,AFP2.2,AFPX03,
+AFP3.1
+UAMs: Cleartxt passwrd,Randnum exchange,2-Way Randnum exchange,DHCAST128
+Flags: SupportsCopyFile,SupportsServerMessages,SupportsServerSignature,
+SupportsTCP/IP,SupportsSrvrNotifications,SupportsOpenDirectory,
+SupportsUTF8Servername,SupportsSuperClient
+Server name: Fire V480
+Signature:
+83 29 cc 60 83 29 cc 60 83 29 cc 60 83 29 cc 60  .).`.).`.).`.).`
+                                                  
+Network address: 192.168.21.1:10548 (TCP/IP address and port)
+Network address: 65282.142 (ddp address)
+UTF8 Servername: Fire V480
+</programlisting></para>
+  </refsect1>
+
+  <refsect1>
+    <title>REPORTING BUGS</title>
+
+    <para>Report bugs to the Netatalk-devel list
+    &lt;netatalk-devel@lists.sourceforge.net&gt;.</para>
+  </refsect1>
+</refentry>

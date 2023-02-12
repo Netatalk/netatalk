@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="papstatus.8">
+  <refmeta>
+    <refentrytitle>papstatus</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>papstatus</refname>
+
+    <refpurpose>get the status of an AppleTalk-connected printer</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>:SBINDIR:/papstatus<indexterm><primary>papstatus</primary></indexterm></command>
+
+      <arg choice="opt">-d</arg>
+
+      <arg choice="opt"><arg choice="plain">-p </arg><arg choice="plain"><replaceable>printer</replaceable></arg></arg>
+
+      <arg choice="opt"><replaceable>retrytime</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><emphasis remap="B">papstatus</emphasis> is used to obtain the
+    current status message from an AppleTalk connected printer. It uses the
+    Printer Access Protocol (PAP) to obtain the status information.</para>
+
+    <para>If no printer is specified on the command line, <emphasis remap="B">papstatus</emphasis>
+    looks for a file called <markup>.paprc</markup> in the current directory
+    and reads it to obtain the name of a printer. The <markup>.paprc</markup>
+    file should contain a single line of the form <emphasis remap="I">object</emphasis><emphasis
+    remap="B">:</emphasis><emphasis remap="I"></emphasis><emphasis remap="I">type</emphasis><emphasis
+    remap="B">@</emphasis><emphasis remap="I"></emphasis><emphasis remap="I">zone</emphasis>
+    where each of <emphasis remap="I">object</emphasis>, <emphasis remap="B">:</emphasis><emphasis
+    remap="I">type</emphasis><emphasis remap="B">,</emphasis> and <emphasis
+    remap="B">@</emphasis><emphasis remap="I">zone</emphasis> are optional.
+    <emphasis remap="I">type</emphasis> and <emphasis remap="I">zone</emphasis>
+    must be proceeded by `<emphasis remap="B">:</emphasis>&#39; and `<emphasis
+    remap="B">@</emphasis>&#39; respectively. Blank lines and lines the begin
+    with a `<emphasis remap="B">#</emphasis>&#39; are ignored. <emphasis
+    remap="I">type</emphasis> and <emphasis remap="I">zone</emphasis> default
+    to <emphasis remap="B">LaserWriter</emphasis> and the zone of the local
+    host, respectively.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Turns on a debugging mode that prints some extra information
+          to standard error.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-p</option> <replaceable>printer</replaceable></term>
+
+        <listitem>
+          <para>Get status from <emphasis remap="I">printer</emphasis> (do not
+          consult any <markup>.paprc</markup> files to find a printer name).
+          The syntax for <emphasis remap="I">printer</emphasis> is the same as
+          discussed above for the <markup>.paprc</markup> file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="I">retrytime</emphasis></term>
+
+        <listitem>
+          <para>Normally, <emphasis remap="B">papstatus</emphasis> only gets
+          the status from the printer once. If <emphasis remap="I">retrytime</emphasis>
+          is specified, the status is obtained repeatedly, with a sleep of
+          <emphasis remap="I">retrytime</emphasis> seconds between inquiring
+          the printer.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>FILES</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><markup>.paprc</markup></term>
+
+        <listitem>
+          <para>file that contains printer name</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>nbp</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>pap</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>

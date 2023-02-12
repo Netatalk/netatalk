@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="psf.8">
+  <refmeta>
+    <refentrytitle>psf</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>psf</refname>
+
+    <refpurpose>PostScript filter</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>psf<indexterm><primary>psf</primary></indexterm></command>
+
+      <arg choice="opt"><arg choice="plain">-n </arg><arg choice="plain"><replaceable>name</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-h </arg><arg choice="plain"><replaceable>host</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-w </arg><arg choice="plain"><replaceable>width</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-l </arg><arg choice="plain"><replaceable>length</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-i </arg><arg choice="plain"><replaceable>indent</replaceable></arg></arg>
+
+      <arg choice="opt">-c</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>psf</command> is an <emphasis remap="B">lpd</emphasis>
+    filter for PostScript printing. <command>psf</command> interprets the name
+    it was called with to determine what filters to invoke. First, if the
+    string ``pap&#39;&#39; appears anywhere in the name, <command>psf</command>
+    invokes <emphasis remap="B">pap</emphasis> to talk to a printer via
+    AppleTalk. Next, if the string ``rev&#39;&#39; appears,
+    <command>psf</command> invokes <emphasis remap="B">psorder</emphasis> to
+    reverse the pages of the job. Finally, if <command>psf</command> was
+    called with a filter&#39;s name as the leading string, it invokes that
+    filter. If there is no filter to run, <command>psf</command> examines the
+    magic number of the input, and if the input is not PostScript, converts it
+    to PostScript.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>KLUDGE</title>
+
+    <para>In the default configuration, <command>psf</command> supports two
+    kludges. The first causes <command>psf</command> to check its name for the
+    letter `m&#39;. If this letter is found and accounting is turned on,
+    <command>psf</command> calls <emphasis remap="B">pap</emphasis> twice,
+    once to get an initial page count and to print the job, and another time
+    to get a final page count. This is a work-around for bugs in a variety of
+    PAP implementions that cause printers to never properly close the PAP
+    output file. A notable example is any printer by Hewlett-Packard.</para>
+
+    <para>The second kludge causes <command>psf</command> to examine its name
+    for the letter `w&#39;. If this letter is found and accounting is turned
+    on, <command>psf</command> calls <emphasis remap="B">pap</emphasis> with
+    the <option>-w</option> flag. This flag causes <emphasis remap="B">pap</emphasis>
+    to wait until the printer&#39;s status contains the string `idle&#39;.
+    Once this string is found, the job is printed as normal. This kludge is a
+    work-around for printers, notably Hewlett-Packard&#39;s LaserJet IV, which
+    will report a page count while a previous jobs is still printing.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLE</title>
+
+    <para>The sample <emphasis remap="B">printcap</emphasis> entry below
+    invokes <command>psf</command> to print text files, PostScript files,
+    <emphasis remap="B">troff</emphasis>&#39;s C/A/T output, and <emphasis
+    remap="B">TeX</emphasis>&#39;s DVI output, to an AppleTalk connected
+    LaserWriter Plus. Since the LaserWriter Plus stacks pages in descending
+    order, we reverse the pages and print the burst page last.</para>
+
+    <literallayout remap=".nf">
+laser|lp|LaserWriter Plus on AppleTalk:\
+    :sd=/usr/spool/lpd/laser:\
+    :lp=/usr/spool/lpd/laser/null:\
+    :lf=/var/adm/lpd-errs:pw#80:hl:\
+    :of=:LIBEXECDIR:/ofpap:\
+    :if=:LIBEXECDIR:/ifpaprev:\
+    :tf=:LIBEXECDIR:/tfpaprev:\
+    :df=:LIBEXECDIR:/dfpaprev:
+</literallayout>
+
+    <para>Note that if the host in question spools to more than one AppleTalk
+    printer, <filename>/dev/null</filename> should not be used for the
+    <emphasis remap="B">lp</emphasis> capability. Instead, a null device
+    should be created with <emphasis remap="B">mknod</emphasis> for each
+    printer, as has been done above.</para>
+
+    <para>Finally, there is a file in the spool directory,
+    <filename>/var/spool/lpd/laser</filename>, called <markup>.paprc</markup>,
+    which <emphasis remap="B">pap</emphasis> reads for the AppleTalk name of
+    the printer.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>psorder</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>printcap</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>lpd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>mknod</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>pap</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>

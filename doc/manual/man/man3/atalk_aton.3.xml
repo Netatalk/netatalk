@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="atalk_aton.3">
+  <refmeta>
+    <refentrytitle>atalk_aton</refentrytitle>
+
+    <manvolnum>3</manvolnum>
+
+    <refmiscinfo class="date">12 Jan 1994</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>atalk_aton</refname>
+
+    <refpurpose>AppleTalk address parsing<indexterm><primary>atalk_aton</primary></indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+      <funcsynopsisinfo>#include &#60;sys/types.h&#62;
+#include &#60;netatalk/at.h&#62;</funcsynopsisinfo>
+
+      <funcprototype>
+        <funcdef><function>atalk_aton</function></funcdef>
+
+        <paramdef>char * <parameter>cp</parameter></paramdef>
+
+        <paramdef>struct at_addr * <parameter>ata</parameter></paramdef>
+      </funcprototype>
+    </funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>The <function>atalk_aton()</function> routine converts an ASCII
+    representation of an AppleTalk address to a format appropriate for system
+    calls. Acceptable ASCII representations include both hex and base 10, in
+    triples or doubles. For instance, the address `0x1f6b.77&#39; has a
+    network part of `8043&#39; and a node part of `119&#39;. This same address
+    could be written `8043.119&#39;, `31.107.119&#39;, or `0x1f.6b.77&#39;. If
+    the address is in hex and the first digit is one of `A-F&#39;, a leading
+    `0x&#39; is redundant.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>atalk</refentrytitle><manvolnum>4</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>
