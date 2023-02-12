@@ -1,0 +1,1041 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="AppleVolumes.default.5">
+  <refmeta>
+    <refentrytitle>AppleVolumes.default</refentrytitle>
+
+    <manvolnum>5</manvolnum>
+
+    <refmiscinfo class="date">27 Dez 2012</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>AppleVolumes.default</refname>
+
+    <refname>AppleVolumes.system</refname>
+
+    <refname>AppleVolumes</refname>
+
+    <refpurpose>Configuration file used by <command>afpd</command>(8) to
+    determine the shares made available through AFP and specify file name
+    extension mappings.<indexterm>
+        <primary>AppleVolumes.default</primary>
+      </indexterm><indexterm>
+        <primary>cnidscheme</primary>
+
+        <secondary>specifying a CNID backend</secondary>
+      </indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv id="synopsis">
+    <cmdsynopsis>
+      <command>:ETCDIR:/AppleVolumes.default<indexterm><primary>AppleVolumes.default</primary></indexterm></command>
+
+      <sbr />
+
+      <command>:ETCDIR:/AppleVolumes.system<indexterm><primary>AppleVolumes.system</primary></indexterm></command>
+
+      <sbr />
+
+      <command>~/AppleVolumes<indexterm><primary>~/AppleVolumes</primary></indexterm></command>
+
+      <sbr />
+
+      <command>~/.AppleVolumes<indexterm><primary>~/.AppleVolumes</primary></indexterm></command>
+
+      <sbr />
+
+      <command>~/applevolumes<indexterm><primary>~/applevolumes</primary></indexterm></command>
+
+      <sbr />
+
+      <command>~/.applevolumes<indexterm><primary>~/.applevolumes</primary></indexterm></command>
+
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para>
+    <filename>:ETCDIR:/AppleVolumes.system</filename> and one of
+    <filename>:ETCDIR:/AppleVolumes.default</filename>,
+    <filename>~/AppleVolumes</filename>,
+    <filename>~/.AppleVolumes</filename>,
+    <filename>~/applevolumes</filename>, or
+    <filename>~/.applevolumes</filename>  are the
+    configuration files used by <command>afpd</command> to determine what
+    portions of the file system will be shared via Apple Filing Protocol, as
+    well as their behaviour.</para>
+
+    <para>Any line not prefixed with # is interpreted.
+    Newline escaping is supported. The configuration lines are composed
+    like:</para>
+
+    <para><filename>path</filename> <replaceable>[ volume name ] [ options
+    ]</replaceable></para>
+    <para><filename>.extension</filename> <replaceable>[ type [
+    creator ] ]</replaceable></para>
+
+    <para>The path name must be a fully qualified path name, or a path name
+    using either the ~ shell shorthand or any of the substitution variables,
+    which are listed below.</para>
+
+    <para>The volume name is the name that appears in the Chooser ot the
+    "connect to server" dialog on Macintoshes to represent the appropriate
+    share. If volumename is unspecified, the last component of pathname
+    is used. No two volumes may have the same name. If there are spaces in
+    the name, it should be in quotes (i.e. "File Share").
+    The volume name cannot contain the <keycode>':'</keycode>
+    character. The volume name is mangled if it is very long. Mac codepage
+    volume name is limited to 27 characters. UTF8-MAC volume name is limited
+    to -volnamelen parameter in afpd.conf</para>
+
+    <note>
+      <para>Each volume has to be configured on a <emphasis
+      role="bold">single</emphasis> line. Though newline escaping is
+      supported.</para>
+    </note>
+
+    <para>The leading-dot lines specify file name extension mappings.
+    The extension '.' sets the default creator and type for otherwise
+    untyped Unix files.</para>
+
+    <note>
+      <para>File name extension mapping is useful for Mac OS 9 and earlier.
+      But it should not use for Mac OS X.</para>
+    </note>
+
+    <para>It is possible to specify default options for all volumes with a
+    <emphasis>:DEFAULT: </emphasis>line preceeding these volume
+    definitions:</para>
+      <example>
+        <title>:DEFAULT: configuration line</title>
+
+        <programlisting>:DEFAULT: options:upriv,usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664</programlisting>
+      </example>
+
+    <para>The possible options and their meanings are:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>adouble:<replaceable>[v1|v2|osx]</replaceable></term>
+
+        <listitem>
+          <para>Specify the format of the metadata files, which are used for
+          saving Mac resource fork as well. Earlier versions used AppleDouble
+          V1, the new default format is V2. Starting with Netatalk 2.0, the
+          scheme MacOS X 10.3.x uses, is also supported.</para>
+
+          <note>
+            <para><option>adouble:osx</option> <emphasis
+            role="bold">cannot</emphasis> be treated normally any longer. Its
+            only aim was to temporarely share eg. FAT32 formatted FireWire
+            harddrives written on a Macintosh with afpd. Apple's metadata
+            scheme lacks several essential features, so using it on the
+            server's side will break both CNIDs and MacOS 9 compatibility.
+            AppleDouble file of Mac OS X 10.6 is incompatible to V1 and
+            V2.</para>
+          </note>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>volsizelimit:<replaceable>size in MiB</replaceable></term>
+
+        <listitem>
+          <para>Useful for TimeMachine: limits the reported volume size,
+            thus preventing TM from using the whole real disk space for
+            backup. Example: "volsizelimit:1000" would limit the reported
+            disk space to 1 GB. <emphasis role="bold">IMPORTANT: </emphasis>
+            This is an approximated calculation taking into accout
+            the contents of TM sparsebundle images. Therefor you MUST NOT
+            use this volume to store other content when using this
+            option, because it would NOT be accounted.
+            The calculation works by reading the band size from the Info.plist
+            XML file of the sparsebundle, reading the bands/ directory
+            counting the number of band files, and then multiplying one
+            with the other.
+          </para>
+
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>allow:<replaceable>[users/groups]</replaceable></term>
+
+        <listitem>
+          <para>The allow option allows the users and groups that access a
+          share to be specified. Users and groups are specified, delimited by
+          commas. Groups are designated by a @ prefix. Example:
+          allow:user1,user2,@group</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>deny:<replaceable>[users/groups]</replaceable></term>
+
+        <listitem>
+          <para>The deny option specifies users and groups who are not allowed
+          access to the share. It follows the same format as the allow
+          option.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>allowed_hosts:<replaceable>[IP host address/IP netmask bits[,
+        ... ]]</replaceable></term>
+
+        <listitem>
+          <para>Only listed hosts and networks are allowed, all others are
+          rejected. The network address may be specified either in
+          dotted-decimal format for IPv4 or in hexadecimal format for
+          IPv6.</para>
+
+          <para>Example:
+          allowed_hosts:10.1.0.0/16,10.2.1.100,2001:0db8:1234::/48</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>denied_hosts:<replaceable>[IP host address/IP netmask bits[,
+        ...]]</replaceable></term>
+
+        <listitem>
+          <para>Listed hosts and nets are rejected, all others are
+          allowed.</para>
+
+          <para>Example: denied_hosts:
+          192.168.100/24,10.1.1.1,2001:db8::1428:57ab</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>cnidscheme:<replaceable>[backend]</replaceable></term>
+
+        <listitem>
+          <para>set the CNID backend to be used for the volume, default is
+          [:DEFAULT_CNID_SCHEME:] available schemes:
+          [:COMPILED_BACKENDS:]</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>dbpath:<replaceable>[path]</replaceable></term>
+
+        <listitem>
+          <para>Sets the database information to be stored in path. You have
+          to specifiy a writable location, even if the volume is read
+          only.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>cnidserver:<replaceable>[fqdn|IP[:port]]</replaceable></term>
+
+        <listitem>
+          <para>Query this servername or IP address
+          (default:<emphasis>localhost</emphasis>) and port (default:
+          <emphasis>4700</emphasis>) for CNIDs. Only used with CNID backend
+          "<emphasis>dbd</emphasis>". This option here overrides any setting
+          from
+          <filename>afpd.conf</filename>:<option>cnidserver</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ea:<replaceable>[none|auto|sys|ad]</replaceable></term>
+
+        <listitem>
+          <para>Specify how Extended Attributes<indexterm>
+              <primary>Extended Attributes</primary>
+            </indexterm> are stored. <option>auto</option> is the
+          default.</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>auto</term>
+
+              <listitem>
+                <para>Try <option>sys</option> (by setting an EA on the shared
+                directory itself), fallback to <option>ad</option>. Requires
+                writeable volume for perfoming test.
+                <option>options:ro</option> overwrites <option>auto</option>
+                with <option>none</option>. Use explicit
+                <option>ea:sys|ad</option> for read-only volumes where
+                appropiate.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>sys</term>
+
+              <listitem>
+                <para>Use filesystem Extended Attributes.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>ad</term>
+
+              <listitem>
+                <para>Use files in <emphasis>.AppleDouble</emphasis>
+                directories.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>none</term>
+
+              <listitem>
+                <para>No Extended Attributes support.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>maccharset:<replaceable>[charset]</replaceable></term>
+
+        <listitem>
+          <para>specifies the mac client codepage for this Volume, e.g.
+          "MAC_ROMAN", "MAC_CYRILLIC". If not specified the setting from
+          <filename>afpd.conf</filename> is inherited. This setting is only
+          required if you need volumes, where the mac codepage differs from
+          the one globally set in <filename>afpd.conf</filename>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>options:<replaceable>[option]</replaceable></term>
+
+        <listitem>
+          <para>This allows multiple options to be specified in a comma
+          delimited format. The available options are:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>searchdb</term>
+              <listitem>
+                <para>Use fast CNID database namesearch instead of slow recursive
+                  filesystem search. Relies on a consistent CNID database, ie Samba
+                  or local filesystem access lead to inaccurate or wrong results.
+                  Works only for "dbd" CNID db volumes.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>tm</term>
+
+              <listitem>
+                <para>Enable Time Machine suport for this volume.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>invisibledots</term>
+
+              <listitem>
+                <para>Use with <option>usedots</option>: make dot files
+                invisible.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nonetids</term>
+
+              <listitem>
+                <para>Try to force ACL unawareness on the client.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>limitsize</term>
+
+              <listitem>
+                <para>Limit disk size reporting to 2GB. This can be used for
+                older Macintoshes using newer Appleshare clients.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>preexec_close</term>
+
+              <listitem>
+                <para>a non-zero return code from preexec close the volume
+                being immediately, preventing clients to mount/see the volume
+                in question.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>ro</term>
+
+              <listitem>
+                <para>Specifies the share as being read only for all users.
+                The .AppleDB directory has to be writeable, you can use the
+                <option>-dbpath</option> option to relocate it. Overwrites
+                <option>ea:auto</option> with <option>ea:none</option></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>root_preexec_close</term>
+
+              <listitem>
+                <para>a non-zero return code from root_preexec closes the
+                volume immediately, preventing clients to mount/see the volume
+                in question.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>upriv</term>
+
+              <listitem>
+                <para>use AFP3 unix privileges. This should be set for OS X
+                  clients. Starting with Netatalk 2.1 it's part of the
+                  default config :DEFAULT: line.
+                  See also: <option>perm|fperm|dperm</option>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>usedots</term>
+
+              <listitem>
+                <para>Don't do :hex translation for dot files. note: when this
+                option gets set, certain file names become illegal. These are
+                .Parent and anything that starts with .Apple. See also
+                <option>invisibledots</option>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>followsymlinks</term>
+
+              <listitem>
+                <para>Follow symlinks on the server.</para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>password:<replaceable>[password]</replaceable></term>
+
+        <listitem>
+          <para>This option allows you to set a volume password, which can be
+          a maximum of 8 characters long (using ASCII strongly recommended at
+          the time of this writing).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>perm|fperm|dperm:<replaceable>[mode]</replaceable></term>
+
+        <listitem>
+          <para>Add(or) with the client requested permissions:
+          <option>perm</option> affects files and directories,
+          <option>fperm</option> is for files only, <option>dperm</option> is
+          for directories only. Use with
+          <option>options:upriv</option>.</para>
+
+          <example>
+            <title>Volume for a collaborative workgroup</title>
+
+            <programlisting>/path/to/volume "Workgroup" options:upriv dperm:0770 fperm:0660</programlisting>
+          </example>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>umask:<replaceable>[mode]</replaceable></term>
+
+        <listitem>
+          <para>set perm mask. Use with <option>options:upriv</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>preexec:<replaceable>[command]</replaceable></term>
+
+        <listitem>
+          <para>command to be run when the volume is mounted, ignored for user
+          defined volumes</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>postexec:<replaceable>[command]</replaceable></term>
+
+        <listitem>
+          <para>command to be run when the volume is closed, ignored for user
+          defined volumes</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>root_preexec:<replaceable>[command]</replaceable></term>
+
+        <listitem>
+          <para>command to be run as root when the volume is mounted, ignored
+          for user defined volumes</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>root_postexec:<replaceable>[command]</replaceable></term>
+
+        <listitem>
+          <para>command to be run as root when the volume is closed, ignored
+          for user defined volumes</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>rolist:[<option>users/groups</option>]</term>
+
+        <listitem>
+          <para>Allows certain users and groups to have read-only access to a
+          share. This follows the allow option format.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>rwlist:<replaceable>[users/groups]</replaceable></term>
+
+        <listitem>
+          <para>Allows certain users and groups to have read/write access to a
+          share. This follows the allow option format.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>veto:<replaceable>[vetoed names]</replaceable></term>
+
+        <listitem>
+          <para>hide files and directories,where the path matches one of the
+          '/' delimited vetoed names. The veto string must always be
+          terminated with a '/', eg. "veto1/", "veto1/veto2/".</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>volcharset:<replaceable>[charset]</replaceable></term>
+
+        <listitem>
+          <para>specifies the volume codepage, e.g. "UTF8", "UTF8-MAC",
+          "ISO-8859-15". Defaults to "UTF8".</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Variable substitutions</title>
+
+    <para>You can use variables in both volume path and volume name.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>if you specify an unknown variable, it will not get
+        converted.</para>
+      </listitem>
+
+      <listitem>
+        <para>if you specify a known variable, but that variable doesn't have
+        a value, it will get ignored.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The variables which can be used for substitutions are:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>$b</term>
+
+        <listitem>
+          <para>basename</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$c</term>
+
+        <listitem>
+          <para>client's ip or appletalk address</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$d</term>
+
+        <listitem>
+          <para>volume pathname on server</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$f</term>
+
+        <listitem>
+          <para>full name (contents of the gecos field in the passwd
+          file)</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$g</term>
+
+        <listitem>
+          <para>group name</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$h</term>
+
+        <listitem>
+          <para>hostname</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$i</term>
+
+        <listitem>
+          <para>client's ip, without port</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$s</term>
+
+        <listitem>
+          <para>server name (this can be the hostname)</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$u</term>
+
+        <listitem>
+          <para>user name (if guest, it is the user that guest is running
+          as)</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$v</term>
+
+        <listitem>
+          <para>volume name (either ADEID_NAME or basename of path)</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$z</term>
+
+        <listitem>
+          <para>appletalk zone (may not exist)</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>$$</term>
+
+        <listitem>
+          <para>prints dollar sign ($)</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <example>
+      <title>Using variable substitution when defining volumes</title>
+
+      <para><programlisting>/home/groups/$g "Groupdir for $g"
+~ "$f is the best one"</programlisting> We define "groupdirs" for each primary
+      group and use a personalized server name for homedir shares.</para>
+    </example>
+  </refsect1>
+
+  <refsect1>
+    <title>CNID backends</title>
+
+    <para>The AFP protocol mostly refers to files and directories by ID and
+    not by name. Netatalk needs a way to store these ID's in a persistent way,
+    to achieve this several different CNID backends are available. The CNID
+    Databases are by default located in the <filename>.AppleDB</filename>
+    folder in the volume root.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>cdb</term>
+
+        <listitem>
+          <para>"Concurrent database", backend is based on Sleepycat's Berkely
+          DB. With this backend several <command>afpd</command> deamons access
+          the CNID database directly. Berkeley DB locking is used to
+          synchronize access, if more than one <command>afpd</command> process
+          is active for a volume. The drawback is, that the crash of a single
+          <command>afpd</command> process might corrupt the database.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>dbd</term>
+
+        <listitem>
+          <para>Access to the CNID database is restricted to the
+          <command>cnid_metad</command> daemon process.
+          <command>afpd</command> processes communicate with the daemon for
+          database reads and updates. If built with Berkeley DB transactions
+          the probability for database corruption is practically zero, but
+          performance can be slower than with <option>cdb</option></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>last</term>
+
+        <listitem>
+          <para>This backend is an exception, in terms of ID persistency. ID's
+          are only valid for the current session. This is basically what
+          <command>afpd</command> did in the 1.5 (and 1.6) versions. This
+          backend is still available, as it is useful for e.g. sharing
+          cdroms.</para>
+
+          <para><emphasis role="bold">Warning</emphasis>: It is
+          <emphasis>NOT</emphasis> recommended to use this backend for volumes
+          anymore, as <command>afpd</command> now relies heavily on a
+          persistent ID database. Aliases will likely not work and filename
+          mangling is not supported.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>Even though <command>./configure --help</command> might show that
+    there are other CNID backends available, be warned those are likely broken
+    or mainly used for testing. Don't use them unless you know what you're
+    doing, they may be removed without further notice from future
+    versions.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Charset options</title>
+
+    <para>With OS X Apple introduced the AFP3 protocol. One of the most
+    important changes was that AFP3 uses unicode names encoded as UTF-8
+    decomposed. Previous AFP/OS versions used codepages, like MacRoman,
+    MacCentralEurope, etc.</para>
+
+    <para><command>afpd</command> needs a way to preserve extended macintosh
+    characters, or characters illegal in unix filenames, when saving files on
+    a unix filesystem. Earlier versions used the the so called CAP encoding.
+    An extended character (&gt;0x7F) would be converted to a :xx sequence,
+    e.g. the Apple Logo (MacRoman: 0XF0) was saved as <literal>:f0</literal>.
+    Some special characters will be converted as to :xx notation as well.
+    '<keycode>/</keycode>' will be encoded to <literal>:2f</literal>, if
+    <option>usedots</option> is not specified, a leading dot
+    '<keycode>.</keycode>' will be encoded as <literal>:2e</literal>.</para>
+
+    <para>This version now uses UTF-8 as the default encoding for names.
+    Special characters, like '<keycode>/</keycode>' and a leading
+    '<keycode>.</keycode>' will still be CAP style encoded .</para>
+
+    <para>The <option>-volcharset</option> option will allow you to select
+    another volume encoding. E.g. for western users another useful setting
+    could be -volcharset ISO-8859-15. <command>apfd</command> will accept any
+    <citerefentry>
+        <refentrytitle><command>iconv</command></refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry> provided charset. If a character cannot be converted
+    from the mac codepage to the selected volcharset, afpd will save it as a
+    CAP encoded character. For AFP3 clients, <command>afpd</command> will
+    convert the UTF-8<indexterm>
+        <primary>UTF8</primary>
+
+        <secondary>afpd's volcharset setting</secondary>
+      </indexterm><indexterm>
+        <primary>UTF8-MAC</primary>
+
+        <secondary>afpd's volcharset setting</secondary>
+      </indexterm><indexterm>
+        <primary>ISO-8859-15</primary>
+
+        <secondary>afpd's volcharset setting</secondary>
+      </indexterm><indexterm>
+        <primary>ISO-8859-1</primary>
+
+        <secondary>afpd's volcharset setting</secondary>
+      </indexterm> character to <option>-maccharset</option> first. If this
+    conversion fails, you'll receive a -50 error on the mac.</para>
+
+    <para><emphasis>Note</emphasis>: Whenever you can, please stick with the
+    default UTF-8 volume format.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Compatibility with earlier versions</title>
+
+    <para>To use a volume created with an earlier <command>afpd</command>
+    version, you'll have to specify the following options:</para>
+
+    <example>
+      <title>use a 1.x style volume</title>
+
+      <programlisting>/path/to/volume "Volname" adouble:v1 volcharset:ASCII<indexterm>
+          <primary>ASCII</primary>
+
+          <secondary>afpd's volcharset setting</secondary>
+        </indexterm></programlisting>
+    </example>
+
+    <para>In case you used an NLS you could try using a compatible iconv
+    charset for <option>-volcharset</option>.</para>
+
+    <example>
+      <title>use a 1.x style volume, created with maccode.iso8859-1</title>
+
+      <programlisting>/path/to/volume "Volname" adouble:v1 volcharset:ISO-8859-1</programlisting>
+    </example>
+
+    <para>You should consider converting old style volumes to the new
+    UTF-8/AD2 format. The safest way to do this, is to create a new volume
+    with the default options and copy the files between this volumes with a
+    mac.</para>
+
+    <para><emphasis>Note</emphasis>: Using above example options will allow
+    you to downgrade to 1.x netatalk again.</para>
+
+    <para><emphasis>Note</emphasis>: Some 1.x NLS files used non standard
+    mappings, e.g. <filename>maccode.iso8859-1.adapted</filename>. Three 1.x
+    CAP double-byte maccharsets are incompatible to netatalk 2.x;
+    "MAC_CHINESE_TRAD", "MAC_JAPANESE" and "MAC_KOREAN". These are not
+    supported anymore. You'll have to copy the contents of those volumes files
+    to a Mac and then back to the netatalk server, preferably to an UTF-8
+    volume.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Advanced Options</title>
+
+    <para>The following options should only be used after serious
+    consideration. Be sure you fully understood the, sometimes complex,
+    consequences, before using them.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>casefold:<option>[option]</option></term>
+
+        <listitem>
+          <para>The casefold option handles, if the case of filenames should
+          be changed. The available options are:</para>
+
+          <para><option>tolower</option> - Lowercases names in both
+          directions.</para>
+
+          <para><option>toupper</option> - Uppercases names in both
+          directions.</para>
+
+          <para><option>xlatelower</option> - Client sees lowercase, server
+          sees uppercase.</para>
+
+          <para><option>xlateupper</option> - Client sees uppercase, server
+          sees lowercase.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>options:[<option>option</option>]</term>
+
+        <listitem>
+          <para>This allows multiple options to be specified in a comma
+          delimited format. The available options are:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term>caseinsensitive</term>
+
+              <listitem>
+                <para>The underlying filesystem is case insensitive (only
+                tested with JFS in OS2 mode).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>crlf</term>
+
+              <listitem>
+                <para>Enables crlf translation for TEXT files, automatically
+                converting macintosh line breaks into Unix ones. Use of this
+                option might be dangerous since some older programs store
+                binary data files as type "TEXT" when saving and switch the
+                filetype in a second step. <command>Afpd</command> will
+                potentially destroy such files when "erroneously" changing
+                bytes in order to do line break translation.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>dropbox</term>
+
+              <listitem>
+                <para>Allows a volume to be declared as being a "dropbox."
+                Note that netatalk must be compiled with dropkludge support
+                for this to function. <emphasis>Warning</emphasis>: This
+                option is deprecated and might not work as expected.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>dropkludge</term>
+
+              <listitem>
+                <para>same as "dropbox".</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>mswindows</term>
+
+              <listitem>
+                <para>Forces filename restrictions imposed by MS WinXX.
+                <emphasis>Warning</emphasis>: This is <emphasis>NOT</emphasis>
+                recommened for volumes mainly used by Macs. Please make sure
+                you fully understand this option before using it.</para>
+
+                <warning>
+                  <para>This option breaks direct saving to netatalk volumes
+                  from some applications, i.e. OfficeX.</para>
+                </warning>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>noadouble</term>
+
+              <listitem>
+                <para>Forces <command>afpd</command> to not create
+                .AppleDouble directories unless macintosh metadata needs to be
+                written. This option is only useful if you want to share files
+                mostly used NOT by macs, causing <command>afpd</command> to
+                not automatically create .AppleDouble subdirs containing AD
+                header files in every directory it enters (which will it do by
+                default).</para>
+
+                <para>In case, you save or change files from mac clients, AD
+                metadata files have to be written even in case you set this
+                option. So you can't avoid the creation of .AppleDouble
+                directories and its contents when you give macs write access
+                to a share and they make use of it.</para>
+
+                <para>Try to avoid <option>noadouble</option> whenever
+                possible.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nocnidcache</term>
+
+              <listitem>
+                <para>If set <command>afpd</command> doesn't store the ID
+                information in AppleDouble V2 header files. As these IDs are
+                used for caching and as a database backup, this option
+                normally shouldn't be set.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nodev</term>
+
+              <listitem>
+                <para>always use 0 for device number, helps when the device
+                number is not constant across a reboot, cluster, ...</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nofileid</term>
+
+              <listitem>
+                <para>don't advertise createfileid, resolveid, deleteid
+                calls.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nohex</term>
+
+              <listitem>
+                <para>Disables :hex translations for anything except dot
+                files. This option makes the <keycode>'/</keycode>' character
+                illegal.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>nostat</term>
+
+              <listitem>
+                <para>don't stat volume path when enumerating volumes list,
+                useful for automounting or volumes created by a preexec
+                script.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term>prodos</term>
+
+              <listitem>
+                <para>Provides compatibility with Apple II clients.
+                (legacy)</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>File Name Extension Mappings</title>
+
+    <example>
+      <title>Extension is jpg. Type is "JPEG". Creator is "ogle".</title>
+
+            <programlisting>.jpg "JPEG" "ogle"</programlisting>
+          </example>
+
+    <example>
+      <title>Extension is lzh. Type is "LHA ". Creator is not defined.</title>
+
+            <programlisting>.lzh "LHA "</programlisting>
+          </example>
+
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry>
+        <refentrytitle>afpd.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>cnid_metad</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>

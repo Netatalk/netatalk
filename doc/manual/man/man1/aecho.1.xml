@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="aecho.1">
+  <refmeta>
+    <refentrytitle>aecho</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>aecho</refname>
+
+    <refpurpose>send AppleTalk Echo Protocol packets to network hosts</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <para><command>aecho<indexterm><primary>aecho</primary></indexterm><indexterm>
+        <primary>AEP</primary>
+
+        <secondary>Apple Echo Protocol</secondary>
+      </indexterm></command> [ <option>-c</option><replaceable> count</replaceable>
+    ] ( <command>address</command> | <command>nbpname</command> )</para>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>aecho</command> repeatedly sends an Apple Echo Protocol
+    (AEP) packet to the host specified by the given AppleTalk
+    <command>address</command> or <command>nbpname</command> and reports
+    whether a reply was received. Requests are sent at the rate of one per
+    second.</para>
+
+    <para><command>address</command> is parsed by
+    <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>.
+    <command>nbpname</command> is parsed by <citerefentry><refentrytitle>nbp_name</refentrytitle><manvolnum>3</manvolnum></citerefentry>.
+    The nbp type defaults to `<emphasis remap="B">Workstation</emphasis>&#39;.</para>
+
+    <para>When <command>aecho</command> is terminated, it reports the number
+    of packets sent, the number of responses received, and the percentage of
+    packets lost. If any responses were received, the minimum, average, and
+    maximum round trip times are reported.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLE</title>
+
+    <para>Check to see if a particular host is up and responding to AEP
+    packets:</para>
+
+    <screen><prompt>example%</prompt> <userinput>aecho bloodsport
+<computeroutput>11 bytes from 8195.13: aep_seq=0. time=10. ms
+11 bytes from 8195.13: aep_seq=1. time=10. ms
+11 bytes from 8195.13: aep_seq=2. time=10. ms
+11 bytes from 8195.13: aep_seq=3. time=10. ms
+11 bytes from 8195.13: aep_seq=4. time=10. ms
+11 bytes from 8195.13: aep_seq=5. time=9. ms</computeroutput>
+<userinput>^C</userinput>
+<computeroutput>----8195.13 AEP Statistics----
+6 packets sent, 6 packets received, 0% packet loss
+round-trip (ms)  min/avg/max = 9/9/10
+</computeroutput></userinput></screen>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-c</option><replaceable> count</replaceable></term>
+
+        <listitem>
+          <para>Stop after <emphasis remap="I">count</emphasis> packets.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>ping</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>nbp_name</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>aep</refentrytitle><manvolnum>4</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>atalkd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>

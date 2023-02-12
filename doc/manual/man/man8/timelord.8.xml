@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="timelord.8">
+  <refmeta>
+    <refentrytitle>timelord</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">27 Jun 2001</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+
+    <refmiscinfo class="manual">The Netatalk Project</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>timelord</refname>
+
+    <refpurpose>Macintosh time server daemon</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <indexterm>
+      <primary>timelord</primary>
+    </indexterm>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>SYNTAX</title>
+
+    <para>timelord [-d] [-n <emphasis remap="I">filename</emphasis>]</para>
+  </refsect1>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><emphasis remap="B">timelord</emphasis> is a simple time server for
+    Macintosh computers that use the <emphasis remap="B">tardis</emphasis>
+    client.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Debug mode, i.e. don't disassociate from controlling
+          TTY.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option> <replaceable>nbpname</replaceable></term>
+
+        <listitem>
+          <para>Register this server as <emphasis
+          remap="I">nbpname</emphasis>. This defaults to the hostname.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+</refentry>

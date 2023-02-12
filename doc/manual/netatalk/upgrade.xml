@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="upgrade">
+  <chapterinfo>
+    <date>06.09.2004</date>
+
+    <author>
+      <firstname>Jörg</firstname>
+
+      <surname>Lenneis</surname>
+
+      <contrib>initial version</contrib>
+    </author>
+
+    <pubdate>26 June, 2004</pubdate>
+  </chapterinfo>
+
+  <title>Upgrading from  Netatalk 1.x</title>
+
+  <sect1>
+    <title>Overview</title>
+
+    <para>Version 2.x of the Netatalk suite includes significant changes and
+    enhancements in functionality compared to 1.x. Netatalk 2.x is
+    now supported which allows UTF8-MAC encoded filenames of up to 255 bytes
+    (85-255 chars) in length amongst other things. The Catalogue Node ID
+    (CNID) subsystem has been reworked as well and should now be much more
+    robust. For an overview of what CNIDs are and why you need them please see
+    the <link linkend="CNID-backends">CNID</link> section in the
+    manual.</para>
+
+    <para>The downside of these enhancements is that upgrading to Netatalk 2.x
+    is not a process that can be easily automated. Too many factors depend on
+    site specific configuration and administrators have to make choices that
+    suit their requirements. This document attempts to clarify the issues and
+    outline the steps that need to be taken for a successful upgrade. As
+    usual, the first of these steps should be to make a complete backup of all
+    volumes and home directories that were in use with Netatalk before.
+    Afterwards, you'll have to decide</para>
+
+    <orderedlist>
+      <listitem>
+        <para>what encoding to use for filenames in the future and how to
+        convert existing filenames</para>
+      </listitem>
+
+      <listitem>
+        <para>what storage scheme to use for CNIDs and maybe convert an
+        existing database to that scheme</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The following two sections deal with each of these areas in
+    turn.</para>
+  </sect1>
+
+  <sect1 id="volumes-and-filenames">
+    <title>Volumes and filenames</title>
+
+    <para>Netatalk 1.x saved filenames in the so called
+    <emphasis>CAP<indexterm>
+        <primary>CAP</primary>
+
+        <secondary>Columbia AppleTalk Package</secondary>
+      </indexterm></emphasis> encoding by default. Alternatively, there was
+    the NLS<indexterm>
+        <primary>NLS</primary>
+
+        <secondary>Native Language Support</secondary>
+      </indexterm> system, that allowed you to convert filenames to other
+    codepages, like ISO-8859-1.</para>
+
+    <para>For Netatalk 2.x the charset conversion routines had to be
+    completely rewritten to support AFP 3.x. For more indepth information on
+    character sets please read the <link
+    linkend="charsets">Unicode/charsets</link> section in the manual.</para>
+
+    <para>As a consequence, Netatalk 2.x now stores filenames in UTF-8 by
+    default. Additionally you <emphasis role="bold">have</emphasis> to specify
+    a maccodepage in afpd.conf, if your Mac clients are not using
+    <emphasis>MacRoman</emphasis>.</para>
+
+    <para>The format of the metadata files stored in the .AppleDouble folders
+    has changed from AppleDouble v1 to AppleDouble v2<indexterm>
+        <primary>ADv2</primary>
+
+        <secondary>AppleDouble v2</secondary>
+      </indexterm>. Netatalk 2.x is still able to use AD1 files, if
+    configured. Otherwise ADv1<indexterm>
+        <primary>ADv1</primary>
+
+        <secondary>AppleDouble v1</secondary>
+      </indexterm> files will silently be updated to the new ADv2 format,
+    which will prevent you from using this volume with 1.x again.</para>
+
+    <warning>
+      <para>Do not share a 1.x volume with Netatalk 2.x without setting the
+      proper options!</para>
+    </warning>
+
+    <para></para>
+
+    <warning>
+      <para>In case of MacChineseTraditional, MacJapanese or MacKorean,
+      This method cannot be used.</para>
+      <para>Before upgrading, copy all files to the client. And restore
+      all files to netatalk 2.0.4 or later.</para>
+    </warning>
+
+    <para></para>
+
+    <note>
+      <para>You should consider 'upgrading' your volumes using the new
+      defaults UTF-8 and AppleDouble v2, even if this is a time consuming
+      process. AFP 3.x uses UTF-8 and it is impossible to fully map UTF-8 to
+      any of the old volume formats.</para>
+    </note>
+
+    <para></para>
+
+    <sect2 id="volupgrade">
+      <title>How to upgrade a volume to 2.x</title>
+
+      <para>To convert the 1.x CAP or NLS encoded volumes on the server, we
+      provide the <citerefentry>
+          <refentrytitle>uniconv</refentrytitle>
+
+          <manvolnum>1</manvolnum>
+        </citerefentry> utility. Please see the man page for details.</para>
+
+      <para>Another option to perform an upgrade, is to copy all files using a
+      Mac client. Either copy the volume to a Mac while you are still running
+      1.6, then install 2.x and copy the data back to a fresh share, or try to
+      set up the volume with the compatibility options described below and do
+      a share to share copy.</para>
+    </sect2>
+
+    <sect2 id="capvol">
+      <title>How to use a 1.x CAP encoded volume with 2.x</title>
+
+      <para>Using a 1.x CAP encoded volume is still possible with Netatalk
+      2.x. To work properly, the following options need to be set, matching
+      your 1.x setup:</para>
+
+      <para>afpd.conf:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>maccodepage</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>AppleVolumes.default:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>volcharset</para>
+        </listitem>
+
+        <listitem>
+          <para>adouble</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>You have to make sure <option>maccodepage</option> matches your
+      Apple clients codepage. For western users the default
+      <emphasis>Mac_Roman</emphasis> should be fine.</para>
+
+      <para>Set <option>volcharset</option> to
+      <emphasis>ASCII</emphasis>.</para>
+
+      <para>Set <option>adouble:v1</option>, this will make sure the metadata
+      files will not be changed to AppleDouble v2. If you do not set this
+      option, it will not be possible to use the volume with Netatalk 1.x
+      anymore.</para>
+
+      <para><emphasis role="bold">Example</emphasis>:</para>
+
+      <para><filename>afpd.conf</filename>:</para>
+
+      <programlisting> - -transall -maccodepage:MAC_CENTRALEUROPE</programlisting>
+
+      <para><filename>AppleVolumes.default</filename>:</para>
+
+      <programlisting> /path/to/share "1.x Volume" adouble:v1 volcharset:ASCII</programlisting>
+
+      <para></para>
+    </sect2>
+
+    <sect2>
+      <title>How to use a 1.x NLS volume with 2.x</title>
+
+      <para>Whether you can still use an 1.x NLS encoded volume with Netatalk
+      2.x mainly depends on which NLS setting you used with 1.x.</para>
+
+      <para>Make sure you set the correct <option>maccodepage</option> in
+      <filename>afpd.conf</filename> !</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>maccode.iso8859-1</term>
+
+          <listitem>
+            <para>Use the following settings in
+            <filename>AppleVolumes.default</filename>:</para>
+
+            <programlisting> /path/to/share "1.x Volume" adouble:v1 volcharset:ISO-8859-1</programlisting>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>maccode.iso8859-1.adapted</term>
+
+          <listitem>
+            <para>Sorry, you're out of luck. This NLS contains a non standard
+            mapping and is not supported by afpd anymore. You'll have to <link
+            linkend="volupgrade">convert</link> the volume to a supported
+            encoding.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>maccode.437</term>
+
+          <listitem>
+            <para>Using the following settings in
+            <filename>AppleVolumes.default</filename> might work, but is
+            untested:</para>
+
+            <programlisting> /path/to/share "1.x Volume" adouble:v1 volcharset:CP437</programlisting>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>maccode.850</term>
+
+          <listitem>
+            <para>Using the following settings in
+            <filename>AppleVolumes.default</filename> might work, but is
+            untested:</para>
+
+            <programlisting> /path/to/share "1.x Volume" adouble:v1 volcharset:CP850</programlisting>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>maccode.koi8-r</term>
+
+          <listitem>
+            <para>Using the following settings in
+            <filename>AppleVolumes.default</filename> might work, but is
+            untested:</para>
+
+            <programlisting> /path/to/share "1.x Volume" adouble:v1 volcharset:KOI8-R</programlisting>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para></para>
+
+      <note>
+        <para>All of the above require <ulink
+        url="http://www.gnu.org/software/libiconv/">iconv</ulink> to be
+        installed and to supply the volcharset codepage!</para>
+      </note>
+
+      <para></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="choosecnidscheme">
+    <title>Choosing a CNID<indexterm>
+        <primary>CNID</primary>
+
+        <secondary>Catalog Node ID</secondary>
+      </indexterm> storage scheme</title>
+
+    <para>Previous versions of Netatalk allocated CNIDs either on the fly or
+    CNIDs were recorded in a persistent database. "On the fly methods" work by
+    either generating a CNID from the device and inode number or simply by
+    using a counter that is increased by one on each access to a file or
+    directory from the client. The counter only lasts for the lifetime of an
+    afpd daemon process and inode numbers are reused for a different file once
+    the original file has been deleted. These methods therefore violate a
+    fundamental assumption: A CNID once assigned must never be reused for the
+    lifetime of a volume. Netatalk 2.0 supports one "On the fly scheme" called
+    <emphasis remap="B">last</emphasis>. It computes CNIDs for files from
+    device and inode of the file and uses a counter for directories. You
+    should think twice about using it in production. Depending on your needs
+    and the semantics of the underlying file system it might be OK on read
+    only volumes, but even there we are not certain if OS X clients will work
+    properly.</para>
+
+    <para>That leaves the CNID schemes that use persistent storage for CNIDs.
+    Netatalk 2.0 supports two: <emphasis remap="B">cdb</emphasis> and
+    <emphasis remap="B">dbd</emphasis>. Both are based on the Berkeley DB
+    database library as before. One difference is, though, that you are not
+    restricted to using a single scheme for all of your volumes that has to be
+    determined at compile time. The CNID scheme (also called a "CNID backend")
+    is now a runtime option for a volume. That means that you can make the
+    choice per volume based on your requirements. Here are the properties as
+    well as the advantages and disadvantages of the three supported schemes:
+    <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">last<indexterm>
+              <primary>Last</primary>
+
+              <secondary>"last" CNID backend</secondary>
+            </indexterm>:</emphasis> See above. Avoid, if at all
+          possible.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">cdb<indexterm>
+              <primary>CDB</primary>
+
+              <secondary>"cdb" CNID backend</secondary>
+            </indexterm>: </emphasis>Roughly analogous to the Netatalk 1.6.x
+          versions with what was called then the "DID scheme" option set to
+          "cnid" and the "CNID with Concurrent Data Store" option set to
+          "yes". Access to the CNID database for a volume happens directly
+          from the Netatalk afpd daemons. A Berkeley DB locking scheme (the
+          "Concurrent Data Store" bit) is used to avoid database
+          inconsistencies. Robustness is much improved compared to previous
+          releases. The CNID database can only become corrupted if an afpd
+          daemon crashes unexpectedly, is killed by the administrator or the
+          whole machine crashes.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">dbd<indexterm>
+              <primary>DBD</primary>
+
+              <secondary>"dbd" CNID backend</secondary>
+            </indexterm>:</emphasis> There is only a single daemon that
+          accesses the CNID database for a given volume. Any afpd process that
+          wishes to retrieve or update CNIDs for that volume needs to do it
+          via the daemon. The CNID can database be (this is a compile time
+          option) updated under Berkeley DB transactional protection. This
+          design combined with the transactional updates makes the CNID
+          database crashproof: Any of the participating afpd daemons, the
+          database daemon itself or the whole machine can crash and the CNID
+          database should still be in a consistent state. The downside to this
+          is that the speed of updates and retrieval is slower than with the
+          <emphasis remap="B">cdb</emphasis> scheme. If this is a problem, you
+          might want to disable transactions at Netatalk compile time
+          (currently, the default is to compile without transactions anyway).
+          That will give you safety against afpd crashing, but not if the
+          machine goes down unexpectedly. Also, have a look at the nosync
+          option documented in the cnid_dbd manual page.</para>
+        </listitem>
+      </orderedlist></para>
+
+    <para>It is also possible to switch between <emphasis
+    remap="B">cdb</emphasis> and <emphasis remap="B">dbd</emphasis> for a
+    given volume, since they use the same database format. You just have to
+    shut down all processes accessing the database cleanly, make the necessary
+    configuration changes and restart. Please note, that you can easily
+    specify a default CNID backend for all shares by applying the
+    <option>cnidscheme</option><indexterm>
+        <primary>cnidscheme</primary>
+
+        <secondary>specifying a CNID backend</secondary>
+      </indexterm> option to the "<option>:DEFAULT:</option>" share (compare
+    with the <citerefentry>
+        <refentrytitle>AppleVolumes.default</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> manual page for details).</para>
+
+    <para>Note that the <emphasis remap="B">dbd</emphasis> backend needs an
+    auxiliary daemon, called <command>cnid_metad</command><indexterm>
+        <primary>cnid_metad</primary>
+
+        <secondary>dbd CNID database daemon</secondary>
+      </indexterm>, to work. It should be started together with afpd. If the
+    <emphasis remap="B">dbd</emphasis> backend is compiled into afpd (the
+    default), this should happen automatically. If you cannot find it in the
+    process list even though the <emphasis remap="B">dbd</emphasis> backend is
+    used please check for errors in the startup scripts.</para>
+
+    <para>If you compile Netatalk 2.0 yourself and invoke configure --help,
+    you'll notice that there are in fact more CNID backends to chose from.
+    Don't use any of them. They are either broken or incomplete. Some of them
+    might turn into something useful in the future.</para>
+
+    <sect2>
+      <title>How to upgrade if no persistent CNID storage was used</title>
+
+      <para>That is easy. Just pick a CNID backend from above, configure it
+      properly in afpd.conf and the AppleVolumes file and start up the
+      necessary Netatalk processes. The databases will be automatically
+      created in a subdirectory <filename>.AppleDB</filename><indexterm>
+          <primary>AppleDB</primary>
+
+          <secondary>.AppleDB CNID database store</secondary>
+        </indexterm> of the volume in question.</para>
+    </sect2>
+
+    <sect2>
+      <title>How to upgrade if a persistent CNID storage scheme was
+      used</title>
+
+      <para>In that case the CNID databases need to be upgraded. A script
+      called cnid2_create that comes with Netatalk 2.0 does most of the work.
+      The steps you have to take depend on what version of Berkeley DB is
+      installed on your system. If you already use one of the supported
+      versions of Berkeley DB (4.1.25 or 4.2.52) for your old Netatalk
+      installation and plan to use it for Netatalk 2.0 as well just use the
+      <command>db_dump</command> and <command>db_load</command> utilities that
+      came with it as indicated below. Otherwise it is probably best to have
+      the old and the new (to be used with Netatalk 2.0) version of Berkeley
+      DB installed side by side until you have finished the upgrade. The
+      reason for this is that we will dump out the old databases with the
+      currently installed version of Berkeley DB in ASCII format and reload
+      them with the new version. This avoids any incompatibility problems
+      between Berkeley DB releases with respect to the on-disk format.</para>
+
+      <para>For each volume to be upgraded, follow these steps <itemizedlist>
+          <listitem>
+            <para>Stop all afpd daemons accessing the volume.</para>
+          </listitem>
+
+          <listitem>
+            <para>Change to the database directory for that volume, most
+            likely the <filename>.AppleDB</filename> subdirectory of the
+            volume toplevel directory in question.</para>
+          </listitem>
+
+          <listitem>
+            <para>Dump the contents of <filename>cnid.db</filename> and
+            <filename>didname.db</filename> using the old (installed) version
+            of Berkeley DB like this:</para>
+
+            <programlisting> db_dump -f cnid.dump cnid.db 
+ db_dump -f didname.dump didname.db</programlisting>
+
+            <para>Make sure the db_dump utility you are using is the correct
+            (currently used) one. Use the full path to the db_dump executable
+            if in doubt. So if this database was created with Berkeley DB 3.xx
+            installed in <filename>/usr/local/db3</filename> use
+            <filename>/usr/local/db3/bin/db_dump</filename> instead. This will
+            create two files, <filename>cnid.dump</filename> and
+            <filename>didname.dump</filename> in the current directory.</para>
+          </listitem>
+
+          <listitem>
+            <para>Run the cnid2_create script:</para>
+
+            <programlisting> /path/to/netatalk/bin/cnid2_create </programlisting>
+
+            <para>The script assumes that <filename>.AppleDB</filename> is a
+            subdirectory of the volume directory to be upgraded. If that is
+            not the case give the full path name of the volume as the first
+            argument to <command>cnid2_create</command>. The script will
+            create a file <filename>cnid2.dump</filename> in ASCII
+            format.</para>
+          </listitem>
+
+          <listitem>
+            <para>Remove the old Berkeley DB environment and logfiles (if
+            present):</para>
+
+            <programlisting> rm __db.* log.*</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Load <filename>cnid2.dump</filename> into the new database.
+            You should use the <command>db_load</command> utility of Berkeley
+            DB that will be used with version 2.0 of Netatalk. So if Berkeley
+            DB 4.xx lives in <filename>/usr/local/db4</filename> use</para>
+
+            <programlisting> /usr/local/db4/bin/db_load -f cnid2.dump cnid2.db </programlisting>
+
+            <para>This will create the new database file,
+            <filename>cnid2.db</filename>. Remove the old database files
+            <filename>cnid.db</filename>, <filename>didname.db</filename> and
+            <filename>devino.db</filename>. The intermediate files
+            <filename>cnid.dump</filename>, <filename>didname.dump</filename>
+            and <filename>cnid2.dump</filename> can be removed now or at some
+            later time.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>If you do not want to have two versions of Berkeley DB installed
+      side by side during the upgrade, you should first dump out the old
+      databases as indicated above for all volumes, upgrade Berkeley DB and
+      then load them with db_load. The <command>cnid2_create</command> script
+      can be run before or after the upgrade. Berkeley DB environment and
+      logfiles should still be removed before running
+      <command>db_load</command>.</para>
+    </sect2>
+
+    <sect2 id="bruteforceupgrade">
+      <title>How to upgrade if a persistent CNID storage scheme was used, the
+      brute force approach</title>
+
+      <para>If you are absolutely sure what you are doing, you can also just
+      clear out all database files from the <filename>.AppleDB</filename>
+      directories. They will be recreated, but will <emphasis
+      remap="B">not</emphasis> contain the same CNIDs as before!! That might
+      lead to all sorts of problems, like aliases not working any more on
+      clients. As I said, make sure you know the consequences and don't mind
+      them.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="testserver">
+    <title>Setting up a test server on the same machine</title>
+
+    <para>Providing a test environment in parallel with the existing
+    production installation is not difficult and, if done properly, it should
+    not in any way disrupt the normal operation. However, as always, it is
+    recommended to make a backup of the existing installation before
+    proceeding. When compiling a newer netatalk version you should also take
+    care that you do not overwrite the binaries of an older version (make use
+    of the <option>--prefix=</option> configure option).</para>
+
+    <para>There could be more than two afpd servers running on one UNIX box.
+    You just have to be careful to keep them from running into each
+    other:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>the shares/volumes
+        (<filename>AppleVolumes.default</filename>)</para>
+      </listitem>
+
+      <listitem>
+        <para>the PID file (<command>afpd</command> <option>-P</option>
+        command line option)</para>
+      </listitem>
+
+      <listitem>
+        <para>the port number (<option>-port</option> option in
+        <filename>afpd.conf</filename>)</para>
+      </listitem>
+
+      <listitem>
+        <para>no use of AppleTalk (<option>-noddp</option> option in
+        <filename>afpd.conf</filename>)</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>You should test the new Netatalk version with both a freshly created
+    new share and another one that has been duplicated/converted from an
+    already existing volume. This helps finding mistakes you probably made in
+    the upgrade process when the first share behaves well and the latter
+    not.</para>
+
+    <sect2>
+      <title>Setting up an empty test share</title>
+
+      <para>First, you have to provide some space for the test share. Just
+      create a directory on one of your data filesystems. However, this
+      directory must not be accessible from the production afpd server. Don't
+      forget to set appropriate permissions for the share. For example:</para>
+
+      <programlisting> mkdir /macdata/testshare
+ chown root.macusers /macdata/testshare
+ chmod g+wrx,g+s /macdata/testshare</programlisting>
+    </sect2>
+
+    <sect2>
+      <title>Duplicating an already existing share</title>
+
+      <para>Ensure that users cannot access the share in question and copy the
+      whole contents (including all the metadata directories like
+      <filename>.AppleDB</filename>) to another location.</para>
+
+      <programlisting> cp -pr /production/testshare /macdata/</programlisting>
+
+      <para>Then do the somewhat extensive upgrade of CNID databases and
+      filename encodings outlined earlier in this chapter.</para>
+    </sect2>
+
+    <sect2>
+      <title>Configuring and running the test afpd</title>
+
+      <para>Normally the test afpd cannot listen on the standard afpovertcp
+      port, because that one is already bound by the production afpd. So the
+      <filename>afpd.conf</filename> should look like</para>
+
+      <programlisting> - -noddp -nouservol -port 5480 -loginmsg "WARNING: test server"</programlisting>
+
+      <para>You also have to present the share to the Mac users by editing the
+      <filename>AppleVolumes.default</filename> file. Remove the line
+      containing a single "~" at the end of the file and append something
+      like:</para>
+
+      <programlisting> /macdata/testshare "Test Volume (not production)"</programlisting>
+
+      <para>That should be the only uncommented line in the file. Do not
+      forget to adjust encoding and AppleDouble setting when you're not using
+      the recommended defaults UTF8 and ADv2.</para>
+
+      <para>In case you have many users and want to restrict access to the
+      test server, there is a provision for that in the
+      <filename>AppleVolumes.default</filename> file. First, create a group
+      named, say, <option>afpdtest</option>, and put in it all users you would
+      want to enable access to the test volumes. Then, instead of the line
+      above, append a line like this one:</para>
+
+      <programlisting> /macdata/testshare "Test Volume (not production)" allow:@afpdtest</programlisting>
+
+      <para>The test afpd server can be started now:</para>
+
+      <programlisting> $TESTDIR/sbin/afpd -P /var/run/afpd-test.pid</programlisting>
+
+      <para>You can also put this line in the production netatalk start
+      script, in the "start" case. In the "stop" case, you should
+      insert</para>
+
+      <programlisting> [ -f /var/run/afpd-test.pid ] &amp;&amp; kill `cat /var/run/afpd-test.pid`</programlisting>
+
+      <para>The production server has to know about the test server. Otherwise
+      the Mac users would not be able to see the test server in their
+      choosers. Append the following line to the production
+      <filename>afpd.conf</filename> (usually in
+      <filename>/etc/netatalk/afpd.conf</filename>):</para>
+
+      <programlisting> "Test server (not production)" -proxy -uamlist "" -port 5480</programlisting>
+
+      <para>and restart the production netatalk. Note that the port directive
+      here should match the one which appears above in the test
+      <filename>afpd.conf</filename>.</para>
+
+      <important>
+        <para>Note that there is a limit of 31 characters for the server's
+        name. Should the name be longer, then afpd will just refuse to register
+        the server.</para>
+      </important>
+
+      <para>The test server should appear in the chooser on Macs. You can also
+      test that from the UNIX command line:</para>
+
+      <programlisting> nbplkup =:AFPServer</programlisting>
+
+      <para>or</para>
+
+      <programlisting> netstat -an | grep 5480</programlisting>
+
+      <para>If everything went fine spread the word about the test server
+      among your more experienced Mac users and see whether things work as
+      expected.</para>
+    </sect2>
+  </sect1>
+</chapter>

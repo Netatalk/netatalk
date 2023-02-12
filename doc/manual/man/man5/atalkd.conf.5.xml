@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="atalkd.conf.5">
+  <!--  $Id: atalkd.conf.5.xml,v 1.6 2004-07-20 09:41:42 tkaiser Exp $ -->
+
+  <refmeta>
+    <refentrytitle>atalkd.conf</refentrytitle>
+
+    <manvolnum>5</manvolnum>
+
+    <refmiscinfo class="date">22 September 2000</refmiscinfo>
+
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>atalkd.conf</refname>
+
+    <refpurpose>Configuration file used by atalkd(8) to determine the
+    interfaces used by the master Netatalk daemon<indexterm><primary>atalkd.conf</primary></indexterm><indexterm>
+              <primary>ALLMULTI</primary>
+
+              <secondary>NIC multicast settings</secondary>
+            </indexterm><indexterm>
+              <primary>Phase</primary>
+
+              <secondary>AppleTalk phase 1 or 2</secondary>
+            </indexterm></refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><emphasis remap="B">:ETCDIR:/atalkd.conf</emphasis> is the
+    configuration file used by atalkd to configure the Appletalk interfaces
+    and their behavior</para>
+
+    <para>Any line not prefixed with <emphasis remap="B">#</emphasis> is
+    interpreted. The configuration lines are composed like:</para>
+
+    <para><emphasis remap="I">Interface</emphasis> <emphasis
+    remap="B">[</emphasis> <emphasis remap="I">options</emphasis> <emphasis
+    remap="B">]</emphasis></para>
+
+    <para>The simplest case is to have either no atalkd.conf, or to have one
+    that has no active lines. In this case, atalkd should auto-discover the
+    local interfaces on the machine. Please note that you cannot split
+    lines.</para>
+
+    <para>The interface is the network interface that this to work over, such
+    as <emphasis remap="B">eth0</emphasis> for Linux, or <emphasis
+    remap="B">le0</emphasis> for Sun.</para>
+
+    <para>The possible options and their meanings are:</para>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-addr
+        <replaceable>net.node</replaceable></option></term>
+
+        <listitem>
+          <para>Allows specification of the net and node numbers for this
+          interface, specified in Appletalk numbering format (example:
+          <option>-addr 66.6</option>).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-dontroute</option></term>
+
+        <listitem>
+          <para>Disables Appletalk routing. It is the opposite of
+          <option>-router</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-net first[-last]</option></term>
+
+        <listitem>
+          <para>Allows the available net to be set, optionally as a
+          range.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-noallmulti</option> (linux only)</term>
+
+        <listitem>
+          <para>On linux the interfaces, atalkd uses, are set to
+          ALLMULTI by default caused by countless NICs having problems
+          without being forced into this mode (some even don't work with
+          allmulti set). In case, you've a NIC known to support multicasts
+          properly, you might want to set this option causing less packets to
+          be processed</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-phase ( 1 | 2 )</option></term>
+
+        <listitem>
+          <para>Specifies the Appletalk phase that this interface is to use
+          (either Phase 1 or Phase 2).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-router</option></term>
+
+        <listitem>
+          <para>Like <option>-seed</option>, but allows single interface
+          routing. It is the opposite of <option>-dontroute</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-seed</option></term>
+
+        <listitem>
+          <para>The seed option only works if you have multiple interfaces. It
+          also causes all missing arguments to be automagically configured
+          from the network.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-zone
+        <replaceable>zonename</replaceable></option></term>
+
+        <listitem>
+          <para>Specifies a specific zone that this interface should appear on (example:
+          <option>-zone "Parking Lot"</option>). Please note that zones with
+          spaces and other special characters should be enclosed in
+          parentheses.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>
