@@ -1328,7 +1328,6 @@ AC_OUTPUT([Makefile
 	distrib/config/netatalk-config
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
-	doc/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/atalkd/Makefile
