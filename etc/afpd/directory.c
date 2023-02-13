@@ -1231,7 +1231,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
         }
 
-        LOG(log_maxdebug, logtype_afpd, "came('%s'): {node: '%s}", cfrombstr(dir->d_fullpath), ret.u_name);
+        LOG(log_maxdebug, logtype_afpd, "cname('%s'): {node: '%s}", cfrombstr(dir->d_fullpath), ret.u_name);
 
         /* Prevent access to our special folders like .AppleDouble */
         if (check_name(vol, ret.u_name)) {
