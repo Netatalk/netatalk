@@ -5,57 +5,68 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">02 Sep 2011</refmiscinfo>
+    <refmiscinfo class="date">12 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>apple_dump</refname>
 
-    <refpurpose>Dump AppleSingle/AppleDouble format file</refpurpose>
+    <refpurpose>Dump AppleSingle/AppleDouble format data</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+      <command>apple_dump</command>
 
       <arg choice="opt"><arg choice="plain">-a</arg></arg>
+
+      <group choice="opt">
+        <arg choice="plain"><replaceable>FILE</replaceable></arg>
+        <arg choice="plain"><replaceable>DIR</replaceable></arg>
+      </group>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>apple_dump</command>
+
+      <arg choice="plain">-e</arg>
 
       <group choice="plain">
         <arg choice="plain"><replaceable>FILE</replaceable></arg>
         <arg choice="plain"><replaceable>DIR</replaceable></arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <arg choice="plain">-f</arg>
 
-      <arg choice="plain"><replaceable>FILE</replaceable></arg>
+      <arg choice="opt"><replaceable>FILE</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <arg choice="plain">-d</arg>
 
-      <arg choice="plain"><replaceable>FILE</replaceable></arg>
+      <arg choice="opt"><replaceable>FILE</replaceable></arg>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <group choice="plain">
         <arg choice="plain">-h</arg>
         <arg choice="plain">-help</arg>
         <arg choice="plain">--help</arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>apple_dump<indexterm><primary>apple_dump</primary></indexterm></command>
+    <cmdsynopsis>
+      <command>apple_dump</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
@@ -66,10 +77,14 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
-    <para><command>apple_dump</command> dump AppleSingle/AppleDouble format file.</para>
+    <para><command>apple_dump</command> is a perl script to dump
+    AppleSingle/AppleDouble format data. </para>
+    <para>This script can dump various AppleSingle/AppleDouble data created
+    by mailer, archiver, Mac OS X, Netatalk and so on.</para>
+    <para>With no <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable>, or when <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable> is '-', read standard input.</para>
 
   </refsect1>
 
@@ -78,25 +93,34 @@
 
     <variablelist remap="TP">
       <varlistentry>
-        <term><option>-a</option> <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable></term>
+        <term><option>-a</option> [<replaceable>FILE</replaceable>|<replaceable>DIR</replaceable>]</term>
 
         <listitem>
           <para>This is default.
-          Dump a AppleSingle/AppleDouble file for
+          Dump a AppleSingle/AppleDouble data for
           <replaceable>FILE</replaceable> or <replaceable>DIR</replaceable>
           automatically.
-          Extrapolate FinderInfo type from absolute path.
           If FILE is not AppleSingle/AppleDouble format,
-          look for <replaceable>.AppleDouble/FILE</replaceable> and
+          look for extended attribute,
+          <replaceable>.AppleDouble/FILE</replaceable> and
           <replaceable>._FILE</replaceable>.
           If <replaceable>DIR</replaceable>, look for
+          extended attribute,
           <replaceable>DIR/.AppleDouble/.Parent</replaceable> and
           <replaceable>._DIR</replaceable>.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term><option>-f</option> <replaceable>FILE</replaceable></term>
+        <term><option>-e</option> <replaceable>FILE</replaceable>|<replaceable>DIR</replaceable></term>
+
+        <listitem>
+          <para>Dump extended attribute of <replaceable>FILE</replaceable> or <replaceable>DIR</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option> [<replaceable>FILE</replaceable>]</term>
 
         <listitem>
           <para>Dump <replaceable>FILE</replaceable>. Assume FinderInfo to be FileInfo.</para>
@@ -104,7 +128,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-d</option> <replaceable>FILE</replaceable></term>
+        <term><option>-d</option> [<replaceable>FILE</replaceable>]</term>
 
         <listitem>
           <para>Dump <replaceable>FILE</replaceable>. Assume FinderInfo to be DirInfo.</para>
@@ -137,17 +161,17 @@
     <title>NOTE</title>
 
     <para>There is no way to detect whether FinderInfo is FileInfo or DirInfo.
-    By default, apple_dump examins whether file or directory, a parent directory
+    By default, apple_dump examines whether file or directory, a parent directory
     is .AppleDouble, filename is ._*, filename is .Parent, and so on.</para>
 
-    <para>If setting option -f or -d,  assume FinderInfo and doesn't look
-    for another file.</para>
+    <para>If setting option -e, -f or -d,  assume FinderInfo and doesn't look
+    for another data.</para>
 
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
-    <para><citerefentry><refentrytitle>ad</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+	<para><citerefentry><refentrytitle>ad</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
   </refsect1>
 </refentry>
