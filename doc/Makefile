@@ -4,6 +4,7 @@
 #
 # Available targets:
 #   html: make html doc
+#   html-upload: upload html doc to SourceForce server
 #   man: make manpages
 #   install: copy manpages to Netatalk source code tree
 
@@ -27,6 +28,7 @@ TMPDIR   = tmp
 
 MAN_XSL_TMP  = $(TMPDIR)/$(MAN_XSL)
 HTML_XSL_TMP = $(TMPDIR)/$(HTML_XSL)
+XSL_PATH     = $(shell pwd)/$(XSL)
 
 manpages = manpages/ad.1 \
 		manpages/aecho.1 \
@@ -112,8 +114,8 @@ $(MAN_XSL_TMP) : manual/man.xsl
 			exit 1; \
 		fi
 		@cp manual/man.xsl $(MAN_XSL_TMP)
-		@echo Configuring XSL stylesheet with path $(XSL)
-		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL)@" $(MAN_XSL_TMP)
+		@echo Configuring XSL stylesheet with path $(XSL_PATH)
+		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL_PATH)@" $(MAN_XSL_TMP)
 
 manpageinit: tmpdir $(MAN_XSL_TMP)
 		@if [ "x$(VERSION)" = "x" ] ; then \
@@ -125,11 +127,11 @@ manpageinit: tmpdir $(MAN_XSL_TMP)
 		fi
 
 install:
-		@if [ "x$(DIR)" = "x" ] ; then \
-			echo 'Set $$DIR to be the path of your Netatalk directory.'; \
+		@if [ ! -d ../man ] ; then \
+			echo 'No `man` dir to install into in parent directory.'; \
 			exit 1; \
 		fi
-		sh checkinmans.sh "$(DIR)"
+		sh checkinmans.sh
 
 # html targets
 
@@ -162,6 +164,6 @@ $(HTML_XSL_TMP) : manual/html.xsl
 			exit 1; \
 		fi
 		@cp manual/html.xsl $(HTML_XSL_TMP)
-		@echo Configuring XSL stylesheet with path $(XSL)
-		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL)@" $(HTML_XSL_TMP)
+		@echo Configuring XSL stylesheet with path $(XSL_PATH)
+		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL_PATH)@" $(HTML_XSL_TMP)
 

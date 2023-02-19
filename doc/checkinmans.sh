@@ -1,19 +1,14 @@
 #!/bin/sh
 
 #
-# Copies man pages from dir "manpages" to netalk CVS working copy man directory structure <dir>
-# As some man pages contain path variables that are substituded at build time we have to be carefull:
-# we try to figure out which they are by examing the Makefile.am's and append ".tml" to any of them.
+# Copies man pages from dir "manpages" to the man page dir structure in the parent dir.
+# As some man pages contain path variables that are substituded at build time we have to be careful:
+# we try to figure out which they are by examing the Makefile.am's and append ".tmpl" to any of them.
 #
-
-if test $# -ne 1; then
-    echo "Usage: checkinmans <netatalk source dir>"
-    exit 1
-fi
 
 CURRDIR="`pwd`"
 WORKDIR="$CURRDIR/manpages"
-MANDIR="$1/man"
+MANDIR="$CURRDIR/../man"
 
 cd "$MANDIR"
 
