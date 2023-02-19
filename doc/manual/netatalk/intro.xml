@@ -2,21 +2,23 @@
 <chapter id="intro">
   <title>Introduction to Netatalk</title>
 
-  <para>Netatalk is an OpenSource software package, that can be used to turn
-  a *NIX machine into an extremely high-performance and
-  reliable file server for Macintosh computers.</para>
+  <para>Netatalk is an Open Source software package that can be used to turn
+  a *NIX machine into an extremely light-weight and
+  versatile file server for Macintosh computers. It speaks both AFP over TCP
+  as well as the legacy AppleTalk protocol, which means it can act as a bridge between
+  older Macs, networked Apple IIs, and the very latest macOS systems.</para>
 
-  <para>Using Netatalk's AFP 3.3 compliant file-server leads to significantly
-  higher transmission speeds compared with Macs accessing a server via
-  SaMBa/NFS while providing clients with the best possible user experience
-  (full support for Macintosh metadata, flawlessly supporting mixed
-  environments of classic MacOS and MacOS X clients)</para>
+  <para>Netatalk is AFP 3.3 compliant with AFP 2 backwards compatibility.
+  Its file server offers high transmission speeds and full
+  support for Macintosh metadata (resource forks), while offering a wide range of
+  authentication methods to accommodate any deployment environment.</para>
 
-  <para>Due to Netatalk speaking AppleTalk, the print-server task can provide
-  printing clients with full AppleTalk support as well as the server itself
-  with printing capabilities for AppleTalk-only printers. Starting with
-  version 2.0, Netatalk seamlessly interacts with CUPS on the server.</para>
+  <para>The included print server daemon can provide Apple II and Macintosh clients
+  with the ability to print to AppleTalk-only printers.
+  In addition, Netatalk is fully integrated with CUPS, allowing any networked Mac
+  to discover and print to a CUPS/AirPrint compatible printer on the network.</para>
 
-  <para>After all, Netatalk can be used to act as an AppleTalk router,
-  providing both segmentation and zone names in Macintosh networks.</para>
+  <para>Additionally, Netatalk can be used to act as an AppleTalk router,
+  providing both segmentation and zone names in traditional Macintosh networks.
+  </para>
 </chapter>
