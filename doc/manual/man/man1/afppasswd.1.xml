@@ -18,13 +18,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>afppasswd<indexterm>
-          <primary>afppasswd</primary>
-        </indexterm><indexterm>
-          <primary>UAM</primary>
-
-          <secondary>User Authentication Module</secondary>
-        </indexterm></command>
+      <command>afppasswd</command>
 
       <arg choice="opt">-acfn</arg>
 

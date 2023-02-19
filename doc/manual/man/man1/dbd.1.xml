@@ -18,9 +18,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>dbd<indexterm>
-          <primary>dbd</primary>
-        </indexterm></command>
+      <command>dbd</command>
 
       <arg choice="opt">-evx</arg>
 

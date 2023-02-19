@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">15 Aug 2011</refmiscinfo>
+    <refmiscinfo class="date">28 Jan 2022</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -15,9 +15,7 @@
     <refname>afpd.conf</refname>
 
     <refpurpose>Configuration file used by afpd(8) to determine the setup of
-    its file sharing services<indexterm>
-        <primary>afpd.conf</primary>
-      </indexterm></refpurpose>
+    its file sharing services</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -36,11 +34,14 @@
     either the ~ shell shorthand or any of the substitution variables, which
     are listed below.</para>
 
-    <para><note>
+    <note>
         <para>Each server has to be configured on a <emphasis
         role="bold">single</emphasis> line. Though, using "\" character,
         newline escaping is supported.</para>
-      </note>The possible options and their meanings are:</para>
+    </note>
+
+    <para>The possible options and their meanings are:</para>
+
   </refsect1>
 
   <refsect1>
@@ -885,7 +886,7 @@ third -signature user:ADMINS</programlisting></para>
 
         <listitem>
           <para>Sets the tickle timeout interval (in seconds). Defaults to
-          30.</para>
+          30. A value of 0 disables session timer tickles.</para>
         </listitem>
       </varlistentry>
 

@@ -18,9 +18,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>cnid_metad<indexterm>
-          <primary>cnid_metad</primary>
-        </indexterm></command>
+      <command>cnid_metad</command>
 
       <arg choice="opt"><arg choice="plain">-l </arg><arg
       choice="plain"><replaceable>loglevel</replaceable><arg>-f
@@ -42,12 +40,9 @@
 
       <arg choice="opt"><arg choice="plain">-s </arg><arg
       choice="plain"><replaceable>cnid_dbdpathname</replaceable></arg></arg>
-
-      <sbr />
-
-      <command>cnid_metad<indexterm>
-          <primary>cnid_metad</primary>
-        </indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>cnid_metad</command>
 
 	<group choice="plain">
 	  <arg choice="plain">-v</arg>

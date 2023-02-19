@@ -18,9 +18,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>afpd<indexterm>
-          <primary>afpd</primary>
-        </indexterm></command>
+      <command>afpd</command>
 
       <arg choice="opt">-duptDTI</arg>
 
@@ -45,12 +43,9 @@
       <arg choice="opt">-U <replaceable>uams</replaceable></arg>
 
       <arg choice="opt">-m <replaceable>umask</replaceable></arg>
-
-      <sbr />
-
-      <command>afpd<indexterm>
-          <primary>afpd</primary>
-        </indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>afpd</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>

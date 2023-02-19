@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 15 Aug 2011
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 28 Jan 2022
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "15 Aug 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD\&.CONF" "5" "28 Jan 2022" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -30,7 +39,6 @@ to determine the behavior and configuration of the different virtual file server
 Any line not prefixed with # is interpreted\&. The configuration lines are composed like: server name [ options ] If a
 \fB\-\fR
 is used instead of a server name, the default server is specified\&. Server names must be quoted if they contain spaces\&. They must not contain ":" or "@"\&. The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
-.PP
 .if n \{\
 .sp
 .\}
@@ -49,6 +57,7 @@ Each server has to be configured on a
 line\&. Though, using "\e" character, newline escaping is supported\&.
 .sp .5v
 .RE
+.PP
 The possible options and their meanings are:
 .SH "APPLEVOLUMES FILES"
 .PP
@@ -66,12 +75,12 @@ Specifies path to AppleVolumes\&.system file (default is
 .PP
 \-[no]uservol
 .RS 4
-Enables or disables reading of the users\' individual volumes file entirely\&.
+Enables or disables reading of the users\*(Aq individual volumes file entirely\&.
 .RE
 .PP
 \-[no]uservolfirst
 .RS 4
-Enables or disables reading of the users\' individual volumes file before processing the global
+Enables or disables reading of the users\*(Aq individual volumes file before processing the global
 AppleVolumes\&.default
 file\&.
 .RE
@@ -146,7 +155,7 @@ With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that
 .PP
 To be able to serve AFP3 and older clients at the same time,
 \fBafpd\fR
-needs to be able to convert between UTF\-8 and Mac codepages\&. Even OS X clients partly still rely on codepages\&. As there\'s no way,
+needs to be able to convert between UTF\-8 and Mac codepages\&. Even OS X clients partly still rely on codepages\&. As there\*(Aqs no way,
 \fBafpd\fR
 can detect the codepage a pre AFP3 client uses, you have to specify it using the
 \fB\-maccodepage\fR
@@ -154,11 +163,11 @@ option\&. The default is MacRoman, which should be fine for most western users\&
 .PP
 As
 \fBafpd\fR
-needs to interact with unix operating system as well, it need\'s to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
+needs to interact with unix operating system as well, it need\*(Aqs to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
 \fBafpd\fR
-uses the systems LOCALE, or ASCII if your system doesn\'t support locales\&. You can set the unix codepage using the
+uses the systems LOCALE, or ASCII if your system doesn\*(Aqt support locales\&. You can set the unix codepage using the
 \fB\-unixcodepage\fR
-option\&. If you\'re using extended characters in the configuration files for
+option\&. If you\*(Aqre using extended characters in the configuration files for
 \fBafpd\fR, make sure your terminal matches the
 \fB\-unixcodepage\fR\&.
 .PP
@@ -221,7 +230,7 @@ Make both available
 .PP
 \-advertise_ssh
 .RS 4
-Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
+Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\*(Aqs answers to client\*(Aqs FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\*(Aqs settings and a correctly configured and running
 \fBsshd\fR(8)
 on the server to let things work\&.
 .if n \{\
@@ -236,7 +245,7 @@ on the server to let things work\&.
 \fBNote\fR
 .ps -1
 .br
-Setting this option is not recommended since globally encrypting AFP connections via SSH will increase the server\'s load significantly\&. On the other hand, Apple\'s client side implementation of this feature in MacOS X versions prior to 10\&.3\&.4 contained a security flaw\&.
+Setting this option is not recommended since globally encrypting AFP connections via SSH will increase the server\*(Aqs load significantly\&. On the other hand, Apple\*(Aqs client side implementation of this feature in MacOS X versions prior to 10\&.3\&.4 contained a security flaw\&.
 .sp .5v
 .RE
 .RE
@@ -266,7 +275,7 @@ when used together with the
 \fB\-proxy\fR
 option\&.
 .PP
-\fBExample.\ \&afpd.conf onfiguration line\fR
+\fBExample.\ \&afpd\&.conf onfiguration line\fR
 .sp
 .if n \{\
 .RS 4
@@ -279,7 +288,6 @@ option\&.
 .RE
 .\}
 .sp
-
 \fBResult\fR
 .sp
 (UTF8) Server name: fluxxus, Listening and advertised network address: 192\&.168\&.0\&.1, Advertised network address: www\&.example\&.com, hostname is not used\&.
@@ -292,14 +300,14 @@ Allows a different TCP port to be used for AFP\-over\-TCP\&. The default is 548\
 .PP
 \-proxy
 .RS 4
-Runs an AppleTalk proxy server for the specified AFP\-over\-TCP server\&. If the address and port aren\'t given, then the first IP address of the system and port 548 will be used\&. If you don\'t want the proxy server to act as a DDP
+Runs an AppleTalk proxy server for the specified AFP\-over\-TCP server\&. If the address and port aren\*(Aqt given, then the first IP address of the system and port 548 will be used\&. If you don\*(Aqt want the proxy server to act as a DDP
 server as well, set
 \fB\-uamlist ""\fR\&.
 .RE
 .PP
 \-server_quantum \fI[number]\fR
 .RS 4
-This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
+This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\*(Aqre absolutely sure, what you\*(Aqre doing
 .RE
 .PP
 \-dsireadbuf \fI[number]\fR
@@ -359,8 +367,8 @@ will only work for clients connecting via DDP\&. Almost all modern Clients will 
 .PP
 \-client_polling
 .RS 4
-With this switch enabled, afpd won\'t advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
-\fINote\fR: Depending on the number of simultaneously connected clients and the network\'s speed, this can lead to a significant higher load on your network!
+With this switch enabled, afpd won\*(Aqt advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
+\fINote\fR: Depending on the number of simultaneously connected clients and the network\*(Aqs speed, this can lead to a significant higher load on your network!
 .if n \{\
 .sp
 .\}
@@ -426,12 +434,12 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 .PP
 \-[no]icon
 .RS 4
-[Don\'t] Use the platform\-specific icon\&. Recent Mac OS don\'t display it any longer\&.
+[Don\*(Aqt] Use the platform\-specific icon\&. Recent Mac OS don\*(Aqt display it any longer\&.
 .RE
 .PP
 \-keepsessions
 .RS 4
-Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\'s absolutely critical to restart the master process in time!
+Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\*(Aqs absolutely critical to restart the master process in time!
 .RE
 .PP
 \-loginmesg \fI[message]\fR
@@ -448,7 +456,7 @@ Specifies the icon model that appears on clients\&. Defaults to off\&. Examples:
 .PP
 \-noacl2maccess
 .RS 4
-Don\'t map filesystem ACLs to effective permissions\&.
+Don\*(Aqt map filesystem ACLs to effective permissions\&.
 .RE
 .PP
 \-nodebug
@@ -514,7 +522,7 @@ Specify that any message of a loglevel up to the given
 should be logged to the given file\&. If the filename is ommited the loglevel applies to messages passed to syslog\&.
 .sp
 By default afpd logs to syslog with a default logging setup equivalent to
-\fB"\-setuplog default log_note\fR"\&.
+\fB\-setuplog "default log_info"\fR\&.
 .sp
 logtypes: Default, AFPDaemon, Logger, UAMSDaemon
 .sp
@@ -579,7 +587,7 @@ Note that for
 \fBunsetuplog\fR
 specifying any string as filename is sufficient for the config parser to distinguish between requests to disable syslog logging or file\-logging\&.
 .PP
-\fBExample.\ \&Disable afpd logging set at build-time from configure\fR
+\fBExample.\ \&Disable afpd logging set at build\-time from configure\fR
 .sp
 .if n \{\
 .RS 4
@@ -597,8 +605,7 @@ These options are useful for debugging only\&.
 .PP
 \-tickleval \fI[number]\fR
 .RS 4
-Sets the tickle timeout interval (in seconds)\&. Defaults to 30\&.
-A value of 0 disables session tickles.
+Sets the tickle timeout interval (in seconds)\&. Defaults to 30\&. A value of 0 disables session timer tickles\&.
 .RE
 .PP
 \-timeout \fI[number]\fR
@@ -607,7 +614,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RE
 .SH "EXAMPLES"
 .PP
-\fBExample.\ \&afpd.conf default configuration\fR
+\fBExample.\ \&afpd\&.conf default configuration\fR
 .sp
 .if n \{\
 .RS 4
@@ -619,7 +626,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RE
 .\}
 .PP
-\fBExample.\ \&afpd.conf MacCyrillic setup / UTF8 unix locale\fR
+\fBExample.\ \&afpd\&.conf MacCyrillic setup / UTF8 unix locale\fR
 .sp
 .if n \{\
 .RS 4
@@ -631,7 +638,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RE
 .\}
 .PP
-\fBExample.\ \&afpd.conf setup for Kerberos V auth with newline escaping\fR
+\fBExample.\ \&afpd\&.conf setup for Kerberos V auth with newline escaping\fR
 .sp
 .if n \{\
 .RS 4
@@ -645,7 +652,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RE
 .\}
 .PP
-\fBExample.\ \&afpd.conf letting afpd appear as three servers on the net\fR
+\fBExample.\ \&afpd\&.conf letting afpd appear as three servers on the net\fR
 .sp
 .if n \{\
 .RS 4

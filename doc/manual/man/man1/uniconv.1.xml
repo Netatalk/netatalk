@@ -20,7 +20,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>uniconv<indexterm><primary>uniconv</primary></indexterm></command>
+      <command>uniconv</command>
 
       <arg choice="opt">-ndv</arg>
 

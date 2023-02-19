@@ -86,7 +86,7 @@
 
               <entry align="center">Default</entry>
 
-              <entry align="char">Description</entry>
+              <entry align="left">Description</entry>
             </row>
           </thead>
 
@@ -249,7 +249,7 @@
         <primary>authenticated printing</primary>
       </indexterm> carried out through postscript printer queries to the print
     server. Using PSSP requires LaserWriter 8.6.1 or greater on the client
-    mac. The user will be prompted to enter their username and password before
+    Mac. The user will be prompted to enter their username and password before
     they print. It may be necessary to re-setup the printer on each client the
     first time PSSP is enabled, so that the client can figure out that
     authentication is required to print. You can enable PSSP on a per-printer
@@ -260,16 +260,16 @@
         <primary>CAP-style authentication</primary>
 
         <secondary>old-style printing authentication</secondary>
-      </indexterm> gets its name from the method the CAP (Columbia APpletalk)
-    package used to authenticate its mac clients' printing. This method
+      </indexterm> gets its name from the method CAP (Columbia AppleTalk
+    Package) used to authenticate its Mac clients' printing. This method
     requires that a user login to a file share before they print.
     <command>afpd</command> records the username in a temporary file named
-    after the client's Appletalk address, and it deletes the temporary file
+    after the client's AppleTalk address, and it deletes the temporary file
     when the user disconnects. Therefore CAP style authentification will
     <emphasis>not</emphasis> work for clients connected to
     <command>afpd</command> via TCP/IP. <command>papd</command> gets the
-    username from the file with the same Appletalk address as the machine
-    connecting to it. CAP-style authentication will work with any mac client.
+    username from the file with the same AppleTalk address as the machine
+    connecting to it. CAP-style authentication will work with any Mac client.
     If both CAP and PSSP are enabled for a particular printer, CAP will be
     tried first, then <command>papd</command> will fall back to PSSP.</para>
 

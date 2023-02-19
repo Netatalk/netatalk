@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">27 Dez 2012</refmiscinfo>
+    <refmiscinfo class="date">27 Dec 2012</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -28,29 +28,34 @@
       </indexterm></refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
-      <command>:ETCDIR:/AppleVolumes.default<indexterm><primary>AppleVolumes.default</primary></indexterm></command>
+      <command>:ETCDIR:/AppleVolumes.default</command>
 
-      <sbr />
+    </cmdsynopsis>
+    <cmdsynopsis>
 
-      <command>:ETCDIR:/AppleVolumes.system<indexterm><primary>AppleVolumes.system</primary></indexterm></command>
+      <command>:ETCDIR:/AppleVolumes.system</command>
 
-      <sbr />
+    </cmdsynopsis>
+    <cmdsynopsis>
 
-      <command>~/AppleVolumes<indexterm><primary>~/AppleVolumes</primary></indexterm></command>
+      <command>~/AppleVolumes</command>
 
-      <sbr />
+    </cmdsynopsis>
+    <cmdsynopsis>
 
-      <command>~/.AppleVolumes<indexterm><primary>~/.AppleVolumes</primary></indexterm></command>
+      <command>~/.AppleVolumes</command>
 
-      <sbr />
+    </cmdsynopsis>
+    <cmdsynopsis>
 
-      <command>~/applevolumes<indexterm><primary>~/applevolumes</primary></indexterm></command>
+      <command>~/applevolumes</command>
 
-      <sbr />
+    </cmdsynopsis>
+    <cmdsynopsis>
 
-      <command>~/.applevolumes<indexterm><primary>~/.applevolumes</primary></indexterm></command>
+      <command>~/.applevolumes</command>
 
     </cmdsynopsis>
   </refsynopsisdiv>

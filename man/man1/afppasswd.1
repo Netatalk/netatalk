@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: afppasswd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 31 May 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
 .TH "AFPPASSWD" "1" "31 May 2011" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,8 +30,8 @@
 .SH "NAME"
 afppasswd \- netatalk password maintenance utility
 .SH "SYNOPSIS"
-.HP \w'\fBafppasswd\fR\fB\fR\fB\fR\ 'u
-\fBafppasswd\fR\fB\fR\fB\fR [\-acfn] [\-p\ \fIpasswd\fR\ \fIfile\fR] [\-u\ \fIminimum\fR\ \fIuid\fR]
+.HP \w'\fBafppasswd\fR\ 'u
+\fBafppasswd\fR [\-acfn] [\-p\ \fIpasswd\fR\ \fIfile\fR] [\-u\ \fIminimum\fR\ \fIuid\fR]
 .SH "DESCRIPTION"
 .PP
 \fBafppasswd\fR
@@ -45,7 +54,7 @@ can either be called by root with parameters, or can be called by local system u
 .PP
 With this utility you can only change the passwords used by two specific UAMs\&. As they provide only weak password encryption, the use of the "Randnum exchange" and "2\-Way Randnum exchange" UAMs is deprecated unless one has to support very old AFP clients, that can not deal with the more secure "DHCAST128" and "DHX2" UAM instead\&. Please compare with the
 Authentication chapter
-inside Netatalk\'s documentation\&.
+inside Netatalk\*(Aqs documentation\&.
 .sp .5v
 .RE
 .SH "EXAMPLE"

@@ -15,9 +15,7 @@
     <refname>afp_voluuid.conf</refname>
 
     <refpurpose>Configuration file used by afpd(8) to specify UUID
-        for Time Machine volume<indexterm>
-        <primary>afp_voluuid.conf</primary>
-      </indexterm></refpurpose>
+        for Time Machine volume</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -28,7 +26,7 @@
     UUID of Time Machine volume automagically. The configuration
     lines are composed like:</para>
 
-    <para><replaceable>"volume name"</replaceable>
+    <para><replaceable>"volume-name"</replaceable>
     <replaceable>uuid-string</replaceable></para>
 
     <para>The first field is volume name. Volume names must be quoted

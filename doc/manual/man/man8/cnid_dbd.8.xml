@@ -19,15 +19,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>cnid_dbd<indexterm>
-          <primary>cnid_dbd</primary>
-        </indexterm><indexterm>
-          <primary>CNID backend</primary>
-        </indexterm><indexterm>
-          <primary>NFS</primary>
-
-          <secondary>Network File System</secondary>
-        </indexterm></command>
+      <command>cnid_dbd</command>
 
       <arg choice="plain"><replaceable>volpath</replaceable></arg>
 
@@ -36,12 +28,9 @@
       <arg choice="plain"><replaceable>clntfd</replaceable></arg>
 
       <arg choice="plain"><replaceable>logconfig_string</replaceable></arg>
-
-      <sbr />
-
-      <command>cnid_dbd<indexterm>
-          <primary>cnid_dbd</primary>
-        </indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>cnid_dbd</command>
 
         <group choice="plain">
           <arg choice="plain">-v</arg>
@@ -166,7 +155,7 @@
           much memory on top of its normal memory footprint. It can be used to
           tune database performance. The <emphasis
           remap="B">db_stat</emphasis> utility with the <option>-m</option>
-          option that comes with Berkely DB can help you determine wether you
+          option that comes with Berkely DB can help you determine whether you
           need to change this value. The default is pretty conservative so
           that a large percentage of requests should be satisfied from the
           cache directly. If memory is not a bottleneck on your system you
