@@ -1,6 +1,6 @@
 <?xml version='1.0'?> 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"> 
-<xsl:import href="PATH_TO_XSL_STYLESHEETS_DIR/manpages/docbook.xsl"/> 
+<xsl:import href="PATH_TO_XSL_STYLESHEETS_DIR/manpages/docbook.xsl"/>
 
 <!-- * Collect date from <refmiscinfo class="date"> -->
 <xsl:param name="refentry.date.profile.enabled">1</xsl:param>
@@ -8,8 +8,11 @@
   (//refmiscinfo[@class='date'])[last()]
 </xsl:param>
 
-<!-- * Suppress extra :VERSION: -->
-<xsl:param name="refentry.version.suppress">1</xsl:param>
+<!-- * Collect manual name from <refmiscinfo class="source"> -->
+<xsl:param name="refentry.manual.profile.enabled">1</xsl:param>
+<xsl:param name="refentry.manual.profile">
+  (//refmiscinfo[@class='source'])[last()]
+</xsl:param>
 
 <!-- * Example without numbering -->
 <xsl:param name="local.l10n.xml" select="document('')"/>

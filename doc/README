@@ -7,54 +7,43 @@
 
 	1. Install `xsltproc`.
 	2. Get the latest Docbook XSL stylesheet distribution from:
-	   https://sourceforge.net/project/showfiles.php?group_id=21935
+	   https://sourceforge.net/projects/docbook/files/docbook-xsl/
 
-	   Tested docbook-xsl stylesheet version is 1.75.2.
+	   Recommended docbook-xsl stylesheet version is 1.79.1.
+	   Version 1.79.2 and later introduced a namespace that our stylesheets don't support (yet).
 
-    3. Fix indexterm bug in xsl stylesheet:
-       inside the xsl stylesheet distribution in manpages/inline.xsl remove these lines:
-
-        <!-- * indexterm instances produce groff comments like this: -->
-        <!-- * .\" primary: secondary: tertiary -->
-        <xsl:template match="indexterm">
-          <xsl:text>.\" </xsl:text>
-          <xsl:apply-templates/>
-          <xsl:text>&#10;</xsl:text>
-        </xsl:template>
-
-        <xsl:template match="primary">
-          <xsl:value-of select="normalize-space(.)"/>
-        </xsl:template>
-
-        <xsl:template match="secondary|tertiary">
-          <xsl:text>: </xsl:text>
-          <xsl:value-of select="normalize-space(.)"/>
-        </xsl:template>
 
    Usage
    -----
 
 	Preparation:
 
-	1. Get netatalk-doc from CVS
-	2. `cd` to "netatalk-doc"
+	1. Clone the Netatalk repo with git
+	2. `cd` to "doc"
 
 	Create manpages:
 
-	3. XSL=<path to XSL stylesheets> VERSION=2.x make man
-	4. Copy the generated man pages to your CVS working copy:
-	   DIR=<path to netatalk> make install
+	3. XSL=<path to XSL stylesheets> VERSION=2.2 make man
+	4. Copy the generated man pages to the correct locations in the code repo
+	   make install
 
 	Create HTML:
 
-    5. XSL=<path to XSL stylesheets> VERSION=2.x make html
+    5. XSL=<path to XSL stylesheets> VERSION=2.2 make html
        The generated html files are then inside the directory html.
+	6. Upload the generated html files to SourceForge: (admins only)
+	   USER=<SourceForge user> make html-upload
+
+	Clean-up:
+
+	7. Remove the generated files in tmp/ before running the script again.
+	   make clean
 
    Editing Docbook Sources
    -----------------------
 
 	Free WYSIWYG editor with only one minor drawback is XMLEditor from XMLmind:
-	http://www.xmlmind.com/xmleditor/persoedition.html
+	https://www.xmlmind.com/xmleditor/
 
 	Drawback: in order to be able to edit any of the  nested xml files, you have to "promote" them to valid Docbook
 	files by referencing the Docbook DTD: insert as line 2+3:

@@ -2,3 +2,4 @@ html.tgz
 html/
 manpages/
 tmp/
+docbook-xsl*
