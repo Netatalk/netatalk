@@ -15,9 +15,7 @@
     <refname>afp_signature.conf</refname>
 
     <refpurpose>Configuration file used by afpd(8) to specify server
-        signature<indexterm>
-        <primary>afp_signature.conf</primary>
-      </indexterm></refpurpose>
+        signature</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -28,7 +26,7 @@
     server signature automagically. The configuration lines are
     composed like:</para>
 
-    <para><replaceable>"server name"</replaceable>
+    <para><replaceable>"server-name"</replaceable>
     <replaceable>hexa-string</replaceable></para>
 
     <para>The first field is server name. Server names must be quoted
@@ -40,13 +38,13 @@
 
     <note>
         <para>Server Signature is unique 16-bytes identifier used to
-        prevent logging on to the same server twice. </para>
+        prevent logging on to the same server twice.</para>
         <para>Netatalk 2.0 and earlier generated server signature by using
         gethostid(). There was a problem that another servers have the same
         signature because the hostid is not unique enough.</para>
         <para>Current netatalk generates the signature from random numbers and
         saves it into afp_signature.conf. When starting next time, it
-        is read from this file. </para>
+        is read from this file.</para>
         <para>This file should not be thoughtlessly edited and be copied
         onto another server. If it wants to set the signature intentionally,
         use the option "-signature user:xxxx"  in afpd.conf. In this case,

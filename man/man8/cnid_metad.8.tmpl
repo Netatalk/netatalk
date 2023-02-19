@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: cnid_metad
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 01 Jan 2012
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
 .TH "CNID_METAD" "8" "01 Jan 2012" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,10 +30,10 @@
 .SH "NAME"
 cnid_metad \- start cnid_dbd daemons on request
 .SH "SYNOPSIS"
-.HP \w'\fBcnid_metad\fR\fB\fR\fBcnid_metad\fR\fB\fR\ 'u
-\fBcnid_metad\fR\fB\fR [\-l\ \fIloglevel\fR\ [\-f\ \fIfilename\fR]] [\-d] [\-h\ \fIhostname\fR] [\-p\ \fIport\fR] [\-u\ \fIuser\fR] [\-g\ \fIgroup\fR] [\-s\ \fIcnid_dbdpathname\fR]
-.br
-\fBcnid_metad\fR\fB\fR \-v | \-V 
+.HP \w'\fBcnid_metad\fR\ 'u
+\fBcnid_metad\fR [\-l\ \fIloglevel\fR\ [\-f\ \fIfilename\fR]] [\-d] [\-h\ \fIhostname\fR] [\-p\ \fIport\fR] [\-u\ \fIuser\fR] [\-g\ \fIgroup\fR] [\-s\ \fIcnid_dbdpathname\fR]
+.HP \w'\fBcnid_metad\fR\ 'u
+\fBcnid_metad\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBcnid_metad\fR
@@ -160,7 +169,7 @@ subprocecesses is currently limited to 512\&.
 .PP
 \fBcnid_metad\fR
 does not block or catch any signals apart from SIGPIPE\&. It will therefore exit on most signals received\&. This will also cause all instances of
-\fBcnid_dbd\'s\fR
+\fBcnid_dbd\*(Aqs\fR
 started by that
 \fBcnid_metad\fR
 to exit gracefully\&. Since state about and IPC access to the subprocesses is only maintained in memory by

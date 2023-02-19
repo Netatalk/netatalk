@@ -18,17 +18,17 @@
 
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
-      <command>afpldaptest<indexterm><primary>afpldaptest</primary></indexterm></command>
+      <command>afpldaptest</command>
 
       <group choice="req">
         <arg choice="plain">-u <replaceable>USER</replaceable></arg>
         <arg choice="plain">-g <replaceable>GROUP</replaceable></arg>
         <arg choice="plain">-i <replaceable>UUID</replaceable></arg>
       </group>
+    </cmdsynopsis>
 
-      <sbr />
-
-      <command>afpldaptest<indexterm><primary>afpldaptest</primary></indexterm></command>
+    <cmdsynopsis>
+	  <command>afpldaptest</command>
 
       <group choice="req">
         <arg choice="plain">-h</arg>

@@ -8,8 +8,6 @@
     <refmiscinfo class="date">09 June 2001</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
-
-    <refmiscinfo class="manual">The Netatalk Project</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -21,7 +19,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>netatalk-config<indexterm><primary>netatalk-config</primary></indexterm></command>
+      <command>netatalk-config</command>
 
       <arg choice="opt"><arg choice="plain">--prefix </arg><arg choice="opt"><replaceable>=DIR</replaceable></arg></arg>
 
@@ -134,7 +132,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>--exec\_prefix=PREFIX</option></term>
+        <term><option>--exec_prefix=PREFIX</option></term>
 
         <listitem>
           <para>If specified, use PREFIX instead of the installation exec

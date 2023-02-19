@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">02 Sep 2011</refmiscinfo>
+    <refmiscinfo class="date">05 Dec 2015</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -36,9 +36,7 @@
     <title>Description</title>
 
     <para><command>ad</command> is a UNIX file utlity suite with Netatalk
-    compatibity. AppleDouble<indexterm>
-        <primary>AppleDouble</primary>
-      </indexterm> files in <filename>.AppleDouble</filename> directories and
+    compatibity. AppleDouble files in <filename>.AppleDouble</filename> directories and
     the CNID databases are updated as appropiate.</para>
   </refsect1>
 
@@ -106,6 +104,8 @@
 
       <arg choice="req">file|directory</arg>
     </cmdsynopsis>
+
+    <para>Remove files and directories.</para>
 
     <cmdsynopsis>
       <command>ad -v|--version</command>
@@ -189,15 +189,15 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
     <para>Copy files and directories.</para>
 
     <para>In the first synopsis form, the cp utility copies the contents of
-    the source_file to the target_file. In the second synopsis form, the
-    contents of each named source_file is copied to the destination
-    target_directory. The names of the files themselves are not changed. If cp
+    the src_file to the dst_file. In the second synopsis form, the
+    contents of each named src_file is copied to the destination
+    dst_directory. The names of the files themselves are not changed. If cp
     detects an attempt to copy a file to itself, the copy will fail.</para>
 
     <para>Netatalk AFP volumes are detected by means of their ".AppleDesktop"
     directory which is located in their volume root. When a copy targetting an
     AFP volume is detected, its CNID database daemon is connected and all
-    copies will also go through the CNID database. AppleDouble files are also
+    copies will also go through the CNID database. AppleDouble data are also
     copied and created as needed when the target is an AFP volume.</para>
 
     <para>Options:</para>
@@ -217,7 +217,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <listitem>
           <para>For each existing destination pathname, remove it and create a
           new file, without prompting for confirmation regardless of its
-          permis- sions. (The -f option overrides any previous -i or -n
+          permissions. (The -f option overrides any previous -i or -n
           options.)</para>
         </listitem>
       </varlistentry>
@@ -229,8 +229,8 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
           <para>Cause cp to write a prompt to the standard error output before
           copying a file that would overwrite an existing file. If the
           response from the standard input begins with the character 'y' or
-          'Y', the file copy is attempted. (The -i option overrides any pre-
-          vious -f or -n options.)</para>
+          'Y', the file copy is attempted. (The -i option overrides any
+          previous -f or -n options.)</para>
         </listitem>
       </varlistentry>
 
@@ -259,8 +259,8 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-R</term>
 
         <listitem>
-          <para>If source_file designates a directory, cp copies the directory
-          and the entire subtree connected at that point.If the source_file
+          <para>If src_file designates a directory, cp copies the directory
+          and the entire subtree connected at that point. If the src_file
           ends in a /, the contents of the directory are copied rather than
           the directory itself.</para>
         </listitem>

@@ -10,7 +10,7 @@
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>megatron</refname>
 
     <refname>unhex</refname>
@@ -28,51 +28,45 @@
     <refpurpose>Macintosh file format transformer</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
-      <command>megatron<indexterm><primary>megatron</primary></indexterm></command>
+      <command>megatron</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>unbin<indexterm><primary>unbin</primary></indexterm></command>
-
-      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>unhex<indexterm><primary>unhex</primary></indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>unbin</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>unsingle<indexterm><primary>unsingle</primary></indexterm></command>
-
-      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>hqx2bin<indexterm><primary>hqx2bin</primary></indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>unhex</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
-
-      <sbr />
-
-      <command>single2bin<indexterm><primary>single2bin</primary></indexterm></command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>unsingle</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>hqx2bin</command>
 
-      <sbr />
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>single2bin</command>
 
-      <command>macbinary<indexterm><primary>macbinary</primary></indexterm></command>
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>macbinary</command>
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
     <para><command>megatron</command> is used to transform files from BinHex,
@@ -119,7 +113,7 @@
     overwritten!</para>
   </refsect1>
 
-  <refsect1 id="options">
+  <refsect1>
     <title>OPTIONS</title>
 
     <variablelist remap="TP">
@@ -135,7 +129,7 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
     <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>

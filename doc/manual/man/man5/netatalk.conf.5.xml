@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">30 Mar 2011</refmiscinfo>
+    <refmiscinfo class="date">13 Feb 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -14,7 +14,7 @@
   <refnamediv>
     <refname>netatalk.conf</refname>
 
-    <refpurpose>Configuration file used by Netatalk to determine its
+    <refpurpose>Configuration file used by the Netatalk init script to determine its
     general configuration<indexterm>
         <primary>netatalk.conf</primary>
       </indexterm><indexterm>
@@ -48,14 +48,12 @@
       </indexterm></refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
-      <command>:ETCDIR:/netatalk.conf<indexterm><primary>netatalk.conf</primary></indexterm></command>
-
-      <sbr />
-
-      <command>:DESTDIR:/etc/default/netatalk<indexterm><primary>/etc/default/netatalk</primary></indexterm></command>
-
+      <command>:ETCDIR:/netatalk.conf</command>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>:DESTDIR:/etc/default/netatalk</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -63,12 +61,18 @@
     <title>DESCRIPTION</title>
 
     <para><emphasis remap="B">:ETCDIR:/netatalk.conf</emphasis> is the
-    configuration file used by afpd to determine what portions of the file
+    configuration file used by the netatalk init script to determine what portions of the file
     system will be shared via AFP, as well as their behaviors.</para>
 
     <para>If netatalk has been configured with --enable-debian, it is not
     <emphasis remap="B">:ETCDIR:/netatalk.conf</emphasis> but 
     <emphasis remap="B">:DESTDIR:/etc/default/netatalk</emphasis>.</para>
+
+    <note><para>If netatalk has been configured with --enable-systemd, the
+    <emphasis remap="B">netatalk.conf</emphasis> file is NOT used at all. Instead,
+    the startup settings are governed by the systemd unit configuration
+    files of the netatalk daemons, in tandem with the configuration files of each daemon
+    individually.</para></note>
 
     <para>Any line not prefixed with <emphasis remap="B">#</emphasis> is
     interpreted. The configuration lines are composed like:</para>

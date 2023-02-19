@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 12 Oct 2010
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
 .TH "DBD" "1" "12 Oct 2010" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,8 +30,8 @@
 .SH "NAME"
 dbd \- CNID database maintenance
 .SH "SYNOPSIS"
-.HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-evx] {\-d\ [\-i]  | \-s\ [\-c|\-n]  | \-r\ [\-c|\-f]  | \-u} \fIvolumepath\fR
+.HP \w'\fBdbd\fR\ 'u
+\fBdbd\fR [\-evx] {\-d\ [\-i]  | \-s\ [\-c|\-n]  | \-r\ [\-c|\-f]  | \-u} \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBdbd\fR
@@ -133,14 +142,13 @@ Check for orphaned CNIDs in database (requires
 .\}
 Open and close adouble files
 .RE
-.RS 4
 .PP
 Options:
 .RS 4
 \fB\-c\fR
-Don\'t check \&.AppleDouble stuff, only check orphaned\&.
+Don\*(Aqt check \&.AppleDouble stuff, only check orphaned\&.
 \fB\-n\fR
-Don\'t open CNID database, skip CNID checks, only traverse filesystem
+Don\*(Aqt open CNID database, skip CNID checks, only traverse filesystem
 .RE
 .RE
 .PP
@@ -238,12 +246,11 @@ Delete orphaned CNIDs in database (requires
 .\}
 Open and close adouble files
 .RE
-.RS 4
 .PP
 Options:
 .RS 4
 \fB\-c\fR
-Don\'t create \&.AppleDouble stuff, only cleanup orphaned\&.
+Don\*(Aqt create \&.AppleDouble stuff, only cleanup orphaned\&.
 
 \fB\-f\fR
 Wipe database and rebuild from IDs stored in AppleDouble files, only available for volumes without
@@ -281,7 +288,7 @@ In order to be able to run
 \fB\-rf\fR
 reconstructing the CNIDs in the database from the
 \fIAppleDouble\fR
-files, make sure you\'ve run a
+files, make sure you\*(Aqve run a
 \fB\-r\fR
 rebuild sometimes before, where the CNIDs then would have been synched between database and
 \fIAppleDouble\fR
@@ -294,7 +301,7 @@ Also be careful about the option
 .PP
 The CNID backends maintains name to ID mappings\&. If you change a filename outside afpd(8) (shell, samba), the CNID db will not know and not reflect that change\&. Netatalk tries to recover from such inconsistencies as gracefully as possible\&. The mechanisms to resolve such inconsistencies may fail sometimes, though, as this is not an easy task to accomplish\&. E\&.g\&. if several names in the path to the file or directory have changed, things may go wrong\&.
 .PP
-If you change a lot of filenames at once, chances are higher that the afpds fallback mechanisms fail, i\&.e\&. files will be assigned new IDs, even though the file hasn\'t changed\&.
+If you change a lot of filenames at once, chances are higher that the afpds fallback mechanisms fail, i\&.e\&. files will be assigned new IDs, even though the file hasn\*(Aqt changed\&.
 .SH "SEE ALSO"
 .PP
 \fBcnid_metad\fR(8),

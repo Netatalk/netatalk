@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: afpd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 08 Mar 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
 .TH "AFPD" "8" "08 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,10 +30,10 @@
 .SH "NAME"
 afpd \- Apple Filing Protocol daemon
 .SH "SYNOPSIS"
-.HP \w'\fBafpd\fR\fB\fR\fBafpd\fR\fB\fR\ 'u
-\fBafpd\fR\fB\fR [\-duptDTI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfigfile\fR] [\-U\ \fIuams\fR] [\-m\ \fIumask\fR]
-.br
-\fBafpd\fR\fB\fR \-v | \-V | \-h 
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR [\-duptDTI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfigfile\fR] [\-U\ \fIuams\fR] [\-m\ \fIumask\fR]
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR \-v | \-V | \-h 
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR
@@ -105,7 +114,7 @@ Print help and exit\&.
 Use a platform specific icon\&. (Equivalent to
 \fB\-icon\fR
 in
-afpd\&.conf\&.) (Recent Mac OS don\'t display it\&.)
+afpd\&.conf\&.) (Recent Mac OS don\*(Aqt display it\&.)
 .RE
 .PP
 \-f \fIdefaultvolumes\fR
@@ -126,15 +135,15 @@ should be read for a list of volume that all users will be offered, instead of
 .PP
 \-u
 .RS 4
-Read the user\'s
+Read the user\*(Aqs
 AppleVolumes
-file first\&. This option causes volume names in the user\'s
+file first\&. This option causes volume names in the user\*(Aqs
 AppleVolumes
-file to override volume names in the system\'s
+file to override volume names in the system\*(Aqs
 AppleVolumes
 file\&. The default is to read the system
 AppleVolumes
-file first\&. Note that this option doesn\'t effect the precendence of filename extension mappings: the user\'s
+file first\&. Note that this option doesn\*(Aqt effect the precendence of filename extension mappings: the user\*(Aqs
 AppleVolumes
 file always has precedence\&.
 .RE
@@ -154,7 +163,7 @@ Specifies the maximum number of connections to allow for this
 .PP
 \-g \fIguest\fR
 .RS 4
-Specifies the name of the guest account\&. The default is \'\fInobody\fR\'\&.
+Specifies the name of the guest account\&. The default is \*(Aq\fInobody\fR\*(Aq\&.
 .RE
 .PP
 \-P \fIpidfile\fR
@@ -201,7 +210,7 @@ for the creation of folders in Netatalk\&.
 .RE
 .SH "SIGNALS"
 .PP
-To shut down a user\'s
+To shut down a user\*(Aqs
 \fBafpd\fR
 process it is recommended that
 \fBSIGKILL (\-9)\fR
@@ -281,7 +290,7 @@ list of volumes to offer all users
 .PP
 ~/AppleVolumes, ~/\&.AppleVolumes, ~/applevolumes, ~/\&.applevolumes
 .RS 4
-user\'s list of volumes to mount
+user\*(Aqs list of volumes to mount
 .RE
 .PP
 :ETCDIR:/afp_signature\&.conf

@@ -10,19 +10,19 @@
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>macusers</refname>
 
     <refpurpose>List the users connecting via AFP</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
-      <command>macusers<indexterm><primary>macusers</primary></indexterm></command>
+      <command>macusers</command>
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>macusers<indexterm><primary>macusers</primary></indexterm></command>
+      <command>macusers</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
@@ -36,7 +36,7 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
     <para><command>macusers</command> list the users connecting via AFP.</para>
@@ -67,7 +67,7 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
     <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
