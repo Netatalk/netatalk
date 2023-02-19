@@ -23,17 +23,18 @@
       <title>Setting up the AFP file server</title>
 
       <para>AFP (the Apple Filing Protocol) is the protocol Apple Macintoshes
-      use for file services. The protocol has evolved over the years. The
-      latest changes to the protocol, called "AFP 3.3", were added with the
-      release of Snow Leopard<indexterm>
-          <primary>Snow Leopard</primary>
+      use for file services up until OS X Mountain Lion (10.8). The protocol
+      has evolved over the years. The
+      latest change to the protocol, AFP 3.4, was introduced with
+      the release of OS X Mountain Lion<indexterm>
+          <primary>Mountain Lion</primary>
 
-          <secondary>Mac OS X 10.6</secondary>
-        </indexterm> (Mac OS X 10.6).</para>
+          <secondary>Mac OS X 10.8</secondary>
+        </indexterm>. Netatalk 2.2 supports up to AFP 3.3.</para>
 
       <para>AFP3 brought some big changes. For the first time, AFP3 supports
       pathnames up to 65535 characters. It is virtually unlimited. Netatalk
-      2.x supports filenames up to 255 characters because Mac OS X 10.4 and
+      2.2 supports filenames up to 255 characters because Mac OS X 10.4 and
       earlier can use it up to 255 characters (actually 255 bytes leading to
       85-255 chars depending on the glyphs used), Decomposed UTF-8 (UTF8-MAC)
       is used on the wire and large files (&gt;4GB) are supported.</para>
@@ -57,7 +58,7 @@
 
           <secondary>UNIX symlink</secondary>
         </indexterm> can be used on the server. Semantics are the same as for
-      eg NFS, ie they are not resolved on the server side but instead it's
+      eg NFS, i.e. they are not resolved on the server side but instead it's
       completely up to the client to resolve them, resulting in links that
       point somewhere inside the clients filesystem view.</para>
 
@@ -119,7 +120,7 @@
           <secondary>CNID backend</secondary>
         </indexterm></title>
 
-      <para>Unlike other protocols like smb or nfs, the AFP protocol mostly
+      <para>Unlike other protocols like SMB or NFS, the AFP protocol mostly
       refers to files and directories by ID and not by a path (the IDs are
       also called CNID, that means Catalog Node ID). A typical AFP request
       uses a directory ID<indexterm>
@@ -145,7 +146,7 @@
       <para>Netatalk needs to map IDs to files and folders in the host
       filesystem. To achieve this, several different CNID backends<indexterm>
           <primary>CNID backend</primary>
-        </indexterm> are available and can be choosed by the
+        </indexterm> are available and can be selected with the
       <option>cnidscheme</option><indexterm>
           <primary>cnidscheme</primary>
 
@@ -219,45 +220,6 @@
         </itemizedlist>
       </note>
 
-      <important>
-        <para>In order to update between Netatalk releases using different
-        BerkeleyDB library versions, follow this steps:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>Stop the to be upgraded old version of Netatalk</para>
-          </listitem>
-
-          <listitem>
-            <para>Using the old BerkeleyDB utilities run <command>db_recover
-            -h &lt;path to .AppleDB&gt;</command></para>
-          </listitem>
-
-          <listitem>
-            <para>Using the new BerkeleyDB utilities run <command>db_upgrade
-            -v -h &lt;path to .AppleDB&gt; -f cnid2.db</command></para>
-          </listitem>
-
-          <listitem>
-            <para>Again using the new BerkeleyDB utilities run
-            <command>db_checkpoint -1 -h &lt;path to
-            .AppleDB&gt;</command></para>
-          </listitem>
-
-          <listitem>
-            <para>Start the the new version of Netatalk</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>Note that the first version to appear <emphasis>after</emphasis>
-        Netatalk 2.1 ie Netatalk 2.1.1, will support BerkeleyDB updates on the
-        fly without manual intervention. In other words Netatalk 2.1 does
-        contain code to prepare the BerkeleyDB database for upgrades and to
-        upgrade it in case it has been prepared before. That means it can't
-        upgrade a 2.0.x version because that one didn't prepare the
-        database.</para>
-      </important>
-
       <sect3>
         <title>cdb<indexterm>
             <primary>CDB</primary>
@@ -265,7 +227,7 @@
             <secondary>"cdb" CNID backend</secondary>
           </indexterm></title>
 
-        <para>The "concurrent database" backend is based on sleepycat's
+        <para>The "concurrent database" backend is based on
         Berkeley DB. With this backend, several afpd daemons access the CNID
         database directly. Berkeley DB locking is used to synchronize access,
         if more than one afpd process is active for a volume. The drawback is,
@@ -290,7 +252,7 @@
         probably better off using cdb for sharing home directories for a
         larger number of users.</para>
 
-        <para>This is the default backend starting with Netatalk 2.1.</para>
+        <para>This is the default backend since Netatalk 2.1.</para>
       </sect3>
 
       <sect3>
@@ -394,7 +356,7 @@
         <emphasis>multibyte</emphasis> character sets.</para>
 
         <para>One standardized multibyte charset encoding scheme is known as
-        <ulink url="http://www.unicode.org/">unicode</ulink>. A big advantage
+        <ulink url="https://www.unicode.org/">Unicode</ulink>. A big advantage
         of using a multibyte charset is that you only need one. There is no
         need to make sure two computers use the same charset when they are
         communicating.</para>
@@ -428,7 +390,7 @@
           </listitem>
 
           <listitem>
-            <para>MacCroation</para>
+            <para>MacCroatian</para>
           </listitem>
 
           <listitem>
@@ -477,7 +439,7 @@
         </itemizedlist>
 
         <para>Starting with Mac OS X and AFP3, <ulink
-        url="http://www.utf-8.com/">UTF-8</ulink> is used. UTF-8 encodes
+        url="https://www.utf-8.com/">UTF-8</ulink> is used. UTF-8 encodes
         Unicode characters in an ASCII compatible way, each Unicode character
         is encoded into 1-6 ASCII characters. UTF-8 is therefore not really a
         charset itself, it's an encoding of the Unicode charset.</para>
@@ -485,7 +447,7 @@
         <para>To complicate things, Unicode defines several <emphasis> <ulink
         url="http://www.unicode.org/reports/tr15/index.html">normalization</ulink>
         </emphasis> forms. While <ulink
-        url="http://www.samba.org">samba</ulink><indexterm>
+        url="https://www.samba.org">Samba</ulink><indexterm>
             <primary>Samba</primary>
           </indexterm> uses <emphasis>precomposed</emphasis><indexterm>
             <primary>Precomposed</primary>
@@ -664,7 +626,7 @@
               character to <emphasis>maccodepage</emphasis> first. If this
               conversion fails, you'll receive a -50 error on the mac.
               <emphasis>Note</emphasis>: Whenever you can, please stick with
-              the default UTF-8 volume format. see <citerefentry>
+              the default UTF-8 volume format. See <citerefentry>
                   <refentrytitle>AppleVolumes.default</refentrytitle>
 
                   <manvolnum>5</manvolnum>
@@ -831,7 +793,7 @@
         <para>On Mac OS X, there exist some client-side techniques to make the
         AFP-client more verbose, so one can have a look what's happening while
         negotiating the UAMs to use. Compare with this <ulink
-        url="http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
+        url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -911,7 +873,7 @@
 
         <para>For a more detailed overview over the technical implications of
         the different UAMs, please have a look at Apple's <ulink
-        url="http://developer.apple.com/documentation/Networking/Conceptual/AFP/Chapter_1/chapter_2_section_6.html">File
+        url="https://web.archive.org/web/20040916191641/http://developer.apple.com/documentation/Networking/Conceptual/AFP/Chapter_1/chapter_2_section_6.html">File
         Server Security</ulink> pages.</para>
       </sect3>
 
@@ -1013,7 +975,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
               </row>
 
               <row>
-                <entry align="center" rotate="0" valign="middle">pssword
+                <entry align="center" rotate="0" valign="middle">Password
                 length</entry>
 
                 <entry>guest access</entry>
@@ -1065,11 +1027,11 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
 
                 <entry>Password will be encrypted with 128 bit SSL, user will
                 be authenticated against the server but not vice versa.
-                Therefor weak against man-in-the-middle attacks.</entry>
+                Therefore weak against man-in-the-middle attacks.</entry>
 
                 <entry>Password will be encrypted using libgcrypt with CAST
                 128 in CBC mode. User will be authenticated against the server
-                but not vice versa. Therefor weak against man-in-the-middle
+                but not vice versa. Therefore weak against man-in-the-middle
                 attacks.</entry>
 
                 <entry>Password is not sent over the network. Due to the
@@ -1120,7 +1082,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         </table>
 
         <para>* Have a look at this <ulink
-        url="http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
+        url="https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
         overview</ulink></para>
       </sect3>
 
@@ -1150,9 +1112,9 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           forwarded to the remote server's AFP port (we used the default 548)
           over SSH.</para>
 
-          <para>These sorts of tunnels are an ideal solution if you've to
-          access an AFP server providing weak authentications mechanisms
-          through the Internet without having the ability to use a "real" VPN.
+          <para>This sort of tunnel is an ideal solution if you must access
+          an AFP server through the Internet without having the ability
+          or desire to use a "real" VPN.
           Note that you can let <command>ssh</command> compress the data by
           using its "-C" switch and that the tunnel endpoints can be different
           from both AFP client and server (compare with the SSH documentation
@@ -1190,9 +1152,18 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
 
           <itemizedlist>
             <listitem>
-              <para>Tunneling TCP over TCP (as SSH does) is not the best idea.
-              There exist better solutions like VPNs based on the IP
-              layer.</para>
+              <para>Most users who need such a feature are probably already
+              familiar with using a VPN; it might be easier for the user to
+              employ the same VPN software in order to connect to the network
+              on which the AFP server is running, and then to access the AFP
+              server as normal.</para>
+
+              <para>That being said, for the simple case of connecting
+              to one specific AFP server, a direct SSH connection is likely to
+              perform better than a general-purpose VPN; contrary to popular
+              belief, tunneling via SSH does <emphasis role="strong">not</emphasis>
+              result in what's called "TCP-over-TCP meltdown", because the
+              AFP data that are being tunneled do not encapsulate TCP data.</para>
             </listitem>
 
             <listitem>
@@ -1211,23 +1182,23 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
             </listitem>
 
             <listitem>
-              <para>On the other side you've to limit access to afpd to
-              localhost only (TCP wrappers) and disable AFP over DDP when you
-              want to ensure that all AFP sessions are SSH encrypted
-              or...</para>
-            </listitem>
+              <para>Indeed, to ensure that all AFP over TCP sessions are encrypted
+              via SSH, you need to limit afpd to connections that originate
+              only from localhost (e.g., by using Wietse Venema's TCP Wrappers,
+              or by using suitable firewall or packet-filtering facilities, etc.).</para>
 
-            <listitem>
-              <para>...when you're using 10.2 - 10.3.3 then you get the
-              opposite of what you'd expect: potentially unencrypted AFP
-              communication (including logon credentials) on the network
+              <para>Otherwise, when you're using Mac OS X 10.2 through 10.3.3,
+              you get the opposite of what you'd expect: potentially unencrypted AFP
+              communications (including login credentials) being sent across the network
               without a single notification that establishing the tunnel
               failed. Apple fixed that not until Mac OS X 10.3.4.</para>
             </listitem>
 
             <listitem>
               <para>Encrypting all AFP sessions via SSH can lead to a
-              significantly higher load on the Netatalk server</para>
+              significantly higher load on the computer that is running
+              the AFP server, because that computer must also handle
+              encryption.</para>
             </listitem>
           </itemizedlist>
         </sect4>
@@ -1239,26 +1210,33 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           <primary>ACLs</primary>
         </indexterm></title>
 
-      <para>ACL support for AFP is implemented for Solaris/ZFS/NFSv4 ACLs and
-      POSIX 1e ACLs on Linux.</para>
+      <para>ACL support for AFP is implemented for ZFS ACLs on Solaris and
+      derived platforms and for POSIX 1e ACLs on Linux.</para>
 
       <sect3>
         <title>Configuration</title>
 
-        <para>For a basic mode of operation where all you want to achieve is
-        that read/write/execute permissions are displayed appropiately, taking
-        ACLs into accout, there's nothing to configure. afpd reads ACLs on the
-        fly, calculating effective permissions and returning the calculated
-        permissions via the so called <emphasis>UARights</emphasis> permission
-        bits. The client, notable the Finder uses these bits to display
-        permissions.</para>
+        <para>For a basic mode of operation there's nothing to configure.
+        Netatalk reads ACLs on the fly and calculates effective permissions
+        which are then sent to the AFP client via the so called
+        UARights<indexterm>
+            <primary>UARights</primary>
+          </indexterm> permission bits. On a Mac, the Finder uses these bits
+          to adjust permission in Finder windows. Example: a folder whose
+          UNIX mode is read-only and an ACL giving the user write access,
+          will display the effective read-write permission. Without the
+          permission mapping the Finder would display a read-only icon and
+          the user wouldn't be able to write to the folder.</para>
 
-        <para>If you want to be able to display ACLs on the client, things get
-        more involed as you must then setup both client and server to be part
-        on a authentication domain (eg LDAP, OpenDirectory). The reason is,
-        that in OS X ACLs are bound to UUIDs, not just uid's or gid's.
-        Therefor afpd must be able to map every filesystem uid and gid to a
-        UUID.</para>
+        <para>However, neither in Finder "Get Info" windows nor in Terminal
+        will you be able to see the ACLs, that's a result of how ACLs in OS X
+        are designed. If you want to be able to display ACLs on the client,
+        things get more involved as you must then setup both client and server
+        to be part on a authentication domain (directory service, eg LDAP,
+        OpenDirectory). The reason is, that in OS X ACLs are bound to UUIDs,
+        not just uid's or gid's. Therefore, afpd must be able to map every
+        filesystem uid and gid to a UUID so that it can return the server side
+        ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs.</para>
 
         <para>In detail:</para>
 
@@ -1282,7 +1260,7 @@ aclmode = passthrough (if available)</screen>
             <para>Your server and the clients must be part of a security
             association where identity data is coming from a common source.
             ACLs in Darwin are based on UUIDs and so is the ACL specification
-            in AFP 3.2. Therefor your source of identity data has to provide
+            in AFP 3.2. Therefore your source of identity data has to provide
             an attribute for every user and group where a UUID is stored as a
             ASCII string. In other words:</para>
 
@@ -1341,12 +1319,13 @@ aclmode = passthrough (if available)</screen>
 
           <manvolnum>8</manvolnum>
         </citerefentry> for older AFP clients not capable of using AFP over
-      TCP. You'll need it also, if you want to use the deprecated
+      TCP. You'll need it also if you want to use the
       AppleTalk-based timeserver <citerefentry>
           <refentrytitle>timelord</refentrytitle>
 
           <manvolnum>8</manvolnum>
-        </citerefentry> for older Mac clients.</para>
+        </citerefentry> for older Mac clients, or netboot server a2boot
+      for Apple II clients.</para>
 
       <para>But even if you don't need PAP or AFP over AppleTalk, you might
       consider using AppleTalk for service propagation/location, having the
@@ -1714,7 +1693,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
     has been a great advantage compared with other protocols like Adobe's
     Standard Protocol to drive serial and parallel PostScript printers
     (compare with <ulink
-    url="http://partners.adobe.com/asn/tech/ps/specifications.jsp">Adobe
+    url="https://web.archive.org/web/20041022165533/http://partners.adobe.com/asn/tech/ps/specifications.jsp">Adobe
     TechNote 5009</ulink>) or LPR<indexterm>
         <primary>LPR</primary>
 
@@ -1726,7 +1705,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
     (usually a Macintosh computer) and destination (a printer or spooler
     implementation) communicate about both destination's capabilities via
     feature queries (compare with <ulink
-    url="http://partners.adobe.com/asn/tech/ps/archive.jsp">Adobe TechNote
+    url="https://web.archive.org/web/20041022123331/http://partners.adobe.com/asn/tech/ps/archive.jsp">Adobe TechNote
     5133</ulink>) and device status. This allows the LaserWriter driver on the
     Macintosh to generate appropriate device specific PostScript code (color
     or b/w, only embedding needed fonts, and so on) on the one hand and
@@ -1816,6 +1795,14 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
         automagically using the parameters assigned to this global share. But
         subsequent printer definitions can be used to override these global
         settings for individual spoolers.</para>
+
+	<example>
+	<title>Example syntax, assigning root as operator:</title>
+
+	<para>
+	<programlisting>cupsautoadd:op=root:</programlisting>
+	</para>
+	</example>
       </sect3>
     </sect2>
 
@@ -1895,12 +1882,18 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
 
       <para><command>timelord</command><indexterm>
           <primary>timelord</primary>
-        </indexterm>, an AppleTalk based time server, is deprecated these
-      days. Use NTP<indexterm>
+          </indexterm>, an AppleTalk based time server, is useful for classic
+          Mac OS clients that do not support NTP<indexterm>
           <primary>NTP</primary>
 
           <secondary>Network Time Protocol</secondary>
-        </indexterm> instead.</para>
+        </indexterm>.</para>
+
+	<para>Netatalk's <command>timelord</command> is compatible with the <ulink
+        url="https://macintoshgarden.org/apps/tardis-and-timelord">tardis</ulink>
+        client for Macintosh developed at the <ulink
+        url="https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html">
+        University of Melbourne.</ulink></para>
 
       <para>For further information please have a look at the <citerefentry>
           <refentrytitle>timelord</refentrytitle>
@@ -1916,9 +1909,9 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
     <para>The Netatalk distribution comes with several operating system
     specific startup script templates that are tailored according to the
     options given to the "configure" script before compiling. Currently,
-    templates are provided for RedHat (sysv style), RedHat (systemd style),
-    SuSE, Gentoo, NetBSD and Debian. You can select to install the generated
-    startup script(s)
+    templates are provided for systemd (cross-platform), RedHat,
+    SuSE, Gentoo, Debian, NetBSD, Solaris, and Tru64. You can select to
+    install the generated startup script(s).
     <indexterm>
         <primary>Startscript</primary>
 
@@ -1926,13 +1919,18 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
       </indexterm> by specifying a system type to "configure". To
     automatically install startup scripts for e.g. the Ubuntu distribution
     try to give the <option>--enable-debian</option> option to "configure". Some
-    of the scripts can be further parametrized by the configuration file
+    of the non-systemd scripts can be further parametrized by the configuration file
     netatalk.conf (described in the <citerefentry>
         <refentrytitle>netatalk.conf</refentrytitle>
 
         <manvolnum>5</manvolnum>
       </citerefentry> manual page), some obtain that information in another,
     operating system specific way (like NetBSD, Debian and so on).</para>
+
+    <para>If you use the cross-platform <option>--enable-systemd</option>
+    option, there is no need to specify the system type. Also, the <filename>
+    netatalk.conf</filename> configuration file is <emphasis>not</emphasis>
+    used by systemd unit configurations.</para>
 
     <para>Since new releases of Linux distributions appear all the time and
     the startup procedure for the other systems mentioned above might change
@@ -1963,15 +1961,14 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
       <listitem>
         <para>timelord<indexterm>
             <primary>timelord</primary>
-          </indexterm> (for old style time synchronisation via
+          </indexterm> (for old style time synchronization via
         AppleTalk)</para>
       </listitem>
 
       <listitem>
         <para>a2boot<indexterm>
             <primary>a2boot</primary>
-          </indexterm> (Apple II boot server via AppleTalk, not necessary any
-        longer)</para>
+          </indexterm> (Apple II boot server via AppleTalk)</para>
       </listitem>
 
       <listitem>

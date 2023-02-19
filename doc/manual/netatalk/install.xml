@@ -17,11 +17,11 @@
   <sect1>
     <title>How to obtain Netatalk</title>
 
-    <para>Please have a look at the netatalk page on sourceforge for the most
+    <para>Please have a look at the netatalk page on GitHub for the most
     recent informations on this issue.</para>
 
     <para><ulink
-    url="http://sourceforge.net/projects/netatalk/">http://sourceforge.net/projects/netatalk/</ulink></para>
+    url="https://github.com/Netatalk/Netatalk">https://github.com/Netatalk/Netatalk</ulink></para>
 
     <sect2>
       <title>Binary packages</title>
@@ -35,38 +35,38 @@
       </ulink></para>
 
       <para>Debian package: <ulink
-      url="http://packages.debian.org/">http://packages.debian.org/
+      url="https://www.debian.org/distrib/packages">https://www.debian.org/distrib/packages
       </ulink></para>
 
-      <para>various RPM package: <ulink
-      url="http://rpmfind.net/">http://rpmfind.net/ </ulink></para>
+      <para>Various RPM packages: <ulink
+      url="https://rpmfind.net/">https://rpmfind.net/ </ulink></para>
 
       <para>Fedora/RHEL package: <ulink
-      url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
+      url="https://koji.fedoraproject.org/koji/search">https://koji.fedoraproject.org/koji/search
       </ulink></para>
 
       <para>Gentoo package: <ulink
-      url="http://packages.gentoo.org/">http://packages.gentoo.org/
+      url="https://packages.gentoo.org/">https://packages.gentoo.org/
       </ulink></para>
 
       <para>openSUSE package: <ulink
-      url="http://software.opensuse.org/">http://software.opensuse.org/
+      url="https://software.opensuse.org/">https://software.opensuse.org/
       </ulink></para>
 
       <para>Solaris package: <ulink
-      url="http://www.blastwave.org/">http://www.blastwave.org/
+      url="https://www.opencsw.org/packages/CSWnetatalk/">https://www.opencsw.org/
       </ulink></para>
 
       <para>FreeBSD ports: <ulink
-      url="http://www.freebsd.org/ports/index.html">http://www.freebsd.org/ports/index.html
+      url="https://www.freebsd.org/ports/">https://www.freebsd.org/ports/
       </ulink></para>
 
       <para>NetBSD pkgsrc: <ulink
-      url="http://pkgsrc.se/search.php">http://pkgsrc.se/search.php
+      url="https://pkgsrc.se/search.php">https://pkgsrc.se/search.php
       </ulink></para>
 
       <para>OpenBSD ports:<ulink
-      url="http://openports.se/search.php">http://openports.se/search.php
+      url="https://openports.pl">https://openports.pl
       </ulink></para>
 
       <para>etc.<indexterm>
@@ -92,51 +92,43 @@
 
         <para>Prepacked tarballs in .tar.gz and tar.bz2 format are available
         on the netatalk page on <ulink
-        url="http://netatalk.sourceforge.net/">sourceforge</ulink>.</para>
+        url="https://github.com/Netatalk/Netatalk">GitHub</ulink>.</para>
       </sect3>
 
       <sect3>
-        <title>Read-only Git</title>
+        <title>Git</title>
 
         <para>Downloading the Git repository can be done quickly and
-        easily.</para>
+        easily:</para>
 
         <orderedlist>
           <listitem>
             <para>Make sure you have Git installed. <command>which
             git</command> should produce a path to git.</para>
 
-            <screen><prompt>$&gt;</prompt> <userinput>which git</userinput>
+            <screen><prompt>$</prompt> <userinput>which git</userinput>
 <computeroutput>/usr/bin/git</computeroutput></screen>
-          </listitem>
-
-          <listitem>
-            <para>If you don't have one make a source directory.
-            <command>cd</command> to this directory.</para>
-
-            <screen><prompt>$&gt;</prompt> <userinput>mkdir /path/to/new/source/dir</userinput>
-<prompt>$&gt;</prompt> <userinput>cd /path/to/new/source/dir</userinput></screen>
           </listitem>
 
           <listitem>
             <para>Now get the source:</para>
 
-            <screen><prompt>$&gt;</prompt> <userinput>git clone git://netatalk.git.sourceforge.net/gitroot/netatalk/netatalk
+            <screen><prompt>$</prompt> <userinput>git clone -b main https://github.com/Netatalk/Netatalk.git netatalk-code
 </userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
 remote: Counting objects: 2503, done.
 ...
 </computeroutput></screen>
 
-            <para>This will create a local directory called "netatalk"
-            containing a complete and fresh copy of the whole Netatalk source
-            from the Git repository.</para>
+            <para>This will create a local directory called
+            <filename>netatalk-code</filename> containing a complete and fresh
+            copy of the whole Netatalk source from the Git repository.</para>
           </listitem>
 
           <listitem>
             <para>In order to keep your repository copy updated, occasionally
             run:</para>
 
-            <screen><prompt>$&gt;</prompt> <userinput>git pull</userinput></screen>
+            <screen><prompt>$</prompt> <userinput>git pull</userinput></screen>
           </listitem>
 
           <listitem>
@@ -145,11 +137,13 @@ remote: Counting objects: 2503, done.
             <filename>configure</filename> script required in the next
             step.</para>
 
-            <screen><prompt>$&gt;</prompt> <userinput>./bootstrap</userinput></screen>
+            <screen><prompt>$</prompt> <userinput>./bootstrap</userinput></screen>
           </listitem>
         </orderedlist>
 
-        <para></para>
+        <para>For futher information refer to the <ulink
+        url="https://github.com/Netatalk/Netatalk/wiki/Developer-Notes">Developer Notes</ulink>
+        wiki page.</para>
       </sect3>
     </sect2>
   </sect1>
@@ -159,6 +153,11 @@ remote: Counting objects: 2503, done.
 
     <sect2>
       <title>Prerequisites</title>
+
+      <para>The following pieces of software are likely to have a package
+      available for your OS distribution of choice. Please see the <ulink
+      url="https://github.com/Netatalk/Netatalk/wiki/Installation-Notes">
+      Installation Notes</ulink> wiki page as a starting point.</para>
 
       <sect3>
         <title>System requirements</title>
@@ -185,7 +184,7 @@ remote: Counting objects: 2503, done.
       <sect3>
         <title>Required third party software</title>
 
-        <para>Netatalk makes use of sleepycats' Berkeley DB<indexterm>
+        <para>Netatalk makes use of Berkeley DB<indexterm>
             <primary>BDB</primary>
 
             <secondary>Berkeley DB</secondary>
@@ -198,15 +197,6 @@ remote: Counting objects: 2503, done.
           </listitem>
         </itemizedlist>
 
-        <para>In case Berkeley DB is not installed on your system, please
-        download it from:</para>
-
-        <para><ulink
-        url="http://www.oracle.com/database/berkeley-db/index.html">
-        http://www.oracle.com/database/berkeley-db/index.html</ulink></para>
-
-        <para>and follow the <link linkend="build-bdb">installation
-        instructions</link>.</para>
       </sect3>
 
       <sect3>
@@ -223,13 +213,6 @@ remote: Counting objects: 2503, done.
             will be sent over the network in clear text. Libgcrypt is needed
             for DHX2. OpenSSL is needed for the older DHCAST128 (aka
             DHX).</para>
-
-            <para>Libgcrypt can be downloaded from: <ulink
-            url="http://directory.fsf.org/project/libgcrypt/">
-            http://directory.fsf.org/project/libgcrypt/</ulink>.</para>
-
-            <para>OpenSSL can be downloaded from: <ulink
-            url="http://www.openssl.org/">http://www.openssl.org/</ulink>.</para>
           </listitem>
 
           <listitem>
@@ -250,9 +233,6 @@ remote: Counting objects: 2503, done.
 
             <para>Mac OS 8.5 - Mac OS X 10.4 use SLP to locate AFP
             servers.</para>
-
-            <para>You can download OpenSLP from: <ulink
-            url="http://www.openslp.org/">http://www.openslp.org/</ulink>.</para>
           </listitem>
 
           <listitem>
@@ -263,17 +243,11 @@ remote: Counting objects: 2503, done.
             Avahi or mDNSResponder.</para>
 
             <para>Avahi is a freely-available implementation of Zeroconf.
-            Avahi must be build with DBUS support (
+            Avahi itself must be built with DBUS support (
               <userinput>--enable-dbus</userinput>).</para>
-
-            <para>You can download Avahi from: <ulink
-            url="http://www.avahi.org/">http://www.avahi.org/</ulink>.</para>
 
             <para>Starting with Netatalk 2.2.3, mDNSResponder is also available.
             </para>
-
-            <para>You can download mDNSResponder from: <ulink
-            url="http://developer.apple.com/bonjour/">http://developer.apple.com/bonjour/</ulink>.</para>
           </listitem>
 
           <listitem>
@@ -285,9 +259,6 @@ remote: Counting objects: 2503, done.
             <para>Security options are: access control per host, domain and/or
             service; detection of host name spoofing or host address spoofing;
             booby traps to implement an early-warning system.</para>
-
-            <para>TCP Wrappers can be downloaded from: <ulink
-            url="ftp://ftp.porcupine.org/pub/security">ftp://ftp.porcupine.org/pub/security</ulink>/</para>
           </listitem>
 
           <listitem>
@@ -306,9 +277,6 @@ remote: Counting objects: 2503, done.
             libraries that enable the local system administrator to choose how
             applications authenticate users.</para>
 
-            <para>You can get the Linux PAM documentation and sources from
-            <ulink
-            url="http://www.kernel.org/pub/linux/libs/pam/">http://www.kernel.org/pub/linux/libs/pam/</ulink>.</para>
           </listitem>
 
           <listitem>
@@ -319,9 +287,6 @@ remote: Counting objects: 2503, done.
             built in conversions for, like ISO-8859-1. On glibc systems,
             Netatalk can use the glibc provided iconv implementation.
             Otherwise you can use the GNU libiconv implementation.</para>
-
-            <para>You can download GNU libiconv from: <olink><ulink
-            url="http://www.gnu.org/software/libiconv/">http://www.gnu.org/software/libiconv/</ulink></olink>.</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -342,7 +307,7 @@ remote: Counting objects: 2503, done.
         automatically configure Netatalk for your operating system. If you
         have unusual needs, then you may wish to run</para>
 
-        <screen>$&gt; <userinput>./configure --help</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
 
         <para>to see what special options you can enable.</para>
 
@@ -350,10 +315,12 @@ remote: Counting objects: 2503, done.
 
         <itemizedlist>
           <listitem>
-            <para>--enable-[redhat-sysv/redhat-systemd/suse-sysv/suse-systemd/gentoo/netbsd/debian/systemd/fhs]</para>
+            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd/fhs]</para>
 
             <para>This option helps netatalk to determine where to install the
-            start scripts.</para>
+		start scripts. The <command>--enable-systemd</command> option is
+                cross-platform and should work with most contemporary Linux or *BSD
+                distributions that have adopted systemd.</para>
           </listitem>
 
           <listitem>
@@ -367,25 +334,25 @@ remote: Counting objects: 2503, done.
 
         <para>Now run configure with any options you need</para>
 
-        <screen><prompt>$&gt;</prompt> <userinput>./configure [arguments] [--with-bdb=/bdb/install/path]</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure [arguments] [--with-bdb=/bdb/install/path]</userinput></screen>
 
         <para>Configure will end up in an overview showing the settings the
         Netatalk Makefiles have been created with.</para>
 
         <para>If this step fails please visit the <ulink
-        url="http://netatalk.sourceforge.net/wiki/index.php/Troubleshooting">troubleshooting
+        url="https://github.com/Netatalk/Netatalk/wiki/Troubleshooting">troubleshooting
         guide</ulink>.</para>
 
         <para>Next, running</para>
 
-        <screen><prompt>$&gt;</prompt> <userinput>make</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>make</userinput></screen>
 
         <para>should produce the Netatalk binaries (this step can take several
         minutes to complete).</para>
 
         <para>When the process finished you can use</para>
 
-        <screen><prompt>$&gt;</prompt> <userinput>make install</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>make install</userinput></screen>
 
         <para>to install the binaries and documentation (must be done as
         "root" when using default locations).</para>
