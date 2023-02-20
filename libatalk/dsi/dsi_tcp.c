@@ -412,7 +412,7 @@ EC_CLEANUP:
  * @param inport     (r)  pointer to port string
  *
  * Creates listening AFP/DSI socket. If the parameter inaddress is NULL, then we listen
- * on the wildcard address, ie on all interfaces. That should mean listening on the IPv6
+ * on the wildcard address, i,e, on all interfaces. That should mean listening on the IPv6
  * address "::" on IPv4/IPv6 dual stack kernels, accepting both v4 and v6 requests.
  *
  * If the parameter inaddress is not NULL, then we only listen on the given address.

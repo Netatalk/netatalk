@@ -49,7 +49,7 @@
 
           <secondary>UNIX symlink</secondary>
         </indexterm> can be used on the server. Semantics are the same as for
-      eg NFS, ie they are not resolved on the server side but instead it's
+      e.g. NFS, i.e. they are not resolved on the server side but instead it's
       completely up to the client to resolve them, resulting in links that
       point somewhere inside the clients filesystem view.</para>
 
@@ -95,7 +95,7 @@ basedir regex = /home
         available whose path is <filename>/home/NAME</filename>.</para>
 
         <para>A more complex setup would be a server with a large amount of
-        user homes which are split across eg two different
+        user homes which are split across e.g. two different
         filesystems:<itemizedlist>
             <listitem>
               <para>/RAID1/homes</para>
@@ -895,7 +895,7 @@ uams_dhx.so -&gt; uams_dhx_pam.so
 uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         otherwise classic Unix passwords. The main advantage of using PAM is
         that one can integrate Netatalk in centralized authentication
-        scenarios, eg. via LDAP, NIS and the like. Please always keep in mind
+        scenarios, e.g. via LDAP, NIS and the like. Please always keep in mind
         that the protection of your user's login credentials in such scenarios
         also depends on the strength of encryption that the UAM in question
         supplies. So think about eliminating weak UAMs like "ClearTxt Passwrd"
@@ -1231,7 +1231,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         will you be able to see the ACLs, that's a result of how ACLs in OS X
         are designed. If you want to be able to display ACLs on the client,
         things get more involved as you must then setup both client and server
-        to be part on a authentication domain (directory service, eg LDAP,
+        to be part on a authentication domain (directory service, e.g. LDAP,
         OpenDirectory). The reason is, that in OS X ACLs are bound to UUIDs,
         not just uid's or gid's. Therefore afpd must be able to map every
         filesystem uid and gid to a UUID so that it can return the server side
@@ -1563,7 +1563,7 @@ aclmode = passthrough</screen>
 
       <para>In case the <command>dbus-daemon</command> binary is installed
       at the other path, you must use the
-      global option <option>dbus daemon</option> to point to the path, eg for
+      global option <option>dbus daemon</option> to point to the path, e.g. for
       Solaris with Tracker from OpenCSW: <screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
     </sect2>
 

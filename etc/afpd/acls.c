@@ -783,7 +783,7 @@ EC_CLEANUP:
 /*!
  * Map Darwin ACL to POSIX ACL.
  *
- * aclp must point to a acl_init'ed acl_t or an acl_t that can eg contain default ACEs.
+ * aclp must point to a acl_init'ed acl_t or an acl_t that can e.g. contain default ACEs.
  * Mapping pecularities:
  * - we create a default ace (which inherits to files and dirs) if either
      DARWIN_ACE_FLAGS_FILE_INHERIT or DARWIN_ACE_FLAGS_DIRECTORY_INHERIT is requested
@@ -1555,7 +1555,7 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     if (!s_path->st_valid)
         of_statdir(vol, s_path);
     if ( s_path->st_errno != 0 ) {
-        LOG(log_error, logtype_afpd, "afp_getacl: cant stat");
+        LOG(log_error, logtype_afpd, "afp_getacl: can't stat");
         return AFPERR_NOOBJ;
     }
 
@@ -1611,7 +1611,7 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     if (!s_path->st_valid)
         of_statdir(vol, s_path);
     if ( s_path->st_errno != 0 ) {
-        LOG(log_error, logtype_afpd, "afp_getacl: cant stat");
+        LOG(log_error, logtype_afpd, "afp_getacl: can't stat");
         return AFPERR_NOOBJ;
     }
 
@@ -1698,7 +1698,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     if (!s_path->st_valid)
         of_statdir(vol, s_path);
     if ( s_path->st_errno != 0 ) {
-        LOG(log_error, logtype_afpd, "afp_setacl: cant stat");
+        LOG(log_error, logtype_afpd, "afp_setacl: can't stat");
         return AFPERR_NOOBJ;
     }
     LOG(log_debug, logtype_afpd, "afp_setacl: unixname: %s", s_path->u_name);

@@ -54,7 +54,7 @@ static inline mode_t ea_header_mode(mode_t mode)
 {
     /* Same as ad_hf_mode(mode) */
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
-    /* Owner must be able to open, read and w-lock it, in order to chmod from eg 0000 -> 0xxxx*/
+    /* Owner must be able to open, read and w-lock it, in order to chmod from e.g. 0000 -> 0xxxx*/
     mode |= S_IRUSR | S_IWUSR;
     return mode;
 }
@@ -383,10 +383,10 @@ error:
  *
  * Creates EA header file and initialize ea->ea_data buffer.
  * Possibe race condition with other afpd processes:
- * we were called because header file didn't exist in eg. ea_open. We then
+ * we were called because header file didn't exist in e.g. ea_open. We then
  * try to create a file with O_CREAT | O_EXCL, but the whole process in not atomic.
  * What do we do then? Someone else is in the process of creating the header too, but
- * it might not have finished it. That means we cant just open, read and use it!
+ * it might not have finished it. That means we can't just open, read and use it!
  * We therefor currently just break with an error.
  * On return the header file is still r/w locked.
  */
@@ -680,7 +680,7 @@ int ea_open(const struct vol * restrict vol,
     ea->ea_flags = eaflags;
     ea->dirfd = -1;             /* no *at (cf openat) semantics by default */
 
-    /* Dont care for errors, eg when removing the file is already gone */
+    /* Dont care for errors, e.g. when removing the file is already gone */
     if (!stat(uname, &st) && S_ISDIR(st.st_mode))
         ea->ea_flags |=  EA_DIR;
 
@@ -853,7 +853,7 @@ int ea_openat(const struct vol * restrict vol,
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_afpd, "ea_openat: cant chdir back, exiting");
+            LOG(log_error, logtype_afpd, "ea_openat: can't chdir back, exiting");
             exit(EXITERR_SYS);
         }
     }
@@ -1367,7 +1367,7 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
     }
 
     if (dirfd != -1 && fchdir(cwd) != 0) {
-        LOG(log_error, logtype_afpd, "ea_deletefile: cant chdir back. exit!");
+        LOG(log_error, logtype_afpd, "ea_deletefile: can't chdir back. exit!");
         exit(EXITERR_SYS);
     }
 
@@ -1748,7 +1748,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
         eaname = (*ea.ea_entries)[count].ea_name;
         /*
          * Be careful with EA names from the EA header!
-         * Eg NFS users might have access to them, can inject paths using ../ or /.....
+         * E.g. NFS users might have access to them, can inject paths using ../ or /.....
          * FIXME:
          * Until the EA code escapes / in EA name requests from the client, these therefor wont work.
          */

@@ -112,7 +112,7 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
     BSTRING_STRIP_SLASH(fpath);
 
     /*
-     * Now we have eg:
+     * Now we have e.g.:
      *   fpath:   /Volume/netatalk/dir/bla
      *   volpath: /Volume/netatalk/
      * we want: "dir/bla"

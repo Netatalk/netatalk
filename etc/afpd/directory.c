@@ -77,7 +77,7 @@ struct path Cur_Path = {
 
 /*
  * dir_remove queues struct dirs to be freed here. We can't just delete them immeidately
- * eg in dircache_search_by_id, because a caller somewhere up the stack might be
+ * e.g. in dircache_search_by_id, because a caller somewhere up the stack might be
  * referencing it.
  * So instead:
  * - we mark it as invalid by setting d_did to CNID_INVALID (ie 0)
@@ -370,7 +370,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *r
  * 1. move cwd into parent dir (we're often already there, but not always)
  * 2. set struct path to the dirname
  * 3. in case of
- *    AFPERR_ACCESS: the dir is there, we just cant chdir into it
+ *    AFPERR_ACCESS: the dir is there, we just can't chdir into it
  *    AFPERR_NOOBJ: the dir was there when we stated it in cname, so we have a race
  *                  4. indicate there's no dir for this path
  *                  5. remove the dir
@@ -1048,8 +1048,8 @@ int dir_modify(const struct vol *vol,
  * @brief Resolve a catalog node name path
  *
  * 1. Evaluate path type
- * 2. Move to start dir, if we cant, it might eg because of EACCES, build
- *    path from dirname, so eg getdirparams has sth it can chew on. curdir
+ * 2. Move to start dir, if we can't, it might be e.g. because of EACCES, build
+ *    path from dirname, so e.g. getdirparams has sth it can chew on. curdir
  *    is dir parent then. All this is done in path_from_dir().
  * 3. Parse next cnode name in path, cases:
  * 4.   single "\0" -> do nothing
@@ -1195,7 +1195,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 return NULL;
         } else {
             /*
-             * CNID != 1, eg. most of the times we take this way.
+             * CNID != 1, e.g. most of the times we take this way.
              * Now check if current path-part is a file or dir:
              * o if it's dir we have to step into it
              * o if it's a file we expect it to be the last part of the requested path
@@ -1216,7 +1216,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                  * this will terminate clean in while (1) because len == 0,
                  * probably afp_createfile|dir
                  */
-                LOG(log_maxdebug, logtype_afpd, "cname('%s'): {leave-cnode ENOENT (possile create request): '%s'}",
+                LOG(log_maxdebug, logtype_afpd, "cname('%s'): {leave-cnode ENOENT (probably create request): '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
                 continue; /* 10 */
             }
@@ -1738,7 +1738,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 }
 
 /*
- * assume path == '\0' eg. it's a directory in canonical form
+ * assume path == '\0' e.g. it's a directory in canonical form
  */
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf )
 {

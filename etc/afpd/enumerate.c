@@ -86,12 +86,12 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 }
 
 /* ----------------------------- 
- * FIXME: 
+ * FIXME:
  * Doesn't work with dangling symlink
- * ie: 
+ * i.e.:
  * - Move a folder with a dangling symlink in the trash
  * - empty the trash
- * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams 
+ * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams
  * and the Mac doesn't try to call afp_delete!
  *
  * Another option for symlink

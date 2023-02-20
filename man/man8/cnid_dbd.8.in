@@ -181,7 +181,7 @@ exits\&. Default: 600\&. Set this to 0 to disable the timeout\&.
 .PP
 Note that the first version to appear
 \fIafter\fR
-Netatalk 2\&.1 ie Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\*(Aqt upgrade a 2\&.0\&.x version because that one didn\*(Aqt prepare the database\&.
+Netatalk 2\&.1 i\&.e\&. Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\*(Aqt upgrade a 2\&.0\&.x version because that one didn\*(Aqt prepare the database\&.
 .PP
 In order to update between older Netatalk releases using different BerkeleyDB library versions, follow this steps:
 .sp

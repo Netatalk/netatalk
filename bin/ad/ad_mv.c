@@ -284,7 +284,7 @@ static int do_move(const char *from, const char *to)
         }
 
         if (stat(from, &sb) != 0) {
-            SLOG("Cant stat %s: %s", to, strerror(errno));
+            SLOG("Can't stat %s: %s", to, strerror(errno));
             return -1;
         }
 
@@ -336,14 +336,14 @@ static int do_move(const char *from, const char *to)
         }
 
         if (stat(to, &sb) != 0) {
-            SLOG("Cant stat %s: %s", to, strerror(errno));
+            SLOG("Can't stat %s: %s", to, strerror(errno));
             return 1;
         }
 
         char *p = strdup(to);
         char *name = basename(p);
         if (cnid_update(dvolume.vol->v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
-            SLOG("Cant update CNID for: %s", to);
+            SLOG("Can't update CNID for: %s", to);
             return 1;
         }
         free(p);

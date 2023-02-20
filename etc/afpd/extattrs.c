@@ -182,11 +182,11 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
         }
 
-        /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
+        /* Now check for Resource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
+        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Resource fork size: %llu", uname, adp->ad_rlen);
 
         if (adp->ad_rlen > 0) {
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.ResourceFork.", uname);
             strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
             attrbuflen += strlen(ea_resourcefork) + 1;
         }

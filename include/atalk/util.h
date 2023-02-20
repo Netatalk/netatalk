@@ -5,7 +5,7 @@
  * Utility functions for these areas: \n
  * * sockets \n
  * * locking \n
- * * misc UNIX function wrappers, eg for getcwd
+ * * misc UNIX function wrappers, e.g. for getcwd
  */
 
 #ifndef _ATALK_UTIL_H

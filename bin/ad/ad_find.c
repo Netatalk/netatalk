@@ -112,7 +112,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     cnid_init();
 
     if (openvol(obj, srchvol, &vol) != 0)
-        ERROR("Cant open volume \"%s\"", srchvol);
+        ERROR("Can't open volume \"%s\"", srchvol);
 
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];

@@ -389,7 +389,7 @@ static int gss_logincont(void *obj,
      * username, encoding unspecified, null terminated C string,
      *   padded when the terminating null is an even numbered byte.
      *   The packet is formated such that the username begins on an
-     *   odd numbered byte. Eg if the username is 3 characters and the
+     *   odd numbered byte. E.g. if the username is 3 characters and the
      *   terminating null makes 4, expect to pad the the result.
      *   The encoding of this string is unknown.
      * ticket length (uint16_t)

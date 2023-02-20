@@ -116,7 +116,7 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
     if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
         return -1;
     if (dbif_txn_commit(dbd) != 1) {
-        LOG(log_error, logtype_cnid, "dbif_init_rootinfo: cant commit txn");
+        LOG(log_error, logtype_cnid, "dbif_init_rootinfo: can't commit txn");
         return -1;
     }
 
@@ -591,7 +591,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
                                       dbd->db_table[i].type,
                                       dbd->db_table[i].openflags,
                                       0664) < 0) {
-            LOG(log_error, logtype_cnid, "Cant open database");
+            LOG(log_error, logtype_cnid, "Can't open database");
             return -1;
         }
 

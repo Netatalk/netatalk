@@ -47,7 +47,7 @@ static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
  * @brief set or unset non-blocking IO on a fd
  *
  * @param     fd         (r) File descriptor
- * @param     cmd        (r) 0: disable non-blocking IO, ie block\n
+ * @param     cmd        (r) 0: disable non-blocking IO, i.e. block\n
  *                           <>0: enable non-blocking IO
  *
  * @returns   0 on success, -1 on failure
@@ -281,7 +281,7 @@ exit:
 /*!
  * @brief convert an IPv4 or IPv6 address to a static string using inet_ntop
  *
- * IPv6 mapped IPv4 addresses are returned as IPv4 addreses eg
+ * IPv6 mapped IPv4 addresses are returned as IPv4 addreses e.g.
  * ::ffff:10.0.0.0 is returned as "10.0.0.0".
  *
  * @param  sa        (r) pointer to an struct sockaddr
@@ -344,7 +344,7 @@ unsigned int getip_port(const struct sockaddr  *sa)
  *
  * Modifies IP address in sa->sin[6]_addr-s[6]_addr. The caller is responsible
  * for passing a value for mask that is sensible to the passed address,
- * eg 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
+ * e.g. 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
  * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
  *
  * @param  ai        (rw) pointer to an struct sockaddr

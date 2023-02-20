@@ -46,13 +46,13 @@
  *
  * The directory cache caches directories and files(!). The main reason for having the cache
  * is avoiding recursive walks up the path, querying the CNID database each time, when
- * we have to calculate the location of eg directory with CNID 30, which is located in a dir with
+ * we have to calculate the location of e.g. directory with CNID 30, which is located in a dir with
  * CNID 25, next CNID 20 and then CNID 2 (the volume root as per AFP spec).
  * If all these dirs where in the cache, each database look up can be avoided. Additionally there's
  * the element "fullpath" in struct dir, which is used to avoid the recursion in any case. Wheneveer
  * a struct dir is initialized, the fullpath to the directory is stored there.
  *
- * In order to speed up the CNID query for files too, which eg happens when a directory is enumerated,
+ * In order to speed up the CNID query for files too, which e.g. happens when a directory is enumerated,
  * files are stored too in the dircache. In order to differentiate between files and dirs, we set
  * the flag DIRF_ISFILE in struct dir.d_flags for files.
  *
@@ -239,7 +239,7 @@ static unsigned long queue_count;
  *
  * The default is to remove the 256 oldest entries from the cache.
  * 1. Get the oldest entry
- * 2. If it's in use ie open forks reference it or it's curdir requeue it,
+ * 2. If it's in use i.e. open forks reference it or it's curdir requeue it,
  *    don't remove it
  * 3. Remove the dir from the main cache and the didname index
  * 4. Free the struct dir structure and all its members

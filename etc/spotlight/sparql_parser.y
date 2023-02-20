@@ -28,7 +28,7 @@
   static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
   static time_t isodate2unix(const char *s);
  
- /* global vars, eg needed by the lexer */
+ /* global vars, e.g. needed by the lexer */
   slq_t *ssp_slq;
 
   /* local vars */
@@ -89,7 +89,7 @@ BOOL {
 	/*
 	 * We can't properly handle these in expressions, fortunately this
 	 * is probably only ever used by OS X as sole element in an
-	 * expression ie "False" (when Finder window selected our share
+	 * expression i.e. "False" (when Finder window selected our share
 	 * but no search string entered yet). Packet traces showed that OS
 	 * X Spotlight server then returns a failure (ie -1) which is what
 	 * we do here too by calling YYABORT.

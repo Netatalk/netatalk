@@ -497,11 +497,11 @@ static int ad_ls_r(char *path, afpvol_t *vol)
 
     /* Its a dir: chdir to it remembering where we started */
     if ((cwd = open(".", O_RDONLY)) == -1) {
-        perror("Cant open .");
+        perror("Can't open .");
         return -1;
     }
     if (chdir(path) != 0) {
-        perror("Cant chdir");
+        perror("Can't chdir");
         close(cwd);
         return -1;
     }
