@@ -206,7 +206,7 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  * Change mode of file preserving existing explicit ACEs
  *
  * nfsv4_chmod
- * (1) reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on eg UFS fs
+ * (1) reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs
  * (2) removes all trivial ACEs from the ACL by calling strip_trivial_aces(), possibly
  *     leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
  * (3) calls chmod() with mode, we're done if step (1) returned 0 for noaces
@@ -281,7 +281,7 @@ exit:
 #ifdef HAVE_POSIX_ACLS
 
 /* This is a workaround for chmod() on filestystems supporting Posix 1003.1e draft 17
- * compliant ACLs. For objects with extented ACLs, eg objects with an ACL_MASK entry,
+ * compliant ACLs. For objects with extented ACLs, e.g. objects with an ACL_MASK entry,
  * chmod() manipulates ACL_MASK instead of ACL_GROUP_OBJ. As OS X isn't aware of
  * this behavior calling FPSetFileDirParms may lead to unpredictable results. For
  * more information see section 23.1.2 of Posix 1003.1e draft 17.

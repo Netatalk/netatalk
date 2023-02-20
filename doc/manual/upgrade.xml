@@ -120,7 +120,7 @@
 
       <para>As these days the only applications making use of Resource Forks
       are Adobe Photoshop (image preview) and Postscript Type 1 fonts, even on
-      eg Linux you’ll get rid of 99% of any extra Netatalk AppleDouble files
+      e.g. Linux you’ll get rid of 99% of any extra Netatalk AppleDouble files
       (and folders).</para>
     </sect2>
 

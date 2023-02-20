@@ -220,7 +220,7 @@ int ipc_server_read(server_child_t *children, int fd)
 
 	case IPC_DISCOLDSESSION:
         if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
-            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldnt read DSI id: %s",
+            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldn't read DSI id: %s",
                  ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
             return -1;
         }

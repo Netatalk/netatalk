@@ -334,7 +334,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
 
     /*
      * According to AFP 3.3 spec we should not return anything,
-     * but eg 10.5.8 server still returns the numbers of hours
+     * but e.g. 10.5.8 server still returns the numbers of hours
      * the server is keeping the sessino (ie max sleeptime).
      */
     data = obj->options.sleep / 120; /* hours */

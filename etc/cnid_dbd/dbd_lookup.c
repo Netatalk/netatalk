@@ -28,7 +28,7 @@ spec.
 1) UNIX rename (via mv) or inode reusage(!)
 -------------------------------------------
 Name is possibly changed (rename case) but inode is the same.
-We should try to keep the CNID, but we cant, because inode reusage is probably
+We should try to keep the CNID, but we can't, because inode reusage is probably
 much to frequent.
 
 rename:
@@ -70,7 +70,7 @@ a new CNID.
 If we got a hint and hint matches the CNID from devino we keep it and update
 the record.
 
-3) Restore from backup ie change of inode number -- or emacs
+3) Restore from backup i.e. change of inode number -- or emacs
 ------------------------------------------------------------
 
 15  2   f   1   1       file

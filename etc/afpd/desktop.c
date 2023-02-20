@@ -3,7 +3,7 @@
  *
  * bug:
  * afp_XXXcomment are (the only) functions able to open
- * a ressource fork when there's no data fork, eg after
+ * a resource fork when there's no data fork, e.g. after
  * it was removed with samba.
  */
 

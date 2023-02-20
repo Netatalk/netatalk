@@ -144,7 +144,7 @@ typedef enum {
  */
 
 struct ea_entry {
-    size_t       ea_namelen; /* len of ea_name without terminating 0 ie. strlen(ea_name)*/
+    size_t       ea_namelen; /* len of ea_name without terminating 0 i.e. strlen(ea_name)*/
     size_t       ea_size;    /* size of EA*/
     char         *ea_name;   /* name of the EA */
 };

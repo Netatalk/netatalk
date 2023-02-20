@@ -283,7 +283,7 @@ static int moveandrename(const AFPObj *obj,
      *   b) the oldname (renameat is available)
      * we are in the dest folder so we need to use 
      *   a) oldunixname for ad_open
-     *   b) fchdir sdir_fd before eg ad_open or use *at functions where appropriate
+     *   b) fchdir sdir_fd before e.g. ad_open or use *at functions where appropriate
      */
 
     if (sdir_fd != -1) {

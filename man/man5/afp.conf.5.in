@@ -264,7 +264,7 @@ Append @DOMAIN to username when authenticating\&. Useful in Active Directory env
 .PP
 admin auth user = \fIuser\fR \fB(G)\fR
 .RS 4
-Specifying eg "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
+Specifying e\%.g\&. "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
 \fBadmin auth user\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
 \fBadmin auth user\fR, you can authenticate as any other user\&.
 .RE
@@ -291,7 +291,7 @@ These are required if the server supports the Kerberos 5 authentication UAM\&.
 .PP
 nt domain = \fIDOMAIN\fR \fB(G)\fR, nt separator = \fISEPARATOR\fR \fB(G)\fR
 .RS 4
-Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the available and active UAM authentication modules\&.
+Use for e\&.g\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the available and active UAM authentication modules\&.
 .RE
 .PP
 save password = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -544,7 +544,7 @@ basedir regex = \fIregex\fR \fB(H)\fR
 .RS 4
 Regular expression which matches the parent directory of the user homes\&. If
 \fBbasedir regex\fR
-contains symlink, you must set the canonicalized absolute path\&. In the simple case this is just a path ie
+contains symlink, you must set the canonicalized absolute path\&. In the simple case this is just a path i\&.e\&.
 \fBbasedir regex = /home\fR
 .RE
 .PP
@@ -1010,7 +1010,7 @@ ACLs are additionally mapped to the UNIX mode of the filesystem object\&.
 .RE
 .RE
 .PP
-If you want to be able to display ACLs on the client, you must setup both client and server as part on a authentication domain (directory service, eg LDAP, Open Directory, Active Directory)\&. The reason is, in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor Netatalk must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&.
+If you want to be able to display ACLs on the client, you must setup both client and server as part on a authentication domain (directory service, e\&.g\&. LDAP, Open Directory, Active Directory)\&. The reason is, in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor Netatalk must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&.
 .PP
 Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
 .PP
@@ -1113,7 +1113,7 @@ and
 .PP
 string
 .RS 4
-UUID is a string, use with eg OpenDirectory\&.
+UUID is a string, use with e\&.g\&. OpenDirectory\&.
 .RE
 .PP
 ms\-guid
@@ -1331,7 +1331,7 @@ Allows certain users and groups to have read/write access to a share\&. This fol
 .PP
 veto files = \fIvetoed names\fR \fB(V)\fR
 .RS 4
-hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, eg\&. "veto files = veto1/", "veto files = veto1/veto2/"\&.
+hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, e\.&g\&. "veto files = veto1/", "veto files = veto1/veto2/"\&.
 .RE
 .SS "Volume options"
 .PP
@@ -1364,7 +1364,7 @@ In spite of being case sensitive as a matter of fact, netatalk 3\&.1\&.3 and ear
 .PP
 cnid dev = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
 .RS 4
-Whether to use the device number in the CNID backends\&. Helps when the device number is not constant across a reboot, eg cluster, \&.\&.\&.
+Whether to use the device number in the CNID backends\&. Helps when the device number is not constant across a reboot, e\&.g\&. cluster, \&.\&.\&.
 .RE
 .PP
 convert appledouble = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR
@@ -1437,7 +1437,7 @@ A non\-zero return code from root_preexec closes the volume immediately, prevent
 .PP
 search db = \fIBOOLEAN\fR (default: \fIno\fR) \fB(V)\fR
 .RS 4
-Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, ie Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
+Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, i\&.e\&. Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
 .RE
 .PP
 stat vol = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(V)\fR

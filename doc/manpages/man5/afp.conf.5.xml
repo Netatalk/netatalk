@@ -287,7 +287,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Specifying eg "<option>admin auth user = root</option>"
+            <para>Specifying e.g. "<option>admin auth user = root</option>"
             whenever a normal user login fails, afpd will try to authenticate
             as the specified <option>admin auth user</option>. If this
             succeeds, a normal session is created for the original connecting
@@ -354,7 +354,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Use for eg. winbind authentication, prepends both strings
+            <para>Use for e.g. winbind authentication, prepends both strings
             before the username from login and then tries to authenticate with
             the result through the available and active UAM authentication
             modules.</para>
@@ -824,7 +824,7 @@
             <para>Regular expression which matches the parent directory of the
             user homes. If <option>basedir regex</option> contains symlink,
             you must set the canonicalized absolute path. In the simple case
-            this is just a path ie <option>basedir regex =
+            this is just a path i.e. <option>basedir regex =
             /home</option></para>
           </listitem>
         </varlistentry>
@@ -1455,7 +1455,7 @@
 
       <para>If you want to be able to display ACLs on the client, you must
       setup both client and server as part on a authentication domain
-      (directory service, eg LDAP, Open Directory, Active Directory). The
+      (directory service, e.g. LDAP, Open Directory, Active Directory). The
       reason is, in OS X ACLs are bound to UUIDs, not just uid's or gid's.
       Therefor Netatalk must be able to map every filesystem uid and gid to a
       UUID so that it can return the server side ACLs which are bound to UNIX
@@ -1641,7 +1641,7 @@
                   <term>string</term>
 
                   <listitem>
-                    <para>UUID is a string, use with eg OpenDirectory.</para>
+                    <para>UUID is a string, use with e.g. OpenDirectory.</para>
                   </listitem>
                 </varlistentry>
 
@@ -2000,7 +2000,7 @@
           <listitem>
             <para>hide files and directories,where the path matches one of the
             '/' delimited vetoed names. The veto string must always be
-            terminated with a '/', eg. "veto files = veto1/", "veto files =
+            terminated with a '/', e.g. "veto files = veto1/", "veto files =
             veto1/veto2/".</para>
           </listitem>
         </varlistentry>
@@ -2046,7 +2046,7 @@
 
           <listitem>
             <para>Whether to use the device number in the CNID backends. Helps
-            when the device number is not constant across a reboot, eg
+            when the device number is not constant across a reboot, e.g.
             cluster, ...</para>
           </listitem>
         </varlistentry>
@@ -2165,7 +2165,7 @@
 
           <listitem>
             <para>Use fast CNID database namesearch instead of slow recursive
-            filesystem search. Relies on a consistent CNID database, ie Samba
+            filesystem search. Relies on a consistent CNID database, i.e. Samba
             or local filesystem access lead to inaccurate or wrong results.
             Works only for "dbd" CNID db volumes.</para>
           </listitem>

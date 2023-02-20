@@ -166,7 +166,7 @@ int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
      * fork may reference the adouble handle with an open fd for the
      * file, which means we would only delete the directory entry, not
      * the file. Subsequently all code that works with fork handles
-     * finds the fork open, so eg flushing a fork (ad_flush()) will
+     * finds the fork open, so e.g. flushing a fork (ad_flush()) will
      * recreate ._ files.  The correct place to delete 0 byte sized
      * resource forks is in of_closefork().
      */

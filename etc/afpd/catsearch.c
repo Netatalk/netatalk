@@ -600,7 +600,7 @@ static int catsearch(const AFPObj *obj,
             switch (S_IFMT & path.st.st_mode) {
             case S_IFDIR:
 				/* here we can short cut 
-				   ie if in the same loop the parent dir wasn't in the cache
+				   i.e. if in the same loop the parent dir wasn't in the cache
 				   ALL dirsearch_byname will fail.
 				*/
                 unlen = strlen(path.u_name);
