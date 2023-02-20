@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 #endif
 /*
   FIXME: this doesn't work although it should. "//" get translated to \000 \000 at means ".."
-  ie this should getfiledirparms for DIRDID_ROOT_PARENT -- at least afair!
+  i.e. this should getfiledirparms for DIRDID_ROOT_PARENT -- at least afair!
     TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, "//"), 0);
 */
 #if 0

@@ -309,7 +309,7 @@ remote: Counting objects: 2503, done.
 
         <para>The tracker packages are found via pkg-config, you may have to
         pass the version suffix as you may have a newer version installed then
-        the default 0.12, eg</para>
+        the default 0.12, e.g.</para>
 
         <screen><prompt>$ </prompt><userinput>pkg-config --list-all | grep tracker
 </userinput>tracker-extract-0.16  tracker-extract - Tracker : A library to develop metadata extractors for 3rd party file types.

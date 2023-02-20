@@ -216,7 +216,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
              * on dev:inode
              *   - leftover should have been delete before.
              *   - a second process already updated the db
-             *   - it's a new file eg our file is already deleted and replaced
+             *   - it's a new file e.g. our file is already deleted and replaced
              * on did:name leftover
             */
             if (cnid_cdb_update(cdb, hint, st, did, name, len)) {

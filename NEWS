@@ -203,13 +203,13 @@ Changes in 3.1.2
 Changes in 3.1.1
 ================
 * FIX: Add asprint() compatibility function for systems lacking it
-* FIX: Fix ressource fork name conversion. Bug #534.
+* FIX: Fix resource fork name conversion. Bug #534.
 * FIX: Fix a bug where only the first configured UAM was loaded.
        Bug #537.
 * UPD: Add support for AFP 3.4. From FR #85.
 * FIX: Registering with mDNS crashed. Bug #540
 * FIX: Saving from applications like Photoshop may fail, because
-       removing the ressource fork AppleDouble file failed. Bug #542.
+       removing the resource fork AppleDouble file failed. Bug #542.
 * FIX: dbd: remove orphaned ._ AppleDouble files. Bug #549.
 * NEW: afpd: Automatic conversion of ._ AppleDouble files
        created by OS X. Bug #550.
@@ -240,7 +240,7 @@ Changes in 3.0.7
 * FIX: Workaround for a problem which cannot be advertized by Avahi. Bug #541.
 * FIX: Registering with mDNS crashed. Bug #540
 * FIX: Saving from applications like Photoshop may fail, because
-       removing the ressource fork AppleDouble file failed. Bug #542.
+       removing the resource fork AppleDouble file failed. Bug #542.
 * FIX: macusers showed root user. Bug #495.
 * UPD: Add file pathname to logmessage parse_entries: bogus eid. FR#87.
 
@@ -291,7 +291,7 @@ Changes in 3.0.4
        metadata EA. Check for malformed metadata EAs and delete them.
        Fixes bug #510.
 * FIX: Fix an issue with filenames containing non-ASCII characters that
-       lead to a failure setting the size of a files ressource fork.
+       lead to a failure setting the size of a files resource fork.
        This affected application like Adobe Photoshop where saving
        files may fail. Fixes bug #511.
 * UPD: Enhance ACL mapping, change global ACL option 'map acls' to take
@@ -341,13 +341,13 @@ Changes in 3.0.3
 * UPD: Reload groups when reloading volumes. FR #71.
 * FIX: Attempt to read read-only ._ rfork results in disconnect.
        Fixes bug #502.
-* FIX: File's ressource fork can't be read if metadata EA is missing.
+* FIX: File's resource fork can't be read if metadata EA is missing.
        Fixes bug #501.
 * FIX: Conversion from adouble v2 to ea for directories.
        Fixes bug #500.
 * FIX: Error messages when mounting read-only filesystems.
        Fixes bug #504.
-* FIX: Permissions of ._ AppleDouble ressource fork after conversion
+* FIX: Permissions of ._ AppleDouble resource fork after conversion
        from v2 to ea.
        Fixes bug #505.
 * UPD: Use FreeBSD sendfile() capability to send protocol header.
@@ -524,7 +524,7 @@ Changes in 2.2.3
 * NEW: afpd: new LDAP config option ldap_uuid_string
 * UPD: based on Unicode 6.1.0
 * UPD: experimental systemd service files: always run both afpd and cnid_metad
-* UPD: afpd: Ensure our umask is not altered by eg pam_umask
+* UPD: afpd: Ensure our umask is not altered by e.g. pam_umask
 * UPD: afpd: Use GSS_C_NO_NAME as server principal when Kerberos options -fqdn
        and -krb5service are not set, from Jamie Gilbertson
 * UPD: afpd: Changed behaviour for TimeMachine volumes in case there's a problem
@@ -538,7 +538,7 @@ Changes in 2.2.3
        NetAFP Bug ID #16
 * FIX: afpd: Close IPC fds in afpd session child inherited from the afpd
        master process
-* FIX: dbd: Don't remove BerkeleyDB if it's still in use by eg cnid_dbd, fixes
+* FIX: dbd: Don't remove BerkeleyDB if it's still in use by e.g. cnid_dbd, fixes
        bug introduced in 2.2.2
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
 * FIX: Zeroconf could not advertise non-ASCII time machine volume name
@@ -546,7 +546,7 @@ Changes in 2.2.3
 Changes in 2.2.2
 ================
 
-* NEW: afpd: New option "adminauthuser". Specifying eg "-adminauthuser root"
+* NEW: afpd: New option "adminauthuser". Specifying e.g. "-adminauthuser root"
        whenever a normal user login fails, afpd tries to authenticate as
        the specified adminauthuser. If this succeeds, a normal session is
        created for the original connecting user. Said differently: if you
@@ -616,7 +616,7 @@ Changes in 2.2.1
 * FIX: afpd: return correct user/group type when mapping UUIDs to names
 * FIX: afpd: for directories add DARWIN_ACE_DELETE ACE
        if DARWIN_ACE_ADD_SUBDIRECTORY is set
-* FIX: afpd: afpd crashed when it failed to register with Avahi because eg
+* FIX: afpd: afpd crashed when it failed to register with Avahi because e.g.
        user service registration is disabled in the Avahi config
 * FIX: dbd: function checking and removing malformed ad:ea header files failed
        to chdir back to the original working directory
@@ -754,7 +754,7 @@ Changes in 2.1.6
 
 * FIX: afpd: Fix for LDAP user cache corruption
 * FIX: afpd: Fix for not shown ACLs for when filesyem uid or gid
-       couldn't be resolved because (eg deleted users/groups)
+       couldn't be resolved because (e.g. deleted users/groups)
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
 * FIX: Solaris: configure script failed to enable DDP module
@@ -769,7 +769,7 @@ Changes in 2.1.5
 * UPD: afpd: support newlines in -loginmesg with \n escaping syntax
 * UPD: afpd: support for changed chmod semantics on ZFS with ACLs
        in onnv145+
-* FIX: afpd: fix leaking ressource when moving objects on the server
+* FIX: afpd: fix leaking resource when moving objects on the server
 * FIX: afpd: backport Solaris 10 compatibilty fix from 2.2: don't use
        SO_SNDTIMEO/SO_RCVTIMEO, use non-blocking IO and select instead.
 * FIX: afpd: misaligned memory access on Sparc in ad_setattr, fixes
@@ -811,7 +811,7 @@ Changes in 2.1.2
 * UPD: afpd: don't and permissions with parent folder when creating new
        directories on "upriv" volumes.
 * UPD: afpd: use 'afpserver@fqdn' instead of 'afpserver/fqdn@realm'.
-       Prevents a crash in older GNU GSSAPI libs on eg. CentOS 5.x.
+       Prevents a crash in older GNU GSSAPI libs on e.g. CentOS 5.x.
  
 Changes in 2.1.1
 ================
@@ -891,7 +891,7 @@ Changes in 2.1-beta1
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
 * FIX: initscripts installation now correctly uses autoconf paths,
-       ie they're installed to --sysconfdir.
+       i.e. they're installed to --sysconfdir.
 * FIX: UTF-8 volume name length
 * FIX: atalkd: workaround for broken Linux 2.6 AT kernel module:
        Linux 2.6 sends broadcast queries to the first available socket
@@ -925,7 +925,7 @@ Changes in 2.0.4
        'perm' value OR with the client requested permissions. (help with OSX 10.5
        strange permissions).
        Make dot files visible by default with 'usedots', use 'invisibledots' 
-       for keeping the old behavior, ie for OS9 (OSX hide dot files on its
+       for keeping the old behavior, i.e. for OS9 (OSX hide dot files on its
        own).
 * NEW: afpd: volume options allow_hosts/denied hosts
 * NEW: afpd: volume options dperm/fperm default directory and file

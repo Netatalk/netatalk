@@ -253,7 +253,7 @@ int main(int argc, char **argv)
     vol->v_cdb = cnid_open(vol, vol->v_cnidscheme,
                            vol->v_flags & AFPVOL_NODEV ? CNID_FLAG_NODEV : 0);
     if (vol->v_cdb == NULL) {
-        dbd_log(LOGSTD, "Cant initialize CNID database connection for %s", vol->v_path);
+        dbd_log(LOGSTD, "Can't initialize CNID database connection for %s", vol->v_path);
         exit(EXIT_FAILURE);
     }
 

@@ -393,7 +393,7 @@ static int check_addir(int volroot)
 
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
         if ((lstat(".", &st)) != 0) {
-            dbd_log( LOGSTD, "Couldnt stat %s: %s", cwdbuf, strerror(errno));
+            dbd_log( LOGSTD, "Couldn't stat %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
         chown(ADv2_DIRNAME, st.st_uid, st.st_gid);
@@ -776,16 +776,16 @@ static int dbd_readdir(int volroot, cnid_t did)
         /**************************************************************************
           Recursion
         **************************************************************************/
-        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we cant enter recursion */
+        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we can't enter recursion */
             strcat(cwdbuf, "/");
             strcat(cwdbuf, name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
             if (-1 == (cwd = open(".", O_RDONLY))) {
-                dbd_log( LOGSTD, "Cant open directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log( LOGSTD, "Can't open directory '%s': %s", cwdbuf, strerror(errno));
                 continue;
             }
             if (0 != chdir(name)) {
-                dbd_log( LOGSTD, "Cant chdir to directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log( LOGSTD, "Can't chdir to directory '%s': %s", cwdbuf, strerror(errno));
                 close(cwd);
                 continue;
             }

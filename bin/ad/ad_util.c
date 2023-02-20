@@ -127,7 +127,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     if ((vol->vol->v_cdb = cnid_open(vol->vol,
                                      "dbd",
                                      flags)) == NULL)
-        ERROR("Cant initialize CNID database connection for %s", vol->vol->v_path);
+        ERROR("Can't initialize CNID database connection for %s", vol->vol->v_path);
 
     cnid_getstamp(vol->vol->v_cdb,
                   vol->db_stamp,

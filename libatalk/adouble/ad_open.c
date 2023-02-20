@@ -2060,7 +2060,7 @@ EC_CLEANUP:
 /*!
  * @brief open metadata, possibly as root
  *
- * Return only metadata but try very hard ie at first try as user, then try as root.
+ * Return only metadata but try very hard i.e. at first try as user, then try as root.
  *
  * @param name  name of file/dir
  * @param flags ADFLAGS_DIR: name is a directory \n
@@ -2109,7 +2109,7 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     if (dirfd != -1) {
 
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_ad, "ad_openat: cant chdir back, exiting");
+            LOG(log_error, logtype_ad, "ad_openat: can't chdir back, exiting");
             exit(EXITERR_SYS);
         }
     }
@@ -2192,7 +2192,7 @@ int ad_openat(struct adouble  *ad,
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            AFP_PANIC("ad_openat: cant chdir back");
+            AFP_PANIC("ad_openat: can't chdir back");
         }
     }
 

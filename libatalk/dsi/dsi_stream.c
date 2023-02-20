@@ -72,7 +72,7 @@ static int dsi_peek(DSI *dsi)
 
     while (1) {
         if (dsi->socket == -1)
-            /* eg dsi_disconnect() might have disconnected us */
+            /* e.g. dsi_disconnect() might have disconnected us */
             return -1;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
@@ -252,7 +252,7 @@ static void unblock_sig(DSI *dsi)
  *
  * @returns  0 if successfully entered disconnected state
  *          -1 if ppid is 1 which means afpd master died
- *             or euid == 0 ie where still running as root (unauthenticated session)
+ *             or euid == 0 i.e. where still running as root (unauthenticated session)
  */
 int dsi_disconnect(DSI *dsi)
 {

@@ -362,7 +362,7 @@ static int check_vol_acl_support(const struct vol *vol)
  * This get's called from readvolfile with
  * path = NULL, volname = NULL for xlating the volumes path
  * path = path, volname = NULL for xlating the volumes name
- * ... and from volumes options parsing code when xlating eg dbpath with
+ * ... and from volumes options parsing code when xlating e.g. dbpath with
  * path = path, volname = volname
  *
  * Using this information we can reject xlation of any variable depeninding on a login
@@ -593,7 +593,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
  * Get option string from config, use default value if not set
  *
  * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name ie wo vars expanded)
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
  * @param opt     (r) option
  * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
  * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
@@ -616,7 +616,7 @@ static const char *getoption(const dictionary *conf, const char *vol, const char
  * Get boolean option from config, use default value if not set
  *
  * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name ie wo vars expanded)
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
  * @param opt     (r) option
  * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
  * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
@@ -643,7 +643,7 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
  * "vdg" means volume, default section or global
  *
  * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name ie wo vars expanded)
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
  * @param opt     (r) option
  * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
  * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
@@ -1099,7 +1099,7 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_qfd = -1;
 #endif /* __svr4__ */
 
-    /* os X start at 1 and use network order ie. 1 2 3 */
+    /* os X start at 1 and use network order i.e. 1 2 3 */
     lastvid++;
     if (lastvid == UINT16_MAX) {
         LOG(log_error, logtype_default, "creatvol(\"%s\"): exceeded maximum number of volumes",
@@ -1787,7 +1787,7 @@ EC_CLEANUP:
  * Path may be absolute or relative. Ordinary volume structs are created when
  * the ini config is initially parsed (load_volumes()), but user volumes are
  * as load_volumes() only can create the user volume of the logged in user
- * in an AFP session in afpd, but not when called from eg cnid_metad or dbd.
+ * in an AFP session in afpd, but not when called from e.g. cnid_metad or dbd.
  * Both cnid_metad and dbd thus need a way to lookup and create struct vols
  * for user home by path. This is what this func does as well.
  *
