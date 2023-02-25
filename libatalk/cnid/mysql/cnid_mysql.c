@@ -848,7 +848,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     /* Initialize and connect to MySQL server */
     EC_NULL( db->cnid_mysql_con = mysql_init(NULL) );
-    my_bool my_recon = true;
+    bool my_recon = true;
     EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_RECONNECT, &my_recon) );
     int my_timeout = 600;
     EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT, &my_timeout) );
