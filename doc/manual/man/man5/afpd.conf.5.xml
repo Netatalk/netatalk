@@ -684,7 +684,7 @@
         <term>-[no]icon</term>
 
         <listitem>
-          <para>[Don't] Use the platform-specific icon. Recent Mac OS don't display it any longer.</para>
+          <para>[Don't] Use the Netatalk icon for mounted volumes. Later Mac OS versions ignores this.</para>
         </listitem>
       </varlistentry>
 

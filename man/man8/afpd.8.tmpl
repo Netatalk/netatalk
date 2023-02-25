@@ -37,7 +37,7 @@ afpd \- Apple Filing Protocol daemon
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR
-provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time from /etc/rc\&.
+provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time from /etc/rc or as a systemd service\&.
 .PP
 :ETCDIR:/afpd\&.conf
 is the configuration file used by
@@ -111,10 +111,10 @@ Print help and exit\&.
 .PP
 \-I
 .RS 4
-Use a platform specific icon\&. (Equivalent to
+Use the Netatalk icon for mounted volumes\&. (Equivalent to
 \fB\-icon\fR
 in
-afpd\&.conf\&.) (Recent Mac OS don\*(Aqt display it\&.)
+afpd\&.conf\&.) (Later versions of Mac OS ignores this\&.)
 .RE
 .PP
 \-f \fIdefaultvolumes\fR
