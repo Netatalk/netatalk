@@ -61,7 +61,7 @@
 
     <para><command>afpd</command> provides an Apple Filing Protocol (AFP)
     interface to the Unix file system. It is normally started at boot time
-    from /etc/rc.</para>
+    from /etc/rc or as a systemd service.</para>
 
     <para><filename>:ETCDIR:/afpd.conf</filename> is the configuration file
     used by <command>afpd</command> to determine the behavior and
@@ -161,9 +161,9 @@
         <term>-I</term>
 
         <listitem>
-          <para>Use a platform specific icon. (Equivalent to
+          <para>Use the Netatalk icon for mounted volumes. (Equivalent to
           <option>-icon</option> in <filename>afpd.conf</filename>.)
-          (Recent Mac OS don't display it.)</para>
+          (Later versions of Mac OS ignores this.)</para>
         </listitem>
       </varlistentry>
 
