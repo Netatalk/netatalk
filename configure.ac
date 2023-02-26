@@ -189,20 +189,17 @@ AC_ARG_WITH(cracklib,
 AC_MSG_CHECKING([for cracklib support])
 AC_MSG_RESULT([$netatalk_cv_with_cracklib])
 
-netatalk_cv_ddp_enabled=no
+netatalk_cv_ddp_enabled=yes
 AC_MSG_CHECKING([whether to enable DDP])
 AC_ARG_ENABLE(ddp,
 	[  --enable-ddp            enable DDP (AppleTalk)],[
-	if test "$enableval" = "yes"; then 
-		AC_MSG_RESULT([yes])
-		netatalk_cv_ddp_enabled=yes
-	else
-		AC_MSG_RESULT([yes])
-		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-	fi
-	],[
+	if test "$enableval" = "no"; then
 		AC_MSG_RESULT([no])
 		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
+		netatalk_cv_ddp_enabled=no
+	fi
+	],[
+		AC_MSG_RESULT([yes])
 	]
 )
 
@@ -476,23 +473,23 @@ AC_ARG_ENABLE(systemd,
 	]
 )
 
-dnl ----- timelord compilation (disabled by default)
+dnl ----- timelord compilation (enabled by default)
 AC_MSG_CHECKING([whether timelord should be compiled])
-compile_timelord=no
+compile_timelord=yes
 AC_ARG_ENABLE(timelord,
 	[  --enable-timelord       enable compilation of timelord server],
 	[compile_timelord="$enableval"],
-	[compile_timelord="no"]
+	[compile_timelord="yes"]
 )
 AC_MSG_RESULT([$compile_timelord])
 
-dnl ----- a2boot compilation (disabled by default)
+dnl ----- a2boot compilation (enabled by default)
 AC_MSG_CHECKING([whether a2boot should be compiled])
-compile_a2boot=no
+compile_a2boot=yes
 AC_ARG_ENABLE(a2boot,
 	[  --enable-a2boot         enable compilation of Apple2 boot server],
 	[compile_a2boot="$enableval"],
-	[compile_a2boot="no"]
+	[compile_a2boot="yes"]
 )
 AC_MSG_RESULT([$compile_a2boot])
 
