@@ -1,5 +1,25 @@
 Changes in 2.2.8
 ================
+* NEW: asip-status.pl: IPv6 support; show GSS-UAM SPNEGO blob;
+       improved layout of output. (3.1 backport)
+* NEW: apple_dump: support for EA meta data. (3.1 backport)
+* NEW: Import netatalk-doc into the main repo, and overhaul
+       scripts, man pages and html manual sources.
+* UPD: Display the Netatalk Daemon icon with the '-icon' afpd.conf
+       option for all platforms. GH #214
+* UPD: Remove OpenSSL 1.0 backwards compatibility header.
+       Please use OpenSSL 1.1 or later.
+* UPD: configure: Enable DDP, timelord, and a2boot by default. GH #215
+* UPD: configure: Disable Quota by default. GH #198
+* FIX: afpd: Create tmp files in /tmp rather than / and clean up
+       after use. Regression in 2.2.7. GH #188
+* FIX: Provide MNTTYPE_NFS for Solaris descendents to enable
+       compiling with Quota. GH #117
+* FIX: afpd: reading from file may fail. SF Bug #619 (3.1 backport)
+* FIX: timelord: Fall back to timezone when tm_gmtoff is unavailable.
+       Makes it work on Solaris descendents. GH #194
+* FIX: fix largefile-check macro for largefile with clang 16.
+* FIX: Typo fixes in user facing strings.
 
 Changes in 2.2.7
 ================
