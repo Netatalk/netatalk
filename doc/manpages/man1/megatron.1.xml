@@ -10,7 +10,7 @@
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>megatron</refname>
 
     <refname>unhex</refname>
@@ -28,7 +28,7 @@
     <refpurpose>Macintosh file format transformer</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>megatron</command>
 
@@ -72,7 +72,7 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
     <para><command>megatron</command> is used to transform files from BinHex,
@@ -119,7 +119,7 @@
     overwritten!</para>
   </refsect1>
 
-  <refsect1 id="options">
+  <refsect1>
     <title>OPTIONS</title>
 
     <variablelist remap="TP">
@@ -135,7 +135,7 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
     <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
