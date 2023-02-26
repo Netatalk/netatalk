@@ -79,7 +79,7 @@
         <para>Leaving the afpd.conf file empty equals to the following
         configuration:</para>
 
-        <para><programlisting>- -tcp -noddp -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword</programlisting></para>
+        <para><programlisting>- -transall -uamlist uams_dhx.so,uams_dhx2.so</programlisting></para>
 
         <para>For a more detailed explanation of the available options, please
         refer to the <citerefentry>
