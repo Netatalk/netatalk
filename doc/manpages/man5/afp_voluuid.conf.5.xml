@@ -26,7 +26,7 @@
     UUID of all AFP volumes. The configuration
     lines are composed like:</para>
 
-    <para><replaceable>"volume name" </replaceable>
+    <para><replaceable>"volume-name"</replaceable>
     <replaceable>uuid-string</replaceable></para>
 
     <para>The first field is volume name. Volume names must be quoted
