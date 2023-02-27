@@ -160,7 +160,7 @@ basedir regex = /usr/home</programlisting></para>
       <para>Netatalk needs to map IDs to files and folders in the host
       filesystem. To achieve this, several different CNID backends<indexterm>
           <primary>CNID backend</primary>
-        </indexterm> are available and can be choosed by the <option>cnid
+        </indexterm> are available and can be selected with the <option>cnid
       scheme</option><indexterm>
           <primary>cnidscheme</primary>
 
@@ -400,7 +400,7 @@ basedir regex = /usr/home</programlisting></para>
           </listitem>
 
           <listitem>
-            <para>MacCroation</para>
+            <para>MacCroatian</para>
           </listitem>
 
           <listitem>
@@ -559,7 +559,7 @@ basedir regex = /usr/home</programlisting></para>
               If <option>LOCALE</option> is specified and your system support
               Unix locales, afpd tries to detect the codepage. afpd uses this
               codepage to read its configuration files, so you can use
-              extended characters for volume names, login messages, etc. see
+              extended characters for volume names, login messages, etc. See
               <citerefentry>
                   <refentrytitle>afp.conf</refentrytitle>
 
@@ -796,7 +796,7 @@ basedir regex = /usr/home</programlisting></para>
         <para>On OS X, there exist some client-side techniques to make the
         AFP-client more verbose, so one can have a look what's happening while
         negotiating the UAMs to use. Compare with this <ulink
-        url="http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
+        url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -968,7 +968,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
               </row>
 
               <row>
-                <entry align="center" rotate="0" valign="middle">pssword
+                <entry align="center" rotate="0" valign="middle">Password
                 length</entry>
 
                 <entry>guest access</entry>
@@ -1075,7 +1075,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         </table>
 
         <para>* Have a look at this <ulink
-        url="http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
+        url="https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
         overview</ulink></para>
       </sect3>
 
@@ -1964,12 +1964,12 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
       <orderedlist>
         <listitem>
           <para><ulink
-          url="https://developer.apple.com/library/mac/#documentation/Carbon/Reference/MDItemRef/Reference/reference.html">MDItem</ulink></para>
+          url="https://developer.apple.com/documentation/coreservices/mditemref/">MDItem</ulink></para>
         </listitem>
 
         <listitem>
           <para><ulink
-          url="https://live.gnome.org/Tracker/Documentation">Tracker</ulink></para>
+          url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">Tracker</ulink></para>
         </listitem>
       </orderedlist>
     </sect2>
