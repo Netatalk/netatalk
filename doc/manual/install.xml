@@ -15,11 +15,11 @@
   <sect1>
     <title>How to obtain Netatalk</title>
 
-    <para>Please have a look at the netatalk page on sourceforge for the most
-    recent informations on this issue.</para>
+    <para>Please have a look at the Netatalk page on GitHub for the most
+    recent information on this matter.</para>
 
     <para><ulink
-    url="http://sourceforge.net/projects/netatalk/">http://sourceforge.net/projects/netatalk/</ulink></para>
+    url="https://github.com/Netatalk/netatalk">https://github.com/Netatalk/netatalk</ulink></para>
 
     <sect2>
       <title>Binary packages</title>
@@ -28,30 +28,30 @@
       distributions. You might want to have a look at the usual locations,
       too.</para>
 
-      <para>Ubuntu package: <ulink
+      <para>Ubuntu packages: <ulink
       url="https://launchpad.net/ubuntu">https://launchpad.net/ubuntu
       </ulink></para>
 
-      <para>Debian package: <ulink
-      url="http://packages.debian.org/">http://packages.debian.org/
+      <para>Debian packages: <ulink
+      url="https://www.debian.org/distrib/packages">https://www.debian.org/
       </ulink></para>
 
-      <para>various RPM package: <ulink
-      url="http://rpmfind.net/">http://rpmfind.net/ </ulink></para>
+      <para>various RPM packages: <ulink
+      url="http://rpmfind.net/">http://rpmfind.net/</ulink></para>
 
-      <para>Fedora/RHEL package: <ulink
+      <para>Fedora/RHEL packages: <ulink
       url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
       </ulink></para>
 
-      <para>Gentoo package: <ulink
+      <para>Gentoo packages: <ulink
       url="http://packages.gentoo.org/">http://packages.gentoo.org/
       </ulink></para>
 
-      <para>openSUSE package: <ulink
+      <para>openSUSE packages: <ulink
       url="http://software.opensuse.org/">http://software.opensuse.org/
       </ulink></para>
 
-      <para>Solaris package: <ulink
+      <para>Solaris packages: <ulink
       url="http://www.opencsw.org/packages/CSWnetatalk/">http://www.opencsw.org/</ulink></para>
 
       <para>FreeBSD ports: <ulink
@@ -63,7 +63,7 @@
       </ulink></para>
 
       <para>OpenBSD ports:<ulink
-      url="http://openports.se/search.php">http://openports.se/search.php
+      url="https://openports.pl">https://openports.pl
       </ulink></para>
 
       <para>etc.<indexterm>
@@ -87,9 +87,9 @@
       <sect3>
         <title>Tarballs</title>
 
-        <para>Prepacked tarballs in .tar.gz and tar.bz2 format are available
-        on the netatalk page on <ulink
-        url="http://netatalk.sourceforge.net/">sourceforge</ulink>.</para>
+        <para>Prepackaged tarballs in .tar.gz and .tar.bz2 format are available
+        on the Netatalk page on <ulink
+        url="https://github.com/Netatalk/netatalk">GitHub</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -103,14 +103,14 @@
             <para>Make sure you have Git installed. <command>which
             git</command> should produce a path to git.</para>
 
-            <screen><prompt>$ </prompt><userinput>which git</userinput>
+            <screen><prompt>$</prompt> <userinput>which git</userinput>
 <computeroutput>/usr/bin/git</computeroutput></screen>
           </listitem>
 
           <listitem>
             <para>Now get the source:</para>
 
-            <screen><prompt>$</prompt> <userinput>git clone -b develop git://git.code.sf.net/p/netatalk/code netatalk-code
+            <screen><prompt>$</prompt> <userinput>git clone https://github.com/Netatalk/netatalk.git netatalk-code
 </userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
 remote: Counting objects: 2503, done.
 ...
@@ -129,7 +129,7 @@ remote: Counting objects: 2503, done.
           </listitem>
 
           <listitem>
-            <para>Now <command>cd</command> to the netatalk directory and run
+            <para>Now <command>cd</command> to the netatalk-code directory and run
             <command>./bootstrap</command>. This will create the
             <filename>configure</filename> script required in the next
             step.</para>
@@ -138,9 +138,9 @@ remote: Counting objects: 2503, done.
           </listitem>
         </orderedlist>
 
-        <para>For futher information refer to this <ulink
-        url="http://netatalk.sourceforge.net/wiki/index.php/Developer_Infos">wiki</ulink>
-        page.</para>
+        <para>For futher information refer to the <ulink
+        url="https://github.com/Netatalk/netatalk/wiki/Developer-Notes">Developer Notes</ulink>
+        wiki page.</para>
       </sect3>
     </sect2>
   </sect1>
@@ -189,7 +189,7 @@ remote: Counting objects: 2503, done.
               </indexterm> support</para>
 
             <para>Netatalk uses <ulink
-            url="http://projects.gnome.org/tracker/">Tracker</ulink> as the
+            url="https://tracker.gnome.org">Tracker</ulink> as the
             metadata backend. Recent Linux distributions will provide the
             libtracker-sparql library which is available since Tracker version
             0.7.</para>
@@ -202,7 +202,7 @@ remote: Counting objects: 2503, done.
             <para>Mac OS X 10.2 and later use Bonjour (aka Zeroconf) for
             service discovery.</para>
 
-            <para>Avahi must be build with DBUS support (
+            <para>The Avahi library must be built with DBUS support (
             <userinput>--enable-dbus</userinput>).</para>
           </listitem>
 
@@ -262,7 +262,7 @@ remote: Counting objects: 2503, done.
         automatically configure Netatalk for your operating system. If you
         have unusual needs, then you may wish to run</para>
 
-        <screen>$ <userinput>./configure --help</userinput></screen>
+    <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
 
         <para>to see what special options you can enable.</para>
 
@@ -272,7 +272,7 @@ remote: Counting objects: 2503, done.
           <listitem>
             <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd</para>
 
-            <para>This option helps netatalk to determine where to install the
+            <para>This option helps Netatalk to determine where to install the
             start scripts.</para>
           </listitem>
 
@@ -281,7 +281,7 @@ remote: Counting objects: 2503, done.
 
             <para>In case you installed Berkeley DB in a non-standard
             location, you will <emphasis>have</emphasis> to give the install
-            location to netatalk, using this switch.</para>
+            location to Netatalk, using this switch.</para>
           </listitem>
         </itemizedlist>
 
@@ -300,7 +300,7 @@ remote: Counting objects: 2503, done.
 
         <para>Netatalk uses Gnome <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> as the
         metadata backend. The minimum required version is 0.7 as that's the
-        first version to support <ulink url="https://wiki.gnome.org/Tracker/Documentation">SPARQL</ulink>.</para>
+        first version to support <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">SPARQL</ulink>.</para>
 
         <para>If not already installed, install the packages
         <emphasis>tracker</emphasis> and <emphasis>tracker-devel</emphasis>,
@@ -311,14 +311,14 @@ remote: Counting objects: 2503, done.
         pass the version suffix as you may have a newer version installed then
         the default 0.12, e.g.</para>
 
-        <screen><prompt>$ </prompt><userinput>pkg-config --list-all | grep tracker
+        <screen><prompt>$</prompt> <userinput>pkg-config --list-all | grep tracker
 </userinput>tracker-extract-0.16  tracker-extract - Tracker : A library to develop metadata extractors for 3rd party file types.
 tracker-sparql-0.16   tracker-sparql - Tracker : A library to perform SPARQL queries and updates in the              Tracker Store
 tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</screen>
 
         <para>So:</para>
 
-        <screen><prompt>$ </prompt><userinput>./configure --with-tracker-pkgconfig-version=0.16 ...</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=0.16 ...</userinput></screen>
 
         <para>If you're using Solaris and Tracker from OpenCSW, then you need
         to set the PKG_CONFIG_PATH environment variable, add the
