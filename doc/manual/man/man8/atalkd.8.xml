@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">06 Sep 2004</refmiscinfo>
+    <refmiscinfo class="date">01 Mar 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -61,7 +61,7 @@
 
         <manvolnum>8</manvolnum>
       </citerefentry>). <command>atalkd</command> is typically started at boot
-    time, out of <filename>/etc/rc</filename>. It first reads from its
+    time from system init scripts or services. It first reads from its
     configuration file, <filename>:ETCDIR:/atalkd.conf</filename>. If there is
     no configuration file, <command>atalkd</command> will attempt to configure
     all available interfaces and will create a configuration file. The file
