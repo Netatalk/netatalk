@@ -2,12 +2,12 @@
 .\"     Title: atalkd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06 Sep 2004
+.\"      Date: 01 Mar 2023
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "ATALKD" "8" "06 Sep 2004" "Netatalk 2.2" "Netatalk 2.2"
+.TH "ATALKD" "8" "01 Mar 2023" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,8 +38,7 @@ atalkd \- AppleTalk RTMP, NBP, ZIP, and AEP manager
 is responsible for all user level AppleTalk network management\&. This includes routing, name registration and lookup, zone lookup, and the AppleTalk Echo Protocol (similar to
 \fBping\fR(8))\&.
 \fBatalkd\fR
-is typically started at boot time, out of
-/etc/rc\&. It first reads from its configuration file,
+is typically started at boot time from system init scripts or services\&. It first reads from its configuration file,
 :ETCDIR:/atalkd\&.conf\&. If there is no configuration file,
 \fBatalkd\fR
 will attempt to configure all available interfaces and will create a configuration file\&. The file consists of a series of interfaces, one per line\&. Lines with `#\*(Aq in the first column are ignored, as are blank lines\&. The syntax is
