@@ -7,6 +7,7 @@
 <!ENTITY Upgrade SYSTEM "netatalk/upgrade.xml">
 <!ENTITY Configuration SYSTEM "netatalk/configuration.xml">
 
+<!ENTITY a2boot.8 SYSTEM "man/man8/a2boot.8.xml">
 <!ENTITY ad.1 SYSTEM "man/man1/ad.1.xml">
 <!ENTITY atalkd.8 SYSTEM "man/man8/atalkd.8.xml">
 <!ENTITY afpd.8 SYSTEM "man/man8/afpd.8.xml">
@@ -84,6 +85,8 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
     <title>Manual Pages</title>
 
     <para>This is a collection of the man pages delivered with Netatalk.</para>
+
+    &a2boot.8;
 
     &ad.1;
 

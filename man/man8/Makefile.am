@@ -13,7 +13,7 @@ SUFFIXES = .tmpl .
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
-NONGENERATED_MANS = timelord.8
+NONGENERATED_MANS = a2boot.8 timelord.8
 GENERATED_MANS    = afpd.8 cnid_dbd.8 cnid_metad.8
 TEMPLATE_FILES    = afpd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl
 ATALK_MANS        = atalkd.8.tmpl papd.8.tmpl papstatus.8.tmpl psf.8.tmpl

@@ -1,0 +1,53 @@
+'\" t
+.\"     Title: a2boot
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 01 Mar 2023
+.\"    Manual: Netatalk 2.2
+.\"    Source: Netatalk 2.2
+.\"  Language: English
+.\"
+.TH "A2BOOT" "8" "01 Mar 2023" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+a2boot \- Apple II netboot server
+.SH "SYNOPSIS"
+.HP \w'\fBa2boot\fR\ 'u
+\fBa2boot\fR [\-d] [\-n\ \fInbpname\fR]
+.SH "DESCRIPTION"
+.PP
+\fBa2boot\fR
+is a netboot server for Apple IIe and IIGS computers\&. It allows compatible clients to boot over an AppleTalk network
+.PP
+\fBa2boot\fR
+serves multiple AFP volumes that the Apple II client is configured to boot off of\&. These volumes have to be populated with the appropriate ProDOS or GS/OS system files before they can be used as boot volumes\&.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Debug mode, i\&.e\&. don\*(Aqt disassociate from controlling TTY\&.
+.RE
+.PP
+\fB\-n\fR \fInbpname\fR
+.RS 4
+Register this server as
+\fInbpname\fR\&. This defaults to the hostname\&.
+.RE
