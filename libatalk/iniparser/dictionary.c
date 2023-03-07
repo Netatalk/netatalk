@@ -1,8 +1,30 @@
+/*
+Copyright (c) 2000-2011 by Nicolas Devillard.
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+*/
+
 /*-------------------------------------------------------------------------*/
 /**
    @file	dictionary.c
    @author	N. Devillard
-   @date	Sep 2007
    @brief	Implements a dictionary for string variables.
 
    This module implements a simple dictionary object, i.e. a list
@@ -11,8 +33,6 @@
 */
 /*--------------------------------------------------------------------------*/
 
-/*
-*/
 /*---------------------------------------------------------------------------
    								Includes
  ---------------------------------------------------------------------------*/
@@ -60,7 +80,7 @@ static char *makekey(const char *section, const char *entry)
 static void * mem_double(void * ptr, int size)
 {
     void * newptr ;
- 
+
     newptr = calloc(2*size, 1);
     if (newptr==NULL) {
         return NULL ;
@@ -80,14 +100,17 @@ static void * mem_double(void * ptr, int size)
   for systems that do not have it.
  */
 /*--------------------------------------------------------------------------*/
-static char * xstrdup(char * s)
+static char * xstrdup(const char * s)
 {
     char * t ;
+    size_t len ;
     if (!s)
         return NULL ;
-    t = malloc(strlen(s)+1) ;
+
+    len = strlen(s) + 1 ;
+    t = (char*) malloc(len) ;
     if (t) {
-        strcpy(t,s);
+        memcpy(t, s, len) ;
     }
     return t ;
 }
@@ -107,7 +130,7 @@ static char * xstrdup(char * s)
   by comparing the key itself in last resort.
  */
 /*--------------------------------------------------------------------------*/
-unsigned atalkdict_hash(char * key)
+unsigned atalkdict_hash(const char * key)
 {
 	int			len ;
 	unsigned	hash ;
@@ -136,21 +159,22 @@ unsigned atalkdict_hash(char * key)
   dictionary, give size=0.
  */
 /*--------------------------------------------------------------------------*/
-dictionary * atalkdict_new(int size)
+dictionary * atalkdict_new(size_t size)
 {
-	dictionary	*	d ;
+    dictionary  *   d ;
 
-	/* If no size was specified, allocate space for DICTMINSZ */
-	if (size<DICTMINSZ) size=DICTMINSZ ;
+    /* If no size was specified, allocate space for DICTMINSZ */
+    if (size<DICTMINSZ) size=DICTMINSZ ;
 
-	if (!(d = (dictionary *)calloc(1, sizeof(dictionary)))) {
-		return NULL;
-	}
-	d->size = size ;
-	d->val  = (char **)calloc(size, sizeof(char*));
-	d->key  = (char **)calloc(size, sizeof(char*));
-	d->hash = (unsigned int *)calloc(size, sizeof(unsigned));
-	return d ;
+    d = (dictionary*) calloc(1, sizeof *d) ;
+
+    if (d) {
+        d->size = size ;
+        d->val  = (char**) calloc(size, sizeof *d->val);
+        d->key  = (char**) calloc(size, sizeof *d->key);
+        d->hash = (unsigned*) calloc(size, sizeof *d->hash);
+    }
+    return d ;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -240,13 +264,13 @@ const char * atalkdict_get(const dictionary * d, const char *section, const char
   This function returns non-zero in case of failure.
  */
 /*--------------------------------------------------------------------------*/
-int atalkdict_set(dictionary * d, char *section, char * key, char * val)
+int atalkdict_set(dictionary * d, const char *section, const char * key, const char * val)
 {
 	int			i ;
 	unsigned	hash ;
 
 	if (d==NULL || section==NULL) return -1 ;
-	
+
 	/* Compute hash for this key */
 	hash = atalkdict_hash(makekey(section, key));
 	/* Find if value is already in dictionary */
@@ -308,7 +332,7 @@ int atalkdict_set(dictionary * d, char *section, char * key, char * val)
   key cannot be found.
  */
 /*--------------------------------------------------------------------------*/
-void atalkdict_unset(dictionary * d, char *section, char * key)
+void atalkdict_unset(dictionary * d, const char *section, const char * key)
 {
 	unsigned	hash ;
 	int			i ;

@@ -1,9 +1,30 @@
+/*
+Copyright (c) 2000-2011 by Nicolas Devillard.
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+*/
+
 /*-------------------------------------------------------------------------*/
 /**
    @file    iniparser.c
    @author  N. Devillard
-   @date    Sep 2007
-   @version 3.0
    @brief   Parser for ini files.
 */
 
@@ -173,6 +194,44 @@ void atalk_iniparser_dump(const dictionary * d, FILE * f)
 
 /*-------------------------------------------------------------------------*/
 /**
+  @brief    Save a dictionary section to a loadable ini file
+  @param    d   Dictionary to dump
+  @param    s   Section name of dictionary to dump
+  @param    f   Opened file pointer to dump to
+  @return   void
+
+  This function dumps a given section of a given dictionary into a loadable ini
+  file.  It is Ok to specify @c stderr or @c stdout as output files.
+ */
+/*--------------------------------------------------------------------------*/
+void atalk_iniparser_dumpsection_ini(const dictionary * d, const char * s, FILE * f)
+{
+    int     j ;
+    char    keym[ASCIILINESZ+1];
+    int     seclen ;
+
+    if (d==NULL || f==NULL) return ;
+    if (! atalk_iniparser_find_entry(d, s)) return ;
+
+    seclen  = (int)strlen(s);
+    fprintf(f, "\n[%s]\n", s);
+    sprintf(keym, "%s:", s);
+    for (j=0 ; j<d->size ; j++) {
+        if (d->key[j]==NULL)
+            continue ;
+        if (!strncmp(d->key[j], keym, seclen+1)) {
+            fprintf(f,
+                    "%-30s = %s\n",
+                    d->key[j]+seclen+1,
+                    d->val[j] ? d->val[j] : "");
+        }
+    }
+    fprintf(f, "\n");
+    return ;
+}
+
+/*-------------------------------------------------------------------------*/
+/**
   @brief    Save a dictionary to a loadable ini file
   @param    d   Dictionary to dump
   @param    f   Opened file pointer to dump to
@@ -184,11 +243,9 @@ void atalk_iniparser_dump(const dictionary * d, FILE * f)
 /*--------------------------------------------------------------------------*/
 void atalk_iniparser_dump_ini(const dictionary * d, FILE * f)
 {
-    int     i, j ;
-    char    keym[ASCIILINESZ+1];
-    int     nsec ;
-    const char *  secname ;
-    int     seclen ;
+    int          i ;
+    int          nsec ;
+    const char * secname ;
 
     if (d==NULL || f==NULL) return ;
 
@@ -204,19 +261,7 @@ void atalk_iniparser_dump_ini(const dictionary * d, FILE * f)
     }
     for (i=0 ; i<nsec ; i++) {
         secname = atalk_iniparser_getsecname(d, i) ;
-        seclen  = (int)strlen(secname);
-        fprintf(f, "\n[%s]\n", secname);
-        sprintf(keym, "%s:", secname);
-        for (j=0 ; j<d->size ; j++) {
-            if (d->key[j]==NULL)
-                continue ;
-            if (!strncmp(d->key[j], keym, seclen+1)) {
-                fprintf(f,
-                        "%-30s = %s\n",
-                        d->key[j]+seclen+1,
-                        d->val[j] ? d->val[j] : "");
-            }
-        }
+        atalk_iniparser_dumpsection_ini(d, secname, f);
     }
     fprintf(f, "\n");
     return ;
@@ -278,10 +323,48 @@ char * atalk_iniparser_getstrdup(const dictionary * d, const char *section, cons
 
 /*-------------------------------------------------------------------------*/
 /**
-  @brief    Get the string associated to a key, convert to an int
-  @param    d        Dictionary to search
+  @brief    Get the string associated to a key, convert to an long int
+  @param    d Dictionary to search
   @param    section  Section to search
-  @param    key      Key string to look for
+  @param    key Key string to look for
+  @param    notfound Value to return in case of error
+  @return   long integer
+
+  This function queries a dictionary for a key. A key as read from an
+  ini file is given as "section:key". If the key cannot be found,
+  the notfound value is returned.
+
+  Supported values for integers include the usual C notation
+  so decimal, octal (starting with 0) and hexadecimal (starting with 0x)
+  are supported. Examples:
+
+  "42"      ->  42
+  "042"     ->  34 (octal -> decimal)
+  "0x42"    ->  66 (hexa  -> decimal)
+
+  Warning: the conversion may overflow in various ways. Conversion is
+  totally outsourced to strtol(), see the associated man page for overflow
+  handling.
+
+  Credits: Thanks to A. Becker for suggesting strtol()
+ */
+/*--------------------------------------------------------------------------*/
+long int atalk_iniparser_getlongint(const dictionary * d, const char * section, const char * key, long int notfound)
+{
+    const char * str ;
+
+    str = atalk_iniparser_getstring(d, section, key, INI_INVALID_KEY);
+    if (str==INI_INVALID_KEY) return notfound ;
+    return strtol(str, NULL, 0);
+}
+
+
+/*-------------------------------------------------------------------------*/
+/**
+  @brief    Get the string associated to a key, convert to an int
+  @param    d Dictionary to search
+  @param    section  Section to search
+  @param    key Key string to look for
   @param    notfound Value to return in case of error
   @return   integer
 
@@ -304,14 +387,12 @@ char * atalk_iniparser_getstrdup(const dictionary * d, const char *section, cons
   Credits: Thanks to A. Becker for suggesting strtol()
  */
 /*--------------------------------------------------------------------------*/
-int atalk_iniparser_getint(const dictionary * d, const char *section, const char * key, int notfound)
+int atalk_iniparser_getint(const dictionary * d, const char * section, const char * key, int notfound)
 {
-    const char    *   str ;
-
-    str = atalk_iniparser_getstring(d, section, key, INI_INVALID_KEY);
-    if (str==INI_INVALID_KEY) return notfound ;
-    return (int)strtol(str, NULL, 0);
+    return (int)atalk_iniparser_getlongint(d, section, key, notfound);
 }
+
+/*-------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -421,7 +502,7 @@ int atalk_iniparser_find_entry(const dictionary *ini, const char *entry)
   It is Ok to set val to NULL.
  */
 /*--------------------------------------------------------------------------*/
-int atalk_iniparser_set(dictionary * ini, char *section, char * key, char * val)
+int atalk_iniparser_set(dictionary * ini, const char *section, const char * key, const char * val)
 {
     return atalkdict_set(ini, section, key, val) ;
 }
@@ -437,7 +518,7 @@ int atalk_iniparser_set(dictionary * ini, char *section, char * key, char * val)
   If the given entry can be found, it is deleted from the dictionary.
  */
 /*--------------------------------------------------------------------------*/
-void atalk_iniparser_unset(dictionary * ini, char *section, char * key)
+void atalk_iniparser_unset(dictionary * ini, const char *section, const char * key)
 {
     atalkdict_unset(ini, section, key);
 }
@@ -453,7 +534,7 @@ void atalk_iniparser_unset(dictionary * ini, char *section, char * key)
  */
 /*--------------------------------------------------------------------------*/
 static line_status atalk_iniparser_line(
-    char * input_line,
+    const char * input_line,
     char * section,
     char * key,
     char * value)
@@ -478,12 +559,16 @@ static line_status atalk_iniparser_line(
         strcpy(section, strstrip(section));
         strcpy(section, section);
         sta = LINE_SECTION ;
-    } else if (sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
-           ||  sscanf (line, "%[^=] = %[^;#]",     key, value) == 2) {
-        /* Usual key=value, with or without comments */
-        strcpy(key, strstrip(key));
-        strcpy(key, key);
-        strcpy(value, strstrip(value));
+    } else if (sscanf (line, "%[^=] = \"%[^\"]\"", key, value) == 2
+           ||  sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2) {
+        /* Usual key=value with quotes, with or without comments */
+        strstrip(key);
+        /* Don't strip spaces from values surrounded with quotes */
+        sta = LINE_VALUE ;
+    } else if (sscanf (line, "%[^=] = %[^;#]", key, value) == 2) {
+        /* Usual key=value without quotes, with or without comments */
+        strstrip(key);
+        strstrip(value);
         /*
          * sscanf cannot handle '' or "" as empty values
          * this is done here
@@ -508,6 +593,8 @@ static line_status atalk_iniparser_line(
         /* Generate syntax error */
         sta = LINE_ERROR ;
     }
+
+    free(line);
     return sta ;
 }
 
@@ -559,25 +646,26 @@ dictionary * atalk_iniparser_load(const char * ininame)
     last=0 ;
 
     in = inifile;
-    while (1) {
-        if (fgets(line+last, ASCIILINESZ-last, in) == NULL) {
-            if (include) {
-                fclose(include);
-                include = NULL;
-                in = inifile;
-                continue;
-            }
-            break;
-        }
+    while (fgets(line+last, ASCIILINESZ-last, in) != NULL) {
         lineno++ ;
         len = (int)strlen(line)-1;
-        if (len==0)
+        if (len<=0)
             continue;
+        /* Safety check against buffer overflows */
+        if (line[len]!='\n' && !feof(in)) {
+            LOG(log_error, logtype_default, "iniparser: input line too long in %s (lineno: %d): %s");
+            atalkdict_del(dict);
+            fclose(in);
+            return NULL ;
+        }
         /* Get rid of \n and spaces at end of line */
         while ((len>=0) &&
                 ((line[len]=='\n') || (isspace(line[len])))) {
             line[len]=0 ;
             len-- ;
+        }
+        if (len < 0) { /* Line was entirely \n and/or spaces */
+            len = 0;
         }
         /* Detect multi-line */
         if (line[len]=='\\') {
@@ -649,4 +737,3 @@ void atalk_iniparser_freedict(dictionary * d)
 {
     atalkdict_del(d);
 }
-
