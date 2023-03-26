@@ -135,7 +135,7 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
 
     p = mpath + mpathlen;
     p -= strlen( path );
-    memcpy( p, path, strlen( path )); 
+    memcpy( p, path, strlen( path ));
 
     while ( dir->d_did != DIRDID_ROOT ) {
         p -= blength(dir->d_m_name) + 1;
@@ -368,14 +368,14 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 {
     struct vol		*vol;
     char		*p, *q;
-    int			cc; 
+    int			cc;
     size_t		buflen;
     uint16_t		vid, aindex, bitmap, len;
     unsigned char		creator[ 4 ];
     unsigned char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
-    
+
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof( vid ));
@@ -419,6 +419,10 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         memcpy( &len, p, sizeof( len ));
         len = ntohs( len );
         p += sizeof( u_short );
+        if ( len > sizeof(obj->oldtmp) - (p - buf) ) {
+            *rbuflen = 0;
+            return( AFPERR_NOITEM );
+        }
         if (( cc = read( sa.sdt_fd, p, len )) < len ) {
             break;
         }
@@ -447,11 +451,16 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         char		*u, *m;
         int		i, h;
 
+        if ( len > sizeof(utomname) ) {
+            *rbuflen = 0;
+            return( AFPERR_NOITEM );
+        }
+
         u = p;
         m = utomname;
         i = len;
         while ( i ) {
-            if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
+            if ( i >= 3 && i + 2 < len && *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
                     *(u+2) != '\0' && islxdigit( *(u+2))) {
                 ++u, --i;
                 h = hextoint( *u ) << 4;
@@ -505,4 +514,3 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     rbuf += sizeof( appltag );
     return( AFP_OK );
 }
-
