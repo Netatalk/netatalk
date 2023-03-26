@@ -1,10 +1,8 @@
-# This is experimental service file.
-# See distrib/systemd/README
 # This file is part of Netatalk :NETATALK_VERSION:.
 
 [Unit]
 Description=Apple II boot daemon
-After=syslog.target network.target atalkd.service
+After=network-online.target atalkd.service
 Requires=atalkd.service
 
 [Service]

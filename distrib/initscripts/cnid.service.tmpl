@@ -2,7 +2,7 @@
 
 [Unit]
 Description=Netatalk CNID database daemon for AFP fileserver
-After=syslog.target network.target
+After=network-online.target
 Before=afpd.service
 Requires=afpd.service
 
