@@ -144,7 +144,7 @@ const char *uuid_bin2string(const unsigned char *uuid) {
  *   uuid: pointer to uuid_t storage that the caller must provide
  * returns 0 on success !=0 on errror
  */
-int getuuidfromname( const char *name, uuidtype_t type, unsigned char *uuid) {
+int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid) {
     int ret = 0;
     uuidtype_t mytype = type;
     char nulluuid[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
