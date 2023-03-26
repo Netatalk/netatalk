@@ -119,6 +119,8 @@ BOOL {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
+    if ($1 == NULL || $3 == NULL)
+        YYABORT;
     if (strcmp($1, $3) != 0)
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     else

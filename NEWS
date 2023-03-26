@@ -1,3 +1,7 @@
+Changes in 3.1.14
+=================
+* FIX: afpd: Spotlight searches can cause afpd to segfault.
+
 Changes in 3.1.13
 =================
 * FIX: CVE-2021-31439
