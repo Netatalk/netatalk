@@ -1,6 +1,9 @@
+Changes in 3.1.15
+=================
+* FIX: afpd: Spotlight searches can cause afpd to segfault.
+
 Changes in 3.1.14
 =================
-
 *  FIX: fix build with libressl >= 2.7.0
 *  NEW: Added Ignore Directories Feature
 *  UPD: Generate Unicode source code based on the latest https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
