@@ -2,7 +2,7 @@
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients
-After=syslog.target network.target slpd.service avahi-daemon.service cnid.service atalkd.service
+After=network-online.target slpd.service avahi-daemon.service cnid.service atalkd.service
 Requires=cnid.service
 
 [Service]

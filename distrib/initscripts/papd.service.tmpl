@@ -2,7 +2,7 @@
 
 [Unit]
 Description=AppleTalk PAP printer server daemon
-After=syslog.target network.target atalkd.service
+After=network-online.target atalkd.service
 Requires=atalkd.service
 
 [Service]
