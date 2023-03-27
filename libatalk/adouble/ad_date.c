@@ -41,7 +41,6 @@ int ad_getdate(const struct adouble *ad,
 	       unsigned int dateoff, u_int32_t *date) 
 {
   int xlate = (dateoff & AD_DATE_UNIX);
-
   dateoff &= AD_DATE_MASK;
   if (ad->ad_version == AD_VERSION1) {
     if (dateoff > AD_DATE_BACKUP)
