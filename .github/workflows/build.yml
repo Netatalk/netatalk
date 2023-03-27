@@ -13,9 +13,9 @@ env:
 
 jobs:
   build:
+    if: ${{ github.event.pull_request.head.repo.full_name == 'Netatalk/netatalk' }}
     name: Build and analyze
     runs-on: ubuntu-22.04
-    if: github.repository == 'Netatalk/netatalk'
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
