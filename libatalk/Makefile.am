@@ -101,14 +101,14 @@ all-local: .libs/libatalk.so
 		cp libatalk.abi.tmp libatalk-$(NETATALK_VERSION).abi ; \
 		echo "**********************************************************************************************************" ; \
 		echo "                                created ABI file libatalk-$(NETATALK_VERSION).abi" ; \
-		echo "    check https://sourceforge.net/apps/mediawiki/netatalk/index.php?title=Developer_Infos#ABI_checking" ; \
+		echo "               check https://github.com/Netatalk/netatalk/wiki/Developer-Notes#abi-checking" ; \
 		echo "**********************************************************************************************************" ; \
 		exit 1 ; \
 	fi
 	@diff -u libatalk-$(NETATALK_VERSION).abi libatalk.abi.tmp || ( \
 		echo '**********************************************************************************************************' && \
 		echo '***                                     libatalk ABI changed                                           ***' && \
-		echo '*** check https://sourceforge.net/apps/mediawiki/netatalk/index.php?title=Developer_Infos#ABI_checking ***' && \
+		echo '***            check https://github.com/Netatalk/netatalk/wiki/Developer-Notes#abi-checking            ***' && \
 		echo '**********************************************************************************************************' && \
 		exit 1 )
 
