@@ -3,7 +3,7 @@
 use strict;
 use Socket;
 use File::Basename;
-use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
+use vars qw($MAIN_PID $AFPD_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 # Written for linux; may have to be modified for your brand of Unix.
 # Support for FreeBSD added by Joe Clarke <marcus@marcuscom.com>.
@@ -19,16 +19,16 @@ if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
         exit(1);
 }
 
-$MAC_PROCESS = "afpd";
+$AFPD_PROCESS = "afpd";
 if ($^O eq "freebsd" || $^O eq "openbsd" || $^O eq "netbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
-        $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
+        $MATCH_STR = '(\S+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 } elsif ($^O eq "solaris") {
         $PS_STR    = "-eo user,pid,ppid,c,stime,tty,time,comm";
-        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
+        $MATCH_STR = '\s*(\S+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 } else {
         $PS_STR    = "-eo user:32,pid,ppid,c,stime,tty,time,cmd";
-        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
+        $MATCH_STR = '\s*(\S+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 }
 $ASIP_PORT    = "afpovertcp";
 $ASIP_PORT_NO = 548;
@@ -38,10 +38,10 @@ $LSOF = 1;
 my %mac = ();
 
 if ($^O eq "freebsd" || $^O eq "netbsd") {
-        open(SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |");
+        open(SOCKSTAT, "sockstat -4 | grep $AFPD_PROCESS | grep -v grep |");
 
         while (<SOCKSTAT>) {
-                next if ($_ !~ /$MAC_PROCESS/);
+                next if ($_ !~ /$AFPD_PROCESS/);
                 $_ =~
                     /\S+\s+\S+\s+(\d+)\s+\d+\s+[\w\d]+\s+[\d\.:]+\s+([\d\.]+)/;
                 my ($pid, $addr, $host);
@@ -80,10 +80,11 @@ if ($^O eq "freebsd" || $^O eq "netbsd") {
             "PID      UID      Username         Name                 Logintime\n";
 }
 
+$MAIN_PID = 1;
 open(PS, "ps $PS_STR |") || die "Unable to open a pipe to ``ps''";
 
 while (<PS>) {
-        next if ($_ !~ /$MAC_PROCESS/);
+        next if ($_ !~ /$AFPD_PROCESS/);
         my ($user, $pid, $ppid, $time, $name, $uid, $t, $ip);
         $_ =~ /$MATCH_STR/;
         $user = $1;
@@ -91,7 +92,7 @@ while (<PS>) {
         $ppid = $3;
         $time = $4;
 
-        if ($ppid != 1) {
+        if ($ppid != $MAIN_PID) {
                 if ($^O eq "solaris") {
                         open(PFILES, "pfiles $pid |");
                         while (<PFILES>) {
@@ -112,7 +113,14 @@ while (<PS>) {
                         close(PFILES);
                 }
 
-                ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
+                # Deal with truncated usernames. Caution: this does make the
+                # assumption that no username will be all-numeric.
+                if ($user =~ /^[0-9]+$/) {
+                        $uid = $user;
+                        ($user, $t, $t, $t, $t, $t, $name, $t, $t) = getpwuid($uid);
+                } else {
+                        ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
+                }
                 ($name) = ( $name =~ /(^[^,]+)/ );
                 printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user,
                     $name, $time, $mac{$pid};
