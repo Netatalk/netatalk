@@ -52,7 +52,7 @@
 #define SOL_TCP IPPROTO_TCP
 #endif
 
-/* 
+/*
  * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
  * available everywhere. Unfortunately some funcs (eg acltoownermode) need acces to it
  * but are deeply nested in the function chain with the caller already without acces to it.
@@ -80,7 +80,7 @@ static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
     sigset_t sigs;
-    
+
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
@@ -90,7 +90,7 @@ static void afp_dsi_close(AFPObj *obj)
      */
     if (geteuid() != obj->uid) {
         if (seteuid( obj->uid ) < 0) {
-            LOG(log_error, logtype_afpd, "can't seteuid(%u) back %s: uid: %u, euid: %u", 
+            LOG(log_error, logtype_afpd, "can't seteuid(%u) back %s: uid: %u, euid: %u",
                 obj->uid, strerror(errno), getuid(), geteuid());
             exit(EXITERR_SYS);
         }
@@ -113,7 +113,7 @@ static void afp_dsi_close(AFPObj *obj)
 
 /* -------------------------------
  * SIGTERM
- * a little bit of code duplication. 
+ * a little bit of code duplication.
  */
 static void afp_dsi_die(int sig)
 {
@@ -186,7 +186,7 @@ static void afp_dsi_transfer_session(int sig _U_)
     }
 
     LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: successful primary reconnect");
-    /* 
+    /*
      * Now returning from this signal handler return to dsi_receive which should start
      * reading/continuing from the connected socket that was passed via the parent from
      * another session. The parent will terminate that session.
@@ -207,7 +207,7 @@ static void afp_dsi_timedown(int sig _U_)
                   AFPATTN_MESG | AFPATTN_TIME(5)) < 0) {
         DSI *dsi = (DSI *)AFPobj->dsi;
         dsi->down_request = 1;
-    }                  
+    }
 
     it.it_interval.tv_sec = 0;
     it.it_interval.tv_usec = 0;
@@ -302,7 +302,7 @@ static void alarm_handler(int sig _U_)
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
-    } 
+    }
 
     if (dsi->flags & DSI_DISCONNECTED) {
         if (geteuid() == 0) {
@@ -316,7 +316,7 @@ static void alarm_handler(int sig _U_)
         return;
     }
 
-    /* if we're in the midst of processing something, don't die. */        
+    /* if we're in the midst of processing something, don't die. */
     if (dsi->tickle >= AFPobj->options.timeout) {
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
         if (dsi_disconnect(dsi) != 0)
@@ -344,9 +344,9 @@ static void child_handler(int sig _U_)
     wait(NULL);
 }
 
-/* ----------------- 
+/* -----------------
    if dsi->in_write is set attention, tickle (and close?) msg
-   aren't sent. We don't care about tickle 
+   aren't sent. We don't care about tickle
 */
 static void pending_request(DSI *dsi)
 {
@@ -449,7 +449,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
 }
 
 /* -------------------------------------------
- afp over dsi. this never returns. 
+ afp over dsi. this never returns.
 */
 void afp_over_dsi(AFPObj *obj)
 {
@@ -460,8 +460,8 @@ void afp_over_dsi(AFPObj *obj)
 
     AFPobj = obj;
     obj->exit = afp_dsi_die;
-    obj->reply = (int (*)()) dsi_cmdreply;
-    obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
+    obj->reply = (int (*)(void *, int))dsi_cmdreply;
+    obj->attention = (int (*)(void *, AFPUserBytes))dsi_attention;
     dsi->tickle = 0;
 
     afp_over_dsi_sighandlers(obj);

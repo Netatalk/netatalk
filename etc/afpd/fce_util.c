@@ -82,7 +82,7 @@ static long get_ms_difftime (  struct timeval *tv1, struct timeval *tv2 )
  * Public functions follow
  ******************************************************************************/
 
-void fce_initialize_history()
+void fce_initialize_history(void)
 {
 	for (int i = 0; i < FCE_HISTORY_LEN; i++) {
 		memset( &fce_history_list[i], 0, sizeof(fce_history_list[i]) );

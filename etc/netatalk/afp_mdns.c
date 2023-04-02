@@ -134,7 +134,8 @@ static void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSService
  * This function unregisters anything we have already
  * registered and frees associated memory
  */
-static void unregister_stuff() {
+static void unregister_stuff(void)
+{
     pthread_cancel(poller);
 
     for (int i = 0; i < svc_ref_count; i++)
@@ -344,10 +345,10 @@ void md_zeroconf_register(const AFPObj *obj) {
  * Tries to shutdown this loop impl.
  * Call this function from inside this thread.
  */
-int md_zeroconf_unregister() {
+int md_zeroconf_unregister(void)
+{
     unregister_stuff();
     return 0;
 }
 
 #endif /* USE_MDNS */
-

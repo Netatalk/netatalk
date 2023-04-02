@@ -44,7 +44,7 @@ struct fce_close_event {
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)
 
 bool fce_handle_coalescation(int event, const char *path);
-void fce_initialize_history();
+void fce_initialize_history(void);
 
 
 #endif	/* _FCE_API_INTERNAL_H */
