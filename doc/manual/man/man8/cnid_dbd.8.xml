@@ -155,7 +155,7 @@
           much memory on top of its normal memory footprint. It can be used to
           tune database performance. The <emphasis
           remap="B">db_stat</emphasis> utility with the <option>-m</option>
-          option that comes with Berkely DB can help you determine whether you
+          option that comes with Berkeley DB can help you determine whether you
           need to change this value. The default is pretty conservative so
           that a large percentage of requests should be satisfied from the
           cache directly. If memory is not a bottleneck on your system you
@@ -221,14 +221,14 @@
     <title>UPDATING</title>
 
     <para>Note that the first version to appear <emphasis>after</emphasis>
-    Netatalk 2.1 ie Netatalk 2.1.1, will support BerkeleyDB updates on the fly
+    Netatalk 2.1 ie Netatalk 2.1.1, will support Berkeley DB updates on the fly
     without manual intervention. In other words Netatalk 2.1 does contain code
-    to prepare the BerkeleyDB database for upgrades and to upgrade it in case
+    to prepare the Berkeley DB database for upgrades and to upgrade it in case
     it has been prepared before. That means it can't upgrade a 2.0.x version
     because that one didn't prepare the database.</para>
 
     <para>In order to update between older Netatalk releases using different
-    BerkeleyDB library versions, follow this steps:</para>
+    Berkeley DB library versions, follow this steps:</para>
 
     <itemizedlist>
       <listitem>
@@ -236,17 +236,17 @@
       </listitem>
 
       <listitem>
-        <para>Using the old BerkeleyDB utilities run <command>db_recover -h
+        <para>Using the old Berkeley DB utilities run <command>db_recover -h
         &lt;path to .AppleDB&gt;</command></para>
       </listitem>
 
       <listitem>
-        <para>Using the new BerkeleyDB utilities run <command>db_upgrade -v -h
+        <para>Using the new Berkeley DB utilities run <command>db_upgrade -v -h
         &lt;path to .AppleDB&gt; -f cnid2.db</command></para>
       </listitem>
 
       <listitem>
-        <para>Again using the new BerkeleyDB utilities run
+        <para>Again using the new Berkeley DB utilities run
         <command>db_checkpoint -1 -h &lt;path to .AppleDB&gt;</command></para>
       </listitem>
 

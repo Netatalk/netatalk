@@ -683,7 +683,7 @@
         <term>cdb</term>
 
         <listitem>
-          <para>"Concurrent database", backend is based on Sleepycat's Berkely
+          <para>"Concurrent database", backend is based on Sleepycat's Berkeley
           DB. With this backend several <command>afpd</command> deamons access
           the CNID database directly. Berkeley DB locking is used to
           synchronize access, if more than one <command>afpd</command> process
