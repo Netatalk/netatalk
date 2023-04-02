@@ -34,12 +34,12 @@
 
 #define STRNCMP(a, R, b, l) (strncmp(a,b,l) R 0)
 
-static void usage()
+static void usage(void)
 {
     printf("Usage: afpldaptest -u <user> | -g <group> | -i <UUID>\n");
 }
 
-static void parse_ldapconf()
+static void parse_ldapconf(void)
 {
     static int inited = 0;
     dictionary *iniconfig;

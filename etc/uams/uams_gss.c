@@ -476,7 +476,8 @@ static int gss_logincont(void *obj,
 }
 
 /* logout */
-static void gss_logout() {
+static void gss_logout(void)
+{
 }
 
 static int gss_login_ext(void *obj,
@@ -535,7 +536,7 @@ static int gss_create_principal(AFPObj *obj)
 
     if (obj->options.k5service && obj->options.fqdn && obj->options.k5realm) {
         LOG(log_debug, logtype_afpd, "gss_create_principal: using service principal specified in options");
-            
+
         if ((ret = krb5_build_principal(context,
                                         &service_principal,
                                         strlen(obj->options.k5realm),

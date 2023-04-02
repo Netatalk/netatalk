@@ -51,7 +51,7 @@
 
 static   size_t maxstatuslen = 0;
 
-static int uam_gss_enabled()
+static int uam_gss_enabled(void)
 {
     /* XXX: must be a better way to find out if uam_gss is active */
     return auth_uamfind(UAM_SERVER_LOGIN_EXT,
