@@ -111,7 +111,7 @@ static char *fce_event_names[] = {
  * We don't give return code because all errors are handled internally (I hope..)
  *
  * */
-void fce_init_udp()
+void fce_init_udp(void)
 {
     int rv;
     struct addrinfo hints, *servinfo, *p;
@@ -159,7 +159,7 @@ void fce_init_udp()
     udp_initialized = true;
 }
 
-void fce_cleanup()
+void fce_cleanup(void)
 {
     if (udp_initialized == false )
         return;

@@ -95,7 +95,7 @@ struct _cnid_module {
 typedef struct _cnid_module cnid_module;
 
 /* Inititalize the CNID backends */
-void cnid_init();
+void cnid_init(void);
 
 /* Registers new CNID backend module */
 void cnid_register(struct _cnid_module *module);
