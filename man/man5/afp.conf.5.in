@@ -1466,7 +1466,7 @@ directory\&.
 .PP
 cdb
 .RS 4
-"Concurrent database", backend is based on Oracle Berkley DB\&. With this backend several
+"Concurrent database", backend is based on Oracle Berkeley DB\&. With this backend several
 \fBafpd\fR
 daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR

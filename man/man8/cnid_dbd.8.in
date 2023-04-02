@@ -135,7 +135,7 @@ process grabs that much memory on top of its normal memory footprint\&. It can b
 \fBdb_stat\fR
 utility with the
 \fB\-m\fR
-option that comes with Berkley DB can help you determine whether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
+option that comes with Berkeley DB can help you determine whether you need to change this value\&. The default is pretty conservative so that a large percentage of requests should be satisfied from the cache directly\&. If memory is not a bottleneck on your system you might want to leave it at that value\&. The
 \fBBerkeley DB Tutorial and Reference Guide\fR
 has a section
 \fBSelecting a cache size\fR
@@ -181,9 +181,9 @@ exits\&. Default: 600\&. Set this to 0 to disable the timeout\&.
 .PP
 Note that the first version to appear
 \fIafter\fR
-Netatalk 2\&.1 i\&.e\&. Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\*(Aqt upgrade a 2\&.0\&.x version because that one didn\*(Aqt prepare the database\&.
+Netatalk 2\&.1 i\&.e\&. Netatalk 2\&.1\&.1, will support Berkeley DB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the Berkeley DB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\*(Aqt upgrade a 2\&.0\&.x version because that one didn\*(Aqt prepare the database\&.
 .PP
-In order to update between older Netatalk releases using different BerkeleyDB library versions, follow this steps:
+In order to update between older Netatalk releases using different Berkeley DB library versions, follow this steps:
 .sp
 .RS 4
 .ie n \{\
@@ -204,7 +204,7 @@ Stop the to be upgraded old version of Netatalk
 .sp -1
 .IP \(bu 2.3
 .\}
-Using the old BerkeleyDB utilities run
+Using the old Berkeley DB utilities run
 \fBdb_recover \-h <path to \&.AppleDB>\fR
 .RE
 .sp
@@ -216,7 +216,7 @@ Using the old BerkeleyDB utilities run
 .sp -1
 .IP \(bu 2.3
 .\}
-Using the new BerkeleyDB utilities run
+Using the new Berkeley DB utilities run
 \fBdb_upgrade \-v \-h <path to \&.AppleDB> \-f cnid2\&.db\fR
 .RE
 .sp
@@ -228,7 +228,7 @@ Using the new BerkeleyDB utilities run
 .sp -1
 .IP \(bu 2.3
 .\}
-Again using the new BerkeleyDB utilities run
+Again using the new Berkeley DB utilities run
 \fBdb_checkpoint \-1 \-h <path to \&.AppleDB>\fR
 .RE
 .sp
