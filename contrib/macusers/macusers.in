@@ -21,15 +21,15 @@ if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
 
 $NETATALK_PROCESS = "netatalk";
 $AFPD_PROCESS = "afpd";
-if ($^O eq "freebsd" || $^O eq "openbsd") {
+if ($^O eq "freebsd" || $^O eq "openbsd" || $^O eq "netbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
-        $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
+        $MATCH_STR = '(\S+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 } elsif ($^O eq "solaris") {
         $PS_STR    = "-eo user,pid,ppid,c,stime,tty,time,comm";
-        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
+        $MATCH_STR = '\s*(\S+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 } else {
         $PS_STR    = "-eo user:32,pid,ppid,c,stime,tty,time,cmd";
-        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
+        $MATCH_STR = '\s*(\S+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 }
 $ASIP_PORT    = "afpovertcp";
 $ASIP_PORT_NO = 548;
@@ -38,7 +38,7 @@ $ASIP_PORT_NO = 548;
 $LSOF = 1;
 my %mac = ();
 
-if ($^O eq "freebsd") {
+if ($^O eq "freebsd" || $^O eq "netbsd") {
         open(SOCKSTAT, "sockstat -4 | grep $AFPD_PROCESS | grep -v grep |");
 
         while (<SOCKSTAT>) {
@@ -124,7 +124,14 @@ while (<PS>) {
                         close(PFILES);
                 }
 
-                ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
+                # Deal with truncated usernames. Caution: this does make the
+                # assumption that no username will be all-numeric.
+                if ($user =~ /^[0-9]+$/) {
+                        $uid = $user;
+                        ($user, $t, $t, $t, $t, $t, $name, $t, $t) = getpwuid($uid);
+                } else {
+                        ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
+                }
                 ($name) = ( $name =~ /(^[^,]+)/ );
                 printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user,
                     $name, $time, $mac{$pid};
