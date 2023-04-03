@@ -294,7 +294,9 @@ basedir regex = /usr/home</programlisting></para>
             <secondary>"mysql" CNID backend</secondary>
           </indexterm></title>
 
-        <para>CNID backend using a MySQL server.</para>
+          <para>CNID backend using a MySQL server. Gets automatically configured if the
+          mysql development libraries are detected. Disable it by passing <command>
+          --without-mysql-config</command> to the configure script.</para>
       </sect3>
     </sect2>
 
