@@ -7,7 +7,11 @@
 %{
 #include <stdbool.h>
 #include <gio/gio.h>
+#if USE_BUILTIN_TALLOC
 #include <atalk/talloc.h>
+#else
+#include <talloc.h>
+#endif
 #include <atalk/spotlight.h>
 #ifdef HAVE_TRACKER
 #include "sparql_parser.h"

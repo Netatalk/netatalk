@@ -26,7 +26,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <signal.h>
+#if USE_BUILTIN_TDB
 #include <atalk/tdb.h>
+#else
+#include <tdb.h>
+#endif
 
 #define TDB_ERROR_LINK  1
 #define TDB_ERROR_DEV   2
