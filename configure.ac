@@ -7,12 +7,12 @@ NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
 
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_MACRO_DIR([macros])
+AC_CONFIG_MACRO_DIRS([macros])
 AC_CONFIG_AUX_DIR([build-aux])
 
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs.
