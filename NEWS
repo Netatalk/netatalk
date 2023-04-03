@@ -1,5 +1,17 @@
+Changes in 2.2.9
+================
+
+* FIX: CVE-2022-45188
+* FIX: Improve systemd service dependencies GH#232
+* FIX: macusers: Fix output for long usernames
+* FIX: macusers: account for usernames with non-word characters
+* FIX: macusers: do not show root user. SF bug #495
+* NEW: Add manpage for a2boot
+* UPD: Manpage and html manual updates
+
 Changes in 2.2.8
 ================
+
 * NEW: asip-status.pl: IPv6 support; show GSS-UAM SPNEGO blob;
        improved layout of output. (3.1 backport)
 * NEW: apple_dump: support for EA meta data. (3.1 backport)
@@ -23,6 +35,7 @@ Changes in 2.2.8
 
 Changes in 2.2.7
 ================
+
 * FIX: CVE-2022-23121
 * FIX: CVE-2022-23123
 * FIX: CVE-2022-23125
