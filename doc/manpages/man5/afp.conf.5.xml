@@ -984,7 +984,7 @@
 
           <listitem>
             <para>AFP user home volume name. The default is <emphasis>$u's
-            home</emphasis>.</para>
+            home</emphasis>. The name must contain "<emphasis>$u</emphasis>".</para>
           </listitem>
         </varlistentry>
 
