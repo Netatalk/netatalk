@@ -8,7 +8,11 @@
 
   #include <gio/gio.h>
 
+  #if USE_BUILTIN_TALLOC
   #include <atalk/talloc.h>
+  #else
+  #include <talloc.h>
+  #endif
   #include <atalk/logger.h>
   #include <atalk/errchk.h>
   #include <atalk/spotlight.h>

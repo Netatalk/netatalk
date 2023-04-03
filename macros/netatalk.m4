@@ -156,7 +156,8 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AC_ARG_WITH([tracker-prefix],
       [AS_HELP_STRING([--with-tracker-prefix=PATH],[Prefix of Tracker (default: none)])],
       [ac_cv_tracker_prefix=$withval],
-      [ac_cv_tracker_prefix="`pkg-config --variable=prefix tracker-sparql-$ac_cv_tracker_pkg_version`"]
+      [AC_REQUIRE([PKG_PROG_PKG_CONFIG])
+       ac_cv_tracker_prefix="`$PKG_CONFIG --variable=prefix tracker-sparql-$ac_cv_tracker_pkg_version`"]
     )
 
     AC_ARG_WITH([tracker-install-prefix],
@@ -246,6 +247,31 @@ AC_DEFUN([AC_NETATALK_TDB], [
     AC_SUBST(TDB_CFLAGS)
     AC_SUBST(TDB_LIBS)
     AM_CONDITIONAL(USE_BUILTIN_TDB, test x"$use_bundled_tdb" = x"yes")
+])
+
+dnl Whether to disable bundled talloc
+AC_DEFUN([AC_NETATALK_TALLOC], [
+    AC_ARG_WITH(
+        talloc,
+        [AS_HELP_STRING([--with-talloc],[whether to use the bundled talloc (default: yes)])],
+        use_bundled_talloc=$withval,
+        use_bundled_talloc=yes
+    )
+    AC_MSG_CHECKING([whether to use bundled talloc])
+    AC_MSG_RESULT([$use_bundled_talloc])
+
+    if test x"$use_bundled_talloc" = x"yes" ; then
+        AC_DEFINE(USE_BUILTIN_TALLOC, 1, [Use internal talloc])
+    else
+        if test -z "$TALLOC_LIBS" ; then
+            PKG_CHECK_MODULES(TALLOC, talloc, , [AC_MSG_ERROR([couldn't find talloc with pkg-config])])
+        fi
+        use_bundled_talloc=no
+    fi
+
+    AC_SUBST(TALLOC_CFLAGS)
+    AC_SUBST(TALLOC_LIBS)
+    AM_CONDITIONAL(USE_BUILTIN_TALLOC, test x"$use_bundled_talloc" = x"yes")
 ])
 
 dnl Filesystem Hierarchy Standard (FHS) compatibility
