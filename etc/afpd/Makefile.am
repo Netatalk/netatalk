@@ -61,8 +61,8 @@ afpd_CFLAGS = \
 
 if HAVE_TRACKER
 afpd_SOURCES += spotlight.c
-afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la
-afpd_CFLAGS += @TRACKER_CFLAGS@
+afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
+afpd_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@
 endif
 
 if HAVE_ACLS
