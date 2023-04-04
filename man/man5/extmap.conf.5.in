@@ -1,7 +1,7 @@
 '\" t
 .\"     Title: extmap.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
@@ -34,7 +34,6 @@ extmap.conf \- Configuration file used by afpd(8) to specify file name extension
 \fB@pkgconfdir@/extmap\&.conf\fR
 .SH "DESCRIPTION"
 .PP
-
 @pkgconfdir@/extmap\&.conf
 is the configuration file used by
 \fBafpd\fR
@@ -48,7 +47,7 @@ The configuration lines are composed like:
 Any line beginning with a hash (\(lq#\(rq) character is ignored\&. The leading\-dot lines specify file name extension mappings\&. The extension \*(Aq\&.\*(Aq sets the default creator and type for otherwise untyped Unix files\&.
 .SH "EXAMPLES"
 .PP
-\fBExample.\ \&Extension is jpg. Type is "JPEG". Creator is "ogle".\fR
+\fBExample.\ \&Extension is jpg\&. Type is "JPEG"\&. Creator is "ogle"\&.\fR
 .sp
 .if n \{\
 .RS 4
@@ -60,7 +59,7 @@ Any line beginning with a hash (\(lq#\(rq) character is ignored\&. The leading\-
 .RE
 .\}
 .PP
-\fBExample.\ \&Extension is lzh. Type is "LHA ". Creator is not defined.\fR
+\fBExample.\ \&Extension is lzh\&. Type is "LHA "\&. Creator is not defined\&.\fR
 .sp
 .if n \{\
 .RS 4

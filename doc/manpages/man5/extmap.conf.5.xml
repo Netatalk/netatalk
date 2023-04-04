@@ -17,7 +17,7 @@
     specify file name extension mappings.</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>@pkgconfdir@/extmap.conf</command>
     </cmdsynopsis>

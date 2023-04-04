@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">27 Dec 2016</refmiscinfo>
+    <refmiscinfo class="date">02 Apr 2023</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -1336,7 +1336,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term>fce ignore directoriex = <replaceable>NAME[,NAME2,...]</replaceable>
+          <term>fce ignore directories = <replaceable>NAME[,NAME2,...]</replaceable>
           <type>(G)</type></term>
 
           <listitem>
