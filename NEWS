@@ -1,40 +1,60 @@
 Changes in 3.1.15
 =================
-* FIX: afpd: Spotlight searches can cause afpd to segfault.
+* FIX: CVE-2022-43634
+* FIX: CVE-2022-45188
+* FIX: macusers: Fix output for long usernames
+* FIX: macusers: account for usernames with non-word characters
+* FIX: macusers: Support NetBSD
+* FIX: Modernize Systemd service file.
+* FIX: configure.ac: update deprecated autoconf syntax
+* UPD: configure.ac: Support linking with system shared libraries
+* FIX: largefile-check macro for largefile (clang 16)
+* FIX: libatalk/conf: include sys/file.h for LOCK_EX
+* FIX: libatalk: Change log level for realpath() error, SF bug#666
+* FIX: libatalk: The my_bool type is deprecated as of MySQL 8.0.1, GitHub#129
+* FIX: Fix user-visible typos in log output and man pages.
+* FIX: Fix spelling, syntax, and dead URLs in html manual.
+* FIX: Document how the mysql cnid backend is configured, GitHub#69
+* FIX: Document $u in home name (afp.conf man page), GitHub#123
+* FIX: afpd: Provide MNTTYPE_NFS on OmniOS. GitHub#117
+* FIX: afpd: Spotlight searches can cause afpd to segfault, GitHub#56
+* UPD: afpd: Spotlight add support for tracker3, SF patch#147
+* NEW: Create README.md
+* NEW: Set up GitHub workflow and static analysis with Sonarcloud
 
 Changes in 3.1.14
 =================
-*  FIX: fix build with libressl >= 2.7.0
-*  NEW: Added Ignore Directories Feature
-*  UPD: Generate Unicode source code based on the latest https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
-*  FIX: Protect against removing AFP metadata xattr
-*  FIX: avoid setting adouble entries on symlinks
-*  FIX: add handling for cases where ad_entry() returns NULL
-*  FIX: Fix setting of LD_LIBRARY_FLAGS ($shlibpath_var).
-*  FIX: Fedora migrating away from IO::Socket::INET6 to IO::Socket::IP
-*  FIX: afpd: check return values from setXXid() functions
-*  FIX: afpd: drop groups in become_user_permanently()
-*  FIX: Fix use after free in get_tm_used()
-*  FIX: Fix sign extension problem in bsd_attr_list()
-*  FIX: Fix garbage read in bsd_attr_list
-*  FIX: make afpstats python 3 compatible
-*  UPD: docs: manual: Remove wrong TCP-over-TCP info; minor copy editing
-*  FIX: configure.ac: fix macro ordering for CentOS 6
-*  FIX: configure.ac: fix typo Reviewed-by: Ralph Boehme <slow@samba.org>
-*  FIX: configure.ac: remove some trailing whitespace Reviewed-by: Ralph Boehme <slow@samba.org>
-*  FIX: configure.ac: fix deprecated macro invocation Reviewed-by: Ralph Boehme <slow@samba.org>
-*  FIX: configure.ac: replace obsolete macro Reviewed-by: Ralph Boehme <slow@samba.org>
-*  FIX: libatalk/dsi/Makefile.am: fix deprecation warning
-*  FIX: Store AutoMake helper script in build-aux/
-*  FIX: configure.ac: define a dir for macros
-*  FIX: configure.ac: AM_CONFIG_HEADER is deprecated
-*  FIX: autotools: Fix another deprecation warning
-*  FIX: libgcrypt typo in configuration error message
-*  UPD: Various CI improvements
-*  FIX: libatalk/conf: re-generation of afp_voluuid.conf
-*  UPD: libatalk/conf: code cleanup and add locking to get_vol_uuid()
-*  UPD: add documentation for the lv_flags_t
-*  FIX: No need to check for attropen on Solaris #44
+* FIX: fix build with libressl >= 2.7.0, GitHub#105
+* NEW: Added Ignore Directories Feature
+* UPD: Generate Unicode source code based on Unicode 14.0, GitHub#114
+* FIX: Protect against removing AFP metadata xattr
+* FIX: avoid setting adouble entries on symlinks
+* FIX: add handling for cases where ad_entry() returns NULL, GitHub#175
+* FIX: Fix setting of LD_LIBRARY_FLAGS ($shlibpath_var).
+* FIX: afpstats: Fedora migrating away from IO::Socket::INET6, GitHub#130
+* FIX: afpd: check return values from setXXid() functions, GitHub#115
+* FIX: afpd: drop groups in become_user_permanently(), GitHub#126
+* FIX: Fix use after free in get_tm_used()
+* FIX: Fix sign extension problem in bsd_attr_list()
+* FIX: Fix garbage read in bsd_attr_list
+* FIX: make afpstats python 3 compatible
+* UPD: docs: manual: Remove wrong TCP-over-TCP info; minor copy editing
+* FIX: configure.ac: fix macro ordering for CentOS 6
+* FIX: configure.ac: fix typo
+* FIX: configure.ac: remove some trailing whitespace
+* FIX: configure.ac: fix deprecated macro invocation
+* FIX: configure.ac: replace obsolete macro
+* FIX: libatalk/dsi/Makefile.am: fix deprecation warning
+* FIX: Store AutoMake helper script in build-aux/
+* FIX: configure.ac: define a dir for macros
+* FIX: configure.ac: AM_CONFIG_HEADER is deprecated
+* FIX: autotools: Fix another deprecation warning
+* FIX: libgcrypt typo in configuration error message
+* UPD: Various CI improvements
+* FIX: libatalk/conf: re-generation of afp_voluuid.conf
+* UPD: libatalk/conf: code cleanup and add locking to get_vol_uuid()
+* UPD: add documentation for the lv_flags_t
+* FIX: No need to check for attropen on Solaris, GitHub#44
 
 Changes in 3.1.13
 =================
