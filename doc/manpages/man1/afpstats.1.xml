@@ -10,19 +10,19 @@
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>afpstats</refname>
 
     <refpurpose>List AFP statistics</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>afpstats</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
     <para><command>afpstats</command> list AFP statistics via D-Bus IPC.</para>
@@ -40,7 +40,7 @@
 
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
     <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,

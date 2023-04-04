@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
-.\"      Date: 27 Dec 2016
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 02 Apr 2023
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "27 Dec 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "02 Apr 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -264,7 +264,7 @@ Append @DOMAIN to username when authenticating\&. Useful in Active Directory env
 .PP
 admin auth user = \fIuser\fR \fB(G)\fR
 .RS 4
-Specifying e\%.g\&. "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
+Specifying e\&.g\&. "\fBadmin auth user = root\fR" whenever a normal user login fails, afpd will try to authenticate as the specified
 \fBadmin auth user\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
 \fBadmin auth user\fR, you can authenticate as any other user\&.
 .RE
@@ -519,13 +519,13 @@ Maximum number of bytes spliced\&.
 .PP
 use sendfile = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
-Whether to use sendfile.\" sendfile
+Whether to use sendfile
 syscall for sending file data to clients\&.
 .RE
 .PP
 zeroconf = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
-Whether to use automatic Zeroconf.\" Zeroconf: Bonjour
+Whether to use automatic Zeroconf
 service registration if Avahi or mDNSResponder were compiled in\&.
 .RE
 .SS "Miscellaneous Options"
@@ -560,7 +560,6 @@ Advanced permission control that deals with ACLs\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBignore\fR
 \- UNIX chmod() requests are completely ignored, use this option to allow the parent directory\*(Aqs ACL inheritance full control over new items\&.
 .RE
@@ -573,7 +572,6 @@ Advanced permission control that deals with ACLs\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBpreserve\fR
 \- preserve ZFS ACEs for named users and groups or POSIX ACL group mask
 .RE
@@ -586,7 +584,6 @@ Advanced permission control that deals with ACLs\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBsimple\fR
 \- just to a chmod() as requested without any extra steps
 .RE
@@ -656,7 +653,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 home name = \fIname\fR \fB(H)\fR
 .RS 4
 AFP user home volume name\&. The default is
-\fI$u\*(Aqs home\fR\&.
+\fI$u\*(Aqs home\fR\&. The name must contain "\fI$u\fR"\&.
 .RE
 .PP
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
@@ -817,7 +814,7 @@ Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
 .RE
-.SS "Filesystem Change Events (FCE.\" FCE )"
+.SS "Filesystem Change Events (FCE)"
 .PP
 Netatalk includes a nifty filesystem change event mechanism where afpd processes notify interested listeners about certain filesystem event by UDP network datagrams\&.
 .PP
@@ -1203,7 +1200,7 @@ set the CNID backend to be used for the volume, default is [@DEFAULT_CNID_SCHEME
 .PP
 ea = \fInone|auto|sys|ad|samba\fR \fB(V)\fR
 .RS 4
-Specify how Extended Attributes.\" Extended Attributes
+Specify how Extended Attributes
 are stored\&.
 \fBauto\fR
 is the default\&.
@@ -1331,7 +1328,7 @@ Allows certain users and groups to have read/write access to a share\&. This fol
 .PP
 veto files = \fIvetoed names\fR \fB(V)\fR
 .RS 4
-hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, e\.&g\&. "veto files = veto1/", "veto files = veto1/veto2/"\&.
+hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, e\&.g\&. "veto files = veto1/", "veto files = veto1/veto2/"\&.
 .RE
 .SS "Volume options"
 .PP
