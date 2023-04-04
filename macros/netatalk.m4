@@ -135,19 +135,6 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
   AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
 ])
 
-dnl Whether to enable developer build
-AC_DEFUN([AC_DEVELOPER], [
-    AC_MSG_CHECKING([whether to enable developer build])
-    AC_ARG_ENABLE(
-        developer,
-        AS_HELP_STRING([--enable-developer], [whether to enable developer build (ABI checking)]),
-        enable_dev=$enableval,
-        enable_dev=no
-    )
-    AC_MSG_RESULT([$enable_dev])
-    AM_CONDITIONAL(DEVELOPER, test x"$enable_dev" = x"yes")
-])
-
 dnl Tracker, for Spotlight
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     ac_cv_have_tracker=no
