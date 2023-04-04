@@ -1,7 +1,7 @@
 '\" t
 .\"     Title: afp_signature.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
@@ -36,7 +36,7 @@ is the configuration file used by
 \fBafpd\fR
 to specify server signature automagically\&. The configuration lines are composed like:
 .PP
-\fI"server name" \fR
+\fI"server\-name"\fR
 \fIhexa\-string\fR
 .PP
 The first field is server name\&. Server names must be quoted if they contain spaces\&. The second field is the hexadecimal string of 32 characters for 16\-bytes server signature\&.
@@ -67,7 +67,7 @@ This file should not be thoughtlessly edited and be copied onto another server\&
 .PP
 .SH "EXAMPLES"
 .PP
-\fBExample.\ \&afp_signature.conf\fR
+\fBExample.\ \&afp_signature\&.conf\fR
 .sp
 .if n \{\
 .RS 4
