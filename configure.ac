@@ -199,9 +199,6 @@ AC_NETATALK_TALLOC
 dnl Check for Tracker
 AC_NETATALK_SPOTLIGHT
 
-dnl libatalk API checks
-AC_DEVELOPER
-
 dnl Check for dtrace
 AC_NETATALK_DTRACE
 
