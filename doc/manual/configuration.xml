@@ -1592,6 +1592,16 @@ aclmode = passthrough</screen>
           linkend="enable-monitors">enable-monitors</link> and <link
           linkend="crawling-interval">crawling-interval</link> below.</para>
         </listitem>
+	<listitem>
+	    <para>Indexing home directories</para>
+
+	    <para>A known limitation with the current implementation means
+	    that shared volumes in a user's home directory does not get
+	    indexed by Spotlight.</para>
+
+	    <para>As a workaround, keep the shared volumes you want to have
+	    indexed elsewhere on the host filesystem.</para>
+        </listitem>
       </itemizedlist>
     </sect2>
 
@@ -1599,10 +1609,11 @@ aclmode = passthrough</screen>
       <title>Using Tracker commandline tools on the server</title>
 
       <para>Netatalk must be running, commands must be executed as root and
-      some environment variables must be set up (adjust PREFIX to point to
-      the base directory Netatalk in installed to):<screen>$ su
+      some environment variables must be set up.</para>
+
+      <para>If the .tracker_profile file does not exist, create it first. If you need to make the environment variables persistent, source .tracker_profile from /root/.profile. Adjust PREFIX to point to the base directory Netatalk is installed to.<screen>$ su
 # cat .tracker_profile
-PREFIX="/"
+PREFIX="/usr/local"
 export XDG_DATA_HOME="$PREFIX/var/netatalk/"
 export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
 export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
@@ -1614,120 +1625,48 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
       PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
 
       <sect3>
-        <title>Querying Tracker status</title>
+        <title>Common Tracker commands</title>
 
         <variablelist>
           <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Querying Tracker status:</term>
             <listitem>
               <screen># tracker daemon</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-          <term>Old Tracker:</term>
-          <listitem>
-            <screen># tracker-control -S</screen>
-          </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>Stop Tracker</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Stop Tracker:</term>
             <listitem>
               <screen># tracker daemon -t</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Old Tracker:</term>
-            <listitem>
-              <screen># tracker-control -t</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>Start Tracker</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Start Tracker:</term>
             <listitem>
               <screen># tracker daemon -s</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Old Tracker:</term>
-            <listitem>
-              <screen># tracker-control -s</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>Reindex directory</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Reindex directory:</term>
             <listitem>
               <screen># tracker index -f PATH</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Old Tracker:</term>
-            <listitem>
-              <screen># tracker-control -f PATH</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-        </sect3>
-
-      <sect3>
-        <title>Query Tracker for information about a file or directory</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Query Tracker for information about a file or directory:</term>
             <listitem>
               <screen># tracker info PATH</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>Old Tracker:</term>
-            <listitem>
-              <screen># tracker-info PATH</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-        </sect3>
-
-      <sect3>
-        <title>Search Tracker</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>Recent Tracker:</term>
+            <term>Search Tracker:</term>
             <listitem>
               <screen># tracker search QUERY</screen>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>Old Tracker:</term>
-            <listitem>
-              <screen># tracker-search QUERY</screen>
             </listitem>
           </varlistentry>
         </variablelist>
