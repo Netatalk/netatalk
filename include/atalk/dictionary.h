@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #define _DICTIONARY_H_
 
 /*---------------------------------------------------------------------------
-   								Includes
+                                                                Includes
  ---------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <unistd.h>
 
 /*---------------------------------------------------------------------------
-   								New types
+                                                                New types
  ---------------------------------------------------------------------------*/
 
 
@@ -61,19 +61,19 @@ DEALINGS IN THE SOFTWARE.
  */
 /*-------------------------------------------------------------------------*/
 typedef struct _dictionary_ {
-	int				n ;		/** Number of entries in dictionary */
-	int				size ;	/** Storage size */
-	char 	    **	val ;	/** List of string values */
-	char 	    **  key ;	/** List of string keys */
-	unsigned	 *	hash ;	/** List of hash values for keys */
-} dictionary ;
+    int n;          /** Number of entries in dictionary */
+    int size;       /** Storage size */
+    char **val;     /** List of string values */
+    char **key;     /** List of string keys */
+    unsigned *hash; /** List of hash values for keys */
+} dictionary;
 
 
 /*---------------------------------------------------------------------------
-  							Function prototypes
+                                                        Function prototypes
  ---------------------------------------------------------------------------*/
 
- /*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
 /**
   @brief    Compute the hash key for a string.
   @param    key     Character string to use for key.
@@ -85,7 +85,7 @@ typedef struct _dictionary_ {
   by comparing the key itself in last resort.
  */
 /*--------------------------------------------------------------------------*/
-unsigned   atalkdict_hash  (const char * key);
+unsigned atalkdict_hash(const char *key);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -98,7 +98,7 @@ unsigned   atalkdict_hash  (const char * key);
   dictionary, give size=0.
  */
 /*--------------------------------------------------------------------------*/
-dictionary *atalkdict_new  (size_t size);
+dictionary *atalkdict_new(size_t size);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -109,7 +109,7 @@ dictionary *atalkdict_new  (size_t size);
   Deallocate a dictionary object and all memory associated to it.
  */
 /*--------------------------------------------------------------------------*/
-void       atalkdict_del   (dictionary * vd);
+void atalkdict_del(dictionary *vd);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -126,7 +126,7 @@ void       atalkdict_del   (dictionary * vd);
   dictionary object, you should not try to free it or modify it.
  */
 /*--------------------------------------------------------------------------*/
-const char *atalkdict_get  (const dictionary * d, const char *section, const char * key, const char * def);
+const char *atalkdict_get(const dictionary *d, const char *section, const char *key, const char *def);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -155,7 +155,7 @@ const char *atalkdict_get  (const dictionary * d, const char *section, const cha
   This function returns non-zero in case of failure.
  */
 /*--------------------------------------------------------------------------*/
-int        atalkdict_set   (dictionary * vd, const char *section, const char * key, const char * val);
+int atalkdict_set(dictionary *vd, const char *section, const char *key, const char *val);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -169,7 +169,7 @@ int        atalkdict_set   (dictionary * vd, const char *section, const char * k
   key cannot be found.
  */
 /*--------------------------------------------------------------------------*/
-void       atalkdict_unset (dictionary * d, const char *section, const char * key);
+void atalkdict_unset(dictionary *d, const char *section, const char *key);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -183,6 +183,6 @@ void       atalkdict_unset (dictionary * d, const char *section, const char * ke
   output file pointers.
  */
 /*--------------------------------------------------------------------------*/
-void       atalkdict_dump  (dictionary * d, FILE * out);
+void atalkdict_dump(dictionary *d, FILE *out);
 
 #endif

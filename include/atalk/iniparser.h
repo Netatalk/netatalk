@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #define _INIPARSER_H_
 
 /*---------------------------------------------------------------------------
-   								Includes
+                                                                Includes
  ---------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -67,7 +67,7 @@ DEALINGS IN THE SOFTWARE.
   This function returns -1 in case of error.
  */
 /*--------------------------------------------------------------------------*/
-int        atalk_iniparser_getnsec(const dictionary * d);
+int atalk_iniparser_getnsec(const dictionary *d);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -83,7 +83,7 @@ int        atalk_iniparser_getnsec(const dictionary * d);
   This function returns NULL in case of error.
  */
 /*--------------------------------------------------------------------------*/
-const char *atalk_iniparser_getsecname(const dictionary * d, int n);
+const char *atalk_iniparser_getsecname(const dictionary *d, int n);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -96,7 +96,7 @@ const char *atalk_iniparser_getsecname(const dictionary * d, int n);
   It is Ok to specify @c stderr or @c stdout as output files.
  */
 /*--------------------------------------------------------------------------*/
-void       atalk_iniparser_dump_ini(const dictionary * d, FILE * f);
+void atalk_iniparser_dump_ini(const dictionary *d, FILE *f);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -110,7 +110,7 @@ void       atalk_iniparser_dump_ini(const dictionary * d, FILE * f);
   file.  It is Ok to specify @c stderr or @c stdout as output files.
  */
 /*--------------------------------------------------------------------------*/
-void iniparser_dumpsection_ini(const dictionary * d, const char * s, FILE * f);
+void iniparser_dumpsection_ini(const dictionary *d, const char *s, FILE *f);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -125,7 +125,7 @@ void iniparser_dumpsection_ini(const dictionary * d, const char * s, FILE * f);
   purposes mostly.
  */
 /*--------------------------------------------------------------------------*/
-void       atalk_iniparser_dump(const dictionary * d, FILE * f);
+void atalk_iniparser_dump(const dictionary *d, FILE *f);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -143,7 +143,7 @@ void       atalk_iniparser_dump(const dictionary * d, FILE * f);
   the dictionary, do not free or modify it.
  */
 /*--------------------------------------------------------------------------*/
-const char *atalk_iniparser_getstring(const dictionary * d, const char *section, const char * key, const char * def);
+const char *atalk_iniparser_getstring(const dictionary *d, const char *section, const char *key, const char *def);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -161,7 +161,7 @@ const char *atalk_iniparser_getstring(const dictionary * d, const char *section,
   the dictionary, do not free or modify it.
  */
 /*--------------------------------------------------------------------------*/
-char       *atalk_iniparser_getstrdup(const dictionary * d, const char *section, const char * key, const char * def);
+char *atalk_iniparser_getstrdup(const dictionary *d, const char *section, const char *key, const char *def);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -191,7 +191,7 @@ char       *atalk_iniparser_getstrdup(const dictionary * d, const char *section,
   Credits: Thanks to A. Becker for suggesting strtol()
  */
 /*--------------------------------------------------------------------------*/
-int        atalk_iniparser_getint(const dictionary * d, const char *section, const char * key, int notfound);
+int atalk_iniparser_getint(const dictionary *d, const char *section, const char *key, int notfound);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -219,7 +219,7 @@ int        atalk_iniparser_getint(const dictionary * d, const char *section, con
   handling.
  */
 /*--------------------------------------------------------------------------*/
-long int   atalk_iniparser_getlongint(const dictionary * d, const char * section, const char * key, long int notfound);
+long int atalk_iniparser_getlongint(const dictionary *d, const char *section, const char *key, long int notfound);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -235,7 +235,7 @@ long int   atalk_iniparser_getlongint(const dictionary * d, const char * section
   the notfound value is returned.
  */
 /*--------------------------------------------------------------------------*/
-double     atalk_iniparser_getdouble(const dictionary * d, const char *section, const char * key, double notfound);
+double atalk_iniparser_getdouble(const dictionary *d, const char *section, const char *key, double notfound);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -270,7 +270,7 @@ double     atalk_iniparser_getdouble(const dictionary * d, const char *section, 
   necessarily have to be 0 or 1.
  */
 /*--------------------------------------------------------------------------*/
-int        atalk_iniparser_getboolean(const dictionary * d, const char *section, const char * key, int notfound);
+int atalk_iniparser_getboolean(const dictionary *d, const char *section, const char *key, int notfound);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -286,7 +286,7 @@ int        atalk_iniparser_getboolean(const dictionary * d, const char *section,
   It is Ok to set val to NULL.
  */
 /*--------------------------------------------------------------------------*/
-int        atalk_iniparser_set(dictionary * ini, const char *section, const char * key, const char * val);
+int atalk_iniparser_set(dictionary *ini, const char *section, const char *key, const char *val);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -299,7 +299,7 @@ int        atalk_iniparser_set(dictionary * ini, const char *section, const char
   If the given entry can be found, it is deleted from the dictionary.
  */
 /*--------------------------------------------------------------------------*/
-void       atalk_iniparser_unset(dictionary * ini, const char *section, const char * key);
+void atalk_iniparser_unset(dictionary *ini, const char *section, const char *key);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -313,7 +313,7 @@ void       atalk_iniparser_unset(dictionary * ini, const char *section, const ch
   of querying for the presence of sections in a dictionary.
  */
 /*--------------------------------------------------------------------------*/
-int        atalk_iniparser_find_entry(const dictionary * ini, const char * entry) ;
+int atalk_iniparser_find_entry(const dictionary *ini, const char *entry);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -329,7 +329,7 @@ int        atalk_iniparser_find_entry(const dictionary * ini, const char * entry
   The returned dictionary must be freed using iniparser_freedict().
  */
 /*--------------------------------------------------------------------------*/
-dictionary *atalk_iniparser_load(const char * ininame);
+dictionary *atalk_iniparser_load(const char *ininame);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -342,6 +342,6 @@ dictionary *atalk_iniparser_load(const char * ininame);
   gets out of the current context.
  */
 /*--------------------------------------------------------------------------*/
-void       atalk_iniparser_freedict(dictionary * d);
+void atalk_iniparser_freedict(dictionary *d);
 
 #endif
