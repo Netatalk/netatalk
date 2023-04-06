@@ -45,7 +45,7 @@ dnl	compile_ssl=no
 
 	if test "$tryssl" = "yes"; then
 		AC_MSG_CHECKING([for SSL])
-		for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/$atalk_libname/openssl /usr/local/ssl /usr/$atalk_libname/ssl /usr/local /usr/pkg /opt /opt/openssl /usr/local/ssl ; do
+		for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/$atalk_libname/openssl /usr/local/ssl /usr/$atalk_libname/ssl /usr/local /usr/pkg /opt /opt/openssl /usr/local/ssl /usr/local/opt/openssl@1.1 /opt/homebrew/opt/openssl@1.1; do
 			if test -f "$ssldir/include/openssl/cast.h" ; then
 				SSL_CFLAGS="$SSL_CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
 				SSL_LIBS="$SSL_LIBS -L$ssldir/$atalk_libname -L$ssldir -lcrypto"
