@@ -23,7 +23,6 @@
 #include <string.h>
 #define HASH_IMPLEMENTATION
 #include "hash.h"
-
 #ifdef KAZLIB_RCSID
 #endif
 
