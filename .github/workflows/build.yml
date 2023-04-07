@@ -1,13 +1,14 @@
 name: SonarCloud
 on:
   push:
-    paths:
-      - 'bin/**'
-      - 'contrib/**'
-      - 'etc/**'
-      - 'include/**'
-      - 'libatalk/**'
-      - '.github/workflows/build.yml'
+    branches:
+      - main
+      - branch-*
+    paths-ignore:
+      - 'config/**'
+      - 'distrib/**'
+      - 'doc/**'
+      - 'man/**'
   pull_request:
     types: [opened, synchronize, reopened]
 
