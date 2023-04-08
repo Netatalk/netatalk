@@ -2,23 +2,30 @@ Changes in 3.1.15
 =================
 * FIX: CVE-2022-43634
 * FIX: CVE-2022-45188
+* FIX: configure.ac: update deprecated autoconf syntax
+* UPD: configure.ac: Support linking with system shared libraries
+* FIX: macros: largefile-check macro for largefile (clang 16)
+* UPD: macros: Update pthread macro to the latest from gnu.org
+* FIX: initscripts: Modernize Systemd service file.
+* FIX: libatalk/conf: include sys/file.h for LOCK_EX
+* UPD: libatalk/conf: Remove ABI checks and the --enable-developer option, GitHub#262
+* FIX: libatalk: Change log level for realpath() error, SF bug#666
+* FIX: libatalk: The my_bool type is deprecated as of MySQL 8.0.1, GitHub#129
+* UPD: libatalk: Bring iniparser library codebase in line with current version 4.1 
+* FIX: Fix user-visible typos in log output and man pages.
+* FIX: Fix spelling, syntax, and dead URLs in html manual.
+* FIX: afpd: Provide MNTTYPE_NFS on OmniOS, GitHub#117
+* FIX: afpd: Avoid triggering realpath() lookups with empty path, GitHub#277
+* FIX: spotlight: Spotlight searches can cause afpd to segfault, GitHub#56
+* UPD: spotlight: add support for tracker3, SF patch#147
+* UPD: spotlight: Regenerate sparql_parser code using GNU Bison 3.7.5
 * FIX: macusers: Fix output for long usernames
 * FIX: macusers: account for usernames with non-word characters
 * FIX: macusers: Support NetBSD
-* FIX: Modernize Systemd service file.
-* FIX: configure.ac: update deprecated autoconf syntax
-* UPD: configure.ac: Support linking with system shared libraries
-* FIX: largefile-check macro for largefile (clang 16)
-* FIX: libatalk/conf: include sys/file.h for LOCK_EX
-* FIX: libatalk: Change log level for realpath() error, SF bug#666
-* FIX: libatalk: The my_bool type is deprecated as of MySQL 8.0.1, GitHub#129
-* FIX: Fix user-visible typos in log output and man pages.
-* FIX: Fix spelling, syntax, and dead URLs in html manual.
+* FIX: Fix all function declarations without a prototype
+* UPD: Remove acsiidocs sources and release notes script
 * FIX: Document how the mysql cnid backend is configured, GitHub#69
 * FIX: Document $u in home name (afp.conf man page), GitHub#123
-* FIX: afpd: Provide MNTTYPE_NFS on OmniOS. GitHub#117
-* FIX: afpd: Spotlight searches can cause afpd to segfault, GitHub#56
-* UPD: afpd: Spotlight add support for tracker3, SF patch#147
 * NEW: Create README.md
 * NEW: Set up GitHub workflow and static analysis with Sonarcloud
 
