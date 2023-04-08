@@ -543,9 +543,6 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
     LOG(log_debug, logtype_fce, "register_fce(path: %s, event: %s)",
         path, fce_event_names[event]);
 
-    bname = basename_safe(path);
-    dirname = realpath_safe(path);
-
     if ((udp_sockets == 0) && (obj->fce_notify_script == NULL)) {
         /* No listeners configured */
         return AFP_OK;
@@ -562,6 +559,9 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 	}
 
 	/* handle files which should not cause events (.DS_Store atc. ) */
+    bname = basename_safe(path);
+    dirname = realpath_safe(path);
+
     for (int i = 0; skip_files[i] != NULL; i++) {
         if (strcmp(bname, skip_files[i]) == 0)
 			return AFP_OK;
