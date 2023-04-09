@@ -62,7 +62,7 @@ dnl	# check for iconv usability
 	AC_CACHE_CHECK([for working iconv],netatalk_cv_HAVE_USABLE_ICONV,[
 		AC_TRY_RUN([\
 #include <iconv.h>
-main() {
+int main(void) {
        iconv_t cd = iconv_open("ASCII", "UTF-8");
        if (cd == 0 || cd == (iconv_t)-1) return -1;
        return 0;
