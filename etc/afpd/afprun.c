@@ -29,6 +29,7 @@
 #include <sys/types.h>
 /* #define __USE_GNU 1 */
 #include <unistd.h>
+#include <grp.h>
 
 #include <errno.h>
 #include <sys/wait.h>
