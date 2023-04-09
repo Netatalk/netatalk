@@ -1220,6 +1220,7 @@ AC_DEFUN([AC_NETATALK_REALPATH], [
 AC_CACHE_CHECK([if the realpath function allows a NULL argument],
     neta_cv_REALPATH_TAKES_NULL, [
         AC_RUN_IFELSE([AC_LANG_SOURCE([[
+	    #include <stdlib.h>
             #include <stdio.h>
             #include <limits.h>
             #include <signal.h>
@@ -1228,7 +1229,7 @@ AC_CACHE_CHECK([if the realpath function allows a NULL argument],
                  exit(1);
             }
 
-            main() {
+            int main(void) {
                 char *newpath;
                 signal(SIGSEGV, exit_on_core);
                 newpath = realpath("/tmp", NULL);
