@@ -486,10 +486,17 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
                 init_style="$withval", init_style=none
     )
-    case "$init_style" in 
+    case "$host_os" in
+    *darwin*)
+    if test x"$init_style" = x"none" ; then
+    init_style=macos-launchd
+    fi
+    ;;
+    esac
+    case "$init_style" in
     "redhat")
 	    AC_MSG_ERROR([--with-init-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
         ;;
@@ -550,6 +557,10 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_RESULT([enabling general systemd support])
 	    ac_cv_init_dir="/usr/lib/systemd/system"
         ;;
+    "macos-launchd")
+    	AC_MSG_RESULT([enabling macOS-style launchd initscript support])
+    	ac_cv_init_dir="/Library/LaunchDaemons"
+        ;;    
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
 	    ac_cv_init_dir="none"
@@ -566,6 +577,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)
     AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd || test x$init_style = xgentoo-systemd)
     AM_CONDITIONAL(USE_DEBIAN_SYSTEMD, test x$init_style = xdebian-systemd)
+    AM_CONDITIONAL(USE_MACOS_LAUNCHD, test x$init_style = xmacos-launchd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
     AC_ARG_WITH(init-dir,
