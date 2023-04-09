@@ -111,12 +111,10 @@ int afpstats_init(server_child_t *childs_in)
     GThread *thread;
 
     childs = childs_in;
-    g_type_init();
-    g_thread_init(NULL);
     dbus_g_thread_init();
     (void)g_log_set_default_handler(my_glib_log, NULL);
 
-    thread = g_thread_create(afpstats_thread, NULL, TRUE, NULL);
+    thread = g_thread_new("afpstats", afpstats_thread, NULL);
 
     return 0;
 }
