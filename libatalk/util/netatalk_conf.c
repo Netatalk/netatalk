@@ -791,7 +791,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (atalk_iniparser_getboolean(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", 0)) {
         EC_NULL( volume->v_dbpath = strdup(path) );
     } else {
-        char *global_path;
+        const char *global_path;
         val = getoption(obj->iniconfig, section, "vol dbpath", preset, NULL);
         if (val == NULL) {
             /* check global option */
@@ -1573,7 +1573,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     struct stat         st;
     int                 retries = 0;
     struct vol         *vol;
-    char               *includefile;
+    const char         *includefile;
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
