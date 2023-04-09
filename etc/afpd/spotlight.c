@@ -42,6 +42,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 #include <atalk/spotlight.h>
+#include <atalk/compat.h>
 
 #include "directory.h"
 #include "etc/spotlight/sparql_parser.h"
@@ -1435,7 +1436,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         RSIVAL(rbuf, 0, ntohs(vid));
         RSIVAL(rbuf, 4, 0);
         len = strlen(vol->v_path) + 1;
-        strncpy(rbuf + 8, vol->v_path, len);
+        strlcpy(rbuf + 8, vol->v_path, len);
         *rbuflen += 8 + len;
         break;
 
