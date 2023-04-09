@@ -8,8 +8,6 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/standards.h>
-
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +29,7 @@
 #include <atalk/uam.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/standards.h>
 
 #define PASSWDLEN 8
 
