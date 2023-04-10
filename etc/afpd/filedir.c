@@ -205,7 +205,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
 int check_name(const struct vol *vol, char *name)
 {
     if (!vol->vfs->vfs_validupath(vol, name)) {
-        LOG(log_error, logtype_afpd, "check_name: illegal name: '%s'", name);
+        LOG(log_warning, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
     }
 
