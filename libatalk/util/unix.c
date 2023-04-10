@@ -441,7 +441,7 @@ char *realpath_safe(const char *path)
 
 #ifdef REALPATH_TAKES_NULL
     if ((resolved_path = realpath(path, NULL)) == NULL) {
-        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        LOG(log_warning, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
         return NULL;
     }
     return resolved_path;
@@ -450,7 +450,7 @@ char *realpath_safe(const char *path)
         return NULL;
     if (realpath(path, resolved_path) == NULL) {
         free(resolved_path);
-        LOG(log_error, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
+        LOG(log_warning, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
         return NULL;
     }
     /* Safe some memory */
