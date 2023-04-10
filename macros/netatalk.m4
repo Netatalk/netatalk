@@ -52,6 +52,13 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
     [WDTRACE=$withval],
     [WDTRACE=auto]
   )
+  case "$host_os" in
+  *darwin*)
+  if test x"$WDTRACE" = x"auto" ; then
+  WDTRACE=no
+  fi
+  ;;
+  esac
   if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
     AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
     if test "x$atalk_cv_have_dtrace" = "xno" ; then
@@ -899,7 +906,12 @@ fi
 
 # Platform specific checks
 if test x"$with_acl_support" != x"no" ; then
-	case "$host_os" in
+   case "$host_os" in
+  *darwin*)
+    AC_MSG_NOTICE(Darwin ACLs are currently unsupported)
+    with_acl_support=no
+    ac_cv_have_acls=no
+    ;;
 	*solaris*)
 		AC_MSG_NOTICE(Using solaris ACLs)
 		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether Solaris ACLs are available])
