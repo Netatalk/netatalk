@@ -1,30 +1,9 @@
-/*
-Copyright (c) 2000-2011 by Nicolas Devillard.
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-*/
 
 /*-------------------------------------------------------------------------*/
 /**
    @file    dictionary.h
    @author  N. Devillard
+   @date    Sep 2007
    @brief   Implements a dictionary for string variables.
 
    This module implements a simple dictionary object, i.e. a list
@@ -33,11 +12,16 @@ DEALINGS IN THE SOFTWARE.
 */
 /*--------------------------------------------------------------------------*/
 
+/*
+	$Author: ndevilla $
+	$Date: 2007-11-23 21:37:00 $
+*/
+
 #ifndef _DICTIONARY_H_
 #define _DICTIONARY_H_
 
 /*---------------------------------------------------------------------------
-                                                                Includes
+   								Includes
  ---------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -46,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 #include <unistd.h>
 
 /*---------------------------------------------------------------------------
-                                                                New types
+   								New types
  ---------------------------------------------------------------------------*/
 
 
@@ -61,128 +45,24 @@ DEALINGS IN THE SOFTWARE.
  */
 /*-------------------------------------------------------------------------*/
 typedef struct _dictionary_ {
-    int n;          /** Number of entries in dictionary */
-    int size;       /** Storage size */
-    char **val;     /** List of string values */
-    char **key;     /** List of string keys */
-    unsigned *hash; /** List of hash values for keys */
-} dictionary;
+	int				n ;		/** Number of entries in dictionary */
+	int				size ;	/** Storage size */
+	char 	    **	val ;	/** List of string values */
+	char 	    **  key ;	/** List of string keys */
+	unsigned	 *	hash ;	/** List of hash values for keys */
+} dictionary ;
 
 
 /*---------------------------------------------------------------------------
-                                                        Function prototypes
+  							Function prototypes
  ---------------------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Compute the hash key for a string.
-  @param    key     Character string to use for key.
-  @return   1 unsigned int on at least 32 bits.
-
-  This hash function has been taken from an Article in Dr Dobbs Journal.
-  This is normally a collision-free function, distributing keys evenly.
-  The key is stored anyway in the struct so that collision can be avoided
-  by comparing the key itself in last resort.
- */
-/*--------------------------------------------------------------------------*/
-unsigned atalkdict_hash(const char *key);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Create a new dictionary object.
-  @param    size    Optional initial size of the dictionary.
-  @return   1 newly allocated dictionary object.
-
-  This function allocates a new dictionary object of given size and returns
-  it. If you do not know in advance (roughly) the number of entries in the
-  dictionary, give size=0.
- */
-/*--------------------------------------------------------------------------*/
-dictionary *atalkdict_new(size_t size);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Delete a dictionary object
-  @param    d   dictionary object to deallocate.
-  @return   void
-
-  Deallocate a dictionary object and all memory associated to it.
- */
-/*--------------------------------------------------------------------------*/
-void atalkdict_del(dictionary *vd);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Get a value from a dictionary.
-  @param    d       dictionary object to search.
-  @param    section section object to search.
-  @param    key     Key to look for in the dictionary.
-  @param    def     Default value to return if key not found.
-  @return   1 pointer to internally allocated character string.
-
-  This function locates a key in a dictionary and returns a pointer to its
-  value, or the passed 'def' pointer if no such key can be found in
-  dictionary. The returned character pointer points to data internal to the
-  dictionary object, you should not try to free it or modify it.
- */
-/*--------------------------------------------------------------------------*/
-const char *atalkdict_get(const dictionary *d, const char *section, const char *key, const char *def);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Set a value in a dictionary.
-  @param    d       dictionary object to modify.
-  @param    section section object to modify.
-  @param    key     Key to modify or add.
-  @param    val     Value to add.
-  @return   int     0 if Ok, anything else otherwise
-
-  If the given key is found in the dictionary, the associated value is
-  replaced by the provided one. If the key cannot be found in the
-  dictionary, it is added to it.
-
-  It is Ok to provide a NULL value for val, but NULL values for the dictionary
-  or the key are considered as errors: the function will return immediately
-  in such a case.
-
-  Notice that if you dictionary_set a variable to NULL, a call to
-  dictionary_get will return a NULL value: the variable will be found, and
-  its value (NULL) is returned. In other words, setting the variable
-  content to NULL is equivalent to deleting the variable from the
-  dictionary. It is not possible (in this implementation) to have a key in
-  the dictionary without value.
-
-  This function returns non-zero in case of failure.
- */
-/*--------------------------------------------------------------------------*/
-int atalkdict_set(dictionary *vd, const char *section, const char *key, const char *val);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Delete a key in a dictionary
-  @param    d       dictionary object to modify.
-  @param    section section object to modify.
-  @param    key     Key to remove.
-  @return   void
-
-  This function deletes a key in a dictionary. Nothing is done if the
-  key cannot be found.
- */
-/*--------------------------------------------------------------------------*/
-void atalkdict_unset(dictionary *d, const char *section, const char *key);
-
-/*-------------------------------------------------------------------------*/
-/**
-  @brief    Dump a dictionary to an opened file pointer.
-  @param    d   Dictionary to dump
-  @param    f   Opened file pointer.
-  @return   void
-
-  Dumps a dictionary onto an opened file pointer. Key pairs are printed out
-  as @c [Key]=[Value], one per line. It is Ok to provide stdout or stderr as
-  output file pointers.
- */
-/*--------------------------------------------------------------------------*/
-void atalkdict_dump(dictionary *d, FILE *out);
+unsigned   atalkdict_hash  (char * key);
+dictionary *atalkdict_new  (int size);
+void       atalkdict_del   (dictionary * vd);
+const char *atalkdict_get  (const dictionary * d, const char *section, const char * key, const char * def);
+int        atalkdict_set   (dictionary * vd, char *section, char * key, char * val);
+void       atalkdict_unset (dictionary * d, char *section, char * key);
+void       atalkdict_dump  (dictionary * d, FILE * out);
 
 #endif
