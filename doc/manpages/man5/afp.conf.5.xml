@@ -974,7 +974,7 @@
 
           <listitem>
             <para>Specifies the user that guests should use (default is
-            "nobody"). The name should be quoted.</para>
+            nobody).</para>
           </listitem>
         </varlistentry>
 
@@ -1009,8 +1009,8 @@
 
           <listitem>
             <para>Sets a message to be displayed when clients logon to the
-            server. The message should be in <option>unix charset</option> and
-            should be quoted. Extended characters are allowed.</para>
+            server. The message should be in <option>unix charset</option>.
+            Extended characters are allowed.</para>
           </listitem>
         </varlistentry>
 
@@ -1742,9 +1742,8 @@
           <listitem>
             <para>The allow option allows the users and groups that access a
             share to be specified. Users and groups are specified, delimited
-            by spaces or commas. Groups are designated by a @ prefix. Names
-            may be quoted in order to allow for spaces in names. Example:
-            <programlisting>valid users = user "user 2" @group “@group 2"</programlisting></para>
+            by spaces or commas. Groups are designated by a @ prefix. Example:
+            <programlisting>valid users = user @group</programlisting></para>
           </listitem>
         </varlistentry>
 
