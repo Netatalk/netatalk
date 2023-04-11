@@ -1944,6 +1944,14 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     EC_NULL( realvolpath = realpath_safe(volpath) );
     EC_NULL( pw = getpwnam(user) );
 
+    become_root();
+    ret = set_groups(obj, pw);
+    unbecome_root();
+    if (ret != 0) {
+        LOG(log_error, logtype_afpd, "getvolbypath: set_groups: %s", strerror(errno));
+        EC_FAIL;
+    }
+
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\"): user: %s, homedir: %s => realvolpath: \"%s\"",
         path, user, pw->pw_dir, realvolpath);
 
