@@ -314,7 +314,7 @@ AC_DEFUN([AC_NETATALK_LOCKFILE], [
             *freebsd*)
                 ac_cv_netatalk_lock=/var/spool/lock/netatalk
                 ;;
-            *netbsd*|*openbsd*)
+            *netbsd*|*openbsd*|*darwin*)
                 ac_cv_netatalk_lock=/var/run/netatalk.pid
                 ;;
             *linux*)
