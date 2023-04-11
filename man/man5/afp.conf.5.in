@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 02 Apr 2023
+.\"      Date: 11 Apr 2023
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "02 Apr 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "11 Apr 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -647,7 +647,7 @@ By enabling this option Netatalk will write the metadata xattr as root\&.
 .PP
 guest account = \fIname\fR \fB(G)\fR
 .RS 4
-Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
+Specifies the user that guests should use (default is nobody)\&. The name must be a valid user on the host system\&.
 .RE
 .PP
 home name = \fIname\fR \fB(H)\fR
@@ -669,8 +669,7 @@ In OS X when the Finder sets a lock on a file/directory or you set the BSD uchg 
 login message = \fImessage\fR \fB(G)/(V)\fR
 .RS 4
 Sets a message to be displayed when clients logon to the server\&. The message should be in
-\fBunix charset\fR
-and should be quoted\&. Extended characters are allowed\&.
+\fBunix charset\fR\&. Extended characters are allowed\&.
 .RE
 .PP
 mimic model = \fImodel\fR \fB(G)\fR
@@ -1161,13 +1160,13 @@ This is an approximated calculation taking into account the contents of Time Mac
 .PP
 valid users = \fIuser @group\fR \fB(V)\fR
 .RS 4
-The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by spaces or commas\&. Groups are designated by a @ prefix\&. Names may be quoted in order to allow for spaces in names\&. Example:
+The allow option allows the users and groups that access a share to be specified\&. Users and groups are specified, delimited by spaces or commas\&. Groups are designated by a @ prefix\&. Example:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-valid users = user "user 2" @group \(lq@group 2"
+valid users = user @group
 .fi
 .if n \{\
 .RE
