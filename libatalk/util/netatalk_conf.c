@@ -1624,7 +1624,9 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
 
+    become_root();
     fd = open(obj->options.configfile, O_RDONLY);
+    unbecome_root();
 
     while (retries < 2) {
         if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
@@ -1643,7 +1645,9 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     if (obj->iniconfig)
         atalk_iniparser_freedict(obj->iniconfig);
     LOG(log_debug, logtype_afpd, "load_volumes: loading: %s", obj->options.configfile);
+    become_root();
     obj->iniconfig = atalk_iniparser_load(obj->options.configfile);
+    unbecome_root();
 
     EC_ZERO_LOG( readvolfile(obj, pwresult) );
 
@@ -2015,7 +2019,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
     
-    if ((config = atalk_iniparser_load(AFPObj->options.configfile)) == NULL)
+    become_root();
+    config = atalk_iniparser_load(AFPObj->options.configfile);
+    unbecome_root();
+    if (config == NULL)
         return -1;
     AFPObj->iniconfig = config;
 
