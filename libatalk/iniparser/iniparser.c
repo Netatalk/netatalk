@@ -587,7 +587,7 @@ static line_status atalk_iniparser_line(
         sscanf(line, "[%[^]]", section);
         strstrip(section);
         sta = LINE_SECTION;
-    } else if (sscanf(line, "%[^=] = \"%[^\"]\"", key, value) == 2 || sscanf(line, "%[^=] = '%[^\']'", key, value) == 2) {
+    } else if (sscanf(line, "%[^=] = '%[^\']'", key, value) == 2) {
         /* Usual key=value with quotes, with or without comments */
         strstrip(key);
         /* Don't strip spaces from values surrounded with quotes */
