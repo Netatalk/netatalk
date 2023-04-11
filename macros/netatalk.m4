@@ -1045,6 +1045,19 @@ case "$this_os" in
   *freebsd4* | *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
   ;;
+  
+  *macosx*)
+	AC_SEARCH_LIBS(getxattr, [attr])
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+       AC_CHECK_FUNCS([getxattr fgetxattr listxattr],
+                      [neta_cv_eas_sys_found=yes],
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([flistxattr removexattr fremovexattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([setxattr fsetxattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
+  ;;
 
   *)
 	AC_SEARCH_LIBS(getxattr, [attr])
