@@ -9,6 +9,7 @@
 #define IPC_GETSESSION       1
 #define IPC_STATE            2  /* pass AFP session state */
 #define IPC_VOLUMES          3  /* pass list of open volumes */
+#define IPC_LOGINDONE        4
 
 extern int ipc_server_read(server_child_t *children, int fd);
 extern int ipc_child_write(int fd, uint16_t command, int len, void *token);
