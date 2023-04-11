@@ -45,7 +45,8 @@ typedef struct ipc_header {
 static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_GETSESSION",
                                "IPC_STATE",
-                               "IPC_VOLUMES"};
+                               "IPC_VOLUMES",
+                               "IPC_LOGINDONE"};
 
 /*
  * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
@@ -103,6 +104,19 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
                                 idlen,
                                 clientid,
                                 boottime);
+
+    return 0;
+}
+
+/* ----------------- */
+static int ipc_login_done(const struct ipc_header *ipc, server_child_t *children)
+{
+    LOG(log_debug, logtype_afpd, "ipc_login_done(pid: %u, uid: %u)",
+        ipc->child_pid, ipc->uid);
+
+    server_child_login_done(children,
+                            ipc->child_pid,
+                            ipc->uid);
 
     return 0;
 }
@@ -250,6 +264,11 @@ int ipc_server_read(server_child_t *children, int fd)
 
     case IPC_VOLUMES:
         if (ipc_set_volumes(&ipc, children) != 0)
+            return -1;
+        break;
+
+    case IPC_LOGINDONE:
+		if (ipc_login_done(&ipc, children) != 0)
             return -1;
         break;
 

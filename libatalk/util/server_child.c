@@ -321,6 +321,32 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
     pthread_mutex_unlock(&children->servch_lock);
 }
 
+/*  */
+void server_child_login_done(server_child_t *children, pid_t pid,
+                                 uid_t uid)
+{
+    afp_child_t *child;
+    afp_child_t *tmp;
+
+    pthread_mutex_lock(&children->servch_lock);
+
+    for (int i = 0; i < CHILD_HASHSIZE; i++) {
+        child = children->servch_table[i];
+        while (child) {
+            tmp = child->afpch_next;
+            if (child->afpch_pid == pid) {
+                /* update childs own slot */
+                LOG(log_debug, logtype_default, "Setting client ID for %u", child->afpch_pid);
+                child->afpch_uid = uid;
+                child->afpch_valid = 1;
+            }
+            child = tmp;
+        }
+    }
+
+    pthread_mutex_unlock(&children->servch_lock);
+}
+
 /* ---------------------------
  * reset children signals
  */
