@@ -21,8 +21,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/standards.h>
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -40,6 +38,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/errchk.h>
+#include <atalk/standards.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 

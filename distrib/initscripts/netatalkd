@@ -1,0 +1,44 @@
+#!/bin/zsh
+
+# # Startup daemon for netatalk on macOS
+
+# Prepare the environment
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+PREFIX=/usr/local/sbin
+. /etc/rc.common
+
+# root check
+if [ "$(id -u)" != "0" ]; then
+  printf "Error: The start/stop/restart script for netatalk needs to be executed with sudo privileges.\n" 1>&2
+  exit 1
+fi
+
+#Ensure network availability before running daemon
+CheckForNetwork
+while [ "${NETWORKUP}" != "-YES-" ]; do
+  sleep 5
+  NETWORKUP=
+  CheckForNetwork
+done
+
+# The start subroutine
+StartService() {
+  ConsoleMessage "Starting netatalk fileserver..."
+  rm -f /var/run/netatalk.pid
+  $PREFIX/netatalk
+}
+
+# The stop subroutine
+StopService() {
+  ConsoleMessage "Stopping netatalk fileserver..."
+  killall -TERM netatalk
+}
+
+# The restart subroutine
+RestartService() {
+  StopService
+  rm -f /var/run/netatalk.pid
+  StartService
+}
+
+RunService "$1"
