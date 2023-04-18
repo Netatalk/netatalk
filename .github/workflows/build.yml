@@ -1,4 +1,4 @@
-name: SonarCloud
+name: Checks
 on:
   push:
     branches:
@@ -9,15 +9,29 @@ on:
       - 'distrib/**'
       - 'doc/**'
       - 'man/**'
+      - 'NEWS'
+      - 'README.md'
   pull_request:
     types: [opened, synchronize, reopened]
 
 env:
-  APT_PACKAGES: libtool-bin libdb-dev libavahi-client-dev libevent-dev tracker tcpd
+  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev tracker tcpd
 
 jobs:
-  build:
-    name: Build and analyze
+  integration_test:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+      - name: Build
+        run: ./bootstrap && ./configure --with-dtrace=no && make -j $(nproc) # disable dtrace; issue #313
+      - name: Run tests
+        run: make check
+
+  static_analysis:
+    name: Static Analysis
     runs-on: ubuntu-22.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
@@ -27,7 +41,7 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Install dependencies
-        run: sudo apt-get install --no-install-recommends ${{ env.APT_PACKAGES }}
+        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
