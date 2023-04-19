@@ -52,6 +52,7 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
     [WDTRACE=$withval],
     [WDTRACE=auto]
   )
+  dnl the macOS version of dtrace is currently unsupported
   case "$host_os" in
   *darwin*)
   if test x"$WDTRACE" = x"auto" ; then
