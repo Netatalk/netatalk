@@ -283,6 +283,14 @@ remote: Counting objects: 2503, done.
             location, you will <emphasis>have</emphasis> to give the install
             location to Netatalk, using this switch.</para>
           </listitem>
+          
+          <listitem>
+            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
+
+            <para>In case you installed OpenSSL or LibreSSL in a non-standard
+            location, you will <emphasis>have</emphasis> to give the install
+            location to Netatalk, using this switch.</para>
+          </listitem>
         </itemizedlist>
 
         <para>Now run configure with any options you need</para>
