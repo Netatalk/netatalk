@@ -270,7 +270,7 @@ remote: Counting objects: 2503, done.
 
         <itemizedlist>
           <listitem>
-            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd</para>
+            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd</para>
 
             <para>This option helps Netatalk to determine where to install the
             start scripts.</para>
@@ -280,6 +280,14 @@ remote: Counting objects: 2503, done.
             <para><option>--with-bdb</option>=<replaceable>/path/to/bdb/installation/</replaceable></para>
 
             <para>In case you installed Berkeley DB in a non-standard
+            location, you will <emphasis>have</emphasis> to give the install
+            location to Netatalk, using this switch.</para>
+          </listitem>
+          
+          <listitem>
+            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
+
+            <para>In case you installed OpenSSL or LibreSSL in a non-standard
             location, you will <emphasis>have</emphasis> to give the install
             location to Netatalk, using this switch.</para>
           </listitem>

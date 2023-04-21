@@ -52,6 +52,14 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
     [WDTRACE=$withval],
     [WDTRACE=auto]
   )
+  dnl the macOS version of dtrace is currently unsupported
+  case "$host_os" in
+  *darwin*)
+  if test x"$WDTRACE" = x"auto" ; then
+  WDTRACE=no
+  fi
+  ;;
+  esac
   if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
     AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
     if test "x$atalk_cv_have_dtrace" = "xno" ; then
@@ -307,7 +315,7 @@ AC_DEFUN([AC_NETATALK_LOCKFILE], [
             *freebsd*)
                 ac_cv_netatalk_lock=/var/spool/lock/netatalk
                 ;;
-            *netbsd*|*openbsd*)
+            *netbsd*|*openbsd*|*darwin*)
                 ac_cv_netatalk_lock=/var/run/netatalk.pid
                 ;;
             *linux*)
@@ -486,10 +494,17 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
                 init_style="$withval", init_style=none
     )
-    case "$init_style" in 
+    case "$host_os" in
+    *darwin*)
+    if test x"$init_style" = x"none" ; then
+    init_style=macos-launchd
+    fi
+    ;;
+    esac
+    case "$init_style" in
     "redhat")
 	    AC_MSG_ERROR([--with-init-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
         ;;
@@ -550,6 +565,10 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_RESULT([enabling general systemd support])
 	    ac_cv_init_dir="/usr/lib/systemd/system"
         ;;
+    "macos-launchd")
+    	AC_MSG_RESULT([enabling macOS-style launchd initscript support])
+    	ac_cv_init_dir="/Library/LaunchDaemons"
+        ;;    
     "none")
 	    AC_MSG_RESULT([disabling init-style support])
 	    ac_cv_init_dir="none"
@@ -566,6 +585,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)
     AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd || test x$init_style = xgentoo-systemd)
     AM_CONDITIONAL(USE_DEBIAN_SYSTEMD, test x$init_style = xdebian-systemd)
+    AM_CONDITIONAL(USE_MACOS_LAUNCHD, test x$init_style = xmacos-launchd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
     AC_ARG_WITH(init-dir,
@@ -887,7 +907,12 @@ fi
 
 # Platform specific checks
 if test x"$with_acl_support" != x"no" ; then
-	case "$host_os" in
+   case "$host_os" in
+  *darwin*)
+    AC_MSG_NOTICE(Darwin ACLs are currently unsupported)
+    with_acl_support=no
+    ac_cv_have_acls=no
+    ;;
 	*solaris*)
 		AC_MSG_NOTICE(Using solaris ACLs)
 		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether Solaris ACLs are available])
@@ -1044,6 +1069,19 @@ case "$this_os" in
 
   *freebsd4* | *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
+  ;;
+  
+  *macosx*)
+	AC_SEARCH_LIBS(getxattr, [attr])
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+       AC_CHECK_FUNCS([getxattr fgetxattr listxattr],
+                      [neta_cv_eas_sys_found=yes],
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([flistxattr removexattr fremovexattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([setxattr fsetxattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
   ;;
 
   *)
