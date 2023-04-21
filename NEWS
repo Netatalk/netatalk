@@ -2,19 +2,23 @@ Changes in 3.1.15
 =================
 * FIX: CVE-2022-43634
 * FIX: CVE-2022-45188
+* NEW: Support for macOS hosts, Intel and Apple silicon, GitHub#281
 * FIX: configure.ac: update deprecated autoconf syntax
 * UPD: configure.ac: Support linking with system shared libraries
+       Introduces the --with-talloc option
 * FIX: macros: largefile-check macro for largefile (clang 16)
 * UPD: macros: Update pthread macro to the latest from gnu.org
 * FIX: initscripts: Modernize Systemd service file.
 * FIX: libatalk/conf: include sys/file.h for LOCK_EX
 * UPD: libatalk/conf: Remove ABI checks and the --enable-developer option, GitHub#262
 * FIX: libatalk: Change log level for realpath() error, SF bug#666
+* FIX: libatalk: Change log level for real_name error, SF bug#596
 * FIX: libatalk: The my_bool type is deprecated as of MySQL 8.0.1, GitHub#129
-* UPD: libatalk: Bring iniparser library codebase in line with current version 4.1 
-* FIX: Fix user-visible typos in log output and man pages.
-* FIX: Fix spelling, syntax, and dead URLs in html manual.
-* FIX: afpd: Provide MNTTYPE_NFS on OmniOS, GitHub#117
+* UPD: libatalk: allow afpd to read read-protected afp.conf, SF bug#546
+* UPD: libatalk: Make the "valid users" option work in the Homes section, SF bug#449
+* UPD: libatalk: Check that FPDisconnectOldSession is successful, SF bug#634
+* UPD: libatalk: Bring iniparser library codebase in line with current version 4.1
+* FIX: afpd: Provide MNTTYPE_NFS on OmniOS to make quota work, GitHub#117
 * FIX: afpd: Avoid triggering realpath() lookups with empty path, GitHub#277
 * FIX: spotlight: Spotlight searches can cause afpd to segfault, GitHub#56
 * UPD: spotlight: add support for tracker3, SF patch#147
@@ -23,9 +27,15 @@ Changes in 3.1.15
 * FIX: macusers: account for usernames with non-word characters
 * FIX: macusers: Support NetBSD
 * FIX: Fix all function declarations without a prototype
+* FIX: Fix C99 compliance issues
+* FIX: Fix gcc10 compiler warnings
 * UPD: Remove acsiidocs sources and release notes script
+* FIX: manpages: afp.conf: Parameters are not quoted, SF bug#617
+* FIX: manpages: afp.conf: Document $u in home name, GitHub#123
+* FIX: manpages: afp.conf: Document the usage of guest user, GitHub#298
 * FIX: Document how the mysql cnid backend is configured, GitHub#69
-* FIX: Document $u in home name (afp.conf man page), GitHub#123
+* FIX: Fix user-visible typos in log output and man pages.
+* FIX: Fix spelling, syntax, and dead URLs in html manual.
 * NEW: Create README.md
 * NEW: Set up GitHub workflow and static analysis with Sonarcloud
 
