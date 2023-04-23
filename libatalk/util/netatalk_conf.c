@@ -1816,7 +1816,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     static regex_t reg;
     struct vol *vol;
     struct vol *tmp;
-    const struct passwd *pw;
+    struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        abspath[MAXPATHLEN + 1];
     char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
