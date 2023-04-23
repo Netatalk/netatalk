@@ -307,7 +307,7 @@ cups_get_printer_status (struct printer *pr)
 
 	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
 	{
-		if ( ippGetInteger(attr, 0) == 0 )
+		if ( ippGetBoolean(attr, 0) == 0 )
 			status = 0;
 	}
 		
