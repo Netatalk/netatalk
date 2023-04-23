@@ -1,6 +1,7 @@
 Changes in 2.2.9
 ================
 
+* FIX: Fix printing from old Mac OS LaserWriter drivers
 * FIX: CVE-2022-45188
 * FIX: Improve systemd service dependencies GH#232
 * FIX: macusers: Fix output for long usernames
