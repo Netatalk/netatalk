@@ -18,8 +18,8 @@ env:
   APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev tracker tcpd
 
 jobs:
-  integration_test:
-    name: Integration Tests
+  build-ubuntu:
+    name: Ubuntu
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -29,6 +29,21 @@ jobs:
         run: ./bootstrap && ./configure --with-dtrace=no && make -j $(nproc) # disable dtrace; issue #313
       - name: Run tests
         run: make check
+
+  build-macos:
+    name: macOS
+    runs-on: macos-13
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+      - run: brew install automake libressl mysql pkg-config
+      - name: Build
+      - run: ./bootstrap && ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db && make -j $(nproc)
+      - name: Run tests
+      - run: make check
 
   static_analysis:
     name: Static Analysis
