@@ -39,11 +39,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-      - run: brew install automake libressl mysql pkg-config
+        run: brew install automake libressl mysql pkg-config
       - name: Build
-      - run: ./bootstrap && ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db && make -j $(nproc)
+        run: ./bootstrap && ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db && make -j $(nproc)
       - name: Run tests
-      - run: make check
+        run: make check
 
   static_analysis:
     name: Static Analysis
