@@ -1,6 +1,6 @@
 dnl configure.ac for netatalk
 
-AC_INIT([netatalk],[m4_esyscmd(cat VERSION)])
+AC_INIT([netatalk], [m4_esyscmd([echo -n `cat VERSION`])])
 AC_CONFIG_SRCDIR([etc/afpd/main.c])
 
 NETATALK_VERSION=`cat $srcdir/VERSION`
