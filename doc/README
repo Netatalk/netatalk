@@ -11,6 +11,8 @@
 
 	   Recommended docbook-xsl stylesheet version is 1.79.1.
 	   Version 1.79.2 and later introduced a namespace that our stylesheets don't support (yet).
+	   
+	3. Unpack the docbook-xsl tarball to a temporary location
 
 
    Usage
@@ -23,16 +25,16 @@
 
 	Create manpages:
 
-	3. XSL=<path to XSL stylesheets> VERSION=2.2 make man
+	3. XSL=<path to docbook-xsl dir> VERSION=2.2 make man
 	4. Copy the generated man pages to the correct locations in the code repo
 	   make install
 
 	Create HTML:
 
-    5. XSL=<path to XSL stylesheets> VERSION=2.2 make html
-       The generated html files are then inside the directory html.
+	5. XSL=<path to docbook-xsl dir> VERSION=2.2.9 make html
+	   The generated html files are then inside the directory html.
 	6. Upload the generated html files to SourceForge: (admins only)
-	   USER=<SourceForge user> make html-upload
+	   USER=<SourceForge user> VERSION=2.2.9 make html-upload
 
 	Clean-up:
 
