@@ -15,7 +15,7 @@ on:
     types: [opened, synchronize, reopened]
 
 env:
-  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev tracker tcpd
+  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev systemtap-sdt-dev tracker tcpd
 
 jobs:
   build-ubuntu:
@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Build
-        run: ./bootstrap && ./configure --with-dtrace=no && make -j $(nproc) # disable dtrace; issue #313
+        run: ./bootstrap && ./configure && make -j $(nproc)
       - name: Run tests
         run: make check
 
