@@ -109,6 +109,7 @@ int                                     /* O - 1 if printer name OK */
 cups_printername_ok(char *name)         /* I - Name of printer */
 {
         http_t          *http;          /* HTTP connection to server */
+	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
         cups_lang_t     *language;      /* Default language */
@@ -131,6 +132,24 @@ cups_printername_ok(char *name)         /* I - Name of printer */
                 return (0);
         }
 
+	/*
+	 * Try to connect to the requested printer...
+	 */
+
+	dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, name, NULL);
+	
+	if (!dest)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
+		return (0);
+	}
+	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
+		return (0);
+	}
 
        /*
         * Build an IPP_GET_PRINTER_ATTRS request, which requires the following
@@ -201,6 +220,7 @@ cups_get_printer_status (struct printer *pr)
 {
 
         http_t          *http;          /* HTTP connection to server */
+	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
         ipp_attribute_t *attr;          /* Current attribute */
@@ -231,6 +251,25 @@ cups_get_printer_status (struct printer *pr)
                          cupsServer(), strerror(errno));
                 return (0);
         }
+
+	/*
+	 * Try to connect to the requested printer...
+	 */
+
+	dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, pr->p_printer, NULL);
+	
+	if (!dest)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to get destination \"%s\": %s", pr->p_printer, cupsLastErrorString());
+		return (0);
+	}
+	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
+		return (0);
+	}
 
        /*
         * Generate the printer URI...
