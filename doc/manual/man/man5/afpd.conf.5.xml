@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">28 Jan 2022</refmiscinfo>
+    <refmiscinfo class="date">03 May 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -190,9 +190,9 @@
         <term>-ntseparator</term>
 
         <listitem>
-          <para>Use for eg. winbind authentication, prepends both strings
+          <para>Use for e.g. winbind authentication, prepends both strings
           before the username from login and then tries to authenticate with
-          the result through the availabel and active UAM authentication
+          the result through the available and active UAM authentication
           modules.</para>
         </listitem>
       </varlistentry>
@@ -201,7 +201,7 @@
         <term>-adminauthuser</term>
         <listitem>
           <para>
-            Specifying eg <option>-adminauthuser root</option>
+            Specifying e.g. <option>-adminauthuser root</option>
             whenever a normal user login fails, afpd will try to authenticate as
             the specified <option>adminauthuser</option>. If this succeeds, a normal session is created
             for the original connecting user. Said differently: if you know the
@@ -244,7 +244,7 @@
 
         <listitem>
           <para>Specifies the servers unix codepage, e.g. "ISO-8859-15" or
-          "UTF8". This is used to convert strings to/from the systems locale,
+          "UTF8". This is used to convert strings to/from the system's locale,
           e.g. for authenthication, server messages and volume names. Defaults
           to LOCALE if your system supports it, otherwise ASCII will be
           used.</para>
@@ -255,9 +255,9 @@
         <term>-maccodepage [<parameter>CODEPAGE</parameter>]</term>
 
         <listitem>
-          <para>Specifies the mac clients codepage, e.g. "MAC_ROMAN". This is
+          <para>Specifies the Mac client's codepage, e.g. "MAC_ROMAN". This is
           used to convert strings and filenames to the clients codepage for
-          OS9 and Classic, i.e. for authentication and AFP messages (SIGUSR2
+          Mac OS 9 and Classic, i.e. for authentication and AFP messages (SIGUSR2
           messaging). This will also be the default for the volumes
           maccharset. Defaults to MAC_ROMAN.</para>
         </listitem>
@@ -310,7 +310,7 @@
 
         <listitem>
           <para>Enables or disables the ability of clients to change their
-          passwords via chooser or the "connect to server" dialog</para>
+          passwords via the Chooser or the "connect to server" dialog</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -327,7 +327,7 @@
           <para>Enables or disables AFP-over-Appletalk. If
           <option>-proxy</option> is specified, you must instead use
           <option>-uamlist ""</option> to prevent DDP connections from
-          working. (default is -noddp)</para>
+          working.</para>
         </listitem>
       </varlistentry>
 
@@ -335,7 +335,7 @@
         <term>-[no]tcp</term>
 
         <listitem>
-          <para>Enables or disables AFP-over-TCP (default is -tcp)</para>
+          <para>Enables or disables AFP-over-TCP</para>
         </listitem>
       </varlistentry>
 
@@ -343,7 +343,7 @@
         <term>-transall</term>
 
         <listitem>
-          <para>Make both available</para>
+          <para>Make both available (default)</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -418,7 +418,7 @@
 
         <listitem>
           <para>Specifies the IP address that the server should advertise
-          <emphasis role="bold">and</emphasis> listens to. The default is
+          <emphasis role="bold">and</emphasis> listen to. The default is
           advertise the first IP address of the system, but to listen for any
           incoming request. The network address may be specified either in
           dotted-decimal format for IPv4 or in hexadecimal format for IPv6.
@@ -488,7 +488,7 @@
         <listitem>
           <para>
             Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12.
-            This is multiplies with the DSI server quantum (default ~300k) to give the size of
+            This is multiplied with the DSI server quantum (default ~300k) to give the size of
             the buffer. Increasing this value might increase throughput in fast local networks
             for volume to volume copies.
             <emphasis>Note</emphasis>: This buffer is allocated per afpd child process, so
@@ -599,7 +599,7 @@
 
         <listitem>
           <para>Immediately unmount volumes removed from AppleVolumes files on
-          SIGHUP sent to the afp master process.</para>
+          SIGHUP sent to the afpd master process.</para>
         </listitem>
       </varlistentry>
 
@@ -608,9 +608,9 @@
 
         <listitem>
           <para>Specifies the IP address and port of a cnid_metad server,
-          required for CNID dbd backend. Defaults to localhost:4700. The
+          required for the CNID dbd backend. Defaults to localhost:4700. The
           network address may be specified either in dotted-decimal format for
-          IPv4 or in hexadecimal format for IPv6.-</para>
+          IPv4 or in hexadecimal format for IPv6.</para>
         </listitem>
       </varlistentry>
 
@@ -626,7 +626,7 @@
           <para>Default size is 8192, maximum size is 131072. Given value is
           rounded up to nearest power of 2. Each entry takes about 100 bytes,
           which is not much, but remember that every afpd child process for
-          every connected user has its cache.</para>
+          every connected user has its own cache.</para>
         </listitem>
       </varlistentry>
 
@@ -645,7 +645,7 @@
         <term>-fceevents <replaceable>fmod,fdel,ddel,fcre,dcre,tmsz</replaceable></term>
         <listitem>
           <para>
-            Speficies which FCE events are active, default is <parameter>fmod,fdel,ddel,fcre,dcre</parameter>.
+            Specifies which FCE events are active, default is <parameter>fmod,fdel,ddel,fcre,dcre</parameter>.
           </para>
         </listitem>
       </varlistentry>
@@ -664,9 +664,9 @@
         <listitem>
           <para>
             This determines the time delay in seconds which is always waited if another file modification for the
-            same file is done by a client before sending an FCE file modification event (fmod). For example saving
+            same file is done by a client before sending an FCE file modification event (fmod). For example, saving
             a file in Photoshop would generate multiple events by itself because the application is opening,
-            modifying and closing a file mutliple times for every "save". Defautl: 60 seconds.
+            modifying and closing a file mutliple times for every "save". Default: 60 seconds.
           </para>
         </listitem>
       </varlistentry>
@@ -692,7 +692,7 @@
         <term>-keepsessions</term>
         <listitem>
           <para>Enable "Continuous AFP Service". This means the ability to stop the master afpd process with
-          a SIGQUIT signal, possibly install an afpd update and start the afpd process. Existing AFP sessions
+          a SIGQUIT signal, possibly install an afpd update and start the afpd process. Existing AFP sessions'
           afpd processes will remain unaffected. Technically they will be notified of the master afpd shutdown,
           sleep 15-20 seconds and then try to reconnect their IPC channel to the master afpd process. If this
           reconnect fails, the sessions are in an undefined state. Therefor it's absolutely critical to restart
@@ -715,8 +715,8 @@
 
         <listitem>
           <para>
-            Specifies the icon model that appears on
-            clients. Defaults to off. Examples: RackMac
+            Specifies the shared volume icon that appears on
+            Mac OS X clients. Defaults to off. Examples: RackMac
             (same as Xserve), PowerBook, PowerMac, Macmini,
             iMac, MacBook, MacBookPro, MacBookAir, MacPro,
             AppleTV1,1, AirPort.
@@ -753,13 +753,13 @@
 
         <listitem>
           <para>Specify a server signature. This option is useful while
-          running multiple independent instances of afpd on one machine (eg.
+          running multiple independent instances of afpd on one machine (e.g.
           in clustered environments, to provide fault isolation etc.). Default
-          is "auto". "auto" signature type allows afpd generating signature
+          is "auto". "auto" signature type allows afpd to generate a signature
           and saving it to <filename>:ETCDIR:/afp_signature.conf</filename>
-          automatically (based on random number). "host" signature type
-          switches back to "auto" because it is obsoleted. "user" signature
-          type allows administrator to set up a signature string manually. The
+          automatically (based on random number). The "host" signature type
+          switches back to "auto" because it is obsoleted. The "user" signature
+          type allows an administrator to set up a signature string manually. The
           maximum length is 16 characters.</para>
 
           <example>
@@ -771,14 +771,14 @@ second -signature user:USERS
 third -signature user:ADMINS</programlisting></para>
           </example>
 
-          <para>First two servers will appear as one logical AFP service to
-          the clients - if user logs in to first one and then connects to
-          second one, session will be automatically redirected to the first
-          one. But if client connects to first and then to third, will be
-          asked for password twice and will see resources of both servers.
-          Traditional method of signature generation causes two independent
+          <para>The first two servers will appear as one logical AFP service to
+          the clients - if a user logs in to the first one and then connects to
+          the second one, the session will be automatically redirected to the first
+          one. But if a client connects to the first and then to the third, they will be
+          asked for the password twice and will see resources of both servers.
+          The traditional method of signature generation causes two independent
           afpd instances to have the same signature and thus cause clients to
-          be redirected automatically to server (s)he logged in first.</para>
+          be redirected automatically to the server they logged in to first.</para>
         </listitem>
       </varlistentry>
 
@@ -904,12 +904,6 @@ third -signature user:ADMINS</programlisting></para>
 
   <refsect1>
     <title>Examples</title>
-
-    <example>
-      <title>afpd.conf default configuration</title>
-
-      <programlisting>- -tcp -noddp -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword</programlisting>
-    </example>
 
     <example>
       <title>afpd.conf MacCyrillic setup / UTF8 unix locale</title>

@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">27 Dec 2012</refmiscinfo>
+    <refmiscinfo class="date">03 May 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -87,7 +87,7 @@
     using either the ~ shell shorthand or any of the substitution variables,
     which are listed below.</para>
 
-    <para>The volume name is the name that appears in the Chooser ot the
+    <para>The volume name is the name that appears in the Chooser or the
     "connect to server" dialog on Macintoshes to represent the appropriate
     share. If volumename is unspecified, the last component of pathname
     is used. No two volumes may have the same name. If there are spaces in
@@ -343,7 +343,7 @@
               <term>invisibledots</term>
 
               <listitem>
-                <para>Use with <option>usedots</option>: make dot files
+                <para>Use with <option>usedots</option> to make dot files
                 invisible.</para>
               </listitem>
             </varlistentry>
@@ -361,7 +361,7 @@
 
               <listitem>
                 <para>Limit disk size reporting to 2GB. This can be used for
-                older Macintoshes using newer Appleshare clients.</para>
+                older Macintoshes using newer AppleShare clients.</para>
               </listitem>
             </varlistentry>
 
@@ -369,8 +369,8 @@
               <term>preexec_close</term>
 
               <listitem>
-                <para>a non-zero return code from preexec close the volume
-                being immediately, preventing clients to mount/see the volume
+                <para>A non-zero return code from preexec closes the volume
+                immediately, preventing clients to mount/see the volume
                 in question.</para>
               </listitem>
             </varlistentry>
@@ -380,7 +380,7 @@
 
               <listitem>
                 <para>Specifies the share as being read only for all users.
-                The .AppleDB directory has to be writeable, you can use the
+                The .AppleDB directory has to be writeable, and you can use the
                 <option>-dbpath</option> option to relocate it. Overwrites
                 <option>ea:auto</option> with <option>ea:none</option></para>
               </listitem>
@@ -390,7 +390,7 @@
               <term>root_preexec_close</term>
 
               <listitem>
-                <para>a non-zero return code from root_preexec closes the
+                <para>A non-zero return code from root_preexec closes the
                 volume immediately, preventing clients to mount/see the volume
                 in question.</para>
               </listitem>
@@ -400,8 +400,8 @@
               <term>upriv</term>
 
               <listitem>
-                <para>use AFP3 unix privileges. This should be set for OS X
-                  clients. Starting with Netatalk 2.1 it's part of the
+                <para>Use AFP3 UNIX privileges. This should be set for OS X
+                  clients. Starting with Netatalk 2.1, it's part of the
                   default config :DEFAULT: line.
                   See also: <option>perm|fperm|dperm</option>.</para>
               </listitem>
@@ -411,7 +411,7 @@
               <term>usedots</term>
 
               <listitem>
-                <para>Don't do :hex translation for dot files. note: when this
+                <para>Don't do :hex translation for dot files. Note: when this
                 option gets set, certain file names become illegal. These are
                 .Parent and anything that starts with .Apple. See also
                 <option>invisibledots</option>.</para>
@@ -735,13 +735,13 @@
     <title>Charset options</title>
 
     <para>With OS X Apple introduced the AFP3 protocol. One of the most
-    important changes was that AFP3 uses unicode names encoded as UTF-8
-    decomposed. Previous AFP/OS versions used codepages, like MacRoman,
+    important changes was that AFP3 uses Unicode names encoded as UTF-8
+    decomposed. Previous AFP/OS versions used codepages like MacRoman,
     MacCentralEurope, etc.</para>
 
-    <para><command>afpd</command> needs a way to preserve extended macintosh
-    characters, or characters illegal in unix filenames, when saving files on
-    a unix filesystem. Earlier versions used the the so called CAP encoding.
+    <para><command>afpd</command> needs a way to preserve extended Macintosh
+    characters, or characters illegal in UNIX filenames, when saving files on
+    a UNIX filesystem. Earlier versions used the the so called CAP encoding.
     An extended character (&gt;0x7F) would be converted to a :xx sequence,
     e.g. the Apple Logo (MacRoman: 0XF0) was saved as <literal>:f0</literal>.
     Some special characters will be converted as to :xx notation as well.
@@ -879,10 +879,10 @@
 
               <listitem>
                 <para>Enables crlf translation for TEXT files, automatically
-                converting macintosh line breaks into Unix ones. Use of this
+                converting Macintosh line breaks into Unix ones. Use of this
                 option might be dangerous since some older programs store
-                binary data files as type "TEXT" when saving and switch the
-                filetype in a second step. <command>Afpd</command> will
+                binary data files as type "TEXT" when saving, and switches the
+                filetype in a second step. <command>afpd</command> will
                 potentially destroy such files when "erroneously" changing
                 bytes in order to do line break translation.</para>
               </listitem>
@@ -903,7 +903,7 @@
               <term>dropkludge</term>
 
               <listitem>
-                <para>same as "dropbox".</para>
+                <para>Same as "dropbox".</para>
               </listitem>
             </varlistentry>
 
@@ -928,17 +928,17 @@
 
               <listitem>
                 <para>Forces <command>afpd</command> to not create
-                .AppleDouble directories unless macintosh metadata needs to be
+                .AppleDouble directories unless Macintosh metadata needs to be
                 written. This option is only useful if you want to share files
-                mostly used NOT by macs, causing <command>afpd</command> to
+                mostly used NOT by Macs, causing <command>afpd</command> to
                 not automatically create .AppleDouble subdirs containing AD
                 header files in every directory it enters (which will it do by
                 default).</para>
 
-                <para>In case, you save or change files from mac clients, AD
+                <para>In case you save or change files from Mac clients, AD
                 metadata files have to be written even in case you set this
                 option. So you can't avoid the creation of .AppleDouble
-                directories and its contents when you give macs write access
+                directories and its contents when you give Macs write access
                 to a share and they make use of it.</para>
 
                 <para>Try to avoid <option>noadouble</option> whenever
@@ -950,7 +950,7 @@
               <term>nocnidcache</term>
 
               <listitem>
-                <para>If set <command>afpd</command> doesn't store the ID
+                <para>If set, <command>afpd</command> doesn't store the ID
                 information in AppleDouble V2 header files. As these IDs are
                 used for caching and as a database backup, this option
                 normally shouldn't be set.</para>
@@ -961,7 +961,7 @@
               <term>nodev</term>
 
               <listitem>
-                <para>always use 0 for device number, helps when the device
+                <para>Always use 0 for device number, which helps when the device
                 number is not constant across a reboot, cluster, ...</para>
               </listitem>
             </varlistentry>
@@ -970,7 +970,7 @@
               <term>nofileid</term>
 
               <listitem>
-                <para>don't advertise createfileid, resolveid, deleteid
+                <para>Don't advertise createfileid, resolveid, deleteid
                 calls.</para>
               </listitem>
             </varlistentry>
@@ -989,7 +989,7 @@
               <term>nostat</term>
 
               <listitem>
-                <para>don't stat volume path when enumerating volumes list,
+                <para>Don't stat volume path when enumerating volumes list,
                 useful for automounting or volumes created by a preexec
                 script.</para>
               </listitem>
