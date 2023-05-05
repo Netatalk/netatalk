@@ -908,6 +908,16 @@
             </varlistentry>
 
             <varlistentry>
+              <term>illegalseq</term>
+
+              <listitem>
+                <para>Encode illegal sequences in filenames as is. For example
+                "\217-", which is not a valid SHIFT-JIS char, is encoded as
+                "U\217 -"</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
               <term>mswindows</term>
 
               <listitem>
