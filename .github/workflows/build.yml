@@ -14,7 +14,7 @@ on:
     types: [opened, synchronize, reopened]
 
 env:
-  APT_PACKAGES: libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev tcpd
+  APT_PACKAGES: libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libcups2-dev tcpd
 
 jobs:
   integration_test:
