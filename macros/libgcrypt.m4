@@ -10,7 +10,7 @@ dnl with a changed API.
 dnl
 AC_DEFUN([AC_NETATALK_PATH_LIBGCRYPT],
 [ AC_ARG_WITH(libgcrypt-dir,
-            AC_HELP_STRING([--with-libgcrypt-dir=PATH],
+            AS_HELP_STRING([--with-libgcrypt-dir=PATH],
                            [path where LIBGCRYPT is installed (optional). 
 			    Must contain lib and include dirs.]),
      libgcrypt_config_prefix="$withval", libgcrypt_config_prefix="")

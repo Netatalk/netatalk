@@ -1,6 +1,6 @@
 dnl configure.ac for netatalk
 
-AC_INIT([netatalk],[m4_esyscmd(cat VERSION)])
+AC_INIT([netatalk],m4_normalize(m4_include([VERSION])))
 AC_CONFIG_SRCDIR([etc/afpd/main.c])
 
 NETATALK_VERSION=`cat $srcdir/VERSION`
@@ -12,25 +12,23 @@ AC_CONFIG_AUX_DIR([build-aux])
 
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+LT_INIT([dlopen])
 AC_PROG_PERL
 AC_PROG_GREP
 AC_PROG_PS
 AM_PROG_CC_C_O
 AC_C_BIGENDIAN
 AC_C_INLINE
-AC_PROG_LEX
+AC_PROG_LEX([noyywrap])
 AC_PROG_YACC
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
@@ -63,9 +61,9 @@ AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]
 dnl --------------------------------------------------------------------------
 dnl check if dlsym needs to add an underscore, uses libtool macros
 dnl --------------------------------------------------------------------------
-AC_LTDL_DLLIB
+LT_LIB_DLLOAD
 AC_CHECK_FUNCS(dlopen dlsym dlclose)
-AC_LTDL_DLSYM_USCORE
+LT_FUNC_DLSYM_USCORE
 if test x"$libltdl_cv_need_uscore" = xyes; then
     AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
 fi
