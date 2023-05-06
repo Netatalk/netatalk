@@ -35,7 +35,7 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
     for lib in $atalk_cv_bdb_try_libs ; do
         LIBS="-l$lib $savedlibs"
         AC_MSG_CHECKING([Berkeley DB library (-l$lib)])
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
             #include <stdio.h>
             #include <db.h>
             int main(void) {
@@ -54,7 +54,7 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
                 printf("%d.%d.%d ... ",major, minor, patch);
                 return (0);
             }
-        ],[
+        ]])],[
             AC_MSG_RESULT(yes)
             atalk_cv_bdb_version="yes"
             atalk_cv_lib_db="-l$lib"

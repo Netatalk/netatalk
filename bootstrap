@@ -49,18 +49,8 @@ set -x
 
 rm -rf autom4te*.cache
 
-LIBTOOLIZE=libtoolize
-SYSNAME=`uname`
-if [ "x$SYSNAME" = "xDarwin" ] ; then
-  LIBTOOLIZE=glibtoolize
-fi
-
 # build it all.
-aclocal -I macros $ACLOCAL_FLAGS || exit 1
-autoheader || exit 1
-$LIBTOOLIZE --force --copy
-automake --include-deps --add-missing --foreign --copy || exit 1
-autoconf || exit 1
+autoreconf -fi || exit 1
 
 # Let's not fall off the end...
 exit 0

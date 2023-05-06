@@ -20,9 +20,9 @@ define(WX_SYS_LARGEFILE_MACRO_VALUE,
 [
     AC_CACHE_CHECK([for $1 value needed for large files], [$3],
         [
-          AC_TRY_COMPILE([#define $1 $2
+          AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#define $1 $2
                           #include <sys/types.h>],
-                         WX_SYS_LARGEFILE_TEST,
+                         WX_SYS_LARGEFILE_TEST])],
                          [$3=$2],
                          [$3=no])
         ]
@@ -57,10 +57,10 @@ if test "$enable_largefile" != no; then
 
     
     AC_CACHE_CHECK([for 64 bit off_t],netatalk_cv_SIZEOF_OFF_T,[
-    AC_TRY_RUN([#include <stdio.h>
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-int main() { exit((sizeof(off_t) == 8) ? 0 : 1); }],
+int main() { exit((sizeof(off_t) == 8) ? 0 : 1);}]])],
 netatalk_cv_SIZEOF_OFF_T=yes,netatalk_cv_SIZEOF_OFF_T=no,netatalk_cv_SIZEOF_OFF_T=cross)])
 
     AC_MSG_CHECKING([if large file support is available])
