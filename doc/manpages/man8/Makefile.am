@@ -18,7 +18,7 @@ EXTRA_DIST = \
 if HAVE_XSLTPROC
 CLEANFILES += $(MAN_MANPAGES)
 
-%.8 : %.8.xml
+$(MAN_MANPAGES) : %.8 : %.8.xml
 	@xsltproc $(MAN_STYLESHEET) $<
 	@cp $@ $(top_builddir)/man/man8/$@.in
 
