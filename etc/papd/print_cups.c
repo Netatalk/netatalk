@@ -121,17 +121,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         cupsSetPasswordCB(cups_passwd_cb);
 
-       /*
-        * Try to connect to the server...
-        */
-
-        if ((http = httpConnect(cupsServer(), ippPort())) == NULL)
-        {
-		LOG(log_error, logtype_papd, "Unable to connect to CUPS server %s - %s",
-                         cupsServer(), strerror(errno));
-                return (0);
-        }
-
 	/*
 	 * Try to connect to the requested printer...
 	 */
@@ -241,17 +230,6 @@ cups_get_printer_status (struct printer *pr)
         */
 
         cupsSetPasswordCB(cups_passwd_cb);
-
-       /*
-        * Try to connect to the server...
-        */
-
-        if ((http = httpConnect(cupsServer(), ippPort())) == NULL)
-        {
-		LOG(log_error, logtype_papd, "Unable to connect to CUPS server %s - %s",
-                         cupsServer(), strerror(errno));
-                return (0);
-        }
 
 	/*
 	 * Try to connect to the requested printer...
