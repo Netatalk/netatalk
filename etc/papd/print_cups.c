@@ -39,15 +39,8 @@
 
 #ifdef HAVE_CUPS
 
-/*
- * Do not error out on deprecation messages
- * -- darktable does this in their "src/common/cups_print.c"
- */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 #include <cups/ipp.h>
 #include <cups/cups.h>
-#include <cups/ppd.h>
 #include <cups/language.h>
 #include <atalk/unicode.h>
 #include <atalk/logger.h>
@@ -60,11 +53,6 @@
 
 #define MAXCHOOSERLEN 31
 #define HTTP_MAX_URI 1024
-
-/* Deal with post-1.7 deprecated httpConnect() */
-#define httpConnect(host, port)		httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, 1000, NULL)
-
-/* XXX Also: cupsGetPPD() */
 
 static const char* cups_status_msg[] = {
         "status: busy; info: \"%s\" is rejecting jobs; ",
@@ -201,8 +189,204 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 const char * 
 cups_get_printer_ppd ( char * name)
 {
+	http_t		*http;		/* Connection to destination */
+	cups_dest_t	*dest = NULL;	/* Destination */
+	cups_dest_t 	*dests;		/* Destination List */
+	ipp_t           *request,       /* IPP Request */
+			*response;      /* IPP Response */
+	cups_lang_t	*language;      /* Default language */
+	char		uri[HTTP_MAX_URI]; /* printer-uri attribute */
+        const char	*pattrs[] =   /* Requested printer attributes */
+                        {
+                          "printer-make-and-model",
+                          "color-supported"
+                        };
+	ipp_attribute_t	*attr;
+  	cups_file_t	*fp;		/* PPD file */
+    	static char	buffer[1024];	/* I - Filename buffer */
+    	size_t		bufsize;	/* I - Size of filename buffer */
+  	char		make[256],	/* Make and model */
+			*model;
+
+
 	cupsSetPasswordCB(cups_passwd_cb);
-	return cupsGetPPD( name );
+
+	/*
+	 *We have to go this roundabout way to correctly get the make and 
+	 *model of DNS-SD discovered printers. Otherwise we get the name of 
+	 *the CUPS temporary queue, which we don't want.
+	 */
+
+	int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+	dest = cupsGetDest(name, NULL, num_dests, dests);
+	const char *make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
+
+	if (!dest)
+	{
+		LOG(log_error, logtype_papd, "testdest: Unable to get destination \"%s\": %s\n", name, cupsLastErrorString());
+		cupsFreeDests(num_dests,dests);
+		return (0);
+	}
+
+	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
+	{
+		LOG(log_error, logtype_papd, "testdest: Unable to connect to destination \"%s\": %s\n", dest->name, cupsLastErrorString());
+		cupsFreeDests(num_dests,dests);
+		return (0);
+	}
+	
+	/*
+	 * Generate the printer URI...
+	 */
+
+	sprintf(uri, "ipp://localhost/printers/%s", name);
+
+	/*
+	 * Build an IPP_GET_PRINTER_ATTRIBUTES request, which requires the
+	 * following attributes:
+	 *
+	 *    attributes-charset
+	 *    attributes-natural-language
+	 *    requested-attributes
+	 *    printer-uri
+	 */
+
+        request = ippNew();
+
+        ippSetOperation(request, IPP_GET_PRINTER_ATTRIBUTES);
+        ippSetRequestId(request, 1);
+
+	language = cupsLangDefault();
+
+	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
+		     "attributes-charset", NULL,
+		     cupsLangEncoding(language));
+
+	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
+		     "attributes-natural-language", NULL,
+		     language->language);
+
+	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
+		      "requested-attributes",
+		      (sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+
+	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+		     "printer-uri", NULL, uri);
+
+	/*
+	 * Do the request and get back a response...
+	 */
+
+        if ((response = cupsDoRequest(http, request, "/")) == NULL)
+        {
+                 LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
+                         ippErrorString(cupsLastError()));
+                httpClose(http);
+		cupsFreeDests(num_dests,dests);
+                return (0);
+        }
+
+        if (ippGetStatusCode(response) >= IPP_OK_CONFLICT)
+        {
+      		 LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
+                         ippErrorString(ippGetStatusCode(response)));
+                ippDelete(response);
+                httpClose(http);
+		cupsFreeDests(num_dests,dests);
+                return (0);
+        }
+
+	/*
+	 * Range check input...
+	 */
+	
+	bufsize = sizeof(buffer);
+	if (buffer)
+		*buffer = '\0';
+
+	if (!buffer || bufsize < 1)
+	{
+		LOG(log_error, logtype_papd, "Check buffer failed!\n");
+		LOG(log_error, logtype_papd, strerror(EINVAL));
+                ippDelete(response);
+                httpClose(http);
+		cupsFreeDests(num_dests,dests);
+		return (0);
+	}
+
+	if (!response)
+	{
+		LOG(log_error, logtype_papd, "No IPP attributes.\n");
+                ippDelete(response);
+                httpClose(http);
+		cupsFreeDests(num_dests,dests);
+		return (0);
+	}
+
+	/*
+	 * Open a temporary file for the PPD...
+	 */
+
+	if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL)
+	{
+		LOG(log_error, logtype_papd, strerror(errno));
+                ippDelete(response);
+                httpClose(http);
+		cupsFreeDests(num_dests,dests);
+		return (0);
+	}
+
+	/*
+	 * Write the header and some hard coded defaults for the PPD file...
+	 */
+
+	cupsFilePuts(fp, "*PPD-Adobe: \"4.3\"\n");
+	cupsFilePuts(fp, "*FormatVersion: \"4.3\"\n");
+	cupsFilePrintf(fp, "*FileVersion: \"%d.%d\"\n", CUPS_VERSION_MAJOR, CUPS_VERSION_MINOR);
+	cupsFilePuts(fp, "*LanguageVersion: English\n");
+	cupsFilePuts(fp, "*LanguageEncoding: ISOLatin1\n");
+	cupsFilePuts(fp, "*PSVersion: \"(3010.000) 0\"\n");
+	cupsFilePuts(fp, "*LanguageLevel: \"3\"\n");
+	cupsFilePuts(fp, "*FileSystem: False\n");
+	cupsFilePuts(fp, "*PCFileName: \"ippeve.ppd\"\n");
+
+	if ((dests != NULL))
+		strcpy(make, make_model);
+	else
+		strcpy(make, "Unknown Printer");
+
+	if (!strncasecmp(make, "Hewlett Packard ", 16) || !strncasecmp(make, "Hewlett-Packard ", 16))
+	{
+		model = make + 16;
+		strcpy(make, "HP");
+  	}
+	else if ((model = strchr(make, ' ')) != NULL)
+		*model++ = '\0';
+  	else
+		model = "Unknown";
+
+	cupsFilePrintf(fp, "*Manufacturer: \"%s\"\n", make);
+	cupsFilePrintf(fp, "*ModelName: \"%s\"\n", model);
+	cupsFilePrintf(fp, "*Product: \"(%s %s)\"\n", make, model);
+	cupsFilePrintf(fp, "*NickName: \"%s %s\"\n", make, model);
+	cupsFilePrintf(fp, "*ShortNickName: \"%s %s\"\n", make, model);
+
+ 	if ((attr = ippFindAttribute(response, "color-supported", IPP_TAG_BOOLEAN)) != NULL && ippGetBoolean(attr, 0))
+  		cupsFilePuts(fp, "*ColorDevice: True\n");
+	else
+		cupsFilePuts(fp, "*ColorDevice: False\n");
+	cupsFilePuts(fp, "*TTRasterizer: Type42\n");
+	cupsFilePuts(fp, "*?Resolution: 600dpi\n");
+
+	/*
+	 *Clean up.
+	 */
+	
+	httpClose(http);
+	ippDelete(response);
+	cupsFileClose(fp);
+	cupsFreeDests(num_dests,dests);
+	return (buffer);
 }
 
 int
