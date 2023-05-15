@@ -26,6 +26,18 @@ dnl	# check for libiconv support
 
 	CFLAGS="$ICONV_CFLAGS $CFLAGS"
         LDFLAGS="$LDFLAGS $ICONV_LIBS -liconv"
+				
+  # native libiconv support on macOS
+  case "$host_os" in
+  *darwin*)
+  AC_CHECK_HEADER(
+      iconv.h,
+      AC_CHECK_LIB(
+      iconv,
+      iconv_open,
+      [netatalk_cv_iconv="yes"]))
+  ;;
+  esac	
 
 	AC_CACHE_CHECK([for libiconv],netatalk_cv_iconv,[
           AC_LINK_IFELSE([AC_LANG_SOURCE([[
