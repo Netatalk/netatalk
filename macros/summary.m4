@@ -168,4 +168,9 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $MYSQL_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $MYSQL_CFLAGS])
 	fi
+	if test x"$netatalk_cv_iconv" = x"yes"; then
+		AC_MSG_RESULT([    ICONV:])
+		AC_MSG_RESULT([        LIBS   = $ICONV_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $ICONV_CFLAGS])
+	fi
 ])
