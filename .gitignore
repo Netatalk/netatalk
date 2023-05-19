@@ -31,3 +31,5 @@ test-driver
 *.rej
 *~
 *.o
+build-aux
+**/.DS_Store
