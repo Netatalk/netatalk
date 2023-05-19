@@ -31,15 +31,13 @@ AC_DEFUN([NETATALK_SRVLOC], [
 		LDFLAGS="$LDFLAGS -L$srvlocdir/$atalk_libname"
 
 		AC_MSG_CHECKING([for slp.h])
-		AC_TRY_CPP([#include <slp.h>],
-			[
+		AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <slp.h>]])],[
 				AC_MSG_RESULT([yes])
 				found_slp=yes
-			],
-			[
+			],[
 				AC_MSG_RESULT([no])
-			]
-		)
+			
+		])
 		
 		if test "x$found_slp" = "xyes"; then
 			AC_CHECK_LIB(slp, SLPOpen, [
