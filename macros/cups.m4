@@ -29,7 +29,7 @@ AC_DEFUN([NETATALK_AC_CUPS], [
 			netatalk_cv_use_cups=yes
 	
 			if test x"$netatalk_cv_HAVE_USABLE_ICONV" = x"no" ; then
-				AC_WARN([*** Warning: iconv not found on your system, using simple ascii mapping***])
+				AC_MSG_WARN(*** Warning: iconv not found on your system, using simple ascii mapping***)
 			fi
 	                spool_required="yes"
 		elif test x"$enable_cups" = "xyes"; then

@@ -19,18 +19,17 @@ AC_DEFUN([NETATALK_TCP_WRAPPERS], [
 		saved_LIBS=$LIBS
 		W_LIBS="-lwrap" 
 		LIBS="$LIBS $W_LIBS"
-		AC_TRY_LINK([ int allow_severity = 0; int deny_severity = 0;]
-			,[hosts_access();]
-			, netatalk_cv_tcpwrap=yes , 
-   			[
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[ int allow_severity = 0; int deny_severity = 0;
+			]], [[hosts_access();
+			]])],[netatalk_cv_tcpwrap=yes ],[
 				LIBS=$saved_LIBS
 				W_LIBS="-lwrap -lnsl" 
 				LIBS="$LIBS $W_LIBS"
-				AC_TRY_LINK([ int allow_severity = 0; int deny_severity = 0;]
-					,[hosts_access();]
-					, netatalk_cv_tcpwrap=yes , netatalk_cv_tcpwrap=no)
-			]
-			, netatalk_cv_tcpwrap=cross)
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([[ int allow_severity = 0; int deny_severity = 0;
+					]], [[hosts_access();
+					]])],[netatalk_cv_tcpwrap=yes ],[netatalk_cv_tcpwrap=no])
+			
+			])
 
 		LIBS=$saved_LIBS
 	fi
