@@ -1281,6 +1281,9 @@ AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
+dnl Enable silent Automake rules if present
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
 dnl --------------------- generate files
 
 AC_CONFIG_FILES([Makefile
