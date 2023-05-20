@@ -20,7 +20,7 @@ define(WX_SYS_LARGEFILE_MACRO_VALUE,
 [
     AC_CACHE_CHECK([for $1 value needed for large files], [$3],
         [
-          AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#define $1 $2
+          AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define $1 $2
                           #include <sys/types.h>],
                          WX_SYS_LARGEFILE_TEST])],
                          [$3=$2],
