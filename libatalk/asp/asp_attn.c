@@ -10,12 +10,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <atalk/logger.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
 
+#include <atalk/logger.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>

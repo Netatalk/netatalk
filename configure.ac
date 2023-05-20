@@ -685,7 +685,6 @@ if test x"$this_os" = "xmacosx"; then
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
 	dnl AC_DEFINE(NO_DLFCN_H)
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
@@ -1045,7 +1044,8 @@ if test x"$with_acl_support" = x"yes" ; then
 		;;
 	*darwin*)
 		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
-		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
+		with_acl_support=no
+		ac_cv_have_acls=no
 		;;
 	*)
 		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
@@ -1156,6 +1156,19 @@ case "$this_os" in
 
   *freebsd4* | *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
+  ;;
+
+  *macosx*)
+	AC_SEARCH_LIBS(getxattr, [attr])
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+       AC_CHECK_FUNCS([getxattr fgetxattr listxattr],
+                      [neta_cv_eas_sys_found=yes],
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([flistxattr removexattr fremovexattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([setxattr fsetxattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
   ;;
 
   *)

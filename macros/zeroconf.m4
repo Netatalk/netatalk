@@ -65,10 +65,26 @@ AC_DEFUN([NETATALK_ZEROCONF], [
                 found_zeroconf=yes
             fi
 		fi
+
+		    # mDNS support using mDNSResponder on macOS
+		    if test x"$found_zeroconf" != x"yes" ; then
+				    AC_CHECK_HEADER(
+						    dns_sd.h,
+						    AC_CHECK_LIB(
+								    System,
+								    DNSServiceRegister,
+								    AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration]))
+				    )
+				    if test "$ac_cv_lib_System_DNSServiceRegister" = yes; then
+						    ZEROCONF_LIBS="-lSystem"
+						    AC_DEFINE(HAVE_MDNS, 1, [Use mDNSRespnder/DNS-SD registration])
+						    found_zeroconf=yes
+				    fi
+        fi
 	fi
 
 	netatalk_cv_zeroconf=no
-	AC_MSG_CHECKING([whether to enable Zerconf support])
+	AC_MSG_CHECKING([whether to enable Zeroconf support])
 	if test "x$found_zeroconf" = "xyes"; then
 		AC_MSG_RESULT([yes])
 		AC_DEFINE(USE_ZEROCONF, 1, [Define to enable Zeroconf support])

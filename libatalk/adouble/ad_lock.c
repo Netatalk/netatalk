@@ -18,15 +18,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/adouble.h>
-#include <atalk/logger.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <inttypes.h>
-
 #include <string.h>
+
+#include <atalk/adouble.h>
+#include <atalk/logger.h>
 
 #include "ad_private.h"
 
