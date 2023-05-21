@@ -97,6 +97,13 @@ AC_DEFUN([AC_PATH_PAM], [
            PAM_ACCOUNT=system
            PAM_PASSWORD=system
            PAM_SESSION=system
+        dnl macOS
+        elif test -f "$pampath/chkpasswd"; then
+           PAM_DIRECTIVE=required
+           PAM_AUTH=pam_opendirectory.so
+           PAM_ACCOUNT=pam_opendirectory.so
+           PAM_PASSWORD=pam_permit.so
+           PAM_SESSION=pam_permit.so
         dnl Fallback
         else
            PAM_DIRECTIVE=required
