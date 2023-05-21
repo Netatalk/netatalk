@@ -687,7 +687,7 @@ if test x"$this_os" = "xmacosx"; then
 	dnl AC_DEFINE(NO_DLFCN_H)
 	dnl AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
-	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
+	dnl AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
 
 dnl ----- NetBSD specific -----
