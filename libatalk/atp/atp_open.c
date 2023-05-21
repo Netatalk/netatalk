@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
