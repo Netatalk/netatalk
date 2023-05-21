@@ -1045,7 +1045,8 @@ if test x"$with_acl_support" = x"yes" ; then
 		;;
 	*darwin*)
 		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
-		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
+		with_acl_support=no
+		ac_cv_have_acls=no
 		;;
 	*)
 		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
