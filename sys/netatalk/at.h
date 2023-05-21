@@ -74,15 +74,15 @@ struct at_addr {
 #ifdef s_net
 #undef s_net
 #endif /* s_net */
-    u_short	s_net;
-    u_char	s_node;
+    unsigned short	s_net;
+    unsigned char	s_node;
 };
 #endif /* MACOSX_SERVER */
 
-#define ATADDR_ANYNET	(u_short)0x0000
-#define ATADDR_ANYNODE	(u_char)0x00
-#define ATADDR_ANYPORT	(u_char)0x00
-#define ATADDR_BCAST	(u_char)0xff		/* There is no BCAST for NET */
+#define ATADDR_ANYNET	(unsigned short)0x0000
+#define ATADDR_ANYNODE	(unsigned char)0x00
+#define ATADDR_ANYPORT	(unsigned char)0x00
+#define ATADDR_BCAST	(unsigned char)0xff		/* There is no BCAST for NET */
 
 /*
  * Socket address, AppleTalk style.  We keep magic information in the 
@@ -94,26 +94,26 @@ struct at_addr {
 #ifndef MACOSX_SERVER
 struct sockaddr_at {
 #ifdef BSD4_4
-    u_char		sat_len;
-    u_char		sat_family;
+    unsigned char		sat_len;
+    unsigned char		sat_family;
 #else /* BSD4_4 */
     short		sat_family;
 #endif /* BSD4_4 */
-    u_char		sat_port;
+    unsigned char		sat_port;
     struct at_addr	sat_addr;
 #ifdef notdef
     struct {
-	u_char		sh_type;
+	unsigned char		sh_type;
 # define SATHINT_NONE	0
 # define SATHINT_CONFIG	1
 # define SATHINT_IFACE	2
 	union {
 	    char		su_zero[ 7 ];	/* XXX check size */
 	    struct {
-		u_char		sr_phase;
-		u_short		sr_firstnet, sr_lastnet;
+		unsigned char		sr_phase;
+		unsigned short		sr_firstnet, sr_lastnet;
 	    } su_range;
-	    u_short		su_interface;
+	    unsigned short		su_interface;
 	} sh_un;
     } sat_hints;
 #else /* notdef */
@@ -123,9 +123,9 @@ struct sockaddr_at {
 #endif /* MACOSX_SERVER */
 
 struct netrange {
-    u_char		nr_phase;
-    u_short		nr_firstnet;
-    u_short		nr_lastnet;
+    unsigned char		nr_phase;
+    unsigned short		nr_firstnet;
+    unsigned short		nr_lastnet;
 };
 
 #ifdef KERNEL
