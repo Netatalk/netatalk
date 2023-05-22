@@ -16,7 +16,7 @@
 
 /* lock file path. this should be re-organized a bit. */
 #if ! defined (_PATH_LOCKDIR)
-#  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
+#  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__) || defined (__APPLE__)
 #    define _PATH_LOCKDIR	"/var/run/"
 #  elif defined (BSD4_4)
 #    ifdef MACOSX_SERVER
