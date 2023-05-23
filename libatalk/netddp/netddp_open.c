@@ -18,11 +18,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#ifdef MACOSX_SERVER
-#include <netat/appletalk.h>
-#include <netat/ddp.h>
-#endif /* MACOSX_SERVER */
-
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
 
@@ -34,31 +29,6 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
 #else /* !NO_DDP */
 
     int s;
-
-#ifdef MACOSX_SERVER
-    at_inet_t address, baddress;
-
-    if ((s = ddp_open(addr ? &addr->sat_port : NULL)) < 0)
-        return -1;
-
-    if (!addr)
-      return s;
-
-    if (rtmp_netinfo(s, &address, &baddress) < 0) {
-        ddp_close(s);
-	return -1;
-    }
-    
-    memcpy(&addr->sat_addr.s_net, &address.net, sizeof(addr->sat_addr.s_net));
-    addr->sat_addr.s_node = address.node;
-    addr->sat_port = address.socket;
-    if (bridge) {
-      memcpy(&bridge->sat_addr.s_net, &baddress.net, 
-	     sizeof(bridge->sat_addr.s_net));
-      bridge->sat_addr.s_node = baddress.node;
-      bridge->sat_port = baddress.socket;
-    }
-#else /* MACOSX_SERVER */
     socklen_t len;
 
     if ((s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0) 
@@ -80,7 +50,6 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
         close(s);
 	return -1;
     }
-#endif /* MACOSX_SERVER */
 
     return s;
 #endif /* NO_DDP */

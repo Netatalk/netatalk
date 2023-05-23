@@ -682,12 +682,7 @@ fi
 dnl ----- Mac OSX specific -----
 if test x"$this_os" = "xmacosx"; then 
 	AC_MSG_RESULT([ * Mac OSX specific configuration])
-	dnl AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
-	dnl AC_DEFINE(NO_DLFCN_H)
-	dnl AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
-	dnl AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
 
 dnl ----- NetBSD specific -----
