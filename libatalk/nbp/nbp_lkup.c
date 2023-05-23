@@ -60,11 +60,7 @@ int nbp_lookup( const char *obj, const char *type, const char *zone, struct nbpn
       return -1;
 
     *data++ = DDPTYPE_NBP;
-#ifdef MACOSX_SERVER
-    nh.nh_op = from.sat_addr.s_node ? NBPOP_BRRQ : NBPOP_LKUP;
-#else /* MACOSX_SERVER */
     nh.nh_op = NBPOP_BRRQ;
-#endif /* MACOSX_SERVER */
 
     nh.nh_cnt = 1;
     nh.nh_id = ++nbp_id;
@@ -117,14 +113,6 @@ int nbp_lookup( const char *obj, const char *type, const char *zone, struct nbpn
       }
     }
 
-#ifdef MACOSX_SERVER
-    if (from.sat_addr.s_node) {
-      memcpy(&addr.sat_addr, &from.sat_addr, sizeof(addr.sat_addr));
-    } else {
-      addr.sat_addr.s_net = ATADDR_ANYNET;
-      addr.sat_addr.s_node = ATADDR_BCAST;
-    }
-#endif /* MACOSX_SERVER */
     addr.sat_port = nbp_port;
 
     cnt = 0;

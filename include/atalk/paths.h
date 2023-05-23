@@ -19,11 +19,7 @@
 #  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__) || defined (__APPLE__)
 #    define _PATH_LOCKDIR	"/var/run/"
 #  elif defined (BSD4_4)
-#    ifdef MACOSX_SERVER
-#      define _PATH_LOCKDIR	"/var/run/"
-#    else
 #      define _PATH_LOCKDIR	"/var/spool/lock/"
-#    endif
 #  elif defined (linux)
 #    define _PATH_LOCKDIR	"/var/lock/"
 #  else
