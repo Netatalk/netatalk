@@ -40,6 +40,7 @@ struct ppd_feature	ppd_features[] = {
     { "*ColorDevice",	NULL },
     { "*FaxSupport",	NULL },
     { "*TTRasterizer",	NULL },
+    { "*Resolution",    NULL },
     { NULL, NULL },
 };
 
