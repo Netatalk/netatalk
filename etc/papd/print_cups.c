@@ -376,7 +376,8 @@ cups_get_printer_ppd ( char * name)
 	else
 		cupsFilePuts(fp, "*ColorDevice: False\n");
 	cupsFilePuts(fp, "*TTRasterizer: Type42\n");
-	cupsFilePuts(fp, "*?Resolution: 600dpi\n");
+	cupsFilePuts(fp, "*Resolution: 600dpi\n");
+	cupsFilePuts(fp, "*FaxSupport: None\n");
 
 	/*
 	 *Clean up.
