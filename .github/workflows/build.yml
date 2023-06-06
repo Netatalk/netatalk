@@ -25,8 +25,12 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure
       - name: Build
-        run: ./bootstrap && ./configure && make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
 
@@ -40,8 +44,12 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: brew install automake libressl mysql pkg-config
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db
       - name: Build
-        run: ./bootstrap && ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db && make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
 
