@@ -600,7 +600,7 @@ int cq_feature( struct papfile *in, struct papfile *out)
 	    }
 
 	    /* handle the '?' at the beginning of LW8's Resolution Query */
-	    if (*p == '*' && *(p + 1) == '?')
+	    if (*p == '*' && *(p + 1) == '?' && p < stop)
 	    {
 	        p++;
 	        *p = '*';
