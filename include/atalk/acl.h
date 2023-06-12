@@ -18,7 +18,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
 #ifdef HAVE_ACLS
 
 #define O_NETATALK_ACL (O_NOFOLLOW << 1)
