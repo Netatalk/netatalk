@@ -2068,7 +2068,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->extmapfile     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "extmap file",    _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "passwd file",    _PATH_AFPDPWFILE);
     options->uampath        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "uam path",       _PATH_AFPDUAMPATH);
-    options->uamlist        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx.so uams_dhx2.so");
+    options->uamlist        = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "uam list",       "uams_dhx2.so");
     options->port           = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
     options->signatureopt   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "");
     options->k5service      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "k5 service",     NULL);

@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">11 Apr 2023</refmiscinfo>
+    <refmiscinfo class="date">24 Jun 2023</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -387,7 +387,7 @@
 
           <listitem>
             <para>Space or comma separated list of UAMs. (The default is
-            "uams_dhx.so uams_dhx2.so").</para>
+            "uams_dhx2.so").</para>
 
             <para>The most commonly used UAMs are:</para>
 
