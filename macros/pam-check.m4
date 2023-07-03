@@ -82,7 +82,13 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
            PAM_AUTH=common-auth
            PAM_ACCOUNT=common-account
            PAM_PASSWORD=common-password
-           PAM_SESSION=common-session
+           if test -f "$pampath/common-session-noninteractive" ; then
+               PAM_SESSION=common-session-noninteractive
+           elif test -f "$pampath/common-session-nonlogin" ; then
+               PAM_SESSION=common-session-nonlogin
+           else
+               PAM_SESSION=common-session
+           fi
         dnl RHEL/FC
         elif test -f "$pampath/system-auth" ; then
            PAM_DIRECTIVE=include
