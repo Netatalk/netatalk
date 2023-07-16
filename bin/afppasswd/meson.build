@@ -6,7 +6,7 @@ executable(
     'afppasswd',
     afppasswd_sources,
     include_directories: root_includes,
-    dependencies: [crack, crypto, mysqlclient],
+    dependencies: [crack, ssl_deps, mysqlclient],
     link_with: libatalk,
     c_args: [
         afpdpwfile,

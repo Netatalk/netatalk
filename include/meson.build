@@ -1,1 +1,2 @@
 subdir('atalk')
+subdir('wolfssl')
