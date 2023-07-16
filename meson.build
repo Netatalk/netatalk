@@ -478,6 +478,7 @@ message('BDB version: ', bdb_version)
 #
 
 with_ssl_dir = get_option('with-ssl-dir')
+have_embedded_ssl = get_option('with-embedded-ssl')
 
 wolfssl = dependency('wolfssl', required: false)
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
@@ -534,16 +535,25 @@ if wolfssl.found() or ssl_link_args != []
 endif
 
 ssl_deps = []
+ssl_type = ''
 
-if wolfssl.found() and run_command(
+#if have_embedded_ssl and wolfssl.found()
+#    error('embedded SSL cannot be compiled when WolfSSL is installed')
+if have_embedded_ssl
+    ssl_type += 'built-in'
+    cdata.set('WOLFSSL_DHX', 1)
+    cdata.set('EMBEDDED_SSL', 1)
+elif wolfssl.found() and run_command(
     '/bin/cat',
     wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h',
     check: true,
 ).stdout().strip().contains('OPENSSL_EXTRA')
     ssl_deps += wolfssl
+    ssl_type += 'dependency'
     cdata.set('WOLFSSL_DHX', 1)
 elif ssl_link_args != []
     ssl_deps += crypto
+    ssl_type += 'dependency'
     cdata.set('OPENSSL_DHX', 1)
 else
     have_ssl = false
@@ -1984,6 +1994,7 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
+    '  SSL provider': ssl_type,
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,
 }

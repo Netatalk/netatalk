@@ -16,6 +16,11 @@ if host_os != 'darwin'
     libatalk_libs += libcompat
 endif
 
+if have_embedded_ssl
+    subdir('ssl')
+    libatalk_libs += libssl
+endif
+
 if have_spotlight
     subdir('talloc')
     libatalk_libs += libtalloc

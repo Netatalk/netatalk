@@ -143,6 +143,12 @@ option(
     description: 'Enable dtrace probes (enabled if dtrace found)',
 )
 option(
+    'with-embedded-ssl',
+    type: 'boolean',
+    value: false,
+    description: 'Enable embedded SSL library',
+)
+option(
     'with-gssapi',
     type: 'string',
     value: '',

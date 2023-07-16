@@ -42,6 +42,12 @@ uams_passwd = static_library(
     install_dir: libdir / 'netatalk',
 )
 
+ssl_links = []
+
+if have_embedded_ssl
+    ssl_links += libatalk
+endif
+
 if have_ssl
     uams_dhx_passwd_sources = ['uams_dhx_passwd.c']
 
@@ -50,6 +56,7 @@ if have_ssl
         uams_dhx_passwd_sources,
         include_directories: root_includes,
         dependencies: [crypt, ssl_deps],
+        link_with: ssl_links,
         name_prefix: '',
         name_suffix: 'so',
         install: true,
@@ -61,6 +68,7 @@ if have_ssl
         uams_dhx_passwd_sources,
         include_directories: root_includes,
         dependencies: [crypt, ssl_deps],
+        link_with: ssl_links,
         name_prefix: '',
         install: true,
         install_dir: libdir / 'netatalk',
@@ -73,6 +81,7 @@ if have_ssl
             uams_dhx_pam_sources,
             include_directories: [pam_includes, root_includes],
             dependencies: [pam, ssl_deps],
+            link_with: ssl_links,
             name_prefix: '',
             name_suffix: 'so',
             install: true,
@@ -84,6 +93,7 @@ if have_ssl
             uams_dhx_pam_sources,
             include_directories: [pam_includes, root_includes],
             dependencies: [pam, ssl_deps],
+            link_with: ssl_links,
             name_prefix: '',
             install: true,
             install_dir: libdir / 'netatalk',

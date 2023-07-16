@@ -1,0 +1,23 @@
+wc_sources = files(
+  'aes.c',
+  'asn.c',
+  'coding.c',
+  'cpuid.c',
+  'des3.c',
+  'dh.c',
+  'error.c',
+  'hash.c',
+  'hmac.c',
+  'kdf.c',
+  'logging.c',
+  'memory.c',
+  'pwdbased.c',
+  'random.c',
+  'rsa.c',
+  'sha256.c',
+  'signature.c',
+  'sp_int.c',
+  'wc_encrypt.c',
+  'wc_port.c',
+  'wolfmath.c')
+
