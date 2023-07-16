@@ -46,6 +46,9 @@
 /* Available Extended Attributes modules */
 #mesondefine EA_MODULES
 
+/* Define to 1 if built-in SSL should be enabled */
+#mesondefine EMBEDDED_SSL
+
 /* Define if you want compatibily with the FHS */
 #mesondefine FHS_COMPATIBILITY
 
@@ -823,7 +826,10 @@
 /* Define as 'int' if <sys/types.h> doesn't define. */
 #mesondefine gid_t
 
-/* Define to '__inline__' or '__inline' if that's what the C compiler
+/* WolfSSL configuration */
+#include <wolfssl/options.h>
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #mesondefine inline

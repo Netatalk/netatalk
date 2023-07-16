@@ -29,8 +29,12 @@
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
-
-#include <openssl/des.h>
+#if defined(EMBEDDED_SSL)
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/des.h>
+#else
+#include <des.h>
+#endif
 
 #ifdef USE_CRACKLIB
 #include <crack.h>

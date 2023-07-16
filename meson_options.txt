@@ -191,6 +191,12 @@ option(
     description: 'Path to Docbook XSL directory',
 )
 option(
+    'with-embedded-ssl',
+    type: 'boolean',
+    value: true,
+    description: 'Enable embedded SSL library',
+)
+option(
     'with-gssapi',
     type: 'string',
     value: '',
