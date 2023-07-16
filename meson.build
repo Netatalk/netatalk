@@ -168,6 +168,11 @@ if dl.found()
     netatalk_common_link_args += '-ldl'
 endif
 
+math = cc.find_library('m', required: true)
+if math.found()
+    netatalk_common_link_args += '-lm'
+endif
+
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
 
 ############
@@ -516,6 +521,7 @@ message('BDB version: ', bdb_version)
 #
 
 with_ssl_dir = get_option('with-ssl-dir')
+have_embedded_ssl = get_option('with-embedded-ssl')
 
 wolfssl = dependency('wolfssl', required: false)
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
@@ -559,23 +565,26 @@ crypto = declare_dependency(
     include_directories: ssl_includes,
 )
 
-if wolfssl.found() or ssl_link_args != []
+if have_embedded_ssl or wolfssl.found() or ssl_link_args != []
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
 endif
 
 ssl_deps = []
+ssl_type = ''
 
-if wolfssl.found() and run_command(
-    '/bin/cat',
-    wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h',
-    check: true,
-).stdout().strip().contains('OPENSSL_EXTRA')
+if have_embedded_ssl
+    ssl_type += 'built-in'
+    cdata.set('WOLFSSL_DHX', 1)
+    cdata.set('EMBEDDED_SSL', 1)
+elif wolfssl.found() and fs.read(wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h').contains('OPENSSL_ALL')
     ssl_deps += wolfssl
+    ssl_type += 'dependency'
     cdata.set('WOLFSSL_DHX', 1)
 elif ssl_link_args != []
     ssl_deps += crypto
+    ssl_type += 'dependency'
     cdata.set('OPENSSL_DHX', 1)
 else
     have_ssl = false
@@ -1793,6 +1802,7 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  LDAP support': have_ldap,
     '  Quota support': have_quota,
+    '  SSL provider': ssl_type,
     '  TCP wrapper support': have_tcpwrap,
     '  valid shell check': valid_shellcheck,
     '  Zeroconf support': enable_zeroconf,

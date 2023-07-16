@@ -2,7 +2,7 @@ executable(
     'afppasswd',
     'afppasswd.c',
     include_directories: root_includes,
-    dependencies: [crack, crypto],
+    dependencies: [crack, ssl_deps],
     link_with: libatalk,
     c_args: [afpdpwfile, dversion],
     install: true,
