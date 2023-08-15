@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+    <refmiscinfo class="date">22 Dec 1999</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -85,9 +85,9 @@
 
     <literallayout remap=".nf">
 laser|lp|LaserWriter Plus on AppleTalk:\
-    :sd=/usr/spool/lpd/laser:\
-    :lp=/usr/spool/lpd/laser/null:\
-    :lf=/var/adm/lpd-errs:pw#80:hl:\
+    :sd=/var/spool/lpd/laser:\
+    :lp=/var/spool/lpd/laser/null:\
+    :lf=/var/log/lpd-errs:pw#80:hl:\
     :of=:LIBEXECDIR:/ofpap:\
     :if=:LIBEXECDIR:/ifpaprev:\
     :tf=:LIBEXECDIR:/tfpaprev:\
