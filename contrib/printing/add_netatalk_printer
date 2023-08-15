@@ -101,7 +101,7 @@ echo ""
 # scrunch all of the whitespace and / out of the appletalk name and suggest
 # that as the unix name
 
-SUGGEST=`echo "$DEST" | cut -d: -f1 | sed 's/ //g' | sed 's#/##g` ; export SUGGEST
+SUGGEST=`echo "$DEST" | cut -d: -f1 | sed 's/ //g' | sed 's#/##g'` ; export SUGGEST
 
 # truncate the suggested name to 14 chars to conform to lp specs.
 
