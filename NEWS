@@ -125,7 +125,7 @@ Changes in 2.2.3
 * NEW: afpd: new LDAP config option ldap_uuid_string
 * UPD: based on Unicode 6.1.0
 * UPD: experimental systemd service files: always run both afpd and cnid_metad
-* UPD: afpd: Ensure our umask is not altered by eg pam_umask
+* UPD: afpd: Ensure our umask is not altered by e.g. pam_umask
 * UPD: afpd: Use GSS_C_NO_NAME as server principal when Kerberos options -fqdn
        and -krb5service are not set, from Jamie Gilbertson
 * UPD: afpd: Changed behaviour for TimeMachine volumes in case there's a problem
@@ -139,7 +139,7 @@ Changes in 2.2.3
        NetAFP Bug ID #16
 * FIX: afpd: Close IPC fds in afpd session child inherited from the afpd
        master process
-* FIX: dbd: Don't remove BerkeleyDB if it's still in use by eg cnid_dbd, fixes
+* FIX: dbd: Don't remove BerkeleyDB if it's still in use by e.g. cnid_dbd, fixes
        bug introduced in 2.2.2
 * FIX: debian initscript: start avahi-daemon (if available) before atalkd
 * FIX: Zeroconf could not advertise non-ASCII time machine volume name
@@ -147,7 +147,7 @@ Changes in 2.2.3
 Changes in 2.2.2
 ================
 
-* NEW: afpd: New option "adminauthuser". Specifying eg "-adminauthuser root"
+* NEW: afpd: New option "adminauthuser". Specifying e.g. "-adminauthuser root"
        whenever a normal user login fails, afpd tries to authenticate as
        the specified adminauthuser. If this succeeds, a normal session is
        created for the original connecting user. Said differently: if you
@@ -217,7 +217,7 @@ Changes in 2.2.1
 * FIX: afpd: return correct user/group type when mapping UUIDs to names
 * FIX: afpd: for directories add DARWIN_ACE_DELETE ACE
        if DARWIN_ACE_ADD_SUBDIRECTORY is set
-* FIX: afpd: afpd crashed when it failed to register with Avahi because eg
+* FIX: afpd: afpd crashed when it failed to register with Avahi because e.g.
        user service registration is disabled in the Avahi config
 * FIX: dbd: function checking and removing malformed ad:ea header files failed
        to chdir back to the original working directory
@@ -355,7 +355,7 @@ Changes in 2.1.6
 
 * FIX: afpd: Fix for LDAP user cache corruption
 * FIX: afpd: Fix for not shown ACLs for when filesyem uid or gid
-       couldn't be resolved because (eg deleted users/groups)
+       couldn't be resolved because (e.g. deleted users/groups)
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
 * FIX: Solaris: configure script failed to enable DDP module
@@ -412,7 +412,7 @@ Changes in 2.1.2
 * UPD: afpd: don't and permissions with parent folder when creating new
        directories on "upriv" volumes.
 * UPD: afpd: use 'afpserver@fqdn' instead of 'afpserver/fqdn@realm'.
-       Prevents a crash in older GNU GSSAPI libs on eg. CentOS 5.x.
+       Prevents a crash in older GNU GSSAPI libs on e.g. CentOS 5.x.
  
 Changes in 2.1.1
 ================
@@ -492,7 +492,7 @@ Changes in 2.1-beta1
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
 * FIX: initscripts installation now correctly uses autoconf paths,
-       ie they're installed to --sysconfdir.
+       i.e. they're installed to --sysconfdir.
 * FIX: UTF-8 volume name length
 * FIX: atalkd: workaround for broken Linux 2.6 AT kernel module:
        Linux 2.6 sends broadcast queries to the first available socket
@@ -526,7 +526,7 @@ Changes in 2.0.4
        'perm' value OR with the client requested permissions. (help with OSX 10.5
        strange permissions).
        Make dot files visible by default with 'usedots', use 'invisibledots' 
-       for keeping the old behavior, ie for OS9 (OSX hide dot files on its
+       for keeping the old behavior, i.e. for OS9 (OSX hide dot files on its
        own).
 * NEW: afpd: volume options allow_hosts/denied hosts
 * NEW: afpd: volume options dperm/fperm default directory and file

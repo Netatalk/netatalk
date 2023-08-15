@@ -4,7 +4,7 @@ Information for Netatalk Developers
 For basic installation instructions, see the INSTALL file.
 
 Netatalk is an implementation of "AFP over TCP".
-Netatalk also support the AppleTalk Protocol Suite for legacy Macs.
+Netatalk also supports the AppleTalk Protocol Suite for legacy Macs.
 The current release contains support for EtherTalk Phase I and II, 
 DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, AFP and DSI.
 The complete stack looks like this on a BSD-derived system:
@@ -173,7 +173,7 @@ and EC_CHECK_CUSTOM:
 The macros EC_CHECK* unconditionally jump to a cleanup label where the
 neccessary cleanup can be done alongside controlling the return value.
 EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
-performed as appropiate.
+performed as appropriate.
 
 Example:
 - stat() without EC macro:

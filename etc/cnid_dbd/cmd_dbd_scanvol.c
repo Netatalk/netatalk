@@ -201,12 +201,12 @@ static int check_symlink(const char *name, int *adflags)
 
     /* fchdir() to pathbuf so we can easily get its path with getcwd() */
     if ((chdir(pathbuf)) != 0) {
-        dbd_log(LOGSTD, "Cant chdir to '%s': %s", pathbuf, strerror(errno));
+        dbd_log(LOGSTD, "Can't chdir to '%s': %s", pathbuf, strerror(errno));
         return -1;
     }
 
     if ((getcwd(pathbuf, MAXPATHLEN)) == NULL) {
-        dbd_log(LOGSTD, "Cant get symlink'ed dir '%s/%s': %s", cwdbuf, pathbuf, strerror(errno));
+        dbd_log(LOGSTD, "Can't get symlink'ed dir '%s/%s': %s", cwdbuf, pathbuf, strerror(errno));
         if ((fchdir(cwd)) != 0)
             /* We're foobared */
             longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
@@ -1015,11 +1015,11 @@ static int dbd_readdir(int volroot, cnid_t did)
             strcat(cwdbuf, ep->d_name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
             if (-1 == (cwd = open(".", O_RDONLY))) {
-                dbd_log( LOGSTD, "Cant open directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log( LOGSTD, "Can't open directory '%s': %s", cwdbuf, strerror(errno));
                 continue;
             }
             if (0 != chdir(ep->d_name)) {
-                dbd_log( LOGSTD, "Cant chdir to directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log( LOGSTD, "Can't chdir to directory '%s': %s", cwdbuf, strerror(errno));
                 close(cwd);
                 continue;
             }

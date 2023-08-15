@@ -1602,7 +1602,7 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
+            LOG(log_error, logtype_afpd, "ad_openat: can't chdir back, exiting");
             exit(EXITERR_SYS);
         }
     }
@@ -1707,7 +1707,7 @@ int ad_openat(int dirfd,  /* dir fd openat like */
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
+            LOG(log_error, logtype_afpd, "ad_openat: can't chdir back, exiting");
             exit(EXITERR_SYS);
         }
     }

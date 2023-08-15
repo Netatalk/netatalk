@@ -797,7 +797,7 @@ static int RF_deletefile_ads(VFS_FUNC_ARGS_DELETEFILE)
     ret = ads_delete_rf(ad_p);
 
     if (dirfd != -1 && fchdir(cwd) != 0) {
-        LOG(log_error, logtype_afpd, "RF_deletefile_ads: cant chdir back. exit!");
+        LOG(log_error, logtype_afpd, "RF_deletefile_ads: can't chdir back. exit!");
         exit(EXITERR_SYS);
     }
 

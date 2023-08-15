@@ -48,7 +48,7 @@
 
     <para>Systems using a BSD printing system should make use of a pipe to the
     printing command in question within the <emphasis remap="B">pr</emphasis>
-    option (eg. <emphasis remap="B">pr=|/usr/bin/lpr</emphasis>).</para>
+    option (e.g. <emphasis remap="B">pr=|/usr/bin/lpr</emphasis>).</para>
 
     <para>When CUPS support is compiled in, then <emphasis
     remap="B">cupsautoadd </emphasis> as the first entry in papd.conf will
@@ -93,7 +93,7 @@
 
         <listitem>
           <para>The <emphasis remap="B">co</emphasis> option allows options to
-          be passed through to CUPS (eg. <emphasis
+          be passed through to CUPS (e.g. <emphasis
           remap="B">co="protocol=TBCP" </emphasis> or <emphasis
           remap="B">co="raw"</emphasis>).</para>
         </listitem>

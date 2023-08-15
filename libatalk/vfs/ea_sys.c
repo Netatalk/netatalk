@@ -408,7 +408,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
     if (sfd != -1) {
         if ((cwd = open(".", O_RDONLY)) == -1) {
-            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant open cwd: %s",
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: can't open cwd: %s",
                 strerror(errno));
             ret = -1;
             goto getout;
@@ -417,7 +417,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
     if (sfd != -1) {
         if (fchdir(sfd) == -1) {
-            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to sfd: %s",
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: can't chdir to sfd: %s",
                 strerror(errno));
             ret = -1;
             goto getout;
@@ -447,7 +447,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
     if (sfd != -1) {
         if (fchdir(cwd) == -1) {
-            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to cwd: %s",
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: can't chdir to cwd: %s",
                 strerror(errno));
             ret = -1;
             goto getout;
@@ -463,7 +463,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
         if (sfd != -1) {
             if (fchdir(sfd) == -1) {
-                LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to sfd: %s",
+                LOG(log_error, logtype_afpd, "sys_ea_copyfile: can't chdir to sfd: %s",
                     strerror(errno));
                 ret = -1;
                 goto getout;
@@ -488,7 +488,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 
         if (sfd != -1) {
             if (fchdir(cwd) == -1) {
-                LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to cwd: %s",
+                LOG(log_error, logtype_afpd, "sys_ea_copyfile: can't chdir to cwd: %s",
                     strerror(errno));
                 ret = -1;
                 goto getout;
