@@ -60,7 +60,7 @@ fi
 # get the user to tell us where to look for things, and list things there.
 
 echo ''
-echo "Enter Appletalk zone [default: local]: \c"
+printf 'Enter Appletalk zone [default: local]: \c'
 
 read ZONE
 
@@ -69,7 +69,7 @@ echo "Looking for LaserWriters in Zone ${ZONE} ..."
 ${NETATALKHOME}/bin/nbplkup ":LaserWriter@${ZONE}"
 
 echo ""
-echo "Enter AppleTalk printer name: \c"
+printf 'Enter AppleTalk printer name: \c'
 
 read DEST
 
