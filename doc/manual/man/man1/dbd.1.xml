@@ -41,7 +41,7 @@
 
     <para><command>dbd</command> can dump, scan, reindex and rebuild
     <emphasis>Netatalk</emphasis> dbd CNID databases. It must be run with
-    appropiate permissions i.e. as root. <command>dbd</command>
+    appropriate permissions i.e. as root. <command>dbd</command>
     <option>-s|-r</option> can be run on active volumes, but 
     <command>dbd -rf</command>, which wipes the db before rebuilding it,
     checks and enforces that the chosen volume is not in use.</para>

@@ -851,7 +851,7 @@ int ea_openat(const struct vol * restrict vol,
 
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_afpd, "ea_openat: cant chdir back, exiting");
+            LOG(log_error, logtype_afpd, "ea_openat: can't chdir back, exiting");
             exit(EXITERR_SYS);
         }
     }
@@ -1365,7 +1365,7 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
     }
 
     if (dirfd != -1 && fchdir(cwd) != 0) {
-        LOG(log_error, logtype_afpd, "ea_deletefile: cant chdir back. exit!");
+        LOG(log_error, logtype_afpd, "ea_deletefile: can't chdir back. exit!");
         exit(EXITERR_SYS);
     }
 

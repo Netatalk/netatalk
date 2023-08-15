@@ -221,18 +221,18 @@
     <title>UPDATING</title>
 
     <para>Note that the first version to appear <emphasis>after</emphasis>
-    Netatalk 2.1 ie Netatalk 2.1.1, will support Berkeley DB updates on the fly
+    Netatalk 2.1 i.e. Netatalk 2.1.1, will support Berkeley DB updates on the fly
     without manual intervention. In other words Netatalk 2.1 does contain code
     to prepare the Berkeley DB database for upgrades and to upgrade it in case
     it has been prepared before. That means it can't upgrade a 2.0.x version
     because that one didn't prepare the database.</para>
 
     <para>In order to update between older Netatalk releases using different
-    Berkeley DB library versions, follow this steps:</para>
+    Berkeley DB library versions, follow these steps:</para>
 
     <itemizedlist>
       <listitem>
-        <para>Stop the to be upgraded old version of Netatalk</para>
+        <para>Stop the to-be-updated old version of Netatalk</para>
       </listitem>
 
       <listitem>

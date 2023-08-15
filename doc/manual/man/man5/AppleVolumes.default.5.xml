@@ -129,18 +129,18 @@
 
         <listitem>
           <para>Specify the format of the metadata files, which are used for
-          saving Mac resource fork as well. Earlier versions used AppleDouble
-          V1, the new default format is V2. Starting with Netatalk 2.0, the
-          scheme MacOS X 10.3.x uses, is also supported.</para>
+          saving the Mac resource fork as well. Earlier versions used AppleDouble
+          V1, while the new default format is V2. Starting with Netatalk 2.0, the
+          scheme Mac OS X 10.3.x uses, is also supported.</para>
 
           <note>
             <para><option>adouble:osx</option> <emphasis
             role="bold">cannot</emphasis> be treated normally any longer. Its
-            only aim was to temporarely share eg. FAT32 formatted FireWire
-            harddrives written on a Macintosh with afpd. Apple's metadata
+            only aim was to temporarily share e.g. FAT32 formatted FireWire
+            hard drives written on a Macintosh with afpd. Apple's metadata
             scheme lacks several essential features, so using it on the
-            server's side will break both CNIDs and MacOS 9 compatibility.
-            AppleDouble file of Mac OS X 10.6 is incompatible to V1 and
+            server's side will break both CNIDs and Mac OS 9 compatibility.
+            An AppleDouble file of Mac OS X 10.6 is incompatible to V1 and
             V2.</para>
           </note>
         </listitem>
@@ -150,14 +150,14 @@
         <term>volsizelimit:<replaceable>size in MiB</replaceable></term>
 
         <listitem>
-          <para>Useful for TimeMachine: limits the reported volume size,
+          <para>Useful for Time Machine: limits the reported volume size,
             thus preventing TM from using the whole real disk space for
             backup. Example: "volsizelimit:1000" would limit the reported
             disk space to 1 GB. <emphasis role="bold">IMPORTANT: </emphasis>
-            This is an approximated calculation taking into accout
-            the contents of TM sparsebundle images. Therefor you MUST NOT
+            This is an approximated calculation taking into account
+            the contents of TM sparsebundle images. Therefore you MUST NOT
             use this volume to store other content when using this
-            option, because it would NOT be accounted.
+            option, because it would NOT be accounted for.
             The calculation works by reading the band size from the Info.plist
             XML file of the sparsebundle, reading the bands/ directory
             counting the number of band files, and then multiplying one
@@ -265,11 +265,11 @@
               <listitem>
                 <para>Try <option>sys</option> (by setting an EA on the shared
                 directory itself), fallback to <option>ad</option>. Requires
-                writeable volume for perfoming test.
+                a writeable volume for perfoming the test.
                 <option>options:ro</option> overwrites <option>auto</option>
                 with <option>none</option>. Use explicit
                 <option>ea:sys|ad</option> for read-only volumes where
-                appropiate.</para>
+                appropriate.</para>
               </listitem>
             </varlistentry>
 
@@ -325,7 +325,7 @@
               <term>searchdb</term>
               <listitem>
                 <para>Use fast CNID database namesearch instead of slow recursive
-                  filesystem search. Relies on a consistent CNID database, ie Samba
+                  filesystem search. Relies on a consistent CNID database, so Samba
                   or local filesystem access lead to inaccurate or wrong results.
                   Works only for "dbd" CNID db volumes.</para>
               </listitem>
@@ -524,9 +524,9 @@
         <term>veto:<replaceable>[vetoed names]</replaceable></term>
 
         <listitem>
-          <para>hide files and directories,where the path matches one of the
+          <para>hide files and directories where the path matches one of the
           '/' delimited vetoed names. The veto string must always be
-          terminated with a '/', eg. "veto1/", "veto1/veto2/".</para>
+          terminated with a '/', e.g. "veto1/", "veto1/veto2/".</para>
         </listitem>
       </varlistentry>
 

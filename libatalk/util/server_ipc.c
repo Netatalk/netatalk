@@ -193,11 +193,11 @@ int reconnect_ipc(AFPObj *obj)
 
     while (retrycount++ < 10) {
         if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
-            LOG(log_error, logtype_afpd, "reconnect_ipc: cant reconnect to master");
+            LOG(log_error, logtype_afpd, "reconnect_ipc: can't reconnect to master");
             sleep(1);
             continue;
         }
-        LOG(log_debug, logtype_afpd, "reconnect_ipc: succesfull IPC reconnect");
+        LOG(log_debug, logtype_afpd, "reconnect_ipc: successful IPC reconnect");
         return 0;
     }
     return -1;

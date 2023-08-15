@@ -317,9 +317,7 @@
         <listitem>
           <para>PostScript Printer Description file. papd answers
           configuration and font queries from printing clients by consulting
-          the configured PPD file. Such files are available for download from
-          Adobe, Inc. (<ulink
-          url="http://www.adobe.com/support/downloads/main.html#Printer">http://www.adobe.com/support/downloads/main.htm</ulink>),
+          the configured PPD file. Such files are available from Adobe, Inc.,
           or from the printer's manufacturer. If no PPD file is configured,
           papd will return the default answer, possibly causing the client to
           send excessively large jobs.</para>
@@ -337,14 +335,14 @@
     serial interface by default. The same applies for some printers when
     they're accessed via TCP/IP methods (remote LPR or socket). You will need
     to configure your printer to accept a full 8 bits or take special
-    precautions and convert the printjob's encoding (eg. by using <emphasis
+    precautions and convert the printjob's encoding (e.g. by using <emphasis
     remap="B">co="protocol=BCP"</emphasis> when using CUPS 1.1.19 or
     above).</para>
 
-    <para>When printing clients run MacOS 10.2 or above, take care that PPDs
+    <para>When printing clients run Mac OS 10.2 or above, take care that PPDs
     do not make use of <emphasis remap="B">*cupsFilter:</emphasis> comments
     unless the appropriate filters are installed at the client's side, too
-    (remember: Starting with 10.2 Apple chose to integrate CUPS into MacOS X).
+    (remember: Starting with 10.2 Apple chose to integrate CUPS into Mac OS X).
     For in-depth information on how CUPS uses PPDs see chapter 3.4 in <ulink
     url="http://tinyurl.com/zbxn"> http://tinyurl.com/zbxn</ulink>).</para>
   </refsect1>

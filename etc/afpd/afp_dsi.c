@@ -206,7 +206,7 @@ static void afp_dsi_transfer_session(int sig _U_)
         exit(EXITERR_CLNT);
     }
 
-    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: succesfull primary reconnect");
+    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: successful primary reconnect");
     /* 
      * Now returning from this signal handler return to dsi_receive which should start
      * reading/continuing from the connected socket that was passed via the parent from

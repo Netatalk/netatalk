@@ -351,7 +351,7 @@ DIR *opendirat(int dirfd, const char *path)
     ret = opendir(path);
 
     if (dirfd != -1 && fchdir(cwd) != 0) {
-        LOG(log_error, logtype_afpd, "opendirat: cant chdir back. exit!");
+        LOG(log_error, logtype_afpd, "opendirat: can't chdir back. exit!");
         exit(EXITERR_SYS);
     }
 
