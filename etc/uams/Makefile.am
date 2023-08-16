@@ -124,6 +124,8 @@ uams_LTLIBRARIES =		\
 	$(UAMS_DHX2_PAM)	\
 	$(UAMS_GSSAPI)
 
+EXTRA_DIST = openssl_compat.h
+
 #
 # link creation
 #
