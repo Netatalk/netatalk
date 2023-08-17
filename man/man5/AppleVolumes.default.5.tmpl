@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 27 Dec 2012
+.\"      Date: 03 May 2023
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "27 Dec 2012" "Netatalk 2.2" "Netatalk 2.2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "03 May 2023" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ path
 .PP
 The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
 .PP
-The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
+The volume name is the name that appears in the Chooser or the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
 \*(Aq:\*(Aq
 character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .if n \{\
@@ -124,7 +124,7 @@ The possible options and their meanings are:
 .PP
 adouble:\fI[v1|v2|osx]\fR
 .RS 4
-Specify the format of the metadata files, which are used for saving Mac resource fork as well\&. Earlier versions used AppleDouble V1, the new default format is V2\&. Starting with Netatalk 2\&.0, the scheme MacOS X 10\&.3\&.x uses, is also supported\&.
+Specify the format of the metadata files, which are used for saving the Mac resource fork as well\&. Earlier versions used AppleDouble V1, while the new default format is V2\&. Starting with Netatalk 2\&.0, the scheme Mac OS X 10\&.3\&.x uses, is also supported\&.
 .if n \{\
 .sp
 .\}
@@ -139,16 +139,16 @@ Specify the format of the metadata files, which are used for saving Mac resource
 .br
 \fBadouble:osx\fR
 \fBcannot\fR
-be treated normally any longer\&. Its only aim was to temporarely share eg\&. FAT32 formatted FireWire harddrives written on a Macintosh with afpd\&. Apple\*(Aqs metadata scheme lacks several essential features, so using it on the server\*(Aqs side will break both CNIDs and MacOS 9 compatibility\&. AppleDouble file of Mac OS X 10\&.6 is incompatible to V1 and V2\&.
+be treated normally any longer\&. Its only aim was to temporarily share e\&.g\&. FAT32 formatted FireWire hard drives written on a Macintosh with afpd\&. Apple\*(Aqs metadata scheme lacks several essential features, so using it on the server\*(Aqs side will break both CNIDs and Mac OS 9 compatibility\&. An AppleDouble file of Mac OS X 10\&.6 is incompatible to V1 and V2\&.
 .sp .5v
 .RE
 .RE
 .PP
 volsizelimit:\fIsize in MiB\fR
 .RS 4
-Useful for TimeMachine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "volsizelimit:1000" would limit the reported disk space to 1 GB\&.
+Useful for Time Machine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "volsizelimit:1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approximated calculation taking into accout the contents of TM sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approximated calculation taking into account the contents of TM sparsebundle images\&. Therefore you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted for\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 allow:\fI[users/groups]\fR
@@ -204,14 +204,14 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires writeable volume for perfoming test\&.
+\fBad\fR\&. Requires a writeable volume for perfoming the test\&.
 \fBoptions:ro\fR
 overwrites
 \fBauto\fR
 with
 \fBnone\fR\&. Use explicit
 \fBea:sys|ad\fR
-for read\-only volumes where appropiate\&.
+for read\-only volumes where appropriate\&.
 .RE
 .PP
 sys
@@ -246,7 +246,7 @@ This allows multiple options to be specified in a comma delimited format\&. The 
 .PP
 searchdb
 .RS 4
-Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, ie Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
+Use fast CNID database namesearch instead of slow recursive filesystem search\&. Relies on a consistent CNID database, so Samba or local filesystem access lead to inaccurate or wrong results\&. Works only for "dbd" CNID db volumes\&.
 .RE
 .PP
 tm
@@ -257,7 +257,8 @@ Enable Time Machine suport for this volume\&.
 invisibledots
 .RS 4
 Use with
-\fBusedots\fR: make dot files invisible\&.
+\fBusedots\fR
+to make dot files invisible\&.
 .RE
 .PP
 nonetids
@@ -267,17 +268,17 @@ Try to force ACL unawareness on the client\&.
 .PP
 limitsize
 .RS 4
-Limit disk size reporting to 2GB\&. This can be used for older Macintoshes using newer Appleshare clients\&.
+Limit disk size reporting to 2GB\&. This can be used for older Macintoshes using newer AppleShare clients\&.
 .RE
 .PP
 preexec_close
 .RS 4
-a non\-zero return code from preexec close the volume being immediately, preventing clients to mount/see the volume in question\&.
+A non\-zero return code from preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
 ro
 .RS 4
-Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, you can use the
+Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, and you can use the
 \fB\-dbpath\fR
 option to relocate it\&. Overwrites
 \fBea:auto\fR
@@ -287,18 +288,18 @@ with
 .PP
 root_preexec_close
 .RS 4
-a non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
+A non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
 upriv
 .RS 4
-use AFP3 unix privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1 it\*(Aqs part of the default config :DEFAULT: line\&. See also:
+Use AFP3 UNIX privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1, it\*(Aqs part of the default config :DEFAULT: line\&. See also:
 \fBperm|fperm|dperm\fR\&.
 .RE
 .PP
 usedots
 .RS 4
-Don\*(Aqt do :hex translation for dot files\&. note: when this option gets set, certain file names become illegal\&. These are \&.Parent and anything that starts with \&.Apple\&. See also
+Don\*(Aqt do :hex translation for dot files\&. Note: when this option gets set, certain file names become illegal\&. These are \&.Parent and anything that starts with \&.Apple\&. See also
 \fBinvisibledots\fR\&.
 .RE
 .PP
@@ -375,7 +376,7 @@ Allows certain users and groups to have read/write access to a share\&. This fol
 .PP
 veto:\fI[vetoed names]\fR
 .RS 4
-hide files and directories,where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, eg\&. "veto1/", "veto1/veto2/"\&.
+hide files and directories where the path matches one of the \*(Aq/\*(Aq delimited vetoed names\&. The veto string must always be terminated with a \*(Aq/\*(Aq, e\&.g\&. "veto1/", "veto1/veto2/"\&.
 .RE
 .PP
 volcharset:\fI[charset]\fR
@@ -529,10 +530,10 @@ Even though
 might show that there are other CNID backends available, be warned those are likely broken or mainly used for testing\&. Don\*(Aqt use them unless you know what you\*(Aqre doing, they may be removed without further notice from future versions\&.
 .SH "CHARSET OPTIONS"
 .PP
-With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages, like MacRoman, MacCentralEurope, etc\&.
+With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses Unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.
 .PP
 \fBafpd\fR
-needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0XF0) was saved as
+needs a way to preserve extended Macintosh characters, or characters illegal in UNIX filenames, when saving files on a UNIX filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0XF0) was saved as
 :f0\&. Some special characters will be converted as to :xx notation as well\&. \*(Aq/\*(Aq will be encoded to
 :2f, if
 \fBusedots\fR
@@ -626,8 +627,8 @@ The underlying filesystem is case insensitive (only tested with JFS in OS2 mode)
 .PP
 crlf
 .RS 4
-Enables crlf translation for TEXT files, automatically converting macintosh line breaks into Unix ones\&. Use of this option might be dangerous since some older programs store binary data files as type "TEXT" when saving and switch the filetype in a second step\&.
-\fBAfpd\fR
+Enables crlf translation for TEXT files, automatically converting Macintosh line breaks into Unix ones\&. Use of this option might be dangerous since some older programs store binary data files as type "TEXT" when saving, and switches the filetype in a second step\&.
+\fBafpd\fR
 will potentially destroy such files when "erroneously" changing bytes in order to do line break translation\&.
 .RE
 .PP
@@ -639,7 +640,12 @@ Allows a volume to be declared as being a "dropbox\&." Note that netatalk must b
 .PP
 dropkludge
 .RS 4
-same as "dropbox"\&.
+Same as "dropbox"\&.
+.RE
+.PP
+illegalseq
+.RS 4
+Encode illegal sequences in filenames as is\&. For example "\e217\-", which is not a valid SHIFT\-JIS char, is encoded as "U\e217 \-"
 .RE
 .PP
 mswindows
@@ -669,11 +675,11 @@ noadouble
 .RS 4
 Forces
 \fBafpd\fR
-to not create \&.AppleDouble directories unless macintosh metadata needs to be written\&. This option is only useful if you want to share files mostly used NOT by macs, causing
+to not create \&.AppleDouble directories unless Macintosh metadata needs to be written\&. This option is only useful if you want to share files mostly used NOT by Macs, causing
 \fBafpd\fR
 to not automatically create \&.AppleDouble subdirs containing AD header files in every directory it enters (which will it do by default)\&.
 .sp
-In case, you save or change files from mac clients, AD metadata files have to be written even in case you set this option\&. So you can\*(Aqt avoid the creation of \&.AppleDouble directories and its contents when you give macs write access to a share and they make use of it\&.
+In case you save or change files from Mac clients, AD metadata files have to be written even in case you set this option\&. So you can\*(Aqt avoid the creation of \&.AppleDouble directories and its contents when you give Macs write access to a share and they make use of it\&.
 .sp
 Try to avoid
 \fBnoadouble\fR
@@ -682,19 +688,19 @@ whenever possible\&.
 .PP
 nocnidcache
 .RS 4
-If set
+If set,
 \fBafpd\fR
 doesn\*(Aqt store the ID information in AppleDouble V2 header files\&. As these IDs are used for caching and as a database backup, this option normally shouldn\*(Aqt be set\&.
 .RE
 .PP
 nodev
 .RS 4
-always use 0 for device number, helps when the device number is not constant across a reboot, cluster, \&.\&.\&.
+Always use 0 for device number, which helps when the device number is not constant across a reboot, cluster, \&.\&.\&.
 .RE
 .PP
 nofileid
 .RS 4
-don\*(Aqt advertise createfileid, resolveid, deleteid calls\&.
+Don\*(Aqt advertise createfileid, resolveid, deleteid calls\&.
 .RE
 .PP
 nohex
@@ -705,7 +711,7 @@ Disables :hex translations for anything except dot files\&. This option makes th
 .PP
 nostat
 .RS 4
-don\*(Aqt stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
+Don\*(Aqt stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
 .RE
 .PP
 prodos

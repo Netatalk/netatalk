@@ -255,30 +255,25 @@ Printer capabilities database\&.
 .PP
 \&.ppd
 .RS 4
-PostScript Printer Description file\&. papd answers configuration and font queries from printing clients by consulting the configured PPD file\&. Such files are available for download from Adobe, Inc\&. (\m[blue]\fBhttp://www\&.adobe\&.com/support/downloads/main\&.htm\fR\m[]\&\s-2\u[1]\d\s+2), or from the printer\*(Aqs manufacturer\&. If no PPD file is configured, papd will return the default answer, possibly causing the client to send excessively large jobs\&.
+PostScript Printer Description file\&. papd answers configuration and font queries from printing clients by consulting the configured PPD file\&. Such files are available from Adobe, Inc\&., or from the printer\*(Aqs manufacturer\&. If no PPD file is configured, papd will return the default answer, possibly causing the client to send excessively large jobs\&.
 .RE
 .SH "CAVEATS"
 .PP
 \fBpapd\fR
-accepts characters with the high bit set (a full 8\-bits) from the clients, but some PostScript printers (including Apple Computer\*(Aqs LaserWriter family) only accept 7\-bit characters on their serial interface by default\&. The same applies for some printers when they\*(Aqre accessed via TCP/IP methods (remote LPR or socket)\&. You will need to configure your printer to accept a full 8 bits or take special precautions and convert the printjob\*(Aqs encoding (eg\&. by using
+accepts characters with the high bit set (a full 8\-bits) from the clients, but some PostScript printers (including Apple Computer\*(Aqs LaserWriter family) only accept 7\-bit characters on their serial interface by default\&. The same applies for some printers when they\*(Aqre accessed via TCP/IP methods (remote LPR or socket)\&. You will need to configure your printer to accept a full 8 bits or take special precautions and convert the printjob\*(Aqs encoding (e\&.g\&. by using
 \fBco="protocol=BCP"\fR
 when using CUPS 1\&.1\&.19 or above)\&.
 .PP
-When printing clients run MacOS 10\&.2 or above, take care that PPDs do not make use of
+When printing clients run Mac OS 10\&.2 or above, take care that PPDs do not make use of
 \fB*cupsFilter:\fR
-comments unless the appropriate filters are installed at the client\*(Aqs side, too (remember: Starting with 10\&.2 Apple chose to integrate CUPS into MacOS X)\&. For in\-depth information on how CUPS uses PPDs see chapter 3\&.4 in
-\m[blue]\fBhttp://tinyurl\&.com/zbxn\fR\m[]\&\s-2\u[2]\d\s+2)\&.
+comments unless the appropriate filters are installed at the client\*(Aqs side, too (remember: Starting with 10\&.2 Apple chose to integrate CUPS into Mac OS X)\&. For in\-depth information on how CUPS uses PPDs see chapter 3\&.4 in
+\m[blue]\fBhttp://tinyurl\&.com/zbxn\fR\m[]\&\s-2\u[1]\d\s+2)\&.
 .SH "SEE ALSO"
 .PP
 \fBlpr\fR(1),\fBlprm\fR(1),\fBprintcap\fR(5),\fBlpc\fR(8),\fBlpd\fR(8),
 \fBlp\fR(1)\&.
 .SH "NOTES"
 .IP " 1." 4
-http://www.adobe.com/support/downloads/main.htm
-.RS 4
-\%http://www.adobe.com/support/downloads/main.html#Printer
-.RE
-.IP " 2." 4
 http://tinyurl.com/zbxn
 .RS 4
 \%http://tinyurl.com/zbxn
