@@ -1,3 +1,23 @@
+Changes in 2.2.10
+=================
+* UPD: Build and run on macOS Ventura, GH#350
+       - Removed legacy conditionals for Mac OS X Server
+       - Modernized autotools syntax
+* UPD: papd: CUPS API improvements, GH#371
+       - Fix printing to Avahi discovered "driverless" printers
+       - Remove CUPS PPD API dependency, which is slated for deprecation
+       - Allow papd to return a printer resolution with LaserWriter 8
+* UPD: Remove redundant documentation in conf files, GH#333
+       - Add man page paragraph on the illegalseq option
+* FIX: Use non-interactive PAM session to avoid spurious error, GH#361
+* FIX: Adopt Debian downstream patches, GH#369
+       - Drop bogus warning in AppleVolumes.default 
+       - Fix syntax and typo in add_netatalk_printer script
+       - Fix user-visible typos in log output and documentation
+       - Improvements to Debian legacy init.d script
+* FIX: atalkd.service register NBP entries "Workstation" and "netatalk", GH#372
+* FIX: Restore tarball distribution of READMEs in doc/ GH#374
+
 Changes in 2.2.9
 ================
 
