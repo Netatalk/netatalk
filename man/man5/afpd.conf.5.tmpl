@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 28 Jan 2022
+.\"      Date: 03 May 2023
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "28 Jan 2022" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD\&.CONF" "5" "03 May 2023" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -138,12 +138,12 @@ These are required if the server supports the Kerberos 5 authentication UAM\&.
 .PP
 \-ntdomain, \-ntseparator
 .RS 4
-Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
+Use for e\&.g\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the available and active UAM authentication modules\&.
 .RE
 .PP
 \-adminauthuser
 .RS 4
-Specifying eg
+Specifying e\&.g\&.
 \fB\-adminauthuser root\fR
 whenever a normal user login fails, afpd will try to authenticate as the specified
 \fBadminauthuser\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
@@ -173,12 +173,12 @@ option\&. If you\*(Aqre using extended characters in the configuration files for
 .PP
 \-unixcodepage [\fICODEPAGE\fR]
 .RS 4
-Specifies the servers unix codepage, e\&.g\&. "ISO\-8859\-15" or "UTF8"\&. This is used to convert strings to/from the systems locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to LOCALE if your system supports it, otherwise ASCII will be used\&.
+Specifies the servers unix codepage, e\&.g\&. "ISO\-8859\-15" or "UTF8"\&. This is used to convert strings to/from the system\*(Aqs locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to LOCALE if your system supports it, otherwise ASCII will be used\&.
 .RE
 .PP
 \-maccodepage [\fICODEPAGE\fR]
 .RS 4
-Specifies the mac clients codepage, e\&.g\&. "MAC_ROMAN"\&. This is used to convert strings and filenames to the clients codepage for OS9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes maccharset\&. Defaults to MAC_ROMAN\&.
+Specifies the Mac client\*(Aqs codepage, e\&.g\&. "MAC_ROMAN"\&. This is used to convert strings and filenames to the clients codepage for Mac OS 9 and Classic, i\&.e\&. for authentication and AFP messages (SIGUSR2 messaging)\&. This will also be the default for the volumes maccharset\&. Defaults to MAC_ROMAN\&.
 .RE
 .SH "PASSWORD OPTIONS"
 .PP
@@ -204,7 +204,7 @@ Enables or disables the ability of clients to save passwords locally
 .PP
 \-[no]setpassword
 .RS 4
-Enables or disables the ability of clients to change their passwords via chooser or the "connect to server" dialog
+Enables or disables the ability of clients to change their passwords via the Chooser or the "connect to server" dialog
 .RE
 .SH "TRANSPORT PROTOCOLS"
 .PP
@@ -214,17 +214,17 @@ Enables or disables AFP\-over\-Appletalk\&. If
 \fB\-proxy\fR
 is specified, you must instead use
 \fB\-uamlist ""\fR
-to prevent DDP connections from working\&. (default is \-noddp)
+to prevent DDP connections from working\&.
 .RE
 .PP
 \-[no]tcp
 .RS 4
-Enables or disables AFP\-over\-TCP (default is \-tcp)
+Enables or disables AFP\-over\-TCP
 .RE
 .PP
 \-transall
 .RS 4
-Make both available
+Make both available (default)
 .RE
 .SH "TRANSPORT OPTIONS"
 .PP
@@ -270,7 +270,7 @@ Use this instead of the result from calling hostname for dertermening which IP a
 .RS 4
 Specifies the IP address that the server should advertise
 \fBand\fR
-listens to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&. This option also allows to use one machine to advertise the AFP\-over\-TCP/IP settings of another machine via NBP
+listen to\&. The default is advertise the first IP address of the system, but to listen for any incoming request\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&. This option also allows to use one machine to advertise the AFP\-over\-TCP/IP settings of another machine via NBP
 when used together with the
 \fB\-proxy\fR
 option\&.
@@ -312,7 +312,7 @@ This specifies the DSI server quantum\&. The default value is 303840\&. The maxi
 .PP
 \-dsireadbuf \fI[number]\fR
 .RS 4
-Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
+Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplied with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
 \fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
 .RE
 .PP
@@ -388,19 +388,19 @@ Do not use this option any longer as Netatalk 2\&.x correctly supports server no
 .PP
 \-closevol
 .RS 4
-Immediately unmount volumes removed from AppleVolumes files on SIGHUP sent to the afp master process\&.
+Immediately unmount volumes removed from AppleVolumes files on SIGHUP sent to the afpd master process\&.
 .RE
 .PP
 \-cnidserver \fI[ipaddress:port]\fR
 .RS 4
-Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
+Specifies the IP address and port of a cnid_metad server, required for the CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
 .RE
 .PP
 \-dircachesize\fI entries\fR
 .RS 4
 Maximum possible entries in the directory cache\&. The cache stores directories and files\&. It is used to cache the full path to directories and CNIDs which considerably speeds up directory enumeration\&.
 .sp
-Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
+Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its own cache\&.
 .RE
 .PP
 \-fcelistener \fIhost[:port]\fR
@@ -413,7 +413,7 @@ is 12250 if not specified\&. Specifying mutliple listeners is done by having thi
 .PP
 \-fceevents \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR
 .RS 4
-Speficies which FCE events are active, default is
+Specifies which FCE events are active, default is
 \fIfmod,fdel,ddel,fcre,dcre\fR\&.
 .RE
 .PP
@@ -424,7 +424,7 @@ Coalesce FCE events\&.
 .PP
 \-fceholdfmod \fIseconds\fR
 .RS 4
-This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Defautl: 60 seconds\&.
+This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example, saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file mutliple times for every "save"\&. Default: 60 seconds\&.
 .RE
 .PP
 \-guestname \fI[name]\fR
@@ -439,7 +439,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 .PP
 \-keepsessions
 .RS 4
-Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\*(Aqs absolutely critical to restart the master process in time!
+Enable "Continuous AFP Service"\&. This means the ability to stop the master afpd process with a SIGQUIT signal, possibly install an afpd update and start the afpd process\&. Existing AFP sessions\*(Aq afpd processes will remain unaffected\&. Technically they will be notified of the master afpd shutdown, sleep 15\-20 seconds and then try to reconnect their IPC channel to the master afpd process\&. If this reconnect fails, the sessions are in an undefined state\&. Therefor it\*(Aqs absolutely critical to restart the master process in time!
 .RE
 .PP
 \-loginmesg \fI[message]\fR
@@ -451,7 +451,7 @@ and should be quoted\&. Extended characters are allowed\&.
 .PP
 \-mimicmodel \fImodel\fR
 .RS 4
-Specifies the icon model that appears on clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
+Specifies the shared volume icon that appears on Mac OS X clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
 .RE
 .PP
 \-noacl2maccess
@@ -473,9 +473,9 @@ hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
 .PP
 \-signature { user:<text> | auto }
 .RS 4
-Specify a server signature\&. This option is useful while running multiple independent instances of afpd on one machine (eg\&. in clustered environments, to provide fault isolation etc\&.)\&. Default is "auto"\&. "auto" signature type allows afpd generating signature and saving it to
+Specify a server signature\&. This option is useful while running multiple independent instances of afpd on one machine (e\&.g\&. in clustered environments, to provide fault isolation etc\&.)\&. Default is "auto"\&. "auto" signature type allows afpd to generate a signature and saving it to
 :ETCDIR:/afp_signature\&.conf
-automatically (based on random number)\&. "host" signature type switches back to "auto" because it is obsoleted\&. "user" signature type allows administrator to set up a signature string manually\&. The maximum length is 16 characters\&.
+automatically (based on random number)\&. The "host" signature type switches back to "auto" because it is obsoleted\&. The "user" signature type allows an administrator to set up a signature string manually\&. The maximum length is 16 characters\&.
 .PP
 \fBExample.\ \&Three server definitions using 2 different server signatures\fR
 .sp
@@ -492,7 +492,7 @@ third \-signature user:ADMINS
 .\}
 
 
-First two servers will appear as one logical AFP service to the clients \- if user logs in to first one and then connects to second one, session will be automatically redirected to the first one\&. But if client connects to first and then to third, will be asked for password twice and will see resources of both servers\&. Traditional method of signature generation causes two independent afpd instances to have the same signature and thus cause clients to be redirected automatically to server (s)he logged in first\&.
+The first two servers will appear as one logical AFP service to the clients \- if a user logs in to the first one and then connects to the second one, the session will be automatically redirected to the first one\&. But if a client connects to the first and then to the third, they will be asked for the password twice and will see resources of both servers\&. The traditional method of signature generation causes two independent afpd instances to have the same signature and thus cause clients to be redirected automatically to the server they logged in to first\&.
 .RE
 .PP
 \-volnamelen \fI[number] \fR
@@ -613,18 +613,6 @@ Sets the tickle timeout interval (in seconds)\&. Defaults to 30\&. A value of 0 
 Specify the number of tickles to send before timing out a connection\&. The default is 4, therefore a connection will timeout after 2 minutes\&.
 .RE
 .SH "EXAMPLES"
-.PP
-\fBExample.\ \&afpd\&.conf default configuration\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-\- \-tcp \-noddp \-uamlist uams_dhx\&.so,uams_dhx2\&.so \-nosavepassword
-.fi
-.if n \{\
-.RE
-.\}
 .PP
 \fBExample.\ \&afpd\&.conf MacCyrillic setup / UTF8 unix locale\fR
 .sp
