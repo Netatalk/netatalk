@@ -8,7 +8,7 @@
 
 CURRDIR="`pwd`"
 WORKDIR="$CURRDIR/manpages"
-MANDIR="$CURRDIR/../man"
+MANDIR="$CURRDIR/../../man"
 
 cd "$MANDIR"
 

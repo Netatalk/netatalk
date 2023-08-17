@@ -8,8 +8,6 @@
 #   man: make manpages
 #   install: copy manpages to Netatalk source code tree
 
-# VPATH = manual/man/man1:manual/man/man3:manual/man/man4:manual/man/man5:manual/man/man8
-
 # setup
 sed=sed
 OS=$(shell uname -s)
@@ -89,32 +87,32 @@ clean:
 
 # manpage targets
 
-manpages/%.1 : manual/man/man1/%.1.xml
+manpages/%.1 : man/man1/%.1.xml
 		@xsltproc -o manpages/ $(MAN_XSL_TMP) $<
 		@$(sed) -i -e "s@:NETATALK_VERSION:@Netatalk $(VERSION)@g" $@
 
-manpages/%.3 : manual/man/man3/%.3.xml
+manpages/%.3 : man/man3/%.3.xml
 		@xsltproc -o manpages/ $(MAN_XSL_TMP) $<
 		@$(sed) -i -e "s@:NETATALK_VERSION:@Netatalk $(VERSION)@g" $@
 
-manpages/%.4 : manual/man/man4/%.4.xml
+manpages/%.4 : man/man4/%.4.xml
 		@xsltproc -o manpages/ $(MAN_XSL_TMP) $<
 		@$(sed) -i -e "s@:NETATALK_VERSION:@Netatalk $(VERSION)@g" $@
 
-manpages/%.5 : manual/man/man5/%.5.xml
+manpages/%.5 : man/man5/%.5.xml
 		@xsltproc -o manpages/ $(MAN_XSL_TMP) $<
 		@$(sed) -i -e "s@:NETATALK_VERSION:@Netatalk $(VERSION)@g" $@
 
-manpages/%.8 : manual/man/man8/%.8.xml
+manpages/%.8 : man/man8/%.8.xml
 		@xsltproc -o manpages/ $(MAN_XSL_TMP) $<
 		@$(sed) -i -e "s@:NETATALK_VERSION:@Netatalk $(VERSION)@g" $@
 
-$(MAN_XSL_TMP) : manual/man.xsl
+$(MAN_XSL_TMP) : man.xsl
 		@if [ "x$(XSL)" = "x" ] ; then \
 			echo 'Set $$XSL to be the path of your XSL stylesheet directory.'; \
 			exit 1; \
 		fi
-		@cp manual/man.xsl $(MAN_XSL_TMP)
+		@cp man.xsl $(MAN_XSL_TMP)
 		@echo Configuring XSL stylesheet with path $(XSL_PATH)
 		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL_PATH)@" $(MAN_XSL_TMP)
 
@@ -128,7 +126,7 @@ manpageinit: tmpdir $(MAN_XSL_TMP)
 		fi
 
 install:
-		@if [ ! -d ../man ] ; then \
+		@if [ ! -d ../../man ] ; then \
 			echo 'No `man` dir to install into in parent directory.'; \
 			exit 1; \
 		fi
@@ -144,7 +142,7 @@ html-upload: htmlpages
 	scp html/* $(USER),netatalk@web.sourceforge.net:/home/project-web/netatalk/htdocs/2.2/htmldocs/
 
 htmlpages:	htmlinit
-		@xsltproc -o html/ $(HTML_XSL_TMP) manual/manual.xml
+		@xsltproc -o html/ $(HTML_XSL_TMP) manual.xml
 		@find html -name '*.html' -exec $(sed) -i -e "s@:SBINDIR:/@@g" -e "s@:BINDIR:/@@g" \
 			-e "s@:ETCDIR:/@@g" -e "s@:LIBDIR:/@@g" -e "s@:LIBEXECDIR:/@@g" \
 			-e "s@:DESTDIR:/@@g" \
@@ -159,12 +157,12 @@ htmlinit:	tmpdir $(HTML_XSL_TMP)
 			mkdir html; \
 		fi
 
-$(HTML_XSL_TMP) : manual/html.xsl
+$(HTML_XSL_TMP) : html.xsl
 		@if [ "x$(XSL)" = "x" ] ; then \
 			echo 'Set $$XSL to be the path of your XSL stylesheet directory.'; \
 			exit 1; \
 		fi
-		@cp manual/html.xsl $(HTML_XSL_TMP)
+		@cp html.xsl $(HTML_XSL_TMP)
 		@echo Configuring XSL stylesheet with path $(XSL_PATH)
 		@$(sed) -i -e "s@PATH_TO_XSL_STYLESHEETS_DIR@$(XSL_PATH)@" $(HTML_XSL_TMP)
 
