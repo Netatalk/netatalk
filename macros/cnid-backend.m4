@@ -120,7 +120,9 @@ AC_DEFUN([AC_NETATALK_CNID], [
     )
 
     if test -z "$MYSQL_CONFIG" -a -z "$MYSQL_CFLAGS" -a -z "$MYSQL_LIBS" ; then
-        AC_PATH_PROG(MYSQL_CONFIG, mysql_config)
+        PKG_CHECK_MODULES([MYSQL],[mysqlclient],[],[
+          AC_PATH_PROG(MYSQL_CONFIG, mysql_config)
+        ])
     fi
 
     if test -x "$MYSQL_CONFIG" ; then
