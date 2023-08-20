@@ -1,4 +1,3 @@
-dnl $Id: db3-check.m4,v 1.23 2010-04-12 14:28:48 franklahm Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 dnl -- check header for minimum version and return version in
@@ -63,20 +62,13 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
         ],[
             AC_MSG_RESULT(no)
         ],[
-            bdblibs=`ls $bdblibdir/lib$lib.* 2>/dev/null`
-            for bdblib in $bdblibs ; do
-                echo "Testing for lib file $bdblib" >&AS_MESSAGE_LOG_FD
-                if test -f "$bdblib" ; then
-                    AC_MSG_RESULT([yes (cross-compiling)])
-                    atalk_cv_bdb_version="yes"
-                    atalk_cv_lib_db="-l$lib"
-                    break
-                fi
-            done
-            if test "x$atalk_cv_bdb_version" = "xyes" ; then
-                break
-            fi
-            AC_MSG_RESULT([no (cross-compiling)])
+            AC_CHECK_LIB([$lib],[db_version],[
+                AC_MSG_RESULT([yes (cross-compiling)])
+                atalk_cv_bdb_version=yes
+                atalk_cv_lib_db="-l$lib"
+            ],[
+                AC_MSG_RESULT([no (cross-compiling)])
+            ])
         ])
     done
     LIBS="$savedlibs"
