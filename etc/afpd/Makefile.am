@@ -89,7 +89,7 @@ if WITH_DTRACE
 DTRACE_OBJ = afpd-afp_dsi.o afpd-fork.o afpd-appl.o afpd-catsearch.o afpd-directory.o afpd-enumerate.o afpd-file.o afpd-filedir.o
 afp_dtrace.o: $(top_srcdir)/include/atalk/afp_dtrace.d $(DTRACE_OBJ)
 	if test -f afp_dtrace.o ; then rm -f afp_dtrace.o ; fi
-	$(LIBTOOL) --mode=execute dtrace -G -s $(top_srcdir)/include/atalk/afp_dtrace.d -o afp_dtrace.o $(DTRACE_OBJ)
+	CC=$(CC) $(LIBTOOL) --mode=execute dtrace -G -s $(top_srcdir)/include/atalk/afp_dtrace.d -o afp_dtrace.o $(DTRACE_OBJ)
 afpd_LDADD += afp_dtrace.o @DTRACE_LIBS@
 CLEANFILES += afp_dtrace.o
 endif
