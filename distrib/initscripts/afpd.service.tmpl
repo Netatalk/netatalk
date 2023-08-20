@@ -2,6 +2,8 @@
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients
+Documentation=man:afpd(8) man:afpd.conf(5) man:AppleVolumes.default(5) man:afp_signature.conf(5) man:afp_voluuid.conf(5) man:afp_ldap.conf(5)
+Documentation=https://netatalk.sourceforge.io/
 After=network-online.target slpd.service avahi-daemon.service cnid.service atalkd.service
 Requires=cnid.service
 
