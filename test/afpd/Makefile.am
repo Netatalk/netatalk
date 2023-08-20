@@ -45,7 +45,7 @@ test_CFLAGS = \
 	-I$(top_srcdir)/etc/afpd \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/sys \
-	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @QUOTA_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \

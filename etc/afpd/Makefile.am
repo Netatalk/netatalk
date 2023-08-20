@@ -50,7 +50,7 @@ afpd_LDADD =  \
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@ @QUOTA_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
