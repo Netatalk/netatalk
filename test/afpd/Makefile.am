@@ -70,14 +70,14 @@ test_CFLAGS += @TRACKER_CFLAGS@
 endif
 
 if WITH_DTRACE
-DTRACE_OBJ = $(top_srcdir)/etc/afpd/test-afp_dsi.o \
-             $(top_srcdir)/etc/afpd/test-fork.o \
-             $(top_srcdir)/etc/afpd/test-appl.o \
-             $(top_srcdir)/etc/afpd/test-catsearch.o \
-             $(top_srcdir)/etc/afpd/test-directory.o \
-             $(top_srcdir)/etc/afpd/test-enumerate.o \
-             $(top_srcdir)/etc/afpd/test-file.o \
-             $(top_srcdir)/etc/afpd/test-filedir.o
+DTRACE_OBJ = $(top_builddir)/etc/afpd/test-afp_dsi.o \
+             $(top_builddir)/etc/afpd/test-fork.o \
+             $(top_builddir)/etc/afpd/test-appl.o \
+             $(top_builddir)/etc/afpd/test-catsearch.o \
+             $(top_builddir)/etc/afpd/test-directory.o \
+             $(top_builddir)/etc/afpd/test-enumerate.o \
+             $(top_builddir)/etc/afpd/test-file.o \
+             $(top_builddir)/etc/afpd/test-filedir.o
 afp_dtrace.o: $(top_srcdir)/include/atalk/afp_dtrace.d $(DTRACE_OBJ)
 	if test -f afp_dtrace.o ; then rm -f afp_dtrace.o ; fi
 	$(LIBTOOL) --mode=execute dtrace -G -s $(top_srcdir)/include/atalk/afp_dtrace.d -o afp_dtrace.o $(DTRACE_OBJ)
