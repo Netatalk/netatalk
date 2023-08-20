@@ -54,7 +54,7 @@ afpd_LDFLAGS = -export-dynamic
 afpd_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/sys \
-	@SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
+	@SLP_CFLAGS@ @ZEROCONF_CFLAGS@ @QUOTA_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \

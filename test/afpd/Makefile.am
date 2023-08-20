@@ -50,7 +50,7 @@ test_SOURCES += $(top_builddir)/etc/afpd/acls.c
 endif
 
 test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
-	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
+	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ @QUOTA_CFLAGS@ \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
