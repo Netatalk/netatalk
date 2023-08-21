@@ -406,8 +406,8 @@
 
         <listitem>
           <para>Use this instead of the result from calling hostname for
-          dertermening which IP address to advertise, therfore the hostname is
-          resolved to an IP which is the advertised. This is NOT used for
+          determining which IP address to advertise, therefore the hostname is
+          resolved to an IP which is the advertised one. This is NOT used for
           listening and it is also overwritten by
           <option>-ipaddr</option>.</para>
         </listitem>
@@ -418,11 +418,11 @@
 
         <listitem>
           <para>Specifies the IP address that the server should advertise
-          <emphasis role="bold">and</emphasis> listen to. The default is
+          <emphasis role="bold">and</emphasis> listen to. The default is to
           advertise the first IP address of the system, but to listen for any
           incoming request. The network address may be specified either in
           dotted-decimal format for IPv4 or in hexadecimal format for IPv6.
-          This option also allows to use one machine to advertise the
+          This option also allows one to use one machine to advertise the
           AFP-over-TCP/IP settings of another machine via NBP<indexterm>
               <primary>NBP</primary>
 
@@ -636,7 +636,7 @@
           <para>
             Enables sending FCE events to the specified <parameter>host</parameter>,
             default <parameter>port</parameter> is 12250 if not specified. Specifying
-            mutliple listeners is done by having this option once for each of them.
+            multiple listeners is done by having this option once for each of them.
           </para>
         </listitem>
       </varlistentry>
@@ -666,7 +666,7 @@
             This determines the time delay in seconds which is always waited if another file modification for the
             same file is done by a client before sending an FCE file modification event (fmod). For example, saving
             a file in Photoshop would generate multiple events by itself because the application is opening,
-            modifying and closing a file mutliple times for every "save". Default: 60 seconds.
+            modifying and closing a file multiple times for every "save". Default: 60 seconds.
           </para>
         </listitem>
       </varlistentry>
@@ -695,7 +695,7 @@
           a SIGQUIT signal, possibly install an afpd update and start the afpd process. Existing AFP sessions'
           afpd processes will remain unaffected. Technically they will be notified of the master afpd shutdown,
           sleep 15-20 seconds and then try to reconnect their IPC channel to the master afpd process. If this
-          reconnect fails, the sessions are in an undefined state. Therefor it's absolutely critical to restart
+          reconnect fails, the sessions are in an undefined state. Therefore it's absolutely critical to restart
           the master process in time!</para>
         </listitem>
       </varlistentry>
@@ -757,7 +757,7 @@
           in clustered environments, to provide fault isolation etc.). Default
           is "auto". "auto" signature type allows afpd to generate a signature
           and saving it to <filename>:ETCDIR:/afp_signature.conf</filename>
-          automatically (based on random number). The "host" signature type
+          automatically (based on a random number). The "host" signature type
           switches back to "auto" because it is obsoleted. The "user" signature
           type allows an administrator to set up a signature string manually. The
           maximum length is 16 characters.</para>
@@ -792,7 +792,7 @@ third -signature user:ADMINS</programlisting></para>
           <para><programlisting>73:  limit of Mac OS X 10.1
 80:  limit for Mac OS X 10.4/10.5 (default)
 255: limit of spec</programlisting>Mac OS 9 and earlier are not influenced by
-          this, because Maccharset volume name is always limitted to 27
+          this, because Maccharset volume name is always limited to 27
           bytes.</para>
         </listitem>
       </varlistentry>
@@ -810,7 +810,7 @@ third -signature user:ADMINS</programlisting></para>
         <listitem>
           <para>Specify that any message of a loglevel up to the given
           <option>loglevel</option> should be logged to the given file. If the
-          filename is ommited the loglevel applies to messages passed to
+          filename is omitted, the loglevel applies to messages passed to
           syslog.</para>
 
           <para>By default afpd logs
@@ -824,7 +824,7 @@ third -signature user:ADMINS</programlisting></para>
           LOG_MAXDEBUG</para>
 
           <note>
-            <para>The config is case-ignoring</para>
+            <para>The config is case insensitive</para>
           </note>
 
           <example>

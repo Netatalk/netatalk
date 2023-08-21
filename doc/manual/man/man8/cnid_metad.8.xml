@@ -59,7 +59,7 @@
     remap="B">cnid_dbd</emphasis> daemon. It keeps track of the status of a
     <emphasis remap="B">cnid_dbd</emphasis> instance once started and will
     restart it if necessary. <command>cnid_metad</command> is normally started
-    at boot time from <filename>/etc/rc</filename> or equivalent and runs
+    at boot time from system init scripts or services, and runs
     until shutdown. <emphasis remap="B">afpd</emphasis> needs to be configured
     with the <option>-cnidserver</option> option in <emphasis
     remap="B">afpd.conf</emphasis> in order to access <emphasis
@@ -78,10 +78,10 @@
         &lt;filename&gt;]</replaceable></term>
 
         <listitem>
-          <para>Specify that any message of a loglevel up to the given
+          <para>Specify that any message of a log level up to the given
           <option>loglevel</option> should be logged to the given file. If the
-          filename is ommited the loglevel applies to messages passed to
-          syslog. Default is logs to syslog with a default logging setup of
+          filename is omitted, the log level applies to messages passed to
+          syslog. Default is to log to syslog with a default log level of
           <option>"log_note</option>".</para>
 
           <para><emphasis remap="B">Note:</emphasis>
@@ -114,7 +114,7 @@
 
         <listitem>
           <para><emphasis remap="B">cnid_metad will remain in the foreground
-          and</emphasis> will also leave the standard input, standard output
+          and</emphasis> also leave the standard input, standard output
           and standard error file descriptors open. Useful for
           debugging.</para>
         </listitem>
@@ -170,7 +170,7 @@
 
         <listitem>
           <para>Use <emphasis remap="I">cnid_dbd pathname</emphasis> as the
-          pathname of the executeable of the <emphasis
+          pathname of the executable of the <emphasis
           remap="B">cnid_dbd</emphasis> daemon. The default is <emphasis
           remap="I">:SBINDIR:/cnid_dbd.</emphasis></para>
         </listitem>
@@ -189,14 +189,14 @@
   <refsect1>
     <title>CAVEATS</title>
 
-    <para>The number of <emphasis remap="B">cnid_dbd</emphasis> subprocecesses
+    <para>The number of <emphasis remap="B">cnid_dbd</emphasis> subprocesses
     is currently limited to 512.</para>
 
     <para><command>cnid_metad</command> does not block or catch any signals
     apart from SIGPIPE. It will therefore exit on most signals received. This
-    will also cause all instances of <emphasis remap="B">cnid_dbd's</emphasis>
+    will also cause all instances of <emphasis remap="B">cnid_dbd</emphasis>
     started by that <command>cnid_metad</command> to exit gracefully. Since
-    state about and IPC access to the subprocesses is only maintained in
+    the state of and IPC access to the subprocesses is only maintained in
     memory by <command>cnid_metad</command> this is desired behaviour. As soon
     as <command>cnid_metad</command> is restarted <emphasis
     remap="B">afpd</emphasis> processes will transparently reconnect.</para>

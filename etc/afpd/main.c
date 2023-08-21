@@ -399,7 +399,7 @@ int main(int ac, char **av)
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
 
     if (default_options.flags & OPTION_KEEPSESSIONS) {
-        LOG(log_note, logtype_afpd, "Activating continous service");
+        LOG(log_note, logtype_afpd, "Activating continuous service");
         disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
     }
 

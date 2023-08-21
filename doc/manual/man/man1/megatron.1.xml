@@ -78,7 +78,7 @@
     (AppleShare) server. BinHex, MacBinary, and AppleSingle are commonly used
     formats for transferring Macintosh files between machines via email or
     file transfer protocols. <command>megatron</command> uses its name to
-    determine what type of tranformation is being asked of it.</para>
+    determine what type of transformation is being asked of it.</para>
 
     <para>If <command>megatron</command> is called as <command>unhex</command>
     , <command>unbin</command> or <command>unsingle</command>, it tries to

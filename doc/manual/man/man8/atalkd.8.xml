@@ -79,7 +79,7 @@
     specified, all other fields must be present. Also,
     <command>atalkd</command> will exit during bootstrap­ping, if a router
     disagrees with its seed information. If <option>-seed</option> is not
-    given, all other information may be overriden during auto-configuration.
+    given, all other information may be overridden during auto-configuration.
     If no <option>-phase</option> option is given, the default phase as given
     on the command line is used (the default is 2). If <option>-addr</option>
     is given and <option>-net</option> is not, a net-range of one is
@@ -103,7 +103,7 @@
     <title>Routing</title>
 
     <para>If you are connecting a netatalk router to an existing AppleTalk
-    internet, you should first contact your local network administrators to
+    network, you should first contact your local network administrators to
     obtain appropriate network addresses.</para>
 
     <para><command>atalkd</command> can provide routing between interfaces by
@@ -114,8 +114,8 @@
         <secondary>AppleTalk net-range</secondary>
       </indexterm> between 1 and 65279 (0 and 65535 are illegal, and addresses
     between 65280 and 65534 are reserved for startup). It is best to choose
-    the smallest useful net-range, i.e. if you have three machines on an
-    Ethernet, don't chose a net-range of 1000-2000. Each net-range may have an
+    the smallest useful net-range, i.e. if you have three machines on a
+    LAN, don't chose a net-range of 1000-2000. Each net-range may have an
     arbitrary list of zones associated with it.</para>
   </refsect1>
 

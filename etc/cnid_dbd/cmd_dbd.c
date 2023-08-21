@@ -190,7 +190,7 @@ static void usage (void)
            "               -n Don't open CNID database, skip CNID checks.\n\n"
            "   -r Rebuild volume:\n"
            "      1. Sync CNIDs in database with volume\n"
-           "      2. Make sure .AppleDouble dir exist, create if missing\n"
+           "      2. Make sure .AppleDouble dir exists, create if missing\n"
            "      3. Make sure AppleDouble file exists, create if missing\n"
            "      4. Delete orphaned AppleDouble files\n"
            "      5. Check for directories inside AppleDouble directories\n"
@@ -211,7 +211,7 @@ static void usage (void)
            "   -v verbose\n\n"
            "WARNING:\n"
            "For -r -f restore of the CNID database from the adouble files,\n"
-           "the CNID must of course be synched to them files first with a plain -r rebuild!\n"
+           "the CNID must of course be synced to the files first with a plain -r rebuild!\n"
            , VERSION
         );
 }
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
         } else {
-            dbd_log( LOGSTD, "Somethings wrong with .AppleDB for \"%s\", giving up: %s", dbpath, strerror(errno));
+            dbd_log( LOGSTD, "Something is wrong with .AppleDB for \"%s\", giving up: %s", dbpath, strerror(errno));
             exit(EXIT_FAILURE);
         }
     } else {
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
     if (db_locked != LOCK_EXCL) {
         /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
         if (exclusive) {
-            dbd_log(LOGSTD, "Database is in use and exlusive was requested");
+            dbd_log(LOGSTD, "Database is in use and exclusive was requested");
             goto exit_noenv;
         }
         if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD)

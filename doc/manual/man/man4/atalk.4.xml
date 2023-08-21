@@ -56,7 +56,7 @@
     The node for <emphasis remap="B">bind</emphasis> must always be <emphasis
     remap="B">ATADDR_ANYNODE</emphasis>: ``this node.&#39;&#39; The net may be
     <emphasis remap="B">ATADDR_ANYNET</emphasis> or <emphasis remap="B">ATADDR_LATENET</emphasis>.
-    <emphasis remap="B">ATADDR_ANYNET</emphasis> coresponds to the
+    <emphasis remap="B">ATADDR_ANYNET</emphasis> corresponds to the
     machine&#39;s ``primary&#39;&#39; address (the first configured).
     <emphasis remap="B">ATADDR_LATENET</emphasis> causes the address in
     outgoing packets to be determined when a packet is sent, i.e. determined

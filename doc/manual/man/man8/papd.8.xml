@@ -54,9 +54,9 @@
     <command>lpd</command> in use.</para>
 
     <para>As of Netatalk 2.0, CUPS is also supported. Simply using <emphasis
-    remap="B">cupsautoadd</emphasis> as first papd.conf entry will share all
-    CUPS printers automagically using the PPD files configured in CUPS. It ist
-    still possible to overwrite these defaults by individually define printer
+    remap="B">cupsautoadd</emphasis> as the first papd.conf entry will share
+    all CUPS printers automagically. It is still possible to overwrite
+    these defaults by individually defining printer
     shares. See <citerefentry>
         <refentrytitle>papd.conf</refentrytitle>
 
@@ -139,7 +139,7 @@
 
               <entry>NULL</entry>
 
-              <entry>Pathname used for CAP-style authentification</entry>
+              <entry>Pathname used for CAP-style authentication</entry>
             </row>
 
             <row>
@@ -149,7 +149,7 @@
 
               <entry>false</entry>
 
-              <entry>PSSP-style authetication</entry>
+              <entry>PSSP-style authentication</entry>
             </row>
 
             <row>
@@ -265,7 +265,7 @@
     requires that a user login to a file share before they print.
     <command>afpd</command> records the username in a temporary file named
     after the client's AppleTalk address, and it deletes the temporary file
-    when the user disconnects. Therefore CAP style authentification will
+    when the user disconnects. Therefore CAP style authentication will
     <emphasis>not</emphasis> work for clients connected to
     <command>afpd</command> via TCP/IP. <command>papd</command> gets the
     username from the file with the same AppleTalk address as the machine
@@ -284,8 +284,8 @@
 
     <note>
       <para>As of this writing, Mac OS X makes no use of PSSP authentication
-      any longer. CAP-style authentication normally won't be an option, too
-      caused by the use of AFP over TCP these days.</para>
+      any longer. CAP-style authentication normally won't be an option, either,
+      because of the use of AFP over TCP these days.</para>
     </note>
 
     <para></para>
