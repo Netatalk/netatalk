@@ -35,7 +35,7 @@
   <refsect1>
     <title>Description</title>
 
-    <para><command>ad</command> is a UNIX file utlity suite with Netatalk
+    <para><command>ad</command> is a UNIX file utility suite with Netatalk
     compatibity. AppleDouble files in <filename>.AppleDouble</filename> directories and
     the CNID databases are updated as appropriate.</para>
   </refsect1>
@@ -132,7 +132,7 @@
         <term>-R</term>
 
         <listitem>
-          <para>list subdirectories recursively</para>
+          <para>List subdirectories recursively</para>
         </listitem>
       </varlistentry>
 
@@ -195,7 +195,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
     detects an attempt to copy a file to itself, the copy will fail.</para>
 
     <para>Netatalk AFP volumes are detected by means of their ".AppleDesktop"
-    directory which is located in their volume root. When a copy targetting an
+    directory which is located in their volume root. When a copy targeting an
     AFP volume is detected, its CNID database daemon is connected and all
     copies will also go through the CNID database. AppleDouble data are also
     copied and created as needed when the target is an AFP volume.</para>

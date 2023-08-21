@@ -45,7 +45,7 @@
     <para><command>cnid_dbd</command> provides an interface for storage and
     retrieval of catalog node IDs (CNIDs) and related information to the
     <emphasis remap="B">afpd</emphasis> daemon. CNIDs are a component of
-    Macintosh based file systems with semantics that map not easily onto Unix
+    Macintosh based file systems with semantics that do not easily map onto Unix
     file systems. This makes separate storage in a database necessary.
     <command>cnid_dbd</command> is part of the <emphasis remap="B">CNID
     backend</emphasis> framework of <emphasis remap="B">afpd</emphasis> and
@@ -88,7 +88,7 @@
     a TERM or an INT signal it will exit cleanly after flushing dirty database
     buffers to disk and closing <emphasis remap="B">Berkleley DB</emphasis>
     database environments. It is safe to terminate <command>cnid_dbd</command>
-    this way, it will be restarted when necessary. Other signals are not
+    this way, because it will be restarted when necessary. Other signals are not
     handled and will cause an immediate exit, possibly leaving the CNID
     database in an inconsistent state (no transactions) or losing recent
     updates during recovery (transactions).</para>
@@ -96,8 +96,8 @@
     <para>The <emphasis remap="B">Berkleley DB</emphasis> database subsystem
     will create files named log.xxxxxxxxxx in the database home directory
     <emphasis remap="I">dbdir</emphasis>, where xxxxxxxxxx is a monotonically
-    increasing integer. These files contain ithe transactional database
-    changes. They will be removed regularily, unless the <emphasis
+    increasing integer. These files contain the transactional database
+    changes. They will be removed regularly, unless the <emphasis
     remap="B">logfile_autoremove</emphasis> option is specified in the
     <emphasis remap="I">db_param</emphasis> configuration file (see
     below) with a value of 0 (default 1).</para>

@@ -196,7 +196,7 @@
           <filename>AppleVolumes</filename> file to override volume names in
           the system's <filename>AppleVolumes</filename> file. The default is
           to read the system <filename>AppleVolumes</filename> file first.
-          Note that this option doesn't effect the precendence of filename
+          Note that this option doesn't effect the precedence of filename
           extension mappings: the user's <filename>AppleVolumes</filename>
           file always has precedence.</para>
         </listitem>
@@ -217,7 +217,7 @@
 
         <listitem>
           <para>Specifies the maximum number of connections to allow for this
-          <command>afpd</command>. The default is 20.</para>
+          instance of <command>afpd</command>. The default is 20.</para>
         </listitem>
       </varlistentry>
 

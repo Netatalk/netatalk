@@ -113,7 +113,7 @@
     </note>
 
     <para>It is possible to specify default options for all volumes with a
-    <emphasis>:DEFAULT: </emphasis>line preceeding these volume
+    <emphasis>:DEFAULT: </emphasis>line preceding these volume
     definitions:</para>
       <example>
         <title>:DEFAULT: configuration line</title>
@@ -231,7 +231,7 @@
 
         <listitem>
           <para>Sets the database information to be stored in path. You have
-          to specifiy a writable location, even if the volume is read
+          to specify a writable location, even if the volume is read
           only.</para>
         </listitem>
       </varlistentry>
@@ -265,7 +265,7 @@
               <listitem>
                 <para>Try <option>sys</option> (by setting an EA on the shared
                 directory itself), fallback to <option>ad</option>. Requires
-                a writeable volume for perfoming the test.
+                a writeable volume for performing the test.
                 <option>options:ro</option> overwrites <option>auto</option>
                 with <option>none</option>. Use explicit
                 <option>ea:sys|ad</option> for read-only volumes where
@@ -335,7 +335,7 @@
               <term>tm</term>
 
               <listitem>
-                <para>Enable Time Machine suport for this volume.</para>
+                <para>Enable Time Machine support for this volume.</para>
               </listitem>
             </varlistentry>
 
@@ -684,7 +684,7 @@
 
         <listitem>
           <para>"Concurrent database", backend is based on Sleepycat's Berkeley
-          DB. With this backend several <command>afpd</command> deamons access
+          DB. With this backend several <command>afpd</command> daemons access
           the CNID database directly. Berkeley DB locking is used to
           synchronize access, if more than one <command>afpd</command> process
           is active for a volume. The drawback is, that the crash of a single
@@ -923,7 +923,7 @@
               <listitem>
                 <para>Forces filename restrictions imposed by MS WinXX.
                 <emphasis>Warning</emphasis>: This is <emphasis>NOT</emphasis>
-                recommened for volumes mainly used by Macs. Please make sure
+                recommended for volumes mainly used by Macs. Please make sure
                 you fully understand this option before using it.</para>
 
                 <warning>
