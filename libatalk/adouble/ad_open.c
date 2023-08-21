@@ -804,9 +804,6 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
     }
 
     /*
-     * It is possible for AFP metadata to contain a zero-length
-     * comment. This will cause ad_entry(ad, ADEID_COMMENT) to return NULL
-     * but should not be treated as an error condition.
      * Since recent CVE fixes have introduced new behavior regarding
      * ad_entry() output. For now, we will AFP_ASSERT() in EC_CLEANUP to prevent
      * altering on-disk info. This does introduce an avenue to DOS
@@ -816,6 +813,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
      */
     if (nentries != ADEID_NUM_EA
         || !ad_entry(ad, ADEID_FINDERI)
+        || !ad_entry(ad, ADEID_COMMENT)
         || !ad_entry(ad, ADEID_FILEDATESI)
         || !ad_entry(ad, ADEID_AFPFILEI)
         || !ad_entry(ad, ADEID_PRIVDEV)
@@ -833,12 +831,6 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         EC_FAIL;
     }
 
-    if (!ad_entry(ad, ADEID_COMMENT) &&
-        (ad->ad_eid[ADEID_COMMENT].ade_len != 0)) {
-        errno = EINVAL;
-        EC_FAIL;
-    }
-
     /*
      * Ensure the resource fork offset is always set
      */
@@ -847,6 +839,8 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
 #endif
 
+    // TODO: Remove the assert and restore the branch for cleaning up invalid metadata
+    //       https://github.com/Netatalk/netatalk/issues/400
 EC_CLEANUP:
     AFP_ASSERT(!(ret != 0 && errno == EINVAL));
 #if 0
