@@ -5,7 +5,7 @@ pkgconfdir = @PKGCONFDIR@
 GENERATED_FILES = lp2pap.sh
 TEMPLATE_FILES = lp2pap.sh.tmpl
 PERLSCRIPTS = \
-	asip-status.pl \
+	asip-status \
 	apple_dump
 
 SUFFIXES = .tmpl .
