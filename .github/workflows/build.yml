@@ -32,6 +32,8 @@ jobs:
         run: make -j $(nproc)
       - name: Run tests
         run: make check
+      - name: Run distribution tests
+        run: make distcheck
 
   build-macos:
     name: macOS
