@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<refentry id="asip-status.pl.1">
+<refentry id="asip-status.1">
   <refmeta>
-    <refentrytitle>asip-status.pl</refentrytitle>
+    <refentrytitle>asip-status</refentrytitle>
 
     <manvolnum>1</manvolnum>
 
@@ -11,14 +11,14 @@
   </refmeta>
 
   <refnamediv>
-    <refname>asip-status.pl</refname>
+    <refname>asip-status</refname>
 
     <refpurpose>Queries AFP servers for their capabilities</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="opt">
         <arg choice="plain">-4</arg>
@@ -33,7 +33,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="opt">
         <arg choice="plain">-4</arg>
@@ -47,7 +47,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
@@ -61,7 +61,7 @@
   <refsect1>
     <title>DESCRIPTION</title>
 
-    <para><command>asip-status.pl</command> is a perl script that
+    <para><command>asip-status</command>
     sends a FPGetSrvrInfo request to an AFP server at
     <replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable> and
     displays the results, namely "Machine type", the server's name, supported
@@ -71,11 +71,11 @@
     <para>When you don't supply <replaceable>PORT</replaceable>, then the
     default AFP port, 548, will be used.</para>
 
-    <para>Starting with Netatalk 3.1.9, <command>asip-status.pl</command>
+    <para>Starting with Netatalk 3.1.9, <command>asip-status</command>
     supports both IPv4 and IPv6. It's decided by your system which IP version
     to use. You can use -4 or -6 option to specify IP version.</para>
 
-    <note><para><command>asip-status.pl</command> requires IO::Socket::IP
+    <note><para><command>asip-status</command> requires IO::Socket::IP
     module.</para></note>
 
   </refsect1>
@@ -138,7 +138,7 @@
   <refsect1>
     <title>EXAMPLES</title>
 
-    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> 192.168.1.15
+    <para><programlisting>$ <emphasis remap="B">asip-status</emphasis> 192.168.1.15
 AFP reply from 192.168.1.15:548 via IPv4
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -162,7 +162,7 @@ Network address: 192.168.1.15:548 (IPv4 address and port)
 Network address: 65280.128 (ddp address)
 </programlisting></para>
 
-    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> myserver:10548
+    <para><programlisting>$ <emphasis remap="B">asip-status</emphasis> myserver:10548
 AFP reply from myserver:10548 via IPv6
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus

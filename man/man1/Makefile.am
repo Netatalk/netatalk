@@ -6,7 +6,7 @@ man_MANS = \
 	afppasswd.1 \
 	afpstats.1 \
 	apple_dump.1 \
-	asip-status.pl.1 \
+	asip-status.1 \
 	dbd.1 \
 	macusers.1 \
 	netatalk-config.1 \
