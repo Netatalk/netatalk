@@ -932,7 +932,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
 
     ret = map_spotlight_to_sparql_query(slq, &sparql_query);
     if (ret != 0) {
-        LOG(log_debug, logtype_sl, "mapping retured non-zero");
+        LOG(log_debug, logtype_sl, "mapping returned non-zero");
         EC_FAIL;
     }
     LOG(log_debug, logtype_sl, "SPARQL query: \"%s\"", sparql_query);

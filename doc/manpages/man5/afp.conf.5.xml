@@ -993,7 +993,7 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Speficy a set of file and directory attributes that shall
+            <para>Specify a set of file and directory attributes that shall
             be ignored by the server, <option>all</option> includes all
             the other options.</para>
             <para>In OS X when the Finder sets a lock on a file/directory or you
@@ -1457,7 +1457,7 @@
       setup both client and server as part on a authentication domain
       (directory service, e.g. LDAP, Open Directory, Active Directory). The
       reason is, in OS X ACLs are bound to UUIDs, not just uid's or gid's.
-      Therefor Netatalk must be able to map every filesystem uid and gid to a
+      Therefore Netatalk must be able to map every filesystem uid and gid to a
       UUID so that it can return the server side ACLs which are bound to UNIX
       uid and gid mapped to OS X UUIDs.</para>
 
@@ -1726,9 +1726,9 @@
             for backup. Example: "vol size limit = 1000" would limit the
             reported disk space to 1 GB. <emphasis role="bold">IMPORTANT:
             </emphasis> This is an approximated calculation taking into
-            account the contents of Time Machine sparsebundle images. Therefor
+            account the contents of Time Machine sparsebundle images. Therefore
             you MUST NOT use this volume to store other content when using
-            this option, because it would NOT be accounted. The calculation
+            this option, because it would NOT be accounted for. The calculation
             works by reading the band size from the Info.plist XML file of the
             sparsebundle, reading the bands/ directory counting the number of
             band files, and then multiplying one with the other.</para>
