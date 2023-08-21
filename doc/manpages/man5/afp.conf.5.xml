@@ -1037,7 +1037,7 @@
             and saving it to
             <filename>@localstatedir@/netatalk/afp_signature.conf</filename>
             automatically (based on random number). See also
-            asip-status.pl(1).</para>
+            asip-status(1).</para>
           </listitem>
         </varlistentry>
 

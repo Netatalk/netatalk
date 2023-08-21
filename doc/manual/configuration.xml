@@ -784,7 +784,7 @@ basedir regex = /usr/home</programlisting></para>
         occur while activating them in either
         <filename>netatalk.log</filename> or syslog at startup time.
         <citerefentry>
-            <refentrytitle>asip-status.pl</refentrytitle>
+            <refentrytitle>asip-status</refentrytitle>
 
             <manvolnum>1</manvolnum>
           </citerefentry> can be used to query the available UAMs of AFP
@@ -1135,7 +1135,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           tunneled AFP requests, when both "<option>advertise ssh</option>"
           and "<option>fqdn</option>" options are set in
           <option>Global</option> section (double check with <citerefentry>
-              <refentrytitle>asip-status.pl</refentrytitle>
+              <refentrytitle>asip-status</refentrytitle>
 
               <manvolnum>1</manvolnum>
             </citerefentry> after you restarted afpd when you made changes to
