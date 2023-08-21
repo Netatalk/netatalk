@@ -220,7 +220,7 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
     /* store the wrapped session key in afpd's session_info struct */
     if (NULL == (sinfo->cryptedkey = malloc(wrap_buff.length))) {
         LOG_UAMS(log_error,
-                 "wrap_sessionkey: out of memory tyring to allocate %u bytes",
+                 "wrap_sessionkey: out of memory trying to allocate %u bytes",
                  wrap_buff.length);
         ret = 1;
     } else {
