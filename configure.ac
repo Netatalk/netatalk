@@ -1350,7 +1350,7 @@ AC_CONFIG_FILES([Makefile
 	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
 	contrib/shell_utils/apple_dump
-	contrib/shell_utils/asip-status.pl
+	contrib/shell_utils/asip-status
 	contrib/timelord/Makefile
 	contrib/a2boot/Makefile
 	distrib/Makefile

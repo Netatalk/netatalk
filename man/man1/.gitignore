@@ -1,6 +1,6 @@
 Makefile
 Makefile.in
-asip-status.pl.1
+asip-status.1
 afpldaptest.1
 uniconv.1
 *.o
