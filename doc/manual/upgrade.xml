@@ -138,8 +138,8 @@
           <listitem>
             <para>The CNID databases are now stored under
               <filename>/var/netatalk/CNID/</filename>
-              by default. You can use configure --localstatedir=PATH at
-              compile time to change the location.</para>
+              by default. You can use <command>configure --localstatedir=PATH</command>
+              at compile time to change the location.</para>
           </listitem>
 
           <listitem>

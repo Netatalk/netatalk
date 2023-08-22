@@ -172,8 +172,10 @@ basedir regex = /usr/home</programlisting></para>
         </citerefentry> configuration file. A CNID backend is basically a
       database storing ID &lt;-&gt; name mappings.</para>
 
-      <para>The CNID Databases are by default located in
-      <filename>/var/netatalk/CNID</filename>.</para>
+      <para>The CNID databases are by default located in
+      <filename>/var/netatalk/CNID</filename>. You can pass
+      <command>--localstatedir=PATH</command> to the configure script
+      to change the location.</para>
 
       <para>There is a command line utility called <command>dbd</command>
       available which can be used to verify, repair and rebuild the CNID
@@ -1611,15 +1613,21 @@ aclmode = passthrough</screen>
       <para>Netatalk must be running, commands must be executed as root and
       some environment variables must be set up.</para>
 
-      <para>If the .tracker_profile file does not exist, create it first. If you need to make the environment variables persistent, source .tracker_profile from /root/.profile. Adjust PREFIX to point to the base directory Netatalk is installed to.<screen>$ su
-# cat .tracker_profile
-PREFIX="/usr/local"
-export XDG_DATA_HOME="$PREFIX/var/netatalk/"
-export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
-export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
-# . .tracker_profile
-#
-</screen></para>
+      <para>If the .tracker_profile file does not exist, create it first.
+      If you need to make the environment variables persistent,
+      source .tracker_profile from /root/.profile.
+      If needed, adjust PREFIX to point to the base directory Netatalk is
+      installed to, and replace "/var" with the localstate directory
+      configured at compile time.
+      <screen>$ su
+      # cat .tracker_profile
+      PREFIX="/usr/local"
+      export XDG_DATA_HOME="$PREFIX/var/netatalk/"
+      export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
+      # . .tracker_profile
+      #
+      </screen></para>
 
       <para>When using Tracker from OpenCSW you must also update your
       PATH:<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
