@@ -10,6 +10,7 @@ MAN_MANPAGES = \
 	afpstats.1 \
 	apple_dump.1 \
 	asip-status.pl.1 \
+	cnid2_create.1 \
 	dbd.1 \
 	macusers.1 \
 	megatron.1 \
@@ -23,6 +24,7 @@ EXTRA_DIST = \
 	afpstats.1.xml \
 	apple_dump.1.xml \
 	asip-status.pl.1.xml \
+	cnid2_create.1.xml \
 	dbd.1.xml \
 	macusers.1.xml \
 	megatron.1.xml \
