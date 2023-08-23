@@ -34,6 +34,7 @@ manpages = manpages/ad.1 \
 		manpages/afppasswd.1 \
 		manpages/apple_dump.1 \
 		manpages/asip-status.1 \
+		manpages/cnid2_create.1 \
 		manpages/dbd.1 \
 		manpages/getzones.1 \
 		manpages/macusers.1 \

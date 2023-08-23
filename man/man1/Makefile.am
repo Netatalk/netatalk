@@ -12,8 +12,14 @@ SUFFIXES= .tmpl .
 	    -e s@:DEFAULT_CNID_SCHEME:@${DEFAULT_CNID_SCHEME}@ \
 	    <$< >$@
 
-GENERATED_MANS	= uniconv.1 asip-status.1 afpldaptest.1
-TEMPLATE_FILES	= uniconv.1.tmpl asip-status.1.tmpl afpldaptest.1.tmpl
+GENERATED_MANS	= uniconv.1 \
+		  asip-status.1 \
+		  afpldaptest.1 \
+		  cnid2_create.1
+TEMPLATE_FILES	= uniconv.1.tmpl \
+		  asip-status.1.tmpl \
+		  afpldaptest.1.tmpl \
+		  cnid2_create.1.tmpl
 NONGENERATED_MANS	=	ad.1 \
 				afppasswd.1 \
 				apple_dump.1 \
