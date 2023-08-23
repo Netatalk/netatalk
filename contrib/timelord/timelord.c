@@ -243,11 +243,11 @@ int main( int ac, char **av )
             exit( 1 );
             }
 
-#if defined (HAVE_STRUCT_TM_GMTOFF)
-			mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
-#else /* HAVE_STRUCT_TM_GMTOFF */
-			mtime = tv.tv_sec + EPOCH - timezone;
-#endif /* HAVE_STRUCT_TM_GMTOFF */
+#if defined (NO_STRUCT_TM_GMTOFF)
+	mtime = tv.tv_sec + EPOCH - timezone;
+#else /* NO_STRUCT_TM_GMTOFF */
+	mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
+#endif /* NO_STRUCT_TM_GMTOFF */
         }
         else {
             if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
