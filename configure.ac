@@ -692,6 +692,11 @@ dnl	AC_COMPILE_IFELSE([
 		AC_MSG_RESULT([no])
 	])
 
+	dnl ----- Use the glibc at.h header if found -----
+	AC_CHECK_HEADER([netatalk/at.h], [
+		use_glibc_at_header=yes
+	])
+
 if test "x$ac_have_atalk_addr" = "xyes"; then
 	AC_DEFINE(HAVE_ATALK_ADDR, 1, [set if struct at_addr is called atalk_addr])
 fi
@@ -1320,6 +1325,7 @@ AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 AM_CONDITIONAL(USE_INSTALL_PRIVILEGED, test x"$install_privileged" = x"yes")
+AM_CONDITIONAL(USE_GLIBC_AT_HEADER, test x$use_glibc_at_header = xyes)
 
 dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
