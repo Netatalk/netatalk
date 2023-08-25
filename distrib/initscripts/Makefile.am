@@ -102,12 +102,18 @@ servicedir	= $(systemddir)
 service_DATA	= a2boot.service afpd.service atalkd.service cnid.service papd.service timelord.service
 
 install-data-hook:
+if USE_INSTALL_PRIVILEGED
 	-systemctl daemon-reload
+endif
 
 uninstall-startup:
+if USE_INSTALL_PRIVILEGED
 	-systemctl disable $(service_DATA)
+endif
 	rm -f $(DESTDIR)$(servicedir)/{a2boot,afpd,atalkd,cnid,papd,timelord}.service
+if USE_INSTALL_PRIVILEGED
 	-systemctl daemon-reload
+endif
 
 endif
 

@@ -492,6 +492,19 @@ AC_ARG_WITH(systemd-prefix,
 SYSTEMDDIR=${SYSTEMD_PREFIX}/systemd/system
 AC_SUBST(SYSTEMDDIR)
 
+dnl ----- primarily a workaround for systemctl being buggy in fakeroot
+AC_MSG_CHECKING([whether to run privileged hooks with make install])
+install_privileged=yes
+AC_ARG_ENABLE(install-privileged,
+	[  --disable-install-privileged   make install runs privileged hooks],[
+	if test x"$enableval" = x"no"; then
+		install_privileged=no
+		AC_MSG_RESULT([no])
+	fi],[
+		AC_MSG_RESULT([yes])
+	]
+)
+
 dnl ----- timelord compilation (enabled by default)
 AC_MSG_CHECKING([whether timelord should be compiled])
 compile_timelord=yes
@@ -1306,6 +1319,7 @@ AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
+AM_CONDITIONAL(USE_INSTALL_PRIVILEGED, test x"$install_privileged" = x"yes")
 
 dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
