@@ -529,7 +529,7 @@ AC_ARG_WITH(uams-path,
 	[  --with-uams-path=PATH   path to UAMs [[PKGCONF/uams]]],[
 		uams_path="$withval"
 	],[
-		uams_path="${PKGCONFDIR}/uams"
+		uams_path="${libdir}/netatalk"
 	]
 )
 
@@ -575,7 +575,7 @@ dnl --------------------------------------------------------------------------
 
 dnl ***** UAMS_PATH
 dnl AC_DEFINE_UNQUOTED(UAMS_PATH, "${uams_path}",
-dnl 	[path to UAMs [default=PKGCONF/uams]])
+dnl 	[path to UAMs [default=$libdir/netatalk]])
 UAMS_PATH="${uams_path}"
 AC_SUBST(UAMS_PATH)
 
