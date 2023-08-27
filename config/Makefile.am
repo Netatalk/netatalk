@@ -67,8 +67,8 @@ endif
 install-config-files: $(CONFFILES) $(GENFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
 	for f in $(CONFFILES); do \
-		if test -f $$f; then \
-			echo "origin file not found $$f"; \
+		if test -f $(srcdir)$$f; then \
+			echo "origin file not found $(srcdir)$$f"; \
 			exit 1; \
 		elif test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/$$f; then \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
