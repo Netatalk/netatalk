@@ -49,6 +49,12 @@ HTML_PAGES = \
 	uniconv.1.html \
 	upgrade.html
 
+do_subst =  sed \
+  -i '' \
+  -e 's|@pkgconfdir[@]|$(sysconfdir)|g' \
+  -e 's|@localstatedir[@]|$(localstatedir)|g' \
+  -e 's|@prefix[@]|$(prefix)|g'
+
 DISTCLEANFILES = manual.xml
 
 if HAVE_XSLTPROC
@@ -56,6 +62,7 @@ CLEANFILES += $(HTML_PAGES)
 
 html-local: $(XML_PAGES)
 	@xsltproc $(HTML_STYLESHEET) manual.xml
+	$(do_subst)	$(HTML_PAGES)
 
 html-upload: html-local
 	scp $(HTML_PAGES) $$USER,netatalk@web.sourceforge.net:/home/project-web/netatalk/htdocs/3.1/htmldocs/
