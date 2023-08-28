@@ -33,7 +33,9 @@ NONGENERATED_MANS	=	ad.1 \
 				unbin.1 \
 				unhex.1 \
 				unsingle.1
-ATALK_MANS = aecho.1 \
+
+if USE_APPLETALK
+NONGENERATED_MANS	+=	aecho.1 \
 				getzones.1 \
 				nbp.1 \
 				nbplkup.1 \
@@ -42,11 +44,8 @@ ATALK_MANS = aecho.1 \
 				pap.1 \
 				papstatus.1 \
 				psorder.1
-
-if USE_APPLETALK
-NONGENERATED_MANS += $(ATALK_MANS)
 endif
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 CLEANFILES = $(GENERATED_MANS)
-EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS) $(ATALK_MANS)
+EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS)

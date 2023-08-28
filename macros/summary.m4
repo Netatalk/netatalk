@@ -47,7 +47,6 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([         DDP (AppleTalk) support: $netatalk_cv_ddp_enabled])
 	if test "x$netatalk_cv_ddp_enabled" = "xyes"; then
 		AC_MSG_RESULT([         CUPS support:            $netatalk_cv_use_cups])
-		AC_MSG_RESULT([         Apple 2 boot support:    $compile_a2boot])
 	fi
 	AC_MSG_RESULT([         SLP support:             $netatalk_cv_srvloc])
 	AC_MSG_RESULT([         Zeroconf support:        $netatalk_cv_zeroconf])
