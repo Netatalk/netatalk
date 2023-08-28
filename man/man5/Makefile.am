@@ -27,11 +27,9 @@ TEMPLATE_FILES = AppleVolumes.default.5.tmpl \
 	afp_signature.conf.5.tmpl \
 	afp_voluuid.conf.5.tmpl
 
-ATALK_MANS = atalkd.conf.5.tmpl papd.conf.5.tmpl
-
 if USE_APPLETALK
 GENERATED_MANS += atalkd.conf.5 papd.conf.5
-TEMPLATE_FILES += $(ATALK_MANS)
+TEMPLATE_FILES += atalkd.conf.5.tmpl papd.conf.5.tmpl
 endif
 
 NONGENERATED_MANS = AppleVolumes.5 AppleVolumes.system.5
@@ -40,4 +38,4 @@ man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 
 CLEANFILES = $(GENERATED_MANS)
 
-EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS) $(ATALK_MANS)
+EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS)

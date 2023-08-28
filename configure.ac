@@ -505,26 +505,6 @@ AC_ARG_ENABLE(install-privileged,
 	]
 )
 
-dnl ----- timelord compilation (enabled by default)
-AC_MSG_CHECKING([whether timelord should be compiled])
-compile_timelord=yes
-AC_ARG_ENABLE(timelord,
-	[  --enable-timelord       enable compilation of timelord server],
-	[compile_timelord="$enableval"],
-	[compile_timelord="yes"]
-)
-AC_MSG_RESULT([$compile_timelord])
-
-dnl ----- a2boot compilation (enabled by default)
-AC_MSG_CHECKING([whether a2boot should be compiled])
-compile_a2boot=yes
-AC_ARG_ENABLE(a2boot,
-	[  --enable-a2boot         enable compilation of Apple2 boot server],
-	[compile_a2boot="$enableval"],
-	[compile_a2boot="yes"]
-)
-AC_MSG_RESULT([$compile_a2boot])
-
 AC_ARG_WITH(uams-path,
 	[  --with-uams-path=PATH   path to UAMs [[PKGCONF/uams]]],[
 		uams_path="$withval"
@@ -1296,8 +1276,6 @@ AC_SUBST(CFLAGS)
 AC_SUBST(OVERWRITE_CONFIG)
 
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
-AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
-AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
