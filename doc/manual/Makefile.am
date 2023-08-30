@@ -50,7 +50,7 @@ HTML_PAGES = \
 	upgrade.html
 
 do_subst =  sed \
-  -i '' \
+  -i.'' \
   -e 's|@pkgconfdir[@]|$(sysconfdir)|g' \
   -e 's|@localstatedir[@]|$(localstatedir)|g' \
   -e 's|@prefix[@]|$(prefix)|g'
