@@ -21,25 +21,27 @@
 	Preparation:
 
 	1. Clone the Netatalk repo with git
-	2. `cd` to "doc"
+	2. `cd` to "doc/manual"
 
-	Create manpages:
+	Create man pages:
 
-	3. XSL=<path to docbook-xsl dir> VERSION=2.2 make man
+	3. Generate man pages from xml sources
+	   $ XSL=<relative path to docbook-xsl dir> VERSION=2.2 make man
 	4. Copy the generated man pages to the correct locations in the code repo
-	   make install
+	   $ make install
 
 	Create HTML:
 
-	5. XSL=<path to docbook-xsl dir> VERSION=2.2.9 make html
+	5. Generate the html pages from xml sources
+	   $ XSL=<relative path to docbook-xsl dir> VERSION=2.2.9 make html
 	   The generated html files are then inside the directory html.
 	6. Upload the generated html files to SourceForge: (admins only)
-	   USER=<SourceForge user> VERSION=2.2.9 make html-upload
+	   $ USER=<SourceForge user> VERSION=2.2.9 make html-upload
 
 	Clean-up:
 
 	7. Remove the generated files in tmp/ before running the script again.
-	   make clean
+	   $ make clean
 
    Editing Docbook Sources
    -----------------------
