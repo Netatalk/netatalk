@@ -45,9 +45,7 @@ daemon\&. It keeps track of the status of a
 \fBcnid_dbd\fR
 instance once started and will restart it if necessary\&.
 \fBcnid_metad\fR
-is normally started at boot time from
-/etc/rc
-or equivalent and runs until shutdown\&.
+is normally started at boot time from system init scripts or services, and runs until shutdown\&.
 \fBafpd\fR
 needs to be configured with the
 \fB\-cnidserver\fR
@@ -66,9 +64,9 @@ options\&.
 .PP
 \fB\-l\fR\fI <loglevel> [\-f <filename>]\fR
 .RS 4
-Specify that any message of a loglevel up to the given
+Specify that any message of a log level up to the given
 \fBloglevel\fR
-should be logged to the given file\&. If the filename is ommited the loglevel applies to messages passed to syslog\&. Default is logs to syslog with a default logging setup of
+should be logged to the given file\&. If the filename is omitted, the log level applies to messages passed to syslog\&. Default is to log to syslog with a default log level of
 \fB"log_note\fR"\&.
 .sp
 \fBNote:\fR
@@ -107,7 +105,7 @@ loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE, LOG_INFO, LOG_DEBUG, LOG_D
 \fB\-d\fR
 .RS 4
 \fBcnid_metad will remain in the foreground and\fR
-will also leave the standard input, standard output and standard error file descriptors open\&. Useful for debugging\&.
+also leave the standard input, standard output and standard error file descriptors open\&. Useful for debugging\&.
 .RE
 .PP
 \fB\-h\fR\fI hostname\fR
@@ -151,7 +149,7 @@ must be specified as strings\&.
 .RS 4
 Use
 \fIcnid_dbd pathname\fR
-as the pathname of the executeable of the
+as the pathname of the executable of the
 \fBcnid_dbd\fR
 daemon\&. The default is
 \fI:SBINDIR:/cnid_dbd\&.\fR
@@ -165,14 +163,14 @@ Show version and exit\&.
 .PP
 The number of
 \fBcnid_dbd\fR
-subprocecesses is currently limited to 512\&.
+subprocesses is currently limited to 512\&.
 .PP
 \fBcnid_metad\fR
 does not block or catch any signals apart from SIGPIPE\&. It will therefore exit on most signals received\&. This will also cause all instances of
-\fBcnid_dbd\*(Aqs\fR
+\fBcnid_dbd\fR
 started by that
 \fBcnid_metad\fR
-to exit gracefully\&. Since state about and IPC access to the subprocesses is only maintained in memory by
+to exit gracefully\&. Since the state of and IPC access to the subprocesses is only maintained in memory by
 \fBcnid_metad\fR
 this is desired behaviour\&. As soon as
 \fBcnid_metad\fR

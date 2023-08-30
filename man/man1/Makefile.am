@@ -23,12 +23,15 @@ TEMPLATE_FILES	= uniconv.1.tmpl \
 NONGENERATED_MANS	=	ad.1 \
 				afppasswd.1 \
 				apple_dump.1 \
+				binheader.1 \
 				dbd.1 \
 				hqx2bin.1 \
 				macbinary.1 \
 				macusers.1 \
 				megatron.1 \
+				nadheader.1 \
 				netatalk-config.1 \
+				showppd.1 \
 				single2bin.1 \
 				unbin.1 \
 				unhex.1 \

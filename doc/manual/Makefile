@@ -43,6 +43,7 @@ manpages = manpages/ad.1 \
 		manpages/netatalk-config.1 \
 		manpages/pap.1 \
 		manpages/psorder.1  \
+		manpages/showppd.1 \
 		manpages/uniconv.1 \
 		manpages/atalk_aton.3 \
 		manpages/nbp_name.3 \

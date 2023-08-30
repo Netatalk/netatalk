@@ -39,7 +39,7 @@ cnid_dbd \- implement access to CNID databases through a dedicated daemon proces
 \fBcnid_dbd\fR
 provides an interface for storage and retrieval of catalog node IDs (CNIDs) and related information to the
 \fBafpd\fR
-daemon\&. CNIDs are a component of Macintosh based file systems with semantics that map not easily onto Unix file systems\&. This makes separate storage in a database necessary\&.
+daemon\&. CNIDs are a component of Macintosh based file systems with semantics that do not easily map onto Unix file systems\&. This makes separate storage in a database necessary\&.
 \fBcnid_dbd\fR
 is part of the
 \fBCNID backend\fR
@@ -102,12 +102,12 @@ receives a TERM or an INT signal it will exit cleanly after flushing dirty datab
 \fBBerkleley DB\fR
 database environments\&. It is safe to terminate
 \fBcnid_dbd\fR
-this way, it will be restarted when necessary\&. Other signals are not handled and will cause an immediate exit, possibly leaving the CNID database in an inconsistent state (no transactions) or losing recent updates during recovery (transactions)\&.
+this way, because it will be restarted when necessary\&. Other signals are not handled and will cause an immediate exit, possibly leaving the CNID database in an inconsistent state (no transactions) or losing recent updates during recovery (transactions)\&.
 .PP
 The
 \fBBerkleley DB\fR
 database subsystem will create files named log\&.xxxxxxxxxx in the database home directory
-\fIdbdir\fR, where xxxxxxxxxx is a monotonically increasing integer\&. These files contain ithe transactional database changes\&. They will be removed regularily, unless the
+\fIdbdir\fR, where xxxxxxxxxx is a monotonically increasing integer\&. These files contain the transactional database changes\&. They will be removed regularly, unless the
 \fBlogfile_autoremove\fR
 option is specified in the
 \fIdb_param\fR

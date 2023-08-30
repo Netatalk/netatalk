@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">02 Sep 2011</refmiscinfo>
+    <refmiscinfo class="date">29 Aug 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -24,6 +24,10 @@
     <refname>single2bin</refname>
 
     <refname>macbinary</refname>
+
+    <refname>binheader</refname>
+
+    <refname>nadheader</refname>
 
     <refpurpose>Macintosh file format transformer</refpurpose>
   </refnamediv>
@@ -64,6 +68,16 @@
 
       <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
     </cmdsynopsis>
+    <cmdsynopsis>
+      <command>binheader</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>nadheader</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
@@ -98,6 +112,10 @@
     MacBinary. This last translation may be useful in moving Macintosh files
     from your <command>afpd</command> server to some other machine when you
     can&#39;t copy them from the server using a Macintosh for some reason.</para>
+
+    <para>If <command>megatron</command> is called as <command>binheader</command>
+    or <command>nadheader</command>, it will parse and print to stdout the headers
+    of a MacBinary file, or the associated AppleDouble metadata, respectively.</para>
 
     <para>If <command>megatron</command> is called with any other name, it
     uses the default translation, namely <command>unhex</command>.</para>

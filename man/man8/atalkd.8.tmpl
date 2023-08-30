@@ -66,7 +66,7 @@ is specified, all other fields must be present\&. Also,
 \fBatalkd\fR
 will exit during bootstrap\%ping, if a router disagrees with its seed information\&. If
 \fB\-seed\fR
-is not given, all other information may be overriden during auto\-configuration\&. If no
+is not given, all other information may be overridden during auto\-configuration\&. If no
 \fB\-phase\fR
 option is given, the default phase as given on the command line is used (the default is 2)\&. If
 \fB\-addr\fR
@@ -81,11 +81,11 @@ maps ``*\*(Aq\*(Aq to the default zone of the first interface\&. Note: The defau
 \fBnbp_name\fR(3)\&.
 .SH "ROUTING"
 .PP
-If you are connecting a netatalk router to an existing AppleTalk internet, you should first contact your local network administrators to obtain appropriate network addresses\&.
+If you are connecting a netatalk router to an existing AppleTalk network, you should first contact your local network administrators to obtain appropriate network addresses\&.
 .PP
 \fBatalkd\fR
 can provide routing between interfaces by configuring multiple interfaces\&. Each interface must be assigned a unique net\-range
-between 1 and 65279 (0 and 65535 are illegal, and addresses between 65280 and 65534 are reserved for startup)\&. It is best to choose the smallest useful net\-range, i\&.e\&. if you have three machines on an Ethernet, don\*(Aqt chose a net\-range of 1000\-2000\&. Each net\-range may have an arbitrary list of zones associated with it\&.
+between 1 and 65279 (0 and 65535 are illegal, and addresses between 65280 and 65534 are reserved for startup)\&. It is best to choose the smallest useful net\-range, i\&.e\&. if you have three machines on a LAN, don\*(Aqt chose a net\-range of 1000\-2000\&. Each net\-range may have an arbitrary list of zones associated with it\&.
 .SH "EXAMPLES"
 .PP
 Below is an example configuration file for a sun4/40\&. The machine has two interfaces, ``le0\*(Aq\*(Aq and ``le1\*(Aq\*(Aq\&. The ``le0\*(Aq\*(Aq interface is configured automatically from other routers on the network\&. The machine is the only router for the ``le1\*(Aq\*(Aq interface\&.

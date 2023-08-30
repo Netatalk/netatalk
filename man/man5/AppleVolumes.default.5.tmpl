@@ -106,7 +106,7 @@ File name extension mapping is useful for Mac OS 9 and earlier\&. But it should 
 .RE
 .PP
 It is possible to specify default options for all volumes with a
-\fI:DEFAULT: \fRline preceeding these volume definitions:
+\fI:DEFAULT: \fRline preceding these volume definitions:
 .PP
 \fBExample.\ \&:DEFAULT: configuration line\fR
 .sp
@@ -182,7 +182,7 @@ set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME
 .PP
 dbpath:\fI[path]\fR
 .RS 4
-Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&.
+Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&.
 .RE
 .PP
 cnidserver:\fI[fqdn|IP[:port]]\fR
@@ -204,7 +204,7 @@ auto
 Try
 \fBsys\fR
 (by setting an EA on the shared directory itself), fallback to
-\fBad\fR\&. Requires a writeable volume for perfoming the test\&.
+\fBad\fR\&. Requires a writeable volume for performing the test\&.
 \fBoptions:ro\fR
 overwrites
 \fBauto\fR
@@ -251,7 +251,7 @@ Use fast CNID database namesearch instead of slow recursive filesystem search\&.
 .PP
 tm
 .RS 4
-Enable Time Machine suport for this volume\&.
+Enable Time Machine support for this volume\&.
 .RE
 .PP
 invisibledots
@@ -495,7 +495,7 @@ cdb
 .RS 4
 "Concurrent database", backend is based on Sleepycat\*(Aqs Berkeley DB\&. With this backend several
 \fBafpd\fR
-deamons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
+daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
 \fBafpd\fR
 process is active for a volume\&. The drawback is, that the crash of a single
 \fBafpd\fR
@@ -653,7 +653,7 @@ mswindows
 Forces filename restrictions imposed by MS WinXX\&.
 \fIWarning\fR: This is
 \fINOT\fR
-recommened for volumes mainly used by Macs\&. Please make sure you fully understand this option before using it\&.
+recommended for volumes mainly used by Macs\&. Please make sure you fully understand this option before using it\&.
 .if n \{\
 .sp
 .\}
