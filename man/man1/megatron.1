@@ -2,12 +2,12 @@
 .\"     Title: megatron
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 02 Sep 2011
+.\"      Date: 29 Aug 2023
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "MEGATRON" "1" "02 Sep 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "MEGATRON" "1" "29 Aug 2023" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-megatron, unhex, unbin, unsingle, hqx2bin, single2bin, macbinary \- Macintosh file format transformer
+megatron, unhex, unbin, unsingle, hqx2bin, single2bin, macbinary, binheader, nadheader \- Macintosh file format transformer
 .SH "SYNOPSIS"
 .HP \w'\fBmegatron\fR\ 'u
 \fBmegatron\fR [\fIsourcefile\fR...]
@@ -44,6 +44,10 @@ megatron, unhex, unbin, unsingle, hqx2bin, single2bin, macbinary \- Macintosh fi
 \fBsingle2bin\fR [\fIsourcefile\fR...]
 .HP \w'\fBmacbinary\fR\ 'u
 \fBmacbinary\fR [\fIsourcefile\fR...]
+.HP \w'\fBbinheader\fR\ 'u
+\fBbinheader\fR [\fIsourcefile\fR...]
+.HP \w'\fBnadheader\fR\ 'u
+\fBnadheader\fR [\fIsourcefile\fR...]
 .SH "DESCRIPTION"
 .PP
 \fBmegatron\fR
@@ -59,7 +63,7 @@ the
 \fBnetatalk\fR
 Apple Filing Protocol (AppleShare) server\&. BinHex, MacBinary, and AppleSingle are commonly used formats for transferring Macintosh files between machines via email or file transfer protocols\&.
 \fBmegatron\fR
-uses its name to determine what type of tranformation is being asked of it\&.
+uses its name to determine what type of transformation is being asked of it\&.
 .PP
 If
 \fBmegatron\fR
@@ -78,6 +82,13 @@ is called as
 \fBmacbinary\fR, it will try to convert the file(s) from BinHex, AppleSingle, or AppleDouble into MacBinary\&. This last translation may be useful in moving Macintosh files from your
 \fBafpd\fR
 server to some other machine when you can\*(Aqt copy them from the server using a Macintosh for some reason\&.
+.PP
+If
+\fBmegatron\fR
+is called as
+\fBbinheader\fR
+or
+\fBnadheader\fR, it will parse and print to stdout the headers of a MacBinary file, or the associated AppleDouble metadata, respectively\&.
 .PP
 If
 \fBmegatron\fR

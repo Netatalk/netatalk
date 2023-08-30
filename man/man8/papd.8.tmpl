@@ -51,7 +51,7 @@ in use\&.
 .PP
 As of Netatalk 2\&.0, CUPS is also supported\&. Simply using
 \fBcupsautoadd\fR
-as first papd\&.conf entry will share all CUPS printers automagically using the PPD files configured in CUPS\&. It ist still possible to overwrite these defaults by individually define printer shares\&. See
+as the first papd\&.conf entry will share all CUPS printers automagically\&. It is still possible to overwrite these defaults by individually defining printer shares\&. See
 \fBpapd.conf\fR(5)
 for details\&.
 .PP
@@ -130,7 +130,7 @@ str
 T}:T{
 NULL
 T}:T{
-Pathname used for CAP\-style authentification
+Pathname used for CAP\-style authentication
 T}
 T{
 sp
@@ -139,7 +139,7 @@ bool
 T}:T{
 false
 T}:T{
-PSSP\-style authetication
+PSSP\-style authentication
 T}
 T{
 am
@@ -213,7 +213,7 @@ carried out through postscript printer queries to the print server\&. Using PSSP
 CAP\-style authentication
 gets its name from the method CAP (Columbia AppleTalk Package) used to authenticate its Mac clients\*(Aq printing\&. This method requires that a user login to a file share before they print\&.
 \fBafpd\fR
-records the username in a temporary file named after the client\*(Aqs AppleTalk address, and it deletes the temporary file when the user disconnects\&. Therefore CAP style authentification will
+records the username in a temporary file named after the client\*(Aqs AppleTalk address, and it deletes the temporary file when the user disconnects\&. Therefore CAP style authentication will
 \fInot\fR
 work for clients connected to
 \fBafpd\fR
@@ -237,7 +237,7 @@ The list of UAMs to use for authentication (specified with the \*(Aqam\*(Aq opti
 .ps -1
 .br
 .PP
-As of this writing, Mac OS X makes no use of PSSP authentication any longer\&. CAP\-style authentication normally won\*(Aqt be an option, too caused by the use of AFP over TCP these days\&.
+As of this writing, Mac OS X makes no use of PSSP authentication any longer\&. CAP\-style authentication normally won\*(Aqt be an option, either, because of the use of AFP over TCP these days\&.
 .sp .5v
 .RE
 .PP

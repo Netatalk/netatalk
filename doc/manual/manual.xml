@@ -43,13 +43,14 @@
 <!ENTITY atalk_aton.3 SYSTEM "man/man3/atalk_aton.3.xml">
 <!ENTITY asip-status.1 SYSTEM "man/man1/asip-status.1.xml">
 <!ENTITY dbd.1 SYSTEM "man/man1/dbd.1.xml">
+<!ENTITY showppd.1 SYSTEM "man/man1/showppd.1.xml">
 ]>
 <book id="netatalk-manual">
   <title revision="0.1 initial version">Netatalk 2.2 Manual</title>
   
 
   <bookinfo>
-    <date>08-03-2011</date>
+    <date>08-29-2023</date>
     <releaseinfo>:VERSION:</releaseinfo>
   </bookinfo>
 
@@ -154,6 +155,8 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
     &psf.8;
 
     &psorder.1;
+
+    &showppd.1;
 
     &timelord.8;
 
