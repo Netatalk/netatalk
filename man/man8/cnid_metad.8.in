@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: :NETATALK_VERSION:
+.\"    Source: :NETATALK_VERSION:
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "23 Mar 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "CNID_METAD" "8" "23 Mar 2012" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -60,7 +60,7 @@ will also leave the standard input, standard output and standard error file desc
 Use
 \fIconfiguration file\fR
 as the configuration file\&. The default is
-\fI@pkgconfdir@/afp\&.conf\fR\&.
+\fI:pkgconfdir:/afp\&.conf\fR\&.
 .RE
 .PP
 \fB\-v, \-V\fR

@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: :NETATALK_VERSION:
+.\"    Source: :NETATALK_VERSION:
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "19 Jan 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFPD" "8" "19 Jan 2013" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ afpd \- Apple Filing Protocol daemon
 provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time by
 \fBnetatalk\fR(8)\&.
 .PP
-@pkgconfdir@/afp\&.conf
+:pkgconfdir:/afp\&.conf
 is the configuration file used by
 \fBafpd\fR
 to determine the behavior and configuration of a file server\&.
@@ -69,7 +69,7 @@ Print help and exit\&.
 \-F \fIconfigfile\fR
 .RS 4
 Specifies the configuration file to use\&. (Defaults to
-@pkgconfdir@/afp\&.conf\&.)
+:pkgconfdir:/afp\&.conf\&.)
 .RE
 .SH "SIGNALS"
 .PP
@@ -136,27 +136,27 @@ process will look in the message directory configured at build time for a file n
 .RE
 .SH "FILES"
 .PP
-@pkgconfdir@/afp\&.conf
+:pkgconfdir:/afp\&.conf
 .RS 4
 configuration file used by afpd
 .RE
 .PP
-@localstatedir@/netatalk/afp_signature\&.conf
+:localstatedir:/netatalk/afp_signature\&.conf
 .RS 4
 list of server signature
 .RE
 .PP
-@localstatedir@/netatalk/afp_voluuid\&.conf
+:localstatedir:/netatalk/afp_voluuid\&.conf
 .RS 4
 list of UUID for Time Machine volume
 .RE
 .PP
-@pkgconfdir@/extmap\&.conf
+:pkgconfdir:/extmap\&.conf
 .RS 4
 file name extension mapping
 .RE
 .PP
-@pkgconfdir@/msg/message\&.pid
+:pkgconfdir:/msg/message\&.pid
 .RS 4
 contains messages to be sent to users\&.
 .RE

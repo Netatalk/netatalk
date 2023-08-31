@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
   <refnamediv>

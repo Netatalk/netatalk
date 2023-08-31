@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: :NETATALK_VERSION:
+.\"    Source: :NETATALK_VERSION:
 .\"  Language: English
 .\"
-.TH "AFP_SIGNATURE\&.CONF" "5" "23 Mar 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_SIGNATURE\&.CONF" "5" "23 Mar 2012" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 afp_signature.conf \- Configuration file used by afpd(8) to specify server signature
 .SH "DESCRIPTION"
 .PP
-@localstatedir@/netatalk/afp_signature\&.conf
+:localstatedir:/netatalk/afp_signature\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify server signature automagically\&. The configuration lines are composed like:

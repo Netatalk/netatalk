@@ -301,26 +301,8 @@ AC_CONFIG_FILES([
   macros/Makefile
   man/Makefile
   man/man1/Makefile
-  man/man1/ad.1
-  man/man1/afpldaptest.1
-  man/man1/afppasswd.1
-  man/man1/afpstats.1
-  man/man1/apple_dump.1
-  man/man1/asip-status.1
-  man/man1/dbd.1
-  man/man1/macusers.1
-  man/man1/netatalk-config.1
-  man/man1/uniconv.1
   man/man5/Makefile
-  man/man5/afp.conf.5
-  man/man5/afp_signature.conf.5
-  man/man5/afp_voluuid.conf.5
-  man/man5/extmap.conf.5
   man/man8/Makefile
-  man/man8/afpd.8
-  man/man8/cnid_dbd.8
-  man/man8/cnid_metad.8
-  man/man8/netatalk.8
   test/Makefile
   test/afpd/Makefile
 ])
