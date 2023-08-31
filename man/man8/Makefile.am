@@ -3,9 +3,9 @@
 SUFFIXES = .in .
 
 .in:
-	sed -e "s,[@]pkgconfdir[@],${sysconfdir},g" \
-		-e "s,[@]localstatedir[@],${localstatedir}," \
-		-e "s,[@]prefix[@],${prefix}," \
+	sed -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
+	    -e s@:pkgconfdir:@${sysconfdir}@ \
+	    -e s@:localstatedir:@${localstatedir}@ \
 	    <$< >$@
 
 man_MANS = \
@@ -21,5 +21,5 @@ TEMPLATES = \
 	netatalk.8.in
 
 CLEANFILES = $(man_MANS)
-DISTCLEANFILES = $(man_MANS)
+EXTRA_DIST = $(TEMPLATES)
 noinst_DATA = $(man_MANS)

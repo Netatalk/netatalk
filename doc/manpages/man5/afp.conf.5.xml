@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">11 Apr 2023</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -415,7 +415,7 @@
                 <listitem>
                   <para>allows Random Number and Two-Way Random Number
                   Exchange for authentication (requires a separate file
-                  containing the passwords, either @pkgconfdir@/afppasswd file or
+                  containing the passwords, either :pkgconfdir:/afppasswd file or
                   the one specified via "<option>passwd file</option>"). See
                   <citerefentry>
                       <refentrytitle>afppasswd</refentrytitle>
@@ -541,7 +541,7 @@
 
           <listitem>
             <para>Sets the path to the Randnum UAM passwd file for this server
-            (default is @pkgconfdir@/afppasswd).</para>
+            (default is :pkgconfdir:/afppasswd).</para>
           </listitem>
         </varlistentry>
 
@@ -948,7 +948,7 @@
 
           <listitem>
             <para>Sets the path to the file which defines file extension
-            type/creator mappings. (default is @pkgconfdir@/extmap.conf).</para>
+            type/creator mappings. (default is :pkgconfdir:/extmap.conf).</para>
           </listitem>
         </varlistentry>
 
@@ -1035,7 +1035,7 @@
             characters. This option is useful for clustered environments, to
             provide fault isolation etc. By default, afpd generate signature
             and saving it to
-            <filename>@localstatedir@/netatalk/afp_signature.conf</filename>
+            <filename>:localstatedir:/netatalk/afp_signature.conf</filename>
             automatically (based on random number). See also
             asip-status(1).</para>
           </listitem>
@@ -1146,7 +1146,7 @@
             <para>Sets the database information to be stored in path. You have
             to specify a writable location, even if the volume is read only.
             The default is
-            <filename>@localstatedir@/netatalk/CNID/$v/</filename>.</para>
+            <filename>:localstatedir:/netatalk/CNID/$v/</filename>.</para>
           </listitem>
         </varlistentry>
 
@@ -2212,7 +2212,7 @@
     not by name. Netatalk needs a way to store these ID's in a persistent way,
     to achieve this several different CNID backends are available. The CNID
     Databases are by default located in the
-    <filename>@localstatedir@/netatalk/CNID/(volumename)/.AppleDB/</filename>
+    <filename>:localstatedir:/netatalk/CNID/(volumename)/.AppleDB/</filename>
     directory.</para>
 
     <variablelist>

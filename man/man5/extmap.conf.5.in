@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: :NETATALK_VERSION:
+.\"    Source: :NETATALK_VERSION:
 .\"  Language: English
 .\"
-.TH "EXTMAP\&.CONF" "5" "19 Jan 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "EXTMAP\&.CONF" "5" "19 Jan 2013" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,11 +30,11 @@
 .SH "NAME"
 extmap.conf \- Configuration file used by afpd(8) to specify file name extension mappings\&.
 .SH "SYNOPSIS"
-.HP \w'\fB@pkgconfdir@/extmap\&.conf\fR\ 'u
-\fB@pkgconfdir@/extmap\&.conf\fR
+.HP \w'\fB:pkgconfdir:/extmap\&.conf\fR\ 'u
+\fB:pkgconfdir:/extmap\&.conf\fR
 .SH "DESCRIPTION"
 .PP
-@pkgconfdir@/extmap\&.conf
+:pkgconfdir:/extmap\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify file name extension mappings\&.
