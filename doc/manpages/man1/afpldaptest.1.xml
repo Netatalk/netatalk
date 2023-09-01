@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
 
-    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv id="name">
@@ -43,7 +43,7 @@
     <title>DESCRIPTION</title>
 
     <para><command>afpldaptest</command> is a simple command to syntactically
-    check ldap parameters in :pkgconfdir:/afp.conf.</para>
+    check ldap parameters in @pkgconfdir@/afp.conf.</para>
 
   </refsect1>
 

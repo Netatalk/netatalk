@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 11 Apr 2023
-.\"    Manual: :NETATALK_VERSION:
-.\"    Source: :NETATALK_VERSION:
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "11 Apr 2023" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
+.TH "AFP\&.CONF" "5" "11 Apr 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -322,7 +322,7 @@ uams_clrtxt\&.so
 .PP
 uams_randnum\&.so
 .RS 4
-allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :pkgconfdir:/afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
+allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @pkgconfdir@/afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
 \fBafppasswd\fR(1)
 for details\&. (legacy)
 .RE
@@ -398,7 +398,7 @@ Specifies the encoding of the volumes filesystem\&. By default, it is the same a
 .PP
 passwd file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the Randnum UAM passwd file for this server (default is :pkgconfdir:/afppasswd)\&.
+Sets the path to the Randnum UAM passwd file for this server (default is @pkgconfdir@/afppasswd)\&.
 .RE
 .PP
 passwd minlen = \fInumber\fR \fB(G)\fR
@@ -635,7 +635,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is :pkgconfdir:/extmap\&.conf)\&.
+Sets the path to the file which defines file extension type/creator mappings\&. (default is @pkgconfdir@/extmap\&.conf)\&.
 .RE
 .PP
 force xattr with sticky bit = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G/V)\fR
@@ -680,7 +680,7 @@ Specifies the icon model that appears on clients\&. Defaults to off\&. Note that
 signature = <text> \fB(G)\fR
 .RS 4
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
-:localstatedir:/netatalk/afp_signature\&.conf
+@localstatedir@/netatalk/afp_signature\&.conf
 automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
 .RE
 .PP
@@ -739,7 +739,7 @@ Send optional AFP messages for vetoed files\&. Then whenever a client tries to a
 vol dbpath = \fIpath\fR \fB(G)/(V)\fR
 .RS 4
 Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
-:localstatedir:/netatalk/CNID/$v/\&.
+@localstatedir@/netatalk/CNID/$v/\&.
 .RE
 .PP
 vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -1457,7 +1457,7 @@ and
 .SH "CNID BACKENDS"
 .PP
 The AFP protocol mostly refers to files and directories by ID and not by name\&. Netatalk needs a way to store these ID\*(Aqs in a persistent way, to achieve this several different CNID backends are available\&. The CNID Databases are by default located in the
-:localstatedir:/netatalk/CNID/(volumename)/\&.AppleDB/
+@localstatedir@/netatalk/CNID/(volumename)/\&.AppleDB/
 directory\&.
 .PP
 cdb

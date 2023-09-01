@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 13 Jun 2016
-.\"    Manual: :NETATALK_VERSION:
-.\"    Source: :NETATALK_VERSION:
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "NETATALK" "8" "13 Jun 2016" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
+.TH "NETATALK" "8" "13 Jun 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,7 @@ Print version information and exit\&.
 \-F \fIconfigfile\fR
 .RS 4
 Specifies the configuration file to use\&. (Defaults to
-:pkgconfdir:/afp\&.conf\&.)
+@pkgconfdir@/afp\&.conf\&.)
 .RE
 .SH "SIGNALS"
 .PP
@@ -68,7 +68,7 @@ will cause the AFP daemon reload its configuration file\&.
 .RE
 .SH "FILES"
 .PP
-:pkgconfdir:/afp\&.conf
+@pkgconfdir@/afp\&.conf
 .RS 4
 configuration file used by
 \fBnetatalk\fR(8),

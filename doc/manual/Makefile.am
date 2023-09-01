@@ -51,8 +51,8 @@ HTML_PAGES = \
 
 do_subst =  sed \
   -i. \
-	-e 's|:pkgconfdir[:]|$(sysconfdir)|g' \
-  -e 's|:localstatedir[:]|$(localstatedir)|g'
+	-e 's|@pkgconfdir[@]|$(sysconfdir)|g' \
+  -e 's|@localstatedir[@]|$(localstatedir)|g'
 
 DISTCLEANFILES = manual.xml
 
