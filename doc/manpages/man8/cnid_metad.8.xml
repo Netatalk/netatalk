@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
 
-    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -70,7 +70,7 @@
         <listitem>
           <para>Use <emphasis remap="I">configuration file</emphasis> as the
             configuration file. The default is
-            <emphasis remap="I">:pkgconfdir:/afp.conf</emphasis>.</para>
+            <emphasis remap="I">@pkgconfdir@/afp.conf</emphasis>.</para>
         </listitem>
       </varlistentry>
 

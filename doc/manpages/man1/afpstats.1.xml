@@ -7,7 +7,7 @@
 
     <refmiscinfo class="date">24 Mar 2013</refmiscinfo>
 
-    <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -36,7 +36,7 @@
     "<command>afpd -V</command>".</para>
 
     <para>"<option>afpstats = yes</option>" must be set in
-    <filename>:pkgconfdir:/afp.conf</filename>.</para>
+    <filename>@pkgconfdir@/afp.conf</filename>.</para>
 
   </refsect1>
 

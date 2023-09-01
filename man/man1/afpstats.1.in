@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 24 Mar 2013
-.\"    Manual: :NETATALK_VERSION:
-.\"    Source: :NETATALK_VERSION:
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFPSTATS" "1" "24 Mar 2013" ":NETATALK_VERSION:" ":NETATALK_VERSION:"
+.TH "AFPSTATS" "1" "24 Mar 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,7 +42,7 @@ list AFP statistics via D\-Bus IPC\&.
 must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
 .PP
 "\fBafpstats = yes\fR" must be set in
-:pkgconfdir:/afp\&.conf\&.
+@pkgconfdir@/afp\&.conf\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),

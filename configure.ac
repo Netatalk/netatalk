@@ -87,6 +87,12 @@ AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(connect, socket)
 AC_CHECK_FUNCS(getifaddrs) dnl comes after gethostbyname and connect so it picks up the libs
 
+dnl We substitute these in the manpage templates.
+localstatedir=`eval echo $localstatedir`
+AC_SUBST(localstatedir)
+pkgconfdir=`eval echo $sysconfdir`
+AC_SUBST(pkgconfdir)
+
 AX_PTHREAD(, [AC_MSG_ERROR([missing pthread_sigmask])])
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
@@ -301,8 +307,26 @@ AC_CONFIG_FILES([
   macros/Makefile
   man/Makefile
   man/man1/Makefile
+  man/man1/ad.1
+  man/man1/afpldaptest.1
+  man/man1/afppasswd.1
+  man/man1/afpstats.1
+  man/man1/apple_dump.1
+  man/man1/asip-status.1
+  man/man1/dbd.1
+  man/man1/macusers.1
+  man/man1/netatalk-config.1
+  man/man1/uniconv.1
   man/man5/Makefile
+  man/man5/afp.conf.5
+  man/man5/afp_signature.conf.5
+  man/man5/afp_voluuid.conf.5
+  man/man5/extmap.conf.5
   man/man8/Makefile
+  man/man8/afpd.8
+  man/man8/cnid_dbd.8
+  man/man8/cnid_metad.8
+  man/man8/netatalk.8
   test/Makefile
   test/afpd/Makefile
 ])
