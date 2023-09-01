@@ -151,8 +151,17 @@ remote: Counting objects: 2503, done.
     <sect2>
       <title>Prerequisites</title>
 
+      <note>
+        <para>The following pieces of software are likely to have a package
+        available for your OS distribution of choice.</para>
+
+        <para>Please see the <ulink
+        url="https://github.com/Netatalk/netatalk/wiki/Installation-Notes">
+        Installation Notes</ulink> wiki page as a starting point.</para>
+      </note>
+
       <sect3>
-        <title>Required third party software</title>
+        <title>Required third-party software</title>
 
         <itemizedlist>
           <listitem>
@@ -161,26 +170,28 @@ remote: Counting objects: 2503, done.
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
             <para>At the time of writing you need at least version 4.6.</para>
+
+            <para>The recommended version is 5.3, which was the final release
+            under the permissive Sleepycat license,
+	    which means that this is what most FLOSS operating systems
+	    are defaulting to.</para>
           </listitem>
 
           <listitem>
             <para>Libgcrypt</para>
 
-            <para>Required for OS X 10.7 and later. Libgcrypt is needed for
-            DHX2.</para>
-
-            <para>Libgcrypt can be downloaded from: <ulink
-            url="http://directory.fsf.org/wiki/Libgcrypt">
-            http://directory.fsf.org/wiki/Libgcrypt</ulink>.</para>
+            <para>The <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
+	    Libgcrypt</ulink> library enables the DHX2 UAM,
+	    which is required to authenticate with OS X 10.7 and later.</para>
           </listitem>
         </itemizedlist>
       </sect3>
 
       <sect3>
-        <title>Optional third party software</title>
+        <title>Optional third-party software</title>
 
-        <para>Netatalk can use the following third party software to enhance
-        it's functionality.</para>
+        <para>Netatalk can use the following third-party software to enhance
+        its functionality.</para>
 
         <itemizedlist>
           <listitem>
@@ -320,13 +331,11 @@ remote: Counting objects: 2503, done.
         the default 0.12, e.g.</para>
 
         <screen><prompt>$</prompt> <userinput>pkg-config --list-all | grep tracker
-</userinput>tracker-extract-0.16  tracker-extract - Tracker : A library to develop metadata extractors for 3rd party file types.
-tracker-sparql-0.16   tracker-sparql - Tracker : A library to perform SPARQL queries and updates in the              Tracker Store
-tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</screen>
+	</userinput>tracker-sparql-3.0             tracker-sparql-3.0 - Tracker : A SPARQL triple store library</screen>
 
-        <para>So:</para>
+        <para>So in this example, configure with:</para>
 
-        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=0.16 ...</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=3.0 ...</userinput></screen>
 
         <para>If you're using Solaris and Tracker from OpenCSW, then you need
         to set the PKG_CONFIG_PATH environment variable, add the
@@ -339,13 +348,13 @@ tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</
         found:</para>
 
         <screen>checking for TRACKER... yes
-checking for TRACKER_MINER... yes
-...
-Configure summary:
-...
-  AFP:
-    Spotlight: yes
-...</screen>
+        checking for TRACKER_MINER... yes
+        ...
+        Configure summary:
+        ...
+          AFP:
+            Spotlight: yes
+        ...</screen>
       </sect3>
 
       <sect3>
