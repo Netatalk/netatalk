@@ -154,10 +154,14 @@ remote: Counting objects: 2503, done.
     <sect2>
       <title>Prerequisites</title>
 
-      <para>The following pieces of software are likely to have a package
-      available for your OS distribution of choice. Please see the <ulink
-      url="https://github.com/Netatalk/Netatalk/wiki/Installation-Notes">
-      Installation Notes</ulink> wiki page as a starting point.</para>
+      <note>
+        <para>The following pieces of software are likely to have a package
+        available for your OS distribution of choice.</para>
+
+        <para>Please see the <ulink
+        url="https://github.com/Netatalk/Netatalk/wiki/Installation-Notes">
+        Installation Notes</ulink> wiki page as a starting point.</para>
+      </note>
 
       <sect3>
         <title>System requirements</title>
@@ -182,7 +186,7 @@ remote: Counting objects: 2503, done.
       </sect3>
 
       <sect3>
-        <title>Required third party software</title>
+        <title>Required third-party software</title>
 
         <para>Netatalk makes use of Berkeley DB<indexterm>
             <primary>BDB</primary>
@@ -195,15 +199,18 @@ remote: Counting objects: 2503, done.
           <listitem>
             <para>minimum 4.6.x</para>
           </listitem>
+          <listitem>
+            <para>recommended 5.3.x</para>
+          </listitem>
         </itemizedlist>
 
       </sect3>
 
       <sect3>
-        <title>Optional third party software</title>
+        <title>Optional third-party software</title>
 
-        <para>Netatalk can use the following third party software to enhance
-        it's functionality.</para>
+        <para>Netatalk can use the following third-party software to enhance
+        its functionality.</para>
 
         <itemizedlist>
           <listitem>
@@ -315,12 +322,14 @@ remote: Counting objects: 2503, done.
 
         <itemizedlist>
           <listitem>
-            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd/fhs]</para>
+            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd]</para>
 
             <para>This option helps netatalk to determine where to install the
-		start scripts. The <command>--enable-systemd</command> option is
-                cross-platform and should work with most contemporary Linux or *BSD
-                distributions that have adopted systemd.</para>
+            start scripts.</para>
+
+            <para>The <command>--enable-systemd</command> option is
+            cross-platform and should work with most contemporary Linux or *BSD
+            distributions that have adopted systemd.</para>
           </listitem>
 
           <listitem>
