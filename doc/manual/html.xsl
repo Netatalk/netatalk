@@ -4,7 +4,7 @@
 	<xsl:param name="use.id.as.filename" select="'1'"/>
 	<xsl:param name="chunk.section.depth" select="0"></xsl:param>
 	<xsl:param name="chunk.separate.lots" select="1"></xsl:param>
-	<xsl:param name="html.stylesheet" select="'http://netatalk.sourceforge.net/css/netatalk.css'"/>
+	<xsl:param name="html.stylesheet" select="'https://netatalk.sourceforge.io/css/netatalk.css'"/>
 
 	<xsl:template name="user.header.navigation">
 		<xsl:variable name="codefile" select="document('netatalk.html',/)"/>
