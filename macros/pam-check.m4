@@ -151,11 +151,17 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
 	    AC_DEFINE(USE_PAM, 1, [Define to enable PAM support])
 	fi
 
+  if test x$prefix = xNONE ; then
+    prefix=/usr/local
+  fi
+  sysconfdir=`eval echo $sysconfdir`
+  AC_SUBST(sysconfdir)
+    
     AC_ARG_WITH(
         pam-confdir,
         [AS_HELP_STRING([--with-pam-confdir=PATH],[Path to PAM config dir (default: ${sysconfdir}/pam.d)])],
         ac_cv_pamdir=$withval,
-        ac_cv_pamdir='${sysconfdir}/pam.d'
+        ac_cv_pamdir=${sysconfdir}/pam.d
     )
 
     PAMDIR="$ac_cv_pamdir"
