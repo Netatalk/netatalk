@@ -21,7 +21,7 @@
   <refsect1>
     <title>Description</title>
 
-    <para><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename> is the
+    <para><filename>@prefix@/var/netatalk/afp_voluuid.conf</filename> is the
     configuration file used by <command>afpd</command> to specify
     UUID of all AFP volumes. The configuration
     lines are composed like:</para>

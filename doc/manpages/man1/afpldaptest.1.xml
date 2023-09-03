@@ -43,7 +43,7 @@
     <title>DESCRIPTION</title>
 
     <para><command>afpldaptest</command> is a simple command to syntactically
-    check ldap parameters in @pkgconfdir@/afp.conf.</para>
+    check ldap parameters in @prefix@/etc/afp.conf.</para>
 
   </refsect1>
 

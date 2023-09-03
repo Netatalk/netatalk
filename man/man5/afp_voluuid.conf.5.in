@@ -31,7 +31,7 @@
 afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for AFP volumes
 .SH "DESCRIPTION"
 .PP
-@localstatedir@/netatalk/afp_voluuid\&.conf
+@prefix@/var/netatalk/afp_voluuid\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify UUID of all AFP volumes\&. The configuration lines are composed like:

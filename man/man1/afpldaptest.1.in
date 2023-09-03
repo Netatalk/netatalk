@@ -37,7 +37,7 @@ afpldaptest \- Syntactically check ldap parameters in afp\&.conf
 .SH "DESCRIPTION"
 .PP
 \fBafpldaptest\fR
-is a simple command to syntactically check ldap parameters in @pkgconfdir@/afp\&.conf\&.
+is a simple command to syntactically check ldap parameters in @prefix@/etc/afp\&.conf\&.
 .SH "OPTIONS"
 .PP
 \fB\-u\fR \fIUSER\fR

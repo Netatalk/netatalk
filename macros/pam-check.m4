@@ -154,14 +154,12 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
   if test x$prefix = xNONE ; then
     prefix=/usr/local
   fi
-  sysconfdir=`eval echo $sysconfdir`
-  AC_SUBST(sysconfdir)
-    
+
     AC_ARG_WITH(
         pam-confdir,
-        [AS_HELP_STRING([--with-pam-confdir=PATH],[Path to PAM config dir (default: ${sysconfdir}/pam.d)])],
+        [AS_HELP_STRING([--with-pam-confdir=PATH],[Path to PAM config dir (default: ${prefix}/etc/pam.d)])],
         ac_cv_pamdir=$withval,
-        ac_cv_pamdir=${sysconfdir}/pam.d
+        ac_cv_pamdir=${prefix}/etc/pam.d
     )
 
     PAMDIR="$ac_cv_pamdir"

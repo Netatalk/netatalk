@@ -60,7 +60,7 @@ will also leave the standard input, standard output and standard error file desc
 Use
 \fIconfiguration file\fR
 as the configuration file\&. The default is
-\fI@pkgconfdir@/afp\&.conf\fR\&.
+\fI@prefix@/etc/afp\&.conf\fR\&.
 .RE
 .PP
 \fB\-v, \-V\fR
