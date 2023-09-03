@@ -88,10 +88,19 @@ AC_SEARCH_LIBS(connect, socket)
 AC_CHECK_FUNCS(getifaddrs) dnl comes after gethostbyname and connect so it picks up the libs
 
 dnl We substitute these in the manpage templates.
+
+if test x$prefix = xNONE ; then
+prefix=/usr/local
+sysconfdir=/usr/local/etc
+localstatedir=/usr/local/var
+fi
+
 localstatedir=`eval echo $localstatedir`
 AC_SUBST(localstatedir)
 pkgconfdir=`eval echo $sysconfdir`
 AC_SUBST(pkgconfdir)
+sysconfdir=`eval echo $sysconfdir`
+AC_SUBST(sysconfdir)
 
 AX_PTHREAD(, [AC_MSG_ERROR([missing pthread_sigmask])])
 

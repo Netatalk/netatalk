@@ -113,12 +113,6 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
     AC_MSG_ERROR([afpstats requested but dbus-glib not found])
   fi
   
-  if test x$prefix = xNONE ; then
-    prefix=/usr/local
-  fi
-  sysconfdir=`eval echo $sysconfdir`
-  AC_SUBST(sysconfdir)
-
   AC_ARG_WITH(
       dbus-sysconf-dir,
       [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
