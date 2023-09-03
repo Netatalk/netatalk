@@ -5,13 +5,19 @@ on:
       - main
       - branch-*
     paths-ignore:
-      - 'config/**'
-      - 'distrib/**'
-      - 'doc/**'
-      - 'man/**'
+      - 'CONTRIBUTORS'
       - 'NEWS'
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - branch-*
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'NEWS'
 
 env:
   APT_PACKAGES: libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libcups2-dev tcpd
