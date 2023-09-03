@@ -11,6 +11,7 @@
 # setup
 sed=sed
 OS=$(shell uname -s)
+VERSION=$(shell cat ../../VERSION)
 
 ifeq (SunOS, $(findstring SunOS, $(OS)))
 	sed=gsed
@@ -26,7 +27,7 @@ TMPDIR   = tmp
 
 MAN_XSL_TMP  = $(TMPDIR)/$(MAN_XSL)
 HTML_XSL_TMP = $(TMPDIR)/$(HTML_XSL)
-XSL_PATH     = $(shell pwd)/$(XSL)
+XSL_PATH     = $(XSL)
 
 manpages = manpages/ad.1 \
 		manpages/aecho.1 \
@@ -138,7 +139,7 @@ install:
 
 html-upload: htmlpages
 	@if [ "x$(USER)" = "x" ] ; then \
-		echo 'Set $$USER to the Sourceforge user'; \
+		echo 'Set $$USER to the SourceForge user'; \
 		exit 1; \
 	fi
 	scp html/* $(USER),netatalk@web.sourceforge.net:/home/project-web/netatalk/htdocs/2.2/htmldocs/
@@ -151,17 +152,13 @@ htmlpages:	htmlinit
 			-e "s@:VERSION:@$(VERSION)@g" {} \;
 
 htmlinit:	tmpdir $(HTML_XSL_TMP)
-		@if [ "x$(VERSION)" = "x" ] ; then \
-			echo 'Set $$VERSION to the Netatalk version'; \
-			exit 1; \
-		fi
 		@if [ ! -d html ] ; then \
 			mkdir html; \
 		fi
 
 $(HTML_XSL_TMP) : html.xsl
 		@if [ "x$(XSL)" = "x" ] ; then \
-			echo 'Set $$XSL to be the path of your XSL stylesheet directory.'; \
+			echo 'Set $$XSL to be the absolute path of your XSL stylesheet directory.'; \
 			exit 1; \
 		fi
 		@cp html.xsl $(HTML_XSL_TMP)
