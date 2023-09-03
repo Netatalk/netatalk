@@ -9,10 +9,15 @@
 	2. Get the latest Docbook XSL stylesheet distribution from:
 	   https://sourceforge.net/projects/docbook/files/docbook-xsl/
 
-	   Recommended docbook-xsl stylesheet version is 1.79.1.
-	   Version 1.79.2 and later introduced a namespace that our stylesheets don't support (yet).
+	   ...or via your distribution's package repository.
+
+	   The latest recommended docbook-xsl stylesheet version is 1.79.1.
+	   Version 1.79.2 and later distributed on GitHub
+	   introduced a namespace that our stylesheets don't support (yet).
+	   See: https://github.com/Netatalk/netatalk/issues/318
 	   
-	3. Unpack the docbook-xsl tarball to a temporary location
+	3. Unpack the docbook-xsl tarball to a temporary location,
+	   or identify where your distro installed them if you used a package.
 
 
    Usage
@@ -26,17 +31,17 @@
 	Create man pages:
 
 	3. Generate man pages from xml sources
-	   $ XSL=<relative path to docbook-xsl dir> VERSION=2.2 make man
+	   $ XSL=<absolute path to docbook-xsl dir> make man
 	4. Copy the generated man pages to the correct locations in the code repo
 	   $ make install
 
 	Create HTML:
 
 	5. Generate the html pages from xml sources
-	   $ XSL=<relative path to docbook-xsl dir> VERSION=2.2.9 make html
+	   $ XSL=<absolute path to docbook-xsl dir> make html
 	   The generated html files are then inside the directory html.
 	6. Upload the generated html files to SourceForge: (admins only)
-	   $ USER=<SourceForge user> VERSION=2.2.9 make html-upload
+	   $ USER=<SourceForge user> make html-upload
 
 	Clean-up:
 
