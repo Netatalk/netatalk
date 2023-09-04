@@ -41,7 +41,6 @@ HTML_PAGES = \
 	macusers.1.html \
 	man-pages.html \
 	manual-index.html \
-	megatron.1.html \
 	netatalk.8.html \
 	netatalkconfig.1.html \
 	pr01.html \
