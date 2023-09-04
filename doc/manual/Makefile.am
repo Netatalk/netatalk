@@ -45,7 +45,6 @@ HTML_PAGES = \
 	netatalkconfig.1.html \
 	pr01.html \
 	table-toc.html \
-	uniconv.1.html \
 	upgrade.html
 
 DISTCLEANFILES = manual.xml

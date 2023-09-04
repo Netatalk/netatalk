@@ -12,8 +12,7 @@ MAN_MANPAGES = \
 	asip-status.1 \
 	dbd.1 \
 	macusers.1 \
-	netatalk-config.1 \
-	uniconv.1
+	netatalk-config.1
 
 EXTRA_DIST = \
 	ad.1.xml \
@@ -24,8 +23,7 @@ EXTRA_DIST = \
 	asip-status.1.xml \
 	dbd.1.xml \
 	macusers.1.xml \
-	netatalk-config.1.xml \
-	uniconv.1.xml
+	netatalk-config.1.xml
 
 if HAVE_XSLTPROC
 CLEANFILES += $(MAN_MANPAGES)
