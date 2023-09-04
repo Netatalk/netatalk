@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-uniconv
-.deps
-.libs
-.gitignore
-iso8859_1_adapted.o uniconv.o
