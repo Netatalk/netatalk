@@ -51,7 +51,7 @@ Print version information and exit\&.
 \-F \fIconfigfile\fR
 .RS 4
 Specifies the configuration file to use\&. (Defaults to
-@pkgconfdir@/afp\&.conf\&.)
+@prefix@/etc/afp\&.conf\&.)
 .RE
 .SH "SIGNALS"
 .PP
@@ -68,7 +68,7 @@ will cause the AFP daemon reload its configuration file\&.
 .RE
 .SH "FILES"
 .PP
-@pkgconfdir@/afp\&.conf
+@prefix@/etc/afp\&.conf
 .RS 4
 configuration file used by
 \fBnetatalk\fR(8),

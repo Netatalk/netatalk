@@ -87,12 +87,6 @@ AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(connect, socket)
 AC_CHECK_FUNCS(getifaddrs) dnl comes after gethostbyname and connect so it picks up the libs
 
-dnl We substitute these in the manpage templates.
-localstatedir=`eval echo $localstatedir`
-AC_SUBST(localstatedir)
-pkgconfdir=`eval echo $sysconfdir`
-AC_SUBST(pkgconfdir)
-
 AX_PTHREAD(, [AC_MSG_ERROR([missing pthread_sigmask])])
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
@@ -253,7 +247,6 @@ AC_CONFIG_FILES([
   bin/afppasswd/Makefile
   bin/cnid/Makefile
   bin/cnid/cnid2_create
-  bin/megatron/Makefile
   bin/misc/Makefile
   config/Makefile
   config/pam/Makefile

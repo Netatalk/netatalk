@@ -36,7 +36,7 @@
     "<command>afpd -V</command>".</para>
 
     <para>"<option>afpstats = yes</option>" must be set in
-    <filename>@pkgconfdir@/afp.conf</filename>.</para>
+    <filename>@prefix@/etc/afp.conf</filename>.</para>
 
   </refsect1>
 

@@ -20,7 +20,6 @@
 <!ENTITY apple_dump.1 SYSTEM "../manpages//man1/apple_dump.1.xml">
 <!ENTITY extmap.conf.5 SYSTEM "../manpages//man5/extmap.conf.5.xml">
 <!ENTITY macusers.1 SYSTEM "../manpages//man1/macusers.1.xml">
-<!ENTITY megatron.1 SYSTEM "../manpages//man1/megatron.1.xml">
 <!ENTITY netatalk.8 SYSTEM "../manpages//man8/netatalk.8.xml">
 <!ENTITY netatalk-config.1 SYSTEM "../manpages//man1/netatalk-config.1.xml">
 <!ENTITY asip-status.1 SYSTEM "../manpages//man1/asip-status.1.xml">
@@ -97,8 +96,6 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
     &extmap.conf.5;
 
     &macusers.1;
-
-    &megatron.1;
 
     &netatalk.8;
 

@@ -3,6 +3,10 @@ XSLTPROC_FLAGS=@XSLTPROC_FLAGS@
 HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
+do_subst =  sed \
+	-i. \
+	-e 's|@prefix[@]|$(prefix)|g'
+
 XML_PAGES = \
 	manual.xml \
 	configuration.xml \
@@ -41,17 +45,11 @@ HTML_PAGES = \
 	macusers.1.html \
 	man-pages.html \
 	manual-index.html \
-	megatron.1.html \
 	netatalk.8.html \
 	netatalkconfig.1.html \
 	pr01.html \
 	table-toc.html \
 	upgrade.html
-
-do_subst =  sed \
-  -i. \
-	-e 's|@pkgconfdir[@]|$(sysconfdir)|g' \
-  -e 's|@localstatedir[@]|$(localstatedir)|g'
 
 DISTCLEANFILES = manual.xml
 
@@ -60,7 +58,7 @@ CLEANFILES += $(HTML_PAGES)
 
 html-local: $(XML_PAGES)
 	@xsltproc $(HTML_STYLESHEET) manual.xml
-	$(do_subst)	$(HTML_PAGES)
+	$(do_subst) $(HTML_PAGES)
 	rm -f *.
 
 html-upload: html-local

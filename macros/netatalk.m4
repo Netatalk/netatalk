@@ -116,14 +116,12 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
   if test x$prefix = xNONE ; then
     prefix=/usr/local
   fi
-  sysconfdir=`eval echo $sysconfdir`
-  AC_SUBST(sysconfdir)
-
+  
   AC_ARG_WITH(
       dbus-sysconf-dir,
-      [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sysconfdir}/dbus-1/system.d/)])],
+      [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sprefix}/etc/dbus-1/system.d/)])],
       ac_cv_dbus_sysdir=$withval,
-      ac_cv_dbus_sysdir=${sysconfdir}/dbus-1/system.d
+      ac_cv_dbus_sysdir=${prefix}/etc/dbus-1/system.d
   )
   DBUS_SYS_DIR=""
   if test x$atalk_cv_with_dbus = xyes ; then

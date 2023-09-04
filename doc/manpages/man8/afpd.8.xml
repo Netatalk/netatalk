@@ -44,7 +44,7 @@
     interface to the Unix file system. It is normally started at boot time
     by <command>netatalk</command>(8).</para>
 
-    <para><filename>@pkgconfdir@/afp.conf</filename> is the configuration file
+    <para><filename>@prefix@/etc/afp.conf</filename> is the configuration file
     used by <command>afpd</command> to determine the behavior and
     configuration of a file server.</para>
 
@@ -92,7 +92,7 @@
 
         <listitem>
           <para>Specifies the configuration file to use. (Defaults to
-          <filename>@pkgconfdir@/afp.conf</filename>.)</para>
+          <filename>@prefix@/etc/afp.conf</filename>.)</para>
         </listitem>
       </varlistentry>
 
@@ -178,7 +178,7 @@
 
     <variablelist>
       <varlistentry>
-        <term><filename>@pkgconfdir@/afp.conf</filename></term>
+        <term><filename>@prefix@/etc/afp.conf</filename></term>
 
         <listitem>
           <para>configuration file used by afpd</para>
@@ -186,7 +186,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>@localstatedir@/netatalk/afp_signature.conf</filename></term>
+        <term><filename>@prefix@/var/netatalk/afp_signature.conf</filename></term>
 
         <listitem>
           <para>list of server signature</para>
@@ -194,7 +194,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename></term>
+        <term><filename>@prefix@/var/netatalk/afp_voluuid.conf</filename></term>
 
         <listitem>
           <para>list of UUID for Time Machine volume</para>
@@ -202,7 +202,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>@pkgconfdir@/extmap.conf</filename></term>
+        <term><filename>@prefix@/etc/extmap.conf</filename></term>
 
         <listitem>
           <para>file name extension mapping</para>
@@ -210,7 +210,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><filename>@pkgconfdir@/msg/message.pid</filename></term>
+        <term><filename>@prefix@/etc/msg/message.pid</filename></term>
 
         <listitem>
           <para>contains messages to be sent to users.</para>

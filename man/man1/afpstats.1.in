@@ -42,7 +42,7 @@ list AFP statistics via D\-Bus IPC\&.
 must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
 .PP
 "\fBafpstats = yes\fR" must be set in
-@pkgconfdir@/afp\&.conf\&.
+@prefix@/etc/afp\&.conf\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),

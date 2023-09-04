@@ -30,11 +30,11 @@
 .SH "NAME"
 extmap.conf \- Configuration file used by afpd(8) to specify file name extension mappings\&.
 .SH "SYNOPSIS"
-.HP \w'\fB@pkgconfdir@/extmap\&.conf\fR\ 'u
-\fB@pkgconfdir@/extmap\&.conf\fR
+.HP \w'\fB@prefix@/etc/extmap\&.conf\fR\ 'u
+\fB@prefix@/etc/extmap\&.conf\fR
 .SH "DESCRIPTION"
 .PP
-@pkgconfdir@/extmap\&.conf
+@prefix@/etc/extmap\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify file name extension mappings\&.
