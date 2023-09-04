@@ -316,7 +316,6 @@ AC_CONFIG_FILES([
   man/man1/dbd.1
   man/man1/macusers.1
   man/man1/netatalk-config.1
-  man/man1/uniconv.1
   man/man5/Makefile
   man/man5/afp.conf.5
   man/man5/afp_signature.conf.5

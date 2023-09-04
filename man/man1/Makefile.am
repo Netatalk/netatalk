@@ -9,7 +9,6 @@ man_MANS = \
 	asip-status.1 \
 	dbd.1 \
 	macusers.1 \
-	netatalk-config.1 \
-	uniconv.1
+	netatalk-config.1
 
 DISTCLEANFILES = $(man_MANS)
