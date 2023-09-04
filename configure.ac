@@ -253,7 +253,6 @@ AC_CONFIG_FILES([
   bin/afppasswd/Makefile
   bin/cnid/Makefile
   bin/cnid/cnid2_create
-  bin/megatron/Makefile
   bin/misc/Makefile
   config/Makefile
   config/pam/Makefile

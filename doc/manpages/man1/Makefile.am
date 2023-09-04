@@ -12,7 +12,6 @@ MAN_MANPAGES = \
 	asip-status.1 \
 	dbd.1 \
 	macusers.1 \
-	megatron.1 \
 	netatalk-config.1 \
 	uniconv.1
 
@@ -25,7 +24,6 @@ EXTRA_DIST = \
 	asip-status.1.xml \
 	dbd.1.xml \
 	macusers.1.xml \
-	megatron.1.xml \
 	netatalk-config.1.xml \
 	uniconv.1.xml
 
