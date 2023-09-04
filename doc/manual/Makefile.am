@@ -3,6 +3,10 @@ XSLTPROC_FLAGS=@XSLTPROC_FLAGS@
 HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
+do_subst =  sed \
+	-i. \
+	-e 's|@prefix[@]|$(prefix)|g'
+
 XML_PAGES = \
 	manual.xml \
 	configuration.xml \
@@ -49,11 +53,6 @@ HTML_PAGES = \
 	uniconv.1.html \
 	upgrade.html
 
-do_subst =  sed \
-  -i. \
-	-e 's|@pkgconfdir[@]|$(sysconfdir)|g' \
-  -e 's|@localstatedir[@]|$(localstatedir)|g'
-
 DISTCLEANFILES = manual.xml
 
 if HAVE_XSLTPROC
@@ -61,7 +60,7 @@ CLEANFILES += $(HTML_PAGES)
 
 html-local: $(XML_PAGES)
 	@xsltproc $(HTML_STYLESHEET) manual.xml
-	$(do_subst)	$(HTML_PAGES)
+	$(do_subst) $(HTML_PAGES)
 	rm -f *.
 
 html-upload: html-local

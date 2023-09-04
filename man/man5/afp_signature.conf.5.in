@@ -31,7 +31,7 @@
 afp_signature.conf \- Configuration file used by afpd(8) to specify server signature
 .SH "DESCRIPTION"
 .PP
-@localstatedir@/netatalk/afp_signature\&.conf
+@prefix@/var/netatalk/afp_signature\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify server signature automagically\&. The configuration lines are composed like:
