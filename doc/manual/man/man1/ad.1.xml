@@ -380,13 +380,6 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
   </refsect1>
 
   <refsect1>
-    <title>Reporting Bugs</title>
-
-    <para>Report bugs to the Netatalk-devel list
-    &lt;netatalk-devel@lists.sourceforge.net&gt;.</para>
-  </refsect1>
-
-  <refsect1>
     <title>See also</title>
 
     <para><citerefentry>
