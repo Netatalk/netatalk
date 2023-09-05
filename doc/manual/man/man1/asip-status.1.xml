@@ -190,11 +190,4 @@ Network address: [fd00:0000:0000:0000:0000:0000:0001:0160]:10548 (IPv6 address +
 UTF8 Servername: myserver
 </programlisting></para>
   </refsect1>
-
-  <refsect1>
-    <title>REPORTING BUGS</title>
-
-    <para>Report bugs to the Netatalk-devel list
-    &lt;netatalk-devel@lists.sourceforge.net&gt;.</para>
-  </refsect1>
 </refentry>
