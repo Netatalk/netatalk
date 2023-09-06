@@ -7,7 +7,9 @@
 
     <refmiscinfo class="date">13 Jun 2016</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP fileserver Manual</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -122,5 +124,11 @@
 
         <manvolnum>5</manvolnum>
       </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+      <title>AUTHOR</title>
+
+      <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS</ulink></para>
   </refsect1>
 </refentry>
