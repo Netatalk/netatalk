@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: cnid_metad
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "23 Mar 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "CNID_METAD" "8" "23 Mar 2012" "Netatalk @NETATALK_VERSION@" "Netatalk AFP fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -88,3 +88,13 @@ processes will transparently reconnect\&.
 \fBafpd\fR(8),
 \fBdbd\fR(1),
 \fBafp.conf\fR(5)
+.SH "AUTHOR"
+.PP
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE

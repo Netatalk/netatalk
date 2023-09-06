@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: asip-status.pl
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"     Title: asip-status
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 06 May 2016
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "ASIP\-STATUS\&.PL" "1" "06 May 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "ASIP\-STATUS" "1" "06 May 2016" "Netatalk @NETATALK_VERSION@" "Netatalk AFP fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,18 +28,18 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-asip-status.pl \- Queries AFP servers for their capabilities
+asip-status \- Queries AFP servers for their capabilities
 .SH "SYNOPSIS"
-.HP \w'\fBasip\-status\&.pl\fR\ 'u
-\fBasip\-status\&.pl\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR [\fIPORT\fR]
-.HP \w'\fBasip\-status\&.pl\fR\ 'u
-\fBasip\-status\&.pl\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR:\fIPORT\fR
-.HP \w'\fBasip\-status\&.pl\fR\ 'u
-\fBasip\-status\&.pl\fR \-v | \-version | \-\-version 
+.HP \w'\fBasip\-status\fR\ 'u
+\fBasip\-status\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR [\fIPORT\fR]
+.HP \w'\fBasip\-status\fR\ 'u
+\fBasip\-status\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR:\fIPORT\fR
+.HP \w'\fBasip\-status\fR\ 'u
+\fBasip\-status\fR \-v | \-version | \-\-version 
 .SH "DESCRIPTION"
 .PP
-\fBasip\-status\&.pl\fR
-is a perl script that sends a FPGetSrvrInfo request to an AFP server at
+\fBasip\-status\fR
+sends a FPGetSrvrInfo request to an AFP server at
 \fIHOSTNAME\fR:\fIPORT\fR
 and displays the results, namely "Machine type", the server\*(Aqs name, supported AFP versions, UAMs and AFP flags, the "server signature" and the network addresses, the server provides AFP services on\&.
 .PP
@@ -47,7 +47,7 @@ When you don\*(Aqt supply
 \fIPORT\fR, then the default AFP port, 548, will be used\&.
 .PP
 Starting with Netatalk 3\&.1\&.9,
-\fBasip\-status\&.pl\fR
+\fBasip\-status\fR
 supports both IPv4 and IPv6\&. It\*(Aqs decided by your system which IP version to use\&. You can use \-4 or \-6 option to specify IP version\&.
 .if n \{\
 .sp
@@ -62,7 +62,7 @@ supports both IPv4 and IPv6\&. It\*(Aqs decided by your system which IP version 
 .ps -1
 .br
 .PP
-\fBasip\-status\&.pl\fR
+\fBasip\-status\fR
 requires IO::Socket::IP module\&.
 .sp .5v
 .RE
@@ -103,7 +103,7 @@ Show version\&.
 .RS 4
 .\}
 .nf
-$ \fBasip\-status\&.pl\fR 192\&.168\&.1\&.15
+$ \fBasip\-status\fR 192\&.168\&.1\&.15
 AFP reply from 192\&.168\&.1\&.15:548 via IPv4
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -134,7 +134,7 @@ Network address: 65280\&.128 (ddp address)
 .RS 4
 .\}
 .nf
-$ \fBasip\-status\&.pl\fR myserver:10548
+$ \fBasip\-status\fR myserver:10548
 AFP reply from myserver:10548 via IPv6
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -164,6 +164,13 @@ UTF8 Servername: myserver
 .if n \{\
 .RE
 .\}
-.SH "REPORTING BUGS"
+.SH "AUTHOR"
 .PP
-Report bugs to the Netatalk\-devel list <netatalk\-devel@lists\&.sourceforge\&.net>\&.
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: extmap.conf
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "EXTMAP\&.CONF" "5" "19 Jan 2013" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "EXTMAP\&.CONF" "5" "19 Jan 2013" "Netatalk @NETATALK_VERSION@" "Netatalk AFP fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -74,3 +74,13 @@ Any line beginning with a hash (\(lq#\(rq) character is ignored\&. The leading\-
 .PP
 \fBafp.conf\fR(5),
 \fBafpd\fR(8)
+.SH "AUTHOR"
+.PP
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE
