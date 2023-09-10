@@ -119,7 +119,7 @@
             </varlistentry>
 
             <varlistentry>
-              <term>uams_randum.so</term>
+              <term>uams_randnum.so</term>
 
               <listitem>
                 <para>allows Random Number and Two-Way Random Number Exchange
@@ -230,7 +230,7 @@
     users.</para>
 
     <para>As <command>afpd</command> needs to interact with unix operating
-    system as well, it need's to be able to convert from UTF8-MAC/MacCodepage
+    system as well, it needs to be able to convert from UTF8-MAC/MacCodepage
     to the unix codepage. By default <command>afpd</command> uses the systems
     LOCALE, or ASCII if your system doesn't support locales. You can set the
     unix codepage using the <option>-unixcodepage</option> option. If you're
@@ -243,7 +243,7 @@
         <term>-unixcodepage [<parameter>CODEPAGE</parameter>]</term>
 
         <listitem>
-          <para>Specifies the servers unix codepage, e.g. "ISO-8859-15" or
+          <para>Specifies the server's unix codepage, e.g. "ISO-8859-15" or
           "UTF8". This is used to convert strings to/from the system's locale,
           e.g. for authenthication, server messages and volume names. Defaults
           to LOCALE if your system supports it, otherwise ASCII will be
@@ -368,11 +368,8 @@
             </citerefentry> on the server to let things work.</para>
 
           <note>
-            <para>Setting this option is not recommended since globally
-            encrypting AFP connections via SSH will increase the server's load
-            significantly. On the other hand, Apple's client side
-            implementation of this feature in MacOS X versions prior to 10.3.4
-            contained a security flaw.</para>
+            <para>Apple's client side implementation of this feature 
+            in Mac OS X versions prior to 10.3.4 contained a security flaw.</para>
           </note>
         </listitem>
       </varlistentry>
@@ -431,7 +428,7 @@
           option.</para>
 
           <example>
-            <title>afpd.conf onfiguration line</title>
+            <title>afpd.conf configuration line</title>
             <programlisting>
               fluxxus -hostname afp.example.org -ipaddr 192.168.0.1 -fqdn www.example.com
             </programlisting>
@@ -440,7 +437,7 @@
             </para>
             <para>
               (UTF8) Server name: fluxxus, Listening and advertised network address: 192.168.0.1, Advertised network address: www.example.com,
-               hostname is not used.
+              hostname is not used.
             </para>
           </example>
         </listitem>
@@ -491,10 +488,13 @@
             This is multiplied with the DSI server quantum (default ~300k) to give the size of
             the buffer. Increasing this value might increase throughput in fast local networks
             for volume to volume copies.
-            <emphasis>Note</emphasis>: This buffer is allocated per afpd child process, so
-            specifying large values will eat up large amount of memory (buffer size * number of
-            clients).
           </para>
+
+		<note>
+			<para>This buffer is allocated per afpd child process, so
+			specifying large values will eat up large amounts of memory
+			(buffer size * number of clients).</para>
+		</note>
         </listitem>
       </varlistentry>
 
@@ -503,7 +503,7 @@
         <listitem>
           <para>
             Try to set TCP receive buffer using setsockpt(). Often OSes impose restrictions
-            on the applications ability to set this value.
+            on the applications' ability to set this value.
           </para>
         </listitem>
       </varlistentry>
@@ -513,7 +513,7 @@
         <listitem>
           <para>
             Try to set TCP send buffer using setsockpt(). Often OSes impose restrictions
-            on the applications ability to set this value.
+            on the applications' ability to set this value.
           </para>
         </listitem>
       </varlistentry>
@@ -564,7 +564,7 @@
           <para>Specifies the path to be used (per server) to store the files
           required to do CAP-style print authentication which papd will
           examine to determine if a print job should be allowed. These files
-          are created at login and if they are to be properly removed, this
+          are created at login, and if they are to be properly removed, this
           directory probably needs to be umode 1777.</para>
 
           <note>
@@ -581,9 +581,13 @@
           <para>With this switch enabled, afpd won't advertise that it is
           capable of server notifications, so that connected clients poll the
           server every 10 seconds to detect changes in opened server windows.
-          <emphasis>Note</emphasis>: Depending on the number of simultaneously
-          connected clients and the network's speed, this can lead to a
-          significant higher load on your network!</para>
+          </para>
+
+          <note>
+            <para>Depending on the number of simultaneously
+            connected clients and the network's speed, this can lead to a
+            significant higher load on your network!</para>
+          </note>
 
           <note>
             <para>Do not use this option any longer as Netatalk 2.x correctly
@@ -767,8 +771,8 @@
             signatures</title>
 
             <para><programlisting>first -signature user:USERS 
-second -signature user:USERS 
-third -signature user:ADMINS</programlisting></para>
+            second -signature user:USERS 
+            third -signature user:ADMINS</programlisting></para>
           </example>
 
           <para>The first two servers will appear as one logical AFP service to
@@ -790,8 +794,9 @@ third -signature user:ADMINS</programlisting></para>
           Hangul is especially sensitive to this.</para>
 
           <para><programlisting>73:  limit of Mac OS X 10.1
-80:  limit for Mac OS X 10.4/10.5 (default)
-255: limit of spec</programlisting>Mac OS 9 and earlier are not influenced by
+          80:  limit for Mac OS X 10.4/10.5 (default)
+	  255: limit of spec</programlisting>
+          Mac OS 9 and earlier are not influenced by
           this, because Maccharset volume name is always limited to 27
           bytes.</para>
         </listitem>
