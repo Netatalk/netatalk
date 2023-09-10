@@ -9,10 +9,7 @@ After=network-online.target
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStartPre=/bin/sh -c 'systemctl set-environment ATALK_NAME=$$(hostname|cut -d. -f1)'
 ExecStart=:SBINDIR:/atalkd
-ExecStartPost=:BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:Workstation"
-ExecStartPost=:BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:netatalk"
 Restart=always
 RestartSec=1
 
