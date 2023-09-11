@@ -8,9 +8,6 @@
   (//refmiscinfo[@class='date'])[last()]
 </xsl:param>
 
-<!-- * Suppress extra :VERSION: -->
-<xsl:param name="refentry.version.suppress">1</xsl:param>
-
 <!-- * Example without numbering -->
 <xsl:param name="local.l10n.xml" select="document('')"/>
 <l:i18n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0">

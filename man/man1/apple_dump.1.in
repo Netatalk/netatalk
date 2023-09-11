@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: apple_dump
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 12 Nov 2015
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP Fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "12 Nov 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "APPLE_DUMP" "1" "12 Nov 2015" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,9 +45,9 @@ apple_dump \- Dump AppleSingle/AppleDouble format data
 .SH "DESCRIPTION"
 .PP
 \fBapple_dump\fR
-is a perl script to dump AppleSingle/AppleDouble format data\&.
+dumps AppleSingle/AppleDouble format data\&.
 .PP
-This script can dump various AppleSingle/AppleDouble data created by mailer, archiver, Mac OS X, Netatalk and so on\&.
+It can dump various AppleSingle/AppleDouble data created by mailers, archivers, Mac OS X, Netatalk and so on\&.
 .PP
 With no
 \fIFILE\fR|\fIDIR\fR, or when
@@ -57,15 +57,15 @@ is \*(Aq\-\*(Aq, read standard input\&.
 .PP
 \fB\-a\fR [\fIFILE\fR|\fIDIR\fR]
 .RS 4
-This is default\&. Dump a AppleSingle/AppleDouble data for
+This is the default\&. Dump AppleSingle/AppleDouble data for
 \fIFILE\fR
 or
 \fIDIR\fR
-automatically\&. If FILE is not AppleSingle/AppleDouble format, look for extended attribute,
+automatically\&. If FILE is not in AppleSingle/AppleDouble format, look for extended attributes,
 \fI\&.AppleDouble/FILE\fR
 and
 \fI\&._FILE\fR\&. If
-\fIDIR\fR, look for extended attribute,
+\fIDIR\fR, look for extended attributes,
 \fIDIR/\&.AppleDouble/\&.Parent\fR
 and
 \fI\&._DIR\fR\&.
@@ -73,7 +73,7 @@ and
 .PP
 \fB\-e\fR \fIFILE\fR|\fIDIR\fR
 .RS 4
-Dump extended attribute of
+Dump extended attributes of
 \fIFILE\fR
 or
 \fIDIR\fR\&.
@@ -102,9 +102,9 @@ Show version and exit
 .RE
 .SH "NOTE"
 .PP
-There is no way to detect whether FinderInfo is FileInfo or DirInfo\&. By default, apple_dump examines whether file or directory, a parent directory is \&.AppleDouble, filename is \&._*, filename is \&.Parent, and so on\&.
+There is no way to detect whether FinderInfo is FileInfo or DirInfo\&. By default, apple_dump examines whether the file, directory or parent directory is \&.AppleDouble, filename is \&._*, filename is \&.Parent, and so on\&.
 .PP
-If setting option \-e, \-f or \-d, assume FinderInfo and doesn\*(Aqt look for another data\&.
+When setting option \-e, \-f or \-d, assume FinderInfo and don\*(Aqt look for other data\&.
 .SH "SEE ALSO"
 .PP
 \fBad\fR(1),
@@ -113,3 +113,13 @@ If setting option \-e, \-f or \-d, assume FinderInfo and doesn\*(Aqt look for an
 \fBrunat\fR(1),
 \fBgetextattr\fR(8),
 \fBlsextattr\fR(8)
+.SH "AUTHOR"
+.PP
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE
