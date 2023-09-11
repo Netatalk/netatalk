@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: afp_voluuid.conf
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 27 June 2016
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP Fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_VOLUUID\&.CONF" "5" "27 June 2016" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_VOLUUID\&.CONF" "5" "27 June 2016" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -85,3 +85,13 @@ mary 6331E2D1\-446C\-B68C\-3066\-D685AADBE911
 \fBafp.conf\fR(5),
 \fBavahi-daemon\fR(8),
 \fBmDNSResponder\fR(8)
+.SH "AUTHOR"
+.PP
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE

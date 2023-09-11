@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: afp.conf
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 11 Apr 2023
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: Netatalk AFP Fileserver Manual
+.\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "11 Apr 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP\&.CONF" "5" "11 Apr 2023" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -658,7 +658,7 @@ AFP user home volume name\&. The default is
 .PP
 ignored attributes = \fIall | nowrite | nodelete | norename\fR \fB(G)/(V)\fR
 .RS 4
-Speficy a set of file and directory attributes that shall be ignored by the server,
+Specify a set of file and directory attributes that shall be ignored by the server,
 \fBall\fR
 includes all the other options\&.
 .sp
@@ -681,7 +681,7 @@ signature = <text> \fB(G)\fR
 .RS 4
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
 @prefix@/var/netatalk/afp_signature\&.conf
-automatically (based on random number)\&. See also asip\-status\&.pl(1)\&.
+automatically (based on random number)\&. See also asip\-status(1)\&.
 .RE
 .PP
 solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -1006,7 +1006,7 @@ ACLs are additionally mapped to the UNIX mode of the filesystem object\&.
 .RE
 .RE
 .PP
-If you want to be able to display ACLs on the client, you must setup both client and server as part on a authentication domain (directory service, e\&.g\&. LDAP, Open Directory, Active Directory)\&. The reason is, in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefor Netatalk must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&.
+If you want to be able to display ACLs on the client, you must setup both client and server as part on a authentication domain (directory service, e\&.g\&. LDAP, Open Directory, Active Directory)\&. The reason is, in OS X ACLs are bound to UUIDs, not just uid\*(Aqs or gid\*(Aqs\&. Therefore Netatalk must be able to map every filesystem uid and gid to a UUID so that it can return the server side ACLs which are bound to UNIX uid and gid mapped to OS X UUIDs\&.
 .PP
 Netatalk can query a directory server using LDAP queries\&. Either the directory server already provides an UUID attribute for user and groups (Active Directory, Open Directory) or you reuse an unused attribute (or add a new one) to you directory server (eg OpenLDAP)\&.
 .PP
@@ -1155,7 +1155,7 @@ vol size limit = \fIsize in MiB\fR \fB(V)\fR
 .RS 4
 Useful for Time Machine: limits the reported volume size, thus preventing Time Machine from using the whole real disk space for backup\&. Example: "vol size limit = 1000" would limit the reported disk space to 1 GB\&.
 \fBIMPORTANT: \fR
-This is an approximated calculation taking into account the contents of Time Machine sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
+This is an approximated calculation taking into account the contents of Time Machine sparsebundle images\&. Therefore you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted for\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 valid users = \fIuser @group\fR \fB(V)\fR
@@ -1525,3 +1525,13 @@ provided charset\&. It is highly recommended to stick to the default UTF\-8\&.
 \fBafp_signature.conf\fR(5),
 \fBextmap.conf\fR(5),
 \fBcnid_metad\fR(8)
+.SH "AUTHOR"
+.PP
+See
+\m[blue]\fBCONTRIBUTORS\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "NOTES"
+.IP " 1." 4
+CONTRIBUTORS
+.RS 4
+\%https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS
+.RE
