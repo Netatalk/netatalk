@@ -1,6 +1,6 @@
 Makefile
 Makefile.in
-asip-status.pl
+asip-status
 apple_dump
 .gitignore
 *.o

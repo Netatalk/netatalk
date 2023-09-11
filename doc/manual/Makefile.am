@@ -28,7 +28,7 @@ HTML_PAGES = \
 	afpstats.1.html \
 	afp_voluuid.conf.5.html \
 	apple_dump.1.html \
-	asip-status.pl.1.html \
+	asip-status.1.html \
 	cnid_dbd.8.html \
 	cnid_metad.8.html \
 	configuration.html \

@@ -256,7 +256,7 @@ AC_CONFIG_FILES([
   contrib/macusers/macusers
   contrib/shell_utils/Makefile
   contrib/shell_utils/apple_dump
-  contrib/shell_utils/asip-status.pl
+  contrib/shell_utils/asip-status
   distrib/Makefile
   distrib/config/Makefile
   distrib/config/netatalk-config
@@ -306,7 +306,7 @@ AC_CONFIG_FILES([
   man/man1/afppasswd.1
   man/man1/afpstats.1
   man/man1/apple_dump.1
-  man/man1/asip-status.pl.1
+  man/man1/asip-status.1
   man/man1/dbd.1
   man/man1/macusers.1
   man/man1/netatalk-config.1
