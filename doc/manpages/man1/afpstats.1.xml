@@ -8,7 +8,7 @@
     <refmiscinfo class="date">24 Mar 2013</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
-    <refmiscinfo class="manual">Netatalk AFP fileserver Manual</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP Fileserver Manual</refmiscinfo>
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 

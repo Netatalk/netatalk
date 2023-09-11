@@ -3,11 +3,11 @@
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
-.\"    Manual: Netatalk AFP fileserver Manual
+.\"    Manual: Netatalk AFP Fileserver Manual
 .\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_SIGNATURE\&.CONF" "5" "23 Mar 2012" "Netatalk @NETATALK_VERSION@" "Netatalk AFP fileserver Manual"
+.TH "AFP_SIGNATURE\&.CONF" "5" "23 Mar 2012" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
