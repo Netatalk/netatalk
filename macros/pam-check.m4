@@ -155,7 +155,7 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
         pam-confdir,
         [AS_HELP_STRING([--with-pam-confdir=PATH],[Path to PAM config dir (default: ${sysconfdir}/pam.d)])],
         ac_cv_pamdir=$withval,
-        ac_cv_pamdir='${sysconfdir}/pam.d'
+        ac_cv_pamdir=${sysconfdir}/pam.d
     )
 
     PAMDIR="$ac_cv_pamdir"
