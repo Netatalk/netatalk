@@ -1,3 +1,40 @@
+Changes in 3.1.16
+=================
+* FIX: libatalk: Fix CVE-2022-23121, CVE-2022-23123 regression
+       - Added guard check before access ad_entry(), GitHub#357
+       - Allow zero length entry, for AppleDouble specification, GitHub#368
+       - Remove special handling for COMMENT entries, GitHub#236
+       - The assertion for invalid entires is still enabled,
+         so please report any future "Invalid metadata EA" errors!
+* FIX: build system: Fix autoconf warnings and modernize bootstrap
+       and configure.ac, GitHub#331
+* FIX: build system: Correct syntax in libevent search macro,
+       summary macro and netatalk executable makefile, GitHub#342
+* FIX: build system: Fix native libiconv detection on macOS, GitHub#343
+* FIX: build system: Use non-interactive PAM session when available, GitHub#361
+* FIX: build system: Fix detection of Berkeley DB installed
+       in multiarch location, GitHub#380
+* FIX: build system: Fix support for cross-compilation
+       with mysql_config and dtrace, GitHub#384
+* FIX: build system: Support building quota against libtirpc, GitHub#385
+* FIX: build system: Fix variable substitution in configure summary, GitHub#443
+* UPD: build system: Remove ABI checks and the --enable-developer option, GitHub#262
+* FIX: initscript: Improvements to Debian SysV init script
+       - Source init-functions, GitHub#386
+       - Add a Description and Short-Description, GitHub#428
+* FIX: docs: Clarify localstate dir configurability in manual, GitHub#401
+* UPD: docs: Make BerkeleyDB 5.3.x the recommended version, GitHub#8
+* FIX: docs: Update SourceForge URLs to fix CSS styles and download links
+* FIX: docs: Remove obsoleted bug reporting sections, GitHub#455
+* FIX: Sundry typo fixes in user visible strings and docs, GitHub#381, GitHub#382
+* UPD: Rename asip-status.pl as asip-status
+       to make naming implementation-agnostic, GitHub#379
+* UPD: Remove redundant uid.c|h files in etc/afpd
+* UPD: Don't build and distribute deprecated cnid2_create tool, GitHub#412
+* UPD: Remove deprecated megatron code and man page, GitHub#456
+* UPD: Remove deprecated uniconv code and man page, GitHub#457
+* UPD: Improvements to the GitHub CI workflow
+
 Changes in 3.1.15
 =================
 * FIX: CVE-2022-43634
