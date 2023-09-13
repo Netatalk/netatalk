@@ -6,7 +6,7 @@ NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
 
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([subdir-objects dist-xz no-dist-gzip])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIRS([macros])
 AM_MAINTAINER_MODE([enable])
