@@ -12,7 +12,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([subdir-objects dist-xz])
 AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs.
