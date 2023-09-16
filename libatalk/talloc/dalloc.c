@@ -215,7 +215,7 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
     EC_INIT;
     void *p = NULL;
     va_list args;
-    const char *type;
+    const char *type = NULL;
     int elem;
     const char *elemtype;
     char *s;
@@ -241,9 +241,18 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
             break;
         }            
     }
-    va_end(args);
+    if (p == NULL) {
+        EC_FAIL;
+    }
+
+    type = va_arg(args, const char *);
+    if (STRCMP(talloc_get_name(p), !=, type)) {
+        p = NULL;
+    }
+
 
 EC_CLEANUP:
+    va_end(args);
     if (ret != 0)
         p = NULL;
     return p;

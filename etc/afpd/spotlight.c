@@ -862,7 +862,8 @@ static int sl_rpc_openQuery(AFPObj *obj,
     /* convert spotlight query charset to host charset */
     sl_query = dalloc_value_for_key(query, "DALLOC_CTX", 0,
                                     "DALLOC_CTX", 1,
-                                    "kMDQueryString");
+                                    "kMDQueryString",
+                                    "char *");
     if (sl_query == NULL) {
         EC_FAIL;
     }
@@ -893,14 +894,14 @@ static int sl_rpc_openQuery(AFPObj *obj,
     slq->slq_ctx2 = *uint64;
 
     reqinfo = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-                                   "kMDAttributeArray");
+                                   "kMDAttributeArray", "sl_array_t");
     if (reqinfo == NULL) {
         EC_FAIL;
     }
     slq->slq_reqinfo = talloc_steal(slq, reqinfo);
 
     scope_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-                                       "kMDScopeArray");
+                                       "kMDScopeArray", "sl_array_t");
     if (scope_array == NULL) {
         scope = g_uri_escape_string(v->v_path,
                                     G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
@@ -925,7 +926,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     LOG(log_debug, logtype_sl, "Search scope: \"%s\"", slq->slq_scope);
 
     cnids = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-                                 "kMDQueryItemArray");
+                                 "kMDQueryItemArray", "sl_array_t");
     if (cnids) {
         EC_ZERO_LOG( sl_createCNIDArray(slq, cnids->ca_cnids) );
     }
@@ -1089,7 +1090,8 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
      * that seems to be candidates for updating filesystem metadata.
      */
 
-    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "DALLOC_CTX", 1, "kMDItemFSContentChangeDate"))) {
+    if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1, "DALLOC_CTX", 1,
+                                        "kMDItemFSContentChangeDate", "sl_time_t"))) {
         struct utimbuf utimes;
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
