@@ -697,6 +697,12 @@ if test x"$this_os" = "xsolaris"; then
 	init_style=solaris
 fi
 
+dnl ----- macOS specific -----
+if test x"$this_os" = "xmacosx"; then 
+	AC_MSG_RESULT([ * macOS specific configuration])
+    AC_DEFINE(NO_QUOTA_SUPPORT, 1, [No quota support])
+fi
+
 dnl Whether to run ldconfig after installing libraries
 AC_PATH_PROG(NETA_LDCONFIG, ldconfig, , [$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/bin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/bin])
 echo NETA_LDCONFIG = $NETA_LDCONFIG
