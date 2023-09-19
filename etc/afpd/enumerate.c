@@ -51,10 +51,10 @@ struct savedir {
 
 static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 {
-    struct savedir *sd = data; 
+    struct savedir *sd = data;
     char *start, *end;
     int  len,lenm;
-    
+
     end = sd->sd_buf + sd->sd_buflen;
     len = strlen(de->d_name);
     *(sd->sd_last)++ = len;
@@ -81,11 +81,11 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
     *(sd->sd_last)++ = lenm;
     memcpy( sd->sd_last, mname, lenm + 1 );
     sd->sd_last += lenm + 1;
-#endif    
+#endif
     return 0;
 }
 
-/* ----------------------------- 
+/* -----------------------------
  * FIXME:
  * Doesn't work with dangling symlink
  * i.e.:
@@ -97,7 +97,7 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * Another option for symlink
  * cf:
  * http://sourceforge.net/tracker/index.php?func=detail&aid=461938&group_id=8642&atid=108642
- * 
+ *
 */
 char *check_dirent(const struct vol *vol, char *name)
 {
@@ -114,8 +114,8 @@ char *check_dirent(const struct vol *vol, char *name)
 #if 0
     char *m_name = NULL;
 
-    if (NULL == (m_name = utompath(vol, name, 0, utf8_encoding()))) 
-        return NULL;    
+    if (NULL == (m_name = utompath(vol, name, 0, utf8_encoding())))
+        return NULL;
 
     /* now check against too big a file */
     if (strlen(m_name) > vol->max_filename)
@@ -125,14 +125,14 @@ char *check_dirent(const struct vol *vol, char *name)
 }
 
 /* ----------------------------- */
-int 
+int
 for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 {
     DIR             *dp;
     struct dirent	*de;
     char            *m_name;
     int             ret;
-    
+
     if (NULL == ( dp = opendir( name)) ) {
         return -1;
     }
@@ -159,9 +159,9 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 #define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + UTF8FILELEN_EARLY + 1)
 
 /* ----------------------------- */
-static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, 
-    char *rbuf, 
-    size_t *rbuflen, 
+static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+    char *rbuf,
+    size_t *rbuflen,
     int ext)
 {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
@@ -176,7 +176,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     struct path                 *o_path;
     struct path                 s_path;
     int                         header;
-        
+
     if ( sd.sd_buflen == 0 ) {
         if (( sd.sd_buf = (char *)malloc( SDBUFBRK )) == NULL ) {
             LOG(log_error, logtype_afpd, "afp_enumerate: malloc: %s", strerror(errno) );
@@ -251,19 +251,19 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         maxsz = ntohs( temp16 );
         ibuf += sizeof( temp16 );
     }
-    
+
     header = (ext)?4:2;
     header *=sizeof( u_char );
-    
+
     maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);
     o_path = cname( vol, dir, &ibuf );
 
-    if (afp_errno == AFPERR_NOOBJ) 
+    if (afp_errno == AFPERR_NOOBJ)
         afp_errno = AFPERR_NODIR;
 
     *rbuflen = 0;
     if (NULL == o_path ) {
-        return get_afp_errno(AFPERR_NOOBJ); 
+        return get_afp_errno(AFPERR_NOOBJ);
     }
     if ( *o_path->m_name != '\0') {
         /* it's a file or it's a dir and extendir() was unable to chdir in it */
@@ -285,7 +285,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         sd.sd_last = sd.sd_buf;
         /* if dir was in the cache we don't have the inode */
         if (( !o_path->st_valid && ostat(".", &o_path->st, vol_syml_opt(vol)) < 0 ) ||
-            (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
+            (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0)
         {
             LOG(log_error, logtype_afpd, "enumerate: loop error: %s (%d)", strerror(errno), errno);
             switch (errno) {
@@ -351,7 +351,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         s_path.u_name = sd.sd_last;
         if (of_stat(vol, &s_path) < 0 ) {
             /* so the next time it won't try to stat it again
-             * another solution would be to invalidate the cache with 
+             * another solution would be to invalidate the cache with
              * sd.sd_did = 0 but if it's not ENOENT error it will start again
              */
             *sd.sd_last = 0;
@@ -406,7 +406,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             /* files are added to the dircache in getfilparams() -> getmetadata() */
-            if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir, 
+            if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir,
                                                data + header, &esz, 1)) ) {
                 return( ret );
             }
@@ -486,24 +486,24 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 }
 
 /* ----------------------------- */
-int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, 
-    char *rbuf, 
+int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen,
+    char *rbuf,
     size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 0);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, 
-    char *rbuf, 
+int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen,
+    char *rbuf,
     size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 1);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, 
-    char *rbuf, 
+int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen,
+    char *rbuf,
     size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 2);

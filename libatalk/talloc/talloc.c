@@ -1,4 +1,4 @@
-/* 
+/*
    Samba Unix SMB/CIFS implementation.
 
    Samba trivial allocation library - new interface
@@ -7,11 +7,11 @@
 
    Copyright (C) Andrew Tridgell 2004
    Copyright (C) Stefan Metzmacher 2006
-   
+
      ** NOTE! The following LGPL license applies to the talloc
      ** library. This does NOT imply that all of Samba is released
      ** under the LGPL
-   
+
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
@@ -43,8 +43,8 @@
 
 #define _PUBLIC_ extern
 
-/** 
- * pointer difference macro 
+/**
+ * pointer difference macro
  */
 #define PTR_DIFF(p1,p2) ((ptrdiff_t)(((const char *)(p1)) - (const char *)(p2)))
 
@@ -89,7 +89,7 @@
 #define TALLOC_FLAG_POOLMEM 0x08	/* This is allocated in a pool */
 #define TALLOC_MAGIC_REFERENCE ((const char *)1)
 
-/* by default we abort when given a bad pointer (such as when talloc_free() is called 
+/* by default we abort when given a bad pointer (such as when talloc_free() is called
    on a pointer that came from malloc() */
 #ifndef TALLOC_ABORT
 #define TALLOC_ABORT(reason) abort()
@@ -362,7 +362,7 @@ static inline struct talloc_chunk *talloc_chunk_from_ptr(const void *ptr)
 {
 	const char *pp = (const char *)ptr;
 	struct talloc_chunk *tc = discard_const_p(struct talloc_chunk, pp - TC_HDR_SIZE);
-	if (unlikely((tc->flags & (TALLOC_FLAG_FREE | ~0xF)) != TALLOC_MAGIC)) { 
+	if (unlikely((tc->flags & (TALLOC_FLAG_FREE | ~0xF)) != TALLOC_MAGIC)) {
 		if ((tc->flags & (~0xFFF)) == TALLOC_MAGIC_BASE) {
 			talloc_abort_magic(tc->flags & (~0xF));
 			return NULL;
@@ -552,7 +552,7 @@ static struct talloc_chunk *talloc_alloc_pool(struct talloc_chunk *parent,
 	return result;
 }
 
-/* 
+/*
    Allocate a bit of memory as a child of an existing pointer
 */
 static inline void *__talloc(const void *context, size_t size)
@@ -643,7 +643,7 @@ _PUBLIC_ void _talloc_set_destructor(const void *ptr, int (*destructor)(void *))
 }
 
 /*
-  increase the reference count on a piece of memory. 
+  increase the reference count on a piece of memory.
 */
 _PUBLIC_ int talloc_increase_ref_count(const void *ptr)
 {
@@ -666,7 +666,7 @@ static int talloc_reference_destructor(struct talloc_reference_handle *handle)
 }
 
 /*
-   more efficient way to add a name to a pointer - the name must point to a 
+   more efficient way to add a name to a pointer - the name must point to a
    true string constant
 */
 static inline void _talloc_set_name_const(const void *ptr, const char *name)
@@ -696,8 +696,8 @@ static inline void *_talloc_named_const(const void *context, size_t size, const 
   make a secondary reference to a pointer, hanging off the given context.
   the pointer remains valid until both the original caller and this given
   context are freed.
-  
-  the major use for this is when two different structures need to reference the 
+
+  the major use for this is when two different structures need to reference the
   same underlying data, and you want to be able to free the two instances separately,
   and in either order
 */
@@ -788,7 +788,7 @@ static inline void _talloc_free_children_internal(struct talloc_chunk *tc,
 						  void *ptr,
 						  const char *location);
 
-/* 
+/*
    internal talloc_free call
 */
 static inline int _talloc_free_internal(void *ptr, const char *location)
@@ -865,8 +865,8 @@ static inline int _talloc_free_internal(void *ptr, const char *location)
 
 	/* we mark the freed memory with where we called the free
 	 * from. This means on a double free error we can report where
-	 * the first free came from 
-	 */	 
+	 * the first free came from
+	 */	
 	tc->name = location;
 
 	if (tc->flags & TALLOC_FLAG_POOL) {
@@ -894,7 +894,7 @@ static inline int _talloc_free_internal(void *ptr, const char *location)
 	return 0;
 }
 
-/* 
+/*
    move a lump of memory from one talloc context to another return the
    ptr on success, or NULL if it could not be transferred.
    passing NULL as ptr will always return NULL with no side effects.
@@ -952,7 +952,7 @@ static void *_talloc_steal_internal(const void *new_ctx, const void *ptr)
 	return discard_const_p(void, ptr);
 }
 
-/* 
+/*
    move a lump of memory from one talloc context to another return the
    ptr on success, or NULL if it could not be transferred.
    passing NULL as ptr will always return NULL with no side effects.
@@ -990,7 +990,7 @@ _PUBLIC_ void *_talloc_steal_loc(const void *new_ctx, const void *ptr, const cha
 	return _talloc_steal_internal(new_ctx, ptr);
 }
 
-/* 
+/*
    this is like a talloc_steal(), but you must supply the old
    parent. This resolves the ambiguity in a talloc_steal() which is
    called on a context that has more than one parent (via references)
@@ -1319,7 +1319,7 @@ _PUBLIC_ void talloc_free_children(void *ptr)
 	}
 }
 
-/* 
+/*
    Allocate a bit of memory as a child of an existing pointer
 */
 _PUBLIC_ void *_talloc(const void *context, size_t size)
@@ -1345,8 +1345,8 @@ _PUBLIC_ void *talloc_named_const(const void *context, size_t size, const char *
 	return _talloc_named_const(context, size, name);
 }
 
-/* 
-   free a talloc pointer. This also frees all child pointers of this 
+/*
+   free a talloc pointer. This also frees all child pointers of this
    pointer recursively
 
    return 0 if the memory is actually freed, otherwise -1. The memory
@@ -1592,8 +1592,8 @@ _PUBLIC_ void *_talloc_realloc(const void *context, void *ptr, size_t size, cons
 got_new_ptr:
 #endif
 	if (unlikely(!new_ptr)) {	
-		tc->flags &= ~TALLOC_FLAG_FREE; 
-		return NULL; 
+		tc->flags &= ~TALLOC_FLAG_FREE;
+		return NULL;
 	}
 
 	tc = (struct talloc_chunk *)new_ptr;
@@ -1768,14 +1768,14 @@ static void talloc_report_depth_FILE_helper(const void *ptr, int depth, int max_
 	}
 
 	if (depth == 0) {
-		fprintf(f,"%stalloc report on '%s' (total %6lu bytes in %3lu blocks)\n", 
+		fprintf(f,"%stalloc report on '%s' (total %6lu bytes in %3lu blocks)\n",
 			(max_depth < 0 ? "full " :""), name,
 			(unsigned long)talloc_total_size(ptr),
 			(unsigned long)talloc_total_blocks(ptr));
 		return;
 	}
 
-	fprintf(f, "%*s%-30s contains %6lu bytes in %3lu blocks (ref %d) %p\n", 
+	fprintf(f, "%*s%-30s contains %6lu bytes in %3lu blocks (ref %d) %p\n",
 		depth*4, "",
 		name,
 		(unsigned long)talloc_total_size(ptr),
@@ -1914,8 +1914,8 @@ _PUBLIC_ void talloc_enable_leak_report_full(void)
 	atexit(talloc_report_null_full);
 }
 
-/* 
-   talloc and zero memory. 
+/*
+   talloc and zero memory.
 */
 _PUBLIC_ void *_talloc_zero(const void *ctx, size_t size, const char *name)
 {
@@ -1929,7 +1929,7 @@ _PUBLIC_ void *_talloc_zero(const void *ctx, size_t size, const char *name)
 }
 
 /*
-  memdup with a talloc. 
+  memdup with a talloc.
 */
 _PUBLIC_ void *_talloc_memdup(const void *t, const void *p, size_t size, const char *name)
 {

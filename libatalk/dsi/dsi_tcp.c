@@ -260,7 +260,7 @@ static void guess_interface(DSI *dsi, const char *hostname, const char *port)
     start = list = getifacelist();
     if (!start)
         return;
-        
+
     fd = socket(PF_INET, SOCK_STREAM, 0);
 
     while (list && *list) {

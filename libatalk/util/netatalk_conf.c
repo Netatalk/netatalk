@@ -606,7 +606,7 @@ static const char *getoption(const dictionary *conf, const char *vol, const char
 
     if ((!(result = atalk_iniparser_getstring(conf, vol, opt, NULL))) && (defsec != NULL))
         result = atalk_iniparser_getstring(conf, defsec, opt, NULL);
-    
+
     if (result == NULL)
         result = defval;
     return result;
@@ -629,7 +629,7 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
 
     if (((result = atalk_iniparser_getboolean(conf, vol, opt, -1)) == -1) && (defsec != NULL))
         result = atalk_iniparser_getboolean(conf, defsec, opt, -1);
-    
+
     if (result == -1)
         result = defval;
     return result;
@@ -713,7 +713,7 @@ static struct vol *creatvol(AFPObj *obj,
 
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
         if (STRCMP(name, ==, vol->v_localname) && vol->v_deleted) {
-            /* 
+            /*
              * reloading config, volume still present, nothing else to do,
              * we don't change options for volumes once they're loaded
              */
@@ -1091,8 +1091,8 @@ static struct vol *creatvol(AFPObj *obj,
     EC_NULL( volume->v_localname = strdup(name) );
     EC_NULL( volume->v_u8mname = strdup_w(u8mtmpname) );
     EC_NULL( volume->v_macname = strdup_w(mactmpname) );
-    EC_NULL( volume->v_path = strdup(path) ); 
-        
+    EC_NULL( volume->v_path = strdup(path) );
+
     volume->v_name = utf8_encoding(obj) ? volume->v_u8mname : volume->v_macname;
 
 #ifdef __svr4__
@@ -1225,7 +1225,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
-    int secnum = atalk_iniparser_getnsec(obj->iniconfig);    
+    int secnum = atalk_iniparser_getnsec(obj->iniconfig);
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
@@ -1233,7 +1233,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
 
-    for (i = 0; i < secnum; i++) { 
+    for (i = 0; i < secnum; i++) {
         secname = atalk_iniparser_getsecname(obj->iniconfig, i);
 
         if (!vol_section(secname))
@@ -1737,15 +1737,15 @@ struct vol *getvolbyvid(const uint16_t vid )
 
 /*
  * get username by path
- * 
+ *
  * getvolbypath() assumes that the user home directory has the same name as the username.
  * If that is not true, getuserbypath() is called and tries to retrieve the username
  * from the directory owner, checking its validity.
- * 
+ *
  * @param   path (r) absolute volume path
  * @returns NULL     if no match is found, pointer to username if successfull
  *
- */ 
+ */
 static char *getuserbypath(const char *path)
 {
     EC_INIT;
@@ -1768,7 +1768,7 @@ static char *getuserbypath(const char *path)
         EC_FAIL;
 
     /* resolve and remove symlinks */
-    if ((hdir = realpath_safe(pwd->pw_dir)) == NULL) 
+    if ((hdir = realpath_safe(pwd->pw_dir)) == NULL)
         EC_FAIL;
 
     /* handle subdirectories, path = */
@@ -1795,7 +1795,7 @@ EC_CLEANUP:
  * Both cnid_metad and dbd thus need a way to lookup and create struct vols
  * for user home by path. This is what this func does as well.
  *
- * (1) Search "normal" volume list 
+ * (1) Search "normal" volume list
  * (2) Check if theres a [Homes] section, load_volumes() remembers this for us
  * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
  * (4) Built user home path by appending the basedir matched in (3) and appending the username
@@ -1869,7 +1869,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     int secnum = atalk_iniparser_getnsec(obj->iniconfig);
 
-    for (int i = 0; i < secnum; i++) { 
+    for (int i = 0; i < secnum; i++) {
         secname = atalk_iniparser_getsecname(obj->iniconfig, i);
         if (STRCMP(secname, ==, INISEC_HOMES))
             break;
@@ -2018,7 +2018,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
-    
+
     become_root();
     config = atalk_iniparser_load(AFPObj->options.configfile);
     unbecome_root();
@@ -2218,7 +2218,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->volcodepage = strdup(p);
     }
     LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
-    
+
     /* mac charset is in [G] and [V] */
     if (!(p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "mac charset", NULL))) {
         options->maccodepage = strdup("MAC_ROMAN");

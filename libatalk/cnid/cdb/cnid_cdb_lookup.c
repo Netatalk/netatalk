@@ -17,8 +17,8 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
     CNID_private *db;
     DBT key, devdata, diddata;
     char dev[CNID_DEV_LEN];
-    char ino[CNID_INO_LEN];  
-    int devino = 1, didname = 1; 
+    char ino[CNID_INO_LEN];
+    int devino = 1, didname = 1;
     u_int32_t type_devino  = (unsigned)-1;
     u_int32_t type_didname = (unsigned)-1;
     u_int32_t type;
@@ -29,7 +29,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         return 0;
     }
-    
+
     if ((buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
         return 0;
@@ -48,7 +48,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
 
     memcpy(dev, buf + CNID_DEV_OFS, CNID_DEV_LEN);
     memcpy(ino, buf + CNID_INO_OFS, CNID_INO_LEN);
-    
+
     if (0 != (rc = db->db_didname->get(db->db_devino, NULL, &key, &devdata, 0 )) ) {
         if (rc != DB_NOTFOUND) {
             LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID did 0x%x, name %s: %s",
@@ -66,7 +66,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
     buf = make_cnid_data(cdb->cnid_db_flags, st, did, name, len);
     key.data = buf +CNID_DID_OFS;
     key.size = CNID_DID_LEN + len + 1;
-    
+
     if (0 != (rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0 ) ) ) {
         if (rc != DB_NOTFOUND) {
             LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID did 0x%x, name %s: %s",
@@ -81,7 +81,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
         type_didname = ntohl(type_didname);
     }
 
-    if (!devino && !didname) {  
+    if (!devino && !didname) {
         return 0;
     }
 
@@ -89,10 +89,10 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
         /* the same */
         return id_didname;
     }
- 
+
     if (didname) {
         id = id_didname;
-        /* we have a did:name 
+        /* we have a did:name
          * if it's the same dev or not the same type
          * just delete it
         */
@@ -110,7 +110,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
     if (devino) {
         id = id_devino;
         if (type_devino != type) {
-            /* same dev:inode but not same type one is a folder the other 
+            /* same dev:inode but not same type one is a folder the other
              * is a file,it's an inode reused, delete the record
             */
             if (cnid_cdb_delete(cdb, id) < 0) {

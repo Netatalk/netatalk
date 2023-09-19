@@ -433,7 +433,7 @@ ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 binary search for pre|decomposition
 ********************************************************************/
 
-static ucs2_t do_precomposition(unsigned int base, unsigned int comb) 
+static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 {
 	int min = 0;
 	int max = PRECOMP_COUNT - 1;
@@ -457,7 +457,7 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 }
 
 /* ------------------------ */
-static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp) 
+static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 {
 	int min = 0;
 	int max = PRECOMP_SP_COUNT - 1;
@@ -481,7 +481,7 @@ static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 }
 
 /* -------------------------- */
-static uint32_t do_decomposition(ucs2_t base) 
+static uint32_t do_decomposition(ucs2_t base)
 {
 	int min = 0;
 	int max = DECOMP_COUNT - 1;
@@ -507,7 +507,7 @@ static uint32_t do_decomposition(ucs2_t base)
 }
 
 /* -------------------------- */
-static uint64_t do_decomposition_sp(unsigned int base_sp) 
+static uint64_t do_decomposition_sp(unsigned int base_sp)
 {
 	int min = 0;
 	int max = DECOMP_SP_COUNT - 1;

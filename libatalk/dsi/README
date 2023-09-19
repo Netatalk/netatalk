@@ -12,13 +12,13 @@ buffers.
 signals that send data to the client and should block other signals
 (afp_dsi.c):
 	SIGALRM (tickle handler)
-	SIGHUP (attention) 
+	SIGHUP (attention)
 	SIGTERM (attention)
 
 functions which need SIG_BLOCK/SIG_SETMASK: dsi_send, dsi_attention
 functions which can use SIG_BLOCK/SIG_UNBLOCK: dsi_read
 
-functions which need their own buffers: dsi_attention, dsi_tickle 
+functions which need their own buffers: dsi_attention, dsi_tickle
 
 
 PERFORMANCE TWEAKING:
@@ -33,7 +33,7 @@ because dsi_read can send incomplete packets, proto_send should not
 use the length parameter to specify the dsi_len field in the
 header. instead, anything that uses proto_send needs to specify
 dsi_len (in network byte order) before calling proto_send. the
-dsi_send() macro already does this. 
+dsi_send() macro already does this.
 
 functions that need to specify .dsi_len: dsi_readinit, dsi_cmdreply
 

@@ -127,7 +127,7 @@ int daemonize(int nochdir, int noclose)
         return -1;
 
     switch (fork()) {
-    case 0: 
+    case 0:
         break;
     case -1:
         return -1;
@@ -217,7 +217,7 @@ const char *fullpathname(const char *name)
  *          "[/][dir/[...]]file"
  *        or
  *          "[/][dir/[...]]dir/[/]"
- *        Result is "file" or "dir" 
+ *        Result is "file" or "dir"
  *
  * @returns pointer to basename in path buffer, buffer is possibly modified
  */
@@ -289,7 +289,7 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
     }
 }
 
-/* 
+/*
  * @brief ostat/fsstatat multiplexer
  *
  * ostatat mulitplexes ostat and fstatat. If we don't HAVE_ATFUNCS, dirfd is ignored.
@@ -306,7 +306,7 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
     return fstatat(dirfd, path, st, (options & O_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
 #else
     return ostat(path, st, options);
-#endif            
+#endif
 
     /* DEADC0DE */
     return -1;
@@ -332,7 +332,7 @@ int ochdir(const char *dir, int options)
 
     /*
      dir is a canonical path (without "../" "./" "//" )
-     but may end with a / 
+     but may end with a /
     */
     *cwd = 0;
     if (*dir != '/') {
@@ -342,7 +342,7 @@ int ochdir(const char *dir, int options)
     if (chdir(dir) != 0)
         return -1;
 
-    /* 
+    /*
      * Cases:
      * chdir request   | realpath result | ret
      * (after getwcwd) |                 |
@@ -356,7 +356,7 @@ int ochdir(const char *dir, int options)
 
     i = 0;
     if (*cwd) {
-        /* relative path requested, 
+        /* relative path requested,
          * Same directory?
         */
         for (; cwd[i]; i++) {
@@ -367,10 +367,10 @@ int ochdir(const char *dir, int options)
             if (buf[i] != '/')
                 return 1;
             i++;
-        }                    
+        }
     }
 
-    test = &buf[i];    
+    test = &buf[i];
     for (i = 0; test[i]; i++) {
         if (test[i] != dir[i]) {
             return 1;

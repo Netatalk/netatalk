@@ -1,23 +1,23 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    minimal iconv implementation
    Copyright (C) Andrew Tridgell 2001
    Copyright (C) Jelmer Vernooij 2002,2003
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-   
+
    From samba 3.0 beta and GNU libiconv-1.8
    It's bad but most of the time we can't use libc iconv service:
    - it doesn't round trip for most encoding
@@ -43,7 +43,7 @@
 
 /* ------------------------ */
 
-size_t mb_generic_push( int (*char_func)(unsigned char *, ucs2_t), void *cd _U_, char **inbuf, 
+size_t mb_generic_push( int (*char_func)(unsigned char *, ucs2_t), void *cd _U_, char **inbuf,
 			size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 {
         int len = 0;
@@ -77,7 +77,7 @@ size_t mb_generic_push( int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
 
 /* ------------------------ */
 
-size_t mb_generic_pull ( int (*char_func)(ucs2_t *, const unsigned char *), void *cd _U_, 
+size_t mb_generic_pull ( int (*char_func)(ucs2_t *, const unsigned char *), void *cd _U_,
 			char **inbuf, size_t *inbytesleft,char **outbuf, size_t *outbytesleft)
 {
 	ucs2_t 		temp;

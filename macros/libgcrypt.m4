@@ -3,7 +3,7 @@ dnl                   [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND ]]])
 dnl Test for libgcrypt and define LIBGCRYPT_CFLAGS and LIBGCRYPT_LIBS.
 dnl MINIMUN-VERSION is a string with the version number optionalliy prefixed
 dnl with the API version to also check the API compatibility. Example:
-dnl a MINIMUN-VERSION of 1:1.2.5 won't pass the test unless the installed 
+dnl a MINIMUN-VERSION of 1:1.2.5 won't pass the test unless the installed
 dnl version of libgcrypt is at least 1.2.5 *and* the API number is 1.  Using
 dnl this features allows to prevent build against newer versions of libgcrypt
 dnl with a changed API.
@@ -11,7 +11,7 @@ dnl
 AC_DEFUN([AC_NETATALK_PATH_LIBGCRYPT],
 [ AC_ARG_WITH(libgcrypt-dir,
             AS_HELP_STRING([--with-libgcrypt-dir=PATH],
-                           [path where LIBGCRYPT is installed (optional). 
+                           [path where LIBGCRYPT is installed (optional).
 			    Must contain lib and include dirs.]),
      libgcrypt_config_prefix="$withval", libgcrypt_config_prefix="")
   if test x$libgcrypt_config_prefix != x ; then
@@ -51,7 +51,7 @@ if test x$libgcrypt_config_prefix != xno ; then
                sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\).*/\3/'`
     if test "$major" -gt "$req_major"; then
         ok=yes
-    else 
+    else
         if test "$major" -eq "$req_major"; then
             if test "$minor" -gt "$req_minor"; then
                ok=yes

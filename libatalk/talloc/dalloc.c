@@ -15,7 +15,7 @@
 /*!
   @file
   Typesafe, dynamic object store based on talloc
- 
+
   Usage:
 
   //
@@ -36,15 +36,15 @@
   TALLOC_CTX *mem_ctx = talloc_new(NULL);
   // Create a new dalloc object
   DALLOC_CTX *d = talloc_zero(mem_ctx, DALLOC_CTX);
- 
+
   // Store an int value in the object
   uint64_t i = 1;
   dalloc_add_copy(d, &i, uint64_t);
- 
+
   // Store a string
   char *str = dalloc_strdup(d, "hello world");
   dalloc_add(d, str, char *);
- 
+
   // Add a nested object, you later can't fetch this directly
   DALLOC_CTX *nested = talloc_zero(d, DALLOC_CTX);
   dalloc_add(d, nested, DALLOC_CTX);
@@ -56,7 +56,7 @@
   // Add a nested set
   set_t *set = talloc_zero(nested, set_t);
   dalloc_add(nested, set, set_t);
- 
+
   // Add an int value to the set
   i = 3;
   dalloc_add_copy(set, &i, uint64_t);
@@ -239,7 +239,7 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
         if (STRCMP((char *)d->dd_talloc_array[elem], ==, type)) {
             p = d->dd_talloc_array[elem + 1];
             break;
-        }            
+        }
     }
     if (p == NULL) {
         EC_FAIL;

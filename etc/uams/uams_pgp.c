@@ -1,7 +1,7 @@
 /*
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -89,21 +89,21 @@ static int pgp_login(void *obj, struct passwd **uam_pwd,
     /* get the challenge */
     len = (unsigned char) *ibuf++;
     /* challenge */
-    
+
     /* get the signature. it's always 16 bytes. */
-    if (uam_afpserver_option(obj, UAM_OPTION_SIGNATURE, 
+    if (uam_afpserver_option(obj, UAM_OPTION_SIGNATURE,
 			     (void *) &name, NULL) < 0) {
       *rbuflen = 0;
       goto pgp_fail;
     }
-    memcpy(rbuf + KEYSIZE, name, KEYSIZE); 
+    memcpy(rbuf + KEYSIZE, name, KEYSIZE);
 
 pgp_fail:
     return AFPERR_PARAM;
 }
 
 static int pgp_logincont(void *obj, struct passwd **uam_pwd,
-			 char *ibuf, size_t ibuflen, 
+			 char *ibuf, size_t ibuflen,
 			 char *rbuf, size_t *rbuflen)
 {
 	unsigned char iv[] = "RJscorat";
@@ -118,11 +118,11 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
     if (sessid != pgphash(obj))
       return AFPERR_PARAM;
     ibuf += sizeof(sessid);
-   
+
     /* use rbuf as scratch space */
     CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
 		     iv, CAST_DECRYPT);
-    
+
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
     if (!(bn1 = BN_bin2bn(rbuf, KEYSIZE, NULL)))
@@ -132,7 +132,7 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
       BN_free(bn1);
       return AFPERR_PARAM;
     }
-      
+
     /* zero out the random number */
     memset(rbuf, 0, sizeof(randbuf));
     memset(randbuf, 0, sizeof(randbuf));

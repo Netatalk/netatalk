@@ -3,7 +3,7 @@
  * All Rights Reserved.  See COPYRIGHT.
  *
  * NOTE: SunOS 4 and ultrix are pretty much the only reason why there
- * are checks for EINTR everywhere. 
+ * are checks for EINTR everywhere.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -37,7 +37,7 @@ extern size_t strnlen(const char *s, size_t n);
 #ifndef HAVE_STRLCPY
 extern size_t strlcpy (char *, const char *, size_t);
 #endif
- 
+
 #ifndef HAVE_STRLCAT
 extern size_t strlcat (char *, const char *, size_t);
 #endif

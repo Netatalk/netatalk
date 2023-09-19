@@ -1,4 +1,4 @@
-/* 
+/*
  * interface for database access to cnids. i do it this way to abstract
  * things a bit in case we want to change the underlying implementation.
  */

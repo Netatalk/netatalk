@@ -47,7 +47,7 @@ The file consists of sections and parameters\&. A section begins with the name o
 .\}
 .nf
     \fIname\fR = \fIvalue \fR
-    
+
 .fi
 .if n \{\
 .RE
@@ -103,7 +103,7 @@ baz:
 .\}
 .nf
  [baz]
-    path = /foo/bar 
+    path = /foo/bar
 .fi
 .if n \{\
 .RE

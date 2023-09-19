@@ -47,7 +47,7 @@ void readmessage(AFPObj *obj)
 #ifdef SERVERTEXT
     FILE *message;
     char * filename;
-    unsigned int i; 
+    unsigned int i;
     int rc;
     static int c;
     uint32_t maxmsgsize;
@@ -65,7 +65,7 @@ void readmessage(AFPObj *obj)
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "Reading file %s ", filename);
-#endif 
+#endif
 
     message=fopen(filename, "r");
     if (message==NULL) {
@@ -157,12 +157,12 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     rbuf += sizeof(bitmap);
     *rbuflen += sizeof(bitmap);
 
-    utf8 = ntohs(bitmap) & 2; 
+    utf8 = ntohs(bitmap) & 2;
     msglen = strlen(message);
     if (msglen > msgsize)
         msglen = msgsize;
 
-    if (msglen) { 
+    if (msglen) {
         if ( (size_t)-1 == (outlen = convert_string(obj->options.unixcharset, utf8?CH_UTF8_MAC:obj->options.maccharset,
                                                     message, msglen, localized_message, msgsize)) )
         {
@@ -174,7 +174,7 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 	    memcpy(rbuf+((utf8)?2:1), localized_message, outlen);
         }
     }
-    
+
     if ( utf8 ) {
 	/* UTF8 message, 2 byte length */
 	msgsize = htons(outlen);

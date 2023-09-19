@@ -1,13 +1,13 @@
 Lots of thanks to the following people who've made Netatalk what it is
-with their contributions. Cheers. 
+with their contributions. Cheers.
 
-Original Authors, pre-Sourceforge. 
+Original Authors, pre-Sourceforge.
 
 Thanks a bunch folks, wherever you are.
 
 	Wesley Craig <wesley.craig@umich.edu>
 	Adrian Sun <asun@cobaltnet.com>
-	Steve Hirsch <shirsch@adelphia.net>: ProDOS II support/initial Randnum 
+	Steve Hirsch <shirsch@adelphia.net>: ProDOS II support/initial Randnum
 	  support
 	Robert Marinchick: initial rquota patch
 	Frank Morton: megatron information patch
@@ -114,7 +114,7 @@ Bug Reports: Version 1.4.99 - 2.0
 
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
-lists. If you feel you should be listed here and aren't, please let 
+lists. If you feel you should be listed here and aren't, please let
 us know.
 
 Cheers!

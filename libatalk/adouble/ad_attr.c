@@ -13,7 +13,7 @@
 #define FILEIOFF_ATTR 14
 #define AFPFILEIOFF_ATTR 2
 
-/* 
+/*
    Note:
    the "shared" and "invisible" attributes are opaque and stored and
    retrieved from the FinderFlags. This fixes Bug #2802236:
@@ -73,7 +73,7 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
     if (ad_getentryoff(ad, ADEID_AFPFILEI) && (ade = ad_entry(ad, ADEID_AFPFILEI)) != NULL
         && ad_getentryoff(ad, ADEID_FINDERI) && (adp = ad_entry(ad, ADEID_FINDERI)) != NULL) {
         memcpy(ade + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
-            
+
         /* Now set opaque flags in FinderInfo too */
         memcpy(&fflags, adp + FINDERINFO_FRFLAGOFF, 2);
         if (attr & htons(ATTRBIT_INVISIBLE))

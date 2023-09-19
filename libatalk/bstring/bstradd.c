@@ -100,7 +100,7 @@ int bunrefcstr (bstring b) {
 	if (b == NULL || b->slen < 0 || b->mlen > 0 || b->data == NULL)
 		return BSTR_ERR;
 
-	/* In case there is any stale usage, there is one more chance to 
+	/* In case there is any stale usage, there is one more chance to
 	   notice this error. */
 
 	b->slen = -1;

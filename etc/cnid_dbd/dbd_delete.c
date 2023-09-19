@@ -44,7 +44,7 @@ int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
                 (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
             rply->result = CNID_DBD_RES_OK;
         } else {
-            LOG(log_debug, logtype_cnid, "cnid_delete: dev/ino: 0x%llx/0x%llx not in database", 
+            LOG(log_debug, logtype_cnid, "cnid_delete: dev/ino: 0x%llx/0x%llx not in database",
                 (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
             rply->result = CNID_DBD_RES_NOTFOUND;
         }

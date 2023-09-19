@@ -21,7 +21,7 @@
  *	netatalk@itd.umich.edu
  */
 
-#ifndef AFPD_FILE_H 
+#ifndef AFPD_FILE_H
 #define AFPD_FILE_H 1
 
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
@@ -109,7 +109,7 @@ extern int renamefile   (struct vol *, struct dir *, int, char *, char *, char *
 extern int copyfile     (struct vol *, struct vol *, struct dir *, int, char *, char *, char *, struct adouble *);
 extern int deletefile   (const struct vol *, int, char *, int);
 
-extern int getmetadata  (const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, 
+extern int getmetadata  (const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path,
                          struct dir *dir, char *buf, size_t *buflen, struct adouble *adp);
 
 extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *, int);

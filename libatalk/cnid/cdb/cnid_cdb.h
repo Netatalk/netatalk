@@ -1,4 +1,4 @@
-/* 
+/*
  * interface for database access to cnids. i do it this way to abstract
  * things a bit in case we want to change the underlying implementation.
  */
@@ -25,8 +25,8 @@ extern cnid_t cnid_cdb_add (struct _cnid_db *, const struct stat *, cnid_t,
 extern int cnid_cdb_getstamp (struct _cnid_db *, void *, const size_t );
 
 /* cnid_get.c */
-extern cnid_t cnid_cdb_get (struct _cnid_db *, cnid_t, const char *, size_t); 
-extern char *cnid_cdb_resolve (struct _cnid_db *, cnid_t *, void *, size_t ); 
+extern cnid_t cnid_cdb_get (struct _cnid_db *, cnid_t, const char *, size_t);
+extern char *cnid_cdb_resolve (struct _cnid_db *, cnid_t *, void *, size_t );
 extern cnid_t cnid_cdb_lookup (struct _cnid_db *, const struct stat *, cnid_t,
                                const char *, size_t);
 

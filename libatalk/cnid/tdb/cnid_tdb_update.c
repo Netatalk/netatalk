@@ -28,20 +28,20 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     key.dsize = CNID_DEVINO_LEN;
     altdata = tdb_fetch(db->tdb_devino, key);
     if (altdata.dptr) {
-        tdb_delete(db->tdb_devino, key); 
+        tdb_delete(db->tdb_devino, key);
 
         key.dptr = altdata.dptr;
         key.dsize = sizeof(id);
 
         data = tdb_fetch(db->tdb_cnid, key);
-        tdb_delete(db->tdb_cnid, key); 
+        tdb_delete(db->tdb_cnid, key);
         free(altdata.dptr);
 
         if (data.dptr) {
             key.dptr = (unsigned char *)data.dptr +CNID_DID_OFS;
             key.dsize = data.dsize - CNID_DID_OFS;
-            tdb_delete(db->tdb_didname, key); 
-        
+            tdb_delete(db->tdb_didname, key);
+
             free(data.dptr);
         }
     }
@@ -53,22 +53,22 @@ int cnid_tdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     key.dsize = data.dsize - CNID_DID_OFS;
     altdata = tdb_fetch(db->tdb_didname, key);
     if (altdata.dptr) {
-        tdb_delete(db->tdb_didname, key); 
+        tdb_delete(db->tdb_didname, key);
 
         key.dptr = altdata.dptr;
         key.dsize = sizeof(id);
         data = tdb_fetch(db->tdb_cnid, key);
-        tdb_delete(db->tdb_cnid, key); 
+        tdb_delete(db->tdb_cnid, key);
         free(altdata.dptr);
 
         if (data.dptr) {
             key.dptr = data.dptr +CNID_DEVINO_OFS;
             key.dsize = CNID_DEVINO_LEN;
-            tdb_delete(db->tdb_devino, key); 
+            tdb_delete(db->tdb_devino, key);
             free(data.dptr);
         }
     }
-    
+
 
     /* Make a new entry. */
     data.dptr = make_tdb_data(cdb->cnid_db_flags, st, did, name, len);

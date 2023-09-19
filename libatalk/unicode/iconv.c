@@ -1,23 +1,23 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    minimal iconv implementation
    Copyright (C) Andrew Tridgell 2001
    Copyright (C) Jelmer Vernooij 2002,2003
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-   
+
    From samba 3.0 beta and GNU libiconv-1.8
    It's bad but most of the time we can't use libc iconv service:
    - it doesn't round trip for most encoding
@@ -126,7 +126,7 @@ static struct charset_functions builtin_functions[] = {
 
 static struct charset_functions *charsets = NULL;
 
-struct charset_functions *find_charset_functions(const char *name) 
+struct charset_functions *find_charset_functions(const char *name)
 {
 	struct charset_functions *c = charsets;
 
@@ -140,7 +140,7 @@ struct charset_functions *find_charset_functions(const char *name)
 	return NULL;
 }
 
-int atalk_register_charset(struct charset_functions *funcs) 
+int atalk_register_charset(struct charset_functions *funcs)
 {
 	if (!funcs) {
 		return -1;
@@ -164,7 +164,7 @@ static void lazy_initialize_iconv(void)
 
 	if (!initialized) {
 		initialized = 1;
-		for(i = 0; builtin_functions[i].name; i++) 
+		for(i = 0; builtin_functions[i].name; i++)
 			atalk_register_charset(&builtin_functions[i]);
 
 		/* register additional charsets */
@@ -188,13 +188,13 @@ static void lazy_initialize_iconv(void)
 /* if there was an error then reset the internal state,
    this ensures that we don't have a shift state remaining for
    character sets like SJIS */
-static size_t sys_iconv(void *cd, 
+static size_t sys_iconv(void *cd,
 			char **inbuf, size_t *inbytesleft,
 			char **outbuf, size_t *outbytesleft)
 {
 #ifdef HAVE_USABLE_ICONV
-	size_t ret = iconv((iconv_t)cd, 
-			   (ICONV_CONST char**)inbuf, inbytesleft, 
+	size_t ret = iconv((iconv_t)cd,
+			   (ICONV_CONST char**)inbuf, inbytesleft,
 			   outbuf, outbytesleft);
 	if (ret == (size_t)-1) iconv(cd, NULL, NULL, NULL, NULL);
 	return ret;
@@ -210,7 +210,7 @@ static size_t sys_iconv(void *cd,
  * It only knows about a very small number of character sets - just
  * enough that netatalk works on systems that don't have iconv.
  **/
-size_t atalk_iconv(atalk_iconv_t cd, 
+size_t atalk_iconv(atalk_iconv_t cd,
 		 const char **inbuf, size_t *inbytesleft,
 		 char **outbuf, size_t *outbytesleft)
 {
@@ -220,7 +220,7 @@ size_t atalk_iconv(atalk_iconv_t cd,
 
 	/* in many cases we can go direct */
 	if (cd->direct) {
-		return cd->direct(cd->cd_direct, 
+		return cd->direct(cd->cd_direct,
 				  (char **)inbuf, inbytesleft, outbuf, outbytesleft);
 	}
 

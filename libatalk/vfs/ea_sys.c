@@ -82,7 +82,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     }
     /* PBaranski fix */
 
-    
+
     if (ret == -1) {
         memset(rbuf, 0, 4);
         *rbuflen += 4;
@@ -104,7 +104,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
         }
     }
 
-    if (ret > MAX_EA_SIZE) 
+    if (ret > MAX_EA_SIZE)
       ret = MAX_EA_SIZE;
 
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
@@ -311,7 +311,7 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
             ret = AFPERR_MISC;
             goto exit;
     }
-    
+
     ptr = buf;
     while (ret > 0)  {
         len = strlen(ptr);
@@ -393,9 +393,9 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     eabuf[attrsize] = 0;
 
     attr_flag = 0;
-    if ((oflag & O_CREAT) ) 
+    if ((oflag & O_CREAT) )
         attr_flag |= XATTR_CREATE;
-    else if ((oflag & O_TRUNC) ) 
+    else if ((oflag & O_TRUNC) )
         attr_flag |= XATTR_REPLACE;
 
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
@@ -434,7 +434,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
             return AFPERR_MISC;
         default:
             LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s', size: %u, flags: %s|%s|%s): %s",
-                getcwdpath(), uname, attruname, attrsize, 
+                getcwdpath(), uname, attruname, attrsize,
                 oflag & O_CREAT ? "XATTR_CREATE" : "-",
                 oflag & O_TRUNC ? "XATTR_REPLACE" : "-",
                 oflag & O_NOFOLLOW ? "O_NOFOLLOW" : "-",
@@ -658,7 +658,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 getout:
     if (cwd != -1)
         close(cwd);
-        
+
 	free(value);
 	free(names);
 

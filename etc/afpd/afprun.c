@@ -1,22 +1,22 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    run a command as a specified user
    Copyright (C) Andrew Tridgell 1992-1998
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-   
+
    modified for netatalk dgautheron@magic.fr
 */
 
@@ -33,7 +33,7 @@
 
 #include <errno.h>
 #include <sys/wait.h>
-#include <sys/param.h>  
+#include <sys/param.h>
 #include <string.h>
 
 /* FIXME */
@@ -53,7 +53,7 @@
  Find a suitable temporary directory. The result should be copied immediately
   as it may be overwritten by a subsequent call.
   ****************************************************************************/
-   
+
 static const char *tmpdir(void)
 {
     char *p;
@@ -68,7 +68,7 @@ This is a utility function of afprun().
 ****************************************************************************/
 
 static int setup_out_fd(void)
-{  
+{
 	int fd;
 	char path[MAXPATHLEN +1];
 
@@ -95,7 +95,7 @@ static void gain_root_privilege(void)
 {
         seteuid(0);
 }
- 
+
 /****************************************************************************
  Ensure our real and effective groups are zero.
  we want to end up with rgid==egid==0
@@ -117,7 +117,7 @@ static int become_user_permanently(uid_t uid, gid_t gid)
      * First - gain root privilege. We do this to ensure
      * we can lose it again.
      */
- 
+
     gain_root_privilege();
     gain_root_group_privilege();
     ret = setgroups(0, NULL);
@@ -143,7 +143,7 @@ static int become_user_permanently(uid_t uid, gid_t gid)
         return -1;
     }
 #endif
- 
+
 #if USE_SETREUID
     ret = setregid(gid,gid);
     if (ret != 0) {
@@ -162,7 +162,7 @@ static int become_user_permanently(uid_t uid, gid_t gid)
         return -1;
     }
 #endif
- 
+
 #if USE_SETEUID
     ret = setegid(gid);
     if (ret != 0) {
@@ -185,7 +185,7 @@ static int become_user_permanently(uid_t uid, gid_t gid)
         return -1;
     }
 #endif
- 
+
 #if USE_SETUIDX
     ret = setgidx(ID_REAL, gid);
     if (ret != 0) {
@@ -279,7 +279,7 @@ int afprun(int root, char *cmd, int *outfd)
 #endif
         return status;
     }
-    
+
     /* we are in the child. we exec /bin/sh to do the work for us. we
        don't directly exec the command we want because it may be a
        pipeline or anything else the config file specifies */
@@ -293,7 +293,7 @@ int afprun(int root, char *cmd, int *outfd)
 	    exit(80);
 	}
     }
-    
+
     if (chdir("/") < 0) {
         LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s", strerror(errno) );
         exit(83);
@@ -315,7 +315,7 @@ int afprun(int root, char *cmd, int *outfd)
         /* we failed to lose our privileges - do not execute the command */
 	exit(81); /* we can't print stuff at this stage, instead use exit codes for debugging */
     }
-    
+
     /* close all other file descriptors, leaving only 0, 1 and 2. 0 and
        2 point to /dev/null from the startup code */
     {
@@ -323,7 +323,7 @@ int afprun(int root, char *cmd, int *outfd)
 	for (fd=3;fd<256;fd++) close(fd);
     }
 
-    execl("/bin/sh","sh","-c",cmd,NULL);  
+    execl("/bin/sh","sh","-c",cmd,NULL);
     /* not reached */
     exit(82);
     return 1;

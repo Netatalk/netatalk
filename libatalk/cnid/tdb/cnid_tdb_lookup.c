@@ -14,7 +14,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     TDB_DATA key, devdata, diddata, cniddata;
     int devino = 1, didname = 1;
     char dev[CNID_DEV_LEN];
-    char ino[CNID_INO_LEN];  
+    char ino[CNID_INO_LEN];
     uint32_t type_devino  = (unsigned)-1;
     uint32_t type_didname = (unsigned)-1;
     uint32_t type;
@@ -49,7 +49,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
          devino = 0;
     }
     else {
-        
+
         key.dptr = cniddata.dptr;
         key.dsize = sizeof(id);
 
@@ -73,7 +73,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
         didname = 0;
     }
     else {
-        
+
         key.dptr = cniddata.dptr;
         key.dsize = sizeof(id);
 
@@ -90,7 +90,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     }
     /* Set id.  Honor did/name over dev/ino as dev/ino isn't necessarily
      * 1-1. */
-    if (!devino && !didname) {  
+    if (!devino && !didname) {
         free(devdata.dptr);
         free(diddata.dptr);
         return 0;
@@ -102,10 +102,10 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
         free(diddata.dptr);
         return id_didname;
     }
- 
+
     if (didname) {
         id = id_didname;
-        /* we have a did:name 
+        /* we have a did:name
          * if it's the same dev or not the same type
          * just delete it
         */
@@ -125,7 +125,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     if (devino) {
         id = id_devino;
         if (type_devino != type) {
-            /* same dev:inode but not same type one is a folder the other 
+            /* same dev:inode but not same type one is a folder the other
              * is a file,it's an inode reused, delete the record
             */
             if (cnid_tdb_delete(cdb, id) < 0) {

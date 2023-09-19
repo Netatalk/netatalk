@@ -7,22 +7,22 @@
 
 #define CNID_OFS                 0
 #define CNID_LEN                 4
- 
+
 #define CNID_DEV_OFS             CNID_LEN
 #define CNID_DEV_LEN             8
- 
+
 #define CNID_INO_OFS             (CNID_DEV_OFS + CNID_DEV_LEN)
 #define CNID_INO_LEN             8
- 
+
 #define CNID_DEVINO_OFS          CNID_LEN
 #define CNID_DEVINO_LEN          (CNID_DEV_LEN + CNID_INO_LEN)
- 
+
 #define CNID_TYPE_OFS            (CNID_DEVINO_OFS + CNID_DEVINO_LEN)
 #define CNID_TYPE_LEN            4
- 
+
 #define CNID_DID_OFS             (CNID_TYPE_OFS + CNID_TYPE_LEN)
 #define CNID_DID_LEN             CNID_LEN
- 
+
 #define CNID_NAME_OFS            (CNID_DID_OFS + CNID_DID_LEN)
 #define CNID_HEADER_LEN          (CNID_NAME_OFS)
 
@@ -34,9 +34,9 @@
 #define ROOTINFO_KEY    "\0\0\0\0"
 #define ROOTINFO_KEYLEN 4
 
-/* 
+/*
    Rootinfo data, fields as they are used by normal entries for CNIDs (for reference):
-   4 bytes: CNID 
+   4 bytes: CNID
    8 bytes: dev
    8 bytes: inode
    4 bytes: is a file/directory (type)
@@ -59,7 +59,7 @@
                          "RootInfo"
 #define ROOTINFO_DATALEN (3*4 + 2*8 + 9)
 
-/* 
+/*
  * CNID version history:
  * 0: up to Netatalk 2.1.x
  * 1: starting with 2.2, additional name index, used in cnid_find

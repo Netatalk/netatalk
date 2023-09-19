@@ -45,7 +45,7 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
 
 
 /* fill up buf and then return. this should be called repeatedly
- * until all the data has been read. i block alarm processing 
+ * until all the data has been read. i block alarm processing
  * during the transfer to avoid sending unnecessary tickles. */
 size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
 {
@@ -68,7 +68,7 @@ void dsi_writeflush(DSI *dsi)
 {
   size_t length;
 
-  while (dsi->datasize > 0) { 
+  while (dsi->datasize > 0) {
     length = dsi_stream_read(dsi, dsi->data,
 			     MIN(sizeof(dsi->data), dsi->datasize));
     if (length > 0)

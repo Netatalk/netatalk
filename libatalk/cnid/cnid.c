@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
- * 
+ *
  * This program is free software; you can redistribute and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation version 2 of the License or later
@@ -60,11 +60,11 @@ void cnid_register(struct _cnid_module *module)
 /* --------------- */
 static int cnid_dir(const char *dir, mode_t mask)
 {
-   struct stat st, st1; 
+   struct stat st, st1;
    char tmp[MAXPATHLEN];
 
    if (stat(dir, &st) < 0) {
-       if (errno != ENOENT) 
+       if (errno != ENOENT)
            return -1;
        if (ad_stat( dir, &st) < 0)
           return -1;
@@ -81,7 +81,7 @@ static int cnid_dir(const char *dir, mode_t mask)
        strlcpy(tmp, dir, sizeof(tmp));
        strlcat(tmp, "/.AppleDB", sizeof(tmp));
        if (stat(tmp, &st1) < 0) /* use .AppleDB owner, if folder already exists */
-           st1 = st; 
+           st1 = st;
        LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st1.st_uid, st1.st_gid);
        if (setegid(st1.st_gid) < 0 || seteuid(st1.st_uid) < 0) {
            LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
@@ -97,7 +97,7 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
     struct _cnid_db *db;
     cnid_module *mod = NULL;
     struct list_head *ptr;
-    uid_t uid = -1;  
+    uid_t uid = -1;
     gid_t gid = -1;
 
     list_for_each(ptr, &modules) {
@@ -180,7 +180,7 @@ static void unblock_signal(uint32_t flags)
     }
 }
 
-/* ------------------- 
+/* -------------------
   protect against bogus value from the DB.
   adddir really doesn't like 2
 */
@@ -188,7 +188,7 @@ static cnid_t valide(cnid_t id)
 {
   if (id == CNID_INVALID)
       return id;
-      
+
   if (id < CNID_START) {
     static int err = 0;
     if (!err) {
@@ -217,7 +217,7 @@ void cnid_close(struct _cnid_db *db)
 }
 
 /* --------------- */
-cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
+cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                 const char *name, const size_t len, cnid_t hint)
 {
     cnid_t ret;
@@ -291,9 +291,9 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
     int ret;
-    
+
     if (cdb->cnid_find == NULL) {
-        LOG(log_error, logtype_cnid, "cnid_find not supported by CNID backend");        
+        LOG(log_error, logtype_cnid, "cnid_find not supported by CNID backend");
         return -1;
     }
 
@@ -319,7 +319,7 @@ char *ret;
 }
 
 /* --------------- */
-int cnid_update   (struct _cnid_db *cdb, const cnid_t id, const struct stat *st, 
+int cnid_update   (struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
 			const cnid_t did, char *name, const size_t len)
 {
 int ret;

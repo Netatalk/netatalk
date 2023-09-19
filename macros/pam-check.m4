@@ -124,7 +124,7 @@ AC_DEFUN([AC_NETATALK_PATH_PAM], [
            PAM_ACCOUNT=pam_unix.so
            PAM_PASSWORD="pam_unix.so use_authtok"
            PAM_SESSION=pam_unix.so
-        fi  
+        fi
 
         if test "x$PAM_DIRECTIVE" != "xrequired" ; then
             AC_MSG_RESULT([yes ($PAM_DIRECTIVE $PAM_AUTH)])

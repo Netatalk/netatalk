@@ -3,7 +3,7 @@
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
- * cnid_delete: delete a CNID from the database 
+ * cnid_delete: delete a CNID from the database
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,7 @@ int cnid_cdb_delete(struct _cnid_db *cdb, const cnid_t id) {
     /* Get from ain CNID database. */
     key.data = (cnid_t *)&id;
     key.size = sizeof(id);
-    
+
     if ((rc = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
         LOG(log_error, logtype_default, "cnid_delete: Unable to delete CNID %u: %s",
             ntohl(id), db_strerror(rc));

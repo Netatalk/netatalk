@@ -115,7 +115,7 @@ static long long int get_tm_bands(const char *path)
     while ((entry = readdir(dir)) != NULL)
         count++;
     count -= 2; /* All OSens I'm aware of return "." and "..", so just substract them, avoiding string comparison in loop */
-        
+
 EC_CLEANUP:
     if (dir)
         closedir(dir);
@@ -180,7 +180,7 @@ static int get_tm_used(struct vol * restrict vol)
             && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
 
             EC_NULL_LOG( infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist") );
-            
+
             if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1) {
                 bdestroy(infoplist);
                 infoplist = NULL;
@@ -578,7 +578,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         /*
          * There seems to be an undocumented limit on how big our reply can get
          * before the client chokes and closes the connection.
-         * Testing with 10.8.4 found the limit at ~4600 bytes. Go figure. 
+         * Testing with 10.8.4 found the limit at ~4600 bytes. Go figure.
          */
         if (((data + len + 3) - rbuf) > 4600)
             break;

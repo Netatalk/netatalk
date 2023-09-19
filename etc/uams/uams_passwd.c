@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -163,10 +163,10 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         ibuflen--;
     }
     return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
-    
+
 }
 
-/* cleartxt login ext 
+/* cleartxt login ext
  * uname format :
     byte      3
     2 bytes   len (network order)
@@ -198,7 +198,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     username[ len ] = '\0';
     return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
-                        
+
 
 #if 0
 /* change passwd */

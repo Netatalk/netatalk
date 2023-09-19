@@ -36,7 +36,7 @@
 #include "comm.h"
 #include "pack.h"
 
-/* 
+/*
    Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
    It's a likey performance hit, but it might we worth it.
  */
@@ -151,7 +151,7 @@ static int get_lock(int cmd, const char *dbpath)
                 return -1;
             }
         }
-    
+
         if (cmd == LOCK_EXCL)
             ret = write_lock(lockfd, 0, SEEK_SET, 0);
         else
@@ -160,11 +160,11 @@ static int get_lock(int cmd, const char *dbpath)
         if (ret != 0) {
             if (cmd == LOCK_SHRD)
                 LOG(log_error, logtype_cnid, "Volume CNID db is locked, try again...");
-            return 0; 
+            return 0;
         }
 
         LOG(log_debug, logtype_cnid, "get_lock: got %s lock",
-            cmd == LOCK_EXCL ? "LOCK_EXCL" : "LOCK_SHRD");    
+            cmd == LOCK_EXCL ? "LOCK_EXCL" : "LOCK_SHRD");
         return cmd;
 
     default:
@@ -385,7 +385,7 @@ static int loop(struct db_param *dbp)
                 dbif_txn_abort(dbd);
                 return -1;
             }
-            
+
             if (ret == 0 || cret == 0) {
                 if (dbif_txn_abort(dbd) < 0)
                     return -1;
@@ -415,7 +415,7 @@ static int loop(struct db_param *dbp)
                 dbp->flush_interval, timebuf);
         }
 
-        /* 
+        /*
            Shall we checkpoint bdb ?
            Have we commited "count" more changes than "flush_frequency" ?
         */

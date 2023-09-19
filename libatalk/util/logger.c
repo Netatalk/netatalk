@@ -50,7 +50,7 @@ Netatalk 2001 (c)
   "debug7",                       \
   "debug8",                       \
   "debug9",                       \
-  "maxdebug"}                        
+  "maxdebug"}
 
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
@@ -303,7 +303,7 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
 /* Setup syslog logging */
 static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
 {
-    /* 
+    /*
      * FIXME:
      * this currently doesn't care if logtype is already logging to a file.
      * Fortunately currently there's no way a user could trigger this as afpd.conf
@@ -419,7 +419,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     if (!log_config.inited) {
       log_init();
     }
-    
+
     if (type_configs[logtype].syslog) {
         if (type_configs[logtype].level >= loglevel) {
             /* Initialise the Messages and send it to syslog */

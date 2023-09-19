@@ -34,7 +34,7 @@
 #include <atalk/globals.h>
 
 /* grab the FP functions */
-#include "auth.h" 
+#include "auth.h"
 #include "desktop.h"
 #include "switch.h"
 #include "fork.h"

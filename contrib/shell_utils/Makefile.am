@@ -2,8 +2,8 @@
 
 pkgconfdir = @PKGCONFDIR@
 
-GENERATED_FILES = 
-TEMPLATE_FILES = 
+GENERATED_FILES =
+TEMPLATE_FILES =
 PERLSCRIPTS = \
 	asip-status \
 	apple_dump

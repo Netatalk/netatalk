@@ -29,7 +29,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
-			char *ibuf _U_, size_t ibuflen _U_, 
+			char *ibuf _U_, size_t ibuflen _U_,
 			char *rbuf _U_, size_t *rbuflen)
 {
     struct passwd *pwent;
@@ -42,7 +42,7 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 			     NULL) < 0)
       return AFPERR_MISC;
 
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, 
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
 			     (void *) &username, NULL) < 0)
       return AFPERR_MISC;
 

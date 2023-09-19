@@ -4,7 +4,7 @@ the catalog database keeps track of three mappings:
     did/name -> CNID
 
 dev/ino is used to keep track of magically moved files. did/name is
-for quick lookups of CNIDs. 
+for quick lookups of CNIDs.
 
 NOTE: the database will append a nul byte to the end of name. in
 addition, name should be given as it appears on disk. this allows the
@@ -28,8 +28,8 @@ here's the ritual:
 	        is good for FPResolveID.
              b) cnid_lookup returns a CNID corresponding to the
 	        dev/ino,did/name keys. it will auto-update the catalog
-		database if there's a discrepancy. 
-		NOTE: cnid_add calls this before adding a new CNID. 
+		database if there's a discrepancy.
+		NOTE: cnid_add calls this before adding a new CNID.
 	4) when you delete a file or directory, you need to call
 	   cnid_delete with the CNID for that file/directory.
 	5) call cnid_close when closing the volume.

@@ -8,7 +8,7 @@
 #endif
 
 #ifdef CNID_BACKEND_TDB
-#include <sys/param.h>   
+#include <sys/param.h>
 
 #include "cnid_tdb.h"
 #include <atalk/logger.h>
@@ -77,13 +77,13 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
         LOG(log_error, logtype_default, "tdb_open: Pathname too large: %s", vol->v_path);
         return NULL;
     }
-    
+
     strcpy(path, vol->v_path);
     if (path[len - 1] != '/') {
         strcat(path, "/");
         len++;
     }
- 
+
     strcpy(path + len, DBHOME);
     if (!(args->cnid_args_flags & CNID_FLAG_MEMORY)) {
         if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~vol->v_umask) < 0)) {
@@ -96,7 +96,7 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
         tdb_flags = TDB_INTERNAL;
     }
     strcat(path, "/");
- 
+
     db = (struct _cnid_tdb_private *)cdb->cnid_db_private;
 
     path[len + DBHOMELEN] = '\0';
@@ -132,13 +132,13 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
     else {
         free(data.dptr);
     }
-        
+
     return cdb;
 
 fail:
     free(cdb->cnid_db_private);
     free(cdb);
-    
+
     return NULL;
 }
 

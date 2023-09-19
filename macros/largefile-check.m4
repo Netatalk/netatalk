@@ -1,6 +1,6 @@
 dnl -------------------------------------------------------------------
-dnl This test for largefile support was written by Vadim Zeitlin for 
-dnl wxWindows. 
+dnl This test for largefile support was written by Vadim Zeitlin for
+dnl wxWindows.
 dnl -------------------------------------------------------------------
 
 dnl WX_SYS_LARGEFILE_TEST
@@ -50,12 +50,12 @@ if test "$enable_largefile" != no; then
     dnl _FILE_OFFSET_BITS==64 is needed for Linux, Solaris, ...
     dnl _LARGE_FILES -- for AIX
     wx_largefile=no
-    WX_SYS_LARGEFILE_MACRO_VALUE(_FILE_OFFSET_BITS, 64, ac_cv_sys_file_offset_bits) 
+    WX_SYS_LARGEFILE_MACRO_VALUE(_FILE_OFFSET_BITS, 64, ac_cv_sys_file_offset_bits)
     if test "x$wx_largefile" != "xyes"; then
         WX_SYS_LARGEFILE_MACRO_VALUE(_LARGE_FILES, 1, ac_cv_sys_large_files)
     fi
 
-    
+
     AC_CACHE_CHECK([for 64 bit off_t],netatalk_cv_SIZEOF_OFF_T,[
     AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <stdio.h>
 #include <stdlib.h>

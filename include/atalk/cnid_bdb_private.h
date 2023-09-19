@@ -50,7 +50,7 @@ struct cnid_dbd_rqst {
 };
 
 struct cnid_dbd_rply {
-    int     result;    
+    int     result;
     cnid_t  cnid;
     cnid_t  did;
     char    *name;

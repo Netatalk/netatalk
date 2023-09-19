@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -223,7 +223,7 @@ ssize_t writet(int socket, void *data, const size_t length, int setnonblocking, 
                 FD_SET(socket, &rfds);
                 tv.tv_usec = 0;
                 tv.tv_sec  = timeout;
-                        
+
                 while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
                     switch (ret) {
                     case 0:

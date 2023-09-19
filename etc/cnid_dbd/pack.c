@@ -46,14 +46,14 @@ static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;
 }
 
 /* --------------- */
 int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
 int len;
- 
+
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DID_OFS;
     /* FIXME: At least DB 4.0.14 and 4.1.25 pass in the correct length of
@@ -63,7 +63,7 @@ int len;
     skey->size = CNID_DID_LEN + len + 1;
     return (0);
 }
- 
+
 /* --------------- */
 int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 {

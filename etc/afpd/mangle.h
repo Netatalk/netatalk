@@ -2,7 +2,7 @@
  *
  */
 
-#ifndef AFPD_MANGLE_H 
+#ifndef AFPD_MANGLE_H
 #define AFPD_MANGLE_H 1
 
 #include <stdlib.h>
@@ -21,7 +21,7 @@
 #define MAX_MANGLE_SUFFIX_LENGTH 999
 #define MAX_EXT_LENGTH 5 /* XXX This cannot be greater than 27 */
 #define MANGLE_LENGTH  9 /* #ffffffff This really can't be changed. */
-#define MAX_LENGTH MACFILELEN 
+#define MAX_LENGTH MACFILELEN
 
 extern char *mangle (const struct vol *, char *, size_t, char *, cnid_t, int);
 extern char *demangle (const struct vol *, char *, cnid_t did);

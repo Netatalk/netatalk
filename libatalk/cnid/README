@@ -1,7 +1,7 @@
-  
+
   CNID back-end refactoring
-  
-This patch allows to compile all DID schemes into 
+
+This patch allows to compile all DID schemes into
 afpd  binary and then select desired schemes at runtime,
 per volume.
 
@@ -12,12 +12,12 @@ Libatalk/cnid directory as been restructured. Now it contains
 subdirectories representing particular back-end types and a
 simple cnid-object factory (cnid.c and cnid_init.c).
 
-All CNID functions have been grouped into a structure which 
+All CNID functions have been grouped into a structure which
 contains function pointers and some data. Main afpd code uses
-them in a object manner rather than structural: it calls cnid 
-functions through fields of cnid_db structure. 
+them in a object manner rather than structural: it calls cnid
+functions through fields of cnid_db structure.
 
-Actually there are standard backends: transactional db3, cdb, 
+Actually there are standard backends: transactional db3, cdb,
 last and mtab (I'm not sure how to call mtab - it does some magic
 with dev/inode numbers, but mtab has been removed some time ago).
 

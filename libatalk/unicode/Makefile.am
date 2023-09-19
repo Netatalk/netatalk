@@ -6,7 +6,7 @@ AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys @ICONV_CFLAGS@
 
 SUBDIRS = charsets
 
-LIBUNICODE_DEPS = charsets/libcharsets.la 
+LIBUNICODE_DEPS = charsets/libcharsets.la
 
 libunicode_la_SOURCES = \
 	util_unistr.c	\

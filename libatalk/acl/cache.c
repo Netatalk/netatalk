@@ -246,7 +246,7 @@ int search_cachebyname( const char *name, uuidtype_t *type, unsigned char *uuid)
     return -1;
 }
 
-/* 
+/*
  * Caller must free allocated name
  */
 int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {

@@ -39,11 +39,11 @@ int dbd_resolve(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
-     
+
     if (rc == 0) {
 
         LOG(log_debug, logtype_cnid, "dbd_resolve: Could not resolve CNID %u", ntohl(rqst->cnid));
-    
+
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }

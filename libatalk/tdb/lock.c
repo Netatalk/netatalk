@@ -1,4 +1,4 @@
- /* 
+ /*
    Unix SMB/CIFS implementation.
 
    trivial database library
@@ -6,11 +6,11 @@
    Copyright (C) Andrew Tridgell              1999-2005
    Copyright (C) Paul `Rusty' Russell		   2000
    Copyright (C) Jeremy Allison			   2000-2003
-   
+
      ** NOTE! The following LGPL license applies to the tdb
      ** library. This does NOT imply that all of Samba is released
      ** under the LGPL
-   
+
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
@@ -38,11 +38,11 @@ void tdb_setalarm_sigptr(struct tdb_context *tdb, volatile sig_atomic_t *ptr)
    this functions locks/unlocks 1 byte at the specified offset.
 
    On error, errno is also set so that errors are passed back properly
-   through tdb_open(). 
+   through tdb_open().
 
    note that a len of zero means lock to end of file
 */
-int tdb_brlock(struct tdb_context *tdb, tdb_off_t offset, 
+int tdb_brlock(struct tdb_context *tdb, tdb_off_t offset,
 	       int rw_type, int lck_type, int probe, size_t len)
 {
 	struct flock fl;
@@ -80,7 +80,7 @@ int tdb_brlock(struct tdb_context *tdb, tdb_off_t offset,
 		 * EAGAIN is an expected return from non-blocking
 		 * locks. */
 		if (!probe && lck_type != F_SETLK) {
-			TDB_LOG((tdb, TDB_DEBUG_TRACE,"tdb_brlock failed (fd=%d) at offset %d rw_type=%d lck_type=%d len=%d\n", 
+			TDB_LOG((tdb, TDB_DEBUG_TRACE,"tdb_brlock failed (fd=%d) at offset %d rw_type=%d lck_type=%d len=%d\n",
 				 tdb->fd, offset, rw_type, lck_type, (int)len));
 		}
 		return -1;
@@ -93,7 +93,7 @@ int tdb_brlock(struct tdb_context *tdb, tdb_off_t offset,
   upgrade a read lock to a write lock. This needs to be handled in a
   special way as some OSes (such as solaris) have too conservative
   deadlock detection and claim a deadlock when progress can be
-  made. For those OSes we may loop for a while.  
+  made. For those OSes we may loop for a while.
 */
 int tdb_brlock_upgrade(struct tdb_context *tdb, tdb_off_t offset, size_t len)
 {
@@ -126,7 +126,7 @@ static int _tdb_lock(struct tdb_context *tdb, int list, int ltype, int op)
 	ltype &= ~TDB_MARK_LOCK;
 
 	/* a global lock allows us to avoid per chain locks */
-	if (tdb->global_lock.count && 
+	if (tdb->global_lock.count &&
 	    (ltype == tdb->global_lock.ltype || ltype == F_RDLCK)) {
 		return 0;
 	}
@@ -138,7 +138,7 @@ static int _tdb_lock(struct tdb_context *tdb, int list, int ltype, int op)
 
 	if (list < -1 || list >= (int)tdb->header.hash_size) {
 		tdb->ecode = TDB_ERR_LOCK;
-		TDB_LOG((tdb, TDB_DEBUG_ERROR,"tdb_lock: invalid list %d for ltype=%d\n", 
+		TDB_LOG((tdb, TDB_DEBUG_ERROR,"tdb_lock: invalid list %d for ltype=%d\n",
 			   list, ltype));
 		return -1;
 	}
@@ -223,7 +223,7 @@ int tdb_unlock(struct tdb_context *tdb, int list, int ltype)
 	ltype &= ~TDB_MARK_LOCK;
 
 	/* a global lock allows us to avoid per chain locks */
-	if (tdb->global_lock.count && 
+	if (tdb->global_lock.count &&
 	    (ltype == tdb->global_lock.ltype || ltype == F_RDLCK)) {
 		return 0;
 	}
@@ -294,7 +294,7 @@ int tdb_unlock(struct tdb_context *tdb, int list, int ltype)
 	}
 
 	if (ret)
-		TDB_LOG((tdb, TDB_DEBUG_ERROR, "tdb_unlock: An error occurred unlocking!\n")); 
+		TDB_LOG((tdb, TDB_DEBUG_ERROR, "tdb_unlock: An error occurred unlocking!\n"));
 	return ret;
 }
 
@@ -311,7 +311,7 @@ int tdb_transaction_lock(struct tdb_context *tdb, int ltype)
 		return 0;
 	}
 
-	if (tdb->methods->tdb_brlock(tdb, TRANSACTION_LOCK, ltype, 
+	if (tdb->methods->tdb_brlock(tdb, TRANSACTION_LOCK, ltype,
 				     F_SETLKW, 0, 1) == -1) {
 		TDB_LOG((tdb, TDB_DEBUG_ERROR, "tdb_transaction_lock: failed to get transaction lock\n"));
 		tdb->ecode = TDB_ERR_LOCK;
@@ -415,7 +415,7 @@ static int _tdb_unlockall(struct tdb_context *tdb, int ltype)
 	}
 
 	if (!mark_lock &&
-	    tdb->methods->tdb_brlock(tdb, FREELIST_TOP, F_UNLCK, F_SETLKW, 
+	    tdb->methods->tdb_brlock(tdb, FREELIST_TOP, F_UNLCK, F_SETLKW,
 				     0, 4*tdb->header.hash_size)) {
 		TDB_LOG((tdb, TDB_DEBUG_ERROR, "tdb_unlockall failed (%s)\n", strerror(errno)));
 		return -1;

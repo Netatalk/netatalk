@@ -6,7 +6,7 @@
  *
  * Copyright (c) 2002 netatalk
  *
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -77,7 +77,7 @@ const char *AfpNum2name(int num)
     case AFP_BYTELOCK_EXT  : return "AFP_BYTELOCK_EXT";     /*  59 */
     case AFP_READ_EXT      : return "AFP_READ_EXT";         /*  60 */
     case AFP_WRITE_EXT     : return "AFP_WRITE_EXT";        /*  61 */
-    case AFP_GETSESSTOKEN  : return "AFP_GETSESSTOKEN";     /*  64 */ 
+    case AFP_GETSESSTOKEN  : return "AFP_GETSESSTOKEN";     /*  64 */
     case AFP_LOGIN_EXT     : return "AFP_LOGIN_EXT";        /*  63 */
     case AFP_DISCTOLDSESS  : return "AFP_DISCTOLDSESS";     /*  65 */
     case AFP_ENUMERATE_EXT : return "AFP_ENUMERATE_EXT";    /*  66 */
@@ -85,7 +85,7 @@ const char *AfpNum2name(int num)
     /* version 3.1 */
     case AFP_ENUMERATE_EXT2: return "AFP_ENUMERATE_EXT2";   /*  68 */
     case AFP_ZZZ  : return "AFP_ZZZ";	    /* 122 */
-    /* version 3.2 */															  
+    /* version 3.2 */															
     case AFP_GETEXTATTR         : return "AFP_GETEXTATTR";	      /* 69 */
     case AFP_SETEXTATTR         : return "AFP_SETEXTATTR";	      /* 70 */
     case AFP_REMOVEATTR         : return "AFP_REMOVEATTR";	      /* 71 */
@@ -97,7 +97,7 @@ const char *AfpNum2name(int num)
     case AFP_SYNCDIR            : return "AFP_SYNCDIR";	          /* 78 */
     case AFP_SYNCFORK           : return "AFP_SYNCFORK";	      /* 79 */
 	}
-	return "not yet defined";								  
+	return "not yet defined";								
 }
 
 #define AFPERR2NAME(err) case err : return #err

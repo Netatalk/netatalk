@@ -43,7 +43,7 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         /* This could indicate a database error or that the key already exists
          (because of DB_NOOVERWRITE). In that case we still look at some sort of
          database corruption since that is not supposed to happen. */
-        
+
         switch (rc) {
         case 1:
             rply->result = CNID_DBD_RES_ERR_DUPLCNID;
@@ -52,14 +52,14 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 	    /* FIXME: Should that not be logged for case 1:? */
             LOG(log_error, logtype_cnid, "add_cnid: duplicate %x %s", rply->cnid
              , (char *)data.data + CNID_NAME_OFS);
-            
+
             rqst->cnid = rply->cnid;
             rc = dbd_update(dbd, rqst, rply);
             if (rc < 0) {
                 rply->result = CNID_DBD_RES_ERR_DB;
                 return -1;
             }
-            else 
+            else
                return 0;
             break;
         }
@@ -176,7 +176,7 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             return -1;
         }
     }
-    
+
     if (add_cnid(dbd, rqst, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_DUPLCNID) {
             LOG(log_error, logtype_cnid, "dbd_add(DID: %u/\"%s\", dev/ino 0x%llx/0x%llx): Cannot add CNID: %u",

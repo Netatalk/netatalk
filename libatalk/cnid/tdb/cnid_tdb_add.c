@@ -35,7 +35,7 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;
 }
 
 unsigned char *make_tdb_data(uint32_t flags, const struct stat *st,const cnid_t did,
@@ -55,7 +55,7 @@ unsigned char *make_tdb_data(uint32_t flags, const struct stat *st,const cnid_t 
     i = htonl(i);
     memcpy(buf, &i, sizeof(i));
     buf += sizeof(i);
-    
+
     /* did is already in network byte order */
     memcpy(buf, &did, sizeof(did));
     buf += sizeof(did);
@@ -64,10 +64,10 @@ unsigned char *make_tdb_data(uint32_t flags, const struct stat *st,const cnid_t 
     *(buf + len) = '\0';
 
     return start;
-}    
+}
 
 /* add an entry to the CNID databases. we do this as a transaction
- * to prevent messiness. 
+ * to prevent messiness.
  * key:   cnid
  * data:
  */
@@ -109,13 +109,13 @@ static cnid_t get_cnid(struct _cnid_tdb_private *db)
 {
     TDB_DATA rootinfo_key, data;
     cnid_t hint,id;
-    
+
     memset(&rootinfo_key, 0, sizeof(rootinfo_key));
     memset(&data, 0, sizeof(data));
     rootinfo_key.dptr = (unsigned char *)ROOTINFO_KEY;
     rootinfo_key.dsize = ROOTINFO_KEYLEN;
-    
-    tdb_chainlock(db->tdb_didname, rootinfo_key);  
+
+    tdb_chainlock(db->tdb_didname, rootinfo_key);
     data = tdb_fetch(db->tdb_didname, rootinfo_key);
     if (data.dptr)
     {
@@ -134,7 +134,7 @@ static cnid_t get_cnid(struct _cnid_tdb_private *db)
     else {
         hint = htonl(CNID_START);
     }
-    
+
     memset(&data, 0, sizeof(data));
     data.dptr = (unsigned char *)&hint;
     data.dsize = sizeof(hint);
@@ -142,10 +142,10 @@ static cnid_t get_cnid(struct _cnid_tdb_private *db)
         goto cleanup;
     }
 
-    tdb_chainunlock(db->tdb_didname, rootinfo_key );  
+    tdb_chainunlock(db->tdb_didname, rootinfo_key );
     return hint;
 cleanup:
-    tdb_chainunlock(db->tdb_didname, rootinfo_key);  
+    tdb_chainunlock(db->tdb_didname, rootinfo_key);
     return CNID_INVALID;
 }
 
@@ -157,9 +157,9 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
     const struct stat *lstp;
     cnid_t id;
     struct _cnid_tdb_private *priv;
-    TDB_DATA key, data; 
-    int rc;      
-    
+    TDB_DATA key, data;
+    int rc;
+
     if (!cdb || !(priv = cdb->cnid_db_private) || !st || !name) {
         errno = CNID_ERR_PARAM;
         return CNID_INVALID;
@@ -195,7 +195,7 @@ cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
         return CNID_INVALID;
     }
     memcpy(data.dptr, &hint, sizeof(hint));
-    
+
     /* Now we need to add the CNID data to the databases. */
     rc = add_cnid(priv, &key, &data);
     if (rc) {

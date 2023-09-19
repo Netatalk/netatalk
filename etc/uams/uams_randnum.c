@@ -1,7 +1,7 @@
-/* 
+/*
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -38,30 +38,30 @@ static DES_key_schedule	seskeysched;
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
-/* hash to a 16-bit number. this will generate completely harmless 
+/* hash to a 16-bit number. this will generate completely harmless
  * warnings on 64-bit machines. */
 #define randhash(a) (((((unsigned long) a) >> 8) ^ \
 		      ((unsigned long)a)) & 0xffff)
 
 
 /* handle ~/.passwd. courtesy of shirsch@ibm.net. */
-static  int home_passwd(const struct passwd *pwd, 
-				   const char *path, const int pathlen _U_, 
+static  int home_passwd(const struct passwd *pwd,
+				   const char *path, const int pathlen _U_,
 				   unsigned char *passwd, const int len,
 				   const int set)
 {
   struct stat st;
   int fd, i;
-  
+
   if ( (fd = open(path, (set) ? O_WRONLY : O_RDONLY)) < 0 ) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
 
-  if ( fstat( fd, &st ) < 0 ) 
+  if ( fstat( fd, &st ) < 0 )
     goto home_passwd_fail;
-  
-  /* If any of these are true, disallow login: 
+
+  /* If any of these are true, disallow login:
    * - not a regular file
    * - gid or uid don't match user
    * - anyone else has permissions of any sort
@@ -84,7 +84,7 @@ static  int home_passwd(const struct passwd *pwd,
       LOG(log_error, logtype_uams, "Failed to read from %s", path );
       goto home_passwd_fail;
     }
-  
+
   /* get rid of pesky characters */
   for (i = 0; i < len; i++)
     if ((passwd[i] != ' ') && isspace(passwd[i]))
@@ -101,25 +101,25 @@ home_passwd_fail:
 
 
 
-/* 
+/*
  * handle /path/afppasswd with an optional key file. we're a lot more
  * trusting of this file. NOTE: we use our own password entry writing
  * bits as we want to avoid tromping over global variables. in addition,
- * we look for a key file and use that if it's there. here are the 
- * formats: 
+ * we look for a key file and use that if it's there. here are the
+ * formats:
  * password file:
  * username:password:last login date:failedcount
  *
  * password is just the hex equivalent of either the ASCII password
  * (if the key file doesn't exist) or the des encrypted password.
  *
- * key file: 
+ * key file:
  * key (in hex) */
 #define PASSWD_ILLEGAL '*'
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-static int afppasswd(const struct passwd *pwd, 
-		     const char *path, const int pathlen, 
-		     unsigned char *passwd, int len, 
+static int afppasswd(const struct passwd *pwd,
+		     const char *path, const int pathlen,
+		     unsigned char *passwd, int len,
 		     const int set)
 {
   uint8_t key[DES_KEY_SZ*2];
@@ -129,19 +129,19 @@ static int afppasswd(const struct passwd *pwd,
   unsigned int i, j;
   int keyfd = -1, err = 0;
   off_t pos;
-  
+
   if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
-  
+
   /* open the key file if it exists */
   strcpy(buf, path);
   if (pathlen < (int) sizeof(buf) - 5) {
     strcat(buf, ".key");
     keyfd = open(buf, O_RDONLY);
-  } 
-  
+  }
+
   pos = ftell(fp);
   memset(buf, 0, sizeof(buf));
   while (fgets(buf, sizeof(buf), fp)) {
@@ -209,7 +209,7 @@ afppasswd_found:
     memcpy(p, key, sizeof(key));
 
     /* get exclusive access to the user's password entry. we don't
-     * worry so much on reads. in the worse possible case there, the 
+     * worry so much on reads. in the worse possible case there, the
      * user will just need to re-enter their password. */
     lock.l_type = F_WRLCK;
     lock.l_start = pos;
@@ -221,7 +221,7 @@ afppasswd_found:
     fwrite(buf, p - buf + sizeof(key), 1, fp);
     lock.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lock);
-  } else 
+  } else
     memcpy(passwd, p, len);
 
   memset(buf, 0, sizeof(buf));
@@ -238,7 +238,7 @@ afppasswd_done:
  * depending upon whether or not the password is in ~/.passwd
  * or in a global location */
 static int randpass(const struct passwd *pwd, const char *file,
-		    unsigned char *passwd, const int len, const int set) 
+		    unsigned char *passwd, const int len, const int set)
 {
   int i;
   uid_t uid = geteuid();
@@ -250,7 +250,7 @@ static int randpass(const struct passwd *pwd, const char *file,
 
     if ( (strlen(pwd->pw_dir) + i - 1) > MAXPATHLEN)
     return AFPERR_PARAM;
-  
+
     strcpy(path,  pwd->pw_dir );
     strcat(path, "/" );
     strcat(path, file + 2);
@@ -260,7 +260,7 @@ static int randpass(const struct passwd *pwd, const char *file,
     if (!uid)
       seteuid(0); /* change ourselves back to root */
     return i;
-  } 
+  }
 
   if (i > MAXPATHLEN)
     return AFPERR_PARAM;
@@ -286,10 +286,10 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
   uint16_t sessid;
   size_t len;
   int err;
- 
+
   if (( randpwd = uam_getname(obj, username, ulen)) == NULL )
     return AFPERR_NOTAUTH; /* unknown user */
-  
+
   LOG(log_info, logtype_uams, "randnum/rand2num login: %s", username);
   if (uam_checkuser(randpwd) < 0)
     return AFPERR_NOTAUTH;
@@ -314,7 +314,7 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
   memcpy(rbuf, &sessid, sizeof(sessid));
   rbuf += sizeof(sessid);
   *rbuflen = sizeof(sessid);
-  
+
   /* send the random number off */
   memcpy(rbuf, randbuf, sizeof(randbuf));
   *rbuflen += sizeof(randbuf);
@@ -325,7 +325,7 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
 /* check encrypted reply. we actually setup the encryption stuff
  * here as the first part of randnum and rand2num are identical. */
 static int randnum_logincont(void *obj, struct passwd **uam_pwd,
-			     char *ibuf, size_t ibuflen _U_, 
+			     char *ibuf, size_t ibuflen _U_,
 			     char *rbuf _U_, size_t *rbuflen)
 {
   uint16_t sessid;
@@ -364,7 +364,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
  *    and sends it back as part of the reply.
  */
 static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
-			      char *ibuf, size_t ibuflen _U_, 
+			      char *ibuf, size_t ibuflen _U_,
 			      char *rbuf, size_t *rbuflen)
 {
   uint16_t sessid;
@@ -403,16 +403,16 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
 	       &seskeysched, DES_ENCRYPT);
   memset(&seskeysched, 0, sizeof(seskeysched));
   *rbuflen = sizeof(randbuf);
-  
+
   *uam_pwd = randpwd;
   return AFP_OK;
 }
 
 /* change password  --
  * NOTE: an FPLogin must already have completed successfully for this
- *       to work. 
+ *       to work.
  */
-static int randnum_changepw(void *obj, const char *username _U_, 
+static int randnum_changepw(void *obj, const char *username _U_,
 			    struct passwd *pwd, char *ibuf,
 			    size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen _U_)
 {
@@ -424,13 +424,13 @@ static int randnum_changepw(void *obj, const char *username _U_,
       return AFPERR_ACCESS;
 
     len = UAM_PASSWD_FILENAME;
-    if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT, 
+    if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT,
 			     (void *) &passwdfile, &len) < 0)
       return AFPERR_PARAM;
 
     /* old password is encrypted with new password and new password is
      * encrypted with old. */
-    if ((err = randpass(pwd, passwdfile, seskey, 
+    if ((err = randpass(pwd, passwdfile, seskey,
 			sizeof(seskey), 0)) != AFP_OK)
       return err;
 
@@ -444,7 +444,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
     DES_key_sched((DES_cblock *) ibuf, &seskeysched);
     ibuf -= PASSWDLEN; /* old passwd */
     DES_ecb_encrypt((DES_cblock *) ibuf, (DES_cblock *) ibuf, &seskeysched, DES_DECRYPT);
-    if (memcmp(seskey, ibuf, sizeof(seskey))) 
+    if (memcmp(seskey, ibuf, sizeof(seskey)))
 	err = AFPERR_NOTAUTH;
     else if (memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0)
         err = AFPERR_PWDSAME;
@@ -453,7 +453,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
         err = AFPERR_PWDPOLCY;
 #endif /* USE_CRACKLIB */
 
-    if (!err) 
+    if (!err)
         err = randpass(pwd, passwdfile, (unsigned char *)ibuf + PASSWDLEN, sizeof(seskey), 1);
 
     /* zero out some fields */
@@ -533,7 +533,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int uam_setup(void *obj, const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange", 
+  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange",
 		   randnum_login, randnum_logincont, NULL, randnum_login_ext) < 0)
     return -1;
 
@@ -543,7 +543,7 @@ static int uam_setup(void *obj, const char *path)
     return -1;
   }
 
-  if (uam_register(UAM_SERVER_CHANGEPW, path, "Randnum Exchange", 
+  if (uam_register(UAM_SERVER_CHANGEPW, path, "Randnum Exchange",
 		   randnum_changepw) < 0) {
     uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");
     uam_unregister(UAM_SERVER_LOGIN, "2-Way Randnum exchange");

@@ -33,7 +33,7 @@ cnid_metad \- start cnid_dbd daemons on request
 .HP \w'\fBcnid_metad\fR\ 'u
 \fBcnid_metad\fR [\-d] [\-F\ \fIconfiguration\ file\fR]
 .HP \w'\fBcnid_metad\fR\ 'u
-\fBcnid_metad\fR \-v | \-V 
+\fBcnid_metad\fR \-v | \-V
 .SH "DESCRIPTION"
 .PP
 \fBcnid_metad\fR

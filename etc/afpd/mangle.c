@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
  *
@@ -72,7 +72,7 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
     /* the mangled name we got ..					*/
 
     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
-    if ( (size_t) -1 == (len = convert_charset(vol->v_volcharset, vol->v_maccharset, 0, 
+    if ( (size_t) -1 == (len = convert_charset(vol->v_volcharset, vol->v_maccharset, 0,
 				      uname, strlen(uname), buffer, MAXPATHLEN, &flags)) ) {
 	return mfilename;
     }
@@ -82,18 +82,18 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
         flags |= CONV_REQMANGLE;
         len = prefix;
     }
-    
+
     /* Ok, mangling was needed, now we do some further checks    */
     /* this is still necessary, as we might have a file abcde:xx */
     /* with id 12, mangled to abcde#12, and a passed filename    */
-    /* abcd#12 						     */ 
+    /* abcd#12 						     */
     /* if we only checked if "prefix" number of characters match */
     /* we get a false postive in above case			     */
 
     if ( (flags & CONV_REQMANGLE) ) {
-        if (len) { 
+        if (len) {
             /* convert the buffer to UTF8_MAC ... */
-            if ((size_t) -1 == (len = convert_charset(vol->v_maccharset, CH_UTF8_MAC, 0, 
+            if ((size_t) -1 == (len = convert_charset(vol->v_maccharset, CH_UTF8_MAC, 0,
             			buffer, len, buffer, MAXPATHLEN, &flags)) ) {
                 return mfilename;
             }
@@ -101,7 +101,7 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
             /* prefix can be longer than len, OSX might send us the first character(s) of a     */
             /* decomposed char as the *last* character(s) before the #, so our match below will */
             /* still work, but leaves room for a race ... FIXME				    */
-            if ( (prefix >= len || mfilenamelen == MACFILELEN) 
+            if ( (prefix >= len || mfilenamelen == MACFILELEN)
                  && !strncmp (mfilename, buffer, len)) {
                  return uname;
             }
@@ -115,8 +115,8 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
             /* ..but OSX might send us only the first characters of a decomposed character. */
             /*  So convert to UTF8_MAC again, now at least the prefix number of 	  */
             /* characters have to match ... again a possible race FIXME			  */
-            
-            if ( (size_t) -1 == (len = convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0, 
+
+            if ( (size_t) -1 == (len = convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0,
 	                          uname, strlen(uname), buffer, MAXPATHLEN, &flags)) ) {
 	        return mfilename;
 	    }
@@ -132,7 +132,7 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
 /* -------------------------------------------------------
 */
 static char *
-private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx) 
+private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx)
 {
     char *t;
     char *u_name;
@@ -149,7 +149,7 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
         return mfilename;
     }
     prefix = t - mfilename;
-    /* FIXME 
+    /* FIXME
      * is prefix == 0 a valid mangled filename ?
     */
     /* may be a mangled filename */
@@ -215,10 +215,10 @@ demangle(const struct vol *vol, char *mfilename, cnid_t did)
 }
 
 /* -------------------------------------------------------
- * OS X  
+ * OS X
 */
 char *
-demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid) 
+demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
 {
     return private_demangle(vol, mfilename, did, fileid);
 }
@@ -237,7 +237,7 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
    ------------------------
    with utf8 filename not always round trip
    filename   mac filename too long or first chars if unmatchable chars.
-   uname      unix filename 
+   uname      unix filename
    id         file/folder ID or 0
 */
 char *
@@ -249,7 +249,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname, c
     size_t ext_len;
     size_t maxlen;
     int k;
-    
+
     maxlen = (flags & 2)?UTF8FILELEN_EARLY:MACFILELEN; /* was vol->max_filename */
     /* Do we really need to mangle this filename? */
     if (!(flags & 1) && filenamelen <= maxlen) {

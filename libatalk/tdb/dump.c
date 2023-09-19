@@ -1,4 +1,4 @@
- /* 
+ /*
    Unix SMB/CIFS implementation.
 
    trivial database library
@@ -6,11 +6,11 @@
    Copyright (C) Andrew Tridgell              1999-2005
    Copyright (C) Paul `Rusty' Russell		   2000
    Copyright (C) Jeremy Allison			   2000-2003
-   
+
      ** NOTE! The following LGPL license applies to the tdb
      ** library. This does NOT imply that all of Samba is released
      ** under the LGPL
-   
+
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
@@ -33,7 +33,7 @@ static tdb_off_t tdb_dump_record(struct tdb_context *tdb, int hash,
 	struct tdb_record rec;
 	tdb_off_t tailer_ofs, tailer;
 
-	if (tdb->methods->tdb_read(tdb, offset, (char *)&rec, 
+	if (tdb->methods->tdb_read(tdb, offset, (char *)&rec,
 				   sizeof(rec), DOCONV()) == -1) {
 		printf("ERROR: failed to read record at %u\n", offset);
 		return 0;
@@ -110,7 +110,7 @@ int tdb_printfreelist(struct tdb_context *tdb)
 
 	printf("freelist top=[0x%08x]\n", rec_ptr );
 	while (rec_ptr) {
-		if (tdb->methods->tdb_read(tdb, rec_ptr, (char *)&rec, 
+		if (tdb->methods->tdb_read(tdb, rec_ptr, (char *)&rec,
 					   sizeof(rec), DOCONV()) == -1) {
 			tdb_unlock(tdb, -1, F_WRLCK);
 			return -1;
@@ -122,14 +122,14 @@ int tdb_printfreelist(struct tdb_context *tdb)
 			return -1;
 		}
 
-		printf("entry offset=[0x%08x], rec.rec_len = [0x%08x (%d)] (end = 0x%08x)\n", 
+		printf("entry offset=[0x%08x], rec.rec_len = [0x%08x (%d)] (end = 0x%08x)\n",
 		       rec_ptr, rec.rec_len, rec.rec_len, rec_ptr + rec.rec_len);
 		total_free += rec.rec_len;
 
 		/* move to the next record */
 		rec_ptr = rec.next;
 	}
-	printf("total rec_len = [0x%08x (%d)]\n", (int)total_free, 
+	printf("total rec_len = [0x%08x (%d)]\n", (int)total_free,
                (int)total_free);
 
 	return tdb_unlock(tdb, -1, F_WRLCK);

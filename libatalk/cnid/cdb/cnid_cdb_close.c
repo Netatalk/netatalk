@@ -19,10 +19,10 @@ void cnid_cdb_close(struct _cnid_db *cdb) {
     if (!(db = cdb->cnid_db_private)) {
         return;
     }
-    db->db_didname->sync(db->db_didname, 0); 
+    db->db_didname->sync(db->db_didname, 0);
     db->db_devino->sync(db->db_devino, 0);
     db->db_cnid->sync(db->db_cnid, 0);
-    
+
     db->db_didname->close(db->db_didname, 0);
     db->db_devino->close(db->db_devino, 0);
     db->db_cnid->close(db->db_cnid, 0);

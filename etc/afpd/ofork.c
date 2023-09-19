@@ -262,7 +262,7 @@ int of_fstatat(int dirfd, struct path *path)
 }
 #endif /* HAVE_ATFUNCS */
 
-/* -------------------------- 
+/* --------------------------
    stat the current directory.
    stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
@@ -295,11 +295,11 @@ int of_statdir(struct vol *vol, struct path *path)
 
     /* hmm, can't stat curdir anymore */
     if (errno == EACCES && (dir = dirlookup(vol, curdir->d_pdid))) {
-       if (movecwd(vol, dir)) 
+       if (movecwd(vol, dir))
            return -1;
        path->st_errno = 0;
 
-       if ((ret = ostat(cfrombstr(path->d_dir->d_u_name), &path->st, vol_syml_opt(vol))) < 0) 
+       if ((ret = ostat(cfrombstr(path->d_dir->d_u_name), &path->st, vol_syml_opt(vol))) < 0)
            path->st_errno = errno;
     }
 
@@ -345,7 +345,7 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
 {
     struct ofork *of;
     struct file_key key;
-    
+
     if ( ! path->st_valid) {
         of_fstatat(dirfd, path);
     }

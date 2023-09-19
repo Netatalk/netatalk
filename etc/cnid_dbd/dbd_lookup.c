@@ -5,7 +5,7 @@
  * All Rights Reserved.  See COPYING.
  */
 
-/* 
+/*
 CNID salvation spec:
 general rule: better safe then sorry, so we always delete CNIDs and assign
 new ones in case of a lookup mismatch. afpd also sends us the CNID found
@@ -134,13 +134,13 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     unsigned char *buf;
     DBT key, devdata, diddata;
-    int devino = 1, didname = 1; 
+    int devino = 1, didname = 1;
     int rc;
     cnid_t id_devino, id_didname;
     u_int32_t type_devino  = (unsigned)-1;
     u_int32_t type_didname = (unsigned)-1;
     int update = 0;
-    
+
     memset(&key, 0, sizeof(key));
     memset(&diddata, 0, sizeof(diddata));
     memset(&devdata, 0, sizeof(devdata));
@@ -149,8 +149,8 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     rply->cnid = 0;
 
     LOG(log_maxdebug, logtype_cnid, "dbd_lookup(): START");
-    
-    buf = pack_cnid_data(rqst); 
+
+    buf = pack_cnid_data(rqst);
 
     /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
        only get a match in one of them, that means a file has moved. */
@@ -190,13 +190,13 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         type_didname = ntohl(type_didname);
     }
 
-    LOG(log_maxdebug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx) {devino: %u, didname: %u}", 
+    LOG(log_maxdebug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx) {devino: %u, didname: %u}",
         rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, devino, didname);
 
     /* Have we found anything at all ? */
-    if (!devino && !didname) {  
+    if (!devino && !didname) {
         /* nothing found */
-        LOG(log_debug, logtype_cnid, "dbd_lookup: name: '%s', did: %u, dev/ino: 0x%llx/0x%llx is not in the CNID database", 
+        LOG(log_debug, logtype_cnid, "dbd_lookup: name: '%s', did: %u, dev/ino: 0x%llx/0x%llx is not in the CNID database",
             rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
@@ -208,7 +208,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         if (devino && (type_devino != rqst->type)) {
             /* one is a dir one is a file, remove from db */
 
-            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for devino", 
+            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for devino",
                 rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
             rqst->cnid = id_devino;
@@ -216,7 +216,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
             rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
             if (rc < 0) {
-                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for devino", 
+                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for devino",
                     rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
                 return -1;
             }
@@ -225,7 +225,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         if (didname && (type_didname != rqst->type)) {
             /* same: one is a dir one is a file, remove from db */
 
-            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for didname", 
+            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for didname",
                 rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
             rqst->cnid = id_didname;
@@ -233,7 +233,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
             rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
             if (rc < 0) {
-                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for didname", 
+                LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for didname",
                     rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
                 return -1;
             }
@@ -309,7 +309,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         rply->cnid = rqst->cnid;
     }
 
-    LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): Got CNID (needed update): %u", 
+    LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): Got CNID (needed update): %u",
         ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rply->cnid));
 
     return rc;

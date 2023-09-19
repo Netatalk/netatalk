@@ -1,7 +1,7 @@
 # Makefile.am for include/atalk/
 
 atalkincludedir = $(includedir)/atalk
-BUILT_SOURCES = 
+BUILT_SOURCES =
 CLEANFILES =
 
 atalkinclude_HEADERS = \

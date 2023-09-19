@@ -385,7 +385,7 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 #    if ( $entid == 11 ) { ; } # ProDOS File Info
 #    if ( $entid == 12 ) { ; } # MS-DOS File Info
 #    if ( $entid == 13 ) { ; } # Short Name
-#    if ( $entid == 14 ) { ; } # AFP File Info 
+#    if ( $entid == 14 ) { ; } # AFP File Info
     elsif ( $entid == 15 ) { print "\n"; bedump($ofst,$len); } # Directory ID
     elsif ( $entid == 0x8053567E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # CNID (Netatalk Extended)
     elsif ( $entid == 0x8053594E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)

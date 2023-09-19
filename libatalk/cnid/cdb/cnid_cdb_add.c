@@ -38,7 +38,7 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino; ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;
 }
 
 unsigned char *make_cnid_data(u_int32_t flags, const struct stat *st, const cnid_t did,
@@ -58,7 +58,7 @@ unsigned char *make_cnid_data(u_int32_t flags, const struct stat *st, const cnid
     i = htonl(i);
     memcpy(buf, &i, sizeof(i));
     buf += sizeof(i);
-    
+
     /* did is already in network byte order */
     memcpy(buf, &did, sizeof(did));
     buf += sizeof(did);
@@ -67,7 +67,7 @@ unsigned char *make_cnid_data(u_int32_t flags, const struct stat *st, const cnid
     *(buf + len) = '\0';
 
     return start;
-}    
+}
 
 /* --------------- */
 static int db_stamp(void *buffer, size_t size)
@@ -94,7 +94,7 @@ static cnid_t get_cnid(CNID_private *db)
     cnid_t hint,id;
     char buf[ROOTINFO_DATALEN];
     char stamp[CNID_DEV_LEN];
-     
+
     if ((rc = db->db_cnid->cursor(db->db_cnid, NULL, &cursor, DB_WRITECURSOR) ) != 0) {
         LOG(log_error, logtype_default, "get_cnid: Unable to get a cursor: %s", db_strerror(rc));
         return CNID_INVALID;
@@ -126,10 +126,10 @@ static cnid_t get_cnid(CNID_private *db)
         break;
     default:
         LOG(log_error, logtype_default, "cnid_add: Unable to lookup rootinfo: %s", db_strerror(rc));
-	errno = CNID_ERR_DB; 
+	errno = CNID_ERR_DB;
         goto cleanup;
     }
-    
+
     memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
     rootinfo_data.data = buf;
     rootinfo_data.size = ROOTINFO_DATALEN;
@@ -141,18 +141,18 @@ static cnid_t get_cnid(CNID_private *db)
         memcpy((char *)rootinfo_data.data +CNID_DEV_OFS, stamp, sizeof(stamp));
     }
 
-    
+
     switch (rc = cursor->c_put(cursor, &rootinfo_key, &rootinfo_data, flag)) {
     case 0:
         break;
     default:
         LOG(log_error, logtype_default, "cnid_add: Unable to update rootinfo: %s", db_strerror(rc));
-	errno = CNID_ERR_DB; 
+	errno = CNID_ERR_DB;
         goto cleanup;
     }
     if ((rc = cursor->c_close(cursor)) != 0) {
         LOG(log_error, logtype_default, "get_cnid: Unable to close cursor: %s", db_strerror(rc));
-	errno = CNID_ERR_DB; 
+	errno = CNID_ERR_DB;
         return CNID_INVALID;
     }
     return hint;
@@ -204,7 +204,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
          return CNID_INVALID;
     }
     memcpy(data.data, &hint, sizeof(hint));
-    
+
     key.data = &hint;
     key.size = sizeof(hint);
 
@@ -226,8 +226,8 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
         }
         else {
             LOG(log_error, logtype_default
-                   , "cnid_add: Failed to add CNID for %s to database using hint %u: %s", 
-                   name, ntohl(hint), db_strerror(rc));  
+                   , "cnid_add: Failed to add CNID for %s to database using hint %u: %s",
+                   name, ntohl(hint), db_strerror(rc));
             errno = CNID_ERR_DB;
             return CNID_INVALID;
         }
@@ -274,7 +274,7 @@ int cnid_cdb_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
         key.data = ROOTINFO_KEY;
         key.size = ROOTINFO_KEYLEN;
 	if (0 != (rc = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0 )) ) {
-	    LOG(log_error, logtype_default, "cnid_getstamp: failed to get rootinfo: %s", 
+	    LOG(log_error, logtype_default, "cnid_getstamp: failed to get rootinfo: %s",
                db_strerror(rc));
             errno = CNID_ERR_DB;
 	    return -1;

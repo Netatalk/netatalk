@@ -41,13 +41,13 @@ int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_, struct cnid_dbd_rply 
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
-     
+
     if (rc == 0) {
 	LOG(log_error, logtype_cnid, "dbd_getstamp: No rootinfo record found");
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
-    
+
     rply->namelen = CNID_DEV_LEN;
     rply->name = (char *)data.data + CNID_DEV_OFS;
     rply->result = CNID_DBD_RES_OK;

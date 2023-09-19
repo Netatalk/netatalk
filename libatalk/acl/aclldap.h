@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -17,11 +17,11 @@
 
 #include <atalk/uuid.h>		/* just for uuidtype_t*/
 
-/******************************************************** 
+/********************************************************
  * Interface
  ********************************************************/
 
 extern int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string);
-extern int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type); 
+extern int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type);
 
 #endif /* ACLLDAP_H */

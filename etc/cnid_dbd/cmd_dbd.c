@@ -1,11 +1,11 @@
-/* 
+/*
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -67,11 +67,11 @@ static void set_signal(void)
     if (sigaction(SIGTERM, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGTERM): %s", strerror(errno));
         exit(EXIT_FAILURE);
-    }        
+    }
     if (sigaction(SIGINT, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGINT): %s", strerror(errno));
         exit(EXIT_FAILURE);
-    }        
+    }
 
     memset(&sv, 0, sizeof(struct sigaction));
     sv.sa_handler = SIG_IGN;
@@ -80,15 +80,15 @@ static void set_signal(void)
     if (sigaction(SIGABRT, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGABRT): %s", strerror(errno));
         exit(EXIT_FAILURE);
-    }        
+    }
     if (sigaction(SIGHUP, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGHUP): %s", strerror(errno));
         exit(EXIT_FAILURE);
-    }        
+    }
     if (sigaction(SIGQUIT, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGQUIT): %s", strerror(errno));
         exit(EXIT_FAILURE);
-    }        
+    }
 }
 
 static void usage (void)
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
         dbd_log( LOGSTD, "Can't open dir: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
-        
+
     /* Setup signal handling */
     set_signal();
 
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
     /* Sanity checks to ensure we can touch this volume */
     if (vol->v_vfs_ea != AFPVOL_EA_AD && vol->v_vfs_ea != AFPVOL_EA_SYS) {
         dbd_log( LOGSTD, "Unknown Extended Attributes option: %u", vol->v_vfs_ea);
-        exit(EXIT_FAILURE);        
+        exit(EXIT_FAILURE);
     }
 
     if (flags & DBD_FLAGS_FORCE) {

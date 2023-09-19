@@ -20,9 +20,9 @@ extern struct _cnid_db *cnid_dbd_open (struct cnid_open_args *args);
 extern void   cnid_dbd_close      (struct _cnid_db *);
 extern cnid_t cnid_dbd_add        (struct _cnid_db *, const struct stat *, cnid_t,
                                    const char *, size_t, cnid_t);
-extern cnid_t cnid_dbd_get        (struct _cnid_db *, cnid_t, const char *, size_t); 
-extern char  *cnid_dbd_resolve    (struct _cnid_db *, cnid_t *, void *, size_t ); 
-extern int    cnid_dbd_getstamp   (struct _cnid_db *, void *, const size_t ); 
+extern cnid_t cnid_dbd_get        (struct _cnid_db *, cnid_t, const char *, size_t);
+extern char  *cnid_dbd_resolve    (struct _cnid_db *, cnid_t *, void *, size_t );
+extern int    cnid_dbd_getstamp   (struct _cnid_db *, void *, const size_t );
 extern cnid_t cnid_dbd_lookup     (struct _cnid_db *, const struct stat *, cnid_t,
                                    const char *, size_t);
 extern int    cnid_dbd_find       (struct _cnid_db *cdb, const char *name, size_t namelen,

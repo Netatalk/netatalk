@@ -1,18 +1,18 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    SMB Byte handling
    Copyright (C) Andrew Tridgell 1992-1998
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -23,7 +23,7 @@
 #include <arpa/inet.h>
 
 /*
-   This file implements macros for machine independent short and 
+   This file implements macros for machine independent short and
    int manipulation
 
 Here is a description of this file that I emailed to the samba list once:
@@ -32,7 +32,7 @@ Here is a description of this file that I emailed to the samba list once:
 > looked at it, and I would have thought that you might make a distinction
 > between LE and BE machines, but you only seem to distinguish between 386
 > and all other architectures.
-> 
+>
 > Can you give me a clue?
 
 sure.
@@ -97,7 +97,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 #undef CAREFUL_ALIGNMENT
 
-/* we know that the 386 can handle misalignment and has the "right" 
+/* we know that the 386 can handle misalignment and has the "right"
    byteorder */
 #ifdef __i386__
 #define CAREFUL_ALIGNMENT 0
@@ -163,7 +163,7 @@ it also defines lots of intermediate macros, just ignore those :-)
    alignment errors */
 /*
    WARNING: This section is dependent on the length of int16 and int32
-   being correct 
+   being correct
 */
 
 /* get single value from an SMB buffer */

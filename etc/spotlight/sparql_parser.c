@@ -101,7 +101,7 @@
   static const char *map_expr(const char *attr, char op, const char *val);
   static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
   static time_t isodate2unix(const char *s);
- 
+
  /* global vars, e.g. needed by the lexer */
   slq_t *ssp_slq;
 
@@ -2049,11 +2049,11 @@ void yyerror(const char *str)
     LOG(log_error, logtype_sl, "yyerror: %s", str);
 #endif
 }
- 
+
 int yywrap()
 {
     return 1;
-} 
+}
 
 /**
  * Map a Spotlight RAW query string to a SPARQL query string
@@ -2111,5 +2111,5 @@ int main(int argc, char **argv)
         printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
 
     return 0;
-} 
+}
 #endif

@@ -298,7 +298,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
  * We don't give return code because all errors are handled internally (I hope..)
  * */
 static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
-{    
+{
     static bool first_event = true;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     static char *user;
@@ -386,7 +386,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
                                      udp_entry->addrinfo.ai_socktype,
                                      udp_entry->addrinfo.ai_protocol);
-            
+
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
                 LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );

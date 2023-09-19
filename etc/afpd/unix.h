@@ -12,11 +12,11 @@ typedef int	mode_t;
 #endif /*i386*/
 #endif /*sun __svr4__*/
 
-#if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 ) 
+#if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 )
 #include <sys/vfs.h>
 #endif /* HAVE_SYS_VFS_H || sun || ibm032 */
 
-#if defined(_IBMR2) || defined(HAVE_STATFS_H) 
+#if defined(_IBMR2) || defined(HAVE_STATFS_H)
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
@@ -72,7 +72,7 @@ typedef int	mode_t;
 #endif /* ! NEED_QUOTACTL_WRAPPER */
 #endif /* linux || ultrix || HAVE_QUOTA_H */
 
-#ifdef __svr4__ 
+#ifdef __svr4__
 #include <sys/fs/ufs_quota.h>
 #endif /* __svr4__ */
 
@@ -222,6 +222,6 @@ extern void accessmode      (const AFPObj *obj, const struct vol *, char *, stru
 
 #ifdef AFS	
     #define accessmode afsmode
-#endif 
+#endif
 
 #endif /* UNIX_H */

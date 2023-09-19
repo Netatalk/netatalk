@@ -293,7 +293,7 @@ const char *openflags2logstr(int oflags)
         first = 0;
     }
     return buf;
-}    
+}
 
 static uint32_t get_eid(uint32_t eid)
 {
@@ -1310,7 +1310,7 @@ EC_CLEANUP:
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
-        
+
     EC_EXIT;
 }
 
@@ -2083,7 +2083,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     int   ret, err, oflags;
 
     /* Sanitize flags */
-    oflags = (flags & (ADFLAGS_CHECK_OF | ADFLAGS_DIR)) | ADFLAGS_HF | ADFLAGS_RDONLY;    
+    oflags = (flags & (ADFLAGS_CHECK_OF | ADFLAGS_DIR)) | ADFLAGS_HF | ADFLAGS_RDONLY;
 
     if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
         become_root();

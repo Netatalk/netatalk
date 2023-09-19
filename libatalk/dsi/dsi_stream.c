@@ -44,7 +44,7 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
 {
     buf[0] = dsi->header.dsi_flags;
     buf[1] = dsi->header.dsi_command;
-    memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));           
+    memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));
     memcpy(buf + 4, &dsi->header.dsi_data.dsi_code, sizeof(dsi->header.dsi_data.dsi_code));
     memcpy(buf + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
     memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
@@ -134,7 +134,7 @@ static int dsi_peek(DSI *dsi)
     return 0;
 }
 
-/* 
+/*
  * Return all bytes up to count from dsi->buffer if there are any buffered there
  */
 static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
@@ -146,7 +146,7 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
         return 0;
 
     LOG(log_maxdebug, logtype_dsi, "from_buf: %u bytes", count);
-    
+
     nbe = dsi->eof - dsi->start;
 
     if (nbe > 0) {
@@ -184,7 +184,7 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
     len = from_buf(dsi, buf, count); /* 1. */
     if (len)
         return len;             /* 2. */
-  
+
     len = readt(dsi->socket, buf, count, 0, 0); /* 3. */
 
     LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes): got: %d", count, len);
@@ -202,7 +202,7 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t len
   size_t buflen;
 
   LOG(log_maxdebug, logtype_dsi, "dsi_buffered_stream_read: %u bytes", length);
-  
+
   len = from_buf(dsi, data, length); /* read from buffer dsi->buffer */
   dsi->read_count += len;
   if (len == length) {          /* got enough bytes from there ? */
@@ -517,7 +517,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 
 /* ---------------------------------------
  * write data. 0 on failure. this assumes that dsi_len will never
- * cause an overflow in the data buffer. 
+ * cause an overflow in the data buffer.
  */
 int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {
@@ -539,20 +539,20 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     length = (dsi_stream_write(dsi, block, sizeof(block), 0) == sizeof(block));
     return length; /* really 0 on failure, 1 on success */
   }
-  
+
   /* block signals */
   block_sig(dsi);
   iov[0].iov_base = block;
   iov[0].iov_len = sizeof(block);
   iov[1].iov_base = buf;
   iov[1].iov_len = length;
-  
+
   towrite = sizeof(block) + length;
   dsi->write_count += towrite;
   while (towrite > 0) {
       if (((len = writev(dsi->socket, iov, iovecs)) == -1 && errno == EINTR) || (len == 0))
           continue;
-    
+
       if ((size_t)len == towrite) /* wrote everything out */
           break;
       else if (len < 0) { /* error */
@@ -565,7 +565,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
           unblock_sig(dsi);
           return 0;
       }
-    
+
       towrite -= len;
       if (towrite > length) { /* skip part of header */
           iov[0].iov_base = (char *) iov[0].iov_base + len;
@@ -582,7 +582,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   }
 
   LOG(log_maxdebug, logtype_dsi, "dsi_stream_send(%u bytes): END", length);
-  
+
   unblock_sig(dsi);
   return 1;
 }
@@ -605,7 +605,7 @@ int dsi_stream_receive(DSI *dsi)
       return 0;
 
   /* read in the header */
-  if (dsi_buffered_stream_read(dsi, (uint8_t *)block, sizeof(block)) != sizeof(block)) 
+  if (dsi_buffered_stream_read(dsi, (uint8_t *)block, sizeof(block)) != sizeof(block))
     return 0;
 
   dsi->header.dsi_flags = block[0];
@@ -621,7 +621,7 @@ int dsi_stream_receive(DSI *dsi)
 
   memcpy(&dsi->header.dsi_reserved, block + 12, sizeof(dsi->header.dsi_reserved));
   dsi->clientID = ntohs(dsi->header.dsi_requestID);
-  
+
   /* make sure we don't over-write our buffers. */
   dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
   dsi->header.dsi_data.dsi_doff = MIN(dsi->header.dsi_data.dsi_doff, dsi->server_quantum);

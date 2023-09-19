@@ -65,7 +65,7 @@
 static int
 callaurpc(struct vol *vol,
     u_long prognum, u_long versnum, u_long procnum,
-    xdrproc_t inproc, char *in, 
+    xdrproc_t inproc, char *in,
     xdrproc_t outproc, char *out)
 {
     enum clnt_stat clnt_stat;

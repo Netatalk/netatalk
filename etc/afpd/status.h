@@ -13,7 +13,7 @@
 #define AFPSTATUS_ICONOFF     6
 #define AFPSTATUS_FLAGOFF     8
 
-/* AFPSTATUS_PRELEN is the number of bytes for status data prior to 
+/* AFPSTATUS_PRELEN is the number of bytes for status data prior to
  * the ServerName field.
  *
  * This is two bytes of offset space for the MachineType, AFPVersionCount,

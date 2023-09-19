@@ -345,7 +345,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
         LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not in cache}", ntohl(cnid));
         dircache_stat.misses++;
     }
-    
+
     return cdir;
 }
 
@@ -448,7 +448,7 @@ int dircache_add(const struct vol *vol,
     if (dircache->hash_nodecount == dircache_maxsize)
         dircache_evict();
 
-    /* 
+    /*
      * Make sure we don't add duplicates
      */
 
@@ -493,7 +493,7 @@ int dircache_add(const struct vol *vol,
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
-   AFP_ASSERT(queue_count == index_didname->hash_nodecount 
+   AFP_ASSERT(queue_count == index_didname->hash_nodecount
            && queue_count == dircache->hash_nodecount);
 
     return 0;
@@ -520,7 +520,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIDNAME_INDEX) {
         if ((hn = hash_lookup(index_didname, dir)) == NULL) {
-            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in didname index", 
+            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in didname index",
                 ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
@@ -530,7 +530,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIRCACHE) {
         if ((hn = hash_lookup(dircache, dir)) == NULL) {
-            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in dircache", 
+            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in dircache",
                 ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
@@ -542,7 +542,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
     dircache_stat.removed++;
-    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
+    AFP_ASSERT(queue_count == index_didname->hash_nodecount
                && queue_count == dircache->hash_nodecount);
 }
 
@@ -571,7 +571,7 @@ int dircache_init(int reqsize)
     }
     if ((dircache = hash_create(dircache_maxsize, hash_comp_vid_did, hash_vid_did)) == NULL)
         return -1;
-    
+
     LOG(log_debug, logtype_afpd, "dircache_init: done. max dircache size: %u", dircache_maxsize);
 
     /* Initialize did/name index hashtable */

@@ -1,16 +1,16 @@
 #ifndef _ATALK_LOGGER_H
 #define _ATALK_LOGGER_H 1
 
-/* 
+/*
  * logger LOG Macro Usage
  * ======================
  *
  * LOG(<logtype>, <loglevel>, "<string>"[, args]);
- * 
+ *
  *
  * logger API Setup
  * ================
- * 
+ *
  * Standard interface:
  * -------------------
  *
@@ -19,7 +19,7 @@
  *
  * Calling without <filename> configures basic logging to syslog. Specifying <filename>
  * configures extended logging to <filename>.
- * 
+ *
  * You can later disable logging by calling
  *
  *    unsetuplog(char *confstring)
@@ -65,7 +65,7 @@
 
 /* logger is used by pam modules */
 #ifndef UAM_MODULE_EXPORT
-#define UAM_MODULE_EXPORT 
+#define UAM_MODULE_EXPORT
 #endif
 
 enum loglevels {
@@ -122,7 +122,7 @@ enum logtypes {
 #define logfacility_authpriv    (10<<3) /* security/auth messages (private) */
 #define logfacility_ftp         (11<<3) /* ftp daemon */
 
-/* ========================================================================= 
+/* =========================================================================
     Structure definitions
    ========================================================================= */
 
@@ -147,7 +147,7 @@ typedef struct {
 } logtype_conf_t;
 
 
-/* ========================================================================= 
+/* =========================================================================
     Global variables
     ========================================================================= */
 
@@ -169,7 +169,7 @@ UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes lo
 /*
  * How to write a LOG macro:
  * http://c-faq.com/cpp/debugmacs.html
- * 
+ *
  * We choose the verbose form in favor of the obfuscated ones, its easier
  * to parse for human beings and facilitates expanding the macro for
  * inline checks for debug levels.
@@ -184,7 +184,7 @@ UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes lo
         if (log_level <= LOG_MAX)                                       \
             if (log_level <= type_configs[type].level)                  \
                 make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
-    } while(0)  
+    } while(0)
 
 #else  /* ! NO_DEBUG */
 

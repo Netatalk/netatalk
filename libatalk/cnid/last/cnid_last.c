@@ -95,7 +95,7 @@ cnid_t cnid_last_get(struct _cnid_db *cdb _U_, cnid_t did _U_, const char *name 
 
 
 /* */
-cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, cnid_t did _U_, 
+cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, cnid_t did _U_,
                         const char *name _U_, size_t len _U_)
 {
     /* FIXME: this function doesn't work in [last] scheme ! */

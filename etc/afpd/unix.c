@@ -129,8 +129,8 @@ static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess 
      * There are certain things the mac won't try if you don't have
      * the "owner" bit set, even tho you can do these things on unix wiht
      * only write permission.  What were the things?
-     * 
-     * FIXME 
+     *
+     * FIXME
      * ditto seems to care if st_uid is 0 ?
      * was ma->ma_user & AR_UWRITE
      * but 0 as owner is a can of worms.
@@ -185,8 +185,8 @@ static mode_t mtoubits(u_char bits)
 
 /* ----------------------------------
    from the finder's share windows (menu--> File--> sharing...)
-   and from AFP 3.0 spec page 63 
-   the mac mode should be save somewhere 
+   and from AFP 3.0 spec page 63
+   the mac mode should be save somewhere
 */
 mode_t mtoumode(struct maccess *ma)
 {
@@ -214,7 +214,7 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
     if (path->st_errno) {
         return -1;
     }
-        
+
     mode |= vol->v_fperm;
 
     if (setfilmode(vol, path->u_name, mode, &path->st) < 0)
@@ -270,7 +270,7 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct 
     return 0;
 }
 
-/* --------------------------------- 
+/* ---------------------------------
  * uid/gid == 0 need to be handled as special cases. they really mean
  * that user/group should inherit from other, but that doesn't fit
  * into the unix permission scheme. we can get around this by

@@ -1,29 +1,29 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    Samba system utilities
    Copyright (C) Andrew Tridgell 1992-1998
    Copyright (C) Jeremy Allison  1998-2005
    Copyright (C) Timur Bakeyev        2005
    Copyright (C) Bjoern Jacke    2006-2007
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-   
+
    sys_copyxattr modified from LGPL2.1 libattr copyright
    Copyright (C) 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
    Copyright (C) 2001 Andreas Gruenbacher.
-      
+
    Samba 3.0.28, modified for netatalk.
 */
 
@@ -189,7 +189,7 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
 #elif defined(HAVE_EXTATTR_GET_FD)
     char *s;
     ssize_t retval;
-    int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
+    int attrnamespace = (strncmp(name, "system", 6) == 0) ?
         EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
     const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 
@@ -293,7 +293,7 @@ static struct {
         int space;
 	const char *name;
 	size_t len;
-} 
+}
 extattr[] = {
 	{ EXTATTR_NAMESPACE_SYSTEM, EXTATTR_PREFIX("") },
         { EXTATTR_NAMESPACE_USER, EXTATTR_PREFIX("") },
@@ -751,7 +751,7 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
 #elif defined(HAVE_EXTATTR_SET_FD)
     char *s;
     int retval = 0;
-    int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
+    int attrnamespace = (strncmp(name, "system", 6) == 0) ?
         EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
     const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
     if (flags) {
@@ -969,7 +969,7 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
             EC_FAIL;
         }
 	}
-    
+
 EC_CLEANUP:
     if (filedes != -1)
         close(filedes);
