@@ -266,7 +266,7 @@ static int do_move(const char *from, const char *to)
     }
 
     int mustcopy = 0;
-    /* 
+    /*
      * Besides the usual EXDEV we copy instead of moving if
      * 1) source AFP volume != dest AFP volume
      * 2) either source or dest isn't even an AFP volume
@@ -275,7 +275,7 @@ static int do_move(const char *from, const char *to)
         || !dvolume.vol->v_path
         || strcmp(svolume.vol->v_path, dvolume.vol->v_path) != 0)
         mustcopy = 1;
-    
+
     cnid_t cnid = 0;
     if (!mustcopy) {
         if ((cnid = cnid_for_path(svolume.vol->v_cdb, svolume.vol->v_path, from, &did)) == CNID_INVALID) {
@@ -313,7 +313,7 @@ static int do_move(const char *from, const char *to)
                 return (1);
             }
         } /* rename != 0*/
-        
+
         switch (sb.st_mode & S_IFMT) {
         case S_IFREG:
             if (dvolume.vol->vfs->vfs_renamefile(dvolume.vol, -1, from, to) != 0) {
@@ -327,7 +327,7 @@ static int do_move(const char *from, const char *to)
             SLOG("Not a file or dir: %s", from);
             return -1;
         }
-    
+
         /* get CNID of new parent dir */
         cnid_t newpdid, newdid;
         if ((newdid = cnid_for_paths_parent(&dvolume, to, &newpdid)) == CNID_INVALID) {
@@ -362,7 +362,7 @@ static int do_move(const char *from, const char *to)
             printf("%s -> %s\n", from, to);
         return (0);
     }
-    
+
     if (mustcopy)
         return copy(from, to);
 

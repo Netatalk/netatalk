@@ -16,14 +16,14 @@ AC_DEFUN([AC_NETATALK_TCP_WRAPPERS], [
 	netatalk_cv_tcpwrap=no
 	if test "x$wrapcheck" != "xno"; then
 		saved_LIBS=$LIBS
-		W_LIBS="-lwrap" 
+		W_LIBS="-lwrap"
 		LIBS="$LIBS $W_LIBS"
 		AC_LINK_IFELSE([AC_LANG_SOURCE([[ int allow_severity = 0; int deny_severity = 0; extern char hosts_access(void);]
 			,[hosts_access();]])]
-			, netatalk_cv_tcpwrap=yes , 
+			, netatalk_cv_tcpwrap=yes ,
    			[
 				LIBS=$saved_LIBS
-				W_LIBS="-lwrap -lnsl" 
+				W_LIBS="-lwrap -lnsl"
 				LIBS="$LIBS $W_LIBS"
 				AC_LINK_IFELSE([AC_LANG_SOURCE([[ int allow_severity = 0; int deny_severity = 0; extern char hosts_access(void);]
 					,[hosts_access();]])]

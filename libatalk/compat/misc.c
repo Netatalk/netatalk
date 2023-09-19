@@ -19,13 +19,13 @@ int dirfd(DIR *dir)
 size_t strnlen(const char *s, size_t max)
 {
     size_t len;
-  
+
     for (len = 0; len < max; len++) {
         if (s[len] == '\0') {
             break;
         }
     }
-    return len;  
+    return len;
 }
 #endif
 

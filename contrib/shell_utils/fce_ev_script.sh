@@ -40,7 +40,7 @@ while getopts ':hs:v:e:P:S:u:p:i:' option; do
 done
 shift $((OPTIND - 1))
 
-printf "FCE Event: $event" >> /tmp/fce.log 
+printf "FCE Event: $event" >> /tmp/fce.log
 if [ -n "$version" ] ; then
     printf ", protocol: $version" >> /tmp/fce.log
 fi

@@ -7,7 +7,7 @@ dnl   to be used as follows:
 dnl AM_PATH_NETATALK(MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl
 AC_DEFUN([AM_PATH_NETATALK],
-[dnl 
+[dnl
 dnl Get the cflags and libraries from the netatalk-config script
 dnl
 
@@ -20,12 +20,12 @@ AC_ARG_WITH(netatalk-prefix,
 , netatalk_config_prefix="$withval", netatalk_config_prefix="")
 
 AC_ARG_WITH(netatalk-exec-prefix,
-[  --with-netatalk-exec-prefix=PREFIX 
+[  --with-netatalk-exec-prefix=PREFIX
                           Exec prefix where netatalk is installed (optional)]
 , netatalk_config_exec_prefix="$withval", netatalk_config_exec_prefix="")
 
-AC_ARG_ENABLE(netatalktest, 
-[  --disable-netatalktest     Do not try to compile and run a test netatalk 
+AC_ARG_ENABLE(netatalktest,
+[  --disable-netatalktest     Do not try to compile and run a test netatalk
                           program],
 , enable_netatalktest=yes)
 
@@ -143,7 +143,7 @@ int main(int argc,char **argv)
   dnl
   dnl
   if test "x$no_netatalk" = x ; then
-     ifelse([$2], , :, [$2])     
+     ifelse([$2], , :, [$2])
   else
      NETATALK_CFLAGS=""
      NETATALK_LIBS=""

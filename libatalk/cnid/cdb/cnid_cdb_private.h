@@ -25,19 +25,19 @@
 #include <atalk/util.h>
 #include "cnid_cdb.h"
 
-/* record structure 
+/* record structure
    cnid                4
    dev                 8
    inode               8
-   type/last cnid      4 Not used    
+   type/last cnid      4 Not used
    did                 4
    name                strlen(name) +1
 
-primary key 
+primary key
 cnid
 secondary keys
 dev/inode
-did/name   
+did/name
 
 */
 
@@ -67,7 +67,7 @@ typedef struct CNID_private {
  * dev           4
  * ino           4
  * did           4
- * unix name     strlen(name) + 1 
+ * unix name     strlen(name) + 1
  *
  * db_didname:   (key: did/unix name)
  * -- this also caches the bits of .AppleDouble used by FPGetFilDirParam
@@ -80,8 +80,8 @@ typedef struct CNID_private {
  *    version number is stored with did/name key of 0/0
  *
  * cnid          4
- * modfiller     4 (dates only use 4 bytes right now, but we leave space 
- * moddate       4  for 8. moddate is also used to keep this info 
+ * modfiller     4 (dates only use 4 bytes right now, but we leave space
+ * moddate       4  for 8. moddate is also used to keep this info
  * createfiller  4  up-to-date.)
  * createdate    4
  * backfiller    4
@@ -98,10 +98,10 @@ typedef struct CNID_private {
  * longname      longnamelen (nul-terminated)
  * ---------------
  *             132 bytes + longnamelen
- * 
- * db_devino:    (key: dev/ino) 
+ *
+ * db_devino:    (key: dev/ino)
  * -- this is only used for consistency checks and isn't 1-1
- * cnid          4 
+ * cnid          4
  *
  * these correspond to the different path types. longname is for the
  * 255 unicode character names (path type == ?), macname is for the
@@ -115,7 +115,7 @@ typedef struct CNID_private {
  * name          namelen = strlen(name) + 1
  *
  * db_shortname: (key: did/shortname)
- * name namelen = strlen(name) + 1 
+ * name namelen = strlen(name) + 1
  */
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */

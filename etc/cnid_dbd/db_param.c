@@ -40,7 +40,7 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
     if (fn[0] != '/') {
         len = strlen(dir);
         if (len + 1 + strlen(fn) > maxlen)
-            return -1;      
+            return -1;
         strcpy(path, dir);
         if (path[len - 1] != '/')
             strcat(path, "/");
@@ -54,7 +54,7 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
 }
 
 static void default_params(struct db_param *dbp, char *dir)
-{        
+{
     dbp->logfile_autoremove  = DEFAULT_LOGFILE_AUTOREMOVE;
     dbp->cachesize           = DEFAULT_CACHESIZE;
     dbp->maxlocks            = DEFAULT_MAXLOCKS;
@@ -98,10 +98,10 @@ struct db_param *db_param_read(char *dir)
     static char val[MAXPATHLEN + 1];
     static char pfn[MAXPATHLEN + 1];
     int    items;
-    
+
     default_params(&params, dir);
     params.dir = dir;
-    
+
     if (make_pathname(pfn, dir, DB_PARAM_FN, MAXPATHLEN) < 0) {
         LOG(log_error, logtype_cnid, "Parameter filename too long");
         return NULL;
@@ -167,7 +167,7 @@ struct db_param *db_param_read(char *dir)
         if (parse_err)
             break;
     }
-    
+
     if (strlen(params.usock_file) == 0) {
         LOG(log_error, logtype_cnid, "default usock filename too long");
         parse_err++;
@@ -176,7 +176,7 @@ struct db_param *db_param_read(char *dir)
     fclose(fp);
     if (! parse_err) {
         /* sanity checks */
-        if (params.flush_frequency <= 0) 
+        if (params.flush_frequency <= 0)
             params.flush_frequency = 86400;
 
         if (params.flush_interval <= 0)

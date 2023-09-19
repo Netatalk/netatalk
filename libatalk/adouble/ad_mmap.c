@@ -18,7 +18,7 @@
 #include "ad_lock.h"
 
 static void *ad_mmap(const size_t length, const int prot,
-				const int flags, const int fd, 
+				const int flags, const int fd,
 				const off_t offset)
 {
   return mmap(0, length, prot, flags, fd, offset);
@@ -26,7 +26,7 @@ static void *ad_mmap(const size_t length, const int prot,
 
 /* this just sets things up for mmap. as mmap can handle offsets,
  * we need to reset the file position before handing it off */
-void *ad_mmapread(struct adouble *ad, const u_int32_t eid, 
+void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
 		  const off_t off, const size_t buflen)
 {
     /* data fork */
@@ -36,7 +36,7 @@ void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
 	return (void *) -1;
       }
       ad->ad_df.adf_off = 0;
-      return ad_mmap(buflen, PROT_READ | PROT_WRITE, MAP_PRIVATE, 
+      return ad_mmap(buflen, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 		     ad->ad_df.adf_fd, off);
 
     }
@@ -47,7 +47,7 @@ void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
       return (void *) -1;
     }
     ad->ad_hf.adf_off = 0;
-    return ad_mmap(buflen, PROT_READ | PROT_WRITE, MAP_PRIVATE, 
+    return ad_mmap(buflen, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 		   ad->ad_hf.adf_fd, ad->ad_eid[eid].ade_off + off);
 }
 
@@ -71,7 +71,7 @@ void *ad_mmapwrite(struct adouble *ad, const u_int32_t eid,
 	}
 
 	/* make sure the file is large enough */
-	if (st.st_size < buflen + off) 
+	if (st.st_size < buflen + off)
 	  ftruncate(ad->ad_df.adf_fd, buflen + off);
 
 	if ( lseek( ad->ad_df.adf_fd, 0, SEEK_SET ) < 0 ) {
@@ -82,19 +82,19 @@ void *ad_mmapwrite(struct adouble *ad, const u_int32_t eid,
 		       ad->ad_df.adf_fd, off);
     }
 
-    
+
     if ( fstat( ad->ad_hf.adf_fd, &st ) < 0 ) {
         return (void *) -1;
     }
-    
+
     if ( end ) {
 	off = ad->ad_eid[ eid ].ade_len - off;
     }
-    
+
     off += ad->ad_eid[eid].ade_off;
 
     /* make sure the file is large enough */
-    if (st.st_size < buflen + off) 
+    if (st.st_size < buflen + off)
       ftruncate(ad->ad_hf.adf_fd, buflen + off);
 
     if ( lseek( ad->ad_hf.adf_fd, 0, SEEK_SET ) < 0 ) {

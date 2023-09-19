@@ -251,7 +251,7 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
     }
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): BEGIN", ntohl(id));
-    
+
     EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
                                 "DELETE FROM `%s` WHERE Id=%" PRIu32,
                                 db->cnid_mysql_voluuid_str,
@@ -418,7 +418,7 @@ exec_stmt:
 
     case 0:
         /* not found */
-        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: name: '%s', did: %u is not in the CNID database", 
+        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: name: '%s', did: %u is not in the CNID database",
             name, ntohl(did));
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
@@ -577,7 +577,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                                             "START TRANSACTION;"
                                             "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
                                             "TRUNCATE TABLE %s;"
-                                            "ALTER TABLE %s AUTO_INCREMENT = 17;" 
+                                            "ALTER TABLE %s AUTO_INCREMENT = 17;"
                                             "COMMIT;",
                                             db->cnid_mysql_voluuid_str,
                                             db->cnid_mysql_voluuid_str,
@@ -683,7 +683,7 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t 
     *id = htonl(atoi(row[0]));
     strncpy(buffer, row[1], len);
 
-EC_CLEANUP:             
+EC_CLEANUP:
     if (result)
         mysql_free_result(result);
 

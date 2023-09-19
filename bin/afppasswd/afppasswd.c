@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -15,7 +15,7 @@
  * the last two fields aren't currently used by the randnum uams.
  *
  * root syntax: afppasswd [-c] [-a] [-p path] [-f] [username]
- * user syntax: afppasswd 
+ * user syntax: afppasswd
  */
 
 #ifdef HAVE_CONFIG_H
@@ -85,7 +85,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
     if (j <= DES_KEY_SZ)
       memset(key + j, 0, sizeof(key) - j);
     DES_key_sched((DES_cblock *) key, &schedule);
-    memset(key, 0, sizeof(key));   
+    memset(key, 0, sizeof(key));
     if (newpwd) {
 	DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd, &schedule,
 		    DES_ENCRYPT);
@@ -93,7 +93,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
       /* decrypt the password */
       DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf, &schedule, DES_DECRYPT);
     }
-    memset(&schedule, 0, sizeof(schedule));      
+    memset(&schedule, 0, sizeof(schedule));
   }
 
   if (newpwd) {
@@ -125,14 +125,14 @@ static int update_passwd(const char *path, const char *name, int flags)
   if (strlen(path) < sizeof(buf) - 5) {
     strcat(buf, ".key");
     keyfd = open(buf, O_RDONLY);
-  } 
+  }
 
   pos = ftell(fp);
   memset(buf, 0, sizeof(buf));
   while (fgets(buf, sizeof(buf), fp)) {
     if ((p = strchr(buf, ':'))) {
       /* check for a match */
-      if (strlen(name) == (p - buf) && 
+      if (strlen(name) == (p - buf) &&
           strncmp(buf, name, p - buf) == 0) {
 	p++;
 	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
@@ -175,11 +175,11 @@ found_entry:
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
-    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) { 
+    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) {
         fprintf(stderr, "Error: %s\n", passwd);
         err = -1;
         goto update_done;
-    } 
+    }
   }
 #endif /* USE_CRACKLIB */
 
@@ -219,7 +219,7 @@ static int create_file(const char *path, uid_t minuid)
   struct passwd *pwd;
   int fd, len, err = 0;
 
-  
+
   if ((fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
     fprintf(stderr, "afppasswd: can't create %s\n", path);
     return -1;
@@ -303,8 +303,8 @@ int main(int argc, char **argv)
       break;
     }
   }
-  
-  if (err || (optind + ((flags & OPT_CREATE) ? 0 : 
+
+  if (err || (optind + ((flags & OPT_CREATE) ? 0 :
 			(flags & OPT_ISROOT)) != argc)) {
 #ifdef USE_CRACKLIB
     fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "afppasswd: %s doesn't exist.\n", path);
       return -1;
     }
-    
+
     /* if we're root, we need to specify the username */
     pwd = (flags & OPT_ISROOT) ? getpwnam(argv[optind]) : getpwuid(uid);
     if (pwd)

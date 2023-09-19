@@ -45,7 +45,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
 
     if test $use_cdb_backend = yes; then
         AC_MSG_RESULT([yes])
-        AC_DEFINE(CNID_BACKEND_CDB, 1, [Define if CNID Concurrent BDB backend should be compiled.])	    
+        AC_DEFINE(CNID_BACKEND_CDB, 1, [Define if CNID Concurrent BDB backend should be compiled.])	
         if test x"$DEFAULT_CNID_SCHEME" = x; then
             DEFAULT_CNID_SCHEME=cdb
         fi
@@ -183,6 +183,6 @@ AC_DEFUN([AC_NETATALK_CNID], [
     if test "x$bdb_required" = "xyes"; then
 	ifelse([$1], , :, [$1])
     else
-	ifelse([$2], , :, [$2])     
+	ifelse([$2], , :, [$2])
     fi
 ])

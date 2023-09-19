@@ -1,9 +1,9 @@
 
-/* 
+/*
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
- * 
+ *
  * This program is free software; you can redistribute and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation version 2 of the License or later
@@ -13,8 +13,8 @@
 
 /*
  * This file contains initialization stuff for CNID backends.
- * Currently it only employs static bindings. 
- * No plans for dynamically loaded CNID backends here (temporary). 
+ * Currently it only employs static bindings.
+ * No plans for dynamically loaded CNID backends here (temporary).
  * Maybe somewhere in the future.
  */
 

@@ -132,7 +132,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     cnid_getstamp(vol->vol->v_cdb,
                   vol->db_stamp,
                   sizeof(vol->db_stamp));
-    
+
     return 0;
 }
 

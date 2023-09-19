@@ -1,7 +1,7 @@
 # Makefile.am for etc/spotlight/
 
 pkgconfdir = @PKGCONFDIR@
-noinst_LTLIBRARIES = 
+noinst_LTLIBRARIES =
 noinst_PROGRAMS =
 noinst_HEADERS = sparql_map.h
 BUILT_SOURCES =

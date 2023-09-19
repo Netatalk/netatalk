@@ -254,7 +254,7 @@ int server_child_transfer_session(server_child_t *children,
     }
 
     LOG(log_note, logtype_default, "Reconnect: transferring session to child[%u]", pid);
-    
+
     if (writet(child->afpch_ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_default, "Reconnect: error sending DSI id to child[%u]", pid);
         EC_STATUS(-1);
@@ -279,7 +279,7 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
     int i;
 
     pthread_mutex_lock(&children->servch_lock);
-    
+
     for (i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
         while (child) {

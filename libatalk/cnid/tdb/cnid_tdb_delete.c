@@ -3,12 +3,12 @@
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
- * cnid_delete: delete a CNID from the database 
+ * cnid_delete: delete a CNID from the database
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif 
+#endif
 
 #ifdef CNID_BACKEND_TDB
 
@@ -32,19 +32,19 @@ int cnid_tdb_delete(struct _cnid_db *cdb, const cnid_t id)
     {
         return 0;
     }
-    
-    tdb_delete(db->tdb_cnid, key); 
+
+    tdb_delete(db->tdb_cnid, key);
 
     key.dptr = data.dptr +CNID_DEVINO_OFS;
     key.dsize = CNID_DEVINO_LEN;
-    tdb_delete(db->tdb_devino, key); 
+    tdb_delete(db->tdb_devino, key);
 
     key.dptr = data.dptr +CNID_DID_OFS;
     key.dsize = data.dsize -CNID_DID_OFS;
-    tdb_delete(db->tdb_didname, key); 
+    tdb_delete(db->tdb_didname, key);
 
     free(data.dptr);
     return 0;
 }
 
-#endif 
+#endif

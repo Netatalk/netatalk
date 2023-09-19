@@ -33,7 +33,7 @@ afpd \- Apple Filing Protocol daemon
 .HP \w'\fBafpd\fR\ 'u
 \fBafpd\fR [\-d] [\-F\ \fIconfigfile\fR]
 .HP \w'\fBafpd\fR\ 'u
-\fBafpd\fR \-v | \-V | \-h 
+\fBafpd\fR \-v | \-V | \-h
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR

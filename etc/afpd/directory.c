@@ -604,7 +604,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             }
             /* DEADC0DE */
             ret = NULL;
-            goto exit;            
+            goto exit;
         }
         ret = ret;
         goto exit;
@@ -692,7 +692,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         err = 1;
         goto exit;
     }
-    
+
     /* Add it to the cache only if it's a dir */
     if (dircache_add(vol, ret) != 0) { /* 7 */
         err = 1;

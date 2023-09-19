@@ -1,11 +1,11 @@
-/* 
+/*
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -350,7 +350,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
         if (adflags & ADFLAGS_DIR)
             putchar('O');
         else
-            putchar('o');                
+            putchar('o');
     } else
         putchar('-');
 
@@ -364,14 +364,14 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
         else
             putchar('-');
     }
-    putchar(' '); 
+    putchar(' ');
     for(i=0; i<4; i++) {
         if (isalnum(creator[i]))
             putchar(creator[i]);
         else
             putchar('-');
     }
-    putchar(' '); 
+    putchar(' ');
 
     /* CNID */
     cnid = ad_forcegetid(&ad);
@@ -463,7 +463,7 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
         print_date(st);
     }
     print_flags(path, vol, st);
-    printf("  %s\n", path);    
+    printf("  %s\n", path);
 
 
     return 0;

@@ -21,7 +21,7 @@
 #include "dbd.h"
 
 
-/* 
+/*
    cnid_update: takes the given cnid and updates the metadata.
    First, delete given CNID, then re-insert.
 */

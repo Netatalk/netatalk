@@ -1,14 +1,14 @@
 #!@PERL@
 #
 # asip-status - send DSIGetStatus to an AppleShare IP file server (aka
-#               ASIP, aka AFP over TCP port 548).  A returned UAM of 
+#               ASIP, aka AFP over TCP port 548).  A returned UAM of
 #               "No User Authen" means that the server supports guest access.
 #
 # author: James W. Abendschan  <jwa@jammed.com>
 # license: GPL - http://www.gnu.org/copyleft/gpl.html
 # url: http://www.jammed.com/~jwa/hacks/security/asip/
 # Date: 7 May 1997 (v1.0) - original version
-# see also: 
+# see also:
 #   - http://developer.apple.com/techpubs/macos8/NetworkCommSvcs/AppleShare/
 #   - http://www2.opendoor.com/asip/   (excellent Mac sharing / security site)
 #
@@ -111,9 +111,9 @@ sub parse_hostport
 	return ( $host, $port );
 }
 
-sub build_packet 
+sub build_packet
 {
-	my (@packet) = 
+	my (@packet) =
 		(
 		0x00,			# 0- request, 1-reply
 		0x03,			# 3- DSIGetStatus
@@ -130,7 +130,7 @@ sub build_packet
 
 }
 
-sub sendpacket 
+sub sendpacket
 {
 	my ($host, $port, $packet) = @_;
 	my ($b, $buf);
@@ -139,12 +139,12 @@ sub sendpacket
 
 	my ($asip_sock) = IO::Socket::IP->new(
 		Domain => $main::ipv,
-		PeerAddr => $host, 
-		PeerPort => $port, 
-		Proto => 'tcp', 
-		Type => SOCK_STREAM, 
+		PeerAddr => $host,
+		PeerPort => $port,
+		Proto => 'tcp',
+		Type => SOCK_STREAM,
 		Timeout => 10
-		) || die "connect to $host failure: $!"; 
+		) || die "connect to $host failure: $!";
 	$asip_sock->autoflush(1);
 
 	print "sending packet\n" if ($main::debug);
@@ -195,7 +195,7 @@ sub sendpacket
 }
 
 
-sub parse_packet 
+sub parse_packet
 {
 	my ($buf) = shift @_;
 	my (@packet);
@@ -246,7 +246,7 @@ sub parse_packet
 	{
 		print "No data in packet?\n";
 	}	
-	if (($datalen > 0) && ($cmd == 3)) 
+	if (($datalen > 0) && ($cmd == 3))
 	{
 		my (@AFPpacket) = @packet[($edo+16)..($edo+16+$datalen)];
 		return (parse_FPGetSrvrInfo(@AFPpacket));
@@ -260,7 +260,7 @@ sub parse_packet
 
 
 
-sub parse_FPGetSrvrInfo() 
+sub parse_FPGetSrvrInfo()
 {
 	my (@packet) = @_;
 	my ($i);
@@ -386,17 +386,17 @@ sub parse_FPGetSrvrInfo()
 
 # getsrvbyname .. sorta ..
 
-sub getasipsrv 
+sub getasipsrv
 {
 	my ($what, $code) = @_;
 
-	if ($what eq "flags") 
+	if ($what eq "flags")
 	{
 		return "Request" if ($code == 0);
-		return "Reply" if ($code == 1); 
+		return "Reply" if ($code == 1);
 	}
 
-	if ($what eq "command") 
+	if ($what eq "command")
 	{
 		return "DSICloseSession" if ($code == 1);
 		return "DSICommand" if ($code == 2);
@@ -415,7 +415,7 @@ sub getasipsrv
 # look in the packet for the count.  Otherwise, it will
 # assume I know what I'm doing.  (hah, what a foolish function..)
 
-sub extract 
+sub extract
 {
 	my ($count, $offset, @packet) = @_;
 	my ($i, $j);
@@ -627,7 +627,7 @@ sub extract_network_address
 				print " (IPv6 address)\n";
 			}
 		}
-		else 
+		else
 		{
 			printf "unsupported address type: %u\n", $type;
 		}

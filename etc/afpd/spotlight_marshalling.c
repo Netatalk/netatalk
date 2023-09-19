@@ -246,7 +246,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
             offset += 8;
         }
     }
-    
+
 EC_CLEANUP:
     if (ret != 0)
         return -1;
@@ -524,7 +524,7 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int le
     if (length <= 16)
         /* that's permitted, it's an empty array */
         goto EC_CLEANUP;
-    
+
     query_data64 = sl_unpack_uint64(buf, offset, encoding);
     count = query_data64 & 0xffff;
 
@@ -671,7 +671,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     default:
         EC_FAIL;
     }
-            
+
 EC_CLEANUP:
     if (ret != 0)
         roffset = -1;

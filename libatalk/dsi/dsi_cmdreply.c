@@ -15,7 +15,7 @@
 
 /* this assumes that the reply follows right after the command, saving
  * on a couple assignments. specifically, command, requestID, and
- * reserved field are assumed to already be set. */ 
+ * reserved field are assumed to already be set. */
 int dsi_cmdreply(DSI *dsi, const int err)
 {
     int ret;

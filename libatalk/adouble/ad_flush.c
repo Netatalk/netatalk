@@ -460,10 +460,10 @@ int ad_close(struct adouble *ad, int adflags)
     if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF))
         adflags |= ADFLAGS_HF;
 
-    if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {        
+    if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {
         if (ad->ad_data_refcount)
             if (--ad->ad_data_refcount == 0)
-                adf_lock_free(&ad->ad_data_fork);                
+                adf_lock_free(&ad->ad_data_fork);
         if (--ad->ad_data_fork.adf_refcount == 0) {
             if (ad_data_closefd(ad) < 0)
                 err = -1;

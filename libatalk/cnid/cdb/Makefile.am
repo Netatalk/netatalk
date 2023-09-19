@@ -17,5 +17,5 @@ if USE_CDB_BACKEND
 noinst_LTLIBRARIES = libcnid_cdb.la
 endif
 
-noinst_HEADERS = cnid_cdb_meta.h cnid_cdb_private.h 
+noinst_HEADERS = cnid_cdb_meta.h cnid_cdb_private.h
 EXTRA_DIST = README cnid_cdb_meta.c cnid_cdb_nextid.c

@@ -15,7 +15,7 @@
 
 /* just a label for exported bits */
 #ifndef UAM_MODULE_EXPORT
-#define UAM_MODULE_EXPORT 
+#define UAM_MODULE_EXPORT
 #endif
 
 /* type of uam */
@@ -28,7 +28,7 @@
 /* things for which we can have uams */
 #define UAM_SERVER_LOGIN         (1 << 0)
 #define UAM_SERVER_CHANGEPW      (1 << 1)
-#define UAM_SERVER_PRINTAUTH     (1 << 2) 
+#define UAM_SERVER_PRINTAUTH     (1 << 2)
 #define UAM_SERVER_LOGIN_EXT     (1 << 3)
 
 /* options */

@@ -27,7 +27,7 @@ int dbd_check_indexes(DBD *dbd, char *dbdir)
 
     LOG(log_note, logtype_cnid, "CNID database at `%s' is being checked (quick)", dbdir);
 
-    if (dbif_count(dbd, DBIF_CNID, &c_cnid)) 
+    if (dbif_count(dbd, DBIF_CNID, &c_cnid))
         return -1;
 
     if (dbif_count(dbd, DBIF_IDX_DEVINO, &c_devino))
@@ -39,16 +39,16 @@ int dbd_check_indexes(DBD *dbd, char *dbdir)
         return 1;
     }
 
-    if (dbif_count(dbd, DBIF_IDX_DIDNAME, &c_didname)) 
+    if (dbif_count(dbd, DBIF_IDX_DIDNAME, &c_didname))
         return -1;
-    
+
     if ( c_cnid != c_didname) {
         LOG(log_error, logtype_cnid, "CNID database at `%s' corrupted (%u/%u)", dbdir, c_cnid, c_didname);
         return 1;
     }
 
     LOG(log_note, logtype_cnid, "CNID database at `%s' seems ok, %u entries.", dbdir, c_cnid);
-    return 0;  
+    return 0;
 }
 
 

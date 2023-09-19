@@ -1,21 +1,21 @@
 /*
     Copyright (c) 2004 Didier Gautheron
     Copyright (c) 2009 Frank Lahm
- 
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- 
+
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <libgen.h>
 
-#include <atalk/afp.h>    
+#include <atalk/afp.h>
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
 #include <atalk/acl.h>
@@ -52,7 +52,7 @@ struct perm {
 typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *, int);
 
 /* ----------------------------- */
-static int 
+static int
 for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vol *vol, void *data, int flag)
 {
     char            buf[ MAXPATHLEN + 1];
@@ -60,7 +60,7 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vo
     DIR             *dp;
     struct dirent   *de;
     int             ret;
-    
+
 
     if (NULL == ( dp = opendir( name)) ) {
         if (!flag) {
@@ -77,7 +77,7 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vo
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
                 continue;
         }
-        
+
         strlcat(buf, de->d_name, sizeof(buf));
         if (fn && (ret = fn(vol, de, buf, data, flag))) {
            closedir(dp);
@@ -91,20 +91,20 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vo
 
 static int netatalk_name(const char *name)
 {
-    return strcmp(name,".AppleDB") && strcmp(name,".AppleDesktop");        
+    return strcmp(name,".AppleDB") && strcmp(name,".AppleDesktop");
 }
 
 /*******************************************************************************
- * classic adouble format 
+ * classic adouble format
  *******************************************************************************/
 
 static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 {
     if (name[0] != '.')
         return 1;
-    
+
     return netatalk_name(name) && strcmp(name,".AppleDouble") && strcasecmp(name,".Parent");
-}                                           
+}
 
 /* ----------------- */
 static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
@@ -131,10 +131,10 @@ static int deletecurdir_adouble_loop(const struct vol *vol, struct dirent *de, c
 {
     struct stat st;
     int         err;
-    
+
     /* bail if the file exists in the current directory.
      * note: this will not fail with dangling symlinks */
-    
+
     if (lstat(de->d_name, &st) == 0)
         return AFPERR_DIRNEMPT;
 
@@ -150,7 +150,7 @@ static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
        as well. */
-    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, vol, NULL, 1))) 
+    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, vol, NULL, 1)))
         return err;
     return netatalk_rmdir(-1, ".AppleDouble" );
 }
@@ -180,7 +180,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             return -1;
     }
 
-    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR ), mode, st) < 0) 
+    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR ), mode, st) < 0)
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -275,18 +275,18 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
                 return 0;
 
             /* We are here  because :
-             * -there's no dest folder. 
+             * -there's no dest folder.
              * -there's no .AppleDouble in the dest folder.
              * if we use the struct adouble passed in parameter it will not
              * create .AppleDouble if the file is already opened, so we
              * use a diff one, it's not a pb,ie it's not the same file, yet.
              */
-            ad_init(&ad, vol); 
+            ad_init(&ad, vol);
             if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) == 0) {
             	ad_close(&ad, ADFLAGS_HF);
-    	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) ) 
+    	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) )
                    err = 0;
-                else 
+                else
                    err = errno;
             }
             else { /* it's something else, bail out */
@@ -417,7 +417,7 @@ static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
         /* set ACL on ressource fork */
         EC_ZERO_ERR( acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl), AFPERR_MISC );
     }
-    
+
 EC_CLEANUP:
     if (errno == ENOENT)
         EC_STATUS(AFP_OK);
@@ -442,13 +442,13 @@ EC_CLEANUP:
 #endif
 
 /*************************************************************************
- * EA adouble format 
+ * EA adouble format
  ************************************************************************/
 static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 {
     if (name[0] != '.')
         return 1;
-    
+
 #ifndef HAVE_EAFD
     if (name[1] == '_')
         return ad_valid_header_osx(name);
@@ -596,7 +596,7 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
             LOG(log_error, logtype_afpd, "[VFS] copyfile(\"%s\" -> \"%s\"): %s",
                 cfrombstr(s), cfrombstr(d), strerror(errno));
             EC_FAIL;
-                    
+
         }
     }
 
@@ -637,7 +637,7 @@ static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
  * VFS chaining
  ********************************************************************************************/
 
-/* 
+/*
  * Up until we really start stacking many VFS modules on top of one another or use
  * dynamic module loading like we do for UAMs, up until then we just stack VFS modules
  * via an fixed size array.
@@ -646,7 +646,7 @@ static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
  * following funcs are called in order to give them a chance.
  */
 
-/* 
+/*
  * Define most VFS funcs with macros as they all do the same.
  * Only "ad_path" and "validupath" will NOT do stacking and only
  * call the func from the first module.
@@ -668,7 +668,7 @@ static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
     }
 
 VFS_MFUNC(chown, VFS_FUNC_ARGS_CHOWN, VFS_FUNC_VARS_CHOWN)
-VFS_MFUNC(renamedir, VFS_FUNC_ARGS_RENAMEDIR, VFS_FUNC_VARS_RENAMEDIR) 
+VFS_MFUNC(renamedir, VFS_FUNC_ARGS_RENAMEDIR, VFS_FUNC_VARS_RENAMEDIR)
 VFS_MFUNC(deletecurdir, VFS_FUNC_ARGS_DELETECURDIR, VFS_FUNC_VARS_DELETECURDIR)
 VFS_MFUNC(setfilmode, VFS_FUNC_ARGS_SETFILEMODE, VFS_FUNC_VARS_SETFILEMODE)
 VFS_MFUNC(setdirmode, VFS_FUNC_ARGS_SETDIRMODE, VFS_FUNC_VARS_SETDIRMODE)
@@ -719,7 +719,7 @@ static struct vfs_ops vfs_master_funcs = {
     vfs_ea_remove
 };
 
-/* 
+/*
  * Primary adouble modules: v2, ea
  */
 
@@ -753,7 +753,7 @@ static struct vfs_ops netatalk_adouble_ea = {
     NULL
 };
 
-/* 
+/*
  * Secondary vfs modules for Extended Attributes
  */
 
@@ -803,7 +803,7 @@ static struct vfs_ops netatalk_ea_sys = {
     /* ea_remove          */ sys_remove_ea
 };
 
-/* 
+/*
  * Tertiary VFS modules for ACLs
  */
 

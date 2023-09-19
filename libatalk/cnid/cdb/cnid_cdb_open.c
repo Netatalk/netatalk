@@ -2,17 +2,17 @@
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
- * CNID database support. 
+ * CNID database support.
  *
  * here's the deal:
- *  1) afpd already caches did's. 
- *  2) the database stores cnid's as both did/name and dev/ino pairs. 
+ *  1) afpd already caches did's.
+ *  2) the database stores cnid's as both did/name and dev/ino pairs.
  *  3) RootInfo holds the value of the NextID.
  *  4) the cnid database gets called in the following manner --
  *     start a database:
  *     cnid = cnid_open(root_dir);
  *
- *     allocate a new id: 
+ *     allocate a new id:
  *     newid = cnid_add(cnid, dev, ino, parent did,
  *     name, id); id is a hint for a specific id. pass 0 if you don't
  *     care. if the id is already assigned, you won't get what you
@@ -21,14 +21,14 @@
  *     given an id, get a did/name and dev/ino pair.
  *     name = cnid_get(cnid, &id); given an id, return the corresponding
  *     info.
- *     return code = cnid_delete(cnid, id); delete an entry. 
+ *     return code = cnid_delete(cnid, id); delete an entry.
  *
  * with AFP, CNIDs 0-2 have special meanings. here they are:
  * 0 -- invalid cnid
- * 1 -- parent of root directory (handled by afpd) 
+ * 1 -- parent of root directory (handled by afpd)
  * 2 -- root directory (handled by afpd)
  *
- * CNIDs 4-16 are reserved according to page 31 of the AFP 3.0 spec so, 
+ * CNIDs 4-16 are reserved according to page 31 of the AFP 3.0 spec so,
  * CNID_START begins at 17.
  */
 
@@ -66,14 +66,14 @@ static char *old_dbfiles[] = {"cnid.db", NULL};
 static int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
 int len;
- 
+
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DID_OFS;
     len = strlen((char *)skey->data + CNID_DID_LEN);
     skey->size = CNID_DID_LEN + len + 1;
     return (0);
 }
- 
+
 /* --------------- */
 static int devino(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
@@ -82,7 +82,7 @@ static int devino(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
     skey->size = CNID_DEVINO_LEN;
     return (0);
 }
- 
+
 /* --------------- */
 static int  my_associate (DB *p, DB *s,
                    int (*callback)(DB *, const DBT *,const DBT *, DBT *),
@@ -121,7 +121,7 @@ static struct _cnid_db *cnid_cdb_new(struct vol *vol)
     /* check library match, ignore if only patch level changed */
     if ( major != DB_VERSION_MAJOR || minor != DB_VERSION_MINOR)
     {
-        LOG(log_error, logtype_cnid, "cnid_cdb_new: the Berkeley DB library version used does not match the version compiled with: (%u.%u)/(%u.%u)", DB_VERSION_MAJOR, DB_VERSION_MINOR, major, minor); 
+        LOG(log_error, logtype_cnid, "cnid_cdb_new: the Berkeley DB library version used does not match the version compiled with: (%u.%u)/(%u.%u)", DB_VERSION_MAJOR, DB_VERSION_MINOR, major, minor);
 	return NULL;
     }
 
@@ -151,7 +151,7 @@ static int upgrade_required(char *dbdir)
     int len, i;
     int found = 0;
     struct stat st;
-    
+
     strcpy(path, dbdir);
 
     len = strlen(path);
@@ -159,7 +159,7 @@ static int upgrade_required(char *dbdir)
         strcat(path, "/");
         len++;
     }
-    
+
     for (i = 0; old_dbfiles[i] != NULL; i++) {
 	strcpy(path + len, old_dbfiles[i]);
 	if ( !(stat(path, &st) < 0) ) {
@@ -231,7 +231,7 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
     open_flag = DB_CREATE;
 
     /* We need to be able to open the database environment with full
-     * transaction, logging, and locking support if we ever hope to 
+     * transaction, logging, and locking support if we ever hope to
      * be a true multi-acess file server. */
     if ((rc = db_env_create(&db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: db_env_create: %s", db_strerror(rc));
@@ -311,19 +311,19 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
     }
 
     /* ---------------------- */
-    /* Associate the secondary with the primary. */ 
+    /* Associate the secondary with the primary. */
     if ((rc = my_associate(db->db_cnid, db->db_didname, didname, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to associate didname database: %s",
             db_strerror(rc));
         goto fail_appinit;
     }
- 
+
     if ((rc = my_associate(db->db_cnid, db->db_devino, devino, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to associate devino database: %s",
             db_strerror(rc));
         goto fail_appinit;
     }
- 
+
     /* ---------------------- */
     /* Check for version. "cdb" only supports CNID_VERSION_0, cf cnid_private.h */
 

@@ -100,7 +100,7 @@ void *dequeue(q_t *q)
     node->next->prev = node->prev;
     free(node);
 
-    return data;    
+    return data;
 }
 
 void queue_destroy(q_t *q, void (*callback)(void *))

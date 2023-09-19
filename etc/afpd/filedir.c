@@ -215,9 +215,9 @@ int check_name(const struct vol *vol, char *name)
     return 0;
 }
 
-/* ------------------------- 
+/* -------------------------
     move and rename sdir:oldname to curdir:newname in volume vol
-    special care is needed for lock   
+    special care is needed for lock
 */
 static int moveandrename(const AFPObj *obj,
                          struct vol *vol,
@@ -281,7 +281,7 @@ static int moveandrename(const AFPObj *obj,
      * oldunixname now points to either
      *   a) full pathname of the source fs object (if renameat is not available)
      *   b) the oldname (renameat is available)
-     * we are in the dest folder so we need to use 
+     * we are in the dest folder so we need to use
      *   a) oldunixname for ad_open
      *   b) fchdir sdir_fd before e.g. ad_open or use *at functions where appropriate
      */
@@ -298,7 +298,7 @@ static int moveandrename(const AFPObj *obj,
         uint16_t bshort;
 
         ad_getattr(adp, &bshort);
-        
+
         ad_close(adp, ADFLAGS_HF);
         if (!(vol->v_ignattr & ATTRBIT_NORENAME) && (bshort & htons(ATTRBIT_NORENAME))) {
             rc = AFPERR_OLOCK;
@@ -313,7 +313,7 @@ static int moveandrename(const AFPObj *obj,
         }
     }
 
-    if (NULL == (upath = mtoupath(vol, newname, curdir->d_did, utf8_encoding(vol->v_obj)))){ 
+    if (NULL == (upath = mtoupath(vol, newname, curdir->d_did, utf8_encoding(vol->v_obj)))){
         rc = AFPERR_PARAM;
         goto exit;
     }
@@ -475,7 +475,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     if (!plen) {
         return AFP_OK; /* newname == oldname same dir */
     }
-    
+
     rc = moveandrename(obj, vol, sdir, -1, oldname, newname, isdir);
     if ( rc == AFP_OK ) {
         setvoltime(obj, vol );
@@ -484,7 +484,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     return( rc );
 }
 
-/* 
+/*
  * Recursivley delete vetoed files and directories if the volume option is set
  *
  * @param vol   (r) volume handle
@@ -655,7 +655,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 				fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
                 if (vol->v_tm_used < s_path->st.st_size)
                     vol->v_tm_used = 0;
-                else 
+                else
                     vol->v_tm_used -= s_path->st.st_size;
             }
             struct dir *cachedfile;

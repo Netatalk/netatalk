@@ -81,7 +81,7 @@
 
 #ifdef HAVE_NFSV4_ACLS
 
-/*! 
+/*!
  * Compile access rights for a user to one file-system object
  *
  * This combines combines all access rights for a user to one fs-object and
@@ -419,7 +419,7 @@ EC_CLEANUP:
     return rights;
 }
 
-/*! 
+/*!
  * Compile access rights for a user to one file-system object
  *
  * This combines combines all access rights for a user to one fs-object and
@@ -728,7 +728,7 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights, 
  * Add a permission of "type" for user or group "id" to an ACL. Scan the ACL
  * for existing permissions for this type/id, if there is one add the perm,
  * otherwise create a new ACL entry.
- * perm can be or'ed ACL_READ, ACL_WRITE and ACL_EXECUTE.  
+ * perm can be or'ed ACL_READ, ACL_WRITE and ACL_EXECUTE.
  *
  * @param aclp     (rw) pointer to ACL
  * @param type     (r)  acl_tag_t of ACL_USER or ACL_GROUP

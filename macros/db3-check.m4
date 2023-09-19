@@ -210,7 +210,7 @@ if test "x$bdb_required" = "xyes"; then
     if test "x$bdbfound" = "xyes"; then
         ifelse([$1], , :, [$1])
     else
-        ifelse([$2], , :, [$2])     
+        ifelse([$2], , :, [$2])
 		AC_MSG_ERROR([Berkeley DB library required but not found!])
     fi
 

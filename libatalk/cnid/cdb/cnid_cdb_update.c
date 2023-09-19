@@ -98,7 +98,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
     return 0;
 fin:
     return -1;
- 
+
 }
 
 #endif

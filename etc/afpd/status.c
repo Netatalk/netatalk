@@ -105,8 +105,8 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
-    if ((size_t)-1 == (len = convert_string( 
-                           options->unixcharset, options->maccharset, 
+    if ((size_t)-1 == (len = convert_string(
+                           options->unixcharset, options->maccharset,
                            Obj, -1, buf, sizeof(buf))) ) {
         len = MIN(strlen(Obj), 31);
     	*data++ = len;
@@ -128,7 +128,7 @@ static int status_server(char *data, const char *server, const struct afp_option
      * signature and net address offsets if they're not going to be
      * used. as there are no offsets after them, it doesn't hurt to
      * have them specified though. so, we just do that to simplify
-     * things.  
+     * things.
      *
      * NOTE2: AFP3.1 Documentation states that the directory names offset
      * is a required feature, even though it can be set to zero.
@@ -218,10 +218,10 @@ static size_t status_netaddress(char *data, int *servoffset,
     data += ntohs(offset);
 
     /* format:
-       Address count (byte) 
-       len (byte = sizeof(length + address type + address) 
+       Address count (byte)
+       len (byte = sizeof(length + address type + address)
        address type (byte, ip address = 0x01, ip + port = 0x02,
-                           ddp address = 0x03, fqdn = 0x04) 
+                           ddp address = 0x03, fqdn = 0x04)
        address (up to 254 bytes, ip = 4, ip + port = 6, ddp = 4)
        */
 
@@ -286,10 +286,10 @@ static size_t status_netaddress(char *data, int *servoffset,
             addresses_len += len+2;
         }
 
-        /* Annouce support for SSH tunneled AFP session, 
+        /* Annouce support for SSH tunneled AFP session,
          * this feature is available since 10.3.2.
          * According to the specs (AFP 3.1 p.225) this should
-         * be an IP+Port style value, but it only works with 
+         * be an IP+Port style value, but it only works with
          * a FQDN. OSX Server uses FQDN as well.
          */
         if ( len + 2 + addresses_len < maxstatuslen - offset) {
@@ -303,7 +303,7 @@ static size_t status_netaddress(char *data, int *servoffset,
     }
 
     /* calculate/store Directory Services Names offset */
-    offset = htons(data - begin); 
+    offset = htons(data - begin);
     *servoffset += sizeof(offset);
     memcpy(begin + *servoffset, &offset, sizeof(offset));
 
@@ -363,7 +363,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
 
     if ((len = convert_string(options->unixcharset,
-                              CH_UTF8_MAC, 
+                              CH_UTF8_MAC,
                               options->hostname,
                               -1,
                               data + sizeof(namelen),
@@ -452,13 +452,13 @@ void status_init(AFPObj *obj, DSI *dsi)
      *
      * at the appropriate offsets:
      * machine type, afp versions, uams, server signature
-     * (16-bytes), network addresses, volume icon/mask 
+     * (16-bytes), network addresses, volume icon/mask
      */
 
     status_flags(status,
                  options->flags & OPTION_SERVERNOTIF,
                  (options->fqdn || ipok),
-                 options->passwdbits, 
+                 options->passwdbits,
                  1,
                  options->flags);
     /* returns offset to signature offset */
@@ -477,7 +477,7 @@ void status_init(AFPObj *obj, DSI *dsi)
     statuslen = status_directorynames(status, &c, dsi, options);
     /* c now contains the offset where the UTF-8 ServerName offset lives */
 
-    if ( statuslen < maxstatuslen) 
+    if ( statuslen < maxstatuslen)
         statuslen = status_utf8servername(status, &c, dsi, options);
 
     dsi->signature = status + sigoff;
@@ -501,7 +501,7 @@ void set_signature(struct afp_options *options) {
     FILE *fp = NULL;
     size_t len;
     char *server_tmp;
-    
+
     server_tmp = options->hostname;
     len = strlen(options->signatureopt);
     if (len == 0) {
@@ -517,21 +517,21 @@ void set_signature(struct afp_options *options) {
         LOG(log_info, logtype_afpd, "signature string is %s.", options->signatureopt);
         goto server_signature_user;
     }
-    
+
 server_signature_user:
-    
+
     /* Signature is defined in afp.conf */
     memset(options->signature, 0, 16);
     memcpy(options->signature, options->signatureopt, len);
     goto server_signature_done;
-    
+
 server_signature_auto:
-    
+
     /* Signature type is auto, using afp_signature.conf */
     if (!stat(options->sigconffile, &tmpstat)) {                /* conf file exists? */
         if ((fp = fopen(options->sigconffile, "r")) != NULL) {  /* read open? */
             /* scan in the conf file */
-            while (fgets(buf, sizeof(buf), fp) != NULL) { 
+            while (fgets(buf, sizeof(buf), fp) != NULL) {
                 p = buf;
                 while (p && isblank(*p))
                     p++;
@@ -549,10 +549,10 @@ server_signature_auto:
                 p++;
                 if (*p == '\0')
                     continue;                             /* syntax error: missing signature */
-                
+
                 if (strcmp(server_tmp, servername_conf))
                     continue;                             /* another servername */
-                
+
                 while (p && isblank(*p))
                     p++;
                 if ( 16 == sscanf(p, "%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX",
@@ -578,7 +578,7 @@ server_signature_auto:
                     fseek(fp, -1L, SEEK_END);
                     if(fgetc(fp) != '\n') fputc('\n', fp); /* last char is \n? */
                     goto server_signature_random;
-                }                    
+                }
             } else {
                 LOG(log_error, logtype_afpd, "ERROR: Cannot write in %s (%s). Using one-time signature.",
                     options->sigconffile, strerror(errno));
@@ -604,9 +604,9 @@ server_signature_auto:
         header = 1;
         goto server_signature_random;
     }
-    
+
 server_signature_random:
-    
+
     /* generate signature from random number */
     randombytes(options->signature, 16);
 
@@ -619,7 +619,7 @@ server_signature_random:
         fprintf(fp, "# \n");
         fprintf(fp, "# If setting \"signature = xxxxx\" in afp.conf, this file is not used.\n\n");
     }
-    
+
     if (fp) {
         fprintf(fp, "\"%s\"\t", server_tmp);
         for (i=0 ; i<16 ; i++) {
@@ -628,9 +628,9 @@ server_signature_random:
         fprintf(fp, "%s", "\n");
         fclose(fp);
     }
-    
+
 server_signature_done:
-    
+
     /* retrun */
     LOG(log_info, logtype_afpd,
         "signature is %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
@@ -642,7 +642,7 @@ server_signature_done:
         (options->signature)[10], (options->signature)[11],
         (options->signature)[12], (options->signature)[13],
         (options->signature)[14], (options->signature)[15]);
-    
+
     return;
 }
 

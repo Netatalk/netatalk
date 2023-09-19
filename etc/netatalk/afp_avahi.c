@@ -115,7 +115,7 @@ static void register_stuff(void) {
             }
         }
 
-        LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);            
+        LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);
 
         if (avahi_entry_group_add_service(ctx->group,
                                           AVAHI_IF_UNSPEC,

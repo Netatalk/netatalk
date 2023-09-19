@@ -35,7 +35,7 @@
 int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_child_t **childp)
 {
   pid_t pid;
-  int ipc_fds[2];  
+  int ipc_fds[2];
   afp_child_t *child;
 
   if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
@@ -74,7 +74,7 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_c
     *childp = child;
     return 0;
   }
-  
+
   /* Save number of existing and maximum connections */
   dsi->AFPobj->cnx_cnt = serv_children->servch_count;
   dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
@@ -84,31 +84,31 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_c
   close(ipc_fds[0]);
   close(dsi->serversock);
   dsi->serversock = -1;
-  server_child_free(serv_children); 
+  server_child_free(serv_children);
 
   switch (dsi->header.dsi_command) {
   case DSIFUNC_STAT: /* send off status and return */
     {
-      /* OpenTransport 1.1.2 bug workaround: 
+      /* OpenTransport 1.1.2 bug workaround:
        *
        * OT code doesn't currently handle close sockets well. urk.
        * the workaround: wait for the client to close its
-       * side. timeouts prevent indefinite resource use. 
+       * side. timeouts prevent indefinite resource use.
        */
-      
+
       static struct timeval timeout = {120, 0};
       fd_set readfds;
-      
+
       dsi_getstatus(dsi);
 
       FD_ZERO(&readfds);
       FD_SET(dsi->socket, &readfds);
       free(dsi);
-      select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);    
+      select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
       exit(0);
     }
     break;
-    
+
   case DSIFUNC_OPEN: /* setup session */
     /* set up the tickle timer */
     dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;

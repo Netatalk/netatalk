@@ -73,7 +73,7 @@ struct vol {
     VolSpace        v_tm_used;  /* used bytes on a TM volume */
     time_t          v_tm_cachetime; /* time at which v_tm_used was calculated last */
     VolSpace        v_appended; /* amount of data appended to files */
-    
+
     /* only when opening/closing volumes or in error */
     int             v_casefold;
     char            *v_configname;   /* as defined in afpc.conf */

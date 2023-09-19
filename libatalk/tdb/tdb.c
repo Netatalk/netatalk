@@ -1,4 +1,4 @@
- /* 
+ /*
    Unix SMB/CIFS implementation.
 
    trivial database library
@@ -6,11 +6,11 @@
    Copyright (C) Andrew Tridgell              1999-2005
    Copyright (C) Paul `Rusty' Russell		   2000
    Copyright (C) Jeremy Allison			   2000-2003
-   
+
      ** NOTE! The following LGPL license applies to the tdb
      ** library. This does NOT imply that all of Samba is released
      ** under the LGPL
-   
+
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
@@ -138,7 +138,7 @@ static int tdb_update_hash(struct tdb_context *tdb, TDB_DATA key, uint32_t hash,
 
 	/* it could be an exact duplicate of what is there - this is
 	 * surprisingly common (eg. with a ldb re-index). */
-	if (rec.key_len == key.dsize && 
+	if (rec.key_len == key.dsize &&
 	    rec.data_len == dbuf.dsize &&
 	    rec.full_hash == hash) {
 		TDB_DATA data = _tdb_fetch(tdb, key);
@@ -153,7 +153,7 @@ static int tdb_update_hash(struct tdb_context *tdb, TDB_DATA key, uint32_t hash,
 			free(data.dptr);
 		}
 	}
-	 
+	
 
 	/* must be long enough key, data and tailer */
 	if (rec.rec_len < key.dsize + dbuf.dsize + sizeof(tdb_off_t)) {
@@ -170,7 +170,7 @@ static int tdb_update_hash(struct tdb_context *tdb, TDB_DATA key, uint32_t hash,
 		rec.data_len = dbuf.dsize;
 		return tdb_rec_write(tdb, rec_ptr, &rec);
 	}
- 
+
 	return 0;
 }
 
@@ -251,7 +251,7 @@ int tdb_parse_record(struct tdb_context *tdb, TDB_DATA key,
 	return ret;
 }
 
-/* check if an entry in the database exists 
+/* check if an entry in the database exists
 
    note that 1 is returned if the key is found and 0 is returned if not found
    this doesn't match the conventions in the rest of this module, but is
@@ -587,7 +587,7 @@ static int _tdb_store(struct tdb_context *tdb, TDB_DATA key,
 		tdb_increment_seqnum(tdb);
 	}
 
-	SAFE_FREE(p); 
+	SAFE_FREE(p);
 	return ret;
 }
 
@@ -779,7 +779,7 @@ void tdb_enable_seqnum(struct tdb_context *tdb)
 
 
 /*
-  add a region of the file to the freelist. Length is the size of the region in bytes, 
+  add a region of the file to the freelist. Length is the size of the region in bytes,
   which includes the free list header that needs to be added
  */
 static int tdb_free_region(struct tdb_context *tdb, tdb_off_t offset, ssize_t length)
@@ -855,7 +855,7 @@ int tdb_wipe_all(struct tdb_context *tdb)
 		goto failed;
 	}
 
-	/* add all the rest of the file to the freelist, possibly leaving a gap 
+	/* add all the rest of the file to the freelist, possibly leaving a gap
 	   for the recovery area */
 	if (recovery_size == 0) {
 		/* the simple case - the whole file can be used as a freelist */
@@ -865,7 +865,7 @@ int tdb_wipe_all(struct tdb_context *tdb)
 		}
 	} else {
 		/* we need to add two freelist entries - one on either
-		   side of the recovery area 
+		   side of the recovery area
 
 		   Note that we cannot shift the recovery area during
 		   this operation. Only the transaction.c code may

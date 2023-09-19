@@ -1,6 +1,6 @@
-/* 
+/*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999-2000 Adrian Sun. 
+ * Copyright (c) 1999-2000 Adrian Sun.
  * All Rights Reserved. See COPYRIGHT.
  */
 
@@ -34,12 +34,12 @@
 #define IFACE_NUM 5
 
 /* we leave all of the ioctl's to the application */
-static int addname(char **list, int *i, const char *name) 
+static int addname(char **list, int *i, const char *name)
 
 {
     /* if we've run out of room, allocate some more. just return
      * the present list if we can't. */
-     
+
     if ((list[*i] = strdup(name)) == NULL)
       return -1;
 
@@ -55,7 +55,7 @@ static int getifaces(const int sockfd, char ***list)
       struct if_nameindex *ifstart, *ifs;
       int i = 0;
 	  char **new;
-  
+
       ifs = ifstart = if_nameindex();
 
 	  new = (char **) malloc((sizeof(ifs)/sizeof(struct if_nameindex) + 1) * sizeof(char *));
@@ -111,7 +111,7 @@ static int getifaces(const int sockfd, char ***list)
 
 /*
  * Get interfaces from the kernel. we keep an extra null entry to signify
- * the end of the interface list. 
+ * the end of the interface list.
  */
 char **getifacelist(void)
 {

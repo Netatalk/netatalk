@@ -17,7 +17,7 @@ void *mod_open(const char *path)
 {
   NSObjectFileImage file;
 
-  if (NSCreateObjectFileImageFromFile(path, &file) != 
+  if (NSCreateObjectFileImageFromFile(path, &file) !=
       NSObjectFileImageSuccess)
     return NULL;
   return NSLinkModule(file, path, TRUE);

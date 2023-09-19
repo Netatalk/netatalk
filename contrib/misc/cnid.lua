@@ -1,5 +1,5 @@
--- 
--- Netatalk DBD protocol 
+--
+-- Netatalk DBD protocol
 -- wireshark -X lua_script:cnid.lua
 -- don't forget to comment out the line disable_lua = true; do return end;
 -- in /etc/wireshark/init.lua
@@ -23,16 +23,16 @@ local type = ProtoField.uint32("dbd.type", "File type")
 dbd_proto.fields = {cmd, error, cnid, did, dev, ino, type, filename, len}
 
 --- Request list
-local Cmd = { [3] = "add", 
-	      [4] = "get", 
-	      [5] = "resolve", 
-	      [6] = "lookup", 
-	      [7] = "update", 
-	      [8] = "delete", 
-	      [11] = "timestamp" 
+local Cmd = { [3] = "add",
+	      [4] = "get",
+	      [5] = "resolve",
+	      [6] = "lookup",
+	      [7] = "update",
+	      [8] = "delete",
+	      [11] = "timestamp"
 	    }
 
---- display a filename 
+--- display a filename
 local function fname(buffer, pinfo, tree, len, ofs)
 
     pinfo.cols.info:append(" Name=" .. buffer(ofs +4, len):string())
@@ -85,7 +85,7 @@ function dbd_proto.dissector(buffer, pinfo, tree)
     	    pinfo.cols.info = "Reply"
 
     	    local rply = {}
-    	    
+    	
 	    local val = buffer(0,4):uint()
     	    rply.error = val
 	    subtree:add(error, buffer(0,4))
@@ -109,7 +109,7 @@ function dbd_proto.dissector(buffer, pinfo, tree)
 
 	    val = buffer(16,4):uint()
     	    rply.len = val
-	    
+	
 	    if rply.error == 0 and rply.did ~= 0 then
 	       subtree = fname(buffer, pinfo, subtree, val, 16)
 	       subtree:add(len, buffer(16,4))
@@ -119,5 +119,5 @@ end
 
 -- load the tcp.port table
 local tcp_table = DissectorTable.get("tcp.port")
--- register our protocol 
+-- register our protocol
 tcp_table:add(4700, dbd_proto)

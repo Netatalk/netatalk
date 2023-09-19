@@ -77,7 +77,7 @@ void uuid_string2bin( const char *uuidstring, unsigned char *uuid) {
     int nibble = 1;
     int i = 0;
     unsigned char c, val = 0;
-    
+
     while (*uuidstring && i < UUID_BINSIZE) {
         c = *uuidstring;
         if (c == '-') {

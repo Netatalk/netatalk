@@ -113,7 +113,7 @@ struct afp_options {
     size_t k5principal_buflen;
     char *k5principal;
     char *unixcodepage, *maccodepage, *volcodepage;
-    charset_t maccharset, unixcharset; 
+    charset_t maccharset, unixcharset;
     mode_t umask;
     mode_t save_mask;
     gid_t admingid;

@@ -22,8 +22,8 @@ Options:
   --help        display this help and exit
   --macros      print the path to m4 macros
 
-  --prefix[=DIR] 
-  --exec_prefix[=DIR] 
+  --prefix[=DIR]
+  --exec_prefix[=DIR]
   --version     output netatalk version information
 Libraries:
          netatalk
@@ -156,7 +156,7 @@ for i in $af_all_flags; do
             case " $af_lib_L_flags " in
             *\ $i\ *) ;;                              # already there
             *) af_lib_L_flags="$af_lib_L_flags $i" ;; # add it to output
-            esac 
+            esac
         fi;;
     *)
         case " $af_other_flags " in

@@ -3,14 +3,14 @@
  * All rights reserved. See COPYRIGHT.
  *
  * NOTE: the following uses the fact that sendfile() only exists on
- * machines with SA_RESTART behaviour. this is all very machine specific. 
+ * machines with SA_RESTART behaviour. this is all very machine specific.
  *
  * sendfile chainsaw from samba.
  Unix SMB/Netbios implementation.
  Version 2.2.x / 3.0.x
  sendfile implementations.
  Copyright (C) Jeremy Allison 2002.
- 
+
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -19,7 +19,7 @@
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
-#include <errno.h>  
+#include <errno.h>
 
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
@@ -85,13 +85,13 @@ ssize_t sys_sendfile(int out_fd, int in_fd, off_t *_offset, size_t count)
 #endif
 
 /* ------------------------------- */
-int ad_readfile_init(const struct adouble *ad, 
+int ad_readfile_init(const struct adouble *ad,
 				       const int eid, off_t *off,
 				       const int end)
 {
   int fd;
 
-  if (end) 
+  if (end)
     *off = ad_size(ad, eid) - *off;
 
   if (eid == ADEID_DFORK) {

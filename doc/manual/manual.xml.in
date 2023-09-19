@@ -27,7 +27,7 @@
 ]>
 <book id="netatalk-manual">
   <title>Netatalk 3.1 Manual</title>
-  
+
   <bookinfo>
     <date>07-01-2013</date>
     <releaseinfo>@NETATALK_VERSION@</releaseinfo>
@@ -37,7 +37,7 @@
 <preface>
         <title>Legal Notice</title>
 <para>
-This documentation is distributed under the GNU General Public License (GPL) version 2.  
+This documentation is distributed under the GNU General Public License (GPL) version 2.
 A copy of the license is included in this documentation, as well as within the Netatalk source
 distribution.  An on-line copy can be found at <ulink
 url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>

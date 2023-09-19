@@ -134,14 +134,14 @@ static int send_reply(const AFPObj *obj, const int err)
     return AFP_OK;
 }
 
-static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, 
+static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
                              char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
     return AFPERR_PWDEXPR;
 }
 
-static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, 
+static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
                           char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
@@ -390,7 +390,7 @@ static int create_session_key(AFPObj *obj)
 /* ---------------------- */
 int afp_getsession(
     AFPObj *obj,
-    char   *ibuf, size_t ibuflen, 
+    char   *ibuf, size_t ibuflen,
     char   *rbuf, size_t *rbuflen)
 {
     uint16_t           type;
@@ -876,9 +876,9 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
         return AFPERR_PARAM;
 
     /* send it off to the uam. we really don't use ibuflen right now. */
-    if (ibuflen < (size_t)(ibuf - start)) 
+    if (ibuflen < (size_t)(ibuf - start))
         return AFPERR_PARAM;
-    
+
     ibuflen -= (ibuf - start);
     ret = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
                               rbuf, rbuflen);

@@ -15,7 +15,7 @@
  *
  * A gap or not starting with 1 mode FCE_CONN_START or receiving mode FCE_CONN_BROKEN means that
  * the listener has lost at least one filesystem event
- * 
+ *
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -59,15 +59,15 @@ static uint32_t coalesce = 0;
 static struct fce_history fce_history_list[FCE_HISTORY_LEN];
 
 /****
-* With coalesce we try to reduce the events over UDP, the eventlistener would throw these 
+* With coalesce we try to reduce the events over UDP, the eventlistener would throw these
 * events away anyway.
 * This works only, if the connected listener uses the events on a "per directory" base
 * It is a very simple aproach, but saves a lot of events sent to listeners.
-* Every "child element" event is ignored as long as its parent event is not older 
-* than MAX_COALESCE_TIME_MS ms. If large directory trees or large files are created or deleted, 
-* this probably will not work recursive, because the time to copy data will exceed this 
-* event timeout. 
-* 
+* Every "child element" event is ignored as long as its parent event is not older
+* than MAX_COALESCE_TIME_MS ms. If large directory trees or large files are created or deleted,
+* this probably will not work recursive, because the time to copy data will exceed this
+* event timeout.
+*
 ****/
 
 static long get_ms_difftime (  struct timeval *tv1, struct timeval *tv2 )
@@ -161,7 +161,7 @@ bool fce_handle_coalescation(int event, const char *path)
 }
 
 /*
- * Set event coalescation to reduce number of events sent over UDP 
+ * Set event coalescation to reduce number of events sent over UDP
  * all|delete|create
  */
 
@@ -169,7 +169,7 @@ int fce_set_coalesce(const char *opt)
 {
     char *e;
     char *p;
-    
+
     if (opt == NULL)
         return AFPERR_PARAM;
 

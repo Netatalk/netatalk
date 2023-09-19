@@ -3,7 +3,7 @@
 noinst_LTLIBRARIES = libcharsets.la
 
 AM_CFLAGS = -I$(top_srcdir)/sys @CFLAGS@ @ICONV_CFLAGS@
-LIBS = 
+LIBS =
 
 libcharsets_la_SOURCES = \
 	mac_roman.c	\

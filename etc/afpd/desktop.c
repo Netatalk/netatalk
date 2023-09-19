@@ -156,7 +156,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
     EC_NEG1( chdir(cfrombstr(dtpath)) );
-    
+
     if (( desk = opendir( "." )) == NULL ) {
         if ( chdir( wd ) < 0 ) {
             LOG(log_error, logtype_afpd, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
@@ -690,7 +690,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
             *rbuflen = buflen;
         }
-        
+
         dsi_readdone(dsi);
         return AFP_OK;
 
@@ -746,7 +746,7 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 }
 
 /* ---------------------------
- * mpath is only a filename 
+ * mpath is only a filename
  * did filename parent directory ID.
 */
 
@@ -757,7 +757,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     size_t       inplen;
     size_t       outlen;
     uint16_t	 flags;
-        
+
     if ( *mpath == '\0' ) {
         strcpy(upath, ".");
         return upath;
@@ -765,7 +765,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 
     /* set conversion flags */
     flags = vol->v_mtou_flags;
-    
+
     m = demangle(vol, mpath, did);
     if (m != mpath) {
         return m;
@@ -788,7 +788,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     return( upath );
 }
 
-/* --------------- 
+/* ---------------
  * id filename ID
 */
 char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
@@ -806,7 +806,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     u = upath;
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset ( vol->v_volcharset, (utf8)?CH_UTF8_MAC:vol->v_maccharset, vol->v_maccharset, u, outlen, mpath, MAXPATHLEN, &flags)) ) { 
+    if ((size_t)-1 == ( outlen = convert_charset ( vol->v_volcharset, (utf8)?CH_UTF8_MAC:vol->v_maccharset, vol->v_maccharset, u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         LOG(log_error, logtype_afpd, "Conversion from %s to %s for %s (%u) failed.", vol->v_volcodepage, vol->v_maccodepage, u, ntohl(id));
 	goto utompath_error;
     }
@@ -845,7 +845,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
     if (check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
-    
+
     isadir = path_isadir(path);
     if (isadir || !(of = of_findname(vol, path))) {
         ad_init(&ad, vol);
@@ -927,7 +927,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
         adp = &ad;
     } else
         adp = of->of_ad;
-        
+
     if ( ad_metadata( upath, ((isadir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
         return( AFPERR_NOITEM );
     }
@@ -962,7 +962,7 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     struct path         *s_path;
     uint32_t		did;
     uint16_t		vid;
-    
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1051,6 +1051,6 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     if (NULL == ( s_path = cname( vol, dir, &ibuf ))) {
 	return get_afp_errno(AFPERR_NOOBJ);
     }
-    
+
     return ad_rmvcomment(obj, vol, s_path);
 }

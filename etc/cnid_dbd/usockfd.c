@@ -37,7 +37,7 @@ int usockfd_create(char *usock_fn, mode_t mode, int backlog)
             strerror(errno));
         return -1;
     }
-     
+
     if (unlink(usock_fn) < 0 && errno != ENOENT) {
         LOG(log_error, logtype_cnid, "error unlinking unix socket file %s: %s",
             usock_fn, strerror(errno));
@@ -114,7 +114,7 @@ int tsockfd_create(char *host, char *port, int backlog)
         flag = 1;
         setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 #endif /* USE_TCP_NODELAY */
-            
+
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
             LOG(log_info, logtype_cnid, "tsockfd_create: bind: %s\n", strerror(errno));
@@ -148,7 +148,7 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
     socklen_t size;
     fd_set readfds;
     int ret;
-     
+
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
 
@@ -165,7 +165,7 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
         if ((fd = accept(sockfd, NULL, &size)) < 0) {
             if (errno == EINTR)
                 return 0;
-            LOG(log_error, logtype_cnid, "error in accept: %s", 
+            LOG(log_error, logtype_cnid, "error in accept: %s",
                 strerror(errno));
             return -1;
         }

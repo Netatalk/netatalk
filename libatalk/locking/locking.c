@@ -23,9 +23,9 @@
  * structures and defines
  ***************************************************************************/
 
-#define LOCKTABLE_PATH         "/tmp/netatalk-afp-locks.tdb" 
+#define LOCKTABLE_PATH         "/tmp/netatalk-afp-locks.tdb"
 
-/* 
+/*
  * Struct for building the the main database of file locks.
  * vid + cnid build the primary key for database access.
  */

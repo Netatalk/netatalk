@@ -50,7 +50,7 @@ static int dbif_stamp(DBD *dbd, void *buffer, int size)
 
     /* chdir to db_envhome */
     if ((chdir(dbd->db_envhome)) != 0) {
-        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));
         EC_FAIL;
     }
 
@@ -67,7 +67,7 @@ static int dbif_stamp(DBD *dbd, void *buffer, int size)
 EC_CLEANUP:
     if (cwd != -1) {
         if (fchdir(cwd) != 0) {
-            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));
             EC_STATUS(-1);
         }
         close(cwd);
@@ -221,7 +221,7 @@ static int dbif_upgrade(DBD *dbd)
             return -1;
     }
 
-    /* 
+    /*
      * Do upgrade stuff ...
      */
 
@@ -254,7 +254,7 @@ static int dbif_openlog(DBD *dbd)
 
     /* chdir to db_envhome */
     if ((chdir(dbd->db_envhome)) != 0) {
-        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));
         ret = -1;
         goto exit;
     }
@@ -270,7 +270,7 @@ static int dbif_openlog(DBD *dbd)
 exit:
     if (cwd != -1) {
         if ((fchdir(cwd)) != 0) {
-            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));
             ret = -1;
         }
         close(cwd);
@@ -298,7 +298,7 @@ static int dbif_logautorem(DBD *dbd)
 
     /* chdir to db_envhome */
     if ((chdir(dbd->db_envhome)) != 0) {
-        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));
         ret = -1;
         goto exit;
     }
@@ -323,7 +323,7 @@ static int dbif_logautorem(DBD *dbd)
 exit:
     if (cwd != -1) {
         if ((fchdir(cwd)) != 0) {
-            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));
             ret = -1;
         }
         close(cwd);
@@ -357,7 +357,7 @@ DBD *dbif_init(const char *envhome, const char *filename)
             return NULL;
         }
     }
-    
+
     dbd->db_table[DBIF_CNID].name        = "cnid2.db";
     dbd->db_table[DBIF_IDX_DEVINO].name  = "devino.db";
     dbd->db_table[DBIF_IDX_DIDNAME].name = "didname.db";
@@ -378,7 +378,7 @@ DBD *dbif_init(const char *envhome, const char *filename)
     return dbd;
 }
 
-/* 
+/*
    We must open the db_env with an absolute pathname, as `dbd` keeps chdir'ing, which
    breaks e.g. bdb logfile-rotation with relative pathnames.
    But still we use relative paths with DB_ERRLOGFILE
@@ -425,7 +425,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
             dbd->db_env = NULL;
             return -1;
         }
-        dbd->db_errlog = NULL;        
+        dbd->db_errlog = NULL;
 
         if ((ret = db_env_create(&dbd->db_env, 0))) {
             LOG(log_error, logtype_cnid, "error creating DB environment after recovery: %s",
@@ -521,13 +521,13 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
             LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
             return -1;
         }
-        
+
         /* chdir to db_envhome. makes it easier checking for old db files and creating db_errlog file  */
         if ((chdir(dbd->db_envhome)) != 0) {
-            LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+            LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));
             return -1;
         }
-        
+
         if ((stat(dbd->db_filename, &st)) == 0) {
             LOG(log_debug, logtype_cnid, "See if we can upgrade the CNID database...");
             if ((ret = db_create(&upgrade_db, dbd->db_env, 0))) {
@@ -548,9 +548,9 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
             }
             LOG(log_debug, logtype_cnid, "Finished BerkeleyBD upgrade check");
         }
-        
+
         if ((fchdir(cwd)) != 0) {
-            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));
             return -1;
         }
     }
@@ -612,7 +612,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
         LOG(log_info, logtype_cnid, "Reindexing did/name index...");
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[DBIF_CNID].db,
                                               dbd->db_txn,
-                                              dbd->db_table[DBIF_IDX_DIDNAME].db, 
+                                              dbd->db_table[DBIF_IDX_DIDNAME].db,
                                               didname,
                                               (reindex) ? DB_CREATE : 0))
          != 0) {
@@ -624,9 +624,9 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 
     if (reindex)
         LOG(log_info, logtype_cnid, "Reindexing dev/ino index...");
-    if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db, 
+    if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db,
                                               dbd->db_txn,
-                                              dbd->db_table[DBIF_IDX_DEVINO].db, 
+                                              dbd->db_table[DBIF_IDX_DEVINO].db,
                                               devino,
                                               (reindex) ? DB_CREATE : 0))
         != 0) {
@@ -649,12 +649,12 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
             return -1;
     }
 
-    if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db, 
+    if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db,
                                               dbd->db_txn,
-                                              dbd->db_table[DBIF_IDX_NAME].db, 
+                                              dbd->db_table[DBIF_IDX_NAME].db,
                                               idxname,
                                               (reindex
-                                               || 
+                                               ||
                                                ((CNID_VERSION == CNID_VERSION_1) && (version == CNID_VERSION_0)))
                                               ? DB_CREATE : 0)) != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate name index: %s", db_strerror(ret));
@@ -667,7 +667,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
         LOG(log_error, logtype_cnid, "Error upgrading CNID database to version %d", CNID_VERSION);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -716,7 +716,7 @@ int dbif_close(DBD *dbd)
     return 0;
 }
 
-/* 
+/*
    In order to support silent database upgrades:
    destroy env at cnid_dbd shutdown.
  */
@@ -741,7 +741,7 @@ int dbif_env_remove(const char *path)
         return -1;
 
     /* Open environment with recovery */
-    if ((ret = dbd->db_env->open(dbd->db_env, 
+    if ((ret = dbd->db_env->open(dbd->db_env,
                                  dbd->db_envhome,
                                  DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_PRIVATE,
                                  0))) {
@@ -854,7 +854,7 @@ int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
                                      val,
                                      flags);
 
-    
+
     if (ret) {
         if ((flags & DB_NOOVERWRITE) && ret == DB_KEYEXIST) {
             return 1;
@@ -875,7 +875,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
     if (dbd->db_cur) {
         dbd->db_cur->close(dbd->db_cur);
         dbd->db_cur = NULL;
-    }    
+    }
 
     if (dbif_txn_begin(dbd) < 0) {
         LOG(log_error, logtype_cnid, "error deleting key/value from %s", dbd->db_table[dbi].name);
@@ -886,7 +886,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
                                      dbd->db_txn,
                                      key,
                                      flags);
-    
+
     if (ret == DB_NOTFOUND) {
         LOG(log_debug, logtype_cnid, "key not found");
         return 0;
@@ -987,7 +987,7 @@ int dbif_txn_commit(DBD *dbd)
 
     ret = dbd->db_txn->commit(dbd->db_txn, 0);
     dbd->db_txn = NULL;
-    
+
     if (ret) {
         LOG(log_error, logtype_cnid, "error committing transaction: %s", db_strerror(ret));
         return -1;
@@ -1008,7 +1008,7 @@ int dbif_txn_abort(DBD *dbd)
 
     ret = dbd->db_txn->abort(dbd->db_txn);
     dbd->db_txn = NULL;
-    
+
     if (ret) {
         LOG(log_error, logtype_cnid, "error aborting transaction: %s", db_strerror(ret));
         return -1;
@@ -1016,7 +1016,7 @@ int dbif_txn_abort(DBD *dbd)
         return 0;
 }
 
-/* 
+/*
    ret = 1 -> commit txn if db_param.txn_frequency
    ret = 0 -> abort txn db_param.txn_frequency -> exit!
    anything else -> exit!
@@ -1155,9 +1155,9 @@ int dbif_dump(DBD *dbd, int dumpindexes)
             did = ntohl(did);
 
             count++;
-            printf("id: %10u, did: %10u, type: %s, dev: 0x%llx, ino: 0x%016llx, name: %s\n", 
+            printf("id: %10u, did: %10u, type: %s, dev: 0x%llx, ino: 0x%016llx, name: %s\n",
                    cnid, did, typestring[type],
-                   (long long unsigned int)dev, (long long unsigned int)ino, 
+                   (long long unsigned int)dev, (long long unsigned int)ino,
                    (char *)data.data + CNID_NAME_OFS);
 
         }
@@ -1188,7 +1188,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
             LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(rc));
             return -1;
         }
-        
+
         cur->c_get(cur, &key, &data, DB_FIRST);
         while (rc == 0) {
             /* Parse and print data */
@@ -1205,8 +1205,8 @@ int dbif_dump(DBD *dbd, int dumpindexes)
                 /* ino */
                 memcpy(&ino, (char *)key.data + CNID_DEV_LEN, CNID_INO_LEN);
                 ino = ntoh64(ino);
-                
-                printf("id: %10u <== dev: 0x%llx, ino: 0x%016llx\n", 
+
+                printf("id: %10u <== dev: 0x%llx, ino: 0x%016llx\n",
                        cnid, (unsigned long long int)dev, (unsigned long long int)ino);
                 count++;
             }
@@ -1216,7 +1216,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
             LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(rc));
             return -1;
         }
-        
+
         rc = cur->c_close(cur);
         if (rc) {
             LOG(log_error, logtype_cnid, "Couldn't close cursor: %s", db_strerror(rc));
@@ -1233,7 +1233,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
             LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(rc));
             return -1;
         }
-        
+
         cur->c_get(cur, &key, &data, DB_FIRST);
         while (rc == 0) {
             /* Parse and print data */
@@ -1257,7 +1257,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
             LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(rc));
             return -1;
         }
-        
+
         rc = cur->c_close(cur);
         if (rc) {
             LOG(log_error, logtype_cnid, "Couldn't close cursor: %s", db_strerror(rc));
@@ -1269,7 +1269,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
     return 0;
 }
 
-/* 
+/*
    Iterates over dbd, returning cnids.
    Uses in-value of cnid to seek to that cnid, then gets next and return that in cnid.
    If close=1, close cursor.
@@ -1321,7 +1321,7 @@ int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close)
     if (dbd->db_cur) {
         dbd->db_cur->close(dbd->db_cur);
         dbd->db_cur = NULL;
-    }    
+    }
 
     return 0;
 }

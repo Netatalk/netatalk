@@ -24,10 +24,10 @@ static cnid_t set_max_cnid(CNID_private *db, cnid_t hint)
     char buf[ROOTINFO_DATALEN];
     cnid_t id, id1;
     time_t t;
-    
+
     memset(&rootinfo_key, 0, sizeof(rootinfo_key));
     memset(&rootinfo_data, 0, sizeof(rootinfo_data));
-    
+
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
@@ -36,7 +36,7 @@ static cnid_t set_max_cnid(CNID_private *db, cnid_t hint)
 	memcpy(buf, (char *)rootinfo_data.data, ROOTINFO_DATALEN);
         break;
     case DB_NOTFOUND:
-	/* FIXME: This duplicates stuff from cnid_cdb_add.c. 
+	/* FIXME: This duplicates stuff from cnid_cdb_add.c.
 	   We also implicitely assume that sizeof(time_t) <= CNID_DEV_LEN */
 	memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
 	t = time(NULL);
@@ -47,7 +47,7 @@ static cnid_t set_max_cnid(CNID_private *db, cnid_t hint)
 	break;
     default:
         LOG(log_error, logtype_default, "set_max_cnid: Unable to read rootinfo: %s", db_strerror(rc));
-	errno = CNID_ERR_DB; 
+	errno = CNID_ERR_DB;
         goto cleanup;
     }
 
@@ -61,7 +61,7 @@ static cnid_t set_max_cnid(CNID_private *db, cnid_t hint)
 	rootinfo_data.size = ROOTINFO_DATALEN;
 	if ((rc = db->db_cnid->put(db->db_cnid, tid, &rootinfo_key, &rootinfo_data, 0))) {
 	    LOG(log_error, logtype_default, "set_max_cnid: Unable to write rootinfo: %s", db_strerror(rc));
-	    errno = CNID_ERR_DB; 
+	    errno = CNID_ERR_DB;
 	    goto cleanup;
 	}
     }
@@ -107,17 +107,17 @@ cnid_t cnid_cdb_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
         return CNID_INVALID;
     }
     data.size = CNID_HEADER_LEN + len + 1;
-    
+
     memcpy(data.data, &hint, sizeof(hint));
-    
+
     key.data = &hint;
     key.size = sizeof(hint);
 
     /* Now we need to add the CNID data to the databases. */
     if ((rc = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
             LOG(log_error, logtype_default
-                   , "cnid_add: Failed to add CNID for %s to database using hint %u: %s", 
-                   name, ntohl(hint), db_strerror(rc));  
+                   , "cnid_add: Failed to add CNID for %s to database using hint %u: %s",
+                   name, ntohl(hint), db_strerror(rc));
             errno = CNID_ERR_DB;
 	    goto cleanup;
     }

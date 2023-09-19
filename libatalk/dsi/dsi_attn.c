@@ -22,9 +22,9 @@
 #endif /* MIN */
 
 /* send an attention. this may get called at any time, so we can't use
- * DSI buffers to send one. 
+ * DSI buffers to send one.
    return 0 on error
- 
+
  */
 int dsi_attention(DSI *dsi, AFPUserBytes flags)
 {
@@ -38,7 +38,7 @@ int dsi_attention(DSI *dsi, AFPUserBytes flags)
 
   if (dsi->in_write) {
       return -1;
-  }      
+  }
   id = htons(dsi_serverID(dsi));
   flags = htons(flags);
   len = MIN(sizeof(flags), dsi->attn_quantum);

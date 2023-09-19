@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   fce_api.h
  * Author: mw
  *

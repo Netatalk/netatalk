@@ -33,7 +33,7 @@ netatalk \- Netatalk AFP server service controller daemon
 .HP \w'\fBnetatalk\fR\ 'u
 \fBnetatalk\fR [\-F\ \fIconfigfile\fR]
 .HP \w'\fBnetatalk\fR\ 'u
-\fBnetatalk\fR \-v | \-V 
+\fBnetatalk\fR \-v | \-V
 .SH "DESCRIPTION"
 .PP
 \fBnetatalk\fR

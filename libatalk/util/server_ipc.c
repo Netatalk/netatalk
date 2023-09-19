@@ -6,7 +6,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif 
+#endif
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -76,27 +76,27 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
     uint32_t idlen;
     char     *clientid, *p;
 
-    
+
     if (ipc->len < (sizeof(idlen) + sizeof(boottime)) )
         return -1;
 
     p = ipc->msg;
     memcpy (&idlen, p, sizeof(idlen));
     idlen = ntohl (idlen);
-    p += sizeof(idlen); 
+    p += sizeof(idlen);
 
     memcpy (&boottime, p, sizeof(boottime));
     p += sizeof(boottime);
-    
+
     if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime))
         return -1;
 
     if (NULL == (clientid = (char*) malloc(idlen)) )
         return -1;
     memcpy (clientid, p, idlen);
-  
+
     LOG(log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time: 0x%08x)",
-        ipc->child_pid, ipc->uid, boottime); 
+        ipc->child_pid, ipc->uid, boottime);
 
     server_child_kill_one_by_id(children,
                                 ipc->child_pid,
@@ -164,12 +164,12 @@ EC_CLEANUP:
  * Public functions
  ***********************************************************************************/
 
-/* ----------------- 
+/* -----------------
  * Ipc format
  * command
  * pid
  * uid
- * 
+ *
  */
 
 /*!
@@ -223,12 +223,12 @@ int ipc_server_read(server_child_t *children, int fd)
             LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
                 ret, ipc.len, strerror(errno));
             return -1;
-    	}	 
+    	}	
     }
     ipc.msg = buf;
 
     LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
-        ipc_cmd_str[ipc.command], ipc.child_pid); 
+        ipc_cmd_str[ipc.command], ipc.child_pid);
 
     switch (ipc.command) {
 
@@ -248,7 +248,7 @@ int ipc_server_read(server_child_t *children, int fd)
             LOG(log_note, logtype_afpd, "Reconnect: killing new session child[%u] after transfer",
                 ipc.child_pid);
             kill(ipc.child_pid, SIGTERM);
-        }        
+        }
         close(ipc.afp_socket);
         break;
 
@@ -300,10 +300,10 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
    pid = getpid();
    memcpy(p, &pid, sizeof(pid_t));
    p += sizeof(pid_t);
-   
-   /* FIXME 
+
+   /* FIXME
     * using uid is wrong. It will not disconnect if the new connection
-    * is with a different user. 
+    * is with a different user.
     * But we really don't want a remote kill command.
    */
    uid = geteuid();

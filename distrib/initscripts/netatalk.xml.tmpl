@@ -5,7 +5,7 @@
     <service name="network/netatalk" type="service" version="1">
 
         <create_default_instance enabled="false"/>
-        
+
         <single_instance/>
 
         <dependency name="network" grouping="require_all" restart_on="error" type="service">
@@ -35,7 +35,7 @@
         <property_group name="application" type="application">
             <propval name="config_file" type="astring" value=":ETCDIR:/afp.conf"/>
         </property_group>
-        
+
         <stability value="Evolving"/>
 
         <template>

@@ -19,7 +19,7 @@
      with a filename. Pass a db_param here for on-disk databases.
   4. Call dbif_open to finally open the CNID database itself. Pass db_param
      here for in-memory database.
-  
+
   Querying the CNID database
   --------------------------
   Call dbif_[get|pget|put|del]. They map to the corresponding BerkeleyDB calls
@@ -58,7 +58,7 @@
 #include "db_param.h"
 
 #define DBIF_DB_CNT 4
- 
+
 #define DBIF_CNID          0
 #define DBIF_IDX_DEVINO    1
 #define DBIF_IDX_DIDNAME   2

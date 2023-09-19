@@ -1,6 +1,6 @@
 dnl Autoconf macro to check for kerberos
 
-AC_DEFUN([NETATALK_GSSAPI_CHECK], 
+AC_DEFUN([NETATALK_GSSAPI_CHECK],
 [
     FOUND_GSSAPI=no
     GSSAPI_LIBS=""
@@ -28,9 +28,9 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
             AC_PATH_PROG(KRB5_CONFIG, krb5-config)
             AC_MSG_CHECKING([for working krb5-config that takes --libs gssapi])
 
-            if test -x "$KRB5_CONFIG" ; then 
+            if test -x "$KRB5_CONFIG" ; then
                 TEMP="`$KRB5_CONFIG --libs gssapi`"
-                if test $? -eq 0 ; then 
+                if test $? -eq 0 ; then
                     GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
                     GSSAPI_LIBS="$TEMP"
                     FOUND_GSSAPI=yes

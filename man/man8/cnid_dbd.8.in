@@ -33,7 +33,7 @@ cnid_dbd \- implement access to CNID databases through a dedicated daemon proces
 .HP \w'\fBcnid_dbd\fR\ 'u
 \fBcnid_dbd\fR
 .HP \w'\fBcnid_dbd\fR\ 'u
-\fBcnid_dbd\fR \-v | \-V 
+\fBcnid_dbd\fR \-v | \-V
 .SH "DESCRIPTION"
 .PP
 \fBcnid_dbd\fR

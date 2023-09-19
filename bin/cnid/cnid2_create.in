@@ -16,7 +16,7 @@ use strict;
 
 my $toplevel = $ARGV[0];
 
-# Assume our current directory is .AppleDB in the share directory as the default. 
+# Assume our current directory is .AppleDB in the share directory as the default.
 
 $toplevel = ".." unless $toplevel;
 
@@ -42,10 +42,10 @@ my $ri_hexname = "526f6f74496e666f00";  # RootInfo\0
 # Current CNID found in didname.db
 my $current_cnid;
 
-# Largest CNID from cnid.db, used if we cannot find the current CNID in didname.db 
+# Largest CNID from cnid.db, used if we cannot find the current CNID in didname.db
 my $max_cnid;
 
-# Number of bogus/invalid entries found in the DB 
+# Number of bogus/invalid entries found in the DB
 my $errors_found;
 
 # Filenames
@@ -83,7 +83,7 @@ sub print_eentry($$)
     $entry->{ino},
     $entry->{did},
     $entry->{name};
-    
+
     $errors_found++;
 }
 
@@ -97,7 +97,7 @@ sub find_current_cnid()
     # get rid of "00" at the end, RootInfo in the old format does not have a trailing \0
 
     $compare =~ s/00$//;
-    
+
     open DIDNAME, "< $didname_dump" or die "Unable to open $didname_dump: $!";
     skip_header(*DIDNAME);
 
@@ -132,11 +132,11 @@ sub verify_entry($)
 }
 
 sub create_did_table()
-{    
+{
     my $data_ok;
     my $key;
     my $val;
-    my $len;    
+    my $len;
     my $i;
     my $name;
     my $cmax;
@@ -157,21 +157,21 @@ sub create_did_table()
 	$val =~ s/^ //;
 
 	last unless defined($key) and defined($val);
-    
+
 	# We do not worry about converting any of the
-	# integer values into binary form. They are in network byte order, 
+	# integer values into binary form. They are in network byte order,
 	# so we know how to extend them. We just treat them as hexadecimal ASCII strings.
-	# The file name is also stored as a proper string, since we need to 
+	# The file name is also stored as a proper string, since we need to
 	# look for it in the file system.
 
 	my $entry;
-    
+
 	$entry->{cnid}    = $key;
 	$entry->{dev}     = substr($val, 0,   8);
 	$entry->{ino}     = substr($val, 8,   8);
 	$entry->{did}     = substr($val, 16,  8);
 	$entry->{hexname} = substr($val, 24);
-    
+
 	$len = length($entry->{hexname}) - 2;
 	$i = 0;
 	$name = '';
@@ -197,7 +197,7 @@ sub output_header($$$)
     my $handle = shift;
     my $dbname = shift;
     my $n      = shift;
-    
+
     printf $handle "VERSION=3\nformat=bytevalue\ndatabase=%s\ntype=btree\nHEADER=END\n", $dbname;
 }
 
@@ -211,27 +211,27 @@ sub expand_did_table($$)
     foreach $entry (@{$did_table{$did}}) {
 	$name = $basename . "/" . $entry->{name};
 
-	if ( -e $name ) { 
-	    if ( -d $name ) { 
-		$entry->{type} = "00000001"; 
-	    } else { 
-		$entry->{type} = "00000000"; 
-	    } 
-	} else { 
-	    
+	if ( -e $name ) {
+	    if ( -d $name ) {
+		$entry->{type} = "00000001";
+	    } else {
+		$entry->{type} = "00000000";
+	    }
+	} else {
+	
             # The file/dir does not exist in the file system. This could result
 	    # from a non-afpd rename that has not yet been picked up by afpd and is
 	    # fixable. We need a guess at the type, though.
-	    
+	
 	    if ($did_table{$entry->{cnid}} and scalar(@{$did_table{$entry->{cnid}}}) > 0) {
 
 		# We have entries hanging off this entry in our table,
 		# so this must be a directory
 		$entry->{type} = "00000001";
 	    } else {
-		# If this is actually an empty directory that was renamed, 
-		# the entry will be deleted by afpd on the next access, 
-		# so this should be safe 
+		# If this is actually an empty directory that was renamed,
+		# the entry will be deleted by afpd on the next access,
+		# so this should be safe
 		$entry->{type} = "00000000";		
 	    }
 	}
@@ -259,13 +259,13 @@ sub find_duplicates()
 {
     my %seen_cnid;
     my %seen_devino;
-    my %seen_didname;    
+    my %seen_didname;
     my $cnid;
     my $devino;
     my $didname;
     my $err;
     my $entry;
-    
+
     for (my $i = 0; $i < scalar(@output_list); $i++) {
 	$err = 0;
 	$entry = $output_list[$i];
@@ -329,7 +329,7 @@ open CNID2, "> $cnid2_dump" or die "Unable to open $cnid2_dump for writing: $!";
 output_header(*CNID2, "cnid2.db", scalar(@output_list) + 1);
 foreach my $entry (@output_list) {
     print CNID2 " ", $entry->{cnid}, "\n";
-    print CNID2 " ", $entry->{cnid}, 
+    print CNID2 " ", $entry->{cnid},
                      "00000000", $entry->{dev}, "00000000", $entry->{ino},
                      $entry->{type},
                      $entry->{did}, $entry->{hexname}, "\n";

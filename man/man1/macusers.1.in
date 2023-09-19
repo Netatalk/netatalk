@@ -33,7 +33,7 @@ macusers \- List the users connecting via AFP
 .HP \w'\fBmacusers\fR\ 'u
 \fBmacusers\fR
 .HP \w'\fBmacusers\fR\ 'u
-\fBmacusers\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help 
+\fBmacusers\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help
 .SH "DESCRIPTION"
 .PP
 \fBmacusers\fR

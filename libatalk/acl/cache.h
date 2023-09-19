@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,7 +15,7 @@
 #ifndef LDAPCACHE_H
 #define LDAPCACHE_H
 
-/* 
+/*
  * We need to cache all LDAP querie results, they just take too long.
  * We do hashing with chaining. Two caches are needed:
  * 1) name -> uuid, indexed by a hash(f(): hashstring) of the name
@@ -27,7 +27,7 @@
 
 #define CACHESECONDS 600
 
-/******************************************************** 
+/********************************************************
  * Interface
  ********************************************************/
 

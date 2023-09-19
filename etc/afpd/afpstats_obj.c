@@ -96,7 +96,7 @@ gboolean afpstats_obj_get_users(AFPStatsObj *obj, gchar ***ret, GError **error)
                                              child->afpch_state == DSI_EXTSLEEP ? "sleeping" :
                                              child->afpch_state == DSI_DISCONNECTED ? "disconnected" :
                                              "unknown",
-                                             child->afpch_volumes ? child->afpch_volumes : "-"); 
+                                             child->afpch_volumes ? child->afpch_volumes : "-");
             }
             child = child->afpch_next;
         }

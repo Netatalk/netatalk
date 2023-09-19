@@ -1,4 +1,4 @@
- /* 
+ /*
    Unix SMB/CIFS implementation.
 
    trivial database library
@@ -6,11 +6,11 @@
    Copyright (C) Andrew Tridgell              1999-2005
    Copyright (C) Paul `Rusty' Russell		   2000
    Copyright (C) Jeremy Allison			   2000-2003
-   
+
      ** NOTE! The following LGPL license applies to the tdb
      ** library. This does NOT imply that all of Samba is released
      ** under the LGPL
-   
+
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
    License as published by the Free Software Foundation; either
@@ -29,7 +29,7 @@
 
 /* check for an out of bounds access - if it is out of bounds then
    see if the database has been expanded by someone else and expand
-   if necessary 
+   if necessary
    note that "len" is the minimum length needed for the db
 */
 static int tdb_oob(struct tdb_context *tdb, tdb_off_t len, int probe)
@@ -73,7 +73,7 @@ static int tdb_oob(struct tdb_context *tdb, tdb_off_t len, int probe)
 }
 
 /* write a lump of data at a specified offset */
-static int tdb_write(struct tdb_context *tdb, tdb_off_t off, 
+static int tdb_write(struct tdb_context *tdb, tdb_off_t off,
 		     const void *buf, tdb_len_t len)
 {
 	if (len == 0) {
@@ -130,7 +130,7 @@ void *tdb_convert(void *buf, uint32_t size)
 
 
 /* read a lump of data at a specified offset, maybe convert */
-static int tdb_read(struct tdb_context *tdb, tdb_off_t off, void *buf, 
+static int tdb_read(struct tdb_context *tdb, tdb_off_t off, void *buf,
 		    tdb_len_t len, int cv)
 {
 	if (tdb->methods->tdb_oob(tdb, off + len, 0) != 0) {
@@ -209,8 +209,8 @@ void tdb_mmap(struct tdb_context *tdb)
 
 #ifdef HAVE_MMAP
 	if (!(tdb->flags & TDB_NOMMAP)) {
-		tdb->map_ptr = mmap(NULL, tdb->map_size, 
-				    PROT_READ|(tdb->read_only? 0:PROT_WRITE), 
+		tdb->map_ptr = mmap(NULL, tdb->map_size,
+				    PROT_READ|(tdb->read_only? 0:PROT_WRITE),
 				    MAP_SHARED, tdb->fd, 0);
 
 		/*
@@ -219,7 +219,7 @@ void tdb_mmap(struct tdb_context *tdb)
 
 		if (tdb->map_ptr == MAP_FAILED) {
 			tdb->map_ptr = NULL;
-			TDB_LOG((tdb, TDB_DEBUG_WARNING, "tdb_mmap failed for size %d (%s)\n", 
+			TDB_LOG((tdb, TDB_DEBUG_WARNING, "tdb_mmap failed for size %d (%s)\n",
 				 tdb->map_size, strerror(errno)));
 		}
 	} else {
@@ -253,7 +253,7 @@ static int tdb_expand_file(struct tdb_context *tdb, tdb_off_t size, tdb_off_t ad
 			errno = ENOSPC;
 		}
 		if (written != 1) {
-			TDB_LOG((tdb, TDB_DEBUG_FATAL, "expand_file to %d failed (%s)\n", 
+			TDB_LOG((tdb, TDB_DEBUG_FATAL, "expand_file to %d failed (%s)\n",
 				 size+addition, strerror(errno)));
 			return -1;
 		}

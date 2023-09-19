@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -63,7 +63,7 @@
  */
 #define MAX_REPLY_EXTRA_BYTES 6
 
-/* 
+/*
  * Library user must provide a static buffer of size ATTRNAMEBUFSIZ.
  * It's used when listing EAs as intermediate buffer. For afpd it's
  * defined in extattrs.c.
@@ -137,7 +137,7 @@ typedef enum {
 #define EA_COUNT_LEN   2
 #define EA_HEADER_SIZE (EA_MAGIC_LEN + EA_VERSION_LEN + EA_COUNT_LEN)
 
-/* 
+/*
  * structs describing the layout of the Extended Attributes bookkeeping file.
  * This isn't really an AppleDouble structure, it's just a binary blob that
  * lives in our .AppleDouble directory too.

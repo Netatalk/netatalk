@@ -72,7 +72,7 @@ void dsi_opensession(DSI *dsi)
   dsi->commands[0] = DSIOPT_SERVQUANT;
   dsi->commands[1] = sizeof(servquant);
   servquant = htonl(( dsi->server_quantum < DSI_SERVQUANT_MIN ||
-	      dsi->server_quantum > DSI_SERVQUANT_MAX ) ? 
+	      dsi->server_quantum > DSI_SERVQUANT_MAX ) ?
 	    DSI_SERVQUANT_DEF : dsi->server_quantum);
   memcpy(dsi->commands + 2, &servquant, sizeof(servquant));
 

@@ -47,7 +47,7 @@
  * - store EAs in files "fileWithEAs::EA::testEA1" and "fileWithEAs::EA::testEA2"
  */
 
-/* 
+/*
  * Build mode for EA header from file mode
  */
 static inline mode_t ea_header_mode(mode_t mode)
@@ -59,7 +59,7 @@ static inline mode_t ea_header_mode(mode_t mode)
     return mode;
 }
 
-/* 
+/*
  * Build mode for EA file from file mode
  */
 static inline mode_t ea_mode(mode_t mode)
@@ -276,7 +276,7 @@ static int pack_header(struct ea * restrict ea)
 
     LOG(log_debug, logtype_afpd, "pack_header('%s'): ea_count: %u, ea_size: %u",
         ea->filename, ea->ea_count, ea->ea_size);
-    
+
     return 0;
 }
 
@@ -885,7 +885,7 @@ exit:
  */
 int ea_close(struct ea * restrict ea)
 {
-    int ret = 0; 
+    int ret = 0;
     unsigned int count = 0;
     char *eaname;
     struct stat st;
@@ -1173,7 +1173,7 @@ int list_eas(VFS_FUNC_ARGS_EA_LIST)
     while (count < ea.ea_count) {
         /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
         if ( ( len = convert_string(vol->v_volcharset,
-                                    CH_UTF8_MAC, 
+                                    CH_UTF8_MAC,
                                     (*ea.ea_entries)[count].ea_name,
                                     (*ea.ea_entries)[count].ea_namelen,
                                     buf + attrbuflen,
@@ -1391,7 +1391,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
     struct adouble ad;
 
     LOG(log_debug, logtype_afpd, "ea_renamefile('%s'/'%s')", src, dst);
-            
+
 
     /* Open EA stuff */
     if ((ea_openat(vol, dirfd, src, EA_RDWR, &srcea)) != 0) {
@@ -1407,7 +1407,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
     if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
-            ad_init(&ad, vol); 
+            ad_init(&ad, vol);
             if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666)) != 0) {
                 LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src, dst, dst);
                 ret = AFPERR_MISC;

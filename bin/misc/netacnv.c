@@ -21,7 +21,7 @@ struct flag_map {
 
 struct flag_map flag_map[] = {
     flag(CONV_ESCAPEHEX),
-    flag(CONV_UNESCAPEHEX),    
+    flag(CONV_UNESCAPEHEX),
     flag(CONV_ESCAPEDOTS),
     flag(CONV_IGNORE),
     flag(CONV_FORCE),
