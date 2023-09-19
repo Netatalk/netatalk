@@ -40,14 +40,15 @@ dnl	# check for libiconv support
   esac	
 
 	AC_CACHE_CHECK([for libiconv],netatalk_cv_iconv,[
-          AC_LINK_IFELSE([AC_LANG_SOURCE([[
+          AC_LINK_IFELSE([AC_LANG_SOURCE([
 #include <stdlib.h>
 #include <iconv.h>
-],[
+int main(void) {
 	iconv_t cd = iconv_open("","");
         iconv(cd,NULL,NULL,NULL,NULL);
         iconv_close(cd);
-]])], netatalk_cv_iconv=yes, netatalk_cv_iconv=no, netatalk_cv_iconv=cross)])
+}
+])], netatalk_cv_iconv=yes, netatalk_cv_iconv=no, netatalk_cv_iconv=cross)])
 
 	if test x"$netatalk_cv_iconv" = x"yes"; then
 	    ICONV_LIBS="$ICONV_LIBS -liconv"
