@@ -121,9 +121,6 @@ AC_NETATALK_CHECK_ICONV
 dnl Check for CNID database backends
 AC_NETATALK_CNID([bdb_required=yes],[bdb_required=no])
 
-dnl Check for quota support
-AC_NETATALK_CHECK_QUOTA
-
 dnl Check for optional Zeroconf support
 AC_NETATALK_ZEROCONF
 

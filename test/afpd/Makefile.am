@@ -31,9 +31,7 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_srcdir)/etc/afpd/hash.c \
 				$(top_srcdir)/etc/afpd/mangle.c \
 				$(top_srcdir)/etc/afpd/messages.c \
-				$(top_srcdir)/etc/afpd/nfsquota.c \
 				$(top_srcdir)/etc/afpd/ofork.c \
-				$(top_srcdir)/etc/afpd/quota.c \
 				$(top_srcdir)/etc/afpd/status.c \
 				$(top_srcdir)/etc/afpd/spotlight_marshalling.c \
 				$(top_srcdir)/etc/afpd/switch.c \
@@ -45,7 +43,7 @@ test_CFLAGS = \
 	-I$(top_srcdir)/etc/afpd \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/sys \
-	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @QUOTA_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
@@ -55,7 +53,7 @@ test_CFLAGS = \
 
 test_LDADD = \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
+	@LIBGCRYPT_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 test_LDFLAGS = -export-dynamic
 

@@ -122,13 +122,6 @@ static void show_version_extended(void )
 	puts( "No" );
 #endif
 
-	printf( "         Quota support:\t" );
-#ifndef NO_QUOTA_SUPPORT
-	puts( "Yes" );
-#else
-	puts( "No" );
-#endif
-
 	printf( "   Admin group support:\t" );
 	puts( "Yes" );
 
