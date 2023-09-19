@@ -655,17 +655,6 @@ dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then
 	AC_MSG_RESULT([ * Linux specific configuration])
     AC_DEFINE(LINUX, 1, [OS is Linux])	
-	dnl ----- check if we need the quotactl wrapper
-    AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
-		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
-        	AC_CHECK_HEADERS(xfs/libxfs.h xfs/xqm.h xfs/xfs_fs.h)]
-	)
-
-
-	dnl ----- as far as I can tell, dbtob always does the wrong thing
-	dnl ----- on every single version of linux I've ever played with.
-	dnl ----- see etc/afpd/quota.c
-	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
 fi
 
 dnl ----- NetBSD specific -----
@@ -699,12 +688,6 @@ if test x"$this_os" = "xsolaris"; then
     AC_DEFINE(_XOPEN_SOURCE, 600, [Solaris compilation environment])
     AC_DEFINE(__EXTENSIONS__,  1, [Solaris compilation environment])
 	init_style=solaris
-fi
-
-dnl ----- macOS specific -----
-if test x"$this_os" = "xmacosx"; then
-	AC_MSG_RESULT([ * macOS specific configuration])
-    AC_DEFINE(NO_QUOTA_SUPPORT, 1, [No quota support])
 fi
 
 dnl Whether to run ldconfig after installing libraries
