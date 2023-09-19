@@ -60,6 +60,18 @@ AC_DEFUN([AC_NETATALK_DTRACE], [
   fi
   ;;
   esac
+  dnl the version of dtrace on aarch64 FreeBSD is currently unsupported
+  case "$host_cpu" in
+  aarch64)
+  case "$host_os" in
+  *freebsd*)
+  if test x"$WDTRACE" = x"auto" ; then
+  WDTRACE=no
+  fi
+  ;;
+  esac
+  ;;
+  esac
   if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
     AC_CHECK_PROG([atalk_cv_have_dtrace], [dtrace], [yes], [no])
     if test "x$atalk_cv_have_dtrace" = "xno" ; then
