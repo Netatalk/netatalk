@@ -1,3 +1,20 @@
+Changes in 3.1.18
+=================
+* FIX: CVE-2022-22995: Harden create_appledesktop_folder(), GitHub #480
+* FIX: Correct syntax for libwrap check in tcp-wrappers.m4, GitHub #500
+* FIX: Correct syntax for libiconv check in iconv.m4, GitHub #491
+* FIX: quota is not supported on macOS, GitHub #492
+* FIX: dtrace is not supported on FreeBSD aarch64, GitHub #498
+
+Changes in 3.1.17
+=================
+* FIX: CVE-2023-42464: Validate data type in dalloc_value_for_key(), GitHub #486
+* FIX: Declare a variable before using it in a loop,
+       which was throwing off the default compiler on RHEL7, GitHub #481
+* UPD: Distribute tarballs with xz compression by default, not gzip, GitHub #478
+* UPD: Add AUTHOR sections to all man pages with a reference to CONTRIBUTORS,
+       and standardize headers and footers, GitHub #462
+
 Changes in 3.1.16
 =================
 * FIX: libatalk: Fix CVE-2022-23121, CVE-2022-23123 regression
