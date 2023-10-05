@@ -12,8 +12,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 #include <errno.h>
 
@@ -212,7 +214,6 @@ static void create_appledesktop_folder(const struct vol * vol)
 {
     bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
-    char *cmd_argv[4];
 
     olddtpath = bfromcstr(vol->v_path);
     bcatcstr(olddtpath, "/" APPLEDESKTOP);
@@ -220,26 +221,23 @@ static void create_appledesktop_folder(const struct vol * vol)
     dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
 
+    become_root();
+
     if (lstat(cfrombstr(dtpath), &st) != 0) {
-
-        become_root();
-
-        if (lstat(cfrombstr(olddtpath), &st) == 0) {
-            cmd_argv[0] = "mv";
-            cmd_argv[1] = bdata(olddtpath);
-            cmd_argv[2] = bdata(dtpath);
-            cmd_argv[3] = NULL;
-            if (run_cmd("mv", cmd_argv) != 0) {
-                LOG(log_error, logtype_afpd, "moving .AppleDesktop from \"%s\" to \"%s\" failed",
+        if ((lstat(cfrombstr(olddtpath), &st) == 0) && (S_ISDIR(st.st_mode) != 0)) {
+	    if (rename(bdata(olddtpath), bdata(dtpath)) != 0) {
+                LOG(log_error, logtype_afpd, "moving .AppleDesktop from \"%s\" failed; creating new dir \"%s\"",
                     bdata(olddtpath), bdata(dtpath));
                 mkdir(cfrombstr(dtpath), 0777);
             }
         } else {
+            LOG(log_debug, logtype_afpd, "no valid .AppleDesktop dir found; creating new dir \"%s\"",
+                bdata(dtpath));
             mkdir(cfrombstr(dtpath), 0777);
         }
-
-        unbecome_root();
     }
+
+    unbecome_root();
 
     bdestroy(dtpath);
     bdestroy(olddtpath);
