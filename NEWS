@@ -1,6 +1,6 @@
 Changes in 3.2.0
 ================
-* UPD: Remove quota support from Netatalk 3
+* UPD: Remove quota support from Netatalk 3, GitHub #493
 
 Changes in 3.1.18
 =================
