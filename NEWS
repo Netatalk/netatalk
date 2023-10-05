@@ -1,3 +1,11 @@
+Changes in 3.1.18
+=================
+* FIX: CVE-2022-22995: Harden create_appledesktop_folder(), GitHub #480
+* FIX: Correct syntax for libwrap check in tcp-wrappers.m4, GitHub #500
+* FIX: Correct syntax for libiconv check in iconv.m4, GitHub #491
+* FIX: quota is not supported on macOS, GitHub #492
+* FIX: dtrace is not supported on FreeBSD aarch64, GitHub #498
+
 Changes in 3.1.17
 =================
 * FIX: CVE-2023-42464: Validate data type in dalloc_value_for_key(), GitHub #486
