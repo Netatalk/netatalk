@@ -21,7 +21,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>@prefix@/etc/extmap.conf</command>
+      <command>extmap.conf</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -29,7 +29,7 @@
     <title>Description</title>
 
     <para>
-    <filename>@prefix@/etc/extmap.conf</filename> is the
+    <filename>extmap.conf</filename> is the
     configuration file used by <command>afpd</command> to
     specify file name extension mappings.</para>
 

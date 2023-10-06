@@ -61,8 +61,7 @@
         <term>-F <replaceable>configfile</replaceable></term>
 
         <listitem>
-          <para>Specifies the configuration file to use. (Defaults to
-          <filename>@prefix@/etc/afp.conf</filename>.)</para>
+          <para>Specifies the configuration file to use.</para>
         </listitem>
       </varlistentry>
 
@@ -97,7 +96,7 @@
 
     <variablelist>
       <varlistentry>
-        <term><filename>@prefix@/etc/afp.conf</filename></term>
+        <term><filename>afp.conf</filename></term>
 
         <listitem>
           <para>configuration file used by <command>netatalk</command>(8),
