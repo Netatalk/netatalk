@@ -71,8 +71,7 @@
 
         <listitem>
           <para>Use <emphasis remap="I">configuration file</emphasis> as the
-            configuration file. The default is
-            <emphasis remap="I">@prefix@/etc/afp.conf</emphasis>.</para>
+            configuration file.</para>
         </listitem>
       </varlistentry>
 
