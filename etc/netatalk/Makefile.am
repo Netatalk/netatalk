@@ -1,4 +1,4 @@
-# Makefile.am for etc/netatlk/
+# Makefile.am for etc/netatalk/
 
 pkgconfdir = @PKGCONFDIR@
 
@@ -18,7 +18,7 @@ netatalk_LDADD = \
 	@ZEROCONF_LIBS@ \
 	$(top_builddir)/libatalk/libatalk.la
 
-netatalk_LDFLAGS = @LIBEVENT_LDFLAGS@ -levent
+netatalk_LDFLAGS = @LIBEVENT_LIBS@
 
 netatalk_CFLAGS += @LIBEVENT_CFLAGS@
 
