@@ -10,13 +10,13 @@
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>afpldaptest</refname>
 
     <refpurpose>Syntactically check an afp_ldap.conf</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>afpldaptest</command>
 
@@ -39,7 +39,7 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>DESCRIPTION</title>
 
     <para><command>afpldaptest</command> is a simple command to syntactically
@@ -89,7 +89,7 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>SEE ALSO</title>
 
     <para><citerefentry><refentrytitle>afp_ldap.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
