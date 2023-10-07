@@ -3,23 +3,10 @@
 #
 # volume format:
 # :DEFAULT: [all of the default options except volume name]
-# path [name] [casefold:x] [options:z,l,j] \
-#   [allow:a,@b,c,d] [deny:a,@b,c,d] [dbpath:path] [password:p] \
-#   [rwlist:a,@b,c,d] [rolist:a,@b,c,d] [limitsize:value in bytes] \
-#   [preexec:cmd] [root_preexec:cmd] [postexec:cmd]  [root_postexec:cmd] \
-#   [allowed_hosts:IPv4 address[/IPv4 netmask bits]] \
-#   [denied_hosts:IPv4 address[/IPv4 netmask bits]] \
-#   ... more, see below ...
-#   
-# name:      volume name. it can't include the ':' character
+# path [name] [options]
 #
 
-# The line below sets some DEFAULT, starting with Netatalk 2.1.
 :DEFAULT: options:upriv,usedots
 
-# The "~" below indicates that Home directories are visible by default.
-# If you do not wish to have people accessing their Home directories,
-# please put a pound sign in front of the tilde or delete it.
-~
-
-# End of File
+# Shared volumes are defined below, one per line.
+~ "$u's Home Directory"
