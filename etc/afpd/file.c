@@ -839,7 +839,8 @@ int setfilparams(struct vol *vol,
     struct extmap	*em;
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
-    u_char              achar, *fdType, xyy[4]; /* uninitialized, OK 310105 */
+    u_char              achar, xyy[4];
+    u_char              *fdType = NULL;
     u_int16_t		ashort, bshort, oshort;
     u_int32_t		aint;
     u_int32_t		upriv;
