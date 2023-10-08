@@ -46,7 +46,6 @@ cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
 
 void uuidcache_dump(void) {
     int i;
-    int ret = 0;
     cacheduser_t *entry;
     char timestr[200];
     struct tm *tmp = NULL;
@@ -301,7 +300,6 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
     char *name = NULL;
     uuidp_t uuid = NULL;
     cacheduser_t *cacheduser = NULL;
-    cacheduser_t *entry;
     unsigned char hash;
 
     /* allocate mem and copy values */
