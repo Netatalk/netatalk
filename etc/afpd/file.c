@@ -827,12 +827,13 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
     char		*ade = NULL;
-    u_char              achar, *fdType, xyy[4]; /* uninitialized, OK 310105 */
+    u_char              achar, xyy[4];
+    u_char              *fdType = NULL;
     uint16_t		ashort, bshort, oshort;
     uint32_t		aint;
     uint32_t		upriv;
     uint16_t           upriv_bit = 0;
-        struct utimbuf	ut;
+    struct utimbuf	ut;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
@@ -1853,7 +1854,7 @@ retry:
 	if (errno == ESTALE) {
 	    errno = ENOENT;
 	}
-#endif	
+#endif
 	if ( errno == ENOENT && !retry) {
 	    /* cnid db is out of sync, reenumerate the directory and update ids */
 	    reenumerate_id(vol, ".", dir);
@@ -1952,7 +1953,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
             return AFPERR_ACCESS;
 #ifdef ESTALE
 	case ESTALE:
-#endif	
+#endif
         case ENOENT:
             /* still try to delete the id */
             err = AFPERR_NOOBJ;
