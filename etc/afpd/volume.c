@@ -17,7 +17,6 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-/* STDC check */
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>

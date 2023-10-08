@@ -15,7 +15,6 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
-/* STDC check */
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>

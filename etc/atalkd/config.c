@@ -26,8 +26,6 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-
-/* STDC check */
 #include <string.h>
 
 #ifdef HAVE_FCNTL_H

@@ -10,8 +10,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <ctype.h>

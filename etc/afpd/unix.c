@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <errno.h>

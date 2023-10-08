@@ -9,8 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <utime.h>

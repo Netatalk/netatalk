@@ -39,7 +39,6 @@
 
 #if !defined(NO_QUOTA_SUPPORT) && !defined(HAVE_LIBQUOTA)
 #include <stdio.h>
-/* STDC check */
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>

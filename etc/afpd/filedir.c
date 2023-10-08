@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-/* STDC check */
 #include <string.h>
 
 #ifdef HAVE_STRINGS_H

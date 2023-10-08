@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <atalk/logger.h>

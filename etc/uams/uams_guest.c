@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <pwd.h>

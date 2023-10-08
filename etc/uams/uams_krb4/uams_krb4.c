@@ -21,8 +21,6 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <limits.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <ctype.h>

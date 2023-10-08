@@ -31,8 +31,6 @@
 #endif /* ! WIFEXITED */
 
 #include <errno.h>
-
-/* STDC check */
 #include <string.h>
 
 #include <signal.h>
