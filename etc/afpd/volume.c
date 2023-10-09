@@ -618,7 +618,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
     /* suffix for mangling use (lastvid + 1)   */
     /* because v_vid has not been decided yet. */
-    suffixlen = sprintf(suffix, "%c%X", MANGLE_CHAR, lastvid + 1 );
+    suffixlen = snprintf(suffix, sizeof(suffix), "%c%X", MANGLE_CHAR, lastvid + 1);
 
     vlen = strlen( name );
 
@@ -1468,6 +1468,8 @@ EC_CLEANUP:
     if (file)
         fclose(file);
     LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    if (ret != 0)
+        return -1;
     return bandsize;
 }
 
@@ -1531,7 +1533,6 @@ static int get_tm_used(struct vol * restrict vol)
     DIR *dir = NULL;
     const struct dirent *entry;
     const char *p;
-    struct stat st;
     long int links;
     time_t now = time(NULL);
 
@@ -1589,14 +1590,13 @@ static int getvolspace(struct vol *vol,
                        u_int32_t *bfree, u_int32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, u_int32_t *bsize)
 {
-    int         spaceflag, rc;
+    int         rc;
     u_int32_t   maxsize;
-    VolSpace    used;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
+    int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
 
-    spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
         (((afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
