@@ -857,7 +857,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     uint16_t	namelen;
     uint16_t	flags;
     char  	    tmppath[256];
-    char        *uname;
+    char        *uname = NULL;
 
     *rbuflen = 0;
 
