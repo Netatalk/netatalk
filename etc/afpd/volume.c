@@ -94,6 +94,8 @@ EC_CLEANUP:
     if (file)
         fclose(file);
     LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    if (ret != 0)
+        return -1;
     return bandsize;
 }
 
@@ -222,10 +224,9 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
                        uint32_t *bfree, uint32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
 {
-    int         spaceflag, rc;
+    int         rc;
     uint32_t   maxsize;
 
-    spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
 
