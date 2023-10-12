@@ -1,8 +1,8 @@
 #!/bin/sh
-if [ ! -d /tmp/AFPtestvolume ] ; then
-    mkdir -p /tmp/AFPtestvolume
+if [ ! -d /tmp/netatalk/AFPtestvolume ] ; then
+    mkdir -p /tmp/netatalk/AFPtestvolume
     if [ $? -ne 0 ] ; then
-        echo Error creating AFP test volume /tmp/AFPtestvolume
+        echo Error creating AFP test volume /tmp/netatalk/AFPtestvolume
         exit 1
     fi
 fi
@@ -18,7 +18,7 @@ fi
 if [ ! -f test.default ] ; then
     echo -n "Creating volume config template ... "
     cat > test.default <<EOF
-/tmp/AFPtestvolume "test" ea:none cnidscheme:last
+/tmp/netatalk/AFPtestvolume "test" ea:none cnidscheme:last
 EOF
     echo [ok]
 fi
