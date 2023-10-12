@@ -1,6 +1,6 @@
 # Makefile.am for test/afpd/
 
-pkgconfdir = @PKGCONFDIR@
+tmpconfdir = /tmp/netatalk
 
 TESTS = test.sh test
 
@@ -53,14 +53,14 @@ test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
 	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ @QUOTA_CFLAGS@ \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\" \
-	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
-	 -D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
-	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
-	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
-	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
-	 -D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
-	 -D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\"
+	 -D_PATH_AFPDDEFVOL=\"$(tmpconfdir)/AppleVolumes.default\" \
+	 -D_PATH_AFPDSYSVOL=\"$(tmpconfdir)/AppleVolumes.system\" \
+	 -D_PATH_AFPDPWFILE=\"$(tmpconfdir)/afppasswd\" \
+	 -D_PATH_AFPDCONF=\"$(tmpconfdir)/afpd.conf\" \
+	 -D_PATH_AFPDUAMPATH=\"$(tmpconfdir)/\" \
+	 -D_PATH_ACL_LDAPCONF=\"$(tmpconfdir)/afp_ldap.conf\" \
+	 -D_PATH_AFPDSIGCONF=\"$(tmpconfdir)/afp_signature.conf\" \
+	 -D_PATH_AFPDUUIDCONF=\"$(tmpconfdir)/afp_voluuid.conf\"
 
 test_LDADD = $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
