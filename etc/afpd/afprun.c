@@ -153,6 +153,7 @@ static void become_user_permanently(uid_t uid, gid_t gid)
     setuidx(ID_EFFECTIVE, uid);
     setuid(uid);
 #endif
+    return 0;
 }
 
 /****************************************************************************
