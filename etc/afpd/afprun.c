@@ -213,6 +213,7 @@ static int become_user_permanently(uid_t uid, gid_t gid)
         return -1;
     }
 #endif
+    return 0;
 }
 
 /****************************************************************************
