@@ -585,7 +585,8 @@ static int ad_ls_r(char *path, afpvol_t *vol)
 
 exit:
     closedir(dp);
-    fchdir(cwd);
+    if (fchdir(cwd) < 0)
+        fprintf(stderr, "can't chdir to %i (%s)", cwd, strerror(errno));
     close(cwd);
 
     tmp = strrchr(cwdpath, '/');

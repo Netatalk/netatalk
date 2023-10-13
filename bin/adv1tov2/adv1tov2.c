@@ -87,10 +87,12 @@ static void descend(DIR *dp)
     /* go down subdirectory */
     flags = ADFLAGS_HF;
     if (S_ISDIR(st.st_mode) && (dpnew = opendir(de->d_name))) {
-      chdir(de->d_name);
+      if (chdir(de->d_name) < 0)
+        fprintf(stderr, "adv1tov2: unable to chdir to %s\n", de->d_name);
       descend(dpnew);
       closedir(dpnew);
-      chdir("..");
+      if (chdir("..") < 0)
+        fprintf(stderr, "adv1tov2: unable to chdir to %s\n", "..");
       flags |= ADFLAGS_DIR;
     }
 
@@ -130,10 +132,12 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  chdir(argv[1]);
+  if (chdir(argv[1]) < 0)
+    fprintf(stderr, "%s: unable to chdir to %s\n", *argv, argv[1]);
   descend(dp);
   closedir(dp);
-  chdir("..");
+  if (chdir("..") < 0)
+    fprintf(stderr, "%s: unable to chdir to %s\n", *argv, "..");
 
   putc('\n', stderr);
   return 0;
