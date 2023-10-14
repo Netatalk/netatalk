@@ -149,10 +149,9 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     if ((dp = opendirat(dirfd, dir)) == NULL)
         return AFP_OK;
 
-    strcpy(path, dir);
-    strcat(path, "/");
+    snprintf(path, MAXPATHLEN, "%s/", dir);
     len++;
-    remain = sizeof(path) -len -1;
+    remain = strlen(path) -len -1;
     while ((de = readdir(dp)) && err == AFP_OK) {
         /* skip this and previous directory */
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
@@ -207,15 +206,13 @@ static int copydir(const struct vol *vol, int dirfd, char *src, char *dst)
     }
 
     /* set things up to copy */
-    strcpy(spath, src);
-    strcat(spath, "/");
+    snprintf(spath, MAXPATHLEN, "%s/", src);
     slen++;
-    srem = sizeof(spath) - slen -1;
+    srem = strlen(spath) - slen -1;
 
-    strcpy(dpath, dst);
-    strcat(dpath, "/");
+    snprintf(dpath, MAXPATHLEN, "%s/", dst);
     dlen++;
-    drem = sizeof(dpath) - dlen -1;
+    drem = strlen(dpath) - dlen -1;
 
     err = AFP_OK;
     while ((de = readdir(dp))) {
