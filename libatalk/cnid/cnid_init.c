@@ -28,32 +28,12 @@
 #include <stdlib.h>
 
 
-#ifdef CNID_BACKEND_DB3
-extern struct _cnid_module cnid_db3_module;
-#endif
-
-#ifdef CNID_BACKEND_HASH
-extern struct _cnid_module cnid_hash_module;
-#endif
-
 #ifdef CNID_BACKEND_LAST
 extern struct _cnid_module cnid_last_module;
 #endif
 
-#ifdef CNID_BACKEND_MTAB
-extern struct _cnid_module cnid_mtab_module;
-#endif
-
-#ifdef CNID_BACKEND_CDB
-extern struct _cnid_module cnid_cdb_module;
-#endif
-
 #ifdef CNID_BACKEND_DBD
 extern struct _cnid_module cnid_dbd_module;
-#endif
-
-#ifdef CNID_BACKEND_TDB
-extern struct _cnid_module cnid_tdb_module;
 #endif
 
 #ifdef CNID_BACKEND_MYSQL
@@ -62,32 +42,12 @@ extern struct _cnid_module cnid_mysql_module;
 
 void cnid_init(void)
 {
-#ifdef CNID_BACKEND_DB3
-    cnid_register(&cnid_db3_module);
-#endif
-
-#ifdef CNID_BACKEND_HASH
-    cnid_register(&cnid_hash_module);
-#endif
-
 #ifdef CNID_BACKEND_LAST
     cnid_register(&cnid_last_module);
 #endif
 
-#ifdef CNID_BACKEND_MTAB
-    cnid_register(&cnid_mtab_module);
-#endif
-
-#ifdef CNID_BACKEND_CDB
-    cnid_register(&cnid_cdb_module);
-#endif
-
 #ifdef CNID_BACKEND_DBD
     cnid_register(&cnid_dbd_module);
-#endif
-
-#ifdef CNID_BACKEND_TDB
-    cnid_register(&cnid_tdb_module);
 #endif
 
 #ifdef CNID_BACKEND_MYSQL

@@ -185,9 +185,6 @@ AC_NETATALK_RECVFILE
 dnl Check whether bundled libevent shall not be used
 AC_NETATALK_LIBEVENT
 
-dnl Check whether bundled tdb shall be used
-AC_NETATALK_TDB
-
 dnl Check whether bundled talloc shall be used
 AC_NETATALK_TALLOC
 

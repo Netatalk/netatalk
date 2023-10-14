@@ -2215,19 +2215,6 @@
 
     <variablelist>
       <varlistentry>
-        <term>cdb</term>
-
-        <listitem>
-          <para>"Concurrent database", backend is based on Oracle Berkeley DB.
-          With this backend several <command>afpd</command> daemons access the
-          CNID database directly. Berkeley DB locking is used to synchronize
-          access, if more than one <command>afpd</command> process is active
-          for a volume. The drawback is, that the crash of a single
-          <command>afpd</command> process might corrupt the database.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>dbd</term>
 
         <listitem>
