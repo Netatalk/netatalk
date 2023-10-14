@@ -21,8 +21,6 @@ GENERATED_FILES = \
 	rc.afpd.netbsd		\
 	rc.atalk.redhat-sysv	\
 	rc.atalk.systemd	\
-	rc.atalk.tru64		\
-	rc.atalk.bsd		\
 	rc.atalkd.netbsd	\
 	rc.atalk.suse-sysv	\
 	rc.cnid_metad.netbsd	\
@@ -43,8 +41,6 @@ TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
 	rc.atalk.redhat-sysv.tmpl	\
 	rc.atalk.systemd.tmpl		\
-	rc.atalk.tru64.tmpl		\
-	rc.atalk.bsd.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
 	rc.atalk.suse-sysv.tmpl		\
 	rc.cnid_metad.netbsd.tmpl	\
