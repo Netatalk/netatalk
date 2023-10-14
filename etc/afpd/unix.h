@@ -12,9 +12,9 @@ typedef int	mode_t;
 #endif /*i386*/
 #endif /*sun __svr4__*/
 
-#if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 )
+#if defined(HAVE_SYS_VFS_H) || defined( sun )
 #include <sys/vfs.h>
-#endif /* HAVE_SYS_VFS_H || sun || ibm032 */
+#endif /* HAVE_SYS_VFS_H || sun */
 
 #if defined(_IBMR2) || defined(HAVE_STATFS_H)
 #include <sys/statfs.h>
