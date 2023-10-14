@@ -280,16 +280,13 @@ AC_CONFIG_FILES([
   libatalk/adouble/Makefile
   libatalk/bstring/Makefile
   libatalk/cnid/Makefile
-  libatalk/cnid/cdb/Makefile
   libatalk/cnid/last/Makefile
   libatalk/cnid/dbd/Makefile
-  libatalk/cnid/tdb/Makefile
   libatalk/cnid/mysql/Makefile
   libatalk/compat/Makefile
   libatalk/dsi/Makefile
   libatalk/iniparser/Makefile
   libatalk/talloc/Makefile
-  libatalk/tdb/Makefile
   libatalk/unicode/Makefile
   libatalk/unicode/charsets/Makefile
   libatalk/util/Makefile
