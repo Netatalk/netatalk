@@ -75,6 +75,17 @@ char *strchr (), *strrchr ();
 
 #define PIPED_STATUS	"status: print spooler processing job"
 
+/* This maps to TReq and TResp, per "Inside AppleTalk" 10-13 */
+
+typedef struct __attribute__((__packed__)) {
+	u_int8_t user_bytes[4];
+	u_int8_t data_bytes[4];
+	u_int8_t buf_len;
+	char buf[255];
+} rbuf_t;
+
+static rbuf_t r_buf;
+
 struct printer	defprinter;
 struct printer	*printers = NULL;
 
@@ -91,7 +102,7 @@ char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;
 
 /* Prototypes for locally used functions */
-int getstatus( struct printer *pr, char *buf );
+int getstatus( struct printer *pr, rbuf_t *buf );
 int rprintcap( struct printer *pr );
 static void getprinters( char *cf );
 
@@ -158,8 +169,6 @@ reap(int sig _U_)
     }
     return;
 }
-
-static char rbuf[ 255 + 1 + 8 ];
 
 int main(int ac, char **av)
 {
@@ -387,14 +396,17 @@ int main(int ac, char **av)
 		    connid = (unsigned char)cbuf[ 0 ];
 		    sock = (unsigned char)cbuf[ 4 ];
 		    quantum = (unsigned char)cbuf[ 5 ];
-		    rbuf[ 0 ] = cbuf[ 0 ];
-		    rbuf[ 1 ] = PAP_OPENREPLY;
-		    rbuf[ 2 ] = rbuf[ 3 ] = 0;
+		    r_buf.user_bytes[0] = connid;
+		    r_buf.user_bytes[1] = PAP_OPENREPLY;
+		    r_buf.user_bytes[2] = 0;
+		    r_buf.user_bytes[3] = 0;
 
 		    if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) != 0 ) {
 			LOG(log_error, logtype_papd, "printcap problem: %s",
 				pr->p_printer );
-			rbuf[ 2 ] = rbuf[ 3 ] = 0xff;
+			/* "IAT", 10-16 */
+			r_buf.user_bytes[2] = 0xff;
+			r_buf.user_bytes[3] = 0xff;
 			err = 1;
 		    }
 
@@ -409,7 +421,8 @@ int main(int ac, char **av)
 		    if ( (pr->p_flags & P_SPOOLED) && (cups_get_printer_status ( pr ) == 0)) {
                         LOG(log_error, logtype_papd, "CUPS_PAP_OPEN: %s is not accepting jobs",
                                 pr->p_printer );
-                        rbuf[ 2 ] = rbuf[ 3 ] = 0xff;
+			r_buf.user_bytes[2] = 0xff;
+			r_buf.user_bytes[3] = 0xff;
                         err = 1;
                     }
 #endif /* HAVE_CUPS */
@@ -422,18 +435,21 @@ int main(int ac, char **av)
 		    if (( atp = atp_open( ATADDR_ANYPORT, 
 					  &pr->p_addr)) == NULL ) {
 			LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
-			rbuf[ 2 ] = rbuf[ 3 ] = 0xff;  /* printer busy */
-			rbuf[ 4 ] = 0; /* FIXME is it right? */
+			r_buf.user_bytes[2] = 0xff;
+			r_buf.user_bytes[3] = 0xff;
+			/* FIXME is it right? */
+			r_buf.data_bytes[0] = 0x00;
 			err = 1;
 		    }
 		    else {
-		       rbuf[ 4 ] = atp_sockaddr( atp )->sat_port;
+		       r_buf.data_bytes[0] = atp_sockaddr( atp )->sat_port;
                     }
-		    rbuf[ 5 ] = oquantum;
-		    rbuf[ 6 ] = rbuf[ 7 ] = 0;
+		    r_buf.data_bytes[1] = oquantum;
+		    r_buf.data_bytes[2] = 0;
+		    r_buf.data_bytes[3] = 0;
 
-		    iov.iov_base = rbuf;
-		    iov.iov_len = 8 + getstatus( pr, &rbuf[ 8 ] );
+		    iov.iov_base = &r_buf;
+		    iov.iov_len = 8 + getstatus( pr, &r_buf );
 		    atpb.atp_sresiov = &iov;
 		    atpb.atp_sresiovcnt = 1;
 		    /*
@@ -508,14 +524,17 @@ int main(int ac, char **av)
 		    break;
 
 		case PAP_SENDSTATUS :
-		    rbuf[ 0 ] = 0;
-		    rbuf[ 1 ] = PAP_STATUS;
-		    rbuf[ 2 ] = rbuf[ 3 ] = 0;
-		    rbuf[ 4 ] = rbuf[ 5 ] = 0;
-		    rbuf[ 6 ] = rbuf[ 7 ] = 0;
+		    r_buf.user_bytes[0] = 0;
+		    r_buf.user_bytes[1] = PAP_STATUS;
+		    r_buf.user_bytes[2] = 0;
+		    r_buf.user_bytes[3] = 0;
+		    r_buf.data_bytes[0] = 0;
+		    r_buf.data_bytes[1] = 0;
+		    r_buf.data_bytes[2] = 0;
+		    r_buf.data_bytes[3] = 0;
 
-		    iov.iov_base = rbuf;
-		    iov.iov_len = 8 + getstatus( pr, &rbuf[ 8 ] );
+		    iov.iov_base = &r_buf;
+		    iov.iov_len = 8 + getstatus( pr, &r_buf );
 		    atpb.atp_sresiov = &iov;
 		    atpb.atp_sresiovcnt = 1;
 		    /*
@@ -560,45 +579,51 @@ int main(int ac, char **av)
  * We assume buf is big enough for 255 bytes of data and a length byte.
  */
 
-int getstatus(struct printer *pr, char *buf)
+int getstatus(struct printer *pr, rbuf_t *buf)
 {
-
 #ifdef HAVE_CUPS
     if ( pr->p_flags & P_PIPED ) {
-	*buf = strlen( cannedstatus );
-	strncpy( &buf[ 1 ], cannedstatus, *buf );
-	return( *buf + 1 );
+	buf->buf_len = strlen(cannedstatus);
+	snprintf(buf->buf, 254, cannedstatus);
+	return (buf->buf_len + 1);
     } else {
 	cups_get_printer_status( pr );
-	*buf = strlen ( pr->p_status );
-	strncpy ( &buf[1], pr->p_status, *buf);
-	return ( *buf + 1);
+	buf->buf_len = strlen(pr->p_status);
+	snprintf(buf->buf, 254, pr->p_status);
+	return (buf->buf_len + 1);
     }
 #else
-
-    char		path[ MAXPATHLEN ];
-    int			fd = -1, rc;
+    char path[MAXPATHLEN];
+    char getstatus_buffer[255];
+    char *temp = NULL;
+    FILE *fd = NULL;
+    int rc;
 
     if ( pr->p_flags & P_SPOOLED && ( pr->p_spool != NULL )) {
-	strcpy( path, pr->p_spool );
-	strcat( path, "/status" );
-	fd = open( path, O_RDONLY);
+	snprintf(path, MAXPATHLEN - 1, "%s/status", pr->p_spool);
+	fd = fopen(path, O_RDONLY);
     }
 
-    if (( pr->p_flags & P_PIPED ) || ( fd < 0 )) {
-	*buf = strlen( cannedstatus );
-	strncpy( &buf[ 1 ], cannedstatus, *buf );
-	return( *buf + 1 );
+    if ((pr->p_flags & P_PIPED) || (fd == NULL)) {
+	buf->buf_len = strlen(cannedstatus);
+	snprintf(buf->buf, 254, cannedstatus);
+	return (buf->buf_len + 1);
     } else {
-	if (( rc = read( fd, &buf[ 1 ], 255 )) < 0 ) {
-	    rc = 0;
+	rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
+	fclose(fd);
+
+	if (rc > 0) {
+		if (temp != NULL) {
+			temp[strcspn(temp, "\n")] = '\0';
+			snprintf(buf->buf, 254, temp);
+			buf->buf_len = strlen(buf->buf);
+		}
+	} else {
+		snprintf(buf->buf, 254, "thisisanemptystring");
+		buf->buf_len = 0;
 	}
-	close( fd );
-	if ( rc && buf[ rc ] == '\n' ) {	/* remove trailing newline */
-	    rc--;
-	}
-	*buf = rc;
-	return( rc + 1 );
+
+	return (buf->buf_len + 1);
     }
 #endif /* HAVE_CUPS */
 }
