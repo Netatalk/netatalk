@@ -55,8 +55,6 @@
 #include "acls.h"
 #include "auth.h"
 
-extern int afprun(int root, char *cmd, int *outfd);
-
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif /* ! MIN */
@@ -2316,23 +2314,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return stat_vol(bitmap, volume, rbuf, rbuflen);
     }
 
-    if (volume->v_root_preexec) {
-        if ((ret = afprun(1, volume->v_root_preexec, NULL)) && volume->v_root_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): root preexec : %d", volume->v_path, ret );
-            return AFPERR_MISC;
-        }
-    }
-
 #ifdef FORCE_UIDGID
     set_uidgid ( volume );
 #endif
-
-    if (volume->v_preexec) {
-        if ((ret = afprun(0, volume->v_preexec, NULL)) && volume->v_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path, ret );
-            return AFPERR_MISC;
-        }
-    }
 
     if ( stat( volume->v_path, &st ) < 0 ) {
         return AFPERR_PARAM;
@@ -2487,13 +2471,6 @@ static void closevol(struct vol *vol)
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);
         vol->v_cdb = NULL;
-    }
-
-    if (vol->v_postexec) {
-        afprun(0, vol->v_postexec, NULL);
-    }
-    if (vol->v_root_postexec) {
-        afprun(1, vol->v_root_postexec, NULL);
     }
 }
 

@@ -17,7 +17,6 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_builddir)/etc/afpd/afp_dsi.c \
 				$(top_builddir)/etc/afpd/afp_options.c \
 				$(top_builddir)/etc/afpd/afp_util.c \
-				$(top_builddir)/etc/afpd/afprun.c \
 				$(top_builddir)/etc/afpd/appl.c \
 				$(top_builddir)/etc/afpd/auth.c \
 				$(top_builddir)/etc/afpd/afp_zeroconf.c \
