@@ -2051,7 +2051,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     struct ofork	*d_of = NULL;
     int                 crossdev;
 
-    int                 slen, dlen;
+    unsigned int        slen, dlen;
     uint32_t		sid, did;
     uint16_t		vid;
 
