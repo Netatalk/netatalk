@@ -6,29 +6,22 @@
 #include "config.h"
 #include "volume.h"
 
-#if defined( sun ) && !defined( __svr4__ )
-#ifdef i386
-typedef int	mode_t;
-#endif /*i386*/
-#endif /*sun __svr4__*/
-
-#if defined(HAVE_SYS_VFS_H) || defined( sun )
+#if defined(HAVE_SYS_VFS_H)
 #include <sys/vfs.h>
-#endif /* HAVE_SYS_VFS_H || sun */
+#endif /* HAVE_SYS_VFS_H */
 
-#if defined(_IBMR2) || defined(HAVE_STATFS_H)
+#if defined(HAVE_STATFS_H) 
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
-#endif /* _IBMR2 || HAVE_STATFS_H */
+#endif /* HAVE_STATFS_H */
 
-/* temp fix, was: defined(HAVE_SYS_STATVFS) || defined(__svr4__) */
-#if defined(__svr4__) || (defined(__NetBSD__) && (__NetBSD_Version__ >= 200040000))
+#if defined(__svr4__) || defined(__NetBSD__)
 #include <sys/statvfs.h>
 #define statfs statvfs
-#else /* HAVE_SYS_STATVFS || __svr4__ */
+#else
 #define	f_frsize f_bsize
-#endif /* USE_STATVFS_H */
+#endif /* __svr4__ || __NetBSD__ */
 
 #if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>
