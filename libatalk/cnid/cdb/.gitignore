@@ -1,8 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-.gitignore
-libcnid_cdb_la-cnid_cdb_add.o libcnid_cdb_la-cnid_cdb_close.o libcnid_cdb_la-cnid_cdb_delete.o libcnid_cdb_la-cnid_cdb_get.o libcnid_cdb_la-cnid_cdb_lookup.o libcnid_cdb_la-cnid_cdb_open.o libcnid_cdb_la-cnid_cdb_rebuild_add.o libcnid_cdb_la-cnid_cdb_resolve.o libcnid_cdb_la-cnid_cdb_update.o

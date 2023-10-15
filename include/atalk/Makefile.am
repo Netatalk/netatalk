@@ -34,7 +34,6 @@ noinst_HEADERS = \
 	queue.h \
 	server_child.h \
 	server_ipc.h \
-	tdb.h \
 	cnid_bdb_private.h \
 	cnid_mysql_private.h \
 	cnid_private.h \

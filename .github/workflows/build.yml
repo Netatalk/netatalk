@@ -22,7 +22,7 @@ on:
       - 'README.md'
 
 env:
-  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev systemtap-sdt-dev tracker tcpd
+  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev systemtap-sdt-dev tracker tcpd
 
 jobs:
   build-ubuntu:

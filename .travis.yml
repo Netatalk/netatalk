@@ -11,7 +11,6 @@ before_install:
       libkrb5-dev
       libpam0g-dev
       libdb-dev
-      libtdb-dev
       libmysqlclient-dev
       libavahi-client-dev
       libacl1-dev

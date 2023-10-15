@@ -67,30 +67,11 @@ static void show_version( void )
 	puts( "" );
 
 	printf( "         CNID backends:\t" );
-#ifdef CNID_BACKEND_CDB
-	printf( "cdb ");
-#endif
-#ifdef CNID_BACKEND_DB3
-	printf( "db3 " );
-#endif
 #ifdef CNID_BACKEND_DBD
-#ifdef CNID_BACKEND_DBD_TXN
-	printf( "dbd-txn " );
-#else
 	printf( "dbd " );
-#endif
-#endif
-#ifdef CNID_BACKEND_HASH
-	printf( "hash " );
 #endif
 #ifdef CNID_BACKEND_LAST
 	printf( "last " );
-#endif
-#ifdef CNID_BACKEND_MTAB
-	printf( "mtab " );
-#endif
-#ifdef CNID_BACKEND_TDB
-	printf( "tdb " );
 #endif
 #ifdef CNID_BACKEND_MYSQL
 	printf( "mysql " );

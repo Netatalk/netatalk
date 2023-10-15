@@ -36,8 +36,3 @@ libatalk_la_DEPENDENCIES = \
 	util/libutil.la		\
 	vfs/libvfs.la
 
-if USE_BUILTIN_TDB
-SUBDIRS += tdb
-libatalk_la_LIBADD += tdb/libtdb.la
-libatalk_la_DEPENDENCIES += tdb/libtdb.la
-endif
