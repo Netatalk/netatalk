@@ -43,7 +43,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h> /* for DEV_BSIZE */
-#include <sys/time.h>  /* <rpc/rpc.h> on ultrix doesn't include this */
+#include <sys/time.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */

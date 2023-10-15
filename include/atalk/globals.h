@@ -15,7 +15,7 @@
 #endif /* ADMIN_GRP */
 
 #ifdef HAVE_NETDB_H
-#include <netdb.h>  /* this isn't header-protected under ultrix */
+#include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
 #include <netatalk/at.h>
