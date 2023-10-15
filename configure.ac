@@ -575,7 +575,6 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
-	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
 	*freebsd*) 			this_os=freebsd ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
@@ -602,46 +601,12 @@ esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
 
-dnl ----- AIX specific -----
-if test x"$this_os" = "xaix"; then
-	AC_MSG_RESULT([ * AIX specific configuration])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-
-	dnl This is probably a lie; AIX 4.3 supports a 64-bit long
-	dnl compilation environment.  It's enough to get things defined
-	dnl right in endian.h provided that long long is supported, though.
-	AC_DEFINE(HAVE_32BIT_LONGS, 1, [Define if the data type long has 32 bit])
-fi
-
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then 
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- GNU/kFreeBSD specific -----
-if test x"$this_os" = "xkfreebsd-gnu"; then 
-	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- HP-UX 11 specific -----
-if test x"$this_os" = "xhpux11"; then
-	AC_MSG_RESULT([ * HP-UX 11 specific configuration])
-
-	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-fi
-
-dnl ----- IRIX specific -----
-if test x"$this_os" = "xirix"; then
-	AC_MSG_RESULT([ * IRIX specific configuration])
-
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 fi
 
 dnl ----- Linux specific -----
@@ -992,10 +957,6 @@ fi
 if test x"$with_acl_support" = x"yes" ; then
 	AC_MSG_NOTICE(checking whether ACL support is available:)
 	case "$host_os" in
-	*sysv5*)
-		AC_MSG_NOTICE(Using UnixWare ACLs)
-		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
-		;;
 	*solaris*)
 		AC_MSG_NOTICE(Using solaris ACLs)
 		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
@@ -1084,17 +1045,6 @@ AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio
 
 case "$this_os" in
 
-  *osf*)
-	AC_SEARCH_LIBS(getproplist, [proplist])
-	AC_CHECK_FUNCS([getproplist fgetproplist setproplist fsetproplist],
-                   [neta_cv_eas_sys_found=yes],
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([sizeof_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
-
   *solaris*)
 	AC_CHECK_FUNCS([attropen],
                    [neta_cv_eas_sys_found=yes],
@@ -1116,7 +1066,7 @@ case "$this_os" in
   *freebsd4* | *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
   ;;
-	
+
 	*macosx*)
 	AC_SEARCH_LIBS(getxattr, [attr])
     if test "x$neta_cv_eas_sys_found" != "xyes" ; then
