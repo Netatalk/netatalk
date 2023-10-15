@@ -2,15 +2,11 @@
 #define ATALK_PATHS_H 1
 
 /* we need a way of concatenating strings */
-#ifdef __STDC__
 #ifdef HAVE_BROKEN_CPP
 #define BROKEN_ECHO(a)    a
 #define ATALKPATHCAT(a,b) BROKEN_ECHO(a)##BROKEN_ECHO(b)
 #else
 #define ATALKPATHCAT(a,b) a b
-#endif
-#else
-#define ATALKPATHCAT(a,b) a/**/b
 #endif
 
 
@@ -31,11 +27,7 @@
  * papd paths
  */
 #define _PATH_PAPDPRINTCAP	"/etc/printcap"
-#ifdef ultrix
-#define _PATH_PAPDSPOOLDIR	"/usr/spool/lpd"
-#else /* !ultrix */
 #define _PATH_PAPDSPOOLDIR	"/var/spool/lpd"
-#endif /* ultrix */
 #ifdef BSD4_4
 #define _PATH_DEVPRINTER	"/var/run/printer"
 #else /* !BSD4_4 */

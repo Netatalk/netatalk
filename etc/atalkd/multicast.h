@@ -8,7 +8,7 @@
 #ifndef ATALKD_MULTICAST_H
 #define ATALKD_MULTICAST_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include "zip.h"
 
 int addmulti (const char *, const unsigned char *);

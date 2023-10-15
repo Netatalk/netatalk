@@ -31,30 +31,14 @@
 #endif /* ! WIFEXITED */
 
 #include <errno.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
 #include <fcntl.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
@@ -270,13 +254,9 @@ int main(int ac, char **av)
     } else {
 	p++;
     }
-#ifdef ultrix
-    openlog( p, LOG_PID );
-#else /* ultrix */
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid |
                debug ? logoption_perror : 0, logfacility_lpr );
-#endif /* ultrix */
 
     LOG(log_info, logtype_papd, "restart (%s)", version );
 #ifdef HAVE_CUPS

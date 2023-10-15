@@ -17,7 +17,7 @@
 #include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
@@ -42,15 +42,6 @@
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
 
-#ifdef TRU64
-#include <sys/security.h>
-#include <prot.h>
-#include <sia.h>
-
-static int argc = 0;
-static char **argv = NULL;
-#endif /* TRU64 */
-
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
 
@@ -67,14 +58,6 @@ static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
 static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
-
-#ifdef TRU64
-void afp_get_cmdline( int *ac, char ***av)
-{
-    *ac = argc;
-    *av = argv;
-}
-#endif /* TRU64 */
 
 /* This is registered with atexit() */
 static void afp_exit(void)
@@ -246,17 +229,9 @@ static int setlimits(void)
 int main(int ac, char **av)
 {
     AFPConfig           *config;
-    fd_set              rfds;
-    void                *ipc;
     struct sigaction	sv;
     sigset_t            sigs;
     int                 ret;
-
-#ifdef TRU64
-    argc = ac;
-    argv = av;
-    set_auth_parameters( ac, av );
-#endif /* TRU64 */
 
     /* Parse argv args and initialize default options */
     afp_options_init(&default_options);
@@ -380,10 +355,6 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGALRM);
     sigaddset(&sigs, SIGHUP);
     sigaddset(&sigs, SIGUSR1);
-#if 0
-    /* don't block SIGTERM */
-    sigaddset(&sigs, SIGTERM);
-#endif
     sigaddset(&sigs, SIGCHLD);
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
@@ -475,7 +446,7 @@ int main(int ac, char **av)
                 case LISTEN_FD:
                     config = (AFPConfig *)polldata[i].data;
                     /* config->server_start is afp_config.c:dsi_start() for DSI */
-                    if (child = config->server_start(config, configs, server_children)) {
+                    if ((child = config->server_start(config, configs, server_children))) {
                         /* Add IPC fd to select fd set */
                         fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
                                      &fdset,

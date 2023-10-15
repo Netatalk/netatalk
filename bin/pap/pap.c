@@ -863,7 +863,8 @@ static void updatestatus(char *s, int len)
     iov[ 2 ].iov_base = " ]%%\n";
     iov[ 2 ].iov_len = 5;
 
-    writev( fd, iov, 3 );
+    if (writev(fd, iov, 3) < 0)
+        fprintf(stderr, "could not write to fd (%s)\n", strerror(errno));
     if ( status ) {
 	close( fd );
     }

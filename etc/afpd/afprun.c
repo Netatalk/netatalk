@@ -97,7 +97,8 @@ static int setup_out_fd(void)
 ****************************************************************************/
 static void gain_root_privilege(void)
 {
-        seteuid(0);
+	if (seteuid(0) < 0)
+		LOG(log_error, logtype_afpd, "gain_root_privilege: could not seteuid(%i)", 0);
 }
  
 /****************************************************************************
@@ -106,7 +107,8 @@ static void gain_root_privilege(void)
 ****************************************************************************/
 static void gain_root_group_privilege(void)
 {
-        setegid(0);
+	if (setegid(0) < 0)
+		LOG(log_error, logtype_afpd, "gain_root_group_privilege: could not setegid(%i)", 0);
 }
 
 /****************************************************************************
@@ -124,28 +126,31 @@ static void become_user_permanently(uid_t uid, gid_t gid)
     gain_root_group_privilege();
  
 #if USE_SETRESUID
-    setresgid(gid,gid,gid);
-    setgid(gid);
-    setresuid(uid,uid,uid);
-    setuid(uid);
-#endif
- 
-#if USE_SETREUID
+	if ( setresgid(gid, gid, gid) < 0)
+		LOG(log_error, logtype_afpd, "could not setresgid(%i, %i, %i)",
+		    gid, gid, gid);
+	if ( setgid(gid) < 0 )
+		LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
+	if ( setresuid(uid, uid, uid) < 0)
+		LOG(log_error, logtype_afpd, "could not setresuid(%i, %i, %i)",
+                    uid, uid, uid);
+	if ( setuid(uid) < 0 )
+		LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
+
+#elif USE_SETREUID
     setregid(gid,gid);
     setgid(gid);
     setreuid(uid,uid);
     setuid(uid);
-#endif
  
-#if USE_SETEUID
+#elif USE_SETEUID
     setegid(gid);
     setgid(gid);
     setuid(uid);
     seteuid(uid);
     setuid(uid);
-#endif
  
-#if USE_SETUIDX
+#elif USE_SETUIDX
     setgidx(ID_REAL, gid);
     setgidx(ID_EFFECTIVE, gid);
     setgid(gid);

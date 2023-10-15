@@ -26,7 +26,7 @@
 #ifndef ATALKD_RTMP_H
 #define ATALKD_RTMP_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct rtmptab {
     struct rtmptab	*rt_next,

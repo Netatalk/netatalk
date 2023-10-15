@@ -13,9 +13,7 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
@@ -317,7 +315,6 @@ ssize_t bin_write(int fork, char *buffer, size_t length)
 
 int bin_header_read(struct FHeader *fh, int revision)
 {
-    u_short		mask;
 
 /*
  * Set the appropriate finder flags mask for the type of macbinary
@@ -329,11 +326,9 @@ int bin_header_read(struct FHeader *fh, int revision)
     switch ( revision ) {
         case 3:
 	case 2 :
-	    mask = htons( 0xfcee );
 	    memcpy(&fh->finder_info.fdFlags + 1, head_buf + 101,1 );
 	    break;
 	case 1 :
-	    mask = htons( 0xfc00 );
 	    break;
 	default :
 	    return( -1 );

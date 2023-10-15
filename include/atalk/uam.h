@@ -5,14 +5,10 @@
 #ifndef UAM_H
 #define UAM_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <pwd.h>
 #include <stdarg.h>
 
-#ifdef TRU64
-#include <sia.h>
-#include <siad.h>
-#endif /* TRU64 */
 
 /* just a label for exported bits */
 #ifndef UAM_MODULE_EXPORT
@@ -94,11 +90,5 @@ extern UAM_MODULE_EXPORT int uam_afp_read (void *, char *, size_t *,
 			     int (*)(void *, void *, const int));
 extern UAM_MODULE_EXPORT int uam_afpserver_option (void *, const int, void *, size_t *);
 
-#ifdef TRU64
-extern void uam_afp_getcmdline (int *, char ***);
-extern int uam_sia_validate_user (sia_collect_func_t *, int, char **,
-                                     char *, char *, char *, int, char *,
-                                     char *);
-#endif /* TRU64 */
 
 #endif

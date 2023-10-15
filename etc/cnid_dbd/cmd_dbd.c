@@ -97,11 +97,12 @@ static struct db_param db_param = {
     DEFAULT_MAXLOCKOBJS,        /* maxlockobjs */
     0,                          /* flush_interval */
     0,                          /* flush_frequency */
-    0,                          /* usock_file */
+    { '\0' },                   /* usock_file */
     -1,                         /* fd_table_size */
     -1,                         /* idle_timeout */
     -1                          /* max_vols */
 };
+
 static char dbpath[MAXPATHLEN+1];   /* Path to the dbd database */
 
 /* 
@@ -109,13 +110,12 @@ static char dbpath[MAXPATHLEN+1];   /* Path to the dbd database */
  */
 void dbd_log(enum logtype lt, char *fmt, ...)
 {
-    int len;
     static char logbuffer[1024];
     va_list args;
 
     if ( (lt == LOGSTD) || (verbose == 1)) {
         va_start(args, fmt);
-        len = vsnprintf(logbuffer, 1023, fmt, args);
+        vsnprintf(logbuffer, 1023, fmt, args);
         va_end(args);
         logbuffer[1023] = 0;
 
@@ -218,8 +218,9 @@ static void usage (void)
 
 int main(int argc, char **argv)
 {
-    int c, lockfd, ret = -1;
-    int dump=0, scan=0, rebuild=0, prep_upgrade=0, rebuildindexes=0, dumpindexes=0, force=0;
+    int c;
+    int ret = -1;
+    int dump=0, scan=0, rebuild=0, prep_upgrade=0, rebuildindexes=0, dumpindexes=0;
     dbd_flags_t flags = 0;
     char *volpath;
     int cdir;
@@ -269,7 +270,6 @@ int main(int argc, char **argv)
             rebuildindexes = 1;
             break;
         case 'f':
-            force = 1;
             exclusive = 1;
             flags |= DBD_FLAGS_FORCE | DBD_FLAGS_EXCL;
             break;
@@ -377,13 +377,14 @@ int main(int argc, char **argv)
 
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
-        char cmd[8 + MAXPATHLEN];
+        char cmd[8 + MAXPATHLEN + 2];
         if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
             goto exit_noenv;
 
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
+        snprintf(cmd, 8 + (MAXPATHLEN + 2), "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
-        system(cmd);
+        if (system(cmd) < 0)
+            dbd_log(LOGSTD, "Could not execute \"%s\" (%s)", cmd, strerror(errno));
         if ((mkdir(dbpath, 0755)) != 0) {
             dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
             exit(EXIT_FAILURE);
@@ -451,7 +452,6 @@ cleanup:
         }
     }
 
-exit_success:
     ret = 0;
 
 exit_failure:

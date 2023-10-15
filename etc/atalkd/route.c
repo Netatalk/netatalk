@@ -9,9 +9,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <string.h>
 #include <sys/param.h>
 #include <sys/types.h>
@@ -26,11 +24,7 @@
 #ifndef BSD4_4
 int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 {
-#ifdef TRU64
-    struct ortentry	rtent;
-#else /* TRU64 */
     struct rtentry	rtent;
-#endif /* TRU64 */
 
     memset( &rtent, 0, sizeof( struct rtentry ));
     rtent.rt_dst = *dst;
@@ -56,7 +50,7 @@ struct rt_msg_at {
     struct sockaddr_m	rtma_mask;
 } rtma;
 
-route( int message, struct sockaddr_at	*dst, struct sockaddr_at *gate, int flags)
+int route( int message, struct sockaddr_at	*dst, struct sockaddr_at *gate, int flags)
 {
     int			rc;
 

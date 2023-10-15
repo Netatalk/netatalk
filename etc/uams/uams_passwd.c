@@ -13,23 +13,8 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
@@ -57,12 +42,6 @@ char *strchr (), *strrchr ();
 #endif /* MIN */
 
 
-#ifdef TRU64
-#include <sia.h>
-#include <siad.h>
-
-static const char *clientname;
-#endif /* TRU64 */
 
 /*XXX in etc/papd/file.h */
 struct papfile;
@@ -79,11 +58,6 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     struct spwd *sp;
 #endif /* SHADOWPW */
 
-#ifdef TRU64
-    if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
-                              (void *) &clientname, NULL ) < 0 )
-        return AFPERR_MISC;
-#endif /* TRU64 */
 
     if (ibuflen < PASSWDLEN) {
         return( AFPERR_PARAM );
@@ -124,26 +98,9 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
     *uam_pwd = pwd;
 
-#ifdef TRU64
-    {
-        int ac;
-        char **av;
-        char hostname[256];
-
-        uam_afp_getcmdline( &ac, &av );
-        sprintf( hostname, "%s@%s", username, clientname );
-
-        if( uam_sia_validate_user( NULL, ac, av, hostname, username,
-                                   NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
-            return AFPERR_NOTAUTH;
-
-        return err;
-    }
-#else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );
     if ( strcmp( p, pwd->pw_passwd ) == 0 )
         return err;
-#endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
 
@@ -217,53 +174,6 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     username[ len ] = '\0';
     return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
-                        
-
-#if 0
-/* change passwd */
-static int passwd_changepw(void *obj, char *username,
-                           struct passwd *pwd, char *ibuf,
-                           size_t ibuflen, char *rbuf, size_t *rbuflen)
-{
-#ifdef SHADOWPW
-    struct spwd *sp;
-#endif /* SHADOWPW */
-    char pw[PASSWDLEN + 1], *p;
-    uid_t uid = geteuid();
-
-    if (uam_checkuser(pwd) < 0)
-        return AFPERR_ACCESS;
-
-    /* old password */
-    memcpy(pw, ibuf, PASSWDLEN);
-    memset(ibuf, 0, PASSWDLEN);
-    pw[PASSWDLEN] = '\0';
-
-#ifdef SHADOWPW
-    if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-        LOG(log_info, logtype_uams, "no shadow passwd entry for %s", username);
-        return AFPERR_PARAM;
-    }
-    pwd->pw_passwd = sp->sp_pwdp;
-#endif /* SHADOWPW */
-
-    p = crypt(pw, pwd->pw_passwd );
-    if (strcmp( p, pwd->pw_passwd )) {
-        memset(pw, 0, sizeof(pw));
-        return AFPERR_NOTAUTH;
-    }
-
-    /* new password */
-    ibuf += PASSWDLEN;
-    ibuf[PASSWDLEN] = '\0';
-
-#ifdef SHADOWPW
-#else /* SHADOWPW */
-#endif /* SHADOWPW */
-    return AFP_OK;
-}
-#endif /* 0 */
-
 
 /* Printer ClearTxtUAM login */
 static int passwd_printer(char	*start, char *stop, char *username, struct papfile *out)

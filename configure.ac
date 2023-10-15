@@ -27,11 +27,7 @@ AM_PROG_CC_C_O
 dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h time.h sys/param.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h statfs.h sys/types.h dlfcn.h errno.h sys/errno.h sys/uio.h langinfo.h locale.h sys/filio.h)
-AC_CHECK_HEADER(sys/cdefs.h,,
-	AC_MSG_RESULT([enabling generic cdefs.h from tree])
-	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
-)
+AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h time.h sys/param.h fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h termios.h netdb.h sgtty.h ufs/quota.h mount.h statfs.h sys/types.h dlfcn.h errno.h sys/uio.h langinfo.h locale.h sys/filio.h)
 AC_CHECK_HEADERS([sys/mount.h], , , 
 [#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -311,10 +307,10 @@ AC_NETATALK_CNID([bdb_required=yes],[bdb_required=no])
 dnl Check for quota support
 AC_CHECK_QUOTA
 
-dnl Check for optional server location protocol support (used by MacOS X)
+dnl Check for optional server location protocol support (used by Mac OS X 10.0 & 10.1)
 NETATALK_SRVLOC
 
-dnl Check for optional Zeroconf support
+dnl Check for optional Zeroconf support (used by Mac OS X 10.3 and later)
 NETATALK_ZEROCONF
 
 dnl Check for PAM libs
@@ -579,17 +575,12 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
-	*aix*)				this_os=aix ;;
-	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
 	*freebsd*) 			this_os=freebsd ;;
-	*hpux11*)			this_os=hpux11 ;;
-	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*darwin*)			this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
 	*openbsd*) 			this_os=openbsd ;;
-	*osf*) 				this_os=tru64 ;;
 	*solaris*) 			this_os=solaris ;;
 esac
 
@@ -610,46 +601,12 @@ esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
 
-dnl ----- AIX specific -----
-if test x"$this_os" = "xaix"; then
-	AC_MSG_RESULT([ * AIX specific configuration])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-
-	dnl This is probably a lie; AIX 4.3 supports a 64-bit long
-	dnl compilation environment.  It's enough to get things defined
-	dnl right in endian.h provided that long long is supported, though.
-	AC_DEFINE(HAVE_32BIT_LONGS, 1, [Define if the data type long has 32 bit])
-fi
-
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then 
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- GNU/kFreeBSD specific -----
-if test x"$this_os" = "xkfreebsd-gnu"; then 
-	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- HP-UX 11 specific -----
-if test x"$this_os" = "xhpux11"; then
-	AC_MSG_RESULT([ * HP-UX 11 specific configuration])
-
-	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-fi
-
-dnl ----- IRIX specific -----
-if test x"$this_os" = "xirix"; then
-	AC_MSG_RESULT([ * IRIX specific configuration])
-
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 fi
 
 dnl ----- Linux specific -----
@@ -683,15 +640,6 @@ fi
 
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 
-
-	dnl ----- Linux/alpha specific -----
-	if test x"$this_cpu" = "xalpha"; then 
-		AC_MSG_RESULT([enabling gcc memcpy bug workaround])
-		AC_DEFINE(HAVE_GCC_MEMCPY_BUG, 1, [Define if memcpy is buggy])
-	fi
-	need_dash_r=no
-
-
 fi
 
 dnl ----- Mac OSX specific -----
@@ -705,9 +653,8 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_MSG_RESULT([ * NetBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(NETBSD, 1, [Define if OS is NetBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
+	AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
 
-	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
 	need_dash_r=yes 
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
@@ -813,23 +760,6 @@ timeout_id_t dummy;
 	AC_SUBST(COMPILE_64BIT_KMODULE)
 	AC_SUBST(KCFLAGS)
 	AC_SUBST(KLDFLAGS)
-fi
-
-dnl ----- Tru64 specific -----
-if test x"$this_os" = "xtru64"; then 
-	AC_MSG_RESULT([ * Tru64 specific configuration])
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-	AC_DEFINE(HAVE_64BIT_LONGS, 1, [Define if the data type long has 64 bit])
-	dnl AC_DEFINE(USE_MOUNT_H)
-	AC_DEFINE(USE_OLD_RQUOTA, 1, [Define to use old rquota])
-	dnl AC_DEFINE(USE_UFS_QUOTA_H)
-	AC_DEFINE(TRU64, 1, [Define on Tru64 platforms])
-	AC_DEFINE(_OSF_SOURCE, 1, [Define if the *passwd UAMs should be used])
-	AC_DEFINE(_XOPEN_SOURCE_EXTENDED, 1, [Define for Berkeley DB 4])
-	AC_CHECK_LIB(security,set_auth_parameters)
-	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
-	need_dash_r=no
-	sysv_style=tru64
 fi
 
 dnl ------ Check for sendfile() --------
@@ -1027,31 +957,10 @@ fi
 if test x"$with_acl_support" = x"yes" ; then
 	AC_MSG_NOTICE(checking whether ACL support is available:)
 	case "$host_os" in
-	*sysv5*)
-		AC_MSG_NOTICE(Using UnixWare ACLs)
-		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
-		;;
 	*solaris*)
 		AC_MSG_NOTICE(Using solaris ACLs)
 		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
 		ACL_LIBS="$ACL_LIBS -lsec"
-		;;
-	*hpux*)
-		AC_MSG_NOTICE(Using HPUX ACLs)
-		AC_DEFINE(HAVE_HPUX_ACLS,1,[Whether HPUX ACLs are available])
-		;;
-	*irix*)
-		AC_MSG_NOTICE(Using IRIX ACLs)
-		AC_DEFINE(HAVE_IRIX_ACLS,1,[Whether IRIX ACLs are available])
-		;;
-	*aix*)
-		AC_MSG_NOTICE(Using AIX ACLs)
-		AC_DEFINE(HAVE_AIX_ACLS,1,[Whether AIX ACLs are available])
-		;;
-	*osf*)
-		AC_MSG_NOTICE(Using Tru64 ACLs)
-		AC_DEFINE(HAVE_TRU64_ACLS,1,[Whether Tru64 ACLs are available])
-		ACL_LIBS="$ACL_LIBS -lpacl"
 		;;
 	*darwin*)
 		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
@@ -1136,17 +1045,6 @@ AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio
 
 case "$this_os" in
 
-  *osf*)
-	AC_SEARCH_LIBS(getproplist, [proplist])
-	AC_CHECK_FUNCS([getproplist fgetproplist setproplist fsetproplist],
-                   [neta_cv_eas_sys_found=yes],
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([sizeof_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
-
   *solaris*)
 	AC_CHECK_FUNCS([attropen],
                    [neta_cv_eas_sys_found=yes],
@@ -1168,7 +1066,7 @@ case "$this_os" in
   *freebsd4* | *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
   ;;
-	
+
 	*macosx*)
 	AC_SEARCH_LIBS(getxattr, [attr])
     if test "x$neta_cv_eas_sys_found" != "xyes" ; then
@@ -1290,7 +1188,6 @@ AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
 AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
 AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
 AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
 AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
@@ -1378,14 +1275,8 @@ AC_CONFIG_FILES([Makefile
 	man/man5/Makefile
 	man/man8/Makefile
 	sys/Makefile
-	sys/generic/Makefile
-	sys/generic/sys/Makefile
 	sys/netatalk/Makefile
-	sys/netbsd/Makefile
-	sys/netbsd/netatalk/Makefile
 	sys/solaris/Makefile
-	sys/sunos/Makefile
-	sys/ultrix/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	])

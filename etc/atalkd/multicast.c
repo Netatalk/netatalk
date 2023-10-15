@@ -16,21 +16,8 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <atalk/logger.h>
-
-/* work around for FreeBSD */
-#if defined(__FreeBSD__) && (__FreeBSD__ >= 2)
-#include <osreldate.h>
-#if __FreeBSD_version >= 300000
-#include <net/if_dl.h>
-#define NO_DATA_LINK_PASSTHROUGH
-#endif /* __FreeBSD_version >= 300000 */
-#endif /* __FreeBSD__ */
 
 #ifdef __svr4__
 #include <sys/sockio.h>

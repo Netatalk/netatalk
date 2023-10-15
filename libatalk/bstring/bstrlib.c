@@ -2720,16 +2720,8 @@ struct genBstrList g;
 	return g.bl;
 }
 
-#if defined (__TURBOC__) && !defined (__BORLANDC__)
-# ifndef BSTRLIB_NOVSNP
-#  define BSTRLIB_NOVSNP
-# endif
-#endif
 
 /* Give WATCOM C/C++, MSVC some latitude for their non-support of vsnprintf */
-#if defined(__WATCOMC__) || defined(_MSC_VER)
-#define exvsnprintf(r,b,n,f,a) {r = _vsnprintf (b,n,f,a);}
-#else
 #ifdef BSTRLIB_NOVSNP
 /* This is just a hack.  If you are using a system without a vsnprintf, it is 
    not recommended that bformat be used at all. */
@@ -2738,7 +2730,6 @@ struct genBstrList g;
 #else
 
 #define exvsnprintf(r,b,n,f,a) {r = vsnprintf (b,n,f,a);}
-#endif
 #endif
 
 #if !defined (BSTRLIB_NOVSNP)

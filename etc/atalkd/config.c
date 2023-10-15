@@ -15,10 +15,6 @@
 #include <sys/ioctl.h>
 #include <atalk/logger.h>
 #include <sys/param.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
@@ -30,21 +26,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -804,11 +786,9 @@ struct interface *newiface( const char *name)
     strlcpy( niface->i_name, name, sizeof(niface->i_name));
 #ifdef BSD4_4
     niface->i_addr.sat_len = sizeof( struct sockaddr_at );
-#endif /* BSD4_4 */
-    niface->i_addr.sat_family = AF_APPLETALK;
-#ifdef BSD4_4
     niface->i_caddr.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
+    niface->i_addr.sat_family = AF_APPLETALK;
     niface->i_caddr.sat_family = AF_APPLETALK;
 #ifdef linux
     niface->i_flags = IFACE_ALLMULTI;

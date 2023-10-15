@@ -1,8 +1,8 @@
-/* 
+/*
  * $Id: uams_randnum.c,v 1.21 2010-03-30 10:25:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -12,25 +12,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
+#include <errno.h>
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -196,7 +181,8 @@ afppasswd_found:
 
   if (keyfd > -1) {
       /* read in the hex representation of an 8-byte key */
-      read(keyfd, key, sizeof(key));
+      if (read(keyfd, key, sizeof(key)) < 0)
+          LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
 
       /* convert to binary key */
       for (i = j = 0; i < strlen((char *) key); i += 2, j++)
@@ -277,10 +263,14 @@ static int randpass(const struct passwd *pwd, const char *file,
     strcat(path, "/" );
     strcat(path, file + 2);
     if (!uid)
-      seteuid(pwd->pw_uid); /* change ourselves to the user */
+      /* change ourselves to the user */
+      if ( seteuid(pwd->pw_uid) < 0)
+        LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", pwd->pw_uid, strerror(errno));
     i = home_passwd(pwd, path, i, passwd, len, set);
     if (!uid)
-      seteuid(0); /* change ourselves back to root */
+      /* change ourselves back to root */
+      if ( seteuid(0) < 0)
+          LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
     return i;
   } 
 
@@ -290,10 +280,12 @@ static int randpass(const struct passwd *pwd, const char *file,
   /* handle afppasswd file. we need to make sure that we're root
    * when we do this. */
   if (uid)
-    seteuid(0);
+    if ( seteuid(0) < 0)
+      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
   i = afppasswd(pwd, file, i, passwd, len, set);
   if (uid)
-    seteuid(uid);
+    if ( seteuid(uid) < 0)
+      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", uid, strerror(errno));
   return i;
 }
 

@@ -29,9 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <errno.h>
@@ -683,8 +681,7 @@ static int cups_mangle_printer_name ( struct printer *pr, struct printer *printe
 	while ( ( cups_check_printer ( pr, printers, 0 )) && count < 100)
 	{
 		memset ( pr->p_name, 0, name_len);
-		strncpy ( pr->p_name, name, MAXCHOOSERLEN-3);
-		sprintf ( pr->p_name, "%s#%2.2u", pr->p_name, count++);
+		sprintf(pr->p_name, "%s#%2.2lu", name, (unsigned long) count++);
 	}
 
 	if ( count > 99) 

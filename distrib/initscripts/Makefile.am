@@ -21,8 +21,6 @@ GENERATED_FILES = \
 	rc.afpd.netbsd		\
 	rc.atalk.redhat-sysv	\
 	rc.atalk.systemd	\
-	rc.atalk.tru64		\
-	rc.atalk.bsd		\
 	rc.atalkd.netbsd	\
 	rc.atalk.suse-sysv	\
 	rc.cnid_metad.netbsd	\
@@ -43,8 +41,6 @@ TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
 	rc.atalk.redhat-sysv.tmpl	\
 	rc.atalk.systemd.tmpl		\
-	rc.atalk.tru64.tmpl		\
-	rc.atalk.bsd.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
 	rc.atalk.suse-sysv.tmpl		\
 	rc.cnid_metad.netbsd.tmpl	\
@@ -140,27 +136,6 @@ uninstall-startup:
 endif
 
 #
-# checking for "tru64" style sysv scripts:
-#
-
-if USE_TRU64
-
-sysvdir	= /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.tru64
-	cp -f rc.atalk.tru64 $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
-
-endif
-
-#
 # checking for NetBSD init scripts
 #
 
@@ -170,23 +145,23 @@ sysvdir = /etc/rc.d
 sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord a2boot
 
 afpd: rc.afpd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 atalkd: rc.atalkd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 cnid_metad: rc.cnid_metad.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 papd: rc.papd.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 timelord: rc.timelord.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 a2boot: rc.a2boot.netbsd

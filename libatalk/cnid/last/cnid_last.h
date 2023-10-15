@@ -7,7 +7,7 @@
 #ifndef _ATALK_CNID_LAST__H
 #define _ATALK_CNID_LAST__H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>

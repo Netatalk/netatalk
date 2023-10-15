@@ -178,15 +178,6 @@ send_to_kdc(pkt,rpkt,realm)
             goto rtn;
         }
         memcpy(cp, host->h_addr, host->h_length);
-/* At least Sun OS version 3.2 (or worse) and Ultrix version 2.2
-   (or worse) only return one name ... */
-#if !(defined(ULTRIX022) || (defined(SunOS) && SunOS < 40))
-        host->h_addr_list = (char **)malloc(sizeof(char *));
-        if (!host->h_addr_list) {
-            retval = /*errno */SKDC_CANT;
-            goto rtn;
-        }
-#endif /* ULTRIX022 || SunOS */
         host->h_addr = cp;
         memset(&hostlist[n_hosts], 0, sizeof(struct hostent));
         to.sin_family = host->h_addrtype;
@@ -225,15 +216,8 @@ rtn:
     if (hostlist) {
         register struct hostent *hp;
         for (hp = hostlist; hp->h_name; hp++)
-#if !(defined(ULTRIX022) || (defined(SunOS) && SunOS < 40))
-            if (hp->h_addr_list) {
-#endif /* ULTRIX022 || SunOS */
                 if (hp->h_addr)
                     free(hp->h_addr);
-#if !(defined(ULTRIX022) || (defined(SunOS) && SunOS < 40))
-                free((char *)hp->h_addr_list);
-            }
-#endif /* ULTRIX022 || SunOS */
         free((char *)hostlist);
     }
     return(retval);

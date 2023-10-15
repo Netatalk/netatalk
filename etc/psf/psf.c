@@ -23,9 +23,7 @@
 
 #define FUCKED
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/time.h>
 
 /* POSIX.1 sys/wait.h check */
@@ -106,11 +104,7 @@ int main( int ac, char **av)
     } else {
 	prog++;
     }
-#ifdef ultrix
-    openlog( prog, LOG_PID );
-#else /* ultrix */
     openlog( prog, LOG_PID, LOG_LPR );
-#endif /* ultrix */
 
     while (( c = getopt( ac, av, "P:C:D:F:L:J:x:y:n:h:w:l:i:c" )) != EOF ) {
 	switch ( c ) {

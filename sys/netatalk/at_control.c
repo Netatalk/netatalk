@@ -11,17 +11,12 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#ifdef ibm032
-#include <sys/dir.h>
-#endif /* ibm032 */
 #include <sys/user.h>
 #include <sys/types.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/mbuf.h>
-#ifndef _IBMR2
 #include <sys/kernel.h>
-#endif /* ! _IBMR2 */
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <net/if.h>
@@ -30,9 +25,6 @@
 #include <netinet/in.h>
 #undef s_net
 #include <netinet/if_ether.h>
-#ifdef _IBMR2
-#include <net/spl.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -45,9 +37,7 @@
 		    (a)->sat_addr.s_net == (b)->sat_addr.s_net && \
 		    (a)->sat_addr.s_node == (b)->sat_addr.s_node )
 #else /* BSD4_4 */
-atalk_hash( sat, hp )
-    struct sockaddr_at	*sat;
-    struct afhash	*hp;
+void atalk_hash(struct sockaddr_at *sat, struct afhash *hp)
 {
     hp->afh_nethash = sat->sat_addr.s_net;
     hp->afh_hosthash = ( sat->sat_addr.s_net << 8 ) +
@@ -58,8 +48,7 @@ atalk_hash( sat, hp )
  * Note the magic to get ifa_ifwithnet() to work without adding an
  * ifaddr entry for each net in our local range.
  */
-atalk_netmatch( sat1, sat2 )
-    struct sockaddr_at	*sat1, *sat2;
+int atalk_netmatch(struct sockaddr_at *sat1, struct sockaddr_at *sat2)
 {
     struct at_ifaddr	*aa;
 

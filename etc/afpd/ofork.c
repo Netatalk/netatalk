@@ -9,9 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <string.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
@@ -72,7 +70,7 @@ void of_pforkdesc( FILE *f)
 
     for ( ofrefnum = 0; ofrefnum < nforks; ofrefnum++ ) {
         if ( oforks[ ofrefnum ] != NULL ) {
-            fprintf( f, "%hu <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]));
+            fprintf( f, "%d <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]));
         }
     }
 }

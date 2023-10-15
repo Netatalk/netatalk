@@ -109,29 +109,4 @@ int ad_readfile_init(const struct adouble *ad,
   return fd;
 }
 
-
-/* ------------------------ */
-#if 0
-#ifdef HAVE_SENDFILE_WRITE
-/* read from a socket and write to an adouble file */
-ssize_t ad_writefile(struct adouble *ad, const int eid, 
-		     const int sock, off_t off, const int end,
-		     const size_t len)
-{
-#ifdef __linux__
-  ssize_t cc;
-  int fd;
-
-  fd = ad_sendfile_init(ad, eid, &off, end);
-  if ((cc = sys_sendfile(fd, sock, &off, len)) < 0)
-    return -1;
-
-  if ((eid != ADEID_DFORK) && (off > ad_getentrylen(ad, eid))) 
-    ad_setentrylen(ad, eid, off);
-
-  return cc;
-#endif /* __linux__ */
-}
-#endif /* HAVE_SENDFILE_WRITE */
-#endif /* 0 */
 #endif

@@ -8,7 +8,7 @@
 #ifndef ATALKD_ZIP_H
 #define ATALKD_ZIP_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct ziptab {
     struct ziptab	*zt_next,

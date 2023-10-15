@@ -971,7 +971,7 @@ exit:
         ea->ea_fd = -1;
     }
 
-    return 0;
+    return ret;
 }
 
 

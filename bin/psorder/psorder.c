@@ -42,9 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include "pa.h"
 #include "psorder.h"
 
@@ -113,9 +111,9 @@ filesetup( char *inputfile, int *infd, char *tfile, int *tfd)
  */
 
 #if defined(NAME_MAX)
-    (void *)strncpy( tfile, template, NAME_MAX );
+    strncpy( tfile, template, NAME_MAX );
 #else
-    (void *)strncpy( tfile, template, MAXNAMLEN );
+    strncpy( tfile, template, MAXNAMLEN );
 #endif
     if (( *tfd = mkstemp( tfile )) == -1 ) {
 	fprintf( stderr, "can't create temporary file %s\n", tfile );

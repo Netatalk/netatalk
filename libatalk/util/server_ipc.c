@@ -9,9 +9,7 @@
 #endif 
 
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -268,8 +266,6 @@ int ipc_server_read(server_child *children, int fd)
 
     LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
         ipc_cmd_str[ipc.command], ipc.child_pid); 
-
-    int afp_socket;
 
     switch (ipc.command) {
 

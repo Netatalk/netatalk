@@ -80,7 +80,7 @@ static int veto(const char *path)
     char *veto_str = VETO;
     
 
-    if ((path == NULL))
+    if (path == NULL)
         return 0;
 
     for(i=0, j=0; veto_str[i] != '\0'; i++) {
@@ -338,7 +338,8 @@ static int checkdir(DIR *curdir, char *path, cnid_t cur_did)
 
 	char **names;
 
-	chdir(path);
+	if (chdir(path) < 0)
+		fprintf(stderr, "\nfailed chdir to %s\n", path);
 
 	check_adouble(curdir, path);
 	curpath[len] = 0;
@@ -368,7 +369,8 @@ static int checkdir(DIR *curdir, char *path, cnid_t cur_did)
                     checkdir(cdir, curpath, id);
                     closedir(cdir);
                     curpath[len] = 0;
-                    chdir(path);
+                    if (chdir(path) < 0)
+                        fprintf(stderr, "\nfailed chdir to %s\n", path);
 		    if (verbose)
 	    	 	fprintf( stdout, "returned to DIR '%s' with ID %u\n", path, ntohl(cur_did));
                 }

@@ -112,7 +112,7 @@ static off_t get_off_t(char **ibuf, int is64)
     if (is64) {
         memcpy(&temp, *ibuf, sizeof( temp ));
         *ibuf += sizeof(temp);
-        ret = ntohl(temp)| (ret << 32);
+        ret = ntohl(temp)| ((unsigned long long) ret << 32);
     }
     else {
     	ret = (int)ret;	/* sign extend */
@@ -128,7 +128,7 @@ static int set_off_t(off_t offset, char *rbuf, int is64)
 
     ret = 0;
     if (is64) {
-        temp = htonl(offset >> 32);
+        temp = htonl((uint64_t) offset >> 32);
         memcpy(rbuf, &temp, sizeof( temp ));
         rbuf += sizeof(temp);
         ret = sizeof( temp );
@@ -1281,7 +1281,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
 #ifdef DEBUG1
         if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %d\n", *rbuflen);
+            printf("(write) len: %ld\n", (unsigned long) *rbuflen);
             bprint(rbuf, *rbuflen);
         }
 #endif

@@ -10,21 +10,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
 #include <ctype.h>
 #include <pwd.h>
@@ -97,82 +83,3 @@ parseline(int len, char *token)
         l_curr++;
     }
 }
-
-#ifdef notdef
-void parseline(char *token, char *user)
-{
-    char		*p = pos, *t = token, *u, *q, buf[ MAXPATHLEN ];
-    struct passwd	*pwent;
-    int			quoted = 0;
-
-    while ( isspace( *p )) {
-        p++;
-    }
-
-    /*
-     * If we've reached the end of the line, or a comment,
-     * don't return any more tokens.
-     */
-    if ( *p == '\0' || *p == '#' ) {
-        *token = '\0';
-        return;
-    }
-
-    if ( *p == '"' ) {
-        p++;
-        quoted = 1;
-    }
-    while ( *p != '\0' && ( quoted || !isspace( *p ))) {
-        if ( *p == '"' ) {
-            if ( quoted ) {
-                *t = '\0';
-                break;
-            }
-            quoted = 1;
-            p++;
-        } else {
-            *t++ = *p++;
-        }
-    }
-    pos = p;
-    *t = '\0';
-
-    /*
-     * We got to the end of the line without closing an open quote
-     */
-    if ( *p == '\0' && quoted ) {
-        *token = '\0';
-        return;
-    }
-
-    t = token;
-    if ( *t == '~' ) {
-        t++;
-        if ( *t == '\0' || *t == '/' ) {
-            u = user;
-            if ( *t == '/' ) {
-                t++;
-            }
-        } else {
-            u = t;
-            if (( q = strchr( t, '/' )) == NULL ) {
-                t = "";
-            } else {
-                *q = '\0';
-                t = q + 1;
-            }
-        }
-        if ( u == NULL || ( pwent = getpwnam( u )) == NULL ) {
-            *token = '\0';
-            return;
-        }
-        strcpy( buf, pwent->pw_dir );
-        if ( *t != '\0' ) {
-            strcat( buf, "/" );
-            strcat( buf, t );
-        }
-        strcpy( token, buf );
-    }
-    return;
-}
-#endif /* notdef */

@@ -26,7 +26,7 @@
 #ifndef AFPD_DESKTOP_H
 #define AFPD_DESKTOP_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <atalk/globals.h>
 #include "volume.h"
 

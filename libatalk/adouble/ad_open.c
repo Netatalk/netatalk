@@ -888,7 +888,7 @@ ad_path_sfm( const char *path, int adflags)
     strlcat( pathbuf, ".AppleDouble/", MAXPATHLEN +1);
     strlcat( pathbuf, slash, MAXPATHLEN +1);
 
-    if ((adflags == ADFLAGS_RF)) {
+    if (adflags == ADFLAGS_RF) {
         strlcat( pathbuf, "/AFP_Resource", MAXPATHLEN +1);
     }
     else {

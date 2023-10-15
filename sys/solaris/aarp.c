@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/byteorder.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/stream.h>
 #include <sys/ethernet.h>
 #include <sys/kmem.h>
@@ -18,11 +18,7 @@
 #include <netinet/arp.h>
 #include <net/if.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include <netatalk/at.h>
 #include <netatalk/aarp.h>

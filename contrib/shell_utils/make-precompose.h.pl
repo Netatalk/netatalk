@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # usage: make-precompose.h.pl UnicodeData.txt > precompose.h
 #

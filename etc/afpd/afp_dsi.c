@@ -15,9 +15,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/socket.h>
 #include <sys/time.h>
 #ifdef HAVE_SYS_STAT_H
@@ -148,8 +146,6 @@ static void afp_dsi_die(int sig)
 /* SIGQUIT handler */
 static void ipc_reconnect_handler(int sig _U_)
 {
-    DSI *dsi = (DSI *)AFPobj->handle;
-
     if (reconnect_ipc(AFPobj) != 0) {
         LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC reconnect");
         afp_dsi_close(AFPobj);
@@ -347,7 +343,8 @@ static void alarm_handler(int sig _U_)
 
     if ((err = pollvoltime(AFPobj)) == 0)
         LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
-        err = dsi_tickle(AFPobj->handle);
+
+    err = dsi_tickle(AFPobj->handle);
     if (err <= 0) {
         if (geteuid() == 0) {
             LOG(log_note, logtype_afpd, "afp_alarm: unauthenticated user, connection problem");

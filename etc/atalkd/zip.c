@@ -18,10 +18,6 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
 #include <netatalk/endian.h>
@@ -932,6 +928,7 @@ int zip_getnetinfo(struct interface *iface)
      */
     *data++ = 0;
 
+    memset(&sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */

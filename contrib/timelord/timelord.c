@@ -40,7 +40,6 @@
 #endif /* HAVE_SGTTY_H */
 #include <errno.h>
 #include <signal.h>
-#pragma warn "testing 123"
 #include <atalk/logger.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,7 +51,7 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #ifdef HAVE_SYS_FCNTL_H
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
 #include <termios.h>
@@ -170,12 +169,8 @@ int main( int ac, char **av )
 	p++;
     }
 
-#ifdef ultrix
-    openlog( p, LOG_PID );
-#else /* ultrix */
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     /* allocate memory */
     memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));

@@ -5,7 +5,7 @@
 #ifndef AFPD_MISC_H
 #define AFPD_MISC_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <atalk/globals.h>
 
 /* FP functions */

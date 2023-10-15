@@ -1,12 +1,9 @@
 /*
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- *
- * NOTE: SunOS 4 and ultrix are pretty much the only reason why there
- * are checks for EINTR everywhere. 
  */
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <signal.h>
 
 #ifdef __svr4__
@@ -16,6 +13,7 @@
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif
+#endif /* __svr4__ */
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -23,18 +21,6 @@
 
 extern int flock (int, int);
 extern int inet_aton (const char *, struct in_addr *);
-#else /* __svr4__ */
-
-#ifdef sun
-/*
- * SunOS 4 has SA_INTERRUPT, but no SA_RESTART.
- */
-#ifndef SA_RESTART
-#define SA_RESTART	0
-#endif
-#endif /* sun */
-
-#endif /* __svr4__ */
 
 #ifdef linux
 /*
@@ -48,35 +34,13 @@ extern int inet_aton (const char *, struct in_addr *);
 #endif /* SA_INTERRUPT */
 #endif /* linux */
 
-#ifdef ultrix 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-/*
- * Here's the really confusing one...  Under Ultrix, sigaction() works just
- * like sigvec(), except that SV_INTERRUPT is always set.  Hence, there is
- * no SA_INTERRUPT flag.  Unfortunately, there's also no SA_RESTART, so
- * there's no way to suppress the interrupt.  Sigh.
- */
-#ifndef SA_INTERRUPT
-#define SA_INTERRUPT	0
-#endif
-#ifndef SA_RESTART
-#define SA_RESTART	0
-#endif
-
-extern char *strdup (const char *);
-extern int inet_aton (const char *, struct in_addr *);
-#endif /* ultrix */
-
 #ifdef BSD4_4
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif
 #endif /* BSD4_4 */
 
-#if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
+#if defined(NEED_GETUSERSHELL)
 extern char *getusershell (void);
 #endif
 

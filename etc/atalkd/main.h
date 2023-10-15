@@ -5,7 +5,7 @@
 #ifndef ATALKD_MAIN_H
 #define ATALKD_MAIN_H
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include "config.h"
 
 extern int transition;

@@ -113,13 +113,11 @@ static int tdb_munmap(TDB_CONTEXT *tdb)
 	if (tdb->flags & TDB_INTERNAL)
 		return 0;
 
-#ifdef HAVE_MMAP
 	if (tdb->map_ptr) {
 		int ret = munmap(tdb->map_ptr, tdb->map_size);
 		if (ret != 0)
 			return ret;
 	}
-#endif
 	tdb->map_ptr = NULL;
 	return 0;
 }
@@ -129,7 +127,6 @@ static void tdb_mmap(TDB_CONTEXT *tdb)
 	if (tdb->flags & TDB_INTERNAL)
 		return;
 
-#ifdef HAVE_MMAP
 	if (!(tdb->flags & TDB_NOMMAP)) {
 		tdb->map_ptr = mmap(NULL, tdb->map_size, 
 				    PROT_READ|(tdb->read_only? 0:PROT_WRITE), 
@@ -147,9 +144,6 @@ static void tdb_mmap(TDB_CONTEXT *tdb)
 	} else {
 		tdb->map_ptr = NULL;
 	}
-#else
-	tdb->map_ptr = NULL;
-#endif
 }
 
 /* Endian conversion: we only ever deal with 4 byte quantities */
@@ -937,9 +931,6 @@ static int tdb_new_database(TDB_CONTEXT *tdb, int hash_size)
 	/* Fill in the header */
 	newdb->version = TDB_VERSION;
 	newdb->hash_size = hash_size;
-#ifdef USE_SPINLOCKS
-	newdb->rwlocks = size;
-#endif
 	if (tdb->flags & TDB_INTERNAL) {
 		tdb->map_size = size;
 		tdb->map_ptr = (char *)newdb;
@@ -1933,9 +1924,10 @@ int tdb_lockkeys(TDB_CONTEXT *tdb, u32 number, TDB_DATA keys[])
 	/* Insertion sort by bucket */
 	for (i = 0; i < number; i++) {
 		hash = tdb_hash(&keys[i]);
-		for (j = 0; j < i && BUCKET(tdb->lockedkeys[j+1]) < BUCKET(hash); j++);
-			memmove(&tdb->lockedkeys[j+2], &tdb->lockedkeys[j+1], sizeof(u32) * (i-j));
-		tdb->lockedkeys[j+1] = hash;
+		for (j = 0; j < i && BUCKET(tdb->lockedkeys[j+1]) < BUCKET(hash); j++) {
+		    memmove(&tdb->lockedkeys[j+2], &tdb->lockedkeys[j+1], sizeof(u32) * (i-j));
+		    tdb->lockedkeys[j+1] = hash;
+        }
 	}
 	/* Finally, lock in order */
 	for (i = 0; i < number; i++)

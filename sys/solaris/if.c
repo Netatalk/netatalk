@@ -12,18 +12,14 @@
 #include <sys/kmem.h>
 #include <sys/dlpi.h>
 #include <sys/cmn_err.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/byteorder.h>
 #include <sys/ethernet.h>
 #include <sys/ddi.h>
 #include <net/if.h>
 #include <netinet/arp.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include <netatalk/at.h>
 #include <netatalk/aarp.h>

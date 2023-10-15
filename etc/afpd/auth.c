@@ -10,9 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -26,15 +24,6 @@
 #include <time.h>
 #include <pwd.h>
 #include <grp.h>
-
-#ifdef TRU64
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sia.h>
-#include <siad.h>
-
-extern void afp_get_cmdline( int *ac, char ***av );
-#endif /* TRU64 */
 
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
@@ -55,17 +44,8 @@ int afp_version = 11;
 static int afp_version_index;
 
 uid_t   uuid;
-
-#if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-
-int *groups;
-#define GROUPS_SIZE sizeof(int)
-
-#else /* sun __svr4__ ultrix */
-
 gid_t   *groups;
 #define GROUPS_SIZE sizeof(gid_t)
-#endif /* sun ultrix */
 
 int ngroups;
 
@@ -177,22 +157,7 @@ static int set_auth_switch(int expired)
 {
     int i;
 
-    if (expired) {
-        /*
-         * BF: expired password handling
-         * to allow the user to change his/her password we have to allow login
-         * but every following call except for FPChangePassword will be thrown
-         * away with an AFPERR_PWDEXPR error. (thanks to Leland Wallace from Apple
-         * for clarifying this)
-         */
-
-        for (i=0; i<=0xff; i++) {
-            uam_afpserver_action(i, UAM_AFPSERVER_PREAUTH, afp_errpwdexpired, NULL);
-        }
-        uam_afpserver_action(AFP_LOGOUT, UAM_AFPSERVER_PREAUTH, afp_logout, NULL);
-        uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH, afp_changepw, NULL);
-    }
-    else {
+    if (!expired) {
         afp_switch = postauth_switch;
         switch (afp_version) {
 
@@ -233,6 +198,20 @@ static int set_auth_switch(int expired)
             uam_afpserver_action(AFP_ZZZ,  UAM_AFPSERVER_POSTAUTH, afp_zzz, NULL);
             break;
         }
+    } else {
+        /*
+         * BF: expired password handling
+         * to allow the user to change his/her password we have to allow login
+         * but every following call except for FPChangePassword will be thrown
+         * away with an AFPERR_PWDEXPR error. (thanks to Leland Wallace from Apple
+         * for clarifying this)
+         */
+
+        for (i=0; i<=0xff; i++) {
+            uam_afpserver_action(i, UAM_AFPSERVER_PREAUTH, afp_errpwdexpired, NULL);
+        }
+        uam_afpserver_action(AFP_LOGOUT, UAM_AFPSERVER_PREAUTH, afp_logout, NULL);
+        uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH, afp_changepw, NULL);
     }
 
     return AFP_OK;
@@ -281,7 +260,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
                         fp = fopen(nodename, "w");
                         fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                         fclose(fp);
-                        chown( nodename, pwd->pw_uid, -1 );
+                        if (chown(nodename, pwd->pw_uid, -1) < 0)
+                            LOG(log_error, logtype_afpd, "could not chown %s (%s)", nodename, strerror(errno));
                     } else { /* somebody is messing with us */
                         LOG(log_error, logtype_afpd, "print authfile %s is not a normal file, it will not be modified", nodename );
                     }
@@ -289,7 +269,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
                     fp = fopen(nodename, "w");
                     fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                     fclose(fp);
-                    chown( nodename, pwd->pw_uid, -1 );
+		    if (chown(nodename, pwd->pw_uid, -1) < 0)
+		        LOG(log_error, logtype_afpd, "could not chown %s (%s)", nodename, strerror(errno));
                 }
             } /* if (addr_net && addr_node ) */
         } /* if (options->authprintdir) */
@@ -314,47 +295,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
     if (!admin)
 #endif /* ADMIN_GRP */
-#ifdef TRU64
-    {
-        struct DSI *dsi = obj->handle;
-        struct hostent *hp;
-        char *clientname;
-        int argc;
-        char **argv;
-        char hostname[256];
-
-        afp_get_cmdline( &argc, &argv );
-
-        hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
-                            sizeof( struct in_addr ),
-                            dsi->client.sin_family );
-
-        if( hp )
-            clientname = hp->h_name;
-        else
-            clientname = inet_ntoa( dsi->client.sin_addr );
-
-        sprintf( hostname, "%s@%s", pwd->pw_name, clientname );
-
-        if( sia_become_user( NULL, argc, argv, hostname, pwd->pw_name,
-                             NULL, FALSE, NULL, NULL,
-                             SIA_BEU_REALLOGIN ) != SIASUCCESS )
-            return AFPERR_BADUAM;
-
-        LOG(log_info, logtype_afpd, "session from %s (%s)", hostname,
-            inet_ntoa( dsi->client.sin_addr ) );
-
-        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
-            return AFPERR_BADUAM;
-        }
-    }
-#else /* TRU64 */
     if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
         LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
-#endif /* TRU64 */
 
     LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
 

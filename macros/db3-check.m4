@@ -78,7 +78,7 @@ dnl -- This is called from configure
 AC_DEFUN([AC_PATH_BDB],[
     trybdbdir=""
     dobdbsearch=yes
-    bdb_search_dirs="/usr/local /usr"
+    bdb_search_dirs="/usr/local /usr/pkg /usr"
     search_subdirs="/ /db5 /db5.3 /db5.2 /db5.1 /db51 /db5.0 /db50 /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
 
     bdbfound=no

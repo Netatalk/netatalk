@@ -26,9 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -83,7 +81,8 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 
   if (keyfd > -1) {
     lseek(keyfd, 0, SEEK_SET);
-    read(keyfd, key, sizeof(key));
+    if (read(keyfd, key, sizeof(key)) < 0)
+      fprintf(stderr, "could not read key (%s)\n", strerror(errno));
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
@@ -180,7 +179,7 @@ found_entry:
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
-    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) { 
+    if ((passwd = (char *) FascistCheck(password, _PATH_CRACKLIB))) {
         fprintf(stderr, "Error: %s\n", passwd);
         err = -1;
         goto update_done;

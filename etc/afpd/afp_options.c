@@ -404,17 +404,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->uamlist = opt;
 
     if ((c = getoption(buf, "-ipaddr"))) {
-#if 0
-        struct in_addr inaddr;
-        if (inet_aton(c, &inaddr) && (opt = strdup(c))) {
-            if (!gethostbyaddr((const char *) &inaddr, sizeof(inaddr), AF_INET))
-                LOG(log_info, logtype_afpd, "WARNING: can't find %s", opt);
-            options->ipaddr = opt;
-        }
-        else {
-            LOG(log_error, logtype_afpd, "Error parsing -ipaddr, is %s in numbers-and-dots notation?", c);
-        }
-#endif
         options->ipaddr = strdup(c);
     }
 
@@ -552,30 +541,11 @@ static void show_version( void )
 #endif
 
 	printf( "         CNID backends:\t" );
-#ifdef CNID_BACKEND_CDB
-	printf( "cdb ");
-#endif
-#ifdef CNID_BACKEND_DB3
-	printf( "db3 " );
-#endif
 #ifdef CNID_BACKEND_DBD
-#ifdef CNID_BACKEND_DBD_TXN
-	printf( "dbd-txn " );
-#else
 	printf( "dbd " );
-#endif
-#endif
-#ifdef CNID_BACKEND_HASH
-	printf( "hash " );
 #endif
 #ifdef CNID_BACKEND_LAST
 	printf( "last " );
-#endif
-#ifdef CNID_BACKEND_MTAB
-	printf( "mtab " );
-#endif
-#ifdef CNID_BACKEND_TDB
-	printf( "tdb " );
 #endif
 	puts( "" );
 }
@@ -718,15 +688,6 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
     if (NULL != ( p = strchr(options->hostname, '.' )) ) {
         *p = '\0';
     }
-
-#ifdef ultrix
-    if (NULL == ( p = strrchr( av[ 0 ], '/' )) ) {
-        p = av[ 0 ];
-    } else {
-        p++;
-    }
-    openlog( p, LOG_PID ); /* ultrix only */
-#endif /* ultrix */
 
     while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
         switch ( c ) {

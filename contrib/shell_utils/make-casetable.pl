@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # usage: make-casetable.pl <infile> <outfile1> <outfile2>
 #        make-casetable.pl UnicodeData.txt utf16_casetable.h utf16_case.c
@@ -261,7 +261,7 @@ sub make_array{
         }
     }
 
-    printf(CSOURCE "\treturn \(val\)\;\n");
+    printf(CSOURCE "    return \(val\)\;\n");
     printf(CSOURCE "\}\n");
     printf(CSOURCE "\n");
 
@@ -316,7 +316,7 @@ sub make_array{
         }
     }
 
-    printf(CSOURCE "\treturn \(val\)\;\n");
+    printf(CSOURCE "    return \(val\)\;\n");
     printf(CSOURCE "\}\n");
     printf(CSOURCE "\n");
 }

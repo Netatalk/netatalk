@@ -8,18 +8,14 @@
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/kmem.h>
 #include <sys/cmn_err.h>
 #include <sys/tihdr.h>
 #include <sys/ethernet.h>
 #include <net/if.h>
 
-#ifdef STDC_HEADERS
 #include <strings.h>
-#else
-#include <string.h>
-#endif
 
 #include <netatalk/at.h>
 

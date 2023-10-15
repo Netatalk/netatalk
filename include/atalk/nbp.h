@@ -29,24 +29,29 @@
 #define NBP_UNRGSTR_4ARGS 1
 #define ATP_OPEN_2ARGS 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
 
+/* Described in IAT 7-14 */
+
 struct nbphdr {
 #if BYTE_ORDER == BIG_ENDIAN
-    unsigned	nh_op : 4,
-		nh_cnt : 4,
+    u_int32_t	nh_op : 4,
+    		nh_cnt : 4,
 #else /* BYTE_ORDER != BIG_ENDIAN */
-    unsigned	nh_cnt : 4,
-		nh_op : 4,
+    u_int32_t	nh_cnt : 4,
+    		nh_op : 4,
 #endif /* BYTE_ORDER */
-		nh_id : 8;
+    		nh_id : 8;
 };
 
 #define SZ_NBPHDR	2
 
+
+/* NBP tuple described in IAT 7-16 */
+/* struct nbptuple is misnamed; describes only the entity address */
 struct nbptuple {
     u_int16_t   nt_net;
     u_int8_t    nt_node;
@@ -58,14 +63,15 @@ struct nbptuple {
 #define NBPSTRLEN	32
 /*
  * Name Binding Protocol Network Visible Entity
+ * This is the rest of NBP tuple in IAT 7-16
  */
 struct nbpnve {
     struct sockaddr_at	nn_sat;
-    u_char		nn_objlen;
+    u_int8_t		nn_objlen;
     char		nn_obj[ NBPSTRLEN ];
-    u_char		nn_typelen;
+    u_int8_t		nn_typelen;
     char		nn_type[ NBPSTRLEN ];
-    u_char		nn_zonelen;
+    u_int8_t		nn_zonelen;
     char		nn_zone[ NBPSTRLEN ];
 };
 

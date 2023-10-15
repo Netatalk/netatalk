@@ -5,13 +5,13 @@
  * All Rights Reserved.
  */
 
-# if defined( ultrix ) || defined( BSD4_4 )
+# if defined( BSD4_4 )
 #include <net/if_llc.h>
-# else /* ultrix || BSD4_4 */
+# else /* BSD4_4 */
 
-#if defined( sun ) && !defined( __svr4__ )
+#if !defined( __svr4__ )
 #include <net/if_ieee802.h>
-#endif /* sun && !__svr4__ */
+#endif /* !__svr4__ */
 
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -70,14 +70,12 @@ struct llc {
 #define LLC_ISO_LSAP	0xfe
 #define LLC_SNAP_LSAP	0xaa
 
-# endif /* ultrix && BSD4_4 */
+<<<<<<< HEAD
+=======
+# endif /* BSD4_4 */
 
-#if defined( sun ) || defined( ibm032 )
-#define SIOCPHASE1	_IOW(i, 100, struct ifreq)	/* AppleTalk phase 1 */
-#define SIOCPHASE2	_IOW(i, 101, struct ifreq)	/* AppleTalk phase 2 */
-#endif /* sun || ibm032 */
-
-#if defined( ultrix ) || defined( BSD4_4 ) || defined( _IBMR2 )
+#if defined( BSD4_4 )
+>>>>>>> 8a2dd3b8 (Remove obsolete platform code.)
 #define SIOCPHASE1	_IOW('i', 100, struct ifreq)	/* AppleTalk phase 1 */
 #define SIOCPHASE2	_IOW('i', 101, struct ifreq)	/* AppleTalk phase 2 */
-#endif /* ultrix || BSD4_4 || _IBMR2 */
+#endif /* BSD4_4 */

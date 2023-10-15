@@ -21,11 +21,6 @@ extern int		ddp_usrreq();
 extern int		ddp_output();
 extern int		ddp_init();
 
-#ifdef ultrix
-extern int		ddp_ifoutput();
-extern int		ddp_ifinput();
-extern int		ddp_ifioctl();
-#endif /* ultrix */
 
 struct protosw		atalksw[] = {
     {
@@ -44,10 +39,6 @@ struct protosw		atalksw[] = {
 	ddp_usrreq,
 	/* utility routines. */
 	ddp_init,	0,		0,		0,
-#ifdef ultrix
-	/* interface hooks */
-	ddp_ifoutput,	ddp_ifinput,	ddp_ifioctl,	0,
-#endif /* ultrix */
     },
 };
 

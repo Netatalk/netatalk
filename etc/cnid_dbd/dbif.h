@@ -53,7 +53,7 @@
 #ifndef CNID_DBD_DBIF_H
 #define CNID_DBD_DBIF_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <db.h>
 #include <atalk/adouble.h>
 #include "db_param.h"
@@ -93,27 +93,27 @@ typedef struct {
 } DBD;
 
 /* Functions */
-extern int get_lock(int cmd, const char *dbpath);
+int get_lock(int cmd, const char *dbpath);
 
-extern DBD *dbif_init(const char *envhome, const char *dbname);
-extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
-extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
-extern int dbif_close(DBD *dbd);
-extern int dbif_env_remove(const char *path);
+DBD *dbif_init(const char *envhome, const char *dbname);
+int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
+int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
+int dbif_close(DBD *dbd);
+int dbif_env_remove(const char *path);
 
-extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
-extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
-extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
-extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
-extern int dbif_count(DBD *, const int, u_int32_t *);
-extern int dbif_search(DBD *dbd, DBT *key, char *resbuf);
-extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
-extern int dbif_txn_begin(DBD *);
-extern int dbif_txn_commit(DBD *);
-extern int dbif_txn_abort(DBD *);
-extern int dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
-extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
+int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
+int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
+int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
+int dbif_del(DBD *, const int, DBT *, u_int32_t);
+int dbif_count(DBD *, const int, u_int32_t *);
+int dbif_search(DBD *dbd, DBT *key, char *resbuf);
+int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
+int dbif_txn_begin(DBD *);
+int dbif_txn_commit(DBD *);
+int dbif_txn_abort(DBD *);
+int dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
+int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
 
-extern int dbif_dump(DBD *dbd, int dumpindexes);
-extern int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close);
+int dbif_dump(DBD *dbd, int dumpindexes);
+int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close);
 #endif

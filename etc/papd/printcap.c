@@ -45,9 +45,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef HAVE_FCNTL_H
@@ -137,14 +135,14 @@ int getprent( char *cap, char *bp, int bufsize)
 		default:
 			if (skip)
 				continue;
-			if (bp >= tbuf+BUFSIZ) {
-				write(2, "Termcap entry too long\n", 23);
+			if (bp >= tbuf + BUFSIZ) {
+				fprintf(stderr, "Termcap entry too long\n");
 				*bp = '\0';
 				return(1);
 			}
 			*bp++ = c;
 			if (++i >= bufsize) {
-				write(2, "config file too large\n", 22);
+				fprintf(stderr, "config file too large\n");
 				fclose(pfp);
 				pfp = NULL;
 				*bp = '\0';
@@ -236,8 +234,8 @@ int tgetent(char *cap, char *bp, char *name)
 				skip++;
 			if (skip)
 				continue;
-			if (cp >= bp+BUFSIZ) {
-				write(2,"Termcap entry too long\n", 23);
+			if (cp >= bp + BUFSIZ) {
+				fprintf(stderr, "Termcap entry too long\n");
 				break;
 			} else
 				*cp++ = c;
@@ -274,8 +272,8 @@ int tnchktc( char *cap)
 
 	p = tbuf + strlen(tbuf) - 2;	/* before the last colon */
 	while (*--p != ':')
-		if (p<tbuf) {
-			write(2, "Bad termcap entry\n", 18);
+		if (p < tbuf) {
+			fprintf(stderr, "Bad termcap entry\n");
 			return (0);
 		}
 	p++;
@@ -288,7 +286,7 @@ int tnchktc( char *cap)
 		q++;
 	*q = 0;
 	if (++hopcount > MAXHOP) {
-		write(2, "Infinite tc= loop\n", 18);
+		fprintf(stderr, "Infinite tc= loop\n");
 		return (0);
 	}
 	if (tgetent( cap, tcbuf, tcname) != 1)
@@ -297,8 +295,8 @@ int tnchktc( char *cap)
 		;
 	l = p - holdtbuf + strlen(q);
 	if (l > BUFSIZ) {
-		write(2, "Termcap entry too long\n", 23);
-		q[BUFSIZ - (p-tbuf)] = 0;
+		fprintf(stderr, "Termcap entry too long\n");
+		q[BUFSIZ - (p - tbuf)] = 0;
 	}
 	strcpy(p, q+1);
 	tbuf = holdtbuf;

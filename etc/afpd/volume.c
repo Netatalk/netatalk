@@ -17,20 +17,7 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -327,7 +314,7 @@ static char *volxlate(AFPObj *obj,
                 q = obj->options.server;
             } else
                 q = obj->options.hostname;
-        } else if (obj->username && is_var(p, "$u")) {
+        } else if ((strlen(obj->username) > 0) && is_var(p, "$u")) {
             if (afpmaster && xlatevolname)
                 return NULL;
             char* sep = NULL;
@@ -411,9 +398,7 @@ static void volset(struct vol_option *options, struct vol_option *save,
         volname[vlen] = 0;
         return;
     }
-#if 0
     LOG(log_debug, logtype_afpd, "Parsing volset %s", val);
-#endif
     if (optionok(tmp, "allow:", val)) {
         setoption(options, save, VOLOPT_ALLOW, val);
 
@@ -631,7 +616,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
     /* suffix for mangling use (lastvid + 1)   */
     /* because v_vid has not been decided yet. */
-    suffixlen = sprintf(suffix, "%c%X", MANGLE_CHAR, lastvid + 1 );
+    suffixlen = snprintf(suffix, sizeof(suffix), "%c%X", MANGLE_CHAR, lastvid + 1);
 
     vlen = strlen( name );
 
@@ -1070,8 +1055,12 @@ static void setextmap(char *ext, char *type, char *creator, int user)
     }
 
     if ( em->em_ext == NULL ) {
-        if (!(Extmap  = realloc( Extmap, sizeof( struct extmap ) * (cnt +2))) ) {
+        void *Extmap_check = realloc(Extmap, sizeof(struct extmap) * (cnt + 2));
+        if (Extmap_check) {
+            Extmap = Extmap_check;
+        } else {
             LOG(log_error, logtype_afpd, "setextmap: realloc: %s", strerror(errno) );
+            free(Extmap);
             return;
         }
         (Extmap +cnt +1)->em_ext = NULL;
@@ -1299,7 +1288,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
             /* send path through variable substitution */
             if (*path != '~') /* need to copy path to tmp */
                 strcpy(tmp, path);
-            if (!pwent && obj->username)
+            if (!pwent && (strlen(obj->username) > 0))
                 pwent = getpwnam(obj->username);
 
             if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
@@ -1481,6 +1470,8 @@ EC_CLEANUP:
     if (file)
         fclose(file);
     LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    if (ret != 0)
+        return -1;
     return bandsize;
 }
 
@@ -1544,7 +1535,6 @@ static int get_tm_used(struct vol * restrict vol)
     DIR *dir = NULL;
     const struct dirent *entry;
     const char *p;
-    struct stat st;
     long int links;
     time_t now = time(NULL);
 
@@ -1602,14 +1592,13 @@ static int getvolspace(struct vol *vol,
                        u_int32_t *bfree, u_int32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, u_int32_t *bsize)
 {
-    int         spaceflag, rc;
+    int         rc;
     u_int32_t   maxsize;
-    VolSpace    used;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
+    int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
 
-    spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
         (((afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
@@ -1700,13 +1689,13 @@ static void vol_setdate(u_int16_t id, struct adouble *adp, time_t date)
 static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 {
     struct adouble  ad;
-    int         bit = 0, isad = 1;
-    u_int32_t       aint;
-    u_short     ashort;
-    u_int32_t       bfree, btotal, bsize;
-    VolSpace            xbfree, xbtotal; /* extended bytes */
-    char        *data, *nameoff = NULL;
-    char                *slash;
+    int bit = 0, isad = 1;
+    u_int32_t aint;
+    u_int16_t ashort;
+    u_int32_t bfree = 0, btotal = 0, bsize = 0;
+    VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
+    char *data = NULL, *nameoff = NULL;
+    char *slash = NULL;
 
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
 
@@ -1847,21 +1836,13 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
 #ifndef NO_LARGE_VOL_SUPPORT
         case VOLPBIT_XBFREE :
             xbfree = hton64( xbfree );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbfree, data, sizeof(xbfree));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbfree, sizeof( xbfree ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 
         case VOLPBIT_XBTOTAL :
             xbtotal = hton64( xbtotal );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbtotal, data, sizeof(xbtotal));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbtotal, sizeof( xbtotal ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 #endif /* ! NO_LARGE_VOL_SUPPORT */
@@ -1964,9 +1945,11 @@ void load_volumes(AFPObj *obj)
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);
         if ((pwent = getpwnam(obj->username))) {
-            seteuid(0);
+            if (seteuid(0) < 0)
+                LOG(log_error, logtype_afpd, "could not seteuid(%i)", 0);
             ret = set_groups(obj, pwent);
-            seteuid(obj->uid);
+            if (seteuid(obj->uid) < 0)
+                LOG(log_error, logtype_afpd, "could not seteuid(%i)", obj->uid);
             if (ret != 0) {
                 LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
                 return;
@@ -2990,7 +2973,7 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
     }                    
     
     /* generate uuid and write to file */
-    atalk_uuid_t id;
+    atalk_uuid_t id = "\0";
     const char *cp;
     randombytes((void *)id, 16);
     cp = uuid_bin2string(id);

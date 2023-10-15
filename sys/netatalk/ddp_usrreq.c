@@ -9,13 +9,10 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
-#ifdef ibm032
-#include <sys/dir.h>
-#endif /* ibm032 */
 #include <sys/user.h>
 #include <sys/mbuf.h>
 #include <sys/ioctl.h>
@@ -24,9 +21,6 @@
 #include <sys/protosw.h>
 #include <net/if.h>
 #include <net/route.h>
-#ifdef _IBMR2
-#include <net/spl.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -349,11 +343,7 @@ at_pcbconnect( ddp, addr )
 		( hintnet ? hintnet : sat->sat_addr.s_net ) ||
 		satosat( &ro->ro_dst )->sat_addr.s_node !=
 		sat->sat_addr.s_node )) {
-#ifdef ultrix
-	    rtfree( ro->ro_rt );
-#else /* ultrix */
 	    RTFREE( ro->ro_rt );
-#endif /* ultrix */
 	    ro->ro_rt = (struct rtentry *)0;
 	}
     }

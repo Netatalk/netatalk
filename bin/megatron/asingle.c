@@ -17,9 +17,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "asingle.h"
@@ -126,7 +124,7 @@ int single_header_read( struct FHeader *fh, int version)
     int			n;
     int			readlen;
     int			date_entry = 0;
-    off_t		pos;
+    off_t		pos _U_;
 
 /*
  * Go through and initialize the array of entry_info structs.  Read in the
@@ -394,7 +392,7 @@ ssize_t single_read( int fork, char *buffer, size_t length)
     char		*buf_ptr;
     size_t		readlen;
     ssize_t		cc = 1;
-    off_t		pos;
+    off_t		pos _U_;
 
     switch ( fork ) {
 	case DATA :
@@ -409,7 +407,7 @@ ssize_t single_read( int fork, char *buffer, size_t length)
     }
 
     if (single.entry[entry_id].ade_len > 0x7FFFFFFF) {
-	fprintf(stderr, "single_read: Trying to read past end of fork!, ade_len == %u\n", single.entry[entry_id].ade_len);
+	fprintf(stderr, "single_read: Trying to read past end of fork!, ade_len == %lu\n", (unsigned long) single.entry[entry_id].ade_len);
 	return -1;
     }
     if ( single.entry[ entry_id ].ade_len == 0 ) {

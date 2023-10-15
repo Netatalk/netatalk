@@ -13,9 +13,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifndef NO_DDP
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>

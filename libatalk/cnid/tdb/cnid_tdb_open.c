@@ -28,7 +28,6 @@
 static struct _cnid_db *cnid_tdb_new(const char *volpath)
 {
     struct _cnid_db *cdb;
-    struct _cnid_tdb_private *priv;
 
     if ((cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db))) == NULL)
         return NULL;
@@ -43,9 +42,6 @@ static struct _cnid_db *cnid_tdb_new(const char *volpath)
         free(cdb);
         return NULL;
     }
-
-    /* Set up private state */
-    priv = (struct _cnid_tdb_private *) (cdb->_private);
 
     /* Set up standard fields */
     cdb->flags = CNID_FLAG_PERSISTENT;

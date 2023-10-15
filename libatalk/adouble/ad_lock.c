@@ -35,9 +35,6 @@
 ((type) == ADLOCK_WR ? LOCK_EX : \
  ((type) == ADLOCK_CLR ? LOCK_UN : -1)))
 
-#ifdef DISABLE_LOCKING
-#define fcntl(a, b, c ) (0)
-#endif
 
 /* ----------------------- */
 static int set_lock(int fd, int cmd,  struct flock *lock)

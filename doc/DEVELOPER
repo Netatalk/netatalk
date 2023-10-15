@@ -1,10 +1,13 @@
 Information for Netatalk Developers
 ===================================
 
-For basic installation instructions, see the INSTALL file.
+For basic installation instructions, see the Installation chapter
+in the manual.
 
-Netatalk is an implementation of "AFP over TCP".
-Netatalk also supports the AppleTalk Protocol Suite for legacy Macs.
+Netatalk is an implementation of AFP, with built in support for
+AFP over TCP (also known as AppleShare IP, or ASIP for short.)
+Netatalk also supports the AppleTalk Protocol Suite for legacy Macs
+and Apple IIs via the "atalkd" daemon.
 The current release contains support for EtherTalk Phase I and II, 
 DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, AFP and DSI.
 The complete stack looks like this on a BSD-derived system:
@@ -25,17 +28,19 @@ The complete stack looks like this on a BSD-derived system:
     |                Network-Interface                  |
     +---------------------------------------------------+
 
-DSI is a session layer used to carry AFP over TCP.
-DDP is in the kernel.  "atalkd" implements RTMP, NBP, ZIP, and AEP.  It
-is the AppleTalk equivalent of Unix "routed".  There is also a
-client-stub library for NBP.  ATP and ASP are implemented as
-libraries.  "papd" allows Macs to spool to "lpd", and "pap" allows Unix
-machines to print to AppleTalk connected printers.  "psf" is a
-PostScript printer filter for "lpd", designed to use "pap".  "psorder"
-is a PostScript reverser, called by "psf" to reverse pages printed to
-face-up stacking printers.  "afpd" provides Macs with an interface to
-the Unix file system.  Refer to the appropriate man pages for
-operational information.
+* DSI is a session layer used to carry AFP over TCP.
+* DDP is in the kernel, presently.
+* "atalkd" implements RTMP, NBP, ZIP, and AEP.  It
+  is the AppleTalk equivalent of Unix "routed".  There is also a
+  client-stub library for NBP that exists as a client-stub library.
+* ATP and ASP are implemented as libraries.
+* "papd" allows Macs to spool to "lpd", and "pap" allows Unix
+  machines to print to AppleTalk connected printers.
+* "psf" is a PostScript printer filter for "lpd", designed to use "pap".
+* "psorder" is a PostScript reverser, called by "psf" to reverse pages
+  printed to face-up stacking printers.
+* "afpd" provides Macs with an interface to the Unix file system.
+  Refer to the appropriate man pages for operational information.
 
 
 Compilation
@@ -56,8 +61,8 @@ diffs or instructions to the address given in the `README' so they can
 be considered for the next release.  If at some point `config.cache'
 contains results you don't want to keep, you may remove or edit it.
 
-   The file `configure.in' is used to create `configure' by a program
-called `autoconf'.  You only need `configure.in' if you want to change
+   The file `bootstrap' is used to create `configure' by a program
+called `autoconf'.  You only need `bootstrap' if you want to change
 it or regenerate `configure' using a newer version of `autoconf'.
 
 
@@ -69,22 +74,8 @@ creation of libraries. It determines if the local platform can support
 shared libraries or if it only supports static libraries.
 
 Netatalk currently requires libtool 1.4 or higher (1.4b for OpenBSD).
-If you are using Tru64 you must apply the following patch to the file
-acinclude.m4 (normally found in /usr/share/libtool/libltdl).
-
---- acinclude.m4.old	Tue Nov 20 15:30:23 2001
-+++ acinclude.m4	Tue Nov 20 15:31:54 2001
-@@ -2226,6 +2226,7 @@
- 
- osf3* | osf4* | osf5*)
-   version_type=osf
-+  need_lib_prefix=no
-   need_version=no
-   soname_spec='${libname}${release}.so'
-   library_names_spec='${libname}${release}.so$versuffix ${libname}${release}.so $libname.so'
 
 Documentation: http://www.gnu.org/software/libtool/
-Program: (see the GNU mirrors) /gnu/libtool/libtool-1.4.tar.gz
 
 2. GNU m4
 GNU m4 is an implementation of the Unix macro processor. It reads
@@ -92,20 +83,17 @@ stdin and copies to stdout expanding defined macros as it processes
 the text.
 
 Documentation: http://www.gnu.org/software/m4/
-Program: (see the GNU mirrors) /gnu/m4/m4-1.4.tar.gz
 
 3. Autoconf
 Autoconf is a package of m4 macros that produce shell scripts to
 configure source code packages.
 
 Documentation: http://www.gnu.org/software/autoconf/
-Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2.52.tar.gz
 
 4. Automake
 Automake is a tool that generates  'Makefile.in' files.
 
 Documentation: http://www.gnu.org/software/automake/
-Program: (see the GNU mirrors) /gnu/automake/automake-1.5.tar.gz
 
 Optional
 ========
@@ -123,15 +111,14 @@ The Libgcrypt is a general purpose cryptographic library based on
 the code from GnuPG.
 This is required to enable DHX2 login support.
 
-Get everything at http://directory.fsf.org/project/libgcrypt/
+Get everything at https://gnupg.org/software/libgcrypt/
 
-6. TCP Wrappers 
+6. TCP Wrappers
 Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
 programs log the client host name of incoming telnet, ftp, rsh,
 rlogin, finger etc. requests. Security options are: access control per
 host, domain and/or service; detection of host name spoofing or host
 address spoofing; booby traps to implement an early-warning system.
-TCP Wrappers can be gotten at ftp://ftp.porcupine.org/pub/security/
 Netatalk uses TCP Wrappers to authorize host access when using
 afpovertcp. It should be noted that if DDP is in use, the connection
 will still be allowed as TCP Wrappers do not impact DDP connections.
@@ -151,15 +138,14 @@ Netatalk also supports other standard PAM implementations such as OpenPAM.
 8. Berkeley DB
 Berkeley DB is a programmatic toolkit that provides fast, reliable,
 scalable, and mission-critical database support to software
-developers. BDB can downloaded from
-http://www.oracle.com/database/berkeley-db/index.html
+developers.
 Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.6 and later.
+Currently, Netatalk supports BDB 4.6 and later; 5.3 is recommended.
 
 Error checking and logging
 ==========================
-We wan't rigid error checking and concise log messages. This often leads
-to signifant code bloat where the relevant function call is buried in error
+We want rigid error checking and concise log messages. This often leads
+to significant code bloat where the relevant function call is buried in error
 checking and logging statements.
 In order to alleviate error checking and code readability, we provide a set
 of error checking macros in <atalk/errchk.h>. These macros compare the return

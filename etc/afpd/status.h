@@ -1,7 +1,7 @@
 #ifndef AFPD_STATUS_H
 #define AFPD_STATUS_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <atalk/dsi.h>
 #include <atalk/asp.h>
 #include <atalk/globals.h>

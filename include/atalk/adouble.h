@@ -39,13 +39,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_UNISTD_H
 #undef __USE_MISC
 #define __USE_MISC
 #include <unistd.h>
-#endif
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -328,11 +326,7 @@ struct adouble_fops {
 #define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
 #else
 /* Tru64 is an always-64-bit OS; version 4.0 does not set _FILE_OFFSET_BITS */
-#if defined(TRU64)
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
 #define BYTELOCK_MAX (0x7FFFFFFFU)
-#endif
 #endif
 
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
@@ -557,12 +551,5 @@ extern int ad_readfile_init(const struct adouble *ad,
 				       const int eid, off_t *off,
 				       const int end);
 #endif
-
-#if 0
-#ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile (struct adouble *, const int,
-                                 const int, off_t, const int, const size_t);
-#endif /* HAVE_SENDFILE_WRITE */
-#endif /* 0 */
 
 #endif /* _ATALK_ADOUBLE_H */

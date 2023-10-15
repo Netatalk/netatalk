@@ -11,25 +11,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -55,15 +39,6 @@ char *strchr (), *strrchr ();
 #include "afp_config.h"
 #include "auth.h"
 #include "uam_auth.h"
-
-#define utf8_encoding() (afp_version >= 30)
-
-#ifdef TRU64
-#include <netdb.h>
-#include <sia.h>
-#include <siad.h>
-#include <signal.h>
-#endif /* TRU64 */
 
 /* --- server uam functions -- */
 
@@ -252,10 +227,11 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             }
         }
     }
-#ifndef NO_REAL_USER_NAME
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
-				CH_UCS2, name, -1, username, sizeof(username))))
+#if !defined(NO_REAL_USER_NAME)
+    namelen = convert_string(obj->options.maccharset, CH_UCS2, name, -1,
+                            username, sizeof(username));
+    if (namelen == -1)
 	return NULL;
 
     setpwent();
@@ -289,12 +265,14 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
 int uam_checkuser(const struct passwd *pwd)
 {
+#if !defined(DISABLE_SHELLCHECK)
     const char *p;
+#endif /* DISABLE_SHELLCHECK */
 
     if (!pwd)
         return -1;
 
-#ifndef DISABLE_SHELLCHECK
+#if !defined(DISABLE_SHELLCHECK)
 	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
 		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
@@ -474,101 +452,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
     return 0;
 }
-
-/* if we need to maintain a connection, this is how we do it.
- * because an action pointer gets passed in, we can stream 
- * DSI connections */
-int uam_afp_read(void *handle, char *buf, size_t *buflen,
-                 int (*action)(void *, void *, const int))
-{
-    AFPObj *obj = handle;
-    int len;
-
-    if (!obj)
-        return AFPERR_PARAM;
-
-    switch (obj->proto) {
-#ifndef NO_DDP
-    case AFPPROTO_ASP:
-        if ((len = asp_wrtcont(obj->handle, buf, buflen )) < 0)
-            goto uam_afp_read_err;
-        return action(handle, buf, *buflen);
-        break;
-#endif
-    case AFPPROTO_DSI:
-        len = dsi_writeinit(obj->handle, buf, *buflen);
-        if (!len || ((len = action(handle, buf, len)) < 0)) {
-            dsi_writeflush(obj->handle);
-            goto uam_afp_read_err;
-        }
-
-        while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
-            if ((len = action(handle, buf, len)) < 0) {
-                dsi_writeflush(obj->handle);
-                goto uam_afp_read_err;
-            }
-        }
-        break;
-    default:
-        return -1;
-    }
-    return 0;
-
-uam_afp_read_err:
-    *buflen = 0;
-    return len;
-}
-
-#ifdef TRU64
-void uam_afp_getcmdline( int *ac, char ***av )
-{
-    afp_get_cmdline( ac, av );
-}
-
-int uam_sia_validate_user(sia_collect_func_t * collect, int argc, char **argv,
-                         char *hostname, char *username, char *tty,
-                         int colinput, char *gssapi, char *passphrase)
-/* A clone of the Tru64 system function sia_validate_user() that calls
- * sia_ses_authent() rather than sia_ses_reauthent()   
- * Added extra code to take into account suspected SIA bug whereby it clobbers
- * the signal handler on SIGALRM (tickle) installed by Netatalk/afpd
- */
-{
-       SIAENTITY *entity = NULL;
-       struct sigaction act;
-       int rc;
-
-       if ((rc=sia_ses_init(&entity, argc, argv, hostname, username, tty,
-                            colinput, gssapi)) != SIASUCCESS) {
-               LOG(log_error, logtype_afpd, "cannot initialise SIA");
-               return SIAFAIL;
-       }
-
-       /* save old action for restoration later */
-       if (sigaction(SIGALRM, NULL, &act))
-               LOG(log_error, logtype_afpd, "cannot save SIGALRM handler");
-
-       if ((rc=sia_ses_authent(collect, passphrase, entity)) != SIASUCCESS) {
-               /* restore old action after clobbering by sia_ses_authent() */
-               if (sigaction(SIGALRM, &act, NULL))
-                       LOG(log_error, logtype_afpd, "cannot restore SIGALRM handler");
-
-               LOG(log_info, logtype_afpd, "unsuccessful login for %s",
-(hostname?hostname:"(null)"));
-               return SIAFAIL;
-       }
-       LOG(log_info, logtype_afpd, "successful login for %s",
-(hostname?hostname:"(null)"));
-
-       /* restore old action after clobbering by sia_ses_authent() */   
-       if (sigaction(SIGALRM, &act, NULL))
-               LOG(log_error, logtype_afpd, "cannot restore SIGALRM handler");
-
-       sia_ses_release(&entity);
-
-       return SIASUCCESS;
-}
-#endif /* TRU64 */
 
 /* --- papd-specific functions (just placeholders) --- */
 struct papfile;

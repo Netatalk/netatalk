@@ -15,26 +15,11 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/param.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -467,30 +452,7 @@ mountp( char *file, int *nfs)
 }
 
 #else /* __svr4__ */
-#ifdef ultrix
-/*
-* Return the block-special device name associated with the filesystem
-* on which "file" resides.  Returns NULL on failure.
-*/
-
-static char *
-special( char *file, int *nfs)
-{
-    static struct fs_data	fsd;
-
-    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
-        return( NULL );
-    }
-
-    /* XXX: does this really detect an nfs mounted fs? */
-    if (strchr(fsd.fd_req.devname, ':'))
-        *nfs = 1;
-    return( fsd.fd_req.devname );
-}
-
-#else /* ultrix */
-#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
+#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4)
 
 static char *
 special(char *file, int *nfs)
@@ -501,14 +463,8 @@ special(char *file, int *nfs)
         return( NULL );
     }
 
-#ifdef TRU64
-    /* Digital UNIX: The struct sfs contains a field sfs.f_type,
-     * the MOUNT_* constants are defined in <sys/mount.h> */
-    if ((sfs.f_type == MOUNT_NFS)||(sfs.f_type == MOUNT_NFS3))
-#else /* TRU64 */
     /* XXX: make sure this really detects an nfs mounted fs */
     if (strchr(sfs.f_mntfromname, ':'))
-#endif /* TRU64 */
         *nfs = 1;
     return( sfs.f_mntfromname );
 }
@@ -563,7 +519,6 @@ special(char *file, int *nfs)
 }
 
 #endif /* BSD4_4 */
-#endif /* ultrix */
 #endif /* __svr4__ */
 
 
@@ -587,11 +542,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
     }
 
 #else /* __svr4__ */
-#ifdef ultrix
-    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
-        return( AFPERR_PARAM );
-    }
-#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
@@ -601,10 +551,8 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 #define QCMD(a,b)  (a)
 #endif
 
-#ifndef TRU64
     /* for group quotas. we only use these if the user belongs
     * to one group. */
-#endif /* TRU64 */
 
 #ifdef BSD4_4
     if ( seteuid( getuid() ) == 0 ) {
@@ -618,16 +566,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
                     return( AFPERR_PARAM );
                 }
             }
-        }
-        seteuid( uid );
-    }
-
-#elif defined(TRU64)
-    if ( seteuid( getuid() ) == 0 ) {
-        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA, USRQUOTA),
-                       uid, (char *)dq ) != 0 ) {
-            seteuid( uid );
-            return ( AFPERR_PARAM );
         }
         seteuid( uid );
     }
@@ -647,7 +585,6 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 #endif  /* BSD4_4 */
 
 
-#ifndef TRU64
     /* return either the group quota entry or user quota entry,
        whichever has the least amount of space remaining
     */
@@ -672,9 +609,7 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
         dq->dqb_btimelimit = dqg.dqb_btimelimit;
     } /* if */
 
-#endif /* TRU64 */
 
-#endif /* ultrix */
 #endif /* __svr4__ */
 
     return AFP_OK;
@@ -725,43 +660,8 @@ static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
     }
 #endif
 
-#ifdef TRU64
-    /* Digital UNIX: Two forms of specifying an NFS filesystem are possible,
-       either 'hostname:path' or 'path@hostname' (Ultrix heritage) */
-    if (vol->v_nfs) {
-	char *hostpath;
-	char pathstring[MNAMELEN];
-	/* MNAMELEN ist defined in <sys/mount.h> */
-	int result;
-	
-	if ((hostpath = strchr(vol->v_gvs,'@')) != NULL ) {
-	    /* convert 'path@hostname' to 'hostname:path',
-	     * call getnfsquota(),
-	     * convert 'hostname:path' back to 'path@hostname' */
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s:%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	    
-	    result = getnfsquota(vol, uuid, bsize, dq);
-	    
-	    hostpath = strchr(vol->v_gvs,':');
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s@%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	    
-	    return result;
-	}
-	else
-	    /* vol->v_gvs is of the form 'hostname:path' */
-	    return getnfsquota(vol, uuid, bsize, dq);
-    } else
-	/* local filesystem */
-	return getfsquota(vol, uuid, dq);
-	   
-#else /* TRU64 */
     return vol->v_nfs ? getnfsquota(vol, uuid, bsize, dq) :
            getfsquota(vol, uuid, dq);
-#endif /* TRU64 */
 }
 
 static int overquota( struct dqblk *dqblk)
@@ -777,11 +677,6 @@ static int overquota( struct dqblk *dqblk)
          dqblk->dqb_bsoftlimit == 0 ) {
         return( 0 );
     }
-#ifdef ultrix
-    if ( dqblk->dqb_bwarn ) {
-        return( 0 );
-    }
-#else /* ultrix */
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -789,7 +684,6 @@ static int overquota( struct dqblk *dqblk)
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
-#endif /* ultrix */
     return( 1 );
 }
 

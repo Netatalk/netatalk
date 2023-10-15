@@ -233,10 +233,9 @@ wide strstr()
 ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 {
 	ucs2_t *r;
-	size_t slen, inslen;
+	size_t inslen;
 
 	if (!s || !*s || !ins || !*ins) return NULL;
-	slen = strlen_w(s);
 	inslen = strlen_w(ins);
 	r = (ucs2_t *)s;
 	while ((r = strchr_w(r, *ins))) {
@@ -254,10 +253,9 @@ wide strcasestr()
 ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 {
 	ucs2_t *r;
-	size_t slen, inslen;
+	size_t inslen;
 
 	if (!s || !*s || !ins || !*ins) return NULL;
-	slen = strlen_w(s);
 	inslen = strlen_w(ins);
 	r = (ucs2_t *)s;
 
@@ -292,12 +290,12 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 
 	while (*a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if ( (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) ) return ret;
 			a++;
 			b++;
 			if (!(*a && *b)) return (tolower_w(*a) - tolower_w(*b)); /* avoid buffer over run */
 		} else {
-			if (ret = tolower_w(*a) - tolower_w(*b)) return ret;
+			if ( (ret = tolower_w(*a) - tolower_w(*b)) ) return ret;
 		}
 		a++;
 		b++;
@@ -318,13 +316,13 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 
 	while ((n < len) && *a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if ( (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) ) return ret;
 			a++;
 			b++;
 			n++;
 			if (!((n < len) && *a && *b)) return (tolower_w(*a) - tolower_w(*b));
 		} else {
-			if (ret = tolower_w(*a) - tolower_w(*b)) return ret;
+			if ( (ret = tolower_w(*a) - tolower_w(*b)) ) return ret;
 		}
 		a++;
 		b++;
@@ -608,7 +606,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 				base_sp = ((u_int32_t)base << 16) | (u_int32_t)comb;
 				do {
 					comb_sp = ((u_int32_t)in[1] << 16) | (u_int32_t)in[2];
-					if (result_sp = do_precomposition_sp(base_sp, comb_sp)) {
+					if ( (result_sp = do_precomposition_sp(base_sp, comb_sp)) ) {
 						base_sp = result_sp;
 						i += 4;
 						in +=2;
@@ -642,7 +640,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		}
 
 		/* Binary Search for BMP */
-		else if (result = do_precomposition(base, comb)) {
+		else if ( (result = do_precomposition(base, comb)) ) {
 			base = result;
 		}
 		

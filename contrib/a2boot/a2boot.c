@@ -55,14 +55,14 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #ifdef HAVE_SYS_FCNTL_H
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #endif /* HAVE_SYS_FCNTL_H */
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif /* HAVE_TERMIOS_H */
 #ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
+#include <termios.h>
 #endif /* HAVE_SYS_TERMIOS_H */
 
 #define	TL_OK		'\0'
@@ -177,12 +177,8 @@ int main( int ac, char **av )
 	p++;
     }
 
-#ifdef ultrix
-    openlog( p, LOG_PID );
-#else /* ultrix */
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     /* allocate memory */
     memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));
@@ -287,7 +283,7 @@ int main( int ac, char **av )
 long a2bootreq(fname)
 	char	*fname;
 {
-	int f,m;
+	int f;
 	int32_t readlen;
 /*
     LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );

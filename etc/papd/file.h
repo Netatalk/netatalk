@@ -8,7 +8,7 @@
 #ifndef PAPD_FILE_H
 #define PAPD_FILE_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 struct papfile {
     int			pf_state;

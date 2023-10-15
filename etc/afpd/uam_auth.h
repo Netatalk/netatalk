@@ -10,7 +10,7 @@
 #ifndef AFPD_UAM_AUTH_H
 #define AFPD_UAM_AUTH_H 1
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <pwd.h>
 
 #include <atalk/uam.h>

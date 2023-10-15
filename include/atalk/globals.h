@@ -7,7 +7,7 @@
 #define AFPD_GLOBALS_H 1
 
 #include <sys/param.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifdef ADMIN_GRP
 #include <grp.h>
@@ -15,7 +15,7 @@
 #endif /* ADMIN_GRP */
 
 #ifdef HAVE_NETDB_H
-#include <netdb.h>  /* this isn't header-protected under ultrix */
+#include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
 #include <netatalk/at.h>

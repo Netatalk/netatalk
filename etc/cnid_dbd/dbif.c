@@ -14,7 +14,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <db.h>
@@ -363,7 +363,7 @@ int get_lock(int cmd, const char *dbpath)
     case LOCK_EXCL:
     case LOCK_SHRD:
         if (lockfd == -1) {
-            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+            if ( (strlen(dbpath) + (strlen(LOCKFILENAME) + 1)) > (PATH_MAX - 1) ) {
                 LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
                 return -1;
             }
@@ -902,30 +902,6 @@ int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
         return 1;
 }
 
-/* search by secondary return primary */
-int dbif_pget(DBD *dbd, const int dbi, DBT *key, DBT *pkey, DBT *val, u_int32_t flags)
-{
-    int ret;
-
-    ret = dbd->db_table[dbi].db->pget(dbd->db_table[dbi].db,
-                                      dbd->db_txn,
-                                      key,
-                                      pkey,
-                                      val,
-                                      flags);
-
-    if (ret == DB_NOTFOUND || ret == DB_SECONDARY_BAD) {
-        return 0;
-    }
-    if (ret) {
-        LOG(log_error, logtype_cnid, "error retrieving value from %s: %s",
-            dbd->db_table[dbi].name, db_strerror(ret));
-        return -1;
-   } else
-        return 1;
-}
-
-/* -------------------------- */
 int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
 {
     int ret;

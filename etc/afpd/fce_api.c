@@ -74,7 +74,7 @@ static unsigned long fce_ev_enabled =
 
 static uint64_t tm_used;          /* used for passing to event handler */
 #define MAXIOBUF 1024
-static char iobuf[MAXIOBUF];
+static unsigned char iobuf[MAXIOBUF];
 static const char *skip_files[] = 
 {
 	".DS_Store",
@@ -238,7 +238,6 @@ static void send_fce_event( char *path, int mode )
     static int first_event = FCE_TRUE;
 
     struct fce_packet packet;
-    void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
     time_t now = time(NULL);
 
@@ -356,6 +355,7 @@ static void save_close_event(const char *path)
 
     last_close_event.time = now;
     strncpy(last_close_event.path, path, MAXPATHLEN);
+    last_close_event.path[sizeof last_close_event.path - 1] = '\0';
 }
 
 /*
@@ -366,6 +366,8 @@ static void save_close_event(const char *path)
 static int register_fce(const char *u_name, int is_dir, int mode)
 {
     static int first_event = FCE_TRUE;
+    char full_path_buffer[MAXPATHLEN + 1] = {""};
+    const char *cwd = getcwdpath();
 
     if (udp_sockets == 0)
         /* No listeners configured */
@@ -374,22 +376,17 @@ static int register_fce(const char *u_name, int is_dir, int mode)
     if (u_name == NULL)
         return AFPERR_PARAM;
 
-	/* do some initialization on the fly the first time */
-	if (first_event) {
-		fce_initialize_history();
+    /* do some initialization on the fly the first time */
+    if (first_event) {
+	fce_initialize_history();
         first_event = FCE_FALSE;
-	}
+    }
 
-	/* handle files which should not cause events (.DS_Store atc. ) */
-	for (int i = 0; skip_files[i] != NULL; i++)
-	{
-		if (!strcmp( u_name, skip_files[i]))
-			return AFP_OK;
-	}
-
-
-	char full_path_buffer[MAXPATHLEN + 1] = {""};
-	const char *cwd = getcwdpath();
+    /* handle files which should not cause events (.DS_Store atc. ) */
+    for (int i = 0; skip_files[i] != NULL; i++) {
+	if (!strcmp( u_name, skip_files[i]))
+	    return AFP_OK;
+    }
 
     if (mode == FCE_TM_SIZE) {
         strlcpy(full_path_buffer, u_name, MAXPATHLEN);
@@ -426,6 +423,13 @@ static int register_fce(const char *u_name, int is_dir, int mode)
     return AFP_OK;
 }
 
+/******************** External calls start here **************************/
+
+/*
+ * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
+ * */
+#ifndef FCE_TEST_MAIN
+
 static void check_saved_close_events(int fmodwait)
 {
     time_t now = time(NULL);
@@ -439,13 +443,6 @@ static void check_saved_close_events(int fmodwait)
         last_close_event.time = 0;
     }
 }
-
-/******************** External calls start here **************************/
-
-/*
- * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
- * */
-#ifndef FCE_TEST_MAIN
 
 void fce_pending_events(AFPObj *obj)
 {
@@ -616,7 +613,7 @@ void shortsleep( unsigned int us )
 }
 int main( int argc, char*argv[] )
 {
-    int c,ret;
+    int c;
 
     char *port = FCE_DEFAULT_PORT_STRING;
     char *host = "localhost";

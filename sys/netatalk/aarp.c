@@ -15,21 +15,13 @@
 #include <sys/param.h>
 #include <sys/mbuf.h>
 #include <sys/time.h>
-#ifndef _IBMR2
 #include <sys/kernel.h>
-#endif /* _IBMR2 */
 #include <net/if.h>
 #include <net/route.h>
 #include <net/af.h>
 #include <netinet/in.h>
 #undef s_net
 #include <netinet/if_ether.h>
-#ifdef _IBMR2
-#include <netinet/in_netarp.h>
-#include <net/spl.h>
-#include <sys/errno.h>
-#include <sys/err_rec.h>
-#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -67,11 +59,7 @@ int			aarptab_size = AARPTAB_SIZE;
 #define AARPT_KILLC	20
 #define AARPT_KILLI	3
 
-#ifdef sun
-extern struct ether_addr	etherbroadcastaddr;
-#else /* sun */
 extern u_char			etherbroadcastaddr[6];
-#endif /* sun */
 
 u_char	atmulticastaddr[ 6 ] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,
@@ -84,7 +72,7 @@ u_char	aarp_org_code[ 3 ] = {
     0x00, 0x00, 0x00,
 };
 
-aarptimer()
+void aarptimer(void)
 {
     struct aarptab	*aat;
     int			i, s;
@@ -103,10 +91,7 @@ aarptimer()
     }
 }
 
-struct ifaddr *
-at_ifawithnet( sat, ifa )
-    struct sockaddr_at	*sat;
-    struct ifaddr	*ifa;
+struct ifaddr *at_ifawithnet(struct sockaddr_at *sat, struct ifaddr *ifa)
 {
     struct at_ifaddr	*aa;
 
@@ -133,9 +118,7 @@ at_ifawithnet( sat, ifa )
     return( ifa );
 }
 
-aarpwhohas( ac, sat )
-    struct arpcom	*ac;
-    struct sockaddr_at	*sat;
+void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
 {
     struct mbuf		*m;
     struct ether_header	*eh;
@@ -167,13 +150,8 @@ aarpwhohas( ac, sat )
     ea->aarp_hln = sizeof( ea->aarp_sha );
     ea->aarp_pln = sizeof( ea->aarp_spu );
     ea->aarp_op = htons( AARPOP_REQUEST );
-#ifdef sun
-    bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     /*
      * We need to check whether the output ethernet type should
@@ -191,19 +169,9 @@ aarpwhohas( ac, sat )
     eh = (struct ether_header *)sa.sa_data;
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
-#ifdef sun
-	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( sizeof( struct llc ) +
-		sizeof( struct ether_aarp ));
-#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
 #else /* BSD4_4 */
@@ -224,18 +192,9 @@ aarpwhohas( ac, sat )
 		sizeof( ea->aarp_tpnet ));
 	ea->aarp_tpnode = sat->sat_addr.s_node;
     } else {
-#ifdef sun
-	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( ETHERTYPE_AARP );
-#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif /* sun && i386 */
 
 	ea->aarp_spa = AA_SAT( aa )->sat_addr.s_node;
 	ea->aarp_tpa = sat->sat_addr.s_node;
@@ -248,15 +207,7 @@ aarpwhohas( ac, sat )
     (*ac->ac_if.if_output)(&ac->ac_if, m, &sa );
 }
 
-aarpresolve( ac, m, destsat, desten )
-    struct arpcom	*ac;
-    struct mbuf		*m;
-    struct sockaddr_at	*destsat;
-#ifdef sun
-    struct ether_addr	*desten;
-#else /* sun */
-    u_char		*desten;
-#endif /* sun */
+int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, u_char *desten)
 {
     struct at_ifaddr	*aa;
     struct ifaddr	ifa;
@@ -273,13 +224,8 @@ aarpresolve( ac, m, destsat, desten )
 	    bcopy( (caddr_t)atmulticastaddr, (caddr_t)desten,
 		    sizeof( atmulticastaddr ));
 	} else {
-#ifdef sun
-	    bcopy( (caddr_t)&etherbroadcastaddr, (caddr_t)desten,
-		    sizeof( etherbroadcastaddr ));
-#else /* sun */
 	    bcopy( (caddr_t)etherbroadcastaddr, (caddr_t)desten,
 		    sizeof( etherbroadcastaddr ));
-#endif /* sun */
 	}
 	return( 1 );
     }
@@ -314,9 +260,7 @@ aarpresolve( ac, m, destsat, desten )
     return( 0 );
 }
 
-aarpinput( ac, m )
-    struct arpcom	*ac;
-    struct mbuf		*m;
+void aarpinput(struct arpcom *ac, struct mbuf *m)
 {
     struct arphdr	*ar;
 
@@ -355,9 +299,7 @@ out:
 }
 
 
-at_aarpinput( ac, m )
-    struct arpcom	*ac;
-    struct mbuf		*m;
+void at_aarpinput(struct arpcom *ac, struct mbuf *m)
 {
     struct mbuf		*m0;
     struct ether_aarp	*ea;
@@ -374,46 +316,23 @@ at_aarpinput( ac, m )
     ea = mtod( m, struct ether_aarp *);
 
     /* Check to see if from my hardware address */
-#ifdef sun
-    if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )&ac->ac_enaddr,
-	    sizeof( ac->ac_enaddr ))) {
-	m_freem( m );
-	return;
-    }
-#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )ac->ac_enaddr,
 	    sizeof( ac->ac_enaddr ))) {
 	m_freem( m );
 	return;
     }
-#endif /* sun */
 
     /*
      * Check if from broadcast address.  This could be a more robust
      * check, since we could look for multicasts.
      */
-#ifdef sun
-    if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )&etherbroadcastaddr,
-	    sizeof( etherbroadcastaddr ))) {
-	log( LOG_ERR, "aarp: source is broadcast!\n" );
-	m_freem( m );
-	return;
-    }
-#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )etherbroadcastaddr,
 	    sizeof( etherbroadcastaddr ))) {
-#ifndef _IBMR2
-#ifdef ultrix
-	mprintf( LOG_ERR,
-#else /* ultrix */
 	log( LOG_ERR,
-#endif /* ultrix */
 		"aarp: source is broadcast!\n" );
-#endif /* ! _IBMR2 */
 	m_freem( m );
 	return;
     }
-#endif /* sun */
 
     op = ntohs( ea->aarp_op );
     bcopy( ea->aarp_tpnet, &net, sizeof( net ));
@@ -472,16 +391,10 @@ at_aarpinput( ac, m )
 	     * that someone's saying they have the same source address
 	     * as the one we're using. Get upset...
 	     */
-#ifndef _IBMR2
-#ifdef ultrix
-	    mprintf( LOG_ERR,
-#else /* ultrix */
 	    log( LOG_ERR,
-#endif /* ultrix */
 		    "aarp: duplicate AT address!! %x:%x:%x:%x:%x:%x\n",
 		    ea->aarp_sha[ 0 ], ea->aarp_sha[ 1 ], ea->aarp_sha[ 2 ],
 		    ea->aarp_sha[ 3 ], ea->aarp_sha[ 4 ], ea->aarp_sha[ 5 ]);
-#endif /* ! _IBMR2 */
 	    m_freem( m );
 	    return;
 	}
@@ -504,23 +417,8 @@ at_aarpinput( ac, m )
 		sizeof( ea->aarp_sha ));
 	aat->aat_flags |= ATF_COM;
 	if ( aat->aat_hold ) {
-#ifdef _IBMR2
-	    /*
-	     * Like in ddp_output(), we can't rely on the if_output
-	     * routine to resolve AF_APPLETALK addresses, on the rs6k.
-	     * So, we fill the destination ethernet address here.
-	     *
-	     * This should really be replaced with something like
-	     * rsif_output(). XXX Will have to be for phase 2.
-	     */
-	     /* XXX maybe fill in the rest of the frame header */
-	    sat.sat_family = AF_UNSPEC;
-	    bcopy( aat->aat_enaddr, (*(struct sockaddr *)&sat).sa_data,
-		    sizeof( aat->aat_enaddr ));
-#else /* _IBMR2 */
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_addr = spa;
-#endif /* _IBMR2 */
 	    (*ac->ac_if.if_output)( &ac->ac_if, aat->aat_hold,
 		    (struct sockaddr *)&sat );
 	    aat->aat_hold = 0;
@@ -548,30 +446,15 @@ at_aarpinput( ac, m )
 
     bcopy(( caddr_t )ea->aarp_sha, ( caddr_t )ea->aarp_tha,
 	    sizeof( ea->aarp_sha ));
-#ifdef sun
-    bcopy(( caddr_t )&ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy(( caddr_t )ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
-#ifdef sun
-    bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )&eh->ether_dhost,
-	    sizeof( eh->ether_dhost ));
-#else /* sun */
     bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )eh->ether_dhost,
 	    sizeof( eh->ether_dhost ));
-#endif /* sun */
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( sizeof( struct llc ) +
-		sizeof( struct ether_aarp ));
-#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_DONTWAIT );
 	if ( m == NULL ) {
@@ -598,11 +481,7 @@ at_aarpinput( ac, m )
 	bcopy( ea->aarp_spnet, ea->aarp_tpnet, sizeof( ea->aarp_tpnet ));
 	bcopy( &ma.s_net, ea->aarp_spnet, sizeof( ea->aarp_spnet ));
     } else {
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( ETHERTYPE_AARP );
-#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif /* sun && i386 */
     }
 
     ea->aarp_tpnode = ea->aarp_spnode;
@@ -617,8 +496,7 @@ at_aarpinput( ac, m )
     return;
 }
 
-aarptfree( aat )
-    struct aarptab	*aat;
+void aarptfree(struct aarptab *aat)
 {
 
     if ( aat->aat_hold )
@@ -629,9 +507,7 @@ aarptfree( aat )
     aat->aat_ataddr.s_node = 0;
 }
 
-    struct aarptab *
-aarptnew( addr )
-    struct at_addr	*addr;
+struct aarptab *aarptnew(struct at_addr *addr)
 {
     int			n;
     int			oldest = -1;
@@ -663,8 +539,7 @@ out:
     return( aat );
 }
 
-aarpprobe( ac )
-    struct arpcom	*ac;
+void aarpprobe(struct arpcom *ac)
 {
     struct mbuf		*m;
     struct ether_header	*eh;
@@ -723,30 +598,15 @@ aarpprobe( ac )
     ea->aarp_hln = sizeof( ea->aarp_sha );
     ea->aarp_pln = sizeof( ea->aarp_spu );
     ea->aarp_op = htons( AARPOP_PROBE );
-#ifdef sun
-    bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
-	    sizeof( ea->aarp_sha ));
-#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
-#ifdef sun
-	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( sizeof( struct llc ) +
-		sizeof( struct ether_aarp ));
-#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
 #else /* BSD4_4 */
@@ -765,18 +625,9 @@ aarpprobe( ac )
 		sizeof( ea->aarp_tpnet ));
 	ea->aarp_spnode = ea->aarp_tpnode = AA_SAT( aa )->sat_addr.s_node;
     } else {
-#ifdef sun
-	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
-		sizeof( eh->ether_dhost ));
-#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif /* sun */
-#if defined( sun ) && defined( i386 )
-	eh->ether_type = htons( ETHERTYPE_AARP );
-#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif /* sun && i386 */
 	ea->aarp_spa = ea->aarp_tpa = AA_SAT( aa )->sat_addr.s_node;
     }
 
@@ -788,7 +639,7 @@ aarpprobe( ac )
     aa->aa_probcnt--;
 }
 
-aarp_clean()
+void aarp_clean(void)
 {
     struct aarptab	*aat;
     int			i;

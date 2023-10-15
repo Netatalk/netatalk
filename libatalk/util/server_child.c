@@ -18,9 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <signal.h>
 #include <errno.h>
 
@@ -143,7 +141,7 @@ afp_child_t *server_child_add(server_child *children, int forkid, pid_t pid, int
     fork = (server_child_fork *) children->fork + forkid;
 
     /* if we already have an entry. just return. */
-    if (child = resolve_child(fork->table, pid))
+    if ( (child = resolve_child(fork->table, pid)) )
         goto exit;
 
     if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
@@ -270,7 +268,6 @@ int server_child_transfer_session(server_child *children,
     EC_INIT;
     server_child_fork *fork;
     struct server_child_data *child;
-    int i;
 
     fork = (server_child_fork *) children->fork + forkid;
     if ((child = resolve_child(fork->table, pid)) == NULL) {

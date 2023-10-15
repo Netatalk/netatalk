@@ -9,22 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
 
 #include <utime.h>
 #include <errno.h>
@@ -539,7 +524,7 @@ int getmetadata(struct vol *vol,
             }
             break;
         case FILPBIT_EXTDFLEN:
-            aint = htonl(st->st_size >> 32);
+            aint = htonl((uint64_t)st->st_size >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             aint = htonl(st->st_size);
@@ -549,7 +534,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_EXTRFLEN:
             aint = 0;
             if (adp) 
-                aint = htonl(adp->ad_rlen >> 32);
+                aint = htonl((uint64_t)adp->ad_rlen >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             if (adp) 
@@ -830,7 +815,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         return( AFPERR_NOOBJ );
     }
 
-    if ((u_long)ibuf & 1 ) {
+    if ((intptr_t)ibuf & 1 ) {
         ibuf++;
     }
 
@@ -854,10 +839,12 @@ int setfilparams(struct vol *vol,
     struct extmap	*em;
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
-    u_char              achar, *fdType, xyy[4]; /* uninitialized, OK 310105 */
-    u_int16_t		ashort, bshort, oshort;
+    u_char              achar, xyy[4];
+    u_char              *fdType = NULL;
+    u_int16_t		ashort = 0;
+    u_int16_t		bshort, oshort;
     u_int32_t		aint;
-    u_int32_t		upriv;
+    u_int32_t		upriv = 0;
     u_int16_t           upriv_bit = 0;
     
     struct utimbuf	ut;
@@ -1449,35 +1436,6 @@ static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
     if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
     	return -1;
     	
-#if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
-    /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
-    off_t   offset = 0;
-    size_t  size;
-    struct stat         st;
-    #define BUF 128*1024*1024
-
-    if (fstat(sfd, &st) == 0) {
-        
-        while (1) {
-            if ( offset >= st.st_size) {
-               return 0;
-            }
-            size = (st.st_size -offset > BUF)?BUF:st.st_size -offset;
-            if ((cc = sys_sendfile(dfd, sfd, &offset, size)) < 0) {
-                switch (errno) {
-                case ENOSYS:
-                case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                    goto no_sendfile;
-                default:
-                    return -1;
-                }
-            }
-        }
-    }
-    no_sendfile:
-    lseek(sfd, offset, SEEK_SET);
-#endif 
-
     while (1) {
         if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
             if (errno == EINTR)
@@ -2126,7 +2084,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     char		*spath, temp[17], *p;
     char                *supath, *upath;
     struct path         *path;
-    int                 err;
+    int                 err, fd;
     struct adouble	ads;
     struct adouble	add;
     struct adouble	*adsp = NULL;
@@ -2135,7 +2093,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     struct ofork	*d_of = NULL;
     int                 crossdev;
     
-    int                 slen, dlen;
+    unsigned int        slen, dlen;
     u_int32_t		sid, did;
     u_int16_t		vid;
 
@@ -2245,7 +2203,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    int fd;
     if ((fd = mkstemp(temp)) == -1) {
         err = AFPERR_MISC;
         goto err_exchangefile;

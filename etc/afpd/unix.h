@@ -6,56 +6,40 @@
 #define AFPD_UNIX_H
 
 #ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #endif /* HAVE_SYS_CDEFS_H */
 #include <netatalk/endian.h>
 #include "config.h"
 #include "volume.h"
 
-#if defined( sun ) && !defined( __svr4__ )
-#ifdef i386
-typedef int	mode_t;
-#endif /*i386*/
-#endif /*sun __svr4__*/
-
-#if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 ) 
+#if defined(HAVE_SYS_VFS_H)
 #include <sys/vfs.h>
-#endif /* HAVE_SYS_VFS_H || sun || ibm032 */
+#endif /* HAVE_SYS_VFS_H */
 
-#if defined(_IBMR2) || defined(HAVE_STATFS_H) 
+#if defined(HAVE_STATFS_H) 
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
-#endif /* _IBMR2 || HAVE_STATFS_H */
+#endif /* HAVE_STATFS_H */
 
-#if defined(TRU64)
-#define f_frsize f_fsize
-#else /* TRU64 */
-/* temp fix, was: defined(HAVE_SYS_STATVFS) || defined(__svr4__) */
-#if defined(__svr4__) || (defined(__NetBSD__) && (__NetBSD_Version__ >= 200040000))
+#if defined(__svr4__) || defined(__NetBSD__)
 #include <sys/statvfs.h>
 #define statfs statvfs
-#else /* HAVE_SYS_STATVFS || __svr4__ */
+#else
 #define	f_frsize f_bsize
-#endif /* USE_STATVFS_H */
-#endif /* TRU64 */
+#endif /* __svr4__ || __NetBSD__ */
 
 #if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-#if defined(__DragonFly__)
-#define dqblk ufs_dqblk
-#endif
-
-#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
-    defined(linux) || defined(ultrix)
+#if defined(HAVE_SYS_MOUNT_H)
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux || ultrix */
+#endif /* HAVE_SYS_MOUNT_H */
 
-#if defined(linux) || defined(HAVE_MNTENT_H)
+#if defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif /* linux || HAVE_MNTENT_H */
+#endif /* HAVE_MNTENT_H */
 
 
 #ifndef NO_QUOTA_SUPPORT
@@ -65,7 +49,7 @@ typedef int	mode_t;
 #define dqb_btimelimit  dqb_btime
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
-#if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
+#if defined(linux) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
 /*#include <sys/quota.h>*/
 /*long quotactl (int, const char *, unsigned int, caddr_t); */
@@ -76,7 +60,7 @@ typedef int	mode_t;
 #include <asm/unistd.h>
 #include <linux/quota.h>
 #endif /* ! NEED_QUOTACTL_WRAPPER */
-#endif /* linux || ultrix || HAVE_QUOTA_H */
+#endif /* linux || HAVE_QUOTA_H */
 
 #ifdef __svr4__ 
 #include <sys/fs/ufs_quota.h>
@@ -89,10 +73,6 @@ typedef int	mode_t;
 #ifdef HAVE_UFS_QUOTA_H
 #include <ufs/quota.h>
 #endif /* HAVE_UFS_QUOTA_H */
-
-#ifdef _IBMR2
-#include <jfs/quota.h>
-#endif /* _IBMR2 */
 
 #include <unistd.h>
 #include <sys/types.h>

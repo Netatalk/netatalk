@@ -76,7 +76,7 @@ static void done(int sig _U_)
 		nsent, nrecv, (( nsent - nrecv ) * 100 ) / nsent );
 	if ( nrecv ) {
 	    printf( "round-trip (ms)  min/avg/max = %ld/%ld/%ld\n",
-		    minms, totalms / nrecv, maxms );
+		    (unsigned long) minms, (unsigned long) totalms / nrecv, (unsigned long) maxms );
 	}	
     }
     exit( 0 );
@@ -252,7 +252,7 @@ int main(int ac, char **av)
 	}
 	printf( "%d bytes from %u.%u: aep_seq=%d. time=%ld. ms\n",
 		cc, ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node,
-		seq, ms );
+		seq, (unsigned long) ms );
         if (pings && seq + 1 >= pings) done(0);
     }
 }

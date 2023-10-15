@@ -149,10 +149,9 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     if ((dp = opendirat(dirfd, dir)) == NULL)
         return AFP_OK;
 
-    strcpy(path, dir);
-    strcat(path, "/");
+    snprintf(path, MAXPATHLEN, "%s/", dir);
     len++;
-    remain = sizeof(path) -len -1;
+    remain = strlen(path) -len -1;
     while ((de = readdir(dp)) && err == AFP_OK) {
         /* skip this and previous directory */
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
@@ -207,15 +206,13 @@ static int copydir(const struct vol *vol, int dirfd, char *src, char *dst)
     }
 
     /* set things up to copy */
-    strcpy(spath, src);
-    strcat(spath, "/");
+    snprintf(spath, MAXPATHLEN, "%s/", src);
     slen++;
-    srem = sizeof(spath) - slen -1;
+    srem = strlen(spath) - slen -1;
 
-    strcpy(dpath, dst);
-    strcat(dpath, "/");
+    snprintf(dpath, MAXPATHLEN, "%s/", dst);
     dlen++;
-    drem = sizeof(dpath) - dlen -1;
+    drem = strlen(dpath) - dlen -1;
 
     err = AFP_OK;
     while ((de = readdir(dp))) {
@@ -435,96 +432,6 @@ int get_afp_errno(const int param)
     if (afp_errno != AFPERR_DID1)
         return afp_errno;
     return param;
-}
-
-/*!
- * Resolve struct dir for an absolute path
- *
- * Given a path like "/Volumes/volume/dir/subdir" in a volume "/Volumes/volume" return
- * a pointer to struct dir of "subdir".
- * 1. Remove volue path from absolute path
- * 2. start path
- * 3. loop through all elements of the remaining path from 1.
- * 4. we only allow dirs
- * 5. search dircache
- * 6. if not found in the dircache query the CNID database for the DID
- * 7. and use dirlookup to resolve the DID to a it's struct dir *
- *
- * @param vol   (r) volume the path is in, must be known
- * @param path  (r) absoule path
- *
- * @returns pointer to struct dir or NULL on error
- */
-struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
-{
-    EC_INIT;
-
-    struct dir *dir = NULL;
-    cnid_t cnid, did;
-    bstring rpath = NULL;
-    bstring statpath = NULL;
-    struct bstrList *l = NULL;
-    struct stat st;
-
-    cnid = htonl(2);
-    dir = vol->v_root;
-
-    LOG(log_debug, logtype_afpd, "dirlookup_bypath(\"%s\")", path);
-
-    if (strcmp(vol->v_path, path) == 0)
-        return dir;
-
-    EC_NULL(rpath = rel_path_in_vol(path, vol->v_path)); /* 1. */
-
-    LOG(log_debug, logtype_afpd, "dirlookup_bypath: rpath: \"%s\"", cfrombstr(rpath));
-
-    EC_NULL(statpath = bfromcstr(vol->v_path));          /* 2. */
-
-    l = bsplit(rpath, '/');
-    for (int i = 0; i < l->qty ; i++) {                  /* 3. */
-        did = cnid;
-        EC_ZERO(bcatcstr(statpath, "/"));
-        EC_ZERO(bconcat(statpath, l->entry[i]));
-
-        LOG(log_debug, logtype_afpd, "dirlookup_bypath: statpath: \"%s\"", cfrombstr(statpath));
-
-        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
-                       "lstat(rpath: %s, elem: %s): %s: %s",
-                       cfrombstr(rpath), cfrombstr(l->entry[i]),
-                       cfrombstr(statpath), strerror(errno));
-
-        if (!(S_ISDIR(st.st_mode)))                      /* 4. */
-            EC_FAIL;
-
-        if ((dir = dircache_search_by_name(vol,          /* 5. */
-                                           dir,
-                                           cfrombstr(l->entry[i]),
-                                           blength(l->entry[i]))) == NULL) {
-
-            if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
-                                 &st,
-                                 did,
-                                 cfrombstr(l->entry[i]),
-                                 blength(l->entry[i]),
-                                 0)) == CNID_INVALID)
-                EC_FAIL;
-
-            if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
-                EC_FAIL;
-        }
-    }
-
-EC_CLEANUP:
-    bdestroy(rpath);
-    bstrListDestroy(l);
-    bdestroy(statpath);
-    if (ret != 0)
-        return NULL;
-
-    LOG(log_debug, logtype_afpd, "dirlookup_bypath: result: \"%s\"",
-        cfrombstr(dir->d_fullpath));
-
-    return dir;
 }
 
 /*!
@@ -1028,87 +935,6 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     return 0;
 }
-
-#if 0 /* unused */
-/*!
- * @brief Modify a struct dir, adjust cache
- *
- * Any value that is 0 or NULL is not changed. If new_uname is NULL it is set to new_mname.
- * If given new_uname == new_mname, new_uname will point to new_mname.
- *
- * @param vol       (r) pointer to struct vol
- * @param dir       (rw) pointer to struct dir
- * @param pdid      (r) new parent DID
- * @param did       (r) new DID
- * @param new_mname (r) new mac-name
- * @param new_uname (r) new unix-name
- * @param pdir_fullpath (r) new fullpath of parent dir
- */
-int dir_modify(const struct vol *vol,
-               struct dir *dir,
-               cnid_t pdid,
-               cnid_t did,
-               const char *new_mname,
-               const char *new_uname,
-               bstring pdir_fullpath)
-{
-    int ret = 0;
-
-    /* Remove it from the cache */
-    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-
-    if (pdid)
-        dir->d_pdid = pdid;
-    if (did)
-        dir->d_did = did;
-
-    if (new_mname) {
-        /* free uname if it's not the same as mname */
-        if (dir->d_m_name != dir->d_u_name)
-            bdestroy(dir->d_u_name);
-
-        if (new_uname == NULL)
-            new_uname = new_mname;
-
-        /* assign new name */
-        if ((bassigncstr(dir->d_m_name, new_mname)) != BSTR_OK) {
-            LOG(log_error, logtype_afpd, "dir_modify: bassigncstr: %s", strerror(errno) );
-            return -1;
-        }
-
-        if (new_mname == new_uname || (strcmp(new_mname, new_uname) == 0)) {
-            dir->d_u_name = dir->d_m_name;
-        } else {
-            if ((dir->d_u_name = bfromcstr(new_uname)) == NULL) {
-                LOG(log_error, logtype_afpd, "dir_modify: bassigncstr: %s", strerror(errno) );
-                return -1;
-            }
-        }
-    }
-
-    if (pdir_fullpath) {
-        if (bassign(dir->d_fullpath, pdir_fullpath) != BSTR_OK)
-            return -1;
-        if (bcatcstr(dir->d_fullpath, "/") != BSTR_OK)
-            return -1;
-        if (bcatcstr(dir->d_fullpath, new_uname) != BSTR_OK)
-            return -1;
-    }
-
-    if (dir->d_m_name_ucs2)
-        free(dir->d_m_name_ucs2);
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, -1, (char**)&dir->d_m_name_ucs2))
-        dir->d_m_name_ucs2 = NULL;
-
-    /* Re-add it to the cache */
-    if ((dircache_add(vol, dir)) != 0) {
-        dircache_dump();
-        AFP_PANIC("dir_modify");
-    }
-
-    return ret;
-}
-#endif
 
 /*!
  * @brief Resolve a catalog node name path
@@ -1782,7 +1608,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     /*
      * If ibuf is odd, make it even.
      */
-    if ((u_long)ibuf & 1 ) {
+    if ((intptr_t)ibuf & 1 ) {
         ibuf++;
     }
 
@@ -2650,34 +2476,9 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 */
 int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-#if 0
-    struct vol   *vol;
-    struct dir   *dir;
-    u_int16_t    vid;
-    u_int32_t    did;
-#endif /* 0 */
-
     *rbuflen = 0;
 
     /* do nothing as dids are static for the life of the process. */
-#if 0
-    ibuf += 2;
-
-    memcpy(&vid,  ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
-        return( AFPERR_PARAM );
-    }
-
-    memcpy( &did, ibuf, sizeof( did ));
-    ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_PARAM );
-    }
-
-    /* dir_remove -- deletedid */
-#endif /* 0 */
-
     return AFP_OK;
 }
 

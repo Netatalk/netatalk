@@ -41,7 +41,7 @@
 afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval)
 {
   pid_t pid;
-  unsigned int ipc_fds[2];  
+  int ipc_fds[2];  
   afp_child_t *child;
 
   if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {

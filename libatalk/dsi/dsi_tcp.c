@@ -15,9 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <errno.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
@@ -31,10 +29,6 @@
 #endif /* HAVE_STDINT_H */
 
 #include <sys/ioctl.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>

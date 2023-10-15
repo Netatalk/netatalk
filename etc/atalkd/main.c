@@ -16,26 +16,10 @@
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 
-/* POSIX.1 check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
-#ifndef WEXITSTATUS 
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#endif /* ! WEXITSTATUS */
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif /* ! WIFEXITED */
-#ifndef WIFSTOPPED
-#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
-#endif
 
 #include <errno.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
 
@@ -77,23 +61,6 @@
 
 /* Forward Declarations */
 int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
-
-/* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
-#ifndef SOCKLEN_T
-#define SOCKLEN_T unsigned int
-#endif /* SOCKLEN_T */
-
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(x)	((x).w_retcode)
-#endif /* WEXITSTATUS */
-
-/* linux has a special ioctl for appletalk device destruction.  as of
- * 2.1.57, SIOCDIFADDR works w/ linux. okay, we need to deal with the
- * fact that SIOCDIFADDR may be defined on linux despite the fact that
- * it doesn't work. */
-#if !defined(SIOCDIFADDR) && defined(SIOCATALKDIFADDR)
-#define SIOCDIFADDR SIOCATALKDIFADDR
-#endif
 
 #define elements(a)	(sizeof(a)/sizeof((a)[0]))
 
@@ -143,12 +110,10 @@ static void atalkd_exit(const int i)
 
   for (iface = interfaces; iface; iface = iface->i_next) {
     if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
-#ifdef SIOCATALKDIFADDR
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
+#if defined(__linux__)
       if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr)) 
 	continue;
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
-#endif /* SIOCATALKIFADDR */
+#endif /* __linux__ */
       LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
 	      iface->i_addr.sat_addr.s_node, strerror(errno));
@@ -158,7 +123,7 @@ static void atalkd_exit(const int i)
         ifsetallmulti(iface->i_name, 0);
 #endif /* linux */
   }
-#endif /* SOPCDOFADDR */
+#endif /* SIOCDIFADDR */
 
   server_unlock(pidfile);
   exit(i);
@@ -846,9 +811,6 @@ as_down(int sig _U_)
 
 int main( int ac, char **av)
 {
-    extern char         *optarg;
-    extern int          optind;
-
     struct sockaddr_at	sat;
     struct sigaction	sv;
     struct itimerval	it;
@@ -859,7 +821,7 @@ int main( int ac, char **av)
     struct atport	*ap;
     fd_set		readfds;
     int			i, c;
-    SOCKLEN_T 		fromlen;
+    socklen_t 		fromlen;
     char		*prog;
 
     while (( c = getopt( ac, av, "12qsdtf:P:v" )) != EOF ) {
@@ -939,6 +901,8 @@ int main( int ac, char **av)
      */
     if ( readconf( configfile ) < 0 && getifconf() < 0 ) {
 	fprintf( stderr, "%s: can't get interfaces, exiting.\n", prog );
+	if (interfaces != NULL)
+		free(interfaces);
 	exit( 1 );
     }
 
@@ -1033,10 +997,8 @@ int main( int ac, char **av)
 #ifdef SIOCDIFADDR
     for (iface = interfaces; iface; iface = iface->i_next) {
       if (ifconfig(iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
-#ifdef SIOCATALKDIFADDR
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
+#if defined(__linux__)
 	ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr);
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKDIFADDR */
       }
     }
@@ -1078,12 +1040,8 @@ int main( int ac, char **av)
       exit( 0 );
     }
 
-#ifdef ultrix
-    openlog( prog, LOG_PID );
-#else /* ultrix */
     set_processname(prog);
     syslog_setup(log_debug, logtype_default, logoption_pid, logfacility_daemon );
-#endif /* ultrix */
 
     LOG(log_info, logtype_atalkd, "restart (%s)", version );
 
@@ -1155,10 +1113,6 @@ int main( int ac, char **av)
 
     sigemptyset( &signal_set );
     sigaddset(&signal_set, SIGALRM);
-#if 0
-    /* don't block SIGTERM */
-    sigaddset(&signal_set, SIGTERM);
-#endif
     sigaddset(&signal_set, SIGUSR1);
 
     for (;;) {
@@ -1344,10 +1298,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 
     /* open ports */
     i = 1; /* enable broadcasts */
-#if 0
-    /* useless message, no? */
-    LOG(log_info, logtype_atalkd, "setsockopt incompatible w/ Solaris STREAMS module.");
-#endif /* __svr4__ */
+
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if (( ap->ap_fd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
 	    LOG(log_error, logtype_atalkd, "socket: %s", strerror(errno) );
@@ -1375,11 +1326,9 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	    /* remove all interfaces if we have a problem with bind */
 	    for (iface = interfaces; iface; iface = iface->i_next) {
 	      if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr )) {
-#ifdef SIOCATALKDIFADDR
-#if (SIOCDIFADDR != SIOCATALKDIFADDR)
+#if defined(__linux__)
 		ifconfig( iface->i_name, SIOCATALKDIFADDR, &iface->i_addr );
-#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
-#endif /* SIOCATALKDIFADDR */
+#endif /* __linux__ */
 	      }
 	    }
 #endif /* SIOCDIFADDR */
@@ -1492,81 +1441,3 @@ void dumpconfig( struct interface *iface)
     }
     printf( "\n" );
 }
-
-#ifdef DEBUG
-void dumproutes(void)
-{
-    struct interface	*iface;
-    struct rtmptab	*rtmp;
-    struct list		*l;
-    struct ziptab	*zt;
-
-    for ( iface = interfaces; iface; iface = iface->i_next ) {
-	for ( rtmp = iface->i_rt; rtmp; rtmp = rtmp->rt_inext ) {
-	    if ( rtmp->rt_gate == 0 ) {
-		if ( rtmp->rt_flags & RTMPTAB_EXTENDED ) {
-		    printf( "%u-%u", ntohs( rtmp->rt_firstnet ),
-			    ntohs( rtmp->rt_lastnet ));
-		} else {
-		    printf( "%u", ntohs( rtmp->rt_firstnet ));
-		}
-	    } else {
-		if ( rtmp->rt_flags & RTMPTAB_EXTENDED ) {
-		    printf( "%u.%u for %u-%u",
-			    ntohs( rtmp->rt_gate->g_sat.sat_addr.s_net ),
-			    rtmp->rt_gate->g_sat.sat_addr.s_node,
-			    ntohs( rtmp->rt_firstnet ),
-			    ntohs( rtmp->rt_lastnet ));
-		} else {
-		    printf( "%u.%u for %u",
-			    ntohs( rtmp->rt_gate->g_sat.sat_addr.s_net ),
-			    rtmp->rt_gate->g_sat.sat_addr.s_node,
-			    ntohs( rtmp->rt_firstnet ));
-		}
-	    }
-
-	    if ( rtmp->rt_iprev == 0 && rtmp != iface->i_rt ) {
-		printf( " *" );
-	    }
-
-	    for ( l = rtmp->rt_zt; l; l = l->l_next ) {
-		zt = (struct ziptab *)l->l_data;
-		printf( " %.*s", zt->zt_len, zt->zt_name );
-	    }
-
-	    printf( "\n" );
-	}
-    }
-
-    printf( "\n" );
-    fflush( stdout );
-}
-
-void dumpzones(void)
-{
-    struct interface	*iface;
-    struct rtmptab	*rtmp;
-    struct list		*l;
-    struct ziptab	*zt;
-
-    for ( zt = ziptab; zt; zt = zt->zt_next ) {
-	printf( "%.*s", zt->zt_len, zt->zt_name );
-	for ( l = zt->zt_rt; l; l = l->l_next ) {
-	    rtmp = (struct rtmptab *)l->l_data;
-	    if ( rtmp->rt_flags & RTMPTAB_EXTENDED ) {
-		printf( " %u-%u", ntohs( rtmp->rt_firstnet ),
-			ntohs( rtmp->rt_lastnet ));
-	    } else {
-		printf( " %u", ntohs( rtmp->rt_firstnet ));
-	    }
-	    if ( rtmp->rt_iprev == 0 && rtmp->rt_gate != 0 ) {
-		printf( "*" );
-	    }
-	}
-	printf( "\n" );
-    }
-
-    printf( "\n" );
-    fflush( stdout );
-}
-#endif /* DEBUG */

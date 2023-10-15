@@ -50,9 +50,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 #include <sys/file.h>
 #include <sys/un.h>
@@ -518,7 +516,8 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 	n = ( n + 1 ) % 1000;
 	sprintf( buf, "%03d\n", n );
 	lseek( fd, 0L, 0 );
-	write( fd, buf, strlen( buf ));
+	if (write(fd, buf, strlen(buf)) < 0)
+		LOG(log_error, logtype_papd, "write failed (%s)", strerror(errno));
 	close( fd );
 #else
 

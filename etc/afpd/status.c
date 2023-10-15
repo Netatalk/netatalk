@@ -19,15 +19,6 @@
 #include <sys/socket.h>
 #include <atalk/logger.h>
 
-#if 0
-#ifdef BSD4_4
-#include <sys/param.h>
-#ifndef HAVE_GETHOSTID
-#include <sys/sysctl.h>
-#endif /* HAVE_GETHOSTID */
-#endif /* BSD4_4 */
-#endif
-
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
 #include <atalk/dsi.h>
@@ -378,7 +369,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     u_int16_t namelen;
     size_t len;
     char *begin = data;
-    u_int16_t offset, status;
+    u_int16_t offset;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
@@ -581,7 +572,7 @@ void set_signature(struct afp_options *options) {
     char *servername_conf;
     int header = 0;
     char buf[1024], *p;
-    FILE *fp = NULL, *randomp;
+    FILE *fp = NULL;
     size_t len;
     char *server_tmp;
     
@@ -733,7 +724,7 @@ server_signature_done:
     
     /* retrun */
     LOG(log_info, logtype_afpd,
-        " \"%s\"'s signature is  %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+        "\"%s\"'s signature is %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
         server_tmp,
         (options->signature)[ 0], (options->signature)[ 1],
         (options->signature)[ 2], (options->signature)[ 3],
