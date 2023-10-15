@@ -11,7 +11,7 @@ D.   Generic
 
 A. Linux
 
-We no longer include linux kernel code with netatalk, since Linux now
+We no longer include Linux kernel code with netatalk, since Linux now
 includes AppleTalk support.
 
 1.  MAKE CONFIG.  Configure your kernel with "make config".  Answer yes
@@ -26,11 +26,11 @@ includes AppleTalk support.
     compiled in and you switch to a machine running an os < 2.2.x.
 
 
-Netatalk supplies two different types of Appletalk servers and both
-can run at the same time. Classic Appletalk requires afpd and
-atalkd. Appletalk over IP only requires afpd.
+Netatalk supplies two different types of AFP servers and both
+can run at the same time. Classic AFP requires afpd and
+atalkd. AFP over TCP only requires afpd.
 
-Classic Appletalk on GNU/Linux requires that CONFIG_ATALK is compiled
+Classic AFP on GNU/Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
 has Appletalk installed:
 
@@ -38,12 +38,14 @@ $> dmesg | grep Apple
 This just parses the boot messages for any line containing
 'Apple'.
 
-To see all the  loaded modules (as root):
+To see all the loaded modules (as root):
 $> lsmod
 
 If you don't find it, you may have to compile a kernel and turn on
 Appletalk in Networking options -> Appletalk DDP. You have an option
-to install as a module or directly into the kernel.
+to install as a module or directly into the kernel. Alternatively,
+your distro may have blacklisted the Appletalk kernel module,
+which you will have to disable.
 
 Some default distribution kernels have already compiled Appletalk DDP
 as a module, you may have to edit your /etc/modules.conf to include:
@@ -234,15 +236,14 @@ D. Generic
            files. 
 
     Beyond that, you should make sure that your operating system looks and
-    smells like a Un*x POSIXy operating system. The only operating systems
-    that netatalk supports that don't quite fit that description are
-    sunos 4 and ultrix. If your operating system is peculiar, you may need
-    to add in compatibility routines (libatalk/compat,
-    include/atalk/compat.h) to make it look more like the others. 
+    smells like a Un*x POSIXy operating system. If your operating system
+    is peculiar, you may need to add in compatibility routines
+    (libatalk/compat, include/atalk/compat.h) to make it look more
+    like the others.
     
     If you would like native AppleTalk support, you will need kernel support 
     for your operating system. Look at the Solaris STREAMS module if your
     operating system supports that framework. Otherwise, look at the ddp
-    code in FreeBSD, NetBSD, or OpenBSD if your operating system is BSDish
-    in nature. If your operating system looks different than these two
-    cases, you'll have to roll your own implementation.
+    code in NetBSD if your operating system is BSDish in nature.
+    If your operating system looks different than these two cases,
+    you'll have to roll your own implementation.
