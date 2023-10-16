@@ -85,10 +85,6 @@ static void             free_extmap(void);
 #define VOLOPT_LIMITSIZE  8  /* Limit the size of the volume */
 /* Usable slot: 9 */
 #define VOLOPT_VETO          10  /* list of veto filespec */
-#define VOLOPT_PREEXEC       11  /* preexec command */
-#define VOLOPT_ROOTPREEXEC   12  /* root preexec command */
-#define VOLOPT_POSTEXEC      13  /* postexec command */
-#define VOLOPT_ROOTPOSTEXEC  14  /* root postexec command */
 #define VOLOPT_ENCODING      15  /* mac encoding (pre OSX)*/
 #define VOLOPT_MACCHARSET    16
 #define VOLOPT_CNIDSCHEME    17
@@ -475,10 +471,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
             else if (strcasecmp(p, "nostat") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOSTAT;
-            else if (strcasecmp(p, "preexec_close") == 0)
-                options[VOLOPT_PREEXEC].i_value = 1;
-            else if (strcasecmp(p, "root_preexec_close") == 0)
-                options[VOLOPT_ROOTPREEXEC].i_value = 1;
             else if (strcasecmp(p, "upriv") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
             else if (strcasecmp(p, "nodev") == 0)
@@ -537,18 +529,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
         setoption(options, save, VOLOPT_FORCEGID, val);
 
 #endif /* FORCE_UIDGID */
-    } else if (optionok(tmp, "root_preexec:", val)) {
-        setoption(options, save, VOLOPT_ROOTPREEXEC, val);
-
-    } else if (optionok(tmp, "preexec:", val)) {
-        setoption(options, save, VOLOPT_PREEXEC, val);
-
-    } else if (optionok(tmp, "root_postexec:", val)) {
-        setoption(options, save, VOLOPT_ROOTPOSTEXEC, val);
-
-    } else if (optionok(tmp, "postexec:", val)) {
-        setoption(options, save, VOLOPT_POSTEXEC, val);
-
     } else if (optionok(tmp, "allowed_hosts:", val)) {
         setoption(options, save, VOLOPT_ALLOWED_HOSTS, val);
 
@@ -847,21 +827,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_forcegid = NULL; /* set as null so as to return 0 later on */
         }
 #endif
-        if (!user) {
-            if (options[VOLOPT_PREEXEC].c_value)
-                volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_PREEXEC].c_value, pwd, path, name);
-            volume->v_preexec_close = options[VOLOPT_PREEXEC].i_value;
-
-            if (options[VOLOPT_POSTEXEC].c_value)
-                volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_POSTEXEC].c_value, pwd, path, name);
-
-            if (options[VOLOPT_ROOTPREEXEC].c_value)
-                volume->v_root_preexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_ROOTPREEXEC].c_value, pwd, path,  name);
-            volume->v_root_preexec_close = options[VOLOPT_ROOTPREEXEC].i_value;
-
-            if (options[VOLOPT_ROOTPOSTEXEC].c_value)
-                volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_ROOTPOSTEXEC].c_value, pwd, path,  name);
-        }
     }
     volume->v_dperm |= volume->v_perm;
     volume->v_fperm |= volume->v_perm;
