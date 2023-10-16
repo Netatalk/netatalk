@@ -568,8 +568,7 @@ static void showvol(const ucs2_t *name)
 /* ------------------------------- */
 static int creatvol(AFPObj *obj, struct passwd *pwd,
                     char *path, char *name,
-                    struct vol_option *options,
-                    const int user /* user defined volume */
+                    struct vol_option *options
     )
 {
     struct vol  *volume;
@@ -1298,7 +1297,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                 if (volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL) == NULL)
                     continue;
 
-                creatvol(obj, pwent, path, tmp, options, p2 != NULL);
+                creatvol(obj, pwent, path, tmp, options);
             }
             volfree(options, default_options);
             break;
@@ -1943,7 +1942,7 @@ void load_volumes(AFPObj *obj)
              readvolfile(obj, &obj->options.uservol, ".applevolumes", 1, pwent) < 0 &&
              obj->options.defaultvol.name != NULL ) {
             if (readvolfile(obj, &obj->options.defaultvol, NULL, 1, pwent) < 0)
-                creatvol(obj, pwent, pwent->pw_dir, NULL, NULL, 1);
+                creatvol(obj, pwent, pwent->pw_dir, NULL, NULL);
         }
     }
     if ( obj->options.flags & OPTION_USERVOLFIRST ) {
