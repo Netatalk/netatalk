@@ -52,8 +52,12 @@ static void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
 
-    if (seteuid( obj->uid ) < 0) {
-        LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
+    if ( obj->uid != geteuid() ) {
+        if (seteuid(obj->uid) < 0) {
+            LOG(log_error, logtype_afpd,
+			"afp_asp_close: can't seteuid back to %i from %i (%s)",
+			obj->uid, geteuid(), strerror(errno));
+        }
         exit(EXITERR_SYS);
     }
     close_all_vol();
