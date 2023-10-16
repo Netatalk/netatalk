@@ -366,16 +366,6 @@
             </varlistentry>
 
             <varlistentry>
-              <term>preexec_close</term>
-
-              <listitem>
-                <para>A non-zero return code from preexec closes the volume
-                immediately, preventing clients to mount/see the volume
-                in question.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
               <term>ro</term>
 
               <listitem>
@@ -383,16 +373,6 @@
                 The .AppleDB directory has to be writeable, and you can use the
                 <option>-dbpath</option> option to relocate it. Overwrites
                 <option>ea:auto</option> with <option>ea:none</option></para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term>root_preexec_close</term>
-
-              <listitem>
-                <para>A non-zero return code from root_preexec closes the
-                volume immediately, preventing clients to mount/see the volume
-                in question.</para>
               </listitem>
             </varlistentry>
 
@@ -463,42 +443,6 @@
 
         <listitem>
           <para>set perm mask. Use with <option>options:upriv</option>.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>preexec:<replaceable>[command]</replaceable></term>
-
-        <listitem>
-          <para>command to be run when the volume is mounted, ignored for user
-          defined volumes</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>postexec:<replaceable>[command]</replaceable></term>
-
-        <listitem>
-          <para>command to be run when the volume is closed, ignored for user
-          defined volumes</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>root_preexec:<replaceable>[command]</replaceable></term>
-
-        <listitem>
-          <para>command to be run as root when the volume is mounted, ignored
-          for user defined volumes</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>root_postexec:<replaceable>[command]</replaceable></term>
-
-        <listitem>
-          <para>command to be run as root when the volume is closed, ignored
-          for user defined volumes</para>
         </listitem>
       </varlistentry>
 
@@ -1000,8 +944,7 @@
 
               <listitem>
                 <para>Don't stat volume path when enumerating volumes list,
-                useful for automounting or volumes created by a preexec
-                script.</para>
+                useful for automounting.</para>
               </listitem>
             </varlistentry>
 
