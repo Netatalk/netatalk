@@ -120,7 +120,9 @@ struct vol {
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
 #define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
 #define AFPVOL_MAPASCII  (1 << 13)  /* map the ascii range as well */
+#if 0
 #define AFPVOL_DROPBOX   (1 << 14)  /* dropkludge dropbox support */
+#endif
 #define AFPVOL_NOFILEID  (1 << 15)  /* don't advertise createid resolveid and deleteid calls */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */

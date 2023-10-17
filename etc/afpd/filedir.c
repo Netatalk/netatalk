@@ -39,91 +39,6 @@
 #include "filedir.h"
 #include "unix.h"
 
-#ifdef DROPKLUDGE
-int matchfile2dirperms(
-/* Since it's kinda' big; I decided against an
-   inline function */
-    char    *upath,
-    struct vol  *vol,
-    int     did)
-/* The below code changes the way file ownership is determined in the name of
-   fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
-   more information */
-{
-    struct stat st, sb;
-    struct dir  *dir;
-    char    *adpath;
-    uid_t       uid;
-    int         ret = AFP_OK;
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "begin matchfile2dirperms:");
-#endif
-
-    if (stat(upath, &st ) < 0) {
-        LOG(log_error, logtype_afpd, "Could not stat %s: %s", upath, strerror(errno));
-        return AFPERR_NOOBJ ;
-    }
-
-    adpath = vol->ad_path( upath, ADFLAGS_HF );
-    /* FIXME dirsearch doesn't move cwd to did ! */
-    if (( dir = dirlookup( vol, did )) == NULL ) {
-        LOG(log_error, logtype_afpd, "matchfile2dirperms: Unable to get directory info.");
-        ret = AFPERR_NOOBJ;
-    }
-    else if (stat(".", &sb) < 0) {
-        LOG(log_error, logtype_afpd,
-            "matchfile2dirperms: Error checking directory \"%s\": %s",
-            dir->d_m_name, strerror(errno));
-        ret = AFPERR_NOOBJ;
-    }
-    else {
-        uid=geteuid();
-        if ( uid != sb.st_uid )
-        {
-            seteuid(0);
-            if (ochown(upath, sb.st_uid, sb.st_gid, vol_syml_opt(vol)) < 0)
-            {
-                LOG(log_error, logtype_afpd,
-                    "matchfile2dirperms(%s): Error changing owner/gid: %s",
-                    upath, strerror(errno));
-                ret = AFPERR_ACCESS;
-            }
-            else if (ochmod(upath,
-                            (st.st_mode & ~default_options.umask) | S_IRGRP | S_IROTH,
-                            &sb,
-                            vol_syml_opt(vol) | O_NETATALK_ACL) < 0) {                         
-                LOG(log_error, logtype_afpd,
-                    "matchfile2dirperms(%s): Error adding file read permissions: %s",
-                    upath, strerror(errno));
-                ret = AFPERR_ACCESS;
-            }
-            else if (ochown(adpath, sb.st_uid, sb.st_gid, vol_syml_opt(vol)) < 0)
-            {
-                LOG(log_error, logtype_afpd,
-                    "matchfile2dirperms(%s): Error changing AppleDouble owner/gid: %s",
-                    adpath, strerror(errno));
-                ret = AFPERR_ACCESS;
-            }
-            else if (ochmod(adpath,
-                            (st.st_mode & ~default_options.umask) | S_IRGRP| S_IROTH,
-                            &st,
-                            vol_syml_opt(vol) | O_NETATALK_ACL) < 0)
-            {
-                LOG(log_error, logtype_afpd,
-                    "matchfile2dirperms(%s):  Error adding AD file read permissions: %s",
-                    adpath, strerror(errno));
-                ret = AFPERR_ACCESS;
-            }
-            seteuid(uid);
-        }
-    } /* end else if stat success */
-
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "end matchfile2dirperms:");
-#endif
-    return ret;
-}
-#endif
 
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
@@ -683,9 +598,6 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     int         plen;
     u_int16_t   vid;
     int         rc;
-#ifdef DROPKLUDGE
-    int     retvalue;
-#endif /* DROPKLUDGE */
     int     sdir_fd = -1;
 
 
@@ -772,23 +684,14 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
             rc = AFPERR_PARAM;
             goto exit;
         }
-#ifdef DROPKLUDGE
-        if (vol->v_flags & AFPVOL_DROPBOX) {
-            /* FIXME did is not always the source id */
-            if ((retvalue=matchfile2dirperms (upath, vol, did)) != AFP_OK) {
-                rc = retvalue;
-                goto exit;
-            }
-        }
-        else
-#endif /* DROPKLUDGE */
-            /* if unix priv don't try to match perm with dest folder */
-            if (!isdir && !vol_unix_priv(vol)) {
-                int  admode = ad_mode("", 0777) | vol->v_fperm;
 
-                setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
-                vol->vfs->vfs_setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
-            }
+        /* if unix priv don't try to match perm with dest folder */
+        if (!isdir && !vol_unix_priv(vol)) {
+            int admode = ad_mode("", 0777) | vol->v_fperm;
+
+            setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
+            vol->vfs->vfs_setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
+        }
         setvoltime(obj, vol );
     }
 

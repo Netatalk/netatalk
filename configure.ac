@@ -260,29 +260,6 @@ AC_ARG_ENABLE(debugging,
 AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 AC_CHECK_ICONV
 
-dnl ----------- A NOTE ABOUT DROPKLUDGE
-dnl The trouble with this fix is that if you know what the file is called, it
-dnl can be read from the Unix side.  That's okay for most academic institutions
-dnl since the students don't have telnet access to the Mac servers.  There is
-dnl currently no one working on further development/fixes of DROPKLUDGE.
-dnl -----------
-
-netatalk_cv_dropkludge=no
-AC_MSG_CHECKING([whether to enable experimental dropbox support])
-AC_ARG_ENABLE(dropkludge,
-	[  --enable-dropkludge     enable the experimental dropbox fix (INSECURE!) ],[
-	if test "$enableval" = "yes"; then 
-		AC_DEFINE(DROPKLUDGE, 1, [Define if you want to use the experimental dropkludge support])
-		AC_MSG_RESULT([yes])
-		netatalk_cv_dropkludge=yes
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
 netatalk_cv_force_uidgid=no
 AC_MSG_CHECKING([whether to enable forcing of uid/gid per volume])
 AC_ARG_ENABLE(force-uidgid,

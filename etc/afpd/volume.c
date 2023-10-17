@@ -462,11 +462,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_INV_DOTS;
             else if (strcasecmp(p, "limitsize") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_LIMITSIZE;
-            /* support for either "dropbox" or "dropkludge" */
-            else if (strcasecmp(p, "dropbox") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
-            else if (strcasecmp(p, "dropkludge") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
             else if (strcasecmp(p, "nofileid") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
             else if (strcasecmp(p, "nostat") == 0)

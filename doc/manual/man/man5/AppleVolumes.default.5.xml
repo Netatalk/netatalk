@@ -833,25 +833,6 @@
             </varlistentry>
 
             <varlistentry>
-              <term>dropbox</term>
-
-              <listitem>
-                <para>Allows a volume to be declared as being a "dropbox."
-                Note that netatalk must be compiled with dropkludge support
-                for this to function. <emphasis>Warning</emphasis>: This
-                option is deprecated and might not work as expected.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term>dropkludge</term>
-
-              <listitem>
-                <para>Same as "dropbox".</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
               <term>illegalseq</term>
 
               <listitem>
