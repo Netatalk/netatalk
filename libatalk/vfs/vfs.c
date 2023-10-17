@@ -173,21 +173,9 @@ static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 /* ----------------- */
 static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    char *adouble = vol->ad_path(name, ADFLAGS_DIR );
-    int  dropbox = vol->v_flags;
-
-    if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0 ) 
-            return -1;
-    }
-
     if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR ), mode, st) < 0) 
         return -1;
 
-    if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0 ) 
-            return  -1 ;
-    }
     return 0;
 }
 
@@ -212,23 +200,13 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
 
 static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
-    int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
     char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
     char  *adouble_p = ad_dir(adouble);
 
-    if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return -1;
-    }
-
     if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, vol, &hf_mode, vol_noadouble(vol)))
         return -1;
 
-    if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return  -1 ;
-    }
     return 0;
 }
 
@@ -630,64 +608,27 @@ static int RF_setdirunixmode_ads(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
     char *adouble = vol->ad_path(name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
-    int dropbox = vol->v_flags;
 
     strlcpy(ad_p,ad_dir(adouble), MAXPATHLEN + 1);
-
-    if (dir_rx_set(mode)) {
-
-        /* .AppleDouble */
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return -1;
-
-        /* .AppleDouble/.Parent */
-        if (stickydirmode(ad_p, DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return -1;
-    }
 
     if (ads_setfilmode(vol, ad_dir(vol->ad_path(name, ADFLAGS_DIR)), mode, st) < 0)
         return -1;
 
-    if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_p, DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return  -1 ;
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
-            return -1;
-    }
     return 0;
 }
 
 /* ------------------- */
 struct dir_mode {
     mode_t mode;
-    int    dropbox;
 };
 
-static int setdirmode_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag)
+static int setdirmode_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data)
 {
-
     struct dir_mode *param = data;
-    int    ret = 0; /* 0 ignore error, -1 */
 
-    if (dir_rx_set(param->mode)) {
-        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, vol->v_umask) < 0) {
-            if (flag) {
-                return 0;
-            }
-            return ret;
-        }
-    }
     if (ads_setfilmode(vol, name, param->mode, NULL) < 0)
-        return ret;
+        LOG(log_debug, logtype_afpd, "setdirmode_ads_loop: failed to set file mode");
 
-    if (!dir_rx_set(param->mode)) {
-        if (stickydirmode(name, DIRBITS | param->mode, param->dropbox, vol->v_umask) < 0) {
-            if (flag) {
-                return 0;
-            }
-            return ret;
-        }
-    }
     return 0;
 }
 
@@ -698,23 +639,12 @@ static int RF_setdirmode_ads(VFS_FUNC_ARGS_SETDIRMODE)
     struct dir_mode param;
 
     param.mode = mode;
-    param.dropbox = vol->v_flags;
 
     strlcpy(ad_p,ad_dir(adouble), sizeof(ad_p));
-
-    if (dir_rx_set(mode)) {
-        /* .AppleDouble */
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox, vol->v_umask) < 0) 
-            return -1;
-    }
 
     if (for_each_adouble("setdirmode_ads", ad_dir(ad_p), setdirmode_ads_loop, vol, &param, vol_noadouble(vol)))
         return -1;
 
-    if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox, vol->v_umask) < 0 ) 
-            return -1;
-    }
     return 0;
 }
 
