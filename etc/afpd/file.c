@@ -1317,9 +1317,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         goto copy_exit;
     }
 
-#ifdef FORCE_UIDGID
-    /* FIXME svid != dvid && dvid's user can't read svid */
-#endif
     if (NULL == ( d_vol = getvolbyvid( dvid )) ) {
         retvalue = AFPERR_PARAM;
         goto copy_exit;

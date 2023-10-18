@@ -58,7 +58,6 @@ dnl	fi
 	AC_MSG_RESULT([         admin group support:     $netatalk_cv_admin_group])
 	AC_MSG_RESULT([         valid shell check:       $netatalk_cv_use_shellcheck])
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
-	AC_MSG_RESULT([         force volume uid/gid:    $netatalk_cv_force_uidgid])
 	AC_MSG_RESULT([         ACL support:             $with_acl_support])
 	AC_MSG_RESULT([         LDAP support:            $with_ldap])
 	if test x"$use_pam_so" = x"yes" -a x"$netatalk_cv_install_pam" = x"no"; then

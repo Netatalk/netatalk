@@ -260,23 +260,6 @@ AC_ARG_ENABLE(debugging,
 AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 AC_CHECK_ICONV
 
-netatalk_cv_force_uidgid=no
-AC_MSG_CHECKING([whether to enable forcing of uid/gid per volume])
-AC_ARG_ENABLE(force-uidgid,
-	[  --enable-force-uidgid   allow forcing of uid/gid per volume (BROKEN) ],[
-	if test "$enableval" = "yes"; then
-		AC_DEFINE(FORCE_UIDGID, 1, [Define if you want forcing of uid/gid per volume])
-		AC_MSG_RESULT([enabling forcing of uid/gid per volume])
-		AC_MSG_RESULT([yes])
-		netatalk_cv_force_uidgid=yes
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
 dnl Check for CNID database backends
 bdb_required=no
 AC_NETATALK_CNID([bdb_required=yes],[bdb_required=no])

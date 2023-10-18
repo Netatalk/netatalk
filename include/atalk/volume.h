@@ -88,10 +88,6 @@ struct vol {
     int             v_root_preexec_close;
     int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
-#ifdef FORCE_UIDGID
-    char            *v_forceuid;
-    char            *v_forcegid;
-#endif
 #ifdef __svr4__
     int         v_qfd;
 #endif /*__svr4__*/

@@ -42,11 +42,6 @@
 #include "fork.h"
 #include "dircache.h"
 
-#ifdef FORCE_UIDGID
-#warning UIDGID
-#include "uid.h"
-#endif /* FORCE_UIDGID */
-
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -636,11 +631,6 @@ void afp_over_dsi(AFPObj *obj)
 
                     dir_free_invalid_q();
 
-#ifdef FORCE_UIDGID
-                    /* bring everything back to old euid, egid */
-                    if (obj->force_uid)
-                        restore_uidgid ( &obj->uidgid );
-#endif /* FORCE_UIDGID */
                     dsi->flags &= ~DSI_RUNNING;
 
                     /* Add result to the AFP replay cache */
@@ -681,11 +671,6 @@ void afp_over_dsi(AFPObj *obj)
                     AfpNum2name(function), AfpErr2name(err));
 
                 dsi->flags &= ~DSI_RUNNING;
-#ifdef FORCE_UIDGID
-            	/* bring everything back to old euid, egid */
-		if (obj->force_uid)
-            	    restore_uidgid ( &obj->uidgid );
-#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "(write) bad function %x", function);
                 dsi->datalen = 0;

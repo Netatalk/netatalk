@@ -609,12 +609,6 @@ static void show_version_extended(void )
 	puts( "No" );
 #endif
 
-	printf( "  Force volume uid/gid:\t" );
-#ifdef FORCE_UIDGID
-	puts( "Yes" );
-#else
-	puts( "No" );
-#endif
 
 	printf( "            EA support:\t" );
 	puts( EA_MODULES );
