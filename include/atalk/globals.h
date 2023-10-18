@@ -45,14 +45,6 @@
 #define OPTION_NOZEROCONF    (1 << 9)
 #define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
 
-#ifdef FORCE_UIDGID
-/* set up a structure for this */
-typedef struct uidgidset_t {
-    uid_t uid;
-    gid_t gid;
-} uidgidset;
-#endif /* FORCE_UIDGID */
-
 /* a couple of these options could get stuck in unions to save
  * space. */
 struct afp_volume_name {
@@ -124,10 +116,6 @@ typedef struct _AFPObj {
     uid_t uid; 	/* client running user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
     int cnx_cnt, cnx_max;
-#ifdef FORCE_UIDGID
-    int                 force_uid;
-    uidgidset		uidgid;
-#endif
 } AFPObj;
 
 /* typedef for AFP functions handlers */

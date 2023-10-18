@@ -39,11 +39,6 @@
 #include "fork.h"
 #include "dircache.h"
 
-#ifdef FORCE_UIDGID
-#warning UIDGID
-#include "uid.h"
-#endif /* FORCE_UIDGID */
-
 static AFPObj *child;
 
 static void afp_authprint_remove(AFPObj *);
@@ -347,11 +342,6 @@ void afp_over_asp(AFPObj *obj)
                 reply = (*afp_switch[ func ])(obj,
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
-#ifdef FORCE_UIDGID
-            	/* bring everything back to old euid, egid */
-		if (obj->force_uid)
-            	    restore_uidgid ( &obj->uidgid );
-#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "bad function %X", func );
                 asp->datalen = 0;
@@ -382,11 +372,6 @@ void afp_over_asp(AFPObj *obj)
                 reply = (*afp_switch[ func ])(obj,
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
-#ifdef FORCE_UIDGID
-            	/* bring everything back to old euid, egid */
-		if (obj->force_uid)
-            	    restore_uidgid ( &obj->uidgid );
-#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "(write) bad function %X", func );
                 asp->datalen = 0;
