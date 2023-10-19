@@ -57,8 +57,10 @@ static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_DROPBOX,    "DROPBOX"},     /* dropkludge dropbox support */
 #endif
     {AFPVOL_NOFILEID,   "NOFILEID"},    /* don't advertise createid resolveid and deleteid calls */
+#if 0
     {AFPVOL_NOSTAT,     "NOSTAT"},      /* advertise the volume even if we can't stat() it
                                          * maybe because it will be mounted later in preexec */
+#endif
     {AFPVOL_UNIX_PRIV,  "UNIXPRIV"},    /* support unix privileges */
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
