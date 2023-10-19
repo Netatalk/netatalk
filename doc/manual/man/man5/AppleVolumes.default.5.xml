@@ -921,15 +921,6 @@
             </varlistentry>
 
             <varlistentry>
-              <term>nostat</term>
-
-              <listitem>
-                <para>Don't stat volume path when enumerating volumes list,
-                useful for automounting.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
               <term>prodos</term>
 
               <listitem>

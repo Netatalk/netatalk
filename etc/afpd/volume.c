@@ -456,8 +456,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_LIMITSIZE;
             else if (strcasecmp(p, "nofileid") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
-            else if (strcasecmp(p, "nostat") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_NOSTAT;
             else if (strcasecmp(p, "upriv") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
             else if (strcasecmp(p, "nodev") == 0)
@@ -1938,7 +1936,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 
     data = rbuf + 5;
     for ( vcnt = 0, volume = Volumes; volume && vcnt < 255; volume = volume->v_next ) {
-        if (!(volume->v_flags & AFPVOL_NOSTAT)) {
+        if (!(volume->v_flags)) {
             struct maccess ma;
 
             if ( stat( volume->v_path, &st ) < 0 ) {

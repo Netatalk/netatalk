@@ -120,8 +120,10 @@ struct vol {
 #define AFPVOL_DROPBOX   (1 << 14)  /* dropkludge dropbox support */
 #endif
 #define AFPVOL_NOFILEID  (1 << 15)  /* don't advertise createid resolveid and deleteid calls */
+#if 0
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */
+#endif
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */
 #define AFPVOL_NODEV     (1 << 18)  /* always use 0 for device number in cnid calls
                                      * help if device number is notconsistent across reboot
