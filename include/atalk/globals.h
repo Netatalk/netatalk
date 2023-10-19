@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 #ifdef HAVE_NETDB_H
-#include <netdb.h>  /* this isn't header-protected under ultrix */
+#include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
 #include <atalk/afp.h>

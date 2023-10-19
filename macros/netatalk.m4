@@ -590,17 +590,14 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 dnl OS specific configuration
 AC_DEFUN([AC_NETATALK_OS_SPECIFIC], [
 case "$host_os" in
-	*aix*)				this_os=aix ;;
 	*freebsd*) 			this_os=freebsd ;;
 	*kfreebsd*)			this_os=kfreebsd ;;
-	*hpux11*)			this_os=hpux11 ;;
 	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*darwin*)			this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
 	*openbsd*) 			this_os=openbsd ;;
-	*osf*) 				this_os=tru64 ;;
 	*solaris*) 			this_os=solaris ;;
 esac
 
@@ -1018,17 +1015,6 @@ neta_cv_eas_sys_not_found=no
 AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h sys/ea.h)
 
 case "$this_os" in
-
-  *osf*)
-	AC_SEARCH_LIBS(getproplist, [proplist])
-	AC_CHECK_FUNCS([getproplist fgetproplist setproplist fsetproplist],
-                   [neta_cv_eas_sys_found=yes],
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-	AC_CHECK_FUNCS([sizeof_proplist_entry],,
-                   [neta_cv_eas_sys_not_found=yes])
-  ;;
 
   *solaris*)
 	AC_DEFINE(HAVE_EAFD, 1, [extattr API has full fledged fds for EAs])
