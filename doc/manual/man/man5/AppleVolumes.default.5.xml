@@ -221,8 +221,7 @@
 
         <listitem>
           <para>set the CNID backend to be used for the volume, default is
-          [:DEFAULT_CNID_SCHEME:] available schemes:
-          [:COMPILED_BACKENDS:]</para>
+          dbd</para>
         </listitem>
       </varlistentry>
 
