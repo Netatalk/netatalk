@@ -1666,11 +1666,19 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Change ACL ? */
     if (bitmap & kFileSec_ACL) {
         LOG(log_debug, logtype_afpd, "afp_setacl: Change ACL request.");
+        size_t ibuflen0 = ibuflen;
+        const char *ibuf0 = ibuf;
+
         /*  Get no of ACEs the client put on the wire */
         uint32_t ace_count;
         memcpy(&ace_count, ibuf, sizeof(uint32_t));
         ace_count = htonl(ace_count);
         ibuf += 8;      /* skip ACL flags (see acls.h) */
+
+        if (ibuf + ace_count * sizeof(darwin_ace_t) > ibuf0 + ibuflen0){
+            LOG(log_error, logtype_afpd, "afp_setacl: ace_count is too big");
+            return AFPERR_MISC;
+        }
 
         ret = set_acl(vol,
                       s_path->u_name,
