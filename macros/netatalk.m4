@@ -582,8 +582,6 @@ dnl OS specific configuration
 AC_DEFUN([AC_NETATALK_OS_SPECIFIC], [
 case "$host_os" in
 	*freebsd*) 			this_os=freebsd ;;
-	*kfreebsd*)			this_os=kfreebsd ;;
-	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*darwin*)			this_os=macosx ;;
@@ -602,9 +600,7 @@ esac
 dnl --------------------- GNU source
 case "$this_os" in
 	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
-        ;;
-	kfreebsd) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
-        ;;
+        ;
 esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
@@ -612,14 +608,6 @@ dnl --------------------- operating system specific flags (port from sys/*)
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
-fi
-
-dnl ----- GNU/kFreeBSD specific -----
-if test x"$this_os" = "xkfreebsd"; then
-	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
@@ -675,7 +663,7 @@ AC_DEFUN([AC_NETATALK_SET_RPATH], [
 	AS_CASE("$this_os", [solaris|netbsd],
 		[default_rpath=yes],
 		[default_rpath=no])
-	AS_CASE("$this_os", [linux|kfreebsd],
+	AS_CASE("$this_os", [linux],
 		[enable_dtags=yes],
 		[enable_dtags=no])
 	AC_ARG_ENABLE(rpath,
