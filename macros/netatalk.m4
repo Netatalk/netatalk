@@ -1012,7 +1012,7 @@ case "$this_os" in
                    [neta_cv_eas_sys_not_found=yes])
   ;;
 
-  *freebsd4* | *dragonfly* )
+  *dragonfly* )
     AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
   ;;
 
