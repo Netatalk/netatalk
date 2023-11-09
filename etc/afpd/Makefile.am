@@ -43,12 +43,12 @@ afpd_SOURCES = \
 
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
+	@LIBGCRYPT_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@ @TALLOC_LIBS@
 
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@ \
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@  @TALLOC_CFLAGS@\
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
@@ -58,8 +58,8 @@ afpd_CFLAGS = \
 
 if HAVE_TRACKER
 afpd_SOURCES += spotlight.c
-afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
-afpd_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@
+afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la
+afpd_CFLAGS += @TRACKER_CFLAGS@
 endif
 
 if HAVE_ACLS
