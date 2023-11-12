@@ -20,7 +20,10 @@ on:
       - 'NEWS'
 
 env:
-  APT_PACKAGES: libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libcups2-dev tcpd
+  APT_PACKAGES: |
+    libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
+    libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev \
+    libcups2-dev tcpd
 
 jobs:
   integration_test:
@@ -29,7 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
@@ -55,7 +60,10 @@ jobs:
         run: ./bootstrap
       - name: Configure
         # DDP and related services in the absence of an AppleTalk stack on macOS
-        run: ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db --disable-ddp --disable-timelord --disable-a2boot
+        run: |
+          ./configure --with-ssl-dir=/usr/local/opt/libressl \
+          --with-bdb=/usr/local/opt/berkeley-db \
+          --disable-ddp --disable-timelord --disable-a2boot
       - name: Build
         run: make -j $(nproc)
       - name: Run tests
@@ -65,14 +73,19 @@ jobs:
     name: Static Analysis
     runs-on: ubuntu-22.04
     env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-    if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
+      # Directory where build-wrapper output will be placed
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+    # Run only if not originating from a fork
+    if: ${{ !github.event.pull_request.head.repo.fork }}
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
       - name: Install dependencies
-        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
