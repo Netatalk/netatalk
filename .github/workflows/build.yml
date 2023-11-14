@@ -22,7 +22,11 @@ on:
       - 'README.md'
 
 env:
-  APT_PACKAGES: libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev systemtap-sdt-dev tracker tcpd
+  APT_PACKAGES: |
+    libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev \
+    libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev \
+    libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev \
+    systemtap-sdt-dev tracker tcpd
 
 jobs:
   build-ubuntu:
@@ -31,7 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
@@ -66,14 +72,18 @@ jobs:
     name: Static Analysis
     runs-on: ubuntu-22.04
     env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      # Directory where build-wrapper output will be placed
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
     if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
       - name: Install dependencies
-        run: sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
