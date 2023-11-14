@@ -23,7 +23,7 @@ on:
 
 env:
   APT_PACKAGES: |
-    libtool libtool-bin automake autoconf libevent-dev libssl-dev libgcrypt-dev \
+    libtool libtool-bin automake autoconf libtalloc-dev libevent-dev libssl-dev libgcrypt-dev \
     libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev \
     libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev \
     systemtap-sdt-dev tracker tcpd
@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install automake libressl mysql pkg-config
+        run: brew install automake libressl mysql pkg-config talloc
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure

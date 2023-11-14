@@ -33,7 +33,6 @@ afpd_SOURCES = \
 	mangle.c \
 	messages.c  \
 	ofork.c \
-	spotlight_marshalling.c \
 	status.c \
 	switch.c \
 	uam.c \
@@ -43,12 +42,12 @@ afpd_SOURCES = \
 
 afpd_LDADD =  \
 	$(top_builddir)/libatalk/libatalk.la \
-	@LIBGCRYPT_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@ @TALLOC_LIBS@
+	@LIBGCRYPT_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @PTHREAD_LIBS@ @GSSAPI_LIBS@ @KRB5_LIBS@ @MYSQL_LIBS@
 
 afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
-	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@  @TALLOC_CFLAGS@\
+	@GSSAPI_CFLAGS@ @KRB5_CFLAGS@ @PTHREAD_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
@@ -57,9 +56,9 @@ afpd_CFLAGS = \
 	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
 
 if HAVE_TRACKER
-afpd_SOURCES += spotlight.c
-afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la
-afpd_CFLAGS += @TRACKER_CFLAGS@
+afpd_SOURCES += spotlight.c spotlight_marshalling.c
+afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
+afpd_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@
 endif
 
 if HAVE_ACLS

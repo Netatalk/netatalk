@@ -33,7 +33,6 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_srcdir)/etc/afpd/messages.c \
 				$(top_srcdir)/etc/afpd/ofork.c \
 				$(top_srcdir)/etc/afpd/status.c \
-				$(top_srcdir)/etc/afpd/spotlight_marshalling.c \
 				$(top_srcdir)/etc/afpd/switch.c \
 				$(top_srcdir)/etc/afpd/uam.c \
 				$(top_srcdir)/etc/afpd/unix.c \
@@ -62,9 +61,9 @@ test_SOURCES += $(top_srcdir)/etc/afpd/acls.c
 endif
 
 if HAVE_TRACKER
-test_SOURCES += $(top_srcdir)/etc/afpd/spotlight.c
-test_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la
-test_CFLAGS += @TRACKER_CFLAGS@
+test_SOURCES += $(top_srcdir)/etc/afpd/spotlight.c $(top_srcdir)/etc/afpd/spotlight_marshalling.c
+test_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
+test_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@
 endif
 
 if WITH_DTRACE
