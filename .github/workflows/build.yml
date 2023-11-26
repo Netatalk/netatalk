@@ -26,7 +26,7 @@ env:
     libtool libtool-bin automake autoconf libtalloc-dev libevent-dev libssl-dev libgcrypt-dev \
     libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev \
     libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev \
-    systemtap-sdt-dev tracker tcpd
+    systemtap-sdt-dev tracker tcpd libtracker-sparql-3.0-dev
 
 jobs:
   build-ubuntu:
@@ -41,7 +41,7 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure
+        run: ./configure --with-tracker-pkgconfig-version=3.0
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
