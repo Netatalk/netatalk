@@ -182,7 +182,7 @@ dnl Check for sendfile()
 AC_NETATALK_SENDFILE
 AC_NETATALK_RECVFILE
 
-dnl Check whether bundled libevent shall not be used
+dnl Check for libevent
 AC_NETATALK_LIBEVENT
 
 dnl Check whether bundled talloc shall be used
