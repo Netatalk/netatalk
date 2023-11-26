@@ -228,7 +228,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
 ])
 
-dnl Whether to disable bundled libevent
+dnl Check for libevent
 AC_DEFUN([AC_NETATALK_LIBEVENT], [
     PKG_CHECK_MODULES(LIBEVENT, libevent, , [AC_MSG_ERROR([couldn't find libevent with pkg-config])])
     AC_SUBST(LIBEVENT_CFLAGS)
