@@ -13,10 +13,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <inttypes.h>
-#include <sys/types.h>
-
 #include <sys/param.h>
-#include <sys/cdefs.h>
 
 #include <atalk/fce_api.h>
 #include <atalk/util.h>
