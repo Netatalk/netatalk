@@ -237,9 +237,15 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
 
 dnl Check for talloc library
 AC_DEFUN([AC_NETATALK_TALLOC], [
-    PKG_CHECK_MODULES(TALLOC, talloc, , have_talloc=yes, have_talloc=no)
+    PKG_CHECK_MODULES(TALLOC, talloc, ac_cv_have_talloc=yes, ac_cv_have_talloc=no)
+    
+    if test x"$ac_cv_have_talloc" = x"yes" ; then
+        AC_DEFINE(HAVE_TALLOC, 1, [Define if talloc library is available])
+    fi
+    
     AC_SUBST(TALLOC_CFLAGS)
     AC_SUBST(TALLOC_LIBS)
+    AM_CONDITIONAL(HAVE_TALLOC, [test x"ac_cv_have_talloc" = x"yes"])
 ])
 
 dnl Filesystem Hierarchy Standard (FHS) compatibility

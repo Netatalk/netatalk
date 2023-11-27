@@ -185,7 +185,7 @@ AC_NETATALK_RECVFILE
 dnl Check for libevent
 AC_NETATALK_LIBEVENT
 
-dnl Check whether bundled talloc shall be used
+dnl Check for talloc
 AC_NETATALK_TALLOC
 
 dnl Check for Tracker
