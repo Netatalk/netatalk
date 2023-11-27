@@ -60,7 +60,7 @@ if HAVE_ACLS
 test_SOURCES += $(top_srcdir)/etc/afpd/acls.c
 endif
 
-if HAVE_TRACKER
+if WITH_SPOTLIGHT
 test_SOURCES += $(top_srcdir)/etc/afpd/spotlight.c $(top_srcdir)/etc/afpd/spotlight_marshalling.c
 test_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
 test_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@

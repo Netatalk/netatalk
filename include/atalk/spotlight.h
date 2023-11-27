@@ -26,7 +26,7 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
 #include <gio/gio.h>
 #include <tracker-sparql.h>
 #ifndef HAVE_TRACKER3
