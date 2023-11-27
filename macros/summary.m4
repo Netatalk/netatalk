@@ -149,12 +149,8 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $LIBEVENT_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $LIBEVENT_CFLAGS])
     AC_MSG_RESULT([    TALLOC:])
-    if test x"$use_bundled_talloc" = x"yes"; then
-		AC_MSG_RESULT([        bundled])
-    else
 		AC_MSG_RESULT([        LIBS   = $TALLOC_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $TALLOC_CFLAGS])
-    fi
 	if test x"$ac_cv_with_cnid_mysql" = x"yes"; then
 		AC_MSG_RESULT([    MySQL:])
 		AC_MSG_RESULT([        LIBS   = $MYSQL_LIBS])

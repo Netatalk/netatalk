@@ -235,29 +235,11 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
     AC_SUBST(LIBEVENT_LIBS)
 ])
 
-dnl Whether to disable bundled talloc
+dnl Check for talloc library
 AC_DEFUN([AC_NETATALK_TALLOC], [
-    AC_ARG_WITH(
-        talloc,
-        [AS_HELP_STRING([--with-talloc],[whether to use the bundled talloc (default: yes)])],
-        use_bundled_talloc=$withval,
-        use_bundled_talloc=yes
-    )
-    AC_MSG_CHECKING([whether to use bundled talloc])
-    AC_MSG_RESULT([$use_bundled_talloc])
-
-    if test x"$use_bundled_talloc" = x"yes" ; then
-        AC_DEFINE(USE_BUILTIN_TALLOC, 1, [Use internal talloc])
-    else
-        if test -z "$TALLOC_LIBS" ; then
-            PKG_CHECK_MODULES(TALLOC, talloc, , [AC_MSG_ERROR([couldn't find talloc with pkg-config])])
-        fi
-        use_bundled_talloc=no
-    fi
-
+    PKG_CHECK_MODULES(TALLOC, talloc, , have_talloc=yes, have_talloc=no)
     AC_SUBST(TALLOC_CFLAGS)
     AC_SUBST(TALLOC_LIBS)
-    AM_CONDITIONAL(USE_BUILTIN_TALLOC, test x"$use_bundled_talloc" = x"yes")
 ])
 
 dnl Filesystem Hierarchy Standard (FHS) compatibility
