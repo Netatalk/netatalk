@@ -151,7 +151,7 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
   AM_CONDITIONAL(HAVE_DBUS_GLIB, test x$atalk_cv_with_dbus = xyes)
 ])
 
-dnl Tracker, for Spotlight
+dnl Spotlight support
 AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     ac_cv_have_tracker=no
     ac_cv_tracker_pkg_version_default=0.12
@@ -219,13 +219,26 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
            AC_MSG_ERROR([could find neither tracker command nor tracker-control command])
         fi
     fi
+    
+    dnl Check for talloc library
+    PKG_CHECK_MODULES(TALLOC, talloc, ac_cv_have_talloc=yes, ac_cv_have_talloc=no)
+    if test x"$ac_cv_have_talloc" = x"yes" ; then
+        AC_DEFINE(HAVE_TALLOC, 1, [Define if talloc library is available])
+    fi
+    
+    dnl Enable Spotlight support
+    if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
+        AC_DEFINE(WITH_SPOTLIGHT, 1, [Define whether to enable Spotlight support])
+    fi
 
+    AC_SUBST(DBUS_DAEMON_PATH)
+    AC_SUBST(TALLOC_CFLAGS)
+    AC_SUBST(TALLOC_LIBS)
     AC_SUBST(TRACKER_CFLAGS)
     AC_SUBST(TRACKER_LIBS)
     AC_SUBST(TRACKER_MINER_CFLAGS)
     AC_SUBST(TRACKER_MINER_LIBS)
-    AC_SUBST(DBUS_DAEMON_PATH)
-    AM_CONDITIONAL(HAVE_TRACKER, [test x"$ac_cv_have_tracker" = x"yes"])
+    AM_CONDITIONAL(WITH_SPOTLIGHT, [test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"])
 ])
 
 dnl Check for libevent
@@ -233,13 +246,6 @@ AC_DEFUN([AC_NETATALK_LIBEVENT], [
     PKG_CHECK_MODULES(LIBEVENT, libevent, , [AC_MSG_ERROR([couldn't find libevent with pkg-config])])
     AC_SUBST(LIBEVENT_CFLAGS)
     AC_SUBST(LIBEVENT_LIBS)
-])
-
-dnl Check for talloc library
-AC_DEFUN([AC_NETATALK_TALLOC], [
-    PKG_CHECK_MODULES(TALLOC, talloc, , have_talloc=yes, have_talloc=no)
-    AC_SUBST(TALLOC_CFLAGS)
-    AC_SUBST(TALLOC_LIBS)
 ])
 
 dnl Filesystem Hierarchy Standard (FHS) compatibility

@@ -8,7 +8,7 @@ BUILT_SOURCES =
 
 AM_YFLAGS = -d
 
-if HAVE_TRACKER
+if WITH_SPOTLIGHT
 BUILT_SOURCES += sparql_parser.h
 noinst_PROGRAMS += srp
 noinst_LTLIBRARIES += libspotlight.la

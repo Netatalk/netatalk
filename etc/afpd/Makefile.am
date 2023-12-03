@@ -55,7 +55,7 @@ afpd_CFLAGS = \
 	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
 	-D_PATH_STATEDIR='"$(localstatedir)/netatalk/"'
 
-if HAVE_TRACKER
+if WITH_SPOTLIGHT
 afpd_SOURCES += spotlight.c spotlight_marshalling.c
 afpd_LDADD += $(top_builddir)/etc/spotlight/libspotlight.la @TALLOC_LIBS@
 afpd_CFLAGS += @TRACKER_CFLAGS@ @TALLOC_CFLAGS@

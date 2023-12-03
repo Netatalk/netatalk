@@ -34,7 +34,7 @@ libatalk_la_DEPENDENCIES = \
 	util/libutil.la		\
 	vfs/libvfs.la
 	
-if HAVE_TRACKER
+if WITH_SPOTLIGHT
 SUBDIRS += talloc
 libatalk_la_LIBADD += talloc/libtalloc.la
 libatalk_la_DEPENDENCIES += talloc/libtalloc.la 
