@@ -19,11 +19,7 @@
 #ifndef DALLOC_H
 #define DALLOC_H
 
-#if USE_BUILTIN_TALLOC
-#include <atalk/talloc.h>
-#else
 #include <talloc.h>
-#endif
 
 /* dynamic datastore */
 typedef struct {

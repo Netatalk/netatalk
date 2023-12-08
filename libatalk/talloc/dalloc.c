@@ -117,15 +117,11 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <talloc.h>
 
 #include <atalk/errchk.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
-#if USE_BUILTIN_TALLOC
-#include <atalk/talloc.h>
-#else
-#include <talloc.h>
-#endif
 #include <atalk/bstrlib.h>
 #include <atalk/dalloc.h>
 
