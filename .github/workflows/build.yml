@@ -55,10 +55,11 @@ jobs:
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install automake libressl mysql pkg-config talloc
+        run: brew install automake libressl mysql talloc
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
