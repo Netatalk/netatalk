@@ -25,7 +25,9 @@
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
 #include <atalk/netatalk_conf.h>
+#ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
+#endif
 #include <atalk/dsi.h>
 
 #include "directory.h"

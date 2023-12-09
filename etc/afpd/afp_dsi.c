@@ -41,7 +41,9 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
+#endif
 
 #include "switch.h"
 #include "auth.h"
