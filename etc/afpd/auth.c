@@ -40,9 +40,7 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include <atalk/uuid.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
-#ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
-#endif
 #include <atalk/unix.h>
 
 #include "auth.h"
