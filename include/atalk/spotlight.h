@@ -12,6 +12,8 @@
   GNU General Public License for more details.
 */
 
+#ifdef WITH_SPOTLIGHT
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -26,12 +28,10 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-#ifdef WITH_SPOTLIGHT
 #include <gio/gio.h>
 #include <tracker-sparql.h>
 #ifndef HAVE_TRACKER3
 #include <libtracker-miner/tracker-miner.h>
-#endif
 #endif
 
 /******************************************************************************
@@ -128,3 +128,4 @@ extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 extern void configure_spotlight_attributes(const char *attributes);
 
 #endif /* SPOTLIGHT_H */
+#endif /* WITH_SPOTLIGHT */

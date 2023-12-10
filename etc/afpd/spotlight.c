@@ -27,16 +27,12 @@
 #include <inttypes.h>
 #include <time.h>
 #include <utime.h>
+#include <talloc.h>
 
 #include <atalk/list.h>
 #include <atalk/errchk.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
-#if USE_BUILTIN_TALLOC
-#include <atalk/talloc.h>
-#else
-#include <talloc.h>
-#endif
 #include <atalk/dalloc.h>
 #include <atalk/byteorder.h>
 #include <atalk/netatalk_conf.h>
