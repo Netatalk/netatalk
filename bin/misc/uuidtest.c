@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #ifdef HAVE_LDAP
 #define LDAP_DEPRECATED 1
@@ -86,14 +87,14 @@ int main( int argc, char **argv)
         case 'v':
             if (! verbose) {
                 verbose = 1;
-                setuplog("default:maxdebug", "/dev/tty");
+                setuplog("default:maxdebug", "/dev/tty", true);
                 logsetup = 1;
             }
             break;
 
         case 'u':
             if (! logsetup)
-                setuplog("default:info", "/dev/tty");
+                setuplog("default:info", "/dev/tty", true);
             parse_ldapconf();
             printf("Searching user: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_USER, uuid);
@@ -106,7 +107,7 @@ int main( int argc, char **argv)
 
         case 'g':
             if (! logsetup)
-                setuplog("default:info", "/dev/tty");
+                setuplog("default:info", "/dev/tty", true);
             parse_ldapconf();
             printf("Searching group: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_GROUP, uuid);
@@ -119,7 +120,7 @@ int main( int argc, char **argv)
 
         case 'i':
             if (! logsetup)
-                setuplog("default:info", "/dev/tty");
+                setuplog("default:info", "/dev/tty", true);
             parse_ldapconf();
             printf("Searching uuid: %s\n", optarg);
             uuid_string2bin(optarg, uuid);

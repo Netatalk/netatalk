@@ -2029,8 +2029,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* [Global] */
     options->logconfig = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "log level", "default:note");
     options->logfile   = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "log file",  NULL);
+    options->log_us_timestamp = atalk_iniparser_getboolean(config, INISEC_GLOBAL, "log microseconds", 1);
 
-    setuplog(options->logconfig, options->logfile);
+    setuplog(options->logconfig, options->logfile, options->log_us_timestamp);
 
     /* "server options" boolean options */
     if (!atalk_iniparser_getboolean(config, INISEC_GLOBAL, "zeroconf", 1))

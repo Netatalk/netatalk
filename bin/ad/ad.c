@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
     if (afp_config_parse(&obj, "ad") != 0)
         return 1;
 
-    setuplog("default:note", "/dev/tty");
+    setuplog("default:note", "/dev/tty", true);
 
     if (load_volumes(&obj, LV_DEFAULT) != 0)
         return 1;

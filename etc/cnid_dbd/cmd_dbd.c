@@ -26,6 +26,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pwd.h>
+#include <stdbool.h>
 
 #include <atalk/logger.h>
 #include <atalk/globals.h>
@@ -214,9 +215,9 @@ int main(int argc, char **argv)
 
     /* Setup logging. Should be portable among *NIXes */
     if (flags & DBD_FLAGS_VERBOSE)
-        setuplog("default:note, cnid:debug", "/dev/tty");
+        setuplog("default:note, cnid:debug", "/dev/tty", true);
     else
-        setuplog("default:note", "/dev/tty");
+        setuplog("default:note", "/dev/tty", true);
 
     /* Set username */
     if (username) {

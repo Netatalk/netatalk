@@ -144,6 +144,7 @@ typedef struct {
     int            fd;            /* logfiles fd */
     enum loglevels level;         /* Log Level to put in this file */
     int            display_options;
+    bool           timestamp_us;  /* Log time stamps in us instead of s */
 } logtype_conf_t;
 
 
@@ -160,11 +161,11 @@ extern UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker]
     Global function decarations
    ========================================================================= */
 
-void setuplog(const char *loglevel, const char *logfile);
+void setuplog(const char *loglevel, const char *logfile, const bool log_us_timestamp);
 void set_processname(const char *processname);
 
 /* LOG macro func no.1: log the message to file */
-UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
+UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, const bool log_us_timestamp, int line, char *message, ...);
 
 /*
  * How to write a LOG macro:
@@ -183,7 +184,7 @@ UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes lo
     do {                                                                \
         if (log_level <= LOG_MAX)                                       \
             if (log_level <= type_configs[type].level)                  \
-                make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
+                make_log_entry((log_level), (type), __FILE__, type_configs[type].timestamp_us, __LINE__,  __VA_ARGS__); \
     } while(0)
 
 #else  /* ! NO_DEBUG */
@@ -191,7 +192,7 @@ UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes lo
 #define LOG(log_level, type, ...)               \
     do {                                                                \
         if (log_level <= type_configs[type].level)                      \
-            make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
+            make_log_entry((log_level), (type), __FILE__, type_configs[type].timestamp_us, __LINE__,  __VA_ARGS__); \
     } while(0)
 
 #endif  /* NO_DEBUG */

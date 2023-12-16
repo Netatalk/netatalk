@@ -117,7 +117,8 @@ static int generate_message(char **message_details_buffer,
                             char *user_message,
                             int display_options,
                             enum loglevels loglevel,
-                            enum logtypes logtype)
+                            enum logtypes logtype,
+                            bool log_us_timestamp)
 {
     char *details;
     int    len;
@@ -126,7 +127,7 @@ static int generate_message(char **message_details_buffer,
     char buf[256];
 
     gettimeofday(&tv, NULL);
-    strftime(buf, sizeof(buf), "%b %d %H:%M:%S.", localtime(&tv.tv_sec));
+    strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime(&tv.tv_sec));
     pid = getpid();
     const char *basename = strrchr(log_src_filename, '/');
     if (basename) {
@@ -135,18 +136,30 @@ static int generate_message(char **message_details_buffer,
         basename = log_src_filename;
     }
 
-
-    len = asprintf(&details,
-                   "%s%06u %s[%d] {%s:%d} (%s:%s): %s\n",
-                   buf,
-                   (int)tv.tv_usec,
-                   log_config.processname,
-                   pid,
-                   basename,
-                   log_src_linenumber,
-                   arr_loglevel_strings[loglevel],
-                   arr_logtype_strings[logtype],
-                   user_message);
+    if (log_us_timestamp) {
+        len = asprintf(&details,
+                    "%s.%06u %s[%d] {%s:%d} (%s:%s): %s\n",
+                    buf,
+                    (int)tv.tv_usec,
+                    log_config.processname,
+                    pid,
+                    basename,
+                    log_src_linenumber,
+                    arr_loglevel_strings[loglevel],
+                    arr_logtype_strings[logtype],
+                    user_message);
+    } else {
+        len = asprintf(&details,
+                    "%s %s[%d] {%s:%d} (%s:%s): %s\n",
+                    buf,
+                    log_config.processname,
+                    pid,
+                    basename,
+                    log_src_linenumber,
+                    arr_loglevel_strings[loglevel],
+                    arr_logtype_strings[logtype],
+                    user_message);
+    }
     if (len == -1) {
         *message_details_buffer = "";
         return -1;
@@ -197,7 +210,7 @@ static void log_init(void)
                  logfacility_daemon);
 }
 
-static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
+static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype, const bool log_us_timestamp)
 {
     if (loglevel == 0) {
         /* Disable */
@@ -290,14 +303,16 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
     if (logtype == logtype_default) {
         int typeiter = 0;
         while (typeiter != logtype_end_of_list_marker) {
-            if ( ! (type_configs[typeiter].set))
+            if ( ! (type_configs[typeiter].set)) {
                 type_configs[typeiter].level = loglevel;
+                type_configs[typeiter].timestamp_us = log_us_timestamp;
+            }
             typeiter++;
         }
     }
 
-    LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
-        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename);
+    LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s, timestamp_us: %d",
+        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename, log_us_timestamp);
 }
 
 /* Setup syslog logging */
@@ -343,7 +358,7 @@ static void syslog_setup(int loglevel, enum logtypes logtype, int display_option
  *    else
  *       set to default logging
  */
-static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
+static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename, const bool log_us_timestamp)
 {
     unsigned int typenum, levelnum;
 
@@ -378,7 +393,7 @@ static void setuplog_internal(const char *loglevel, const char *logtype, const c
                      logfacility_daemon);
     } else {
         /* this must be a filelog */
-        log_setup(filename, levelnum, typenum);
+        log_setup(filename, levelnum, typenum, log_us_timestamp);
     }
 
     return;
@@ -401,7 +416,7 @@ void set_processname(const char *processname)
    So it must be shorter than MAXLOGSIZE
    ------------------------------------------------------------------------- */
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
-                    const char *file, int line, char *message, ...)
+                    const char *file, const bool log_us_timestamp, int line, char *message, ...)
 {
     /* fn is not reentrant but is used in signal handler
      * with LOGGER it's a little late source name and line number
@@ -468,7 +483,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                            type_configs[logtype].set ?
                            type_configs[logtype].display_options :
                            type_configs[logtype_default].display_options,
-                           loglevel, logtype);
+                           loglevel, logtype, log_us_timestamp);
     if (len == -1) {
         goto exit;
     }
@@ -480,7 +495,7 @@ exit:
     inlog = 0;
 }
 
-void setuplog(const char *logstr, const char *logfile)
+void setuplog(const char *logstr, const char *logfile, const bool log_us_timestamp)
 {
     char *ptr, *save;
     char *logtype, *loglevel;
@@ -507,7 +522,7 @@ void setuplog(const char *logstr, const char *logfile)
                 ptr++;
             c = *ptr;
             *ptr = 0;
-            setuplog_internal(loglevel, logtype, logfile);
+            setuplog_internal(loglevel, logtype, logfile, log_us_timestamp);
             *ptr = c;
         }
         ptr = strtok(NULL, ", ");

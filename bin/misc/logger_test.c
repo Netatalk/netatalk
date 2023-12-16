@@ -43,11 +43,11 @@ int main(int argc, char *argv[])
 #endif
   /* filelog testing */
 
-  setuplog("DSI:maxdebug", "test.log");
+  setuplog("DSI:maxdebug", "test.log", true);
   LOG(log_info, logtype_dsi, "This should log.");
   LOG(log_error, logtype_default, "This should not log.");
 
-  setuplog("Default:debug", "test.log");
+  setuplog("Default:debug", "test.log", true);
   LOG(log_debug, logtype_default, "This should log.");
   LOG(log_maxdebug, logtype_default, "This should not log.");
 
