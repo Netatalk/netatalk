@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -560,15 +561,15 @@ void afp_over_dsi(AFPObj *obj)
 
             if (debugging) {
                 if (obj->options.logconfig)
-                    setuplog(obj->options.logconfig, obj->options.logfile);
+                    setuplog(obj->options.logconfig, obj->options.logfile, obj->options.log_us_timestamp);
                 else
-                    setuplog("default:note", NULL);
+                    setuplog("default:note", NULL, true);
                 debugging = 0;
             } else {
                 char logstr[50];
                 debugging = 1;
                 sprintf(logstr, "/tmp/afpd.%u.XXXXXX", getpid());
-                setuplog("default:maxdebug", logstr);
+                setuplog("default:maxdebug", logstr, true);
             }
         }
 

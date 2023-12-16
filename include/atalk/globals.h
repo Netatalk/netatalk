@@ -126,6 +126,7 @@ struct afp_options {
     char *ntdomain, *ntseparator, *addomain;
     char *logconfig;
     char *logfile;
+    bool log_us_timestamp;
     char *mimicmodel;
     char *zeroconfname;
     char *adminauthuser;

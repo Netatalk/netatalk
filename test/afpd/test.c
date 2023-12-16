@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
     /* initialize */
     printf("Initializing\n============\n");
-    TEST(setuplog("default:note","/dev/tty"));
+    TEST(setuplog("default:note", "/dev/tty", true));
 
     TEST( afp_options_parse_cmdline(&obj, 3, &args[0]) );
 

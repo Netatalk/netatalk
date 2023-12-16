@@ -1240,6 +1240,18 @@
             </note>
           </listitem>
         </varlistentry>
+
+        <varlistentry>
+          <term>log microseconds = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>yes</emphasis>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Log timestamps with accuracy down to microseconds.
+            If disabled, the timestamps record only full seconds.
+            Used in tandem with <option>log file</option>.</para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </refsect2>
 
