@@ -29,7 +29,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">papstatus</emphasis> is used to obtain the
     current status message from an AppleTalk connected printer. It uses the
@@ -54,7 +54,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -92,7 +92,7 @@
   </refsect1>
 
   <refsect1>
-    <title>FILES</title>
+    <title>Files</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -106,7 +106,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>nbp</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>pap</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>

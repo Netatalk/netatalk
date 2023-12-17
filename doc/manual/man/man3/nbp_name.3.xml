@@ -33,7 +33,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><function>nbp_name()</function> parses user supplied names into
     their component object, type, and zone. <emphasis remap="B">obj</emphasis>,
@@ -55,7 +55,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXAMPLE</title>
+    <title>Example</title>
 
     <para>The argument of <citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>&#39;s
     <option>-n</option> option is parsed with <function>nbp_name()</function>.
@@ -76,7 +76,7 @@
   </refsect1>
 
   <refsect1>
-    <title>BUGS</title>
+    <title>Bugs</title>
 
     <para><emphasis remap="B">obj</emphasis>, <emphasis remap="B">type</emphasis>,
     and <varname role="parameter">zone</varname> return pointers into static

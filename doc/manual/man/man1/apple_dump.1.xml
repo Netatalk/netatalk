@@ -78,7 +78,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>apple_dump</command> dumps
     AppleSingle/AppleDouble format data. </para>
@@ -89,7 +89,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -170,7 +170,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
 	<para><citerefentry><refentrytitle>ad</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
   </refsect1>

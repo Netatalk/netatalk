@@ -290,7 +290,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SIGNALS</title>
+    <title>Signals</title>
 
     <para>To shut down a user's <command>afpd</command> process it is
       recommended that <command>SIGKILL (-9)</command>
@@ -364,7 +364,7 @@
   </refsect1>
 
   <refsect1>
-    <title>FILES</title>
+    <title>Files</title>
 
     <variablelist>
       <varlistentry>
@@ -437,7 +437,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>hosts_access</refentrytitle>

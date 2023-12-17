@@ -40,7 +40,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>afpldaptest</command> is a simple command to syntactically
     check :ETCDIR:/afp_ldap.conf.</para>
@@ -48,7 +48,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -90,7 +90,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>afp_ldap.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
   </refsect1>

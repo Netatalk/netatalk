@@ -28,7 +28,7 @@
   </refnamediv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">:ETCDIR:/atalkd.conf</emphasis> is the
     configuration file used by atalkd to configure the Appletalk interfaces
@@ -138,7 +138,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>atalkd</refentrytitle>

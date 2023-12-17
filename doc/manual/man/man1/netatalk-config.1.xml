@@ -43,7 +43,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>netatalk-config</command> is a tool that is used to
     determine the compiler and linker flags that should be used
@@ -52,7 +52,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <para><command>netatalk-config</command> accepts the following options:</para>
 

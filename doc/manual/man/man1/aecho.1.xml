@@ -26,7 +26,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>aecho</command> repeatedly sends an Apple Echo Protocol
     (AEP) packet to the host specified by the given AppleTalk
@@ -46,7 +46,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXAMPLE</title>
+    <title>Example</title>
 
     <para>Check to see if a particular host is up and responding to AEP
     packets:</para>
@@ -66,7 +66,7 @@ round-trip (ms)  min/avg/max = 9/9/10
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -80,7 +80,7 @@ round-trip (ms)  min/avg/max = 9/9/10
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>ping</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>,

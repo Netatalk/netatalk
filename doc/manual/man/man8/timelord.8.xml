@@ -29,7 +29,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">timelord</emphasis> is a simple time server for
     Macintosh computers that use the <emphasis remap="B">tardis</emphasis>
@@ -45,7 +45,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>

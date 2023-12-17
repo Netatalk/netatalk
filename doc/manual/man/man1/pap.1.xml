@@ -44,7 +44,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>pap</command> is used to connect and send files to an
     AppleTalk connected printer using the Apple Printer Access Protocol (PAP).
@@ -71,7 +71,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -177,7 +177,7 @@
   </refsect1>
 
   <refsect1>
-    <title>FILES</title>
+    <title>Files</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -192,7 +192,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>nbp_name</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
