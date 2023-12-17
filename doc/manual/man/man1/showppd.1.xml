@@ -24,7 +24,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>showppd</command> parses the binary data of a PPD file
     and pretty prints the pertinent information to stdout.
@@ -39,7 +39,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>papd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
   </refsect1>

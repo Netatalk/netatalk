@@ -58,7 +58,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">:ETCDIR:/netatalk.conf</emphasis> is the
     configuration file used by the netatalk init script to determine what portions of the file
@@ -214,7 +214,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>afpd</refentrytitle>

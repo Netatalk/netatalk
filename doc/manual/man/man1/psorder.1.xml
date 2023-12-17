@@ -27,7 +27,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>psorder</command> is a filter that re-orders the pages of a
     PostScript document. The result is written to the standard output. By
@@ -42,7 +42,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -80,7 +80,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>lpr</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>

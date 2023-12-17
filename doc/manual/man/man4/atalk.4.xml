@@ -24,7 +24,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para>The AppleTalk protocol family is a collection of protocols layered
     above the Datagram Delivery Protocol (DDP), and using AppleTalk address
@@ -35,7 +35,7 @@
   </refsect1>
 
   <refsect1>
-    <title>ADDRESSING</title>
+    <title>Addressing</title>
 
     <para>AppleTalk addresses are three byte quantities, stored in network
     byte order. The include file &#60;<emphasis remap="B">netatalk/at.h</emphasis>&#62;
@@ -67,7 +67,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <!--  .BR ddp (4P), -->
 

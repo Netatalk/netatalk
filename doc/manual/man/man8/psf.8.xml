@@ -35,7 +35,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>psf</command> is an <emphasis remap="B">lpd</emphasis>
     filter for PostScript printing. <command>psf</command> interprets the name
@@ -74,7 +74,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXAMPLE</title>
+    <title>Example</title>
 
     <para>The sample <emphasis remap="B">printcap</emphasis> entry below
     invokes <command>psf</command> to print text files, PostScript files,
@@ -107,7 +107,7 @@ laser|lp|LaserWriter Plus on AppleTalk:\
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>psorder</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>printcap</refentrytitle><manvolnum>5</manvolnum></citerefentry>,

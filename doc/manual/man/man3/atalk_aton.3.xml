@@ -32,7 +32,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para>The <function>atalk_aton()</function> routine converts an ASCII
     representation of an AppleTalk address to a format appropriate for system
@@ -45,7 +45,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>atalk</refentrytitle><manvolnum>4</manvolnum></citerefentry>.</para>
   </refsect1>

@@ -33,7 +33,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>afppasswd</command> allows the maintenance of afppasswd
     files created by netatalk for use by the uams_randnum.so UAM (providing
@@ -56,7 +56,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXAMPLE</title>
+    <title>Example</title>
 
     <para>Local user changing their own password:</para>
 
@@ -68,7 +68,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -130,7 +130,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>afpd</refentrytitle>

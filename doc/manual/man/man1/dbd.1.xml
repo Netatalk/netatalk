@@ -228,7 +228,7 @@
   </refsect1>
 
   <refsect1>
-    <title>WARNING</title>
+    <title>Warning</title>
 
     <para>In order to be able to run <option>-rf</option> reconstructing the
     CNIDs in the database from the <emphasis>AppleDouble</emphasis> files,

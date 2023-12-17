@@ -25,7 +25,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>cnid2_create</command> converts a CNID database created
     with Netatalk 1 to a CNID database compatible with Netatalk 2.</para>
@@ -124,7 +124,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>apple_dump</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
     <para><citerefentry><refentrytitle>dbd</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>

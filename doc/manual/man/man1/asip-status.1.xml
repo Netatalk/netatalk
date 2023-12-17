@@ -59,7 +59,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>asip-status</command>
     sends a FPGetSrvrInfo request to an AFP server at
@@ -81,7 +81,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -136,7 +136,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXAMPLES</title>
+    <title>Examples</title>
 
     <para><programlisting>$ <emphasis remap="B">asip-status</emphasis> 192.168.1.15
 AFP reply from 192.168.1.15:548 via IPv4

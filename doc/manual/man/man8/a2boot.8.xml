@@ -27,7 +27,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">a2boot</emphasis> is a netboot server for
     Apple IIe and IIGS computers. It allows compatible clients to boot
@@ -40,7 +40,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>

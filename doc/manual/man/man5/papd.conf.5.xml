@@ -22,7 +22,7 @@
   </refnamediv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><emphasis remap="B">:ETCDIR:/papd.conf</emphasis> is the
     configuration file used by papd to configure the printing services offered
@@ -240,7 +240,7 @@ Boss' LaserWriter@2nd floor:\
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>papd</refentrytitle>

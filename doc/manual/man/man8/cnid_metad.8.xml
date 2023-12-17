@@ -52,7 +52,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>cnid_metad</command> waits for requests from <emphasis
     remap="B">afpd</emphasis> to start up instances of the <emphasis
@@ -70,7 +70,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -187,7 +187,7 @@
   </refsect1>
 
   <refsect1>
-    <title>CAVEATS</title>
+    <title>Caveats</title>
 
     <para>The number of <emphasis remap="B">cnid_dbd</emphasis> subprocesses
     is currently limited to 512.</para>
@@ -203,7 +203,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>cnid_dbd</refentrytitle>

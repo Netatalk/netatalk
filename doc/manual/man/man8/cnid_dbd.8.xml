@@ -40,7 +40,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>cnid_dbd</command> provides an interface for storage and
     retrieval of catalog node IDs (CNIDs) and related information to the
@@ -110,7 +110,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -124,7 +124,7 @@
   </refsect1>
 
   <refsect1>
-    <title>CONFIGURATION</title>
+    <title>Configuration</title>
 
     <para><command>cnid_dbd</command> reads configuration information from the
     file <emphasis remap="I">db_param</emphasis> in the database directory
@@ -218,7 +218,7 @@
   </refsect1>
 
   <refsect1>
-    <title>UPDATING</title>
+    <title>Updating</title>
 
     <para>Note that the first version to appear <emphasis>after</emphasis>
     Netatalk 2.1 i.e. Netatalk 2.1.1, will support Berkeley DB updates on the fly
@@ -258,7 +258,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>cnid_metad</refentrytitle>
