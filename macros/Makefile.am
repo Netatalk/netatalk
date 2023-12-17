@@ -1,5 +1,4 @@
 EXTRA_DIST = \
-	afs-check.m4		\
 	cnid-backend.m4		\
 	config-checks.m4	\
 	cups.m4			\

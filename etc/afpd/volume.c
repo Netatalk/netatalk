@@ -1525,15 +1525,6 @@ static int getvolspace(struct vol *vol,
         (((afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
          ? 0x7fffffffL : 0xffffffffL);
 
-#ifdef AFS
-    if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_AFSGVS ) {
-        if ( afs_getvolspace( vol, xbfree, xbtotal, bsize ) == AFP_OK ) {
-            vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_AFSGVS;
-            goto getvolspace_done;
-        }
-    }
-#endif
-
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
         return( rc );
     }

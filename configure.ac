@@ -158,8 +158,6 @@ AC_ARG_ENABLE(admin-group,
 	]
 )
 
-NETATALK_AFS_CHECK
-
 NETATALK_CONFIG_DIRS
 
 netatalk_cv_with_cracklib=no

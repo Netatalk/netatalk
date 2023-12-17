@@ -592,15 +592,6 @@ void afp_over_dsi(AFPObj *obj)
             break;
 
         case DSIFUNC_CMD:
-#ifdef AFS
-            if ( writtenfork ) {
-                if ( flushfork( writtenfork ) < 0 ) {
-                    LOG(log_error, logtype_afpd, "main flushfork: %s", strerror(errno) );
-                }
-                writtenfork = NULL;
-            }
-#endif /* AFS */
-
             function = (u_char) dsi->commands[0];
 
             /* AFP replay cache */

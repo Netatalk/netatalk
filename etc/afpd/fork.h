@@ -48,10 +48,6 @@ struct ofork {
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 #define AFPFORK_MODIFIED (1<<6) /* used in FCE for modified files */
 
-#ifdef AFS
-extern struct ofork *writtenfork;
-#endif
-
 #define of_name(a) (a)->of_ad->ad_m_name
 /* in ofork.c */
 extern struct ofork *of_alloc    (struct vol *, struct dir *,
