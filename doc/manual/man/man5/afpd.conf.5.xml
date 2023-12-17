@@ -820,7 +820,7 @@
 
           <para>By default afpd logs
           to syslog with a default logging setup equivalent to
-          <option>-setuplog "default log_info"</option>.</para>
+          <option>-setuplog "default log_note"</option>.</para>
 
           <para>logtypes: Default, AFPDaemon, Logger, UAMSDaemon</para>
 
