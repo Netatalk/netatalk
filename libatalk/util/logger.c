@@ -77,8 +77,9 @@ log_config_t log_config = { 0 };
    0:               syslog ?
    -1:              logfiles fd
    log_none:        no logging by default
-   0:               Display options */
-#define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0}
+   0:               Display options
+   false            timestamp_us */
+#define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0, true}
 
 UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
