@@ -3,7 +3,7 @@
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
-Netatalk is a freely-available Open Source fileserver that implements the Apple Filing Protocol (AFP) 3.4.
+Netatalk is a freely-available Open Source fileserver that implements the Apple Filing Protocol (AFP) 3.4 over TCP/IP.
 AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013.
 A *NIX/*BSD system running Netatalk is capable of serving many Macintosh clients simultaneously as an AppleShare file server.
 
@@ -16,6 +16,9 @@ Compared to other Open Source file sharing solutions such as NFS or Samba, Netat
 of Classic Mac OS metadata (resource forks) as well as user authentication methods (UAMs) compatible with Classic Mac OS clients that don't support modern cryptography.
 
 Modern AFP features such as Bonjour, Time Machine, and Spotlight are also supported.
+
+# AppleTalk
+Support for the AppleTalk network stack was removed in Netatalk v3. If you need AppleTalk to network very old Macs or Apple II computers, please use Netatalk v2.
 
 # Contributions
 Bug reports and feature requests can be filed as GitHub issue ticket:
