@@ -95,10 +95,9 @@ struct vol {
 
 #define AFPVOL_OPEN (1<<0)
 
-/* flags  for AFS and quota 0xxx0 */
+/* flags for quota 0xxx0 */
 #define AFPVOL_GVSMASK  (7<<2)
 #define AFPVOL_NONE (0<<2)
-#define AFPVOL_AFSGVS   (1<<2)
 #define AFPVOL_USTATFS  (2<<2)
 #define AFPVOL_UQUOTA   (4<<2)
 

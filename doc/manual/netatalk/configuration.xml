@@ -743,13 +743,10 @@
                 <primary>uams_krb4.so</primary>
 
                 <secondary>"Kerberos IV" UAM</secondary>
-              </indexterm>/"AFS Kerberos"<indexterm>
-                <primary>AFS Kerberos</primary>
 
-                <secondary>"AFS Kerberos" UAM (Kerberos IV)</secondary>
               </indexterm> UAMs (suitable to use <ulink
             url="http://web.mit.edu/macdev/KfM/Common/Documentation/faq.html">Kerberos
-            v4 based authentication</ulink> and AFS file servers)</para>
+            v4 based authentication</ulink>)</para>
 
             <para>Use <filename>"--enable-krb4-uam"</filename> at compile time
             to activate the build of this UAM.</para>

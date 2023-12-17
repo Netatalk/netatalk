@@ -54,13 +54,6 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 	return( AFPERR_BADUAM );
     }
 
-#ifdef AFS
-    if ( setpag() < 0 ) {
-	LOG(log_error, logtype_uams, "noauth_login: setpag: %s", strerror(errno) );
-	return( AFPERR_BADUAM );
-    }
-#endif /* AFS */
-
     *uam_pwd = pwent;
     return( AFP_OK );
 }

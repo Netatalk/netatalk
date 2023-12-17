@@ -209,8 +209,4 @@ extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);
 extern void accessmode      (const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
 
-#ifdef AFS	
-    #define accessmode afsmode
-#endif 
-
 #endif /* UNIX_H */
