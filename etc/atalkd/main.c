@@ -582,14 +582,7 @@ static void as_timer(int sig _U_)
 		    }
 
 		    /* split horizon */
-
-		    /* Made the AsanteTalk bridge consistently start up in
-		     * AppleTalk Phase 2, and stop the Dayna bridge from
-		     * crashing GS/OS.
-		     *
-		     * if (rtmp->rt_iface == iface) {
-		     */
-		    if (rtmp->rt_iface != iface) {
+		    if (rtmp->rt_iface == iface) {
 		        continue;
 		    }
 
