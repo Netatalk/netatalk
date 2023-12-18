@@ -101,7 +101,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SIGNALS</title>
+    <title>Signals</title>
 
     <para>To shut down a user's <command>afpd</command> process it is
       recommended that <command>SIGKILL (-9)</command>
@@ -175,7 +175,7 @@
   </refsect1>
 
   <refsect1>
-    <title>FILES</title>
+    <title>Files</title>
 
     <variablelist>
       <varlistentry>
@@ -221,7 +221,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>netatalk</refentrytitle>
@@ -255,7 +255,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>

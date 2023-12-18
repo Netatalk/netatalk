@@ -19,7 +19,7 @@
   </refnamediv>
 
   <refsect1>
-    <title>SYNOPSIS</title>
+    <title>Synopsis</title>
 
     <para>The <filename>afp.conf</filename> file is the configuration file for
     the <emphasis role="bold">Netatalk</emphasis> AFP file server.</para>
@@ -29,7 +29,7 @@
   </refsect1>
 
   <refsect1 id="FILEFORMATSECT">
-    <title>FILE FORMAT</title>
+    <title>File Format</title>
 
     <para>The file consists of sections and parameters. A section begins with
     the name of the section in square brackets and continues until the next
@@ -67,7 +67,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SECTION DESCRIPTIONS</title>
+    <title>Section Descriptions</title>
 
     <para>Each section in the configuration file (except for the [Global]
     section) describes a shared resource (known as a <quote>volume</quote>).
@@ -101,7 +101,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SPECIAL SECTIONS</title>
+    <title>Special Sections</title>
 
     <refsect2>
       <title>The [Global] section</title>
@@ -141,7 +141,7 @@
   </refsect1>
 
   <refsect1>
-    <title>PARAMETERS</title>
+    <title>Parameters</title>
 
     <para>Parameters define the specific attributes of sections.</para>
 
@@ -154,7 +154,7 @@
   </refsect1>
 
   <refsect1>
-    <title>VARIABLE SUBSTITUTIONS</title>
+    <title>Variable Substitutions</title>
 
     <para>You can use variables in volume names. The use of variables in paths
      is limited to $u.</para>
@@ -267,7 +267,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXPLANATION OF GLOBAL PARAMETERS</title>
+    <title>Explanation of Global Parameters</title>
 
     <refsect2>
       <title>Authentication Options</title>
@@ -1694,7 +1694,7 @@
   </refsect1>
 
   <refsect1>
-    <title>EXPLANATION OF VOLUME PARAMETERS</title>
+    <title>Explanation of Volume Parameters</title>
 
     <refsect2>
       <title>Parameters</title>
@@ -2300,7 +2300,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>afpd</refentrytitle>
@@ -2326,7 +2326,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>
