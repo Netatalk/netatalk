@@ -79,7 +79,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>apple_dump</command> dumps
     AppleSingle/AppleDouble format data. </para>
@@ -90,7 +90,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -159,7 +159,7 @@
   </refsect1>
 
   <refsect1>
-    <title>NOTE</title>
+    <title>Note</title>
 
     <para>There is no way to detect whether FinderInfo is FileInfo or DirInfo.
     By default, apple_dump examines whether the file, directory or parent directory
@@ -171,7 +171,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>ad</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>getfattr</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
@@ -182,7 +182,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>

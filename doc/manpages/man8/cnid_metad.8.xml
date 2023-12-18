@@ -39,7 +39,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>cnid_metad</command> waits for requests from <emphasis
     remap="B">afpd</emphasis> to start up instances of the <emphasis
@@ -51,7 +51,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
  
@@ -87,7 +87,7 @@
   </refsect1>
 
   <refsect1>
-    <title>CAVEATS</title>
+    <title>Caveats</title>
 
     <para><command>cnid_metad</command> does not block or catch any signals
     apart from SIGPIPE. It will therefore exit on most signals received. This
@@ -100,7 +100,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry>
         <refentrytitle>netatalk</refentrytitle>
@@ -126,7 +126,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>

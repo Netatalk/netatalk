@@ -25,14 +25,14 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>afpstats</command> list AFP statistics via D-Bus IPC.</para>
 
   </refsect1>
 
   <refsect1>
-    <title>NOTE</title>
+    <title>Note</title>
 
     <para><command>afpd</command> must support D-Bus. Check it by
     "<command>afpd -V</command>".</para>
@@ -43,7 +43,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
@@ -51,7 +51,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>

@@ -42,7 +42,7 @@
   </refsynopsisdiv>
 
   <refsect1 id="description">
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>afpldaptest</command> is a simple command to syntactically
     check ldap parameters in @pkgconfdir@/afp.conf.</para>
@@ -50,7 +50,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -92,13 +92,13 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See Also</title>
 
     <para><citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>
