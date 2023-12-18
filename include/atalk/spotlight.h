@@ -128,4 +128,3 @@ extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 extern void configure_spotlight_attributes(const char *attributes);
 
 #endif /* SPOTLIGHT_H */
-#endif /* WITH_SPOTLIGHT */
