@@ -155,13 +155,6 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
     }
     BN_free(bn3);
 
-#ifdef AFS
-    if ( kcheckuser(*uam_pwd, rbuf) == 0) {
-      *uam_pwd = pgppwd;
-      return AFP_OK;
-    }
-#endif /* AFS */
-
     rbuf[PASSWDLEN] = '\0';
     p = crypt( rbuf, pgppwd->pw_passwd );
     memset(rbuf, 0, PASSWDLEN);

@@ -335,11 +335,6 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
         return(-1);
     }
 
-#ifdef AFS
-    if ( kcheckuser( pwd, password) == 0)
-        return(0);
-#endif /* AFS */
-
     p = crypt(password, pwd->pw_passwd);
     if (strcmp(p, pwd->pw_passwd) != 0) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: bad password", username);
