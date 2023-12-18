@@ -12,8 +12,6 @@
   GNU General Public License for more details.
 */
 
-#ifdef WITH_SPOTLIGHT
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -24,14 +22,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <atalk/dalloc.h>
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
+#ifdef WITH_SPOTLIGHT
 #include <gio/gio.h>
 #include <tracker-sparql.h>
+#include <atalk/dalloc.h>
 #ifndef HAVE_TRACKER3
 #include <libtracker-miner/tracker-miner.h>
+#endif
 #endif
 
 /******************************************************************************
