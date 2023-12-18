@@ -45,7 +45,7 @@
   </refsynopsisdiv>
 
   <refsect1>
-    <title>DESCRIPTION</title>
+    <title>Description</title>
 
     <para><command>netatalk-config</command> is a tool that is used to
     determine the compiler and linker flags that should be used
@@ -54,7 +54,7 @@
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
+    <title>Options</title>
 
     <para><command>netatalk-config</command> accepts the following options:</para>
 
@@ -147,7 +147,7 @@
   </refsect1>
 
   <refsect1>
-    <title>COPYRIGHT</title>
+    <title>Copyright</title>
 
     <para>Copyright © 1998 Owen Taylor</para>
 
@@ -162,7 +162,7 @@
   </refsect1>
 
   <refsect1>
-      <title>AUTHOR</title>
+      <title>Author</title>
 
       <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
   </refsect1>
