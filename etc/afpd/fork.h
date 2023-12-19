@@ -47,10 +47,6 @@ struct ofork {
 #define AFPFORK_MODIFIED (1<<6) /* used in FCE for modified files */
 #define AFPFORK_ERROR   (1<<7)  /* used to indicate an error in opening the fork */
 
-#ifdef AFS
-extern struct ofork *writtenfork;
-#endif
-
 #define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */
 extern struct ofork *of_alloc    (struct vol *, struct dir *,

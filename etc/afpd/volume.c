@@ -229,15 +229,6 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
 
-#ifdef AFS
-    if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_AFSGVS ) {
-        if ( afs_getvolspace( vol, xbfree, xbtotal, bsize ) == AFP_OK ) {
-            vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_AFSGVS;
-            goto getvolspace_done;
-        }
-    }
-#endif
-
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
         return( rc );
     }

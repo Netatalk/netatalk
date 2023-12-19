@@ -711,27 +711,6 @@ basedir regex = /usr/home</programlisting></para>
           </listitem>
 
           <listitem>
-            <para>"Kerberos IV"<indexterm>
-                <primary>Kerberos IV</primary>
-
-                <secondary>"Kerberos IV" UAM</secondary>
-              </indexterm><indexterm>
-                <primary>uams_krb4.so</primary>
-
-                <secondary>"Kerberos IV" UAM</secondary>
-              </indexterm>/"AFS Kerberos"<indexterm>
-                <primary>AFS Kerberos</primary>
-
-                <secondary>"AFS Kerberos" UAM (Kerberos IV)</secondary>
-              </indexterm> UAMs (suitable to use <ulink
-            url="http://web.mit.edu/macdev/KfM/Common/Documentation/faq.html">Kerberos
-            v4 based authentication</ulink> and AFS file servers)</para>
-
-            <para>Use <filename>"--enable-krb4-uam"</filename> at compile time
-            to activate the build of this UAM.</para>
-          </listitem>
-
-          <listitem>
             <para>"Client Krb v2"<indexterm>
                 <primary>Client Krb v2</primary>
 

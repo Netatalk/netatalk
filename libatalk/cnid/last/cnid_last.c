@@ -39,9 +39,6 @@ cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
      * Since the DIDs are small, we insure that the FNUMs are fairly
      * large by setting thier high bits to the device number.
      *
-     * AFS already does something very similar to this for the
-     * inode number, so we don't repeat the procedure.
-     *
      * new algorithm:
      * due to complaints over did's being non-persistent,
      * here's the current hack to provide semi-persistent
