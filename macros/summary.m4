@@ -12,7 +12,11 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([    AFP:])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([         ACL support: $ac_cv_have_acls])
-	AC_MSG_RESULT([         Spotlight: $ac_cv_have_tracker])
+	if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
+	AC_MSG_RESULT([         Spotlight: yes])
+	else
+	AC_MSG_RESULT([         Spotlight: no])
+	fi
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
 	AC_MSG_RESULT([    UAMS:])
@@ -62,7 +66,7 @@ dnl	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	if test x"$atalk_cv_with_dbus" = x"yes"; then
 		AC_MSG_RESULT([         dbus system directory:   $ac_cv_dbus_sysdir])
 	fi
-	if test x"$ac_cv_have_tracker" = x"yes"; then
+	if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
 		AC_MSG_RESULT([         dbus daemon path:        $ac_cv_dbus_daemon])
 		AC_MSG_RESULT([         tracker prefix:          $ac_cv_tracker_prefix])
 		AC_MSG_RESULT([         tracker install prefix:  $ac_cv_tracker_install_prefix])
