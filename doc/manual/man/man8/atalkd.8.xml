@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">01 Mar 2023</refmiscinfo>
+    <refmiscinfo class="date">19 Dec 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -44,9 +44,19 @@
 
       <arg>-f <replaceable>configfile</replaceable></arg>
 
+      <arg>-P <replaceable>pidfile</replaceable></arg>
+
       <arg>-1</arg>
 
       <arg>-2</arg>
+
+      <arg>-d</arg>
+
+      <arg>-q</arg>
+
+      <arg>-t</arg>
+
+      <arg>-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -97,6 +107,89 @@
 
         <manvolnum>3</manvolnum>
       </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-1</term>
+
+        <listitem>
+          <para>Forces AppleTalk Phase 1.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-2</term>
+
+        <listitem>
+          <para>Forces AppleTalk Phase 2.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-d</term>
+
+        <listitem>
+          <para>Write some additional
+          debugging information to stdout.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>Consult <replaceable>configfile</replaceable> instead of
+          <filename>:ETCDIR:/atalkd.conf</filename> for the configuration
+          information.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P <replaceable>pidfile</replaceable></term>
+
+        <listitem>
+          <para>Specifies the file in which <command>atalkd</command> stores its
+          process id.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-q</term>
+
+        <listitem>
+          <para>Enable quirks mode for AsanteTalk and Dayna EtherPrint bridge
+	      devices. Improves compatibility with these devices, with the tradeoff
+	      that atalkd does not rebroadcast routing information for subnets
+	      behind other AppleTalk routers on the network.</para>
+
+	  <note>
+	    <para>Do NOT use this option unless you know exactly what you are doing.
+	        It breaks the AppleTalk specification.
+	        Ref. page 5-11 in "Inside AppleTalk".</para>
+	  </note>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-t</term>
+
+        <listitem>
+          <para>Turns on transition routing.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>Print version information and exit.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
   </refsect1>
 
   <refsect1>

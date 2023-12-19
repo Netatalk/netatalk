@@ -82,7 +82,7 @@ static int		atservNATSERV = elements( atserv );
 
 struct interface	*interfaces = NULL, *ciface = NULL;
 
-static int		debug = 0, quiet = 0, chatty = 0;
+static int		debug = 0, quirks = 0;
 static char		*configfile = NULL;
 static int		ziptimeout = 0;
 static int		stable = 0, noparent = 0;
@@ -547,7 +547,20 @@ static void as_timer(int sig _U_)
 		    }
 
 		    /* split horizon */
-		    if (rtmp->rt_iface == iface) {
+
+		    /* Quirks mode that stops atalkd from rebroadcasting
+		     * routing information for other subnets.
+		     *
+		     * Makes the AsanteTalk bridge consistently start up in
+		     * AppleTalk Phase 2, and stop the Dayna bridge from
+		     * crashing GS/OS.
+		     *
+		     * TODO: This is an ugly hack that breaks the AppleTalk
+		     * specification. A better solution is needed.
+		     */
+		    if (quirks && (rtmp->rt_iface != iface)) {
+		        continue;
+		    } else if (!quirks && (rtmp->rt_iface == iface)) {
 		        continue;
 		    }
 
@@ -817,7 +830,7 @@ int main( int ac, char **av)
     socklen_t 		fromlen;
     char		*prog;
 
-    while (( c = getopt( ac, av, "12qsdtf:P:v" )) != EOF ) {
+    while (( c = getopt( ac, av, "12df:P:qtv" )) != EOF ) {
 	switch ( c ) {
 	case '1' :
 	    defphase = IFACE_PHASE1;
@@ -835,20 +848,16 @@ int main( int ac, char **av)
 	    configfile = optarg;
 	    break;
 
-	case 'q' :	/* don't seed */
-	    quiet++;
+	case 'P' :	/* pid file */
+	    pidfile = optarg;
 	    break;
 
-	case 's' :	/* seed */
-	    chatty++;
+	case 'q' :	/* quirks mode */
+	    quirks++;
 	    break;
 
 	case 't' :	/* transition */
 	    transition++;
-	    break;
-
-	case 'P' :	/* pid file */
-	    pidfile = optarg;
 	    break;
 
 	case 'v' :	/* version */
@@ -857,7 +866,7 @@ int main( int ac, char **av)
 	    break;
 
 	default :
-	    fprintf( stderr, "Unknown option -- '%c'\n", c );
+	    fprintf( stderr, "Usage:\tatalkd -1 -2 [-f configfile] [-P pidfile] -q -t -d\n" );
 	    exit( 1 );
 	}
     }
