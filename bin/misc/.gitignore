@@ -7,3 +7,4 @@ logger_test
 .deps
 .libs
 *.o
+*.log
