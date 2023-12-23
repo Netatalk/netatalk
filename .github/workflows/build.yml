@@ -23,7 +23,7 @@ env:
   APT_PACKAGES: |
     libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
     libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev \
-    libcups2-dev tcpd
+    libcups2-dev tcpd libkrb5-dev
 
 jobs:
   integration_test:
@@ -38,7 +38,7 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure
+        run: ./configure --enable-pgp-uam --enable-krbV-uam
       - name: Build
         run: make -j $(nproc)
       - name: Run tests
@@ -55,15 +55,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install automake libressl pkg-config
+        run: brew install automake libressl pkg-config krb5
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
         # DDP and related services in the absence of an AppleTalk stack on macOS
         run: |
-          ./configure --with-ssl-dir=/usr/local/opt/libressl \
+          ./configure \
+          --with-ssl-dir=/usr/local/opt/libressl \
           --with-bdb=/usr/local/opt/berkeley-db \
-          --disable-ddp --disable-timelord --disable-a2boot
+          --enable-pgp-uam \
+          --enable-krbV-uam \
+          --disable-ddp
       - name: Build
         run: make -j $(nproc)
       - name: Run tests
