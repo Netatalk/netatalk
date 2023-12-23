@@ -26,7 +26,7 @@ env:
     libtool libtool-bin automake autoconf libtalloc-dev libevent-dev libssl-dev libgcrypt-dev \
     libkrb5-dev libpam0g-dev libdb-dev libmysqlclient-dev libavahi-client-dev \
     libacl1-dev libcrack2-dev libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev \
-    systemtap-sdt-dev tracker tcpd libtracker-sparql-3.0-dev
+    systemtap-sdt-dev tracker tcpd libtracker-sparql-3.0-dev libkrb5-dev
 
 jobs:
   build-ubuntu:
@@ -41,7 +41,11 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --with-tracker-pkgconfig-version=3.0
+        run: |
+             ./configure \
+             --with-tracker-pkgconfig-version=3.0 \
+             --enable-pgp-uam \
+             --enable-krbv-uam
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
@@ -59,11 +63,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install automake libressl mysql talloc
+        run: brew install automake libressl mysql talloc krb5
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --with-ssl-dir=/usr/local/opt/libressl --with-bdb=/usr/local/opt/berkeley-db
+        run: |
+             ./configure \
+             --with-ssl-dir=/usr/local/opt/libressl \
+             --with-bdb=/usr/local/opt/berkeley-db \
+             --enable-pgp-uam \
+             --enable-krbv-uam
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
