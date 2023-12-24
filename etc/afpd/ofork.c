@@ -60,7 +60,6 @@ static void of_unhash(struct ofork *of)
     }
 }
 
-#ifdef DEBUG1
 void of_pforkdesc( FILE *f)
 {
     int ofrefnum;
@@ -74,7 +73,6 @@ void of_pforkdesc( FILE *f)
         }
     }
 }
-#endif
 
 int of_flush(const struct vol *vol)
 {

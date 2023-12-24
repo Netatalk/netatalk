@@ -39,6 +39,8 @@
 #include "route.h"
 #include "main.h"
 
+extern int debug;
+
 void rtmp_delzonemap(struct rtmptab *rtmp)
 {
     struct list		*lz, *flz, *lr, *flr;
@@ -793,11 +795,9 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 		LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
 	    }
 	} else if ( *data == 2 || *data == 3 ) {
-#ifdef DEBUG
-	    printf( "rtmp_packet rdr (%d) from %u.%u\n",
+            LOG(log_debug, logtype_atalkd, "rtmp_packet rdr (%d) from %u.%u\n",
 		    *data, ntohs( from->sat_addr.s_net ),
 		    from->sat_addr.s_node );
-#endif /* DEBUG */
 	} else {
 	    LOG(log_info, logtype_atalkd, "rtmp_packet unknown request from %u.%u",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );

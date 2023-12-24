@@ -639,9 +639,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     }
     PAM_password = utfpass;
 
-#ifdef DEBUG
     LOG(log_maxdebug, logtype_default, "DHX2: password: %s", PAM_password);
-#endif
 
     /* Set these things up for the conv function */
 

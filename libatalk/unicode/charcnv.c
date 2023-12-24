@@ -234,9 +234,7 @@ charset_t add_charset(const char* name)
     charsets[cur_charset_t] = get_charset_functions (cur_charset_t);
     max_charset_t++;
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_default, "Added charset %s with handle %u", name, cur_charset_t);
-#endif
     return (cur_charset_t);
 }
 

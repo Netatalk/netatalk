@@ -216,8 +216,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->server = opt;
 
     /* parse toggles */
-    if (strstr(buf, " -nodebug"))
-        options->flags &= ~OPTION_DEBUG;
+    if (strstr(buf, " -debug"))
+        options->flags |= OPTION_DEBUG;
 #ifdef USE_SRVLOC
     if (strstr(buf, " -slp"))
         options->flags &= ~OPTION_NOSLP;

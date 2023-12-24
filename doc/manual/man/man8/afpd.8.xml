@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">01 Mar 2023</refmiscinfo>
+    <refmiscinfo class="date">24 Dec 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -89,9 +89,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>Specifies that the daemon should not fork. If netatalk has
-          been configured with <emphasis>--enable-debug1</emphasis>, a trace
-          of all AFP commands will be written to stdout.</para>
+          <para>Prevents the daemon from forking, for debugging purposes.</para>
         </listitem>
       </varlistentry>
 

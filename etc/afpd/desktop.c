@@ -38,7 +38,6 @@
 #include "desktop.h"
 #include "mangle.h"
 
-
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
@@ -225,12 +224,7 @@ addicon_err:
         if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
             return( AFPERR_PARAM );
 
-#ifdef DEBUG1
-        if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %d\n", (unsigned long) buflen);
-            bprint(rbuf, buflen);
-        }
-#endif
+	LOG(log_debug9, logtype_afpd, "(write) len: %d\n", buflen);
 
         /*
          * We're at the end of the file, add the headers, etc.  */
@@ -577,9 +571,8 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 	    return NULL;
     }
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
-#endif /* DEBUG */
+
     return( upath );
 }
 
@@ -613,9 +606,8 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 
     m = mangle(vol, mpath, outlen, upath, id, flags);
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m, ntohl(id));
-#endif /* DEBUG */
+
     return(m);
 
 utompath_error:
