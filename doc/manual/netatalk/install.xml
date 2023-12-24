@@ -218,7 +218,7 @@ remote: Counting objects: 2503, done.
 
             <para>Required for encrypted passwords. Without it, the password
             will be sent over the network in clear text. Libgcrypt is needed
-            for DHX2. OpenSSL is needed for the older DHCAST128 (aka
+            for DHX2. OpenSSL 1.x or LibreSSL is needed for the older DHCAST128 (aka
             DHX).</para>
           </listitem>
 
