@@ -104,6 +104,7 @@ the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
 v1) protocols as well as a full-strength general purpose cryptography
 library.
 This is required to enable DHX login support.
+Note that OpenSSL 3.0 or later are no longer compatible with DHX.
 
 Get everything at http://www.openssl.org/ 
 

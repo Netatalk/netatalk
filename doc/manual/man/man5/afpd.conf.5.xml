@@ -96,7 +96,7 @@
 
         <listitem>
           <para>Comma separated list of UAMs. (The default is
-          uams_dhx.so,uams_dhx2.so).</para>
+          uams_dhx2.so).</para>
 
           <para>The most commonly used UAMs are:</para>
 
