@@ -199,44 +199,6 @@ AC_ARG_ENABLE(ddp,
 	]
 )
 
-AC_MSG_CHECKING([whether to enable debug code])
-AC_ARG_ENABLE(debug1,
-	[  --enable-debug1         enable debug code],[
-	if test "$enableval" != "no"; then
-		if test "$enableval" = "yes"; then
-			AC_DEFINE(DEBUG1, 1, [Define if debugging information should be included])
-		else
-			AC_DEFINE_UNQUOTED(DEBUG1, $enableval, [Define if debugging information should be included])
-		fi 
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
-AC_MSG_CHECKING([whether to enable verbose debug code])
-AC_ARG_ENABLE(debug,
-	[  --enable-debug          enable verbose debug code],[
-	if test "$enableval" != "no"; then
-		if test "$enableval" = "yes"; then
-			AC_DEFINE(DEBUG, 1, [Define if verbose debugging information should be included])
-		else
-			AC_DEFINE_UNQUOTED(DEBUG, $enableval, [Define if verbose debugging information should be included])
-		fi 
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-        AC_DEFINE(NDEBUG, 1, [Disable assertions])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-        AC_DEFINE(NDEBUG, 1, [Disable assertions])
-	]
-)
-
 AC_MSG_CHECKING([whether to enable debugging with debuggers])
 AC_ARG_ENABLE(debugging,
 	[  --enable-debugging      disable SIGALRM timers and DSI tickles (eg for debugging with gdb/dbx/...)],[

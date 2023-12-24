@@ -185,22 +185,16 @@ static void lp_setup_comments (charset_t dest)
     }
 
     if (lp.lp_job) {
-#ifdef DEBUG1
         LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job );
-#endif
         translate(from, dest, &lp.lp_job);
     }
     if (lp.lp_created_for) {
-#ifdef DEBUG1
         LOG(log_debug9, logtype_papd, "for: %s", lp.lp_created_for );
-#endif
         translate(from, dest, &lp.lp_created_for);
     }
     if (lp.lp_person) {
-#ifdef DEBUG1
-       LOG(log_debug9, logtype_papd, "person: %s", lp.lp_person );
-#endif
-       translate(from, dest, &lp.lp_person);
+        LOG(log_debug9, logtype_papd, "person: %s", lp.lp_person );
+        translate(from, dest, &lp.lp_person);
     }
 }
 
@@ -358,10 +352,7 @@ void lp_job(char *job)
     }
 
     lp.lp_job = strdup(job);
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job );
-#endif
-    
 }
 
 void lp_for (char *lpfor)
@@ -544,9 +535,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
     int		fd;
     struct passwd	*pwent;
 
-#ifdef DEBUG
     LOG (log_debug9, logtype_papd, "lp_open");
-#endif
 
     if ( lp.lp_flags & LP_JOBPENDING ) {
 	lp_print();
@@ -630,9 +619,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
-#ifdef DEBUG        
-        LOG(log_debug9, logtype_papd, "lp_open: opened %s", name );
-#endif	
+	LOG(log_debug9, logtype_papd, "lp_open: opened %s", name );
     }
     lp.lp_flags |= LP_OPEN;
     return( 0 );
@@ -683,9 +670,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
             tempbuf2[len] = 0;
             tbuf = tempbuf2;
             last_line_translated = 1;
-#ifdef DEBUG
             LOG(log_debug9, logtype_papd, "lp_write: %s", tbuf );
-#endif
         }
         else {
             LOG(log_error, logtype_papd, "lp_write: conversion buffer too small" );
@@ -704,10 +689,8 @@ int lp_write(struct papfile *in, char *buf, size_t len)
      * we store the start of the print job in a buffer.
      * %%EndComment triggers writing to file */
     if (( lp.lp_flags & LP_OPEN ) == 0 ) {
-#ifdef DEBUG
         LOG(log_debug9, logtype_papd, "lp_write: writing to temporary buffer" );
-#endif
-    	if ((bufpos+len) > BUFSIZE) {
+        if ((bufpos+len) > BUFSIZE) {
             LOG(log_error, logtype_papd, "lp_write: temporary buffer too small" );
             /* FIXME: call lp_open here? abort isn't nice... */
             abort();

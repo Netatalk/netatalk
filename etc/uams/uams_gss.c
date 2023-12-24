@@ -87,7 +87,6 @@ static void log_status( char *s, OM_uint32 major_status,
 
 static void log_ctx_flags( OM_uint32 flags )
 {
-#ifdef DEBUG1
     if (flags & GSS_C_DELEG_FLAG)
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_DELEG_FLAG" );
     if (flags & GSS_C_MUTUAL_FLAG)
@@ -100,7 +99,6 @@ static void log_ctx_flags( OM_uint32 flags )
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_CONF_FLAG" );
     if (flags & GSS_C_INTEG_FLAG)
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_INTEG_FLAG" );
-#endif
 }
 
 static void log_principal(gss_name_t server_name)

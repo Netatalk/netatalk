@@ -127,9 +127,7 @@ int ch_title( struct papfile *in, struct papfile *out _U_)
         return( CH_ERROR );
     }
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "Parsing %%Title");
-#endif
 
     cmt = get_text(start, linelength);
 
@@ -194,9 +192,8 @@ int ch_endcomm( struct papfile *in, struct papfile *out _U_)
     char                *start;
     int                 linelength, crlflength;
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "End Comment");
-#endif
+
     in->pf_state |= PF_STW;
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -223,9 +220,7 @@ int ch_starttranslate( struct papfile *in, struct papfile *out _U_)
     char                *start;
     int                 linelength, crlflength;
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "Start translate");
-#endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
@@ -250,9 +245,7 @@ int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
     char                *start;
     int                 linelength, crlflength;
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "EndTranslate");
-#endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
@@ -277,9 +270,7 @@ int ch_translateone( struct papfile *in, struct papfile *out _U_)
     char                *start;
     int                 linelength, crlflength;
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_papd, "TranslateOne");
-#endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :

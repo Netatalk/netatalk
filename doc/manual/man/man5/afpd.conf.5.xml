@@ -736,10 +736,10 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-nodebug</term>
+        <term>-debug</term>
 
         <listitem>
-          <para>Disables debugging.</para>
+          <para>Prevents afpd from forking, for debugging purposes.</para>
         </listitem>
       </varlistentry>
 

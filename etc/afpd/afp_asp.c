@@ -212,9 +212,7 @@ void afp_over_asp(AFPObj *obj)
     ASP asp;
     struct sigaction  action;
     int		func,  reply = 0;
-#ifdef DEBUG1
     int ccnt = 0;
-#endif    
 
     AFPobj = obj;
     obj->exit = afp_asp_die;
@@ -306,22 +304,13 @@ void afp_over_asp(AFPObj *obj)
             afp_asp_close(obj);
             LOG(log_info, logtype_afpd, "done" );
 
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf( "done\n" );
-            }
-#endif
             return;
             break;
 
         case ASPFUNC_CMD :
             func = (u_char) asp->commands[0];
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf("command: %d (%s)\n", func, AfpNum2name(func));
-                bprint( asp->commands, asp->cmdlen );
-            }
-#endif            
+            LOG(log_debug9, logtype_afpd, "command: %d (%s)\n", func, AfpNum2name(func));
+
             if ( afp_switch[ func ] != NULL ) {
                 /*
                  * The function called from afp_switch is expected to
@@ -338,12 +327,9 @@ void afp_over_asp(AFPObj *obj)
                 asp->datalen = 0;
                 reply = AFPERR_NOOP;
             }
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf( "reply: %d, %d\n", reply, ccnt++ );
-                bprint( asp->data, asp->datalen );
-            }
-#endif
+
+            LOG(log_debug9, logtype_afpd, "reply: %d, %d\n", reply, ccnt++ );
+
             if ( asp_cmdreply( asp, reply ) < 0 ) {
                 LOG(log_error, logtype_afpd, "asp_cmdreply: %s", strerror(errno) );
                 afp_asp_die(EXITERR_CLNT);
@@ -352,12 +338,9 @@ void afp_over_asp(AFPObj *obj)
 
         case ASPFUNC_WRITE :
             func = (u_char) asp->commands[0];
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf( "(write) command: %d\n", func );
-                bprint( asp->commands, asp->cmdlen );
-            }
-#endif
+
+            LOG(log_debug9, logtype_afpd, "(write) command: %d\n", func );
+
             if ( afp_switch[ func ] != NULL ) {
                 asp->datalen = ASP_DATASIZ;
                 reply = (*afp_switch[ func ])(obj,
@@ -368,12 +351,9 @@ void afp_over_asp(AFPObj *obj)
                 asp->datalen = 0;
                 reply = AFPERR_NOOP;
             }
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf( "(write) reply code: %d, %d\n", reply, ccnt++ );
-                bprint( asp->data, asp->datalen );
-            }
-#endif
+
+            LOG(log_debug9, logtype_afpd, "(write) reply code: %d, %d\n", reply, ccnt++ );
+
             if ( asp_wrtreply( asp, reply ) < 0 ) {
                 LOG(log_error, logtype_afpd, "asp_wrtreply: %s", strerror(errno) );
                 afp_asp_die(EXITERR_CLNT);
@@ -387,12 +367,12 @@ void afp_over_asp(AFPObj *obj)
             LOG(log_info, logtype_afpd, "main: asp_getrequest: %d", reply );
             break;
         }
-#ifdef DEBUG1
+
         if ( obj->options.flags & OPTION_DEBUG ) {
             of_pforkdesc( stdout );
             fflush( stdout );
         }
-#endif
+
     }
 }
 
