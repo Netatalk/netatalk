@@ -1000,7 +1000,7 @@ neta_cv_eas="ad"
 neta_cv_eas_sys_found=no
 neta_cv_eas_sys_not_found=no
 
-AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h sys/ea.h)
+AC_CHECK_HEADERS(sys/attributes.h sys/attr.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h sys/ea.h)
 
 case "$this_os" in
 
