@@ -160,7 +160,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     uint32_t  attrsize;
     size_t    extra = 0;
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
     /* Protect special attributes set by NFS server */
     if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
         return AFPERR_ACCESS;
@@ -371,7 +371,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     int ret;
     char *eabuf;
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
     /* Protect special attributes set by NFS server */
     if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
         return AFPERR_ACCESS;
@@ -469,7 +469,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
     int ret;
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
     /* Protect special attributes set by NFS server */
     if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE))
         return AFPERR_ACCESS;
@@ -592,7 +592,7 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         if (STRCMP(name, ==, AD_EA_META))
             continue;
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
         /* Skip special attributes set by NFS server */
         if (!strcmp(name, VIEW_READONLY) || !strcmp(name, VIEW_READWRITE))
             continue;

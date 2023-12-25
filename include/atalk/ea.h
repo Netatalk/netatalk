@@ -33,7 +33,7 @@
 #include <sys/extattr.h>
 #endif
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 #include <sys/attr.h>
 #endif
 
@@ -81,7 +81,7 @@ enum {
 #define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
 #endif
 
-#ifdef SOLARIS
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 #define SMB_ATTR_PREFIX "SUNWsmb:"
 #define SMB_ATTR_PREFIX_LEN (sizeof (SMB_ATTR_PREFIX) - 1)
 #endif
