@@ -75,6 +75,12 @@ static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
     FILE *fp;
     struct vol *vol;
 
+    struct flock lock;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_type = F_WRLCK;
+
     fp = fopen(obj->options.uuidconf, "a");
     if (fp == NULL) {
         LOG(log_error, logtype_afpd, "Cannot open %s (%s)",
@@ -82,7 +88,7 @@ static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
         return -1;
     }
 
-    result = flock(fileno(fp), LOCK_EX);
+    result = fcntl(fileno(fp), F_SETLK, &lock);
     if (result != 0) {
         LOG(log_error, logtype_afpd, "Can't lock UUID file %s (%s)",
             obj->options.uuidconf, strerror(errno));
@@ -132,10 +138,16 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
     int result;
     long offset;
 
+    struct flock lock;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+
     fp = fopen(obj->options.uuidconf, "r+");
     if (fp != NULL) {
         /* Lock the file */
-        result = flock(fileno(fp), LOCK_SH);
+        lock.l_type = F_RDLCK;
+        result = fcntl(fileno(fp), F_SETLK, &lock);
         if (result != 0) {
             LOG(log_error, logtype_afpd, "Can't lock UUID file %s", obj->options.uuidconf);
             return NULL;
@@ -203,7 +215,8 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
         }
     }
 
-    result = flock(fileno(fp), LOCK_EX);
+    lock.l_type = F_WRLCK;
+    result = fcntl(fileno(fp), F_SETLK, &lock);
     if (result != 0) {
         LOG(log_error, logtype_afpd, "Can't lock UUID file %s (%s)",
             obj->options.uuidconf, strerror(errno));
