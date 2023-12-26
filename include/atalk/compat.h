@@ -26,10 +26,6 @@ extern int pselect(int, fd_set * restrict, fd_set * restrict,
                    const sigset_t * restrict);
 #endif
 
-#ifndef HAVE_FLOCK
-extern int flock (int, int);
-#endif
-
 #ifndef HAVE_STRNLEN
 extern size_t strnlen(const char *s, size_t n);
 #endif
