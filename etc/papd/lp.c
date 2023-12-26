@@ -372,6 +372,10 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
     int		fd, n, len;
     char	*cp, buf[ BUFSIZ ];
     struct stat	st;
+    struct flock lock;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
 #endif /* HAVE_CUPS */
 #ifdef ABS_PRINT
     char	cost[ 22 ];
@@ -480,13 +484,12 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 	    return( -1 );
 	}
 
-#ifndef SOLARIS /* flock is unsupported, I doubt this stuff works anyway with newer solaris so ignore for now */
-	if ( flock( fd, LOCK_EX ) < 0 ) {
+	lock.l_type = F_WRLCK;
+	if (( fcntl(fd, F_SETLK, &lock)) < 0 ) {
 	    LOG(log_error, logtype_papd, "lp_init: can't lock .seq" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
-#endif
 
 	n = 0;
 	if (( len = read( fd, buf, sizeof( buf ))) < 0 ) {
