@@ -19,7 +19,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-extern int flock (int, int);
 extern int inet_aton (const char *, struct in_addr *);
 
 #ifdef linux
