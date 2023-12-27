@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: AppleVolumes.default
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 03 May 2023
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 24 Dec 2023
+.\"    Manual: Netatalk 2.3.0
+.\"    Source: Netatalk 2.3.0
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "03 May 2023" "Netatalk 2.2" "Netatalk 2.2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "24 Dec 2023" "Netatalk 2.3.0" "Netatalk 2.3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -177,7 +177,7 @@ Example: denied_hosts: 192\&.168\&.100/24,10\&.1\&.1\&.1,2001:db8::1428:57ab
 .PP
 cnidscheme:\fI[backend]\fR
 .RS 4
-set the CNID backend to be used for the volume, default is [:DEFAULT_CNID_SCHEME:] available schemes: [:COMPILED_BACKENDS:]
+set the CNID backend to be used for the volume, default is dbd
 .RE
 .PP
 dbpath:\fI[path]\fR
@@ -271,11 +271,6 @@ limitsize
 Limit disk size reporting to 2GB\&. This can be used for older Macintoshes using newer AppleShare clients\&.
 .RE
 .PP
-preexec_close
-.RS 4
-A non\-zero return code from preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
-.RE
-.PP
 ro
 .RS 4
 Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, and you can use the
@@ -284,11 +279,6 @@ option to relocate it\&. Overwrites
 \fBea:auto\fR
 with
 \fBea:none\fR
-.RE
-.PP
-root_preexec_close
-.RS 4
-A non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
 upriv
@@ -342,26 +332,6 @@ umask:\fI[mode]\fR
 .RS 4
 set perm mask\&. Use with
 \fBoptions:upriv\fR\&.
-.RE
-.PP
-preexec:\fI[command]\fR
-.RS 4
-command to be run when the volume is mounted, ignored for user defined volumes
-.RE
-.PP
-postexec:\fI[command]\fR
-.RS 4
-command to be run when the volume is closed, ignored for user defined volumes
-.RE
-.PP
-root_preexec:\fI[command]\fR
-.RS 4
-command to be run as root when the volume is mounted, ignored for user defined volumes
-.RE
-.PP
-root_postexec:\fI[command]\fR
-.RS 4
-command to be run as root when the volume is closed, ignored for user defined volumes
 .RE
 .PP
 rolist:[\fBusers/groups\fR]
@@ -491,43 +461,27 @@ The AFP protocol mostly refers to files and directories by ID and not by name\&.
 \&.AppleDB
 folder in the volume root\&.
 .PP
-cdb
-.RS 4
-"Concurrent database", backend is based on Sleepycat\*(Aqs Berkeley DB\&. With this backend several
-\fBafpd\fR
-daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
-\fBafpd\fR
-process is active for a volume\&. The drawback is, that the crash of a single
-\fBafpd\fR
-process might corrupt the database\&.
-.RE
-.PP
 dbd
 .RS 4
-Access to the CNID database is restricted to the
+The "Database Daemon" backend is built on Berkeley DB\&. Access to the CNID database is restricted to the
 \fBcnid_metad\fR
 daemon process\&.
 \fBafpd\fR
-processes communicate with the daemon for database reads and updates\&. If built with Berkeley DB transactions the probability for database corruption is practically zero, but performance can be slower than with
-\fBcdb\fR
+processes communicate with the daemon for database reads and updates\&.
 .RE
 .PP
 last
 .RS 4
-This backend is an exception, in terms of ID persistency\&. ID\*(Aqs are only valid for the current session\&. This is basically what
+A simple backend without ID persistency\&. IDs are only valid for the current session\&. This is basically what
 \fBafpd\fR
-did in the 1\&.5 (and 1\&.6) versions\&. This backend is still available, as it is useful for e\&.g\&. sharing cdroms\&.
+did in the 1\&.5 and 1\&.6 versions\&. This backend can be useful for sharing read\-only filesystems, such as CR\-ROMs\&.
 .sp
 \fBWarning\fR: It is
 \fINOT\fR
-recommended to use this backend for volumes anymore, as
+recommended to use this backend for writable voumes, as
 \fBafpd\fR
-now relies heavily on a persistent ID database\&. Aliases will likely not work and filename mangling is not supported\&.
+relies heavily on a persistent ID database\&. Aliases will likely not work and filename mangling is not supported\&.
 .RE
-.PP
-Even though
-\fB\&./configure \-\-help\fR
-might show that there are other CNID backends available, be warned those are likely broken or mainly used for testing\&. Don\*(Aqt use them unless you know what you\*(Aqre doing, they may be removed without further notice from future versions\&.
 .SH "CHARSET OPTIONS"
 .PP
 With OS X Apple introduced the AFP3 protocol\&. One of the most important changes was that AFP3 uses Unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.
@@ -632,17 +586,6 @@ Enables crlf translation for TEXT files, automatically converting Macintosh line
 will potentially destroy such files when "erroneously" changing bytes in order to do line break translation\&.
 .RE
 .PP
-dropbox
-.RS 4
-Allows a volume to be declared as being a "dropbox\&." Note that netatalk must be compiled with dropkludge support for this to function\&.
-\fIWarning\fR: This option is deprecated and might not work as expected\&.
-.RE
-.PP
-dropkludge
-.RS 4
-Same as "dropbox"\&.
-.RE
-.PP
 illegalseq
 .RS 4
 Encode illegal sequences in filenames as is\&. For example "\e217\-", which is not a valid SHIFT\-JIS char, is encoded as "U\e217 \-"
@@ -707,11 +650,6 @@ nohex
 .RS 4
 Disables :hex translations for anything except dot files\&. This option makes the
 \*(Aq/\*(Aq character illegal\&.
-.RE
-.PP
-nostat
-.RS 4
-Don\*(Aqt stat volume path when enumerating volumes list, useful for automounting or volumes created by a preexec script\&.
 .RE
 .PP
 prodos

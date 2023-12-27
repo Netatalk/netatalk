@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: atalkd
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 01 Mar 2023
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 19 Dec 2023
+.\"    Manual: Netatalk 2.3.0
+.\"    Source: Netatalk 2.3.0
 .\"  Language: English
 .\"
-.TH "ATALKD" "8" "01 Mar 2023" "Netatalk 2.2" "Netatalk 2.2"
+.TH "ATALKD" "8" "19 Dec 2023" "Netatalk 2.3.0" "Netatalk 2.3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 atalkd \- AppleTalk RTMP, NBP, ZIP, and AEP manager
 .SH "SYNOPSIS"
 .HP \w'\fBatalkd\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\ 'u
-\fBatalkd\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR [\-f\ \fIconfigfile\fR] [\-1] [\-2]
+\fBatalkd\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR [\-f\ \fIconfigfile\fR] [\-P\ \fIpidfile\fR] [\-1] [\-2] [\-d] [\-q] [\-t] [\-v]
 .SH "DESCRIPTION"
 .PP
 \fBatalkd\fR
@@ -79,6 +79,68 @@ The first \-zone directive for each interface is the ``default\*(Aq\*(Aq zone\&.
 maps ``*\*(Aq\*(Aq to the default zone of the first interface\&. Note: The default zone for a machine is determined by the configuration of the local routers; to appear in a non\-default zone, each service, e\&.g\&.
 \fBafpd\fR, must individually specify the desired zone\&. See also
 \fBnbp_name\fR(3)\&.
+.SH "OPTIONS"
+.PP
+\-1
+.RS 4
+Forces AppleTalk Phase 1\&.
+.RE
+.PP
+\-2
+.RS 4
+Forces AppleTalk Phase 2\&.
+.RE
+.PP
+\-d
+.RS 4
+Write some additional debugging information to stdout\&.
+.RE
+.PP
+\-f \fIconfigfile\fR
+.RS 4
+Consult
+\fIconfigfile\fR
+instead of
+:ETCDIR:/atalkd\&.conf
+for the configuration information\&.
+.RE
+.PP
+\-P \fIpidfile\fR
+.RS 4
+Specifies the file in which
+\fBatalkd\fR
+stores its process id\&.
+.RE
+.PP
+\-q
+.RS 4
+Enable quirks mode for AsanteTalk and Dayna EtherPrint bridge devices\&. Improves compatibility with these devices, with the tradeoff that atalkd does not rebroadcast routing information for subnets behind other AppleTalk routers on the network\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+Do NOT use this option unless you know exactly what you are doing\&. It breaks the AppleTalk specification\&. Ref\&. page 5\-11 in "Inside AppleTalk"\&.
+.sp .5v
+.RE
+.RE
+.PP
+\-t
+.RS 4
+Turns on transition routing\&.
+.RE
+.PP
+\-v
+.RS 4
+Print version information and exit\&.
+.RE
 .SH "ROUTING"
 .PP
 If you are connecting a netatalk router to an existing AppleTalk network, you should first contact your local network administrators to obtain appropriate network addresses\&.

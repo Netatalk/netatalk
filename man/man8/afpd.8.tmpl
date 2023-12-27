@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: afpd
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 01 Mar 2023
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 24 Dec 2023
+.\"    Manual: Netatalk 2.3.0
+.\"    Source: Netatalk 2.3.0
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "01 Mar 2023" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD" "8" "24 Dec 2023" "Netatalk 2.3.0" "Netatalk 2.3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -59,8 +59,7 @@ files is used to specify volumes to mount and file name extension mappings\&.
 .PP
 \-d
 .RS 4
-Specifies that the daemon should not fork\&. If netatalk has been configured with
-\fI\-\-enable\-debug1\fR, a trace of all AFP commands will be written to stdout\&.
+Prevents the daemon from forking, for debugging purposes\&.
 .RE
 .PP
 \-p
@@ -312,8 +311,6 @@ configuration file for LDAP and ACL support
 .RS 4
 contains messages to be sent to users\&.
 .RE
-.SH "BUGS"
-.PP
 .SH "SEE ALSO"
 .PP
 \fBhosts_access\fR(5),

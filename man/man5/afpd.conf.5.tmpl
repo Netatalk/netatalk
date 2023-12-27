@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: afpd.conf
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 03 May 2023
-.\"    Manual: Netatalk 2.2
-.\"    Source: Netatalk 2.2
+.\"    Manual: Netatalk 2.3.0
+.\"    Source: Netatalk 2.3.0
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "03 May 2023" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD\&.CONF" "5" "03 May 2023" "Netatalk 2.3.0" "Netatalk 2.3.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -88,7 +88,7 @@ file\&.
 .PP
 \-uamlist \fI[uams list]\fR
 .RS 4
-Comma separated list of UAMs\&. (The default is uams_dhx\&.so,uams_dhx2\&.so)\&.
+Comma separated list of UAMs\&. (The default is uams_dhx2\&.so)\&.
 .sp
 The most commonly used UAMs are:
 .PP
@@ -102,7 +102,7 @@ uams_clrtxt\&.so
 (uams_pam\&.so or uams_passwd\&.so) Allow logins with passwords transmitted in the clear\&. (legacy)
 .RE
 .PP
-uams_randum\&.so
+uams_randnum\&.so
 .RS 4
 allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :ETCDIR:/afppasswd file or the one specified via
 \fB\-passwdfile\fR\&. See
@@ -163,7 +163,7 @@ option\&. The default is MacRoman, which should be fine for most western users\&
 .PP
 As
 \fBafpd\fR
-needs to interact with unix operating system as well, it need\*(Aqs to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
+needs to interact with unix operating system as well, it needs to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
 \fBafpd\fR
 uses the systems LOCALE, or ASCII if your system doesn\*(Aqt support locales\&. You can set the unix codepage using the
 \fB\-unixcodepage\fR
@@ -173,7 +173,7 @@ option\&. If you\*(Aqre using extended characters in the configuration files for
 .PP
 \-unixcodepage [\fICODEPAGE\fR]
 .RS 4
-Specifies the servers unix codepage, e\&.g\&. "ISO\-8859\-15" or "UTF8"\&. This is used to convert strings to/from the system\*(Aqs locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to LOCALE if your system supports it, otherwise ASCII will be used\&.
+Specifies the server\*(Aqs unix codepage, e\&.g\&. "ISO\-8859\-15" or "UTF8"\&. This is used to convert strings to/from the system\*(Aqs locale, e\&.g\&. for authenthication, server messages and volume names\&. Defaults to LOCALE if your system supports it, otherwise ASCII will be used\&.
 .RE
 .PP
 \-maccodepage [\fICODEPAGE\fR]
@@ -245,7 +245,7 @@ on the server to let things work\&.
 \fBNote\fR
 .ps -1
 .br
-Setting this option is not recommended since globally encrypting AFP connections via SSH will increase the server\*(Aqs load significantly\&. On the other hand, Apple\*(Aqs client side implementation of this feature in MacOS X versions prior to 10\&.3\&.4 contained a security flaw\&.
+Apple\*(Aqs client side implementation of this feature in Mac OS X versions prior to 10\&.3\&.4 contained a security flaw\&.
 .sp .5v
 .RE
 .RE
@@ -275,7 +275,7 @@ when used together with the
 \fB\-proxy\fR
 option\&.
 .PP
-\fBExample.\ \&afpd\&.conf onfiguration line\fR
+\fBExample.\ \&afpd\&.conf configuration line\fR
 .sp
 .if n \{\
 .RS 4
@@ -313,17 +313,31 @@ This specifies the DSI server quantum\&. The default value is 303840\&. The maxi
 \-dsireadbuf \fI[number]\fR
 .RS 4
 Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplied with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
-\fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+This buffer is allocated per afpd child process, so specifying large values will eat up large amounts of memory (buffer size * number of clients)\&.
+.sp .5v
+.RE
 .RE
 .PP
 \-tcprcvbuf \fI[number]\fR
 .RS 4
-Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications\*(Aq ability to set this value\&.
 .RE
 .PP
 \-tcpsndbuf \fI[number]\fR
 .RS 4
-Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications\*(Aq ability to set this value\&.
 .RE
 .PP
 \-nozeroconf
@@ -346,7 +360,7 @@ Allows users of a certain group to be seen as the superuser when they log in\&. 
 .PP
 \-authprintdir \fI[path]\fR
 .RS 4
-Specifies the path to be used (per server) to store the files required to do CAP\-style print authentication which papd will examine to determine if a print job should be allowed\&. These files are created at login and if they are to be properly removed, this directory probably needs to be umode 1777\&.
+Specifies the path to be used (per server) to store the files required to do CAP\-style print authentication which papd will examine to determine if a print job should be allowed\&. These files are created at login, and if they are to be properly removed, this directory probably needs to be umode 1777\&.
 .if n \{\
 .sp
 .\}
@@ -368,7 +382,21 @@ will only work for clients connecting via DDP\&. Almost all modern Clients will 
 \-client_polling
 .RS 4
 With this switch enabled, afpd won\*(Aqt advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
-\fINote\fR: Depending on the number of simultaneously connected clients and the network\*(Aqs speed, this can lead to a significant higher load on your network!
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+Depending on the number of simultaneously connected clients and the network\*(Aqs speed, this can lead to a significant higher load on your network!
+.sp .5v
+.RE
 .if n \{\
 .sp
 .\}
@@ -459,11 +487,6 @@ Specifies the shared volume icon that appears on Mac OS X clients\&. Defaults to
 Don\*(Aqt map filesystem ACLs to effective permissions\&.
 .RE
 .PP
-\-nodebug
-.RS 4
-Disables debugging\&.
-.RE
-.PP
 \-sleep \fI[number]\fR
 .RS 4
 AFP 3\&.x waits
@@ -484,8 +507,8 @@ automatically (based on a random number)\&. The "host" signature type switches b
 .\}
 .nf
 first \-signature user:USERS 
-second \-signature user:USERS 
-third \-signature user:ADMINS
+            second \-signature user:USERS 
+            third \-signature user:ADMINS
 .fi
 .if n \{\
 .RE
@@ -504,8 +527,8 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .\}
 .nf
 73:  limit of Mac OS X 10\&.1
-80:  limit for Mac OS X 10\&.4/10\&.5 (default)
-255: limit of spec
+          80:  limit for Mac OS X 10\&.4/10\&.5 (default)
+	  255: limit of spec
 .fi
 .if n \{\
 .RE
@@ -522,7 +545,7 @@ Specify that any message of a loglevel up to the given
 should be logged to the given file\&. If the filename is omitted, the loglevel applies to messages passed to syslog\&.
 .sp
 By default afpd logs to syslog with a default logging setup equivalent to
-\fB\-setuplog "default log_info"\fR\&.
+\fB\-setuplog "default log_note"\fR\&.
 .sp
 logtypes: Default, AFPDaemon, Logger, UAMSDaemon
 .sp
