@@ -199,15 +199,9 @@ basedir regex = /usr/home</programlisting></para>
 
           <listitem>
             <para>If there's no more space on the filesystem left, the
-            database will get corrupted. You can work around this by either
+            database will get corrupted. You can work around this by
             using the <option>vol dbpath</option> option and put the database
-            files into another location or, if you use quotas, make sure the
-            CNID database folder is owned by a user/group without a
-            quota<indexterm>
-                <primary>Quotas</primary>
-
-                <secondary>Disk usage quotas</secondary>
-              </indexterm>.</para>
+            files into another location.</para>
           </listitem>
 
           <listitem>
@@ -232,7 +226,8 @@ basedir regex = /usr/home</programlisting></para>
             <secondary>"dbd" CNID backend</secondary>
           </indexterm></title>
 
-        <para>Access to the CNID database is restricted to the cnid_dbd daemon
+        <para>The "Database Daemon" backend is built on Berkeley DB.
+        Access to the CNID database is restricted to the cnid_dbd daemon
         process. afpd processes communicate with the daemon for database reads
         and updates. The probability for database corruption is practically
         zero.</para>
@@ -247,8 +242,8 @@ basedir regex = /usr/home</programlisting></para>
             <secondary>"last" CNID backend</secondary>
           </indexterm></title>
 
-        <para>The last backend is a in-memory tdb database. It is not
-        persistent. Starting with netatalk 3.0, it becomes the <emphasis> read
+        <para>The last backend is an in-memory tdb database. It is not
+        persistent. Starting with netatalk 3.0, it operates in <emphasis>read
         only mode</emphasis> automatically. This is useful e.g. for
         CD-ROMs.</para>
       </sect3>

@@ -16,6 +16,3 @@ endif
 
 libcnid_la_SOURCES = cnid.c cnid_init.c
 libcnid_la_LIBADD = $(LIBCNID_DEPS)
-
-EXTRA_DIST = README
-

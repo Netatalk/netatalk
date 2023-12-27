@@ -632,23 +632,10 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
 
     volume->v_cdb = cnid_open(volume, volume->v_cnidscheme, flags);
 
-    if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
-        /* The first attempt failed and it wasn't yet an attempt to open in-memory */
+    if ( ! volume->v_cdb ) {
         LOG(log_error, logtype_afpd, "Can't open volume \"%s\" CNID backend \"%s\" ",
             volume->v_path, volume->v_cnidscheme);
-        LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
-            volume->v_path);
-        flags |= CNID_FLAG_MEMORY;
-        volume->v_cdb = cnid_open(volume, "tdb", flags);
-#ifdef SERVERTEXT
-        /* kill ourself with SIGUSR2 aka msg pending */
-        if (volume->v_cdb) {
-            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
-                       "Check server messages for details!");
-            kill(getpid(), SIGUSR2);
-            /* deactivate cnid caching/storing in AppleDouble files */
-        }
-#endif
+        return -1;
     }
 
     return (!volume->v_cdb)?-1:0;
