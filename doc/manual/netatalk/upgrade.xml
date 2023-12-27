@@ -291,14 +291,14 @@
     properly.</para>
 
     <para>That leaves the CNID schemes that use persistent storage for CNIDs.
-    Netatalk 2.0 supports two: <emphasis remap="B">cdb</emphasis> and
-    <emphasis remap="B">dbd</emphasis>. Both are based on the Berkeley DB
+    Netatalk 2.3 supports one: 
+    <emphasis remap="B">dbd</emphasis>. It is based on the Berkeley DB
     database library as before. One difference is, though, that you are not
     restricted to using a single scheme for all of your volumes that has to be
     determined at compile time. The CNID scheme (also called a "CNID backend")
     is now a runtime option for a volume. That means that you can make the
     choice per volume based on your requirements. Here are the properties as
-    well as the advantages and disadvantages of the three supported schemes:
+    well as the advantages and disadvantages of the two supported schemes:
     <orderedlist>
         <listitem>
           <para><emphasis role="bold">last<indexterm>
@@ -307,23 +307,6 @@
               <secondary>"last" CNID backend</secondary>
             </indexterm>:</emphasis> See above. Avoid, if at all
           possible.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">cdb<indexterm>
-              <primary>CDB</primary>
-
-              <secondary>"cdb" CNID backend</secondary>
-            </indexterm>: </emphasis>Roughly analogous to the Netatalk 1.6.x
-          versions with what was called then the "DID scheme" option set to
-          "cnid" and the "CNID with Concurrent Data Store" option set to
-          "yes". Access to the CNID database for a volume happens directly
-          from the Netatalk afpd daemons. A Berkeley DB locking scheme (the
-          "Concurrent Data Store" bit) is used to avoid database
-          inconsistencies. Robustness is much improved compared to previous
-          releases. The CNID database can only become corrupted if an afpd
-          daemon crashes unexpectedly, is killed by the administrator or the
-          whole machine crashes.</para>
         </listitem>
 
         <listitem>
@@ -339,33 +322,11 @@
           design combined with the transactional updates makes the CNID
           database crashproof: Any of the participating afpd daemons, the
           database daemon itself or the whole machine can crash and the CNID
-          database should still be in a consistent state. The downside to this
-          is that the speed of updates and retrieval is slower than with the
-          <emphasis remap="B">cdb</emphasis> scheme. If this is a problem, you
-          might want to disable transactions at Netatalk compile time
-          (currently, the default is to compile without transactions anyway).
-          That will give you safety against afpd crashing, but not if the
-          machine goes down unexpectedly. Also, have a look at the nosync
+          database should still be in a consistent state.
+          Also, have a look at the nosync
           option documented in the cnid_dbd manual page.</para>
         </listitem>
       </orderedlist></para>
-
-    <para>It is also possible to switch between <emphasis
-    remap="B">cdb</emphasis> and <emphasis remap="B">dbd</emphasis> for a
-    given volume, since they use the same database format. You just have to
-    shut down all processes accessing the database cleanly, make the necessary
-    configuration changes and restart. Please note, that you can easily
-    specify a default CNID backend for all shares by applying the
-    <option>cnidscheme</option><indexterm>
-        <primary>cnidscheme</primary>
-
-        <secondary>specifying a CNID backend</secondary>
-      </indexterm> option to the "<option>:DEFAULT:</option>" share (compare
-    with the <citerefentry>
-        <refentrytitle>AppleVolumes.default</refentrytitle>
-
-        <manvolnum>5</manvolnum>
-      </citerefentry> manual page for details).</para>
 
     <para>Note that the <emphasis remap="B">dbd</emphasis> backend needs an
     auxiliary daemon, called <command>cnid_metad</command><indexterm>
@@ -377,11 +338,6 @@
     default), this should happen automatically. If you cannot find it in the
     process list even though the <emphasis remap="B">dbd</emphasis> backend is
     used please check for errors in the startup scripts.</para>
-
-    <para>If you compile Netatalk 2.0 yourself and invoke configure --help,
-    you'll notice that there are in fact more CNID backends to chose from.
-    Don't use any of them. They are either broken or incomplete. Some of them
-    might turn into something useful in the future.</para>
 
     <sect2>
       <title>How to upgrade if no persistent CNID storage was used</title>

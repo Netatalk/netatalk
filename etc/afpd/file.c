@@ -191,8 +191,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
  *
  * 1. Get the objects CNID as stored in its adouble file
  * 2. Get the objects CNID from the database
- * 3. If there's a problem with a "dbd" database, fallback to "tdb" in memory
- * 4. In case 2 and 3 differ, store 3 in the adouble file
+ * 3. Store in the adouble file
  *
  * @param vol    (rw) volume
  * @param adp    (rw) adouble struct of object upath, might be NULL
@@ -208,11 +207,9 @@ uint32_t get_id(struct vol *vol,
                 const char *upath,
                 const int len) 
 {
-    static int first = 1;       /* mark if this func is called the first time */
     u_int32_t adcnid;
     u_int32_t dbcnid = CNID_INVALID;
 
-restart:
     if (vol->v_cdb != NULL) {
         /* prime aint with what we think is the cnid, set did to zero for
            catching moved files */
@@ -224,6 +221,14 @@ restart:
             switch (errno) {
             case CNID_ERR_CLOSE: /* the db is closed */
                 break;
+            case CNID_ERR_DB:
+                LOG(log_error, logtype_afpd,
+                    "get_id: Connection to the CNID backend DB failed. "
+                    "This is now treated as a fatal error. "
+                    "Is the cnid_metad process running? "
+                    "Please escalate to the upstream project "
+                    "if you suspect this is a bug");
+                exit(EXITERR_SYS);
             case CNID_ERR_PARAM:
                 LOG(log_error, logtype_afpd, "get_id: Incorrect parameters passed to cnid_add");
                 afp_errno = AFPERR_PARAM;
@@ -232,41 +237,11 @@ restart:
                 afp_errno = AFPERR_PARAM;
                 goto exit;
             default:
-                /* Close CNID backend if "dbd" and switch to temp in-memory "tdb" */
-                /* we have to do it here for "dbd" because it uses "lazy opening" */
-                /* In order to not end in a loop somehow with goto restart below  */
-                /*  */
-                if (first && (strcmp(vol->v_cnidscheme, "dbd") == 0)) { /* (3) */
-                    cnid_close(vol->v_cdb);
-                    free(vol->v_cnidscheme);
-                    vol->v_cnidscheme = strdup("tdb");
-
-                    int flags = CNID_FLAG_MEMORY;
-                    if ((vol->v_flags & AFPVOL_NODEV)) {
-                        flags |= CNID_FLAG_NODEV;
-                    }
-                    LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
-                        vol->v_path);
-                    vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
-                    if (vol->v_cdb) {
-                        vol->v_flags &= ~AFPVOL_CACHE;
-                        if (!(vol->v_flags & AFPVOL_TM)) {
-                            vol->v_flags |= AFPVOL_RO;
-                            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
-                                       "Check server messages for details. Switching to read-only mode.");
-                            kill(getpid(), SIGUSR2);
-                        }
-                        goto restart; /* now try again with the temp CNID db */
-                    } else {
-                        setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB failed too!"
-                                   "Check server messages for details, can't recover from this state!");
-                    }
-                }
                 afp_errno = AFPERR_MISC;
                 goto exit;
             }
         }
-        else if (adp && (adcnid != dbcnid)) { /* 4 */
+        else if (adp && (adcnid != dbcnid)) { /* 3 */
             /* Update the ressource fork. For a folder adp is always null */
             LOG(log_debug, logtype_afpd, "get_id(%s/%s): calling ad_setid(old: %u, new: %u)",
                 getcwdpath(), upath, htonl(adcnid), htonl(dbcnid));
@@ -277,7 +252,6 @@ restart:
     }
 
 exit:
-    first = 0;
     return dbcnid;
 }
              

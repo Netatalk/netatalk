@@ -32,7 +32,6 @@
 #define CNID_FLAG_BLOCK        0x08      /* block signals in update. */
 #define CNID_FLAG_NODEV        0x10      /* don't use device number only inode */
 #define CNID_FLAG_LAZY_INIT    0x20      /* */
-#define CNID_FLAG_MEMORY       0x40  /* this is a memory only db */
 #define CNID_FLAG_INODE        0x80  /* in cnid_add the inode is authoritative */
 
 #define CNID_INVALID   0

@@ -45,16 +45,8 @@ extern struct _cnid_module cnid_last_module;
 extern struct _cnid_module cnid_mtab_module;
 #endif
 
-#ifdef CNID_BACKEND_CDB
-extern struct _cnid_module cnid_cdb_module;
-#endif
-
 #ifdef CNID_BACKEND_DBD
 extern struct _cnid_module cnid_dbd_module;
-#endif
-
-#ifdef CNID_BACKEND_TDB
-extern struct _cnid_module cnid_tdb_module;
 #endif
 
 void cnid_init(void)
@@ -75,15 +67,7 @@ void cnid_init(void)
     cnid_register(&cnid_mtab_module);
 #endif
 
-#ifdef CNID_BACKEND_CDB
-    cnid_register(&cnid_cdb_module);
-#endif
-
 #ifdef CNID_BACKEND_DBD
     cnid_register(&cnid_dbd_module);
-#endif
-
-#ifdef CNID_BACKEND_TDB
-    cnid_register(&cnid_tdb_module);
 #endif
 }

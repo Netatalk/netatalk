@@ -22,7 +22,7 @@ on:
 env:
   APT_PACKAGES: |
     libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
-    libdb-dev libtdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev \
+    libdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev \
     libcups2-dev tcpd libkrb5-dev
 
 jobs:

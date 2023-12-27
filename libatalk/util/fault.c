@@ -36,7 +36,7 @@
 #ifndef SIGNAL_CAST
 #define SIGNAL_CAST (RETSIGTYPE (*)(int))
 #endif
-#ifndef SAFE_FREE /* Oh no this is also defined in tdb.h */
+#ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
 #endif
 #define BACKTRACE_STACK_SIZE 64
