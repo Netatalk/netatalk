@@ -827,7 +827,7 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_
  */
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
-    char username[MACFILELEN + 1], *start = ibuf;
+    char username[MAXUSERLEN], *start = ibuf;
     struct uam_obj *uam;
     struct passwd *pwd;
     size_t len;
