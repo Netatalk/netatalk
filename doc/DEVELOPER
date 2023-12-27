@@ -214,8 +214,7 @@ The CNID database daemons cnid_metad and cnid_dbd are a implementation of
 the netatalk CNID database support that attempts to put all functionality
 into separate daemons.
 There is one cnid_dbd daemon per netatalk volume. The underlying database
-structure is based on Berkeley DB and the database format is the same
-as in the cdb CNID backend, so this can be used as a drop-in replacement.
+structure is based on Berkeley DB.
 
 Advantages:
 
