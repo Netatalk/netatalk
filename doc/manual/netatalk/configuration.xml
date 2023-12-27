@@ -221,57 +221,19 @@
       </note>
 
       <sect3>
-        <title>cdb<indexterm>
-            <primary>CDB</primary>
-
-            <secondary>"cdb" CNID backend</secondary>
-          </indexterm></title>
-
-        <para>The "concurrent database" backend is based on
-        Berkeley DB. With this backend, several afpd daemons access the CNID
-        database directly. Berkeley DB locking is used to synchronize access,
-        if more than one afpd process is active for a volume. The drawback is,
-        that the crash of a single afpd process might corrupt the database.
-        cdb should only be used when sharing home directories for a larger
-        number of users <emphasis>and</emphasis> it has been determined that a
-        large number of <command>cnid_dbd</command> processes is
-        problematic.</para>
-      </sect3>
-
-      <sect3>
         <title>dbd<indexterm>
             <primary>DBD</primary>
 
             <secondary>"dbd" CNID backend</secondary>
           </indexterm></title>
 
-        <para>Access to the CNID database is restricted to the cnid_dbd daemon
+        <para>The "Database Daemon" backend is built on Berkeley DB.
+        Access to the CNID database is restricted to the cnid_dbd daemon
         process. afpd processes communicate with the daemon for database reads
         and updates. The probability for database corruption is practically
-        zero. As a database process gets spawned for each volume, you're
-        probably better off using cdb for sharing home directories for a
-        larger number of users.</para>
+        zero.</para>
 
         <para>This is the default backend since Netatalk 2.1.</para>
-      </sect3>
-
-      <sect3>
-        <title>tdb<indexterm>
-            <primary>tdb</primary>
-
-            <secondary>"tdb" CNID backend</secondary>
-          </indexterm></title>
-
-        <para><abbrev>tdb</abbrev> is another persistent CNID database, it's
-        Samba's <emphasis>Trivial Database</emphasis>. It could be used
-        instead of <abbrev>cdb</abbrev> for user volumes.<important>
-            <para>Only ever use it for volumes that are
-            <emphasis>not</emphasis> shared and accessed by multiple clients
-            at once !</para>
-          </important>This backend is also used internally (as in-memory CNID
-        database) as a fallback in case opening the primary database can't be
-        opened, because <abbrev>tdb</abbrev> can work as in-memory database.
-        This of course means upon restart the CNIDs are gone.</para>
       </sect3>
 
       <sect3>
@@ -282,9 +244,9 @@
           </indexterm></title>
 
         <para>The last backend is a semi-persistent backend. IDs will be
-        reused and, what is much worse, you can get duplicate IDs. You should
-        use it for sharing cdroms only, <emphasis>don't</emphasis> use it for
-        sharing normal volumes.</para>
+        reused and, what is much worse, you can get duplicate IDs.
+        You should use it for sharing read-only volumes only.
+        <emphasis>Don't</emphasis> use it for sharing normal volumes.</para>
       </sect3>
     </sect2>
 

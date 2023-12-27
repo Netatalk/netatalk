@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">03 May 2023</refmiscinfo>
+    <refmiscinfo class="date">24 Dec 2023</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -623,28 +623,14 @@
 
     <variablelist>
       <varlistentry>
-        <term>cdb</term>
-
-        <listitem>
-          <para>"Concurrent database", backend is based on Sleepycat's Berkeley
-          DB. With this backend several <command>afpd</command> daemons access
-          the CNID database directly. Berkeley DB locking is used to
-          synchronize access, if more than one <command>afpd</command> process
-          is active for a volume. The drawback is, that the crash of a single
-          <command>afpd</command> process might corrupt the database.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>dbd</term>
 
         <listitem>
-          <para>Access to the CNID database is restricted to the
+          <para>The "Database Daemon" backend is built on Berkeley DB.
+          Access to the CNID database is restricted to the
           <command>cnid_metad</command> daemon process.
           <command>afpd</command> processes communicate with the daemon for
-          database reads and updates. If built with Berkeley DB transactions
-          the probability for database corruption is practically zero, but
-          performance can be slower than with <option>cdb</option></para>
+          database reads and updates.</para>
         </listitem>
       </varlistentry>
 
@@ -652,26 +638,20 @@
         <term>last</term>
 
         <listitem>
-          <para>This backend is an exception, in terms of ID persistency. ID's
-          are only valid for the current session. This is basically what
-          <command>afpd</command> did in the 1.5 (and 1.6) versions. This
-          backend is still available, as it is useful for e.g. sharing
-          cdroms.</para>
+          <para>A simple backend without ID persistency.
+          IDs are only valid for the current session. This is basically what
+          <command>afpd</command> did in the 1.5 and 1.6 versions. This
+          backend can be useful for sharing read-only
+          filesystems, such as CR-ROMs.</para>
 
           <para><emphasis role="bold">Warning</emphasis>: It is
-          <emphasis>NOT</emphasis> recommended to use this backend for volumes
-          anymore, as <command>afpd</command> now relies heavily on a
+          <emphasis>NOT</emphasis> recommended to use this backend for writable
+          voumes, as <command>afpd</command> relies heavily on a
           persistent ID database. Aliases will likely not work and filename
           mangling is not supported.</para>
         </listitem>
       </varlistentry>
     </variablelist>
-
-    <para>Even though <command>./configure --help</command> might show that
-    there are other CNID backends available, be warned those are likely broken
-    or mainly used for testing. Don't use them unless you know what you're
-    doing, they may be removed without further notice from future
-    versions.</para>
   </refsect1>
 
   <refsect1>

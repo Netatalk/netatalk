@@ -736,14 +736,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-debug</term>
-
-        <listitem>
-          <para>Prevents afpd from forking, for debugging purposes.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>-sleep <replaceable>[number]</replaceable></term>
 
         <listitem>

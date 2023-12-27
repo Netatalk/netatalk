@@ -825,7 +825,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
         adp = &ad;
 
     /* Get CNID */
-    if ((id = get_id(vol, adp, &path->st, dir->d_did, path->u_name, len)) == 0) { /* 2 */
+    if ((id = get_id(vol, adp, &path->st, dir->d_did, path->u_name, len)) == CNID_INVALID) { /* 2 */
         err = 1;
         goto exit;
     }

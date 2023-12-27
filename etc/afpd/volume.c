@@ -2049,28 +2049,6 @@ static int volume_openDB(struct vol *volume)
         volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
         volume->v_cnidport ? volume->v_cnidport : Cnid_port);
 
-#if 0
-/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
-
-    /* Legacy pre 2.1 way of sharing eg CD-ROM */
-    if (strcmp(volume->v_cnidscheme, "last") == 0) {
-        /* "last" is gone. We support it by switching to in-memory "tdb" */
-        volume->v_cnidscheme = strdup("tdb");
-        flags |= CNID_FLAG_MEMORY;
-    }
-
-    /* New way of sharing CD-ROM */
-    if (volume->v_flags & AFPVOL_CDROM) {
-        flags |= CNID_FLAG_MEMORY;
-        if (strcmp(volume->v_cnidscheme, "tdb") != 0) {
-            free(volume->v_cnidscheme);
-            volume->v_cnidscheme = strdup("tdb");
-            LOG(log_info, logtype_afpd, "Volume %s is ejectable, switching to scheme %s.",
-                volume->v_path, volume->v_cnidscheme);
-        }
-    }
-#endif
-
     volume->v_cdb = cnid_open(volume->v_path,
                               volume->v_umask,
                               volume->v_cnidscheme,
@@ -2078,24 +2056,10 @@ static int volume_openDB(struct vol *volume)
                               volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
                               volume->v_cnidport ? volume->v_cnidport : Cnid_port);
 
-    if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
-        /* The first attempt failed and it wasn't yet an attempt to open in-memory */
+    if ( ! volume->v_cdb ) {
         LOG(log_error, logtype_afpd, "Can't open volume \"%s\" CNID backend \"%s\" ",
             volume->v_path, volume->v_cnidscheme);
-        LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
-            volume->v_path);
-        flags |= CNID_FLAG_MEMORY;
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL);
-#ifdef SERVERTEXT
-        /* kill ourself with SIGUSR2 aka msg pending */
-        if (volume->v_cdb) {
-            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
-                       "Check server messages for details!");
-            kill(getpid(), SIGUSR2);
-            /* deactivate cnid caching/storing in AppleDouble files */
-            volume->v_flags &= ~AFPVOL_CACHE;
-        }
-#endif
+        return -1;
     }
 
     return (!volume->v_cdb)?-1:0;

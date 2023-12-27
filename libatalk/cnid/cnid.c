@@ -110,7 +110,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         return NULL;
     }
 
-    if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
+    if (mod->flags & CNID_FLAG_SETUID) {
         uid = geteuid();
         gid = getegid();
         if (seteuid(0)) {
@@ -129,7 +129,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
     struct cnid_open_args args = {volpath, mask, flags, cnidsrv, cnidport};
     db = mod->cnid_open(&args);
 
-    if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
+    if (mod->flags & CNID_FLAG_SETUID) {
 		if (geteuid() != 0) {
 			if (seteuid(0) < 0) {
 				LOG(log_error, logtype_afpd,

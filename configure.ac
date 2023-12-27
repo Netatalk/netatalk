@@ -1174,16 +1174,13 @@ AC_CONFIG_FILES([Makefile
 	libatalk/atp/Makefile
 	libatalk/bstring/Makefile
 	libatalk/cnid/Makefile
-	libatalk/cnid/cdb/Makefile
 	libatalk/cnid/last/Makefile
 	libatalk/cnid/dbd/Makefile
-	libatalk/cnid/tdb/Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
-	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
 	libatalk/vfs/Makefile
