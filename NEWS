@@ -1,6 +1,74 @@
+Changes in 2.3.0
+================
+* afpd: Remove cdb and tdb CNID backends, GitHub #535
+* afpd: Remove nostat option, GitHub #540
+* afpd: Remove the "Force UID/GID" feature, GitHub #516
+* afpd: Remove experimental Dropbox Kludge feature, GitHub #515
+* afpd: Remove afprun module from codebase, GitHub #526
+* afpd: Deprecate AFS (Andrew File System) support, GitHub #554
+* afpd: Enable only DHX2 UAM by default, GitHub #358
+* afpd: Validate size of ace_count in FPSetACL request, GitHub #364
+* afpd: Enable, sort, and flesh out Mac file type translation, GitHub #534
+* afpd: Don't seteuid() if process is already running as that uid, GitHub #532
+* afpd: Use correct username length in afp_changepw, GitHub #627
+* uams: Link PGP UAM with CRYPT_LIBS, GitHub #548
+* uams: Use correct data type to build with PAM support on FreeBSD, GitHub #563
+* atalkd: Introduce 3rd party bridge quirks mode for Asante and Dayna bridges, GitHub #585
+* atalkd: Revert registering of NBP entries of "Workstation" and "netatalk", GitHub #473
+* papd: Use packed structs for pap packets, GitHub #527
+* papd: Use a portable fcntl() call instead of flock(), GitHub #625
+* timelord: Flip the check for tm->tm_gmtoff to appease FreeBSD, GitHub #415
+* config: Name the default home dir shared volume in AppleVolumes.default, GitHub #469
+* distrib: Add Documentation tags to systemd templates, GitHub #378
+* distrib: Write a Description and Short-Description for the Debian init script, GitHub #428
+* docs: Remove redundant AUTHORS file, GitHub #454
+* docs: Add README for the v2.3 branch, GitHub #588
+* docs: Remove obsoleted bug reporting sections, GitHub #455
+* docs: Remove redundant id properties, GitHub #520
+* docs: Use absolute XSL stylesheet path, source VERSION in manpages script, GitHub #458
+* docs: Update URLs in website, GitHub #445
+  - Point to the root of SF downloads where new files are added
+  - Load CSS from the current protocol and domain
+* docs: Standardize man page heading case, GitHub #545
+* docs: Minor cleanup of man pages, GitHub #470
+* docs: Document the correct default log level for afpd, GitHub #552
+* docs: Improve readability of manual README, GitHub #440
+* docs: Document binheader, nadheader, and showpap, GitHub #430
+* docs: Fix user visible typos and improve English grammar, GitHub #381 #382
+* docs: Create man page for cnid2_create tool, GitHub #402
+* docs: Fix typos, improve layout in afpd.conf man page, GitHub #472
+* build system: Default to xz compression for tarballs, GitHub #483
+* build system: Remove vestiges of a Webmin install target, GitHub #467
+* build system: Fold a2boot and timelord under the appletalk conditional, GitHub #423
+* build system: Don't install at.h when glibc header found, GitHub #409
+* build system: Switch from compile-time debug to run-time debug, GitHub #536
+* build system: Correct install hook for static config files, GitHub #408
+* build system: Make libdir the default install location for UAM libs, GitHub #407
+* build system: Option to skip privileged hooks for make install, GitHub #405
+* build system: Rearrange the dummy paths for the distribution tests, GitHub #522
+* build system: Configurable systemd prefix, with default to /usr/lib, GitHub #404
+  - Remove hard-coded systemd path /lib/systemd in Makefile
+  - Introduce check for the two known common prefixes
+  - Introduce --with-systemd-prefix autoconf option
+* build system: Fix detection of Berkeley DB installed in multiarch location, GitHub #380
+* build system: Support building against libtirpc as separate from glibc, GitHub #385
+* build system: Recommend BerkeleyDB 5.3, GitHub #8
+* Port 2.x fork code quality improvements GitHub #488
+  - Remove support for ancient OSes:
+    SunOS, IRIX, AIX, Ultrix, HPUX, Tru64, GNU/kFreeBSD, UnixWare
+  - Remove ancient bug workarounds and standard library shortcomings
+  - Refactor functions
+  - More granular typecasting
+  - Initialize variables
+  - Prevent potential memory leaks
+  - Handle system call return values
+* Improve logger_test, while re-enabling the syslog tests, GitHub #584
+* Rename asip-status.pl to asip-status, GitHub #379
+* Clean up residual svn commit headers, GitHub #631
+
 Changes in 2.2.10
 =================
-* UPD: Build and run on macOS Ventura, GH#350
+* UPD: The ability to build and run on macOS Ventura, GH#350
        - Removed legacy conditionals for Mac OS X Server
        - Modernized autotools syntax
 * UPD: papd: CUPS API improvements, GH#371
