@@ -79,8 +79,7 @@ static void afp_dsi_close(AFPObj *obj)
     obj->ipc_fd = -1;
 
     /* we may have been called from a signal handler caught when afpd was running
-     * as uid 0, that's the wrong user for volume's prexec_close scripts if any,
-     * restore our login user
+     * as uid 0, so restore our login user
      */
     if (geteuid() != obj->uid) {
         if (seteuid( obj->uid ) < 0) {

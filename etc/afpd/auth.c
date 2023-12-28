@@ -311,7 +311,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         uuid = pwd->pw_uid;
 
     set_auth_switch(expired);
-    /* save our euid, we need it for preexec_close */
+    /* save our euid */
     obj->uid = geteuid();
     obj->logout = logout;
 

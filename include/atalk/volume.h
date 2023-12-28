@@ -81,12 +81,6 @@ struct vol {
     int             v_hide;       /* new volume wait until old volume is closed */
     int             v_new;        /* volume deleted but there's a new one with the same name */
     int             v_deleted;    /* volume open but deleted in new config file */
-    char            *v_root_preexec;
-    char            *v_preexec;
-    char            *v_root_postexec;
-    char            *v_postexec;
-    int             v_root_preexec_close;
-    int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
 #ifdef __svr4__
     int         v_qfd;
