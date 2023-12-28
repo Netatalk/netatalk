@@ -1,6 +1,4 @@
 /*
- * $Id: print_cups.c,v 1.6 2010-01-26 20:43:11 didg Exp $
- *
  * Copyright 2004 Bjoern Fernhomberg.
  *
  * Some code copied or adapted from print_cups.c for samba

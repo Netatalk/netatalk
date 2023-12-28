@@ -1,12 +1,11 @@
 /*
- * $Id: dsi_tcp.c,v 1.25 2009-12-08 22:34:37 didg Exp $
- *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
  * this provides both proto_open() and proto_close() to account for
  * protocol specific initialization and shutdown procedures. all the
- * read/write stuff is done in dsi_stream.c.  */
+ * read/write stuff is done in dsi_stream.c.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

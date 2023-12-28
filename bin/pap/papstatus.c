@@ -1,6 +1,4 @@
 /*
- * $Id: papstatus.c,v 1.7 2009-10-14 01:38:28 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

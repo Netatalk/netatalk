@@ -1,5 +1,4 @@
 /*
- * $Id: interface.h,v 1.6 2009-12-13 02:21:47 didg Exp $
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */

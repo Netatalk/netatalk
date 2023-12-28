@@ -1,6 +1,4 @@
 /*
- * $Id: showppd.c,v 1.7 2009-10-13 22:55:37 didg Exp $
- *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

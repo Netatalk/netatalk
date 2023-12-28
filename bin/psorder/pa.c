@@ -1,6 +1,4 @@
 /*
- * $Id: pa.c,v 1.6 2009-10-14 02:24:05 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

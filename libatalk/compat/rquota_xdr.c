@@ -1,6 +1,4 @@
 /*
- * $Id: rquota_xdr.c,v 1.4 2003-02-17 01:51:08 srittau Exp $
- *
  * taken from the quota-1.55 used on linux. here's the bsd copyright:
  *
  * Copyright (c) 1980, 1990 Regents of the University of California. All

@@ -1,6 +1,4 @@
 /*
- * $Id: uams_guest.c,v 1.18 2009-11-08 01:07:17 didg Exp $
- *
  * (c) 2001 (see COPYING)
  */
 

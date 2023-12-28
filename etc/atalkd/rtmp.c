@@ -1,6 +1,4 @@
 /*
- * $Id: rtmp.c,v 1.17 2009-12-08 03:21:16 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */

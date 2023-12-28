@@ -1,7 +1,3 @@
-/*
- * $Id: updcrc.h,v 1.1 2009-10-13 22:55:36 didg Exp $
- */
-
 #ifndef _UPDCRC_H
 #define _UPDCRC_H 1
 

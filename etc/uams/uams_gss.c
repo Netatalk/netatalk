@@ -1,6 +1,4 @@
 /*
- * $Id: uams_gss.c,v 1.12 2010-03-30 10:25:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 2003 The Reed Institute

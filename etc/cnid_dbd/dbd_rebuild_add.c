@@ -1,6 +1,4 @@
 /*
- * $Id: dbd_rebuild_add.c,v 1.4 2009-12-23 10:18:48 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2005
  * All Rights Reserved.  See COPYING.
  */

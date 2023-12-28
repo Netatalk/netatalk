@@ -1,6 +1,4 @@
 /*
- * $Id: appl.c,v 1.18.4.1 2010-02-01 10:56:08 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

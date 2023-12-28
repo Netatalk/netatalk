@@ -1,7 +1,3 @@
-/*
- * $Id: nad.h,v 1.5 2010-01-27 21:27:53 didg Exp $
- */
-
 #ifndef _NAD_H
 #define _NAD_H 1
 

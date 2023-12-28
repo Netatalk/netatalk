@@ -1,6 +1,4 @@
 /*
- * $Id: desktop.h,v 1.6 2009-10-15 10:43:13 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

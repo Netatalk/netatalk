@@ -1,7 +1,3 @@
-/*
- * $Id: printcap.h,v 1.5 2009-10-13 22:55:37 didg Exp $
- */
-
 #ifndef PAPD_PRINTCAP_H
 #define PAPD_PRINTCAP_H 1
 

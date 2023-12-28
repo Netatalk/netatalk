@@ -1,7 +1,3 @@
-/*
- * $Id: module.c,v 1.5 2003-02-17 02:03:12 srittau Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -1,6 +1,4 @@
 /*
- * $Id: lp.c,v 1.33 2009-10-29 13:38:15 didg Exp $
- *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  *

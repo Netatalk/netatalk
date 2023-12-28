@@ -1,6 +1,4 @@
 /*
- * $Id: uam.c,v 1.35 2009-11-08 01:15:31 didg Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */

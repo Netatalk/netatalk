@@ -1,6 +1,4 @@
 /*
- * $Id: main.c,v 1.31 2009-10-29 13:38:15 didg Exp $
- *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

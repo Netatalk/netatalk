@@ -13,9 +13,6 @@
  * This source code may be translated into executable form and incorporated
  * into proprietary software; there is no requirement for such software to
  * contain a copyright notice related to this source.
- *
- * $Id: hash.c,v 1.4 2009-11-19 10:37:43 franklahm Exp $
- * $Name:  $
  */
 #define NDEBUG
 #include <stdlib.h>

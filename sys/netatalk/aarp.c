@@ -1,6 +1,4 @@
 /*
- * $Id: aarp.c,v 1.3 2002-01-03 17:49:39 sibaz Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  */

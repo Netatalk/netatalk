@@ -1,6 +1,4 @@
 /*
- * $Id: ddp_input.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
- *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

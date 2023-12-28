@@ -1,6 +1,4 @@
 /*
- * $Id: psorder.c,v 1.10 2010-04-12 14:28:47 franklahm Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

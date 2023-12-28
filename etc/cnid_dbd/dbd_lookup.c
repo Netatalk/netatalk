@@ -1,6 +1,4 @@
 /*
- * $Id: dbd_lookup.c,v 1.18 2010-01-19 14:57:11 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.

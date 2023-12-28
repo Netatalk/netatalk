@@ -1,6 +1,4 @@
 /*
- * $Id: icon.h,v 1.5 2009-10-16 00:11:42 didg Exp $
- *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

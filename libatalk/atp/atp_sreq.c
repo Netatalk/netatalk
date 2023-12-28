@@ -1,6 +1,4 @@
 /*
- * $Id: atp_sreq.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

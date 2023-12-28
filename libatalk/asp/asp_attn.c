@@ -1,5 +1,4 @@
 /*
- * $Id: asp_attn.c,v 1.7 2002-12-04 10:59:37 didg Exp $
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */

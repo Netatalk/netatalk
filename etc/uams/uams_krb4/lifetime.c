@@ -1,6 +1,4 @@
 /*
- * $Id: lifetime.c,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
- *
  * Ticket lifetime.  This defines the table used to lookup lifetime
  * for the fixed part of rande of the one byte lifetime field.  Values
  * less than 0x80 are intrpreted as the number of 5 minute intervals.

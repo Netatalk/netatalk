@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_close.c,v 1.4 2003-03-12 15:07:06 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */

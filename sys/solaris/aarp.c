@@ -1,7 +1,3 @@
-/*
- * $Id: aarp.c,v 1.4 2005-04-28 20:50:07 bfernhomberg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

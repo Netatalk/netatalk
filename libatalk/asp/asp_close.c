@@ -1,6 +1,4 @@
 /*
- * $Id: asp_close.c,v 1.5 2009-10-13 22:55:37 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

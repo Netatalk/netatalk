@@ -1,6 +1,4 @@
 /*
- * $Id: desktop.c,v 1.50.2.1 2010-02-01 10:56:08 franklahm Exp $
- *
  * See COPYRIGHT.
  *
  * bug:

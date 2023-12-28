@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_getsess.c,v 1.7 2005-04-28 20:50:02 bfernhomberg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
