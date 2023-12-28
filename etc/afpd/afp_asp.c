@@ -1,6 +1,4 @@
 /*
- * $Id: afp_asp.c,v 1.29 2010-03-09 06:55:12 franklahm Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

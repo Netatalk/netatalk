@@ -1,7 +1,3 @@
-/*
- * $Id: lp.h,v 1.6 2009-10-13 22:55:37 didg Exp $
- */
-
 #ifndef PAPD_LP_H
 #define PAPD_LP_H 1
 

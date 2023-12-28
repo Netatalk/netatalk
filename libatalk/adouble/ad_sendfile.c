@@ -1,6 +1,4 @@
 /*
- * $Id: ad_sendfile.c,v 1.11 2010-01-21 14:14:49 didg Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *

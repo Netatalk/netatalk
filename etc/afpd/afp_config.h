@@ -1,7 +1,3 @@
-/*
- * $Id: afp_config.h,v 1.5 2009-10-13 22:55:36 didg Exp $
- */
-
 #ifndef AFPD_CONFIG_H
 #define AFPD_CONFIG_H 1
 

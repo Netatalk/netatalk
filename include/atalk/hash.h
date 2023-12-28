@@ -13,9 +13,6 @@
  * This source code may be translated into executable form and incorporated
  * into proprietary software; there is no requirement for such software to
  * contain a copyright notice related to this source.
- *
- * $Id: hash.h,v 1.2 2009-11-19 10:37:44 franklahm Exp $
- * $Name:  $
  */
 
 #ifndef ATALK_HASH_H

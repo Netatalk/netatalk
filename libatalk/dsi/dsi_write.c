@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_write.c,v 1.5 2009-10-20 04:31:41 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *

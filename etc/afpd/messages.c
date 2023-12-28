@@ -1,6 +1,4 @@
 /*
- * $Id: messages.c,v 1.23 2009-11-24 15:44:40 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */

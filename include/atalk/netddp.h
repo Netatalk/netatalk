@@ -1,6 +1,4 @@
 /*
- * $Id: netddp.h,v 1.4 2009-10-13 22:55:37 didg Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *

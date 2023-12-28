@@ -1,8 +1,3 @@
-/*
- * $Id: mangle.h,v 1.7 2009-10-13 22:55:37 didg Exp $
- *
- */
-
 #ifndef AFPD_MANGLE_H 
 #define AFPD_MANGLE_H 1
 

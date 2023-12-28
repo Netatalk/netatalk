@@ -1,5 +1,4 @@
 /*
- * $Id: a2boot.c,v 1.2 2003-01-15 06:24:28 jmarcus Exp $
  *   Apple II boot support code.       with aid of Steven N. Hirsch
  *
  * based on timelord 1.6 so below copyrights still apply

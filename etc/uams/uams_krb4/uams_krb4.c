@@ -1,6 +1,4 @@
 /*
- * $Id: uams_krb4.c,v 1.10 2009-10-15 11:39:48 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

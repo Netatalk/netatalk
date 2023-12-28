@@ -1,6 +1,4 @@
 /*
- * $Id: printer.h,v 1.6 2005-04-28 20:49:49 bfernhomberg Exp $
- *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

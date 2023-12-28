@@ -1,6 +1,4 @@
 /*
- * $Id: atp_rsel.c,v 1.6 2009-10-14 01:38:28 didg Exp $
- *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */

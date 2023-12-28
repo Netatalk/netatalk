@@ -1,6 +1,4 @@
 /*
- * $Id: dbd_delete.c,v 1.5 2009-07-12 09:21:34 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  */

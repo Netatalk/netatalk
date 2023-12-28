@@ -1,6 +1,4 @@
 /*
- * $Id: zip.c,v 1.15 2009-12-13 00:31:50 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */

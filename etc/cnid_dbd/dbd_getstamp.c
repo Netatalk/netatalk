@@ -1,7 +1,5 @@
 
 /*
- * $Id: dbd_getstamp.c,v 1.4 2009-05-06 11:54:24 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  */

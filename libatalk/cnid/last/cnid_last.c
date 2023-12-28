@@ -1,10 +1,6 @@
-
 /*
- * $Id: cnid_last.c,v 1.5 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
- *
  */
 
 #ifdef HAVE_CONFIG_H

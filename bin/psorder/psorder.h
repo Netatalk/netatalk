@@ -1,6 +1,4 @@
 /*
- * $Id: psorder.h,v 1.3 2009-10-13 22:55:36 didg Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

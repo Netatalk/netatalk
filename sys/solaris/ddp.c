@@ -1,7 +1,3 @@
-/*
- * $Id: ddp.c,v 1.3 2002-01-17 06:13:02 srittau Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
