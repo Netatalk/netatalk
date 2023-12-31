@@ -171,6 +171,57 @@ jobs:
             ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --with-tracker-pkgconfig-version=3.0
             gmake -j2
             
+  build-dflybsd:
+    name: "DragonflyBSD"
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/dragonflybsd-vm@v1
+        with:
+          copyback: false
+          prepare: |
+            pkg install -y autoconf automake libtool pkgconf db5 libgcrypt libevent tracker3 talloc avahi
+          run: |
+            ./bootstrap
+            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 LDFLAGS=-L/usr/local/lib CFLAGS=-I/usr/local/include
+            make -j2
+
+  build-solaris:
+    name: "Solaris"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/solaris-vm@v1
+        with:
+          release: 11.4
+          prepare: |
+            pkg install autoconf automake libtool pkg-config gcc libevent libgcrypt
+            wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
+            wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
+            tar xvf autoconf-2.71.tar.gz
+            tar xvf automake-1.16.5.tar.gz
+            cd autoconf-2.71
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ../automake-1.16.5
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ..            
+          run: |
+            ./bootstrap
+            ./configure MAKE=gmake --without-afpstats
+            gmake -j2
+  
   static_analysis:
     name: Static Analysis
     runs-on: ubuntu-22.04
