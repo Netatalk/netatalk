@@ -5,7 +5,7 @@ pkgconfdir = @PKGCONFDIR@
 TESTS = test.sh test
 
 check_PROGRAMS = test
-noinst_HEADERS = test.h subtests.h afpfunc_helpers.h
+# noinst_HEADERS = test.h subtests.h afpfunc_helpers.h
 EXTRA_DIST = test.sh
 CLEANFILES = test.default test.conf
 
