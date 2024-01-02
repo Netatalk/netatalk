@@ -5,8 +5,7 @@ tmpconfdir = /tmp/netatalk
 TESTS = test.sh test
 
 check_PROGRAMS = test
-noinst_HEADERS = test.h subtests.h afpfunc_helpers.h
-EXTRA_DIST = test.sh
+EXTRA_DIST = test.sh test.h subtests.h afpfunc_helpers.h
 CLEANFILES = test.default test.conf
 
 test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
