@@ -64,7 +64,7 @@ Changes in 2.3.0
   - Handle system call return values
 * Improve logger_test, while re-enabling the syslog tests, GitHub #584
 * Rename asip-status.pl to asip-status, GitHub #379
-* Clean up residual svn commit headers, GitHub #631
+* Clean up residual CVS commit headers, GitHub #631
 
 Changes in 2.2.10
 =================
