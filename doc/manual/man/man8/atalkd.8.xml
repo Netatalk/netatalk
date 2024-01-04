@@ -161,13 +161,14 @@
         <term>-q</term>
 
         <listitem>
-          <para>Enable quirks mode for AsanteTalk and Dayna EtherPrint bridge
-	      devices. Improves compatibility with these devices, with the tradeoff
-	      that atalkd does not rebroadcast routing information for subnets
-	      behind other AppleTalk routers on the network.</para>
+          <para>Stops <command>atalkd</command> from broadcasting RTMP routing tuples
+	      to other AppleTalk routers on the network. This improves compatibility with
+	      AsantéTalk and Dayna EtherPrint bridge devices. However,
+	      clients behind other routers on the network can't see or communicate
+	      with network segments that <command>atalkd</command> is routing.</para>
 
 	  <note>
-	    <para>Do NOT use this option unless you know exactly what you are doing.
+	    <para>Do NOT use this option unless you absolutely need it.
 	        It breaks the AppleTalk specification.
 	        Ref. page 5-11 in "Inside AppleTalk".</para>
 	  </note>
