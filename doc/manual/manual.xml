@@ -46,11 +46,11 @@
 <!ENTITY showppd.1 SYSTEM "man/man1/showppd.1.xml">
 ]>
 <book id="netatalk-manual">
-  <title revision="0.1 initial version">Netatalk 2.2 Manual</title>
+  <title revision="0.1 initial version">Netatalk 2.3 Manual</title>
   
 
   <bookinfo>
-    <date>08-29-2023</date>
+    <date>01-04-2024</date>
     <releaseinfo>:VERSION:</releaseinfo>
   </bookinfo>
 

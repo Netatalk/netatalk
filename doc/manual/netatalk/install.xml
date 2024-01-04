@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="installation">
-  <chapterinfo>
-    <date>22.03.2012</date>
-  </chapterinfo>
-
   <title>Installation</title>
 
   <warning>
-    <para>If you have previously used an older version of Netatalk, please
-    read the chapter about <link linkend="upgrade">upgrading</link> first
-    !!!</para>
+    <para>Netatalk 2 cannot coexist with either Netatalk 1 or Netatalk 3.
+    See the respective chapters on upgrading to get to know the differences.</para>
   </warning>
 
   <para></para>
@@ -21,7 +16,7 @@
     recent informations on this issue.</para>
 
     <para><ulink
-    url="https://github.com/Netatalk/Netatalk">https://github.com/Netatalk/Netatalk</ulink></para>
+    url="https://github.com/Netatalk/netatalk">https://github.com/Netatalk/netatalk</ulink></para>
 
     <sect2>
       <title>Binary packages</title>

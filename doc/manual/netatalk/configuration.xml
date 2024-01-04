@@ -30,11 +30,11 @@
           <primary>Mountain Lion</primary>
 
           <secondary>Mac OS X 10.8</secondary>
-        </indexterm>. Netatalk 2.2 supports up to AFP 3.3.</para>
+        </indexterm>. Netatalk 2 supports up to AFP 3.3.</para>
 
       <para>AFP3 brought some big changes. For the first time, AFP3 supports
       pathnames up to 65535 characters. It is virtually unlimited. Netatalk
-      2.2 supports filenames up to 255 characters because Mac OS X 10.4 and
+      2 supports filenames up to 255 characters because Mac OS X 10.4 and
       earlier can use it up to 255 characters (actually 255 bytes leading to
       85-255 chars depending on the glyphs used), Decomposed UTF-8 (UTF8-MAC)
       is used on the wire and large files (&gt;4GB) are supported.</para>
