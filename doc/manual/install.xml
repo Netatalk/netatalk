@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="installation">
-  <chapterinfo>
-    <date>17.1.2015</date>
-  </chapterinfo>
-
   <title>Installation</title>
 
   <warning>
-    <para>If you have previously used an older version of Netatalk, please
-    read the chapter about <link linkend="upgrade">upgrading</link> first
-    !!!</para>
+    <para>Netatalk 3 cannot coexist with earlier versions of Netatalk.
+    See the <link linkend="upgrade">upgrading</link> article on how to
+    convert a Netatalk 2 installation to Netatalk 3 format.</para>
   </warning>
 
   <sect1>
