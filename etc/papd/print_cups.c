@@ -562,12 +562,14 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	{
 		LOG(log_error, logtype_papd,
 		    "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
+		cupsFreeDests(1,dests);
 		return (0);
 	}
 	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
 	{
 		LOG(log_error, logtype_papd,
 		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
+		cupsFreeDests(1,dests);
 		return (0);
 	}
 
