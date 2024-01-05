@@ -38,7 +38,7 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-pgp-uam --enable-krbV-uam
+        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-systemd
       - name: Build
         run: make -j $(nproc)
       - name: Run tests
@@ -55,11 +55,11 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install dependencies
         run: |
-          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel
+          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel krb5-devel libacl-devel openldap-devel cracklib-devel
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-pgp-uam --enable-krbV-uam
+        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-redhat-sysv --with-cracklib=/usr/share/cracklib
       - name: Build
         run: make -j $(nproc)
       - name: Run tests
@@ -108,7 +108,7 @@ jobs:
             pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libressl gmake cups
           run: |
             ./bootstrap
-            ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg
+            ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --enable-netbsd
             gmake -j2
 
   build-solaris:
