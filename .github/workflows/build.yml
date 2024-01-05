@@ -121,7 +121,7 @@ jobs:
             cd ..            
           run: |
             ./bootstrap
-            ./configure MAKE=gmake
+            ./configure MAKE=gmake --enable-cups=no
             gmake -j2
 
   static_analysis:
