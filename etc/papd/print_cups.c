@@ -534,6 +534,9 @@ cups_get_printer_status (struct printer *pr)
 
 int cups_print_job ( char * name, char *filename, char *job, char *username, char * cupsoptions )
 {
+	http_t          *http;          /* HTTP connection to server */
+	cups_dest_t	*dest = NULL;	/* Destination */
+	cups_dinfo_t 	*info = NULL;
 	int 		jobid;
 	char 		filepath[MAXPATHLEN];
 	int           	num_options;
@@ -543,7 +546,32 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	num_options = 0;
 	options     = (cups_option_t *)0;
 
+       /*
+        * Make sure we don't ask for passwords...
+        */
+
         cupsSetPasswordCB(cups_passwd_cb);
+
+	/*
+	 * Try to connect to the requested printer...
+	 */
+
+	dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, name, NULL);
+
+	if (!dest)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
+		return (0);
+	}
+	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
+	{
+		LOG(log_error, logtype_papd,
+		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
+		return (0);
+	}
+
+	info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
 
 	if ( username != NULL )
 	{
@@ -561,13 +589,39 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	strlcpy ( filepath, SPOOLDIR, sizeof(filepath));
 	strlcat ( filepath , "/", sizeof(filepath));
 	strlcat ( filepath , filename, sizeof(filepath));
+
+	/*
+	 * Create a new print job.
+	 */
 	
-	if ((jobid = cupsPrintFile( name, filepath, job, 0, options)) == 0)
-		LOG(log_error, logtype_papd, "Unable to print job '%s' (%s) to printer '%s' for user '%s' - CUPS error : '%s'", job, filepath, name, username, ippErrorString(cupsLastError()));
-	else 
-		LOG(log_info, logtype_papd, "Job '%s' queued to printer '%s' with id '%d'", job, name, jobid);
+	if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, info, &jobid, "Netatalk papd", num_options, options) == IPP_STATUS_OK)
+  		LOG(log_info, logtype_papd, "Job '%s' queued to printer '%s' with id '%d'", job, name, jobid);
+	else
+		LOG(log_error, logtype_papd, "Unable to print job '%s' to printer '%s' for user '%s' - CUPS error : '%s'", job, name, username, cupsLastErrorString());
+	
+	/*
+	 * Send the job off to the printer.
+	 */
+
+	FILE *fp = fopen(filepath, "rb");
+	size_t bytes;
+	char buffer[65536];
+	
+	if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info, jobid, job, CUPS_FORMAT_AUTO, 0, NULL, 1) == HTTP_STATUS_CONTINUE)
+		{
+		while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+			if (cupsWriteRequestData(CUPS_HTTP_DEFAULT, buffer, bytes) != HTTP_STATUS_CONTINUE)
+		break;
+
+		if (cupsFinishDestDocument(CUPS_HTTP_DEFAULT, dest, info) == IPP_STATUS_OK)
+			LOG(log_info, logtype_papd,"Document send succeeded.");
+		else
+			LOG(log_error, logtype_papd, "Document send failed: %s\n", cupsLastErrorString());
+		}
+	fclose(fp);
 
 	cupsFreeOptions(num_options, options);
+	cupsFreeDests(1, dest);
 	return (jobid);
 }
 
