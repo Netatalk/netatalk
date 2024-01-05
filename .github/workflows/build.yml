@@ -53,6 +53,25 @@ jobs:
       - name: Run distribution tests
         run: make distcheck
 
+  build-fedora:
+    name: Fedora
+    runs-on: ubuntu-22.04
+    container:
+      image: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure --enable-pgp-uam --enable-krbV-uam
+      - name: Build
+        run: make -j $(nproc)
+      - name: Run tests
+        run: make check
+
   build-macos:
     name: macOS
     runs-on: macos-13
@@ -101,7 +120,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure --with-init-style=solaris MAKE=gmake PKG_CONFIG_PATH=/opt/local/lib/pkgconfig --with-bdb=/opt/local --with-libgcrypt-dir=/opt/local --with-tracker-pkgconfig-version=3.0
-            gmake -j2
+            gmake -j $(nproc)
 
   build-freebsd:
     name: "FreeBSD"
@@ -114,16 +133,15 @@ jobs:
       - name: "Build on VM"
         uses: vmactions/freebsd-vm@v1
         with:
-          release: 13.2
           copyback: false
           prepare: |
-            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5 avahi
+            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5 avahi gmake
           run: |
             ./bootstrap
-            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
-            make -j2
-          
-  build-openbsd:
+            ./configure MAKE=gmake --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
+            gmake -j $(nproc)
+
+  build-openbsd:            
     name: "OpenBSD"
     runs-on: ubuntu-22.04
     permissions:
@@ -137,7 +155,7 @@ jobs:
           release: 7.4
           copyback: false
           prepare: |
-            pkg_add -I gcc-11.2.0p9 autoconf-2.71 automake-1.16.5 libtool pkgconf libgcrypt libevent dbus-glib tracker3 libtalloc avahi wget bison flex
+            pkg_add -I gcc-11.2.0p9 autoconf-2.71 automake-1.16.5 libtool pkgconf libgcrypt libevent dbus-glib tracker3 libtalloc avahi wget bison flex gmake
             wget https://download.oracle.com/berkeley-db/db-5.3.28.tar.gz
             tar -xvzf db-5.3.28.tar.gz
             cd db-5.3.28/build_unix
@@ -148,8 +166,8 @@ jobs:
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             autoreconf -fi
-            ./configure --with-tracker-pkgconfig-version=3.0 --with-bdb=/usr/local/BerkeleyDB.5.3 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-            make -j2
+            ./configure MAKE=gmake --with-tracker-pkgconfig-version=3.0 --with-bdb=/usr/local/BerkeleyDB.5.3 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+            gmake -j $(nproc)
 
   build-netbsd:
     name: "NetBSD"
@@ -169,7 +187,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --with-tracker-pkgconfig-version=3.0
-            gmake -j2
+            gmake -j $(nproc)
             
   build-dflybsd:
     name: "DragonflyBSD"
@@ -184,11 +202,11 @@ jobs:
         with:
           copyback: false
           prepare: |
-            pkg install -y autoconf automake libtool pkgconf db5 libgcrypt libevent tracker3 talloc avahi
+            pkg install -y autoconf automake libtool pkgconf db5 libgcrypt libevent tracker3 talloc avahi gmake
           run: |
             ./bootstrap
-            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 LDFLAGS=-L/usr/local/lib
-            make -j2
+            ./configure MAKE=gmake --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 LDFLAGS=-L/usr/local/lib
+            gmake -j2
 
   build-solaris:
     name: "Solaris"
@@ -221,7 +239,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure MAKE=gmake --without-afpstats PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
-            gmake -j2
+            gmake -j $(nproc)
   
   static_analysis:
     name: Static Analysis
