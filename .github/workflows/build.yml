@@ -40,7 +40,7 @@ jobs:
       - name: Configure
         run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-systemd
       - name: Build
-        run: make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
       - name: Run distribution tests
@@ -61,7 +61,7 @@ jobs:
       - name: Configure
         run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-redhat-sysv --with-cracklib=/usr/share/cracklib
       - name: Build
-        run: make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
 
@@ -87,7 +87,7 @@ jobs:
           --enable-krbV-uam \
           --disable-ddp
       - name: Build
-        run: make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
 
@@ -109,7 +109,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --enable-netbsd
-            gmake -j2
+            gmake -j2 all
 
   build-solaris:
     name: "Solaris"
@@ -141,7 +141,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure MAKE=gmake --enable-cups=no
-            gmake -j2
+            gmake -j2 all
 
   static_analysis:
     name: Static Analysis
