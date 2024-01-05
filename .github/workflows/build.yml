@@ -86,7 +86,7 @@ jobs:
           release: 9.3
           copyback: false
           prepare: |
-            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libressl gmake
+            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libressl gmake cups
           run: |
             ./bootstrap
             ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg
