@@ -115,13 +115,13 @@ static hash_t       *dircache;        /* The actual cache */
 static unsigned int dircache_maxsize; /* cache maximum size */
 
 static struct dircache_stat {
-    unsigned long long lookups;
-    unsigned long long hits;
-    unsigned long long misses;
-    unsigned long long added;
-    unsigned long long removed;
-    unsigned long long expunged;
-    unsigned long long evicted;
+    u_int64_t lookups;
+    u_int64_t hits;
+    u_int64_t misses;
+    u_int64_t added;
+    u_int64_t removed;
+    u_int64_t expunged;
+    u_int64_t evicted;
 } dircache_stat;
 
 /* FNV 1a */
@@ -229,7 +229,7 @@ static int hash_comp_didname(const void *k1, const void *k2)
  * queue index on dircache */
 
 static q_t *index_queue;    /* the index itself */
-static unsigned long queue_count;
+static u_int64_t queue_count;
 
 /*!
  * @brief Remove a fixed number of (oldest) entries from the cache and indexes
@@ -634,7 +634,7 @@ void dircache_dump(void)
     }
     setbuf(dump, NULL);
 
-    fprintf(dump, "Number of cache entries in LRU queue: %lu\n", queue_count);
+    fprintf(dump, "Number of cache entries in LRU queue: %llu\n", queue_count);
     fprintf(dump, "Configured maximum cache size: %u\n\n", dircache_maxsize);
 
     fprintf(dump, "Primary CNID index:\n");

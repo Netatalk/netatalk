@@ -162,7 +162,7 @@ int gmem(const gid_t gid)
     return( 0 );
 }
 
-static mode_t mtoubits(u_char bits)
+static mode_t mtoubits(u_int8_t bits)
 {
     mode_t	mode;
 

@@ -306,7 +306,7 @@ void afp_over_asp(AFPObj *obj)
             break;
 
         case ASPFUNC_CMD :
-            func = (u_char) asp->commands[0];
+            func = (u_int8_t) asp->commands[0];
             LOG(log_debug9, logtype_afpd, "command: %d (%s)\n", func, AfpNum2name(func));
 
             if ( afp_switch[ func ] != NULL ) {
@@ -335,7 +335,7 @@ void afp_over_asp(AFPObj *obj)
             break;
 
         case ASPFUNC_WRITE :
-            func = (u_char) asp->commands[0];
+            func = (u_int8_t) asp->commands[0];
 
             LOG(log_debug9, logtype_afpd, "(write) command: %d\n", func );
 

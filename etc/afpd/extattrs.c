@@ -277,7 +277,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
         return AFPERR_NOOBJ;
     }
 
-    if ((unsigned long)ibuf & 1)
+    if ((u_int64_t)ibuf & 1)
         ibuf++;
 
     /* get length of EA name */
@@ -359,7 +359,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         return AFPERR_NOOBJ;
     }
 
-    if ((unsigned long)ibuf & 1)
+    if ((u_int64_t)ibuf & 1)
         ibuf++;
 
     /* get length of EA name */
@@ -430,7 +430,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         return AFPERR_NOOBJ;
     }
 
-    if ((unsigned long)ibuf & 1)
+    if ((u_int64_t)ibuf & 1)
         ibuf++;
 
     /* get length of EA name */

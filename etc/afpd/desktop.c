@@ -62,12 +62,12 @@ int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf 
 
 static struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
 
-static char *icon_dtfile(struct vol *vol, u_char creator[ 4 ])
+static char *icon_dtfile(struct vol *vol, u_int8_t creator[ 4 ])
 {
     return dtfile( vol, creator, ".icon" );
 }
 
-static int iconopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
+static int iconopen(struct vol *vol, u_int8_t creator[ 4 ], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
 
@@ -118,7 +118,7 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 #ifndef NO_DDP
     struct iovec	iov[ 2 ];
 #endif
-    u_char		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
+    u_int8_t		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
     int			itype, cc = AFP_OK, iovcnt = 0;
     size_t 		buflen;
     u_int32_t           ftype, itag;
@@ -188,7 +188,7 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         /*
          * Is this our set of headers?
          */
-        if ( memcmp( irh, imh, sizeof( irh ) - sizeof( u_short )) == 0 ) {
+        if ( memcmp( irh, imh, sizeof( irh ) - sizeof( u_int16_t )) == 0 ) {
             /*
              * Is the size correct?
              */
@@ -222,7 +222,7 @@ addicon_err:
         if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
             return( AFPERR_PARAM );
 
-	LOG(log_debug9, logtype_afpd, "(write) len: %d\n", buflen);
+        LOG(log_debug9, logtype_afpd, "(write) len: %lld\n", buflen);
 
         /*
          * We're at the end of the file, add the headers, etc.  */
@@ -284,16 +284,16 @@ addicon_err:
     return( AFP_OK );
 }
 
-static const u_char	utag[] = { 0, 0, 0, 0 };
-static const u_char	ucreator[] = { 0, 0, 0, 0 };/* { 'U', 'N', 'I', 'X' };*/
-static const u_char	utype[] = { 0, 0, 0, 0 };/* { 'T', 'E', 'X', 'T' };*/
+static const u_int8_t	utag[] = { 0, 0, 0, 0 };
+static const u_int8_t	ucreator[] = { 0, 0, 0, 0 };/* { 'U', 'N', 'I', 'X' };*/
+static const u_int8_t	utype[] = { 0, 0, 0, 0 };/* { 'T', 'E', 'X', 'T' };*/
 static const short	usize = 256;
 
 
 int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
-    u_char	fcreator[ 4 ], ih[ 12 ];
+    u_int8_t	fcreator[ 4 ], ih[ 12 ];
     u_int16_t	vid, iindex, bsize;
 
     *rbuflen = 0;
@@ -366,7 +366,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     struct vol	*vol;
     off_t       offset;
     ssize_t	rc, buflen;
-    u_char	fcreator[ 4 ], ftype[ 4 ], itype, ih[ 12 ];
+    u_int8_t	fcreator[ 4 ], ftype[ 4 ], itype, ih[ 12 ];
     u_int16_t	vid, bsize, rsize;
 
     buflen = *rbuflen;
@@ -498,7 +498,7 @@ geticon_exit:
 
 /* ---------------------- */
 static const char		hexdig[] = "0123456789abcdef";
-char *dtfile(const struct vol *vol, u_char creator[], char *ext )
+char *dtfile(const struct vol *vol, u_int8_t creator[], char *ext )
 {
     static char	path[ MAXPATHLEN + 1];
     char	*p;
@@ -623,7 +623,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     int			clen;
     struct adouble	ad, *adp;
 
-    clen = (u_char)*ibuf++;
+    clen = (u_int8_t)*ibuf++;
     clen = min( clen, 199 );
 
     upath = path->u_name;

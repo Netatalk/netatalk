@@ -698,7 +698,7 @@ hashcount_t hash_size(hash_t *hash)
 
 static hash_val_t hash_fun_default(const void *key)
 {
-    static unsigned long randbox[] = {
+    static u_int64_t randbox[] = {
         0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
         0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
         0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
@@ -932,10 +932,10 @@ int main(void)
             puts(val);
             break;
         case 'n':
-            printf("%lu\n", (unsigned long) hash_size(h));
+            printf("%llu\n", (u_int64_t) hash_size(h));
             break;
         case 'c':
-            printf("%lu\n", (unsigned long) hash_count(h));
+            printf("%llu\n", (u_int64_t) hash_count(h));
             break;
         case 't':
             hash_scan_begin(&hs, h);

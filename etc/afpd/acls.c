@@ -1637,7 +1637,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     LOG(log_debug, logtype_afpd, "afp_setacl: unixname: %s", s_path->u_name);
 
     /* Padding? */
-    if ((unsigned long)ibuf & 1)
+    if ((u_int64_t)ibuf & 1)
         ibuf++;
 
     /* Start processing request */

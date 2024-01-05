@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <unistd.h>
 #ifdef HAVE_FCNTL_H
@@ -308,7 +309,7 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 
         if (gettimeofday(&tv, &tz) < 0)
             return -1;
-        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
+        srandom(tv.tv_sec + (uintptr_t) obj + (uintptr_t) obj->handle);
         for (i = 0; i < len; i += sizeof(result)) {
             result = random();
             memcpy(buf + i, &result, sizeof(result));

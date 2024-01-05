@@ -31,11 +31,11 @@
 static struct ofork *ofork_table[OFORK_HASHSIZE]; /* forks hashed by dev/inode */
 static struct ofork **oforks = NULL;              /* point to allocated table of open forks pointers */
 static int          nforks = 0;
-static u_short      lastrefnum = 0;
+static u_int16_t      lastrefnum = 0;
 
 
 /* OR some of each character for the hash*/
-static unsigned long hashfn(const struct file_key *key)
+static u_int64_t hashfn(const struct file_key *key)
 {
     return key->inode & (OFORK_HASHSIZE - 1);
 }

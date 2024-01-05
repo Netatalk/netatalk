@@ -66,10 +66,10 @@
 #define CNID(a,b)     ((a)->st_ino & 0xffffffff)
 
 struct maccess {
-    u_char	ma_user;
-    u_char	ma_world;
-    u_char	ma_group;
-    u_char	ma_owner;
+    u_int8_t	ma_user;
+    u_int8_t	ma_world;
+    u_int8_t	ma_group;
+    u_int8_t	ma_owner;
 };
 
 #define	AR_USEARCH	(1<<0)
