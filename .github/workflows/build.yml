@@ -46,6 +46,25 @@ jobs:
       - name: Run distribution tests
         run: make distcheck
 
+  build-fedora:
+    name: Fedora
+    runs-on: ubuntu-22.04
+    container:
+      image: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure --enable-pgp-uam --enable-krbV-uam
+      - name: Build
+        run: make -j $(nproc)
+      - name: Run tests
+        run: make check
+
   build-macos:
     name: macOS
     runs-on: macos-13
