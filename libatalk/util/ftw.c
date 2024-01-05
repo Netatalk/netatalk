@@ -318,8 +318,8 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             buf[actsize++] = '\0';
 
             /* Shrink the buffer to what we actually need.  */
-            data->dirstreams[data->actdir]->content = realloc (buf, actsize);
-            if (data->dirstreams[data->actdir]->content == NULL)
+            if ( (data->dirstreams[data->actdir]->content =
+                realloc(buf, actsize)) == NULL)
             {
                 int save_err = errno;
                 free (buf);
