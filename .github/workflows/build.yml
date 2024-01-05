@@ -38,13 +38,32 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-pgp-uam --enable-krbV-uam
+        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-systemd
       - name: Build
-        run: make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
       - name: Run distribution tests
         run: make distcheck
+
+  build-fedora:
+    name: Fedora
+    runs-on: ubuntu-22.04
+    container:
+      image: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel krb5-devel libacl-devel openldap-devel cracklib-devel
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-redhat-sysv --with-cracklib=/usr/share/cracklib
+      - name: Build
+        run: make -j $(nproc) all
+      - name: Run tests
+        run: make check
 
   build-macos:
     name: macOS
@@ -68,9 +87,61 @@ jobs:
           --enable-krbV-uam \
           --disable-ddp
       - name: Build
-        run: make -j $(nproc)
+        run: make -j $(nproc) all
       - name: Run tests
         run: make check
+
+  build-netbsd:
+    name: "NetBSD"
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: 9.3
+          copyback: false
+          prepare: |
+            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libressl gmake cups
+          run: |
+            ./bootstrap
+            ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --enable-netbsd
+            gmake -j2 all
+
+  build-solaris:
+    name: "Solaris"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/solaris-vm@v1
+        with:
+          release: 11.4
+          prepare: |
+            pkg install autoconf automake libtool pkg-config gcc libgcrypt
+            wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
+            wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
+            tar xvf autoconf-2.71.tar.gz
+            tar xvf automake-1.16.5.tar.gz
+            cd autoconf-2.71
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ../automake-1.16.5
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ..            
+          run: |
+            ./bootstrap
+            ./configure MAKE=gmake --enable-cups=no
+            gmake -j2 all
 
   static_analysis:
     name: Static Analysis
