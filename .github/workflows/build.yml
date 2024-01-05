@@ -97,7 +97,7 @@ jobs:
             tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
             echo "export PATH="/opt/local/sbin:/opt/local/bin:$PATH"" >> .profile
             source .profile
-            /opt/local/bin/pkgin -y install libgcrypt libevent db5 gnome-tracker talloc
+            /opt/local/bin/pkgin -y install libgcrypt libevent db5 gnome-tracker talloc avahi
           run: |
             ./bootstrap
             ./configure --with-init-style=solaris MAKE=gmake PKG_CONFIG_PATH=/opt/local/lib/pkgconfig --with-bdb=/opt/local --with-libgcrypt-dir=/opt/local --with-tracker-pkgconfig-version=3.0
@@ -117,10 +117,10 @@ jobs:
           release: 13.2
           copyback: false
           prepare: |
-            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5
+            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5 avahi
           run: |
             ./bootstrap
-            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0
+            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             make -j2
           
   build-openbsd:
@@ -137,7 +137,7 @@ jobs:
           release: 7.4
           copyback: false
           prepare: |
-            pkg_add -I gcc-11.2.0p9 autoconf-2.71 automake-1.16.5 libtool pkgconf libgcrypt libevent dbus-glib tracker3 libtalloc avahi wget
+            pkg_add -I gcc-11.2.0p9 autoconf-2.71 automake-1.16.5 libtool pkgconf libgcrypt libevent dbus-glib tracker3 libtalloc avahi wget bison flex
             wget https://download.oracle.com/berkeley-db/db-5.3.28.tar.gz
             tar -xvzf db-5.3.28.tar.gz
             cd db-5.3.28/build_unix
@@ -165,7 +165,7 @@ jobs:
           release: 9.3
           copyback: false
           prepare: |
-            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libevent libressl gmake gnome-tracker talloc dbus-glib
+            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libevent libressl gmake gnome-tracker talloc dbus-glib avahi bison flex
           run: |
             ./bootstrap
             ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --with-tracker-pkgconfig-version=3.0
@@ -187,7 +187,7 @@ jobs:
             pkg install -y autoconf automake libtool pkgconf db5 libgcrypt libevent tracker3 talloc avahi
           run: |
             ./bootstrap
-            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 LDFLAGS=-L/usr/local/lib CFLAGS=-I/usr/local/include
+            ./configure --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 LDFLAGS=-L/usr/local/lib
             make -j2
 
   build-solaris:
@@ -202,6 +202,7 @@ jobs:
         uses: vmactions/solaris-vm@v1
         with:
           release: 11.4
+          copyback: false
           prepare: |
             pkg install autoconf automake libtool pkg-config gcc libevent libgcrypt
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
@@ -219,7 +220,7 @@ jobs:
             cd ..            
           run: |
             ./bootstrap
-            ./configure MAKE=gmake --without-afpstats
+            ./configure MAKE=gmake --without-afpstats PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j2
   
   static_analysis:
