@@ -7,4 +7,4 @@ timelord_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 LIBS = @LIBS@
 
-EXTRA_DIST = COPYRIGHT README VERSION
+EXTRA_DIST = COPYRIGHT
