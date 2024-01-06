@@ -121,7 +121,11 @@ while (<PS>) {
                 } else {
                         ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
                 }
-                ($name) = ( $name =~ /(^[^,]+)/ );
+                if ($name =~ /(^[^,]+)/) {
+                        $name = $1;
+                } else {
+                        $name = "-";
+                }
                 printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user,
                     $name, $time, $mac{$pid};
         }
