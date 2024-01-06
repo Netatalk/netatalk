@@ -1258,7 +1258,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         }
 
         if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %llu\n", (u_int64_t) *rbuflen);
+            printf("(write) len: %llu\n", (unsigned long long) *rbuflen);
             bprint(rbuf, *rbuflen);
         }
 

@@ -229,7 +229,7 @@ static int hash_comp_didname(const void *k1, const void *k2)
  * queue index on dircache */
 
 static q_t *index_queue;    /* the index itself */
-static u_int64_t queue_count;
+static unsigned long long queue_count;
 
 /*!
  * @brief Remove a fixed number of (oldest) entries from the cache and indexes

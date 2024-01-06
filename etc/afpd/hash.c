@@ -932,10 +932,10 @@ int main(void)
             puts(val);
             break;
         case 'n':
-            printf("%llu\n", (u_int64_t) hash_size(h));
+            printf("%llu\n", (unsigned long long) hash_size(h));
             break;
         case 'c':
-            printf("%llu\n", (u_int64_t) hash_count(h));
+            printf("%llu\n", (unsigned long long) hash_count(h));
             break;
         case 't':
             hash_scan_begin(&hs, h);

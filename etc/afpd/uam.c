@@ -309,7 +309,7 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 
         if (gettimeofday(&tv, &tz) < 0)
             return -1;
-        srandom(tv.tv_sec + (uintptr_t) obj + (uintptr_t) obj->handle);
+        srandom((uintptr_t) tv.tv_sec + (uintptr_t) obj + (uintptr_t) obj->handle);
         for (i = 0; i < len; i += sizeof(result)) {
             result = random();
             memcpy(buf + i, &result, sizeof(result));
