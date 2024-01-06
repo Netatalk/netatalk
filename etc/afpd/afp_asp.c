@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <signal.h>
 #include <atalk/logger.h>
 #include <errno.h>

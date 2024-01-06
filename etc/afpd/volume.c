@@ -18,6 +18,7 @@
 #include <strings.h>
 #endif
 #include <string.h>
+#include <stdint.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

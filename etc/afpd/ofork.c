@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
 #include <errno.h>

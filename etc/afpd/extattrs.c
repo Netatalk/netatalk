@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <atalk/adouble.h>
 #include <atalk/util.h>

@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdint.h>
 #include <utime.h>
 #include <errno.h>
 #include <sys/param.h>

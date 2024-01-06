@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <time.h>
+#include <stdint.h>
 
 #include <atalk/util.h>
 #include <atalk/cnid.h>

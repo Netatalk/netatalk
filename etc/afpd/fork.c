@@ -8,7 +8,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 

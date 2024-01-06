@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-
+#include <stdint.h>
 #include <errno.h>
 
 #include <atalk/adouble.h>

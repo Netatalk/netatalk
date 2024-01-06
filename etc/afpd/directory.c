@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <utime.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>

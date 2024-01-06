@@ -20,6 +20,7 @@
 #include <atalk/util.h>
 #include <limits.h>
 #include <string.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <time.h>
 #include <pwd.h>

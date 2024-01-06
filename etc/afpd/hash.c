@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 #define HASH_IMPLEMENTATION
 #include "hash.h"
 
