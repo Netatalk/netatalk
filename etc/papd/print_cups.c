@@ -641,7 +641,7 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 	char 	    	name[MAXCHOOSERLEN+1], *p;
 
         language  = cupsLangDefault();		/* needed for conversion */
-        num_dests = cupsGetDests(&dests);	/* get the available destination from CUPS */
+        num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);	/* get the available destination from CUPS */
 
         for  (i=0; i< num_dests; i++)
         {
