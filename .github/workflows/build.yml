@@ -50,7 +50,7 @@ jobs:
     name: Debian
     runs-on: ubuntu-22.04
     container:
-      image: debian:oldstable
+      image: debian:latest
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -60,7 +60,7 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-debian --enable-krbV-uam --enable-pgp-uam --enable-quota --with-cracklib
+        run: ./configure --enable-debian --enable-krbV-uam --enable-pgp-uam --enable-quota --with-cracklib --with-libtirpc
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
