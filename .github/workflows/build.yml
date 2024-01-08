@@ -38,7 +38,7 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-krbV-uam --enable-pgp-uam --enable-systemd --with-cracklib
+        run: ./configure --enable-krbV-uam --enable-pgp-uam --enable-systemd --enable-quota --with-cracklib --with-libtirpc
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
