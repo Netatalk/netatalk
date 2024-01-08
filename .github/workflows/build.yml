@@ -22,8 +22,8 @@ on:
 env:
   APT_PACKAGES: |
     libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
-    libdb-dev libmysqlclient-dev libavahi-client-dev libacl1-dev libcrack2-dev \
-    libcups2-dev tcpd libkrb5-dev
+    libdb-dev libavahi-client-dev libacl1-dev libldap2-dev libcrack2-dev libcups2-dev  \
+    libkrb5-dev quota libtirpc-dev libltdl-dev tcpd libwrap0-dev
 
 jobs:
   integration_test:
@@ -38,13 +38,33 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-systemd
+        run: ./configure --enable-krbV-uam --enable-pgp-uam --enable-systemd --enable-quota --with-cracklib --with-libtirpc
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
       - name: Run distribution tests
         run: make distcheck
+
+  build-debian:
+    name: Debian
+    runs-on: ubuntu-22.04
+    container:
+      image: debian:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: ./configure --enable-debian --enable-krbV-uam --enable-pgp-uam --enable-quota --with-cracklib --with-libtirpc
+      - name: Build
+        run: make -j $(nproc) all
+      - name: Run tests
+        run: make check
 
   build-fedora:
     name: Fedora
