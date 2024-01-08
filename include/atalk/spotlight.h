@@ -25,13 +25,11 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-#ifdef WITH_SPOTLIGHT
 #include <gio/gio.h>
 #include <tracker-sparql.h>
 #include <atalk/dalloc.h>
 #ifndef HAVE_TRACKER3
 #include <libtracker-miner/tracker-miner.h>
-#endif
 #endif
 
 /******************************************************************************
@@ -108,11 +106,9 @@ typedef struct _slq_t {
 } slq_t;
 
 struct sl_ctx {
-#ifdef HAVE_TRACKER
     TrackerSparqlConnection *tracker_con;
     GCancellable *cancellable;
     GMainLoop *mainloop;
-#endif
     slq_t *query_list; /* list of active queries */
 };
 

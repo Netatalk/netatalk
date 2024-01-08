@@ -188,12 +188,12 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
 
     if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
+        AC_MSG_WARN([tracker SPARQL not found (required for Spotlight support)])
         if test x"$need_tracker_sparql" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
     else
         ac_cv_have_tracker=yes
-        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_install_prefix"], [Path to Tracker])
         AC_DEFINE_UNQUOTED([DBUS_DAEMON_PATH], ["$ac_cv_dbus_daemon"], [Path to dbus-daemon])
 
@@ -225,12 +225,18 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     if test x"$ac_cv_have_talloc" = x"yes" ; then
         AC_DEFINE(HAVE_TALLOC, 1, [Define if talloc library is available])
     fi
+    if test x"$ac_cv_have_talloc" = x"no" ; then
+    AC_MSG_WARN([talloc library is not found (required for Spotlight support)])
+    fi
     
     dnl Enable Spotlight support
     if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
         AC_DEFINE(WITH_SPOTLIGHT, 1, [Define whether to enable Spotlight support])
     fi
-
+    if test x"$ac_cv_have_tracker" = x"no" ; then
+    AC_MSG_WARN([tracker is not found (required for Spotlight support)])
+    fi
+    
     AC_SUBST(DBUS_DAEMON_PATH)
     AC_SUBST(TALLOC_CFLAGS)
     AC_SUBST(TALLOC_LIBS)
