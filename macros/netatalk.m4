@@ -233,7 +233,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
         AC_DEFINE(WITH_SPOTLIGHT, 1, [Define whether to enable Spotlight support])
     fi
-    if test x"$ac_cv_have_tracker" = x"no" ; then
+    if test x"$ac_cv_have_tracker" != x"yes" ; then
     AC_MSG_WARN([tracker is not found (required for Spotlight support)])
     fi
     
