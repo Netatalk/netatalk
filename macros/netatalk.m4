@@ -216,7 +216,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
            TRACKER_MANAGING_COMMAND="tracker-control"
            AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
         else
-           AC_MSG_ERROR([could find neither tracker command nor tracker-control command])
+           AC_MSG_WARN([tracker not found (required for Spotlight support)])
         fi
     fi
     
@@ -226,7 +226,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_DEFINE(HAVE_TALLOC, 1, [Define if talloc library is available])
     fi
     if test x"$ac_cv_have_talloc" = x"no" ; then
-    AC_MSG_WARN([talloc library is not found (required for Spotlight support)])
+    AC_MSG_WARN([talloc library not found (required for Spotlight support)])
     fi
     
     dnl Enable Spotlight support
