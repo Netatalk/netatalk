@@ -189,7 +189,7 @@ static int set_auth_switch(const AFPObj *obj, int expired)
         case 31:
             uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
             uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
             uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH, afp_spotlight_rpc, NULL);
 #endif
             uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);

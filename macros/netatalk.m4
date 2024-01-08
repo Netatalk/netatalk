@@ -157,7 +157,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     ac_cv_tracker_pkg_version_default=0.12
     ac_cv_tracker_pkg_version_min=0.12
 
-    dnl Tracker SPARQL
+    dnl Check for Tracker SPARQL
     AC_ARG_WITH([tracker-pkgconfig-version],
       [AS_HELP_STRING([--with-tracker-pkgconfig-version=VERSION],[Version suffix of the Tracker SPARQL pkg-config (default: 0.12)])],
       [ac_cv_tracker_pkg_version=$withval],
@@ -188,12 +188,11 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     PKG_CHECK_MODULES([TRACKER], [tracker-sparql-$ac_cv_tracker_pkg_version >= $ac_cv_tracker_pkg_version_min], [ac_cv_have_tracker_sparql=yes], [ac_cv_have_tracker_sparql=no])
 
     if test x"$ac_cv_have_tracker_sparql" = x"no" ; then
+        AC_MSG_WARN([tracker SPARQL not found (required for Spotlight support)])
         if test x"$need_tracker_sparql" = x"yes" ; then
             AC_MSG_ERROR([$ac_cv_tracker_pkg not found])
         fi
     else
-        ac_cv_have_tracker=yes
-        AC_DEFINE(HAVE_TRACKER, 1, [Define if Tracker is available])
         AC_DEFINE_UNQUOTED(TRACKER_PREFIX, ["$ac_cv_tracker_install_prefix"], [Path to Tracker])
         AC_DEFINE_UNQUOTED([DBUS_DAEMON_PATH], ["$ac_cv_dbus_daemon"], [Path to dbus-daemon])
 
@@ -203,27 +202,31 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         fi
     fi
 
-    dnl Tracker Managing Command
-    if test x"$ac_cv_have_tracker" = x"yes" ; then
-        AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker3 tracker-control, , ["$ac_cv_tracker_prefix"/bin])
-        if test x"$ac_cv_tracker_manage" = x"tracker" ; then
-           TRACKER_MANAGING_COMMAND="tracker daemon"
-           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker daemon", [tracker managing command])
-        elif test x"$ac_cv_tracker_manage" = x"tracker3" ; then
-           TRACKER_MANAGING_COMMAND="tracker3 daemon"
-           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker3 daemon", [tracker managing command])
-        elif test x"$ac_cv_tracker_manage" = x"tracker-control" ; then
-           TRACKER_MANAGING_COMMAND="tracker-control"
-           AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
-        else
-           AC_MSG_ERROR([could find neither tracker command nor tracker-control command])
-        fi
+    dnl Check for Tracker
+    AC_CHECK_PROGS(ac_cv_tracker_manage, tracker tracker3 tracker-control, , ["$ac_cv_tracker_prefix"/bin])
+    if test x"$ac_cv_tracker_manage" = x"tracker" ; then
+        TRACKER_MANAGING_COMMAND="tracker daemon"
+        AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker daemon", [tracker managing command])
+        ac_cv_have_tracker=yes
+    elif test x"$ac_cv_tracker_manage" = x"tracker3" ; then
+        TRACKER_MANAGING_COMMAND="tracker3 daemon"
+        AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker3 daemon", [tracker managing command])
+        ac_cv_have_tracker=yes
+    elif test x"$ac_cv_tracker_manage" = x"tracker-control" ; then
+        TRACKER_MANAGING_COMMAND="tracker-control"
+        AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
+        ac_cv_have_tracker=yes
+    else
+        AC_MSG_WARN([tracker not found (required for Spotlight support)])    
     fi
-    
+
     dnl Check for talloc library
     PKG_CHECK_MODULES(TALLOC, talloc, ac_cv_have_talloc=yes, ac_cv_have_talloc=no)
     if test x"$ac_cv_have_talloc" = x"yes" ; then
         AC_DEFINE(HAVE_TALLOC, 1, [Define if talloc library is available])
+    fi
+    if test x"$ac_cv_have_talloc" = x"no" ; then
+        AC_MSG_WARN([talloc library not found (required for Spotlight support)])
     fi
     
     dnl Enable Spotlight support

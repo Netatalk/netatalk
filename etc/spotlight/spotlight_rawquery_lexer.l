@@ -9,10 +9,8 @@
 #include <talloc.h>
 #include <gio/gio.h>
 #include <atalk/spotlight.h>
-#ifdef HAVE_TRACKER
 #include "sparql_parser.h"
 #define SLQ_VAR ssp_slq
-#endif
 %}
 
 ASC     [a-zA-Z0-9_\*\:\-\.]

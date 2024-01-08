@@ -145,7 +145,7 @@ static void show_version_extended(void )
 #endif
 
 	printf( "     Spotlight support:\t" );
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
 	puts( "Yes" );
 #else
 	puts( "No" );

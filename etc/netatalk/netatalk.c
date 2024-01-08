@@ -175,7 +175,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
     event_del(sighup_ev);
     event_del(timer_ev);
 
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
     system(TRACKER_MANAGING_COMMAND " -t");
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
@@ -185,7 +185,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
     system(TRACKER_MANAGING_COMMAND " -t");
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
@@ -266,7 +266,7 @@ static void timer_cb(evutil_socket_t fd, short what, void *arg)
         }
     }
 
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
     if (dbus_pid == NETATALK_SRV_NEEDED) {
         dbus_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
@@ -359,7 +359,7 @@ static void show_netatalk_version( void )
 #endif
 
 	printf( "     Spotlight support:\t" );
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
 	puts( "Yes" );
 #else
 	puts( "No" );
@@ -369,18 +369,14 @@ static void show_netatalk_version( void )
 
 static void show_netatalk_paths( void )
 {
+	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
 	printf( "                  afpd:\t%s\n", _PATH_AFPD);
 	printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
-
-#ifdef HAVE_TRACKER
-	printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
+  
+#ifdef WITH_SPOTLIGHT
 	printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
-#endif
-
-	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-
-#ifdef HAVE_TRACKER
-	printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
+  printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");  
+	printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
 #endif
 
 #ifndef SOLARIS
@@ -483,7 +479,7 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
-#ifdef HAVE_TRACKER
+#ifdef WITH_SPOTLIGHT
     if (obj.options.flags & OPTION_SPOTLIGHT) {
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
         setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);

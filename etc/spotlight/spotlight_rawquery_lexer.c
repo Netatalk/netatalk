@@ -502,10 +502,8 @@ char *yytext;
 #include <gio/gio.h>
 #include <atalk/talloc.h>
 #include <atalk/spotlight.h>
-#ifdef HAVE_TRACKER
 #include "sparql_parser.h"
 #define SLQ_VAR ssp_slq
-#endif
 #line 510 "spotlight_rawquery_lexer.c"
 
 #define INITIAL 0
