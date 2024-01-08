@@ -33,7 +33,7 @@ jobs:
     name: Ubuntu
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -59,7 +59,7 @@ jobs:
     container:
       image: fedora:rawhide
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool \
@@ -89,7 +89,7 @@ jobs:
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: brew install automake libressl mysql talloc krb5
       - name: Bootstrap
@@ -115,9 +115,8 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/omnios-vm@v1
+        uses: vmactions/omnios-vm@v1.0.0
         with:
-          release: r151048
           copyback: false
           prepare: |
             pkg install build-essential pkg-config libtool
@@ -140,11 +139,11 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@v1.0.5
         with:
           copyback: false
           prepare: |
-            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5 avahi gmake
+            pkg install -y autoconf automake libtool pkgconf libgcrypt libevent libressl tracker3 talloc db5 avahi gmake bison flex
           run: |
             ./bootstrap
             ./configure MAKE=gmake --with-ssl-dir=/usr/local --with-tracker-pkgconfig-version=3.0 PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
@@ -159,9 +158,8 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/openbsd-vm@v1
+        uses: vmactions/openbsd-vm@v1.0.6
         with:
-          release: 7.4
           copyback: false
           prepare: |
             pkg_add -I gcc-11.2.0p9 autoconf-2.71 automake-1.16.5 libtool pkgconf libgcrypt libevent dbus-glib tracker3 libtalloc avahi wget bison flex gmake
@@ -187,9 +185,8 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1
+        uses: vmactions/netbsd-vm@v1.0.3
         with:
-          release: 9.3
           copyback: false
           prepare: |
             pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libevent libressl gmake gnome-tracker talloc dbus-glib avahi bison flex
@@ -207,7 +204,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/dragonflybsd-vm@v1
+        uses: vmactions/dragonflybsd-vm@v1.0.2
         with:
           copyback: false
           prepare: |
@@ -226,9 +223,8 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1
+        uses: vmactions/solaris-vm@v1.0.1
         with:
-          release: 11.4
           copyback: false
           prepare: |
             pkg install autoconf automake libtool pkg-config gcc libevent libgcrypt
@@ -258,7 +254,7 @@ jobs:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
     if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
