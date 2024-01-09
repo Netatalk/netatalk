@@ -369,18 +369,18 @@ static void show_netatalk_version( void )
 
 static void show_netatalk_paths( void )
 {
-	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-	printf( "                  afpd:\t%s\n", _PATH_AFPD);
-	printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
+  printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+  printf( "                  afpd:\t%s\n", _PATH_AFPD);
+  printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
+  printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
   
 #ifdef WITH_SPOTLIGHT
-	printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
   printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");  
-	printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
+  printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
 #endif
 
 #ifndef SOLARIS
-	printf( "    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
+  printf( "    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
 #endif
 
 }
