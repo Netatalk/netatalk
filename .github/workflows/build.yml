@@ -30,7 +30,7 @@ jobs:
     name: Ubuntu
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -52,7 +52,7 @@ jobs:
     container:
       image: debian:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           apt-get update
@@ -72,7 +72,7 @@ jobs:
     container:
       image: fedora:rawhide
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel krb5-devel libacl-devel openldap-devel cracklib-devel
@@ -92,7 +92,7 @@ jobs:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: brew install automake libressl pkg-config krb5
       - name: Bootstrap
@@ -120,7 +120,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1
+        uses: vmactions/netbsd-vm@v1.0.3
         with:
           release: 9.3
           copyback: false
@@ -140,7 +140,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1
+        uses: vmactions/solaris-vm@v1.0.1
         with:
           release: 11.4
           prepare: |
@@ -172,7 +172,7 @@ jobs:
     # Run only if not originating from a fork
     if: ${{ !github.event.pull_request.head.repo.fork }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Shallow clones should be disabled for a better relevancy of analysis
           fetch-depth: 0
