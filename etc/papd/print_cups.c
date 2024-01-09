@@ -50,6 +50,12 @@
 #define MAXCHOOSERLEN 31
 #define HTTP_MAX_URI 1024
 
+/* Some functions changed names with the introduction of libcups3. Accomodate them here so we can still work with CUPS 2.x */
+#if CUPS_VERSION_MAJOR < 3
+#define cupsGetDests	cupsGetDests2
+#define cupsCreateTempFile(prefix,suffix,buffer,bufsize)	cupsTempFile2(buffer,bufsize)
+#endif
+
 static const char* cups_status_msg[] = {
         "status: busy; info: \"%s\" is rejecting jobs; ",
         "status: idle; info: \"%s\" is stopped, accepting jobs ;",
@@ -213,7 +219,7 @@ cups_get_printer_ppd ( char * name)
 	 *the CUPS temporary queue, which we don't want.
 	 */
 
-	int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+	int num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 	dest = cupsGetDest(name, NULL, num_dests, dests);
 	const char *make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
 
@@ -323,7 +329,7 @@ cups_get_printer_ppd ( char * name)
 	 * Open a temporary file for the PPD...
 	 */
 
-	if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL)
+	if ((fp = cupsCreateTempFile(NULL, NULL, buffer, (int)bufsize)) == NULL)
 	{
 		LOG(log_error, logtype_papd, strerror(errno));
                 ippDelete(response);
@@ -641,7 +647,7 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 	char 	    	name[MAXCHOOSERLEN+1], *p;
 
         language  = cupsLangDefault();		/* needed for conversion */
-        num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);	/* get the available destination from CUPS */
+        num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);	/* get the available destination from CUPS */
 
         for  (i=0; i< num_dests; i++)
         {
