@@ -85,7 +85,7 @@
       <sect3>
         <title>Tarballs</title>
 
-        <para>Prepacked tarballs in .tar.gz and tar.bz2 format are available
+        <para>Prepacked tarballs in .tar.xz and tar.bz2 format are available
         on the netatalk page on <ulink
         url="https://github.com/Netatalk/Netatalk">GitHub</ulink>.</para>
       </sect3>
