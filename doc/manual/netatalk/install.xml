@@ -87,7 +87,7 @@
 
         <para>Prepacked tarballs in .tar.xz and tar.bz2 format are available
         on the netatalk page on <ulink
-        url="https://github.com/Netatalk/Netatalk">GitHub</ulink>.</para>
+        url="https://github.com/Netatalk/netatalk">GitHub</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -108,7 +108,7 @@
           <listitem>
             <para>Now get the source:</para>
 
-            <screen><prompt>$</prompt> <userinput>git clone -b main https://github.com/Netatalk/Netatalk.git netatalk-code
+            <screen><prompt>$</prompt> <userinput>git clone -b main https://github.com/Netatalk/netatalk.git netatalk-code
 </userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
 remote: Counting objects: 2503, done.
 ...
@@ -137,7 +137,7 @@ remote: Counting objects: 2503, done.
         </orderedlist>
 
         <para>For futher information refer to the <ulink
-        url="https://github.com/Netatalk/Netatalk/wiki/Developer-Notes">Developer Notes</ulink>
+        url="https://github.com/Netatalk/netatalk/wiki/Developer-Notes">Developer Notes</ulink>
         wiki page.</para>
       </sect3>
     </sect2>
@@ -154,7 +154,7 @@ remote: Counting objects: 2503, done.
         available for your OS distribution of choice.</para>
 
         <para>Please see the <ulink
-        url="https://github.com/Netatalk/Netatalk/wiki/Installation-Notes">
+        url="https://github.com/Netatalk/netatalk/wiki/Installation-Notes">
         Installation Notes</ulink> wiki page as a starting point.</para>
       </note>
 
@@ -344,7 +344,7 @@ remote: Counting objects: 2503, done.
         Netatalk Makefiles have been created with.</para>
 
         <para>If this step fails please visit the <ulink
-        url="https://github.com/Netatalk/Netatalk/wiki/Troubleshooting">troubleshooting
+        url="https://github.com/Netatalk/netatalk/wiki/Troubleshooting">troubleshooting
         guide</ulink>.</para>
 
         <para>Next, running</para>
