@@ -35,7 +35,7 @@ env:
     libgcrypt-dev \
     libglib2.0-dev \
     libkrb5-dev \
-    libkrb5-dev \
+    libldap2-dev \
     libmysqlclient-dev \
     libpam0g-dev \
     libssl-dev \
@@ -43,6 +43,7 @@ env:
     libtool \
     libtool-bin \
     libtracker-sparql-3.0-dev \
+    libwrap0-dev \
     systemtap-sdt-dev \
     tcpd \
     tracker
@@ -62,9 +63,10 @@ jobs:
       - name: Configure
         run: |
           ./configure \
-          --enable-krbv-uam \
-          --enable-pgp-uam \
-          --with-tracker-pkgconfig-version=3.0
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-cracklib \
+            --with-tracker-pkgconfig-version=3.0
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
@@ -96,6 +98,7 @@ jobs:
             libgcrypt-dev \
             libglib2.0-dev \
             libkrb5-dev \
+            libldap2-dev \
             libltdl-dev \
             libpam0g-dev \
             libssl-dev \
@@ -104,6 +107,7 @@ jobs:
             libtool-bin \
             libtracker-miner-2.0-dev \
             libtracker-sparql-2.0-dev \
+            libwrap0-dev \
             make \
             systemtap-sdt-dev \
             tcpd \
@@ -175,13 +179,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake libressl mysql talloc krb5
+        run: brew install automake libressl mysql talloc krb5 berkeley-db
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
         run: |
           ./configure \
-            --enable-krbv-uam \
+            --enable-krbV-uam \
             --enable-pgp-uam \
             --with-bdb=/usr/local/opt/berkeley-db \
             --with-ssl-dir=/usr/local/opt/libressl
@@ -221,6 +225,7 @@ jobs:
           run: |
             ./bootstrap
             ./configure \
+              --enable-pgp-uam \
               --with-init-style=solaris \
               --with-bdb=/opt/local \
               --with-libgcrypt-dir=/opt/local \
@@ -260,6 +265,8 @@ jobs:
           run: |
             ./bootstrap
             ./configure \
+              --enable-krbV-uam \
+              --enable-pgp-uam \
               --with-ssl-dir=/usr/local \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
@@ -345,6 +352,8 @@ jobs:
           run: |
             ./bootstrap
             ./configure \
+              --enable-krbV-uam \
+              --enable-pgp-uam \
               --with-bdb=/usr/pkg \
               --with-libgcrypt-dir=/usr/pkg \
               --with-tracker-pkgconfig-version=3.0 \
@@ -423,6 +432,8 @@ jobs:
           run: |
             ./bootstrap
             ./configure \
+              --enable-krbV-uam \
+              --enable-pgp-uam \
               --without-afpstats \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
@@ -450,7 +461,10 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           ./bootstrap
-          ./configure
+          ./configure \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-tracker-pkgconfig-version=3.0
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j $(nproc) all
       - name: Run sonar-scanner
         env:
