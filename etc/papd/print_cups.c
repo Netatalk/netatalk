@@ -54,6 +54,9 @@
 #if CUPS_VERSION_MAJOR < 3
 #define cupsGetDests	cupsGetDests2
 #define cupsCreateTempFile(prefix,suffix,buffer,bufsize)	cupsTempFile2(buffer,bufsize)
+#define cups_len_t	int
+#else
+#define cups_len_t	size_t
 #endif
 
 static const char* cups_status_msg[] = {
@@ -219,7 +222,7 @@ cups_get_printer_ppd ( char * name)
 	 *the CUPS temporary queue, which we don't want.
 	 */
 
-	int num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
+	cups_len_t num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 	dest = cupsGetDest(name, NULL, num_dests, dests);
 	const char *make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
 
@@ -545,7 +548,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	cups_dinfo_t 	*info = NULL;
 	int 		jobid;
 	char 		filepath[MAXPATHLEN];
-	int           	num_options;
+	cups_len_t	num_options;
 	cups_option_t 	*options;
 
 	/* Initialize the options array */
@@ -640,7 +643,7 @@ struct printer	*
 cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 {
 	struct printer 	*pr;
-        int         	num_dests,i;
+	cups_len_t	i, num_dests;
 	int 	    	ret;
         cups_dest_t 	*dests;
         cups_lang_t 	*language;
