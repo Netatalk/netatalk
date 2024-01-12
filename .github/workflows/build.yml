@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake libressl pkg-config krb5
+        run: brew install automake libressl pkg-config krb5 berkeley-db
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
