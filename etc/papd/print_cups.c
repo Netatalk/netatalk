@@ -76,7 +76,7 @@ const char * cups_get_language (void)
  */
 
 static const char *                            /* O - Password or NULL */
-cups_passwd_cb(const char *prompt _U_)      /* I - Prompt */
+cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method, const char *resource, void *user_data)      /* I - Prompt */
 {
  /*
   * Always return NULL to indicate that no password is available...
@@ -96,14 +96,13 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
-        cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 
        /*
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -136,14 +135,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         */
         request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
-        language = cupsLangDefault();
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-                     "attributes-charset", NULL, cupsLangEncoding(language));
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-                     "attributes-natural-language", NULL, language->language);
-
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
                      "requested-attributes", NULL, "printer-uri");
 
@@ -166,7 +157,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 
         httpClose(http);
 
-        if (cupsLastError() >= IPP_OK_CONFLICT)
+        if (cupsLastError() >= IPP_STATUS_OK_CONFLICTING)
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
                          ippErrorString(cupsLastError()));
@@ -190,7 +181,6 @@ cups_get_printer_ppd ( char * name)
 	cups_dest_t 	*dests;		/* Destination List */
 	ipp_t           *request,       /* IPP Request */
 			*response;      /* IPP Response */
-	cups_lang_t	*language;      /* Default language */
 	char		uri[HTTP_MAX_URI]; /* printer-uri attribute */
         const char	*pattrs[] =   /* Requested printer attributes */
                         {
@@ -205,7 +195,7 @@ cups_get_printer_ppd ( char * name)
 			*model;
 
 
-	cupsSetPasswordCB(cups_passwd_cb);
+	cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 *We have to go this roundabout way to correctly get the make and 
@@ -238,7 +228,7 @@ cups_get_printer_ppd ( char * name)
 	sprintf(uri, "ipp://localhost/printers/%s", name);
 
 	/*
-	 * Build an IPP_GET_PRINTER_ATTRIBUTES request, which requires the
+	 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
 	 * following attributes:
 	 *
 	 *    attributes-charset
@@ -247,20 +237,7 @@ cups_get_printer_ppd ( char * name)
 	 *    printer-uri
 	 */
 
-        request = ippNew();
-
-        ippSetOperation(request, IPP_GET_PRINTER_ATTRIBUTES);
-        ippSetRequestId(request, 1);
-
-	language = cupsLangDefault();
-
-	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-		     "attributes-charset", NULL,
-		     cupsLangEncoding(language));
-
-	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-		     "attributes-natural-language", NULL,
-		     language->language);
+        request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
 	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 		      "requested-attributes",
@@ -282,7 +259,7 @@ cups_get_printer_ppd ( char * name)
                 return (0);
         }
 
-        if (ippGetStatusCode(response) >= IPP_OK_CONFLICT)
+        if (ippGetStatusCode(response) >= IPP_STATUS_OK_CONFLICTING)
         {
       		 LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
                          ippErrorString(ippGetStatusCode(response)));
@@ -395,7 +372,6 @@ cups_get_printer_status (struct printer *pr)
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
         ipp_attribute_t *attr;          /* Current attribute */
-        cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 	int 		status = -1;
 
@@ -410,7 +386,7 @@ cups_get_printer_status (struct printer *pr)
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -441,7 +417,7 @@ cups_get_printer_status (struct printer *pr)
 
 
        /*
-        * Build an IPP_GET_PRINTER_ATTRIBUTES request, which requires the
+        * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
         * following attributes:
         *
         *    attributes-charset
@@ -451,14 +427,6 @@ cups_get_printer_status (struct printer *pr)
         */
 
         request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-
-        language = cupsLangDefault();
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-                     "attributes-charset", NULL, cupsLangEncoding(language));
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-                     "attributes-natural-language", NULL, language->language);
 
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
                       "requested-attributes",
@@ -480,7 +448,7 @@ cups_get_printer_status (struct printer *pr)
                 return (0);
         }
 
-        if (cupsLastError() >= IPP_OK_CONFLICT)
+        if (cupsLastError() >= IPP_STATUS_OK_CONFLICTING)
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
                          ippErrorString(cupsLastError()));
@@ -497,9 +465,9 @@ cups_get_printer_status (struct printer *pr)
 
         if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
         {
-                if (ippGetInteger(attr, 0) == IPP_PRINTER_STOPPED)
+                if (ippGetInteger(attr, 0) == IPP_PSTATE_STOPPED)
 			status = 1;
-                else if (ippGetInteger(attr,0) == IPP_NOT_ACCEPTING)
+                else if (ippGetInteger(attr,0) == IPP_STATUS_ERROR_NOT_ACCEPTING_JOBS)
 			status = 0;
 		else
 			status = 2;
@@ -550,7 +518,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -609,7 +577,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	size_t bytes;
 	char buffer[65536];
 	
-	if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info, jobid, job, CUPS_FORMAT_AUTO, 0, NULL, 1) == HTTP_STATUS_CONTINUE)
+	if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info, jobid, job, CUPS_FORMAT_AUTO, 0, NULL, true) == HTTP_STATUS_CONTINUE)
 		{
 		while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
 			if (cupsWriteRequestData(CUPS_HTTP_DEFAULT, buffer, bytes) != HTTP_STATUS_CONTINUE)
