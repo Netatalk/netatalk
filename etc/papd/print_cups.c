@@ -68,7 +68,8 @@ const char * cups_get_language (void)
         cups_lang_t *language;
 
         language = cupsLangDefault();           /* needed for conversion */
-        return cupsLangEncoding(language);
+	const char * curr_encoding = cupsLangEncoding(language);
+        return curr_encoding;
 }
 
 /*
@@ -605,10 +606,8 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
         int         	num_dests,i;
 	int 	    	ret;
         cups_dest_t 	*dests;
-        cups_lang_t 	*language;
 	char 	    	name[MAXCHOOSERLEN+1], *p;
 
-        language  = cupsLangDefault();		/* needed for conversion */
         num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);	/* get the available destination from CUPS */
 
         for  (i=0; i< num_dests; i++)
@@ -621,11 +620,11 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 		memcpy( pr, defprinter, sizeof( struct printer ) );
 
 		/* convert from CUPS to local encoding */
-                convert_string_allocate( add_charset(cupsLangEncoding(language)), CH_UNIX, 
+                convert_string_allocate( add_charset(cups_get_language()), CH_UNIX, 
                                          dests[i].name, -1, &pr->p_u_name);
 
 		/* convert CUPS name to Mac charset */
-		if ( convert_to_mac_name ( cupsLangEncoding(language), dests[i].name, name, sizeof(name)) <= 0)
+		if ( convert_to_mac_name ( cups_get_language(), dests[i].name, name, sizeof(name)) <= 0)
 		{
 			LOG (log_error, logtype_papd, "Conversion from CUPS to MAC name failed for %s", dests[i].name);
 			free (pr);
@@ -673,7 +672,6 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 	}
  
         cupsFreeDests(num_dests, dests);
-        cupsLangFree(language);
 
 	return printers;
 }
