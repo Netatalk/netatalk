@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">24 Dec 2023</refmiscinfo>
+    <refmiscinfo class="date">31 Jan 2024</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -125,24 +125,12 @@
 
     <variablelist>
       <varlistentry>
-        <term>adouble:<replaceable>[v1|v2|osx]</replaceable></term>
+        <term>adouble:<replaceable>[v1|v2]</replaceable></term>
 
         <listitem>
-          <para>Specify the format of the metadata files, which are used for
-          saving the Mac resource fork as well. Earlier versions used AppleDouble
-          V1, while the new default format is V2. Starting with Netatalk 2.0, the
-          scheme Mac OS X 10.3.x uses, is also supported.</para>
-
-          <note>
-            <para><option>adouble:osx</option> <emphasis
-            role="bold">cannot</emphasis> be treated normally any longer. Its
-            only aim was to temporarily share e.g. FAT32 formatted FireWire
-            hard drives written on a Macintosh with afpd. Apple's metadata
-            scheme lacks several essential features, so using it on the
-            server's side will break both CNIDs and Mac OS 9 compatibility.
-            An AppleDouble file of Mac OS X 10.6 is incompatible to V1 and
-            V2.</para>
-          </note>
+          <para>Specify the format of the metadata files which are used for
+          saving the Mac resource fork. Earlier versions of Netatalk used AppleDouble
+          V1, while the current default format is V2.</para>
         </listitem>
       </varlistentry>
 

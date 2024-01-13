@@ -311,10 +311,6 @@ static int parseline ( char *buf, struct volinfo *vol)
             vol->ad_path = ad_path;
             vol->v_adouble = AD_VERSION2;
         }
-        else if (strcasecmp(value, "osx") == 0) {
-            vol->v_adouble = AD_VERSION2_OSX;
-            vol->ad_path = ad_path_osx;
-        }
 #endif
         else  {
 	    fprintf (stderr, "unknown adouble version: %s, %s", buf, value);
@@ -544,12 +540,6 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
             break;
         case AD_VERSION2:
             strlcat(buf, "ADOUBLE_VER:v2\n", sizeof(buf));
-            break;
-        case AD_VERSION2_OSX:
-            strlcat(buf, "ADOUBLE_VER:osx\n", sizeof(buf));
-            break;
-        case AD_VERSION1_SFM:
-            strlcat(buf, "ADOUBLE_VER:sfm\n", sizeof(buf));
             break;
     }
 

@@ -315,11 +315,8 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     struct stat		st;
     struct dirent	*dirp;
     DIR			*dir;
-    mode_t              hf_mode;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
     
     mode |= vol->v_dperm;
-    hf_mode = ad_hf_mode(mode);
     
     if (( dir = opendir( name )) == NULL ) {
         LOG(log_error, logtype_afpd, "setdirmode: opendir: %s", fullpathname(name), strerror(errno) );
@@ -327,23 +324,19 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     }
 
     for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        /* FIXME */
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
+        if ( *dirp->d_name == '.' && dirp->d_name[1] != '_') {
             continue;
         }
+
         if (ostat(dirp->d_name, &st, vol_syml_opt(vol)) < 0 ) {
             LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s",dirp->d_name, strerror(errno) );
             continue;
         }
 
-        if (!S_ISDIR(st.st_mode)) {
-           int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
-
-           if (setfilmode(vol, dirp->d_name, setmode, &st) < 0) {
-               closedir( dir );
-                LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
-                return -1;
-           }
+        if (!S_ISDIR(st.st_mode) && setfilmode(vol, dirp->d_name, mode, &st) < 0) {
+            closedir( dir );
+            LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
+            return -1;
         }
     }
     closedir( dir );
@@ -454,15 +447,15 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
     struct stat		st;
     struct dirent	*dirp;
     DIR			*dir;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
 
     if (( dir = opendir( name )) == NULL ) {
         return( -1 );
     }
     for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
+        if ( *dirp->d_name == '.' && dirp->d_name[1] != '_') {
             continue;
         }
+
         if (ostat(dirp->d_name, &st, vol_syml_opt(vol)) < 0 ) {
             LOG(log_error, logtype_afpd, "setdirowner: stat %s: %s",
                 fullpathname(dirp->d_name), strerror(errno) );
@@ -492,51 +485,3 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
 
     return( 0 );
 }
-
-#if 0
-/* recursive chown()ing of a directory */
-static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
-    struct stat sbuf;
-    DIR *odir = NULL;
-    struct dirent *entry;
-    char *name;
-    int ret = 0;
-    char newpath[PATH_MAX+1];
-    newpath[PATH_MAX] = '\0';
-    
-    if (chown(path, uid, gid) < 0) {
-        LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-
-    if (stat(path, &sbuf) < 0) {
-	LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-	
-    if (S_ISDIR(sbuf.st_mode)) {
-	odir = opendir(path);
-	if (odir == NULL) {
-	    LOG(log_error, logtype_afpd, "cannot opendir() [%s] (uid = %d): %s", path, uid, strerror(errno));
-	    goto recursive_chown_end;
-	}
-	while (NULL != (entry=readdir(odir)) ) {
-	    name = entry->d_name;
-	    if (name[0] == '.' && name[1] == '\0')
-		continue;
-	    if (name[0] == '.' && name[1] == '.' && name[2] == '\0')
-		continue;
-	    sprintf(newpath, "%s/%s", path, name);
-	    if (recursive_chown(newpath, uid, gid) < 0)
-		ret = -1;
-	} /* while */
-    } /* if */
-
-recursive_chown_end:
-    if (odir != NULL) {
-	closedir(odir);
-    }
-    return ret;
-}
-#endif
-

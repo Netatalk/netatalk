@@ -134,38 +134,6 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     return 0;
 }
 
-/* ------------------- */
-int  ad_rebuild_sfm_header(struct adouble *ad)
-{
-    u_int32_t       temp;
-
-    u_int16_t       attr;
-    char        *buf;
-
-    /*
-     * Rebuild any header information that might have changed.
-     */
-    buf = ad->ad_data;
-    /* FIXME */
-/*    temp = htonl( ad->ad_magic ); */
-    temp = ad->ad_magic;
-    memcpy(buf, &temp, sizeof( temp ));
-
-/*    temp = htonl( ad->ad_version ); */
-    temp = ad->ad_version;
-    memcpy(buf +4, &temp, sizeof( temp ));
-
-    /* need to save attrib */
-    if (!ad_getattr(ad, &attr)) {
-        attr &= ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
-
-        memcpy(buf +48 +4, &attr, sizeof(attr));
-
-    }
-    return AD_SFM_LEN;
-}
-
-
 int ad_flush( struct adouble *ad)
 {
     int len;
@@ -222,22 +190,6 @@ int ad_close( struct adouble *ad, int adflags)
         }
         ad_meta_fileno(ad) = -1;
         adf_lock_free(ad->ad_md);
-    }
-
-    if (ad->ad_flags != AD_VERSION1_SFM) {
-        return err;
-    }
-
-    if ((adflags & ADFLAGS_DIR)) {
-        return err;
-    }
-
-    if ( ad_reso_fileno(ad) != -1 && !(--ad->ad_resource_fork.adf_refcount)) {
-        if ( close( ad_reso_fileno(ad) ) < 0 ) {
-            err = -1;
-        }
-        ad_reso_fileno(ad) = -1;
-        adf_lock_free(&ad->ad_resource_fork);
     }
 
     return err;
