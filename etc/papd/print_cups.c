@@ -237,10 +237,7 @@ cups_get_printer_ppd ( char * name)
 	 *    printer-uri
 	 */
 
-        request = ippNew();
-
-        ippSetOperation(request, IPP_OP_GET_PRINTER_ATTRIBUTES);
-        ippSetRequestId(request, 1);
+        request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
 	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 		      "requested-attributes",
