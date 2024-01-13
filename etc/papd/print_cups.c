@@ -580,7 +580,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	size_t bytes;
 	char buffer[65536];
 	
-	if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info, jobid, job, CUPS_FORMAT_AUTO, 0, NULL, 1) == HTTP_STATUS_CONTINUE)
+	if (cupsStartDestDocument(CUPS_HTTP_DEFAULT, dest, info, jobid, job, CUPS_FORMAT_AUTO, 0, NULL, true) == HTTP_STATUS_CONTINUE)
 		{
 		while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
 			if (cupsWriteRequestData(CUPS_HTTP_DEFAULT, buffer, bytes) != HTTP_STATUS_CONTINUE)
