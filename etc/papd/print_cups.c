@@ -136,14 +136,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         */
         request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
-        language = cupsLangDefault();
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-                     "attributes-charset", NULL, cupsLangEncoding(language));
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-                     "attributes-natural-language", NULL, language->language);
-
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
                      "requested-attributes", NULL, "printer-uri");
 
@@ -251,16 +243,6 @@ cups_get_printer_ppd ( char * name)
 
         ippSetOperation(request, IPP_OP_GET_PRINTER_ATTRIBUTES);
         ippSetRequestId(request, 1);
-
-	language = cupsLangDefault();
-
-	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-		     "attributes-charset", NULL,
-		     cupsLangEncoding(language));
-
-	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-		     "attributes-natural-language", NULL,
-		     language->language);
 
 	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 		      "requested-attributes",
@@ -451,14 +433,6 @@ cups_get_printer_status (struct printer *pr)
         */
 
         request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-
-        language = cupsLangDefault();
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET,
-                     "attributes-charset", NULL, cupsLangEncoding(language));
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE,
-                     "attributes-natural-language", NULL, language->language);
 
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
                       "requested-attributes",
