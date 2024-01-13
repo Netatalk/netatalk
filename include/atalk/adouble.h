@@ -57,14 +57,7 @@
 
 /* version info */
 #define AD_VERSION1     0x00010000
-#define SFM_VERSION     AD_VERSION1
-
 #define AD_VERSION2     0x00020000
-#define AD_VERSION2_OSX 0x00020001
-/*
-  #define AD_VERSION1_ADS 0x00010002
-*/
-#define AD_VERSION1_SFM 0x00010003
 #define AD_VERSION      AD_VERSION2
 
 /*
@@ -94,8 +87,6 @@
 #define ADEID_PRIVINO       17
 #define ADEID_PRIVSYN       18 /* in synch with database */
 #define ADEID_PRIVID        19
-#define ADEID_SFMRESERVE1   20
-#define ADEID_SFMRESERVE2   21
 
 #define AD_DEV              0x80444556
 #define AD_INO              0x80494E4F
@@ -108,7 +99,6 @@
 #define AD_APPLESINGLE_MAGIC 0x00051600
 #define AD_APPLEDOUBLE_MAGIC 0x00051607
 #define AD_MAGIC             AD_APPLEDOUBLE_MAGIC
-#define SFM_MAGIC            0x00504641
 
 /* sizes of relevant entry bits */
 #define ADEDLEN_MAGIC       4
@@ -144,10 +134,6 @@
 
 #define ADEID_NUM_V1            5
 #define ADEID_NUM_V2            13
-
-// #define ADEID_NUM_SFM        5
-/* sizeof SFM meta data */
-#define AD_SFM_LEN 60
 
 /* 589 */
 #define AD_DATASZ1      (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + ADEDLEN_FINDERI + \
@@ -418,7 +404,6 @@ struct adouble_fops {
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header (struct adouble *);
-extern int ad_rebuild_sfm_header (struct adouble *);
 extern int ad_copy_header (struct adouble *, struct adouble *);
 extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);
@@ -445,9 +430,7 @@ extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
 extern char *ad_path      (const char *, int);
-extern char *ad_path_osx  (const char *, int);
 extern char *ad_path_ads  (const char *, int);
-extern char *ad_path_sfm  (const char *, int);
 extern int ad_mode        (const char *, int);
 extern int ad_mkdir       (const char *, int);
 extern void ad_init       (struct adouble *, int, int );

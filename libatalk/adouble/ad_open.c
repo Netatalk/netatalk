@@ -185,24 +185,6 @@ static const struct entry entry_order2[ADEID_NUM_V2 +1] = {
     {0, 0, 0}
 };
 
-/* OS X adouble finder info and resource fork only
- */
-static const struct entry entry_order_osx[ADEID_NUM_OSX +1] = {
-    {ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI},
-    {ADEID_RFORK, ADEDOFF_RFORK_OSX, ADEDLEN_INIT},
-
-    {0, 0, 0}
-};
-
-#define ADEID_NUM_SFM 3
-static const struct entry entry_order_sfm[ADEID_NUM_SFM +1] = {
-    {ADEID_FINDERI,     16,         ADEDLEN_FINDERI},   /* 9 */
-    {ADEID_SFMRESERVE2, 16+32,      6},                 /* 21 */
-    {ADEID_FILEI,       60,         ADEDLEN_FILEI},     /* 7 */
-
-    {0, 0, 0}
-};
-
 #endif /* AD_VERSION == AD_VERSION2 */
 
 #if AD_VERSION == AD_VERSION2
@@ -647,113 +629,6 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     return 0;
 }
 
-/* ---------------------------
-   SFM structure
-*/
-#if 0
-typedef struct {
-    byte    afpi_Signature[4];      /* Must be 0x00504641 */
-    byte    afpi_Version[4];        /* Must be 0x00010000 */
-    byte    afpi_Reserved1[4];
-    byte    afpi_BackupTime[4];     /* Backup time for the file/dir */
-    byte    finderinfo[32];         /* Finder info */
-    byte    afpi_ProDosInfo[6];     /* ProDos Info */
-    byte    afpi_Reserved2[6];
-} sfm_info;
-#endif
-
-static int ad_header_sfm_read(struct adouble *ad, struct stat *hst)
-{
-    char                *buf = ad->ad_data;
-    const struct entry  *eid;
-    ssize_t             header_len;
-    struct stat         st;
-
-    /* read the header */
-    if ((header_len = adf_pread( ad->ad_md, buf, sizeof(ad->ad_data), 0)) < 0) {
-        return -1;
-    }
-    if (header_len != AD_SFM_LEN) {
-        errno = EIO;
-        return -1;
-    }
-
-    memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
-    memcpy(&ad->ad_version, buf + 4, sizeof( ad->ad_version ));
-
-    /* FIXME in the great Microsoft tradition they aren't in network order */
-#if 0
-    if (ad->ad_magic == SFM_MAGIC && ad->ad_version == AD_VERSION1) {
-        static int          warning = 0;
-        if (!warning) {
-            LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
-            warning++;
-        }
-
-    } else {
-        ad->ad_magic = ntohl( ad->ad_magic );
-        ad->ad_version = ntohl( ad->ad_version );
-    }
-#endif
-    if ((ad->ad_magic != SFM_MAGIC) || ((ad->ad_version != AD_VERSION1) )) {
-        errno = EIO;
-        LOG(log_debug, logtype_default, "ad_header_sfm_read: can't parse AppleDouble header.");
-        return -1;
-    }
-
-    /* reinit adouble table */
-    eid = entry_order_sfm;
-    while (eid->id) {
-        ad->ad_eid[eid->id].ade_off = eid->offset;
-        ad->ad_eid[eid->id].ade_len = eid->len;
-        eid++;
-    }
-
-    /* steal some prodos for attribute */
-    {
-
-        u_int16_t attribute;
-        memcpy(&attribute, buf + 48 +4, sizeof(attribute));
-        ad_setattr(ad, attribute );
-    }
-
-    if (ad->ad_resource_fork.adf_fd != -1) {
-        /* we have a resource fork use it rather than the metadata */
-        if (fstat(ad->ad_resource_fork.adf_fd, &st) < 0) {
-            /* XXX set to zero ?
-               ad->ad_rlen =  0;
-            */
-            return 1;
-        }
-        ad->ad_rlen = st.st_size;
-        hst = &st;
-    }
-    else if (hst == NULL) {
-        hst = &st;
-        if (fstat(ad->ad_md->adf_fd, &st) < 0) {
-            return 1; /* fail silently */
-        }
-    }
-
-    /* fix up broken dates */
-    if (ad->ad_version == AD_VERSION1) {
-        u_int32_t aint;
-
-        /* check to see if the ad date is wrong. just see if we have
-         * a modification date in the future. */
-        if (((ad_getdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, &aint)) == 0) &&
-            (aint > TIMEWARP_DELTA + hst->st_mtime)) {
-            ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-            ad_getdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, &aint);
-            ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-            ad_getdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, &aint);
-            ad_setdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-        }
-    }
-
-    return 0;
-}
-
 /* ---------------------------------------
  * Put the .AppleDouble where it needs to be:
  *
@@ -810,121 +685,6 @@ static int ad_mkrf(char *path)
     errno = 0;
     if ( ad_mkdir( path, 0777 ) < 0 ) {
         return -1;
-    }
-    *slash = '/';
-    return 0;
-}
-
-/* ---------------------------------------
- * Put the resource fork where it needs to be:
- * ._name
- */
-char *
-ad_path_osx(const char *path, int adflags _U_)
-{
-    static char pathbuf[ MAXPATHLEN + 1];
-    char    c, *slash, buf[MAXPATHLEN + 1];
-
-    if (!strcmp(path,".")) {
-        /* fixme */
-        getcwd(buf, MAXPATHLEN);
-    }
-    else {
-        strlcpy(buf, path, MAXPATHLEN +1);
-    }
-    if (NULL != ( slash = strrchr( buf, '/' )) ) {
-        c = *++slash;
-        *slash = '\0';
-        strlcpy( pathbuf, buf, MAXPATHLEN +1);
-        *slash = c;
-    } else {
-        pathbuf[ 0 ] = '\0';
-        slash = buf;
-    }
-    strlcat( pathbuf, "._", MAXPATHLEN  +1);
-    strlcat( pathbuf, slash, MAXPATHLEN +1);
-    return pathbuf;
-}
-/* -------------------- */
-static int ad_mkrf_osx(char *path _U_)
-{
-    return 0;
-}
-
-/* ---------------------------------------
- * Put the .AppleDouble where it needs to be:
- *
- *      /   a/.AppleDouble/b/AFP_AfpInfo
- *  a/b
- *      \   b/.AppleDouble/.Parent/AFP_AfpInfo
- *
- */
-char *
-ad_path_sfm( const char *path, int adflags)
-{
-    static char pathbuf[ MAXPATHLEN + 1];
-    char    c, *slash, buf[MAXPATHLEN + 1];
-    size_t      l;
-
-    l = strlcpy(buf, path, MAXPATHLEN +1);
-    if ( adflags & ADFLAGS_DIR ) {
-        strcpy( pathbuf, buf);
-        if ( *buf != '\0' && l < MAXPATHLEN) {
-            pathbuf[l++] = '/';
-            pathbuf[l] = 0;
-        }
-        slash = ".Parent";
-    } else {
-        if (NULL != ( slash = strrchr( buf, '/' )) ) {
-            c = *++slash;
-            *slash = '\0';
-            strcpy( pathbuf, buf);
-            *slash = c;
-        } else {
-            pathbuf[ 0 ] = '\0';
-            slash = buf;
-        }
-    }
-    strlcat( pathbuf, ".AppleDouble/", MAXPATHLEN +1);
-    strlcat( pathbuf, slash, MAXPATHLEN +1);
-
-    if (adflags == ADFLAGS_RF) {
-        strlcat( pathbuf, "/AFP_Resource", MAXPATHLEN +1);
-    }
-    else {
-        strlcat( pathbuf, "/AFP_AfpInfo", MAXPATHLEN +1);
-    }
-    return( pathbuf );
-}
-
-/* -------------------- */
-static int ad_mkrf_sfm(char *path)
-{
-    char *slash;
-    /*
-     * Probably .AppleDouble doesn't exist, try to mkdir it.
-     */
-    if (NULL == ( slash = strrchr( path, '/' )) ) {
-        return -1;
-    }
-    *slash = 0;
-    errno = 0;
-    if ( ad_mkdir( path, 0777 ) < 0 ) {
-        if ( errno == ENOENT ) {
-            char *slash1;
-
-            if (NULL == ( slash1 = strrchr( path, '/' )) )
-                return -1;
-            errno = 0;
-            *slash1 = 0;
-            if ( ad_mkdir( path, 0777 ) < 0 )
-                return -1;
-            *slash1 = '/';
-            if ( ad_mkdir( path, 0777 ) < 0 )
-                return -1;
-        }
-        else
-            return -1;
     }
     *slash = '/';
     return 0;
@@ -1122,14 +882,6 @@ static int ad_check_size(struct adouble *ad _U_, struct stat *st)
 }
 
 /* --------------------------- */
-static int ad_check_size_sfm(struct adouble *ad _U_, struct stat *st)
-{
-    if (st->st_size > 0 && st->st_size < AD_SFM_LEN)
-        return 1;
-    return 0;
-}
-
-/* --------------------------- */
 static int ad_header_upgrade(struct adouble *ad, char *name)
 {
 #if AD_VERSION == AD_VERSION2
@@ -1147,27 +899,6 @@ static int ad_header_upgrade_none(struct adouble *ad _U_, char *name _U_)
     return 0;
 }
 
-/* --------------------------- */
-static struct adouble_fops ad_osx = {
-    &ad_path_osx,
-    &ad_mkrf_osx,
-    &ad_rebuild_adouble_header,
-    &ad_check_size,
-
-    &ad_header_read,
-    &ad_header_upgrade,
-};
-
-static struct adouble_fops ad_sfm = {
-    &ad_path_sfm,
-    &ad_mkrf_sfm,
-    &ad_rebuild_sfm_header,
-    &ad_check_size_sfm,
-
-    &ad_header_sfm_read,
-    &ad_header_upgrade_none,
-};
-
 static struct adouble_fops ad_adouble = {
     &ad_path,
     &ad_mkrf,
@@ -1183,25 +914,15 @@ void ad_init(struct adouble *ad, int flags, int options)
 {
     ad->ad_inited = 0;
     ad->ad_flags = flags;
-    if (flags == AD_VERSION2_OSX) {
-        ad->ad_ops = &ad_osx;
-        ad->ad_md = &ad->ad_resource_fork;
-    }
-    else if (flags == AD_VERSION1_SFM) {
-        ad->ad_ops = &ad_sfm;
-        ad->ad_md = &ad->ad_metadata_fork;
-    }
-    else {
-        ad->ad_ops = &ad_adouble;
-        ad->ad_md = &ad->ad_resource_fork;
-    }
+    ad->ad_ops = &ad_adouble;
+    ad->ad_md = &ad->ad_resource_fork;
     ad->ad_options = options;
 
     ad_data_fileno(ad) = -1;
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
     /* following can be read even if there's no
-     * meda data.
+     * meta data.
      */
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
@@ -1354,7 +1075,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         /* it's not new anymore */
         ad->ad_md->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_md->adf_refcount++;
-        goto sfm;
+        return 0;
     }
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
@@ -1389,7 +1110,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 admode = mode;
             }
             admode = ad_hf_mode(admode);
-            if ((errno == ENOENT) && (ad->ad_flags != AD_VERSION2_OSX)) {
+            if (errno == ENOENT) {
                 if (ad->ad_ops->ad_mkrf(ad_p) < 0) {
                     return ad_error(ad, adflags);
                 }
@@ -1457,69 +1178,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         }
     }
 
-    /* ****************************************** */
-    /* open the resource fork if SFM */
-sfm:
-    if (ad->ad_flags != AD_VERSION1_SFM) {
-        return 0;
-    }
-
-    if ((adflags & ADFLAGS_DIR)) {
-        /* no resource fork for directories / volumes XXX it's false! */
-        return 0;
-    }
-
-    /* untrue yet but ad_close will decremente it*/
-    ad->ad_resource_fork.adf_refcount++;
-
-    if (ad_reso_fileno(ad) != -1) { /* the file is already open */
-        if ((oflags & ( O_RDWR | O_WRONLY)) &&
-            !(ad->ad_resource_fork.adf_flags & ( O_RDWR | O_WRONLY))) {
-
-            ad_close( ad, open_df | ADFLAGS_HF);
-            errno = EACCES;
-            return -1;
-        }
-        return 0;
-    }
-
-    ad_p = ad->ad_ops->ad_path( path, ADFLAGS_RF );
-
-    admode = mode;
-    st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
-
-    if ((ad->ad_options & ADVOL_UNIXPRIV)) {
-        admode = mode;
-    }
-
-    hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-    ad->ad_resource_fork.adf_fd = open( ad_p, hoflags, admode );
-
-    if (ad->ad_resource_fork.adf_fd < 0 ) {
-        if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
-            hoflags = oflags;
-            ad->ad_resource_fork.adf_fd =open( ad_p, hoflags, admode );
-        }
-    }
-
-    if ( ad->ad_resource_fork.adf_fd < 0) {
-        int err = errno;
-
-        ad_close( ad, adflags );
-        errno = err;
-        return -1;
-    }
-    adf_lock_init(&ad->ad_resource_fork);
-    AD_SET(ad->ad_resource_fork.adf_off);
-    ad->ad_resource_fork.adf_flags = hoflags;
-    if ((oflags & O_CREAT) && !st_invalid) {
-        /* just created, set owner if admin (root) */
-        ad_chown(ad_p, &st_dir);
-    }
-    else if (!fstat(ad->ad_resource_fork.adf_fd, &st_meta)) {
-        ad->ad_rlen = st_meta.st_size;
-    }
-    return 0 ;
+    return 0;
 }
 
 /*!
@@ -1634,12 +1293,6 @@ static int new_rfork(const char *path, struct adouble *ad, int adflags)
 #if AD_VERSION == AD_VERSION2
     if (ad->ad_flags == AD_VERSION2)
         eid = entry_order2;
-    else if (ad->ad_flags == AD_VERSION2_OSX)
-        eid = entry_order_osx;
-    else  if (ad->ad_flags == AD_VERSION1_SFM) {
-        ad->ad_magic = SFM_MAGIC;
-        eid = entry_order_sfm;
-    }
     else
 #endif
         eid = entry_order1;
