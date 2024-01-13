@@ -96,7 +96,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
-        cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 
        /*
@@ -182,7 +181,6 @@ cups_get_printer_ppd ( char * name)
 	cups_dest_t 	*dests;		/* Destination List */
 	ipp_t           *request,       /* IPP Request */
 			*response;      /* IPP Response */
-	cups_lang_t	*language;      /* Default language */
 	char		uri[HTTP_MAX_URI]; /* printer-uri attribute */
         const char	*pattrs[] =   /* Requested printer attributes */
                         {
@@ -377,7 +375,6 @@ cups_get_printer_status (struct printer *pr)
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
         ipp_attribute_t *attr;          /* Current attribute */
-        cups_lang_t     *language;      /* Default language */
         char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 	int 		status = -1;
 
