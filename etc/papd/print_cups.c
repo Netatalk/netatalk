@@ -76,7 +76,7 @@ const char * cups_get_language (void)
  */
 
 static const char *                            /* O - Password or NULL */
-cups_passwd_cb(const char *prompt _U_)      /* I - Prompt */
+cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method, const char *resource, void *user_data)      /* I - Prompt */
 {
  /*
   * Always return NULL to indicate that no password is available...
@@ -103,7 +103,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -205,7 +205,7 @@ cups_get_printer_ppd ( char * name)
 			*model;
 
 
-	cupsSetPasswordCB(cups_passwd_cb);
+	cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 *We have to go this roundabout way to correctly get the make and 
@@ -410,7 +410,7 @@ cups_get_printer_status (struct printer *pr)
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -550,7 +550,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
