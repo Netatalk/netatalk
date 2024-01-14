@@ -48,7 +48,6 @@
 #include "print_cups.h"
 
 #define MAXCHOOSERLEN 31
-#define HTTP_MAX_URI 1024
 
 static const char* cups_status_msg[] = {
         "status: busy; info: \"%s\" is rejecting jobs; ",
@@ -97,7 +96,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
-        char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 
        /*
         * Make sure we don't ask for passwords...
@@ -123,7 +121,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
 		return (0);
 	}
-	cupsFreeDests(1, dest);
+	
 
        /*
         * Build an IPP_GET_PRINTER_ATTRS request, which requires the following
@@ -139,7 +137,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
                      "requested-attributes", NULL, "printer-uri");
 
-        sprintf(uri, "ipp://localhost/printers/%s", name);
+        const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
                      "printer-uri", NULL, uri);
@@ -152,10 +150,11 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
                          ippErrorString(cupsLastError()));
+		cupsFreeDests(1, dest);
                 httpClose(http);
                 return (0);
         }
-
+	cupsFreeDests(1, dest);
         httpClose(http);
 
         if (cupsLastError() >= IPP_STATUS_OK_CONFLICTING)
@@ -182,7 +181,6 @@ cups_get_printer_ppd ( char * name)
 	cups_dest_t 	*dests;		/* Destination List */
 	ipp_t           *request,       /* IPP Request */
 			*response;      /* IPP Response */
-	char		uri[HTTP_MAX_URI]; /* printer-uri attribute */
         const char	*pattrs[] =   /* Requested printer attributes */
                         {
                           "printer-make-and-model",
@@ -226,7 +224,7 @@ cups_get_printer_ppd ( char * name)
 	 * Generate the printer URI...
 	 */
 
-	sprintf(uri, "ipp://localhost/printers/%s", name);
+	const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 
 	/*
 	 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
@@ -373,7 +371,6 @@ cups_get_printer_status (struct printer *pr)
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
         ipp_attribute_t *attr;          /* Current attribute */
-        char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 	int 		status = -1;
 
         static const char *pattrs[] =   /* Requested printer attributes */
@@ -394,7 +391,6 @@ cups_get_printer_status (struct printer *pr)
 	 */
 
 	dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, pr->p_printer, NULL);
-	
 	if (!dest)
 	{
 		LOG(log_error, logtype_papd,
@@ -407,13 +403,12 @@ cups_get_printer_status (struct printer *pr)
 		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
 		return (0);
 	}
-	cupsFreeDests(1, dest);
 
        /*
         * Generate the printer URI...
         */
 
-        sprintf(uri, "ipp://localhost/printers/%s", pr->p_printer);
+        const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 
 
 
@@ -445,6 +440,7 @@ cups_get_printer_status (struct printer *pr)
         {
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
                          ippErrorString(cupsLastError()));
+		cupsFreeDests(1, dest);
                 httpClose(http);
                 return (0);
         }
@@ -454,6 +450,7 @@ cups_get_printer_status (struct printer *pr)
       		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
                          ippErrorString(cupsLastError()));
                 ippDelete(response);
+		cupsFreeDests(1, dest);
                 httpClose(http);
                 return (0);
         }
@@ -490,7 +487,7 @@ cups_get_printer_status (struct printer *pr)
        /*
         * Return the print status ...
         */
-
+	cupsFreeDests(1, dest);
         httpClose(http);
 
 	return (status);
