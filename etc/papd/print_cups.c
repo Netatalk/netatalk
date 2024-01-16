@@ -562,7 +562,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	 * Create a new print job.
 	 */
 	
-	if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, info, &jobid, "Netatalk papd", num_options, options) == IPP_STATUS_OK)
+	if (cupsCreateDestJob(CUPS_HTTP_DEFAULT, dest, info, &jobid, job, num_options, options) == IPP_STATUS_OK)
   		LOG(log_info, logtype_papd, "Job '%s' queued to printer '%s' with id '%d'", job, name, jobid);
 	else
 		LOG(log_error, logtype_papd, "Unable to print job '%s' to printer '%s' for user '%s' - CUPS error : '%s'", job, name, username, cupsLastErrorString());
