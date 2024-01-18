@@ -558,9 +558,9 @@ static void as_timer(int sig _U_)
 		     * TODO: This is an ugly hack that breaks the AppleTalk
 		     * specification. A better solution is needed.
 		     */
-		    if (quirks && (rtmp->rt_iface != iface)) {
+		    if ((iface->i_flags & IFACE_RSEED) && (rtmp->rt_iface != iface)) {
 		        continue;
-		    } else if (!quirks && (rtmp->rt_iface == iface)) {
+		    } else if (!(iface->i_flags & IFACE_RSEED) && (rtmp->rt_iface == iface)) {
 		        continue;
 		    }
 
