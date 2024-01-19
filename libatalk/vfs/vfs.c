@@ -622,7 +622,7 @@ struct dir_mode {
     mode_t mode;
 };
 
-static int setdirmode_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data)
+static int setdirmode_ads_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag _U_)
 {
     struct dir_mode *param = data;
 
