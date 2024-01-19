@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">19 Dec 2023</refmiscinfo>
+    <refmiscinfo class="date">18 Jan 2024</refmiscinfo>
 
     <refmiscinfo class="source">:NETATALK_VERSION:</refmiscinfo>
   </refmeta>
@@ -51,8 +51,6 @@
       <arg>-2</arg>
 
       <arg>-d</arg>
-
-      <arg>-q</arg>
 
       <arg>-t</arg>
 
@@ -154,24 +152,6 @@
         <listitem>
           <para>Specifies the file in which <command>atalkd</command> stores its
           process id.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-q</term>
-
-        <listitem>
-          <para>Stops <command>atalkd</command> from broadcasting RTMP routing tuples
-	      to other AppleTalk routers on the network. This improves compatibility with
-	      AsantéTalk and Dayna EtherPrint bridge devices. However,
-	      clients behind other routers on the network can't see or communicate
-	      with network segments that <command>atalkd</command> is routing.</para>
-
-	  <note>
-	    <para>Do NOT use this option unless you absolutely need it.
-	        It breaks the AppleTalk specification.
-	        Ref. page 5-11 in "Inside AppleTalk".</para>
-	  </note>
         </listitem>
       </varlistentry>
 

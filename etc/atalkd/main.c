@@ -80,7 +80,7 @@ static int		atservNATSERV = elements( atserv );
 
 struct interface	*interfaces = NULL, *ciface = NULL;
 
-int			debug = 0, quirks = 0;
+int			debug = 0;
 static char		*configfile = NULL;
 static int		ziptimeout = 0;
 static int		stable = 0, noparent = 0;
@@ -548,19 +548,12 @@ static void as_timer(int sig _U_)
 
 		    /* split horizon */
 
-		    /* Quirks mode that stops atalkd from rebroadcasting
-		     * routing information for other subnets.
-		     *
-		     * Makes the AsanteTalk bridge consistently start up in
-		     * AppleTalk Phase 2, and stop the Dayna bridge from
-		     * crashing GS/OS.
-		     *
-		     * TODO: This is an ugly hack that breaks the AppleTalk
-		     * specification. A better solution is needed.
+		    /* HACK: If we only have one interface configured and are using
+      		     * the -router switch to seed that interface, we need not
+	     	     * worry about split horizon. Otherwise interface won't
+	    	     * transmit RTMP broadcasts.
 		     */
-		    if (quirks && (rtmp->rt_iface != iface)) {
-		        continue;
-		    } else if (!quirks && (rtmp->rt_iface == iface)) {
+		    if (!(iface->i_flags & IFACE_RSEED) && (rtmp->rt_iface == iface)) {
 		        continue;
 		    }
 
@@ -828,7 +821,7 @@ int main( int ac, char **av)
     socklen_t 		fromlen;
     char		*prog;
 
-    while (( c = getopt( ac, av, "12df:P:qtv" )) != EOF ) {
+    while (( c = getopt( ac, av, "12df:P:tv" )) != EOF ) {
 	switch ( c ) {
 	case '1' :
 	    defphase = IFACE_PHASE1;
@@ -850,10 +843,6 @@ int main( int ac, char **av)
 	    pidfile = optarg;
 	    break;
 
-	case 'q' :	/* quirks mode */
-	    quirks++;
-	    break;
-
 	case 't' :	/* transition */
 	    transition++;
 	    break;
@@ -864,7 +853,7 @@ int main( int ac, char **av)
 	    break;
 
 	default :
-	    fprintf( stderr, "Usage:\tatalkd -1 -2 [-f configfile] [-P pidfile] -q -t -d\n" );
+	    fprintf( stderr, "Usage:\tatalkd -1 -2 [-f configfile] [-P pidfile] -t -d\n" );
 	    exit( 1 );
 	}
     }
