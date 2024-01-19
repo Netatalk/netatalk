@@ -81,6 +81,8 @@ static int		atservNATSERV = elements( atserv );
 struct interface	*interfaces = NULL, *ciface = NULL;
 
 int			debug = 0;
+int			quiet = 0;
+int			chatty = 0;
 static char		*configfile = NULL;
 static int		ziptimeout = 0;
 static int		stable = 0, noparent = 0;
@@ -821,7 +823,7 @@ int main( int ac, char **av)
     socklen_t 		fromlen;
     char		*prog;
 
-    while (( c = getopt( ac, av, "12df:P:tv" )) != EOF ) {
+    while (( c = getopt( ac, av, "12df:P:qstv" )) != EOF ) {
 	switch ( c ) {
 	case '1' :
 	    defphase = IFACE_PHASE1;
@@ -843,6 +845,12 @@ int main( int ac, char **av)
 	    pidfile = optarg;
 	    break;
 
+	case 'q' :	/* don't seed */
+	    quiet++;
+
+	case 's' :	/* seed */
+	    chatty++;
+
 	case 't' :	/* transition */
 	    transition++;
 	    break;
@@ -853,7 +861,7 @@ int main( int ac, char **av)
 	    break;
 
 	default :
-	    fprintf( stderr, "Usage:\tatalkd -1 -2 [-f configfile] [-P pidfile] -t -d\n" );
+	    fprintf( stderr, "Usage:\tatalkd -1 -2 -d [-f configfile] [-P pidfile] -q -s -t -v\n" );
 	    exit( 1 );
 	}
     }
