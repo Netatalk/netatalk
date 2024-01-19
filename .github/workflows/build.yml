@@ -181,7 +181,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v1
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
       - name: Run build-wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
