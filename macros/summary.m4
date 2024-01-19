@@ -35,9 +35,6 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
 		AC_MSG_RESULT([         Kerberos V])
 	fi
-	if test x"$compile_kerberos" = x"yes"; then
-		AC_MSG_RESULT([         Kerberos IV])
-	fi
 	if test x"$compile_pgp" = x"yes"; then
 		AC_MSG_RESULT([         PGP])
 	fi

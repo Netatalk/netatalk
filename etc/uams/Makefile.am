@@ -1,7 +1,5 @@
 # Makefile.am for etc/uams/
 
-SUBDIRS = uams_krb4
-
 #
 # conditionally build some modules
 #
