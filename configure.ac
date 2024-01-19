@@ -765,23 +765,6 @@ AC_ARG_ENABLE(pgp-uam,
 	]
 )
 
-dnl --------------------- check for building Kerberos v4 UAM module
-
-AC_MSG_CHECKING([whether the Kerberos IV UAM should be build])
-AC_ARG_ENABLE(krb4-uam,
-	[  --enable-krb4-uam       enable build of Kerberos v4 UAM module],[
-	if test "$enableval" = "yes"; then
-		AC_DEFINE(UAM_KRB4, 1, [Define if the Kerberos 4 UAM module should be compiled])
-		compile_kerberos=yes
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-	fi
-	],[
-		AC_MSG_RESULT([no])
-	]
-)
-
 dnl --------------------- check for building Kerberos V UAM module
 
 netatalk_cv_build_krb5_uam=no
@@ -1162,7 +1145,6 @@ AC_CONFIG_FILES([Makefile
 	etc/atalkd/Makefile
 	etc/cnid_dbd/Makefile
 	etc/uams/Makefile
-	etc/uams/uams_krb4/Makefile
 	etc/papd/Makefile
 	etc/psf/Makefile
 	include/Makefile

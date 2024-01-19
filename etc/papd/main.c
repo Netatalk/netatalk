@@ -930,17 +930,6 @@ int rprintcap( struct printer *pr)
 	    strcpy( pr->p_lock, p );
 	}
 
-#ifdef KRB
-	/*
-	 * Must Kerberos authenticate?
-	 */
-	if ( pgetflag( "ka" ) == 1 ) {
-	    pr->p_flags |= P_KRB;
-	} else {
-	    pr->p_flags &= ~P_KRB;
-	}
-#endif /* KRB */
-
 	endprent();
     }
 #endif /* HAVE_CUPS */

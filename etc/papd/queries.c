@@ -17,14 +17,6 @@
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 
-#ifdef KRB
-#ifdef SOLARIS
-#include <kerberos/krb.h>
-#else /* SOLARIS */
-#include <krb.h>
-#endif /* SOLARIS */
-#endif /* KRB */
-
 #include "file.h"
 #include "comment.h"
 #include "printer.h"
@@ -110,108 +102,6 @@ int cq_default( struct papfile *in, struct papfile *out)
 	CONSUME( in, linelength + crlflength );
     }
 }
-
-#ifdef KRB
-char	*LoginOK = "LoginOK\n";
-char	*LoginFailed = "LoginFailed\n";
-
-#define h2b(x)	(isdigit((x))?(x)-'0':(isupper((x))?(x)-'A':(x)-'a')+10)
-
-int cq_k4login( struct papfile *in, struct papfile *out)
-{
-    char		*start, *p;
-    int			linelength, crlflength;
-    unsigned char	*t;
-    struct papd_comment	*comment = compeek();
-    KTEXT_ST		tkt;
-    AUTH_DAT		ad;
-    int			rc, i;
-
-    switch ( markline( in, &start, &linelength, &crlflength )) {
-    case 0 :
-	return( 0 );
-
-    case -1 :
-	return( CH_MORE );
-
-    case -2 :
-        return( CH_ERROR );
-    }
-
-    p = start + strlen( comment->c_begin );
-    while ( *p == ' ' ) {
-	p++;
-    }
-
-    bzero( &tkt, sizeof( tkt ));
-    stop = start+linelength;
-    /* FIXME */
-    for ( i = 0, t = tkt.dat; p < stop; p += 2, t++, i++ ) {
-	*t = ( h2b( (unsigned char)*p ) << 4 ) +
-		h2b( (unsigned char)*( p + 1 ));
-    }
-    tkt.length = i;
-
-    if (( rc = krb_rd_req( &tkt, "LaserWriter", printer->p_name,
-	    0, &ad, "" )) != RD_AP_OK ) {
-	LOG(log_error, logtype_papd, "cq_k4login: %s", krb_err_txt[ rc ] );
-	append( out, LoginFailed, strlen( LoginFailed ));
-	compop();
-	CONSUME( in, linelength + crlflength );
-	return( CH_DONE );
-    }
-    LOG(log_info, logtype_papd, "cq_k4login: %s.%s@%s", ad.pname, ad.pinst,
-	    ad.prealm );
-    lp_person( ad.pname );
-    lp_host( ad.prealm );
-
-    append( out, LoginOK, strlen( LoginOK ));
-    compop();
-    CONSUME( in, linelength + crlflength);
-    return( CH_DONE );
-}
-
-char	*uameth = "UMICHKerberosIV\n*\n";
-
-int cq_uameth( struct papfile *in, struct papfile *out)
-{
-    char		*start;
-    int			linelength, crlflength;
-    struct papd_comment	*c, *comment = compeek();
-
-    for (;;) {
-	switch ( markline( in, &start, &linelength, &crlflength )) {
-	case 0 :
-	    return( 0 );
-
-	case -1 :
-	    return( CH_MORE );
-
-        case -2 :
-            return( CH_ERROR );
-	}
-
-	if ( comgetflags() == 0 ) {	/* start */
-	    if (( printer->p_flags & P_KRB ) == 0 ) {	/* no kerberos */
-		if ( comswitch( queries, cq_default ) < 0 ) {
-		    LOG(log_error, logtype_papd, "cq_uameth: can't find default!" );
-		    exit( 1 );
-		}
-		return( CH_DONE );
-	    }
-	    comsetflags( 1 );
-	} else {
-	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) { /* end */
-		append( out, uameth, strlen( uameth ));
-		compop();
-		return( CH_DONE );
-	    }
-	}
-
-	CONSUME( in, linelength + crlflength );
-    }
-}
-#endif /* KRB */
 
 int gq_true( struct papfile *out)
 {
@@ -879,10 +769,6 @@ int cq_end( struct papfile *in, struct papfile *out)
  * "Begin"/"End" general queries have to be last.
  */
 struct papd_comment	queries[] = {
-#ifdef KRB
-    { "%%Login: UMICHKerberosIV", NULL,			cq_k4login,	0 },
-    { "%%?BeginUAMethodsQuery",	"%%?EndUAMethodsQuery:", cq_uameth,C_FULL },
-#endif /* KRB */
 #ifndef HAVE_CUPS
     { "%UMICHListQueue",	NULL,			cq_listq,  C_FULL },
     { "%UMICHDeleteJob",	NULL,			cq_rmjob,	0 },
