@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-*.loT
-.deps
-.libs
-.gitignore
-ea.o ea_sys.o sys_ea.o unix.o vfs.o

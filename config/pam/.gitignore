@@ -1,5 +1,2 @@
-Makefile
-Makefile.in
 netatalk.pam
 netatalk
-*.o

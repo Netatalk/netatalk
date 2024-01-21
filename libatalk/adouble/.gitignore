@@ -1,8 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-.gitignore
-ad_attr.o ad_date.o ad_flush.o ad_lock.o ad_mmap.o ad_open.o ad_read.o ad_sendfile.o ad_size.o ad_write.o

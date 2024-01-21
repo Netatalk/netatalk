@@ -1,4 +1,1 @@
-Makefile
-Makefile.in
-*.o
 afp_dtrace.h
