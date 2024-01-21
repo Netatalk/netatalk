@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-dummy.o
-libatalk.abi.tmp
-*dev.abi

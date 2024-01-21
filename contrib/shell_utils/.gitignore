@@ -1,6 +1,2 @@
-Makefile
-Makefile.in
 asip-status
 apple_dump
-.gitignore
-*.o

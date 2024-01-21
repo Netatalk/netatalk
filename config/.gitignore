@@ -1,5 +1,2 @@
-Makefile
-Makefile.in
-*.o
 afp.conf
 dbus-session.conf

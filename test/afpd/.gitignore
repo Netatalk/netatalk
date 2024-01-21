@@ -1,7 +1,3 @@
-Makefile
-Makefile.in
-.deps
-.libs
 test
 test.conf
 test.default

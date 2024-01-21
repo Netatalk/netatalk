@@ -1,8 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-.gitignore
-getusershell.o inet_aton.o mktemp.o pselect.o rquota_xdr.o snprintf.o strcasecmp.o strdup.o strstr.o

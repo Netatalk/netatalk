@@ -1,5 +1,3 @@
-Makefile
-Makefile.in
 rc.bsd
 rc.debian
 rc.gentoo
@@ -11,4 +9,3 @@ service.systemd
 netatalk
 netatalk.service
 netatalk.xml
-*.o
