@@ -421,6 +421,50 @@ AC_ARG_ENABLE(install-privileged,
 	]
 )
 
+dnl Check for docbook
+AC_DEFUN([AX_CHECK_DOCBOOK], [
+  # It's just rude to go over the net to build
+  XSLTPROC_FLAGS=--nonet
+  DOCBOOK_ROOT=
+  XSLTPROC_WORKS=no
+
+  AC_ARG_WITH(docbook,
+    AS_HELP_STRING(
+      [--with-docbook],
+      [Path to Docbook XSL directory]
+    ),
+    [DOCBOOK_ROOT=$withval]
+  )
+
+  if test -n "$DOCBOOK_ROOT" ; then
+    AC_CHECK_PROG(XSLTPROC,xsltproc,xsltproc,)
+    if test -n "$XSLTPROC"; then
+      AC_MSG_CHECKING([whether xsltproc works])
+      DB_FILE="$DOCBOOK_ROOT/html/docbook.xsl"
+      $XSLTPROC $XSLTPROC_FLAGS $DB_FILE >/dev/null 2>&1 << END
+<?xml version="1.0" encoding='ISO-8859-1'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="test">
+</book>
+END
+      if test "$?" = 0; then
+        XSLTPROC_WORKS=yes
+      fi
+      AC_MSG_RESULT($XSLTPROC_WORKS)
+    fi
+  fi
+
+  AC_MSG_CHECKING([whether to build Docbook documentation])
+  AC_MSG_RESULT($XSLTPROC_WORKS)
+
+  AM_CONDITIONAL(HAVE_XSLTPROC, test x"$XSLTPROC_WORKS" = x"yes")
+  AC_SUBST(XSLTPROC_FLAGS)
+  AC_SUBST(DOCBOOK_ROOT)
+  AC_SUBST(XSLTPROC)
+])
+
+AX_CHECK_DOCBOOK
+
 AC_ARG_WITH(uams-path,
 	[  --with-uams-path=PATH   path to UAMs [[PKGCONF/uams]]],[
 		uams_path="$withval"
@@ -1140,6 +1184,16 @@ AC_CONFIG_FILES([Makefile
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
 	doc/Makefile
+	doc/html.xsl
+	doc/man.xsl
+	doc/manual/Makefile
+	doc/manual/manual.xml
+	doc/manpages/Makefile
+	doc/manpages/man1/Makefile
+	doc/manpages/man3/Makefile
+	doc/manpages/man4/Makefile
+	doc/manpages/man5/Makefile
+	doc/manpages/man8/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/atalkd/Makefile
@@ -1169,10 +1223,47 @@ AC_CONFIG_FILES([Makefile
 	macros/Makefile
 	man/Makefile
 	man/man1/Makefile
+	man/man1/ad.1
+	man/man1/aecho.1
+	man/man1/afpldaptest.1
+	man/man1/afppasswd.1
+	man/man1/apple_dump.1
+	man/man1/asip-status.1
+	man/man1/cnid2_create.1
+	man/man1/dbd.1
+	man/man1/getzones.1
+	man/man1/macusers.1
+	man/man1/megatron.1
+	man/man1/nbp.1
+	man/man1/netatalk-config.1
+	man/man1/pap.1
+	man/man1/psorder.1
+	man/man1/showppd.1
+	man/man1/uniconv.1
 	man/man3/Makefile
+	man/man3/atalk_aton.3
+	man/man3/nbp_name.3
 	man/man4/Makefile
+	man/man4/atalk.4
 	man/man5/Makefile
+	man/man5/afp_ldap.conf.5
+	man/man5/afp_signature.conf.5
+	man/man5/afp_voluuid.conf.5
+	man/man5/afpd.conf.5
+	man/man5/AppleVolumes.default.5
+	man/man5/atalkd.conf.5
+	man/man5/netatalk.conf.5
+	man/man5/papd.conf.5
 	man/man8/Makefile
+	man/man8/a2boot.8
+	man/man8/afpd.8
+	man/man8/atalkd.8
+	man/man8/cnid_dbd.8
+	man/man8/cnid_metad.8
+	man/man8/papd.8
+	man/man8/papstatus.8
+	man/man8/psf.8
+	man/man8/timelord.8
 	sys/Makefile
 	sys/netatalk/Makefile
 	sys/solaris/Makefile

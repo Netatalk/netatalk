@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="showppd.1">
+  <refmeta>
+    <refentrytitle>showppd</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">29 Aug 2023</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>showppd</refname>
+
+    <refpurpose>Show the contents of a PPD file</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>showppd</command>
+      <arg choice="plain"><replaceable>file</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><command>showppd</command> parses the binary data of a PPD file
+    and pretty prints the pertinent information to stdout.
+    PPD files are typically distributed by printer manufacturers
+    and contains information on the fonts and features
+    that a particular printer supports.</para>
+
+    <para>Netatalk's <command>papd</command> printer daemon
+    can use PPD files to determine the capabilities
+    of a printer that it is attempting to print to.</para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry><refentrytitle>papd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>

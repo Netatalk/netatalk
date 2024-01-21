@@ -162,5 +162,7 @@ installcheck:
 
 install-exec:
 
+html:
+
 # DO NOT DELETE THIS LINE
 

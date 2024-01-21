@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="pap.1">
+  <refmeta>
+    <refentrytitle>pap</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">6 May 2002</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>pap</refname>
+
+    <refpurpose>client interface to remote printers using Printer Access
+    Protocol</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>pap<indexterm><primary>pap</primary></indexterm></command>
+
+      <arg choice="opt"><arg choice="plain">-A </arg><arg choice="plain"><replaceable>address</replaceable></arg></arg>
+
+      <arg choice="opt">-c</arg>
+
+      <arg choice="opt">-d</arg>
+
+      <arg choice="opt">-e</arg>
+
+      <arg choice="opt">-E</arg>
+
+      <arg choice="opt"><arg choice="plain">-p </arg><arg choice="plain"><replaceable>nbpname</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-s </arg><arg choice="plain"><replaceable>statusfile</replaceable></arg></arg>
+
+      <arg choice="opt">-w</arg>
+
+      <arg choice="opt">-W</arg>
+
+      <arg choice="opt"><replaceable>FILES</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><command>pap</command> is used to connect and send files to an
+    AppleTalk connected printer using the Apple Printer Access Protocol (PAP).
+    When <command>pap</command> starts execution, it tries to open a session
+    with the printer using PAP, and then downloads the <emphasis remap="I">files</emphasis>
+    to the printer.</para>
+
+    <para>If no <emphasis remap="I">files</emphasis> are given on the command
+    line, <command>pap</command> begins reading from standard input.</para>
+
+    <para>If no printer is specified on the command line, <command>pap</command>
+    looks for a file called <markup>.paprc</markup> in the current working
+    directory and reads it to obtain the <emphasis remap="I">nbpname</emphasis>
+    of a printer. Blank lines and lines that begin with a `<emphasis remap="B">#</emphasis>&#39;
+    are ignored. <emphasis remap="I">type</emphasis> and <emphasis remap="I">zone</emphasis>
+    default to <emphasis remap="B">LaserWriter</emphasis> and the zone of the
+    local host, respectively.</para>
+
+    <para>Note that <command>pap</command> is designed to be useful as a
+    communication filter for sending <citerefentry><refentrytitle>lpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    spooled print jobs to AppleTalk connected printers. See
+    <citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    for hints on how to use it this way.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-A </option><replaceable>address</replaceable></term>
+
+        <listitem>
+          <para>Connect to the printer with Appletalk address <emphasis
+          remap="I">address</emphasis> and do not consult the
+          <markup>.paprc</markup> file to find a printer name. See
+          <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+          for the syntax of <emphasis remap="I">address</emphasis>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-c</option></term>
+
+        <listitem>
+          <para>Take cuts. The PAP protocol specified a simple queuing
+          procedure, such that the clients tell the printer how long they have
+          been waiting to print. This option causes <command>pap</command> to
+          lie about how long it has been waiting.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Enable debug output.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-e</option></term>
+
+        <listitem>
+          <para>Send any message from the printer to stderr instead of stdout.
+          <citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+          invokes <command>pap</command> with this option.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-E</option></term>
+
+        <listitem>
+          <para>Don&#39;t wait for EOF from the printer. This option is useful
+          for printers which don&#39;t implement PAP correctly. In a correct
+          implementation, the client side should wait for the printer to
+          return EOF before closing the connection. Some clients don&#39;t
+          wait, and hence some printers have related bugs in their
+          implementation.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-p</option> <replaceable>nbpname</replaceable></term>
+
+        <listitem>
+          <para>Connect to the printer named <emphasis remap="I">nbpname</emphasis>
+          and do not consult the <markup>.paprc</markup> file to find a
+          printer name. See <citerefentry><refentrytitle>nbp_name</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+          for the syntax of <emphasis remap="I">nbpname</emphasis>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-s</option> <replaceable>statusfile</replaceable></term>
+
+        <listitem>
+          <para>Update the file called <emphasis remap="I">statusfile</emphasis>
+          to contain the most recent status message from the printer.
+          <command>pap</command> gets the status from the printer when it is
+          waiting for the printer to process input. The <emphasis remap="I">statusfile</emphasis>
+          will contain a single line terminated with a newline. This is useful
+          when <command>pap</command> is invoked by
+          <citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+          within <emphasis remap="B">lpd</emphasis>&#39;s spool directory.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-w</option></term>
+
+        <listitem>
+          <para>Wait for the printer status to contain the word
+          &#34;waiting&#34; before sending the job. This is to defeat
+          printer-side spool available on HP IV and V printers.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-W</option></term>
+
+        <listitem>
+          <para>Wait for the printer status to contain the word &#34;idle&#34;
+          before sending the job. This is to defeat printer-side spool
+          available on HP IV and V printers.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Files</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><markup>.paprc</markup></term>
+
+        <listitem>
+          <para>file read to obtain printer name if not specified on command
+          line</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry><refentrytitle>nbp_name</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>lpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>

@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="papd.8">
+  <refmeta>
+    <refentrytitle>papd</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">24 Dec 2023</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>papd</refname>
+
+    <refpurpose>AppleTalk print server daemon</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>papd<indexterm><primary>papd</primary></indexterm><indexterm>
+          <primary>UAM</primary>
+
+          <secondary>User Authentication Module</secondary>
+        </indexterm></command>
+
+      <arg>-d</arg>
+
+      <arg>-f configfile</arg>
+
+      <arg>-p printcap</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><command>papd</command> is the AppleTalk printer daemon. This daemon
+    accepts print jobs from AppleTalk clients (typically Macintosh computers)
+    using the Printer Access Protocol (PAP). When used with System V printing
+    systems, <command>papd</command> spools jobs directly into an
+    <citerefentry>
+        <refentrytitle>lpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry> spool directory and wakes up <command>lpd</command>
+    after accepting a job from the network to have it re-examine the
+    appropriate spool directory. The actual printing and spooling is handled
+    entirely by <command>lpd</command>.</para>
+
+    <para><command>papd</command> can also pipe the print job to an external
+    program for processing, and this is the preferred method on systems not
+    using CUPS to avoid compatibility problems with all the flavours of
+    <command>lpd</command> in use.</para>
+
+    <para>As of Netatalk 2.0, CUPS is also supported. Simply using <emphasis
+    remap="B">cupsautoadd</emphasis> as the first papd.conf entry will share
+    all CUPS printers automagically. It is still possible to overwrite
+    these defaults by individually defining printer
+    shares. See <citerefentry>
+        <refentrytitle>papd.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> for details.</para>
+
+    <para><command>papd</command> is typically started at boot time from
+    system init scripts or services. It first reads from its configuration file,
+    <filename>papd.conf</filename>. The file is in the same format as
+    <filename>/etc/printcap</filename>. See <citerefentry>
+        <refentrytitle>printcap</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> for details. The name of the entry is registered with
+    NBP.</para>
+
+    <para>The following options are supported: <informaltable frame="none"
+        pgwide="0">
+        <tgroup cols="4">
+          <colspec align="center" />
+
+          <thead>
+            <row>
+              <entry align="center">Name</entry>
+
+              <entry align="center">Type</entry>
+
+              <entry align="center">Default</entry>
+
+              <entry align="left">Description</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>pd</entry>
+
+              <entry>str</entry>
+
+              <entry>'.ppd'</entry>
+
+              <entry>Pathname to PPD file</entry>
+            </row>
+
+            <row>
+              <entry>pr</entry>
+
+              <entry>str</entry>
+
+              <entry>'lp'</entry>
+
+              <entry>LPD or CUPS printer name (or pipe to a print
+              command)</entry>
+            </row>
+
+            <row>
+              <entry>op</entry>
+
+              <entry>str</entry>
+
+              <entry>'operator'</entry>
+
+              <entry>Operator name for LPD spooling</entry>
+            </row>
+
+            <row>
+              <entry>au</entry>
+
+              <entry>bool</entry>
+
+              <entry>false</entry>
+
+              <entry>Whether to do authenticated printing or not</entry>
+            </row>
+
+            <row>
+              <entry>ca</entry>
+
+              <entry>str</entry>
+
+              <entry>NULL</entry>
+
+              <entry>Pathname used for CAP-style authentication</entry>
+            </row>
+
+            <row>
+              <entry>sp</entry>
+
+              <entry>bool</entry>
+
+              <entry>false</entry>
+
+              <entry>PSSP-style authentication</entry>
+            </row>
+
+            <row>
+              <entry>am</entry>
+
+              <entry>str</entry>
+
+              <entry>NULL</entry>
+
+              <entry>UAMS to use for authentication</entry>
+            </row>
+
+            <row>
+              <entry>pa</entry>
+
+              <entry>str</entry>
+
+              <entry>NULL</entry>
+
+              <entry>Printer's AppleTalk address</entry>
+            </row>
+
+            <row>
+              <entry>co</entry>
+
+              <entry>str</entry>
+
+              <entry>NULL</entry>
+
+              <entry>CUPS options as supplied to the <citerefentry>
+                  <refentrytitle>lp</refentrytitle>
+
+                  <manvolnum>1</manvolnum>
+                </citerefentry> command with "-o"</entry>
+            </row>
+
+            <row>
+              <entry>fo</entry>
+
+              <entry>bool</entry>
+
+              <entry>false</entry>
+
+              <entry>adjust lineending for foomatic-rip</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable> If no configuration file is given, the hostname of the
+    machine is used as the NBP name and all options take their default
+    value.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-d</term>
+
+        <listitem>
+          <para>Do not fork or disassociate from the terminal.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>Consult <replaceable>configfile</replaceable> instead of
+          <filename>papd.conf</filename> for the configuration
+          information.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-p <replaceable>printcap</replaceable></term>
+
+        <listitem>
+          <para>Consult <replaceable>printcap</replaceable> instead of
+          <filename>/etc/printcap</filename> for LPD configuration
+          information.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Notes</title>
+
+    <para>PSSP<indexterm>
+        <primary>PSSP</primary>
+
+        <secondary>Print Server Security Protocol</secondary>
+      </indexterm> (Print Server Security Protocol) is an authentication
+    protocol<indexterm>
+        <primary>authenticated printing</primary>
+      </indexterm> carried out through postscript printer queries to the print
+    server. Using PSSP requires LaserWriter 8.6.1 or greater on the client
+    Mac. The user will be prompted to enter their username and password before
+    they print. It may be necessary to re-setup the printer on each client the
+    first time PSSP is enabled, so that the client can figure out that
+    authentication is required to print. You can enable PSSP on a per-printer
+    basis. PSSP is the recommended method of authenticating printers as it is
+    more robust than CAP-style authentication, described below.</para>
+
+    <para>CAP-style authentication<indexterm>
+        <primary>CAP-style authentication</primary>
+
+        <secondary>old-style printing authentication</secondary>
+      </indexterm> gets its name from the method CAP (Columbia AppleTalk
+    Package) used to authenticate its Mac clients' printing. This method
+    requires that a user login to a file share before they print.
+    <command>afpd</command> records the username in a temporary file named
+    after the client's AppleTalk address, and it deletes the temporary file
+    when the user disconnects. Therefore CAP style authentication will
+    <emphasis>not</emphasis> work for clients connected to
+    <command>afpd</command> via TCP/IP. <command>papd</command> gets the
+    username from the file with the same AppleTalk address as the machine
+    connecting to it. CAP-style authentication will work with any Mac client.
+    If both CAP and PSSP are enabled for a particular printer, CAP will be
+    tried first, then <command>papd</command> will fall back to PSSP.</para>
+
+    <para>The list of UAMs to use for authentication (specified with the 'am' option)
+    applies to all printers. It is not possible to define different
+    authentication methods on each printer. You can specify the list of UAMS
+    multiple times, but only the last setting will be used. Currently only
+    uams_guest.so and uams_clrtxt.so are supported as printer authentication
+    methods. The guest method requires a valid username, but not a password.
+    The Cleartext UAM requires both a valid username and the correct
+    password.</para>
+
+    <note>
+      <para>As of this writing, Mac OS X makes no use of PSSP authentication
+      any longer. CAP-style authentication normally won't be an option, either,
+      because of the use of AFP over TCP these days.</para>
+    </note>
+
+    <para></para>
+  </refsect1>
+
+  <refsect1>
+    <title>Files</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><filename>papd.conf</filename></term>
+
+        <listitem>
+          <para>Default configuration file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename>/etc/printcap</filename></term>
+
+        <listitem>
+          <para>Printer capabilities database.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename>.ppd</filename></term>
+
+        <listitem>
+          <para>PostScript Printer Description file. papd answers
+          configuration and font queries from printing clients by consulting
+          the configured PPD file. Such files are available from Adobe, Inc.,
+          or from the printer's manufacturer. If no PPD file is configured,
+          papd will return the default answer, possibly causing the client to
+          send excessively large jobs.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Caveats</title>
+
+    <para><command>papd</command> accepts characters with the high bit set (a
+    full 8-bits) from the clients, but some PostScript printers (including
+    Apple Computer's LaserWriter family) only accept 7-bit characters on their
+    serial interface by default. The same applies for some printers when
+    they're accessed via TCP/IP methods (remote LPR or socket). You will need
+    to configure your printer to accept a full 8 bits or take special
+    precautions and convert the printjob's encoding (e.g. by using <emphasis
+    remap="B">co="protocol=BCP"</emphasis> when using CUPS 1.1.19 or
+    above).</para>
+
+    <para>When printing clients run Mac OS 10.2 or above, take care that PPDs
+    do not make use of <emphasis remap="B">*cupsFilter:</emphasis> comments
+    unless the appropriate filters are installed at the client's side, too
+    (remember: Starting with 10.2 Apple chose to integrate CUPS into Mac OS X).
+    For in-depth information on how CUPS uses PPDs see chapter 3.4 in <ulink
+    url="http://tinyurl.com/zbxn"> http://tinyurl.com/zbxn</ulink>).</para>
+  </refsect1>
+
+  <refsect1>
+    <title>See also</title>
+
+    <para><citerefentry>
+        <refentrytitle>lpr</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lprm</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>printcap</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lpc</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>lp</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+</refentry>

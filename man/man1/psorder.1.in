@@ -1,0 +1,68 @@
+'\" t
+.\"     Title: psorder
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 17 Dec 1991
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
+.\"  Language: English
+.\"
+.TH "PSORDER" "1" "17 Dec 1991" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+psorder \- PostScript pageorder filter
+.SH "SYNOPSIS"
+.HP \w'\fBpsorder\fR\fB\fR\ 'u
+\fBpsorder\fR\fB\fR [\-duf] \fIsourcefile\fR
+.SH "DESCRIPTION"
+.PP
+\fBpsorder\fR
+is a filter that re\-orders the pages of a PostScript document\&. The result is written to the standard output\&. By default, documents are processed into ascending order (the lowest numbered page is printed first)\&. Some PostScript documents specify that the order of their pages should never be changed; the default action of
+\fBpsorder\fR
+is to follow this specification\&.
+.PP
+If no source file is given, or if
+\fIsourcefile\fR
+is `\fB\-\fR\*(Aq,
+\fBpsorder\fR
+reads from the standard input file\&.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Re\-order the pages of the document in downward or descending order\&. This is typically used to change the order of a document to be printed by a printer that stacks pages face\-up, such as an Apple LaserWriter or LaserWriter Plus\&.
+.RE
+.PP
+\fB\-u\fR
+.RS 4
+Specifies forward order, and is the default\&. It is used to try and ensure the correct ordering when a document will be printed by a printer that stacks the pages face\-down\&.
+.RE
+.PP
+\fB\-f\fR
+.RS 4
+Force
+\fBpsorder\fR
+to re\-order the pages, even if the document claims that its page order is not to be trifled with\&. This option should only be used experimentally, as it may cause documents to print incorrectly\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBpsf\fR(8),
+\fBlpr\fR(1)\&.

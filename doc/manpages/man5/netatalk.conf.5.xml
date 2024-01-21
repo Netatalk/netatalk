@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="netatalk.conf.5">
+
+  <refmeta>
+    <refentrytitle>netatalk.conf</refentrytitle>
+
+    <manvolnum>5</manvolnum>
+
+    <refmiscinfo class="date">13 Feb 2023</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>netatalk.conf</refname>
+
+    <refpurpose>Configuration file used by the Netatalk init script to determine its
+    general configuration<indexterm>
+        <primary>netatalk.conf</primary>
+      </indexterm><indexterm>
+        <primary>AFPD_GUEST</primary>
+      </indexterm> <indexterm>
+        <primary>AFPD_MAX_CLIENTS</primary>
+      </indexterm> <indexterm>
+        <primary>AFPD_RUN</primary>
+      </indexterm> <indexterm>
+        <primary>AFPD_UAM_LIST</primary>
+      </indexterm> <indexterm>
+        <primary>CNID_METAD_RUN</primary>
+      </indexterm> <indexterm>
+        <primary>ATALK_BGROUND</primary>
+      </indexterm> <indexterm>
+        <primary>ATALK_NAME</primary>
+      </indexterm> <indexterm>
+        <primary>ATALK_ZONE</primary>
+      </indexterm> <indexterm>
+        <primary>ATALKD_RUN</primary>
+      </indexterm> <indexterm>
+        <primary>PAPD_RUN</primary>
+      </indexterm> <indexterm>
+        <primary>ATALK_MAC_CHARSET</primary>
+      </indexterm> <indexterm>
+        <primary>ATALK_UNIX_CHARSET</primary>
+      </indexterm><indexterm>
+        <primary>Startscript</primary>
+
+        <secondary>startup script</secondary>
+      </indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>netatalk.conf</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><emphasis remap="B">netatalk.conf</emphasis> is the
+    configuration file used by the netatalk init script to determine what portions of the file
+    system will be shared via AFP, as well as their behaviors.</para>
+
+    <para>If netatalk has been configured with --enable-debian, this file is named
+    <emphasis remap="B">/etc/default/netatalk</emphasis> without the file ending.</para>
+
+    <note><para>If netatalk has been configured with --enable-systemd, the
+    <emphasis remap="B">netatalk.conf</emphasis> file is NOT used at all. Instead,
+    the startup settings are governed by the systemd unit configuration
+    files of the netatalk daemons, in tandem with the configuration files of each daemon
+    individually.</para></note>
+
+    <para>Any line not prefixed with <emphasis remap="B">#</emphasis> is
+    interpreted. The configuration lines are composed like:</para>
+
+    <para><emphasis remap="I">option</emphasis> <emphasis
+    remap="B">=</emphasis> <emphasis remap="I">value</emphasis></para>
+
+    <para>The possible options and their meanings are:</para>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><emphasis remap="B">AFPD_GUEST</emphasis></term>
+
+        <listitem>
+          <para>Sets the id of the guest user to a local user on the
+          system.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">AFPD_MAX_CLIENTS</emphasis></term>
+
+        <listitem>
+          <para>Sets the maximum number of clients that can simultaneously
+          connect to the server.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">AFPD_RUN</emphasis></term>
+
+        <listitem>
+          <para>Enables the afpd daemon if set to "yes". This should be
+          enabled if you are planning on using netatalk as a file
+          server.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">AFPD_UAM_LIST</emphasis></term>
+
+        <listitem>
+          <para>Sets the default UAMs for afpd (and papd, if printer
+          authentication is compiled in) to use.</para>
+
+          <para><emphasis remap="I">Example:</emphasis> <emphasis
+          remap="B">AFPD_UAMLIST</emphasis>=<emphasis remap="B">"-U
+          uams_guest.so,uams_randnum.so"</emphasis></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">CNID_METAD_RUN</emphasis></term>
+
+        <listitem>
+          <para>Enables the cnid_metad daemon if set to "yes". This should be
+          enabled if you are going to use the dbd CNID backend.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">CNID_CONFIG</emphasis></term>
+
+        <listitem>
+          <para>Configuration options for cnid_metad. See:
+          <citerefentry>
+              <refentrytitle>cnid_metad</refentrytitle>
+
+              <manvolnum>8</manvolnum>
+            </citerefentry>
+            </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALK_BGROUND</emphasis></term>
+
+        <listitem>
+          <para>"yes" will set netatalk to initialize in the background, and
+          "no" will cause normal initialization.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALK_NAME</emphasis></term>
+
+        <listitem>
+          <para>Sets the machines' Appletalk name.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALK_ZONE</emphasis></term>
+
+        <listitem>
+          <para>Sets the machines' Appletalk zone.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALKD_RUN</emphasis></term>
+
+        <listitem>
+          <para>Enables the atalkd daemon if set to "yes". This should be
+          enabled if you are planning on providing Appletalk services.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">PAPD_RUN</emphasis></term>
+
+        <listitem>
+          <para>Enables the papd daemon if set to "yes". This should be
+          enabled if you are planning on using netatalk as a print
+          server.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALK_MAC_CHARSET</emphasis></term>
+
+        <listitem>
+          <para>Set the Mac client codepage, used by atalkd and papd to
+          convert extended characters from the Unix to the Mac
+          codepage.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="B">ATALK_UNIX_CHARSET</emphasis></term>
+
+        <listitem>
+          <para>Set the Unix codepage, used by atalkd and papd to convert
+          extended characters from the Unix to the Mac codepage. Has to match
+          the codepage of the configuration files.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afpd.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>cnid_metad</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>atalkd.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>

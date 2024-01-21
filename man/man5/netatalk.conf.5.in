@@ -1,0 +1,146 @@
+'\" t
+.\"     Title: netatalk.conf
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 13 Feb 2023
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
+.\"  Language: English
+.\"
+.TH "NETATALK\&.CONF" "5" "13 Feb 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+netatalk.conf \- Configuration file used by the Netatalk init script to determine its general configuration
+.SH "SYNOPSIS"
+.HP \w'\fBnetatalk\&.conf\fR\ 'u
+\fBnetatalk\&.conf\fR
+.SH "DESCRIPTION"
+.PP
+\fBnetatalk\&.conf\fR
+is the configuration file used by the netatalk init script to determine what portions of the file system will be shared via AFP, as well as their behaviors\&.
+.PP
+If netatalk has been configured with \-\-enable\-debian, this file is named
+\fB/etc/default/netatalk\fR
+without the file ending\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+If netatalk has been configured with \-\-enable\-systemd, the
+\fBnetatalk\&.conf\fR
+file is NOT used at all\&. Instead, the startup settings are governed by the systemd unit configuration files of the netatalk daemons, in tandem with the configuration files of each daemon individually\&.
+.sp .5v
+.RE
+.PP
+Any line not prefixed with
+\fB#\fR
+is interpreted\&. The configuration lines are composed like:
+.PP
+\fIoption\fR
+\fB=\fR
+\fIvalue\fR
+.PP
+The possible options and their meanings are:
+.PP
+\fBAFPD_GUEST\fR
+.RS 4
+Sets the id of the guest user to a local user on the system\&.
+.RE
+.PP
+\fBAFPD_MAX_CLIENTS\fR
+.RS 4
+Sets the maximum number of clients that can simultaneously connect to the server\&.
+.RE
+.PP
+\fBAFPD_RUN\fR
+.RS 4
+Enables the afpd daemon if set to "yes"\&. This should be enabled if you are planning on using netatalk as a file server\&.
+.RE
+.PP
+\fBAFPD_UAM_LIST\fR
+.RS 4
+Sets the default UAMs for afpd (and papd, if printer authentication is compiled in) to use\&.
+.sp
+\fIExample:\fR
+\fBAFPD_UAMLIST\fR=\fB"\-U uams_guest\&.so,uams_randnum\&.so"\fR
+.RE
+.PP
+\fBCNID_METAD_RUN\fR
+.RS 4
+Enables the cnid_metad daemon if set to "yes"\&. This should be enabled if you are going to use the dbd CNID backend\&.
+.RE
+.PP
+\fBCNID_CONFIG\fR
+.RS 4
+Configuration options for cnid_metad\&. See:
+\fBcnid_metad\fR(8)
+.RE
+.PP
+\fBATALK_BGROUND\fR
+.RS 4
+"yes" will set netatalk to initialize in the background, and "no" will cause normal initialization\&.
+.RE
+.PP
+\fBATALK_NAME\fR
+.RS 4
+Sets the machines\*(Aq Appletalk name\&.
+.RE
+.PP
+\fBATALK_ZONE\fR
+.RS 4
+Sets the machines\*(Aq Appletalk zone\&.
+.RE
+.PP
+\fBATALKD_RUN\fR
+.RS 4
+Enables the atalkd daemon if set to "yes"\&. This should be enabled if you are planning on providing Appletalk services\&.
+.RE
+.PP
+\fBPAPD_RUN\fR
+.RS 4
+Enables the papd daemon if set to "yes"\&. This should be enabled if you are planning on using netatalk as a print server\&.
+.RE
+.PP
+\fBATALK_MAC_CHARSET\fR
+.RS 4
+Set the Mac client codepage, used by atalkd and papd to convert extended characters from the Unix to the Mac codepage\&.
+.RE
+.PP
+\fBATALK_UNIX_CHARSET\fR
+.RS 4
+Set the Unix codepage, used by atalkd and papd to convert extended characters from the Unix to the Mac codepage\&. Has to match the codepage of the configuration files\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBafpd\fR(8),
+\fBafpd.conf\fR(5),
+\fBcnid_metad\fR(8),
+\fBatalkd\fR(8),
+\fBatalkd.conf\fR(5)

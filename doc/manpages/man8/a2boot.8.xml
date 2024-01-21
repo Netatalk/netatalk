@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="a2boot.8">
+  <refmeta>
+    <refentrytitle>a2boot</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">01 Mar 2023</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>a2boot</refname>
+
+    <refpurpose>Apple II netboot server</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>a2boot</command>
+
+      <arg choice="opt">-d</arg>
+
+      <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><emphasis remap="B">a2boot</emphasis> is a netboot server for
+    Apple IIe and IIGS computers. It allows compatible clients to boot
+    over an AppleTalk network </para>
+
+    <para><emphasis remap="B">a2boot</emphasis> serves multiple AFP volumes
+    that the Apple II client is configured to boot off of. These volumes
+    have to be populated with the appropriate ProDOS or GS/OS system files
+    before they can be used as boot volumes.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Debug mode, i.e. don't disassociate from controlling
+          TTY.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option> <replaceable>nbpname</replaceable></term>
+
+        <listitem>
+          <para>Register this server as <emphasis
+          remap="I">nbpname</emphasis>. This defaults to the hostname.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+</refentry>
