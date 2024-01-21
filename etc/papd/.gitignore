@@ -1,7 +1,2 @@
-Makefile
-Makefile.in
 papd
 showppd
-.deps
-.libs
-auth.o comment.o file.o headers.o lp.o magics.o main.o ppd.o printcap.o print_cups.o queries.o session.o showppd-ppd.o showppd-showppd.o uam.o

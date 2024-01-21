@@ -1,7 +1,2 @@
-Makefile
-Makefile.in
 pap
 papstatus
-.deps
-.libs
-pap.o papstatus.o

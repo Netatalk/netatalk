@@ -1,6 +1,1 @@
-Makefile
-Makefile.in
 adv1tov2
-.deps
-.libs
-adv1tov2.o

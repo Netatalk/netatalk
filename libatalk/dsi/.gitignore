@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-dsi_attn.o dsi_close.o dsi_cmdreply.o dsi_getsess.o dsi_getstat.o dsi_init.o dsi_opensess.o dsi_read.o dsi_stream.o dsi_tcp.o dsi_tickle.o dsi_write.o
