@@ -1,0 +1,124 @@
+'\" t
+.\"     Title: psf
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 22 Dec 1999
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
+.\"  Language: English
+.\"
+.TH "PSF" "8" "22 Dec 1999" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+psf \- PostScript filter
+.SH "SYNOPSIS"
+.HP \w'\fBpsf\fR\fB\fR\ 'u
+\fBpsf\fR\fB\fR [\-n\ \fIname\fR] [\-h\ \fIhost\fR] [\-w\ \fIwidth\fR] [\-l\ \fIlength\fR] [\-i\ \fIindent\fR] [\-c]
+.SH "DESCRIPTION"
+.PP
+\fBpsf\fR
+is an
+\fBlpd\fR
+filter for PostScript printing\&.
+\fBpsf\fR
+interprets the name it was called with to determine what filters to invoke\&. First, if the string ``pap\*(Aq\*(Aq appears anywhere in the name,
+\fBpsf\fR
+invokes
+\fBpap\fR
+to talk to a printer via AppleTalk\&. Next, if the string ``rev\*(Aq\*(Aq appears,
+\fBpsf\fR
+invokes
+\fBpsorder\fR
+to reverse the pages of the job\&. Finally, if
+\fBpsf\fR
+was called with a filter\*(Aqs name as the leading string, it invokes that filter\&. If there is no filter to run,
+\fBpsf\fR
+examines the magic number of the input, and if the input is not PostScript, converts it to PostScript\&.
+.SH "KLUDGE"
+.PP
+In the default configuration,
+\fBpsf\fR
+supports two kludges\&. The first causes
+\fBpsf\fR
+to check its name for the letter `m\*(Aq\&. If this letter is found and accounting is turned on,
+\fBpsf\fR
+calls
+\fBpap\fR
+twice, once to get an initial page count and to print the job, and another time to get a final page count\&. This is a work\-around for bugs in a variety of PAP implementions that cause printers to never properly close the PAP output file\&. A notable example is any printer by Hewlett\-Packard\&.
+.PP
+The second kludge causes
+\fBpsf\fR
+to examine its name for the letter `w\*(Aq\&. If this letter is found and accounting is turned on,
+\fBpsf\fR
+calls
+\fBpap\fR
+with the
+\fB\-w\fR
+flag\&. This flag causes
+\fBpap\fR
+to wait until the printer\*(Aqs status contains the string `idle\*(Aq\&. Once this string is found, the job is printed as normal\&. This kludge is a work\-around for printers, notably Hewlett\-Packard\*(Aqs LaserJet IV, which will report a page count while a previous jobs is still printing\&.
+.SH "EXAMPLE"
+.PP
+The sample
+\fBprintcap\fR
+entry below invokes
+\fBpsf\fR
+to print text files, PostScript files,
+\fBtroff\fR\*(Aqs C/A/T output, and
+\fBTeX\fR\*(Aqs DVI output, to an AppleTalk connected LaserWriter Plus\&. Since the LaserWriter Plus stacks pages in descending order, we reverse the pages and print the burst page last\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+laser|lp|LaserWriter Plus on AppleTalk:\e
+    :sd=/var/spool/lpd/laser:\e
+    :lp=/var/spool/lpd/laser/null:\e
+    :lf=/var/log/lpd\-errs:pw#80:hl:\e
+    :of=ofpap:\e
+    :if=ifpaprev:\e
+    :tf=tfpaprev:\e
+    :df=dfpaprev:
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Note that if the host in question spools to more than one AppleTalk printer,
+/dev/null
+should not be used for the
+\fBlp\fR
+capability\&. Instead, a null device should be created with
+\fBmknod\fR
+for each printer, as has been done above\&.
+.PP
+Finally, there is a file in the spool directory,
+/var/spool/lpd/laser, called
+\fB\&.paprc\fR, which
+\fBpap\fR
+reads for the AppleTalk name of the printer\&.
+.SH "SEE ALSO"
+.PP
+\fBpsorder\fR(1),
+\fBprintcap\fR(5),
+\fBlpd\fR(1),
+\fBmknod\fR(1),
+\fBpap\fR(1)\&.

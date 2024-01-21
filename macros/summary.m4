@@ -64,7 +64,8 @@ dnl	fi
 		AC_MSG_WARN([ If you're running Solaris or BSD you'll have to edit /etc/pam.conf to get PAM working.])
 		AC_MSG_WARN([ You can also re-run configure and specify --without-pam to disable PAM support.])
 	fi
-
+	AC_MSG_RESULT([    Documentation:])
+	AC_MSG_RESULT([         Docbook:                 $XSLTPROC_WORKS])
 ])
 
 

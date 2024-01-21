@@ -1,5 +1,2 @@
-html.tgz
-html/
-manpages/
-tmp/
-docbook-xsl*
+manual.xml
+*.html

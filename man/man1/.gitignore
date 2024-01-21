@@ -1,7 +1,1 @@
-Makefile
-Makefile.in
-asip-status.1
-afpldaptest.1
-cnid2_create.1
-uniconv.1
-*.o
+*.1

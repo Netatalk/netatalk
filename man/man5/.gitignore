@@ -1,11 +1,1 @@
-Makefile
-Makefile.in
-AppleVolumes.default.5
-afp_ldap.conf.5
-afp_signature.conf.5
-afp_voluuid.conf.5
-afpd.conf.5
-atalkd.conf.5
-netatalk.conf.5
-papd.conf.5
-*.o
+*.5

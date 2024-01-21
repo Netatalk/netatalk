@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afp_ldap.conf.5">
+  <!--  $Id: afp_ldap.conf.5.xml,v 1.6 2009-11-28 11:25:17 franklahm Exp $ -->
+
+  <refmeta>
+    <refentrytitle>afp_ldap.conf</refentrytitle>
+
+    <manvolnum>5</manvolnum>
+
+    <refmiscinfo class="date">30 Mar 2011</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>afp_ldap.conf</refname>
+
+    <refpurpose>Configuration file used by afpd(8) to configure a LDAP
+    connection to an LDAP server. That is needed for ACL support in order to
+    be able to query LDAP for UUIDs.</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><filename>afp_ldap.conf</filename> is the configuration
+    file used by <command>afpd</command> to set up an LDAP connection to an
+    LDAP server.</para>
+
+    <para>Any line not prefixed with # is interpreted.</para>
+
+    <para><note>
+        <para>You can use <citerefentry>
+            <refentrytitle>afpldaptest</refentrytitle>
+
+            <manvolnum>1</manvolnum>
+          </citerefentry> to syntactically check your config</para>
+      </note>The required parameters and their meanings are:</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Parameter</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>ldap_server</term>
+
+        <listitem>
+          <para>Name or IP address of your LDAP Server</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_auth_method</term>
+
+        <listitem>
+          <para>Authentication method: <option>none | simple |
+          sasl</option></para>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>none</term>
+
+                <listitem>
+                  <para>anonymous LDAP bind</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>simple</term>
+
+                <listitem>
+                  <para>simple LDAP bind</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>sasl</term>
+
+                <listitem>
+                  <para>SASL. Not yet supported !</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_auth_dn</term>
+
+        <listitem>
+          <para>Distinguished Name of the user for simple bind.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_auth_pw</term>
+
+        <listitem>
+          <para>Distinguished Name of the user for simple bind.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_userbase</term>
+
+        <listitem>
+          <para>DN of the user container in LDAP.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_userscope</term>
+
+        <listitem>
+          <para>Search scope for user search: <option>base | one |
+          sub</option></para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_groupbase</term>
+
+        <listitem>
+          <para>DN of the group container in LDAP.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_groupscope</term>
+
+        <listitem>
+          <para>Search scope for user search: <option>base | one
+          | sub</option></para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_uuuid_attr</term>
+
+        <listitem>
+          <para>Name of the LDAP attribute with the UUIDs.</para>
+
+          <para>Note: this is used both for users and groups.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_name_attr</term>
+
+        <listitem>
+          <para>Name of the LDAP attribute with the users short name.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ldap_group_attr</term>
+
+        <listitem>
+          <para>Name of the LDAP attribute with the groups short name.</para>
+
+          <para></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Examples</title>
+
+    <example>
+      <title>afp_ldap.conf setup with simple bind</title>
+
+      <programlisting>ldap_server      = localhost
+ldap_auth_method = simple
+ldap_auth_dn     = cn=admin,dc=domain,dc=org
+ldap_auth_pw     = notthisone
+ldap_userbase    = ou=users,dc=domain,dc=org
+ldap_userscope   = one
+ldap_groupbase   = ou=groups,dc=domain,dc=org
+ldap_groupscope  = one
+ldap_uuid_attr   = some_attribute
+ldap_name_attr   = cn
+ldap_group_attr  = cn</programlisting>
+    </example>
+  </refsect1>
+
+  <refsect1>
+    <title>See also</title>
+
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>AppleVolumes.default</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afpldaptest</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>

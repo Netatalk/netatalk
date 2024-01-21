@@ -1,0 +1,321 @@
+'\" t
+.\"     Title: afpd
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 24 Dec 2023
+.\"    Manual: @NETATALK_VERSION@
+.\"    Source: @NETATALK_VERSION@
+.\"  Language: English
+.\"
+.TH "AFPD" "8" "24 Dec 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+afpd \- Apple Filing Protocol daemon
+.SH "SYNOPSIS"
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR [\-duptDTI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfigfile\fR] [\-U\ \fIuams\fR] [\-m\ \fIumask\fR]
+.HP \w'\fBafpd\fR\ 'u
+\fBafpd\fR \-v | \-V | \-h 
+.SH "DESCRIPTION"
+.PP
+\fBafpd\fR
+provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time from system init scripts or services\&.
+.PP
+afpd\&.conf
+is the configuration file used by
+\fBafpd\fR
+to determine the behavior and configuration of the different virtual file servers that it provides\&.
+.PP
+The list of volumes offered to the user is generated from
+AppleVolumes\&.system
+and one of
+AppleVolumes\&.default,
+~/AppleVolumes,
+~/\&.AppleVolumes,
+~/applevolumes, or
+~/\&.applevolumes\&. The
+AppleVolumes
+files is used to specify volumes to mount and file name extension mappings\&.
+.PP
+.SH "OPTIONS"
+.PP
+\-d
+.RS 4
+Prevents the daemon from forking, for debugging purposes\&.
+.RE
+.PP
+\-p
+.RS 4
+Prevents clients from saving their passwords\&. (Equivalent to \-\fBnosavepasswd\fR
+in
+afpd\&.conf\&.)
+.RE
+.PP
+\-t
+.RS 4
+Allows clients to change their passwords\&. (Equivalent to
+\fB\-setpasswd\fR
+in
+afpd\&.conf\&.)
+.RE
+.PP
+\-D
+.RS 4
+Use DDP (AppleTalk) as transport protocol\&. (Equivalent to
+\fB\-ddp\fR
+in
+afpd\&.cond\&.)
+.RE
+.PP
+\-T
+.RS 4
+Use TCP/IP as transport protocol\&. (Equivalent to
+\fB\-tcp\fR
+in
+afpd\&.conf\&.)
+.RE
+.PP
+\-v
+.RS 4
+Print version information and exit\&.
+.RE
+.PP
+\-V
+.RS 4
+Print verbose information and exit\&.
+.RE
+.PP
+\-h
+.RS 4
+Print help and exit\&.
+.RE
+.PP
+\-I
+.RS 4
+Use the Netatalk icon for mounted volumes\&. (Equivalent to
+\fB\-icon\fR
+in
+afpd\&.conf\&.) (Later versions of Mac OS ignores this\&.)
+.RE
+.PP
+\-f \fIdefaultvolumes\fR
+.RS 4
+Specifies that
+\fIdefaultvolumes\fR
+should be read for a list of default volumes to offer, instead of
+AppleVolumes\&.default\&.
+.RE
+.PP
+\-s \fIsystemvolumes\fR
+.RS 4
+Specifies that
+\fIsystemvolumes\fR
+should be read for a list of volume that all users will be offered, instead of
+AppleVolumes\&.system\&.
+.RE
+.PP
+\-u
+.RS 4
+Read the user\*(Aqs
+AppleVolumes
+file first\&. This option causes volume names in the user\*(Aqs
+AppleVolumes
+file to override volume names in the system\*(Aqs
+AppleVolumes
+file\&. The default is to read the system
+AppleVolumes
+file first\&. Note that this option doesn\*(Aqt effect the precedence of filename extension mappings: the user\*(Aqs
+AppleVolumes
+file always has precedence\&.
+.RE
+.PP
+\-n \fInbpname\fR
+.RS 4
+Specifies that
+\fInbpname\fR
+should be used for NBP registration, instead of the first component of the hostname in the local zone\&.
+.RE
+.PP
+\-c \fImaxconnections\fR
+.RS 4
+Specifies the maximum number of connections to allow for this instance of
+\fBafpd\fR\&. The default is 20\&.
+.RE
+.PP
+\-g \fIguest\fR
+.RS 4
+Specifies the name of the guest account\&. The default is \*(Aq\fInobody\fR\*(Aq\&.
+.RE
+.PP
+\-P \fIpidfile\fR
+.RS 4
+Specifies the file in which
+\fBafpd\fR
+stores its process id\&.
+.RE
+.PP
+\-S \fIport\fR
+.RS 4
+Specifies the port to register with when doing AFPoverTCP\&. Defaults to 548\&. (Equivalent to
+\fB\-port \fRin
+afpd\&.conf\&.)
+.RE
+.PP
+\-L \fImessage\fR
+.RS 4
+Specifies the login message that will be sent to clients\&. (Equivalent to
+\fB\-loginmsg\fR
+in
+afpd\&.conf\&.)
+.RE
+.PP
+\-F \fIconfigfile\fR
+.RS 4
+Specifies the configuration file to use\&.
+.RE
+.PP
+\-U \fIuams\fR
+.RS 4
+Comma\-separated list of UAMs to use for the authentication process\&. (Equivalent to
+\fB\-uamlist\fR
+in
+afpd\&.conf\&.)
+.RE
+.PP
+\-m \fIumask\fR
+.RS 4
+Use this
+\fIumask\fR
+for the creation of folders in Netatalk\&.
+.RE
+.SH "SIGNALS"
+.PP
+To shut down a user\*(Aqs
+\fBafpd\fR
+process it is recommended that
+\fBSIGKILL (\-9)\fR
+\fINOT\fR
+be used, except as a last resort, as this may leave the CNID database in an inconsistent state\&. The safe way to terminate an
+\fBafpd\fR
+is to send it a
+\fBSIGTERM (\-15)\fR
+signal and wait for it to die on its own\&.
+.PP
+SIGTERM and SIGUSR1 signals that are sent to the main
+\fBafpd\fR
+process are propagated to the children, so all will be affected\&.
+.PP
+SIGTERM
+.RS 4
+Clean exit\&. Propagates from master to childs\&.
+.RE
+.PP
+SIGQUIT
+.RS 4
+Send this to the master
+\fBafpd\fR, it will exit leaving all children running! Can be used to implement AFP service without downtime\&.
+.RE
+.PP
+SIGHUP
+.RS 4
+Sending a
+\fBSIGHUP\fR
+to afpd will cause it to reload its configuration files\&.
+.RE
+.PP
+SIGINT
+.RS 4
+Sending a
+\fBSIGINT\fR
+to a child
+\fBafpd\fR
+enables
+\fImax_debug\fR
+logging for this process\&. The log is sent to fhe file
+/tmp/afpd\&.PID\&.XXXXXX\&. Sending another
+\fBSIGINT\fR
+will revert to the original log settings\&.
+.RE
+.PP
+SIGUSR1
+.RS 4
+The
+\fBafpd\fR
+process will send the message "The server is going down for maintenance\&." to the client and shut itself down in 5 minutes\&. New connections are not allowed\&. If this is sent to a child afpd, the other children are not affected\&. However, the main process will still exit, disabling all new connections\&.
+.RE
+.PP
+SIGUSR2
+.RS 4
+The
+\fBafpd\fR
+process will look in the message directory configured at build time for a file named message\&.pid\&. For each one found, a the contents will be sent as a message to the associated AFP client\&. The file is removed after the message is sent\&. This should only be sent to a child
+\fBafpd\fR\&.
+.RE
+.SH "FILES"
+.PP
+afpd\&.conf
+.RS 4
+configuration file used by afpd
+.RE
+.PP
+AppleVolumes\&.default
+.RS 4
+list of default volumes to mount
+.RE
+.PP
+AppleVolumes\&.system
+.RS 4
+list of volumes to offer all users
+.RE
+.PP
+~/AppleVolumes, ~/\&.AppleVolumes, ~/applevolumes, ~/\&.applevolumes
+.RS 4
+user\*(Aqs list of volumes to mount
+.RE
+.PP
+afp_signature\&.conf
+.RS 4
+list of server signatures
+.RE
+.PP
+afp_voluuid\&.conf
+.RS 4
+list of UUID for Time Machine volumes
+.RE
+.PP
+afp_ldap\&.conf
+.RS 4
+configuration file for LDAP and ACL support
+.RE
+.PP
+msg/message\&.pid
+.RS 4
+contains messages to be sent to users\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBhosts_access\fR(5),
+\fBafpd.conf\fR(5),
+\fBAppleVolumes.default\fR(5),
+\fBafp_signature.conf\fR(5),
+\fBafp_voluuid.conf\fR(5),
+\fBafp_ldap.conf\fR(5),
+\fBdbd\fR(1)\&.

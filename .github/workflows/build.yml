@@ -23,7 +23,7 @@ env:
   APT_PACKAGES: |
     libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
     libdb-dev libavahi-client-dev libacl1-dev libldap2-dev libcrack2-dev libcups2-dev  \
-    libkrb5-dev quota libtirpc-dev libltdl-dev tcpd libwrap0-dev
+    libkrb5-dev quota libtirpc-dev libltdl-dev tcpd libwrap0-dev xsltproc docbook-xsl
 
 jobs:
   integration_test:
@@ -38,7 +38,17 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-krbV-uam --enable-pgp-uam --enable-systemd --enable-quota --with-cracklib --with-libtirpc
+        run: |
+          ./configure \
+          --enable-krbV-uam \
+          --enable-pgp-uam \
+          --enable-quota \
+          --enable-systemd \
+          --with-cracklib \
+          --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
+          --with-libtirpc
+      - name: Generate man pages
+        run: make html
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests

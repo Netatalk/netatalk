@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afpldaptest.1">
+  <refmeta>
+    <refentrytitle>afpldaptest</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">30 Mar 2011</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>afpldaptest</refname>
+
+    <refpurpose>Syntactically check an afp_ldap.conf</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>afpldaptest</command>
+
+      <group choice="req">
+        <arg choice="plain">-u <replaceable>USER</replaceable></arg>
+        <arg choice="plain">-g <replaceable>GROUP</replaceable></arg>
+        <arg choice="plain">-i <replaceable>UUID</replaceable></arg>
+      </group>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+	  <command>afpldaptest</command>
+
+      <group choice="req">
+        <arg choice="plain">-h</arg>
+        <arg choice="plain">-?</arg>
+        <arg choice="plain">-:</arg>
+      </group>
+
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><command>afpldaptest</command> is a simple command to syntactically
+    check afp_ldap.conf.</para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-u</option> <replaceable>USER</replaceable></term>
+
+        <listitem>
+          <para>Show uuid for <replaceable>USER</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g</option> <replaceable>GROUP</replaceable></term>
+
+        <listitem>
+          <para>Show uuid for <replaceable>GROUP</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-i</option> <replaceable>UUID</replaceable></term>
+
+        <listitem>
+          <para>Show user, group or local-uuid for
+	  <replaceable>UUID</replaceable>.</para>
+        </listitem>
+
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h, -?, -:</option></term>
+
+        <listitem>
+          <para>Show the help and exit.</para>
+        </listitem>
+
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry><refentrytitle>afp_ldap.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>

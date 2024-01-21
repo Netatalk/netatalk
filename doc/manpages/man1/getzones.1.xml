@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="getzones.1">
+  <refmeta>
+    <refentrytitle>getzones</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>getzones</refname>
+
+    <refpurpose>list AppleTalk zone names</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>getzones<indexterm><primary>getzones</primary></indexterm></command>
+
+      <group choice="opt">
+        <arg choice="plain">-m</arg>
+
+        <arg choice="plain">-l</arg>
+      </group>
+
+      <arg choice="opt"><replaceable>address</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><emphasis remap="B">Getzones</emphasis> is used to obtain a list of
+    AppleTalk zone names using the Zone Information Protocol (ZIP). It sends a
+    GetZoneList request to an AppleTalk router. By default, it sends the
+    request to the locally running <citerefentry><refentrytitle>atalkd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-m</option></term>
+
+        <listitem>
+          <para>List the name of the local zone only; this is accomplished by
+          sending a ZIP GetMyZone request.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-l</option></term>
+
+        <listitem>
+          <para>List the local zones; this is accomplished by sending a
+          GetLocalZones request.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="I">address</emphasis></term>
+
+        <listitem>
+          <para>Contact the AppleTalk router at <emphasis remap="I">address.</emphasis>
+          <emphasis remap="I">address</emphasis> is parsed by
+          <citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry><refentrytitle>atalk_aton</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>atalkd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>

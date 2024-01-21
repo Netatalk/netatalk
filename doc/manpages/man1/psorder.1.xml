@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="psorder.1">
+  <refmeta>
+    <refentrytitle>psorder</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>psorder</refname>
+
+    <refpurpose>PostScript pageorder filter</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>psorder<indexterm><primary>psorder</primary></indexterm></command>
+
+      <arg choice="opt">-duf</arg>
+
+      <arg choice="plain"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><command>psorder</command> is a filter that re-orders the pages of a
+    PostScript document. The result is written to the standard output. By
+    default, documents are processed into ascending order (the lowest numbered
+    page is printed first). Some PostScript documents specify that the order
+    of their pages should never be changed; the default action of
+    <command>psorder</command> is to follow this specification.</para>
+
+    <para>If no source file is given, or if <emphasis remap="I">sourcefile</emphasis>
+    is `<emphasis remap="B">-</emphasis>&#39;, <command>psorder</command>
+    reads from the standard input file.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Re-order the pages of the document in downward or descending
+          order. This is typically used to change the order of a document to
+          be printed by a printer that stacks pages face-up, such as an Apple
+          LaserWriter or LaserWriter Plus.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-u</option></term>
+
+        <listitem>
+          <para>Specifies forward order, and is the default. It is used to try
+          and ensure the correct ordering when a document will be printed by a
+          printer that stacks the pages face-down.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option></term>
+
+        <listitem>
+          <para>Force <command>psorder</command> to re-order the pages, even
+          if the document claims that its page order is not to be trifled
+          with. This option should only be used experimentally, as it may
+          cause documents to print incorrectly.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+
+    <para><citerefentry><refentrytitle>psf</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>lpr</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+  </refsect1>
+</refentry>
