@@ -1,10 +1,4 @@
-Makefile
-Makefile.in
 netacnv
 afpldaptest
 fce
 logger_test
-.deps
-.libs
-*.o
-*.log

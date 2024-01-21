@@ -1,6 +1,3 @@
-Makefile
-Makefile.in
-*.o
 libtool.m4
 ltoptions.m4
 ltsugar.m4

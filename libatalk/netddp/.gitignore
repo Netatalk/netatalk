@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-netddp_open.o netddp_recvfrom.o netddp_sendto.o

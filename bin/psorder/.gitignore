@@ -1,6 +1,1 @@
-Makefile
-Makefile.in
 psorder
-.deps
-.libs
-pa.o psorder.o

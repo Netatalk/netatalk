@@ -1,6 +1,1 @@
-Makefile
-Makefile.in
 aecho
-.deps
-.libs
-aecho.o

@@ -1,5 +1,2 @@
 AppleVolumes.default
-Makefile
-Makefile.in
 afpd.conf
-*.o

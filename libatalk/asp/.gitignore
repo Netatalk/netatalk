@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-*.la
-.deps
-.libs
-asp_attn.o asp_close.o asp_cmdreply.o asp_getreq.o asp_getsess.o asp_init.o asp_shutdown.o asp_tickle.o asp_write.o

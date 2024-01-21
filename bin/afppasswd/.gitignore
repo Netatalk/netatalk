@@ -1,6 +1,1 @@
-Makefile
-Makefile.in
 afppasswd
-.deps
-.libs
-afppasswd.o
