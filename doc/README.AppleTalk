@@ -11,20 +11,12 @@ D.   Generic
 
 A. Linux
 
-We no longer include Linux kernel code with netatalk, since Linux now
+We no longer include Linux kernel code with netatalk, since Linux
 includes AppleTalk support.
 
-1.  MAKE CONFIG.  Configure your kernel with "make config".  Answer yes
-    to "AppleTalk DDP" support.
-
-2.  INSTALL KERNEL.  Make and install your kernel.  Be sure to update
-    your boot blocks!
-
-3.  Linux 2.2.x provides the sendfile() call. This reduces overhead
-    when sending/copying files. This option will be autoconfigured on
-    compile. NOTE: you might run into problems if you have this option
-    compiled in and you switch to a machine running an os < 2.2.x.
-
+Some Linux distributions ship with AppleTalk support out of the box
+(e.g. Debian) others have the kernel module but with a blacklisting
+in effect that has to be deactived before you can use it (e.g. Fedora.)
 
 Netatalk supplies two different types of AFP servers and both
 can run at the same time. Classic AFP requires afpd and
@@ -32,20 +24,18 @@ atalkd. AFP over TCP only requires afpd.
 
 Classic AFP on GNU/Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
-has Appletalk installed:
+has support for AppleTalk:
 
 $> dmesg | grep Apple
 This just parses the boot messages for any line containing
 'Apple'.
 
-To see all the loaded modules (as root):
-$> lsmod
+$> lsmod | grep appletalk
+This checks if the appletalk kernel module is presently loaded.
 
 If you don't find it, you may have to compile a kernel and turn on
 Appletalk in Networking options -> Appletalk DDP. You have an option
-to install as a module or directly into the kernel. Alternatively,
-your distro may have blacklisted the Appletalk kernel module,
-which you will have to disable.
+to install as a module or directly into the kernel.
 
 Some default distribution kernels have already compiled Appletalk DDP
 as a module, you may have to edit your /etc/modules.conf to include:
