@@ -96,7 +96,6 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
-        //char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 
        /*
         * Make sure we don't ask for passwords...
@@ -359,7 +358,7 @@ cups_get_printer_status (struct printer *pr)
         * Collect the needed attributes...
         */
 
-	const char *printerstate = cupsGetOption("printer-state", dest->num_options, dest->options);
+	int printerstate = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
 	const char *printeravail = cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options);
 	const char *printerreason = cupsGetOption("printer-state-reasons", dest->num_options, dest->options);
 
@@ -393,7 +392,7 @@ cups_get_printer_status (struct printer *pr)
 
 	memset ( pr->p_status, 0 ,sizeof(pr->p_status));
 
-	if (strcmp(printerstate, "5") == 0) /* printer is paused */
+	if (printerstate == 5) /* printer is paused */
 			status = 1;
 		else
 			status = 2; /* ready */
@@ -450,16 +449,9 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 		cupsFreeDests(1,dest);
 		return (0);
 	}
-	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
-	{
-		LOG(log_error, logtype_papd,
-		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
-		cupsFreeDests(1,dest);
-		return (0);
-	}
 
 	info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-
+	
 	if ( username != NULL )
 	{
 		/* Add options using cupsAddOption() */
