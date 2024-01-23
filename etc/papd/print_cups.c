@@ -96,12 +96,13 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	cups_dest_t	*dest = NULL;	/* Destination */
         ipp_t           *request,       /* IPP Request */
                         *response;      /* IPP Response */
+        //char            uri[HTTP_MAX_URI]; /* printer-uri attribute */
 
        /*
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB2(cups_passwd_cb, NULL);
+        cupsSetPasswordCB(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -121,56 +122,8 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
 		return (0);
 	}
-	
 
-       /*
-        * Build an IPP_GET_PRINTER_ATTRS request, which requires the following
-        * attributes:
-        *
-        *    attributes-charset
-        *    attributes-natural-language
-        *    requested-attributes
-        *    printer-uri
-        */
-        request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-                     "requested-attributes", NULL, "printer-uri");
-
-        const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-                     "printer-uri", NULL, uri);
-
-       /*
-        * Do the request and get back a response...
-        */
-
-        if ((response = cupsDoRequest(http, request, "/")) == NULL)
-        {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
-                         ippErrorString(cupsLastError()));
-		cupsFreeDests(1, dest);
-                httpClose(http);
-                return (0);
-        }
-	cupsFreeDests(1, dest);
-        httpClose(http);
-
-        if (cupsLastError() >= IPP_STATUS_OK_CONFLICTING)
-        {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", name,
-                         ippErrorString(cupsLastError()));
-                ippDelete(response);
-                return (0);
-        }
-        else
-        {
-                ippDelete(response);
-                return (1);
-        }
-
-	return (0);
+	return (1);
 }
 
 const char * 
