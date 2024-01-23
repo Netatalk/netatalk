@@ -102,7 +102,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
         * Make sure we don't ask for passwords...
         */
 
-        cupsSetPasswordCB(cups_passwd_cb, NULL);
+        cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
 	/*
 	 * Try to connect to the requested printer...
@@ -326,20 +326,9 @@ cups_get_printer_ppd ( char * name)
 int
 cups_get_printer_status (struct printer *pr)
 {
-
         http_t          *http;          /* HTTP connection to server */
 	cups_dest_t	*dest = NULL;	/* Destination */
-        ipp_t           *request,       /* IPP Request */
-                        *response;      /* IPP Response */
-        ipp_attribute_t *attr;          /* Current attribute */
 	int 		status = -1;
-
-        static const char *pattrs[] =   /* Requested printer attributes */
-                        {
-                          "printer-state",
-                          "printer-state-message",
-			  "printer-is-accepting-jobs"
-                        };
 
        /*
         * Make sure we don't ask for passwords...
@@ -352,6 +341,7 @@ cups_get_printer_status (struct printer *pr)
 	 */
 
 	dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, pr->p_printer, NULL);
+
 	if (!dest)
 	{
 		LOG(log_error, logtype_papd,
@@ -366,55 +356,36 @@ cups_get_printer_status (struct printer *pr)
 	}
 
        /*
-        * Generate the printer URI...
+        * Collect the needed attributes...
         */
 
-        const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
+	const char *printerstate = cupsGetOption("printer-state", dest->num_options, dest->options);
+	const char *printeravail = cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options);
+	const char *printerreason = cupsGetOption("printer-state-reasons", dest->num_options, dest->options);
 
-
-
-       /*
-        * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
-        * following attributes:
-        *
-        *    attributes-charset
-        *    attributes-natural-language
-        *    requested-attributes
-        *    printer-uri
-        */
-
-        request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-
-        ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-                      "requested-attributes",
-                      (sizeof(pattrs) / sizeof(pattrs[0])),
-                      NULL, pattrs);
-
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-                     "printer-uri", NULL, uri);
-
-       /*
-        * Do the request and get back a response...
-        */
-
-        if ((response = cupsDoRequest(http, request, "/")) == NULL)
-        {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
-                         ippErrorString(cupsLastError()));
+	/*
+ 	 * If a temporary queue isn't finished building, still return success.
+   	 * CUPS says everything is fine, but hasn't returned responses to
+     	 * cupsGetOption() above.
+	 */
+	
+	if (!printerreason)
+	{
+		httpClose(http);
 		cupsFreeDests(1, dest);
-                httpClose(http);
-                return (0);
-        }
+		if (cupsLastError() == IPP_STATUS_OK)
+		{
+			snprintf(pr->p_status, 255, "status: busy; info: creating temporary printer queue for \"%s\"", pr->p_printer);
+			return(1);
+		}
+		else
+		{
+			LOG(log_error, logtype_papd,
+				"Unable to get status \"%s\": %s", pr->p_printer, cupsLastErrorString());
+			return (0);
+		}
+	}
 
-        if (cupsLastError() >= IPP_STATUS_OK_CONFLICTING)
-        {
-      		LOG(log_error, logtype_papd, "Unable to get printer status for %s - %s", pr->p_printer,
-                         ippErrorString(cupsLastError()));
-                ippDelete(response);
-		cupsFreeDests(1, dest);
-                httpClose(http);
-                return (0);
-        }
 
        /*
         * Get the current printer status and convert it to the status values.
@@ -422,35 +393,22 @@ cups_get_printer_status (struct printer *pr)
 
 	memset ( pr->p_status, 0 ,sizeof(pr->p_status));
 
-        if ((attr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL)
-        {
-                if (ippGetInteger(attr, 0) == IPP_PSTATE_STOPPED)
+	if (strcmp(printerstate, "5") == 0) /* printer is paused */
 			status = 1;
-                else if (ippGetInteger(attr,0) == IPP_STATUS_ERROR_NOT_ACCEPTING_JOBS)
-			status = 0;
 		else
-			status = 2;
-        }
+			status = 2; /* ready */
+	if (strcmp(printeravail, "false") == 0)
+		status = 0; /* printer is rejecting jobs */
 
-	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs", IPP_TAG_BOOLEAN)) != NULL)
-	{
-		if ( ippGetBoolean(attr, 0) == 0 )
-			status = 0;
-	}
-		
-	snprintf ( pr->p_status, 255, cups_status_msg[status], pr->p_printer );
-
-        if ((attr = ippFindAttribute(response, "printer-state-message", IPP_TAG_TEXT)) != NULL)
-		strncat ( pr->p_status, ippGetString(attr, 0, NULL), 255-strlen(pr->p_status));
-
-        ippDelete(response);
+	snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
+	if (strcmp(printerreason, "none") != 0)
+		strncat(pr->p_status, printerreason , 255 - strlen(pr->p_status));
 
        /*
         * Return the print status ...
         */
-	cupsFreeDests(1, dest);
-        httpClose(http);
-
+	httpClose(http);
+	cupsFreeDests(1,dest);
 	return (status);
 }
 
