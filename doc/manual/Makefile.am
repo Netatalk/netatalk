@@ -3,10 +3,6 @@ XSLTPROC_FLAGS=@XSLTPROC_FLAGS@
 HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
-do_subst =  sed \
-	-i. \
-	-e 's|@prefix[@]|$(prefix)|g'
-
 XML_PAGES = \
 	manual.xml \
 	configuration.xml \
@@ -58,7 +54,6 @@ CLEANFILES += $(HTML_PAGES)
 
 html-local: $(XML_PAGES)
 	@xsltproc $(HTML_STYLESHEET) manual.xml
-	$(do_subst) $(HTML_PAGES)
 	rm -f *.
 
 html-upload: html-local
