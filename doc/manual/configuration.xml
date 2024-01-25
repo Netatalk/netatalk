@@ -1823,8 +1823,8 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
 
       <para><command>timelord</command><indexterm>
           <primary>timelord</primary>
-          </indexterm>, an AppleTalk based time server, is useful for classic
-          Mac OS clients that do not support NTP<indexterm>
+          </indexterm>, an AppleTalk based time server, is useful for automatically synchronizing
+          the system time on older Macintosh or Apple II clients that do not support NTP<indexterm>
           <primary>NTP</primary>
 
           <secondary>Network Time Protocol</secondary>
@@ -1851,7 +1851,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
     specific startup script templates that are tailored according to the
     options given to the "configure" script before compiling. Currently,
     templates are provided for systemd (cross-platform), RedHat,
-    SuSE, Gentoo, Debian, NetBSD, Solaris, and Tru64. You can select to
+    SuSE, Gentoo, Debian, NetBSD, and Solaris. You can select to
     install the generated startup script(s).
     <indexterm>
         <primary>Startscript</primary>

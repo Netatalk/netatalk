@@ -86,8 +86,8 @@
         <title>Tarballs</title>
 
         <para>Prepacked tarballs in .tar.xz and tar.bz2 format are available
-        on the netatalk page on <ulink
-        url="https://github.com/Netatalk/netatalk">GitHub</ulink>.</para>
+        on the <ulink
+        url="https://github.com/Netatalk/netatalk/releases">GitHub releases page</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -137,7 +137,7 @@ remote: Counting objects: 2503, done.
         </orderedlist>
 
         <para>For futher information refer to the <ulink
-        url="https://github.com/Netatalk/netatalk/wiki/Developer-Notes">Developer Notes</ulink>
+        url="https://netatalk.sourceforge.io/docs/Developer-Notes.html">Developer Notes</ulink>
         wiki page.</para>
       </sect3>
     </sect2>
@@ -154,8 +154,8 @@ remote: Counting objects: 2503, done.
         available for your OS distribution of choice.</para>
 
         <para>Please see the <ulink
-        url="https://github.com/Netatalk/netatalk/wiki/Installation-Notes">
-        Installation Notes</ulink> wiki page as a starting point.</para>
+        url="https://netatalk.sourceforge.io/docs/">
+        Netatalk wiki</ulink> for OS specific installation guides.</para>
       </note>
 
       <sect3>
