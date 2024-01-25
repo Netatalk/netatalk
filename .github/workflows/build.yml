@@ -25,6 +25,7 @@ env:
   APT_PACKAGES: |
     autoconf \
     automake \
+    docbook-xsl \
     libacl1-dev \
     libavahi-client-dev \
     libcrack2-dev \
@@ -46,7 +47,8 @@ env:
     libwrap0-dev \
     systemtap-sdt-dev \
     tcpd \
-    tracker
+    tracker \
+    xsltproc
 
 jobs:
   build-ubuntu:
@@ -66,7 +68,10 @@ jobs:
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
+            --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
             --with-tracker-pkgconfig-version=3.0
+      - name: Generate man pages
+        run: make html
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
