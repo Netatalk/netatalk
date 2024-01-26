@@ -403,12 +403,13 @@ cups_get_printer_status (struct printer *pr)
 
 		if ((response = cupsDoRequest(http, request, "/")) == NULL)
 		{
+			/* Printer didn't respond to status request. Don't block print jobs as the scheduler will handle them */
 			LOG(log_error, logtype_papd, "Unable to get printer attribs for %s - %s", pr->p_printer,
 				ippErrorString(cupsLastError()));
-			snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
+			snprintf(pr->p_status, 255, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
 			httpClose(http);
 			cupsFreeDests(1, dest);
-			return (0);
+			return (1);
 		}
 		if ((attr = ippFindAttribute(response, "printer-state",
 			IPP_TAG_ENUM)) != NULL)
@@ -507,7 +508,7 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	}
 
 	info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-	
+
 	if ( username != NULL )
 	{
 		/* Add options using cupsAddOption() */
