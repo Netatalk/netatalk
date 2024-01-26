@@ -178,95 +178,103 @@ cups_get_printer_ppd ( char * name)
 {
 	http_t		*http;		/* Connection to destination */
 	cups_dest_t	*dest = NULL;	/* Destination */
-	cups_dest_t 	*dests;		/* Destination List */
-	ipp_t           *request,       /* IPP Request */
+	cups_dest_t	*dests;		/* Destination List */
+	ipp_t		*request,       /* IPP Request */
 			*response;      /* IPP Response */
-        const char	*pattrs[] =   /* Requested printer attributes */
+	const char	*pattrs[] =   /* Requested printer attributes */
                         {
                           "printer-make-and-model",
                           "color-supported"
                         };
 	ipp_attribute_t	*attr;
   	cups_file_t	*fp;		/* PPD file */
-    	static char	buffer[1024];	/* I - Filename buffer */
-    	size_t		bufsize;	/* I - Size of filename buffer */
+	static char	buffer[1024];	/* I - Filename buffer */
+	size_t		bufsize;	/* I - Size of filename buffer */
   	char		make[256],	/* Make and model */
 			*model;
-
+	unsigned 	flags = 0;	/* Destination flag */
 
 	cupsSetPasswordCB2(cups_passwd_cb, NULL);
 
-	/*
-	 *We have to go this roundabout way to correctly get the make and 
-	 *model of DNS-SD discovered printers. Otherwise we get the name of 
-	 *the CUPS temporary queue, which we don't want.
-	 */
-
 	int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
 	dest = cupsGetDest(name, NULL, num_dests, dests);
-	const char *make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
 
 	if (!dest)
 	{
-		LOG(log_error, logtype_papd, "testdest: Unable to get destination \"%s\": %s\n", name, cupsLastErrorString());
+		LOG(log_error, logtype_papd, "Unable to get destination \"%s\": %s\n", name, cupsLastErrorString());
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
 
-	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
+	const char* make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
+	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
+	const char* printer_uri_supported = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
+	const char* printer_is_temporary = cupsGetOption("printer-is-temporary", dest->num_options, dest->options);
+
+	/* Is this a DNS-SD discovered printer? Connect directly to it. */
+	if (!printer_uri_supported || !strcmp(printer_is_temporary, "true"))
+		flags = CUPS_DEST_FLAGS_DEVICE;
+	else
+		flags = CUPS_DEST_FLAGS_NONE;
+
+
+	if ((http = cupsConnectDest(dest, flags, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
 	{
-		LOG(log_error, logtype_papd, "testdest: Unable to connect to destination \"%s\": %s\n", dest->name, cupsLastErrorString());
+		LOG(log_error, logtype_papd, "Unable to connect to destination \"%s\": %s\n", dest->name, cupsLastErrorString());
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
-	
-	/*
-	 * Generate the printer URI...
-	 */
-
-	const char *uri = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 
 	/*
 	 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
 	 * following attributes:
 	 *
-	 *    attributes-charset
-	 *    attributes-natural-language
 	 *    requested-attributes
 	 *    printer-uri
 	 */
 
-        request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+	request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
 	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 		      "requested-attributes",
 		      (sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
-	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-		     "printer-uri", NULL, uri);
+	/* Use the correct URI if DNS-SD printer. */
+	if (flags == CUPS_DEST_FLAGS_DEVICE)
+	{
+		ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+			"printer-uri", NULL, uri);
+	}
+	else
+	{
+		ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+			"printer-uri", NULL, printer_uri_supported);
+	}
+
+
 
 	/*
 	 * Do the request and get back a response...
 	 */
 
-        if ((response = cupsDoRequest(http, request, "/")) == NULL)
-        {
-                 LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
-                         ippErrorString(cupsLastError()));
-                httpClose(http);
+	if ((response = cupsDoRequest(http, request, "/")) == NULL)
+	{
+		LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
+				ippErrorString(cupsLastError()));
+		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-                return (0);
-        }
+		return (0);
+	}
 
-        if (ippGetStatusCode(response) >= IPP_STATUS_OK_CONFLICTING)
-        {
-      		 LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
-                         ippErrorString(ippGetStatusCode(response)));
-                ippDelete(response);
-                httpClose(http);
+	if (ippGetStatusCode(response) >= IPP_STATUS_OK_CONFLICTING)
+	{
+		LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
+				ippErrorString(ippGetStatusCode(response)));
+		ippDelete(response);
+		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-                return (0);
-        }
+		return (0);
+	}
 
 	/*
 	 * Range check input...
@@ -280,8 +288,8 @@ cups_get_printer_ppd ( char * name)
 	{
 		LOG(log_error, logtype_papd, "Check buffer failed!\n");
 		LOG(log_error, logtype_papd, strerror(EINVAL));
-                ippDelete(response);
-                httpClose(http);
+		ippDelete(response);
+		httpClose(http);
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
@@ -289,8 +297,8 @@ cups_get_printer_ppd ( char * name)
 	if (!response)
 	{
 		LOG(log_error, logtype_papd, "No IPP attributes.\n");
-                ippDelete(response);
-                httpClose(http);
+		ippDelete(response);
+		httpClose(http);
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
@@ -302,8 +310,8 @@ cups_get_printer_ppd ( char * name)
 	if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL)
 	{
 		LOG(log_error, logtype_papd, strerror(errno));
-                ippDelete(response);
-                httpClose(http);
+		ippDelete(response);
+		httpClose(http);
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
@@ -347,6 +355,7 @@ cups_get_printer_ppd ( char * name)
   		cupsFilePuts(fp, "*ColorDevice: True\n");
 	else
 		cupsFilePuts(fp, "*ColorDevice: False\n");
+	
 	cupsFilePuts(fp, "*TTRasterizer: Type42\n");
 	cupsFilePuts(fp, "*Resolution: 600dpi\n");
 	cupsFilePuts(fp, "*FaxSupport: None\n");
