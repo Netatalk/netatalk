@@ -207,7 +207,6 @@ cups_get_printer_ppd ( char * name)
 	}
 
 	const char* make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
-	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
 	const char* printer_uri_supported = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 	const char* printer_is_temporary = cupsGetOption("printer-is-temporary", dest->num_options, dest->options);
 
@@ -224,7 +223,9 @@ cups_get_printer_ppd ( char * name)
 		cupsFreeDests(num_dests,dests);
 		return (0);
 	}
-
+	
+	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
+	
 	/*
 	 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
 	 * following attributes:
@@ -234,10 +235,6 @@ cups_get_printer_ppd ( char * name)
 	 */
 
 	request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-
-	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-		      "requested-attributes",
-		      (sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
 	/* Use the correct URI if DNS-SD printer. */
 	if (flags == CUPS_DEST_FLAGS_DEVICE)
@@ -251,7 +248,9 @@ cups_get_printer_ppd ( char * name)
 			"printer-uri", NULL, printer_uri_supported);
 	}
 
-
+	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+		      "requested-attributes",
+		      (sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
 	/*
 	 * Do the request and get back a response...
