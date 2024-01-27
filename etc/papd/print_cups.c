@@ -359,7 +359,6 @@ cups_get_printer_status (struct printer *pr)
 	 * Collect the needed attributes...
 	 */
 	const char* printer_uri_supported = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
-	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
 	const char* printer_is_temporary = cupsGetOption("printer-is-temporary", dest->num_options, dest->options);
 	const char* printer_avail_p = cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options);
 	const char* printer_reason = cupsGetOption("printer-state-reasons", dest->num_options, dest->options);
@@ -386,7 +385,7 @@ cups_get_printer_status (struct printer *pr)
 		  "printer-state-reasons"
 		};
 		ipp_attribute_t* attr;
-
+		const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
 
 		/*
 		 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
@@ -398,12 +397,12 @@ cups_get_printer_status (struct printer *pr)
 
 		request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
 
-		ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-			"requested-attributes",
-			(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
-
 		ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
 			"printer-uri", NULL, uri);
+		
+		ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+			"requested-attributes",
+			(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
 		/*
 		 * Do the request and get back a response...
@@ -459,7 +458,7 @@ cups_get_printer_status (struct printer *pr)
 	else /* ready */
 		status = 2;
 
-	if (!printer_avail)
+	if (!printer_avail && printer_state != 4)
 		status = 0; /* printer is rejecting jobs */
 
 	snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
