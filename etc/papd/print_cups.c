@@ -51,7 +51,7 @@
 
 static const char* cups_status_msg[] = {
         "status: busy; info: \"%s\" is rejecting jobs; ",
-        "status: idle; info: \"%s\" is stopped, accepting jobs ;",
+        "status: idle; info: \"%s\" is stopped, accepting jobs ; ",
         "status: idle; info: \"%s\" is ready ; ",
 	"status: busy; info: \"%s\" is processing a job ; ",
 };
@@ -318,14 +318,14 @@ cups_get_printer_ppd ( char * name)
 int
 cups_get_printer_status (struct printer *pr)
 {
-	http_t* http;          /* HTTP connection to server */
-	cups_dest_t* dest = NULL;	/* Destination */
+	http_t* 	http;          /* HTTP connection to server */
+	cups_dest_t* 	dest = NULL;	/* Destination */
 	int 		status = -1;
-	char printer_reason[150];
+	char 		printer_reason[150];
 	memset(printer_reason, 0, sizeof(printer_reason));
-	int printer_avail = 0;
-	int printer_state = 3;
-	unsigned flags;
+	int 		printer_avail = 0;
+	int 		printer_state = 3;
+	unsigned 	flags;
 
 	/*
 	 * Make sure we don't ask for passwords...
@@ -367,7 +367,7 @@ cups_get_printer_status (struct printer *pr)
 		cupsFreeDests(1, dest);
 		return (0);
 	}
-	ipp_t* request,       /* IPP Request */
+	ipp_t	* request,       /* IPP Request */
 		* response;      /* IPP Response */
 	const char* pattrs[] =   /* Requested printer attributes */
 	{
@@ -375,6 +375,7 @@ cups_get_printer_status (struct printer *pr)
 	  "printer-is-accepting-jobs",
 	  "printer-state-reasons"
 	};
+	
 	ipp_attribute_t* attr;
 
 	/*
@@ -454,8 +455,9 @@ cups_get_printer_status (struct printer *pr)
 	snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
 
 	/* printer state */
-	strncat(pr->p_status, printer_reason, 255 - strlen(pr->p_status));
-
+	if (!strcmp(printer_reason, "none\n"))
+		strncat(pr->p_status, printer_reason, 255 - strlen(pr->p_status));
+	
 	/*
 	 * Return the print status ...
 	 */
