@@ -329,11 +329,11 @@ cups_get_printer_status (struct printer *pr)
 	http_t* http;          /* HTTP connection to server */
 	cups_dest_t* dest = NULL;	/* Destination */
 	int 		status = -1;
-	char printer_reason_t[255];
-	memset(printer_reason_t, 0, sizeof(printer_reason_t));
+	char printer_reason[150];
+	memset(printer_reason, 0, sizeof(printer_reason));
 	int printer_avail = 0;
 	int printer_state = 3;
-	int temp_printer = 0;
+	unsigned flags;
 
 	/*
 	 * Make sure we don't ask for passwords...
@@ -360,92 +360,90 @@ cups_get_printer_status (struct printer *pr)
 	 */
 	const char* printer_uri_supported = cupsGetOption("printer-uri-supported", dest->num_options, dest->options);
 	const char* printer_is_temporary = cupsGetOption("printer-is-temporary", dest->num_options, dest->options);
-	const char* printer_avail_p = cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options);
-	const char* printer_reason = cupsGetOption("printer-state-reasons", dest->num_options, dest->options);
-	
+
 	memset(pr->p_status, 0, sizeof(pr->p_status));
-
 	if (!printer_uri_supported || !strcmp(printer_is_temporary, "true")) /* DNS-SD discovered IPP printer: Get status directly from printer */
+		flags = CUPS_DEST_FLAGS_DEVICE;
+	else
+		flags = CUPS_DEST_FLAGS_NONE;
+
+	if ((http = cupsConnectDest(dest, flags, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
 	{
-		temp_printer = 1;
-		if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_DEVICE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
-		{
-			LOG(log_error, logtype_papd,
-				"Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
-			snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
-			cupsFreeDests(1, dest);
-			return (0);
-		}
-		ipp_t* request,       /* IPP Request */
-			* response;      /* IPP Response */
-		const char* pattrs[] =   /* Requested printer attributes */
-		{
-		  "printer-state",
-		  "printer-is-accepting-jobs",
-		  "printer-state-reasons"
-		};
-		ipp_attribute_t* attr;
-		const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
+		LOG(log_error, logtype_papd,
+			"Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
+		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
+		cupsFreeDests(1, dest);
+		return (0);
+	}
+	ipp_t* request,       /* IPP Request */
+		* response;      /* IPP Response */
+	const char* pattrs[] =   /* Requested printer attributes */
+	{
+	  "printer-state",
+	  "printer-is-accepting-jobs",
+	  "printer-state-reasons"
+	};
+	ipp_attribute_t* attr;
 
-		/*
-		 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
-		 * following attributes:
-		 *
-		 *    requested-attributes
-		 *    printer-uri
-		 */
+	/*
+	 * Build an IPP_OP_GET_PRINTER_ATTRIBUTES request, which requires the
+	 * following attributes:
+	 *
+	 *    requested-attributes
+	 *    printer-uri
+	 */
 
-		request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+	request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
 
-		ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-			"printer-uri", NULL, uri);
-		
-		ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-			"requested-attributes",
-			(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+	if (flags == CUPS_DEST_FLAGS_DEVICE)
+               	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+                       	"printer-uri", NULL, uri);
+	else
+               	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+                       	"printer-uri", NULL, printer_uri_supported);
 
-		/*
-		 * Do the request and get back a response...
-		 */
+	ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+		"requested-attributes",
+		(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
 
-		if ((response = cupsDoRequest(http, request, "/")) == NULL)
-		{
-			/* Printer didn't respond to status request. Don't block print jobs as the scheduler will handle them */
-			LOG(log_error, logtype_papd, "Unable to get printer attribs for %s - %s", pr->p_printer,
-				ippErrorString(cupsLastError()));
-			snprintf(pr->p_status, 255, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
-			httpClose(http);
-			cupsFreeDests(1, dest);
-			return (1);
-		}
-		if ((attr = ippFindAttribute(response, "printer-state",
-			IPP_TAG_ENUM)) != NULL)
-		{
-			printer_state = ippGetInteger(attr, 0);
-		}
-		if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs",
-			IPP_TAG_BOOLEAN)) != NULL)
-		{
-			printer_avail = ippGetBoolean(attr, 0);
-		}
-		if ((attr = ippFindAttribute(response, "printer-state-reasons",
-			IPP_TAG_KEYWORD)) != NULL)
-		{
-			int i, count = ippGetCount(attr);
-			for (i = 0; i < count; i++)
-			{
-				strncat(printer_reason_t, ippGetString(attr, i, NULL), 255 - strlen(printer_reason_t));
-			}
-		}
-		ippDelete(response);
+	/*
+	 * Do the request and get back a response...
+	 */
+
+	if ((response = cupsDoRequest(http, request, "/")) == NULL)
+	{
+		/* Printer didn't respond to status request. Don't block print jobs as the scheduler will handle them */
+		LOG(log_error, logtype_papd, "Unable to get printer attribs for %s - %s", pr->p_printer,
+			ippErrorString(cupsLastError()));
+		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
 		httpClose(http);
+		cupsFreeDests(1, dest);
+		return (1);
 	}
-	else /* Permanent queue: Get status from CUPS scheduler */
+	if ((attr = ippFindAttribute(response, "printer-state",
+		IPP_TAG_ENUM)) != NULL)
 	{
-		if (strcmp(printer_avail_p, "true") == 0)
-			printer_avail = 1;
-		printer_state = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
+		printer_state = ippGetInteger(attr, 0);
 	}
+	if ((attr = ippFindAttribute(response, "printer-is-accepting-jobs",
+		IPP_TAG_BOOLEAN)) != NULL)
+	{
+		printer_avail = ippGetBoolean(attr, 0);
+	}
+	if ((attr = ippFindAttribute(response, "printer-state-reasons",
+		IPP_TAG_KEYWORD)) != NULL)
+	{
+		int i, count = ippGetCount(attr);
+		for (i = 0; i < count; i++)
+		{
+			strncat(printer_reason, ippGetString(attr, i, NULL), 150 - strlen(printer_reason));
+			if ( i != (count-1))
+				strncat(printer_reason, ", ", 150 - strlen(printer_reason));
+		}
+	}
+	ippDelete(response);
+	httpClose(http);
 
 	 /*
 	  * Get the current printer status and convert it to the status values.
@@ -463,10 +461,9 @@ cups_get_printer_status (struct printer *pr)
 
 	snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
 
-	if (temp_printer) /* printer state */
-		strncat(pr->p_status, printer_reason_t, 255 - strlen(pr->p_status));
-	else
-		strncat(pr->p_status, printer_reason, 255 - strlen(pr->p_status));
+	/* printer state */
+	strncat(pr->p_status, printer_reason, 255 - strlen(pr->p_status));
+
 	/*
 	 * Return the print status ...
 	 */
