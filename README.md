@@ -20,6 +20,8 @@ Modern AFP features such as Bonjour, Time Machine, and Spotlight are also suppor
 # AppleTalk
 Support for the AppleTalk network stack was removed in Netatalk v3. If you need AppleTalk to network very old Macs or Apple II computers, please use Netatalk v2.
 
+Find the latest Netatalk v2 releases in the [Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
+
 # Contributions
 Bug reports and feature requests can be filed as GitHub issue ticket:
 
@@ -34,7 +36,7 @@ PRs are automatically picked up by GitHub CI, which runs the builds, integration
 # Documentation
 The latest version of the Netatalk manual can be found at:
 
-https://netatalk.sourceforge.io/3.1/htmldocs/
+https://netatalk.io/3.1/htmldocs/
 
 Each Netatalk component also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
 
