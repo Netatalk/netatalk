@@ -38,7 +38,7 @@ PRs are automatically picked up by GitHub CI, which runs the builds, integration
 # Documentation
 The latest version of the Netatalk manual can be found at:
 
-https://netatalk.sourceforge.io/2.2/htmldocs/
+https://netatalk.io/2.3/htmldocs/
 
 Each Netatalk component also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
 
@@ -59,4 +59,4 @@ https://sourceforge.net/p/netatalk/mailman/
 # Website
 The Netatalk website is where new releases and other news about the project are posted.
 
-https://netatalk.sourceforge.io
+https://netatalk.io

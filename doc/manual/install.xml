@@ -137,7 +137,7 @@ remote: Counting objects: 2503, done.
         </orderedlist>
 
         <para>For futher information refer to the <ulink
-        url="https://netatalk.sourceforge.io/docs/Developer-Notes.html">Developer Notes</ulink>
+        url="https://netatalk.io/docs/Developer-Notes">Developer Notes</ulink>
         wiki page.</para>
       </sect3>
     </sect2>
@@ -154,8 +154,8 @@ remote: Counting objects: 2503, done.
         available for your OS distribution of choice.</para>
 
         <para>Please see the <ulink
-        url="https://netatalk.sourceforge.io/docs/">
-        Netatalk wiki</ulink> for OS specific installation guides.</para>
+        url="https://netatalk.io/docs/">
+        Netatalk wiki docs</ulink> for OS specific installation guides.</para>
       </note>
 
       <sect3>
