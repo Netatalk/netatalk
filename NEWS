@@ -1,3 +1,22 @@
+Changes in 2.3.1
+================
+* afpd: Remove obsoleted AppleDouble osx and sfm formats, GitHub #668
+* uams: Remove obsoleted Kerberos v4 UAM, GitHub #676
+* atalkd: Automatically enable RTMP broadcast quirks mode
+  when configured with the -router switch.
+  Removes the -q command line parameter, GitHub #679
+* papd: Modernize CUPS API usage, GitHub #651 #655 #672 #674 #678 #696 #700
+* macusers: Fallback output when full name not available, GitHub #652
+* libatalk: Appease Fedora gcc incompatible pointer error, GitHub #682
+* Two small memory handling patches ported from netatalk-classic, GitHub #645
+* Generate manual pages through the build system.
+  Introduces the --with-docbook configure option, GitHub #675
+* Fix Zeroconf support on *BSD platforms, GitHub #647
+* Use correct BSD make syntax in initscripts Makefile, GitHub #644
+* Remove obsoleted README and VERSION files for contrib, GitHub #641
+* Update README.AppleTalk with the current state of Linux support.
+* Factual corrections and updates to manual pages.
+
 Changes in 2.3.0
 ================
 * afpd: Remove cdb and tdb CNID backends, GitHub #535
