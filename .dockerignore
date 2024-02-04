@@ -1,0 +1,9 @@
+.git
+.github
+.gitignore
+Dockerfile
+docker-compose.yml
+sonar-project.properties
+*.bz2
+*.gz
+*.xz
