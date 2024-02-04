@@ -21,9 +21,27 @@ on:
 
 env:
   APT_PACKAGES: |
-    libtool libtool-bin automake autoconf libssl-dev libgcrypt-dev libkrb5-dev libpam0g-dev \
-    libdb-dev libavahi-client-dev libacl1-dev libldap2-dev libcrack2-dev libcups2-dev  \
-    libkrb5-dev quota libtirpc-dev libltdl-dev tcpd libwrap0-dev xsltproc docbook-xsl
+    autoconf \
+    automake \
+    docbook-xsl \
+    libacl1-dev \
+    libavahi-client-dev \
+    libcrack2-dev \
+    libcups2-dev \
+    libdb-dev \
+    libgcrypt-dev \
+    libkrb5-dev \
+    libldap2-dev \
+    libltdl-dev \
+    libpam0g-dev \
+    libssl-dev \
+    libtirpc-dev
+    libtool \
+    libtool-bin \
+    libwrap0-dev \
+    quota \
+    tcpd \
+    xsltproc
 
 jobs:
   integration_test:
