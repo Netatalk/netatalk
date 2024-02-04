@@ -35,7 +35,7 @@ env:
     libltdl-dev \
     libpam0g-dev \
     libssl-dev \
-    libtirpc-dev
+    libtirpc-dev \
     libtool \
     libtool-bin \
     libwrap0-dev \
@@ -103,7 +103,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          dnf -y install openssl-devel libgcrypt-devel libdb-devel automake libtool avahi-devel cups-devel krb5-devel libacl-devel openldap-devel cracklib-devel
+          dnf -y install \
+            automake \
+            avahi-devel \
+            cracklib-devel \
+            cups-devel \
+            krb5-devel \
+            libacl-devel \
+            libdb-devel \
+            libgcrypt-devel \
+            libtool \
+            openldap-devel \
+            openssl-devel
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
