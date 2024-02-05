@@ -55,7 +55,4 @@ CLEANFILES += $(HTML_PAGES)
 html-local: $(XML_PAGES)
 	@xsltproc $(HTML_STYLESHEET) manual.xml
 
-html-upload: html-local
-	scp $(HTML_PAGES) $$USER,netatalk@web.sourceforge.net:/home/project-web/netatalk/htdocs/3.2/htmldocs/
-
 endif
