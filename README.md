@@ -57,4 +57,4 @@ https://sourceforge.net/p/netatalk/mailman/
 # Website
 The Netatalk website is where new releases and other news about the project are posted.
 
-https://netatalk.sourceforge.io
+https://netatalk.io

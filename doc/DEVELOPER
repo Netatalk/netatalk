@@ -2,7 +2,7 @@ Information for Netatalk Developers
 ===================================
 
 For basic installation instructions, see the html manual published on
-https://netatalk.sourceforge.io
+https://netatalk.io
 
 Netatalk is an implementation of "AFP over TCP".
 DSI is a session layer used to carry AFP over TCP.
