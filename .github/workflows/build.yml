@@ -208,7 +208,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/omnios-vm@v1.0.0
+        uses: vmactions/omnios-vm@v1.0.1
         with:
           copyback: false
           prepare: |
@@ -248,7 +248,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/freebsd-vm@v1.0.5
+        uses: vmactions/freebsd-vm@v1.0.6
         with:
           copyback: false
           prepare: |
@@ -287,7 +287,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/openbsd-vm@v1.0.6
+        uses: vmactions/openbsd-vm@v1.0.7
         with:
           copyback: false
           prepare: |
@@ -333,7 +333,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.0.3
+        uses: vmactions/netbsd-vm@v1.0.5
         with:
           copyback: false
           prepare: |
@@ -367,6 +367,7 @@ jobs:
             gmake -j $(nproc)
 
   build-dflybsd:
+    if: false
     name: "DragonflyBSD"
     runs-on: ubuntu-22.04
     permissions:
@@ -375,7 +376,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/dragonflybsd-vm@v1.0.2
+        uses: vmactions/dragonflybsd-vm@v1.0.3
         with:
           copyback: false
           prepare: |
@@ -409,7 +410,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1.0.1
+        uses: vmactions/solaris-vm@v1.0.2
         with:
           copyback: false
           prepare: |
