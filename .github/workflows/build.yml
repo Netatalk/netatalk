@@ -375,10 +375,13 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/dragonflybsd-vm@v1.0.2
+        uses: vmactions/dragonflybsd-vm@v1.0.3
         with:
           copyback: false
           prepare: |
+            echo 'nameserver 127.0.0.1' >> /etc/resolv.conf
+            echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
+            echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
             pkg install -y \
               autoconf \
               automake \
