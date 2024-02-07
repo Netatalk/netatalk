@@ -619,7 +619,7 @@ static int copy(const char *path,
 #define BUFSIZE_MAX (2*1024*1024)
 
 /* Small (default) buffer size in bytes. It's inefficient for this to be smaller than MAXPHYS */
-#if ! defined __APPLE__
+#if ! defined MAXPHYS
     #define MAXPHYS (64 * 1024)
 #endif
 #define BUFSIZE_SMALL (MAXPHYS)
