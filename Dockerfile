@@ -56,4 +56,7 @@ RUN ln -sf /dev/stdout /var/log/afpd.log
 
 COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh
 
+EXPOSE 548
+VOLUME ["/mnt/afpshare", "/mnt/afpbackup"]
+
 CMD ["/docker-entrypoint.sh"]

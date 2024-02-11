@@ -38,14 +38,14 @@ fi
 
 echo "*** Configuring shared volume"
 
-if [ ! -d /mnt/afpfiles ]; then
-  mkdir /mnt/afpfiles
+if [ ! -d /mnt/afpshare ]; then
+  mkdir /mnt/afpshare
   echo "Warning: the file sharing volume will be lost when the container is stopped."
   echo "Use a Docker volume to retain your data between runs."
 fi
 
-if [ ! -d /mnt/afptm ]; then
-  mkdir /mnt/afptm
+if [ ! -d /mnt/afpbackup ]; then
+  mkdir /mnt/afpbackup
   echo "Warning: the Time Machine volume will be lost when the container is stopped."
   echo "Use a Docker volume to retain your data between runs."
 fi
@@ -53,14 +53,14 @@ fi
 echo "*** Fixing permissions"
 
 # Workarounds for afpd being weird about the permissions of the shared volume root
-chmod 2775 /mnt/afpfiles
-chmod 2775 /mnt/afptm
+chmod 2775 /mnt/afpshare
+chmod 2775 /mnt/afpbackup
 if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
-    chown "${AFP_UID}:${AFP_GID}" /mnt/afpfiles
-    chown "${AFP_UID}:${AFP_GID}" /mnt/afptm
+    chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
+    chown "${AFP_UID}:${AFP_GID}" /mnt/afpbackup
 elif [ ! -z "${AFP_USER}" ]; then
-    chown "${AFP_USER}:${AFP_USER}" /mnt/afpfiles
-    chown "${AFP_USER}:${AFP_USER}" /mnt/afptm
+    chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
+    chown "${AFP_USER}:${AFP_USER}" /mnt/afpbackup
 fi
 
 echo "*** Configuring Netatalk"
@@ -71,10 +71,10 @@ log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
-path = /mnt/afpfiles
+path = /mnt/afpshare
 valid users = ${AFP_USER}
 [Time Machine]
-path = /mnt/afptm
+path = /mnt/afpbackup
 time machine = yes
 valid users = ${AFP_USER}
 EOF
