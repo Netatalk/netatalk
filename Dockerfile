@@ -34,11 +34,14 @@ ENV BUILD_DEPS \
     libtracker-sparql-2.0-dev \
     pkg-config \
     systemtap-sdt-dev
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS && apt-get clean
 
+RUN useradd builder
 WORKDIR /build
 COPY . .
+RUN chown -R builder:builder .
+USER builder
 
 RUN [ -f ./bootstrap ] && ./bootstrap
 RUN ./configure \
@@ -47,16 +50,15 @@ RUN ./configure \
     --with-pam-confdir=/etc/pam.d \
     --with-dbus-daemon=/usr/bin/dbus-daemon \
     --with-tracker-pkgconfig-version=2.0
-RUN make clean && make -j $(nproc) && make install
+RUN make clean && make -j $(nproc)
+
+USER root
+RUN make install
 
 WORKDIR /mnt
-
 RUN rm -rf /build && apt-get remove --yes --auto-remove --purge $BUILD_DEPS
 RUN ln -sf /dev/stdout /var/log/afpd.log
-
 COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh
-
 EXPOSE 548
 VOLUME ["/mnt/afpshare", "/mnt/afpbackup"]
-
 CMD ["/docker-entrypoint.sh"]
