@@ -53,7 +53,7 @@ RUN ./configure \
 RUN make clean && make -j $(nproc)
 
 USER root
-RUN make install
+RUN userdel builder && make install
 
 WORKDIR /mnt
 RUN rm -rf /build && apt-get remove --yes --auto-remove --purge $BUILD_DEPS
