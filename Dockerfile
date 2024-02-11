@@ -35,7 +35,7 @@ RUN ./configure \
 RUN make clean && make -j $(nproc)
 
 USER root
-RUN make install
+RUN userdel builder && make install
 
 WORKDIR /mnt/afpshare
 
