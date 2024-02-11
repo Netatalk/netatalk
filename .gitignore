@@ -17,3 +17,4 @@ stamp-h*
 *.tar.xz
 .deps
 .libs
+**/.DS_Store
