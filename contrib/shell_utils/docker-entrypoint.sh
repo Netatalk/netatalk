@@ -31,6 +31,10 @@ if [ ! -z "${AFP_USER}" ]; then
         groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
     fi
     adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
+    if [ ! -z "${AFP_GROUP}" ]; then
+        groupadd ${AFP_GROUP} || true 2> /dev/null
+        usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
+    fi
     if [ ! -z "${AFP_PASS}" ]; then
         echo "${AFP_USER}:${AFP_PASS}" | chpasswd
     fi
@@ -58,13 +62,17 @@ chmod 2775 /mnt/afpbackup
 if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
     chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
     chown "${AFP_UID}:${AFP_GID}" /mnt/afpbackup
+elif [ ! -z "${AFP_USER}" ] && [ ! -z "${AFP_GROUP}" ]; then
+    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpshare
+    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpbackup
 elif [ ! -z "${AFP_USER}" ]; then
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpbackup
 fi
 
-echo "*** Configuring Netatalk"
-cat <<EOF > /usr/etc/afp.conf
+if [ -z "${MANUAL_CONFIG}" ]; then
+    echo "*** Configuring Netatalk"
+    cat <<EOF > /usr/etc/afp.conf
 [Global]
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
@@ -78,6 +86,7 @@ path = /mnt/afpbackup
 time machine = yes
 valid users = ${AFP_USER}
 EOF
+fi
 
 echo "*** Starting AFP server"
 
