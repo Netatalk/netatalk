@@ -29,7 +29,7 @@ COPY . .
 RUN chown -R builder:builder .
 USER builder
 
-RUN [ -f ./bootstrap ] && ./bootstrap
+RUN test -e ./bootstrap && ./bootstrap || true
 RUN ./configure \
     --enable-overwrite \
     --prefix=/usr
