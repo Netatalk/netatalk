@@ -20,7 +20,8 @@ ENV BUILD_DEPS autoconf \
     libtool-bin \
     pkg-config
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS && apt-get clean
+RUN apt-get update && \
+  apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS
 
 RUN useradd builder
 WORKDIR /build
@@ -39,7 +40,20 @@ RUN userdel builder && make install
 
 WORKDIR /mnt/afpshare
 
-RUN rm -rf /build && apt-get remove --yes --auto-remove --purge $BUILD_DEPS
+RUN apt-get remove --yes --auto-remove --purge $BUILD_DEPS && \
+  apt-get --quiet --yes autoclean && \
+  apt-get --quiet --yes autoremove && \
+  apt-get --quiet --yes clean
+RUN rm -rf \
+  /build \
+  /usr/include/netatalk \
+  /usr/share/man \
+  /usr/share/doc \
+  /usr/share/poppler \
+  /var/lib/apt/lists \
+  /tmp \
+  /var/tmp
+
 RUN ln -sf /dev/stdout /var/log/afpd.log
 
 COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh

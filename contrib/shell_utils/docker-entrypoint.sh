@@ -38,6 +38,10 @@ if [ ! -z "${AFP_USER}" ]; then
         groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
     fi
     adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
+    if [ ! -z "${AFP_GROUP}" ]; then
+        groupadd ${AFP_GROUP} || true 2> /dev/null
+	usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
+    fi
     if [ ! -z "${AFP_PASS}" ]; then
         echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
@@ -64,6 +68,8 @@ echo "*** Fixing permissions"
 chmod 2775 /mnt/afpshare
 if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
     chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
+elif [ ! -z "${AFP_USER}" ] && [ ! -z "${AFP_GROUP}" ]; then
+    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpshare
 elif [ ! -z "${AFP_USER}" ]; then
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
 fi
