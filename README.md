@@ -76,6 +76,7 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 - `AFPD_OPTIONS` <- options to append to afpd.conf
 - `AVOLUMES_OPTIONS` <- options to append to AppleVolumes.default
 - `ATALKD_OPTIONS` <- options to append to atalkd.conf
+- `MANUAL_CONFIG` <- when non-zero, skip all netatalk config file modification, allowing you to manually manage them
 - `TZ` <- time zone for the timelord time server (e.g. `America/Chicago`)
 
 Refer to the Netatalk manual for a list of available options to append each of the config files.

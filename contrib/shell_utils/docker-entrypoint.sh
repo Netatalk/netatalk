@@ -20,6 +20,37 @@
 
 set -eo pipefail
 
+function configure() {
+	echo "*** Configuring AppleVolumes.default"
+
+	# Clean up residual configurations
+	sed -i '/^~/d' /usr/etc/netatalk/AppleVolumes.default
+	sed -i '/^\//d' /usr/etc/netatalk/AppleVolumes.default
+
+	# Modify netatalk configuration files
+	if [ -z "${SHARE_NAME}" ]; then
+	    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
+	else
+	    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
+	fi
+
+	echo "*** Configuring afpd.conf"
+
+	if [ -z "${SERVER_NAME}" ]; then
+	    echo "- -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	else
+	    echo "\"${SERVER_NAME}\" -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	fi
+
+	echo "*** Configuring atalkd.conf"
+
+	echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/etc/netatalk/atalkd.conf
+
+	echo "*** Configuring papd.conf"
+
+	echo "cupsautoadd:op=root:" | tee /usr/etc/netatalk/papd.conf
+}
+
 echo "*** Setting up users and groups"
 
 # Initializing afppasswd file
@@ -74,34 +105,7 @@ elif [ ! -z "${AFP_USER}" ]; then
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
 fi
 
-echo "*** Configuring AppleVolumes.default"
-
-# Clean up residual configurations
-sed -i '/^~/d' /usr/etc/netatalk/AppleVolumes.default
-sed -i '/^\//d' /usr/etc/netatalk/AppleVolumes.default
-
-# Modify netatalk configuration files
-if [ -z "${SHARE_NAME}" ]; then
-    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
-else
-    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
-fi
-
-echo "*** Configuring afpd.conf"
-
-if [ -z "${SERVER_NAME}" ]; then
-    echo "- -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
-else
-    echo "\"${SERVER_NAME}\" -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
-fi
-
-echo "*** Configuring atalkd.conf"
-
-echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/etc/netatalk/atalkd.conf
-
-echo "*** Configuring papd.conf"
-
-echo "cupsautoadd:op=root:" | tee /usr/etc/netatalk/papd.conf
+[ -z "${MANUAL_CONFIG}" ] && configure
 
 # Release locks incase they're left behind from a previous execution
 echo "*** Removing old locks"
