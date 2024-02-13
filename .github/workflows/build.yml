@@ -367,7 +367,6 @@ jobs:
             gmake -j $(nproc)
 
   build-dflybsd:
-    if: false
     name: "DragonflyBSD"
     runs-on: ubuntu-22.04
     permissions:
