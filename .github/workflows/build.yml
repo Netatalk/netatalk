@@ -375,11 +375,10 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/dragonflybsd-vm@v1.0.3
+        uses: vmactions/dragonflybsd-vm@v1
         with:
           copyback: false
           prepare: |
-            ln -s /usr/local/etc/ssl/cert.pem /etc/ssl/
             pkg install -y \
               autoconf \
               automake \
