@@ -379,6 +379,7 @@ jobs:
         with:
           copyback: false
           prepare: |
+            ln -s /usr/local/etc/ssl/cert.pem /etc/ssl/
             pkg install -y \
               autoconf \
               automake \
