@@ -367,7 +367,6 @@ jobs:
             gmake -j $(nproc)
 
   build-dflybsd:
-    if: false
     name: "DragonflyBSD"
     runs-on: ubuntu-22.04
     permissions:
@@ -376,7 +375,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/dragonflybsd-vm@v1.0.3
+        uses: vmactions/dragonflybsd-vm@v1
         with:
           copyback: false
           prepare: |
