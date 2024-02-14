@@ -20,82 +20,93 @@
 
 set -eo pipefail
 
-echo "*** Setting up users and groups"
+function helper::configure() {
+	echo "*** Setting up users and groups"
 
-# Initializing afppasswd file
-if [ -f "/usr/etc/netatalk/afppasswd" ]; then
-    rm -f /usr/etc/netatalk/afppasswd
-fi
+	# Initializing afppasswd file
+	if [ -f "/usr/etc/netatalk/afppasswd" ]; then
+	    rm -f /usr/etc/netatalk/afppasswd
+	fi
 
-afppasswd -c
+	afppasswd -c
 
-if [ ! -z "${AFP_USER}" ]; then
-    if [ ! -z "${AFP_UID}" ]; then
-        cmd="$cmd --uid ${AFP_UID}"
-    fi
-    if [ ! -z "${AFP_GID}" ]; then
-        cmd="$cmd --gid ${AFP_GID}"
-        groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
-    fi
-    adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
-    if [ ! -z "${AFP_PASS}" ]; then
-        echo "${AFP_USER}:${AFP_PASS}" | chpasswd
+	if [ ! -z "${AFP_USER}" ]; then
+	    if [ ! -z "${AFP_UID}" ]; then
+	        cmd="$cmd --uid ${AFP_UID}"
+	    fi
+	    if [ ! -z "${AFP_GID}" ]; then
+	        cmd="$cmd --gid ${AFP_GID}"
+	        groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
+	    fi
+	    adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
+	    if [ ! -z "${AFP_GROUP}" ]; then
+	        groupadd ${AFP_GROUP} || true 2> /dev/null
+		usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
+	    fi
+	    if [ ! -z "${AFP_PASS}" ]; then
+	        echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
-	# Creating credentials for the RandNum UAM
-	afppasswd -a "${AFP_USER}" <<- EOD
-	${AFP_PASS}
-	${AFP_PASS}
+		# Creating credentials for the RandNum UAM
+		afppasswd -a "${AFP_USER}" <<- EOD
+		${AFP_PASS}
+		${AFP_PASS}
 EOD
-    fi
-fi
+	    fi
+	fi
 
-echo
-echo "*** Configuring shared volume"
+	echo
+	echo "*** Configuring shared volume"
 
-if [ ! -d /mnt/afpshare ]; then
-  mkdir /mnt/afpshare
-  echo "Warning: this shared volume will be lost when the container is stopped."
-  echo "Use a Docker volume to retain your data between runs."
-fi
+	if [ ! -d /mnt/afpshare ]; then
+	  mkdir /mnt/afpshare
+	  echo "Warning: this shared volume will be lost when the container is stopped."
+	  echo "Use a Docker volume to retain your data between runs."
+	fi
 
-echo "*** Fixing permissions"
+	echo "*** Fixing permissions"
 
-# Workarounds for afpd being weird about the permissions of the shared volume root
-chmod 2775 /mnt/afpshare
-if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
-    chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
-elif [ ! -z "${AFP_USER}" ]; then
-    chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
-fi
+	# Workarounds for afpd being weird about the permissions of the shared volume root
+	chmod 2775 /mnt/afpshare
+	if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
+	    chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
+	elif [ ! -z "${AFP_USER}" ] && [ ! -z "${AFP_GROUP}" ]; then
+	    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpshare
+	elif [ ! -z "${AFP_USER}" ]; then
+	    chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
+	fi
 
-echo "*** Configuring AppleVolumes.default"
+	echo "*** Configuring AppleVolumes.default"
 
-# Clean up residual configurations
-sed -i '/^~/d' /usr/etc/netatalk/AppleVolumes.default
-sed -i '/^\//d' /usr/etc/netatalk/AppleVolumes.default
+	# Clean up residual configurations
+	sed -i '/^~/d' /usr/etc/netatalk/AppleVolumes.default
+	sed -i '/^\//d' /usr/etc/netatalk/AppleVolumes.default
 
-# Modify netatalk configuration files
-if [ -z "${SHARE_NAME}" ]; then
-    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
-else
-    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
-fi
+	# Modify netatalk configuration files
+	if [ -z "${SHARE_NAME}" ]; then
+	    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
+	else
+	    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/etc/netatalk/AppleVolumes.default
+	fi
 
-echo "*** Configuring afpd.conf"
+	echo "*** Configuring afpd.conf"
 
-if [ -z "${SERVER_NAME}" ]; then
-    echo "- -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
-else
-    echo "\"${SERVER_NAME}\" -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
-fi
+	if [ -z "${SERVER_NAME}" ]; then
+	    echo "- -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	else
+	    echo "\"${SERVER_NAME}\" -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	fi
 
-echo "*** Configuring atalkd.conf"
+	echo "*** Configuring atalkd.conf"
 
-echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/etc/netatalk/atalkd.conf
+	echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/etc/netatalk/atalkd.conf
 
-echo "*** Configuring papd.conf"
+	echo "*** Configuring papd.conf"
 
-echo "cupsautoadd:op=root:" | tee /usr/etc/netatalk/papd.conf
+	echo "cupsautoadd:op=root:" | tee /usr/etc/netatalk/papd.conf
+}
+
+
+[ -z "${MANUAL_CONFIG}" ] && helper::configure
 
 # Release locks incase they're left behind from a previous execution
 echo "*** Removing old locks"

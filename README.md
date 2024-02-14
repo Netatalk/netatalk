@@ -5,7 +5,7 @@
 
 Netatalk is a freely-available Open Source fileserver that implements the Apple Filing Protocol (AFP) v3.3 over TCP/IP and AppleTalk. A *NIX/*BSD system running Netatalk is capable of serving many Macintosh and Apple II clients simultaneously as an AppleShare file server.
 
-AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013. Mac OS X 10.9 Mavericks removed the AFP *server*, but macOS retains the AFP *client* to this day, and can therefore connect to an AFP fileserver served by Netatalk. This makes Netatalk an effective bridge between the very earliest networked Apple machines, and the very latest. 
+AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013. Mac OS X 10.9 Mavericks removed the AFP *server*, but macOS retains the AFP *client* to this day, and can therefore connect to an AFP fileserver served by Netatalk. This makes Netatalk an effective bridge between the very earliest networked Apple machines, and the very latest.
 
 # Why Should I Use Netatalk?
 
@@ -24,7 +24,7 @@ Netatalk v2 supports the legacy AppleTalk protocol, which means it can act as a 
 
 The included print server daemon can provide Apple II and Macintosh clients with the ability to print to AppleTalk-only printers. In addition, Netatalk is fully integrated with CUPS, allowing any networked Mac to discover and print to a CUPS/AirPrint compatible printer on the network.
 
-Additionally, Netatalk can be used to act as an AppleTalk router, providing both segmentation and zone names in traditional Macintosh networks. 
+Additionally, Netatalk can be used to act as an AppleTalk router, providing both segmentation and zone names in traditional Macintosh networks.
 
 # Docker
 
@@ -70,16 +70,20 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 
 - `SERVER_NAME` <- the name of the server as displayed in the Chooser or Network drawer (default is hostname)
 - `SHARE_NAME` <- the name of the shared volume (default is the final segment of the path)
+- `AFP_GROUP` <- group that owns the shared volume, and that AFP_USER gets assigned to
 - `AFP_UID` <- specify user id of AFP_USER
 - `AFP_GID` <- specify group id of AFP_USER
 - `AFPD_OPTIONS` <- options to append to afpd.conf
 - `AVOLUMES_OPTIONS` <- options to append to AppleVolumes.default
 - `ATALKD_OPTIONS` <- options to append to atalkd.conf
+
+### Advanced
+- `MANUAL_CONFIG` <- when non-zero, manage users, volumes, and configurations manually. This overrides all of the above env variables. Use this together with bind mounted shared volumes and config files for the most versatile setup.
 - `TZ` <- time zone for the timelord time server (e.g. `America/Chicago`)
 
-Refer to the Netatalk manual for a list of available options to append each of the config files.
+Refer to the Netatalk manual for a list of available options for each config file.
 
-Sample docker-compose.yml with docker managed volume
+Sample docker-compose.yml with Docker managed volume
 ```
 version: "3"
 
