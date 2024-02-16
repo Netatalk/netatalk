@@ -912,6 +912,12 @@ int main( int ac, char **av)
      * broken.
      */
     for (iface = interfaces; iface; iface = iface->i_next) {
+        if ( (ninterfaces == IFBASE) &&
+                (iface->i_flags & IFACE_SEED) &&
+                ((iface->i_flags & IFACE_RSEED) == 0) ) {
+            fprintf( stderr, "%s: use the -router switch to seed a single interface.\n", prog );
+            exit( 1 );
+        }
 	/* Apply the default phase */
 	if (( iface->i_flags & IFACE_PHASE1 ) == 0 &&
 		( iface->i_flags & IFACE_PHASE2 ) == 0 ) {
