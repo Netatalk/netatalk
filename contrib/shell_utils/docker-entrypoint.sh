@@ -18,43 +18,42 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-set -eo pipefail
+set -o errexit -o errtrace -o functrace
 
 function helper::configure() {
+	if [ -z "${AFP_USER}" ] || [ -z "${AFP_PASS}" ]; then
+		echo "AFP_USER and AFP_PASS env variables must be defined."
+		exit 1
+	fi
+
 	echo "*** Setting up users and groups"
 
-	# Initializing afppasswd file
-	if [ -f "/usr/etc/netatalk/afppasswd" ]; then
-	    rm -f /usr/etc/netatalk/afppasswd
+	if [ ! -z "${AFP_UID}" ]; then
+		cmd="$cmd --uid ${AFP_UID}"
 	fi
-
-	afppasswd -c
-
-	if [ ! -z "${AFP_USER}" ]; then
-	    if [ ! -z "${AFP_UID}" ]; then
-	        cmd="$cmd --uid ${AFP_UID}"
-	    fi
-	    if [ ! -z "${AFP_GID}" ]; then
-	        cmd="$cmd --gid ${AFP_GID}"
-	        groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
-	    fi
-	    adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
-	    if [ ! -z "${AFP_GROUP}" ]; then
-	        groupadd ${AFP_GROUP} || true 2> /dev/null
+	if [ ! -z "${AFP_GID}" ]; then
+		cmd="$cmd --gid ${AFP_GID}"
+		groupadd --gid ${AFP_GID} ${AFP_USER} || true 2> /dev/null
+	fi
+	adduser $cmd --no-create-home --disabled-password --gecos '' "${AFP_USER}" || true 2> /dev/null
+	if [ ! -z "${AFP_GROUP}" ]; then
+		groupadd ${AFP_GROUP} || true 2> /dev/null
 		usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
-	    fi
-	    if [ ! -z "${AFP_PASS}" ]; then
-	        echo "${AFP_USER}:${AFP_PASS}" | chpasswd
+	fi
+	echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
-		# Creating credentials for the RandNum UAM
-		afppasswd -a "${AFP_USER}" <<- EOD
-		${AFP_PASS}
-		${AFP_PASS}
-EOD
-	    fi
+	if [ -f "/usr/etc/netatalk/afppasswd" ]; then
+		rm -f /usr/etc/netatalk/afppasswd
 	fi
 
-	echo
+	# Creating credentials for the RandNum UAM
+	afppasswd -c
+	afppasswd -a "${AFP_USER}" << EOD > /dev/null
+${AFP_PASS}
+${AFP_PASS}
+
+EOD
+
 	echo "*** Configuring shared volume"
 
 	if [ ! -d /mnt/afpshare ]; then
@@ -90,10 +89,11 @@ EOD
 
 	echo "*** Configuring afpd.conf"
 
+	AFPD_STANDARD_OPTIONS="-transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /dev/stdout\""
 	if [ -z "${SERVER_NAME}" ]; then
-	    echo "- -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	    echo "- ${AFPD_STANDARD_OPTIONS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
 	else
-	    echo "\"${SERVER_NAME}\" -transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /var/log/afpd.log\" ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	    echo "\"${SERVER_NAME}\" ${AFPD_STANDARD_OPTIONS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
 	fi
 
 	echo "*** Configuring atalkd.conf"
