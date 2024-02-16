@@ -54,8 +54,6 @@ RUN rm -rf \
   /tmp \
   /var/tmp
 
-RUN ln -sf /dev/stdout /var/log/afpd.log
-
 COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh
 
 EXPOSE 548 631
