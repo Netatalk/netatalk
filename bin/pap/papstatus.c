@@ -42,8 +42,20 @@
 
 #define _PATH_PAPRC	".paprc"
 
+#define IMAGEWRITER "ImageWriter"
+#define IMAGEWRITER_LQ "LQ"
+
+#define COLOR_RIBBON_INSTALLED 0b10000000
+#define SHEET_FEEDER_INSTALLED 0b01000000
+#define PAPER_OUT_ERROR        0b00100000
+#define COVER_OPEN_ERROR       0b00010000
+#define PRINTER_OFF_LINE       0b00001000
+#define PAPER_JAM_ERROR        0b00000100
+#define PRINTER_FAULT          0b00000010
+#define PRINTER_ACTIVE         0b00000001
+
 /* Forward Declaration */
-static void getstatus(ATP atp, struct sockaddr_at *sat);
+static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter);
 
 static void usage(char *path)
 {
@@ -86,6 +98,15 @@ static char			*printer = NULL;
 static char			cbuf[ 8 ];
 static struct nbpnve		nn;
 
+static void * print_status(char status, char mask, char * message){
+        printf("%s", message);
+    if( status & mask){
+            printf("True\n");
+    }else{
+            printf("False\n");
+    }
+}
+
 int main( int ac, char **av)
 {
     ATP			atp;
@@ -95,6 +116,7 @@ int main( int ac, char **av)
 
     extern char		*optarg;
     extern int		optind;
+    int     is_imagewriter;
 
     memset(&addr, 0, sizeof(addr));
     while (( c = getopt( ac, av, "p:s:A:" )) != EOF ) {
@@ -146,8 +168,11 @@ int main( int ac, char **av)
 	exit( 1 );
     }
 
+    is_imagewriter = (0 == strcmp(IMAGEWRITER, type) ||
+        0 == strcmp(IMAGEWRITER_LQ, type)  );
+
     if ( optind == ac ) {
-	getstatus( atp, &nn.nn_sat );
+	getstatus( atp, &nn.nn_sat, is_imagewriter );
 	exit( 0 );
     }
     if ( optind - ac > 1 ) {
@@ -155,14 +180,14 @@ int main( int ac, char **av)
     }
     wait = atoi( av[ optind ] );
     for (;;) {
-	getstatus( atp, &nn.nn_sat );
+	getstatus( atp, &nn.nn_sat, is_imagewriter );
 	sleep( wait );
     }
 
     return 0;
 }
 
-static void getstatus(ATP atp, struct sockaddr_at *sat)
+static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter)
 {
     struct iovec	iov;
     struct atp_block	atpb;
@@ -198,5 +223,16 @@ static void getstatus(ATP atp, struct sockaddr_at *sat)
 	return;	/* This is weird, since TIDs must match... */
     }
 
+    if (is_imagewriter){
+        char status = rbuf[9];
+        print_status(status, COLOR_RIBBON_INSTALLED, "Color Ribbon Installed: ");
+        print_status(status, SHEET_FEEDER_INSTALLED, "Sheet Feeder Installed: ");
+        print_status(status, PAPER_OUT_ERROR,        "Paper Out Error:        ");
+        print_status(status, COVER_OPEN_ERROR,       "Cover Opened:           ");
+        print_status(status, PRINTER_OFF_LINE,       "Printer Off-Line:       ");
+        print_status(status, PAPER_JAM_ERROR,        "Paper Jammed:           ");
+        print_status(status, PRINTER_FAULT,          "Printer in Fault:       ");
+        print_status(status, PRINTER_ACTIVE,         "Printer Active:         ");
+    }
     printf( "%.*s\n", (int)iov.iov_len - 9, (char *) iov.iov_base + 9 );
 }

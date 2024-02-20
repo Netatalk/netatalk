@@ -29,9 +29,12 @@
 
 #define _PATH_PAPRC	".paprc"
 
+#define IMAGEWRITER "ImageWriter"
+#define IMAGEWRITER_LQ "LQ"
+
 /* Forward Declarations */
 static void updatestatus(char *s, int len);
-static int send_file(int fd, ATP atp, int lastfile);
+static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter);
 
 static void usage(char *path)
 {
@@ -163,6 +166,8 @@ int main( int ac, char	**av)
     extern char		*optarg;
     extern int		optind;
 
+    int        is_imagewriter;
+
     memset(&addr, 0, sizeof(addr));
     while (( c = getopt( ac, av, "dWwcep:s:EA:" )) != EOF ) {
 	switch ( c ) {
@@ -254,6 +259,9 @@ int main( int ac, char	**av)
 	perror( "atp_open" );
 	exit( 2 );
     }
+
+    is_imagewriter = (0 == strcmp(IMAGEWRITER, type) ||
+        0 == strcmp(IMAGEWRITER_LQ, type)  );
 
     while ( waitforidle ) {
 	char	st_buf[ 1024 ];	/* XXX too big */
@@ -392,7 +400,7 @@ int main( int ac, char	**av)
     }
 
     if ( optind == ac ) {
-	send_file( 0, atp, 1 );
+	send_file( 0, atp, 1 , is_imagewriter);
     } else {
 	for (; optind < ac; optind++ ) {
 	    if ( strcmp( av[ optind ], "-" ) == 0 ) {
@@ -401,7 +409,7 @@ int main( int ac, char	**av)
 		perror( av[ optind ] );
 		continue;
 	    }
-	    send_file( fd, atp, ( optind == ac - 1 ) ? 1 : 0 );
+	    send_file( fd, atp, ( optind == ac - 1 ) ? 1 : 0 , is_imagewriter);
 	    if ( fd != 0 ) {
 		close( fd );
 	    }
@@ -464,7 +472,7 @@ static int		data = 0;
 static unsigned char	port;
 static u_int16_t	seq = 0;
 
-static int send_file( int fd, ATP atp, int lastfile)
+static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
 {
     struct timeval	stv, tv;
     struct sockaddr_at	ssat;
@@ -801,17 +809,19 @@ static int send_file( int fd, ATP atp, int lastfile)
 	    }
 
 #ifndef NONZEROSTATUS
-	    /*
-	     * The stinking LaserWriter IINTX puts crap in this
-	     * field.
-	     */
-	    if ( ((char *)rniov[ 0 ].iov_base)[ 0 ] != 0 ) {
-		fprintf( stderr, "Bad status response!\n" );
-		exit( 1 );
-	    }
+        /*
+         * The stinking LaserWriter IINTX puts crap in this
+         * field.
+         * 
+         * The Imagewriter II doesn't handle this well, either
+         */
+        if ( ! is_imagewriter &&  ((char *)rniov[ 0 ].iov_base)[ 0 ] != 0 ) {
+        fprintf( stderr, "Bad status response!\n" );
+        exit( 1 );
+        }
 #endif /* NONZEROSTATUS */
 
-	    if ( ((char *)rniov[ 0 ].iov_base)[ 1 ] != PAP_STATUS ||
+	    if ( ! is_imagewriter && ((char *)rniov[ 0 ].iov_base)[ 1 ] != PAP_STATUS ||
 		    atpb.atp_rresiovcnt != 1 ) {
 		fprintf( stderr, "Bad status response!\n" );
 		exit( 1 );
