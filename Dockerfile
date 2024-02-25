@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 ENV LIB_DEPS cups \
     libavahi-client3 \
@@ -6,7 +6,7 @@ ENV LIB_DEPS cups \
     libdb5.3 \
     libgcrypt20 \
     libpam0g \
-    libssl3
+    libssl1.1
 ENV BUILD_DEPS autoconf \
     automake \
     build-essential \
@@ -21,7 +21,7 @@ ENV BUILD_DEPS autoconf \
     pkg-config
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-  apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS
+    apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS
 
 RUN useradd builder
 WORKDIR /build
@@ -41,18 +41,19 @@ RUN userdel builder && make install
 WORKDIR /mnt/afpshare
 
 RUN apt-get remove --yes --auto-remove --purge $BUILD_DEPS && \
-  apt-get --quiet --yes autoclean && \
-  apt-get --quiet --yes autoremove && \
-  apt-get --quiet --yes clean
+    apt-get --quiet --yes autoclean && \
+    apt-get --quiet --yes autoremove && \
+    apt-get --quiet --yes clean
 RUN rm -rf \
-  /build \
-  /usr/include/netatalk \
-  /usr/share/man \
-  /usr/share/doc \
-  /usr/share/poppler \
-  /var/lib/apt/lists \
-  /tmp \
-  /var/tmp
+    /build \
+    /usr/include/netatalk \
+    /usr/share/man \
+    /usr/share/mime \
+    /usr/share/doc \
+    /usr/share/poppler \
+    /var/lib/apt/lists \
+    /tmp \
+    /var/tmp
 
 COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh
 
