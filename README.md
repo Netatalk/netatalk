@@ -76,6 +76,7 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 - `AFPD_OPTIONS` <- options to append to afpd.conf
 - `AVOLUMES_OPTIONS` <- options to append to AppleVolumes.default
 - `ATALKD_OPTIONS` <- options to append to atalkd.conf
+- `INSECURE_AUTH` <- when non-zero, use the "Clear Text" UAM instead of "Random Number"
 
 ### Advanced
 - `MANUAL_CONFIG` <- when non-zero, manage users, volumes, and configurations manually. This overrides all of the above env variables. Use this together with bind mounted shared volumes and config files for the most versatile setup.

@@ -46,13 +46,14 @@ function helper::configure() {
 		rm -f /usr/etc/netatalk/afppasswd
 	fi
 
-	# Creating credentials for the RandNum UAM
-	afppasswd -c
-	afppasswd -a "${AFP_USER}" << EOD > /dev/null
-${AFP_PASS}
-${AFP_PASS}
-
+	if [ -z "${INSECURE_AUTH}" ]; then
+		# Creating credentials for the RandNum UAM
+		afppasswd -c
+		afppasswd -a "${AFP_USER}" <<EOD
+$AFP_PASS
+$AFP_PASS
 EOD
+	fi
 
 	echo "*** Configuring shared volume"
 
@@ -89,11 +90,18 @@ EOD
 
 	echo "*** Configuring afpd.conf"
 
-	AFPD_STANDARD_OPTIONS="-transall -uamlist uams_dhx2.so,uams_guest.so,uams_randnum.so -setuplog \"default log_info /dev/stdout\""
-	if [ -z "${SERVER_NAME}" ]; then
-	    echo "- ${AFPD_STANDARD_OPTIONS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	AFPD_DEFAULT_OPTIONS="-transall -setuplog \"default log_${AFPD_LOGLEVEL:-info} /dev/stdout\""
+	AFPD_UAMS="-uamlist uams_dhx.so,uams_dhx2.so,uams_guest.so"
+
+	if [ -z "${INSECURE_AUTH}" ]; then
+		AFPD_UAMS+=",uams_randnum.so"
 	else
-	    echo "\"${SERVER_NAME}\" ${AFPD_STANDARD_OPTIONS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+		AFPD_UAMS+=",uams_clrtxt.so"
+	fi
+	if [ -z "${SERVER_NAME}" ]; then
+		echo "- ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
+	else
+		echo "\"${SERVER_NAME}\" ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/etc/netatalk/afpd.conf
 	fi
 
 	echo "*** Configuring atalkd.conf"
