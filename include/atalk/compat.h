@@ -8,10 +8,6 @@
 
 #include <signal.h>
 
-#if defined(NEED_GETUSERSHELL)
-extern char *getusershell (void);
-#endif
-
 /* OpenBSD */
 #if defined(__OpenBSD__) && !defined(ENOTSUP)
 #define ENOTSUP EOPNOTSUPP
