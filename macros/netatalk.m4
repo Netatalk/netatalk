@@ -598,10 +598,9 @@ case "$host_cpu" in
 esac
 
 dnl --------------------- GNU source
-case "$this_os" in
-	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
-        ;
-esac
+if test x"$this_os" = "xlinux"; then
+	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+fi
 
 dnl --------------------- operating system specific flags (port from sys/*)
 
