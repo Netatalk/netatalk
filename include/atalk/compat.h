@@ -1,9 +1,6 @@
 /*
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- *
- * NOTE: SunOS 4 and ultrix are pretty much the only reason why there
- * are checks for EINTR everywhere.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,7 +8,7 @@
 
 #include <signal.h>
 
-#if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
+#if defined(NEED_GETUSERSHELL)
 extern char *getusershell (void);
 #endif
 
