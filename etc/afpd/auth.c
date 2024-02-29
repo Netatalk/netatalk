@@ -26,15 +26,6 @@
 #include <pwd.h>
 #include <grp.h>
 
-#ifdef TRU64
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sia.h>
-#include <siad.h>
-
-extern void afp_get_cmdline( int *ac, char ***av );
-#endif /* TRU64 */
-
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
 #include <atalk/uuid.h>

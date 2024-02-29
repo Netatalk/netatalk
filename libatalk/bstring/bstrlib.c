@@ -2747,13 +2747,6 @@ struct genBstrList g;
 #define START_VSNBUFF (16)
 #endif
 
-/* On IRIX vsnprintf returns n-1 when the operation would overflow the target
-   buffer, WATCOM and MSVC both return -1, while C99 requires that the
-   returned value be exactly what the length would be if the buffer would be
-   large enough.  This leads to the idea that if the return value is larger
-   than n, then changing n to the return value will reduce the number of
-   iterations required. */
-
 /*  int bformata (bstring b, const char * fmt, ...)
  *
  *  After the first parameter, it takes the same parameters as printf (), but

@@ -8,6 +8,5 @@ libcompat_la_LIBADD =
 libcompat_la_SOURCES =	\
 	misc.c \
 	mktemp.c	\
-	getusershell.c	\
 	pselect.c		\
 	strlcpy.c
