@@ -1,0 +1,56 @@
+subdir('acl')
+subdir('adouble')
+subdir('bstring')
+subdir('compat')
+subdir('cnid')
+subdir('dsi')
+subdir('iniparser')
+subdir('util')
+subdir('unicode')
+subdir('vfs')
+if not get_option('with-spotlight').disabled()
+    subdir('talloc')
+endif
+
+libatalk_sources = []
+libatalk_objects = [
+    libacl.extract_all_objects(),
+    libadouble.extract_all_objects(),
+    libbstring.extract_all_objects(),
+    libcnid.extract_all_objects(),
+    libcompat.extract_all_objects(),
+    libdsi.extract_all_objects(),
+    libiniparser.extract_all_objects(),
+    libunicode.extract_all_objects(),
+    libutil.extract_all_objects(),
+    libvfs.extract_all_objects(),
+]
+
+libatalk_deps = [
+    libacl,
+    libadouble,
+    libbstring,
+    libcnid,
+    libcompat,
+    libdsi,
+    libiniparser,
+    libunicode,
+    libutil,
+    libvfs,
+]
+
+if not get_option('with-spotlight').disabled()
+    libatalk_objects += libtalloc.extract_all_objects()
+    libatalk_deps += libtalloc
+endif
+
+libatalk = both_libraries(
+    'atalk',
+    libatalk_sources,
+    include_directories: root_includes,
+    link_with: libatalk_deps,
+    dependencies: [acl_deps, mysqlclient, threads],
+    objects: libatalk_objects,
+    soversion: 18,
+    install: true,
+)

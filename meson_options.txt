@@ -1,0 +1,240 @@
+option(
+    'build-tests',
+    type: 'boolean',
+    value: false,
+    description: 'Build tests',
+)
+option(
+    'disable-shell-check',
+    type: 'boolean',
+    value: false,
+    description: 'Disable checking for a valid shell',
+)
+option(
+    'disable-largefile',
+    type: 'boolean',
+    value: false,
+    description: 'Omit support for large files',
+)
+option(
+    'disable-sendfile',
+    type: 'boolean',
+    value: false,
+    description: 'Disable sendfile syscall',
+)
+option(
+    'enable-debug',
+    type: 'boolean',
+    value: false,
+    description: 'Enable verbose debug code',
+)
+option(
+    'enable-debugging',
+    type: 'boolean',
+    value: false,
+    description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
+)
+option(
+    'enable-krbV-uam',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable build of Kerberos V UAM module',
+)
+option(
+    'enable-overwrite',
+    type: 'boolean',
+    value: false,
+    description: 'Overwrite configuration files during installation',
+)
+option(
+    'enable-pgp-uam',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable build of PGP UAM module',
+)
+option(
+    'enable-rpath',
+    type: 'boolean',
+    value: false,
+    description: 'Enable RPATH/RUNPATH',
+)
+option(
+    'enable-zeroconf',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable Zeroconf support',
+)
+option(
+    'run-tests',
+    type: 'boolean',
+    value: false,
+    description: 'Run tests during build',
+)
+option(
+    'with-acls',
+    type: 'feature',
+    value: 'auto',
+    description: 'Include ACL support',
+)
+option(
+    'with-afpstats',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable AFP statistics via dbus (default: enabled if dbus found)',
+)
+option(
+    'with-bdb',
+    type: 'string',
+    value: '',
+    description: 'Specify path to Berkeley DB installation',
+)
+option(
+    'with-cracklib',
+    type: 'string',
+    value: '',
+    description: 'Enable/set location of cracklib dictionary',
+)
+option(
+    'with-cnid-dbd-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Build CNID with Database Daemon Data Store',
+)
+option(
+    'with-cnid-default-backend',
+    type: 'string',
+    value: 'dbd',
+    description: '',
+)
+option(
+    'with-cnid-last-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Build LAST CNID scheme',
+)
+option(
+    'with-dbus-daemon',
+    type: 'string',
+    value: '',
+    description: 'Path to DBus daemon (default: /bin/dbus-daemon)',
+)
+option(
+    'with-dbus-sysconf-dir',
+    type: 'string',
+    value: '',
+    description: 'Path to dbus system bus security configuration directory (default: $(prefix)/etc/dbus-1/system.d/)',
+)
+option(
+    'with-dtrace',
+    type: 'boolean',
+    value: true,
+    description: 'Enable dtrace probes (default: enabled if dtrace found)',
+)
+option(
+    'with-docbook',
+    type: 'string',
+    value: '',
+    description: 'Path to Docbook XSL directory',
+)
+option(
+    'with-gssapi',
+    type: 'string',
+    value: '',
+    description: 'Path to GSSAPI for Kerberos V UAM',
+)
+option(
+    'with-init-dir',
+    type: 'string',
+    value: '',
+    description: 'Path to OS specific init directory',
+)
+option(
+    'with-init-style',
+    type: 'string',
+    value: '',
+    description: 'Use OS specific init config',
+)
+option(
+    'with-kerberos',
+    type: 'feature',
+    value: 'auto',
+    description: 'Kerberos V support',
+)
+option(
+    'with-ldap',
+    type: 'string',
+    value: '',
+    description: 'LDAP support'
+)
+option(
+    'with-libgcrypt-dir',
+    type: 'string',
+    value: '',
+    description: 'Path where LIBGCRYPT is installed (optional). Must contain lib and include dirs',
+)
+option(
+    'with-libiconv',
+    type: 'string',
+    value: '',
+    description: 'Use libiconv in BASEDIR/lib and BASEDIR/include',
+)
+option(
+    'with-lockfile',
+    type: 'string',
+    value: '',
+    description: 'Path of Netatalk lockfile)',
+)
+option(
+    'with-mysql-config',
+    type: 'string',
+    value: 'mysql_config',
+    description: 'Path to mysql-config binary (default: mysql_config)',
+)
+option(
+    'with-pam',
+    type: 'string',
+    value: '',
+    description: 'Specify path to PAM installation',
+)
+option(
+    'with-shadow',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable shadow password support',
+)
+option(
+    'with-spotlight',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable Spotlight support',
+)
+option(
+    'with-ssl-dir',
+    type: 'string',
+    value: '',
+    description: 'Specify path to OpenSSL installation. Must contain lib and include dirs',
+)
+option(
+    'with-tracker-install-prefix',
+    type: 'string',
+    value: '',
+    description: 'Prefix of Tracker (default: none)',
+)
+option(
+    'with-tracker-pkgconfig-version',
+    type: 'string',
+    value: '0.12',
+    description: 'Version suffix of the Tracker SPARQL pkg-config (default: 0.12)',
+)
+option(
+    'with-tracker-prefix',
+    type: 'string',
+    value: '',
+    description: 'Prefix of Tracker (default: none)',
+)
+option(
+    'with-uams-path',
+    type: 'string',
+    value: '/usr/local/lib/netatalk',
+    description: 'Path to UAMs',
+)
