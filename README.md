@@ -31,6 +31,10 @@ Support for the AppleTalk network stack was removed in Netatalk v3. If you need 
 
 Find the latest Netatalk v2 releases in the [Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
 
+# Installation
+
+Please read the INSTALL file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
+
 # Docker
 
 Netatalk comes with a Dockerfile and entry point script for running a containerized AFP server.
