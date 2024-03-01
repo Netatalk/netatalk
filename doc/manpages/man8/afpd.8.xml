@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">24 Dec 2023</refmiscinfo>
+    <refmiscinfo class="date">01 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -98,7 +98,7 @@
 
         <listitem>
           <para>Prevents clients from saving their passwords. (Equivalent to
-          -<option>nosavepasswd</option> in
+          <option>-nosavepasswd</option> in
           <filename>afpd.conf</filename>.)</para>
         </listitem>
       </varlistentry>
@@ -117,8 +117,8 @@
         <term>-D</term>
 
         <listitem>
-          <para>Use DDP (AppleTalk) as transport protocol. (Equivalent to
-          <option>-ddp</option> in <filename>afpd.cond</filename>.)</para>
+          <para>Disable DDP (AppleTalk) as transport protocol. (Equivalent to
+          <option>-noddp</option> in <filename>afpd.cond</filename>.)</para>
         </listitem>
       </varlistentry>
 
@@ -126,8 +126,8 @@
         <term>-T</term>
 
         <listitem>
-          <para>Use TCP/IP as transport protocol. (Equivalent to
-          <option>-tcp</option> in <filename>afpd.conf</filename>.)</para>
+          <para>Disable TCP/IP as transport protocol. (Equivalent to
+          <option>-notcp</option> in <filename>afpd.conf</filename>.)</para>
         </listitem>
       </varlistentry>
 
