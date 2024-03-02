@@ -118,7 +118,7 @@
 
         <listitem>
           <para>Disable DDP (AppleTalk) as transport protocol. (Equivalent to
-          <option>-noddp</option> in <filename>afpd.cond</filename>.)</para>
+          <option>-noddp</option> in <filename>afpd.conf</filename>.)</para>
         </listitem>
       </varlistentry>
 
