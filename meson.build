@@ -1204,41 +1204,42 @@ endif
 # Check whether BDB daemon needs to be compiled
 #
 
+cnid_backends = ''
+
 # Determine whether or not to use Database Daemon CNID backend
 
-dbd_backend = ' dbd'
 if not get_option('with-cnid-dbd-backend')
     use_dbd_backend = false
 else
     use_dbd_backend = true
+    cnid_backends += ' dbd'
     cdata.set('CNID_BACKEND_DBD', 1)
 endif
 
 # Determine whether or not to use LAST DID scheme
 
-last_backend = ' last'
-
 if not get_option('with-cnid-last-backend')
     use_last_backend = false
 else
     use_last_backend = true
+    cnid_backends += ' last'
     cdata.set('CNID_BACKEND_LAST', 1)
 endif
 
 # Check for mysql CNID backend
 
-mysql_backend = ' mysql'
 mysqlclient = dependency('mysqlclient', required: false)
 
 if not mysqlclient.found()
     use_mysql_backend = false
 else
+    cnid_backends += ' mysql'
     use_mysql_backend = true
     cdata.set('CNID_BACKEND_MYSQL', 1)
 endif
 
-cnid_backends = '"' + dbd_backend + last_backend + mysql_backend + '"'
-cdata.set('compiled_backends', cnid_backends)
+compiled_backends = '"' + cnid_backends + '"'
+cdata.set('compiled_backends', compiled_backends)
 
 # Determine default CNID backend
 
@@ -1255,9 +1256,6 @@ elif default_backend == 'mysql' and not use_mysql_backend
         'Specified default CNID scheme mysql was not selected for compilation',
     )
 endif
-
-cnid_backends = '"' + dbd_backend + last_backend + mysql_backend + '"'
-cdata.set('compiled_backends', cnid_backends)
 
 #
 # Check for docbook
