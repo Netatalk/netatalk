@@ -4,7 +4,6 @@
 
 # Prepare the environment
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-PREFIX=/usr/local/sbin
 . /etc/rc.common
 
 # root check
@@ -25,7 +24,7 @@ done
 StartService() {
   ConsoleMessage "Starting netatalk fileserver..."
   rm -f /var/run/netatalk.pid
-  $PREFIX/netatalk
+  :SBINDIR:/netatalk
 }
 
 # The stop subroutine
