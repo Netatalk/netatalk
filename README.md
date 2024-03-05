@@ -1,24 +1,31 @@
 # About Netatalk
+
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
-Netatalk is a freely-available Open Source fileserver that implements the Apple Filing Protocol (AFP) 3.4 over TCP/IP.
-AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013.
-A *NIX/*BSD system running Netatalk is capable of serving many Macintosh clients simultaneously as an AppleShare file server.
+Netatalk is a Free and Open Source file server that implements the Apple Filing Protocol (AFP) 3.4 over TCP/IP.
+AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013, and is one of several supported protocols on macOS.
+A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for macOS and Classic Mac OS clients.
+
+It supports modern AFP features such as Bonjour, Time Machine, and Spotlight.
 
 # Why Should I Use Netatalk?
-If you're running a network of older Macs, in particular those running OS X 10.8 Mountain Lion or earlier, all the way back to Classic Mac OS,
-are well served by running a Netatalk AppleShare server. The latest macOS at the time of writing (macOS 13 Ventura) still comes with an AFP client,
+
+If you have a local network of Macs - macOS, Mac OS X, and all the way back to Classic Mac OS -
+running a Netatalk AppleShare server allows you to share, collaborate on, and back up files comfortably.
+The latest macOS at the time of writing (macOS 14 Sonoma) ships with an AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
 
-Compared to other Open Source file sharing solutions such as NFS or Samba, Netatalk delivers high transfer speeds and full integration
-of Classic Mac OS metadata (resource forks) as well as user authentication methods (UAMs) compatible with Classic Mac OS clients that don't support modern cryptography.
+Compared to other Open Source file sharing solutions such as NFS or FTP, Netatalk delivers high transfer speeds and full integration
+of Classic Mac OS metadata (resource forks).
 
-Modern AFP features such as Bonjour, Time Machine, and Spotlight are also supported.
+And while Samba is a great option for file sharing now when SMB is the primary file sharing protocol in macOS,
+Netatalk has reportedly better performance, as well as stronger backwards compatibility with OS X 10.8 Mountain Lion and earlier.
 
 # AppleTalk
-Support for the AppleTalk network stack was removed in Netatalk v3. If you need AppleTalk to network very old Macs or Apple II computers, please use Netatalk v2.
+
+Support for the AppleTalk network stack was removed in Netatalk v3. If you need AppleTalk to network very old Macs or Apple II computers, please use *old stable* Netatalk v2.
 
 Find the latest Netatalk v2 releases in the [Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
 
@@ -91,7 +98,20 @@ volumes:
   afpbackup:
 ```
 
+# Webmin module
+
+An administrative GUI webapp in the form of a first-party module for Webmin can be found in a sister repository:
+
+https://github.com/Netatalk/netatalk-webmin
+
+See the README in that repo for instructions how to install and get started with the module.
+
+This wiki page provides an overview of the module's feature set:
+
+https://github.com/Netatalk/netatalk/wiki/Webmin-Module
+
 # Contributions
+
 Bug reports and feature requests can be filed as GitHub issue ticket:
 
 https://github.com/Netatalk/netatalk/issues
@@ -103,20 +123,23 @@ https://github.com/Netatalk/netatalk/wiki/Developer-Notes
 PRs are automatically picked up by GitHub CI, which runs the builds, integration tests, as well as static analysis scan on SonarCloud.
 
 # Documentation
+
 The latest version of the Netatalk manual can be found at:
 
-https://netatalk.io/3.1/htmldocs/
+https://netatalk.io/stable/htmldocs/
 
-Each Netatalk component also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
+Each Netatalk program and configuration file also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
 
 # Wiki
+
 Collaborative articles can be found on the Netatalk wiki hosted on GitHub.
 
-Please feel free to edit existing and create new articles.
+Editing is open to all registered GitHub users. Please feel free to edit existing and create new articles.
 
 https://github.com/Netatalk/netatalk/wiki
 
 # Mailing Lists
+
 Netatalk contributors and maintainers interact with each other primarily on the netatalk-admins and netatalk-devel mailing list.
 
 Subscribe and participate, or read archived discussion threads at:
