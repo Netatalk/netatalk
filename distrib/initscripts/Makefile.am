@@ -25,7 +25,9 @@ GENERATED_FILES = \
 	rc.solaris \
 	rc.suse \
 	service.systemd \
-	netatalk.xml
+	netatalk.xml \
+	com.netatalk.daemon.plist \
+	netatalkd
 
 TEMPLATES = \
 	rc.bsd.tmpl \
@@ -36,7 +38,9 @@ TEMPLATES = \
 	rc.solaris.tmpl \
 	rc.suse.tmpl \
 	service.systemd.tmpl \
-	netatalk.xml.tmpl
+	netatalk.xml.tmpl \
+	com.netatalk.daemon.plist.tmpl \
+	netatalkd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
