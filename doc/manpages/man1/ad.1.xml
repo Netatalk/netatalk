@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">05 Dec 2015</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,7 +13,7 @@
   <refnamediv>
     <refname>ad</refname>
 
-    <refpurpose>Netatalk compatible UNIX file utility suite.</refpurpose>
+    <refpurpose>AppleDouble file utility suite</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -35,9 +35,10 @@
   <refsect1>
     <title>Description</title>
 
-    <para><command>ad</command> is a UNIX file utility suite with Netatalk
+    <para><command>ad</command> is an AppleDouble file utility suite with Netatalk
     compatibity. AppleDouble files in <filename>.AppleDouble</filename> directories and
-    the CNID databases are updated as appropriate.</para>
+    the CNID databases are updated as appropriate when files in a shared Netatalk volume
+    are modified.</para>
   </refsect1>
 
   <refsect1>

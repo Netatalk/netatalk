@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">01 Jan 2012</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,8 +13,7 @@
   <refnamediv>
     <refname>cnid_dbd</refname>
 
-    <refpurpose>implement access to CNID databases through a dedicated daemon
-    process</refpurpose>
+    <refpurpose>CNID database access daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>

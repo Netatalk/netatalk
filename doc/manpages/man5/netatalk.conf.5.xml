@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">13 Feb 2023</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -14,8 +14,7 @@
   <refnamediv>
     <refname>netatalk.conf</refname>
 
-    <refpurpose>Configuration file used by the Netatalk init script to determine its
-    general configuration<indexterm>
+    <refpurpose>Configuration file used by certain Netatalk init scripts<indexterm>
         <primary>netatalk.conf</primary>
       </indexterm><indexterm>
         <primary>AFPD_GUEST</primary>
@@ -57,9 +56,10 @@
   <refsect1>
     <title>Description</title>
 
-    <para><emphasis remap="B">netatalk.conf</emphasis> is the
-    configuration file used by the netatalk init script to determine what portions of the file
-    system will be shared via AFP, as well as their behaviors.</para>
+    <para><emphasis remap="B">netatalk.conf</emphasis>
+    is a configuration file used by certain netatalk init scripts
+    to determine what portions of the file system will be shared via AFP,
+    as well as their behaviors.</para>
 
     <para>If netatalk has been configured with --enable-debian, this file is named
     <emphasis remap="B">/etc/default/netatalk</emphasis> without the file ending.</para>
@@ -71,7 +71,7 @@
     individually.</para></note>
 
     <para>Any line not prefixed with <emphasis remap="B">#</emphasis> is
-    interpreted. The configuration lines are composed like:</para>
+    interpreted. The configuration lines are composed like this:</para>
 
     <para><emphasis remap="I">option</emphasis> <emphasis
     remap="B">=</emphasis> <emphasis remap="I">value</emphasis></para>

@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">18 Jan 2024</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,7 +13,7 @@
   <refnamediv>
     <refname>atalkd</refname>
 
-    <refpurpose>AppleTalk RTMP, NBP, ZIP, and AEP manager</refpurpose>
+    <refpurpose>userland AppleTalk network manager daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -68,7 +68,10 @@
         <refentrytitle>ping</refentrytitle>
 
         <manvolnum>8</manvolnum>
-      </citerefentry>). <command>atalkd</command> is typically started at boot
+      </citerefentry>).
+    Specifically, this corresponds to the RTMP, NBP, ZIP, and AEP protocols.</para>
+      
+    <para><command>atalkd</command> is typically started at boot
     time from system init scripts or services. It first reads from its
     configuration file, <filename>atalkd.conf</filename>. If there is
     no configuration file, <command>atalkd</command> will attempt to configure

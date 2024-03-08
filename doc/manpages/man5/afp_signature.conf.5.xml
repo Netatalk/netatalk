@@ -14,7 +14,7 @@
   <refnamediv>
     <refname>afp_signature.conf</refname>
 
-    <refpurpose>Configuration file used by afpd(8) to specify server
+    <refpurpose>Configuration file used by <command>afpd</command>(8) to specify server
         signature</refpurpose>
   </refnamediv>
 
