@@ -1,5 +1,4 @@
 /*
-  $Id: ea_sys.c,v 1.8 2010-04-13 08:05:06 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify

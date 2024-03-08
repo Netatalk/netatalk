@@ -1,4 +1,3 @@
-dnl $Id: cups.m4,v 1.3 2010-04-12 14:28:47 franklahm Exp $
 dnl Autoconf macros to check for CUPS
 
 AC_DEFUN([NETATALK_AC_CUPS], [
