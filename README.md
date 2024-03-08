@@ -39,13 +39,50 @@ Make sure you have Docker Engine installed, then build the netatalk container:
 docker build -t netatalk2 .
 ```
 
-Once the container is ready, run it with docker run or compose.
+Alternatively, fetch a pre-built docker container from [Docker Hub](https://hub.docker.com/u/netatalk).
+
+## How to Run
+
+Once the container is ready, run it with `docker run` or `docker compose`.
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
+Sample `docker-compose.yml` with a Docker managed volume.
+
+```
+version: "3"
+
+services:
+  netatalk:
+    image: netatalk2:latest
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - afpshare:/mnt/afpshare
+      - /var/run/dbus:/var/run/dbus
+    environment:
+      - "SERVER_NAME=Netatalk Server"
+      - "SHARE_NAME=Shared Volume"
+      - "AFP_USER=atalk"
+      - "AFP_PASS=atalk"
+      - "AFPD_OPTIONS=-icon -mimicmodel RackMac"
+      - "AVOLUMES_OPTIONS=options:limitsize"
+      - "ATALKD_INTERFACE=eth0"
+      - "ATALKD_OPTIONS=-router -phase 2 -net 0-65534 -zone NETATALK"
+volumes:
+  afpshare:
+```
+
+Sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
+
+```
+docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk/netatalk2
+```
+
 ## Constraints
 
-The container requires the "host" network driver, and NET_ADMIN capabilities, to allow AppleTalk routing and Zeroconf.
+The container requires the `host` network driver, and `NET_ADMIN` capabilities, to allow AppleTalk routing and Zeroconf.
 
 We currently rely on the host's DBUS for Zeroconf service discovery via Avahi.
 You need a bind mount for `/var/run/dbus:/var/run/dbus` in order for Bonjour service discovery to work.
@@ -82,34 +119,19 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 - `MANUAL_CONFIG` <- when non-zero, manage users, volumes, and configurations manually. This overrides all of the above env variables. Use this together with bind mounted shared volumes and config files for the most versatile setup.
 - `TZ` <- time zone for the timelord time server (e.g. `America/Chicago`)
 
-Refer to the Netatalk manual for a list of available options for each config file.
+Refer to the [Netatalk manual](https://netatalk.io/oldstable/htmldocs/man-pages) for a list of available options for each config file.
 
-Sample docker-compose.yml with Docker managed volume
-```
-version: "3"
+# Webmin module
 
-services:
-  netatalk2:
-    build: .
-    image: netatalk2:latest
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - afpshare:/mnt/afpshare
-      - /var/run/dbus:/var/run/dbus
-    environment:
-      - "SERVER_NAME=Netatalk Server"
-      - "SHARE_NAME=Shared Volume"
-      - "AFP_USER=atalk"
-      - "AFP_PASS=atalk"
-      - "AFPD_OPTIONS=-icon -mimicmodel RackMac"
-      - "AVOLUMES_OPTIONS=options:limitsize"
-      - "ATALKD_INTERFACE=eth0"
-      - "ATALKD_OPTIONS=-router -phase 2 -net 0-65534 -zone NETATALK"
-volumes:
-  afpshare:
-```
+An administrative GUI webapp in the form of a first-party module for Webmin can be found in a sister repository:
+
+https://github.com/Netatalk/netatalk-webmin
+
+See the README in that repo for instructions how to install and get started with the module.
+
+This wiki page provides an overview of the module's feature set:
+
+https://github.com/Netatalk/netatalk/wiki/Webmin-Module
 
 # Contributions
 
@@ -125,9 +147,9 @@ PRs are automatically picked up by GitHub CI, which runs the builds, integration
 
 # Documentation
 
-The latest version of the Netatalk manual can be found at:
+The latest version of the Netatalk v2 manual can be found at:
 
-https://netatalk.io/2.3/htmldocs/
+https://netatalk.io/oldstable/htmldocs/
 
 Each Netatalk component also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
 
@@ -135,7 +157,7 @@ Each Netatalk component also has a *NIX man page which can be accessed on the co
 
 Collaborative articles can be found on the Netatalk wiki hosted on GitHub.
 
-Please feel free to edit existing and create new articles.
+Editing is open to all registered GitHub users. Please feel free to edit existing and create new articles.
 
 https://github.com/Netatalk/netatalk/wiki
 
@@ -149,6 +171,6 @@ https://sourceforge.net/p/netatalk/mailman/
 
 # Website
 
-The Netatalk website is where new releases and other news about the project are posted.
+The Netatalk website is where project updates and resources are published.
 
 https://netatalk.io
