@@ -1,5 +1,4 @@
 /*
-   $Id: unix.h,v 1.3 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify

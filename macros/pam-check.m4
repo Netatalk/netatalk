@@ -1,4 +1,3 @@
-dnl $Id: pam-check.m4,v 1.6 2010-01-11 13:06:02 franklahm Exp $
 dnl PAM finding macro
 
 AC_DEFUN([AC_PATH_PAM], [

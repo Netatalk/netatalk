@@ -1,4 +1,3 @@
-dnl $Id: summary.m4,v 1.6 2009-10-02 09:32:41 franklahm Exp $
 dnl Autoconf macros, display configure summary
 
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [

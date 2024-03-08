@@ -1,6 +1,4 @@
-dnl Check for optional server location protocol support (used by MacOS X)
-
-dnl $Id: srvloc.m4,v 1.10 2009-12-13 11:58:30 franklahm Exp $
+dnl Check for optional server location protocol support (used by MacOS X 10.1)
 
 AC_DEFUN([NETATALK_SRVLOC], [
 

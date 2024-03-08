@@ -1,5 +1,4 @@
 /*
-  $Id: extattrs.c,v 1.29 2010-01-05 12:06:33 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify

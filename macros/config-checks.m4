@@ -1,4 +1,3 @@
-dnl $Id: config-checks.m4,v 1.6 2005-04-28 20:50:05 bfernhomberg Exp $
 dnl Autoconf macro to set the configuration directories.
 
 AC_DEFUN([NETATALK_CONFIG_DIRS], [
