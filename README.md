@@ -5,10 +5,10 @@
 [<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
 Netatalk is a Free and Open Source file server that implements the Apple Filing Protocol (AFP) 3.4 over TCP/IP.
-AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013, and is one of several supported protocols on macOS.
+AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
 A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for macOS and Classic Mac OS clients.
 
-It supports modern AFP features such as Bonjour, Time Machine, and Spotlight.
+Modern AFP features such as Bonjour, Time Machine, and Spotlight are supported.
 
 # Why Should I Use Netatalk?
 
@@ -41,12 +41,45 @@ Make sure you have Docker Engine installed, then build the netatalk container:
 docker build -t netatalk3 .
 ```
 
-Once the container is ready, run it with docker run or compose.
-When running, expose either port 548 for AFP, or use host networking.
+Alternatively, fetch a pre-built docker container from [Docker Hub](https://hub.docker.com/u/netatalk).
+
+## How to Run
+
+Once the container is ready, run it with `docker run` or `docker compose`.
+When running, expose either port 548 for AFP, or use the `host` network driver.
 The former option is more secure, but you will have to manually specify the IP address when connecting to the file server.
 
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
+
+Sample `docker-compose.yml` with docker managed volume and Zeroconf
+
+```
+version: "3"
+
+services:
+  netatalk:
+    image: netatalk3:latest
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - afpshare:/mnt/afpshare
+      - afpbackup:/mnt/afpbackup
+      - /var/run/dbus:/var/run/dbus
+    environment:
+      - "AFP_USER=atalk"
+      - "AFP_PASS=atalk"
+volumes:
+  afpshare:
+  afpbackup:
+```
+
+Sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
+
+```
+docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/path/to/backup:/mnt/afpbackup" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --name netatalk netatalk3:latest
+```
 
 ## Constraints
 
@@ -74,29 +107,6 @@ These are required to set the credentials used to authenticate with the file ser
 - `SHARE_NAME` <- the name of the file sharing volume
 - `AFP_LOGLEVEL` <- the verbosity of logs; default is "info"
 - `MANUAL_CONFIG` <- when non-zero, skip netatalk config file modification, allowing you to manually manage them
-
-Sample docker-compose.yml with docker managed volume and Zeroconf
-```
-version: "3"
-
-services:
-  netatalk3:
-    build: .
-    image: netatalk3:latest
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - afpshare:/mnt/afpshare
-      - afpbackup:/mnt/afpbackup
-      - /var/run/dbus:/var/run/dbus
-    environment:
-      - "AFP_USER=atalk"
-      - "AFP_PASS=atalk"
-volumes:
-  afpshare:
-  afpbackup:
-```
 
 # Webmin module
 
@@ -147,6 +157,7 @@ Subscribe and participate, or read archived discussion threads at:
 https://sourceforge.net/p/netatalk/mailman/
 
 # Website
-The Netatalk website is where new releases and other news about the project are posted.
+
+The Netatalk website is where project updates and resources are published.
 
 https://netatalk.io
