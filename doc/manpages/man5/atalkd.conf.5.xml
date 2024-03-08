@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <refentry id="atalkd.conf.5">
-  <!--  $Id: atalkd.conf.5.xml,v 1.6 2004-07-20 09:41:42 tkaiser Exp $ -->
 
   <refmeta>
     <refentrytitle>atalkd.conf</refentrytitle>
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">22 September 2000</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -15,8 +14,8 @@
   <refnamediv>
     <refname>atalkd.conf</refname>
 
-    <refpurpose>Configuration file used by atalkd(8) to determine the
-    interfaces used by the master Netatalk daemon<indexterm><primary>atalkd.conf</primary></indexterm><indexterm>
+    <refpurpose>Configuration file used by <command>atalkd</command>(8) to configure the
+    interfaces used by AppleTalk<indexterm><primary>atalkd.conf</primary></indexterm><indexterm>
               <primary>ALLMULTI</primary>
 
               <secondary>NIC multicast settings</secondary>

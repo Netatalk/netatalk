@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">31 Jan 2024</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -17,9 +17,8 @@
 
     <refname>AppleVolumes</refname>
 
-    <refpurpose>Configuration file used by <command>afpd</command>(8) to
-    determine the shares made available through AFP and specify file name
-    extension mappings.<indexterm>
+    <refpurpose>Configuration file(s) used by <command>afpd</command>(8) to
+    determine the shared volumes made available through AFP<indexterm>
         <primary>AppleVolumes.default</primary>
       </indexterm><indexterm>
         <primary>cnidscheme</primary>
@@ -69,10 +68,16 @@
     <filename>~/AppleVolumes</filename>,
     <filename>~/.AppleVolumes</filename>,
     <filename>~/applevolumes</filename>, or
-    <filename>~/.applevolumes</filename>  are the
+    <filename>~/.applevolumes</filename> are the
     configuration files used by <command>afpd</command> to determine what
-    portions of the file system will be shared via Apple Filing Protocol, as
-    well as their behaviour.</para>
+    portions of the file system will be shared via Apple Filing Protocol,
+    their behaviour, as well as file name extension mappings.</para>
+
+    <para>The present convention is that <filename>AppleVolumes.system</filename>
+    contains the global file extension mappings, while
+    <filename>AppleVolumes.default</filename> contains the global shared volumes.
+    When present, the config file in the user's home dir contains
+    user overrides to either.</para>
 
     <para>Any line not prefixed with # is interpreted.
     Newline escaping is supported. The configuration lines are composed
@@ -109,7 +114,7 @@
 
     <note>
       <para>File name extension mapping is useful for Mac OS 9 and earlier.
-      But it should not use for Mac OS X.</para>
+      However, it is not helpful on Mac OS X.</para>
     </note>
 
     <para>It is possible to specify default options for all volumes with a

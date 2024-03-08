@@ -5,7 +5,7 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">01 Jan 2012</refmiscinfo>
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,7 +13,7 @@
   <refnamediv>
     <refname>cnid_metad</refname>
 
-    <refpurpose>start cnid_dbd daemons on request</refpurpose>
+    <refpurpose>daemon for starting cnid_dbd daemons on demand</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
