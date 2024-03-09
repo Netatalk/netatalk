@@ -5,6 +5,7 @@ noinst_LTLIBRARIES =
 noinst_PROGRAMS =
 noinst_HEADERS = sparql_map.h
 BUILT_SOURCES =
+CLEANFILES =
 
 AM_YFLAGS = -d
 
@@ -12,6 +13,7 @@ if WITH_SPOTLIGHT
 BUILT_SOURCES += sparql_parser.h
 noinst_PROGRAMS += srp
 noinst_LTLIBRARIES += libspotlight.la
+CLEANFILES += sparql_parser.c sparql_parser.h spotlight_rawquery_lexer.c
 
 libspotlight_la_SOURCES = \
 	sparql_map.c \
