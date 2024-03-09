@@ -220,6 +220,19 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_MSG_WARN([tracker not found (required for Spotlight support)])    
     fi
 
+    AC_PROG_LEX([noyywrap])
+    if ! test -r "$srcdir"/etc/spotlight/spotlight_rawquery_lexer.c && test x"$LEX" = "x:"; then
+        AC_MSG_ERROR([[flex/lex not found, and no prebuilt lexer either (required for Spotlight support)]])
+    fi
+
+    AC_PROG_YACC
+    if ! test -r "$srcdir"/etc/spotlight/sparql_parser.c && test x"$YACC" = "xyacc"; then
+        AC_CHECK_PROG([YACC_EXISTS], [yacc], [yes], [no])
+    if test x"$YACC_EXISTS" != xyes; then
+            AC_MSG_ERROR([[bison/byacc/yacc not found, and no prebuilt parser either (required for Spotlight support)]])
+        fi
+    fi
+
     dnl Check for talloc library
     PKG_CHECK_MODULES(TALLOC, talloc, ac_cv_have_talloc=yes, ac_cv_have_talloc=no)
     if test x"$ac_cv_have_talloc" = x"yes" ; then

@@ -25,7 +25,9 @@ env:
   APT_PACKAGES: |
     autoconf \
     automake \
+    bison \
     docbook-xsl \
+    flex \
     libacl1-dev \
     libavahi-client-dev \
     libcrack2-dev \
@@ -92,7 +94,9 @@ jobs:
           apt-get install --assume-yes --no-install-recommends \
             autoconf \
             automake \
+            bison \
             default-libmysqlclient-dev \
+            flex \
             libacl1-dev \
             libavahi-client-dev \
             libcrack2-dev \
@@ -144,9 +148,11 @@ jobs:
           dnf -y install \
             automake \
             avahi-devel \
+            bison \
             cracklib-devel \
             dbus-devel \
             dbus-glib-devel \
+            flex \
             glib2-devel \
             krb5-devel \
             libacl-devel \
@@ -383,6 +389,7 @@ jobs:
               autoconf \
               automake \
               avahi \
+              bison \
               db5 \
               gmake \
               libevent \

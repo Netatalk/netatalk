@@ -28,8 +28,6 @@ AC_PROG_PS
 AM_PROG_CC_C_O
 AC_C_BIGENDIAN
 AC_C_INLINE
-AC_PROG_LEX([noyywrap])
-AC_PROG_YACC
 
 dnl Check if we can use attribute unused (gcc only) from ethereal
 AC_MSG_CHECKING(to see if we can add '__attribute__((unused))' to CFLAGS)
