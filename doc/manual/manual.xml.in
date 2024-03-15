@@ -26,12 +26,7 @@
 <!ENTITY dbd.1 SYSTEM "../manpages//man1/dbd.1.xml">
 ]>
 <book id="netatalk-manual">
-  <title>Netatalk 3.1 Manual</title>
-  
-  <bookinfo>
-    <date>01-04-2024</date>
-    <releaseinfo>@NETATALK_VERSION@</releaseinfo>
-  </bookinfo>
+  <title>Netatalk @NETATALK_VERSION@ Manual</title>
 
  <?latex \setcounter{page}{3} ?>
 <preface>
