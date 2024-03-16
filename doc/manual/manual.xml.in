@@ -26,7 +26,11 @@
 <!ENTITY dbd.1 SYSTEM "../manpages//man1/dbd.1.xml">
 ]>
 <book id="netatalk-manual">
-  <title>Netatalk @NETATALK_VERSION@ Manual</title>
+  <title>Netatalk Manual</title>
+
+  <bookinfo>
+    <subtitle>Version @NETATALK_VERSION@</subtitle>
+  </bookinfo>
 
  <?latex \setcounter{page}{3} ?>
 <preface>
