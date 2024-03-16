@@ -16,7 +16,7 @@ EXTRA_DIST = \
 	install.xml \
 	intro.xml \
 	upgrade.xml \
-	netatalk.html
+	netatalk.html.in
 
 HTML_PAGES = \
 	a2boot.8.html \
@@ -66,7 +66,7 @@ HTML_PAGES = \
 	uniconv.1.html \
 	upgrade.html
 
-DISTCLEANFILES = manual.xml
+DISTCLEANFILES = manual.xml natatalk.html
 
 if HAVE_XSLTPROC
 CLEANFILES += $(HTML_PAGES)
