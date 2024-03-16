@@ -251,6 +251,7 @@ AC_CONFIG_FILES([
   doc/man.xsl
   doc/manual/Makefile
   doc/manual/manual.xml
+  doc/manual/netatalk.html
   doc/manpages/Makefile
   doc/manpages/man1/Makefile
   doc/manpages/man5/Makefile

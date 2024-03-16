@@ -16,7 +16,7 @@ EXTRA_DIST = \
 	install.xml \
 	intro.xml \
 	upgrade.xml \
-	netatalk.html
+	netatalk.html.in
 
 HTML_PAGES = \
 	ad.1.html \
@@ -47,7 +47,7 @@ HTML_PAGES = \
 	table-toc.html \
 	upgrade.html
 
-DISTCLEANFILES = manual.xml
+DISTCLEANFILES = manual.xml natatalk.html
 
 if HAVE_XSLTPROC
 CLEANFILES += $(HTML_PAGES)
