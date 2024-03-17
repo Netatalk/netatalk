@@ -15,7 +15,7 @@
   <refnamediv>
     <refname>extmap.conf</refname>
 
-    <refpurpose>Configuration file used by afpd(8) to
+    <refpurpose>Configuration file used by <command>afpd</command>(8) to
     specify file name extension mappings.</refpurpose>
   </refnamediv>
 
