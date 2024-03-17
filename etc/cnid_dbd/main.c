@@ -127,7 +127,7 @@ static int get_lock(int cmd, const char *dbpath)
     case LOCK_EXCL:
     case LOCK_SHRD:
         if (lockfd == -1) {
-            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+            if ( (strlen(dbpath) + strlen(&LOCKFILENAME[1])) > (PATH_MAX - 1) ) {
                 LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
                 return -1;
             }
