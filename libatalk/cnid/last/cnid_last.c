@@ -99,7 +99,7 @@ cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, cni
 }
 
 
-static struct _cnid_db *cnid_last_new(struct vol *vol)
+static struct _cnid_db *cnid_last_new(struct vol *vol _U_)
 {
     struct _cnid_db *cdb;
     struct _cnid_last_private *priv;

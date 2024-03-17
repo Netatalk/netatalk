@@ -23,7 +23,7 @@
 /*
  * Functions (actually they are just facades)
  */
-void zeroconf_register(const AFPObj *configs)
+void zeroconf_register(const AFPObj *configs _U_)
 {
 #if defined (HAVE_MDNS)
   LOG(log_debug, logtype_afpd, "Attempting to register with mDNS using mDNSResponder");

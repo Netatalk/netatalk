@@ -90,7 +90,7 @@ static const char *prefix(const char *uname)
 #endif
 }
 
-int sys_getxattrfd(int fd, const char *uname, int oflag, ...)
+int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...)
 {
 #if defined(SOLARIS)
     int eafd;
@@ -499,7 +499,7 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 #endif
 }
 
-ssize_t sys_flistxattr (int filedes, const char *path, char *list, size_t size)
+ssize_t sys_flistxattr (int filedes _U_, const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LISTXATTR)
 	ssize_t ret;
@@ -605,7 +605,7 @@ int sys_removexattr (const char *path, const char *uname)
 #endif
 }
 
-int sys_fremovexattr (int filedes, const char *path, const char *uname)
+int sys_fremovexattr (int filedes _U_, const char *path, const char *uname)
 {
 	const char *name = prefix(uname);
 #if defined(HAVE_REMOVEXATTR)
@@ -673,7 +673,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 #endif
 }
 
-int sys_setxattr (const char *path, const char *uname, const void *value, size_t size, int flags)
+int sys_setxattr (const char *path, const char *uname, const void *value, size_t size, int flags _U_)
 {
 	const char *name = prefix(uname);
 #if defined(HAVE_SETXATTR)
@@ -735,7 +735,7 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 #endif
 }
 
-int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t size, int flags)
+int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t size, int flags _U_)
 {
     const char *name = prefix(uname);
 
@@ -801,7 +801,7 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
 #endif
 }
 
-int sys_lsetxattr (const char *path, const char *uname, const void *value, size_t size, int flags)
+int sys_lsetxattr (const char *path, const char *uname, const void *value, size_t size, int flags _U_)
 {
 	const char *name = prefix(uname);
 #if defined(HAVE_LSETXATTR)

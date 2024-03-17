@@ -114,7 +114,7 @@ static void upfunc(void)
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo)
+static void sig_handler(int signo _U_)
 {
     alarmed = 1;
     return;
@@ -350,7 +350,7 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
 
 static int copy(const char *path,
                 const struct stat *statp,
-                int tflag,
+                int tflag _U_,
                 struct FTW *ftw)
 {
     static int base = 0;
@@ -624,7 +624,7 @@ static int copy(const char *path,
 #endif
 #define BUFSIZE_SMALL (MAXPHYS)
 
-static int ftw_copy_file(const struct FTW *entp,
+static int ftw_copy_file(const struct FTW *entp _U_,
                          const char *spath,
                          const struct stat *sp,
                          int dne)
@@ -787,7 +787,7 @@ static int ftw_copy_file(const struct FTW *entp,
     return (rval);
 }
 
-static int ftw_copy_link(const struct FTW *p,
+static int ftw_copy_link(const struct FTW *p _U_,
                          const char *spath,
                          const struct stat *sstp,
                          int exists)
@@ -880,7 +880,7 @@ static int setfile(const struct stat *fs, int fd)
     return (rval);
 }
 
-static int preserve_fd_acls(int source_fd, int dest_fd)
+static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
 {
 #if 0
     acl_t acl;

@@ -49,7 +49,7 @@ static AFPObj obj;
 static char *args[] = {"test", "-F", "test.conf"};
 /* Static variables */
 
-int main(int argc, char **argv)
+int main()
 {
     int reti;
     uint16_t vid;

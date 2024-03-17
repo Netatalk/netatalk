@@ -741,15 +741,15 @@ EC_CLEANUP:
 }
 
 
-int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
+int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name, size_t namelen _U_, void *buffer _U_, size_t buflen _U_)
 {
     LOG(log_error, logtype_cnid,
         "cnid_mysql_find(\"%s\"): not supported with MySQL CNID backend", name);
     return -1;
 }
 
-cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                              cnid_t did, const char *name, size_t len, cnid_t hint)
+cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_, const struct stat *st _U_,
+                              cnid_t did _U_, const char *name, size_t len _U_, cnid_t hint _U_)
 {
     LOG(log_error, logtype_cnid,
         "cnid_mysql_rebuild_add(\"%s\"): not supported with MySQL CNID backend", name);

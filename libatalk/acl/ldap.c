@@ -275,7 +275,6 @@ cleanup:
 static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
 {
     EC_INIT;
-    int len;
     const char *uuidstr = uuidstr_in;
 
 #define MAX_FILTER_SIZE 512
@@ -317,12 +316,11 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
     }
 
     if (attr_filter) {
-        len = snprintf(filter, 256, "(&(%s=%s)(%s))", ldap_uuid_attr, uuidstr, attr_filter);
+        snprintf(filter, 256, "(&(%s=%s)(%s))", ldap_uuid_attr, uuidstr, attr_filter);
     } else {
-        len = snprintf(filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
+        snprintf(filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
     }
 
-EC_CLEANUP:
     if (ret != 0)
         return NULL;
     return filter;
