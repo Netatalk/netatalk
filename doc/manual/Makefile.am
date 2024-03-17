@@ -4,19 +4,21 @@ HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
 XML_PAGES = \
-	manual.xml \
 	configuration.xml \
+	gpl.xml \
 	install.xml \
 	intro.xml \
+	manual.xml \
 	upgrade.xml
 
 EXTRA_DIST = \
-	manual.xml.in \
 	configuration.xml \
+	gpl.xml \
 	install.xml \
 	intro.xml \
-	upgrade.xml \
-	netatalk.html.in
+	manual.xml.in \
+	netatalk.html.in \
+	upgrade.xml
 
 HTML_PAGES = \
 	ad.1.html \
