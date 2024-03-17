@@ -430,7 +430,8 @@ static int check_eafile_in_adouble(const char *name)
 
             /* Get string before "::EA" from EA filename */
             namep[0] = 0;
-            strlcpy(pname + 3, namedup, sizeof(pname) - 3); /* Prepends "../" */
+            strlcpy(pname + 3, namedup, strlen(pname)); /* Prepends "../" */
+
             if ((access( pname, F_OK)) == 0) {
                 ret = 1;
                 goto ea_check_done;
