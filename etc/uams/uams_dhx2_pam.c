@@ -574,7 +574,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     int ret = AFPERR_MISC;
     int PAM_error;
     const char *hostname = NULL;
-    gcry_mpi_t retServerNonce;
+    gcry_mpi_t retServerNonce = NULL;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
     char *utfpass = NULL;
@@ -777,7 +777,7 @@ static int changepw_3(void *obj _U_,
     uid_t uid;
     pam_handle_t *lpamh;
     const char *hostname = NULL;
-    gcry_mpi_t retServerNonce;
+    gcry_mpi_t retServerNonce = NULL;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
 
@@ -922,7 +922,7 @@ static int dhx2_changepw(void *obj _U_, char *uname,
     return ret;
 }
 
-static int uam_setup(void *obj, const char *path)
+static int uam_setup(void *obj _U_, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHX2", pam_login,
                      pam_logincont, pam_logout, pam_login_ext) < 0)

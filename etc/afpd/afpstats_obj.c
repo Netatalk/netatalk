@@ -39,11 +39,11 @@ struct AFPStatsObjClass
   GObjectClass parent;
 };
 
-static void afpstats_obj_init(AFPStatsObj *obj)
+static void afpstats_obj_init(AFPStatsObj *obj _U_)
 {
 }
 
-static void afpstats_obj_class_init(AFPStatsObjClass *klass)
+static void afpstats_obj_class_init(AFPStatsObjClass *klass _U_)
 {
 }
 
@@ -72,7 +72,7 @@ GType afpstats_obj_get_type(void)
 	return g_define_type_id__volatile;
 }
 
-gboolean afpstats_obj_get_users(AFPStatsObj *obj, gchar ***ret, GError **error)
+gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret, GError **error _U_)
 {
     gchar **names;
     server_child_t *childs = afpstats_get_and_lock_childs();

@@ -52,7 +52,7 @@ static dbd_flags_t flags;
  * SIGNAL handling:
  * catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
  */
-static void sig_handler(int signo)
+static void sig_handler(int signo _U_)
 {
     alarmed = 1;
     return;

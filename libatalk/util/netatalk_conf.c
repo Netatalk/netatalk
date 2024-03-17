@@ -546,7 +546,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int hostaccessvol(const AFPObj *obj, const char *volname, const char *args)
+static int hostaccessvol(const AFPObj *obj, const char *volname _U_, const char *args)
 {
     int mask_int;
     char buf[MAXPATHLEN + 1], *p, *b;
@@ -2021,7 +2021,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     EC_INIT;
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
-    int c;
+    int c _U_;
     const char *p;
     char *q, *r;
     char val[MAXVAL];

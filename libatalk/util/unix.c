@@ -298,7 +298,7 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
  * @param path    (r) pathname
  * @param st      (rw) pointer to struct stat
  */
-int ostatat(int dirfd, const char *path, struct stat *st, int options)
+int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
 {
 #ifdef HAVE_ATFUNCS
     if (dirfd == -1)

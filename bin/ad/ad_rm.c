@@ -84,7 +84,7 @@ static void upfunc(void)
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo)
+static void sig_handler(int signo _U_)
 {
     alarmed = 1;
     return;
@@ -181,8 +181,8 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
 
 static int rm(const char *path,
               const struct stat *statp,
-              int tflag,
-              struct FTW *ftw)
+              int tflag _U_,
+              struct FTW *ftw _U_)
 {
     cnid_t cnid;
 

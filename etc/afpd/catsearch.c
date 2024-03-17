@@ -133,7 +133,7 @@ static void clearstack(void)
 }
 
 /* Puts new item onto directory stack. */
-static int addstack(char *uname, struct dir *dir, int pidx)
+static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
 {
 	struct dsitem *ds;
     struct dsitem *tmpds = NULL;
@@ -701,7 +701,7 @@ catsearch_end: /* Exiting catsearch: error condition */
  */
 static int catsearch_db(const AFPObj *obj,
                         struct vol *vol,
-                        struct dir *dir,
+                        struct dir *dir _U_,
                         const char *uname,
                         int rmatches,
                         uint32_t *pos,

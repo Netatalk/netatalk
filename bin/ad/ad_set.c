@@ -91,7 +91,7 @@ static void usage_set(void)
         );
 }
 
-static void change_type(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_type)
+static void change_type(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_type)
 {
     char *FinderInfo;
 
@@ -99,7 +99,7 @@ static void change_type(char *path, afpvol_t *vol, const struct stat *st, struct
         memcpy(FinderInfo, new_type, 4);
 }
 
-static void change_creator(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_creator)
+static void change_creator(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_creator)
 {
     char *FinderInfo;
 
@@ -108,7 +108,7 @@ static void change_creator(char *path, afpvol_t *vol, const struct stat *st, str
 
 }
 
-static void change_label(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_label)
+static void change_label(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_label)
 {
     char *FinderInfo;
     const char **color = &labels[0];
@@ -139,7 +139,7 @@ static void change_label(char *path, afpvol_t *vol, const struct stat *st, struc
     }
 }
 
-static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_attributes)
+static void change_attributes(char *path _U_, afpvol_t *vol _U_, const struct stat *st, struct adouble *ad, char *new_attributes)
 {
     uint16_t AFPattributes;
 
@@ -182,7 +182,7 @@ static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, 
     ad_setattr(ad, AFPattributes);
 }
 
-static void change_flags(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *new_flags)
+static void change_flags(char *path _U_, afpvol_t *vol _U_, const struct stat *st, struct adouble *ad, char *new_flags)
 {
     char *FinderInfo;
     uint16_t FinderFlags;

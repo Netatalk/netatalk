@@ -39,7 +39,7 @@
  */
 static server_child_t *childs;
 
-static gpointer afpstats_thread(gpointer _data)
+static gpointer afpstats_thread(gpointer _data _U_)
 {
     DBusGConnection *bus;
     DBusGProxy *bus_proxy;
@@ -88,9 +88,9 @@ static gpointer afpstats_thread(gpointer _data)
 }
 
 static void my_glib_log(const gchar *log_domain,
-                        GLogLevelFlags log_level,
+                        GLogLevelFlags log_level _U_,
                         const gchar *message,
-                        gpointer user_data)
+                        gpointer user_data _U_)
 {
     LOG(log_error, logtype_afpd, "%s: %s", log_domain, message);
 }

@@ -82,7 +82,7 @@ static void (*CatchSignal(int signum,void (*handler)(int )))(int)
  Something really nasty happened - panic !
 ********************************************************************/
 
-void netatalk_panic(const char *why)
+void netatalk_panic(const char *why _U_)
 {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 	void *backtrace_stack[BACKTRACE_STACK_SIZE];

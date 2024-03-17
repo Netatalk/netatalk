@@ -21,7 +21,7 @@
 
 #include <atalk/logger.h>
 
-int main(int argc, char *argv[])
+int main(int argc _U_, char *argv[] _U_)
 {
   set_processname("logger_Test");
 

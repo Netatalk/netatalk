@@ -37,9 +37,9 @@ static char *fce_ev_names[] = {
 static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
 {
     unsigned char *p = buf;
-    uint16_t uint16;
-    uint32_t uint32;
-    uint64_t uint64;
+    uint16_t uint16 _U_;
+    uint32_t uint32 _U_;
+    uint64_t uint64 _U_;
 
     memcpy(&packet->fcep_magic[0], p, sizeof(packet->fcep_magic));
     p += sizeof(packet->fcep_magic);

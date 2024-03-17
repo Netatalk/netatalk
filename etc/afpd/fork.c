@@ -141,7 +141,7 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
     return 0;
 }
 
-static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid, int access, int ofrefnum)
+static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid, int access, int ofrefnum)
 {
     int ret;
     int readset;
@@ -765,7 +765,7 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbu
     return AFP_OK;
 }
 
-static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
+static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen, int is64)
 {
     DSI          *dsi = obj->dsi;
     struct ofork *ofork;

@@ -151,7 +151,7 @@ int bstrListPush(struct bstrList *sl, bstring bs)
 /*!
  * @brief Pop a bstring from the end of a list
  */
-bstring bstrListPop(struct bstrList *sl)
+bstring bstrListPop(struct bstrList *sl _U_)
 {
     return NULL;
 }
