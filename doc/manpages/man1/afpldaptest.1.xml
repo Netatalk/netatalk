@@ -15,7 +15,7 @@
   <refnamediv>
     <refname>afpldaptest</refname>
 
-    <refpurpose>Syntactically check ldap parameters in afp.conf</refpurpose>
+    <refpurpose>Syntactically check ldap parameters in afp.conf(5)</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
