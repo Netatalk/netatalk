@@ -88,9 +88,9 @@ int configinit(AFPObj *obj)
     DSI **next = &obj->dsi;
     char *p = NULL, *q = NULL, *savep;
     const char *r;
-    struct ifaddrs *ifaddr, *ifa;
-    int family, s;
-    static char interfaddr[NI_MAXHOST];
+    struct ifaddrs *ifaddr _U_, *ifa _U_;
+    int family _U_, s _U_;
+    static char interfaddr[NI_MAXHOST] _U_;
 
     auth_load(obj, obj->options.uampath, obj->options.uamlist);
     set_signature(&obj->options);

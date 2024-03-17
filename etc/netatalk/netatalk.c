@@ -64,11 +64,11 @@ static AFPObj obj;
 static pid_t afpd_pid = NETATALK_SRV_NEEDED;
 static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
-static uint afpd_restarts, cnid_metad_restarts, dbus_restarts;
+static uint afpd_restarts, cnid_metad_restarts, dbus_restarts _U_;
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *sighup_ev, *timer_ev;
 static int in_shutdown;
-static const char *dbus_path;
+static const char *dbus_path _U_;
 
 /******************************************************************
  * Misc stuff
@@ -151,7 +151,7 @@ static void libevent_logmsg_cb(int severity, const char *msg)
  ******************************************************************/
 
 /* SIGTERM callback */
-static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
+static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     sigset_t sigs;
     struct timeval tv;
@@ -183,7 +183,7 @@ static void sigterm_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /* SIGQUIT callback */
-static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
+static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
@@ -193,7 +193,7 @@ static void sigquit_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /* SIGHUP callback */
-static void sighup_cb(evutil_socket_t fd, short what, void *arg)
+static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
 
@@ -209,7 +209,7 @@ static void sighup_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /* SIGCHLD callback */
-static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
+static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     int status;
     pid_t pid;
@@ -246,7 +246,7 @@ static void sigchld_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /* timer callback */
-static void timer_cb(evutil_socket_t fd, short what, void *arg)
+static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     if (in_shutdown)
         return;
@@ -339,7 +339,7 @@ static pid_t run_process(const char *path, ...)
 
 static void show_netatalk_version( void )
 {
-	int num, i;
+	int num _U_, i _U_;
 
 	printf( "netatalk %s - Netatalk AFP server service controller daemon\n\n", VERSION );
 

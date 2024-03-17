@@ -92,7 +92,7 @@ static struct pollfd *fds;
 /*
  * This is the thread that polls the filehandles
  */
-static void *polling_thread(void *arg) {
+static void *polling_thread(void *arg _U_) {
     // First we loop through getting the filehandles and adding them to our poll, we
     // need to allocate our pollfd's
     DNSServiceErrorType error;
@@ -121,8 +121,8 @@ static void *polling_thread(void *arg) {
  * we can do if we get problems, so we don't really need to do anything other than report
  * the issue.
  */
-static void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode,
-                          const char *name, const char *regtype, const char *domain, void *context)
+static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_, DNSServiceErrorType errorCode,
+                          const char *name, const char *regtype, const char *domain, void *context _U_)
 {
     if (errorCode != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to register mDNS service: %s%s%s: code=%d",
@@ -335,7 +335,7 @@ fail:
  * neccessary config setting.
  */
 void md_zeroconf_register(const AFPObj *obj) {
-    int error;
+    int error _U_;
 
     register_stuff(obj);
     return;

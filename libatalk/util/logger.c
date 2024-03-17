@@ -116,7 +116,7 @@ static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_string
 
 static int generate_message(char **message_details_buffer,
                             char *user_message,
-                            int display_options,
+                            int display_options _U_,
                             enum loglevels loglevel,
                             enum logtypes logtype,
                             bool log_us_timestamp)

@@ -29,28 +29,28 @@
 #include <atalk/adouble.h>
 #include <atalk/volume.h>
 
-#define VFS_FUNC_ARGS_VALIDUPATH const struct vol *vol, const char *name
+#define VFS_FUNC_ARGS_VALIDUPATH const struct vol *vol _U_, const char *name
 #define VFS_FUNC_VARS_VALIDUPATH vol, name
 
 #define VFS_FUNC_ARGS_CHOWN const struct vol *vol, const char *path, uid_t uid, gid_t gid
 #define VFS_FUNC_VARS_CHOWN vol, path, uid, gid
 
-#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol, int dirfd, const char *oldpath, const char *newpath
+#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol _U_, int dirfd _U_, const char *oldpath _U_, const char *newpath _U_
 #define VFS_FUNC_VARS_RENAMEDIR vol, dirfd, oldpath, newpath
 
 #define VFS_FUNC_ARGS_DELETECURDIR const struct vol *vol
 #define VFS_FUNC_VARS_DELETECURDIR vol
 
-#define VFS_FUNC_ARGS_SETFILEMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_ARGS_SETFILEMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st _U_
 #define VFS_FUNC_VARS_SETFILEMODE vol, name, mode, st
 
-#define VFS_FUNC_ARGS_SETDIRMODE const struct vol *vol,  const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_ARGS_SETDIRMODE const struct vol *vol _U_,  const char *name _U_, mode_t mode _U_, struct stat *st _U_
 #define VFS_FUNC_VARS_SETDIRMODE vol, name, mode, st
 
-#define VFS_FUNC_ARGS_SETDIRUNIXMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_ARGS_SETDIRUNIXMODE const struct vol *vol _U_, const char *name _U_, mode_t mode _U_, struct stat *st _U_
 #define VFS_FUNC_VARS_SETDIRUNIXMODE vol, name, mode, st
 
-#define VFS_FUNC_ARGS_SETDIROWNER const struct vol *vol, const char *name, uid_t uid, gid_t gid
+#define VFS_FUNC_ARGS_SETDIROWNER const struct vol *vol _U_, const char *name _U_, uid_t uid _U_, gid_t gid _U_
 #define VFS_FUNC_VARS_SETDIROWNER vol, name, uid, gid
 
 #define VFS_FUNC_ARGS_DELETEFILE const struct vol *vol, int dirfd, const char *file
@@ -59,7 +59,7 @@
 #define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, int dirfd, const char *src, const char *dst
 #define VFS_FUNC_VARS_RENAMEFILE vol, dirfd, src, dst
 
-#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, int sfd, const char *src, const char *dst
+#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol _U_, int sfd, const char *src, const char *dst
 #define VFS_FUNC_VARS_COPYFILE vol, sfd, src, dst
 
 #ifdef HAVE_NFSV4_ACLS
@@ -74,19 +74,19 @@
 #define VFS_FUNC_ARGS_REMOVE_ACL const struct vol *vol, const char *path, int dir
 #define VFS_FUNC_VARS_REMOVE_ACL vol, path, dir
 
-#define VFS_FUNC_ARGS_EA_GETSIZE const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int fd
+#define VFS_FUNC_ARGS_EA_GETSIZE const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen, const char * restrict uname, int oflag _U_, const char * restrict attruname, int fd _U_
 #define VFS_FUNC_VARS_EA_GETSIZE vol, rbuf, rbuflen, uname, oflag, attruname, fd
 
-#define VFS_FUNC_ARGS_EA_GETCONTENT const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen,  const char * restrict uname, int oflag, const char * restrict attruname, int maxreply, int fd
+#define VFS_FUNC_ARGS_EA_GETCONTENT const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen,  const char * restrict uname, int oflag _U_, const char * restrict attruname, int maxreply, int fd
 #define VFS_FUNC_VARS_EA_GETCONTENT vol, rbuf, rbuflen, uname, oflag, attruname, maxreply, fd
 
-#define VFS_FUNC_ARGS_EA_LIST const struct vol * restrict vol, char * restrict attrnamebuf, size_t * restrict buflen, const char * restrict uname, int oflag, int fd
+#define VFS_FUNC_ARGS_EA_LIST const struct vol * restrict vol, char * restrict attrnamebuf, size_t * restrict buflen, const char * restrict uname, int oflag _U_, int fd _U_
 #define VFS_FUNC_VARS_EA_LIST vol, attrnamebuf, buflen, uname, oflag, fd
 
-#define VFS_FUNC_ARGS_EA_SET const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag, int fd
+#define VFS_FUNC_ARGS_EA_SET const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag, int fd _U_
 #define VFS_FUNC_VARS_EA_SET vol, uname, attruname, ibuf, attrsize, oflag, fd
 
-#define VFS_FUNC_ARGS_EA_REMOVE const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag, int fd
+#define VFS_FUNC_ARGS_EA_REMOVE const struct vol * restrict vol _U_, const char * restrict uname, const char * restrict attruname, int oflag _U_, int fd _U_
 #define VFS_FUNC_VARS_EA_REMOVE vol, uname, attruname, oflag, fd
 
 /*

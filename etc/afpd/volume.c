@@ -641,7 +641,7 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
 }
 
 /* ------------------------- */
-static int volume_openDB(const AFPObj *obj, struct vol *volume)
+static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 {
     int flags = 0;
 

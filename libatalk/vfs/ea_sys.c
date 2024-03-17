@@ -280,7 +280,7 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
     int     ret, len, nlen;
     char    *buf;
     char    *ptr;
-    struct adouble ad, *adp;
+    struct adouble ad _U_, *adp _U_;
 
     buf = malloc(ATTRNAMEBUFSIZ);
     if (!buf)

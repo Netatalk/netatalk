@@ -235,7 +235,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
-    struct adouble	ad, *adp = NULL;
+    struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
 
 
@@ -331,7 +331,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
-    struct adouble	ad, *adp = NULL;
+    struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
 
     *rbuflen = 0;
@@ -424,7 +424,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
-    struct adouble	ad, *adp = NULL;
+    struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
 
     *rbuflen = 0;

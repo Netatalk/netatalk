@@ -152,7 +152,7 @@ static void adf_freelock(struct ad_fd *ad, const int i)
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
  */
-static void adf_unlock(struct adouble *ad, struct ad_fd *adf, const int fork, int unlckbrl)
+static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf, const int fork, int unlckbrl)
 {
     adf_lock_t *lock = adf->adf_lock;
     int i;

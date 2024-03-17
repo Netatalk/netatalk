@@ -203,7 +203,7 @@ char *utompath(const struct vol *vol, const char *upath)
  *
  * @returns 0 on sucess, -1 on error
  */
-int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen)
+int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen _U_)
 {
     static charset_t from = (charset_t) -1;
     static char buf[MAXPATHLEN+2];

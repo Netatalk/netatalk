@@ -303,7 +303,7 @@ static int set_dbdir(const char *dbdir, const char *vpath)
 {
     EC_INIT;
     struct stat st;
-    bstring oldpath, newpath;
+    bstring oldpath, newpath = NULL;
     char *cmd_argv[4];
 
     LOG(log_debug, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);

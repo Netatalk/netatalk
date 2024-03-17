@@ -2060,7 +2060,7 @@ int renamedir(struct vol *vol,
               int dirfd,
               char *src,
               char *dst,
-              struct dir *dir,
+              struct dir *dir _U_,
               struct dir *newparent,
               char *newname)
 {
@@ -2110,8 +2110,8 @@ int renamedir(struct vol *vol,
 /* delete an empty directory */
 int deletecurdir(struct vol *vol)
 {
-    struct dirent *de;
-    struct stat st;
+    struct dirent *de _U_;
+    struct stat st _U_;
     struct dir  *fdir, *pdir;
     struct adouble  ad;
     uint16_t       ashort;

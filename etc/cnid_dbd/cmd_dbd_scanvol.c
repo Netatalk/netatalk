@@ -60,8 +60,8 @@ static char           *special_dirs[] = {
     ".zfs",
     NULL
 };
-static struct cnid_dbd_rqst rqst;
-static struct cnid_dbd_rply rply;
+static struct cnid_dbd_rqst rqst _U_;
+static struct cnid_dbd_rply rply _U_;
 static jmp_buf jmp;
 static char pname[MAXPATHLEN] = "../";
 
@@ -233,7 +233,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
 /*
    Remove all files with file::EA* from adouble dir
 */
-static void remove_eafiles(const char *name, struct ea *ea)
+static void remove_eafiles(const char *name, struct ea *ea _U_)
 {
     DIR *dp = NULL;
     struct dirent *ep;
@@ -335,7 +335,7 @@ static int check_eafiles(const char *fname)
 /*
   Check for .AppleDouble folder and .Parent, create if missing
 */
-static int check_addir(int volroot)
+static int check_addir(int volroot _U_)
 {
     int addir_ok, adpar_ok;
     struct stat st;

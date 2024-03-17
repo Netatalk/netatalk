@@ -446,7 +446,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 }
 
 
-static int uam_setup(void *obj, const char *path)
+static int uam_setup(void *obj _U_, const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
 		   pam_login, NULL, pam_logout, pam_login_ext) < 0)

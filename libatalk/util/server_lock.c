@@ -62,7 +62,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
    * Disassociate from controlling tty.
    */
 
-    int		i;
+    int		i _U_;
 
     getitimer(ITIMER_PROF, &itimer);
     switch (pid = fork()) {
