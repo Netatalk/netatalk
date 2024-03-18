@@ -33,18 +33,8 @@
     <subtitle>Version @NETATALK_VERSION@</subtitle>
   </bookinfo>
 
- <?latex \setcounter{page}{3} ?>
-<preface>
-        <title>Legal Notice</title>
-<para>
-This documentation is distributed under the GNU General Public License (GPL) version 2.  
-A copy of the license is included in this documentation, as well as within the Netatalk source
-distribution.  An on-line copy can be found at <ulink
-url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
-</para>
-</preface>
+  <?latex \setcounter{page}{3} ?>
 
-  <?latex \cleardoublepage ?>
   <!-- Contents -->
   <toc/>
   <?latex \cleardoublepage ?>
