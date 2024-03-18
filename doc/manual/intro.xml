@@ -17,7 +17,7 @@
   <title>Overview of Netatalk</title>
 
   <para>Netatalk is an Open Source software package that can be used to turn
-  a *NIX machine into an extremely high-performance and
+  a *NIX machine into a fast, light-weight and
   reliable file server for Macintosh computers.</para>
 
   <para>Using Netatalk's AFP 3.4 compliant file-server leads to significantly
@@ -25,6 +25,12 @@
   Samba/NFS, while providing clients with the best possible user experience:
   full support for Macintosh metadata, flawlessly supporting mixed
   environments of classic Mac OS and OS X clients.</para>
+
+  <para>It ships with  range of authentication methods to accommodate
+  any deployment environment.
+  Modern macOS features such as Bonjour service discovery,
+  Time Machine backups, and Spotlight indexed search are also supported.
+  </para>
   </sect1>
 
 </chapter>
