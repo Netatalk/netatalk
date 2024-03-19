@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
 <!ENTITY Configuration SYSTEM "configuration.xml">
 <!ENTITY Intro SYSTEM "intro.xml">
@@ -55,7 +55,7 @@
   <chapter id="man-pages">
     <title>Manual Pages</title>
 
-    <para>This is a collection of the man pages delivered with Netatalk.</para>
+    <para>This is a collection of manual pages for Netatalk components.</para>
 
     &ad.1;
 
