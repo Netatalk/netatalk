@@ -7,14 +7,31 @@ AC_DEFUN([AX_CHECK_DOCBOOK], [
   DOCBOOK_ROOT=
   XSLTPROC_WORKS=no
 
-  AC_ARG_WITH(docbook,
-    AS_HELP_STRING(
-      [--with-docbook],
-      [Path to Docbook XSL directory]
-    ),
-    [DOCBOOK_ROOT=$withval]
+  AC_ARG_WITH(docbook, [  --with-docbook=PATH    path to Docbook XSL directory],
+    [
+      if test "x$withval" = "xno"; then
+        trydocbook=no
+      elif test "x$withval" = "xyes"; then
+        trydocbook=yes
+        trydocbookdir=
+      else
+        trydocbook=yes
+        trydocbookdir="$withval"
+      fi
+    ], [trydocbook=yes]
   )
 
+  if test "$trydocbook" = "yes"; then
+    AC_MSG_CHECKING([for docbook-xsl])
+    for docbookdir in "" $trydocbookdir /usr/share/sgml/docbook/xsl-stylesheets /usr/share/xml/docbook/stylesheet/docbook-xsl /opt/local/share/xsl/docbook /usr/local/share/xsl/docbook /usr/pkg/share/xsl/docbook ; do
+        if test -f "$docbookdir/html/docbook.xsl" && test -f "$docbookdir/manpages/docbook.xsl" ; then
+          DOCBOOK_ROOT="$docbookdir"
+          AC_MSG_RESULT([$docbookdir])
+        break
+        fi
+      done
+  fi
+  
   if test -n "$DOCBOOK_ROOT" ; then
     AC_CHECK_PROG(XSLTPROC,xsltproc,xsltproc,)
     if test -n "$XSLTPROC"; then
