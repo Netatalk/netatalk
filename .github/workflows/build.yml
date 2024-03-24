@@ -87,7 +87,7 @@ jobs:
     container:
       image: debian:oldstable
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           apt-get update
