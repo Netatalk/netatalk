@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: asip-status
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 06 May 2016
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -35,7 +35,7 @@ asip-status \- Queries AFP servers for their capabilities
 .HP \w'\fBasip\-status\fR\ 'u
 \fBasip\-status\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR:\fIPORT\fR
 .HP \w'\fBasip\-status\fR\ 'u
-\fBasip\-status\fR \-v | \-version | \-\-version
+\fBasip\-status\fR \-v | \-version | \-\-version 
 .SH "DESCRIPTION"
 .PP
 \fBasip\-status\fR

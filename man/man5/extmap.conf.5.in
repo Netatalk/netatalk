@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: extmap.conf
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-extmap.conf \- Configuration file used by afpd(8) to specify file name extension mappings\&.
+extmap.conf \- Configuration file used by \fBafpd\fR(8) to specify file name extension mappings\&.
 .SH "SYNOPSIS"
-.HP \w'\fB@prefix@/etc/extmap\&.conf\fR\ 'u
-\fB@prefix@/etc/extmap\&.conf\fR
+.HP \w'\fBextmap\&.conf\fR\ 'u
+\fBextmap\&.conf\fR
 .SH "DESCRIPTION"
 .PP
-@prefix@/etc/extmap\&.conf
+extmap\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify file name extension mappings\&.

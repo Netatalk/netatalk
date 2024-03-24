@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afpldaptest
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 22 Mar 2012
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afpldaptest \- Syntactically check ldap parameters in afp\&.conf
+afpldaptest \- Syntactically check ldap parameters in afp\&.conf(5)
 .SH "SYNOPSIS"
 .HP \w'\fBafpldaptest\fR\ 'u
 \fBafpldaptest\fR {\-u\ \fIUSER\fR | \-g\ \fIGROUP\fR | \-i\ \fIUUID\fR}
@@ -37,7 +37,7 @@ afpldaptest \- Syntactically check ldap parameters in afp\&.conf
 .SH "DESCRIPTION"
 .PP
 \fBafpldaptest\fR
-is a simple command to syntactically check ldap parameters in @prefix@/etc/afp\&.conf\&.
+is a simple command to syntactically check ldap parameters in afp\&.conf\&.
 .SH "OPTIONS"
 .PP
 \fB\-u\fR \fIUSER\fR

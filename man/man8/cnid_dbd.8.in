@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: cnid_dbd
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10 Nov 2015
+.\"      Date: 17 Mar 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
 .\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "CNID_DBD" "8" "10 Nov 2015" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "CNID_DBD" "8" "17 Mar 2024" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,12 +28,12 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-cnid_dbd \- implement access to CNID databases through a dedicated daemon process
+cnid_dbd \- CNID database access daemon
 .SH "SYNOPSIS"
 .HP \w'\fBcnid_dbd\fR\ 'u
 \fBcnid_dbd\fR
 .HP \w'\fBcnid_dbd\fR\ 'u
-\fBcnid_dbd\fR \-v | \-V
+\fBcnid_dbd\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBcnid_dbd\fR

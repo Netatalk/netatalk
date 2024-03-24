@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: macusers
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 13 Oct 2011
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -33,7 +33,7 @@ macusers \- List the users connecting via AFP
 .HP \w'\fBmacusers\fR\ 'u
 \fBmacusers\fR
 .HP \w'\fBmacusers\fR\ 'u
-\fBmacusers\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help
+\fBmacusers\fR \-v | \-version | \-\-version | \-h | \-help | \-\-help 
 .SH "DESCRIPTION"
 .PP
 \fBmacusers\fR

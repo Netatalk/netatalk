@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afp_signature.conf
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 23 Mar 2012
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -28,10 +28,10 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_signature.conf \- Configuration file used by afpd(8) to specify server signature
+afp_signature.conf \- Configuration file used by \fBafpd\fR(8) to specify server signature
 .SH "DESCRIPTION"
 .PP
-@prefix@/var/netatalk/afp_signature\&.conf
+afp_signature\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify server signature automagically\&. The configuration lines are composed like:

@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: netatalk
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 13 Jun 2016
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -33,7 +33,7 @@ netatalk \- Netatalk AFP server service controller daemon
 .HP \w'\fBnetatalk\fR\ 'u
 \fBnetatalk\fR [\-F\ \fIconfigfile\fR]
 .HP \w'\fBnetatalk\fR\ 'u
-\fBnetatalk\fR \-v | \-V
+\fBnetatalk\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBnetatalk\fR
@@ -50,8 +50,7 @@ Print version information and exit\&.
 .PP
 \-F \fIconfigfile\fR
 .RS 4
-Specifies the configuration file to use\&. (Defaults to
-@prefix@/etc/afp\&.conf\&.)
+Specifies the configuration file to use\&.
 .RE
 .SH "SIGNALS"
 .PP
@@ -68,7 +67,7 @@ will cause the AFP daemon reload its configuration file\&.
 .RE
 .SH "FILES"
 .PP
-@prefix@/etc/afp\&.conf
+afp\&.conf
 .RS 4
 configuration file used by
 \fBnetatalk\fR(8),

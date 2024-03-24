@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afpd
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 19 Jan 2013
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -33,14 +33,14 @@ afpd \- Apple Filing Protocol daemon
 .HP \w'\fBafpd\fR\ 'u
 \fBafpd\fR [\-d] [\-F\ \fIconfigfile\fR]
 .HP \w'\fBafpd\fR\ 'u
-\fBafpd\fR \-v | \-V | \-h
+\fBafpd\fR \-v | \-V | \-h 
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR
 provides an Apple Filing Protocol (AFP) interface to the Unix file system\&. It is normally started at boot time by
 \fBnetatalk\fR(8)\&.
 .PP
-@prefix@/etc/afp\&.conf
+afp\&.conf
 is the configuration file used by
 \fBafpd\fR
 to determine the behavior and configuration of a file server\&.
@@ -68,8 +68,7 @@ Print help and exit\&.
 .PP
 \-F \fIconfigfile\fR
 .RS 4
-Specifies the configuration file to use\&. (Defaults to
-@prefix@/etc/afp\&.conf\&.)
+Specifies the configuration file to use\&.
 .RE
 .SH "SIGNALS"
 .PP
@@ -136,27 +135,27 @@ process will look in the message directory configured at build time for a file n
 .RE
 .SH "FILES"
 .PP
-@prefix@/etc/afp\&.conf
+afp\&.conf
 .RS 4
 configuration file used by afpd
 .RE
 .PP
-@prefix@/var/netatalk/afp_signature\&.conf
+afp_signature\&.conf
 .RS 4
 list of server signature
 .RE
 .PP
-@prefix@/var/netatalk/afp_voluuid\&.conf
+afp_voluuid\&.conf
 .RS 4
 list of UUID for Time Machine volume
 .RE
 .PP
-@prefix@/etc/extmap\&.conf
+extmap\&.conf
 .RS 4
 file name extension mapping
 .RE
 .PP
-@prefix@/etc/msg/message\&.pid
+message\&.pid
 .RS 4
 contains messages to be sent to users\&.
 .RE

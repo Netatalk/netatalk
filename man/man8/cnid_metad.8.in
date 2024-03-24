@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: cnid_metad
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 23 Mar 2012
+.\"      Date: 17 Mar 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
 .\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "23 Mar 2012" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "CNID_METAD" "8" "17 Mar 2024" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,12 +28,12 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-cnid_metad \- start cnid_dbd daemons on request
+cnid_metad \- daemon for starting \fBcnid_dbd\fR(8) daemons on demand
 .SH "SYNOPSIS"
 .HP \w'\fBcnid_metad\fR\ 'u
 \fBcnid_metad\fR [\-d] [\-F\ \fIconfiguration\ file\fR]
 .HP \w'\fBcnid_metad\fR\ 'u
-\fBcnid_metad\fR \-v | \-V
+\fBcnid_metad\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBcnid_metad\fR
@@ -59,8 +59,7 @@ will also leave the standard input, standard output and standard error file desc
 .RS 4
 Use
 \fIconfiguration file\fR
-as the configuration file\&. The default is
-\fI@prefix@/etc/afp\&.conf\fR\&.
+as the configuration file\&.
 .RE
 .PP
 \fB\-v, \-V\fR
