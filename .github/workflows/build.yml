@@ -47,6 +47,8 @@ env:
     libtool-bin \
     libtracker-sparql-3.0-dev \
     libwrap0-dev \
+    meson \
+    ninja-build \
     systemtap-sdt-dev \
     tcpd \
     tracker \
@@ -80,12 +82,23 @@ jobs:
         run: make check
       - name: Run distribution tests
         run: make distcheck
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Dbuild-manual=true
+      - name: Meson build and generate man pages
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
+      - name: Meson distribution tests
+        run: cd build && meson dist
 
   build-debian:
     name: Debian
     runs-on: ubuntu-22.04
     container:
-      image: debian:oldstable
+      image: debian:bookworm
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -96,7 +109,9 @@ jobs:
             automake \
             bison \
             default-libmysqlclient-dev \
+            file \
             flex \
+            gcc \
             libacl1-dev \
             libavahi-client-dev \
             libcrack2-dev \
@@ -114,10 +129,11 @@ jobs:
             libtalloc-dev \
             libtool \
             libtool-bin \
-            libtracker-miner-2.0-dev \
-            libtracker-sparql-2.0-dev \
+            libtracker-sparql-3.0-dev \
             libwrap0-dev \
             make \
+            meson \
+            ninja-build \
             systemtap-sdt-dev \
             tcpd \
             tracker
@@ -135,6 +151,14 @@ jobs:
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-fedora:
     name: Fedora
@@ -160,9 +184,12 @@ jobs:
             libgcrypt-devel \
             libtalloc-devel \
             libtool \
+            meson \
+            ninja-build \
             openldap-devel \
             openssl-devel \
             pam-devel \
+            perl \
             systemtap-sdt-devel \
             tracker-devel
       - name: Bootstrap
@@ -179,10 +206,18 @@ jobs:
         run: make -j $(nproc)
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-latest
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -190,7 +225,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake libressl mysql talloc krb5 berkeley-db
+        run: brew install automake libressl mysql talloc krb5 berkeley-db meson
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
@@ -204,6 +239,16 @@ jobs:
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dwith-bdb=/usr/local/opt/berkeley-db \
+            -Dwith-ssl-dir=/usr/local/opt/libressl \
+            -Dbuild-tests=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-omnios:
     name: "OmniOS"
@@ -224,16 +269,17 @@ jobs:
               pkg-config
             curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
             tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
-            echo "export PATH="/opt/local/sbin:/opt/local/bin:$PATH"" >> .profile
-            source .profile
-            /opt/local/bin/pkgin -y install \
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            pkgin -y install \
               avahi \
-              db5 \
+              dbus-glib \
               gnome-tracker \
               libevent \
               libgcrypt \
+              meson \
               talloc
           run: |
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             ./bootstrap
             ./configure \
               --enable-pgp-uam \
@@ -244,6 +290,9 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             gmake -j $(nproc)
+            meson setup build \
+              -Dpkg_config_path=/opt/local/lib/pkgconfig
+            ninja -C build
 
   build-freebsd:
     name: "FreeBSD"
@@ -270,6 +319,7 @@ jobs:
               libgcrypt \
               libressl \
               libtool \
+              meson \
               pkgconf \
               talloc \
               tracker3
@@ -283,6 +333,11 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
+            meson setup build
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dbuild-tests=true
+            ninja -C build
+            cd build && meson test
 
   build-openbsd:
     name: "OpenBSD"
@@ -303,32 +358,32 @@ jobs:
               avahi \
               bison \
               dbus-glib \
+              db-4.6.21p7v0 \
               flex \
               gcc-11.2.0p9 \
               gmake \
-              pkgconf \
               libevent \
               libgcrypt \
               libtalloc \
               libtool \
-              tracker3 \
-              wget
-            wget https://download.oracle.com/berkeley-db/db-5.3.28.tar.gz
-            tar -xvzf db-5.3.28.tar.gz
-            cd db-5.3.28/build_unix
-            ../dist/configure
-            make -j2
-            make install
+              meson \
+              openldap-client-2.6.6v0 \
+              pkgconf \
+              tracker3
           run: |
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             autoreconf -fi
             ./configure \
-              --with-bdb=/usr/local/BerkeleyDB.5.3 \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
+            meson setup build
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dbuild-tests=true
+            ninja -C build
+            cd build && meson test
 
   build-netbsd:
     name: "NetBSD"
@@ -358,6 +413,7 @@ jobs:
               libgcrypt \
               libressl \
               libtool \
+              meson \
               pkg-config \
               talloc
           run: |
@@ -371,6 +427,9 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j $(nproc)
+            meson setup build \
+              -Dpkg_config_path=/usr/pkg/lib/pkgconfig
+            ninja -C build
 
   build-dflybsd:
     name: "DragonflyBSD"
@@ -395,7 +454,12 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
+              meson \
+              perl5 \
               pkgconf \
+              py39-gdbm \
+              py39-sqlite3 \
+              py39-tkinter \
               talloc \
               tracker3
           run: |
@@ -406,6 +470,8 @@ jobs:
               LDFLAGS=-L/usr/local/lib \
               MAKE=gmake
             gmake -j2
+            meson setup build
+            ninja -C build
 
   build-solaris:
     name: "Solaris"
@@ -423,11 +489,13 @@ jobs:
             pkg install \
               autoconf \
               automake \
-              libtool \
-              pkg-config \
+              bison \
+              flex \
               gcc \
               libevent \
-              libgcrypt
+              libgcrypt \
+              libtool \
+              pkg-config
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
             tar xvf autoconf-2.71.tar.gz

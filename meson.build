@@ -1335,7 +1335,6 @@ docbook_xsl_dirs = [
     '/opt/local/share/xsl/docbook',
     '/usr/local/share/xsl/docbook',
     '/usr/pkg/share/xsl/docbook',
-    brew_prefix / 'opt/docbook-xsl/docbook-xsl',
 ]
 
 if host_os == 'darwin'
