@@ -8,7 +8,6 @@ libtool
 Makefile
 Makefile.in
 stamp-h*
-*~
 *.la
 *.lo
 *.o

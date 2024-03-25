@@ -1,0 +1,193 @@
+afpd_internal_deps = []
+afpd_external_deps = []
+afpd_c_args = []
+
+afpd_sources = [
+    'afp_config.c',
+    'afp_dsi.c',
+    'afp_options.c',
+    'afp_util.c',
+    'afprun.c',
+    'appl.c',
+    'auth.c',
+    'catsearch.c',
+    'desktop.c',
+    'dircache.c',
+    'directory.c',
+    'enumerate.c',
+    'extattrs.c',
+    'fce_api.c',
+    'fce_util.c',
+    'file.c',
+    'filedir.c',
+    'fork.c',
+    'hash.c',
+    'mangle.c',
+    'messages.c',
+    'ofork.c',
+    'status.c',
+    'switch.c',
+    'uam.c',
+    'unix.c',
+    'volume.c',
+    'main.c',
+]
+
+if have_spotlight
+    afpd_sources += [
+        'spotlight.c',
+        'spotlight_marshalling.c',
+    ]
+    afpd_internal_deps += libspotlight
+    afpd_external_deps += [
+        glib,
+        talloc,
+        tracker_sparql,
+    ]
+endif
+
+if with_afpstats
+    #    afpstatsservice = custom_target(
+    #        'afpstats_service_glue',
+    #        output: 'afpstats_service_glue.h',
+    #        input: 'afpstats-service.xml',
+    #        command: [
+    #            'dbus-binding-tool',
+    #            '--prefix=afpstats_obj',
+    #            '--mode=glib-server',
+    #            '--output=@OUTPUT@', '@INPUT@',
+    #        ],
+    #    )
+    afpd_sources += [
+        'afpstats_obj.c',
+        'afpstats.c',
+        'afpstats_service_glue.h',
+    ]
+    afpd_external_deps += [
+        dbus,
+        dbus_glib,
+        glib,
+    ]
+    afpd_c_args += '-DDBUS_COMPILATION'
+endif
+
+if with_acls
+    afpd_sources += 'acls.c'
+    afpd_external_deps += [acl_deps]
+endif
+
+# For dtrace probes we need to invoke dtrace on all input files, before
+# linking the final executable.
+#
+# On meson there's currently no easy way to do this. So we build
+# a static library with all the input objects, run our script to generate
+# exports, and build the final executable using that static library.
+
+libafpd = static_library(
+    'afpd',
+    afpd_sources,
+    include_directories: root_includes,
+    link_with: [afpd_internal_deps, libatalk],
+    dependencies: [
+        afpd_external_deps,
+        gss,
+        kerberos,
+        libgcrypt,
+        libcnid_deps,
+        threads,
+    ],
+    c_args: [
+        '-DAPPLCNAME',
+        confdir,
+        dversion,
+        kerberos_c_args,
+        messagedir,
+        statedir,
+        uamdir,
+    ],
+    install: false,
+    build_by_default: false,
+)
+
+afpd_dtrace_input = []
+afpd_objs = [libafpd.extract_all_objects(recursive: false)]
+
+# As of 2/2024:
+# The afp_dtrace.o file is necessary for dtrace support on Solaris, and on recent
+# versions of systemtap.  (Older systemtap releases just produce an empty
+# file, but that's okay.)  However, macOS's dtrace doesn't use it and doesn't
+# even recognize the -G option.  So, build afp_dtrace.o except on macOS.
+# This might need adjustment as other platforms add dtrace support.
+#
+# On at least linux we don't actually need to pass in all the objects, but
+# at least on FreeBSD and Solaris we have to.
+
+if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
+    run_command(
+        'rm',
+        '-f',
+        meson.current_build_dir() / 'afp_dtrace.o',
+        check: true,
+    )
+endif
+
+if with_dtrace and host_os != 'darwin'
+    afpd_dtrace_input += custom_target(
+        'afp_dtrace.o',
+        input: [
+            meson.project_source_root() / 'include/atalk/afp_dtrace.d',
+            libafpd.extract_objects(
+                'afp_dsi.c',
+                'fork.c',
+                'appl.c',
+                'catsearch.c',
+                'directory.c',
+                'enumerate.c',
+                'file.c',
+                'filedir.c',
+            ),
+        ],
+        output: 'afp_dtrace.o',
+        command: [
+            dtrace_command,
+            '-C',
+            '-G',
+            '-o', '@OUTPUT@',
+            '-s', '@INPUT@',
+        ],
+        install: false,
+    )
+    afpd_external_deps += dtrace_deps
+endif
+
+executable(
+    'afpd',
+    afpd_dtrace_input,
+    objects: afpd_objs,
+    include_directories: root_includes,
+    link_with: [afpd_internal_deps, libatalk],
+    dependencies: [
+        afpd_external_deps,
+        gss,
+        kerberos,
+        libgcrypt,
+        libcnid_deps,
+        threads,
+    ],
+    c_args: [
+        '-DAPPLCNAME',
+        confdir,
+        dversion,
+        kerberos_c_args,
+        messagedir,
+        statedir,
+        uamdir,
+    ],
+    export_dynamic: true,
+    install: true,
+    install_dir: sbindir,
+)
+
+
+
+
