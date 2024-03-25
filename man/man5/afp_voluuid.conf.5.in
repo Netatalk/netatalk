@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afp_voluuid.conf
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 27 June 2016
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -28,10 +28,10 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for AFP volumes
+afp_voluuid.conf \- Configuration file used by \fBafpd\fR(8) to specify UUID for AFP volumes
 .SH "DESCRIPTION"
 .PP
-@prefix@/var/netatalk/afp_voluuid\&.conf
+afp_voluuid\&.conf
 is the configuration file used by
 \fBafpd\fR
 to specify UUID of all AFP volumes\&. The configuration lines are composed like:
@@ -55,7 +55,7 @@ The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines 
 .ps -1
 .br
 .PP
-This UUID is advertised by Zeroconf in order to provide robust disambiguation of Time Machine volume\&.
+This UUID is advertised by Zeroconf in order to provide robust disambiguation of Time Machine volumes\&.
 .PP
 It is also used by the MySQL CNID backend\&.
 .PP

@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afpstats
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 24 Mar 2013
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -42,7 +42,7 @@ list AFP statistics via D\-Bus IPC\&.
 must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
 .PP
 "\fBafpstats = yes\fR" must be set in
-@prefix@/etc/afp\&.conf\&.
+afp\&.conf\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),

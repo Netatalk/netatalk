@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: apple_dump
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 12 Nov 2015
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -33,15 +33,15 @@ apple_dump \- Dump AppleSingle/AppleDouble format data
 .HP \w'\fBapple_dump\fR\ 'u
 \fBapple_dump\fR [\-a] [\fIFILE\fR | \fIDIR\fR]
 .HP \w'\fBapple_dump\fR\ 'u
-\fBapple_dump\fR \-e \fIFILE\fR | \fIDIR\fR
+\fBapple_dump\fR \-e \fIFILE\fR | \fIDIR\fR 
 .HP \w'\fBapple_dump\fR\ 'u
 \fBapple_dump\fR \-f [\fIFILE\fR]
 .HP \w'\fBapple_dump\fR\ 'u
 \fBapple_dump\fR \-d [\fIFILE\fR]
 .HP \w'\fBapple_dump\fR\ 'u
-\fBapple_dump\fR \-h | \-help | \-\-help
+\fBapple_dump\fR \-h | \-help | \-\-help 
 .HP \w'\fBapple_dump\fR\ 'u
-\fBapple_dump\fR \-v | \-version | \-\-version
+\fBapple_dump\fR \-v | \-version | \-\-version 
 .SH "DESCRIPTION"
 .PP
 \fBapple_dump\fR

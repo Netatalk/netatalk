@@ -1,6 +1,6 @@
 '\" t
 .\"     Title: afp.conf
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 11 Apr 2023
 .\"    Manual: Netatalk AFP Fileserver Manual
@@ -47,7 +47,7 @@ The file consists of sections and parameters\&. A section begins with the name o
 .\}
 .nf
     \fIname\fR = \fIvalue \fR
-
+    
 .fi
 .if n \{\
 .RE
@@ -103,7 +103,7 @@ baz:
 .\}
 .nf
  [baz]
-    path = /foo/bar
+    path = /foo/bar 
 .fi
 .if n \{\
 .RE
@@ -322,7 +322,7 @@ uams_clrtxt\&.so
 .PP
 uams_randnum\&.so
 .RS 4
-allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either @prefix@/etc/afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
+allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either the default afppasswd file or the one specified via "\fBpasswd file\fR")\&. See
 \fBafppasswd\fR(1)
 for details\&. (legacy)
 .RE
@@ -398,7 +398,7 @@ Specifies the encoding of the volumes filesystem\&. By default, it is the same a
 .PP
 passwd file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the Randnum UAM passwd file for this server (default is @prefix@/etc/afppasswd)\&.
+Sets the path to the Randnum UAM passwd file for this server\&.
 .RE
 .PP
 passwd minlen = \fInumber\fR \fB(G)\fR
@@ -635,7 +635,7 @@ Default size is 8192, maximum size is 131072\&. Given value is rounded up to nea
 .PP
 extmap file = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the path to the file which defines file extension type/creator mappings\&. (default is @prefix@/etc/extmap\&.conf)\&.
+Sets the path to the file which defines file extension type/creator mappings\&.
 .RE
 .PP
 force xattr with sticky bit = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G/V)\fR
@@ -679,9 +679,9 @@ Specifies the icon model that appears on clients\&. Defaults to off\&. Note that
 .PP
 signature = <text> \fB(G)\fR
 .RS 4
-Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generate signature and saving it to
-@prefix@/var/netatalk/afp_signature\&.conf
-automatically (based on random number)\&. See also asip\-status(1)\&.
+Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generates a signature and saves it to a file called
+afp_signature\&.conf
+automatically (based on random numbers)\&. See also asip\-status(1)\&.
 .RE
 .PP
 solaris share reservations = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
@@ -738,8 +738,7 @@ Send optional AFP messages for vetoed files\&. Then whenever a client tries to a
 .PP
 vol dbpath = \fIpath\fR \fB(G)/(V)\fR
 .RS 4
-Sets the database information to be stored in path\&. You have to specify a writable location, even if the volume is read only\&. The default is
-@prefix@/var/netatalk/CNID/$v/\&.
+Sets the path where the database information will be stored\&. You have to specify a writable location, even if the volume is read only\&.
 .RE
 .PP
 vol dbnest = \fIBOOLEAN\fR (default: \fIno\fR) \fB(G)\fR
@@ -812,6 +811,12 @@ loglevels: severe, error, warn, note, info, debug, debug6, debug7, debug8, debug
 Both logtype and loglevels are case insensitive\&.
 .sp .5v
 .RE
+.RE
+.PP
+log microseconds = \fIBOOLEAN\fR (default: \fIyes\fR \fB(G)\fR
+.RS 4
+Log timestamps with accuracy down to microseconds\&. If disabled, the timestamps record only full seconds\&. Used in tandem with
+\fBlog file\fR\&.
 .RE
 .SS "Filesystem Change Events (FCE)"
 .PP
@@ -1456,20 +1461,7 @@ and
 .RE
 .SH "CNID BACKENDS"
 .PP
-The AFP protocol mostly refers to files and directories by ID and not by name\&. Netatalk needs a way to store these ID\*(Aqs in a persistent way, to achieve this several different CNID backends are available\&. The CNID Databases are by default located in the
-@prefix@/var/netatalk/CNID/(volumename)/\&.AppleDB/
-directory\&.
-.PP
-cdb
-.RS 4
-"Concurrent database", backend is based on Oracle Berkeley DB\&. With this backend several
-\fBafpd\fR
-daemons access the CNID database directly\&. Berkeley DB locking is used to synchronize access, if more than one
-\fBafpd\fR
-process is active for a volume\&. The drawback is, that the crash of a single
-\fBafpd\fR
-process might corrupt the database\&.
-.RE
+The AFP protocol primarily refers to files and directories by ID and not by name\&. Netatalk needs a way to store these IDs in a persistent way\&. To achieve this, Netatalk provides multiple CNID backends with different capabilities\&. The CNID databases are by default located under localstatedir\&.
 .PP
 dbd
 .RS 4

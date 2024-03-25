@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: ad
-.\"    Author: [see the "AUTHOR" section]
+.\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05 Dec 2015
+.\"      Date: 17 Mar 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
 .\"    Source: Netatalk @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AD" "1" "05 Dec 2015" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "AD" "1" "17 Mar 2024" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-ad \- Netatalk compatible UNIX file utility suite\&.
+ad \- AppleDouble file utility suite
 .SH "SYNOPSIS"
 .HP \w'\fBad\fR\ 'u
 \fBad\fR {ls\ |\ cp\ |\ mv\ |\ rm} [\&.\&.\&.]
@@ -37,9 +37,9 @@ ad \- Netatalk compatible UNIX file utility suite\&.
 .SH "DESCRIPTION"
 .PP
 \fBad\fR
-is a UNIX file utility suite with Netatalk compatibility\&. AppleDouble data (extended attributes of files, \&._files in same directories or files in
+is an AppleDouble file utility suite with Netatalk compatibility\&. AppleDouble data (extended attributes of files, \&._files in same directories or files in
 \&.AppleDouble
-directories) and the CNID databases are updated as appropriate\&.
+directories) and the CNID databases are updated as appropriate when files in a shared Netatalk volume are modified\&.
 .SH "AVAILABLE COMMANDS"
 .HP \w'\fBad\ ls\fR\ 'u
 \fBad ls\fR [\-dRl\ [u]] {file|dir\ [\&.\&.\&.]}
