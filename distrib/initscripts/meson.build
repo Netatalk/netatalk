@@ -1,0 +1,168 @@
+if get_option('enable-redhat-sysv')
+    init_style += 'redhat-sysv'
+    init_dir += '/etc/rc.d/init.d'
+    custom_target(
+        'redhat_sysv',
+        input: 'rc.atalk.redhat-sysv.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+    meson.add_install_script(
+        find_program('/usr/sbin/chkconfig'),
+        '--add',
+        '/etc/rc.d/init.d/netatalk',
+    )
+elif get_option('enable-systemd')
+    init_style += 'systemd'
+    init_dir += systemddir
+    service_data = [
+        'a2boot',
+        'afpd',
+        'atalkd',
+        'cnid',
+        'papd',
+        'timelord',
+    ]
+    foreach service : service_data
+        custom_target(
+            service + '.service',
+            input: service + '.service.tmpl',
+            output: service + '.service',
+            command: sed_command,
+            capture: true,
+            install: true,
+            install_dir: init_dir,
+        )
+    endforeach
+    meson.add_install_script(find_program('systemctl'), 'daemon-reload', '--no-ask-password')
+elif get_option('enable-suse-sysv')
+    init_style += 'suse-sysv'
+    init_dir += '/etc/init.d'
+    custom_target(
+        'suse_sysv',
+        input: 'rc.atalk.suse-sysv.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+    meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+elif get_option('enable-netbsd')
+    init_style += 'netbsd'
+    init_dir += '/etc/rc.d'
+    rc_scripts = [
+        'rc.afpd',
+        'rc.atalkd',
+        'rc.cnid_metad',
+        'rc.papd',
+        'rc.timelord',
+        'rc.a2boot',
+    ]
+    foreach script : rc_scripts
+        custom_target(
+            script + '.netbsd',
+            input: script + '.netbsd.tmpl',
+            output: script + 'netbsd',
+            command: sed_command,
+            capture: true,
+            install: true,
+            install_dir: init_dir,
+            install_mode: 'rwxr-xr-x',
+        )
+    endforeach
+elif get_option('enable-solaris')
+    init_style += 'solaris'
+    init_dir += '/etc/init.d'
+    custom_target(
+        'solaris',
+        input: 'rc.atalk.sysv.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+    )
+    meson.add_install_script(
+        find_program('rm'),
+        '-f',
+        '/etc/rc2.d/S90netatalk',
+    )
+    meson.add_install_script(
+        find_program('ln'),
+        '-s',
+        '/etc/init.d/netatalk',
+        '/etc/rc2.d/S90netatalk',
+    )
+    meson.add_install_script(
+        find_program('ln'),
+        '-s',
+        '/etc/init.d/netatalk',
+        '/etc/rc0.d/K04netatalk',
+    )
+elif get_option('enable-gentoo')
+    init_style += 'gentoo-sysv'
+    init_dir += '/etc/init.d'
+    custom_target(
+        'gentoo',
+        input: 'rc.atalk.gentoo.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+elif get_option('enable-debian')
+    init_style += 'debian-sysv'
+    init_dir += '/etc/init.d'
+    custom_target(
+        'debian_sysv',
+        input: 'rc.atalk.debian.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+elif get_option('enable-macos')
+    init_style += 'macos-launchd'
+    init_dir += '/Library/LaunchDaemons'
+    custom_target(
+        'netatalkd',
+        input: 'netatalkd.tmpl',
+        output: 'netatalkd',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: bindir,
+        install_mode: 'rwxr-xr-x',
+    )
+    custom_target(
+        'plist',
+        input: 'io.netatalk.daemon.plist.tmpl',
+        output: 'io.netatalk.daemon.plist',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+    )
+    if not fs.exists('/Library/LaunchDaemons/io.netatalk.daemon.plist')
+        meson.add_install_script(
+            find_program('launchctl'),
+            'load',
+            '-w',
+            '/Library/LaunchDaemons/io.netatalk.daemon.plist',
+        )
+    endif
+else
+    init_style += 'none'
+    init_dir += 'none'
+endif
+
