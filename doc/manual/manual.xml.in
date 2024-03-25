@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
+<!ENTITY Configuration SYSTEM "configuration.xml">
 <!ENTITY Intro SYSTEM "intro.xml">
 <!ENTITY Install SYSTEM "install.xml">
+<!ENTITY License SYSTEM "gpl.xml">
 <!ENTITY Upgrade SYSTEM "upgrade.xml">
-<!ENTITY Configuration SYSTEM "configuration.xml">
 
 <!ENTITY a2boot.8 SYSTEM "../manpages/man8/a2boot.8.xml">
 <!ENTITY ad.1 SYSTEM "../manpages/man1/ad.1.xml">
@@ -52,18 +53,8 @@
     <subtitle>Version @NETATALK_VERSION@</subtitle>
   </bookinfo>
 
- <?latex \setcounter{page}{3} ?>
-<preface>
-        <title>Legal Notice</title>
-<para>
-This documentation is distributed under the GNU General Public License (GPL) version 2.  
-A copy of the license is included in this documentation, as well as within the Netatalk source
-distribution.  An on-line copy can be found at <ulink
-url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
-</para>
-</preface>
+  <?latex \setcounter{page}{3} ?>
 
-  <?latex \cleardoublepage ?>
   <!-- Contents -->
   <toc/>
   <?latex \cleardoublepage ?>
@@ -84,7 +75,7 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
   <chapter id="man-pages">
     <title>Manual Pages</title>
 
-    <para>This is a collection of the man pages delivered with Netatalk.</para>
+    <para>This is a collection of manual pages for Netatalk components.</para>
 
     &a2boot.8;
 
@@ -106,9 +97,9 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
 
     &afppasswd.1;
 
-    &AppleVolumes.default.5;
-
     &apple_dump.1;
+
+    &AppleVolumes.default.5;
 
     &asip-status.1;
 
@@ -162,7 +153,7 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
   </chapter>
   <?latex \cleardoublepage ?>
 
-  <?latex \include{gpl}?>
+  &License;
   <?latex \cleardoublepage ?>
 
   <index id="manual-index"><title>Index</title></index>
