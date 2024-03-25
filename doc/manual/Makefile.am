@@ -4,19 +4,21 @@ HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
 XML_PAGES = \
-	manual.xml \
 	configuration.xml \
+	gpl.xml \
 	install.xml \
 	intro.xml \
+	manual.xml \
 	upgrade.xml
 
 EXTRA_DIST = \
-	manual.xml.in \
 	configuration.xml \
+	gpl.xml \
 	install.xml \
 	intro.xml \
-	upgrade.xml \
-	netatalk.html.in
+	manual.xml.in \
+	netatalk.html.in \
+	upgrade.xml
 
 HTML_PAGES = \
 	a2boot.8.html \
@@ -29,13 +31,13 @@ HTML_PAGES = \
 	afpd.conf.5.html \
 	afpldaptest.1.html \
 	afppasswd.1.html \
-	AppleVolumes.default.5.html \
 	apple_dump.1.html \
+	AppleVolumes.default.5.html \
 	asip-status.1.html \
 	atalk.4.html \
 	atalkd.8.html \
-	atalkd.conf.5.html \
 	atalk_aton.3.html \
+	atalkd.conf.5.html \
 	cnid_dbd.8.html \
 	cnid_metad.8.html \
 	cnid2_create.1.html \
@@ -47,9 +49,9 @@ HTML_PAGES = \
 	installation.html \
 	intro.html \
 	macusers.1.html \
-	megatron.1.html \
 	man-pages.html \
 	manual-index.html \
+	megatron.1.html \
 	nbp.1.html \
 	nbp_name.3.html \
 	netatalk.conf.5.html \
@@ -57,7 +59,6 @@ HTML_PAGES = \
 	pap.1.html \
 	papd.8.html \
 	papstatus.8.html \
-	pr01.html \
 	psf.8.html \
 	psorder.1.html \
 	showppd.1.html \
