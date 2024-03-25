@@ -26,6 +26,10 @@ The included print server daemon can provide Apple II and Macintosh clients with
 
 Additionally, Netatalk can be used to act as an AppleTalk router, providing both segmentation and zone names in traditional Macintosh networks.
 
+# Installation
+
+Please read the INSTALL file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
+
 # Docker
 
 Netatalk comes with a Dockerfile and entry point script for running a containerized AFP server and AppleTalk router.
