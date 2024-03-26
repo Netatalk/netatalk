@@ -317,7 +317,7 @@ remote: Counting objects: 2503, done.
 
         <itemizedlist>
           <listitem>
-            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd]</para>
+            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd/macos]</para>
 
             <para>This option helps netatalk to determine where to install the
             start scripts.</para>
@@ -333,6 +333,14 @@ remote: Counting objects: 2503, done.
             <para>In case you installed Berkeley DB in a non-standard
             location, you will <emphasis>have</emphasis> to give the install
             location to netatalk, using this switch.</para>
+          </listitem>
+
+          <listitem>
+            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
+
+            <para>In case you installed OpenSSL or LibreSSL in a non-standard
+            location, you will <emphasis>have</emphasis> to give the install
+            location to Netatalk, using this switch.</para>
           </listitem>
         </itemizedlist>
 

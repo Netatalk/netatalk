@@ -35,7 +35,9 @@ GENERATED_FILES = \
 	atalkd.service		\
 	cnid.service		\
 	papd.service		\
-	timelord.service
+	timelord.service \
+	com.netatalk.daemon.plist \
+	netatalkd
 
 TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
@@ -55,7 +57,9 @@ TEMPLATES = \
 	atalkd.service.tmpl		\
 	cnid.service.tmpl		\
 	papd.service.tmpl		\
-	timelord.service.tmpl
+	timelord.service.tmpl \
+	com.netatalk.daemon.plist.tmpl \
+	netatalkd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) a2boot afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
@@ -246,6 +250,29 @@ uninstall-startup:
 
 endif
 
+#
+# checking for macOS init script
+#
+
+if USE_MACOS
+
+launchddir = /Library/LaunchDaemons
+bin_SCRIPTS = netatalkd
+launchd_DATA = com.netatalk.daemon.plist
+
+install-data-hook:
+	(if [ ! -f $(launchddir)/$(launchd_DATA) ] ; then \
+		cp $(launchd_DATA) $(launchddir) && \
+		launchctl load -w $(launchddir)/$(launchd_DATA); \
+	fi)
+
+uninstall-startup:
+	$(bin_SCRIPTS) stop
+	launchctl unload -w $(launchddir)/$(launchd_DATA)
+	rm -f $(DESTDIR)$(bindir)/$(bin_SCRIPTS)
+	rm -f $(launchddir)/$(launchd_DATA)
+
+endif
 
 #
 # defaults, no init scripts installed

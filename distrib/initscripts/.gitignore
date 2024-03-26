@@ -17,3 +17,5 @@ cnid.service
 netatalk
 papd.service
 timelord.service
+netatalkd
+com.netatalk.daemon.plist
