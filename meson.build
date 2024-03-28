@@ -1811,6 +1811,7 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
+    '  Quota support': have_quota,
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,
 }
