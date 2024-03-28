@@ -996,23 +996,6 @@ int main(void) {
 endif
 
 #
-# Check for dbus-glib, for AFP stats
-#
-
-dbus = dependency('dbus-1', required: false)
-dbus_glib = dependency('dbus-glib-1', required: false)
-glib = dependency('glib-2.0', required: false)
-
-if get_option('with-afpstats').disabled()
-    with_afpstats = false
-else
-    with_afpstats = dbus.found() and dbus_glib.found() and glib.found()
-    if with_afpstats
-        cdata.set('HAVE_DBUS_GLIB', 1)
-    endif
-endif
-
-#
 # Set dbus-daemon path
 #
 
