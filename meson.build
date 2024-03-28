@@ -813,6 +813,9 @@ else
     if quota.found()
         cdata.set('HAVE_LIBQUOTA', 1)
     endif
+    if not have_quota
+        cdata.set('NO_QUOTA_SUPPORT', 1)
+    endif
 endif
 
 if get_option('enable-quota').enabled() and not have_quota
