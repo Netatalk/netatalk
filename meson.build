@@ -1586,8 +1586,6 @@ sed_command = [
     's@:SBINDIR:@' + sbindir + '@',
     '-e',
     's@:NETATALK_VERSION:@' + version + '@',
-    '-e',
-    's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
     '@INPUT@',
 ]
 
