@@ -1012,23 +1012,6 @@ else
 endif
 
 #
-# Set dbus sysconf directory
-#
-
-dbus_sysconf_dir = ''
-
-if get_option('with-dbus-sysconf-dir') != ''
-    cdata.set('DBUS_SYS_DIR', '"' + get_option('with-dbus-sysconf-dir') + '"')
-    dbus_sysconf_dir += get_option('with-dbus-sysconf-dir')
-elif host_os == 'darwin'
-    cdata.set('DBUS_SYS_DIR', '"' + pkgconfdir + '/dbus-1/system.d' + '"')
-    dbus_sysconf_dir += pkgconfdir / 'dbus-1/system.d'
-else
-    cdata.set('DBUS_SYS_DIR', '"/etc/dbus-1/system.d"')
-    dbus_sysconf_dir += '/etc/dbus-1/system.d'
-endif
-
-#
 # Check for building PGP UAM
 #
 
