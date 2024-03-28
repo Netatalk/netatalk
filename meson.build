@@ -400,21 +400,6 @@ endif
 message('atalk_libname =', atalk_libname)
 
 #
-# Check whether to enable rpath (the default on Solaris and NetBSD)
-#
-if not get_option('enable-rpath')
-    enable_rpath = false
-elif host_os == 'sunos' or host_os == 'netbsd' or get_option('enable-rpath')
-    enable_rpath = true
-endif
-
-if host_os == 'linux'
-    enable_dtags = true
-else
-    enable_dtags = false
-endif
-
-#
 # Check for the Berkeley DB library
 #
 

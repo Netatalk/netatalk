@@ -113,12 +113,6 @@ option(
     description: 'Enable redhat-style sysv (upstart) configuration',
 )
 option(
-    'enable-rpath',
-    type: 'boolean',
-    value: false,
-    description: 'Enable RPATH/RUNPATH',
-)
-option(
     'enable-suse-sysv',
     type: 'boolean',
     value: false,
