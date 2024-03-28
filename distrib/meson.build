@@ -1,2 +1,2 @@
 subdir('config')
-subdir('initscripts')
+#subdir('initscripts')
