@@ -1737,9 +1737,10 @@ elif host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
+elif host_os == 'kfreebsd-gnu'
+    cdata.set('_GNU_SOURCE', 1)
 elif host_os == 'linux'
     cdata.set('_GNU_SOURCE', 1)
-    cdata.set('LINUX', 1)
 elif host_os == 'netbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
@@ -1748,6 +1749,7 @@ elif host_os == 'netbsd'
 elif host_os == 'openbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('UAM_DHX', 1) # OpenBSD does not have crypt.h, uses unistd.h
+    cdata_set('NO_DDP', 1)
 elif host_os == 'sunos'
     cdata.set('__EXTENSIONS__', 1)
     cdata.set('__svr4__', 1)
