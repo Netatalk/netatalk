@@ -521,10 +521,6 @@ with_ssl_dir = get_option('with-ssl-dir')
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
 des = cc.find_library('des', required: false)
 
-if host_os == 'netbsd' or host_os == 'sunos'
-    need_dash_r = true
-endif
-
 if crypt.found()
     cdata.set('HAVE_CRYPT_H', 1)
     cdata.set('HAVE_LIBCRYPT', 1)
@@ -548,7 +544,7 @@ ssl_dirs = [
 foreach dir : ssl_dirs
     if fs.exists(dir / 'include/openssl/cast.h')
         ssl_link_args += ['-L' + dir / atalk_libname, '-L' + dir, '-lcrypto']
-        if need_dash_r
+        if host_os == 'netbsd' or host_os == 'sunos'
             ssl_link_args += ['-R' + dir / atalk_libname, '-R' + dir]
         endif
         ssl_includes += include_directories(
