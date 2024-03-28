@@ -1548,47 +1548,6 @@ elif host_os == 'freebsd'
 endif
 
 #
-# Check for recvfile
-#
-
-if host_os == 'linux' and cc.has_function('splice')
-    cdata.set('WITH_RECVFILE', 1)
-    cdata.set('HAVE_SPLICE', 1)
-endif
-
-#
-# Check for dtrace
-#
-
-dtrace = find_program('dtrace', required: false)
-libelf = cc.find_library('elf', required: false)
-dtrace_command = [
-    'env',
-    'CC=' + ' '.join(cc.cmd_array()),
-    dtrace,
-]
-dtrace_deps = []
-
-if host_os == 'freebsd' and cpu == 'aarch64'
-    with_dtrace = false
-    message('The version of dtrace in aarch64 FreeBSD is currently unsupported')
-elif not get_option('with-dtrace')
-    with_dtrace = false
-else
-    with_dtrace = dtrace.found()
-    if with_dtrace and host_os == 'freebsd'
-        dtrace_deps += libelf
-    endif
-endif
-
-if with_dtrace
-    cdata.set('WITH_DTRACE', 1)
-endif
-if get_option('with-dtrace') and not dtrace.found()
-    message('Dtrace probe support requested but dtrace not found')
-endif
-
-#
 # Check for POSIX threads
 #
 
