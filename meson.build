@@ -521,6 +521,10 @@ with_ssl_dir = get_option('with-ssl-dir')
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
 des = cc.find_library('des', required: false)
 
+if host_os == 'netbsd' or host_os == 'sunos'
+    need_dash_r = true
+endif
+
 if crypt.found()
     cdata.set('HAVE_CRYPT_H', 1)
     cdata.set('HAVE_LIBCRYPT', 1)
@@ -1736,7 +1740,6 @@ elif host_os == 'netbsd'
     cdata.set('NETBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EFTYPE')
     cdata.set('UAM_DHX', 1) # NetBSD does not have crypt.h, uses unistd.h
-    need_dash_r = true
 elif host_os == 'openbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('UAM_DHX', 1) # OpenBSD does not have crypt.h, uses unistd.h
@@ -1748,7 +1751,6 @@ elif host_os == 'sunos'
     cdata.set('_XOPEN_SOURCE', 600)
     cdata.set('NO_STRUCT_TM_GMTOFF', 1)
     cdata.set('SOLARIS', 1)
-    need_dash_r = true
 endif
 
 #
