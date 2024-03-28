@@ -1807,9 +1807,7 @@ summary(summary_info, bool_yn: true, section: '  UAMS:')
 
 summary_info = {
     '  ACL support': with_acls,
-    '  AFP stats via dbus': with_afpstats,
     '  Cracklib support': have_cracklib,
-    '  dtrace probes': with_dtrace,
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
@@ -1817,14 +1815,6 @@ summary_info = {
     '  Zeroconf support': enable_zeroconf,
 }
 summary(summary_info, bool_yn: true, section: '  Options:')
-
-summary_info = {
-    '  dbus daemon path': dbus_daemon_path,
-    '  dbus system directory': dbus_sysconf_dir,
-    '  init directory': init_dir,
-    '  Netatalk lockfile': lockfile_path,
-}
-summary(summary_info, bool_yn: true, section: '  Paths:')
 
 summary_info = {'  Docbook': build_xml_docs}
 summary(summary_info, bool_yn: true, section: '  Documentation:')
