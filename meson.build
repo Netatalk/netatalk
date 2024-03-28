@@ -465,13 +465,6 @@ else
     endforeach
 endif
 
-if enable_rpath
-    bdb_link_args += '-R' + bdb_libdir
-endif
-if enable_dtags
-    bdb_link_args += '-Wl,--enable-new-dtags'
-endif
-
 if bdb_header != ''
     have_bdb = true
     bdb_major_version += run_command(
@@ -551,11 +544,8 @@ ssl_dirs = [
 foreach dir : ssl_dirs
     if fs.exists(dir / 'include/openssl/cast.h')
         ssl_link_args += ['-L' + dir / atalk_libname, '-L' + dir, '-lcrypto']
-        if enable_rpath
+        if need_dash_r
             ssl_link_args += ['-R' + dir / atalk_libname, '-R' + dir]
-        endif
-        if enable_dtags
-            ssl_link_args += '-Wl,--enable-new-dtags'
         endif
         ssl_includes += include_directories(
             dir / 'include',
@@ -1746,6 +1736,7 @@ elif host_os == 'netbsd'
     cdata.set('NETBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EFTYPE')
     cdata.set('UAM_DHX', 1) # NetBSD does not have crypt.h, uses unistd.h
+    need_dash_r = true
 elif host_os == 'openbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('UAM_DHX', 1) # OpenBSD does not have crypt.h, uses unistd.h
@@ -1757,6 +1748,7 @@ elif host_os == 'sunos'
     cdata.set('_XOPEN_SOURCE', 600)
     cdata.set('NO_STRUCT_TM_GMTOFF', 1)
     cdata.set('SOLARIS', 1)
+    need_dash_r = true
 endif
 
 #
