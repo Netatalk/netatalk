@@ -1659,6 +1659,24 @@ elif host_os == 'kfreebsd-gnu'
     cdata.set('_GNU_SOURCE', 1)
 elif host_os == 'linux'
     cdata.set('_GNU_SOURCE', 1)
+    if cc.compiles(
+        '''
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <linux/atalk.h>
+
+struct atalk_addr foo;
+
+int main (void){
+
+    ;
+    return 0;
+}
+''',
+    )
+        cdata.set('HAVE_ATALK_ADDR', 1)
+    endif
+    cdata.set('NO_QUOTA_SUPPORT', 1)
 elif host_os == 'netbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
