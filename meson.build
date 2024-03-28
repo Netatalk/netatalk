@@ -1523,26 +1523,6 @@ if with_shadow
 endif
 
 #
-# Netatalk lockfile path
-#
-
-with_lockfile = get_option('with-lockfile')
-lockfile_path = ''
-if with_lockfile != ''
-    lockfile_path += with_lockfile
-elif host_os == 'freebsd'
-    lockfile_path += '/var/spool/lock/netatalk'
-elif host_os in ['netbsd', 'openbsd', 'darwin']
-    lockfile_path += '/var/run/netatalk.pid'
-elif host_os == 'linux'
-    lockfile_path += '/var/lock/netatalk'
-else
-    lockfile_path += '/var/spool/locks/netatalk'
-endif
-
-cdata.set('PATH_NETATALK_LOCK', '"' + lockfile_path + '"')
-
-#
 # Check for largefle support
 #
 

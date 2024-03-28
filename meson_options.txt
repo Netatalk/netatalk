@@ -17,6 +17,12 @@ option(
     description: 'Omit support for large files',
 )
 option(
+    'disable-locking',
+    type: 'boolean',
+    value: false,
+    description: 'Disable system locking',
+)
+option(
     'disable-sendfile',
     type: 'boolean',
     value: false,
@@ -65,10 +71,22 @@ option(
     description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
+    'enable-gentoo',
+    type: 'boolean',
+    value: false,
+    description: 'Enable gentoo-style sysv configuration',
+)
+option(
     'enable-krbV-uam',
     type: 'feature',
     value: 'auto',
     description: 'Enable build of Kerberos V UAM module',
+)
+option(
+    'enable-netbsd',
+    type: 'boolean',
+    value: false,
+    description: 'Enable NetBSD-style rc.d configuration',
 )
 option(
     'enable-overwrite',
@@ -89,10 +107,34 @@ option(
     description: 'Turn on quota support',
 )
 option(
+    'enable-redhat-sysv',
+    type: 'boolean',
+    value: false,
+    description: 'Enable redhat-style sysv (upstart) configuration',
+)
+option(
     'enable-rpath',
     type: 'boolean',
     value: false,
     description: 'Enable RPATH/RUNPATH',
+)
+option(
+    'enable-suse-sysv',
+    type: 'boolean',
+    value: false,
+    description: 'Enable suse-style sysv configuration',
+)
+option(
+    'enable-srvloc',
+    type: 'boolean',
+    value: false,
+    description: 'Enable Server Location Protocol (SLP) support',
+)
+option(
+    'enable-systemd',
+    type: 'boolean',
+    value: false,
+    description: 'Use systemd configuration',
 )
 option(
     'enable-zeroconf',
@@ -105,12 +147,6 @@ option(
     type: 'feature',
     value: 'auto',
     description: 'Include ACL support',
-)
-option(
-    'with-afpstats',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable AFP statistics via dbus (enabled if dbus found)',
 )
 option(
     'with-bdb',
@@ -149,56 +185,16 @@ option(
     description: 'Path to DBus daemon',
 )
 option(
-    'with-dbus-sysconf-dir',
-    type: 'string',
-    value: '',
-    description: 'Path to dbus system bus security configuration directory',
-)
-option(
     'with-docbook',
     type: 'string',
     value: '',
     description: 'Path to Docbook XSL directory, default: none',
 )
 option(
-    'with-dtrace',
-    type: 'boolean',
-    value: true,
-    description: 'Enable dtrace probes (enabled if dtrace found)',
-)
-option(
     'with-gssapi',
     type: 'string',
     value: '',
     description: 'Path to GSSAPI for Kerberos V UAM',
-)
-option(
-    'with-init-dir',
-    type: 'string',
-    value: '',
-    description: 'Path to OS specific init directory, default: none',
-)
-option(
-    'with-init-style',
-    type: 'combo',
-    choices: [
-        '',
-        'debian-sysv',
-        'gentoo-openrc',
-        'gentoo-systemd',
-        'macos-launchd',
-        'netbsd',
-        'openrc',
-        'redhat-systemd',
-        'redhat-sysv',
-        'solaris',
-        'suse-systemd',
-        'suse-sysv',
-        'systemd',
-        'debian-systemd',
-    ],
-    value: '',
-    description: 'Use OS specific init config',
 )
 option(
     'with-kerberos',
@@ -225,18 +221,6 @@ option(
     description: 'Path to libiconv installation. Must contain lib and include dirs',
 )
 option(
-    'with-lockfile',
-    type: 'string',
-    value: '',
-    description: 'Path of Netatalk lockfile)',
-)
-option(
-    'with-mysql-config',
-    type: 'string',
-    value: 'mysql_config',
-    description: 'Path to mysql-config binary',
-)
-option(
     'with-pam',
     type: 'string',
     value: '',
@@ -259,24 +243,6 @@ option(
     type: 'string',
     value: '',
     description: 'Specify path to OpenSSL installation. Must contain lib and include dirs',
-)
-option(
-    'with-tracker-install-prefix',
-    type: 'string',
-    value: '',
-    description: 'Prefix of Tracker (default: none)',
-)
-option(
-    'with-tracker-pkgconfig-version',
-    type: 'string',
-    value: '0.12',
-    description: 'Version suffix of the Tracker SPARQL pkg-config',
-)
-option(
-    'with-tracker-prefix',
-    type: 'string',
-    value: '',
-    description: 'Prefix of Tracker',
 )
 option(
     'with-uams-path',
