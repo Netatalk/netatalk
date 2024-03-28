@@ -755,19 +755,21 @@ if get_option('enable-cups').disabled()
     cdata.set('DISABLE_SPOOL', 1)
 
 else
-    have_cups = true
-    spooldir_required = true
-    cdata.set('HAVE_CUPS', 1)
-    cups_api_version = run_command(
-        cups_config,
-        '--api-version',
-        check: true,
-    ).stdout().strip()
-    cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
-    if get_option('with-spooldir') != ''
-        spooldir = get_option('with-spooldir')
-    else
-        spooldir = localstatedir / 'spool/netatalk'
+    have_cups = cups.found() and cups_config.found()
+    if have_cups
+        spooldir_required = true
+        cdata.set('HAVE_CUPS', 1)
+        cups_api_version = run_command(
+            cups_config,
+            '--api-version',
+            check: true,
+        ).stdout().strip()
+        cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
+        if get_option('with-spooldir') != ''
+            spooldir = get_option('with-spooldir')
+        else
+            spooldir = localstatedir / 'spool/netatalk'
+        endif
     endif
 endif
 
