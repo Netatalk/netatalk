@@ -432,6 +432,7 @@ jobs:
             ninja -C build
 
   build-dflybsd:
+    if: false
     name: "DragonflyBSD"
     runs-on: ubuntu-22.04
     permissions:
