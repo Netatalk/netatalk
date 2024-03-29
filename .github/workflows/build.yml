@@ -250,59 +250,15 @@ jobs:
       - name: Meson tests
         run: cd build && meson test
 
-  build-omnios:
-    name: "OmniOS"
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-      - name: "Build on VM"
-        uses: vmactions/omnios-vm@v1.0.1
-        with:
-          copyback: false
-          prepare: |
-            pkg install \
-              build-essential \
-              libtool \
-              pkg-config
-            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
-            tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
-            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            pkgin -y install \
-              avahi \
-              dbus-glib \
-              gnome-tracker \
-              libevent \
-              libgcrypt \
-              meson \
-              talloc
-          run: |
-            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            ./bootstrap
-            ./configure \
-              --enable-pgp-uam \
-              --with-init-style=solaris \
-              --with-bdb=/opt/local \
-              --with-libgcrypt-dir=/opt/local \
-              --with-tracker-pkgconfig-version=3.0 \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
-            gmake -j $(nproc)
-            meson setup build \
-              -Dpkg_config_path=/opt/local/lib/pkgconfig
-            ninja -C build
-
   build-freebsd:
-    name: "FreeBSD"
+    name: FreeBSD
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/freebsd-vm@v1.0.6
         with:
           copyback: false
@@ -340,14 +296,14 @@ jobs:
             cd build && meson test
 
   build-openbsd:
-    name: "OpenBSD"
+    name: OpenBSD
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/openbsd-vm@v1.0.7
         with:
           copyback: false
@@ -386,14 +342,14 @@ jobs:
             cd build && meson test
 
   build-netbsd:
-    name: "NetBSD"
+    name: NetBSD
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/netbsd-vm@v1.0.5
         with:
           copyback: false
@@ -433,14 +389,14 @@ jobs:
 
   build-dflybsd:
     if: false
-    name: "DragonflyBSD"
+    name: DragonflyBSD
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/dragonflybsd-vm@v1
         with:
           copyback: false
@@ -475,14 +431,14 @@ jobs:
             ninja -C build
 
   build-solaris:
-    name: "Solaris"
+    name: Solaris
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/solaris-vm@v1.0.2
         with:
           copyback: false
@@ -519,6 +475,50 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
+
+  build-omnios:
+    name: OmniOS
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/omnios-vm@v1.0.1
+        with:
+          copyback: false
+          prepare: |
+            pkg install \
+              build-essential \
+              libtool \
+              pkg-config
+            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
+            tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            pkgin -y install \
+              avahi \
+              dbus-glib \
+              gnome-tracker \
+              libevent \
+              libgcrypt \
+              meson \
+              talloc
+          run: |
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            ./bootstrap
+            ./configure \
+              --enable-pgp-uam \
+              --with-init-style=solaris \
+              --with-bdb=/opt/local \
+              --with-libgcrypt-dir=/opt/local \
+              --with-tracker-pkgconfig-version=3.0 \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
+            gmake -j $(nproc)
+            meson setup build \
+              -Dpkg_config_path=/opt/local/lib/pkgconfig
+            ninja -C build
 
   static_analysis:
     name: Static Analysis
