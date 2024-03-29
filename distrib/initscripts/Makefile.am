@@ -18,48 +18,48 @@ systemddir = @SYSTEMDDIR@
 	    <$< >$@
 
 GENERATED_FILES = \
-	rc.afpd.netbsd		\
-	rc.atalk.redhat-sysv	\
-	rc.atalk.systemd	\
-	rc.atalkd.netbsd	\
-	rc.atalk.suse-sysv	\
-	rc.cnid_metad.netbsd	\
-	rc.papd.netbsd		\
-	rc.timelord.netbsd	\
-	rc.a2boot.netbsd	\
-	rc.atalk.sysv		\
-	rc.atalk.gentoo		\
-	rc.atalk.debian		\
 	a2boot.service		\
 	afpd.service		\
 	atalkd.service		\
 	cnid.service		\
+	io.netatalk.daemon.plist \
+	netatalkd		\
 	papd.service		\
-	timelord.service \
-	com.netatalk.daemon.plist \
-	netatalkd
+	rc.a2boot.netbsd	\
+	rc.afpd.netbsd		\
+	rc.atalk.debian		\
+	rc.atalk.gentoo		\
+	rc.atalk.redhat-sysv	\
+	rc.atalk.suse-sysv	\
+	rc.atalk.systemd	\
+	rc.atalk.sysv		\
+	rc.atalkd.netbsd	\
+	rc.cnid_metad.netbsd	\
+	rc.papd.netbsd		\
+	rc.timelord.netbsd	\
+	timelord.service
 
 TEMPLATES = \
-	rc.afpd.netbsd.tmpl		\
-	rc.atalk.redhat-sysv.tmpl	\
-	rc.atalk.systemd.tmpl		\
-	rc.atalkd.netbsd.tmpl		\
-	rc.atalk.suse-sysv.tmpl		\
-	rc.cnid_metad.netbsd.tmpl	\
-	rc.papd.netbsd.tmpl		\
-	rc.timelord.netbsd.tmpl		\
-	rc.a2boot.netbsd.tmpl		\
-	rc.atalk.sysv.tmpl		\
-	rc.atalk.gentoo.tmpl		\
-	rc.atalk.debian.tmpl		\
 	a2boot.service.tmpl		\
 	afpd.service.tmpl		\
 	atalkd.service.tmpl		\
 	cnid.service.tmpl		\
+	io.netatalk.daemon.plist.tmpl	\
+	netatalkd.tmpl			\
 	papd.service.tmpl		\
-	timelord.service.tmpl \
-	com.netatalk.daemon.plist.tmpl \
-	netatalkd.tmpl
+	rc.a2boot.netbsd.tmpl		\
+	rc.afpd.netbsd.tmpl		\
+	rc.atalk.debian.tmpl		\
+	rc.atalk.gentoo.tmpl		\
+	rc.atalk.redhat-sysv.tmpl	\
+	rc.atalk.suse-sysv.tmpl		\
+	rc.atalk.systemd.tmpl		\
+	rc.atalk.sysv.tmpl		\
+	rc.atalkd.netbsd.tmpl		\
+	rc.cnid_metad.netbsd.tmpl	\
+	rc.papd.netbsd.tmpl		\
+	rc.timelord.netbsd.tmpl		\
+	timelord.service.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) a2boot afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
@@ -258,7 +258,7 @@ if USE_MACOS
 
 launchddir = /Library/LaunchDaemons
 bin_SCRIPTS = netatalkd
-launchd_DATA = com.netatalk.daemon.plist
+launchd_DATA = io.netatalk.daemon.plist
 
 install-data-hook:
 	(if [ ! -f $(launchddir)/$(launchd_DATA) ] ; then \
