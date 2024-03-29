@@ -13,7 +13,7 @@ elif get_option('with-init-style') == 'redhat-sysv'
         install_mode: 'rwxr-xr-x',
     )
     meson.add_install_script(
-        find_program(chkconfig),
+        find_program('chkconfig'),
         'add',
         '/etc/rc.d/init.d/netatalk',
     )
@@ -33,7 +33,7 @@ elif (
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(find_program(systemctl), 'daemon-reload')
+    meson.add_install_script(find_program('systemctl'), 'daemon-reload')
 elif get_option('with-init-style') == 'debian-systemd'
     init_dir += '/lib/systemd/system'
     custom_target(
@@ -45,7 +45,7 @@ elif get_option('with-init-style') == 'debian-systemd'
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(find_program(systemctl), 'daemon-reload')
+    meson.add_install_script(find_program('systemctl'), 'daemon-reload')
 elif get_option('with-init-style') == 'suse-sysv'
     init_dir += '/etc/init.d'
     custom_target(
@@ -58,7 +58,7 @@ elif get_option('with-init-style') == 'suse-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    meson.add_install_script(find_program(insserv), '/etc/init.d/netatalk')
+    meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
 elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
     custom_target(
@@ -83,7 +83,7 @@ elif get_option('with-init-style') == 'sunos'
         install_dir: init_dir,
     )
     meson.add_install_script(
-        find_program(svccfg),
+        find_program('svccfg'),
         'import',
         '/lib/svc/manifest/network/netatalk.xml',
     )
@@ -137,7 +137,7 @@ elif get_option('with-init-style') == 'macos-launchd'
     )
     if not fs.exists(init_dir / 'com.netatalk.daemon.plist')
         meson.add_install_script(
-            find_program(launchctl),
+            find_program('launchctl'),
             'load',
             '-w',
             init_dir / 'com.netatalk.daemon.plist',
