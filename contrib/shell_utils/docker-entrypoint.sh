@@ -122,13 +122,19 @@ rm -f /var/lock/afpd /var/lock/atalkd /var/lock/cnid_metad || true
 
 # Ready to start things below here
 
-echo "*** Starting AppleTalk services (this will take a minute)"
-
 # All daemons fork when ready, so we can launch them in order
-atalkd
-papd
-timelord -l
-a2boot
+if [ -z "${ATALKD_INTERFACE}" ]; then
+	echo "WARNING The AppleTalk services will NOT be started. The requirements are:"
+	echo "- The host OS must have an AppleTalk networking stack, e.g. Debian, Ubuntu, or NetBSD."
+	echo "- The Docker container must be use the \`host\` network driver with the \`NET_ADMIN\` capability."
+	echo "- You must set the \`ATALKD_INTERFACE\` environment variable."
+else
+	echo "*** Starting AppleTalk services (this will take a minute)"
+	atalkd
+	papd
+	timelord -l
+	a2boot
+fi
 
 echo "*** Starting AFP server"
 
