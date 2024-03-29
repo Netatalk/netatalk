@@ -13,7 +13,7 @@
 
 #ifndef NO_DDP
 
-#if defined(linux) /* pull in the linux header */
+#if defined(__linux__) /* pull in the linux header */
 #include <sys/socket.h>
 #include <asm/types.h>
 #include <linux/atalk.h>
