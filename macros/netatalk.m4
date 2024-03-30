@@ -845,7 +845,7 @@ if test x"$netatalk_cv_ldap" != x"no" ; then
         fi
 		netatalk_cv_ldap=no
         ])
-	AC_CHECK_LIB(ldap, ldap_init, netatalk_cv_ldap=yes,
+	AC_CHECK_LIB(ldap, ldap_initialize, netatalk_cv_ldap=yes,
         [ if test x"$netatalk_cv_ldap" = x"yes" ; then
             AC_MSG_ERROR([Missing LDAP library])
         fi
