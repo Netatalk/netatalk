@@ -280,6 +280,7 @@ jobs:
               talloc \
               tracker3
           run: |
+            set -e
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -327,6 +328,7 @@ jobs:
               pkgconf \
               tracker3
           run: |
+            set -e
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             autoreconf -fi
@@ -373,6 +375,7 @@ jobs:
               pkg-config \
               talloc
           run: |
+            set -e
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -420,6 +423,7 @@ jobs:
               talloc \
               tracker3
           run: |
+            set -e
             ./bootstrap
             ./configure \
               --with-ssl-dir=/usr/local \
@@ -467,6 +471,7 @@ jobs:
             make install
             cd ..
           run: |
+            set -e
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -505,12 +510,14 @@ jobs:
               meson \
               talloc
           run: |
+            set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             ./bootstrap
             ./configure \
               --enable-pgp-uam \
-              --with-init-style=solaris \
               --with-bdb=/opt/local \
+              --with-init-style=solaris \
+              --with-ldap=no \
               --with-libgcrypt-dir=/opt/local \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
