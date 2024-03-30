@@ -290,7 +290,7 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
-            meson setup build
+            meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dbuild-tests=true
             ninja -C build
@@ -337,7 +337,7 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
-            meson setup build
+            meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dbuild-tests=true
             ninja -C build
@@ -517,14 +517,15 @@ jobs:
               --enable-pgp-uam \
               --with-bdb=/opt/local \
               --with-init-style=solaris \
-              --with-ldap=no \
+              --with-ldap=/opt/local \
               --with-libgcrypt-dir=/opt/local \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             gmake -j $(nproc)
             meson setup build \
-              -Dpkg_config_path=/opt/local/lib/pkgconfig
+              -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-ldap=/opt/local
             ninja -C build
 
   static_analysis:
