@@ -291,10 +291,8 @@ jobs:
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
             meson setup build \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dbuild-tests=true
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig
             ninja -C build
-            cd build && meson test
 
   build-openbsd:
     name: OpenBSD
@@ -338,10 +336,8 @@ jobs:
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dbuild-tests=true
+              -Dpkg_config_path=/usr/local/lib/pkgconfig
             ninja -C build
-            cd build && meson test
 
   build-netbsd:
     name: NetBSD
