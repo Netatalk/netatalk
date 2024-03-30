@@ -128,20 +128,19 @@ elif get_option('with-init-style') == 'macos-launchd'
     )
     custom_target(
         'plist',
-        input: 'com.netatalk.daemon.plist.tmpl',
-        output: 'com.netatalk.daemon.plist',
+        input: 'io.netatalk.daemon.plist.tmpl',
+        output: 'io.netatalk.daemon.plist',
         command: sed_command,
         capture: true,
         install: true,
         install_dir: init_dir,
     )
-    if not fs.exists(init_dir / 'com.netatalk.daemon.plist')
+    if not fs.exists(init_dir / 'io.netatalk.daemon.plist')
         meson.add_install_script(
             find_program('launchctl'),
             'load',
             '-w',
-            init_dir / 'com.netatalk.daemon.plist',
+            init_dir / 'io.netatalk.daemon.plist',
         )
     endif
 endif
-

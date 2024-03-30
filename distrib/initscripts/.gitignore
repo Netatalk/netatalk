@@ -1,4 +1,8 @@
-com.netatalk.daemon.plist
+io.netatalk.daemon.plist
+netatalk
+netatalk.service
+netatalk.xml
+netatalkd
 rc.bsd
 rc.debian
 rc.gentoo
@@ -7,7 +11,3 @@ rc.redhat
 rc.solaris
 rc.suse
 service.systemd
-netatalk
-netatalk.service
-netatalk.xml
-netatalkd

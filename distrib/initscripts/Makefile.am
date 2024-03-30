@@ -17,6 +17,9 @@ pkgconfdir = @PKGCONFDIR@
 	    <$< >$@
 
 GENERATED_FILES = \
+	io.netatalk.daemon.plist \
+	netatalk.xml \
+	netatalkd \
 	rc.bsd \
 	rc.debian \
 	rc.gentoo \
@@ -24,12 +27,12 @@ GENERATED_FILES = \
 	rc.redhat \
 	rc.solaris \
 	rc.suse \
-	service.systemd \
-	netatalk.xml \
-	com.netatalk.daemon.plist \
-	netatalkd
+	service.systemd
 
 TEMPLATES = \
+	io.netatalk.daemon.plist.tmpl \
+	netatalk.xml.tmpl \
+	netatalkd.tmpl \
 	rc.bsd.tmpl \
 	rc.debian.tmpl \
 	rc.gentoo.tmpl \
@@ -37,10 +40,7 @@ TEMPLATES = \
 	rc.redhat.tmpl \
 	rc.solaris.tmpl \
 	rc.suse.tmpl \
-	service.systemd.tmpl \
-	netatalk.xml.tmpl \
-	com.netatalk.daemon.plist.tmpl \
-	netatalkd.tmpl
+	service.systemd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
 EXTRA_DIST = $(TEMPLATES)
@@ -229,7 +229,7 @@ endif
 if USE_MACOS_LAUNCHD
 
 bin_SCRIPTS = netatalkd
-launchd_PLIST = com.netatalk.daemon.plist
+launchd_PLIST = io.netatalk.daemon.plist
 
 install-data-hook:
 	(if [ ! -f $(INIT_DIR)/$(launchd_PLIST) ] ; then \
