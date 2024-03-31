@@ -2,12 +2,12 @@
 .\"     Title: afpd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 24 Dec 2023
+.\"      Date: 01 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "24 Dec 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFPD" "8" "01 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -64,7 +64,8 @@ Prevents the daemon from forking, for debugging purposes\&.
 .PP
 \-p
 .RS 4
-Prevents clients from saving their passwords\&. (Equivalent to \-\fBnosavepasswd\fR
+Prevents clients from saving their passwords\&. (Equivalent to
+\fB\-nosavepasswd\fR
 in
 afpd\&.conf\&.)
 .RE
@@ -79,16 +80,16 @@ afpd\&.conf\&.)
 .PP
 \-D
 .RS 4
-Use DDP (AppleTalk) as transport protocol\&. (Equivalent to
-\fB\-ddp\fR
+Disable DDP (AppleTalk) as transport protocol\&. (Equivalent to
+\fB\-noddp\fR
 in
-afpd\&.cond\&.)
+afpd\&.conf\&.)
 .RE
 .PP
 \-T
 .RS 4
-Use TCP/IP as transport protocol\&. (Equivalent to
-\fB\-tcp\fR
+Disable TCP/IP as transport protocol\&. (Equivalent to
+\fB\-notcp\fR
 in
 afpd\&.conf\&.)
 .RE

@@ -2,12 +2,12 @@
 .\"     Title: afp_voluuid.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 8 March 2011
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_VOLUUID\&.CONF" "5" "8 March 2011" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_VOLUUID\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,20 +28,20 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_voluuid.conf \- Configuration file used by afpd(8) to specify UUID for Time Machine volume
+afp_voluuid.conf \- Configuration file used by \fBafpd\fR(8) to specify UUID for Time Machine volumes
 .SH "DESCRIPTION"
 .PP
 afp_voluuid\&.conf
 is the configuration file used by
 \fBafpd\fR
-to specify UUID of Time Machine volume automagically\&. The configuration lines are composed like:
+to specify the UUID of Time Machine volumes automagically\&. The configuration lines are composed like this:
 .PP
 \fI"volume\-name"\fR
 \fIuuid\-string\fR
 .PP
 The first field is volume name\&. Volume names must be quoted if they contain spaces\&. The second field is the 36 character hexadecimal ASCII string representation of a UUID\&.
 .PP
-The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines prefixed with # are ignored\&. The illegal lines are ignored\&.
+The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines prefixed with # are ignored\&. Illegal lines are ignored\&.
 .if n \{\
 .sp
 .\}
@@ -55,11 +55,13 @@ The leading spaces and tabs are ignored\&. Blank lines are ignored\&. The lines 
 .ps -1
 .br
 .PP
-This UUID is advertised by Zeroconf in order to provide robust disambiguation of Time Machine volume\&.
+This UUID is advertised by Zeroconf in order to provide robust disambiguation of the Time Machine volume\&.
 .PP
-The afpd generates the UUID from random numbers and saves it into afp_voluuid\&.conf, only when setting "tm" option in AppleVolumes file\&.
+The afpd process generates the UUID from random numbers and saves it into afp_voluuid\&.conf, when the
+\fBtm\fR
+option is enabled for the volume in the AppleVolumes configuration file\&.
 .PP
-This file should not be thoughtlessly edited and be copied onto another server\&.
+This file should not be thoughtlessly edited or copied onto another server\&.
 .sp .5v
 .RE
 .PP

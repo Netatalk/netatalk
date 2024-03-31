@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_signature.conf \- Configuration file used by afpd(8) to specify server signature
+afp_signature.conf \- Configuration file used by \fBafpd\fR(8) to specify server signature
 .SH "DESCRIPTION"
 .PP
 afp_signature\&.conf

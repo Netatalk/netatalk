@@ -2,12 +2,12 @@
 .\"     Title: ad
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05 Dec 2015
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AD" "1" "05 Dec 2015" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AD" "1" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-ad \- Netatalk compatible UNIX file utility suite\&.
+ad \- AppleDouble file utility suite
 .SH "SYNOPSIS"
 .HP \w'\fBad\fR\ 'u
 \fBad\fR {ls\ |\ cp\ |\ mv\ |\ rm} [\&.\&.\&.]
@@ -37,9 +37,9 @@ ad \- Netatalk compatible UNIX file utility suite\&.
 .SH "DESCRIPTION"
 .PP
 \fBad\fR
-is a UNIX file utility suite with Netatalk compatibity\&. AppleDouble files in
+is an AppleDouble file utility suite with Netatalk compatibity\&. AppleDouble files in
 \&.AppleDouble
-directories and the CNID databases are updated as appropriate\&.
+directories and the CNID databases are updated as appropriate when files in a shared Netatalk volume are modified\&.
 .SH "AVAILABLE COMMANDS"
 .HP \w'\fBad\ ls\fR\ 'u
 \fBad ls\fR [\-dRl\ [u]] {file|dir\ [\&.\&.\&.]}

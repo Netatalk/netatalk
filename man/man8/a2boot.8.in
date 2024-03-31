@@ -2,12 +2,12 @@
 .\"     Title: a2boot
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01 Mar 2023
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "A2BOOT" "8" "01 Mar 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "A2BOOT" "8" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,17 +28,51 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-a2boot \- Apple II netboot server
+a2boot \- Apple II netboot server daemon
 .SH "SYNOPSIS"
 .HP \w'\fBa2boot\fR\ 'u
 \fBa2boot\fR [\-d] [\-n\ \fInbpname\fR]
 .SH "DESCRIPTION"
 .PP
 \fBa2boot\fR
-is a netboot server for Apple IIe and IIGS computers\&. It allows compatible clients to boot over an AppleTalk network
+is a netboot server for Apple IIe and IIGS computers\&. It allows compatible clients to boot into ProDOS or GS/OS over an AppleTalk network\&. This is functionally comparable to the Apple II netboot software included in early versions of AppleShare File Server for Macintosh\&.
 .PP
-\fBa2boot\fR
-serves multiple AFP volumes that the Apple II client is configured to boot off of\&. These volumes have to be populated with the appropriate ProDOS or GS/OS system files before they can be used as boot volumes\&.
+When running, the daemon will create the following hard\-coded AFP volumes\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Apple //e Boot
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Apple //gs
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ProDOS16 Image
+.RE
+.PP
+These volumes need to be populated with the appropriate ProDOS or GS/OS system files in order to function as boot volumes\&. For more information, see the documentation for AppleShare File Server for Macintosh\&.
 .SH "OPTIONS"
 .PP
 \fB\-d\fR

@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-papd.conf \- Configuration file used by papd(8) to determine the configuration of printers used by the Netatalk printing daemon
+papd.conf \- Configuration file used by \fBpapd\fR(8) to determine the configuration of printers used by the Netatalk printing daemon
 .SH "DESCRIPTION"
 .PP
 \fBpapd\&.conf\fR

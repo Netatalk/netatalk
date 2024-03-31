@@ -2,12 +2,12 @@
 .\"     Title: atalkd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 18 Jan 2024
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "ATALKD" "8" "18 Jan 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "ATALKD" "8" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-atalkd \- AppleTalk RTMP, NBP, ZIP, and AEP manager
+atalkd \- userland AppleTalk network manager daemon
 .SH "SYNOPSIS"
 .HP \w'\fBatalkd\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\ 'u
 \fBatalkd\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR\fB\fR [\-f\ \fIconfigfile\fR] [\-P\ \fIpidfile\fR] [\-1] [\-2] [\-d] [\-t] [\-v]
@@ -36,7 +36,8 @@ atalkd \- AppleTalk RTMP, NBP, ZIP, and AEP manager
 .PP
 \fBatalkd\fR
 is responsible for all user level AppleTalk network management\&. This includes routing, name registration and lookup, zone lookup, and the AppleTalk Echo Protocol (similar to
-\fBping\fR(8))\&.
+\fBping\fR(8))\&. Specifically, this corresponds to the RTMP, NBP, ZIP, and AEP protocols\&.
+.PP
 \fBatalkd\fR
 is typically started at boot time from system init scripts or services\&. It first reads from its configuration file,
 atalkd\&.conf\&. If there is no configuration file,

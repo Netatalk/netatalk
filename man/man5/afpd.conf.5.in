@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03 May 2023
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "03 May 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFPD\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afpd.conf \- Configuration file used by afpd(8) to determine the setup of its file sharing services
+afpd.conf \- Configuration file used by \fBafpd\fR(8) to determine the capabilities of its file sharing services
 .SH "DESCRIPTION"
 .PP
 afpd\&.conf
 is the configuration file used by
 \fBafpd\fR
-to determine the behavior and configuration of the different virtual file servers that it provides\&.
+to determine the behavior and capabilities of one or more virtual file servers that it provides\&.
 .PP
 Any line not prefixed with # is interpreted\&. The configuration lines are composed like: server name [ options ] If a
 \fB\-\fR

@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 31 Jan 2024
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "31 Jan 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-AppleVolumes.default, AppleVolumes.system, AppleVolumes \- Configuration file used by \fBafpd\fR(8) to determine the shares made available through AFP and specify file name extension mappings\&.
+AppleVolumes.default, AppleVolumes.system, AppleVolumes \- Configuration file(s) used by \fBafpd\fR(8) to determine the shared volumes made available through AFP
 .SH "SYNOPSIS"
 .HP \w'\fBAppleVolumes\&.default\fR\ 'u
 \fBAppleVolumes\&.default\fR
@@ -53,7 +53,13 @@ AppleVolumes\&.default,
 ~/\&.applevolumes
 are the configuration files used by
 \fBafpd\fR
-to determine what portions of the file system will be shared via Apple Filing Protocol, as well as their behaviour\&.
+to determine what portions of the file system will be shared via Apple Filing Protocol, their behaviour, as well as file name extension mappings\&.
+.PP
+The present convention is that
+AppleVolumes\&.system
+contains the global file extension mappings, while
+AppleVolumes\&.default
+contains the global shared volumes\&. When present, the config file in the user\*(Aqs home dir contains user overrides to either\&.
 .PP
 Any line not prefixed with # is interpreted\&. Newline escaping is supported\&. The configuration lines are composed like:
 .PP
@@ -101,7 +107,7 @@ The leading\-dot lines specify file name extension mappings\&. The extension \*(
 .ps -1
 .br
 .PP
-File name extension mapping is useful for Mac OS 9 and earlier\&. But it should not use for Mac OS X\&.
+File name extension mapping is useful for Mac OS 9 and earlier\&. However, it is not helpful on Mac OS X\&.
 .sp .5v
 .RE
 .PP

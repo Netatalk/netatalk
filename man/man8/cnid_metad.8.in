@@ -2,12 +2,12 @@
 .\"     Title: cnid_metad
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01 Jan 2012
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "01 Jan 2012" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "CNID_METAD" "8" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-cnid_metad \- start cnid_dbd daemons on request
+cnid_metad \- daemon for starting \fBcnid_dbd\fR(8) daemons on demand
 .SH "SYNOPSIS"
 .HP \w'\fBcnid_metad\fR\ 'u
 \fBcnid_metad\fR [\-l\ \fIloglevel\fR\ [\-f\ \fIfilename\fR]] [\-d] [\-h\ \fIhostname\fR] [\-p\ \fIport\fR] [\-u\ \fIuser\fR] [\-g\ \fIgroup\fR] [\-s\ \fIcnid_dbdpathname\fR]

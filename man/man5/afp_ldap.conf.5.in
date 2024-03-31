@@ -2,12 +2,12 @@
 .\"     Title: afp_ldap.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 30 Mar 2011
+.\"      Date: 08 Mar 2024
 .\"    Manual: @NETATALK_VERSION@
 .\"    Source: @NETATALK_VERSION@
 .\"  Language: English
 .\"
-.TH "AFP_LDAP\&.CONF" "5" "30 Mar 2011" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_LDAP\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afp_ldap.conf \- Configuration file used by afpd(8) to configure a LDAP connection to an LDAP server\&. That is needed for ACL support in order to be able to query LDAP for UUIDs\&.
+afp_ldap.conf \- Configuration file used by \fBafpd\fR(8) to configure connections to an LDAP server
 .SH "DESCRIPTION"
 .PP
 afp_ldap\&.conf
 is the configuration file used by
 \fBafpd\fR
-to set up an LDAP connection to an LDAP server\&.
+to set up connections to an LDAP server\&. This is needed for ACL support in order to be able to query LDAP for UUIDs\&.
 .PP
 Any line not prefixed with # is interpreted\&.
 .PP
