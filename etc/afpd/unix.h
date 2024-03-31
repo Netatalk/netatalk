@@ -45,7 +45,7 @@
 #define dqb_btimelimit  dqb_btime
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
-#if defined(linux) || defined(HAVE_QUOTA_H)
+#if defined(__linux__) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
 /*#include <sys/quota.h>*/
 /*long quotactl (int, const char *, unsigned int, caddr_t); */
