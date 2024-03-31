@@ -541,11 +541,12 @@ gssapi_headers = [
 foreach header : gssapi_headers
     if cc.has_header(
         header,
-        include_directories: include_directories(with_gssapi / 'include'),
+        include_directories: include_directories(
+            [with_gssapi / 'include', header_dir],
+        ),
     )
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
     endif
-
 endforeach
 
 if get_option('with-gssapi') != ''
@@ -606,7 +607,10 @@ kerberos_headers = [
 ]
 
 foreach header : kerberos_headers
-    if cc.has_header(header)
+    if cc.has_header(
+        header,
+        include_directories: include_directories(header_dir),
+    )
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
     endif
 endforeach
@@ -1705,31 +1709,33 @@ endif
 # Check for TCP wrappers support
 #
 
-wrap_link_args = []
 wrap = cc.find_library('wrap', required: false)
 
-if wrap.found()
-    wrap_link_args += '-lwrap'
-endif
+if not wrap.found() or get_option('disable-tcp-wrappers')
+    have_tcpwrap = false
+else
+    tcpwrap_code = '''
+int allow_severity = 0;
+int deny_severity = 0;
 
-tcpwrap_code = '''
-#include <tcpd.h>
 int main(void) {
-    int allow_severity = 0;
-    int deny_severity = 0;
+
+    hosts_access();
+
     ;
-return 0;
+    return 0;
 }
 '''
 
-if get_option('disable-tcp-wrappers')
-    have_tcpwrap = false
-else
-    have_tcpwrap = cc.links(tcpwrap_code, args: wrap_link_args)
-endif
-message(have_tcpwrap)
-if have_tcpwrap
-    cdata.set('TCPWRAP', 1)
+    have_tcpwrap = cc.links(tcpwrap_code, args: '-lwrap')
+    if not have_tcpwrap
+        have_tcpwrap = cc.links(tcpwrap_code, args: ['-lwrap', '-lnsl'])
+    endif
+    message(have_tcpwrap)
+
+    if have_tcpwrap
+        cdata.set('TCPWRAP', 1)
+    endif
 endif
 
 #
