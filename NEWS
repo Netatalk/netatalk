@@ -1,3 +1,19 @@
+Changes in 2.3.2
+================
+* atalkd: Bail out when attempting to -seed a single interface, GitHub #719
+* pap: Compatibility and nicer status messages for ImageWriters, GitHub #722
+  Based on code from the `image-writer` project by kakwa
+* init: Add macOS launchd init config and helper script, GitHub #735
+* build system: Detect system docbook stylesheets at configure time, GitHub #746
+* docs: Correct descriptions for afpd -D and -T options, GitHub #725
+* docs: Improve man page summaries and contents, GitHub #733
+* docs: Improve layout of generated html and pdf manuals, GitHub #739
+* docs: Add the full text of the GNU GPL v2 license to the manual, GitHub #753
+* Introduce a Docker container configuration and entry script, GitHub #712
+  Special thanks to Eric Harmon for the initial POC and encouragement.
+* Remove binary logo images from revision control, GitHub #715
+  These files now live in the `netatalk-homepage` repo.
+
 Changes in 2.3.1
 ================
 * afpd: Remove obsoleted AppleDouble osx and sfm formats, GitHub #668
@@ -98,7 +114,7 @@ Changes in 2.2.10
        - Add man page paragraph on the illegalseq option
 * FIX: Use non-interactive PAM session to avoid spurious error, GH#361
 * FIX: Adopt Debian downstream patches, GH#369
-       - Drop bogus warning in AppleVolumes.default 
+       - Drop bogus warning in AppleVolumes.default
        - Fix syntax and typo in add_netatalk_printer script
        - Fix user-visible typos in log output and documentation
        - Improvements to Debian legacy init.d script
@@ -520,7 +536,7 @@ Changes in 2.1.2
        directories on "upriv" volumes.
 * UPD: afpd: use 'afpserver@fqdn' instead of 'afpserver/fqdn@realm'.
        Prevents a crash in older GNU GSSAPI libs on e.g. CentOS 5.x.
- 
+
 Changes in 2.1.1
 ================
 
@@ -617,7 +633,7 @@ Changes in 2.0.5
 * NEW: afpd: Time Machine support with new volume option "tm".
 * FIX: papd: Remove variable expansion for BSD printers. Fixes CVE-2008-5718.
 * FIX: afpd: .AppleDxxx folders were user accessible if option 'usedots'
-       was set 
+       was set
 * FIX: afpd: vetoed files/dirs where still accessible
 * FIX: afpd: cnid_resolve: don't return '..' as a valid name.
 * FIX: uniconv: -d option wasn't working
@@ -625,20 +641,20 @@ Changes in 2.0.5
 Changes in 2.0.4
 ================
 
-* REM: remove timeout 
+* REM: remove timeout
 * NEW: afpd: DHX2 uams using GNU libgcrypt.
 * NEW: afpd: volume options 'illegalseq', 'perm' and 'invisibledots'
-       'ilegalseq'  encode illegal sequence in filename asis, ex "\217-", which is not 
+       'ilegalseq'  encode illegal sequence in filename asis, ex "\217-", which is not
        a valid SHIFT-JIS char, is encoded  as U\217 -.
        'perm' value OR with the client requested permissions. (help with OSX 10.5
        strange permissions).
-       Make dot files visible by default with 'usedots', use 'invisibledots' 
+       Make dot files visible by default with 'usedots', use 'invisibledots'
        for keeping the old behavior, i.e. for OS9 (OSX hide dot files on its
        own).
 * NEW: afpd: volume options allow_hosts/denied hosts
 * NEW: afpd: volume options dperm/fperm default directory and file
        permissions or with server requests.
-* NEW: afpd: afpd.conf, allow line continuation with \ 
+* NEW: afpd: afpd.conf, allow line continuation with \
 * NEW: afpd: AppleVolumes.default allow line continuation with \
 * NEW: afpd: Mac greek encoding.
 * NEW: afpd: CJK encoding.
@@ -646,7 +662,7 @@ Changes in 2.0.4
 * FIX: afpd: return the right error in createfile and copyfile if the disk
        is full.
 * FIX: afpd: resolveid return the same error code than OSX if it's a directory
-* FIX: afpd: server name check, test for the whole loopback subnet 
+* FIX: afpd: server name check, test for the whole loopback subnet
        not only 127.0.0.1.
 * UPD: afpd: limit comments size to 128 bytes, (workaround for Adobe CS2 bug).
 * UPD: afpd: no more daemon icon.
@@ -667,13 +683,13 @@ Changes in 2.0.4
 Changes in 2.0.3
 ================
 
-* NEW: afpd: add a cachecnid option that controls if afpd should 
+* NEW: afpd: add a cachecnid option that controls if afpd should
        use the IDs stored in the AD2 files as cache. Defaults
        to off.
 * UPD: afpd: deal with more than 32 groups.
 * FIX: afpd: several catsearch fixes, based on patch from
        TSUBAKIMOTO Hiroya.
-* FIX: afpd: fix a race when a client very quickly reconnects and 
+* FIX: afpd: fix a race when a client very quickly reconnects and
        tries to kill its old session.
 * FIX: afpd: OSX style symlink caused problems with Panther clients.
 * FIX: afpd: old files with default type didn't show the right icon
@@ -690,10 +706,10 @@ Changes in 2.0.3
 Changes in 2.0.2
 ================
 
-* NEW: cnid: Add an indexes check and rebuild, optional for dbd 
+* NEW: cnid: Add an indexes check and rebuild, optional for dbd
        (parameter check default no), standalone program cnid_index for
        cdb.
-* UPD: Enhanced afpd's -v command line switch and added -V for more 
+* UPD: Enhanced afpd's -v command line switch and added -V for more
        verbose information
 * UPD: uams_gss: build the principal used by uams_gss.so from afpd's
        configuration, don't use GSS_C_NT_HOSTBASED_SERVICE
@@ -701,18 +717,18 @@ Changes in 2.0.2
 * REM: remove netatalkshorternamelinks.pl cf. SF bug [ 1061396 ]
        netatalkshorternamelinks.pl broken
 * FIX: afpd: check for DenyRead on FPCopyFile
-* FIX: afpd: add missing flush for AD2 Metadata on FPCopyFile, SF bug 
+* FIX: afpd: add missing flush for AD2 Metadata on FPCopyFile, SF bug
        [ 1055691 ] Word 98 OS 9 Saving an existing file
 * FIX: afpd: Deal with AFP3 connection and type 2 (non-UTF8) names.
        reported by Gair Heaton, HI RESOLUTION SYSTEMS
 * FIX: afpd: Broken 'crlf' option
-* FIX: afpd: fix SF bug [ 1079622 ] afpd/dhx memory bug, 
+* FIX: afpd: fix SF bug [ 1079622 ] afpd/dhx memory bug,
        by Ralf Schuchardt
-* FIX: afpd: Return an error if we cannot get the db stamp in 
+* FIX: afpd: Return an error if we cannot get the db stamp in
        afp_openvol.
 * FIX: afpd: Fix slp registration with Solaris9 slpd, from
        hat at fa2.so-net.ne.jp
-        
+
 
 Changes in 2.0.1
 ================
@@ -725,19 +741,19 @@ Changes in 2.0.1
        AppleTalk zone names containing spaces
 * FIX: insecure tempfile handling bug in etc2ps.sh,
        found by Trustix, CAN-2004-0974.
-* REM: remove add_netatalk_printer and netatalk.template from stable 
+* REM: remove add_netatalk_printer and netatalk.template from stable
        branch until fixed. (possible symlink vulnerabilities)
-* FIX: afpd: set hasBeenInited in default finder info. This bug caused 
-       endless finder refreshes with OS9 finder if the noadouble option 
+* FIX: afpd: set hasBeenInited in default finder info. This bug caused
+       endless finder refreshes with OS9 finder if the noadouble option
        was used. From TSUBAKIMOTO Hiroya.
-* FIX: afpd: fix a bug in default CREATOR/TYPE handling. Due to this bug 
-       the type/creator mappings in AppleVolumes.system were ignored, 
+* FIX: afpd: fix a bug in default CREATOR/TYPE handling. Due to this bug
+       the type/creator mappings in AppleVolumes.system were ignored,
        causing problems i.e. with OS9 clients.
 * FIX: AppleVolumes.system: By default don't define a CREATOR/TYPE for a
        file of unknown type.
-* FIX: fix two Tru64 UNIX compilation errors, 
+* FIX: fix two Tru64 UNIX compilation errors,
        from Burkhard Schmidt bs AT cpfs.mpg.de
-* FIX: afpd: FPMapId wasn't using UTF8 for groups if requested by client.       
+* FIX: afpd: FPMapId wasn't using UTF8 for groups if requested by client.
 
 Changes in 2.0.0
 ================
@@ -745,8 +761,8 @@ Changes in 2.0.0
 * UPD: afpd: add an error message if -ipaddr parameter cannot be parsed
 * UPD: updated documentation
 * FIX: afpd: fix a file descriptor and memory leak with OSX ._ resource fork
-* FIX: afpd: Prevent overwriting a file by renaming a file in the same 
-       directory to the same name. Won't work with OSX, the dest file gets 
+* FIX: afpd: Prevent overwriting a file by renaming a file in the same
+       directory to the same name. Won't work with OSX, the dest file gets
        deleted by OSX first.
 * FIX: sometimes '0' was used instead of 0 for creator/type
 * FIX: removed setpgrp check from configure, we don't use it anymore and
@@ -785,7 +801,7 @@ Changes in 2.0-rc1
 * UPD: Improved BerkeleyDB detection
 * UPD: sys/solaris/Makefile.in: enable 'make check', from Alexander Barton
 * UPD: tcp wrappers detection should work on OpenBSD as well now
-* UPD: macbin: increase the maximum size of macbinary forks, as suggested by 
+* UPD: macbin: increase the maximum size of macbinary forks, as suggested by
        Sourceforge bug ID 829221
 * UPD: ASP: rework getstatus. use several ASP packets if the client allows
        it, otherwise just send as much as we can
@@ -797,7 +813,7 @@ Changes in 2.0-rc1
 * FIX: enhance ADv1 to ADv2 conversion. Fixed a SIGSEGV reported by Mark Baker
 * FIX: better detection of invalid resource forks
 * FIX: fix some linking problems on OpenBSD
-* FIX: afpd: catsearch.c, filedir.c: fix bogus casts, from Olaf Hering 
+* FIX: afpd: catsearch.c, filedir.c: fix bogus casts, from Olaf Hering
        (olh at suse.de)
 * FIX: afpd: don't try to create special folders and .volinfo on read-only
        volumes
@@ -808,7 +824,7 @@ Changes in 2.0-rc1
 * FIX: papd/Makefile.am: add a missing $DESTDIR, from Vlad Agranovsky
 * FIX: afpd: quota.c: remove a c99 declaration, from Yann Rouillard
 * FIX: configure.in: Solaris/gcc 3.0 fix, from Yann Rouillard
-* FIX: afpd: fix a SIGSEGV when sharing home dirs without any options in 
+* FIX: afpd: fix a SIGSEGV when sharing home dirs without any options in
        AppleVolumes.
 * FIX: numerous small bugfixes
 
@@ -840,10 +856,10 @@ Changes in 2.0-beta2
        reported by Andrew Smith
 * FIX: atalkd: could send invalid NBPLKUP replies, e.g with more than 15
        printers. Reported by Almacha
-* FIX: papd: fix papd.conf parsing problems with consecutive ':' and missing 
+* FIX: papd: fix papd.conf parsing problems with consecutive ':' and missing
        newline. Reported by Craig White.
 * FIX: megatron: make megatron work with UTF-8 volumes
-* FIX: timeout: running timeout with commands which accept arguments, 
+* FIX: timeout: running timeout with commands which accept arguments,
        from Yuval Yeret.
 * FIX: uniconv: fix a SEGFAULT, reported by Matthew Geier
 * FIX: pam detection: PAM_C/LDFLAGS were always empty, from Alexander Barton
@@ -873,7 +889,7 @@ Changes in 2.0-alpha2
 * NEW: afpd: Make sure getstatus doesn't return loopback address as server IP.
 * NEW: afpd: Specify USEDOTS with MSWINDOWS implicitely.
 * NEW: afpd: SRVLOC register with IP address instead of hostname by default,
-       if -fqdn is specified register with FQDN.  Added extended character 
+       if -fqdn is specified register with FQDN.  Added extended character
        support for SLP, non ASCII characters are escaped Added ZONE to registration.
 * NEW: atalkd: Make atalkd set interfaces to ALLMULTI on linux by default.
 * NEW: cnid_metad: Use DB_PRIVATE attribute for dbd backend without transaction.
@@ -891,31 +907,31 @@ Changes in 2.0-alpha2
 Changes in 2.0-alpha1
 =====================
 
-* NEW: afpd: We now support AFP 3.x, which features long filenames and 
+* NEW: afpd: We now support AFP 3.x, which features long filenames and
        large file support
 * NEW: CNID handling completely reworked. We now use per Volume configurable
        CNID backends.
 * NEW: Two new daemons, cnid_metad and cnid_dbd to implement the dbd CNID backend.
        Using Berkeley DB transactions with the CNID database should be safe now.
 * NEW: The on disk format of the CNID database has changed. We now support 8 byte
-       device and inode numbers and an additinal type field that should make 
-       detection of file/directory changes outside of afpd more robust. 
-       Changed from HASH to BTREE access which speeds things up in certain cases 
+       device and inode numbers and an additinal type field that should make
+       detection of file/directory changes outside of afpd more robust.
+       Changed from HASH to BTREE access which speeds things up in certain cases
        and reduces database file size.
-* NEW: Long file name mangling is now implemented using the CNID ID, so no database is 
-       required to map names to mangled names. This is the same method Mac OS X uses. 
-* NEW: New format (version 2) for Metadata in AppleDouble files. We record device and  
+* NEW: Long file name mangling is now implemented using the CNID ID, so no database is
+       required to map names to mangled names. This is the same method Mac OS X uses.
+* NEW: New format (version 2) for Metadata in AppleDouble files. We record device and
        inode of the underlying file as well as the CNID. This can be used for recovery
        and speeds up access to the CNID.
-* NEW: The old NLS codepage system has been removed. It was replaced by an iconv 
+* NEW: The old NLS codepage system has been removed. It was replaced by an iconv
        based conversion system, which provides much more flexibility.
 * NEW: You can safely use extended characters in volume names and for SIGUSR2 messaging.
 * NEW: The default volume encoding is UTF-8.
-* NEW: All documentation is now generated using DocBook. New or completely reworked 
-       sections about installing, setting up and upgrading Netatalk replace various 
+* NEW: All documentation is now generated using DocBook. New or completely reworked
+       sections about installing, setting up and upgrading Netatalk replace various
        README files in the doc directory.
 * FIX: Protect afpd better against unexpected signals during updates of the CNID
-       database with the cdb backend. This makes database corruption less likely.   
+       database with the cdb backend. This makes database corruption less likely.
 * FIX: All manpages have been reviewed and should now be up to date.
 * FIX: Tons of bug fixes since 1.6.4. Please consults the CVS change log for details.
 
