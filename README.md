@@ -6,11 +6,16 @@
 [![License: GPL v2](https://img.shields.io/github/license/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/blob/main/COPYING)
 [<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
-Netatalk is a Free and Open Source file server that implements the Apple Filing Protocol (AFP) 3.4 over TCP/IP.
+Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.4 over TCP/IP.
 AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
 A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for macOS and Classic Mac OS clients.
 
-Modern AFP features such as Bonjour, Time Machine, and Spotlight are supported.
+# AppleTalk
+
+If you need Netatalk to provide AFP over [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) (DDP) in order to do file sharing with very old Macs or Apple II computers, please install the latest *old stable* Netatalk 2.x version.
+AppleTalk support was removed in Netatalk 3.0, however 2.x is still being actively maintained.
+
+Find the latest Netatalk 2.x releases at https://netatalk.io or in the [GitHub Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
 
 # Why Should I Use Netatalk?
 
@@ -19,17 +24,10 @@ running a Netatalk AppleShare server allows you to share, collaborate on, and ba
 The latest macOS at the time of writing (macOS 14 Sonoma) ships with an AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
 
-Compared to other Open Source file sharing solutions such as NFS or FTP, Netatalk delivers high transfer speeds and full integration
-of Classic Mac OS metadata (resource forks).
+Compared to cross-platform file sharing protocols NFS and FTP, Netatalk delivers full integration
+of Classic Mac OS metadata (resource forks) and macOS services such as Bonjour, Time Machine, and Spotlight.
 
-And while Samba is a great option for file sharing now when SMB is the primary file sharing protocol in macOS,
-Netatalk has reportedly better performance, as well as stronger backwards compatibility with OS X 10.8 Mountain Lion and earlier.
-
-# AppleTalk
-
-Support for the AppleTalk network stack was removed in Netatalk v3. If you need AppleTalk to network very old Macs or Apple II computers, please use *old stable* Netatalk v2.
-
-Find the latest Netatalk v2 releases in the [Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
+Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster transfer speeds](https://github.com/Netatalk/netatalk/wiki/Benchmarks), as well as stronger backwards compatibility with OS X 10.8 Mountain Lion and earlier.
 
 # Installation
 
