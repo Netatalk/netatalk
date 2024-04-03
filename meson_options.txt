@@ -151,14 +151,15 @@ option(
 option(
     'with-init-dir',
     type: 'string',
-    value: '',
+    value: 'none',
     description: 'Path to OS specific init directory, default: none',
 )
 option(
     'with-init-style',
     type: 'combo',
     choices: [
-        '',
+        'none',
+        'debian-systemd',
         'debian-sysv',
         'gentoo-openrc',
         'gentoo-systemd',
@@ -171,9 +172,8 @@ option(
         'suse-systemd',
         'suse-sysv',
         'systemd',
-        'debian-systemd',
     ],
-    value: '',
+    value: 'none',
     description: 'Use OS specific init config',
 )
 option(

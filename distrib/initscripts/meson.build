@@ -1,4 +1,4 @@
-if get_option('with-init-style') == ''
+if get_option('with-init-style') == 'none'
     init_dir += 'none'
 elif get_option('with-init-style') == 'redhat-sysv'
     init_dir += '/etc/rc.d/init.d'
@@ -18,14 +18,14 @@ elif get_option('with-init-style') == 'redhat-sysv'
         '/etc/rc.d/init.d/netatalk',
     )
 elif (
-    get_option('with-init-style') == 'service.systemd'
+    get_option('with-init-style') == 'gentoo-systemd'
+    or get_option('with-init-style') == 'systemd'
     or get_option('with-init-style') == 'redhat-systemd'
     or get_option('with-init-style') == 'suse-systemd'
 )
-
     init_dir += '/usr/lib/systemd/system'
     custom_target(
-        'service_systemd',
+        'systemd',
         input: 'service.systemd.tmpl',
         output: 'netatalk.service',
         command: sed_command,
@@ -71,10 +71,10 @@ elif get_option('with-init-style') == 'netbsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-elif get_option('with-init-style') == 'sunos'
+elif get_option('with-init-style') == 'solaris'
     init_dir += '/lib/svc/manifest/network'
     custom_target(
-        'sunos',
+        'solaris',
         input: 'netatalk.xml.tmpl',
         output: 'netatalk.xml',
         command: sed_command,
