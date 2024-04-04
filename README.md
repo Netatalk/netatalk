@@ -1,22 +1,26 @@
 # About Netatalk
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-[<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk&branch=branch-netatalk-2-3)
+[![Project contributors](https://img.shields.io/github/contributors/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/contributors)
+[![License: GPL v2](https://img.shields.io/github/license/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/blob/main/COPYING)
+[<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk&branch=branch-netatalk-2-4)
 
-Netatalk is a freely-available Open Source fileserver that implements the Apple Filing Protocol (AFP) v3.3 over TCP/IP and AppleTalk. A *NIX/*BSD system running Netatalk is capable of serving many Macintosh and Apple II clients simultaneously as an AppleShare file server.
+Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.3 over TCP/IP and AppleTalk.
+AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
+A *NIX/*BSD system running Netatalk provides light-weight, capable, and highly performant AppleShare file sharing for macOS, Classic Mac OS, and Apple II clients.
 
-AFP was the primary file sharing protocol for Apple Macintosh and Apple II computers from 1987 to 2013. Mac OS X 10.9 Mavericks removed the AFP *server*, but macOS retains the AFP *client* to this day, and can therefore connect to an AFP fileserver served by Netatalk. This makes Netatalk an effective bridge between the very earliest networked Apple machines, and the very latest.
+# Why Should I Use Netatalk Version 2?
 
-# Why Should I Use Netatalk?
+If you're running a network of Macs - macOS, Mac OS X, Classic Mac OS, System 6, Apple IIGS and Apple //e -
+you are well served by running a Netatalk 2 AppleShare server.
 
-If you're running a network of older Macs, in particular those running OS X 10.8 Mountain Lion or earlier, all the way back to Classic Mac OS,
-are well served by running a Netatalk AppleShare server. The latest macOS at the time of writing (macOS 14 Sonoma) still comes with an AFP client,
-so Netatalk can act as a seamless bridge between new and old Macs.
+Mac OS X 10.9 Mavericks removed the AFP *server*, but macOS retains the AFP *client* to this day, and can therefore connect to an AFP fileserver served by Netatalk. This makes Netatalk an effective bridge between the very earliest networked Apple machines, and the very latest.
 
-Compared to other Open Source file sharing solutions such as NFS or Samba, Netatalk delivers high transfer speeds and full integration
-of Classic Mac OS metadata (resource forks) as well as user authentication methods (UAMs) compatible with Classic Mac OS clients that don't support modern cryptography.
+Compared to cross-platform file sharing protocols NFS and FTP, Netatalk delivers full integration
+of Classic Mac OS metadata (resource forks) and macOS services such as Bonjour, Time Machine, and Spotlight.
 
-Modern AFP features such as Bonjour, and Time Machine are also supported.
+Compared to [Samba](https://www.samba.org/), Netatalk has stronger backwards compatibility with OS X 10.8 Mountain Lion and earlier, as well as User Authentication Modules (UAMs) compatible with Classic Mac OS and Apple II clients that don't support modern cryptography.
+
+Modern AFP features such as Bonjour and Time Machine are also supported.
 
 # AppleTalk
 
@@ -36,7 +40,7 @@ For simplicity, exactly one user and one shared volume is supported. It is hard 
 Make sure you have Docker Engine installed, then build the netatalk container:
 
 ```
-docker build -t netatalk2 .
+docker build -t netatalk2:latest .
 ```
 
 Alternatively, fetch a pre-built docker container from [Docker Hub](https://hub.docker.com/u/netatalk).
@@ -47,7 +51,7 @@ Once the container is ready, run it with `docker run` or `docker compose`.
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
-Sample `docker-compose.yml` with a Docker managed volume.
+Sample `docker-compose.yml` with a Docker managed volume, using a locally built image.
 
 ```
 version: "3"
@@ -74,10 +78,10 @@ volumes:
   afpshare:
 ```
 
-Sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
+Sample `docker run` command, using a locally build image. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
 
 ```
-docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk/netatalk2
+docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk2:latest
 ```
 
 ## Constraints
