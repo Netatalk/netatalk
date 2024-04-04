@@ -11,7 +11,13 @@ foreach man : manxml
         man + '.8',
         input: man_xmlfile,
         output: man + '.8',
-        command: [manpages_command, '&&', 'cp', '@OUTPUT@', meson.project_source_root() / 'man/man8' / man + '.8.in'],
+        command: [
+            manpages_command,
+            '&&',
+            'cp',
+            '@OUTPUT@',
+            meson.project_source_root() / 'man/man8' / man + '.8.in',
+        ],
         build_by_default: true,
     )
 endforeach
