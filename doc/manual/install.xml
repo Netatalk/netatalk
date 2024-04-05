@@ -62,6 +62,14 @@
       url="https://openports.pl">https://openports.pl
       </ulink></para>
 
+      <para>macOS Homebrew:<ulink
+      url="https://brew.sh/">https://brew.sh/
+      </ulink></para>
+
+      <para>macOS MacPorts:<ulink
+      url="https://ports.macports.org/">https://ports.macports.org/
+      </ulink></para>
+
       <para>etc.<indexterm>
           <primary>RPM</primary>
 
@@ -107,14 +115,24 @@
             <para>Now get the source:</para>
 
             <screen><prompt>$</prompt> <userinput>git clone https://github.com/Netatalk/netatalk.git netatalk-code
-</userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
-remote: Counting objects: 2503, done.
+</userinput><computeroutput>Cloning into 'netatalk-code'...
+remote: Enumerating objects: 41592, done.
 ...
+Resolving deltas: 100% (32227/32227), done.
 </computeroutput></screen>
 
             <para>This will create a local directory called
             <filename>netatalk-code</filename> containing a complete and fresh
-            copy of the whole Netatalk source from the Git repository.</para>
+            copy of the whole Netatalk source tree from the Git repository.</para>
+          </listitem>
+
+          <listitem>
+            <para>If you don't specify a branch or tag,
+            you will get the bleeding edge development code.
+            In order to get the latest stable Netatalk 3.1 code, for instance,
+            check out the branch named "branch-netatalk-3-1":</para>
+
+            <screen><prompt>$</prompt> <userinput>git checkout branch-netatalk-3-1</userinput></screen>
           </listitem>
 
           <listitem>
@@ -135,8 +153,8 @@ remote: Counting objects: 2503, done.
         </orderedlist>
 
         <para>For futher information refer to the <ulink
-        url="https://github.com/Netatalk/netatalk/wiki/Developer-Notes">Developer Notes</ulink>
-        wiki page.</para>
+        url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
+        file.</para>
       </sect3>
     </sect2>
   </sect1>
