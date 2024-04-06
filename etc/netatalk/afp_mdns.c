@@ -262,7 +262,7 @@ static void register_stuff(const AFPObj *obj) {
                                    ADISK_SERVICE_TYPE,
                                    "",            // default domains
                                    NULL,            // default host name
-                                   htons(port),
+                                   htons(9),      // port number
                                    TXTRecordGetLength(&txt_adisk),
                                    TXTRecordGetBytesPtr(&txt_adisk),
                                    RegisterReply,           // callback
@@ -291,14 +291,7 @@ static void register_stuff(const AFPObj *obj) {
                                    DEV_INFO_SERVICE_TYPE,
                                    "",            // default domains
                                    NULL,            // default host name
-                                   /*
-                                    * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
-                                    *   "A value of 0 for a port is passed to register placeholder services.
-                                    *    Place holder services are not found  when browsing, but other
-                                    *    clients cannot register with the same name as the placeholder service."
-                                    * We therefor use port 9 which is used by the adisk service type.
-                                    */
-                                   htons(9),
+                                   htons(0),        // port number
                                    TXTRecordGetLength(&txt_devinfo),
                                    TXTRecordGetBytesPtr(&txt_devinfo),
                                    RegisterReply,           // callback
