@@ -1,0 +1,252 @@
+option(
+    'build-manual',
+    type: 'boolean',
+    value: false,
+    description: 'Compile Netatalk documentation',
+)
+option(
+    'build-tests',
+    type: 'boolean',
+    value: false,
+    description: 'Compile tests',
+)
+option(
+    'disable-largefile',
+    type: 'boolean',
+    value: false,
+    description: 'Omit support for large files',
+)
+option(
+    'disable-admin-group',
+    type: 'boolean',
+    value: false,
+    description: 'Disable system locking',
+)
+option(
+    'disable-locking',
+    type: 'boolean',
+    value: false,
+    description: 'Disable system locking',
+)
+option(
+    'disable-shell-check',
+    type: 'boolean',
+    value: false,
+    description: 'Disable checking for a valid shell',
+)
+option(
+    'disable-tcp-wrappers',
+    type: 'boolean',
+    value: false,
+    description: 'Disable TCP wrappers support',
+)
+option(
+    'enable-cups',
+    type: 'feature',
+    value: 'auto',
+    description: 'Turn on CUPS support',
+)
+option(
+    'enable-ddp',
+    type: 'boolean',
+    value: true,
+    description: 'Enable DDP (Appletalk)',
+)
+option(
+    'enable-debian',
+    type: 'boolean',
+    value: false,
+    description: 'Enable debian-style sysv configuration',
+)
+option(
+    'enable-debug',
+    type: 'boolean',
+    value: false,
+    description: 'Enable verbose debug code',
+)
+option(
+    'enable-debugging',
+    type: 'boolean',
+    value: false,
+    description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
+)
+option(
+    'enable-gentoo',
+    type: 'boolean',
+    value: false,
+    description: 'Enable gentoo-style sysv configuration',
+)
+option(
+    'enable-krbV-uam',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable build of Kerberos V UAM module',
+)
+option(
+    'enable-macos',
+    type: 'boolean',
+    value: false,
+    description: 'Enable macos-style launchd configuration',
+)
+option(
+    'enable-netbsd',
+    type: 'boolean',
+    value: false,
+    description: 'Enable NetBSD-style rc.d configuration',
+)
+option(
+    'enable-overwrite',
+    type: 'boolean',
+    value: false,
+    description: 'Overwrite configuration files during installation',
+)
+option(
+    'enable-pgp-uam',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable build of PGP UAM module',
+)
+option(
+    'enable-quota',
+    type: 'feature',
+    value: 'auto',
+    description: 'Turn on quota support',
+)
+option(
+    'enable-redhat-sysv',
+    type: 'boolean',
+    value: false,
+    description: 'Enable redhat-style sysv (upstart) configuration',
+)
+option(
+    'enable-solaris',
+    type: 'boolean',
+    value: false,
+    description: 'Enable solaris-style sysv configuration',
+)
+option(
+    'enable-suse-sysv',
+    type: 'boolean',
+    value: false,
+    description: 'Enable suse-style sysv configuration',
+)
+option(
+    'enable-systemd',
+    type: 'boolean',
+    value: false,
+    description: 'Use systemd configuration',
+)
+option(
+    'enable-zeroconf',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable Zeroconf support',
+)
+option(
+    'systemd-prefix',
+    type: 'string',
+    value: '',
+    description: 'Specify directory for systemd unit files',
+)
+option(
+    'with-acls',
+    type: 'feature',
+    value: 'auto',
+    description: 'Include ACL support',
+)
+option(
+    'with-bdb',
+    type: 'string',
+    value: '',
+    description: 'Specify path to Berkeley DB installation',
+)
+option(
+    'with-cnid-dbd-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Build CNID with Database Daemon Data Store',
+)
+option(
+    'with-cnid-default-backend',
+    type: 'string',
+    value: 'dbd',
+    description: 'Set default DID scheme',
+)
+option(
+    'with-cnid-last-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Build LAST CNID scheme',
+)
+option(
+    'with-cracklib',
+    type: 'string',
+    value: '',
+    description: 'Enable/set location of cracklib dictionary',
+)
+option(
+    'with-docbook',
+    type: 'string',
+    value: '',
+    description: 'Path to Docbook XSL directory',
+)
+option(
+    'with-gssapi',
+    type: 'string',
+    value: '',
+    description: 'Path to GSSAPI for Kerberos V UAM',
+)
+option(
+    'with-ldap',
+    type: 'string',
+    value: '',
+    description: 'LDAP support'
+)
+option(
+    'with-libgcrypt-dir',
+    type: 'string',
+    value: '',
+    description: 'Path where LIBGCRYPT is installed (optional). Must contain lib and include dirs',
+)
+option(
+    'with-libiconv',
+    type: 'string',
+    value: '',
+    description: 'Path to libiconv installation. Must contain lib and include dirs',
+)
+option(
+    'with-libtirpc',
+    type: 'boolean',
+    value: false,
+    description: 'Use libtirpc as RPC implementation (instead of sunrpc)',
+)
+option(
+    'with-pam',
+    type: 'string',
+    value: '',
+    description: 'Specify path to PAM installation',
+)
+option(
+    'with-shadow',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable shadow password support',
+)
+option(
+    'with-spooldir',
+    type: 'string',
+    value: '',
+    description: 'Path for spooldir used for CUPS support',
+)
+option(
+    'with-ssl-dir',
+    type: 'string',
+    value: '',
+    description: 'Specify path to OpenSSL installation. Must contain lib and include dirs',
+)
+option(
+    'with-uams-path',
+    type: 'string',
+    value: 'libdir / netatalk',
+    description: 'Path to UAMs',
+)

@@ -39,6 +39,8 @@ env:
     libtool \
     libtool-bin \
     libwrap0-dev \
+    meson \
+    ninja-build \
     quota \
     tcpd \
     xsltproc
@@ -58,13 +60,13 @@ jobs:
       - name: Configure
         run: |
           ./configure \
-          --enable-krbV-uam \
-          --enable-pgp-uam \
-          --enable-quota \
-          --enable-systemd \
-          --with-cracklib \
-          --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
-          --with-libtirpc
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --enable-quota \
+            --enable-systemd \
+            --with-cracklib \
+            --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
+            --with-libtirpc
       - name: Generate man pages
         run: make html
       - name: Build
@@ -73,7 +75,18 @@ jobs:
         run: make check
       - name: Run distribution tests
         run: make distcheck
-
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Dbuild-manual=true \
+            -Dwith-libtirpc=true
+      - name: Meson build and generate man pages
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
+      - name: Meson distribution tests
+        run: cd build && meson dist
   build-debian:
     name: Debian
     runs-on: ubuntu-22.04
@@ -88,11 +101,28 @@ jobs:
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-debian --enable-krbV-uam --enable-pgp-uam --enable-quota --with-cracklib --with-libtirpc
+        run: |
+          ./configure \
+            --enable-debian \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --enable-quota \
+            --with-cracklib \
+            --with-libtirpc
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Dwith-libtirpc=true \
+            -Denable-debian=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-fedora:
     name: Fedora
@@ -106,23 +136,42 @@ jobs:
           dnf -y install \
             automake \
             avahi-devel \
+            chkconfig \
             cracklib-devel \
             cups-devel \
+            file \
             krb5-devel \
             libacl-devel \
             libdb-devel \
             libgcrypt-devel \
             libtool \
+            meson \
+            ninja-build \
             openldap-devel \
             openssl-devel
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
-        run: ./configure --enable-pgp-uam --enable-krbV-uam --enable-redhat-sysv --with-cracklib=/usr/share/cracklib
+        run: |
+          ./configure \
+            --enable-pgp-uam \
+            --enable-krbV-uam \
+            --enable-redhat-sysv \
+            --with-cracklib=/usr/share/cracklib
       - name: Build
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Dwith-libtirpc=true \
+            -Denable-redhat-sysv=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-macos:
     name: macOS
@@ -133,7 +182,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake libressl pkg-config krb5 berkeley-db
+        run: brew install automake libressl krb5 berkeley-db meson
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
@@ -149,6 +198,17 @@ jobs:
         run: make -j $(nproc) all
       - name: Run tests
         run: make check
+      - name: Meson configure
+        run: |
+          meson setup build \
+            -Dwith-bdb=/usr/local/opt/berkeley-db \
+            -Dwith-ssl-dir=/usr/local/opt/libressl \
+            -Dbuild-tests=true \
+            -Denable-macos=true
+      - name: Meson build
+        run: ninja -C build
+      - name: Meson tests
+        run: cd build && meson test
 
   build-netbsd:
     name: "NetBSD"
@@ -164,11 +224,31 @@ jobs:
           release: 9.3
           copyback: false
           prepare: |
-            pkg_add gcc13 autoconf automake libtool pkg-config db5 libgcrypt libressl gmake cups
+            pkg_add \
+              autoconf \
+              automake \
+              cups \
+              db5 \
+              libgcrypt \
+              gcc13 \
+              gmake \
+              libressl \
+              libtool \
+              meson \
+              pkg-config
           run: |
             ./bootstrap
-            ./configure MAKE=gmake PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig --with-bdb=/usr/pkg --with-libgcrypt-dir=/usr/pkg --enable-netbsd
+            ./configure \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig \
+              --with-bdb=/usr/pkg \
+              --with-libgcrypt-dir=/usr/pkg \
+              --enable-netbsd
             gmake -j2 all
+            meson setup build \
+              -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+              -Denable-netbsd=true
+            ninja -C build
 
   build-solaris:
     name: "Solaris"

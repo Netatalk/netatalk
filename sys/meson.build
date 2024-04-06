@@ -1,0 +1,3 @@
+subdir('netatalk')
+subdir('solaris')
+
