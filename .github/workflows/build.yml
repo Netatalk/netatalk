@@ -452,9 +452,12 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
-              pkg-config
+              pkg-config \
+              tracker
+            wget https://www.samba.org/ftp/talloc/talloc-2.4.1.tar.gz
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
+            tar xvf talloc-2.4.1.tar.gz
             tar xvf autoconf-2.71.tar.gz
             tar xvf automake-1.16.5.tar.gz
             cd autoconf-2.71
@@ -465,6 +468,11 @@ jobs:
             ./configure --prefix=/usr
             make
             make install
+            cd ../talloc-2.4.1
+            CC=gcc ./configure --prefix=/usr/local
+            make
+            make install
+            ln -s /usr/local/lib/pkgconfig/talloc.pc /usr/lib/64/pkgconfig/talloc.pc
             cd ..
           run: |
             set -e
@@ -473,8 +481,9 @@ jobs:
               --enable-krbV-uam \
               --enable-pgp-uam \
               --without-afpstats \
+              --with-tracker-pkgconfig-version=2.0
               MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
+              PKG_CONFIG_PATH=/usr/lib/64/pkgconfig
             gmake -j $(nproc)
 
   build-omnios:
