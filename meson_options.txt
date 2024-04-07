@@ -260,3 +260,9 @@ option(
     value: 'libdir / netatalk',
     description: 'Path to UAMs',
 )
+option(
+    'without-pam',
+    type: 'boolean',
+    value: false,
+    description: 'Disable PAM support',
+)
