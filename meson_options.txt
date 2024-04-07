@@ -204,7 +204,7 @@ option(
     'with-lockfile',
     type: 'string',
     value: '',
-    description: 'Path of Netatalk lockfile)',
+    description: 'Path to Netatalk lockfile',
 )
 option(
     'with-mysql-config',

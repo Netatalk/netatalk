@@ -1879,7 +1879,7 @@ summary({'Netatalk version': version}, section: 'Configuration Summary:')
 summary_info = {
     '  Initscript style': get_option('with-init-style'),
 }
-summary(summary_info, bool_yn: true, section: '  INIT STYLE:')
+summary(summary_info, bool_yn: true, section: '  Init Style:')
 
 summary_info = {
     '  Extended Attributes': netatalk_ea,
