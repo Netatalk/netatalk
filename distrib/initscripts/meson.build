@@ -14,7 +14,7 @@ elif get_option('with-init-style') == 'redhat-sysv'
     )
     meson.add_install_script(
         find_program('chkconfig'),
-        'add',
+        '--add',
         '/etc/rc.d/init.d/netatalk',
     )
 elif (
