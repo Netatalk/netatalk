@@ -1262,14 +1262,17 @@ pam_paths = [
     '/usr/local',
 ]
 
-if host_os == 'sunos'
-    pam_dir += '/etc/pam.conf'
-else
-    foreach path : pam_paths
-        if fs.is_dir(path / 'etc/pam.d')
-            pam_dir += path
-        endif
-    endforeach
+foreach path : pam_paths
+    if fs.is_dir(path / 'etc/pam.d')
+        pam_dir += path
+    endif
+    break
+endforeach
+
+if pam_dir == '' and host_os == 'sunos'
+    warning(
+        'PAM installation file = /etc/pam.conf. Please edit this file to enable PAM support',
+    )
 endif
 
 if with_pam != '' and pam_dir != '/'
@@ -1281,11 +1284,15 @@ else
     pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
 endif
 
-have_pam = (
-    cc.has_header('security/pam_appl.h')
-    or cc.has_header('pam/pam_appl.h')
-    or cc.has_function('pam_set_item', dependencies: pam)
-)
+if get_option('without-pam')
+    have_pam = false
+else
+    have_pam = (
+        cc.has_header('security/pam_appl.h')
+        or cc.has_header('pam/pam_appl.h')
+        or cc.has_function('pam_set_item', dependencies: pam)
+    )
+endif
 
 if have_pam
     cdata.set('USE_PAM', 1)
@@ -1342,7 +1349,7 @@ if have_pam
     endif
 elif have_pam and (pam_dir == '')
     warning(
-        'PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Either install this file by hand or specify the install path.',
+        'PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Please install this file manually. If you are running a Solaris-based host which still relies on /etc/pam.conf you will have to edit this file to get PAM working',
     )
 endif
 
@@ -1707,7 +1714,7 @@ summary({'Netatalk version': version}, section: 'Configuration Summary:')
 summary_info = {
     '  Initscript style': init_style,
 }
-summary(summary_info, bool_yn: true, section: '  INIT STYLE:')
+summary(summary_info, bool_yn: true, section: '  Init Style:')
 
 summary_info = {
     '  Extended Attributes': netatalk_ea,
