@@ -597,12 +597,10 @@ jobs:
       - name: Run build-wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
-          ./bootstrap
-          ./configure \
-            --enable-krbV-uam \
-            --enable-pgp-uam \
-            --with-tracker-pkgconfig-version=3.0
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j $(nproc) all
+          meson setup build \
+            -Denable-krbV-uam=enabled \
+            -Denable-pgp-uam=enabled
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ninja -C build
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
