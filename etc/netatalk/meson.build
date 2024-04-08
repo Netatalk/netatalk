@@ -9,4 +9,5 @@ executable(
     c_args: [confdir, statedir, afpd, cnid_metad, dversion],
     install: true,
     install_dir: sbindir,
+    install_rpath: rpath,
 )
