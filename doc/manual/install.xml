@@ -141,20 +141,7 @@ Resolving deltas: 100% (32227/32227), done.
 
             <screen><prompt>$</prompt> <userinput>git pull</userinput></screen>
           </listitem>
-
-          <listitem>
-            <para>Now <command>cd</command> to the netatalk-code directory and run
-            <command>./bootstrap</command>. This will create the
-            <filename>configure</filename> script required in the next
-            step.</para>
-
-            <screen><prompt>$</prompt> <userinput>./bootstrap</userinput></screen>
-          </listitem>
         </orderedlist>
-
-        <para>For futher information refer to the <ulink
-        url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
-        file.</para>
       </sect3>
     </sect2>
   </sect1>
@@ -164,15 +151,6 @@ Resolving deltas: 100% (32227/32227), done.
 
     <sect2>
       <title>Prerequisites</title>
-
-      <note>
-        <para>The following pieces of software are likely to have a package
-        available for your OS distribution of choice.</para>
-
-        <para>Please see the <ulink
-        url="https://github.com/Netatalk/netatalk/wiki/Installation-Notes">
-        Installation Notes</ulink> wiki page as a starting point.</para>
-      </note>
 
       <sect3>
         <title>Required third-party software</title>
@@ -215,17 +193,17 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>Netatalk uses <ulink
             url="https://tracker.gnome.org">Tracker</ulink> as the
-            metadata backend. Recent Linux distributions will provide the
-            libtracker-sparql library which is available since Tracker version
-            0.7.</para>
+            metadata backend. The minimum required version is 0.7 as that's the
+            first version to support <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/">
+            SPARQL</ulink>.</para>
           </listitem>
 
           <listitem>
-            <para>mDNSresponderPOSIX or Avahi for Bonjour (aka
-            Zeroconf)</para>
+            <para>mDNSresponderPOSIX or Avahi for Bonjour</para>
 
-            <para>Mac OS X 10.2 and later use Bonjour (aka Zeroconf) for
-            service discovery.</para>
+            <para>Mac OS X 10.2 and later use Bonjour
+            (a.k.a. Zeroconf, and earlier Rendezvous)
+            for service discovery.</para>
 
             <para>The Avahi library must be built with DBUS support (
             <userinput>--enable-dbus</userinput>).</para>
@@ -273,121 +251,18 @@ Resolving deltas: 100% (32227/32227), done.
     </sect2>
 
     <sect2 id="compiling-netatalk">
-      <title>Compiling<indexterm>
+      <title>Configure and Build<indexterm>
           <primary>Compile</primary>
 
           <secondary>Compiling Netatalk from Source</secondary>
         </indexterm> Netatalk</title>
 
-      <sect3>
-        <title>Configuring the build</title>
+      <para>Instructions on how to use the build system are documented in the
+      <ulink url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">
+	    INSTALL</ulink> file in the Netatalk source tree.</para>
 
-        <para>To build the binaries, first run the program
-        <command>./configure</command> in the source directory. This should
-        automatically configure Netatalk for your operating system. If you
-        have unusual needs, then you may wish to run</para>
-
-    <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
-
-        <para>to see what special options you can enable.</para>
-
-        <para>The most used configure options are:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd</para>
-
-            <para>This option helps Netatalk to determine where to install the
-            start scripts.</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-bdb</option>=<replaceable>/path/to/bdb/installation/</replaceable></para>
-
-            <para>In case you installed Berkeley DB in a non-standard
-            location, you will <emphasis>have</emphasis> to give the install
-            location to Netatalk, using this switch.</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
-
-            <para>In case you installed OpenSSL or LibreSSL in a non-standard
-            location, you will <emphasis>have</emphasis> to give the install
-            location to Netatalk, using this switch.</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>Now run configure with any options you need</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure [arguments]</userinput></screen>
-
-        <para>Configure will end up in an overview showing the settings the
-        Netatalk Makefiles have been created with.</para>
-      </sect3>
-
-      <sect3 id="spotlight-compile">
-        <title>Spotlight<indexterm>
-            <primary>Spotlight</primary>
-          </indexterm></title>
-
-        <para>Netatalk uses Gnome <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> as the
-        metadata backend. The minimum required version is 0.7 as that's the
-        first version to support <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">SPARQL</ulink>.</para>
-
-        <para>If not already installed, install the packages
-        <emphasis>tracker</emphasis> and <emphasis>tracker-devel</emphasis>,
-        on Solaris install <ulink url="http://www.opencsw.org/">OpenCSW</ulink> and then install
-        the Tracker package from the OpenCSW unstable repository.</para>
-
-        <para>The tracker packages are found via pkg-config, you may have to
-        pass the version suffix as you may have a newer version installed then
-        the default 0.12, e.g.</para>
-
-        <screen><prompt>$</prompt> <userinput>pkg-config --list-all | grep tracker
-	</userinput>tracker-sparql-3.0             tracker-sparql-3.0 - Tracker : A SPARQL triple store library</screen>
-
-        <para>So in this example, configure with:</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=3.0 ...</userinput></screen>
-
-        <para>If you're using Solaris and Tracker from OpenCSW, then you need
-        to set the PKG_CONFIG_PATH environment variable, add the
-        --with-tracker-prefix configure option and add
-        LDFLAGS="-R/opt/csw/lib"</para>
-
-        <screen>PKG_CONFIG_PATH=/opt/csw/lib/pkgconfig LDFLAGS="-R/opt/csw/lib" ./configure --with-tracker-prefix=/opt/csw --with-tracker-pkgconfig-version=0.16 ...</screen>
-
-        <para>Check the configure output whether the Tracker libs were
-        found:</para>
-
-        <screen>checking for TRACKER... yes
-        checking for TRACKER_MINER... yes
-        ...
-        Configure summary:
-        ...
-          AFP:
-            Spotlight: yes
-        ...</screen>
-      </sect3>
-
-      <sect3>
-        <title>Compile and install</title>
-
-        <para>Next, running</para>
-
-        <screen><prompt>$</prompt> <userinput>make</userinput></screen>
-
-        <para>should produce the Netatalk binaries (this step can take several
-        minutes to complete).</para>
-
-        <para>When the process finished you can use</para>
-
-        <screen><prompt>$</prompt> <userinput>make install</userinput></screen>
-
-        <para>to install the binaries and documentation (must be done as
-        "root" when using default locations).</para>
-      </sect3>
+      <para>For examples of concrete steps to compile on specific operating systems, refer to the
+      <link linkend="compile">Compile Netatalk from Source</link> appendix.</para>
     </sect2>
   </sect1>
 </chapter>
