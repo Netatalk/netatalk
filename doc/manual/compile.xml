@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appendix id="compile">
+	<title>Compile Netatalk from Source</title>
+	<sect1 id="compile-overview">
+		<title>Overview</title>
+	</sect1>
+	<sect1>
+		<para>
+            This section describes how to compile Netatalk from source for specific operating systems.
+            </para>
+		<para>
+            The Netatalk project is in the process of transitioning the build system
+            from GNU Autotools to Meson.
+            During the transitional period,
+            the documentation will contain both Autotools and Meson build instructions.
+            </para>
+		<para>
+            Please note that this document is automatically generated from the GitHub workflow YAML file.
+            This may or may not be the most optimal way to build Netatalk for your system.
+            </para>
+	</sect1>
+	<sect1 id="compile-os">
+		<title>Operating Systems</title>
+	</sect1>
+	<sect1>
+		<para>
+            Note: You only have to use execute the steps for one of the build systems, not both.
+            Additionally, the test steps are entirely optional for compiling from source.
+            </para>
+		<sect2 id="integration_test">
+			<title>Ubuntu</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>sudo apt-get update
+sudo apt-get install --assume-yes --no-install-recommends autoconf \
+automake \
+docbook-xsl \
+libacl1-dev \
+libavahi-client-dev \
+libcrack2-dev \
+libcups2-dev \
+libdb-dev \
+libgcrypt-dev \
+libkrb5-dev \
+libldap2-dev \
+libltdl-dev \
+libpam0g-dev \
+libssl-dev \
+libtirpc-dev \
+libtool \
+libtool-bin \
+libwrap0-dev \
+meson \
+ninja-build \
+quota \
+tcpd \
+xsltproc
+
+</screen>
+			</para>
+			<para>Autotools - Bootstrap</para>
+			<para>
+				<screen>./bootstrap</screen>
+			</para>
+			<para>Autotools - Configure</para>
+			<para>
+				<screen>./configure \
+  --enable-krbV-uam \
+  --enable-pgp-uam \
+  --enable-quota \
+  --enable-systemd \
+  --with-cracklib \
+  --with-libtirpc
+</screen>
+			</para>
+			<para>Autotools - Generate manual pages</para>
+			<para>
+				<screen>make html</screen>
+			</para>
+			<para>Autotools - Build</para>
+			<para>
+				<screen>make -j $(nproc) all</screen>
+			</para>
+			<para>Autotools - Run tests</para>
+			<para>
+				<screen>make check</screen>
+			</para>
+			<para>Autotools - Run distribution tests</para>
+			<para>
+				<screen>make distcheck</screen>
+			</para>
+			<para>Autotools - Install</para>
+			<para>
+				<screen>sudo make install</screen>
+			</para>
+			<para>Meson - Configure</para>
+			<para>
+				<screen>meson setup build \
+  -Dbuild-tests=true \
+  -Dbuild-manual=true \
+  -Dwith-libtirpc=true
+</screen>
+			</para>
+			<para>Meson - Build and generate man pages</para>
+			<para>
+				<screen>ninja -C build</screen>
+			</para>
+			<para>Meson - Tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson test</screen>
+			</para>
+			<para>Meson - Distribution tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson dist</screen>
+			</para>
+			<para>Meson - Install</para>
+			<para>
+				<screen>sudo ninja -C build install</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-debian">
+			<title>Debian</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>apt-get update
+apt-get install --assume-yes --no-install-recommends autoconf \
+automake \
+docbook-xsl \
+libacl1-dev \
+libavahi-client-dev \
+libcrack2-dev \
+libcups2-dev \
+libdb-dev \
+libgcrypt-dev \
+libkrb5-dev \
+libldap2-dev \
+libltdl-dev \
+libpam0g-dev \
+libssl-dev \
+libtirpc-dev \
+libtool \
+libtool-bin \
+libwrap0-dev \
+meson \
+ninja-build \
+quota \
+tcpd \
+xsltproc
+
+</screen>
+			</para>
+			<para>Autotools - Bootstrap</para>
+			<para>
+				<screen>./bootstrap</screen>
+			</para>
+			<para>Autotools - Configure</para>
+			<para>
+				<screen>./configure \
+  --enable-debian \
+  --enable-krbV-uam \
+  --enable-pgp-uam \
+  --enable-quota \
+  --with-cracklib \
+  --with-libtirpc
+</screen>
+			</para>
+			<para>Autotools - Build</para>
+			<para>
+				<screen>make -j $(nproc) all</screen>
+			</para>
+			<para>Autotools - Run tests</para>
+			<para>
+				<screen>make check</screen>
+			</para>
+			<para>Autotools - Install</para>
+			<para>
+				<screen>make install</screen>
+			</para>
+			<para>Meson - Configure</para>
+			<para>
+				<screen>meson setup build \
+  -Dbuild-tests=true \
+  -Denable-debian=true \
+  -Dwith-libtirpc=true
+</screen>
+			</para>
+			<para>Meson - Build</para>
+			<para>
+				<screen>ninja -C build</screen>
+			</para>
+			<para>Meson - Tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson test</screen>
+			</para>
+			<para>Meson - Install</para>
+			<para>
+				<screen>ninja -C build install</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-fedora">
+			<title>Fedora</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>dnf -y install \
+  automake \
+  avahi-devel \
+  chkconfig \
+  cracklib-devel \
+  cups-devel \
+  file \
+  krb5-devel \
+  libacl-devel \
+  libdb-devel \
+  libgcrypt-devel \
+  libtool \
+  meson \
+  ninja-build \
+  openldap-devel \
+  openssl-devel
+</screen>
+			</para>
+			<para>Autotools - Bootstrap</para>
+			<para>
+				<screen>./bootstrap</screen>
+			</para>
+			<para>Autotools - Configure</para>
+			<para>
+				<screen>./configure \
+  --enable-pgp-uam \
+  --enable-krbV-uam \
+  --enable-redhat-sysv \
+  --with-cracklib=/usr/share/cracklib
+</screen>
+			</para>
+			<para>Autotools - Build</para>
+			<para>
+				<screen>make -j $(nproc) all</screen>
+			</para>
+			<para>Autotools - Run tests</para>
+			<para>
+				<screen>make check</screen>
+			</para>
+			<para>Autotools - Install</para>
+			<para>
+				<screen>sudo make install</screen>
+			</para>
+			<para>Meson - Configure</para>
+			<para>
+				<screen>meson setup build \
+  -Dbuild-tests=true \
+  -Dwith-libtirpc=true \
+  -Denable-redhat-sysv=true
+</screen>
+			</para>
+			<para>Meson - Build</para>
+			<para>
+				<screen>ninja -C build</screen>
+			</para>
+			<para>Meson - Tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson test</screen>
+			</para>
+			<para>Meson - Install</para>
+			<para>
+				<screen>sudo ninja -C build install</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-macos">
+			<title>macOS</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>brew install automake libressl krb5 berkeley-db meson</screen>
+			</para>
+			<para>Autotools - Bootstrap</para>
+			<para>
+				<screen>./bootstrap</screen>
+			</para>
+			<para>Autotools - Configure</para>
+			<para>
+				<screen>./configure \
+  --disable-ddp \
+  --enable-pgp-uam \
+  --enable-krbV-uam \
+  --with-ssl-dir=/usr/local/opt/libressl \
+  --with-bdb=/usr/local/opt/berkeley-db
+</screen>
+			</para>
+			<para>Autotools - Build</para>
+			<para>
+				<screen>make -j $(nproc) all</screen>
+			</para>
+			<para>Autotools - Run tests</para>
+			<para>
+				<screen>make check</screen>
+			</para>
+			<para>Autotools - Install</para>
+			<para>
+				<screen>sudo make install</screen>
+			</para>
+			<para>Meson - Configure</para>
+			<para>
+				<screen>meson setup build \
+  -Dwith-bdb=/usr/local/opt/berkeley-db \
+  -Dwith-ssl-dir=/usr/local/opt/libressl \
+  -Dbuild-tests=true \
+  -Denable-macos=true
+</screen>
+			</para>
+			<para>Meson - Build</para>
+			<para>
+				<screen>ninja -C build</screen>
+			</para>
+			<para>Meson - Tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson test</screen>
+			</para>
+			<para>Meson - Install</para>
+			<para>
+				<screen>sudo ninja -C build install</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-netbsd">
+			<title>NetBSD</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>pkg_add \
+  autoconf \
+  automake \
+  avahi \
+  db5 \
+  gcc13 \
+  gmake \
+  libcups \
+  libgcrypt \
+  libressl \
+  libtool \
+  meson \
+  pkg-config
+</screen>
+			</para>
+			<para>Configure and build</para>
+			<para>
+				<screen>set -e
+echo "Building with Autotools"
+./bootstrap
+./configure \
+  --enable-krbV-uam \
+  --enable-netbsd \
+  --enable-pgp-uam \
+  --with-bdb=/usr/pkg \
+  --with-libgcrypt-dir=/usr/pkg \
+  MAKE=gmake \
+  PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
+gmake -j2 all
+echo "Building with Meson"
+meson setup build \
+  -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+  -Denable-netbsd=true
+ninja -C build
+ninja -C build install
+</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-solaris">
+			<title>Solaris</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>pkg install autoconf automake libtool pkg-config gcc libgcrypt
+wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
+wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
+tar xvf autoconf-2.71.tar.gz
+tar xvf automake-1.16.5.tar.gz
+cd autoconf-2.71
+./configure --prefix=/usr
+make
+make install
+cd ../automake-1.16.5
+./configure --prefix=/usr
+make
+make install
+cd ..            
+</screen>
+			</para>
+			<para>Configure and build</para>
+			<para>
+				<screen>set -e
+echo "Building with Autotools"
+./bootstrap
+./configure \
+  MAKE=gmake \
+  --enable-cups=no
+gmake -j $(nproc) all
+gmake install
+</screen>
+			</para>
+		</sect2>
+		<sect2></sect2>
+	</sect1>
+</appendix>

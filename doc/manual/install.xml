@@ -64,6 +64,10 @@
       url="https://openports.pl">https://openports.pl
       </ulink></para>
 
+      <para>macOS Homebrew:<ulink
+      url="https://brew.sh/">https://brew.sh/
+      </ulink></para>
+
       <para>macOS MacPorts:<ulink
       url="https://ports.macports.org/">https://ports.macports.org/
       </ulink></para>
@@ -139,20 +143,7 @@ Resolving deltas: 100% (32227/32227), done.
 
             <screen><prompt>$</prompt> <userinput>git pull</userinput></screen>
           </listitem>
-
-          <listitem>
-            <para>Now <command>cd</command> to the netatalk directory and run
-            <command>./bootstrap</command>. This will create the
-            <filename>configure</filename> script required in the next
-            step.</para>
-
-            <screen><prompt>$</prompt> <userinput>./bootstrap</userinput></screen>
-          </listitem>
         </orderedlist>
-
-        <para>For futher information refer to the <ulink
-        url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
-        file.</para>
       </sect3>
     </sect2>
   </sect1>
@@ -197,22 +188,28 @@ Resolving deltas: 100% (32227/32227), done.
       <sect3>
         <title>Required third-party software</title>
 
-        <para>Netatalk makes use of Berkeley DB<indexterm>
-            <primary>BDB</primary>
-
-            <secondary>Berkeley DB</secondary>
-          </indexterm>. At the time of writing, the following versions are
-        supported:</para>
-
         <itemizedlist>
           <listitem>
-            <para>minimum 4.6.x</para>
+            <para>Berkeley DB<indexterm>
+                <primary>BDB</primary>
+                <secondary>Berkeley DB</secondary>
+              </indexterm>.</para>
+            <para>At the time of writing you need at least version 4.6.</para>
+
+            <para>The recommended version is 5.3, which was the final release
+            under the permissive Sleepycat license,
+            which means that this is what most FLOSS operating systems
+            are distributing.</para>
           </listitem>
+
           <listitem>
-            <para>recommended 5.3.x</para>
+            <para>Libgcrypt</para>
+
+            <para>The <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
+            Libgcrypt</ulink> library enables the DHX2 UAM,
+            which is required to authenticate with OS X 10.7 and later.</para>
           </listitem>
         </itemizedlist>
-
       </sect3>
 
       <sect3>
@@ -223,12 +220,11 @@ Resolving deltas: 100% (32227/32227), done.
 
         <itemizedlist>
           <listitem>
-            <para>Libgcrypt (recommended) and OpenSSL</para>
+            <para>OpenSSL</para>
 
-            <para>Required for encrypted passwords. Without it, the password
-            will be sent over the network in clear text. Libgcrypt is needed
-            for DHX2. OpenSSL 1.x or LibreSSL is needed for the older DHCAST128 (aka
-            DHX).</para>
+            <para>OpenSSL 1.x or LibreSSL is needed for the older DHCAST128 (a.k.a.
+            DHX) UAM, which provides the strongest password encryption for
+            Classic Mac OS.</para>
           </listitem>
 
           <listitem>
@@ -309,80 +305,18 @@ Resolving deltas: 100% (32227/32227), done.
     </sect2>
 
     <sect2 id="compiling-netatalk">
-      <title>Compiling<indexterm>
+      <title>Configure and Build<indexterm>
           <primary>Compile</primary>
 
           <secondary>Compiling Netatalk from Source</secondary>
         </indexterm> Netatalk</title>
 
-      <sect3>
-        <title>Configuring the build</title>
+      <para>Instructions on how to use the build system are documented in the
+      <ulink url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">
+	    INSTALL</ulink> file in the Netatalk source tree.</para>
 
-        <para>To build the binaries, first run the program
-        <command>./configure</command> in the source directory. This should
-        automatically configure Netatalk for your operating system. If you
-        have unusual needs, then you may wish to run</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
-
-        <para>to see what special options you can enable.</para>
-
-        <para>The most used configure options are:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>--enable-[systemd/redhat-sysv/suse-sysv/gentoo/debian/netbsd/macos]</para>
-
-            <para>This option helps netatalk to determine where to install the
-            start scripts.</para>
-
-            <para>The <command>--enable-systemd</command> option is
-            cross-platform and should work with most contemporary Linux or *BSD
-            distributions that have adopted systemd.</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-bdb</option>=<replaceable>/path/to/bdb/installation/</replaceable></para>
-
-            <para>In case you installed Berkeley DB in a non-standard
-            location, you will <emphasis>have</emphasis> to give the install
-            location to netatalk, using this switch.</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
-
-            <para>In case you installed OpenSSL or LibreSSL in a non-standard
-            location, you will <emphasis>have</emphasis> to give the install
-            location to Netatalk, using this switch.</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>Now run configure with any options you need</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure [arguments] [--with-bdb=/bdb/install/path]</userinput></screen>
-
-        <para>Configure will end up in an overview showing the settings the
-        Netatalk Makefiles have been created with.</para>
-
-        <para>If this step fails please visit the <ulink
-        url="https://github.com/Netatalk/netatalk/wiki/Troubleshooting">troubleshooting
-        guide</ulink>.</para>
-
-        <para>Next, running</para>
-
-        <screen><prompt>$</prompt> <userinput>make</userinput></screen>
-
-        <para>should produce the Netatalk binaries (this step can take several
-        minutes to complete).</para>
-
-        <para>When the process finished you can use</para>
-
-        <screen><prompt>$</prompt> <userinput>make install</userinput></screen>
-
-        <para>to install the binaries and documentation (must be done as
-        "root" when using default locations).</para>
-      </sect3>
+      <para>For examples of concrete steps to compile on specific operating systems, refer to the
+      <link linkend="compile">Compile Netatalk from Source</link> appendix.</para>
     </sect2>
   </sect1>
 </chapter>
