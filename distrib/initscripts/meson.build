@@ -12,7 +12,7 @@ if get_option('enable-redhat-sysv')
         install_mode: 'rwxr-xr-x',
     )
     meson.add_install_script(
-        find_program('/usr/sbin/chkconfig'),
+        find_program('chkconfig'),
         '--add',
         '/etc/rc.d/init.d/netatalk',
     )
