@@ -64,35 +64,41 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
             --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
+            --with-init-style=debian-sysv \
             --with-tracker-pkgconfig-version=3.0
-      - name: Generate man pages
+      - name: Autotools - Generate manual pages
         run: make html
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Run distribution tests
+      - name: Autotools - Run distribution tests
         run: make distcheck
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dbuild-manual=true
-      - name: Meson build and generate man pages
+            -Dbuild-manual=true \
+            -Dwith-init-style=debian-sysv
+      - name: Meson - Build and generate manual pages
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Run tests
         run: cd build && meson test
-      - name: Meson distribution tests
+      - name: Meson - Run distribution tests
         run: cd build && meson dist
+      - name: Meson - Install
+        run: sudo ninja -C build install
 
   build-debian:
     name: Debian
@@ -137,28 +143,34 @@ jobs:
             systemtap-sdt-dev \
             tcpd \
             tracker
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --disable-dependency-tracking \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
+            --with-init-style=debian-sysv \
             --with-tracker-pkgconfig-version=2.0
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: make install
+      - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true
-      - name: Meson build
+            -Dbuild-tests=true \
+            -Dwith-init-style=debian-sysv
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Run tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
 
   build-fedora:
     name: Fedora
@@ -173,6 +185,7 @@ jobs:
             automake \
             avahi-devel \
             bison \
+            chkconfig \
             cracklib-devel \
             dbus-devel \
             dbus-glib-devel \
@@ -190,30 +203,36 @@ jobs:
             openssl-devel \
             pam-devel \
             perl \
+            systemd \
             systemtap-sdt-devel \
             tracker-devel
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
-            --with-init-style=redhat-systemd \
+            --with-init-style=redhat-sysv \
             --with-tracker-pkgconfig-version=3.0
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc)
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true
-      - name: Meson build
+            -Dbuild-tests=true \
+            -Dwith-init-style=redhat-sysv
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Run tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
 
   build-macos:
     name: macOS
@@ -226,29 +245,35 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: brew install automake libressl mysql talloc krb5 berkeley-db meson
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-bdb=/usr/local/opt/berkeley-db \
+            --with-init-style=macos-launchd \
             --with-ssl-dir=/usr/local/opt/libressl
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dwith-bdb=/usr/local/opt/berkeley-db \
+            -Dwith-init-style=macos-launchd \
             -Dwith-ssl-dir=/usr/local/opt/libressl \
             -Dbuild-tests=true
-      - name: Meson build
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Run tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
 
   build-freebsd:
     name: FreeBSD
@@ -281,6 +306,7 @@ jobs:
               tracker3
           run: |
             set -e
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -290,9 +316,12 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
+            gmake install
+            echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig
             ninja -C build
+            ninja -C build install
 
   build-openbsd:
     name: OpenBSD
@@ -327,6 +356,7 @@ jobs:
               tracker3
           run: |
             set -e
+            echo "Building with Autotools"
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             autoreconf -fi
@@ -335,9 +365,12 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
+            gmake install
+            echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig
             ninja -C build
+            ninja -C build install
 
   build-netbsd:
     name: NetBSD
@@ -372,19 +405,26 @@ jobs:
               talloc
           run: |
             set -e
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
               --enable-pgp-uam \
               --with-bdb=/usr/pkg \
+              --with-init-style=netbsd \
               --with-libgcrypt-dir=/usr/pkg \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j $(nproc)
+            gmake install
+            echo "Building with Meson"
             meson setup build \
-              -Dpkg_config_path=/usr/pkg/lib/pkgconfig
+              -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+              -Dwith-dtrace=false \
+              -Dwith-init-style=netbsd
             ninja -C build
+            ninja -C build install
 
   build-dflybsd:
     if: false
@@ -420,6 +460,7 @@ jobs:
               tracker3
           run: |
             set -e
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --with-ssl-dir=/usr/local \
@@ -427,8 +468,11 @@ jobs:
               LDFLAGS=-L/usr/local/lib \
               MAKE=gmake
             gmake -j2
+            gmake install
+            echo "Building with Meson"
             meson setup build
             ninja -C build
+            ninja -C build install
 
   build-solaris:
     name: Solaris
@@ -468,14 +512,17 @@ jobs:
             cd ..
           run: |
             set -e
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
               --enable-pgp-uam \
+              --with-init-style=solaris \
               --without-afpstats \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
+            gmake install
 
   build-omnios:
     name: OmniOS
@@ -508,6 +555,7 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-pgp-uam \
@@ -519,10 +567,14 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             gmake -j $(nproc)
+            gmake install
+            echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-init-style=solaris \
               -Dwith-ldap=/opt/local
             ninja -C build
+            ninja -C build install
 
   static_analysis:
     name: Static Analysis
