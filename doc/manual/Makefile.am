@@ -4,6 +4,7 @@ HTML_STYLESHEET=$(top_srcdir)/doc/html.xsl
 CLEANFILES =
 
 XML_PAGES = \
+	compile.xml \
 	configuration.xml \
 	gpl.xml \
 	install.xml \
@@ -12,6 +13,7 @@ XML_PAGES = \
 	upgrade.xml
 
 EXTRA_DIST = \
+	compile.xml \
 	configuration.xml \
 	gpl.xml \
 	install.xml \
@@ -41,6 +43,7 @@ HTML_PAGES = \
 	cnid_dbd.8.html \
 	cnid_metad.8.html \
 	cnid2_create.1.html \
+	compile.html \
 	configuration.html \
 	dbd.1.html \
 	example-toc.html \
