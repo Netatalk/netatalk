@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<refentry id="asip-status.pl.1">
+<refentry id="asip-status.1">
   <refmeta>
-    <refentrytitle>asip-status.pl</refentrytitle>
+    <refentrytitle>asip-status</refentrytitle>
 
     <manvolnum>1</manvolnum>
 
     <refmiscinfo class="date">06 May 2016</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>asip-status.pl</refname>
+    <refname>asip-status</refname>
 
     <refpurpose>AFPサーバに機能を問い合わせる</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="opt">
         <arg choice="plain">-4</arg>
@@ -33,7 +35,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="opt">
         <arg choice="plain">-4</arg>
@@ -47,7 +49,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>asip-status.pl</command>
+      <command>asip-status</command>
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
@@ -61,14 +63,14 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>asip-status.pl</command>は、<replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する"Machine type"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。</para>
+    <para><command>asip-status</command>は、<replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する"Machine type"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。</para>
 
     <para><replaceable>PORT</replaceable>を与えない場合は、デフォルトのAFPポートである548が使われる。</para>
 
-    <para>Netatalk 3.1.9以降では、 <command>asip-status.pl</command>
+    <para>Netatalk 3.1.9以降では、 <command>asip-status</command>
     はIPv4とIPv6の両方をサポートする。どちらのIPバージョンを利用するかは、あなたのシステムが決定する。利用するIPバージョンを指定するには、-4または-6オプションを使うことができる。</para>
 
-    <note><para><command>asip-status.pl</command> は IO::Socket::INET6
+    <note><para><command>asip-status</command> は IO::Socket::IP
     モジュールを要求する。</para></note>
 
   </refsect1>
@@ -131,7 +133,7 @@
   <refsect1>
     <title>例</title>
 
-    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> 192.168.1.15
+    <para><programlisting>$ <emphasis remap="B">asip-status</emphasis> 192.168.1.15
 AFP reply from 192.168.1.15:548 via IPv4
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -155,7 +157,7 @@ Network address: 192.168.1.15:548 (IPv4 address and port)
 Network address: 65280.128 (ddp address)
 </programlisting></para>
 
-    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> myserver:10548
+    <para><programlisting>$ <emphasis remap="B">asip-status</emphasis> myserver:10548
 AFP reply from myserver:10548 via IPv6
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -185,10 +187,8 @@ UTF8 Servername: myserver
   </refsect1>
 
   <refsect1>
-    <title>バグの報告</title>
+      <title>著作者</title>
 
-    <para>バグはNetatalk-develメーリングリスト
-    &lt;netatalk-devel@lists.sourceforge.net&gt;
-    に報告してください。</para>
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

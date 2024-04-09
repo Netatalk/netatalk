@@ -5,9 +5,11 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">19 Mar 2017</refmiscinfo>
+    <refmiscinfo class="date">11 Apr 2023</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -777,7 +779,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>ゲストが利用するユーザ名を指定する (デフォルトは"nobody"である)。ユーザ名は引用符で囲むべきである。</para>
+            <para>ゲストが利用するユーザ名を指定する (デフォルトは nobody である)。
+            本ユーザ名はシステム上の有効なユーザーである必要がある。</para>
           </listitem>
         </varlistentry>
 
@@ -786,7 +789,8 @@
           <type>(H)</type></term>
 
           <listitem>
-            <para>AFPユーザのホームのボリューム名。デフォルトは<emphasis>$u's home</emphasis>である。</para>
+            <para>AFPユーザのホームのボリューム名。デフォルトは<emphasis>$u's home</emphasis>である。
+            ボリューム名の文字列に"<emphasis>$u</emphasis>"は必須である。</para>
           </listitem>
         </varlistentry>
 
@@ -805,7 +809,7 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>クライアントがサーバにログオンしたときに表示されるメッセージを設定する。メッセージは<option>unix charset</option>で書いて引用符で囲むべきです。拡張文字が使えます。</para>
+            <para>クライアントがサーバにログオンしたときに表示されるメッセージを設定する。メッセージは<option>unix charset</option>で書く。拡張文字が使える。</para>
           </listitem>
         </varlistentry>
 
@@ -824,7 +828,7 @@
           <term>signature = &lt;text&gt; <type>(G)</type></term>
 
           <listitem>
-            <para>サーバシグネチャを指定する。最大長は16文字である。このオプションは障害隔離などを提供するクラスタ環境において有用である。デフォルトでは、afpdは自動的にシグネチャを(乱数を元に)生成し、それを<filename>@localstatedir@/netatalk/afp_signature.conf</filename>に保存する。asip-status.pl(1)も見よ。</para>
+            <para>サーバシグネチャを指定する。最大長は16文字である。このオプションは障害隔離などを提供するクラスタ環境において有用である。デフォルトでは、afpdは自動的にシグネチャを(乱数を元に)生成し、それを<filename>@localstatedir@/netatalk/afp_signature.conf</filename>に保存する。asip-status(1)も見よ。</para>
           </listitem>
         </varlistentry>
 
@@ -1072,6 +1076,15 @@
 
           <listitem>
             <para>FCE イベントを生成すべきでないファイル名をスラッシュで区切ったリスト．デフォルトでは .DS_Store．</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>fce ignore directories = <replaceable>NAME[,NAME2,...]</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>FCE イベントが生成されないディレクトリのカンマ区切りのリスト。デフォルトは無し。</para>
           </listitem>
         </varlistentry>
 
@@ -1408,8 +1421,8 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>この許可オプションは指定された共有にそのユーザーとグループのアクセスを許可する．ユーザーとグループはスペースかコンマで区切って指定する．グループは @ プレフィックスで明示する．名前の中にあるスペースを許すために名前を引用符で囲んでもよい．例:
-            <programlisting>valid users = user "user 2" @group “@group 2"</programlisting></para>
+            <para>この許可オプションは指定された共有にそのユーザーとグループのアクセスを許可する．ユーザーとグループはスペースかコンマで区切って指定する．グループは @ プレフィックスで明示する．例:
+            <programlisting>valid users = user @group</programlisting></para>
           </listitem>
         </varlistentry>
 
@@ -1794,7 +1807,7 @@ directory perm = 0770</programlisting></para>
         <term>cdb</term>
 
         <listitem>
-          <para>"Concurrent database" バックエンドは Oracle Berkley DB を基礎としている．このバックエンドだと，いくつかの <command>afpd</command> デーモンが直接 CNID データベースにアクセスする．もし一つのボリュームあたり，一つ以上の <command>afpd</command> プロセスがアクティブならば，Berkeley DB ロッキングがアクセスを同期するために用いられる．欠点は単一の <command>afpd</command> プロセスのクラッシュがデータベースを壊すかもしれないということである．</para>
+          <para>"Concurrent database" バックエンドは Oracle Berkeley DB を基礎としている．このバックエンドだと，いくつかの <command>afpd</command> デーモンが直接 CNID データベースにアクセスする．もし一つのボリュームあたり，一つ以上の <command>afpd</command> プロセスがアクティブならば，Berkeley DB ロッキングがアクセスを同期するために用いられる．欠点は単一の <command>afpd</command> プロセスのクラッシュがデータベースを壊すかもしれないということである．</para>
         </listitem>
       </varlistentry>
 
@@ -1862,5 +1875,11 @@ directory perm = 0770</programlisting></para>
 
         <manvolnum>8</manvolnum>
       </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

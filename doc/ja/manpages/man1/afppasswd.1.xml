@@ -5,15 +5,17 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
+    <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>afppasswd</refname>
 
-    <refpurpose>netatalkパスワード保守ユーティリティ</refpurpose>
+    <refpurpose>AFP Random Number UAM パスワード保守ユーティリティ</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -40,7 +42,7 @@
     <para><command>afppasswd</command>は、rootがパラメータ付きで呼び出すことも、ローカルシステムのユーザが自分のAFPパスワードを変更するためにパラメータなしで呼び出すこともできる。</para>
 
     <note>
-      <para>このユーティリティでは、あなたは特定の2つのUAMが利用するパスワードを変更できるにすぎない。これらは弱いパスワード暗号化を提供するだけなので、より安全な"DHCAST128"と"DHX2" UAMを代わりに使えないような極めて古いAFPクライアントをサポートしなければならない場合を除いて、"Randnum exchange"と"2-Way Randnum exchange" UAMの利用は廃止すべきである。Netatalkドキュメントの<link linkend="authentication">認証の章</link>で比較してください。</para>
+      <para>このユーティリティでは、Random Number UAM の2種類が利用するパスワードのみ変更できる。かなり弱いパスワード暗号化を提供するため、非常に古いAFPクライアントをサポートしなければならない限り、より安全な"DHX" ("DHCAST128") 及び "DHX2" UAMを推奨する。Netatalkマニュアルの<link linkend="authentication">認証の章</link>で比較してください。</para>
     </note>
   </refsect1>
 
@@ -123,5 +125,11 @@
 
         <manvolnum>5</manvolnum>
       </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

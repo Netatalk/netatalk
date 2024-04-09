@@ -1,51 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
+<!ENTITY Configuration SYSTEM "configuration.xml">
 <!ENTITY Intro SYSTEM "intro.xml">
 <!ENTITY Install SYSTEM "install.xml">
+<!ENTITY License SYSTEM "gpl.xml">
 <!ENTITY Upgrade SYSTEM "upgrade.xml">
-<!ENTITY Configuration SYSTEM "configuration.xml">
 
 <!ENTITY ad.1 SYSTEM "../manpages/man1/ad.1.xml">
-<!ENTITY afpd.8 SYSTEM "../manpages//man8/afpd.8.xml">
-<!ENTITY cnid_dbd.8 SYSTEM "../manpages//man8/cnid_dbd.8.xml">
-<!ENTITY cnid_metad.8 SYSTEM "../manpages//man8/cnid_metad.8.xml">
-<!ENTITY afp.conf.5 SYSTEM "../manpages//man5/afp.conf.5.xml">
-<!ENTITY afp_signature.conf.5 SYSTEM "../manpages//man5/afp_signature.conf.5.xml">
-<!ENTITY afp_voluuid.conf.5 SYSTEM "../manpages//man5/afp_voluuid.conf.5.xml">
-<!ENTITY afpldaptest.1 SYSTEM "../manpages//man1/afpldaptest.1.xml">
-<!ENTITY afppasswd.1 SYSTEM "../manpages//man1/afppasswd.1.xml">
-<!ENTITY afpstats.1 SYSTEM "../manpages//man1/afpstats.1.xml">
-<!ENTITY apple_dump.1 SYSTEM "../manpages//man1/apple_dump.1.xml">
-<!ENTITY extmap.conf.5 SYSTEM "../manpages//man5/extmap.conf.5.xml">
-<!ENTITY macusers.1 SYSTEM "../manpages//man1/macusers.1.xml">
-<!ENTITY megatron.1 SYSTEM "../manpages//man1/megatron.1.xml">
-<!ENTITY netatalk.8 SYSTEM "../manpages//man8/netatalk.8.xml">
-<!ENTITY netatalk-config.1 SYSTEM "../manpages//man1/netatalk-config.1.xml">
-<!ENTITY uniconv.1 SYSTEM "../manpages//man1/uniconv.1.xml">
-<!ENTITY asip-status.pl.1 SYSTEM "../manpages//man1/asip-status.pl.1.xml">
-<!ENTITY dbd.1 SYSTEM "../manpages//man1/dbd.1.xml">
+<!ENTITY afp.conf.5 SYSTEM "../manpages/man5/afp.conf.5.xml">
+<!ENTITY afp_signature.conf.5 SYSTEM "../manpages/man5/afp_signature.conf.5.xml">
+<!ENTITY afp_voluuid.conf.5 SYSTEM "../manpages/man5/afp_voluuid.conf.5.xml">
+<!ENTITY afpd.8 SYSTEM "../manpages/man8/afpd.8.xml">
+<!ENTITY afpldaptest.1 SYSTEM "../manpages/man1/afpldaptest.1.xml">
+<!ENTITY afppasswd.1 SYSTEM "../manpages/man1/afppasswd.1.xml">
+<!ENTITY afpstats.1 SYSTEM "../manpages/man1/afpstats.1.xml">
+<!ENTITY apple_dump.1 SYSTEM "../manpages/man1/apple_dump.1.xml">
+<!ENTITY asip-status.1 SYSTEM "../manpages/man1/asip-status.1.xml">
+<!ENTITY cnid_dbd.8 SYSTEM "../manpages/man8/cnid_dbd.8.xml">
+<!ENTITY cnid_metad.8 SYSTEM "../manpages/man8/cnid_metad.8.xml">
+<!ENTITY dbd.1 SYSTEM "../manpages/man1/dbd.1.xml">
+<!ENTITY extmap.conf.5 SYSTEM "../manpages/man5/extmap.conf.5.xml">
+<!ENTITY macusers.1 SYSTEM "../manpages/man1/macusers.1.xml">
+<!ENTITY netatalk.8 SYSTEM "../manpages/man8/netatalk.8.xml">
+<!ENTITY netatalk-config.1 SYSTEM "../manpages/man1/netatalk-config.1.xml">
 ]>
 <book id="netatalk-manual">
-  <title>Netatalk 3.1 マニュアル</title>
-  
+  <title>Netatalk マニュアル</title>
+
   <bookinfo>
-    <date>07-01-2013</date>
-    <releaseinfo>@NETATALK_VERSION@</releaseinfo>
+    <subtitle>バージョン @NETATALK_VERSION@</subtitle>
   </bookinfo>
 
- <?latex \setcounter{page}{3} ?>
-<preface>
-        <title>法的条項</title>
-<para>
-本ドキュメントは GNU 一般公衆利用許諾書 (GPL) バージョン 2 のもとで配布されている．
-Netatalk ソース一式にも本ドキュメントと同様に許諾書のコピーが同梱されている．許諾書のコピーのオンライン版は <ulink
-url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
-で閲覧できる</para>
-</preface>
+  <?latex \setcounter{page}{3} ?>
 
-  <?latex \cleardoublepage ?>
   <!-- Contents -->
   <toc/>
   <?latex \cleardoublepage ?>
@@ -86,7 +75,7 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
 
     &apple_dump.1;
 
-    &asip-status.pl.1;
+    &asip-status.1;
 
     &cnid_dbd.8;
 
@@ -98,17 +87,13 @@ url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/li
 
     &macusers.1;
 
-    &megatron.1;
-
     &netatalk.8;
 
     &netatalk-config.1;
-
-    &uniconv.1;
   </chapter>
   <?latex \cleardoublepage ?>
 
-  <?latex \include{gpl}?>
+  &License;
   <?latex \cleardoublepage ?>
 
   <index id="manual-index"><title>索引</title></index>

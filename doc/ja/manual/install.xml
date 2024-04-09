@@ -16,17 +16,17 @@
   <title>インストール</title>
 
   <warning>
-    <para>もし，以前に Netatalk の古いバージョンを使ったことがあるなら，
+    <para>Netatalk 3 は他バージョンと共存できないので，以前に Netatalk の古いバージョンを使ったことがあるなら，
     “<link linkend="upgrade">Netatalk 2 からのアップグレード</link>”の章をまず読んでいただきたい！！！</para>
   </warning>
 
   <sect1>
     <title>Netatalk の入手の仕方</title>
 
-    <para>この件の最新の情報は sourceforge の netatalk のページを一読いただきたい。</para>
+    <para>この件の最新の情報は GitHub の netatalk のページを一読いただきたい。</para>
 
     <para><ulink
-    url="http://sourceforge.net/projects/netatalk/">http://sourceforge.net/projects/netatalk/</ulink></para>
+    url="https://github.com/Netatalk/netatalk">https://github.com/Netatalk/netatalk</ulink></para>
 
     <sect2>
       <title>バイナリーパッケージ</title>
@@ -39,11 +39,11 @@
       </ulink></para>
 
       <para>Debian パッケージ：<ulink
-      url="http://packages.debian.org/">http://packages.debian.org/
+      url="https://www.debian.org/distrib/packages">http://www.debian.org/
       </ulink></para>
 
       <para>様々な RPM パッケージ：<ulink
-      url="http://rpmfind.net/">http://rpmfind.net/ </ulink></para>
+      url="http://rpmfind.net/">http://rpmfind.net/</ulink></para>
 
       <para>Fedora/RHEL パッケージ：<ulink
       url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
@@ -69,7 +69,7 @@
       </ulink></para>
 
       <para>OpenBSD ports:<ulink
-      url="http://openports.se/search.php">http://openports.se/search.php
+      url="https://openports.pl">https://openports.pl
       </ulink></para>
 
       <para>などである．<indexterm>
@@ -93,8 +93,8 @@
       <sect3>
         <title>Tarball</title>
 
-        <para>Netatalk のソースを tar で固めた .tar.gz および tar.bz2 形式のものが <ulink
-        url="http://netatalk.sourceforge.net/">sourceforge の netatalk のページ</ulink>にある．</para>
+        <para>Netatalk のソースを tar で固めた .tar.xz および .tar.bz2 形式のものが <ulink
+        url="https://github.com/Netatalk/netatalk">GitHub の netatalk のページ</ulink>にある．</para>
       </sect3>
 
       <sect3>
@@ -107,14 +107,14 @@
             <para>Git がインストールしてあることを確認する．<command>which
             git</command> は git のパスを示してくれるはずである．</para>
 
-            <screen><prompt>$ </prompt><userinput>which git</userinput>
+            <screen><prompt>$</prompt> <userinput>which git</userinput>
 <computeroutput>/usr/bin/git</computeroutput></screen>
           </listitem>
 
           <listitem>
             <para>ソースを取得してみよう．</para>
 
-            <screen><prompt>$</prompt> <userinput>git clone -b develop git://git.code.sf.net/p/netatalk/code netatalk-code
+            <screen><prompt>$</prompt> <userinput>git clone https://github.com/Netatalk/netatalk.git netatalk-code
 </userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
 remote: Counting objects: 2503, done.
 ...
@@ -131,7 +131,7 @@ remote: Counting objects: 2503, done.
           </listitem>
 
           <listitem>
-            <para>netatalk ディレクトリに <command>cd</command> して，
+            <para>netatalk-code ディレクトリに <command>cd</command> して，
             <command>./bootstrap</command>を実行する．これで次の段階で必要となる
             <filename>configure</filename> スクリプトが作成される．</para>
 
@@ -140,7 +140,7 @@ remote: Counting objects: 2503, done.
         </orderedlist>
 
         <para>さらなる情報については<ulink
-        url="http://netatalk.sourceforge.net/wiki/index.php/Developer_Infos">この wiki ページ</ulink>
+        url="https://netatalk.io/docs/Developer-Notes">Developer Notes ページ</ulink>
         も参照のこと．</para>
       </sect3>
     </sect2>
@@ -152,6 +152,12 @@ remote: Counting objects: 2503, done.
     <sect2>
       <title>前提条件</title>
 
+      <note>
+        <para>お使いのOSには下記ソフトウェアのバイナリーパッケージが提供される可能性が高い．</para>
+
+        <para>パッケージマネージャで検索すれば見つけられるだろう．</para>
+      </note>
+
       <sect3>
         <title>必要なサードパーティソフトウェア</title>
 
@@ -162,15 +168,15 @@ remote: Counting objects: 2503, done.
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
             <para>書き込みの時に最低でもバージョン 4.6 が必要となる．</para>
+
+            <para>推奨バージョンは 5.3 である Sleepycat ライセンスで提供された最終リリースである．</para>
           </listitem>
 
           <listitem>
             <para>Libgcrypt</para>
 
-            <para>OS X 10.7 とそれ以降では DHX2 のために Libgcrypt が必要である．</para>
-
-            <para>Libgcrypt は <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
-            http://directory.fsf.org/wiki/Libgcrypt</ulink> からダウンロードできる．</para>
+            <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
+            Libgcrypt</ulink> が必要である．</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -187,7 +193,7 @@ remote: Counting objects: 2503, done.
               </indexterm> サポートのための Tracker</para>
 
             <para>Netatalk はメタデータのバックエンドとして
-            <ulink url="http://projects.gnome.org/tracker/">Tracker</ulink> 
+            <ulink url="https://tracker.gnome.org">Tracker</ulink> 
             を使用する．最近の Linux ディストリビューションには，Tracker のバージョン 0.7 以来使用可能な
             libtracker-sparql が提供されている．</para>
           </listitem>
@@ -255,13 +261,13 @@ remote: Counting objects: 2503, done.
         がターゲットのオペレーティングシステム向けに自動的に設定されるはずである．
         もし普通とは違う要求がある場合，以下を実行すれば特殊なオプションで有効化できるものを見ることができる．</para>
 
-        <screen>$ <userinput>./configure --help</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
 
         <para>最も頻繁に使用されるオプションは：</para>
 
         <itemizedlist>
           <listitem>
-            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd</para>
+            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd</para>
 
             <para>このオプションがスタートアップスクリプトをどこにインストールするかの助けになる．</para>
           </listitem>
@@ -273,6 +279,13 @@ remote: Counting objects: 2503, done.
             に Berkeley DB をインストールした場所（訳注：すなわち 
             <replaceable>/path/to/bdb/installation/</replaceable>
             ）を指示<emphasis>しなければならない</emphasis>．</para>
+          </listitem>
+
+          <listitem>
+            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
+
+            <para>OpenSSL または LibreSSL を標準以外の場所にインストールした場合，
+            このオプションを指定<emphasis>しなければならない</emphasis>．</para>
           </listitem>
         </itemizedlist>
 
@@ -290,7 +303,7 @@ remote: Counting objects: 2503, done.
 
         <para>Netatalk はメタデータのバックエンドに Gnome 
         <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる．少なくとも最初に
-        <ulink url="https://wiki.gnome.org/Tracker/Documentation">SPARQL</ulink> 
+        <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">SPARQL</ulink> 
         をサポートしたバージョン 0.7 以降が必要である．</para>
 
         <para>まだインストールしていなければ <emphasis>tracker</emphasis> パッケージと 
@@ -302,14 +315,12 @@ remote: Counting objects: 2503, done.
         より新しいバージョンがインストールされている場合もあるので，
         末尾のバージョン番号も渡す必要があるかもしれない．すなわち</para>
 
-        <screen><prompt>$ </prompt><userinput>pkg-config --list-all | grep tracker
-</userinput>tracker-extract-0.16  tracker-extract - Tracker : A library to develop metadata extractors for 3rd party file types.
-tracker-sparql-0.16   tracker-sparql - Tracker : A library to perform SPARQL queries and updates in the              Tracker Store
-tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</screen>
+        <screen><prompt>$</prompt> <userinput>pkg-config --list-all | grep tracker
+        </userinput>tracker-sparql-3.0             tracker-sparql-3.0 - Tracker : A SPARQL triple store library</screen>
 
         <para>であれば：</para>
 
-        <screen><prompt>$ </prompt><userinput>./configure --with-tracker-pkgconfig-version=0.16 ...</userinput></screen>
+        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=3.0 ...</userinput></screen>
         
         <para>とする．</para>
 
@@ -322,13 +333,13 @@ tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</
         <para>Tracker ライブラリーが見つけられているかどうか，configure の出力を確認する：</para>
 
         <screen>checking for TRACKER... yes
-checking for TRACKER_MINER... yes
-...
-Configure summary:
-...
-  AFP:
-    Spotlight: yes
-...</screen>
+        checking for TRACKER_MINER... yes
+        ...
+        Configure summary:
+        ...
+          AFP:
+            Spotlight: yes
+        ...</screen>
       </sect3>
 
       <sect3>

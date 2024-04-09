@@ -7,9 +7,9 @@
 
     <refmiscinfo class="date">10 Nov 2015</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
-
-    <refmiscinfo class="manual">The Netatalk Project</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -145,5 +145,11 @@
     documentation.</para>
 
     <para>この man ページは Sebastian Rittau が 2001 年に作成した <command>netatalk-config</command> に適合している。</para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>
