@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="uniconv.1">
+
+  <refmeta>
+    <refentrytitle>uniconv</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">19 Jan 2013</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>uniconv</refname>
+
+    <refpurpose>Netatalkボリュームのエンコーディングを変換する</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>uniconv</command>
+
+      <arg choice="opt">-ndv</arg>
+
+      <arg choice="plain">-c <replaceable>cnidbackend</replaceable></arg>
+
+      <arg choice="plain">-f <replaceable>fromcode</replaceable></arg>
+
+      <arg choice="plain">-t <replaceable>tocode</replaceable></arg>
+
+      <arg>-m <replaceable>maccode</replaceable></arg>
+
+      <arg choice="plain"><replaceable>volumepath</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>uniconv</command>は<replaceable>volumepath</replaceable>ボリュームのエンコーディングを<replaceable>fromcode</replaceable>から<replaceable>tocode</replaceable>へ変換する。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-c</term>
+
+        <listitem>
+          <para>このボリュームで使うCNIDバックエンド。一般的にはcdbかdbdである。afpdがこのボリュームのために選んだバックエンドと一致させるべきである。これを指定しない場合、デフォルトのCNIDバックエンド"@DEFAULT_CNID_SCHEME@"が使われる。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-d</term>
+
+        <listitem>
+          <para>先頭のドットをHEXエンコード(:2e)しない。<citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>で<option>use dots = yes</option>を使うのに相当する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f</term>
+
+        <listitem>
+          <para>変換前のエンコーディング。HEXエンコーディングのボリュームではASCIIを指定する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-h</term>
+
+        <listitem>
+          <para>ヘルプを表示する</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-m</term>
+
+        <listitem>
+          <para>Macintoshクライアントのコードページ。HEXエンコードのボリュームの場合に必要である。デフォルトは"MAC_ROMAN"</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-n</term>
+
+        <listitem>
+          <para>「予行演習」であり、実際には何も変更しない。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-t</term>
+
+        <listitem>
+          <para>変換後のボリュームエンコーディング。例えばUTF8</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>詳細を出力する。最大限のログを出力するには二度指定する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-V</term>
+
+        <listitem>
+          <para>バージョンを表示してから終了する</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para></para>
+  </refsect1>
+
+  <refsect1>
+    <title>警告</title>
+
+    <para>間違ったオプションを設定するとあなたのデータが使用不能になるかもしれない!!! 自分が何をしようとしているか自覚してください。必ず最初にあなたのデータをバックアップしてください。</para>
+
+    <para>「予行演習」を最初に行い、変換エラーの出力をチェックすることを<emphasis role="bold">*強く*</emphasis>お勧めします。</para>
+
+    <para>ボリュームエンコーディングを変更している間は<citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>を走らせるべき<emphasis>ではない</emphasis>。afpdを再起動する前に<citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>の<option>unix charset</option>や<option>vol charset</option>を新しいコードページに変更するのを忘れるな。</para>
+
+    <para><emphasis role="bold">MacChineseTraditional</emphasis>や<emphasis role="bold">MacJapanese</emphasis>や<emphasis role="bold">MacKorean</emphasis>の場合はuniconvは使えません。</para>
+
+    <para><emphasis role="bold">自己責任で使ってください!!!</emphasis></para>
+  </refsect1>
+
+  <refsect1>
+    <title>選択可能な文字セット</title>
+
+    <para>Netatalkは(合成済と分解済の)UTF-8とHEXを内部サポートで提供する。もしそれ以外の文字セットを使いたいなら、<citerefentry><refentrytitle>iconv</refentrytitle><manvolnum>1</manvolnum></citerefentry>がそれを提供しなければならない。</para>
+
+    <para><command>uniconv</command>は旧式の1.x NLSで広く使われたiso-8859.adaptedも識別する。これは古いボリュームからアップグレードすることだけを意図したものであり、<citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>はもはやiso-8859.adaptedを扱うことができません。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>CNIDの背景</title>
+
+    <para>CNIDバックエンドは名前のIDへのマッピングを維持する。ファイル名をafpd(8)の外(シェルやsmaba)で変更した場合、CNIDデータベース、つまりDIDNAMEインデックスが一致しなくなる。Netatalkは可能な限り華麗にそのような矛盾から回復しようと試みる。これを達成する仕事は簡単ではないので、この矛盾を解決するメカニズムは時々失敗するかもしれない。つまり、ファイルやディレクトリへのパスの途中の名前が幾つか変更されたら、事態は悪化するだろう。</para>
+
+    <para>一気に多くのファイル名を変更した場合、afpdのフォールバックメカニズムが失敗する可能性がより高くなる。つまり、ファイルが変更されていないのに新しいIDが割り当てられるかもしれない。従って<command>uniconv</command>は矛盾を避けるために名前を変更した後にそれぞれのファイル/ディレクトリのCNIDエントリを直ちに更新する。ボリュームのための2つのバックエンド、つまりdbdとcdbは同じCNIDデータベースフォーマットを使う。したがって、cdbと共に<command>uniconv</command>を使い、その後でdbdと共に<command>afpd</command>を<emphasis>使ってもよい。</emphasis></para>
+
+    <para><emphasis role="bold">警告</emphasis>: 二つのプロセスが一度に異なるバックエンドを使ってCNIDデータベースを開いてはならない! 一つのボリュームをdbd (cnid_metad/cnid_dbd)を使って開いたまま、<command>uniconv</command>がcdbを使って起動すると、CNIDデータベースが壊れる結果になるだろう。何故なら二つのバックエンドは異なるロック方法を使うからである。あなたは更なる問題に出くわすかもしれない。つまりdbdがトランザクションありでコンパイルされている場合、cdbはトランザクションのログをアップデートしない。</para>
+
+    <para>通常、<citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>で使っているのと同じバックエンドを<command>uniconv</command>で使うのが推奨されます。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <para>1.x CAPエンコードボリュームをUTF-8に変換。クライアントはMacRomanコードページを使っていた。CNIDスキームはdbd:</para>
+
+    <screen><prompt>example%</prompt><userinput> uniconv -c dbd -f ASCII -t UTF8 -m MAC_ROMAN /path/to/share</userinput></screen>
+
+    <para>iso8859-1ボリュームをUTF-8に変換。CNIDスキームはcdb:</para>
+
+    <screen><prompt>example%</prompt><userinput> uniconv -c cdb -f ISO-8859-1 -t UTF8 -m MAC_ROMAN /path/to/share</userinput></screen>
+
+    <para>iso8859-1 adapted NLSを使った1.xボリュームをHEXエンコーディングに変換:</para>
+
+    <screen><prompt>example%</prompt><userinput> uniconv -f ISO-8859-ADAPTED -t ASCII -m MAC_ROMAN/path/to/share</userinput></screen>
+
+    <para>UTF-8ボリュームをHEXに変換。MacCyrillicクライアント向け:</para>
+
+    <screen><prompt>example%</prompt><userinput> uniconv -f UTF8 -t ASCII -m MAC_CYRILLIC /path/to/share</userinput></screen>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,<citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,<citerefentry><refentrytitle>iconv</refentrytitle><manvolnum>1</manvolnum></citerefentry>,<citerefentry><refentrytitle>cnid_metad</refentrytitle><manvolnum>8</manvolnum></citerefentry>,<citerefentry><refentrytitle>cnid_dbd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>

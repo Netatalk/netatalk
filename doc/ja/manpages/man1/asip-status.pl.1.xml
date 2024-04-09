@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="asip-status.pl.1">
+  <refmeta>
+    <refentrytitle>asip-status.pl</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">06 May 2016</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>asip-status.pl</refname>
+
+    <refpurpose>AFPサーバに機能を問い合わせる</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>asip-status.pl</command>
+
+      <group choice="opt">
+        <arg choice="plain">-4</arg>
+        <arg choice="plain">-6</arg>
+      </group>
+      <arg choice="opt">-d</arg>
+      <arg choice="opt">-i</arg>
+      <arg choice="opt">-x</arg>
+
+      <arg choice="plain"><replaceable>HOSTNAME</replaceable></arg>
+      <arg choice="opt"><replaceable>PORT</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>asip-status.pl</command>
+
+      <group choice="opt">
+        <arg choice="plain">-4</arg>
+        <arg choice="plain">-6</arg>
+      </group>
+      <arg choice="opt">-d</arg>
+      <arg choice="opt">-i</arg>
+      <arg choice="opt">-x</arg>
+
+      <arg choice="plain"><replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>asip-status.pl</command>
+
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">-version</arg>
+        <arg choice="plain">--version</arg>
+      </group>
+    </cmdsynopsis>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>asip-status.pl</command>は、<replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する"Machine type"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。</para>
+
+    <para><replaceable>PORT</replaceable>を与えない場合は、デフォルトのAFPポートである548が使われる。</para>
+
+    <para>Netatalk 3.1.9以降では、 <command>asip-status.pl</command>
+    はIPv4とIPv6の両方をサポートする。どちらのIPバージョンを利用するかは、あなたのシステムが決定する。利用するIPバージョンを指定するには、-4または-6オプションを使うことができる。</para>
+
+    <note><para><command>asip-status.pl</command> は IO::Socket::INET6
+    モジュールを要求する。</para></note>
+
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-4</option></term>
+
+        <listitem>
+          <para>IPv4のみを使う。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-6</option></term>
+
+        <listitem>
+          <para>IPv6のみを使う。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>デバッグ出力を有効にする。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-i</option></term>
+
+        <listitem>
+          <para>もしアイコンがあれば、それを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-x</option></term>
+
+        <listitem>
+          <para>16進ダンプ出力を有効にする。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-v, -version, --version</option></term>
+
+        <listitem>
+          <para>バージョンを表示する。</para>
+        </listitem>
+
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> 192.168.1.15
+AFP reply from 192.168.1.15:548 via IPv4
+Flags: 1  Cmd: 3  ID: 57005
+Reply: DSIGetStatus
+Request ID: 57005
+Machine type: Macintosh
+AFP versions: AFPVersion 1.1,AFPVersion 2.0,AFPVersion 2.1,AFP2.2
+UAMs: Cleartxt passwrd,Randnum exchange,2-Way Randnum exchange
+Volume Icon &amp; Mask: Yes
+Flags: 
+    SupportsCopyFile
+    SupportsChgPwd
+    SupportsServerMessages
+    SupportsServerSignature
+    SupportsTCP/IP
+    SupportsSuperClient
+Server name: bookchan
+Signature:
+04 1d 65 23 04 1d 65 23 04 1d 65 23 04 1d 65 23  ..e#..e#..e#..e#
+                                                  
+Network address: 192.168.1.15:548 (IPv4 address and port)
+Network address: 65280.128 (ddp address)
+</programlisting></para>
+
+    <para><programlisting>$ <emphasis remap="B">asip-status.pl</emphasis> myserver:10548
+AFP reply from myserver:10548 via IPv6
+Flags: 1  Cmd: 3  ID: 57005
+Reply: DSIGetStatus
+Request ID: 57005
+Machine type: Netatalk3.1.9
+AFP versions: AFP2.2,AFPX03,AFP3.1,AFP3.2,AFP3.3,AFP3.4
+UAMs: DHX2,DHCAST128
+Volume Icon &amp; Mask: Yes
+Flags: 
+    SupportsCopyFile
+    SupportsServerMessages
+    SupportsServerSignature
+    SupportsTCP/IP
+    SupportsSrvrNotifications
+    SupportsOpenDirectory
+    SupportsUTF8Servername
+    SupportsUUIDs
+    SupportsExtSleep
+    SupportsSuperClient
+Server name: myserver
+Signature:
+ea 56 61 0d bf 29 36 31 fa 6a 8a 24 a8 f0 cc 1d  .Va..)61.j.$....
+                                                  
+Network address: [fd00:0000:0000:0000:0000:0000:0001:0160]:10548 (IPv6 address + port)
+UTF8 Servername: myserver
+</programlisting></para>
+  </refsect1>
+
+  <refsect1>
+    <title>バグの報告</title>
+
+    <para>バグはNetatalk-develメーリングリスト
+    &lt;netatalk-devel@lists.sourceforge.net&gt;
+    に報告してください。</para>
+  </refsect1>
+</refentry>

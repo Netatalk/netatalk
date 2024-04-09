@@ -1,0 +1,2 @@
+subdir('manpages')
+subdir('manual')

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="intro">
+  <chapterinfo>
+
+    <author role="first-last">
+      <firstname>Eiichirou</firstname>
+      
+      <surname>UDA（日本語訳）</surname>
+    </author>
+    
+    <pubdate>2015 年 6 月 10 日（訳）</pubdate>
+    
+  </chapterinfo>
+  <title>Netatalk 序説</title>
+
+  <para>Netatalk は，*NIX 
+  マシンを極めて高性能で極めて信頼性の高いマッキントッシュコンピューター用ファイルサーバーに変身させる，
+  オープンソースのソフトウェアのパッケージである．</para>
+
+  <para>Netatalk の AFP 3.3 
+  準拠のファイルサーバーは，考え得る最高のユーザーエクスペリエンス
+  （マッキントッシュのメタデータの完全なサポート．クラシック Mac OS と OS X 
+  の混在環境も問題なくサポート）をもたらしつつ，Mac が SaMBa/NFS 
+  経由でサーバーにアクセスしたのと比較して著しく高い転送速度をもたらす．</para>
+
+</chapter>

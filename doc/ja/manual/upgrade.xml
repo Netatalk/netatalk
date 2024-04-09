@@ -1,0 +1,1544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="upgrade">
+  <chapterinfo>
+    <date>9.6.2013</date>
+
+    <author role="first-last">
+      <firstname>Frank</firstname>
+
+      <surname>Lahm</surname>
+    </author>
+
+    <pubdate>6 Sep, 2013</pubdate>
+    
+    <author role="first-last">
+      <firstname>Eiichirou</firstname>
+      
+      <surname>UDA（日本語訳）</surname>
+    </author>
+    
+    <pubdate>2015 年 5 月 5 日（訳）</pubdate>
+    
+  </chapterinfo>
+
+  <title>Netatalk 2 からのアップグレード</title>
+
+  <sect1>
+    <title>概要</title>
+
+    <para>Netatalk の主要な変更は以下の二点：<orderedlist>
+        <listitem>
+          <para>これまでの設定ファイルすべてが廃止された，全く新しい設定ファイルとしての 
+          <filename><link linkend="afp.conf.5">afp.conf</link></filename></para>        
+        </listitem>
+
+        <listitem>
+          <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する 
+          "<option>appledouble = ea</option>" という新しい AppleDouble のバックエンド．</para>
+        </listitem>
+      </orderedlist></para>
+
+    <sect2>
+      <title>設定まわりの変更点</title>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>（Samba の smb.conf のような） "ini" スタイルの構文</para>
+          </listitem>
+
+          <listitem>
+            <para>一つで設定すべてを指示するという点：
+            AFP 及びボリュームの構成を共に一つのファイルで設定することになるという点</para>
+          </listitem>
+
+          <listitem>
+            <para><filename>afpd.conf</filename>，
+            <filename>netatalk.conf</filename>，
+            <filename>AppleVolumes.default</filename> 及び，
+            <filename>afp_ldap.conf</filename> の廃止</para>
+          </listitem>
+        </itemizedlist><warning>
+          <para>ほとんどのオプション名は変更されたので，
+          詳細については <link linkend="afp.conf.5">afp.conf</link> の manpage 全体を読むこと</para>
+        </warning></para>
+    </sect2>
+
+    <sect2>
+      <title>新たな AppleDouble バックエンド</title>
+
+      <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する 
+      "<option>appledouble = ea</option>" という新しい AppleDouble のバックエンド．<itemizedlist>
+          <listitem>
+            <para>デフォルトのバックエンドである（！）</para>
+          </listitem>
+
+          <listitem>
+            <para>拡張属性のあるファイルシステムが必須．
+            さもなくば "<option>appledouble = v2</option>" オプションの使用が代替となる</para>
+          </listitem>
+
+          <listitem>
+            <para>"<option>appledouble = v2</option>" から "<option>appledouble = ea</option>" 
+            ファイルシステムへの変換はアクセス時，その都度行われる（無効にすることも可能）</para>
+          </listitem>
+
+          <listitem>
+            <para>一括で変換する場合 <command><link linkend="dbd.1">dbd</link></command> 
+            を用いることができる</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>実装の詳細：<itemizedlist>
+          <listitem>
+            <para>Mac のメタデータ（すなわち FinderInfo，AFP フラグ，コメント，CNID）は 
+            “<filename>org.netatalk.Metadata</filename>” という名前の拡張属性に保存される．</para>
+          </listitem>
+
+          <listitem>
+            <para>マックのリソースフォークは：<itemizedlist>
+                <listitem>
+                  <para>ZFS を用いた Solaris では 
+                  “<filename>org.netatalk.ResourceFork</filename>” 
+                  という拡張属性に保存される．</para>
+                </listitem>
+
+                <listitem>
+                  <para>ないしは，ファイル名が “<filename>file</filename>” 
+                  であるものに対して各々， “<filename>._file</filename>” 
+                  という名の別の AppleDouble ファイルに保存される．</para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+
+          <listitem>
+            <para>"._" ファイルのフォーマットは，
+            たとえそのファイルシステムに CIFS サーバー (Samba) 経由でアクセスした場合でも，
+            マックの CIFS クライアントが想定しているフォーマットと全く同じである．
+            なので，データを失う危険性（リソースもメタデータも）なく，
+            マックから同じデータセットに AFP 経由と CIFS 経由と並行してアクセスすることができる．
+            一方，ウィンドウズから当該データセットに CIFS 経由でアクセスした場合は，未だに 
+            “<filename>file</filename>” と “<filename>file</filename>” 
+            の紐付けを失うこととなるであろう（非 ZFS ファイルシステムの場合．上記参照）．
+            今のところその点で拡張 Samba VFS モジュールが必要である（改善中）．</para>
+          </listitem>
+        </itemizedlist></para>
+
+
+      <para>昨今，リソースフォークを使用しているアプリケーションは　
+      Adobe Photoshop（イメージプレビュー）と Postscript Type 1 フォントのみなので，
+      例えば Linux 上においても，あらゆる余分な Netatalk AppleDouble ファイル（及びフォルダー）からは 
+      99% 無関係でいられる．</para>
+    </sect2>
+
+    <sect2>
+      <title>そのほかの主要な変更点</title>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>AFP 及び CNID デーモンの起動・再起動を担う新しいサービスコントローラデーモン 
+            <link linkend="netatalk.8">netatalk</link> の導入．バンドルされているスタートスクリプトが
+            すべて更新されているため，自分の環境でもアップデートされているか確認する必要あり！</para>
+          </listitem>
+
+          <listitem>
+            <para>CNID データベースはデフォルトで <filename>/var/netatalk/CNID/</filename> 
+            以下に保存される．保存場所を変更するには，コンパイル時に --localstatedir=PATH 
+            のコンフィグオプションを使用する．</para>
+          </listitem>
+
+          <listitem>
+            <para>Netatalk 2.x のボリュームオプション “usedots” 及び “upriv” 
+            はデフォルトとなった．</para>
+          </listitem>
+
+          <listitem>
+            <para>SLP 及び AFP プロキシのサポート機能は削除．</para>
+          </listitem>
+
+          <listitem>
+            <para>type/creator と拡張子の関連付けサポート機能は削除</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>アップグレード</title>
+
+    <para><orderedlist>
+        <listitem>
+          <para>Netatalk 2.x を停止する</para>
+        </listitem>
+
+        <listitem>
+          <para>Netatalk 3 をインストールする</para>
+        </listitem>
+
+        <listitem>
+          <para>設定 <option>afp.conf</option> 及び <option>extmap.conf</option> 
+          を自力で書き換える</para>
+        </listitem>
+
+        <listitem>
+          <para><link linkend="netatalk.8">netatalk</link> 起動にのみ関連している，
+          Netatalk 起動スクリプト（SMF，systemd，ほかすべて…）を更新する</para>
+        </listitem>
+
+        <listitem>
+          <para><filename>afp_voluuid.conf</filename> 及び 
+          <filename>afp_signature.conf</filename>  を localstate ディレクトリ
+          （デフォルトでは <filename>/var/netatalk/</filename>），に移動．
+          正しいパスを見つけるために  <command>afpd -v</command> コマンドが有用</para>
+        </listitem>
+
+        <listitem>
+        </listitem>
+          <para>Netatalk 3 を起動する</para>
+      </orderedlist></para>
+  </sect1>
+
+  <sect1>
+    <title>新旧設定ファイル名対照表</title>
+    <para><table frame="all">
+        <title>設定ファイル名対照表</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+          <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+          <colspec colname="c3" colnum="3" colwidth="1.0*"/>
+          <thead>
+            <row>
+              <entry>旧ファイル名</entry>
+              <entry>新ファイル名</entry>
+              <entry>注記</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>-</entry>
+              <entry><filename>etc/afp.conf</filename></entry>
+              <entry>新しい "ini" 様式のフォーマット</entry>
+            </row>
+            <row>
+              <entry>-</entry>
+              <entry><filename>etc/extmap.conf</filename></entry>
+              <entry>netatalk 3.0.2 から採用</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/afp_signature.conf</filename></entry>
+              <entry><filename>var/netatalk/afp_signature.conf</filename></entry>
+              <entry>厳密には $localstatedir に移動</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/afp_voluuid.conf</filename></entry>
+              <entry><filename>var/netatalk/afp_voluuid.conf</filename></entry>
+              <entry>厳密には $localstatedir に移動</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/netatalk.conf</filename>
+              (<filename>/etc/default/netatalk</filename>)</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/afpd.conf</filename></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/afp_ldap.conf</filename></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/AppleVolumes.default</filename></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry><filename>etc/netatalk/AppleVolumes.system</filename></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry><filename>~/.AppleVolumes</filename></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></para>
+  </sect1>
+
+  <sect1>
+    <title>新旧オプション対応表</title>
+    <para><table frame="all">
+        <title>netatalk.conf (/etc/default/netatalk) から afp.conf</title>
+        <tgroup cols="6">
+          <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+          <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+          <colspec colname="c3" colnum="3" colwidth="1.0*"/>
+          <colspec colname="c4" colnum="4" colwidth="1.0*"/>
+          <colspec colname="c5" colnum="5" colwidth="1.0*"/>
+          <colspec colname="c6" colnum="6" colwidth="1.0*"/>
+          <thead>
+            <row>
+              <entry>旧 netatalk.conf</entry>
+              <entry>新 afp.conf</entry>
+              <entry>旧デフォルト値</entry>
+              <entry>新デフォルト値</entry>
+              <entry>セクション</entry>
+              <entry>詳細</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>ATALK_NAME</entry>
+              <entry>hostname</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>デフォルトでは gethostname() を使用</entry>
+            </row>
+            <row>
+              <entry>ATALK_UNIX_CHARSET</entry>
+              <entry>unix charset</entry>
+              <entry><emphasis role="bold">LOCALE</emphasis></entry>
+              <entry><emphasis role="bold">UTF8</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ATALK_MAC_CHARSET</entry>
+              <entry>mac charset</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>CNID_METAD_RUN</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>netatalk(8) で制御</entry>
+            </row>
+            <row>
+              <entry>AFPD_RUN</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>netatalk(8) で制御</entry>
+            </row>
+            <row>
+              <entry>AFPD_MAX_CLIENTS</entry>
+              <entry>max connections</entry>
+              <entry><emphasis role="bold">20</emphasis></entry>
+              <entry><emphasis role="bold">200</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>AFPD_UAMLIST</entry>
+              <entry>uam list</entry>
+              <entry>-U uams_dhx.so,uams_dhx2.so</entry>
+              <entry>uams_dhx.so uams_dhx2.so</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>AFPD_GUEST</entry>
+              <entry>guest account</entry>
+              <entry>nobody</entry>
+              <entry>nobody</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>CNID_CONFIG</entry>
+              <entry>log level</entry>
+              <entry>-l log_note</entry>
+              <entry>cnid:note</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>CNID_CONFIG</entry>
+              <entry>log file</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ATALKD_RUN</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>PAPD_RUN</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>TIMELORD_RUN</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>A2BOOT_RUN</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>ATALK_BGROUND</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>ATALK_ZONE</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><table frame="all">
+        <title>afpd.conf から afp.conf</title>
+        <tgroup cols="6">
+          <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+          <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+          <colspec colname="c3" colnum="3" colwidth="1.0*"/>
+          <colspec colname="c4" colnum="4" colwidth="1.0*"/>
+          <colspec colname="c5" colnum="5" colwidth="1.0*"/>
+          <colspec colname="c6" colnum="6" colwidth="1.0*"/>
+          <thead>
+            <row>
+              <entry>旧 afpd.conf</entry>
+              <entry>新 afp.conf</entry>
+              <entry>旧デフォルト値</entry>
+              <entry>新デフォルト値</entry>
+              <entry>セクション</entry>
+              <entry>詳細</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>一番目のフィールド（"-" あるいは“サーバー名”)</entry>
+              <entry>hostname</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>デフォルトでは gethostname() を使用</entry>
+            </row>
+            <row>
+              <entry>-uamlist</entry>
+              <entry>uam list</entry>
+              <entry>-U uams_dhx.so,uams_dhx2.so</entry>
+              <entry>uams_dhx.so uams_dhx2.so</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-nozeroconf</entry>
+              <entry>zeroconf</entry>
+              <entry>-</entry>
+              <entry>（サポートされていれば） yes</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-advertise_ssh</entry>
+              <entry>advertise ssh</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-[no]savepassword</entry>
+              <entry>save password</entry>
+              <entry>-savepassword</entry>
+              <entry>yes</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-[no]setpassword</entry>
+              <entry>set password</entry>
+              <entry>-nosetpassword</entry>
+              <entry>no</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-client_polling</entry>
+              <entry>client polling</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-hostname</entry>
+              <entry>hostname</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>デフォルトでは gethostname() を使用</entry>
+            </row>
+            <row>
+              <entry>-loginmesg</entry>
+              <entry>login message</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-guestname</entry>
+              <entry>guest account</entry>
+              <entry>nobody</entry>
+              <entry>nobody</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-passwdfile</entry>
+              <entry>passwd file</entry>
+              <entry>afppasswd</entry>
+              <entry>afppasswd</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-passwdminlen</entry>
+              <entry>passwd minlen</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-tickleval</entry>
+              <entry>tickleval</entry>
+              <entry>30</entry>
+              <entry>30</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-timeout</entry>
+              <entry>timeout</entry>
+              <entry>4</entry>
+              <entry>4</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-sleep</entry>
+              <entry>sleep time</entry>
+              <entry>10</entry>
+              <entry>10</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-dsireadbuf</entry>
+              <entry>dsireadbuf</entry>
+              <entry>12</entry>
+              <entry>12</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-server_quantum</entry>
+              <entry>server quantum</entry>
+              <entry><emphasis role="bold">303840</emphasis></entry>
+              <entry><emphasis role="bold">1048576</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-volnamelen</entry>
+              <entry>volnamelen</entry>
+              <entry>80</entry>
+              <entry>80</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-setuplog</entry>
+              <entry>log level</entry>
+              <entry>default log_note</entry>
+              <entry>default:note</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-setuplog</entry>
+              <entry>log file</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-admingroup</entry>
+              <entry>admingroup</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-k5service</entry>
+              <entry>k5 service</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-k5realm</entry>
+              <entry>k5 realm</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-k5keytab</entry>
+              <entry>k5 keytab</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-uampath</entry>
+              <entry>uam path</entry>
+              <entry><emphasis role="bold">etc/netatalk/uams/</emphasis></entry>
+              <entry><emphasis role="bold">lib/netatalk/</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>厳密には $libdir に移動</entry>
+            </row>
+            <row>
+              <entry>-ipaddr</entry>
+              <entry>afp listen</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-cnidserver</entry>
+              <entry>cnid server</entry>
+              <entry>localhost:4700</entry>
+              <entry>localhost:4700</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-port</entry>
+              <entry>port</entry>
+              <entry>548</entry>
+              <entry>548</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-signature</entry>
+              <entry>signature</entry>
+              <entry>auto</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-fqdn</entry>
+              <entry>fqdn</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-unixcodepage</entry>
+              <entry>unix charset</entry>
+              <entry><emphasis role="bold">LOCALE</emphasis></entry>
+              <entry><emphasis role="bold">UTF8</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-maccodepage</entry>
+              <entry>mac charset</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-closevol</entry>
+              <entry>close vol</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-ntdomain</entry>
+              <entry>nt domain</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-ntseparator</entry>
+              <entry>nt separator</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-dircachesize</entry>
+              <entry>dircachesize</entry>
+              <entry>8192</entry>
+              <entry>8192</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-tcpsndbuf</entry>
+              <entry>tcpsndbuf</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>OS のデフォルト</entry>
+            </row>
+            <row>
+              <entry>-tcprcvbuf</entry>
+              <entry>tcprcvbuf</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>OS のデフォルト</entry>
+            </row>
+            <row>
+              <entry>-fcelistener</entry>
+              <entry>fce listener</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-fcecoalesce</entry>
+              <entry>fce coalesce</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-fceevents</entry>
+              <entry>fce events</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-fceholdfmod</entry>
+              <entry>fce holdfmod</entry>
+              <entry>60</entry>
+              <entry>60</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-mimicmodel</entry>
+              <entry>mimic model</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-adminauthuser</entry>
+              <entry>admin auth user</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-noacl2maccess</entry>
+              <entry>map acls</entry>
+              <entry>-</entry>
+              <entry>rights</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>-[no]tcp</entry>
+              <entry>-</entry>
+              <entry>-tcp</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>常に TCP のみ</entry>
+            </row>
+            <row>
+              <entry>-[no]ddp</entry>
+              <entry>-</entry>
+              <entry>-noddp</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>-[no]transall</entry>
+              <entry>-</entry>
+              <entry>-tcp -noddp</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>常に TCP のみ</entry>
+            </row>
+            <row>
+              <entry>-nodebug</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>-[no]slp</entry>
+              <entry>-</entry>
+              <entry>-noslp</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>SLP サポートが廃止</entry>
+            </row>
+            <row>
+              <entry>-[no]uservolfirst</entry>
+              <entry>-</entry>
+              <entry>-nouservolfirst</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>uservol が廃止</entry>
+            </row>
+            <row>
+              <entry>-[no]uservol</entry>
+              <entry>-</entry>
+              <entry>-uservol</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>uservol が廃止</entry>
+            </row>
+            <row>
+              <entry>-proxy</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>-defaultvol</entry>
+              <entry>-</entry>
+              <entry>AppleVolumes.default</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>afp.conf のみ</entry>
+            </row>
+            <row>
+              <entry>-systemvol</entry>
+              <entry>-</entry>
+              <entry>AppleVolumes.system</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>afp.conf のみ</entry>
+            </row>
+            <row>
+              <entry>-loginmaxfail</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>そもそも最初からサポートされていない</entry>
+            </row>
+            <row>
+              <entry>-unsetuplog</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>-authprintdir</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>-ddpaddr</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>AppleTalk が廃止</entry>
+            </row>
+            <row>
+              <entry>-[no]icon</entry>
+              <entry>-</entry>
+              <entry>-noicon</entry>
+              <entry></entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>-keepsessions</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止．kill -HUP を使用</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><table frame="all">
+        <title>from afp_ldap.conf から afp.conf</title>
+        <tgroup cols="6">
+          <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+          <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+          <colspec colname="c3" colnum="3" colwidth="1.0*"/>
+          <colspec colname="c4" colnum="4" colwidth="1.0*"/>
+          <colspec colname="c5" colnum="5" colwidth="1.0*"/>
+          <colspec colname="c6" colnum="6" colwidth="1.0*"/>
+          <thead>
+            <row>
+              <entry>旧 afp_ldap.conf</entry>
+              <entry>新 afp.conf</entry>
+              <entry>旧デフォルト値</entry>
+              <entry>新デフォルト値</entry>
+              <entry>セクション</entry>
+              <entry>詳細</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>ldap_server</entry>
+              <entry>ldap server</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_auth_method</entry>
+              <entry>ldap auth method</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_auth_dn</entry>
+              <entry>ldap auth dn</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_auth_pw</entry>
+              <entry>ldap auth pw</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_userbase</entry>
+              <entry>ldap userbase</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_userscope</entry>
+              <entry>ldap userscope</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_groupbase</entry>
+              <entry>ldap groupbase</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_groupscope</entry>
+              <entry>ldap groupscope</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_uuid_attr</entry>
+              <entry>ldap uuid attr</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_uuid_string</entry>
+              <entry>ldap uuid string</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ldap_name_attr</entry>
+              <entry>ldap name attr</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry> ldap_group_attr</entry>
+              <entry>ldap group attr</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(G)</entry>
+              <entry>-</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><table frame="all">
+        <title>AppleVolumes.* から afp.conf</title>
+        <tgroup cols="6">
+          <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+          <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+          <colspec colname="c3" colnum="3" colwidth="1.0*"/>
+          <colspec colname="c4" colnum="4" colwidth="1.0*"/>
+          <colspec colname="c5" colnum="5" colwidth="1.0*"/>
+          <colspec colname="c6" colnum="6" colwidth="1.0*"/>
+          <thead>
+            <row>
+              <entry>旧 AppleVolumes.*</entry>
+              <entry>新 afp.conf</entry>
+              <entry>旧デフォルト値</entry>
+              <entry>新デフォルト値</entry>
+              <entry>セクション</entry>
+              <entry>詳細</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>（ピリオドで始まる行）</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>extmap.conf で使用する</entry>
+            </row>
+            <row>
+              <entry>:DEFAULT:</entry>
+              <entry>-</entry>
+              <entry>options:upriv,usedots</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>"vol preset =" を使用する</entry>
+            </row>
+            <row>
+              <entry>一番目のフィールド ("~")</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>[Homes] セクションを使用する</entry>
+            </row>
+            <row>
+              <entry>一番目のフィールド ("/path")</entry>
+              <entry>path</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>二番目のフィールド</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>セクション名を使用する</entry>
+            </row>
+            <row>
+              <entry>allow:</entry>
+              <entry>valid users</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>deny:</entry>
+              <entry>invalid users</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>rwlist:</entry>
+              <entry>rwlist</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>rolist:</entry>
+              <entry>rolist</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>volcharset:</entry>
+              <entry>vol charset</entry>
+              <entry><emphasis role="bold">UTF8</emphasis></entry>
+              <entry><emphasis role="bold">（unix charset と同じ）</emphasis></entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>maccharset:</entry>
+              <entry>mac charset</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>MAC_ROMAN</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>veto:</entry>
+              <entry>veto files</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>cnidscheme:</entry>
+              <entry>cnid scheme</entry>
+              <entry>dbd</entry>
+              <entry>dbd</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>casefold:</entry>
+              <entry>casefold</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>adouble:</entry>
+              <entry>appledouble</entry>
+              <entry><emphasis role="bold">v2</emphasis></entry>
+              <entry><emphasis role="bold">ea</emphasis></entry>
+              <entry>(V)</entry>
+              <entry>v1，osx 及び sfm は廃止</entry>
+            </row>
+            <row>
+              <entry>cnidserver:</entry>
+              <entry>cnid server</entry>
+              <entry>localhost:4700</entry>
+              <entry>localhost:4700</entry>
+              <entry>(G)/(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>dbpath:</entry>
+              <entry>vol dbpath</entry>
+              <entry><emphasis role="bold">（ボリュームディレクトリ）</emphasis></entry>
+              <entry><emphasis role="bold">var/netatalk/CNID/</emphasis></entry>
+              <entry>(G)</entry>
+              <entry>厳密には $localstatedir に移動</entry>
+            </row>
+            <row>
+              <entry>umask:</entry>
+              <entry>umask</entry>
+              <entry>0000</entry>
+              <entry>0000</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>dperm:</entry>
+              <entry>directory perm</entry>
+              <entry>0000</entry>
+              <entry>0000</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>fperm:</entry>
+              <entry>file perm</entry>
+              <entry>0000</entry>
+              <entry>0000</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>password:</entry>
+              <entry>password</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>root_preexec:</entry>
+              <entry>root preexec</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>preexec:</entry>
+              <entry>preexec</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>root_postexec:</entry>
+              <entry>root postexec</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>postexec:</entry>
+              <entry>postexec</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>allowed_hosts:</entry>
+              <entry>hosts allow</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>denied_hosts:</entry>
+              <entry>hosts deny</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>ea:</entry>
+              <entry>ea</entry>
+              <entry>auto</entry>
+              <entry>auto</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>volsizelimit:</entry>
+              <entry>vol size limit</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>perm:</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>"directory perm" 及び "file perm" を使用する</entry>
+              
+            </row>
+            <row>
+              <entry>forceuid:</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>forcegid:</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:ro</entry>
+              <entry>read only</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:invisibledots</entry>
+              <entry>invisible dots</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:nostat</entry>
+              <entry>stat vol</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:preexec_close</entry>
+              <entry>preexec close</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:root_preexec_close</entry>
+              <entry>root preexec close</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:upriv</entry>
+              <entry>unix priv</entry>
+              <entry>-</entry>
+              <entry><emphasis role="bold">yes</emphasis></entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:nodev</entry>
+              <entry>cnid dev</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:illegalseq</entry>
+              <entry>illegal seq</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:tm</entry>
+              <entry>time machine</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:searchdb</entry>
+              <entry>search db</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:nonetids</entry>
+              <entry>network ids</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:noacls</entry>
+              <entry>acls</entry>
+              <entry>-</entry>
+              <entry>yes</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:followsymlinks</entry>
+              <entry>follow symlinks</entry>
+              <entry>-</entry>
+              <entry>no</entry>
+              <entry>(V)</entry>
+              <entry>-</entry>
+            </row>
+            <row>
+              <entry>options:nohex</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>":2f" は ":" に自動変換される</entry>
+            </row>
+            <row>
+              <entry>options:usedots</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>":2e" は "." に自動変換される</entry>
+            </row>
+            <row>
+              <entry>options:nofileid</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:prodos</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:mswindows</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:crlf</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:noadouble</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:limitsize</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:dropbox</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:dropkludge</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:nocnidcache</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+            <row>
+              <entry>options:caseinsensitive</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>-</entry>
+              <entry>廃止</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></para>
+  </sect1>
+
+  <sect1>
+    <title>To Do</title>
+
+    <para><itemizedlist>
+        <listitem>
+          <para><command>ad</command> ユーティリティーを <option>appledouble = ea</option> 
+          のもとでテスト</para>
+        </listitem>
+      </itemizedlist></para>
+  </sect1>
+</chapter>
