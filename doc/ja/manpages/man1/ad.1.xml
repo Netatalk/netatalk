@@ -5,15 +5,17 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">05 Dec 2015</refmiscinfo>
+    <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>ad</refname>
 
-    <refpurpose>Netatalk互換UNIXファイルユーティリティ 一式</refpurpose>
+    <refpurpose>AppleDouble ファイルユーティリティ 一式</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -35,7 +37,7 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>ad</command>は、Netatalk互換のUNIXファイルユーティリティ一式である。AppleDoubleデータ (ファイルの拡張属性や、同じディレクトリ内の._fileや、<filename>.AppleDouble</filename>ディレクトリ内のファイル) とCNIDデータベースを適切に更新する。</para>
+    <para><command>ad</command>は、Netatalk 互換の AppleDouble ファイルユーティリティ一式である。Netatalk 共有ボリューム内の AppleDouble データ (ファイルの拡張属性や、同じディレクトリ内の._fileや、<filename>.AppleDouble</filename>ディレクトリ内のファイル) とCNIDデータベースを適切に更新する。</para>
   </refsect1>
 
   <refsect1>
@@ -340,14 +342,6 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
   </refsect1>
 
   <refsect1>
-    <title>バグの報告</title>
-
-    <para>バグはNetatalk-develメーリングリスト
-    &lt;netatalk-devel@lists.sourceforge.net&gt;
-    に報告してください。</para>
-  </refsect1>
-
-  <refsect1>
     <title>参照</title>
 
     <para><citerefentry>
@@ -359,5 +353,11 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
 
         <manvolnum>1</manvolnum>
       </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

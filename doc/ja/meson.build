@@ -1,2 +1,0 @@
-subdir('manpages')
-subdir('manual')

@@ -7,16 +7,18 @@
 
     <refmiscinfo class="date">12 Nov 2015</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>apple_dump</refname>
 
     <refpurpose>AppleSingle/AppleDoubleフォーマットのデータをダンプする</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>apple_dump</command>
 
@@ -77,7 +79,7 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>説明</title>
 
     <para><command>apple_dump</command>はAppleSingle/AppleDoubleフォーマットのデータをダンプするperlスクリプトです。</para>
@@ -153,7 +155,7 @@
 
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>参照</title>
 
     <para><citerefentry><refentrytitle>ad</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
@@ -162,5 +164,11 @@
     <citerefentry><refentrytitle>runat</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>getextattr</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
     <citerefentry><refentrytitle>lsextattr</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

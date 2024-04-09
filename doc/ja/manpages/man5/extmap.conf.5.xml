@@ -7,16 +7,18 @@
 
     <refmiscinfo class="date">19 Jan 2013</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>extmap.conf</refname>
 
-    <refpurpose>ファイル名拡張子マッピングを指定するためにafpd(8)が利用する設定ファイル</refpurpose>
+    <refpurpose>ファイル名拡張子マッピングを指定するために <command>afpd</command>(8) が利用する設定ファイル</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>@pkgconfdir@/extmap.conf</command>
     </cmdsynopsis>
@@ -66,5 +68,11 @@
 
         <manvolnum>8</manvolnum>
       </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

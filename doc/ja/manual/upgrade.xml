@@ -142,7 +142,7 @@
 
           <listitem>
             <para>CNID データベースはデフォルトで <filename>/var/netatalk/CNID/</filename> 
-            以下に保存される．保存場所を変更するには，コンパイル時に --localstatedir=PATH 
+            以下に保存される．保存場所を変更するには，コンパイル時に <command>--localstatedir=PATH</command>
             のコンフィグオプションを使用する．</para>
           </listitem>
 
