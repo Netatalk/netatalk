@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="macusers.1">
+  <refmeta>
+    <refentrytitle>macusers</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">13 Oct 2011</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id="name">
+    <refname>macusers</refname>
+
+    <refpurpose>AFP経由で接続しているユーザをリストする</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv id="synopsis">
+    <cmdsynopsis>
+      <command>macusers</command>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>macusers</command>
+
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">-version</arg>
+        <arg choice="plain">--version</arg>
+        <arg choice="plain">-h</arg>
+        <arg choice="plain">-help</arg>
+        <arg choice="plain">--help</arg>
+      </group>
+
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1 id="description">
+    <title>説明</title>
+
+    <para><command>macusers</command>はAFP経由で接続しているユーザをリストします。</para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-v, -version, --version</option></term>
+
+        <listitem>
+          <para>バージョンを表示して終了する</para>
+        </listitem>
+
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h, -help, --help</option></term>
+
+        <listitem>
+          <para>ヘルプを表示して終了する</para>
+        </listitem>
+
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id="see_also">
+    <title>参照</title>
+
+    <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>

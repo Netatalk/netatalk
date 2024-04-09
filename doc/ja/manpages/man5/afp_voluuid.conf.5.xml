@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afp_voluuid.conf.5">
+
+  <refmeta>
+    <refentrytitle>afp_voluuid.conf</refentrytitle>
+
+    <manvolnum>5</manvolnum>
+
+    <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>afp_voluuid.conf</refname>
+
+    <refpurpose>Time MachineボリュームのUUIDを指定するためにafpd(8)が利用する設定ファイル</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename>はTime MachineボリュームのUUIDを魔法のように自動的に指定するために<command>afpd</command>が利用する設定ファイルである。設定行は以下のように構成される。</para>
+
+    <para><replaceable>"volume name" </replaceable>
+    <replaceable>uuid-string</replaceable></para>
+
+    <para>最初のフィールドはボリューム名である。ボリューム名がスペースを含む場合、それを引用符で囲まなければならない。第二のフィールドは36文字からなるUUIDの16進数ASCII文字列表現である。</para>
+    <para>先頭のスペースとタブは無視される。空行は無視される。頭に#が付いた行は無視される。不正な行は無視される。
+    </para>
+
+    <note>
+      <para>このUUIDはTime Machineボリュームの強固な曖昧さ除去を提供する目的でZeroconfによって宣伝される。</para>
+      <para>afp.confで"time machine = yes"オプションを設定した場合のみ、afpdは乱数からUUIDを生成し、それをafp_voluuid.confに保存する。</para>
+      <para>このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。</para>
+    </note>
+
+    <para></para>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <example>
+      <title>afp_voluuid.conf 1つのnetatalk上の3つのTime Machineボリューム</title>
+
+      <programlisting># これはコメントです。
+"Backup for John Smith" 1573974F-0ABD-69CC-C40A-8519B681A0E1
+"bob" 39A487F4-55AA-8240-E584-69AA01800FE9
+mary 6331E2D1-446C-B68C-3066-D685AADBE911</programlisting>
+    </example>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afp.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>avahi-daemon</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>mDNSResponder</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>

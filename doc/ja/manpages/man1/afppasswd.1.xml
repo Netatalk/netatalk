@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="afppasswd.1">
+  <refmeta>
+    <refentrytitle>afppasswd</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>afppasswd</refname>
+
+    <refpurpose>netatalkパスワード保守ユーティリティ</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>afppasswd</command>
+
+      <arg choice="opt">-acfn</arg>
+
+      <arg choice="opt"><arg choice="plain">-p
+      <replaceable>passwd</replaceable></arg><arg
+      choice="plain"><replaceable>file</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-u
+      <replaceable>minimum</replaceable></arg><arg
+      choice="plain"><replaceable>uid</replaceable></arg></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>afppasswd</command>は、uams_randnum.so UAMで使うために、netatalkが作るafppasswdファイルを保守する。(このUAMは"Randnum exchange"と"2-Way Randnum exchange"ユーザ認証モジュールを提供する)</para>
+
+    <para><command>afppasswd</command>は、rootがパラメータ付きで呼び出すことも、ローカルシステムのユーザが自分のAFPパスワードを変更するためにパラメータなしで呼び出すこともできる。</para>
+
+    <note>
+      <para>このユーティリティでは、あなたは特定の2つのUAMが利用するパスワードを変更できるにすぎない。これらは弱いパスワード暗号化を提供するだけなので、より安全な"DHCAST128"と"DHX2" UAMを代わりに使えないような極めて古いAFPクライアントをサポートしなければならない場合を除いて、"Randnum exchange"と"2-Way Randnum exchange" UAMの利用は廃止すべきである。Netatalkドキュメントの<link linkend="authentication">認証の章</link>で比較してください。</para>
+    </note>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <para>ローカルユーザが自分のパスワードを変更する:</para>
+
+    <screen><prompt>example%</prompt> <userinput>afppasswd</userinput>
+<computeroutput>Enter NEW AFP password:</computeroutput> <userinput>(非表示)</userinput>
+<computeroutput>Enter NEW AFP password again:</computeroutput> <userinput>(非表示)</userinput>
+<computeroutput>afppasswd: updated password.</computeroutput>
+</screen>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-a</option></term>
+
+        <listitem>
+          <para><command>afppasswd</command>ファイルに新しいユーザを追加する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-c</option></term>
+
+        <listitem>
+          <para><command>afppasswd</command>ファイルまたは特定ユーザを作成する。(さらに/または)初期化する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option></term>
+
+        <listitem>
+          <para>現在の動作を強制する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-p</option><replaceable> path</replaceable></term>
+
+        <listitem>
+          <para><command>afppasswd</command>ファイルのパス。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option></term>
+
+        <listitem>
+          <para>もしcracklibサポートが<emphasis remap="B">netatalk</emphasis>に組み込まれており、cracklib辞書に対して実行されたパスワードを持つことをスーパユーザが望まないなら、このオプションはcracklibチェックを無効にできるだろう。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-u</option><replaceable> minimum
+        uid</replaceable></term>
+
+        <listitem>
+          <para>これは、<command>afppasswd</command>がユーザを作成するときに使う最小の<emphasis remap="I">ユーザid</emphasis> (uid)である。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afp.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+</refentry>
