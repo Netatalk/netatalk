@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="netatalkconfig.1">
+  <refmeta>
+    <refentrytitle>netatalk-config</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">10 Nov 2015</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+
+    <refmiscinfo class="manual">The Netatalk Project</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>netatalk-config</refname>
+
+    <refpurpose>インストールされている netatalk の情報を取得するためのスクリプト</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>netatalk-config</command>
+
+      <arg choice="opt"><arg choice="plain">--prefix </arg><arg choice="opt"><replaceable>=DIR</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">--exec_prefix </arg><arg
+      choice="opt"><replaceable>=DIR</replaceable></arg></arg>
+
+      <arg choice="opt">--help</arg>
+
+      <arg choice="opt">--version</arg>
+
+      <arg choice="opt">--libs</arg>
+
+      <arg choice="opt">--libs-dirs</arg>
+
+      <arg choice="opt">--libs-names</arg>
+
+      <arg choice="opt">--cflags</arg>
+
+      <arg choice="opt">--macros</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>netatalk-config</command> は コンパイラー・リンカのフラグを 設定・決定するためのツールである。
+    このフラグは <emphasis remap="I">netatalk</emphasis> ランタイムライブラリを使う プログラムをコンパイル・リンクするときに使われる。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <para><command>netatalk-config</command> は以下のオプションを受け付ける:</para>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>--help</option></term>
+
+        <listitem>
+          <para>このコマンドの簡単なヘルプを表示して、終了する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--version</option></term>
+
+        <listitem>
+          <para>現在インストールされている <emphasis remap="I">netatalk</emphasis> のバージョンを標準出力に表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--libs</option></term>
+
+        <listitem>
+          <para><emphasis remap="I">netatalk</emphasis> ランタイムライブラリをリンクするのに必要な リンカフラグを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--libs-dirs</option></term>
+
+        <listitem>
+          <para>--libs のうち -l と -R フラグのみを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--libs-names</option></term>
+
+        <listitem>
+          <para>--libs のうち -l フラグのみを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--cflags</option></term>
+
+        <listitem>
+          <para><emphasis remap="I">netatalk</emphasis> ランタイムライブラリにリンクされるプログラムを コンパイルするのに必要なコンパイラーフラグを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--macros</option></term>
+
+        <listitem>
+          <para><emphasis remap="I">netatalk</emphasis> の m4 ディレクトリを表示する。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--prefix=PREFIX</option></term>
+
+        <listitem>
+          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis remap="I">netatalk</emphasis> を構築したときに使った インストール先プレフィックスではなく PREFIX を使う。
+          このオプションは --exec-prefix が指定されていない場合の 実行プレフィックスとしても使われる。
+          このオプションは --libs や --cflags オプションより 前に指定しなければならない。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--exec_prefix=PREFIX</option></term>
+
+        <listitem>
+          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis remap="I">netatalk</emphasis> を構築したときに使った 実行プログラムのインストール先プレフィックスではなく PREFIX を使う。
+          このオプションは --libs や --cflags オプションより 前に指定しなければならない。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>著作権</title>
+
+    <para>Copyright © 1998 Owen Taylor</para>
+
+    <para>Permission to use, copy, modify, and distribute this software and
+    its documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appear in all copies and that
+    both that copyright notice and this permission notice appear in supporting
+    documentation.</para>
+
+    <para>この man ページは Sebastian Rittau が 2001 年に作成した <command>netatalk-config</command> に適合している。</para>
+  </refsect1>
+</refentry>

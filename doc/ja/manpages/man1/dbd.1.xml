@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="dbd.1">
+  <refmeta>
+    <refentrytitle>dbd</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">12 Nov 2015</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>dbd</refname>
+
+    <refpurpose>CNIDデータベースの保守</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>dbd</command>
+
+      <arg choice="opt">-cfFstuvV</arg>
+
+      <arg choice="plain"><replaceable>volumepath</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>dbd</command>は、AFPボリューム上の全てのファイルとディレクトリをスキャンし、そのボリュームのCNIDデータベースをアップデートする。適切なパーミッションすなわちrootとして実行しなければならない。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-c</term>
+
+        <listitem>
+          <para>「<option>appledouble = v2</option>」から「<option>appledouble = ea</option>」へ変換する</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f</term>
+
+        <listitem>
+          <para>CNIDデータベースを削除してから再作成する</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-F</term>
+
+        <listitem>
+          <para>設定ファイルafp.confの場所</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-s</term>
+
+        <listitem>
+          <para>ボリュームをスキャンする。すなわち、ボリュームをリードオンリーとして扱い、いかなるファイルシステムの変更も行わない。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-t</term>
+
+        <listitem>
+          <para>実行中の統計を表示する</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-u</term>
+
+        <listitem>
+          <para>ユーザ変数$uを使うAFPボリュームのユーザ名</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>詳細</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-V</term>
+
+        <listitem>
+          <para>バージョン情報の表示</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>CNIDの背景</title>
+
+    <para>CNIDバックエンドは名前からIDへのマッピングを保持します。もしあなたがafpd(8)の外、すなわちシェルやsambaでファイル名を変更した場合、CNIDデータベースはその変更を反映しません。Netatalkは可能な限り優美にそのような矛盾の修復を試みます。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>cnid_metad</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>cnid_dbd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+</refentry>

@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="installation">
+  <chapterinfo>
+    <date>17.1.2015</date>
+    
+    <author role="first-last">
+      <firstname>Eiichirou</firstname>
+      
+      <surname>UDA（日本語訳）</surname>
+    </author>
+    
+    <pubdate>2016 年 7 月 26 日（訳）</pubdate>
+    
+  </chapterinfo>
+
+  <title>インストール</title>
+
+  <warning>
+    <para>もし，以前に Netatalk の古いバージョンを使ったことがあるなら，
+    “<link linkend="upgrade">Netatalk 2 からのアップグレード</link>”の章をまず読んでいただきたい！！！</para>
+  </warning>
+
+  <sect1>
+    <title>Netatalk の入手の仕方</title>
+
+    <para>この件の最新の情報は sourceforge の netatalk のページを一読いただきたい。</para>
+
+    <para><ulink
+    url="http://sourceforge.net/projects/netatalk/">http://sourceforge.net/projects/netatalk/</ulink></para>
+
+    <sect2>
+      <title>バイナリーパッケージ</title>
+
+      <para>Netatalk のバイナリーパッケージは，いくつかの Linux，Unix
+      ディストリビューションに含まれている．通常の配布元も見たいだろうと思う。</para>
+
+      <para>Ubuntu パッケージ：<ulink
+      url="https://launchpad.net/ubuntu">https://launchpad.net/ubuntu
+      </ulink></para>
+
+      <para>Debian パッケージ：<ulink
+      url="http://packages.debian.org/">http://packages.debian.org/
+      </ulink></para>
+
+      <para>様々な RPM パッケージ：<ulink
+      url="http://rpmfind.net/">http://rpmfind.net/ </ulink></para>
+
+      <para>Fedora/RHEL パッケージ：<ulink
+      url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
+      </ulink></para>
+
+      <para>Gentoo パッケージ：<ulink
+      url="http://packages.gentoo.org/">http://packages.gentoo.org/
+      </ulink></para>
+
+      <para>openSUSE パッケージ：<ulink
+      url="http://software.opensuse.org/">http://software.opensuse.org/
+      </ulink></para>
+
+      <para>Solaris パッケージ：<ulink
+      url="http://www.opencsw.org/packages/CSWnetatalk/">http://www.opencsw.org/</ulink></para>
+
+      <para>FreeBSD ポート：<ulink
+      url="http://www.freebsd.org/ports/index.html">http://www.freebsd.org/ports/index.html
+      </ulink></para>
+
+      <para>NetBSD pkgsrc: <ulink
+      url="http://pkgsrc.se/search.php">http://pkgsrc.se/search.php
+      </ulink></para>
+
+      <para>OpenBSD ports:<ulink
+      url="http://openports.se/search.php">http://openports.se/search.php
+      </ulink></para>
+
+      <para>などである．<indexterm>
+          <primary>RPM</primary>
+
+          <secondary>Red Hat Package Manager package</secondary>
+        </indexterm><indexterm>
+          <primary>Deb</primary>
+
+          <secondary>Debian package</secondary>
+        </indexterm><indexterm>
+          <primary>Ports</primary>
+
+          <secondary>FreeBSD port</secondary>
+        </indexterm></para>
+    </sect2>
+
+    <sect2>
+      <title>ソースパッケージ</title>
+
+      <sect3>
+        <title>Tarball</title>
+
+        <para>Netatalk のソースを tar で固めた .tar.gz および tar.bz2 形式のものが <ulink
+        url="http://netatalk.sourceforge.net/">sourceforge の netatalk のページ</ulink>にある．</para>
+      </sect3>
+
+      <sect3>
+        <title>Git</title>
+
+        <para>Git レポジトリ のダウンロードは迅速で容易である：</para>
+
+        <orderedlist>
+          <listitem>
+            <para>Git がインストールしてあることを確認する．<command>which
+            git</command> は git のパスを示してくれるはずである．</para>
+
+            <screen><prompt>$ </prompt><userinput>which git</userinput>
+<computeroutput>/usr/bin/git</computeroutput></screen>
+          </listitem>
+
+          <listitem>
+            <para>ソースを取得してみよう．</para>
+
+            <screen><prompt>$</prompt> <userinput>git clone -b develop git://git.code.sf.net/p/netatalk/code netatalk-code
+</userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
+remote: Counting objects: 2503, done.
+...
+</computeroutput></screen>
+
+            <para>上記で Git リポジトリから，Netatalk のソース全体の完全でまっさらのコピーを含む
+            <filename>netatalk-code</filename> という名前のローカルディレクトリが作成される．</para>
+          </listitem>
+
+          <listitem>
+            <para>レポジトリのコピーを最新の状態にしておきたい場合，適宜以下を実行する．</para>
+
+            <screen><prompt>$</prompt> <userinput>git pull</userinput></screen>
+          </listitem>
+
+          <listitem>
+            <para>netatalk ディレクトリに <command>cd</command> して，
+            <command>./bootstrap</command>を実行する．これで次の段階で必要となる
+            <filename>configure</filename> スクリプトが作成される．</para>
+
+            <screen><prompt>$</prompt> <userinput>./bootstrap</userinput></screen>
+          </listitem>
+        </orderedlist>
+
+        <para>さらなる情報については<ulink
+        url="http://netatalk.sourceforge.net/wiki/index.php/Developer_Infos">この wiki ページ</ulink>
+        も参照のこと．</para>
+      </sect3>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Netatalk のコンパイル</title>
+
+    <sect2>
+      <title>前提条件</title>
+
+      <sect3>
+        <title>必要なサードパーティソフトウェア</title>
+
+        <itemizedlist>
+          <listitem>
+            <para>Berkeley DB<indexterm>
+                <primary>BDB</primary>
+                <secondary>Berkeley DB</secondary>
+              </indexterm>.</para>
+            <para>書き込みの時に最低でもバージョン 4.6 が必要となる．</para>
+          </listitem>
+
+          <listitem>
+            <para>Libgcrypt</para>
+
+            <para>OS X 10.7 とそれ以降では DHX2 のために Libgcrypt が必要である．</para>
+
+            <para>Libgcrypt は <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
+            http://directory.fsf.org/wiki/Libgcrypt</ulink> からダウンロードできる．</para>
+          </listitem>
+        </itemizedlist>
+      </sect3>
+
+      <sect3>
+        <title>任意のサードパーティソフトウェア</title>
+
+        <para>Netatalk はその機能性を拡充するために以下のサードパーティソフトウェアを使用することができる．</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Spotlight<indexterm>
+                <primary>Spotlight</primary>
+              </indexterm> サポートのための Tracker</para>
+
+            <para>Netatalk はメタデータのバックエンドとして
+            <ulink url="http://projects.gnome.org/tracker/">Tracker</ulink> 
+            を使用する．最近の Linux ディストリビューションには，Tracker のバージョン 0.7 以来使用可能な
+            libtracker-sparql が提供されている．</para>
+          </listitem>
+
+          <listitem>
+            <para>Bonjour（Zeroconf としても知られる）のための mDNSresponderPOSIX または Avahi</para>
+
+            <para>サービス探索のために Mac OS X 10.2 及び以降のものは 
+            Bonjour（Zeroconf としても知られる）を使用する．</para>
+
+            <para>Avahi は DBUS サポートのもとで (
+            <userinput>--enable-dbus</userinput>) ビルドされなければならない．</para>
+          </listitem>
+
+          <listitem>
+            <para>TCP wrappers</para>
+
+            <para>TCPD または LOG_TCP としても知られる Wietse Venema のネットワークロガー．</para>
+
+            <para>セキュリティオプションは：
+            ホストごとドメインごとかつ／ないしはサービスごとのアクセス制御；
+            ホスト名のなりすましあるいはホストアドレスのなりすまし検出；
+            早期警告システムを実装するブービートラップ；である．</para>
+          </listitem>
+
+          <listitem>
+            <para>PAM<indexterm>
+                <primary>PAM</primary>
+
+                <secondary>Pluggable Authentication Modules</secondary>
+              </indexterm></para>
+
+            <para>PAM はユーザー認証の柔軟な機構を実現する．PAM は SUN<indexterm>
+                <primary>SUN</primary>
+
+                <secondary>Sun Microsystems</secondary>
+              </indexterm> Microsystems によって作り出された．
+            Linux-PAM はアプリケーションがどのようにユーザーを認証するのかを選択できるようなローカルシステム管理を実現する共有ライブラリーのセットである．</para>
+          </listitem>
+
+          <listitem>
+            <para>iconv</para>
+
+            <para>iconv はたくさんの文字エンコーディングの変換ルーチンを提供する．Netatalk 
+            は iconv を使用して内蔵されていない ISO-8859-1 のようなキャラクターセット変換を実現する．
+            glibc システムでは glibc の提供する iconv 実装を使うことができる．さもなくば GNU libiconv
+            実装を使うことができる．</para>
+          </listitem>
+        </itemizedlist>
+      </sect3>
+    </sect2>
+
+    <sect2 id="compiling-netatalk">
+      <title>Netatalk のコンパイル<indexterm>
+          <primary>コンパイル</primary>
+
+          <secondary>Netatalk のソースからのコンパイル</secondary>
+        </indexterm></title>
+
+      <sect3>
+        <title>ビルドの設定をする</title>
+
+        <para>バイナリーをビルドするには最初にソースのディレクトリで 
+        <command>./configure</command> プログラムを実行する．これによって Netatalk 
+        がターゲットのオペレーティングシステム向けに自動的に設定されるはずである．
+        もし普通とは違う要求がある場合，以下を実行すれば特殊なオプションで有効化できるものを見ることができる．</para>
+
+        <screen>$ <userinput>./configure --help</userinput></screen>
+
+        <para>最も頻繁に使用されるオプションは：</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd</para>
+
+            <para>このオプションがスタートアップスクリプトをどこにインストールするかの助けになる．</para>
+          </listitem>
+
+          <listitem>
+            <para><option>--with-bdb</option>=<replaceable>/path/to/bdb/installation/</replaceable></para>
+
+            <para>Berkeley DB を標準的な場所以外にインストールした場合，このオプションを使って netatalk 
+            に Berkeley DB をインストールした場所（訳注：すなわち 
+            <replaceable>/path/to/bdb/installation/</replaceable>
+            ）を指示<emphasis>しなければならない</emphasis>．</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>そして必要なあらゆるオプションを含めて configure を実行する．</para>
+
+        <screen><prompt>$</prompt> <userinput>./configure [arguments]</userinput></screen>
+
+        <para>Netatalk の Makefile 作成に使われた設定の概要を表示して configure は終了する．</para>
+      </sect3>
+
+      <sect3 id="spotlight-compile">
+        <title>Spotlight<indexterm>
+            <primary>Spotlight</primary>
+          </indexterm></title>
+
+        <para>Netatalk はメタデータのバックエンドに Gnome 
+        <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる．少なくとも最初に
+        <ulink url="https://wiki.gnome.org/Tracker/Documentation">SPARQL</ulink> 
+        をサポートしたバージョン 0.7 以降が必要である．</para>
+
+        <para>まだインストールしていなければ <emphasis>tracker</emphasis> パッケージと 
+        <emphasis>tracker-devel</emphasis> パッケージをインストールする．Solaris では 
+        <ulink url="http://www.opencsw.org/">OpenCSW</ulink> をインストールした後に OpenCSW 
+        の不安定版レポジトリーにある Tracker のパッケージをインストールする．</para>
+
+        <para>Tracker のパッケージは pkg-config 経由で見つかる．デフォルトのバージョン 0.12 
+        より新しいバージョンがインストールされている場合もあるので，
+        末尾のバージョン番号も渡す必要があるかもしれない．すなわち</para>
+
+        <screen><prompt>$ </prompt><userinput>pkg-config --list-all | grep tracker
+</userinput>tracker-extract-0.16  tracker-extract - Tracker : A library to develop metadata extractors for 3rd party file types.
+tracker-sparql-0.16   tracker-sparql - Tracker : A library to perform SPARQL queries and updates in the              Tracker Store
+tracker-miner-0.16    tracker-miner - A library to develop tracker data miners</screen>
+
+        <para>であれば：</para>
+
+        <screen><prompt>$ </prompt><userinput>./configure --with-tracker-pkgconfig-version=0.16 ...</userinput></screen>
+        
+        <para>とする．</para>
+
+        <para>もし Solaris と OpenCSW 由来の Tracker を使っていれば，PKG_CONFIG_PATH 
+        環境変数を設定し，--with-tracker-prefix configure オプションを加え，
+        LDFLAGS="-R/opt/csw/lib" を加える必要がある．</para>
+
+        <screen>PKG_CONFIG_PATH=/opt/csw/lib/pkgconfig LDFLAGS="-R/opt/csw/lib" ./configure --with-tracker-prefix=/opt/csw --with-tracker-pkgconfig-version=0.16 ...</screen>
+
+        <para>Tracker ライブラリーが見つけられているかどうか，configure の出力を確認する：</para>
+
+        <screen>checking for TRACKER... yes
+checking for TRACKER_MINER... yes
+...
+Configure summary:
+...
+  AFP:
+    Spotlight: yes
+...</screen>
+      </sect3>
+
+      <sect3>
+        <title>コンパイルとインストール</title>
+
+        <para>次に以下を実行</para>
+
+        <screen><prompt>$</prompt> <userinput>make</userinput></screen>
+
+        <para>すると Netatalk のバイナリーを生成するはずである．（この段階は完了するのに数分かかる）</para>
+
+        <para>この過程が終了すれば，以下のコマンドを使って</para>
+
+        <screen><prompt>$</prompt> <userinput>make install</userinput></screen>
+
+        <para>ドキュメントとバイナリーのインストール（デフォルトの場所を使う場合は 
+        "root" として行わなければならない）ができる．</para>
+      </sect3>
+    </sect2>
+  </sect1>
+</chapter>

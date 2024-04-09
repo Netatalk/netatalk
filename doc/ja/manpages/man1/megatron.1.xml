@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="megatron.1">
+  <refmeta>
+    <refentrytitle>megatron</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">02 Sep 2011</refmiscinfo>
+
+    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id="name">
+    <refname>megatron</refname>
+
+    <refname>unhex</refname>
+
+    <refname>unbin</refname>
+
+    <refname>unsingle</refname>
+
+    <refname>hqx2bin</refname>
+
+    <refname>single2bin</refname>
+
+    <refname>macbinary</refname>
+
+    <refpurpose>Macintosh ファイルフォーマットを変換する</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv id="synopsis">
+    <cmdsynopsis>
+      <command>megatron</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>unbin</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>unhex</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>unsingle</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>hqx2bin</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>single2bin</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>macbinary</command>
+
+      <arg choice="opt" rep="repeat"><replaceable>sourcefile</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1 id="description">
+    <title>説明</title>
+
+    <para><command>megatron</command> は BinHex, MacBinary, AppleSingle, (<emphasis remap="B" role="bold">netatalk</emphasis> 形式) AppleDouble といったフォーマットのファイルを、MacBinary または (<emphasis remap="B">netatalk</emphasis> 形式) AppleDouble フォーマットに変換する。
+    <emphasis remap="B">netatalk</emphasis> 形式 AppleDouble フォーマットは、 <emphasis remap="B">netatalk</emphasis> の Apple Filing Protocol (AppleShare) サーバーである <emphasis remap="B">afpd</emphasis> によって使われるファイルフォーマットである。
+    BinHex, MacBinary, AppleSingle は、 E メールやファイル転送プロトコル (FTP) を使って マシン間で Macintosh のファイルを転送するために 一般に使われるフォーマットである。
+    <command>megatron</command> は、(呼び出された) 名前からどのタイプの変換が求められているかを決定する。</para>
+
+    <para><command>megatron</command> が <command>unhex</command>, <command>unbin</command>, <command>unsingle</command> として呼び出された場合、 ファイルを BinHex, MacBinary, AppleSingle から AppleDouble に変換しようとする。
+    BinHex は、ほとんどの場合、 Macintosh のファイルを E メールで送るために使われる。
+    通常この形式のファイルには拡張子 &#34;.hqx&#34; が付く。
+    MacBinary は、ほとんどの場合、 Macintosh のファイルをバイナリモードで転送するときに、 端末エミュレータが「裏で」利用する。
+    MacBinary ファイルには、通常、拡張子 &#34;.bin&#34; が付く。
+    Macintosh の LAN ベースの E メールパッケージの中には、 E メールにファイルを「添付」したり「同封」したりするのに uuencode された AppleSingle フォーマットを使うものもある。
+    AppleSingle ファイルにはファイル名の標準的な拡張子がない。</para>
+
+    <para><command>megatron</command> が <command>hqx2bin</command>, <command>single2bin</command>, <command>macbinary</command> として呼び出された場合、 ファイルを BinHex, AppleSingle, AppleDouble から MacBinary に変換しようとする。
+    何らかの理由により Macintosh を使って <command>afpd</command> サーバーから Macintosh ファイルをコピーすることができない場合、 サーバーから他のマシンにファイルを移動するために 最後の (AppleDouble から MacBinary への) 変換が役立つ。</para>
+
+    <para><command>megatron</command> が更に別の名前で呼び出された場合、デフォルトの変換、つまり <command>unhex</command> を使う。</para>
+
+    <para>変換元ファイルが指定されない場合、または <emphasis remap="I">sourcefile</emphasis> が `<emphasis remap="" role="bold">-</emphasis>&#39; である場合、 BinHex または MacBinary ファイルからの変換が指示されると、 <command>megatron</command> は標準入力を読み込む。</para>
+
+    <para>出力ファイルを格納するために使われるファイルの名前は、 変換元ファイルにエンコードされているファイル名である。
+    MacBinary ファイルは拡張子 &#34;.bin&#34; を付けて作成される。
+    (ファイル名の) 衝突が起こった場合、 古いファイルは上書きされるので注意すること。</para>
+  </refsect1>
+
+  <refsect1 id="options">
+    <title>オプション</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-v, --version</option></term>
+
+        <listitem>
+          <para>バージョンを表示する。</para>
+        </listitem>
+
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id="see_also">
+    <title>参照</title>
+
+    <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+  </refsect1>
+</refentry>
