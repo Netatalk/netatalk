@@ -6,4 +6,5 @@ executable(
     link_with: libatalk,
     c_args: [afpdpwfile, dversion],
     install: true,
+    install_rpath: rpath,
 )

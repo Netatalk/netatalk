@@ -14,4 +14,5 @@ executable(
     link_with: libatalk,
     c_args: dversion,
     install: true,
+    install_rpath: rpath,
 )

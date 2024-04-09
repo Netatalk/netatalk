@@ -17,4 +17,5 @@ executable(
     c_args: ['-D_PATH_ATALKDCONF="' + pkgconfdir + '/atalkd.conf"', dversion],
     install: true,
     install_dir: sbindir,
+    install_rpath: rpath,
 )

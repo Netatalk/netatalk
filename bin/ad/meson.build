@@ -16,4 +16,5 @@ executable(
     link_with: [libatalk, libcnid],
     c_args: [ad, dversion],
     install: true,
+    install_rpath: rpath,
 )

@@ -4,6 +4,7 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     install: true,
+    install_rpath: rpath,
 )
 
 executable(
@@ -12,6 +13,7 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     install: true,
+    install_rpath: rpath,
 )
 
 executable(
@@ -20,5 +22,6 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     install: true,
+    install_rpath: rpath,
 )
 

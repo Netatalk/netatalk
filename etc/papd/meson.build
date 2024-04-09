@@ -29,6 +29,7 @@ executable(
     export_dynamic: true,
     install: true,
     install_dir: sbindir,
+    install_rpath: rpath,
 )
 
 executable(
@@ -38,6 +39,7 @@ executable(
     link_with: libatalk,
     c_args: '-DSHOWPPD',
     install: true,
+    install_rpath: rpath,
 )
 
 
