@@ -55,9 +55,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-krbV-uam \
@@ -65,28 +65,32 @@ jobs:
             --enable-quota \
             --enable-systemd \
             --with-cracklib \
-            --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
             --with-libtirpc
-      - name: Generate man pages
+      - name: Autotools - Generate manual pages
         run: make html
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Run distribution tests
+      - name: Autotools - Run distribution tests
         run: make distcheck
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
             -Dbuild-manual=true \
             -Dwith-libtirpc=true
-      - name: Meson build and generate man pages
+      - name: Meson - Build and generate man pages
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Tests
         run: cd build && meson test
-      - name: Meson distribution tests
+      - name: Meson - Distribution tests
         run: cd build && meson dist
+      - name: Meson - Install
+        run: sudo ninja -C build install
+
   build-debian:
     name: Debian
     runs-on: ubuntu-22.04
@@ -98,9 +102,9 @@ jobs:
         run: |
           apt-get update
           apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-debian \
@@ -109,20 +113,24 @@ jobs:
             --enable-quota \
             --with-cracklib \
             --with-libtirpc
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-libtirpc=true \
-            -Denable-debian=true
-      - name: Meson build
+            -Denable-debian=true \
+            -Dwith-libtirpc=true
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
 
   build-fedora:
     name: Fedora
@@ -149,29 +157,33 @@ jobs:
             ninja-build \
             openldap-devel \
             openssl-devel
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
+      - name: Autotools - Configure
         run: |
           ./configure \
             --enable-pgp-uam \
             --enable-krbV-uam \
             --enable-redhat-sysv \
             --with-cracklib=/usr/share/cracklib
-      - name: Build
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
             -Dwith-libtirpc=true \
             -Denable-redhat-sysv=true
-      - name: Meson build
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
 
   build-macos:
     name: macOS
@@ -183,32 +195,36 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: brew install automake libressl krb5 berkeley-db meson
-      - name: Bootstrap
+      - name: Autotools - Bootstrap
         run: ./bootstrap
-      - name: Configure
-        # DDP and related services in the absence of an AppleTalk stack on macOS
+      - name: Autotools - Configure
+        # Disable DDP in the absence of an AppleTalk stack on macOS
         run: |
           ./configure \
-          --with-ssl-dir=/usr/local/opt/libressl \
-          --with-bdb=/usr/local/opt/berkeley-db \
-          --enable-pgp-uam \
-          --enable-krbV-uam \
-          --disable-ddp
-      - name: Build
+            --disable-ddp \
+            --enable-pgp-uam \
+            --enable-krbV-uam \
+            --with-ssl-dir=/usr/local/opt/libressl \
+            --with-bdb=/usr/local/opt/berkeley-db
+      - name: Autotools - Build
         run: make -j $(nproc) all
-      - name: Run tests
+      - name: Autotools - Run tests
         run: make check
-      - name: Meson configure
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Meson - Configure
         run: |
           meson setup build \
             -Dwith-bdb=/usr/local/opt/berkeley-db \
             -Dwith-ssl-dir=/usr/local/opt/libressl \
             -Dbuild-tests=true \
             -Denable-macos=true
-      - name: Meson build
+      - name: Meson - Build
         run: ninja -C build
-      - name: Meson tests
+      - name: Meson - Tests
         run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
 
   build-netbsd:
     name: "NetBSD"
@@ -219,7 +235,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.0.3
+        uses: vmactions/netbsd-vm@v1.0.5
         with:
           release: 9.3
           copyback: false
@@ -227,28 +243,35 @@ jobs:
             pkg_add \
               autoconf \
               automake \
+              avahi \
               cups \
               db5 \
-              libgcrypt \
               gcc13 \
               gmake \
+              libgcrypt \
               libressl \
               libtool \
               meson \
               pkg-config
           run: |
+            set -e
+            echo "Building with Autotools"
             ./bootstrap
             ./configure \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig \
+              --enable-krbV-uam \
+              --enable-netbsd \
+              --enable-pgp-uam \
               --with-bdb=/usr/pkg \
               --with-libgcrypt-dir=/usr/pkg \
-              --enable-netbsd
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j2 all
+            echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Denable-netbsd=true
             ninja -C build
+            ninja -C build install
 
   build-solaris:
     name: "Solaris"
@@ -259,7 +282,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1.0.1
+        uses: vmactions/solaris-vm@v1.0.2
         with:
           release: 11.4
           prepare: |
@@ -278,9 +301,14 @@ jobs:
             make install
             cd ..            
           run: |
+            set -e
+            echo "Building with Autotools"
             ./bootstrap
-            ./configure MAKE=gmake --enable-cups=no
-            gmake -j2 all
+            ./configure \
+              MAKE=gmake \
+              --enable-cups=no
+            gmake -j $(nproc) all
+            gmake install
 
   static_analysis:
     name: Static Analysis
@@ -304,9 +332,11 @@ jobs:
       - name: Run build-wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
-          ./bootstrap
-          ./configure
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j $(nproc) all
+          meson setup build \
+            -Denable-krbV-uam=enabled \
+            -Denable-pgp-uam=enabled \
+            -Dwith-libtirpc=true
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ninja -C build
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
