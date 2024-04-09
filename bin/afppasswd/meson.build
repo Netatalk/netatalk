@@ -13,4 +13,5 @@ executable(
         dversion,
     ],
     install: true,
+    install_rpath: rpath,
 )

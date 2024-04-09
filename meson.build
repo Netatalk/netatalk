@@ -40,6 +40,7 @@ localstatedir = prefix / get_option('localstatedir')
 mandir = prefix / get_option('mandir')
 pkgconfdir = prefix / get_option('sysconfdir')
 sbindir = prefix / get_option('sbindir')
+rpath = '$ORIGIN/../' + get_option('libdir')
 
 ##################
 # Compiler flags #
@@ -326,6 +327,7 @@ if (cpu in ['ppc64', 's390x', 'sparc64', 'x86_64', 'i386'] and compiler_mode)
 else
     atalk_libname = 'lib'
 endif
+
 message('atalk_libname =', atalk_libname)
 
 #
