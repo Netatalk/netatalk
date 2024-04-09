@@ -176,7 +176,8 @@ basedir regex = /usr/home</programlisting></para>
         </indexterm> オプションで選択が可能である．CNID バックエンドは基本的には，
         ストアされた ID &lt;-&gt; 名前を一対一対応させるデータベースである．</para>
 
-      <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename> に置かれる．</para>
+      <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename> に置かれる．
+      コンパイル時に <command>--localstatedir=PATH</command> オプションで場所を変えられる．</para>
 
       <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command> 
       という名のコマンドが用意されていている．</para>
@@ -295,7 +296,9 @@ basedir regex = /usr/home</programlisting></para>
             <secondary>"mysql" CNID バックエンド</secondary>
           </indexterm></title>
 
-        <para>CNID バックエンドは MySQL サーバーを使用する．</para>
+        <para>CNID バックエンドは MySQL サーバーを使用する．
+        mysql 開発ライブラリが検出されると、自動的に設定される．
+        コンパイル時に<command>--without-mysql-config</command>で無効にする．</para>
       </sect3>
     </sect2>
 
@@ -402,7 +405,7 @@ basedir regex = /usr/home</programlisting></para>
           </listitem>
 
           <listitem>
-            <para>MacCroation</para>
+            <para>MacCroatian</para>
           </listitem>
 
           <listitem>
@@ -787,7 +790,7 @@ basedir regex = /usr/home</programlisting></para>
         UAM を有効化した時に問題が起こっているのかどうかを， <filename>netatalk.log</filename> 
         あるいは起動時の syslog にログとして保存する．
         <citerefentry>
-            <refentrytitle>asip-status.pl</refentrytitle>
+            <refentrytitle>asip-status</refentrytitle>
 
             <manvolnum>1</manvolnum>
           </citerefentry>  
@@ -802,7 +805,7 @@ basedir regex = /usr/home</programlisting></para>
         <para>OS X では，
         AFP クライアントをもっと冗長にするクライアント側のテクニックがいくつかあるので，
         使用する UAM と折り合いをつけるまでに何が起こっているのか見ることができる．<ulink
-        url="http://article.gmane.org/gmane.network.netatalk.devel/7383/">このヒント</ulink>
+        url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">このヒント</ulink>
         と比較してみるとよい．</para>
       </sect3>
 
@@ -1074,7 +1077,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting>
         </table>
 
         <para>* <ulink
-        url="http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
+        url="https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
         概要</ulink> も一読のこと</para>
       </sect3>
 
@@ -1129,7 +1132,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting>
           <para>"<option>advertise ssh</option>" および 
           "<option>fqdn</option>" オプション両方を <option>Global</option> 
           セクションで設定（設定を変更したら，afpd を再起動した後 <citerefentry>
-              <refentrytitle>asip-status.pl</refentrytitle>
+              <refentrytitle>asip-status</refentrytitle>
 
               <manvolnum>1</manvolnum>
             </citerefentry> で二重チェックするべき）した時は，
@@ -1138,8 +1141,16 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting>
 
           <itemizedlist>
             <listitem>
-              <para>（SSH がするように）TCP over TCP のトンネリングは最良の案ではない．
-              IP レイヤーに基づいた VPN などのより良い解決法が存在する．</para>
+              <para>こう言うような機能を必要とする大部分のユーザーは、
+              おそらく使い慣れている VPN はあるとしたら、
+              通常のVPNを使用して AFP サーバーが実行されているネットワークに接続し、
+              AFP サーバーにアクセスする方が簡単だろう．</para>
+
+              <para>とはいっても、１台の AFP サーバーに接続するという単純なケースでは、
+              VPN より直接 SSH 接続の方がパフォーマンス的に良いだろう．
+              噂と違って、SSH 経由のトンネリングでは、
+              いわゆる「TCP-over-TCP メルトダウン」は発生しない．
+              何故なら、トンネリングされるAFPデータが TCP データをカプセル化していないためである．</para>
             </listitem>
 
             <listitem>
@@ -1159,13 +1170,12 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting>
             </listitem>
 
             <listitem>
-              <para>一方，AFP セッション全てが SSH で暗号化されていることを確実にしたい場合は，
-              afpd へのアクセスを localhost のみ（TCP ラッパー）に制限すべきである．
-              あるいは…</para>
-            </listitem>
+              <para>実際，AFP セッションが全てが SSH で暗号化されていることを確実にしたい場合は，
+              afpd へのアクセスを localhost のみ発信される接続に制限する必要がある．
+              たとえば，Wietse Venema の TCP ラッパーを使用するか，
+              適切なファイアウォールやパケットフィルタリング機能を使用するなど．</para>
 
-            <listitem>
-              <para>…10.2 から 10.3.3 を使っている場合は，予想とは逆に：
+              <para>そうしなければ、10.2 から 10.3.3 を使っている場合は，予想とは逆に：
               トンネルの確立に失敗したという通知一つもなく，
               ネットワーク上で暗号化されていない AFP の通信（ログイン資格情報を含む）が起こりえるということである．
               Apple は Mac OS X 10.3.4 になってそれをはじめて修正した．</para>
@@ -1545,6 +1555,15 @@ aclmode = passthrough</screen>
           linkend="enable-monitors">enable-monitors</link> および <link
           linkend="crawling-interval">crawling-interval</link> を参照のこと．</para>
         </listitem>
+       	<listitem>
+          <para>home ディレクトリのインデックスは作成されない</para>
+
+          <para>現在の実装の既知の制限により，
+          ユーザーのhome ディレクトリ内の共有ボリュームは
+          Spotlight によってインデックス付けされない．</para>
+
+          <para>回避策として，ファイルシステム別場所に共有ボリュームを設定する．</para>
+        </listitem>
       </itemizedlist>
     </sect2>
 
@@ -1552,10 +1571,11 @@ aclmode = passthrough</screen>
       <title>サーバー上での Tracker コマンドラインツールの使用</title>
 
       <para>Netatalk は動作中でなければならず，コマンドの実行は root 権限で行わなければならない．
-      そしていくつかの環境変数を設定されなければならない（PREFIX は Netatalk 
-      をインストールしたベースディレクトリにあわせて読み替える）：<screen>$ su
+      そしていくつかの環境変数を設定されなければならない．必要に応じて.tracker_profileを作成し，
+      /root/.profile より source を指定する．PREFIX は Netatalk 
+      をインストールしたベースディレクトリにあわせて読み替える．<screen>$ su
 # cat .tracker_profile
-PREFIX="/"
+PREFIX="/usr/local"
 export XDG_DATA_HOME="$PREFIX/var/netatalk/"
 export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
 export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
@@ -1567,120 +1587,48 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
       も以下のように更新する：<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
 
       <sect3>
-        <title>Tracker の状態の問い合わせ</title>
+        <title>Tracker コマンド</title>
 
         <variablelist>
           <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>Tracker の状態の問い合わせ:</term>
             <listitem>
               <screen># tracker daemon</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-          <term>古い Tracker:</term>
-          <listitem>
-            <screen># tracker-control -S</screen>
-          </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>Tracker の停止</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>Tracker の停止:</term>
             <listitem>
               <screen># tracker daemon -t</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>古い Tracker:</term>
-            <listitem>
-              <screen># tracker-control -t</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>Tracker の開始</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>Tracker の開始:</term>
             <listitem>
               <screen># tracker daemon -s</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>古い Tracker:</term>
-            <listitem>
-              <screen># tracker-control -s</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
-
-      <sect3>
-        <title>ディレクトリの再インデックス</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>ディレクトリの再インデックス:</term>
             <listitem>
               <screen># tracker index -f PATH</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>古い Tracker:</term>
-            <listitem>
-              <screen># tracker-control -f PATH</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-        </sect3>
-
-      <sect3>
-        <title>Tracker にファイルやディレクトリの情報を問い合わせる</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>Tracker にファイルやディレクトリの情報を問い合わせる:</term>
             <listitem>
               <screen># tracker info PATH</screen>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term>古い Tracker:</term>
-            <listitem>
-              <screen># tracker-info PATH</screen>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-        </sect3>
-
-      <sect3>
-        <title>Tracker で検索</title>
-
-        <variablelist>
-          <varlistentry>
-            <term>最近の Tracker:</term>
+            <term>Tracker で検索:</term>
             <listitem>
               <screen># tracker search QUERY</screen>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>古い Tracker:</term>
-            <listitem>
-              <screen># tracker-search QUERY</screen>
             </listitem>
           </varlistentry>
         </variablelist>
@@ -1909,12 +1857,12 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
       <orderedlist>
         <listitem>
           <para><ulink
-          url="https://developer.apple.com/library/mac/#documentation/Carbon/Reference/MDItemRef/Reference/reference.html">MDItem</ulink></para>
+          url="https://developer.apple.com/documentation/coreservices/mditemref/">MDItem</ulink></para>
         </listitem>
 
         <listitem>
           <para><ulink
-          url="https://live.gnome.org/Tracker/Documentation">Tracker</ulink></para>
+          url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">Tracker</ulink></para>
         </listitem>
       </orderedlist>
     </sect2>

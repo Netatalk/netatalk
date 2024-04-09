@@ -4,7 +4,7 @@ manxml = [
     'afppasswd',
     'afpstats',
     'apple_dump',
-    'asip-status.pl',
+    'asip-status',
     'dbd',
     'macusers',
     'netatalk-config',

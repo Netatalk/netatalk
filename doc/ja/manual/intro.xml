@@ -4,23 +4,43 @@
 
     <author role="first-last">
       <firstname>Eiichirou</firstname>
-      
+
       <surname>UDA（日本語訳）</surname>
     </author>
-    
+
     <pubdate>2015 年 6 月 10 日（訳）</pubdate>
-    
+
   </chapterinfo>
-  <title>Netatalk 序説</title>
+  <title>序説</title>
+
+  <sect1>
+  <title>法的条項</title>
+
+  <para>
+  本ドキュメントは GNU 一般公衆利用許諾書 (GPL) バージョン 2 のもとで配布されている．
+  Netatalk ソース一式にも本ドキュメントと同様に許諾書のコピーが同梱されている．許諾書のコピーのオンライン版は <ulink
+  url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
+  で閲覧できる
+  </para>
+  </sect1>
+
+  <sect1>
+  <title>Netatalk 概要</title>
 
   <para>Netatalk は，*NIX 
-  マシンを極めて高性能で極めて信頼性の高いマッキントッシュコンピューター用ファイルサーバーに変身させる，
+  マシンを極めて高性能で極めて軽いマッキントッシュコンピューター用ファイルサーバーに変身させる，
   オープンソースのソフトウェアのパッケージである．</para>
 
-  <para>Netatalk の AFP 3.3 
+  <para>Netatalk の AFP 3.4
   準拠のファイルサーバーは，考え得る最高のユーザーエクスペリエンス
-  （マッキントッシュのメタデータの完全なサポート．クラシック Mac OS と OS X 
-  の混在環境も問題なくサポート）をもたらしつつ，Mac が SaMBa/NFS 
+  （マッキントッシュのメタデータの完全なサポート．クラシック Mac OS と macOS
+  の混在環境も問題なくサポート）をもたらしつつ，Mac が Samba/NFS
   経由でサーバーにアクセスしたのと比較して著しく高い転送速度をもたらす．</para>
+
+  <para>あらゆる導入環境に対応できるよう、さまざまな認証方法が付属しています．
+  Bonjour サービス検出、Time Machine バックアップ，
+  Spotlight インデックス検索などの最新の macOS 機能もサポートされています．
+  </para>
+  </sect1>
 
 </chapter>

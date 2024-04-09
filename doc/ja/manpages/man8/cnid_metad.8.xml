@@ -5,15 +5,17 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
+    <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>cnid_metad</refname>
 
-    <refpurpose>要求に応じてcnid_dbdデーモンを起動する</refpurpose>
+    <refpurpose>要求に応じて <command>cnid_dbd</command>(8) デーモンを起動するデーモン</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -103,5 +105,11 @@
 
         <manvolnum>5</manvolnum>
       </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

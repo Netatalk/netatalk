@@ -5,15 +5,17 @@
 
     <manvolnum>8</manvolnum>
 
-    <refmiscinfo class="date">10 Nov 2015</refmiscinfo>
+    <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>cnid_dbd</refname>
 
-    <refpurpose>専用デーモンプロセスを通してCNIDデータベースへのアクセスを実装する</refpurpose>
+    <refpurpose>CNIDデータベースへのアクセスデーモン</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -79,7 +81,7 @@
         <term><emphasis remap="B">cachesize</emphasis></term>
 
         <listitem>
-          <para>Berkeley DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの<command>cnid_dbd</command>プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkley DBに附属する<emphasis remap="B">db_stat</emphasis>ユーティリティに<option>-m</option>オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。<emphasis remap="B">Berkeley DB Tutorial and Reference Guide</emphasis>には、より詳しい情報を記した<emphasis remap="B">Selecting a cache size</emphasis>という章がある。</para>
+          <para>Berkeley DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの<command>cnid_dbd</command>プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkeley DBに附属する<emphasis remap="B">db_stat</emphasis>ユーティリティに<option>-m</option>オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。<emphasis remap="B">Berkeley DB Tutorial and Reference Guide</emphasis>には、より詳しい情報を記した<emphasis remap="B">Selecting a cache size</emphasis>という章がある。</para>
         </listitem>
       </varlistentry>
 
@@ -114,9 +116,9 @@
   <refsect1>
     <title>アップデート</title>
 
-    <para>Netatalk 2.1の<emphasis>後</emphasis>に出た最初のバージョン、すなわちNetatalk 2.1.1は、手動操作なしに自動的にBerkeleyDBアップデートをサポートすることに注意せよ。言い換えると、Netatalk 2.1はBerkeleyDBデータベースのアップグレードを準備するコードと、既に準備されている場合にそれをアップグレードするコードを含んでいる。これはバージョン2.0.xからはアップグレードできないことを意味する。なぜならデータベースの準備をしていないからである。</para>
+    <para>Netatalk 2.1の<emphasis>後</emphasis>に出た最初のバージョン、すなわちNetatalk 2.1.1は、手動操作なしに自動的にBerkeley DBアップデートをサポートすることに注意せよ。言い換えると、Netatalk 2.1はBerkeley DBデータベースのアップグレードを準備するコードと、既に準備されている場合にそれをアップグレードするコードを含んでいる。これはバージョン2.0.xからはアップグレードできないことを意味する。なぜならデータベースの準備をしていないからである。</para>
 
-    <para>異なるバージョンのBerkeleyDBライブラリを使っている古いNetatalkをアップデートするためには、以下の手順をとります:</para>
+    <para>異なるバージョンのBerkeley DBライブラリを使っている古いNetatalkをアップデートするためには、以下の手順をとります:</para>
 
     <itemizedlist>
       <listitem>
@@ -124,17 +126,17 @@
       </listitem>
 
       <listitem>
-        <para>古いBerkeleyDBユーティリティを使って、<command>db_recover -h
+        <para>古いBerkeley DBユーティリティを使って、<command>db_recover -h
         &lt;.AppleDBのパス&gt;</command> を実行する</para>
       </listitem>
 
       <listitem>
-        <para>新しいBerkeleyDBユーティリティを使って、<command>db_upgrade -v -h
+        <para>新しいBerkeley DBユーティリティを使って、<command>db_upgrade -v -h
         &lt;.AppleDBのパス&gt; -f cnid2.db</command> を実行する</para>
       </listitem>
 
       <listitem>
-        <para>再び新しいBerkeleyDBユーティリティを使って、<command>db_checkpoint -1 -h &lt;.AppleDBのパス&gt;</command> を実行する</para>
+        <para>再び新しいBerkeley DBユーティリティを使って、<command>db_checkpoint -1 -h &lt;.AppleDBのパス&gt;</command> を実行する</para>
       </listitem>
 
       <listitem>
@@ -160,5 +162,11 @@
 
         <manvolnum>1</manvolnum>
       </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

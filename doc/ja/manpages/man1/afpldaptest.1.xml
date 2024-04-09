@@ -7,16 +7,18 @@
 
     <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
-  <refnamediv id="name">
+  <refnamediv>
     <refname>afpldaptest</refname>
 
-    <refpurpose>afp.confのldapパラメータを構文チェックする</refpurpose>
+    <refpurpose>afp.conf(5) の ldap パラメータを構文チェックする</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv id="synopsis">
+  <refsynopsisdiv>
     <cmdsynopsis>
       <command>afpldaptest</command>
 
@@ -39,7 +41,7 @@
     </cmdsynopsis>
   </refsynopsisdiv>
 
-  <refsect1 id="description">
+  <refsect1>
     <title>説明</title>
 
     <para><command>afpldaptest</command>は@pkgconfdir@/afp.confのldapパラメータを構文チェックするシンプルなコマンドです。</para>
@@ -87,9 +89,15 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="see_also">
+  <refsect1>
     <title>参照</title>
 
     <para><citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

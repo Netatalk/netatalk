@@ -8,13 +8,15 @@
 
     <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
 
-    <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>afp_signature.conf</refname>
 
-    <refpurpose>サーバシグネチャを指定するためにafpd(8)が利用する設定ファイル</refpurpose>
+    <refpurpose>サーバシグネチャを指定するために <command>afpd</command>(8) が利用する設定ファイル</refpurpose>
   </refnamediv>
 
   <refsect1>
@@ -61,9 +63,15 @@
 
         <manvolnum>5</manvolnum>
       </citerefentry>, <citerefentry>
-        <refentrytitle>asip-status.pl</refentrytitle>
+        <refentrytitle>asip-status</refentrytitle>
 
         <manvolnum>1</manvolnum>
       </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+      <title>著作者</title>
+
+      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>
