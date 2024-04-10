@@ -153,7 +153,6 @@ add_global_link_arguments(netatalk_common_link_args, language: 'c')
 
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: true)
-mysql_config = find_program('mysql_config', required: false)
 perl = find_program('perl', required: true)
 if host_os == 'darwin'
     brew = find_program('brew', required: true)
@@ -1305,9 +1304,16 @@ mysqlclient = dependency('mysqlclient', required: false)
 if not mysqlclient.found()
     use_mysql_backend = false
 else
-    cnid_backends += ' mysql'
-    use_mysql_backend = true
-    cdata.set('CNID_BACKEND_MYSQL', 1)
+    use_mysql_backend = (
+        mysqlclient.found()
+        and fs.exists(
+            mysqlclient.get_variable(pkgconfig: 'includedir') / 'mysql.h',
+        )
+    )
+    if use_mysql_backend
+        cnid_backends += ' mysql'
+        cdata.set('CNID_BACKEND_MYSQL', 1)
+    endif
 endif
 
 compiled_backends = '"' + cnid_backends + '"'
