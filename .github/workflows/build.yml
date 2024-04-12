@@ -235,7 +235,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.0.5
+        uses: vmactions/netbsd-vm@v1.0.7
         with:
           release: 9.3
           copyback: false
@@ -247,12 +247,12 @@ jobs:
               db5 \
               gcc13 \
               gmake \
+              libcups \
               libgcrypt \
               libressl \
               libtool \
               meson \
               pkg-config
-              pkg_add http://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/x86_64/9.0_2023Q3/All/cups-2.4.6.tgz
           run: |
             set -e
             echo "Building with Autotools"
