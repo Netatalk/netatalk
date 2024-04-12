@@ -2,10 +2,9 @@ This is a README for the major platforms where Netatalk is in use.
 
 Platforms Covered:
 A.   Linux
-B.   Solaris
-C.I  OpenBSD
-C.II Other BSDs
-D.   Generic
+B.I  OpenBSD
+B.II Other BSDs
+C.   Generic
 
 ----------------------------------------------------------------
 
@@ -53,81 +52,7 @@ package to be able to compile Netatalk correctly.
 
 ----------------------------------------------------------------
 
-B. SOLARIS
-
-1.  SELECT COMPILER.  This distribution is configured to build with
-    gcc.  It should also work with cc. At the present time only cc
-    v5.0 and gcc 3.1 and above can build the 64-bit kernel module.
-
-1a. SELECT KERNEL TYPE.  Edit sys/solaris/Makefile.kernel and set KCFLAGS
-     to include sparcv9 support if you run a 64-bit kernel, or leave it
-     commented out for a 32-bit kernel. Only UltraSPARC systems
-     running Solaris 7 and above support a 64-bit kernel. If you're
-     not sure what kernel you use, run "isainfo -v". You're running a
-     64-bit kernel if the result includes 64-bit (sparcv9), otherwize
-     it's 32-bit.
-
-     NOTE: If you want both the 32-bit and 64-bit kernel modules to be
-     installed, first compile and install the version appropriate to
-     the kernel that you're currently running, then make clean,
-     compile and install the other version.
-
-2.  EDIT NETCONFIG.  Add the following line to /etc/netconfig:
-
-	ddp tpi_clts - appletalk ddp /dev/ddp -
-
-    This makes the socket library aware of the AppleTalk protocol
-    family.
-
-3.  INSTALL DRIVER.  Since the STREAMS ddp driver must be installed as
-    root, we've separated that portion of the build.  Type
-
-	make -f Makefile.kernel kinstall
-
-    to install the driver.  This copies the driver and its config file
-    into /usr/kernel/drv and /usr/kernel/strmod, runs "add_drv ddp" to
-    make the kernel aware of the new driver, and adds an rc file to
-    /etc/rc?.d. Watch out for error messages after it runs  add_drv.
-    If you see something like
-      devfsadm: driver failed to attach: ddp
-      Warning: Driver (ddp) successfully added to system but failed to attach
-    then recheck sys/solaris/Makefile.kernel and/or try a different
-    compiler.
-
-4.  ATALKD.CONF.  Under Solaris, you must create atalkd.conf, since
-    Solaris provides no method for determining the names of the
-    available interfaces.  It is sufficent to name the available
-    interfaces in atalkd.conf, one per line.  E.g.
-
-	le0
-
-    on a line by itself on many Suns. hme0 on Ultras.  See atalkd(8).
-
-5.  PRINTING.  Netatalk can use any postscript printer that has been set
-    up for use by Solaris. If you haven't already set up a printer,
-    type admintool then select Browse --> Printers, and then Edit --> Add
-    and fill in the form for either a local or remote printer. If adding
-    a local printer, set the Printer Type to PostScript. Then find a
-    postscript file and test your printer from the command line. For
-    example if you created a printer called "fred" your print command
-    would be something like:  lp -d fred some_file.ps
-
-    Once you have a printer that works under Solaris, you need to create
-    a papd.conf file. For example
-
-      MacLaserjet:\
-          :pr=|/usr/bin/lp -d fred:\
-          :op=nobody:\
-          :pd=/usr/local/etc/HPLJ_4M.PPD:
-
-    See doc/CONFIGURE for more information on papd.conf.
-    Once you have this set up, and assuming netatalk starts up after
-      /etc/rc2.d/S79atalk start
-    you should be able to see the printer from the Macintosh Chooser.
-
-----------------------------------------------------------------
-
-C.I OpenBSD
+B.I OpenBSD
 
 1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
     OpenBSD 2.2,  or openbsd-current dated after Aug 1, 1997. But the
@@ -171,7 +96,7 @@ C.I OpenBSD
 
     and copy netatalk/distrib/initscripts/rc.atalk.bsd to /etc/rc.atalk.
 
-C.II Other BSDs
+B.II Other BSDs
 
 1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
     FreeBSD 2.2-current dated after 12 September 1996.
@@ -185,7 +110,7 @@ C.II Other BSDs
 
 ----------------------------------------------------------------
 
-D. Generic
+C. Generic
 
 (It's unknown how applicable this is compared to the current codebase)
 

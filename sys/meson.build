@@ -1,3 +1,2 @@
 subdir('netatalk')
-subdir('solaris')
 

@@ -672,84 +672,6 @@ if test x"$this_os" = "xsolaris"; then
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
 	sysv_style=solaris
-
-	solaris_module=no
-	AC_MSG_CHECKING([if we can build Solaris kernel module])
-	if test -x /usr/ccs/bin/ld && test x"$netatalk_cv_ddp_enabled" = x"yes" ; then
-		solaris_module=yes
-	fi
-	AC_MSG_RESULT([$solaris_module])
-
-	COMPILE_64BIT_KMODULE=no
-	KCFLAGS=""
-	KLDFLAGS=""
-	COMPILE_KERNEL_GCC=no
-
-	if test "$solaris_module" = "yes"; then
-	   dnl Solaris kernel module stuff
-           AC_MSG_CHECKING([if we have to build a 64bit kernel module])
-
-	   # check for isainfo, if not found it has to be a 32 bit kernel (<=2.6)	
-	   if test -x /usr/bin/isainfo; then
-		# check for 64 bit platform
-		if isainfo -kv | grep '^64-bit'; then
-			COMPILE_64BIT_KMODULE=yes
-		fi
-	   fi
-
-	   AC_MSG_RESULT([$COMPILE_64BIT_KMODULE])
-
-	   if test "${GCC}" = yes; then
-		COMPILE_KERNEL_GCC=yes
-		if test "$COMPILE_64BIT_KMODULE" = yes; then
-  	        
-                        AC_MSG_CHECKING([if we can build a 64bit kernel module])
-		        
-                        case `$CC --version 2>/dev/null` in
-			[[12]].* | 3.0.*)
-				COMPILE_64BIT_KMODULE=no
-				COMPILE_KERNEL_GCC=no	
-				solaris_module=no;;
-			*)
-			       	# use for 64 bit
-				KCFLAGS="-m64"
-				#KLDFLAGS="-melf64_sparc"
-				KLDFLAGS="-64";;
-			esac	
-			
-			AC_MSG_RESULT([$COMPILE_64BIT_KMODULE])
-			
-		else
-			KCFLAGS=""
-			KLDFLAGS=""
-		fi
-		KCFLAGS="$KCFLAGS -D_KERNEL -Wall -Wstrict-prototypes"
-           else
-		if test "$COMPILE_64BIT_KMODULE" = yes; then
-                # use Sun CC (for a 64-bit kernel, uncomment " -xarch=v9 -xregs=no%appl ")
- 			KCFLAGS="-xarch=v9 -xregs=no%appl"
-			KLDFLAGS="-64"
-		else
- 			KCFLAGS=""
-			KLDFLAGS=""
-		fi
-		KCFLAGS="-D_KERNEL $KCFLAGS -mno-app-regs -munaligned-doubles -fpcc-struct-return"
-	   fi
-
-           AC_CACHE_CHECK([for timeout_id_t],netatalk_cv_HAVE_TIMEOUT_ID_T,[
-           AC_LINK_IFELSE([AC_LANG_PROGRAM([[\
-#include <sys/stream.h>
-#include <sys/ddi.h>]], [[\
-timeout_id_t dummy;
-]])],[netatalk_cv_HAVE_TIMEOUT_ID_T=yes],[netatalk_cv_HAVE_TIMEOUT_ID_T=no])])
-
-	   AC_DEFINE(HAVE_TIMEOUT_ID_T, test x"$netatalk_cv_HAVE_TIMEOUT_ID" = x"yes", [define for timeout_id_t])
-	fi
-
-	AC_SUBST(COMPILE_KERNEL_GCC)
-	AC_SUBST(COMPILE_64BIT_KMODULE)
-	AC_SUBST(KCFLAGS)
-	AC_SUBST(KLDFLAGS)
 fi
 
 dnl ------ Check for sendfile() --------
@@ -1294,7 +1216,6 @@ AC_CONFIG_FILES([Makefile
 	man/man8/timelord.8
 	sys/Makefile
 	sys/netatalk/Makefile
-	sys/solaris/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	])
