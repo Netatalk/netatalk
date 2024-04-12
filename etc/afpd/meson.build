@@ -105,6 +105,7 @@ libafpd = static_library(
         statedir,
         uamdir,
     ],
+    link_args: netatalk_common_link_args,
     install: false,
     build_by_default: false,
 )
@@ -183,6 +184,7 @@ executable(
         statedir,
         uamdir,
     ],
+    link_args: netatalk_common_link_args,
     export_dynamic: true,
     install: true,
     install_dir: sbindir,
