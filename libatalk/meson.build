@@ -32,7 +32,7 @@ libatalk = both_libraries(
     'atalk',
     libatalk_sources,
     include_directories: root_includes,
-    dependencies: [acl_deps, libcnid_deps],
+    dependencies: [acl_deps, libcnid_deps, threads],
     link_whole: [
         libacl,
         libadouble,

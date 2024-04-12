@@ -117,6 +117,12 @@ else
     )
 endif
 
+################
+# Dependencies #
+################
+
+threads = dependency('threads', required: true)
+
 #############
 # Libraries #
 #############
@@ -150,6 +156,12 @@ nsl = cc.find_library('nsl', required: false)
 if nsl.found()
     netatalk_common_link_args += '-lnsl'
     cdata.set('HAVE_LIBNSL', 1)
+endif
+
+dl = cc.find_library('dl', required: false)
+if dl.found()
+    cdata.set('HAVE_LIBDL', 1)
+    netatalk_common_link_args += '-ldl'
 endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
