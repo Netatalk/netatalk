@@ -1,3 +1,3 @@
-SUBDIRS = manpages manual
+SUBDIRS = ja manpages manual
 
 DISTCLEANFILES = html.xsl man.xsl
