@@ -1283,7 +1283,7 @@ if not get_option('with-cnid-dbd-backend')
     use_dbd_backend = false
 else
     use_dbd_backend = true
-    cnid_backends += ' dbd'
+    cnid_backends += 'dbd'
     cdata.set('CNID_BACKEND_DBD', 1)
 endif
 
@@ -1318,6 +1318,8 @@ endif
 
 compiled_backends = '"' + cnid_backends + '"'
 cdata.set('compiled_backends', compiled_backends)
+
+summary_backends = cnid_backends
 
 # Determine default CNID backend
 
@@ -1901,6 +1903,11 @@ summary_info = {
     '  Spotlight support': have_spotlight,
 }
 summary(summary_info, bool_yn: true, section: '  AFP:')
+
+summary_info = {
+    '  Backends': summary_backends,
+}
+summary(summary_info, bool_yn: true, section: '  CNID:')
 
 summary_info = {
     '  Kerberos V': enable_krbV_uam,
