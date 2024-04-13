@@ -1,17 +1,14 @@
-This is a README for the major platforms where Netatalk is in use. 
+This is a README for using netatalk with AppleTalk networking.
 
 Platforms Covered:
 A.   Linux
-B.I  OpenBSD
+B.I  NetBSD
 B.II Other BSDs
 C.   Generic
 
 ----------------------------------------------------------------
 
 A. Linux
-
-We no longer include Linux kernel code with netatalk, since Linux
-includes AppleTalk support.
 
 Some Linux distributions ship with AppleTalk support out of the box
 (e.g. Debian) others have the kernel module but with a blacklisting
@@ -52,113 +49,40 @@ package to be able to compile Netatalk correctly.
 
 ----------------------------------------------------------------
 
-B.I OpenBSD
+B.I NetBSD
 
-1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
-    OpenBSD 2.2,  or openbsd-current dated after Aug 1, 1997. But the
-    'comment out' character must be removed and the kernel must be
-    recompiled.
+Kernel support for AppleTalk appeared in NetBSD 1.3 in April 1997.
+See the release notes:
 
-    The kernel file that needs to be edited is usually located in:
-    /usr/src/sys/conf
+http://www.netbsd.org/changes/changes-1.3.html
 
-    Remove the first comment (#) from this line:
-    # option          NETATALK        # AppleTalk
+The source code for the kernel module is located in
+sys/netatalk of the NetBSD source tree.
 
-    Generally this is the GENERIC kernal. If you decide to rename 
-    the kernel, don't forget to go to 
-    /usr/src/sys/arch/<your arch>/conf/NEWNAME, and change the 
-    ../../../conf/GENERIC line to your NEWNAME. See 
-    http://www.openbsd.org/faq/faq5.html for more information on 
-    compiling a new kernel.
-
-2.  STARTING NETATALK. The rc scripts that come with openbsd to
-    start netatalk are specific to an older version of netatalk.
-    So, if you use the initscript provided in a current netatalk's
-    distrib/initscripts directory, you must either add the lines
-    from rc.atalk.bsd by hand into /etc/rc.local (or wherever you
-    want to launch the daemons from) or modify your /etc/rc.local
-    file to read: 
-
-    (currently says)
-
-    # Netatalk stuff
-    if [ -f /etc/netatalk/rc.atalk ]; then
-            . /etc/netatlk/rc.atalk
-    fi
-
-    (change to) 
-
-    # Netatalk stuff
-    if [ -f /etc/rc.atalk ]; then
-            . /etc/rc.atalk
-    fi
-
-    and copy netatalk/distrib/initscripts/rc.atalk.bsd to /etc/rc.atalk.
+As of NetBSD 9.3, the netatalk kernel module is loaded by default,
+and made available to the atalkd deamon when it starts up.
 
 B.II Other BSDs
 
-1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
-    FreeBSD 2.2-current dated after 12 September 1996.
+Kernel support for AppleTalk appears in FreeBSD 2.2-current
+dated after 12 September 1996, as well as OpenBSD 2.2,
+or openbsd-current dated after Aug 1, 1997.
 
-    Add the line
-
-        options NETATALK
-
-    to the config file for your kernel.  Rebuild and install your
-    kernel.  Reboot.
+However, both distributions deprecated AppleTalk in the 2010s.
+You can still run netatalk as an AFP over TCP server on any
+BSD derived operating system.
 
 ----------------------------------------------------------------
 
 C. Generic
 
-(It's unknown how applicable this is compared to the current codebase)
+If you would like AppleTalk support on another operating system,
+you will need either need a kernel module for your operating system,
+or a userland AppleTalk stack.
 
-    The generic system profile is for use on systems that don't have native
-    appletalk support. For those systems, it should still be possible to get
-    the AFP/tcp portion of netatalk to still work.
-    
-    To do that, you will need the following information:
+Look at the Solaris STREAMS module if your operating system supports
+that framework. Otherwise, look at the ddp code in NetBSD
+if your operating system is BSDish in nature.
 
-        1) Endian order: If your machine does not specify the
-  	   byte-order in netinet/in.h, you may need to modify
-  	   netatalk/endian.h.
-
-        2) Integer sizes: If your machine does not define intX_t and
-	   u_intX_t, you will need to define them in
-	   netatalk/endian.h. To ease matters, you can specify
-	   _ISOC9X_SOURCE if you have inttypes.h, HAVE_64BIT_LONGS for
-	   64 bit machines, or HAVE_32BIT_LONGS for 32 bit
-	   machines. NOTE: you should only use HAVE_32/64BIT_LONGS on
-	   machines that don't have a header file somewhere with the
-	   integer sizes. If you have a file with all the relevant
-	   bits, modify netatalk/endian.h to include it.
-
-	3) Quota/statfs information: You may be able to get away with
-	   either BSD4_4 or __svr4__, but that's unlikely if your os
-	   is some bizarre hybrid. If you don't have quota support,
-	   just specify NO_QUOTA_SUPPORT. In addition, if you'll need
-	   to specify the include file that gets statfs() (usually
-	   either USE_VFS_H or USE_STATFS_H although BSD4_4 and
-	   __svr4__ bring in a set of include files for that). Look at
-	   etc/afpd/quota.c, unix.c, and unix.h for more information.
-	   Finally, if you have a really old version of rquota, you
-       	   can define USE_OLD_RQUOTA as well.
-
-	4) path information for lock/spool/printer files. you'll need
-           to specify -D_PATH_LOCKDIR if include/atalk/paths.h doesn't
-           have the correct paths specified for printer info and lock
-           files. 
-
-    Beyond that, you should make sure that your operating system looks and
-    smells like a Un*x POSIXy operating system. If your operating system
-    is peculiar, you may need to add in compatibility routines
-    (libatalk/compat, include/atalk/compat.h) to make it look more
-    like the others.
-    
-    If you would like native AppleTalk support, you will need kernel support 
-    for your operating system. Look at the Solaris STREAMS module if your
-    operating system supports that framework. Otherwise, look at the ddp
-    code in NetBSD if your operating system is BSDish in nature.
-    If your operating system looks different than these two cases,
-    you'll have to roll your own implementation.
+If your operating system looks different than these two cases,
+you'll have to roll your own implementation.
