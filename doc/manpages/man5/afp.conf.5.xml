@@ -1020,11 +1020,21 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Specifies the icon model that appears on clients. Defaults
-            to off. Note that netatalk must support Zeroconf.
-            Examples: RackMac (same as Xserve), PowerBook, PowerMac,
-            Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro,
-            AppleTV1,1, AirPort.</para>
+            <para>Specifies a custom icon for the mounted AFP volume
+            on macOS / Mac OS X clients. Default is to let macOS choose.
+            Requires netatalk to be built with Zeroconf.
+            Examples:</para>
+
+            <itemizedlist>
+              <listitem><para><option>Laptop</option></para></listitem>
+              <listitem><para><option>RackMount</option></para></listitem>
+              <listitem><para><option>Tower</option></para></listitem>
+            </itemizedlist>
+
+            <para>A complete set of supported model codes by a macOS client
+            can be found by inspecting
+            <filename>/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist
+            </filename> (as of macOS 14 Sonoma).</para>
           </listitem>
         </varlistentry>
 
