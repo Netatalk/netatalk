@@ -286,7 +286,7 @@ static void guess_interface(DSI *dsi, const char *hostname, const char *port)
         goto iflist_done;
     }
 
-    LOG(log_note, logtype_dsi, "dsi_tcp: couldn't find network interface with IP address to advertice, "
+    LOG(log_note, logtype_dsi, "dsi_tcp: couldn't find network interface with IP address to advertise, "
         "check to make sure \"%s\" is in /etc/hosts or can be resolved with DNS, or "
         "add a netinterface that is not a loopback or point-2-point type", hostname);
 
