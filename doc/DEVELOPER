@@ -2,14 +2,15 @@ Information for Netatalk Developers
 ===================================
 
 For basic installation instructions, see the Installation chapter
-in the manual.
+in the manual, and the INSTALL file in the root of the source tree.
 
 Netatalk is an implementation of AFP, with built in support for
 AFP over TCP (also known as AppleShare IP, or ASIP for short.)
-Netatalk also supports the AppleTalk Protocol Suite for legacy Macs
-and Apple IIs via the "atalkd" daemon.
-The current release contains support for EtherTalk Phase I and II, 
-DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, AFP and DSI.
+Netatalk also supports the AppleTalk Protocol Suite for legacy Macs,
+Lisas and Apple IIs via the "atalkd" daemon.
+
+It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
+PAP, and ASP, while expecting the kernel to supply DDP.
 The complete stack looks like this on a BSD-derived system:
 
     AFP                          AFP
@@ -29,7 +30,8 @@ The complete stack looks like this on a BSD-derived system:
     +---------------------------------------------------+
 
 * DSI is a session layer used to carry AFP over TCP.
-* DDP is in the kernel, presently.
+* DDP is a socket to socket protocol that all other AppleTalk protocols
+  are built on top of.
 * "atalkd" implements RTMP, NBP, ZIP, and AEP.  It
   is the AppleTalk equivalent of Unix "routed".  There is also a
   client-stub library for NBP that exists as a client-stub library.
@@ -43,108 +45,9 @@ The complete stack looks like this on a BSD-derived system:
   Refer to the appropriate man pages for operational information.
 
 
-Compilation
-===========
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, a file
-`config.cache' that saves the results of its tests to speed up
-reconfiguring, and a file `config.log' containing compiler output
-(useful mainly for debugging `configure').
-
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If at some point `config.cache'
-contains results you don't want to keep, you may remove or edit it.
-
-   The file `bootstrap' is used to create `configure' by a program
-called `autoconf'.  You only need `bootstrap' if you want to change
-it or regenerate `configure' using a newer version of `autoconf'.
-
-
-Tools for Developers
-====================
-1. Libtool
-Libtool encapsulates the platform specific dependencies for the
-creation of libraries. It determines if the local platform can support
-shared libraries or if it only supports static libraries.
-
-Netatalk currently requires libtool 1.4 or higher (1.4b for OpenBSD).
-
-Documentation: http://www.gnu.org/software/libtool/
-
-2. GNU m4
-GNU m4 is an implementation of the Unix macro processor. It reads
-stdin and copies to stdout expanding defined macros as it processes
-the text.
-
-Documentation: http://www.gnu.org/software/m4/
-
-3. Autoconf
-Autoconf is a package of m4 macros that produce shell scripts to
-configure source code packages.
-
-Documentation: http://www.gnu.org/software/autoconf/
-
-4. Automake
-Automake is a tool that generates  'Makefile.in' files.
-
-Documentation: http://www.gnu.org/software/automake/
-
-Optional
-========
-5. OpenSSL and/or Libgcrypt
-The OpenSSL Project is a collaborative effort to develop a robust,
-commercial-grade, full-featured, and Open Source toolkit implementing
-the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
-v1) protocols as well as a full-strength general purpose cryptography
-library.
-This is required to enable DHX login support.
-Note that OpenSSL 3.0 or later are no longer compatible with DHX.
-
-Get everything at http://www.openssl.org/ 
-
-The Libgcrypt is a general purpose cryptographic library based on
-the code from GnuPG.
-This is required to enable DHX2 login support.
-
-Get everything at https://gnupg.org/software/libgcrypt/
-
-6. TCP Wrappers
-Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
-programs log the client host name of incoming telnet, ftp, rsh,
-rlogin, finger etc. requests. Security options are: access control per
-host, domain and/or service; detection of host name spoofing or host
-address spoofing; booby traps to implement an early-warning system.
-Netatalk uses TCP Wrappers to authorize host access when using
-afpovertcp. It should be noted that if DDP is in use, the connection
-will still be allowed as TCP Wrappers do not impact DDP connections.
-
-7. PAM (Pluggable Authentication Modules) 
-PAM provides a flexible mechanism for authenticating
-users. PAM was invented by SUN Microsystems.
-
-Author: Andrew Morgan <morgan@linux.kernel.org>
-
-Linux-PAM is a suite of shared libraries that enable the local system
-administrator to choose how applications authenticate users.
-You can get the Linux PAM documentation and sources from
-http://www.kernel.org/pub/linux/libs/pam/
-Netatalk also supports other standard PAM implementations such as OpenPAM.
-
-8. Berkeley DB
-Berkeley DB is a programmatic toolkit that provides fast, reliable,
-scalable, and mission-critical database support to software
-developers.
-Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.6 and later; 5.3 is recommended.
-
 Error checking and logging
 ==========================
+
 We want rigid error checking and concise log messages. This often leads
 to significant code bloat where the relevant function call is buried in error
 checking and logging statements.
@@ -210,3 +113,53 @@ int func(void)
 EC_CLEANUP:
     EC_EXIT;
 }
+
+
+Porting to new platforms
+========================
+
+To port netatalk to a new platform, you will need to consider the following:
+
+1) Endian order
+
+If your machine does not specify the byte-order in netinet/in.h,
+you may need to modify sys/netatalk/endian.h.
+
+2) Integer sizes
+
+If your machine does not define intX_t and u_intX_t,
+you will need to define them in sys/netatalk/endian.h.
+To ease matters, you can specify _ISOC9X_SOURCE
+if you have inttypes.h, HAVE_64BIT_LONGS for 64 bit machines,
+or HAVE_32BIT_LONGS for 32 bit machines.
+
+NOTE: you should only use HAVE_32/64BIT_LONGS
+on machines that don't have a header file somewhere
+with the integer sizes. If you have a file with all the relevant
+bits, modify sys/netatalk/endian.h to include it.
+
+3) Quota/statfs information
+
+You may be able to get away with either BSD4_4 or __svr4__,
+but that's unlikely if your OS is some bizarre hybrid.
+If you don't have quota support, just specify NO_QUOTA_SUPPORT.
+
+In addition, if you'll need to specify the include file
+that gets statfs() (usually either USE_VFS_H or USE_STATFS_H,
+although BSD4_4 and __svr4__ bring in a set of include files
+for that). Look at etc/afpd/quota.c, unix.c, and unix.h
+for more information.
+
+Finally, if you have a really old version of rquota,
+you can define USE_OLD_RQUOTA as well.
+
+4) Path information for lock/spool/printer files
+
+You'll need to specify -D_PATH_LOCKDIR if include/atalk/paths.h
+doesn't have the correct paths specified for printer info and lock files.
+
+Beyond that, you should make sure that your operating system looks and
+smells like a Un*x POSIXy operating system. If your operating system
+is peculiar, you may need to add in compatibility routines
+(libatalk/compat, include/atalk/compat.h) to make it look more
+like the others.
