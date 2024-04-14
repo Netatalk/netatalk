@@ -1,10 +1,11 @@
 Information for Netatalk Developers
 ===================================
 
-For basic installation instructions, see the html manual published on
-https://netatalk.io
+For basic installation instructions, see the Installation chapter
+in the html manual published on https://netatalk.io
+and the INSTALL file in the root of the source tree.
 
-Netatalk is an implementation of "AFP over TCP".
+Netatalk is an implementation of Apple Filing Protocol (AFP) over TCP.
 DSI is a session layer used to carry AFP over TCP.
 The complete stack looks like this:
 
@@ -24,113 +25,10 @@ The complete stack looks like this:
     |     Network-Interface     |
     +---------------------------+
 
-Compilation
-===========
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, a file
-`config.cache' that saves the results of its tests to speed up
-reconfiguring, and a file `config.log' containing compiler output
-(useful mainly for debugging `configure').
-
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If at some point `config.cache'
-contains results you don't want to keep, you may remove or edit it.
-
-   The file `configure.ac' is used to create `configure' by a program
-called `autoconf'.  You only need `configure.ac' if you want to change
-it or regenerate `configure' using a newer version of `autoconf'.
-
-
-Tools for Developers
-====================
-1. Libtool
-Libtool encapsulates the platform specific dependencies for the
-creation of libraries. It determines if the local platform can support
-shared libraries or if it only supports static libraries.
-
-Documentation: http://www.gnu.org/software/libtool/
-
-2. GNU m4
-GNU m4 is an implementation of the Unix macro processor. It reads
-stdin and copies to stdout expanding defined macros as it processes
-the text.
-
-Documentation: http://www.gnu.org/software/m4/
-
-3. Autoconf
-Autoconf is a package of m4 macros that produce shell scripts to
-configure source code packages.
-
-Documentation: http://www.gnu.org/software/autoconf/
-
-4. Automake
-Automake is a tool that generates  'Makefile.in' files.
-
-Documentation: http://www.gnu.org/software/automake/
-
-Required
-========
-5. Berkeley DB
-Berkeley DB is a programmatic toolkit that provides fast, reliable,
-scalable, and mission-critical database support to software
-developers. BDB can downloaded from
-https://github.com/berkeleydb/libdb
-
-Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.6 and later.
-
-
-Optional
-========
-6. OpenSSL, LibreSSL and/or Libgcrypt
-The OpenSSL Project is a collaborative effort to develop a robust,
-commercial-grade, full-featured, and Open Source toolkit implementing
-the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
-v1) protocols as well as a full-strength general purpose cryptography
-library.
-LibreSSL is a version of the TLS/crypto stack forked from OpenSSL.
-This is required to enable DHX login support.
-
-Get everything at http://www.openssl.org/ or http://www.libressl.org/
-
-The Libgcrypt is a general purpose cryptographic library based on
-the code from GnuPG.
-This is required to enable DHX2 login support.
-
-Get everything at https://gnupg.org/software/libgcrypt/
-
-7. TCP Wrappers
-Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
-programs log the client host name of incoming telnet, ftp, rsh,
-rlogin, finger etc. requests. Security options are: access control per
-host, domain and/or service; detection of host name spoofing or host
-address spoofing; booby traps to implement an early-warning system.
-TCP Wrappers can be gotten at http://ftp.porcupine.org/pub/security/
-Netatalk uses TCP Wrappers to authorize host access when using
-afpovertcp. It should be noted that if DDP is in use, the connection
-will still be allowed as TCP Wrappers do not impact DDP connections.
-
-8. PAM (Pluggable Authentication Modules)
-PAM provides a flexible mechanism for authenticating
-users. PAM was invented by SUN Microsystems.
-
-Author: Andrew Morgan <morgan@linux.kernel.org>
-
-Linux-PAM is a suite of shared libraries that enable the local system
-administrator to choose how applications authenticate users.
-You can get the Linux PAM documentation and sources from
-https://github.com/linux-pam/linux-pam
-
-Netatalk also supports other standard PAM implementations such as OpenPAM.
 
 Error checking and logging
 ==========================
+
 We want rigid error checking and concise log messages. This often leads
 to signifant code bloat where the relevant function call is buried in error
 checking and logging statements.
@@ -291,35 +189,3 @@ filenames for the usock_file parameter.
 
 - There is no protection against a malicious user connecting to the
 cnid_dbd socket and changing the database.
-
-Documentation
-=============
-Netatalk documentation is in Docbook XML format. In order to build manpages
-and the html documentation from the Docbook docs you need the following:
-
-1. Install `xsltproc` and `docbook-xsl` via your operating system's package manager
-
-2. If your operating system does not distribute docbook-xsl,
-   get the latest Docbook XSL stylesheet distribution from:
-   https://sourceforge.net/projects/docbook/files/docbook-xsl/
-   The last tested docbook-xsl stylesheet version is 1.79.1.
-
-3. Add the following argument to configure
-   --with-docbook=ABSOLUTE_PATH_TO_XML_STYLESHEET_DIR
-
-4. The manpages and html documentation are now automatically built when running `make html`.
-
-Editing Docbook Sources
------------------------
-Free WYSIWYG editor with only one minor drawback is XMLEditor from XMLmind:
-http://www.xmlmind.com/xmleditor/persoedition.html
-
-Drawback: in order to be able to edit any of the  nested xml files, you have to
-"promote" them to valid Docbook files by referencing the Docbook DTD, insert as line 2+3:
-	
-	<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-	"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
-
-These changes will however prevent XMLeditor from opening the master xml file
-manual.xml. Before further processing can be done these changes then have to be
-reverted for any changed file.
