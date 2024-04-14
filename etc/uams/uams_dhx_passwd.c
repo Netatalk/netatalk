@@ -27,17 +27,19 @@
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
-#if defined(GNUTLS_DHX)
-#include <gnutls/openssl.h>
+
+#if defined(WOLFSSL_DHX)
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/bn.h>
+#include <wolfssl/openssl/dh.h>
+#include <wolfssl/openssl/err.h>
+#include <wolfssl/openssl/ssl.h>
+#include <atalk/cast.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
-#else /* OPENSSL_DHX */
-#include <bn.h>
-#include <dh.h>
-#include <cast.h>
-#endif /* OPENSSL_DHX */
+#endif /* WOLFSSL_DHX */
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>
