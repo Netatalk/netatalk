@@ -1,5 +1,3 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
-
 /* Define if building universal (internal helper macro) */
 #mesondefine AC_APPLE_UNIVERSAL_BUILD
 
@@ -645,6 +643,9 @@
 
 /* Define whether to enable Spotlight support */
 #mesondefine WITH_SPOTLIGHT
+
+/* Define if the WolfSSL DHX modules should be built */
+#mesondefine WOLFSSL_DHX
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
