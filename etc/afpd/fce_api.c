@@ -581,7 +581,11 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 
     switch (event) {
     case FCE_FILE_MODIFY:
-        save_close_event(obj, path);
+        if (obj->options.fce_fmodwait != 0){
+            save_close_event(obj, path);
+        } else {
+            send_fce_event(obj, event, path, oldpath);
+        }
         break;
     default:
         send_fce_event(obj, event, path, oldpath);
