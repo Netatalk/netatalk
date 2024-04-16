@@ -1699,6 +1699,8 @@ sed_command = [
     '-e',
     's@:BINDIR:@' + bindir + '@',
     '-e',
+    's@:LOCALSTATEDIR:@' + localstatedir + '@',
+    '-e',
     's@:ETCDIR:@' + pkgconfdir + '@',
     '-e',
     's@:SBINDIR:@' + sbindir + '@',
