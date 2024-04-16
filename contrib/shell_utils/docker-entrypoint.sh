@@ -72,7 +72,7 @@ fi
 
 if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
-    cat <<EOF > /usr/etc/afp.conf
+    cat <<EOF > /usr/local/etc/afp.conf
 [Global]
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
