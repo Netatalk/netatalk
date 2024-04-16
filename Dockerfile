@@ -6,32 +6,40 @@ ENV LIB_DEPS \
     libevent-2.1-7 \
     libgcrypt20 \
     libglib2.0-0 \
+    libldap-2.5-0 \
+    libmariadb3 \
     libpam0g \
     libssl3 \
     libtalloc2 \
     libtracker-sparql-3.0-0 \
+    libwrap0 \
     systemtap \
     tracker
 ENV BUILD_DEPS \
     bison \
     build-essential \
+    default-libmysqlclient-dev \
     file \
     flex \
+    libacl1-dev \
+    libattr1-dev \
     libavahi-client-dev \
+    libcrack2-dev \
     libcups2-dev \
     libdb5.3-dev \
     libevent-dev \
     libgcrypt20-dev \
     libglib2.0-dev \
+    libldap2-dev \
     libltdl-dev \
     libpam0g-dev \
     libssl-dev \
     libtalloc-dev \
     libtracker-sparql-3.0-dev \
+    libwrap0-dev \
     meson \
     ninja-build \
     pkg-config \
-    python3-pip \
     systemtap-sdt-dev
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
@@ -39,14 +47,19 @@ RUN apt-get update && \
     $LIB_DEPS \
     $BUILD_DEPS
 
-
 RUN useradd builder
 WORKDIR /netatalk-code
 COPY . .
-RUN chown -R builder:builder .
+RUN chown -R builder:builder . && rm -rf build || true
 USER builder
 
-RUN meson setup build -Dbuild-manual=false
+RUN meson setup build \
+    -Dbuild-manual=false \
+    -Dpkg_config_path=/usr/lib/pkgconfig \
+    -Dwith-afpstats=disabled \
+    -Dwith-bdb=/usr \
+    -Dwith-dtrace=false \
+    -Dwith-init-style=none
 RUN ninja -C build
 
 USER root
