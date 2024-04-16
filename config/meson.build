@@ -1,25 +1,28 @@
-conf_templates = ['afp.conf', 'dbus-session.conf']
-conf_files = []
-foreach template : conf_templates
-    conf_files += configure_file(
-        input: template + '.tmpl',
-        output: template,
-        configuration: cdata,
-    )
-endforeach
+afp_conf = configure_file(
+    input: 'afp.conf.tmpl',
+    output: 'afp.conf',
+    configuration: cdata,
+)
 
-installed_files = [pkgconfdir / 'afp.conf', pkgconfdir / 'dbus-session.conf']
-foreach file : installed_files
-    if (
-        not fs.exists(file)
-        or (get_option('enable-overwrite')
-        and fs.exists(file))
-    )
-        install_data(conf_files, install_dir: pkgconfdir)
-    else
-        message('not overwriting', file)
-    endif
-endforeach
+custom_target(
+    'dbus_session',
+    input: 'dbus-session.conf.tmpl',
+    output: 'dbus-session.conf',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: pkgconfdir,
+)
+
+if (
+    not fs.exists(pkgconfdir / 'afp.conf')
+    or (get_option('enable-overwrite')
+    and fs.exists(pkgconfdir / 'afp.conf'))
+)
+    install_data(afp_conf, install_dir: pkgconfdir)
+else
+    message('not overwriting', 'afp.conf')
+endif
 
 install_data('extmap.conf', install_dir: pkgconfdir)
 
