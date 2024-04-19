@@ -3,86 +3,32 @@
   <title>Installation</title>
 
   <warning>
-    <para>Netatalk 3 cannot coexist with earlier versions of Netatalk.
-    See the <link linkend="upgrade">upgrading</link> article on how to
-    convert a Netatalk 2 installation to Netatalk 3 format.</para>
+    <para>Netatalk 3 cannot coexist with earlier versions of Netatalk. See the
+    <link linkend="upgrade">upgrading</link> chapter in this manual if you
+    want to migrate a Netatalk 2 installation to Netatalk 3.</para>
   </warning>
 
   <sect1>
     <title>How to obtain Netatalk</title>
 
-    <para>Please have a look at the Netatalk page on GitHub for the most
-    recent information on this matter.</para>
-
-    <para><ulink
-    url="https://github.com/Netatalk/netatalk">https://github.com/Netatalk/netatalk</ulink></para>
+    <para>Please have a look at the <ulink url="https://netatalk.io">Netatalk
+    homepage</ulink> for the most up to date information on where to find the
+    latest version of the software.</para>
 
     <sect2>
       <title>Binary packages</title>
 
-      <para>Binary packages of Netatalk are included in some Linux and UNIX
-      distributions. You might want to have a look at the usual locations,
-      too.</para>
+      <para>Binary packages of Netatalk are included in the package
+      repositories of some Linux and BSD distributions. Installing Netatalk
+      through this channel will give you the most seamless experience, with
+      managed updates when new package versions are available.</para>
 
-      <para>Ubuntu packages: <ulink
-      url="https://launchpad.net/ubuntu">https://launchpad.net/ubuntu
-      </ulink></para>
-
-      <para>Debian packages: <ulink
-      url="https://www.debian.org/distrib/packages">https://www.debian.org/
-      </ulink></para>
-
-      <para>various RPM packages: <ulink
-      url="http://rpmfind.net/">http://rpmfind.net/</ulink></para>
-
-      <para>Fedora/RHEL packages: <ulink
-      url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
-      </ulink></para>
-
-      <para>Gentoo packages: <ulink
-      url="http://packages.gentoo.org/">http://packages.gentoo.org/
-      </ulink></para>
-
-      <para>openSUSE packages: <ulink
-      url="http://software.opensuse.org/">http://software.opensuse.org/
-      </ulink></para>
-
-      <para>Solaris packages: <ulink
-      url="http://www.opencsw.org/packages/CSWnetatalk/">http://www.opencsw.org/</ulink></para>
-
-      <para>FreeBSD ports: <ulink
-      url="http://www.freebsd.org/ports/index.html">http://www.freebsd.org/ports/index.html
-      </ulink></para>
-
-      <para>NetBSD pkgsrc: <ulink
-      url="http://pkgsrc.se/search.php">http://pkgsrc.se/search.php
-      </ulink></para>
-
-      <para>OpenBSD ports:<ulink
-      url="https://openports.pl">https://openports.pl
-      </ulink></para>
-
-      <para>macOS Homebrew:<ulink
-      url="https://brew.sh/">https://brew.sh/
-      </ulink></para>
-
-      <para>macOS MacPorts:<ulink
-      url="https://ports.macports.org/">https://ports.macports.org/
-      </ulink></para>
-
-      <para>etc.<indexterm>
-          <primary>RPM</primary>
-
-          <secondary>Red Hat Package Manager package</secondary>
-        </indexterm><indexterm>
-          <primary>Deb</primary>
-
-          <secondary>Debian package</secondary>
-        </indexterm><indexterm>
-          <primary>Ports</primary>
-
-          <secondary>FreeBSD port</secondary>
-        </indexterm></para>
+      <para>You might also want to have a look at 3rd party package
+      repositories for your operating system, such as <ulink
+      url="https://www.opencsw.org/">OpenCSW</ulink> for Solaris and its
+      descendants, and <ulink url="https://brew.sh/">Homebrew</ulink> or
+      <ulink url="https://www.macports.org/">MacPorts</ulink> for
+      macOS.</para>
     </sect2>
 
     <sect2>
@@ -91,9 +37,10 @@
       <sect3>
         <title>Tarballs</title>
 
-        <para>Prepackaged tarballs in .tar.xz and .tar.bz2 format are available
-        on the Netatalk page on <ulink
-        url="https://github.com/Netatalk/netatalk">GitHub</ulink>.</para>
+        <para>Prepackaged tarballs in .tar.xz and .tar.bz2 format containing
+        the netatalk source code are available on the <ulink
+        url="https://github.com/Netatalk/netatalk">Netatalk project page on
+        GitHub</ulink>.</para>
       </sect3>
 
       <sect3>
@@ -123,14 +70,15 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>This will create a local directory called
             <filename>netatalk-code</filename> containing a complete and fresh
-            copy of the whole Netatalk source tree from the Git repository.</para>
+            copy of the whole Netatalk source tree from the Git
+            repository.</para>
           </listitem>
 
           <listitem>
-            <para>If you don't specify a branch or tag,
-            you will get the bleeding edge development code.
-            In order to get the latest stable Netatalk 3.1 code, for instance,
-            check out the branch named "branch-netatalk-3-1":</para>
+            <para>If you don't specify a branch or tag, you will get the
+            bleeding edge development code. In order to get the latest stable
+            Netatalk 3.1 code, for instance, check out the branch named
+            "branch-netatalk-3-1":</para>
 
             <screen><prompt>$</prompt> <userinput>git checkout branch-netatalk-3-1</userinput></screen>
           </listitem>
@@ -159,22 +107,40 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Berkeley DB<indexterm>
                 <primary>BDB</primary>
+
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
-            <para>At the time of writing you need at least version 4.6.</para>
 
-            <para>The recommended version is 5.3, which was the final release
-            under the permissive Sleepycat license,
-	    which means that this is what most FLOSS operating systems
-	    are defaulting to.</para>
+            <para>The default dbd CNID backend for netatalk uses Berkeley DB
+            to store unique file identifiers. At the time of writing you need
+            at least version 4.6.</para>
+
+            <para>The recommended version is 5.3, the final release under the
+            permissive Sleepycat license, and therefore the most widely
+            available edition.</para>
           </listitem>
 
           <listitem>
             <para>Libgcrypt</para>
 
             <para>The <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
-	    Libgcrypt</ulink> library enables the DHX2 UAM,
-	    which is required to authenticate with OS X 10.7 and later.</para>
+            Libgcrypt</ulink> library enables the DHX2 UAM, which is required
+            to authenticate with OS X 10.7 and later.</para>
+          </listitem>
+
+          <listitem>
+            <para>libevent</para>
+
+            <para>Internal event callbacks in the netatalk service controller
+            daemon are built on libevent version 2.</para>
+          </listitem>
+
+          <listitem>
+            <para>Perl</para>
+
+            <para>Administrative utilities such as
+            <userinput>asip-status</userinput> and
+            <userinput>macusers</userinput> rely on the Perl runtime.</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -189,9 +155,10 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>OpenSSL</para>
 
-            <para>OpenSSL 1.x or LibreSSL is needed for the older DHCAST128 (a.k.a.
-            DHX) UAM, which provides the strongest password encryption for
-            Classic Mac OS.</para>
+            <para>OpenSSL 1.x or LibreSSL is needed for the older DHCAST128
+            (a.k.a. DHX) UAM, which provides the strongest password encryption
+            for Classic Mac OS. The older Random Number UAMs uses this
+            library, too.</para>
           </listitem>
 
           <listitem>
@@ -200,19 +167,22 @@ Resolving deltas: 100% (32227/32227), done.
               </indexterm> support</para>
 
             <para>Netatalk uses <ulink
-            url="https://tracker.gnome.org">Tracker</ulink> as the
-            metadata backend. The minimum required version is 0.7 as that's the
-            first version to support <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/">
-            SPARQL</ulink>.</para>
+            url="https://tracker.gnome.org">Tracker</ulink> as the metadata
+            backend. The minimum required version is 0.7 as this was the first
+            version to support <ulink
+            url="https://gnome.pages.gitlab.gnome.org/tracker/">SPARQL</ulink>.</para>
+
+            <para>Samba's talloc library, a Yacc parser such as bison, and a
+            lexer like flex are also required for Spotlight.</para>
           </listitem>
 
           <listitem>
             <para>mDNSresponder or Avahi for Bonjour</para>
 
-            <para>Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf)
-            for automatic service discovery.
-            Netatalk can advertise AFP file sharing and Time Machine volumes
-            by using Avahi or mDNSResponder.</para>
+            <para>Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for
+            automatic service discovery. Netatalk can advertise AFP file
+            sharing and Time Machine volumes by using Avahi or
+            mDNSResponder.</para>
 
             <para>The Avahi library itself must be built with DBUS support (
             <userinput>--enable-dbus</userinput>).</para>
@@ -247,6 +217,43 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
+            <para>Kerberos V</para>
+
+            <para>Kerberos v5 is a client-server based authentication protocol
+            invented at the Massachusetts Institute of Technology. With the
+            Kerberos library, netatalk can produce the GSS UAM library for
+            authentication with existing Kerberos infrastructure.</para>
+          </listitem>
+
+          <listitem>
+            <para>ACL and LDAP</para>
+
+            <para>LDAP is an open and industry-standard user directory
+            protocol that works in tandem with the advanced permissions scheme
+            of ACL. On some operating systems ACL and LDAP libraries are built
+            in to the system, while on others you have to install supporting
+            packages to enable this functionality.</para>
+          </listitem>
+
+          <listitem>
+            <para>MySQL</para>
+
+            <para>By leveraging a MySQL-compatible client library, netatalk
+            can be built with a MySQL CNID backend that is highly scalable and
+            reliable. The administrator has to provide a separate database
+            instance for use with this backend.</para>
+          </listitem>
+
+          <listitem>
+            <para>D-Bus and GLib bindings</para>
+
+            <para>Used by the <userinput>afpstats</userinput> tool to inquire
+            afpd about file server usage statistics.
+            <userinput>afpstats</userinput> itself also requires Python
+            3.</para>
+          </listitem>
+
+          <listitem>
             <para>iconv</para>
 
             <para>iconv provides conversion routines for many character
@@ -255,23 +262,93 @@ Resolving deltas: 100% (32227/32227), done.
             Netatalk can use the glibc provided iconv implementation.
             Otherwise you can use the GNU libiconv implementation.</para>
           </listitem>
+
+          <listitem>
+            <para>CrackLib</para>
+
+            <para>When using the Random Number UAMs and netatalk's own
+            <userinput>afppasswd</userinput> password manager, CrackLib can
+            help protect against setting weak passwords for authentication
+            with netatalk.</para>
+          </listitem>
+
+          <listitem>
+            <para>DocBook and xsltproc</para>
+
+            <para>The netatalk documentation (such as this manual) are
+            authored in XML format, and then styled with DocBook XSL
+            stylesheets. We rely on xsltproc to transcode the XML to other
+            human-readable formats.</para>
+          </listitem>
         </itemizedlist>
       </sect3>
     </sect2>
 
     <sect2 id="compiling-netatalk">
-      <title>Configure and Build<indexterm>
+      <title>Configure and build<indexterm>
           <primary>Compile</primary>
 
           <secondary>Compiling Netatalk from Source</secondary>
         </indexterm> Netatalk</title>
 
-      <para>Instructions on how to use the build system are documented in the
-      <ulink url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">
-	    INSTALL</ulink> file in the Netatalk source tree.</para>
+      <para>Instructions on how to use the build system to configure and build
+      netatalk source code are documented in the <ulink
+      url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
+      file in the Netatalk source tree.</para>
 
-      <para>For examples of concrete steps to compile on specific operating systems, refer to the
-      <link linkend="compile">Compile Netatalk from Source</link> appendix.</para>
+      <para>For examples of concrete steps to compile on specific operating
+      systems, refer to the <link linkend="compile">Compile Netatalk from
+      Source</link> appendix in this manual, which is automatically generated
+      from the CI build scripts.</para>
     </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Starting and stopping Netatalk</title>
+
+    <para>The Netatalk distribution comes with several operating system
+    specific startup script templates that are tailored according to the
+    options given to the build system before compiling. Currently, templates
+    are provided for popular Linux distributions, BSD variants, Solaris
+    descendants, and macOS.</para>
+
+    <para>When building from source, you can configure the build system to
+    install the generated startup script(s) <indexterm>
+        <primary>Startscript</primary>
+
+        <secondary>startup script</secondary>
+      </indexterm> you want by specifying an <option>init-style</option>
+    option. For the specific syntax, please refer to the build system's help
+    text.</para>
+
+    <para>Since new releases of Linux distributions appear all the time and
+    the startup procedure for the other systems mentioned above might change
+    as well, it is probably a good idea to not blindly install a startup
+    script but to confirm first that it will work on your system.</para>
+
+    <para>If you use Netatalk as part of a fixed setup, like a Linux
+    distribution, an RPM or a BSD package, things will probably have been
+    arranged properly for you. The previous paragraphs therefore apply mostly
+    for people who have compiled Netatalk themselves.</para>
+
+    <para>The following daemon need to be started by whatever startup script
+    mechanism is used:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>netatalk<indexterm>
+            <primary>netatalk</primary>
+          </indexterm></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>In the absence of a startup script, you can also launch this daemon
+    directly (as root), and kill it with SIGTERM when you are done with
+    it.</para>
+
+    <para>Additionally, make sure that the configuration file
+    <filename>afp.conf</filename> is in the right place. You can inquire
+    netatalk where it is expecting the file to be by running the
+    <userinput>netatalk -V</userinput> command.</para>
   </sect1>
 </chapter>
