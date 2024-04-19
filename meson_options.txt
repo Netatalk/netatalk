@@ -177,6 +177,12 @@ option(
     description: 'Use OS specific init config',
 )
 option(
+    'disable-init-hooks',
+    type: 'boolean',
+    value: 'false',
+    description: 'Disable install hooks for OS specific init system',
+)
+option(
     'with-kerberos',
     type: 'feature',
     value: 'auto',
