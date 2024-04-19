@@ -12,11 +12,13 @@ elif get_option('with-init-style') == 'redhat-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    meson.add_install_script(
-        find_program('chkconfig'),
-        '--add',
-        '/etc/rc.d/init.d/netatalk',
-    )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(
+            find_program('chkconfig'),
+            '--add',
+            '/etc/rc.d/init.d/netatalk',
+        )
+    endif
 elif (
     get_option('with-init-style') == 'gentoo-systemd'
     or get_option('with-init-style') == 'systemd'
@@ -33,7 +35,9 @@ elif (
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+    endif
 elif get_option('with-init-style') == 'debian-systemd'
     init_dir += '/lib/systemd/system'
     custom_target(
@@ -45,7 +49,9 @@ elif get_option('with-init-style') == 'debian-systemd'
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+    endif
 elif get_option('with-init-style') == 'suse-sysv'
     init_dir += '/etc/init.d'
     custom_target(
@@ -58,7 +64,9 @@ elif get_option('with-init-style') == 'suse-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+    endif
 elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
     custom_target(
@@ -82,11 +90,13 @@ elif get_option('with-init-style') == 'solaris'
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(
-        find_program('svccfg'),
-        'import',
-        '/lib/svc/manifest/network/netatalk.xml',
-    )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(
+            find_program('svccfg'),
+            'import',
+            '/lib/svc/manifest/network/netatalk.xml',
+        )
+    endif
 elif (
     get_option('with-init-style') == 'openrc'
     or get_option('with-init-style') == 'gentoo-openrc'
@@ -102,6 +112,14 @@ elif (
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(
+            find_program('rc-update'),
+            'add',
+            'netatalk',
+            'default',
+        )
+    endif
 elif get_option('with-init-style') == 'debian-sysv'
     init_dir += '/etc/init.d'
     custom_target(
@@ -114,6 +132,15 @@ elif get_option('with-init-style') == 'debian-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(
+            find_program('update-rc.d'),
+            'netatalk',
+            'defaults',
+            '90',
+            '10',
+        )
+    endif
 elif get_option('with-init-style') == 'macos-launchd'
     init_dir += '/Library/LaunchDaemons'
     custom_target(
@@ -135,7 +162,17 @@ elif get_option('with-init-style') == 'macos-launchd'
         install: true,
         install_dir: init_dir,
     )
-    if not fs.exists(init_dir / 'io.netatalk.daemon.plist')
+    if (
+        not fs.exists(init_dir / 'io.netatalk.daemon.plist')
+        and not get_option('disable-init-hooks')
+    )
+        if fs.exists(init_dir / 'com.netatalk.daemon.plist')
+            meson.add_install_script(
+                find_program('launchctl'),
+                'disable',
+                'system/com.netatalk.daemon',
+            )
+        endif
         meson.add_install_script(
             find_program('launchctl'),
             'load',

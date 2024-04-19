@@ -66,11 +66,15 @@ $(sysv_SCRIPTS): rc.redhat
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
+if USE_INIT_HOOKS
 	-chkconfig --add $(sysv_SCRIPTS)
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	-chkconfig --del $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -87,12 +91,16 @@ netatalk.service: service.systemd
 	cp -f service.systemd netatalk.service
 
 install-data-hook:
+if USE_INIT_HOOKS
 	-systemctl daemon-reload
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	-systemctl disable $(service_DATA)
 	rm -f $(DESTDIR)$(servicedir)/netatalk.service
 	-systemctl daemon-reload
+endif
 
 endif
 
@@ -109,12 +117,16 @@ netatalk.service: service.systemd
 	cp -f service.systemd netatalk.service
 
 install-data-hook:
+if USE_INIT_HOOKS
 	-systemctl daemon-reload
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	-systemctl disable $(service_DATA)
 	rm -f $(DESTDIR)$(servicedir)/netatalk.service
 	-systemctl daemon-reload
+endif
 
 endif
 
@@ -132,11 +144,15 @@ $(sysv_SCRIPTS): rc.suse
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
+if USE_INIT_HOOKS
 	-insserv $(sysv_SCRIPTS)
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	-insserv -d $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -171,10 +187,14 @@ servicedir = $(INIT_DIR)
 service_DATA = netatalk.xml
 
 install-data-hook:
+if USE_INIT_HOOKS
 	svccfg import netatalk.xml
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	svccfg delete network/netatalk
+endif
 
 endif
 
@@ -192,11 +212,15 @@ $(sysv_SCRIPTS): rc.gentoo
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-#	-rc-update add $(sysv_SCRIPTS) default
+if USE_INIT_HOOKS
+	-rc-update add $(sysv_SCRIPTS) default
+endif
 
 uninstall-startup:
-#	-rc-update del $(sysv_SCRIPTS) default
-#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+if USE_INIT_HOOKS
+	-rc-update del $(sysv_SCRIPTS) default
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -214,11 +238,15 @@ $(sysv_SCRIPTS): rc.debian
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-#	update-rc.d $(sysv_SCRIPTS) defaults 90 10
+if USE_INIT_HOOKS
+	update-rc.d $(sysv_SCRIPTS) defaults 90 10
+endif
 
 uninstall-startup:
-#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
-#	update-rc.d netatalk remove
+if USE_INIT_HOOKS
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+	update-rc.d netatalk remove
+endif
 
 endif
 
@@ -232,16 +260,20 @@ bin_SCRIPTS = netatalkd
 launchd_PLIST = io.netatalk.daemon.plist
 
 install-data-hook:
+if USE_INIT_HOOKS
 	(if [ ! -f $(INIT_DIR)/$(launchd_PLIST) ] ; then \
 		cp $(launchd_PLIST) $(INIT_DIR) && \
 		launchctl load -w $(INIT_DIR)/$(launchd_PLIST); \
 	fi)
+endif
 
 uninstall-startup:
+if USE_INIT_HOOKS
 	$(bin_SCRIPTS) stop
 	launchctl unload -w $(INIT_DIR)/$(launchd_PLIST)
 	rm -f $(DESTDIR)$(bindir)/$(bin_SCRIPTS)
 	rm -f $(INIT_DIR)/$(launchd_PLIST)
+endif
 
 endif
 

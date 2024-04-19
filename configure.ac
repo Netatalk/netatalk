@@ -133,6 +133,9 @@ AC_NETATALK_SHELL_CHECK
 dnl Check for optional sysv initscript install
 AC_NETATALK_INIT_STYLE
 
+dnl Check whether to run install hooks for initscripts
+AC_NETATALK_INIT_HOOK
+
 dnl Path where UAM modules shall be installed
 AC_ARG_WITH(uams-path, [  --with-uams-path=PATH   path to UAMs [[$libdir/netatalk]]], [uams_path="$withval"], [uams_path="$libdir/netatalk"])
 
@@ -220,6 +223,7 @@ AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$net
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
+AM_CONDITIONAL(USE_INIT_HOOKS, test x"$ac_neta_init_hooks" = x"yes")
 
 dnl Enable silent Automake rules if present
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])

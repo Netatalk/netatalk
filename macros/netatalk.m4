@@ -608,6 +608,21 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_SUBST(INIT_DIR, ["$ac_cv_init_dir"])
 ])
 
+dnl ----- skip init script hooks upon install/uninstall (e.g. for chroot or downstream packaging)
+AC_DEFUN([AC_NETATALK_INIT_HOOK], [
+	AC_MSG_CHECKING([whether to execute init script install hooks])
+	ac_neta_init_hooks=yes
+	AC_ARG_ENABLE(init-hooks,
+		[  --disable-init-hooks    skip privileged init script hooks on install/uninstall],[
+		if test x"$enableval" = x"no"; then
+			ac_neta_init_hooks=no
+			AC_MSG_RESULT([no])
+		fi],[
+			AC_MSG_RESULT([yes])
+		]
+	)
+])
+
 dnl OS specific configuration
 AC_DEFUN([AC_NETATALK_OS_SPECIFIC], [
 case "$host_os" in

@@ -69,11 +69,12 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
+            --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
             --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
-            --with-init-style=debian-sysv \
+            --with-init-style=debian-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Generate manual pages
         run: make html
@@ -90,7 +91,8 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Dbuild-manual=true \
-            -Dwith-init-style=debian-sysv
+            -Ddisable-init-hooks=true \
+            -Dwith-init-style=debian-systemd
       - name: Meson - Build and generate manual pages
         run: ninja -C build
       - name: Meson - Run tests
