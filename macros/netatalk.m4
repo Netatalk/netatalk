@@ -239,14 +239,14 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
 
     AC_PROG_LEX([noyywrap])
     if ! test -r "$srcdir"/etc/spotlight/spotlight_rawquery_lexer.c && test x"$LEX" = "x:"; then
-        AC_MSG_ERROR([[flex/lex not found, and no prebuilt lexer either (required for Spotlight support)]])
+        AC_MSG_WARN([[flex/lex not found, and no prebuilt lexer either (required for Spotlight support)]])
     fi
 
     AC_PROG_YACC
     if ! test -r "$srcdir"/etc/spotlight/sparql_parser.c && test x"$YACC" = "xyacc"; then
         AC_CHECK_PROG([YACC_EXISTS], [yacc], [yes], [no])
     if test x"$YACC_EXISTS" != xyes; then
-            AC_MSG_ERROR([[bison/byacc/yacc not found, and no prebuilt parser either (required for Spotlight support)]])
+            AC_MSG_WARN([[bison/byacc/yacc not found, and no prebuilt parser either (required for Spotlight support)]])
         fi
     fi
 
