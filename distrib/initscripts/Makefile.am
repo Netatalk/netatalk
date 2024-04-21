@@ -261,8 +261,8 @@ if USE_OPENRC
 sysvdir = $(INIT_DIR)
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.gentoo
-	cp -f rc.gentoo $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.openrc
+	cp -f rc.openrc $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -344,4 +344,3 @@ uninstall-hook:
 uninstall-startup: uninstall-am
 
 endif
-

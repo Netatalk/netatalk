@@ -134,7 +134,7 @@ elif (
     init_dir += '/etc/init.d'
     custom_target(
         'openrc',
-        input: 'rc.gentoo.tmpl',
+        input: 'rc.openrc.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
