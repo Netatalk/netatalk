@@ -182,6 +182,65 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
+  build-alpine:
+    name: Alpine
+    runs-on: ubuntu-22.04
+    container:
+      image: alpine:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          apk add \
+            autoconf \
+            automake \
+            build-base \
+            gcc \
+            libevent-dev \
+            libgcrypt-dev \
+            libtool \
+            meson \
+            ninja \
+            openssl-dev \
+            pkgconfig &&
+          wget https://github.com/berkeleydb/libdb/releases/download/v5.3.28/db-5.3.28.tar.gz --no-check-certificate &&
+          tar xzf db-5.3.28.tar.gz &&
+          cd db-5.3.28/build_unix/ &&
+          ../dist/configure &&
+          make -j $(nproc) &&
+          make install
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --with-bdb=/usr/local/BerkeleyDB.5.3 \
+            --with-init-style=openrc
+      - name: Autotools - Build
+        run: make -j $(nproc)
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Denable-pgp-uam=disabled \
+            -Dwith-acls=disabled \
+            -Dwith-bdb=/usr/local/BerkeleyDB.5.3 \
+            -Dwith-init-style=openrc
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
+
   build-fedora:
     name: Fedora
     runs-on: ubuntu-22.04
