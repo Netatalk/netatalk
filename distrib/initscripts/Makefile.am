@@ -27,15 +27,14 @@ GENERATED_FILES = \
 	papd.service		\
 	rc.a2boot.netbsd	\
 	rc.afpd.netbsd		\
-	rc.atalk.debian		\
-	rc.atalk.gentoo		\
-	rc.atalk.redhat-sysv	\
-	rc.atalk.suse-sysv	\
-	rc.atalk.systemd	\
-	rc.atalk.sysv		\
 	rc.atalkd.netbsd	\
 	rc.cnid_metad.netbsd	\
+	rc.debian		\
+	rc.openrc		\
 	rc.papd.netbsd		\
+	rc.redhat		\
+	rc.solaris		\
+	rc.suse			\
 	rc.timelord.netbsd	\
 	timelord.service
 
@@ -49,15 +48,14 @@ TEMPLATES = \
 	papd.service.tmpl		\
 	rc.a2boot.netbsd.tmpl		\
 	rc.afpd.netbsd.tmpl		\
-	rc.atalk.debian.tmpl		\
-	rc.atalk.gentoo.tmpl		\
-	rc.atalk.redhat-sysv.tmpl	\
-	rc.atalk.suse-sysv.tmpl		\
-	rc.atalk.systemd.tmpl		\
-	rc.atalk.sysv.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
 	rc.cnid_metad.netbsd.tmpl	\
+	rc.debian.tmpl			\
+	rc.openrc.tmpl			\
 	rc.papd.netbsd.tmpl		\
+	rc.redhat.tmpl			\
+	rc.solaris.tmpl			\
+	rc.suse.tmpl			\
 	rc.timelord.netbsd.tmpl		\
 	timelord.service.tmpl
 
@@ -71,16 +69,16 @@ EXTRA_DIST = $(TEMPLATES)
 uninstall: uninstall-startup
 
 #
-# checking for "redhat" style sysv scripts:
+# checking for Red Hat style sysv scripts:
 #
 
-if USE_REDHAT_SYSV
+if USE_REDHAT
 
 sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.redhat-sysv
-	cp -f rc.atalk.redhat-sysv $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.redhat
+	cp -f rc.redhat $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -118,16 +116,16 @@ endif
 endif
 
 #
-# checking for "SuSE" style sysv scripts:
+# checking for SUSE style sysv scripts:
 #
 
-if USE_SUSE_SYSV
+if USE_SUSE
 
 sysvdir	= /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.suse-sysv
-	cp -f rc.atalk.suse-sysv $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.suse
+	cp -f rc.suse $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -189,8 +187,8 @@ if USE_SOLARIS
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.sysv
-	cp -f rc.atalk.sysv $@
+$(sysv_SCRIPTS): rc.solaris
+	cp -f rc.solaris $@
 	chmod a+x $@
 
 install-data-hook:
@@ -207,16 +205,16 @@ uninstall-startup:
 endif
 
 #
-# checking for "Gentoo" style sysv scripts:
+# checking for openrc scripts (Gentoo, etc.):
 #
 
-if USE_GENTOO
+if USE_OPENRC
 
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.gentoo
-	cp -f rc.atalk.gentoo $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.openrc
+	cp -f rc.openrc $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -237,8 +235,8 @@ if USE_DEBIAN
 sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.debian
-	cp -f rc.atalk.debian $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.debian
+	cp -f rc.debian $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:

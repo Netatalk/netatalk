@@ -25,28 +25,6 @@ SCRIPTNAME=/etc/init.d/$NAME
 # Guard to prevent execution if netatalk was removed.
 test -x :SBINDIR:/afpd || exit 0
 
-# Set defaults. Please change these options in /etc/default/netatalk
-ATALK_NAME=`/bin/hostname --short`
-ATALK_UNIX_CHARSET='LOCALE'
-ATALK_MAC_CHARSET='MAC_ROMAN'
-
-CNID_METAD_RUN=yes
-AFPD_RUN=yes
-AFPD_MAX_CLIENTS=50
-AFPD_UAMLIST="-U uams_dhx2.so"
-AFPD_GUEST=nobody
-CNID_CONFIG="-l log_note"
-
-ATALKD_RUN=no
-PAPD_RUN=no
-TIMELORD_RUN=no
-A2BOOT_RUN=no
-ATALK_ZONE=
-ATALK_BGROUND=no
-
-# old /etc/default/netatalk expected hostname in $HOSTNAME by default
-HOSTNAME=`/bin/hostname`
-
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
     . /etc/default/netatalk

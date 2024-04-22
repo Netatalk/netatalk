@@ -18,24 +18,6 @@
 
 # Netatalk :NETATALK_VERSION:
 
-ATALK_NAME=`hostname|sed 's/\..*$//'`
-ATALK_UNIX_CHARSET='LOCALE'
-ATALK_MAC_CHARSET='MAC_ROMAN'
-
-CNID_METAD_RUN=yes
-AFPD_RUN=yes
-AFPD_MAX_CLIENTS=20
-AFPD_UAMLIST="-U uams_dhx2.so"
-AFPD_GUEST=nobody
-CNID_CONFIG="-l log_note"
-
-ATALKD_RUN=no
-PAPD_RUN=no
-TIMELORD_RUN=no
-A2BOOT_RUN=no
-ATALK_ZONE=
-ATALK_BGROUND=no
-
 . /etc/rc.status
 . :ETCDIR:/netatalk.conf
 

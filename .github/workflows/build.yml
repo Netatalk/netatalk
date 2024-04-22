@@ -76,6 +76,8 @@ jobs:
         run: make distcheck
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -90,6 +92,8 @@ jobs:
         run: cd build && meson dist
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-debian:
     name: Debian
@@ -119,6 +123,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -131,6 +137,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
 
   build-fedora:
     name: Fedora
@@ -164,7 +172,7 @@ jobs:
           ./configure \
             --enable-pgp-uam \
             --enable-krbV-uam \
-            --enable-redhat-sysv \
+            --enable-redhat \
             --with-cracklib=/usr/share/cracklib
       - name: Autotools - Build
         run: make -j $(nproc) all
@@ -172,18 +180,22 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
             -Dwith-libtirpc=true \
-            -Denable-redhat-sysv=true
+            -Denable-redhat=true
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Tests
         run: cd build && meson test
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-macos:
     name: macOS
@@ -212,6 +224,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -225,6 +239,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-netbsd:
     name: "NetBSD"
@@ -266,12 +282,14 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j2 all
+            gmake install
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Denable-netbsd=true
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   build-solaris:
     name: "Solaris"
@@ -299,7 +317,7 @@ jobs:
             ./configure --prefix=/usr
             make
             make install
-            cd ..            
+            cd ..
           run: |
             set -e
             echo "Building with Autotools"
@@ -309,6 +327,7 @@ jobs:
               --enable-cups=no
             gmake -j $(nproc) all
             gmake install
+            gmake uninstall
 
   static_analysis:
     name: Static Analysis

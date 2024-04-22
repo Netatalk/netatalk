@@ -5,31 +5,13 @@
 # its data structures must have time to stablize before running the
 # other processes.
 
-ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
-ATALK_UNIX_CHARSET='LOCALE'
-ATALK_MAC_CHARSET='MAC_ROMAN'
-
-CNID_METAD_RUN=yes
-AFPD_RUN=yes
-AFPD_MAX_CLIENTS=20
-AFPD_UAMLIST="-U uams_dhx2.so"
-AFPD_GUEST=nobody
-CNID_CONFIG="-l log_note"
-
-ATALKD_RUN=no
-PAPD_RUN=no
-TIMELORD_RUN=no
-A2BOOT_RUN=no
-ATALK_ZONE=
-ATALK_BGROUND=no
-
 depend() {
 	need net
 	use logger dns
+	use avahi-daemon
 }
 
 atalk_startup () {
-#	. :ETCDIR:/netatalk.conf
 
 	if [ "${ATALKD_RUN}" != "no" ]; then
 		ebegin "Starting atalkd"

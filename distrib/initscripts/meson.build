@@ -1,9 +1,9 @@
-if get_option('enable-redhat-sysv')
-    init_style += 'redhat-sysv'
+if get_option('enable-redhat')
+    init_style += 'redhat'
     init_dir += '/etc/rc.d/init.d'
     custom_target(
-        'redhat_sysv',
-        input: 'rc.atalk.redhat-sysv.tmpl',
+        'redhat',
+        input: 'rc.redhat.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
@@ -39,12 +39,12 @@ elif get_option('enable-systemd')
         )
     endforeach
     meson.add_install_script(find_program('systemctl'), 'daemon-reload', '--no-ask-password')
-elif get_option('enable-suse-sysv')
-    init_style += 'suse-sysv'
+elif get_option('enable-suse')
+    init_style += 'suse'
     init_dir += '/etc/init.d'
     custom_target(
-        'suse_sysv',
-        input: 'rc.atalk.suse-sysv.tmpl',
+        'suse',
+        input: 'rc.suse.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
@@ -81,7 +81,7 @@ elif get_option('enable-solaris')
     init_dir += '/etc/init.d'
     custom_target(
         'solaris',
-        input: 'rc.atalk.sysv.tmpl',
+        input: 'rc.solaris.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
@@ -105,12 +105,12 @@ elif get_option('enable-solaris')
         '/etc/init.d/netatalk',
         '/etc/rc0.d/K04netatalk',
     )
-elif get_option('enable-gentoo')
-    init_style += 'gentoo-sysv'
+elif get_option('enable-openrc')
+    init_style += 'openrc'
     init_dir += '/etc/init.d'
     custom_target(
-        'gentoo',
-        input: 'rc.atalk.gentoo.tmpl',
+        'openrc',
+        input: 'rc.openrc.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
@@ -123,7 +123,7 @@ elif get_option('enable-debian')
     init_dir += '/etc/init.d'
     custom_target(
         'debian_sysv',
-        input: 'rc.atalk.debian.tmpl',
+        input: 'rc.debian.tmpl',
         output: 'netatalk',
         command: sed_command,
         capture: true,
