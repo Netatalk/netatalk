@@ -307,18 +307,18 @@ AC_ARG_ENABLE(locking,
 )
 
 AC_ARG_ENABLE(redhat,
-	[  --enable-redhat         obsoleted ],[
-	echo "ERROR: --enable-redhat is obsoleted. Use --enable-redhat-sysv."
-	exit 1
+	[  --enable-redhat         use redhat-style sysv (upstart) configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=redhat
+	fi
+	AC_MSG_RESULT([enabling redhat-style sysv support])
 	]
 )
 
 AC_ARG_ENABLE(redhat-sysv,
-	[  --enable-redhat-sysv    use redhat-style sysv (upstart) configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=redhat-sysv
-	fi
-	AC_MSG_RESULT([enabling redhat-style sysv support])
+	[  --enable-redhat-sysv    obsoleted ],[
+	echo "ERROR: --enable-redhat-sysv is obsoleted. Use --enable-redhat."
+	exit 1
 	]
 )
 
@@ -330,18 +330,18 @@ AC_ARG_ENABLE(redhat-systemd,
 )
 
 AC_ARG_ENABLE(suse,
-	[  --enable-suse           obsoleted ],[
-	echo "ERROR: --enable-suse is obsoleted. Use --enable-suse-sysv."
-	exit 1
+	[  --enable-suse           use suse-style sysv configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=suse
+	fi
+	AC_MSG_RESULT([enabling suse-style sysv support])
 	]
 )
 
 AC_ARG_ENABLE(suse-sysv,
-	[  --enable-suse-sysv      use suse-style sysv configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=suse-sysv
-	fi
-	AC_MSG_RESULT([enabling suse-style sysv support])
+	[  --enable-suse-sysv      obsoleted ],[
+	echo "ERROR: --enable-suse-sysv is obsoleted. Use --enable-suse."
+	exit 1
 	]
 )
 
@@ -353,11 +353,9 @@ AC_ARG_ENABLE(suse-systemd,
 )
 
 AC_ARG_ENABLE(gentoo,
-	[  --enable-gentoo         use gentoo-style sysv configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=gentoo
-	fi
-	AC_MSG_RESULT([enabling gentoo-style sysv support])
+	[  --enable-gentoo         obsoleted ],[
+	echo "ERROR: --enable-gentoo is obsoleted. Use --enable-openrc."
+	exit 1
 	]
 )
 
@@ -388,8 +386,17 @@ AC_ARG_ENABLE(macos,
 	]
 )
 
+AC_ARG_ENABLE(openrc,
+	[  --enable-openrc         use openrc configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=openrc
+	fi
+	AC_MSG_RESULT([enabling openrc support])
+	]
+)
+
 AC_ARG_ENABLE(systemd,
-	[  --enable-systemd        use systemd configuration           ],[
+	[  --enable-systemd        use systemd configuration ],[
 	if test "$enableval" = "yes"; then
 		sysv_style=systemd
 		if test -d "/lib/systemd"; then
@@ -1080,11 +1087,11 @@ AM_CONDITIONAL(BUILD_PAM, test x$compile_pam = xyes)
 AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$neta_cv_have_openssl != xyes)
 AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
-AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
-AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
+AM_CONDITIONAL(USE_REDHAT, test x$sysv_style = xredhat)
+AM_CONDITIONAL(USE_SUSE, test x$sysv_style = xsuse)
 AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
 AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
-AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
+AM_CONDITIONAL(USE_OPENRC, test x$sysv_style = xopenrc)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_MACOS, test x$sysv_style = xmacos)
 AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd)

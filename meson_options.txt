@@ -56,7 +56,7 @@ option(
     'enable-debian',
     type: 'boolean',
     value: false,
-    description: 'Enable debian-style sysv configuration',
+    description: 'Enable Debian-style sysv configuration',
 )
 option(
     'enable-debug',
@@ -71,12 +71,6 @@ option(
     description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
-    'enable-gentoo',
-    type: 'boolean',
-    value: false,
-    description: 'Enable gentoo-style sysv configuration',
-)
-option(
     'enable-krbV-uam',
     type: 'feature',
     value: 'auto',
@@ -86,13 +80,19 @@ option(
     'enable-macos',
     type: 'boolean',
     value: false,
-    description: 'Enable macos-style launchd configuration',
+    description: 'Enable macOS-style launchd configuration',
 )
 option(
     'enable-netbsd',
     type: 'boolean',
     value: false,
     description: 'Enable NetBSD-style rc.d configuration',
+)
+option(
+    'enable-openrc',
+    type: 'boolean',
+    value: false,
+    description: 'Enable cross-platform OpenRC configuration',
 )
 option(
     'enable-overwrite',
@@ -113,28 +113,28 @@ option(
     description: 'Turn on quota support',
 )
 option(
-    'enable-redhat-sysv',
+    'enable-redhat',
     type: 'boolean',
     value: false,
-    description: 'Enable redhat-style sysv (upstart) configuration',
+    description: 'Enable Red Hat-style sysv (upstart) configuration',
 )
 option(
     'enable-solaris',
     type: 'boolean',
     value: false,
-    description: 'Enable solaris-style sysv configuration',
+    description: 'Enable Solaris-style sysv configuration',
 )
 option(
-    'enable-suse-sysv',
+    'enable-suse',
     type: 'boolean',
     value: false,
-    description: 'Enable suse-style sysv configuration',
+    description: 'Enable SUSE-style sysv configuration',
 )
 option(
     'enable-systemd',
     type: 'boolean',
     value: false,
-    description: 'Use systemd configuration',
+    description: 'Use cross-platform systemd configuration',
 )
 option(
     'enable-zeroconf',
