@@ -489,7 +489,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1.0.2
+        uses: vmactions/solaris-vm@v1
         with:
           release: "11.4-gcc"
           copyback: false
