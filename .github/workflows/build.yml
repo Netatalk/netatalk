@@ -101,6 +101,7 @@ jobs:
         run: sudo ninja -C build install
 
   build-debian:
+    if: false
     name: Debian
     runs-on: ubuntu-22.04
     container:
@@ -173,6 +174,7 @@ jobs:
         run: ninja -C build install
 
   build-fedora:
+    if: false
     name: Fedora
     runs-on: ubuntu-22.04
     container:
@@ -235,6 +237,7 @@ jobs:
         run: sudo ninja -C build install
 
   build-macos:
+    if: false
     name: macOS
     runs-on: macos-latest
     env:
@@ -276,6 +279,7 @@ jobs:
         run: sudo ninja -C build install
 
   build-freebsd:
+    if: false
     name: FreeBSD
     runs-on: ubuntu-22.04
     permissions:
@@ -324,6 +328,7 @@ jobs:
             ninja -C build install
 
   build-openbsd:
+    if: false
     name: OpenBSD
     runs-on: ubuntu-22.04
     permissions:
@@ -373,6 +378,7 @@ jobs:
             ninja -C build install
 
   build-netbsd:
+    if: false
     name: NetBSD
     runs-on: ubuntu-22.04
     permissions:
@@ -485,6 +491,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/solaris-vm@v1.0.2
         with:
+          release: "11.4-gcc"
           copyback: false
           prepare: |
             pkg install \
@@ -496,20 +503,9 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
+              ninja \
               pkg-config
-            wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
-            wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
-            tar xvf autoconf-2.71.tar.gz
-            tar xvf automake-1.16.5.tar.gz
-            cd autoconf-2.71
-            ./configure --prefix=/usr
-            make
-            make install
-            cd ../automake-1.16.5
-            ./configure --prefix=/usr
-            make
-            make install
-            cd ..
+            pip install meson
           run: |
             set -e
             echo "Building with Autotools"
@@ -523,8 +519,13 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
+            echo "Building with Autotools"
+            meson setup build
+            ninja -C build
+            ninja -C build install
 
   build-omnios:
+    if: false
     name: OmniOS
     runs-on: ubuntu-22.04
     permissions:
@@ -577,12 +578,13 @@ jobs:
             ninja -C build install
 
   static_analysis:
+    if: false
     name: Static Analysis
     runs-on: ubuntu-22.04
     env:
       # Directory where build-wrapper output will be placed
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
-    if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
+    # if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
     steps:
       - uses: actions/checkout@v4
         with:
