@@ -503,6 +503,7 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
+              make \
               pkg-config
           run: |
             set -e
@@ -513,10 +514,9 @@ jobs:
               --enable-pgp-uam \
               --with-init-style=solaris \
               --without-afpstats \
-              MAKE=gmake \
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
-            gmake -j $(nproc)
-            gmake install
+            make -j $(nproc)
+            make install
 
   build-omnios:
     if: false
