@@ -1,0 +1,14 @@
+#!/bin/ksh
+#
+# Netatalk :NETATALK_VERSION: daemons.
+#
+
+daemon=":SBINDIR:/netatalk"
+
+. /etc/rc.d/rc.subr
+
+rc_start() {
+        rc_exec ". ~/.profile; ${daemon}"
+}
+
+rc_cmd $1

@@ -20,10 +20,11 @@ GENERATED_FILES = \
 	io.netatalk.daemon.plist \
 	netatalk.xml \
 	netatalkd \
-	rc.bsd \
 	rc.debian \
-	rc.gentoo \
+	rc.freebsd \
 	rc.netbsd \
+	rc.openbsd \
+	rc.openrc \
 	rc.redhat \
 	rc.solaris \
 	rc.suse \
@@ -33,10 +34,11 @@ TEMPLATES = \
 	io.netatalk.daemon.plist.tmpl \
 	netatalk.xml.tmpl \
 	netatalkd.tmpl \
-	rc.bsd.tmpl \
 	rc.debian.tmpl \
-	rc.gentoo.tmpl \
+	rc.freebsd.tmpl \
 	rc.netbsd.tmpl \
+	rc.openbsd.tmpl \
+	rc.openrc.tmpl \
 	rc.redhat.tmpl \
 	rc.solaris.tmpl \
 	rc.suse.tmpl \
@@ -157,6 +159,32 @@ endif
 endif
 
 #
+# checking for FreeBSD scripts:
+#
+
+if USE_FREEBSD
+
+sysvdir = $(INIT_DIR)
+sysv_SCRIPTS = netatalk
+
+$(sysv_SCRIPTS): rc.freebsd
+	cp -f rc.freebsd $(sysv_SCRIPTS)
+	chmod a+x $(sysv_SCRIPTS)
+
+install-data-hook:
+if USE_INIT_HOOKS
+	$(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) enable
+endif
+
+uninstall-startup:
+if USE_INIT_HOOKS
+	$(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) disable
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
+
+endif
+
+#
 # checking for NetBSD init scripts
 #
 
@@ -174,6 +202,32 @@ install-data-hook:
 uninstall-hook:
 
 uninstall-startup: uninstall-am
+
+endif
+
+#
+# checking for OpenBSD scripts:
+#
+
+if USE_OPENBSD
+
+sysvdir = $(INIT_DIR)
+sysv_SCRIPTS = netatalk
+
+$(sysv_SCRIPTS): rc.openbsd
+	cp -f rc.openbsd $(sysv_SCRIPTS)
+	chmod a+x $(sysv_SCRIPTS)
+
+install-data-hook:
+if USE_INIT_HOOKS
+	-rcctl -d enable $(sysv_SCRIPTS)
+endif
+
+uninstall-startup:
+if USE_INIT_HOOKS
+	-rcctl -d disable $(sysv_SCRIPTS)
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
