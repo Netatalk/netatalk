@@ -503,9 +503,7 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
-              ninja \
               pkg-config
-            pip install meson
           run: |
             set -e
             echo "Building with Autotools"
@@ -519,10 +517,6 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
-            echo "Building with Autotools"
-            meson setup build
-            ninja -C build
-            ninja -C build install
 
   build-omnios:
     if: false
