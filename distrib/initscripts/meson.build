@@ -67,6 +67,21 @@ elif get_option('with-init-style') == 'suse-sysv'
     if not get_option('disable-init-hooks')
         meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
     endif
+elif get_option('with-init-style') == 'freebsd'
+    init_dir += '/etc/rc.d'
+    custom_target(
+        'freebsd',
+        input: 'rc.freebsd.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(find_program('sh'), '/etc/rc.d/netatalk', 'enable')
+    endif
 elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
     custom_target(
@@ -79,6 +94,21 @@ elif get_option('with-init-style') == 'netbsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
+elif get_option('with-init-style') == 'openbsd'
+    init_dir += '/etc/rc.d'
+    custom_target(
+        'freebsd',
+        input: 'rc.openbsd.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+    if not get_option('disable-init-hooks')
+        meson.add_install_script(find_program('rcctl'), '-d', 'enable', 'netatalk')
+    endif
 elif get_option('with-init-style') == 'solaris'
     init_dir += '/lib/svc/manifest/network'
     custom_target(

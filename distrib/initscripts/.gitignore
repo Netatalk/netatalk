@@ -3,10 +3,11 @@ netatalk
 netatalk.service
 netatalk.xml
 netatalkd
-rc.bsd
 rc.debian
-rc.gentoo
+rc.freebsd
 rc.netbsd
+rc.openbsd
+rc.openrc
 rc.redhat
 rc.solaris
 rc.suse

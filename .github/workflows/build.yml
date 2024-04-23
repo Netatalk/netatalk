@@ -86,6 +86,8 @@ jobs:
         run: make distcheck
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -101,6 +103,8 @@ jobs:
         run: cd build && meson dist
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-debian:
     name: Debian
@@ -162,6 +166,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -173,6 +179,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
 
   build-fedora:
     name: Fedora
@@ -224,6 +232,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -235,6 +245,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-macos:
     name: macOS
@@ -263,6 +275,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
@@ -276,6 +290,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
 
   build-freebsd:
     name: FreeBSD
@@ -303,6 +319,7 @@ jobs:
               libressl \
               libtool \
               meson \
+              openldap26-client-2.6.7 \
               pkgconf \
               talloc \
               tracker3
@@ -313,17 +330,22 @@ jobs:
             ./configure \
               --enable-krbV-uam \
               --enable-pgp-uam \
+              --with-init-style=freebsd \
+              --with-ldap=/usr/local \
               --with-ssl-dir=/usr/local \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
             gmake install
+            gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-init-style=freebsd
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   build-openbsd:
     name: OpenBSD
@@ -345,7 +367,6 @@ jobs:
               bison \
               dbus-glib \
               db-4.6.21p7v0 \
-              flex \
               gcc-11.2.0p9 \
               gmake \
               libevent \
@@ -363,16 +384,20 @@ jobs:
             export AUTOMAKE_VERSION=1.16
             autoreconf -fi
             ./configure \
+              --with-init-style=openbsd \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
             gmake install
+            gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-init-style=openbsd
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   build-netbsd:
     name: NetBSD
@@ -420,6 +445,7 @@ jobs:
               PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j $(nproc)
             gmake install
+            gmake uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
@@ -427,6 +453,7 @@ jobs:
               -Dwith-init-style=netbsd
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   build-dflybsd:
     if: false
@@ -471,10 +498,12 @@ jobs:
               MAKE=gmake
             gmake -j2
             gmake install
+            gmake uninstall
             echo "Building with Meson"
             meson setup build
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   build-solaris:
     name: Solaris
@@ -525,6 +554,7 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
+            gmake uninstall
 
   build-omnios:
     name: OmniOS
@@ -570,6 +600,7 @@ jobs:
               PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             gmake -j $(nproc)
             gmake install
+            gmake uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
@@ -577,6 +608,7 @@ jobs:
               -Dwith-ldap=/opt/local
             ninja -C build
             ninja -C build install
+            ninja -C build uninstall
 
   static_analysis:
     name: Static Analysis

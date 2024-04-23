@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# Netatalk :NETATALK_VERSION: daemons.
+#
+
+. /etc/rc.subr
+
+name=netatalk
+rcvar=netatalk_enable
+
+command=":SBINDIR:/${name}"
+
+load_rc_config $name
+run_rc_command "$1"

@@ -506,7 +506,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
+                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|freebsd|netbsd|openbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
                 init_style="$withval", init_style=none
     )
     case "$host_os" in
@@ -550,8 +550,16 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_RESULT([enabling gentoo-style systemd support])
 	    ac_cv_init_dir="/usr/lib/systemd/system"
         ;;
+    "freebsd")
+	    AC_MSG_RESULT([enabling freebsd-style initscript support])
+	    ac_cv_init_dir="/etc/rc.d"
+        ;;
     "netbsd")
 	    AC_MSG_RESULT([enabling netbsd-style initscript support])
+	    ac_cv_init_dir="/etc/rc.d"
+        ;;
+    "openbsd")
+	    AC_MSG_RESULT([enabling openbsd-style initscript support])
 	    ac_cv_init_dir="/etc/rc.d"
         ;;
     "debian")
@@ -589,7 +597,9 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
 	    AC_MSG_ERROR([illegal init-style])
         ;;
     esac
+    AM_CONDITIONAL(USE_FREEBSD, test x$init_style = xfreebsd)
     AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
+    AM_CONDITIONAL(USE_OPENBSD, test x$init_style = xopenbsd)
     AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
     AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
