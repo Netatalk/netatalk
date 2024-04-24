@@ -371,7 +371,6 @@ bdb_dirs = [
     '/usr',
 ]
 bdb_subdirs = [
-    '',
     'db4.6',
     'db4.7',
     'db4.8',
@@ -387,6 +386,7 @@ bdb_subdirs = [
     'db50',
     'db51',
     'db6.1',
+    '',
 ]
 
 if get_option('with-bdb') != ''
@@ -394,11 +394,13 @@ if get_option('with-bdb') != ''
         if fs.exists(with_bdb / 'include' / subdir / 'db.h')
             bdb_header += with_bdb / 'include' / subdir / 'db.h'
             bdb_libdir += with_bdb / 'lib'
-            bdb_includes += include_directories(with_bdb / 'include' / subdir)
+            bdb_includes += include_directories(
+                with_bdb / 'include' / subdir,
+            )
         endif
         if bdb_header != ''
             break
-        endif 
+        endif
     endforeach
 else
     foreach dir : bdb_dirs
@@ -412,7 +414,7 @@ else
             endif
             if bdb_header != ''
                 break
-            endif 
+            endif
         endforeach
         if bdb_header != ''
             break
