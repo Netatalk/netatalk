@@ -1,4 +1,6 @@
 subdir('ad')
-subdir('afppasswd')
+if have_ssl
+    subdir('afppasswd')
+endif
 subdir('cnid')
 subdir('misc')
