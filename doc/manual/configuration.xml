@@ -22,19 +22,18 @@
     <sect2>
       <title>Setting up the AFP file server</title>
 
-      <para>AFP (the Apple Filing Protocol) is the protocol Apple Macintoshes
-      use for file services up until OS X Mountain Lion (10.8). The protocol
-      has evolved over the years. The
-      latest change to the protocol, AFP 3.4, was introduced with
-      the release of OS X Mountain Lion<indexterm>
+      <para>AFP (the Apple Filing Protocol) is the protocol used on the Apple
+      Macintosh for file services up until OS X Mountain Lion (10.8). The
+      protocol has evolved over the years. The latest change to the protocol,
+      AFP 3.4, was introduced with the release of OS X Mountain Lion<indexterm>
           <primary>Mountain Lion</primary>
 
           <secondary>Mac OS X 10.8</secondary>
         </indexterm>. Netatalk 2 supports up to AFP 3.3.</para>
 
       <para>AFP3 brought some big changes. For the first time, AFP3 supports
-      pathnames up to 65535 characters. It is virtually unlimited. Netatalk
-      2 supports filenames up to 255 characters because Mac OS X 10.4 and
+      pathnames up to 65535 characters. It is virtually unlimited. Netatalk 2
+      supports filenames up to 255 characters because Mac OS X 10.4 and
       earlier can use it up to 255 characters (actually 255 bytes leading to
       85-255 chars depending on the glyphs used), Decomposed UTF-8 (UTF8-MAC)
       is used on the wire and large files (&gt;4GB) are supported.</para>
@@ -94,7 +93,7 @@
 
         <para>The AppleVolumes.default file is used to define volumes that
         will by default be shown to all users, including users logged in as
-        guest. A volume will not be presented in the chooser, if the user has
+        guest. A volume will not be presented in the Chooser, if the user has
         no read access to the specified volume path.</para>
 
         <para>You can limit access to a specific volume by using the
@@ -141,7 +140,7 @@
       IDs are 32 bit numbers (Directory IDs use the same ID pool). So, after
       ~4 billion files/folders have been written to an AFP volume, the ID pool
       is depleted and no new file can be written to the volume. No whining
-      please :-)</para>
+      please. :-)</para>
 
       <para>Netatalk needs to map IDs to files and folders in the host
       filesystem. To achieve this, several different CNID backends<indexterm>
@@ -227,11 +226,10 @@
             <secondary>"dbd" CNID backend</secondary>
           </indexterm></title>
 
-        <para>The "Database Daemon" backend is built on Berkeley DB.
-        Access to the CNID database is restricted to the cnid_dbd daemon
-        process. afpd processes communicate with the daemon for database reads
-        and updates. The probability for database corruption is practically
-        zero.</para>
+        <para>The "Database Daemon" backend is built on Berkeley DB. Access to
+        the CNID database is restricted to the cnid_dbd daemon process. afpd
+        processes communicate with the daemon for database reads and updates.
+        The probability for database corruption is practically zero.</para>
 
         <para>This is the default backend since Netatalk 2.1.</para>
       </sect3>
@@ -244,9 +242,9 @@
           </indexterm></title>
 
         <para>The last backend is a semi-persistent backend. IDs will be
-        reused and, what is much worse, you can get duplicate IDs.
-        You should use it for sharing read-only volumes only.
-        <emphasis>Don't</emphasis> use it for sharing normal volumes.</para>
+        reused and, what is much worse, you can get duplicate IDs. You should
+        use it for sharing read-only volumes only. <emphasis>Don't</emphasis>
+        use it for sharing normal volumes.</para>
       </sect3>
     </sect2>
 
@@ -258,8 +256,6 @@
         </indexterm>/Unicode<indexterm>
           <primary>Unicode</primary>
         </indexterm></title>
-
-      <para></para>
 
       <sect3>
         <title>Why Unicode?</title>
@@ -531,7 +527,7 @@
               </indexterm></term>
 
             <listitem>
-              <para>As already mentioned, older MacOS clients (up to AFP 2.2)
+              <para>As already mentioned, older Mac OS clients (up to AFP 2.2)
               use codepages to communicate with afpd. However, there is no
               support for negotiating the codepage used by the client in the
               AFP protocol. If not specified otherwise, afpd assumes the
@@ -576,9 +572,11 @@
               0XF0) was saved as :f0. Some special characters will be
               converted as to :xx notation as well. '/' will be encoded to
               :2f, if -usedots is not specified, a leading dot '.' will be
-              encoded as :2e. Even though this version now uses UTF-8 as the
-              default encoding for filenames, special characters, like '/' and
-              a leading '.' will still be CAP style encoded. For western users
+              encoded as :2e.</para>
+
+              <para>Even though this version now uses UTF-8 as the default
+              encoding for filenames, special characters, like '/' and a
+              leading '.' will still be CAP style encoded. For western users
               another useful setting could be <emphasis>-volcharset
               ISO-8859-15</emphasis>.</para>
 
@@ -663,7 +661,8 @@
                 <primary>DHCAST128</primary>
 
                 <secondary>"DHCAST128" UAM</secondary>
-              </indexterm> UAM (stronger password encryption)</para>
+              </indexterm> UAM (a.k.a. DHX; stronger password
+            encryption)</para>
           </listitem>
 
           <listitem>
@@ -692,8 +691,8 @@
             url="http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
             client</ulink> to let this work)</para>
 
-            <para>You'll have to add <filename>"--enable-pgp-uam"</filename>
-            to your configure switches to have this UAM available.</para>
+            <para>You may have to enable it at compile time to have this UAM
+            available.</para>
           </listitem>
 
           <listitem>
@@ -704,14 +703,18 @@
               </indexterm> UAM (Kerberos V, suitable for "Single Sign On"
             Scenarios with Mac OS X clients -- see below)</para>
 
-            <para><filename>"--enable-krbV-uam"</filename> will provide you
-            with the ability to use this UAM.</para>
+            <para>You may have to deliberately enable this one too when
+            compiling the code.</para>
           </listitem>
         </itemizedlist>
 
         <para>You can configure which UAMs should be activated by defining
         <filename>$AFPD_UAM_LIST</filename> in <citerefentry>
             <refentrytitle>netatalk.conf</refentrytitle>
+
+            <manvolnum>5</manvolnum>
+          </citerefentry> or <emphasis>-uamlist</emphasis> in <citerefentry>
+            <refentrytitle>afpd.conf</refentrytitle>
 
             <manvolnum>5</manvolnum>
           </citerefentry>. <command>afpd</command> will log which UAMs it's
@@ -727,8 +730,8 @@
         <para>Having a specific UAM available at the server does not
         automatically mean that a client can use it. Client-side support is
         also necessary. Fortunately this isn't such a problem these days since
-        Mac OS X' AFP-client supports DHCAST128 from the beginning on. For
-        older Macintoshes running Mac OS &lt; X DHCAST128 support exists since
+        Mac OS X's AFP-client supports DHX2 out of he box. For older
+        Macintoshes running Mac OS &lt; X DHCAST128 support exists since
         AppleShare client 3.8.x.</para>
 
         <para>On Mac OS X, there exist some client-side techniques to make the
@@ -784,12 +787,12 @@
                 <refentrytitle>afppasswd</refentrytitle>
 
                 <manvolnum>1</manvolnum>
-              </citerefentry> utility, if clients should use these
+              </citerefentry> utility, in order for clients to use these
             UAMs)</para>
           </listitem>
 
           <listitem>
-            <para>"DHCAST128" or "DHX2" should be a good compromise for most
+            <para>"DHCAST128" or "DHX2" should be the sweet spot for most
             people since it combines stronger encryption with PAM
             integration.</para>
           </listitem>
@@ -859,19 +862,19 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           <title>Netatalk UAM overview</title>
 
           <tgroup align="center" cols="7">
-            <colspec colname="col1" colnum="1" colwidth="0.5*" />
+            <colspec colname="col1" colnum="1" colwidth="0.5*"/>
 
-            <colspec colname="uam_guest" colnum="2" colwidth="1*" />
+            <colspec colname="uam_guest" colnum="2" colwidth="1*"/>
 
-            <colspec colname="uam_clrtxt" colnum="3" colwidth="1*" />
+            <colspec colname="uam_clrtxt" colnum="3" colwidth="1*"/>
 
-            <colspec colname="uam_randnum" colnum="4" colwidth="1*" />
+            <colspec colname="uam_randnum" colnum="4" colwidth="1*"/>
 
-            <colspec colname="uam_dhx" colnum="5" colwidth="1*" />
+            <colspec colname="uam_dhx" colnum="5" colwidth="1*"/>
 
-            <colspec colname="uam_dhx2" colnum="6" colwidth="1*" />
+            <colspec colname="uam_dhx2" colnum="6" colwidth="1*"/>
 
-            <colspec colname="uam_gss" colnum="7" colwidth="1*" />
+            <colspec colname="uam_gss" colnum="7" colwidth="1*"/>
 
             <tbody>
               <row>
@@ -1030,10 +1033,10 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
       <sect3 id="sshtunnel">
         <title>SSH tunneling</title>
 
-        <para>Tunneling and all sort of VPN stuff has nothing to do with AFP
-        authentication and UAMs in general. But since Apple introduced an
-        option called "Allow Secure Connections Using SSH" and many people
-        tend to confuse both things, we'll speak about that here too.</para>
+        <para>Tunneling and VPNs usually have nothing to do with AFP
+        authentication and UAMs. But since Apple introduced an option called
+        "Allow Secure Connections Using SSH" and many people tend to confuse
+        the two, we'll cover this here.</para>
 
         <sect4 id="manualsshtunnel">
           <title>Manually tunneling an AFP session</title>
@@ -1053,13 +1056,12 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
           forwarded to the remote server's AFP port (we used the default 548)
           over SSH.</para>
 
-          <para>This sort of tunnel is an ideal solution if you must access
-          an AFP server through the Internet without having the ability
-          or desire to use a "real" VPN.
-          Note that you can let <command>ssh</command> compress the data by
-          using its "-C" switch and that the tunnel endpoints can be different
-          from both AFP client and server (compare with the SSH documentation
-          for details).</para>
+          <para>This sort of tunnel is an ideal solution if you must access an
+          AFP server through the Internet without having the ability or desire
+          to use a "real" VPN. Note that you can let <command>ssh</command>
+          compress the data by using its "-C" switch and that the tunnel
+          endpoints can be different from both AFP client and server (compare
+          with the SSH documentation for details).</para>
         </sect4>
 
         <sect4 id="autosshtunnel">
@@ -1099,12 +1101,13 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
               on which the AFP server is running, and then to access the AFP
               server as normal.</para>
 
-              <para>That being said, for the simple case of connecting
-              to one specific AFP server, a direct SSH connection is likely to
+              <para>That being said, for the simple case of connecting to one
+              specific AFP server, a direct SSH connection is likely to
               perform better than a general-purpose VPN; contrary to popular
-              belief, tunneling via SSH does <emphasis role="strong">not</emphasis>
-              result in what's called "TCP-over-TCP meltdown", because the
-              AFP data that are being tunneled do not encapsulate TCP data.</para>
+              belief, tunneling via SSH does <emphasis
+              role="strong">not</emphasis> result in what's called
+              "TCP-over-TCP meltdown", because the AFP data that are being
+              tunneled do not encapsulate TCP data.</para>
             </listitem>
 
             <listitem>
@@ -1123,22 +1126,24 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
             </listitem>
 
             <listitem>
-              <para>Indeed, to ensure that all AFP over TCP sessions are encrypted
-              via SSH, you need to limit afpd to connections that originate
-              only from localhost (e.g., by using Wietse Venema's TCP Wrappers,
-              or by using suitable firewall or packet-filtering facilities, etc.).</para>
+              <para>Indeed, to ensure that all AFP over TCP sessions are
+              encrypted via SSH, you need to limit afpd to connections that
+              originate only from localhost (e.g., by using Wietse Venema's
+              TCP Wrappers, or by using suitable firewall or packet-filtering
+              facilities, etc.).</para>
 
               <para>Otherwise, when you're using Mac OS X 10.2 through 10.3.3,
-              you get the opposite of what you'd expect: potentially unencrypted AFP
-              communications (including login credentials) being sent across the network
-              without a single notification that establishing the tunnel
-              failed. Apple fixed that not until Mac OS X 10.3.4.</para>
+              you get the opposite of what you'd expect: potentially
+              unencrypted AFP communications (including login credentials)
+              being sent across the network without a single notification that
+              establishing the tunnel failed. Apple fixed that not until Mac
+              OS X 10.3.4.</para>
             </listitem>
 
             <listitem>
               <para>Encrypting all AFP sessions via SSH can lead to a
-              significantly higher load on the computer that is running
-              the AFP server, because that computer must also handle
+              significantly higher load on the computer that is running the
+              AFP server, because that computer must also handle
               encryption.</para>
             </listitem>
           </itemizedlist>
@@ -1163,17 +1168,17 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         UARights<indexterm>
             <primary>UARights</primary>
           </indexterm> permission bits. On a Mac, the Finder uses these bits
-          to adjust permission in Finder windows. Example: a folder whose
-          UNIX mode is read-only and an ACL giving the user write access,
-          will display the effective read-write permission. Without the
-          permission mapping the Finder would display a read-only icon and
-          the user wouldn't be able to write to the folder.</para>
+        to adjust permission in Finder windows. Example: a folder whose UNIX
+        mode is read-only and an ACL giving the user write access, will
+        display the effective read-write permission. Without the permission
+        mapping the Finder would display a read-only icon and the user
+        wouldn't be able to write to the folder.</para>
 
         <para>However, neither in Finder "Get Info" windows nor in Terminal
-        will you be able to see the ACLs, that's a result of how ACLs in OS X
-        are designed. If you want to be able to display ACLs on the client,
-        things get more involved as you must then setup both client and server
-        to be part on a authentication domain (directory service, eg LDAP,
+        will you be able to see the ACLs, because of how ACLs in OS X are
+        designed. If you want to be able to display ACLs on the client, things
+        get more involved as you must then setup both client and server to be
+        part on a authentication domain (directory service, eg LDAP,
         OpenDirectory). The reason is, that in OS X ACLs are bound to UUIDs,
         not just uid's or gid's. Therefore, afpd must be able to map every
         filesystem uid and gid to a UUID so that it can return the server side
@@ -1240,9 +1245,9 @@ aclmode = passthrough (if available)</screen>
         <secondary>The AppleTalk protocol suite</secondary>
       </indexterm></title>
 
-    <para>AppleTalk, the network protocol family founded by Apple, contains
-    different protocols for different uses (address resolution, address/name
-    mapping, service location, establishing connections, and the like)</para>
+    <para>AppleTalk, the network protocol family created by Apple, contains
+    different protocols for different uses: address resolution, address/name
+    mapping, service location, establishing connections, and the like.</para>
 
     <para>A complete overview can be found inside the developer
     documentation.</para>
@@ -1260,13 +1265,13 @@ aclmode = passthrough (if available)</screen>
 
           <manvolnum>8</manvolnum>
         </citerefentry> for older AFP clients not capable of using AFP over
-      TCP. You'll need it also if you want to use the
-      AppleTalk-based timeserver <citerefentry>
+      TCP. You'll need it also if you want to use the AppleTalk-based
+      timeserver <citerefentry>
           <refentrytitle>timelord</refentrytitle>
 
           <manvolnum>8</manvolnum>
-        </citerefentry> for older Mac clients, or netboot server a2boot
-      for Apple II clients.</para>
+        </citerefentry> for older Mac clients, or netboot server a2boot for
+      Apple II clients.</para>
 
       <para>But even if you don't need PAP or AFP over AppleTalk, you might
       consider using AppleTalk for service propagation/location, having the
@@ -1285,9 +1290,9 @@ aclmode = passthrough (if available)</screen>
 
       <para>To use AppleTalk/atalkd, your system has to have kernel support
       for AppleTalk. On some systems supported by netatalk, this isn't
-      currently true (notably True64 Unix) so you can use only netatalk
-      services that do not rely on AppleTalk (which means "AFP over TCP" and
-      requires the -noddp switch in afpd.conf).</para>
+      currently true so you can use only netatalk services that do not rely on
+      AppleTalk. This means "AFP over TCP" and requires the
+      <emphasis>-noddp</emphasis> switch in afpd.conf.</para>
     </sect2>
 
     <sect2>
@@ -1335,7 +1340,8 @@ aclmode = passthrough (if available)</screen>
 
         <listitem>
           <para>When using several interfaces you have to add them line by
-          line following the "-dontroute" switch in atalkd.conf.</para>
+          line following the <emphasis>-dontroute</emphasis> switch in
+          atalkd.conf.</para>
 
           <example>
             <title>atalkd.conf containing several entries with the -dontroute
@@ -1489,7 +1495,8 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
       chart</emphasis> containing the physical segments, the netranges you
       want to assign to each one, the zone names you want to publish in which
       segments and the default zone per segment (this is always the first zone
-      name, you supply with the "-zone" switch in atalkd.conf).</para>
+      name, you supply with the <emphasis>-zone</emphasis> switch in
+      atalkd.conf).</para>
 
       <para>Given, you finished the steps outlined above, you might want to
       edit atalkd.conf to fit your needs.</para>
@@ -1646,12 +1653,12 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
     (usually a Macintosh computer) and destination (a printer or spooler
     implementation) communicate about both destination's capabilities via
     feature queries (compare with <ulink
-    url="https://web.archive.org/web/20041022123331/http://partners.adobe.com/asn/tech/ps/archive.jsp">Adobe TechNote
-    5133</ulink>) and device status. This allows the LaserWriter driver on the
-    Macintosh to generate appropriate device specific PostScript code (color
-    or b/w, only embedding needed fonts, and so on) on the one hand and
-    notifications about the printing process or problems (paper jam for
-    example) on the other.</para>
+    url="https://web.archive.org/web/20041022123331/http://partners.adobe.com/asn/tech/ps/archive.jsp">Adobe
+    TechNote 5133</ulink>) and device status. This allows the LaserWriter
+    driver on the Macintosh to generate appropriate device specific PostScript
+    code (color or b/w, only embedding needed fonts, and so on) on the one
+    hand and notifications about the printing process or problems (paper jam
+    for example) on the other.</para>
 
     <sect2 id="papserver">
       <title>Setting up the PAP print server</title>
@@ -1731,19 +1738,18 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
         <option>pd</option> switch, the PPD configured in CUPS will be used by
         <command>papd</command>, too.</para>
 
-        <para>There exists one special share named "cupsautoadd". If this is
-        present in papd.conf, then all available CUPS queues will be served
-        automagically using the parameters assigned to this global share. But
-        subsequent printer definitions can be used to override these global
-        settings for individual spoolers.</para>
+        <para>There exists one special share named
+        <emphasis>cupsautoadd</emphasis>. If this is present in papd.conf,
+        then all available CUPS queues will be served automagically using the
+        parameters assigned to this global share. But subsequent printer
+        definitions can be used to override these global settings for
+        individual spoolers.</para>
 
-	<example>
-	<title>Example syntax, assigning root as operator:</title>
+        <example>
+          <title>Example syntax, assigning root as operator:</title>
 
-	<para>
-	<programlisting>cupsautoadd:op=root:</programlisting>
-	</para>
-	</example>
+          <para><programlisting>cupsautoadd:op=root:</programlisting></para>
+        </example>
       </sect3>
     </sect2>
 
@@ -1823,18 +1829,20 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
 
       <para><command>timelord</command><indexterm>
           <primary>timelord</primary>
-          </indexterm>, an AppleTalk based time server, is useful for automatically synchronizing
-          the system time on older Macintosh or Apple II clients that do not support NTP<indexterm>
+        </indexterm>, an AppleTalk based time server, is useful for
+      automatically synchronizing the system time on older Macintosh or Apple
+      II clients that do not support NTP<indexterm>
           <primary>NTP</primary>
 
           <secondary>Network Time Protocol</secondary>
         </indexterm>.</para>
 
-	<para>Netatalk's <command>timelord</command> is compatible with the <ulink
-        url="https://macintoshgarden.org/apps/tardis-and-timelord">tardis</ulink>
-        client for Macintosh developed at the <ulink
-        url="https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html">
-        University of Melbourne.</ulink></para>
+      <para>Netatalk's <command>timelord</command> is compatible with the
+      <ulink
+      url="https://macintoshgarden.org/apps/tardis-and-timelord">tardis</ulink>
+      client for Macintosh developed at the <ulink
+      url="https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html">
+      University of Melbourne.</ulink></para>
 
       <para>For further information please have a look at the <citerefentry>
           <refentrytitle>timelord</refentrytitle>
@@ -1842,100 +1850,5 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
           <manvolnum>8</manvolnum>
         </citerefentry> manual page.</para>
     </sect2>
-  </sect1>
-
-  <sect1>
-    <title>Starting and stopping Netatalk</title>
-
-    <para>The Netatalk distribution comes with several operating system
-    specific startup script templates that are tailored according to the
-    options given to the "configure" script before compiling. Currently,
-    templates are provided for systemd (cross-platform), RedHat,
-    SuSE, Gentoo, Debian, NetBSD, and Solaris. You can select to
-    install the generated startup script(s).
-    <indexterm>
-        <primary>Startscript</primary>
-
-        <secondary>startup script</secondary>
-      </indexterm> by specifying a system type to "configure". To
-    automatically install startup scripts for e.g. the Ubuntu distribution
-    try to give the <option>--enable-debian</option> option to "configure". Some
-    of the non-systemd scripts can be further parametrized by the configuration file
-    netatalk.conf (described in the <citerefentry>
-        <refentrytitle>netatalk.conf</refentrytitle>
-
-        <manvolnum>5</manvolnum>
-      </citerefentry> manual page), some obtain that information in another,
-    operating system specific way (like NetBSD, Debian and so on).</para>
-
-    <para>If you use the cross-platform <option>--enable-systemd</option>
-    option, there is no need to specify the system type. Also, the <filename>
-    netatalk.conf</filename> configuration file is <emphasis>not</emphasis>
-    used by systemd unit configurations.</para>
-
-    <para>Since new releases of Linux distributions appear all the time and
-    the startup procedure for the other systems mentioned above might change
-    as well, it is probably a good idea to not blindly install a startup
-    script but to look at it first to see if it will work on your system. If
-    you use Netatalk as part of a fixed setup, like a Linux distribution, an
-    RPM or a BSD package, things will probably have been arranged properly for
-    you. The following therefore applies mostly for people who have compiled
-    Netatalk themselves.</para>
-
-    <para>The following daemons need to be started by whatever startup script
-    mechanism is used:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para>atalkd<indexterm>
-            <primary>atalkd</primary>
-          </indexterm> (if you use the AppleTalk protocol)</para>
-      </listitem>
-
-      <listitem>
-        <para>papd<indexterm>
-            <primary>papd</primary>
-          </indexterm> (if you want to provide print services via
-        AppleTalk)</para>
-      </listitem>
-
-      <listitem>
-        <para>timelord<indexterm>
-            <primary>timelord</primary>
-          </indexterm> (for old style time synchronization via
-        AppleTalk)</para>
-      </listitem>
-
-      <listitem>
-        <para>a2boot<indexterm>
-            <primary>a2boot</primary>
-          </indexterm> (Apple II boot server via AppleTalk)</para>
-      </listitem>
-
-      <listitem>
-        <para>cnid_metad<indexterm>
-            <primary>cnid_metad</primary>
-          </indexterm> (if the dbd CNID backend is used)</para>
-      </listitem>
-
-      <listitem>
-        <para>afpd<indexterm>
-            <primary>afpd</primary>
-          </indexterm></para>
-      </listitem>
-    </itemizedlist>
-
-    <para>Additionally, make sure that the various configuration files
-    (<filename>afpd.conf</filename>,
-    <filename>AppleVolumes.default</filename>, <filename>papd.conf</filename>
-    etc.) are in the right place and that
-    <filename>netatalk.conf</filename><indexterm>
-        <primary>netatalk.conf</primary>
-      </indexterm> (if used) contains the right entries. If you want e.g. papd
-    to be started using this mechanism, set the environment variable
-    "<option>PAPD_RUN</option>"<indexterm>
-        <primary>PAPD_RUN</primary>
-      </indexterm> to "yes" in netatalk.conf. See the manual pages for
-    details.</para>
   </sect1>
 </chapter>
