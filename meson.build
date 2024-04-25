@@ -680,6 +680,8 @@ avahi = dependency('avahi-client', required: false)
 dns_sd = cc.find_library('dns_sd', has_headers: 'dns_sd.h', required: false)
 system = cc.find_library('system', required: false)
 dns_sd_libs = [dns_sd, system]
+zeroconf_provider = []
+
 have_dns = (
     (dns_sd.found() or system.found())
     and cc.has_function(
@@ -702,10 +704,12 @@ if avahi.found()
     if avahi.version() >= '0.6.4'
         cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
     endif
+    zeroconf_provider += 'Avahi'
 endif
 
 if have_dns
     cdata.set('HAVE_MDNS', 1)
+    zeroconf_provider += 'mDNS'
 endif
 
 if enable_zeroconf
@@ -1953,6 +1957,11 @@ summary_info = {
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,
 }
+if enable_zeroconf
+    summary_info += {
+        '  Zeroconf provider': zeroconf_provider,
+    }
+endif
 summary(summary_info, bool_yn: true, section: '  Options:')
 
 summary_info = {
