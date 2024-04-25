@@ -183,7 +183,7 @@ jobs:
         run: ninja -C build uninstall
 
   build-alpine:
-    name: Alpine
+    name: Alpine (minimal)
     runs-on: ubuntu-22.04
     container:
       image: alpine:latest
@@ -195,6 +195,7 @@ jobs:
             autoconf \
             automake \
             build-base \
+            db-dev \
             gcc \
             libevent-dev \
             libgcrypt-dev \
@@ -203,19 +204,12 @@ jobs:
             ninja \
             openrc \
             openssl-dev \
-            pkgconfig &&
-          wget https://github.com/berkeleydb/libdb/releases/download/v5.3.28/db-5.3.28.tar.gz --no-check-certificate &&
-          tar xzf db-5.3.28.tar.gz &&
-          cd db-5.3.28/build_unix/ &&
-          ../dist/configure &&
-          make -j $(nproc) &&
-          make install
+            pkgconfig
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
         run: |
           ./configure \
-            --with-bdb=/usr/local/BerkeleyDB.5.3 \
             --with-init-style=openrc
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -231,7 +225,6 @@ jobs:
             -Dbuild-tests=true \
             -Denable-pgp-uam=disabled \
             -Dwith-acls=disabled \
-            -Dwith-bdb=/usr/local/BerkeleyDB.5.3 \
             -Dwith-init-style=openrc
       - name: Meson - Build
         run: ninja -C build
