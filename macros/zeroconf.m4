@@ -35,6 +35,8 @@ AC_DEFUN([AC_NETATALK_ZEROCONF], [
           ZEROCONF_CFLAGS="$AVAHI_CFLAGS"
           AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration])
           AC_DEFINE(HAVE_AVAHI, 1, [Use Avahi/DNS-SD registration])
+          FREEBSD_ZEROCONF_DAEMON="avahi_daemon"
+          AC_SUBST(FREEBSD_ZEROCONF_DAEMON)
           found_zeroconf=yes
         fi
         CPPFLAGS="$savedcppflags"
@@ -53,6 +55,8 @@ AC_DEFUN([AC_NETATALK_ZEROCONF], [
             if test "$ac_cv_lib_dns_sd_DNSServiceRegister" = yes; then
                 ZEROCONF_LIBS="-ldns_sd"
                 AC_DEFINE(HAVE_MDNS, 1, [Use mDNSRespnder/DNS-SD registration])
+                FREEBSD_ZEROCONF_DAEMON="mdnsd"
+                AC_SUBST(FREEBSD_ZEROCONF_DAEMON)
                 found_zeroconf=yes
             fi
 		    fi
