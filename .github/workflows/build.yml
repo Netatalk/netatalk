@@ -201,6 +201,7 @@ jobs:
             libtool \
             meson \
             ninja \
+            openrc \
             openssl-dev \
             pkgconfig &&
           wget https://github.com/berkeleydb/libdb/releases/download/v5.3.28/db-5.3.28.tar.gz --no-check-certificate &&
@@ -306,6 +307,83 @@ jobs:
         run: sudo ninja -C build install
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
+
+  build-opensuse:
+    name: openSUSE
+    runs-on: ubuntu-22.04
+    container:
+      image: opensuse/tumbleweed:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          zypper in -y \
+            automake \
+            file \
+            gawk \
+            gcc \
+            libtool \
+            make \
+            meson \
+            ninja \
+            systemd \
+            wget &&
+          zypper in -y \
+            bison \
+            cracklib-devel \
+            dbus-1-devel \
+            dbus-1-glib-devel \
+            flex \
+            glib2-devel \
+            krb5-devel \
+            libacl-devel \
+            libavahi-devel \
+            libdb-4_8-devel \
+            libevent-devel \
+            libgcrypt-devel \
+            libmariadb-devel \
+            libopenssl-devel \
+            libtalloc-devel \
+            libtdb-devel \
+            openldap2-devel \
+            pam-devel \
+            systemtap-sdt-devel \
+            tcpd-devel \
+            tracker \
+            tracker-devel
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --disable-init-hooks \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-cracklib \
+            --with-init-style=suse-systemd \
+            --with-tracker-pkgconfig-version=3.0
+      - name: Autotools - Build
+        run: make -j $(nproc)
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Ddisable-init-hooks=true \
+            -Dwith-init-style=suse-systemd
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
 
   build-macos:
     name: macOS
