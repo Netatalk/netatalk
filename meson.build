@@ -519,6 +519,9 @@ foreach dir : ssl_dirs
             dir / 'include/openssl',
         )
     endif
+    if ssl_link_args != []
+        break
+    endif
 endforeach
 
 crypto = declare_dependency(
@@ -526,7 +529,7 @@ crypto = declare_dependency(
     include_directories: ssl_includes,
 )
 
-if crypto.found()
+if ssl_link_args != [] and ssl_includes != []
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('OPENSSL_DHX', 1)
