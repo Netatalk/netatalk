@@ -824,7 +824,7 @@ else
     endif
 endif
 
-have_spotlight = tracker_sparql.found() and tracker_ok and talloc.found()
+have_spotlight = tracker_sparql.found() and tracker_ok and talloc.found() and flex.found() and bison.found()
 if have_spotlight
     cdata.set('WITH_SPOTLIGHT', 1)
 endif
