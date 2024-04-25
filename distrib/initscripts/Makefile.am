@@ -14,6 +14,7 @@ pkgconfdir = @PKGCONFDIR@
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    -e s@:PATH_NETATALK_LOCK:@${PATH_NETATALK_LOCK}@ \
+	    -e s@:ZEROCONF:@${FREEBSD_ZEROCONF_DAEMON}@ \
 	    <$< >$@
 
 GENERATED_FILES = \

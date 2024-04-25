@@ -684,6 +684,7 @@ dns_sd = cc.find_library('dns_sd', has_headers: 'dns_sd.h', required: false)
 system = cc.find_library('system', required: false)
 dns_sd_libs = [dns_sd, system]
 zeroconf_provider = []
+freebsd_zeroconf_daemon = ''
 
 have_dns = (
     (dns_sd.found() or system.found())
@@ -704,6 +705,7 @@ endif
 
 if avahi.found()
     cdata.set('HAVE_AVAHI', 1)
+    freebsd_zeroconf_daemon = 'avahi_daemon'
     if avahi.version() >= '0.6.4'
         cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
     endif
@@ -713,6 +715,7 @@ endif
 if have_dns
     cdata.set('HAVE_MDNS', 1)
     zeroconf_provider += 'mDNS'
+    freebsd_zeroconf_daemon = 'mdnsd'
 endif
 
 if enable_zeroconf
@@ -1721,6 +1724,8 @@ sed_command = [
     's@:NETATALK_VERSION:@' + version + '@',
     '-e',
     's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
+    '-e',
+    's@:ZEROCONF:@' + freebsd_zeroconf_daemon + '@',
     '@INPUT@',
 ]
 
