@@ -395,7 +395,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake libressl mysql talloc krb5 berkeley-db meson
+        run: brew install automake berkeley-db libressl libtool meson mysql talloc
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
@@ -403,9 +403,9 @@ jobs:
           ./configure \
             --enable-krbV-uam \
             --enable-pgp-uam \
-            --with-bdb=/usr/local/opt/berkeley-db \
+            --with-bdb=/opt/homebrew/opt/berkeley-db \
             --with-init-style=macos-launchd \
-            --with-ssl-dir=/usr/local/opt/libressl
+            --with-ssl-dir=/opt/homebrew/opt/libressl
       - name: Autotools - Build
         run: make -j $(nproc) all
       - name: Autotools - Run tests
@@ -417,9 +417,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-bdb=/usr/local/opt/berkeley-db \
+            -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
             -Dwith-init-style=macos-launchd \
-            -Dwith-ssl-dir=/usr/local/opt/libressl \
+            -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
             -Dbuild-tests=true
       - name: Meson - Build
         run: ninja -C build
