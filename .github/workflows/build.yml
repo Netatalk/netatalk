@@ -6,6 +6,10 @@ on:
       - branch-*
     paths-ignore:
       - "CONTRIBUTORS"
+      - "COPYING"
+      - "COPYRIGHT"
+      - "Dockerfile"
+      - "INSTALL"
       - "NEWS"
       - "README.md"
   pull_request:

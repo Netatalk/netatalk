@@ -59,8 +59,6 @@ Without this, the shared volume be stored in volatile storage that is lost upon 
 Sample `docker-compose.yml` with docker managed volume and Zeroconf
 
 ```
-version: "3"
-
 services:
   netatalk:
     image: netatalk3:latest
