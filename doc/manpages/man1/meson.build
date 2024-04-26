@@ -3,12 +3,17 @@ manxml = [
     'afpldaptest',
     'afppasswd',
     'afpstats',
-    'apple_dump',
-    'asip-status',
     'dbd',
-    'macusers',
     'netatalk-config',
 ]
+
+if perl.found() and grep.found()
+    manxml += [
+        'apple_dump',
+        'asip-status',
+        'macusers',
+    ]
+endif
 
 foreach man : manxml
     man_xmlfile = configure_file(

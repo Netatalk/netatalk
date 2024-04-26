@@ -134,14 +134,6 @@ Resolving deltas: 100% (32227/32227), done.
             <para>Internal event callbacks in the netatalk service controller
             daemon are built on libevent version 2.</para>
           </listitem>
-
-          <listitem>
-            <para>Perl</para>
-
-            <para>Administrative utilities such as
-            <userinput>asip-status</userinput> and
-            <userinput>macusers</userinput> rely on the Perl runtime.</para>
-          </listitem>
         </itemizedlist>
       </sect3>
 
@@ -273,7 +265,17 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>DocBook and xsltproc</para>
+            <para>Perl</para>
+
+            <para>Administrative utilities such as
+            <userinput>afpstats</userinput>,
+            <userinput>apple_dump</userinput>,
+            <userinput>asip-status</userinput> and
+            <userinput>macusers</userinput> rely on the Perl runtime.</para>
+          </listitem>
+
+          <listitem>
+            <para>DocBook XSL and xsltproc</para>
 
             <para>The netatalk documentation (such as this manual) are
             authored in XML format, and then styled with DocBook XSL
