@@ -109,7 +109,7 @@ Resolving deltas: 100% (32227/32227), done.
                 <primary>BDB</primary>
 
                 <secondary>Berkeley DB</secondary>
-              </indexterm>.</para>
+              </indexterm></para>
 
             <para>The default dbd CNID backend for netatalk uses Berkeley DB
             to store unique file identifiers. At the time of writing you need
@@ -240,9 +240,7 @@ Resolving deltas: 100% (32227/32227), done.
             <para>D-Bus and GLib bindings</para>
 
             <para>Used by the <userinput>afpstats</userinput> tool to inquire
-            afpd about file server usage statistics.
-            <userinput>afpstats</userinput> itself also requires Python
-            3.</para>
+            afpd about file server usage statistics.</para>
           </listitem>
 
           <listitem>
@@ -271,7 +269,10 @@ Resolving deltas: 100% (32227/32227), done.
             <userinput>afpstats</userinput>,
             <userinput>apple_dump</userinput>,
             <userinput>asip-status</userinput> and
-            <userinput>macusers</userinput> rely on the Perl runtime.</para>
+            <userinput>macusers</userinput> rely on the Perl runtime, version
+            5.8 or later. The required Perl modules include
+            <emphasis>IO::Socket::IP</emphasis> (asip-status) and
+            <emphasis>Net::DBus</emphasis> (afpstats).</para>
           </listitem>
 
           <listitem>

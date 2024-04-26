@@ -243,6 +243,7 @@ AC_CONFIG_FILES([
   contrib/macusers/Makefile
   contrib/macusers/macusers
   contrib/shell_utils/Makefile
+  contrib/shell_utils/afpstats
   contrib/shell_utils/apple_dump
   contrib/shell_utils/asip-status
   distrib/Makefile
