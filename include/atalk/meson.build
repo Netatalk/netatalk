@@ -25,11 +25,9 @@ headers = [
 if with_dtrace
     run_command(
         dtrace_command,
-        '-o',
-        'afp_dtrace.h',
+        '-o', 'afp_dtrace.h',
         '-h',
-        '-s',
-        'afp_dtrace.d',
+        '-s', 'afp_dtrace.d',
         check: true,
     )
 endif

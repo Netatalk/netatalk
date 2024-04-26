@@ -6,4 +6,3 @@ libcnid_last = static_library(
     include_directories: root_includes,
     install: false,
 )
-

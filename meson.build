@@ -309,10 +309,8 @@ endif
 
 run_command(
     cc,
-    '-c',
-    meson.project_source_root() / 'libatalk/dummy.c',
-    '-o',
-    meson.global_build_root() / 'dummy.o',
+    '-c', meson.project_source_root() / 'libatalk/dummy.c',
+    '-o', meson.global_build_root() / 'dummy.o',
     check: false,
 )
 compiler_mode = run_command(
@@ -697,10 +695,7 @@ have_dns = (
 if get_option('enable-zeroconf').disabled()
     enable_zeroconf = false
 else
-    enable_zeroconf = (
-        avahi.found() # mDNS support using Avahi
-        or have_dns # mDNS support using mDNSResponder
-    )
+    enable_zeroconf = (avahi.found() or have_dns)
 endif
 
 if avahi.found()
@@ -739,7 +734,8 @@ else
 
     if tracker_pkgconfig_version != ''
         tracker_sparql = dependency(
-            'tracker-sparql-' + get_option('with-tracker-pkgconfig-version'),
+            'tracker-sparql-'
+            + get_option('with-tracker-pkgconfig-version'),
             required: false,
         )
     endif
@@ -784,42 +780,50 @@ else
         if tracker.found()
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"' + tracker_sparql.get_variable(pkgconfig: 'prefix') + '/bin/tracker daemon"',
+                '"'
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
+                + '/bin/tracker daemon"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
-                '"' + tracker_sparql.get_variable(pkgconfig: 'prefix') + '"',
+                '"'
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
+                + '"',
             )
             tracker_manager += 'tracker'
         elif tracker3.found()
             cdata.set('HAVE_TRACKER3', 1)
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"' + tracker_sparql.get_variable(pkgconfig: 'prefix') + '/bin/tracker3 daemon"',
+                '"'
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
+                + '/bin/tracker3 daemon"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
-                '"' + tracker_sparql.get_variable(pkgconfig: 'prefix') + '"',
+                '"'
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
+                + '"',
             )
             tracker_manager += 'tracker3'
         elif tracker_control.found()
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"' + tracker_control.get_variable(pkgconfig: 'prefix') + '/bin/tracker-control"',
+                '"'
+                + tracker_control.get_variable(pkgconfig: 'prefix')
+                + '/bin/tracker-control"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
-                '"' + tracker_control.get_variable(pkgconfig: 'prefix') + '"',
+                '"'
+                + tracker_control.get_variable(pkgconfig: 'prefix')
+                + '"',
             )
             tracker_manager += 'tracker_control'
         else
             warning('tracker not found (required for Spotlight support')
         endif
-        tracker_ok = (
-            tracker.found()
-            or tracker3.found()
-            or tracker_control.found()
-        )
+        tracker_ok = (tracker.found() or tracker3.found() or tracker_control.found())
         if tracker_ok
             # Check for talloc
 
@@ -834,7 +838,13 @@ else
     endif
 endif
 
-have_spotlight = tracker_sparql.found() and tracker_ok and talloc.found() and flex.found() and bison.found()
+have_spotlight = (
+    tracker_sparql.found()
+    and tracker_ok
+    and talloc.found()
+    and flex.found()
+    and bison.found()
+)
 if have_spotlight
     cdata.set('WITH_SPOTLIGHT', 1)
 endif
@@ -1191,10 +1201,7 @@ else
     ldap = cc.find_library('ldap', dirs: libsearch_dirs, required: false)
 endif
 
-have_ldap = (
-    ldap.found()
-    and cc.has_function('ldap_initialize', dependencies: ldap)
-)
+have_ldap = (ldap.found() and cc.has_function('ldap_initialize', dependencies: ldap))
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
 endif
@@ -1241,7 +1248,6 @@ else
 endif
 
 libiconv = cc.find_library('iconv', dirs: libsearch_dirs, required: false)
-
 
 if iconv.found() or libiconv.found()
     if cc.compiles(
@@ -1712,20 +1718,13 @@ init_dir = ''
 
 sed_command = [
     find_program('sed', required: false),
-    '-e',
-    's@:BINDIR:@' + bindir + '@',
-    '-e',
-    's@:LOCALSTATEDIR:@' + localstatedir + '@',
-    '-e',
-    's@:ETCDIR:@' + pkgconfdir + '@',
-    '-e',
-    's@:SBINDIR:@' + sbindir + '@',
-    '-e',
-    's@:NETATALK_VERSION:@' + version + '@',
-    '-e',
-    's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
-    '-e',
-    's@:ZEROCONF:@' + freebsd_zeroconf_daemon + '@',
+    '-e', 's@:BINDIR:@' + bindir + '@',
+    '-e', 's@:LOCALSTATEDIR:@' + localstatedir + '@',
+    '-e', 's@:ETCDIR:@' + pkgconfdir + '@',
+    '-e', 's@:SBINDIR:@' + sbindir + '@',
+    '-e', 's@:NETATALK_VERSION:@' + version + '@',
+    '-e', 's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
+    '-e', 's@:ZEROCONF:@' + freebsd_zeroconf_daemon + '@',
     '@INPUT@',
 ]
 
@@ -1837,7 +1836,7 @@ if get_option('disable-shell-check')
 endif
 
 #
-# Variable substitution 
+# Variable substitution
 #
 
 # Reserved for future use:
@@ -1987,8 +1986,8 @@ if have_spotlight
         '  tracker install prefix': tracker_sparql.get_variable(
             pkgconfig: 'prefix',
         ),
-        '  tracker manager': tracker_sparql.get_variable(pkgconfig: 'prefix') / 'bin' /
-        tracker_manager + ' daemon',
+        '  tracker manager': tracker_sparql.get_variable(pkgconfig: 'prefix') / 'bin' / tracker_manager
+        + ' daemon',
     }
 endif
 summary(summary_info, bool_yn: true, section: '  Paths:')

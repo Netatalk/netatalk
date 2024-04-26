@@ -97,8 +97,7 @@ libafpd = static_library(
         threads,
     ],
     c_args: [
-        '-DAPPLCNAME',
-        confdir,
+        '-DAPPLCNAME', confdir,
         dversion,
         kerberos_c_args,
         messagedir,
@@ -126,8 +125,7 @@ afpd_objs = [libafpd.extract_all_objects(recursive: false)]
 if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
     run_command(
         'rm',
-        '-f',
-        meson.current_build_dir() / 'afp_dtrace.o',
+        '-f', meson.current_build_dir() / 'afp_dtrace.o',
         check: true,
     )
 endif
@@ -176,8 +174,7 @@ executable(
         threads,
     ],
     c_args: [
-        '-DAPPLCNAME',
-        confdir,
+        '-DAPPLCNAME', confdir,
         dversion,
         kerberos_c_args,
         messagedir,
@@ -190,7 +187,3 @@ executable(
     install_dir: sbindir,
     install_rpath: rpath,
 )
-
-
-
-

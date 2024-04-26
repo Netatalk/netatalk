@@ -1,10 +1,8 @@
 manpages_command = [
     xsltproc,
-    '--stringparam',
-    'man.output.quietly',
+    '--stringparam', 'man.output.quietly',
     '1',
-    '-o',
-    '@OUTPUT@',
+    '-o', '@OUTPUT@',
     manpages_stylesheet,
     '@INPUT@',
 ]
