@@ -505,6 +505,7 @@ jobs:
               libtool \
               meson \
               openldap-client-2.6.6v0 \
+              openpam \
               pkgconf \
               tracker3
           run: |
@@ -512,6 +513,8 @@ jobs:
             echo "Building with Autotools"
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
+            export CFLAGS=-I/usr/local/include
+            export LDFLAGS=-L/usr/local/lib
             autoreconf -fi
             ./configure \
               --with-init-style=openbsd \
