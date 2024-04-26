@@ -2,13 +2,13 @@ manxml = [
     'ad',
     'afpldaptest',
     'afppasswd',
-    'afpstats',
     'dbd',
     'netatalk-config',
 ]
 
 if perl.found() and grep.found()
     manxml += [
+        'afpstats',
         'apple_dump',
         'asip-status',
         'macusers',

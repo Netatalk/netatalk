@@ -1,4 +1,10 @@
-install_data('afpstats', install_dir: bindir)
+afpstats_script = configure_file(
+    input: 'afpstats.in',
+    output: 'afpstats',
+    configuration: cdata,
+)
+
+install_data(afpstats_script, install_dir: bindir)
 
 if perl.found() and grep.found()
     appledump_script = configure_file(

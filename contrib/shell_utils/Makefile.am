@@ -5,8 +5,9 @@ pkgconfdir = @PKGCONFDIR@
 GENERATED_FILES =
 TEMPLATE_FILES =
 PERLSCRIPTS = \
-	asip-status \
-	apple_dump
+	afpstats \
+	apple_dump \
+	asip-status
 
 SUFFIXES = .tmpl .
 
@@ -18,6 +19,6 @@ SUFFIXES = .tmpl .
 
 CLEANFILES = $(GENERATED_FILES)
 
-bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES) afpstats
+bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
 
-EXTRA_DIST = $(TEMPLATE_FILES) make-casetable.pl make-precompose.h.pl afpstats fce_ev_script.sh docker-entrypoint.sh
+EXTRA_DIST = $(TEMPLATE_FILES) make-casetable.pl make-precompose.h.pl fce_ev_script.sh docker-entrypoint.sh
