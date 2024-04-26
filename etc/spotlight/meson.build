@@ -1,15 +1,13 @@
 run_command(
     flex,
-    '-o',
-    'spotlight_rawquery_lexer.c',
+    '-o', 'spotlight_rawquery_lexer.c',
     'spotlight_rawquery_lexer.l',
     check: true,
 )
 run_command(
     bison,
     '-d',
-    '-o',
-    'sparql_parser.c',
+    '-o', 'sparql_parser.c',
     'sparql_parser.y',
     check: true,
 )

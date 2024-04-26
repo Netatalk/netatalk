@@ -72,8 +72,7 @@ afpdtestlib = static_library(
         threads,
     ],
     c_args: [
-        '-DAPPLCNAME',
-        confdir,
+        '-DAPPLCNAME', confdir,
         dversion,
         kerberos_c_args,
         messagedir,
@@ -101,8 +100,7 @@ test_objs = [afpdtestlib.extract_all_objects(recursive: false)]
 if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
     run_command(
         'rm',
-        '-f',
-        meson.current_build_dir() / 'afp_dtrace.o',
+        '-f', meson.current_build_dir() / 'afp_dtrace.o',
         check: true,
     )
 endif

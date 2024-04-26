@@ -15,8 +15,7 @@ elif get_option('with-init-style') == 'redhat-sysv'
     if not get_option('disable-init-hooks')
         meson.add_install_script(
             find_program('chkconfig'),
-            '--add',
-            '/etc/rc.d/init.d/netatalk',
+            '--add', '/etc/rc.d/init.d/netatalk',
         )
     endif
 elif (
@@ -65,7 +64,10 @@ elif get_option('with-init-style') == 'suse-sysv'
         install_mode: 'rwxr-xr-x',
     )
     if not get_option('disable-init-hooks')
-        meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+        meson.add_install_script(
+            find_program('insserv'),
+            '/etc/init.d/netatalk',
+        )
     endif
 elif get_option('with-init-style') == 'freebsd'
     init_dir += '/etc/rc.d'
@@ -80,7 +82,11 @@ elif get_option('with-init-style') == 'freebsd'
         install_mode: 'rwxr-xr-x',
     )
     if not get_option('disable-init-hooks')
-        meson.add_install_script(find_program('sh'), '/etc/rc.d/netatalk', 'enable')
+        meson.add_install_script(
+            find_program('sh'),
+            '/etc/rc.d/netatalk',
+            'enable',
+        )
     endif
 elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
@@ -107,7 +113,11 @@ elif get_option('with-init-style') == 'openbsd'
         install_mode: 'rwxr-xr-x',
     )
     if not get_option('disable-init-hooks')
-        meson.add_install_script(find_program('rcctl'), '-d', 'enable', 'netatalk')
+        meson.add_install_script(
+            find_program('rcctl'),
+            '-d', 'enable',
+            'netatalk',
+        )
     endif
 elif get_option('with-init-style') == 'solaris'
     init_dir += '/lib/svc/manifest/network'
@@ -206,8 +216,7 @@ elif get_option('with-init-style') == 'macos-launchd'
         meson.add_install_script(
             find_program('launchctl'),
             'load',
-            '-w',
-            init_dir / 'io.netatalk.daemon.plist',
+            '-w', init_dir / 'io.netatalk.daemon.plist',
         )
     endif
 endif

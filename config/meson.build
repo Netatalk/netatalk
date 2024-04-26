@@ -16,8 +16,7 @@ custom_target(
 
 if (
     not fs.exists(pkgconfdir / 'afp.conf')
-    or (get_option('enable-overwrite')
-    and fs.exists(pkgconfdir / 'afp.conf'))
+    or (get_option('enable-overwrite') and fs.exists(pkgconfdir / 'afp.conf'))
 )
     install_data(afp_conf, install_dir: pkgconfdir)
 else
