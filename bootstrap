@@ -12,7 +12,7 @@ DIE=0
 
 (libtool --version || glibtool --version) < /dev/null > /dev/null 2>&1 || {
   echo
-  echo "**Error**: You must have \`libtool' installed."
+  echo "**Error**: You must have \`libtool' (or glibtool) installed."
   echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.2d.tar.gz"
   echo "(or a newer version if it is available)"
   DIE=1
