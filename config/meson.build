@@ -25,7 +25,7 @@ endif
 
 install_data('extmap.conf', install_dir: pkgconfdir)
 
-install_data('netatalk-dbus.conf', install_dir: pkgconfdir / 'dbus-1/system.d')
+install_data('netatalk-dbus.conf', install_dir: dbus_sysconf_dir)
 
 install_data('README', install_dir: localstatedir / 'netatalk')
 
