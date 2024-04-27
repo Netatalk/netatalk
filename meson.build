@@ -667,7 +667,7 @@ avahi = dependency('avahi-client', required: false)
 dns_sd = cc.find_library('dns_sd', has_headers: 'dns_sd.h', required: false)
 system = cc.find_library('system', required: false)
 dns_sd_libs = [dns_sd, system]
-zeroconf_provider = []
+zeroconf_provider = ''
 
 have_dns = (
     (dns_sd.found() or system.found())
@@ -677,31 +677,25 @@ have_dns = (
     )
 )
 
-if get_option('enable-zeroconf').disabled()
-    enable_zeroconf = false
-else
-    enable_zeroconf = (
-        avahi.found() # mDNS support using Avahi
-        or have_dns # mDNS support using mDNSResponder
-    )
-endif
-
 if avahi.found()
+    cdata.set('USE_ZEROCONF', 1)
     cdata.set('HAVE_AVAHI', 1)
     if avahi.version() >= '0.6.4'
         cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
     endif
     zeroconf_provider += 'Avahi'
-endif
-
-if have_dns
+elif have_dns
+    cdata.set('USE_ZEROCONF', 1)
     cdata.set('HAVE_MDNS', 1)
     zeroconf_provider += 'mDNS'
 endif
 
-if enable_zeroconf
-    cdata.set('USE_ZEROCONF', 1)
+if get_option('enable-zeroconf').disabled()
+    enable_zeroconf = false
+else
+    enable_zeroconf = avahi.found() or have_dns
 endif
+
 
 #
 # Check for CUPS
