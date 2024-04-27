@@ -404,7 +404,7 @@ static int do_gss_auth(void *obj, char *ibuf, int ticket_len,
         if (!ret) {
             /* FIXME: Is copying the authenticator really necessary?
                Where is this documented? */
-            u_int16_t auth_len = htons( authenticator_buff.length );
+            uint16_t auth_len = htons( authenticator_buff.length );
 
             /* copy the authenticator length into the reply buffer */
             memcpy( rbuf, &auth_len, sizeof(auth_len) );
@@ -438,7 +438,7 @@ static int gss_login(void *obj, struct passwd **uam_pwd,
                      char *rbuf, size_t *rbuflen)
 {
 
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 
@@ -456,9 +456,9 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
                          char *rbuf, size_t *rbuflen)
 {
     struct passwd *pwd = NULL;
-    u_int16_t login_id;
+    uint16_t login_id;
     char *username;
-    u_int16_t ticket_len;
+    uint16_t ticket_len;
     char *p;
     int rblen;
     size_t userlen;
@@ -467,9 +467,9 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
     /* Apple's AFP 3.1 documentation specifies that this command
      * takes the following format:
      * pad (byte)
-     * id returned in LoginExt response (u_int16_t)
+     * id returned in LoginExt response (uint16_t)
      * username (format unspecified) padded, when necessary, to end on an even boundary
-     * ticket length (u_int16_t)
+     * ticket length (uint16_t)
      * ticket
      */
 
@@ -477,14 +477,14 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
      * format of this request is as follows:
      * pad (byte) [consumed before login_ext is called]
      * ?? (byte) - always observed to be 0
-     * id returned in LoginExt response (u_int16_t)
+     * id returned in LoginExt response (uint16_t)
      * username, encoding unspecified, null terminated C string,
      *   padded when the terminating null is an even numbered byte.
      *   The packet is formated such that the username begins on an
      *   odd numbered byte. Eg if the username is 3 characters and the
      *   terminating null makes 4, expect to pad the the result.
      *   The encoding of this string is unknown.
-     * ticket length (u_int16_t)
+     * ticket length (uint16_t)
      * ticket
      */
 
@@ -574,7 +574,7 @@ static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen)
 {
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 

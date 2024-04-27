@@ -127,7 +127,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     struct iovec        iov[ 8 ];
     pid_t               pid;
     int                 i, iovcnt, sid;
-    u_int16_t           asperr = 0;
+    uint16_t           asperr = 0;
     char                *buf;
     int                 buflen;
 

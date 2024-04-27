@@ -30,16 +30,16 @@
 #include <netatalk/endian.h>
 
 struct ziphdr {
-    u_int8_t    zh_op;
-    u_int8_t    zh_cnt;
+    uint8_t    zh_op;
+    uint8_t    zh_cnt;
 #define zh_count	zh_cnt
 #define zh_zero		zh_cnt
 #define zh_flags	zh_cnt
 };
 
 struct zipreplent {
-    u_int16_t   zre_net;
-    u_int8_t    zre_zonelen;
+    uint16_t   zre_net;
+    uint8_t    zre_zonelen;
 };
 
 #define ZIPOP_QUERY	1

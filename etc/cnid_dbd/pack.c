@@ -106,7 +106,7 @@ unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
 {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
     unsigned char *buf = start +CNID_LEN;
-    u_int32_t i;
+    uint32_t i;
 
     pack_devino(buf, rqst->dev, rqst->ino);
     buf += CNID_DEVINO_LEN;

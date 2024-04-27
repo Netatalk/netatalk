@@ -203,9 +203,9 @@ static int megatron( char *path, int module, char *newname, int flags)
 
         printf("name:               %s\n",fh.name);
         printf("comment:            %s\n",fh.comment);
-	memcpy(&buf, &fh.finder_info.fdCreator, sizeof(u_int32_t));
+	memcpy(&buf, &fh.finder_info.fdCreator, sizeof(uint32_t));
 	printf("creator:            '%4s'\n", buf);
-	memcpy(&buf, &fh.finder_info.fdType, sizeof(u_int32_t));
+	memcpy(&buf, &fh.finder_info.fdType, sizeof(uint32_t));
 	printf("type:               '%4s'\n", buf);
         for(i=0; i < NUMFORKS; ++i) 
 	  printf("fork length[%d]:     %u\n", i, ntohl(fh.forklen[i]));

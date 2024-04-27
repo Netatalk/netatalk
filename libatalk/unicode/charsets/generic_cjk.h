@@ -25,18 +25,18 @@
 #define CJK_PULL_BUFFER 8
 
 typedef struct {
-  u_int16_t range[2];
-  const u_int16_t (*summary)[2];
+  uint16_t range[2];
+  const uint16_t (*summary)[2];
 } cjk_index_t;
 
-extern size_t cjk_generic_push (size_t (*)(u_int8_t*, const ucs2_t*, size_t*),
+extern size_t cjk_generic_push (size_t (*)(uint8_t*, const ucs2_t*, size_t*),
 				   void*, char**, size_t*, char**, size_t*);
-extern size_t cjk_generic_pull (size_t (*)(ucs2_t*, const u_int8_t*, size_t*),
+extern size_t cjk_generic_pull (size_t (*)(ucs2_t*, const uint8_t*, size_t*),
 				   void*, char**, size_t*, char**, size_t*);
 
-extern size_t cjk_char_push (u_int16_t, u_int8_t*);
-extern size_t cjk_char_pull (ucs2_t, ucs2_t*, const u_int32_t*);
+extern size_t cjk_char_push (uint16_t, uint8_t*);
+extern size_t cjk_char_pull (ucs2_t, ucs2_t*, const uint32_t*);
 
-extern u_int16_t cjk_lookup (u_int16_t, const cjk_index_t*, const u_int16_t*);
-extern ucs2_t cjk_compose (ucs2_t, ucs2_t, const u_int32_t*, size_t);
-extern ucs2_t cjk_compose_seq (const ucs2_t*, size_t*, const u_int32_t*, size_t);
+extern uint16_t cjk_lookup (uint16_t, const cjk_index_t*, const uint16_t*);
+extern ucs2_t cjk_compose (ucs2_t, ucs2_t, const uint32_t*, size_t);
+extern ucs2_t cjk_compose_seq (const ucs2_t*, size_t*, const uint32_t*, size_t);

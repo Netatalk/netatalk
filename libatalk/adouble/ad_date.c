@@ -6,7 +6,7 @@
 #include <atalk/adouble.h>
 
 int ad_setdate(struct adouble *ad, 
-	       unsigned int dateoff, u_int32_t date)
+	       unsigned int dateoff, uint32_t date)
 {
   int xlate = (dateoff & AD_DATE_UNIX);
 
@@ -38,7 +38,7 @@ int ad_setdate(struct adouble *ad,
 }
 
 int ad_getdate(const struct adouble *ad,
-	       unsigned int dateoff, u_int32_t *date) 
+	       unsigned int dateoff, uint32_t *date) 
 {
   int xlate = (dateoff & AD_DATE_UNIX);
 
@@ -48,7 +48,7 @@ int ad_getdate(const struct adouble *ad,
       return -1;
     if (!ad_getentryoff(ad, ADEID_FILEI))
         return -1;
-    memcpy(date, ad_entry(ad, ADEID_FILEI) + dateoff, sizeof(u_int32_t));
+    memcpy(date, ad_entry(ad, ADEID_FILEI) + dateoff, sizeof(uint32_t));
 
   } else if (ad->ad_version == AD_VERSION2) {
     if (!ad_getentryoff(ad, ADEID_FILEDATESI))
@@ -56,7 +56,7 @@ int ad_getdate(const struct adouble *ad,
 
     if (dateoff > AD_DATE_ACCESS)
       return -1;
-    memcpy(date, ad_entry(ad, ADEID_FILEDATESI) + dateoff, sizeof(u_int32_t));
+    memcpy(date, ad_entry(ad, ADEID_FILEDATESI) + dateoff, sizeof(uint32_t));
 
   } else 
     return -1;

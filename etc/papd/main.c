@@ -58,9 +58,9 @@
 /* This maps to TReq and TResp, per "Inside AppleTalk" 10-13 */
 
 typedef struct __attribute__((__packed__)) {
-	u_int8_t user_bytes[4];
-	u_int8_t data_bytes[4];
-	u_int8_t buf_len;
+	uint8_t user_bytes[4];
+	uint8_t data_bytes[4];
+	uint8_t buf_len;
 	char buf[255];
 } rbuf_t;
 

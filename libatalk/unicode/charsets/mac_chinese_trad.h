@@ -20,44 +20,44 @@
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
-static const u_int16_t mac_chinese_trad_uni2_page00[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page00[][2] = {
   /* 0x00a */ { 0x0201,    0 }, { 0x0080,    2 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_page20[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page20[][2] = {
   /* 0x202 */ { 0x0044,    3 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_page21[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page21[][2] = {
   /* 0x212 */ { 0x0004,    5 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_page22[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page22[][2] = {
   /* 0x229 */ { 0x0020,    6 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x22c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x8000,    7 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_page25[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page25[][2] = {
   /* 0x259 */ { 0x0020,    8 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_page26[][2] = {
+static const uint16_t mac_chinese_trad_uni2_page26[][2] = {
   /* 0x264 */ { 0x0002,    9 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_pagee0[][2] = {
+static const uint16_t mac_chinese_trad_uni2_pagee0[][2] = {
   /* 0xe00 */ { 0xffff,   10 }, { 0x00ff,   26 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_pagef8[][2] = {
+static const uint16_t mac_chinese_trad_uni2_pagef8[][2] = {
   /* 0xf88 */ { 0x0003,   34 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_pagefe[][2] = {
+static const uint16_t mac_chinese_trad_uni2_pagefe[][2] = {
   /* 0xfe4 */ { 0x1000,   36 }, { 0x7ef5,   37 },
 };
 
-static const u_int16_t mac_chinese_trad_uni2_pageff[][2] = {
+static const uint16_t mac_chinese_trad_uni2_pageff[][2] = {
   /* 0xff6 */ { 0x0010,   49 },
 };
 
@@ -75,7 +75,7 @@ static const cjk_index_t mac_chinese_trad_uni2_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_chinese_trad_uni2_charset[] = {
+static const uint16_t mac_chinese_trad_uni2_charset[] = {
   0x00a0, 0x00fd, 0xa145, 0xffff, 0x00ff, 0x00fe, 0xa1f2, 0xa14b,
   0xffff, 0xffff, 0x0080, 0xa1c3, 0xa279, 0xa14e, 0xa1a3, 0xa1a4,
   0xa2cc, 0xa2ce, 0xa1cb, 0xa154, 0xa17d, 0xa17e, 0xa14d, 0xa14f,
@@ -85,12 +85,12 @@ static const u_int16_t mac_chinese_trad_uni2_charset[] = {
   0xffff, 0xffff,
 };
 
-static const u_int16_t mac_chinese_trad_2uni_page00[][2] = {
+static const uint16_t mac_chinese_trad_2uni_page00[][2] = {
   /* 0x008 */ { 0x0007,    0 }, { 0x0000,    0 }, { 0x0001,    3 }, { 0x0000,    0 },
   /* 0x00c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0xe000,    4 },
 };
 
-static const u_int16_t mac_chinese_trad_2uni_pagea1[][2] = {
+static const uint16_t mac_chinese_trad_2uni_pagea1[][2] = {
   /* 0xa14 */ { 0xe820,    7 }, { 0x041f,   12 }, { 0x0000,    0 }, { 0x6000,   18 },
   /* 0xa18 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x001e,   20 }, { 0x0000,    0 },
   /* 0xa1c */ { 0x0828,   24 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x4004,   27 },
@@ -106,7 +106,7 @@ static const cjk_index_t mac_chinese_trad_2uni_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_chinese_trad_2uni_charset[] = {
+static const uint16_t mac_chinese_trad_2uni_charset[] = {
   0xe000, 0xf880, 0xf881, 0x00a0, 0x00a9, 0x2122, 0x2026, 0x00b7,
   0x22ef, 0xe00c, 0xe003, 0xe00d, 0xe00e, 0xe011, 0xe010, 0xe012,
   0xe009, 0xe015, 0xe00a, 0xe00b, 0xe016, 0xe017, 0xe004, 0xe005,
@@ -114,7 +114,7 @@ static const u_int16_t mac_chinese_trad_2uni_charset[] = {
   0xe007,
 };
 
-static const u_int32_t mac_chinese_trad_compose[] = {
+static const uint32_t mac_chinese_trad_compose[] = {
   0x005cf87f, 0x203ef87c, 0x2502f87f, 0x3001f87d,
   0x3014f87f, 0x3015f87f, 0x5341f87f, 0x5345f87f,
   0xfe4bf87c, 0xff01f87d, 0xff08f87f, 0xff09f87f,

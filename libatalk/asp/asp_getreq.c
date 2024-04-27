@@ -38,7 +38,7 @@
 int asp_getrequest(ASP asp)
 {
     struct atp_block	atpb;
-    u_int16_t		seq;
+    uint16_t		seq;
 
     asp->asp_sat.sat_port = ATADDR_ANYPORT;
     atpb.atp_saddr = &asp->asp_sat;

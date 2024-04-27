@@ -62,10 +62,10 @@
 
 
 struct finderinfo {
-	u_int32_t f_type;
-	u_int32_t creator;
-	u_int16_t attrs;    /* File attributes (high 8 bits)*/
-	u_int16_t label;    /* Label (low 8 bits )*/
+	uint32_t f_type;
+	uint32_t creator;
+	uint16_t attrs;    /* File attributes (high 8 bits)*/
+	uint16_t label;    /* Label (low 8 bits )*/
 	char reserved[22]; /* Unknown (at least for now...) */
 };
 
@@ -89,14 +89,14 @@ typedef char packed_finder[ADEDLEN_FINDERI];
 
 /* This is our search-criteria structure. */
 struct scrit {
-	u_int32_t rbitmap;          /* Request bitmap - which values should we check ? */
-	u_int16_t fbitmap, dbitmap; /* file & directory bitmap - which values should we return ? */
-	u_int16_t attr;             /* File attributes */
+	uint32_t rbitmap;          /* Request bitmap - which values should we check ? */
+	uint16_t fbitmap, dbitmap; /* file & directory bitmap - which values should we return ? */
+	uint16_t attr;             /* File attributes */
 	time_t cdate;               /* Creation date */
 	time_t mdate;               /* Last modification date */
 	time_t bdate;               /* Last backup date */
-	u_int32_t pdid;             /* Parent DID */
-	u_int16_t offcnt;           /* Offspring count */
+	uint32_t pdid;             /* Parent DID */
+	uint16_t offcnt;           /* Offspring count */
 	struct finderinfo finfo;    /* Finder info */
 	char lname[64];             /* Long name */ 
 	char utf8name[514];         /* UTF8 or UCS2 name */ /* for convert_charset dest_len parameter +2 */
@@ -112,7 +112,7 @@ struct scrit {
  */
 struct dsitem {
     cnid_t ds_did;               /* CNID of this directory           */
-    u_int32_t ds_checked;    /* Have we checked this directory ? */
+    uint32_t ds_checked;    /* Have we checked this directory ? */
 };
  
 
@@ -243,11 +243,11 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, stru
  */
 static int crit_check(struct vol *vol, struct path *path) {
 	int result = 0;
-	u_int16_t attr, flags = CONV_PRECOMPOSE;
+	uint16_t attr, flags = CONV_PRECOMPOSE;
 	struct finderinfo *finfo = NULL, finderinfo;
 	struct adouble *adp = NULL;
 	time_t c_date, b_date;
-	u_int32_t ac_date, ab_date;
+	uint32_t ac_date, ab_date;
 	static char convbuf[514]; /* for convert_charset dest_len parameter +2 */
 	size_t len;
     int islnk;
@@ -415,7 +415,7 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
 	char 		*p = *buf;
 	int 		ret;
 	size_t		tbuf =0;
-	u_int16_t	resultsize;
+	uint16_t	resultsize;
 	int 		isdir = S_ISDIR(path->st.st_mode); 
 
 	/* Skip resultsize */
@@ -488,7 +488,7 @@ static int catsearch(struct vol *vol,
                      int *rsize,
                      int ext)
 {
-    static u_int32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
+    static uint32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
     static DIR *dirpos; 		 /* UNIX structure describing currently opened directory. */
     struct dir *currentdir;      /* struct dir of current directory */
 	int cidx, r;
@@ -839,17 +839,17 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
                   char *rbuf, size_t *rbuflen, int ext)
 {
     struct vol *vol;
-    u_int16_t   vid;
-    u_int16_t   spec_len;
-    u_int32_t   rmatches, reserved;
-    u_int32_t	catpos[4];
-    u_int32_t   pdid = 0;
+    uint16_t   vid;
+    uint16_t   spec_len;
+    uint32_t   rmatches, reserved;
+    uint32_t	catpos[4];
+    uint32_t   pdid = 0;
     int ret, rsize;
-    u_int32_t nrecs = 0;
+    uint32_t nrecs = 0;
     unsigned char *spec1, *spec2, *bspec1, *bspec2;
     size_t	len;
-    u_int16_t	namelen;
-    u_int16_t	flags;
+    uint16_t	namelen;
+    uint16_t	flags;
     char  	    tmppath[256];
     char        *uname = NULL;
 

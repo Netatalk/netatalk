@@ -48,7 +48,7 @@
 	for one of the two functions at a time.
  */
 static struct bin_file_data {
-    u_int32_t		forklen[ NUMFORKS ];
+    uint32_t		forklen[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
     int			filed;
     u_short		headercrc;
@@ -409,7 +409,7 @@ int bin_header_read(struct FHeader *fh, int revision)
 int bin_header_write(struct FHeader *fh)
 {
     char		*write_ptr;
-    u_int32_t           t;
+    uint32_t           t;
     int			wc;
     int			wr;
 

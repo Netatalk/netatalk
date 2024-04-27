@@ -315,11 +315,11 @@ int addmulti(const char *name, const unsigned char *data)
     return 0;
 }
 
-static u_int16_t
+static uint16_t
 atalk_cksum( u_char *data, int len)
 {
     u_char	*end;
-    u_int32_t	cksum = 0;
+    uint32_t	cksum = 0;
 
     for ( end = data + len; data < end; data++ ) {
 	cksum = ( cksum + *data ) << 1;
@@ -333,7 +333,7 @@ atalk_cksum( u_char *data, int len)
 	cksum = 0x0000ffff;
     }
 
-    return( (u_int16_t) cksum );
+    return( (uint16_t) cksum );
 }
 
 /*
@@ -346,7 +346,7 @@ int
 zone_bcast( struct ziptab *zt)
 {
     u_char		uname[ 32 ];
-    u_int16_t		cksum;
+    uint16_t		cksum;
     int			i;
 
     if (!zt->zt_bcast &&

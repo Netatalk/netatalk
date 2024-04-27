@@ -48,7 +48,7 @@
  * This is instance of CNID database object.
  */
 struct _cnid_db {
-    u_int32_t flags;             /* Flags describing some CNID backend aspects. */
+    uint32_t flags;             /* Flags describing some CNID backend aspects. */
     char *volpath;               /* Volume path this particular CNID db refers to. */
     void *_private;              /* back-end speficic data */
 
@@ -90,7 +90,7 @@ struct _cnid_module {
     char *name;
     struct list_head db_list;   /* CNID modules are also stored on a bidirectional list. */
     struct _cnid_db *(*cnid_open)(struct cnid_open_args *args);
-    u_int32_t flags;            /* Flags describing some CNID backend aspects. */
+    uint32_t flags;            /* Flags describing some CNID backend aspects. */
 
 };
 typedef struct _cnid_module cnid_module;

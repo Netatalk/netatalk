@@ -15,7 +15,7 @@
 
 DSI *dsi_init(const dsi_proto protocol, const char *program, 
 	      const char *hostname, const char *address,
-	      const char *port, const int proxy, const u_int32_t quantum)
+	      const char *port, const int proxy, const uint32_t quantum)
 {
     DSI		*dsi;
 

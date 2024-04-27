@@ -44,7 +44,7 @@ static gcry_mpi_t p, g, Ra;
 static gcry_mpi_t serverNonce;
 static char *K_MD5hash = NULL;
 static int K_hash_len;
-static u_int16_t ID;
+static uint16_t ID;
 
 /* The initialization vectors for CAST128 are fixed by Apple. */
 static unsigned char dhx_c2siv[] = { 'L', 'W', 'a', 'l', 'l', 'a', 'c', 'e' };
@@ -371,7 +371,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char *username;
     size_t len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 
@@ -721,7 +721,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen)
 {
-    u_int16_t retID;
+    uint16_t retID;
     int ret;
 
     /* check for session id */

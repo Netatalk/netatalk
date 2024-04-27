@@ -61,7 +61,7 @@ struct afp_options {
     int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
-    u_int32_t server_quantum;
+    uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
 #ifndef NO_DDP

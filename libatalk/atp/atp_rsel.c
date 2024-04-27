@@ -79,8 +79,8 @@ atp_rsel(
     struct atphdr	req_hdr, resp_hdr;
     fd_set		fds;
     int			i, recvlen, requesting, mask, c;
-    u_int8_t		rfunc;
-    u_int16_t		tid;
+    uint8_t		rfunc;
+    uint16_t		tid;
     struct timeval	tv;
     struct sockaddr_at	saddr;
 

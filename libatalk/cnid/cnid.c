@@ -176,7 +176,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
 }
 
 /* ------------------- */
-static void block_signal( u_int32_t flags)
+static void block_signal( uint32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
         pthread_sigmask(SIG_BLOCK, &sigblockset, NULL);
@@ -184,7 +184,7 @@ static void block_signal( u_int32_t flags)
 }
 
 /* ------------------- */
-static void unblock_signal(u_int32_t flags)
+static void unblock_signal(uint32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
         pthread_sigmask(SIG_UNBLOCK, &sigblockset, NULL);
@@ -214,7 +214,7 @@ static cnid_t valide(cnid_t id)
 /* Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
 void cnid_close(struct _cnid_db *db)
 {
-u_int32_t flags;
+uint32_t flags;
 
     if (NULL == db) {
         LOG(log_error, logtype_afpd, "Error: cnid_close called with NULL argument !");

@@ -34,7 +34,7 @@
 #include "desktop.h"
 #include "volume.h"
 
-static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_t *buflen)
+static int getforkparams(struct ofork *ofork, uint16_t bitmap, char *buf, size_t *buflen)
 {
     struct path         path;
     struct stat		*st;
@@ -89,7 +89,7 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_
 /* ---------------------------- */
 static off_t get_off_t(char **ibuf, int is64)
 {
-    u_int32_t             temp;
+    uint32_t             temp;
     off_t                 ret;
 
     ret = 0;
@@ -111,7 +111,7 @@ static off_t get_off_t(char **ibuf, int is64)
 /* ---------------------- */
 static int set_off_t(off_t offset, char *rbuf, int is64)
 {
-    u_int32_t  temp;
+    uint32_t  temp;
     int        ret;
 
     ret = 0;
@@ -242,11 +242,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     struct adouble      *adsame = NULL;
     size_t		buflen;
     int			ret, adflags, eid;
-    u_int32_t           did;
-    u_int16_t		vid, bitmap, access, ofrefnum;
+    uint32_t           did;
+    uint16_t		vid, bitmap, access, ofrefnum;
     char		fork, *path, *upath;
     struct stat         *st;
-    u_int16_t           bshort;
+    uint16_t           bshort;
     struct path         *s_path;
     
     ibuf++;
@@ -438,16 +438,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         }
     }
 
-    if (( ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof( u_int16_t ),
+    if (( ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof( uint16_t ),
                               &buflen )) != AFP_OK ) {
         ad_close( ofork->of_ad, adflags );
         goto openfork_err;
     }
 
-    *rbuflen = buflen + 2 * sizeof( u_int16_t );
+    *rbuflen = buflen + 2 * sizeof( uint16_t );
     bitmap = htons( bitmap );
-    memcpy(rbuf, &bitmap, sizeof( u_int16_t ));
-    rbuf += sizeof( u_int16_t );
+    memcpy(rbuf, &bitmap, sizeof( uint16_t ));
+    rbuf += sizeof( uint16_t );
 
     /* check  WriteInhibit bit if we have a ressource fork
      * the test is done here, after some Mac trafic capture 
@@ -513,7 +513,7 @@ int afp_setforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf _U
     struct vol      *vol;
     struct dir      *dir;
     off_t		size;
-    u_int16_t		ofrefnum, bitmap;
+    uint16_t		ofrefnum, bitmap;
     int                 err;
     int                 is64;
     int                 eid;
@@ -656,8 +656,8 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     struct ofork	*ofork;
     off_t               offset, length;
     int                 eid;
-    u_int16_t		ofrefnum;
-    u_int8_t            flags;
+    uint16_t		ofrefnum;
+    uint8_t            flags;
     int                 lockop;
     
     *rbuflen = 0;
@@ -837,7 +837,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     off_t		offset, saveoff, reqcount, savereqcount;
     ssize_t		cc, err;
     int			eid, xlate = 0;
-    u_int16_t		ofrefnum;
+    uint16_t		ofrefnum;
     u_char		nlmask, nlchar;
 
     ibuf += 2;
@@ -1003,7 +1003,7 @@ int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
 int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol *vol;
-    u_int16_t vid;
+    uint16_t vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1020,7 +1020,7 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, s
 int afp_flushfork(AFPObj *obj _U_, char	*ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork	*ofork;
-    u_int16_t		ofrefnum;
+    uint16_t		ofrefnum;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1047,7 +1047,7 @@ int afp_flushfork(AFPObj *obj _U_, char	*ibuf, size_t ibuflen _U_, char *rbuf _U
 int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork        *ofork;
-    u_int16_t           ofrefnum;
+    uint16_t           ofrefnum;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1113,7 +1113,7 @@ int flushfork(struct ofork *ofork)
 int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork	*ofork;
-    u_int16_t		ofrefnum;
+    uint16_t		ofrefnum;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1180,7 +1180,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     struct ofork	*ofork;
     off_t           offset, saveoff, reqcount, oldsize, newsize;
     int		        endflag, eid, xlate = 0, err = AFP_OK;
-    u_int16_t		ofrefnum;
+    uint16_t		ofrefnum;
     ssize_t             cc;
 
     /* figure out parameters */
@@ -1371,7 +1371,7 @@ int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbu
 {
     struct ofork	*ofork;
     int             ret;
-    u_int16_t		ofrefnum, bitmap;
+    uint16_t		ofrefnum, bitmap;
     size_t          buflen;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));

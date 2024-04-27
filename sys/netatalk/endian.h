@@ -20,26 +20,26 @@
 #include <inttypes.h>
 #ifndef __BIT_TYPES_DEFINED__
 #define __BIT_TYPES_DEFINED__
-typedef uint8_t        u_int8_t;
-typedef uint16_t       u_int16_t;
-typedef uint32_t       u_int32_t;
-typedef uint64_t       u_int64_t;
+typedef uint8_t        uint8_t;
+typedef uint16_t       uint16_t;
+typedef uint32_t       uint32_t;
+typedef uint64_t       uint64_t;
 #endif /* ! __BIT_TYPES_DEFINED__ */
 #else
 
 #if defined(HAVE_32BIT_LONGS) || defined(HAVE_64BIT_LONGS)
 #ifndef __BIT_TYPES_DEFINED__
 #define __BIT_TYPES_DEFINED__
-typedef unsigned char  u_int8_t;
-typedef unsigned short u_int16_t;
-typedef unsigned int   u_int32_t;
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int   uint32_t;
 typedef int            int32_t;
 #endif
 #endif /* HAVE_32BIT_LONGS || HAVE_64BIT_LONGS */
 
 
 #ifdef HAVE_64BIT_LONGS
-typedef unsigned long u_int64_t;
+typedef unsigned long uint64_t;
 #else /* HAVE_64BIT_LONGS */
 /* check for long long support. currently, i assume that if 64-bit
  * ints exist that their made available via long long */
@@ -48,7 +48,7 @@ typedef unsigned long u_int64_t;
 #else /* linux */
 #if defined(HAVE_32BIT_LONGS) && !(defined(BSD4_4) || \
 				  defined(NO_LARGE_VOL_SUPPORT))
-typedef unsigned long long  u_int64_t;
+typedef unsigned long long  uint64_t;
 #endif /* HAVE_32BIT_LONGS || !BSD4_4 || NO_LARGE_VOL_SUPPORT */
 #endif /* linux */
 #endif /* HAVE_64BIT_LONGS */

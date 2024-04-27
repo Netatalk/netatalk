@@ -46,7 +46,7 @@ extern void server_child_free (server_child *);
 
 extern void server_child_kill (server_child *, const int, const int);
 extern void server_child_kill_one_by_id (server_child *children, const int forkid, const pid_t pid, const uid_t,
-                                               const u_int32_t len, char *id, u_int32_t boottime);
+                                               const uint32_t len, char *id, uint32_t boottime);
 extern int  server_child_transfer_session(server_child *children, int forkid, pid_t, uid_t, int, uint16_t);
 extern void server_child_setup (server_child *, const int, void (*)(const pid_t));
 extern void server_child_handler (server_child *);

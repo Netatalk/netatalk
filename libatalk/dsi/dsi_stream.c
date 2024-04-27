@@ -126,7 +126,7 @@ static int dsi_peek(DSI *dsi)
 /* 
  * Return all bytes up to count from dsi->buffer if there are any buffered there
  */
-static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
+static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
 {
     size_t nbe = 0;
 
@@ -161,7 +161,7 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
  *    Note: this may return fewer bytes then requested in count !!
  * 3. If the buffer was empty, read from the socket.
  */
-static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
+static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
 {
     ssize_t len;
 
@@ -185,7 +185,7 @@ static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
  * Get "length" bytes from buffer and/or socket. In order to avoid frequent small reads
  * this tries to read larger chunks (8192 bytes) into a buffer.
  */
-static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t length)
+static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t length)
 {
   size_t len;
   size_t buflen;
@@ -273,7 +273,7 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
       return -1;
 
   while (written < length) {
-      len = send(dsi->socket, (u_int8_t *) data + written, length - written, flags);
+      len = send(dsi->socket, (uint8_t *) data + written, length - written, flags);
       if (len >= 0) {
           written += len;
           continue;
@@ -404,7 +404,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 
   stored = 0;
   while (stored < length) {
-      len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
+      len = buf_read(dsi, (uint8_t *) data + stored, length - stored);
       if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
           LOG(log_maxdebug, logtype_dsi, "dsi_stream_read: select read loop");
           continue;
@@ -528,7 +528,7 @@ int dsi_stream_receive(DSI *dsi)
       return 0;
 
   /* read in the header */
-  if (dsi_buffered_stream_read(dsi, (u_int8_t *)block, sizeof(block)) != sizeof(block)) 
+  if (dsi_buffered_stream_read(dsi, (uint8_t *)block, sizeof(block)) != sizeof(block)) 
     return 0;
 
   dsi->header.dsi_flags = block[0];

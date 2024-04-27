@@ -114,7 +114,7 @@ static char *mtoupath(char *mpath)
     char    *m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t    flags = 0;
+    uint16_t    flags = 0;
 
     if (!mpath)
         return NULL;

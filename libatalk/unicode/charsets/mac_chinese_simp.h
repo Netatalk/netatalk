@@ -20,7 +20,7 @@
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
-static const u_int16_t mac_chinese_simp_uni2_page00[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page00[][2] = {
   /* 0x00a */ { 0x022d,    0 }, { 0x0080,    5 },
   /* 0x00c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x010 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
@@ -31,42 +31,42 @@ static const u_int16_t mac_chinese_simp_uni2_page00[][2] = {
   /* 0x024 */ { 0x0000,    0 }, { 0x0002,    9 }, { 0x0002,   10 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_page1e[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page1e[][2] = {
   /* 0x1e3 */ { 0x8000,   11 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_page20[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page20[][2] = {
   /* 0x201 */ { 0x0070,   12 }, { 0x0040,   15 }, { 0x4000,   16 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_page21[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page21[][2] = {
   /* 0x212 */ { 0x0004,   17 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_page22[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page22[][2] = {
   /* 0x22e */ { 0x8000,   18 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_page30[][2] = {
+static const uint16_t mac_chinese_simp_uni2_page30[][2] = {
   /* 0x301 */ { 0x1000,   19 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x304 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x308 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0x30c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0800,   20 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_pagee0[][2] = {
+static const uint16_t mac_chinese_simp_uni2_pagee0[][2] = {
   /* 0xe00 */ { 0x07ff,   21 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_pagef8[][2] = {
+static const uint16_t mac_chinese_simp_uni2_pagef8[][2] = {
   /* 0xf88 */ { 0x0003,   32 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_pagefe[][2] = {
+static const uint16_t mac_chinese_simp_uni2_pagefe[][2] = {
   /* 0xfe3 */ { 0xfffa,   34 }, { 0x001f,   48 },
 };
 
-static const u_int16_t mac_chinese_simp_uni2_pageff[][2] = {
+static const uint16_t mac_chinese_simp_uni2_pageff[][2] = {
   /* 0xff5 */ { 0x4000,   53 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0xff8 */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 },
   /* 0xffc */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x002b,   54 },
@@ -86,7 +86,7 @@ static const cjk_index_t mac_chinese_simp_uni2_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_chinese_simp_uni2_charset[] = {
+static const uint16_t mac_chinese_simp_uni2_charset[] = {
   0x00a0, 0xa1e9, 0xa1ea, 0xa3a4, 0x00fd, 0xa1a4, 0xa8bd, 0xa8be,
   0xa8bf, 0xa8bb, 0xa8c0, 0xa8bc, 0xa1aa, 0xffff, 0xa1ac, 0x00ff,
   0xa3fe, 0x00fe, 0xa1ad, 0xa1ab, 0xffff, 0x0080, 0xa6f3, 0xa6db,
@@ -97,26 +97,26 @@ static const u_int16_t mac_chinese_simp_uni2_charset[] = {
   0xffff, 0xffff,
 };
 
-static const u_int16_t mac_chinese_simp_2uni_page00[][2] = {
+static const uint16_t mac_chinese_simp_2uni_page00[][2] = {
   /* 0x008 */ { 0x0007,    0 }, { 0x0000,    0 }, { 0x0001,    3 }, { 0x0000,    0 },
   /* 0x00c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0xe000,    4 },
 };
 
-static const u_int16_t mac_chinese_simp_2uni_pagea1[][2] = {
+static const uint16_t mac_chinese_simp_2uni_pagea1[][2] = {
   /* 0xa1a */ { 0x3c10,    7 }, { 0x0000,    0 },
   /* 0xa1c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0600,   12 },
 };
 
-static const u_int16_t mac_chinese_simp_2uni_pagea3[][2] = {
+static const uint16_t mac_chinese_simp_2uni_pagea3[][2] = {
   /* 0xa3a */ { 0x0010,   14 }, { 0x0000,    0 },
   /* 0xa3c */ { 0x0000,    0 }, { 0x0000,    0 }, { 0x0000,    0 }, { 0x4000,   15 },
 };
 
-static const u_int16_t mac_chinese_simp_2uni_pagea6[][2] = {
+static const uint16_t mac_chinese_simp_2uni_pagea6[][2] = {
   /* 0xa6d */ { 0xfe00,   16 }, { 0xffff,   23 }, { 0x003f,   39 },
 };
 
-static const u_int16_t mac_chinese_simp_2uni_pagea8[][2] = {
+static const uint16_t mac_chinese_simp_2uni_pagea8[][2] = {
   /* 0xa8b */ { 0xf800,   45 }, { 0x0001,   50 },
 };
 
@@ -129,7 +129,7 @@ static const cjk_index_t mac_chinese_simp_2uni_index[] = {
   { { 0, 0 }, NULL }
 };
 
-static const u_int16_t mac_chinese_simp_2uni_charset[] = {
+static const uint16_t mac_chinese_simp_2uni_charset[] = {
   0xe000, 0xf880, 0xf881, 0x00a0, 0x00a9, 0x2122, 0x2026, 0x00b7,
   0x2014, 0x301c, 0x2016, 0x22ef, 0x00a2, 0x00a3, 0x00a5, 0x203e,
   0xe007, 0xe003, 0xe002, 0xe008, 0xe009, 0xe006, 0xe00a, 0xfe35,
@@ -139,7 +139,7 @@ static const u_int16_t mac_chinese_simp_2uni_charset[] = {
   0x0148, 0x01f9, 0x0261,
 };
 
-static const u_int32_t mac_chinese_simp_compose[] = {
+static const uint32_t mac_chinese_simp_compose[] = {
   0x00fcf87f, 0x22eff87e, 0x3001f87e, 0x3002f87e,
   0x3016f87e, 0x3017f87e, 0xff01f87e, 0xff0cf87e,
   0xff1af87e, 0xff1bf87e, 0xff1ff87e,

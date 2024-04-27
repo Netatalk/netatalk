@@ -293,7 +293,7 @@ int uam_checkuser(const struct passwd *pwd)
 
 int uam_random_string (AFPObj *obj, char *buf, int len)
 {
-    u_int32_t result;
+    uint32_t result;
     int ret;
     int fd;
 

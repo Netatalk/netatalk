@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include <netatalk/endian.h>
 
-typedef u_int16_t AFPUserBytes;
+typedef uint16_t AFPUserBytes;
 
 /* protocols */
 #define AFPPROTO_ASP           1

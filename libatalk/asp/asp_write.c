@@ -39,8 +39,8 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
     struct atp_block	atpb;
     char	        *p;
     int			iovcnt = ASP_MAXPACKETS;
-    u_int16_t		blen, seq;
-    u_int8_t		oport;
+    uint16_t		blen, seq;
+    uint8_t		oport;
 
     p = buf;
     *p++ = ASPFUNC_WRTCONT;

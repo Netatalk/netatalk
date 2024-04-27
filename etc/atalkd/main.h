@@ -8,8 +8,8 @@ extern int transition;
 extern int stabletimer, newrtmpdata;
 
 int ifconfig ( const char *, unsigned long, struct sockaddr_at * );
-void setaddr ( struct interface *, u_int8_t, u_int16_t,
-        u_int8_t, u_int16_t, u_int16_t );
+void setaddr ( struct interface *, uint8_t, uint16_t,
+        uint8_t, uint16_t, uint16_t );
 void bootaddr ( struct interface * );
 void dumpconfig ( struct interface * );
 
