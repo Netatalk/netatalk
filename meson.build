@@ -780,9 +780,7 @@ else
         if tracker.found()
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"'
-                + tracker_sparql.get_variable(pkgconfig: 'prefix')
-                + '/bin/tracker daemon"',
+                '"tracker daemon"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
@@ -795,9 +793,7 @@ else
             cdata.set('HAVE_TRACKER3', 1)
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"'
-                + tracker_sparql.get_variable(pkgconfig: 'prefix')
-                + '/bin/tracker3 daemon"',
+                '"tracker3 daemon"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
@@ -809,9 +805,7 @@ else
         elif tracker_control.found()
             cdata.set(
                 'TRACKER_MANAGING_COMMAND',
-                '"'
-                + tracker_control.get_variable(pkgconfig: 'prefix')
-                + '/bin/tracker-control"',
+                '"tracker-control"',
             )
             cdata.set(
                 'TRACKER_PREFIX',
