@@ -1,63 +1,68 @@
-FROM debian:bullseye-slim
+FROM alpine:3.19
 
-ENV LIB_DEPS cups \
-    libavahi-client3 \
-    libcups2 \
-    libdb5.3 \
-    libgcrypt20 \
-    libpam0g \
-    libssl1.1
-ENV BUILD_DEPS autoconf \
-    automake \
-    build-essential \
-    libavahi-client-dev \
-    libcups2-dev \
-    libdb-dev \
-    libgcrypt20-dev \
-    libltdl-dev \
-    libpam0g-dev \
-    libssl-dev \
-    libtool-bin \
-    pkg-config
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    apt-get install --yes --no-install-recommends $LIB_DEPS $BUILD_DEPS
+ENV LIB_DEPS \
+    acl \
+    avahi \
+    bash \
+    cups \
+    db \
+    krb5 \
+    libgcrypt \
+    linux-pam \
+    openldap \
+    openssl \
+    shadow
+ENV BUILD_DEPS \
+    acl-dev \
+    avahi-dev \
+    cups-dev \
+    curl \
+    db-dev \
+    build-base \
+    gcc \
+    krb5-dev \
+    libgcrypt-dev \
+    linux-pam-dev \
+    meson \
+    ninja \
+    openldap-dev \
+    openssl-dev \
+    pkgconfig
 
-RUN useradd builder
-WORKDIR /build
+RUN apk update \
+&&  apk add --no-cache \
+    $LIB_DEPS \
+    $BUILD_DEPS \
+&&  addgroup builder \
+&&  adduser \
+    --disabled-password \
+    --ingroup builder \
+    --no-create-home \
+    builder
+
+WORKDIR /netatalk-code
 COPY . .
-RUN chown -R builder:builder .
+RUN chown -R builder:builder . \
+&&  rm -rf build || true
 USER builder
 
-RUN test -e ./bootstrap && ./bootstrap || true
-RUN ./configure \
-    --enable-overwrite \
-    --prefix=/usr
-RUN make clean && make -j $(nproc)
+RUN meson setup build \
+    -Denable-pgp-uam=disabled \
+    -Dwith-libtirpc=true \
+&&  ninja -C build
 
 USER root
-RUN userdel builder && make install
-
-WORKDIR /mnt/afpshare
-
-RUN apt-get remove --yes --auto-remove --purge $BUILD_DEPS && \
-    apt-get --quiet --yes autoclean && \
-    apt-get --quiet --yes autoremove && \
-    apt-get --quiet --yes clean
-RUN rm -rf \
-    /build \
-    /usr/include/netatalk \
-    /usr/share/man \
-    /usr/share/mime \
-    /usr/share/doc \
-    /usr/share/poppler \
-    /var/lib/apt/lists \
+RUN ninja -C build install \
+&&  apk del $BUILD_DEPS && \
+    rm -rf \
+    /netatalk-code \
+    /usr/local/include/atalk \
+    /var/tmp \
     /tmp \
-    /var/tmp
+&&  ln -sf /dev/stdout /var/log/afpd.log
 
-COPY contrib/shell_utils/docker-entrypoint.sh /docker-entrypoint.sh
-
+COPY contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
+WORKDIR /mnt
 EXPOSE 548 631
-VOLUME ["/mnt/afpshare"]
-
-CMD ["/docker-entrypoint.sh"]
+VOLUME ["/mnt/afpshare", "/mnt/afpbackup"]
+CMD ["/entrypoint.sh"]
