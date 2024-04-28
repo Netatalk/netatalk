@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">06 May 2016</refmiscinfo>
+    <refmiscinfo class="date">27 Apr 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,7 +13,7 @@
   <refnamediv>
     <refname>asip-status</refname>
 
-    <refpurpose>Queries AFP servers for their capabilities</refpurpose>
+    <refpurpose>Queries an AFP server for its capabilities</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -62,22 +62,19 @@
     <title>Description</title>
 
     <para><command>asip-status</command>
-    sends a FPGetSrvrInfo request to an AFP server at
+    sends an FPGetSrvrInfo request to an AFP server at
     <replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable> and
-    displays the results, namely "Machine type", the server's name, supported
+    displays the results: "Machine type", the server's name, supported
     AFP versions, UAMs and AFP flags, the "server signature" and the network
-    addresses, the server provides AFP services on.</para>
+    addresses that the server provides AFP services on.</para>
 
     <para>When you don't supply <replaceable>PORT</replaceable>, then the
     default AFP port, 548, will be used.</para>
 
     <para>Starting with Netatalk 2.2.8, <command>asip-status</command>
-    supports both IPv4 and IPv6. It's decided by your system which IP version
-    to use. You can use -4 or -6 option to specify IP version.</para>
-
-    <note><para><command>asip-status</command> requires IO::Socket::IP
-    module.</para></note>
-
+    supports both IPv4 and IPv6. By default, your system automatically decides
+    which protocol version to use. You can use -4 or -6 option to force IPv4
+    or IPv6, respectively.</para>
   </refsect1>
 
   <refsect1>
