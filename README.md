@@ -55,11 +55,10 @@ Once the container is ready, run it with `docker run` or `docker compose`.
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
-Sample `docker-compose.yml` with a Docker managed volume, using a locally built image.
+Sample `docker-compose.yml` with Docker managed volumes, using a locally built image.
+Adjust the "image:" line to use a pulled image from Docker Hub.
 
 ```
-version: "3"
-
 services:
   netatalk:
     image: netatalk2:latest
@@ -68,34 +67,31 @@ services:
       - NET_ADMIN
     volumes:
       - afpshare:/mnt/afpshare
+      - afpbackup:/mnt/afpbackup
       - /var/run/dbus:/var/run/dbus
     environment:
       - "SERVER_NAME=Netatalk Server"
       - "SHARE_NAME=Shared Volume"
       - "AFP_USER=atalk"
       - "AFP_PASS=atalk"
-      - "AFPD_OPTIONS=-icon -mimicmodel RackMac"
-      - "AVOLUMES_OPTIONS=options:limitsize"
       - "ATALKD_INTERFACE=eth0"
-      - "ATALKD_OPTIONS=-router -phase 2 -net 0-65534 -zone NETATALK"
 volumes:
   afpshare:
+  afpbackup:
 ```
 
-Sample `docker run` command, using a locally build image. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
+Sample `docker run` command, using a locally build image. Substitute `/path/to/*` with paths to actual directories on your file system, with appropriate permissions.
 
 ```
-docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk2:latest
+docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/path/to/backup:/mnt/afpbackup" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk2:latest
 ```
 
 ## Constraints
 
 The container requires the `host` network driver, and `NET_ADMIN` capabilities, to allow AppleTalk routing and Zeroconf.
 
-We currently rely on the host's DBUS for Zeroconf service discovery via Avahi.
+We currently rely on the host's D-Bus for Zeroconf service discovery via Avahi. mDNSResponder is not supported.
 You need a bind mount for `/var/run/dbus:/var/run/dbus` in order for Bonjour service discovery to work.
-
-Note that the Dockerfile currently only supports Avahi for Zeroconf; no mDNS support at present.
 
 ## Printing
 
