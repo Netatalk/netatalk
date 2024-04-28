@@ -3,12 +3,9 @@ man_xml = [
     'aecho',
     'afpldaptest',
     'afppasswd',
-    'apple_dump',
-    'asip-status',
     'cnid2_create',
     'dbd',
     'getzones',
-    'macusers',
     'megatron',
     'nbp',
     'netatalk-config',
@@ -17,6 +14,14 @@ man_xml = [
     'showppd',
     'uniconv',
 ]
+
+if perl.found() and grep.found()
+    man_xml += [
+        'apple_dump',
+        'asip-status',
+        'macusers',
+    ]
+endif
 
 foreach man : man_xml
     man_xmlfile = configure_file(

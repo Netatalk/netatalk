@@ -38,7 +38,11 @@ elif get_option('enable-systemd')
             install_dir: init_dir,
         )
     endforeach
-    meson.add_install_script(find_program('systemctl'), 'daemon-reload', '--no-ask-password')
+    meson.add_install_script(
+        find_program('systemctl'),
+        'daemon-reload',
+        '--no-ask-password',
+    )
 elif get_option('enable-suse')
     init_style += 'suse'
     init_dir += '/etc/init.d'

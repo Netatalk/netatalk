@@ -175,8 +175,8 @@ add_global_link_arguments(netatalk_common_link_args, language: 'c')
 # Programs #
 ############
 
-grep = find_program('grep', required: true)
-perl = find_program('perl', required: true)
+grep = find_program('grep', required: false)
+perl = find_program('perl', required: false)
 
 #################
 # Header checks #
@@ -445,7 +445,7 @@ if get_option('with-bdb') != ''
         endif
         if bdb_header != ''
             break
-        endif 
+        endif
     endforeach
 else
     foreach dir : bdb_dirs
@@ -459,7 +459,7 @@ else
             endif
             if bdb_header != ''
                 break
-            endif 
+            endif
         endforeach
         if bdb_header != ''
             break
@@ -1651,7 +1651,7 @@ elif host_os == 'sunos'
 endif
 
 #
-# Variable substitution 
+# Variable substitution
 #
 
 # Reserved for future use:
@@ -1666,10 +1666,13 @@ cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
 cdata.set('NETATALK_VERSION', version)
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
-cdata.set('PERL', perl.full_path())
 cdata.set('pkgconfdir', pkgconfdir)
 cdata.set('prefix', prefix)
 cdata.set('sbindir', sbindir)
+
+if perl.found()
+    cdata.set('PERL', perl.full_path())
+endif
 
 configure_file(
     input: 'meson_config.h',
