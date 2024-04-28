@@ -319,6 +319,7 @@ jobs:
             make \
             meson \
             ninja \
+            pkg-config \
             systemd \
             wget &&
           zypper in -y \
@@ -338,12 +339,12 @@ jobs:
             libopenssl-devel \
             libtalloc-devel \
             libtdb-devel \
+            libtracker-sparql-3_0-0 \
             openldap2-devel \
             pam-devel \
             systemtap-sdt-devel \
             tcpd-devel \
-            tracker \
-            tracker-devel
+            tracker
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
