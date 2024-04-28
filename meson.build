@@ -753,7 +753,7 @@ else
     endif
 
     if not tracker_sparql.found()
-        warning('tracker SPARQL not found (required for Spotlight support')
+        warning('tracker SPARQL not found (required for Spotlight support)')
     else
         # Check for tracker
 
@@ -811,7 +811,7 @@ else
             )
             tracker_manager += 'tracker_control'
         else
-            warning('tracker not found (required for Spotlight support')
+            warning('tracker not found (required for Spotlight support)')
         endif
         tracker_ok = (tracker.found() or tracker3.found() or tracker_control.found())
         if tracker_ok
@@ -821,7 +821,7 @@ else
                 cdata.set('HAVE_TALLOC', 1)
             else
                 warning(
-                    'talloc library not found (required for Spotlight support',
+                    'talloc library not found (required for Spotlight support)',
                 )
             endif
         endif
