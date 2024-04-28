@@ -14,7 +14,8 @@ ENV LIB_DEPS \
     openldap \
     openssl \
     talloc \
-    tracker
+    tracker \
+    tracker-miners
 ENV BUILD_DEPS \
     acl-dev \
     avahi-dev \
@@ -36,35 +37,44 @@ ENV BUILD_DEPS \
     pkgconfig \
     talloc-dev \
     tracker-dev
-RUN apk update && \
-    apk add --no-cache \
+RUN apk update \
+&&  apk add --no-cache \
     $LIB_DEPS \
-    $BUILD_DEPS
+    $BUILD_DEPS \
+&&  addgroup builder \
+&&  adduser \
+    --disabled-password \
+    --ingroup builder \
+    --no-create-home \
+    builder
 
-RUN adduser -D -H builder
 WORKDIR /netatalk-code
 COPY . .
-RUN chown -R builder:builder . && rm -rf build || true
+RUN chown -R builder:builder . \
+&&  rm -rf build || true
 USER builder
 
 RUN meson setup build \
     -Denable-pgp-uam=disabled \
     -Dwith-dbus-daemon=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-dir=/etc \
-    -Dwith-init-style=none && \
-    ninja -C build
+    -Dwith-afpstats=disabled \
+    -Dwith-dtrace=false \
+    -Dwith-init-style=none \
+&&  ninja -C build
 
 USER root
-RUN deluser builder && ninja -C build install
 
-WORKDIR /mnt
-RUN apk del $BUILD_DEPS && \
-    rm -rf \
+RUN ninja -C build install \
+&&  apk del $BUILD_DEPS \
+&&  rm -rf \
     /netatalk-code \
     /usr/local/include/atalk \
     /var/tmp \
-    /tmp && \
-    ln -sf /dev/stdout /var/log/afpd.log
+    /tmp \
+&&  ln -sf /dev/stdout /var/log/afpd.log
+
+WORKDIR /mnt
 COPY contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
 EXPOSE 548
 VOLUME ["/mnt/afpshare", "/mnt/afpbackup"]
