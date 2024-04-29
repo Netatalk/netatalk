@@ -1768,7 +1768,7 @@ if have_libgcrypt
         '  DHX2': uams_using_options,
     }
 endif
-summary(summary_info, bool_yn: true, section: '  UAMS:')
+summary(summary_info, bool_yn: true, section: '  UAMs:')
 
 summary_info = {
     '  admin group support': admin_group,
