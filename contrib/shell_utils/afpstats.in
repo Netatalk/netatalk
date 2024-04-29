@@ -27,15 +27,17 @@ sub main {
         my $remote_object = $service->get_object("/org/netatalk/AFPStats",
                                                  "org.netatalk.AFPStats");
 
-        print "Username         PID      Login time        State          Volumes\n";
+        print "Connected user   PID      Login time        State          Mounted volumes\n";
 
         foreach my $user (@{$remote_object->GetUsers}) {
             if ($user =~ /name: ([^,]+), pid: ([^,]+), logintime: ([^,]+), state: ([^,]+), volumes: (.+)/) {
                 my ($name, $pid, $logintime, $state, $volume) = ($1, $2, $3, $4, $5);
                 printf "%-17s%-9s%-18s%-15s%s\n", $name, $pid, $logintime, $state, $volume;
+            } else {
+                print "WARNING Unexpected output. This is probably a bug:\n".$user."\n";
             }
         }
-    }
+    };
     if ($@) {
         print "Error: $@\n";
         exit 1;
