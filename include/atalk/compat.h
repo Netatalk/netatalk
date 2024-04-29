@@ -21,7 +21,7 @@
 
 extern int inet_aton (const char *, struct in_addr *);
 
-#ifdef linux
+#ifdef __linux__
 /*
  * Linux has SA_RESTART, but no SA_INTERRUPT.  Note that the documentation
  * seems to be wrong on several counts.  First, SA_ONESHOT is not the default,
@@ -31,7 +31,7 @@ extern int inet_aton (const char *, struct in_addr *);
 #ifndef SA_INTERRUPT
 #define SA_INTERRUPT	0
 #endif /* SA_INTERRUPT */
-#endif /* linux */
+#endif /* __linux__ */
 
 #ifdef BSD4_4
 #ifndef SA_INTERRUPT

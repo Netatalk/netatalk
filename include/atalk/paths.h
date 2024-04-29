@@ -16,7 +16,7 @@
 #    define _PATH_LOCKDIR	"/var/run/"
 #  elif defined (BSD4_4)
 #      define _PATH_LOCKDIR	"/var/spool/lock/"
-#  elif defined (linux)
+#  elif defined (__linux__)
 #    define _PATH_LOCKDIR	"/var/lock/"
 #  else
 #    define _PATH_LOCKDIR	"/var/spool/locks/"

@@ -187,7 +187,7 @@ int quotactl(int cmd, const char *special, int id, caddr_t addr)
 
 static int overquota( struct dqblk *);
 
-#ifdef linux
+#ifdef __linux__
 
 #ifdef HAVE_LINUX_XQM_H
 #include <linux/xqm.h>
@@ -406,7 +406,7 @@ static int get_linux_fs_quota(int what, char *path, uid_t euser_id, struct dqblk
   	return ret;
 }
 
-#endif /* linux */
+#endif /* __linux__ */
 
 #if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
 /*
@@ -508,7 +508,7 @@ special(char *file, int *nfs)
 
     if (!found)
 	return (NULL);
-#ifdef linux
+#ifdef __linux__
     if (strcmp(mnt->mnt_type, "xfs") == 0)
 	is_xfs = 1;
 #endif
@@ -722,7 +722,7 @@ int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, cons
 		return( AFPERR_PARAM );
 	}
 
-#ifdef linux
+#ifdef __linux__
 	this_bsize = dqblk.bsize;
 #endif
 

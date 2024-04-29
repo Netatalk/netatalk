@@ -76,7 +76,7 @@
 #else
 #define SWITCH_TO_GID(gid)  ((setegid(gid) < 0 || setgid(gid) < 0) ? -1 : 0)
 #define SWITCH_TO_UID(uid)  ((setuid(uid) < 0 || seteuid(uid) < 0 || setuid(uid) < 0) ? -1 : 0)
-#endif  /* linux */
+#endif  /* __linux__ */
 
 #include <atalk/util.h>
 #include <atalk/logger.h>

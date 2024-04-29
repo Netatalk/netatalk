@@ -43,14 +43,14 @@ typedef unsigned long u_int64_t;
 #else /* HAVE_64BIT_LONGS */
 /* check for long long support. currently, i assume that if 64-bit
  * ints exist that their made available via long long */
-#ifdef linux
+#ifdef __linux__
 #include <endian.h> /* i think this is here for libc4 */
-#else /* linux */
+#else /* __linux__ */
 #if defined(HAVE_32BIT_LONGS) && !(defined(BSD4_4) || \
 				  defined(NO_LARGE_VOL_SUPPORT))
 typedef unsigned long long  u_int64_t;
 #endif /* HAVE_32BIT_LONGS || !BSD4_4 || NO_LARGE_VOL_SUPPORT */
-#endif /* linux */
+#endif /* __linux__ */
 #endif /* HAVE_64BIT_LONGS */
 #endif /* ISOC9X */
 

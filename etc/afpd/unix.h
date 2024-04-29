@@ -76,7 +76,7 @@
 #include "directory.h"
 
 
-#if defined (linux)
+#if defined (__linux__)
 
 #define MAXQUOTAS 2
 
@@ -183,7 +183,7 @@ extern long quotactl (unsigned int, const char *, int, caddr_t);
 
 
 
-#endif /* linux */
+#endif /* __linux__ */
 
 extern int getnfsquota (struct vol *, const int, const u_int32_t,
                                 struct dqblk *);
