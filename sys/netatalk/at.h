@@ -23,7 +23,7 @@
 #define netrange atalk_netrange
 #endif /* HAVE_ATALK_ADDR */
 
-#else /* linux */
+#else /* __linux__ */
 
 #include <sys/types.h>
 #include <netinet/in.h> /* so that we can deal with sun's s_net #define */
@@ -125,7 +125,7 @@ extern struct domain	atalkdomain;
 extern struct protosw	atalksw[];
 #endif /* KERNEL */
 
-#endif /* linux */
+#endif /* __linux__ */
 #endif /* NO_DDP */
 #endif /* __AT_HEADER__ */
 

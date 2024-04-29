@@ -45,11 +45,11 @@ struct interface {
 
 #define IFBASE		2	/* base number of interfaces */
 
-#ifdef linux
+#ifdef __linux__
 #define LOOPIFACE	"lo"
 #else /* !linux */
 #define LOOPIFACE	"lo0"
-#endif /* linux */
+#endif /* __linux__ */
 
 extern struct interface	*interfaces;
 extern struct interface	*ciface;

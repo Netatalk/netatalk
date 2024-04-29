@@ -118,10 +118,10 @@ static void atalkd_exit(const int i)
 	      ntohs(iface->i_addr.sat_addr.s_net), 
 	      iface->i_addr.sat_addr.s_node, strerror(errno));
     }
-#ifdef linux
+#ifdef __linux__
     if (!(iface->i_flags & IFACE_WASALLMULTI) && (iface->i_flags & IFACE_ALLMULTI))
         ifsetallmulti(iface->i_name, 0);
-#endif /* linux */
+#endif /* __linux__ */
   }
 #endif /* SIOCDIFADDR */
 

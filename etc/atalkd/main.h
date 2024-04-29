@@ -13,7 +13,7 @@ void setaddr ( struct interface *, u_int8_t, u_int16_t,
 void bootaddr ( struct interface * );
 void dumpconfig ( struct interface * );
 
-#ifdef linux
+#ifdef __linux__
 int ifsetallmulti ( const char *, int);
 #endif
 
