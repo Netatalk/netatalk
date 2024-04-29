@@ -20,7 +20,7 @@ option(
     'disable-admin-group',
     type: 'boolean',
     value: false,
-    description: 'Disable system locking',
+    description: 'Disable the admin group',
 )
 option(
     'disable-locking',
