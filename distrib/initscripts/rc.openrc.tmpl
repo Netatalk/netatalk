@@ -23,7 +23,7 @@ atalk_startup () {
 			"${ATALK_NAME}:netatalk${ATALK_ZONE}"
 		do
 			ebegin "  Registering $reg"
-			:BINDIR:/nbprgstr "$reg"
+			:BINDIR:/nbprgstr -p 4 "$reg"
 			eend $?
 		done
 
