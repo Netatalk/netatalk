@@ -33,6 +33,18 @@ atalk_startup () {
 			eend $?
 		fi
 
+		if [ "${TIMELORD_RUN}" = "yes" ]; then
+			ebegin "  Starting timelord"
+			start-stop-daemon --start --quiet --exec :SBINDIR:/timelord
+			eend $?
+		fi
+
+		if [ "${A2BOOT_RUN}" = "yes" ]; then
+			ebegin "  Starting a2boot"
+			start-stop-daemon --start --quiet --exec :SBINDIR:/a2boot
+			eend $?
+		fi
+
 	fi
 
 	if [ "${CNID_METAD_RUN}" = "yes" ] ; then
@@ -48,18 +60,6 @@ atalk_startup () {
 		start-stop-daemon --start --quiet --exec :SBINDIR:/afpd -- \
 			${AFPD_UAMLIST} -g ${AFPD_GUEST} -c ${AFPD_MAX_CLIENTS} \
 			-n "${ATALK_NAME}${ATALK_ZONE}"
-		eend $?
-	fi
-
-	if [ "${TIMELORD_RUN}" = "yes" ]; then
-		ebegin "Starting timelord"
-		start-stop-daemon --start --quiet --exec :SBINDIR:/timelord
-		eend $?
-	fi
-
-	if [ "${A2BOOT_RUN}" = "yes" ]; then
-		ebegin "Starting a2boot"
-		start-stop-daemon --start --quiet --exec :SBINDIR:/a2boot
 		eend $?
 	fi
 }
@@ -84,22 +84,22 @@ stop () {
 		eend $?
 	fi
 
-	if [ "${TIMELORD_RUN}" = "yes" ]; then
-		ebegin "Stopping timelord"
-		start-stop-daemon --stop --quiet --exec :SBINDIR:/timelord
-		eend $?
-	fi
-
-	if [ "${A2BOOT_RUN}" = "yes" ]; then
-		ebegin "Stopping a2boot"
-		start-stop-daemon --stop --quiet --exec :SBINDIR:/a2boot
-		eend $?
-	fi
-
 	if [ "${ATALKD_RUN}" != "no" ]; then
 		if [ "${PAPD_RUN}" = "yes" ]; then
 			ebegin "Stopping papd"
 			start-stop-daemon --stop --quiet --exec :SBINDIR:/papd
+			eend $?
+		fi
+
+		if [ "${TIMELORD_RUN}" = "yes" ]; then
+			ebegin "Stopping timelord"
+			start-stop-daemon --stop --quiet --exec :SBINDIR:/timelord
+			eend $?
+		fi
+
+		if [ "${A2BOOT_RUN}" = "yes" ]; then
+			ebegin "Stopping a2boot"
+			start-stop-daemon --stop --quiet --exec :SBINDIR:/a2boot
 			eend $?
 		fi
 
