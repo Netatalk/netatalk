@@ -58,8 +58,7 @@ executable(
         wrap,
     ],
     c_args: [
-        '-DAPPLCNAME',
-        acl_ldapconf,
+        '-DAPPLCNAME', acl_ldapconf,
         afpdconf,
         afpddefvol,
         afpdpwfile,
@@ -97,7 +96,3 @@ executable(
     c_args: '-DKAZLIB_TEST_MAIN',
     install: false,
 )
-
-
-
-

@@ -12,8 +12,7 @@ endforeach
 foreach file : gen_templates
     if (
         not fs.exists(pkgconfdir / file)
-        or (get_option('enable-overwrite')
-        and fs.exists(pkgconfdir / file))
+        or (get_option('enable-overwrite') and fs.exists(pkgconfdir / file))
     )
         install_data(gen_files, install_dir: pkgconfdir)
     else
@@ -40,8 +39,7 @@ endif
 foreach file : conf_files
     if (
         not fs.exists(file)
-        or (get_option('enable-overwrite')
-        and fs.exists(file))
+        or (get_option('enable-overwrite') and fs.exists(file))
     )
         install_data(conf_files, install_dir: pkgconfdir)
     else

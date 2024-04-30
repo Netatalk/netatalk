@@ -30,4 +30,3 @@ executable(
     c_args: acl_ldapconf,
     install: false,
 )
-
