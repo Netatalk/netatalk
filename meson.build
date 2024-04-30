@@ -1600,6 +1600,16 @@ if get_option('enable-systemd')
 endif
 
 #
+# Check for musl C library
+#
+
+if host_os == 'linux'
+    if run_command('ldd', '/bin/ls', check: true).stdout().strip().contains('musl')
+        cdata.set('MUSL', 1)
+    endif
+endif
+
+#
 # OS-specific configuration
 #
 

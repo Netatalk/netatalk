@@ -679,6 +679,9 @@
    <sysmacros.h>. */
 #mesondefine MAJOR_IN_SYSMACROS
 
+/* Define to 1 if musl C library is present. */
+#mesondefine MUSL
+
 /* Define various xdr functions */
 #mesondefine NEED_RQUOTA
 
