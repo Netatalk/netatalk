@@ -38,10 +38,10 @@ endif
 
 foreach file : conf_files
     if (
-        not fs.exists(file)
+        not fs.exists(pkgconfdir / file)
         or (get_option('enable-overwrite') and fs.exists(file))
     )
-        install_data(conf_files, install_dir: pkgconfdir)
+        install_data(file, install_dir: pkgconfdir)
     else
         message('not overwriting', file)
     endif
