@@ -24,4 +24,3 @@ executable(
     install: true,
     install_rpath: rpath,
 )
-

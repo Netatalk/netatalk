@@ -25,4 +25,6 @@ int lp_write ( struct papfile *,char *, size_t );
 /* close current spooling file */
 int lp_close ( void );
 
+extern int rresvport (int *__alport);
+
 #endif /* PAPD_LP_H */

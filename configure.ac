@@ -1066,6 +1066,12 @@ if test x"$neta_cv_REALPATH_TAKES_NULL" = x"yes"; then
     AC_DEFINE(REALPATH_TAKES_NULL,1,[Whether the realpath function allows NULL])
 fi
 
+dnl --------------------- Check for musl C library
+neta_cv_musl=`/usr/bin/ldd /bin/ls | grep 'musl' | head -1 | cut -d ' ' -f1`
+if test "x$neta_cv_musl" != "xyes"; then
+    AC_DEFINE(MUSL,	1, [Define if musl C library is present])
+fi
+
 dnl --------------------- last minute substitutions
 
 AC_SUBST(LIBS)

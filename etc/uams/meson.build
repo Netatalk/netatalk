@@ -275,6 +275,3 @@ if have_gssapi
         install_dir: libdir / 'netatalk',
     )
 endif
-
-
-

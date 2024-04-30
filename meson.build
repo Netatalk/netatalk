@@ -372,10 +372,8 @@ endif
 
 run_command(
     cc,
-    '-c',
-    meson.project_source_root() / 'libatalk/dummy.c',
-    '-o',
-    meson.global_build_root() / 'dummy.o',
+    '-c', meson.project_source_root() / 'libatalk/dummy.c',
+    '-o', meson.global_build_root() / 'dummy.o',
     check: false,
 )
 compiler_mode = run_command(
@@ -700,7 +698,6 @@ if get_option('enable-zeroconf').disabled()
 else
     enable_zeroconf = avahi.found() or have_dns
 endif
-
 
 #
 # Check for CUPS
@@ -1118,7 +1115,6 @@ endif
 
 libiconv = cc.find_library('iconv', dirs: libsearch_dirs, required: false)
 
-
 if iconv.found() or libiconv.found()
     if cc.compiles(
         '''
@@ -1459,16 +1455,11 @@ init_dir = ''
 
 sed_command = [
     find_program('sed', required: false),
-    '-e',
-    's@:BINDIR:@' + bindir + '@',
-    '-e',
-    's@:ETCDIR:@' + pkgconfdir + '@',
-    '-e',
-    's@:SBINDIR:@' + sbindir + '@',
-    '-e',
-    's@:PKGLIBEXECDIR:@' + libexecdir + '@',
-    '-e',
-    's@:NETATALK_VERSION:@' + version + '@',
+    '-e', 's@:BINDIR:@' + bindir + '@',
+    '-e', 's@:ETCDIR:@' + pkgconfdir + '@',
+    '-e', 's@:SBINDIR:@' + sbindir + '@',
+    '-e', 's@:PKGLIBEXECDIR:@' + libexecdir + '@',
+    '-e', 's@:NETATALK_VERSION:@' + version + '@',
     '@INPUT@',
 ]
 
@@ -1597,6 +1588,16 @@ if get_option('enable-systemd')
         systemd_prefix += '/usr/lib'
     endif
     systemddir += systemd_prefix / 'systemd/system'
+endif
+
+#
+# Check for musl C library
+#
+
+if host_os == 'linux'
+    if run_command('ldd', '/bin/ls', check: true).stdout().strip().contains('musl')
+        cdata.set('MUSL', 1)
+    endif
 endif
 
 #

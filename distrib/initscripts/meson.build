@@ -13,8 +13,7 @@ if get_option('enable-redhat')
     )
     meson.add_install_script(
         find_program('chkconfig'),
-        '--add',
-        '/etc/rc.d/init.d/netatalk',
+        '--add', '/etc/rc.d/init.d/netatalk',
     )
 elif get_option('enable-systemd')
     init_style += 'systemd'
@@ -94,19 +93,16 @@ elif get_option('enable-solaris')
     )
     meson.add_install_script(
         find_program('rm'),
-        '-f',
+        '-f', '/etc/rc2.d/S90netatalk',
+    )
+    meson.add_install_script(
+        find_program('ln'),
+        '-s', '/etc/init.d/netatalk',
         '/etc/rc2.d/S90netatalk',
     )
     meson.add_install_script(
         find_program('ln'),
-        '-s',
-        '/etc/init.d/netatalk',
-        '/etc/rc2.d/S90netatalk',
-    )
-    meson.add_install_script(
-        find_program('ln'),
-        '-s',
-        '/etc/init.d/netatalk',
+        '-s', '/etc/init.d/netatalk',
         '/etc/rc0.d/K04netatalk',
     )
 elif get_option('enable-openrc')
@@ -161,12 +157,10 @@ elif get_option('enable-macos')
         meson.add_install_script(
             find_program('launchctl'),
             'load',
-            '-w',
-            '/Library/LaunchDaemons/io.netatalk.daemon.plist',
+            '-w', '/Library/LaunchDaemons/io.netatalk.daemon.plist',
         )
     endif
 else
     init_style += 'none'
     init_dir += 'none'
 endif
-
