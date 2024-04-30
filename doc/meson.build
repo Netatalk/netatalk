@@ -12,4 +12,3 @@ manual_stylesheet = configure_file(
 
 subdir('manpages')
 subdir('manual')
-

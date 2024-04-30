@@ -4,4 +4,3 @@ libcnid_dbd = static_library(
     include_directories: root_includes,
     install: false,
 )
-
