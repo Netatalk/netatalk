@@ -17,8 +17,9 @@ killproc() {
 	[ "$pid" != "" ] && kill $pid
 }
 
-. :ETCDIR:/netatalk.conf
+ATALK_NAME=`hostname|cut -d. -f1`
 
+. :ETCDIR:/netatalk.conf
 
 #
 # Start the netatalk server processes.

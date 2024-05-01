@@ -1,10 +1,10 @@
 #! /bin/sh
 # Copyright (c) 1996-2001 SuSE GmbH Nuernberg, Germany.  All rights reserved.
 #
-# Author: 
+# Author:
 #	Reinhold Sojer, <reinhold@suse.de>
 #	Olaf Hering, <olh@suse.de>
-# 
+#
 ### BEGIN INIT INFO
 # Provides:       netatalk
 # Required-Start: $local_fs
@@ -18,24 +18,26 @@
 
 # Netatalk :NETATALK_VERSION:
 
+ATALK_NAME=`hostname|sed 's/\..*$//'`
+
 . /etc/rc.status
 . :ETCDIR:/netatalk.conf
 
 # startup code for everything
 atalk_startup() {
-    if [ x"${ATALKD_RUN}" != x"no" ]; then 
+    if [ x"${ATALKD_RUN}" != x"no" ]; then
 	echo -n "  Starting atalkd ... "
 	:SBINDIR:/atalkd ; my_ec=$?
 
-	if [ -x :BINDIR:/nbprgstr -a "$my_ec" = "0" ]; then	
+	if [ -x :BINDIR:/nbprgstr -a "$my_ec" = "0" ]; then
 	    echo -n ".. "
 	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:Workstation
 	    echo -n ". "
 	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:netatalk
-	fi	
+	fi
 	if [ "$my_ec" != "0" ] ; then false ; fi
 	rc_status -v
-	
+
 	rc_reset
 
 	if [ x"${PAPD_RUN}" = x"yes"  -a -x :SBINDIR:/papd ]; then
@@ -81,7 +83,7 @@ atalk_startup() {
 	    rc_status -v
     fi
 
-	touch /var/lock/subsys/atalk 
+	touch /var/lock/subsys/atalk
 }
 
 case "$1" in
@@ -90,7 +92,7 @@ case "$1" in
 		echo "you have to be root to start netatalk daemons"
 		rc_failed
 	else
-	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then 
+	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then
 	    echo -n "Starting netatalk in the background ..."
 	    atalk_startup >& /dev/null &
 	    rc_status -v
