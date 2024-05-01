@@ -1724,20 +1724,37 @@ sed_command = [
 
 with_cracklib = get_option('with-cracklib')
 crack = cc.find_library('crack', dirs: libsearch_dirs, required: false)
+cracklib_dict = ''
 
-if crack.found()
-    have_cracklib = true
-    cdata.set('USE_CRACKLIB', 1)
-    if with_cracklib == ''
-        cdata.set(
-            '_PATH_CRACKLIB',
-            '"/usr/' + atalk_libname + '/cracklib_dict"',
-        )
-    elif with_cracklib != ''
-        cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '/cracklib_dict"')
-    endif
-else
+if fs.is_dir('/usr/share/cracklib')
+    cracklib_dict += '/usr/share/cracklib/pw_dict'
+elif fs.is_dir('/var/cache/cracklib')
+    cracklib_dict += '/var/cache/cracklib/cracklib_dict'
+elif fs.is_dir('/usr/local/libdata/cracklib')
+    cracklib_dict += '/usr/local/libdata/cracklib/cracklib-words'
+elif fs.is_dir('/usr/pkg/share/cracklib')
+    cracklib_dict += '/usr/pkg/share/cracklib/pw_dict'
+elif fs.is_dir('/usr/local/share/cracklib')
+    cracklib_dict += '/usr/local/share/cracklib/cracklib-small'
+endif
+
+if not crack.found()
     have_cracklib = false
+else
+    have_cracklib = crack.found() and (with_cracklib != '' or cracklib_dict != '')
+    if have_cracklib
+        cdata.set('USE_CRACKLIB', 1)
+        if with_cracklib != ''
+            cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '"')
+        elif host_os == 'darwin'
+            cdata.set(
+                '_PATH_CRACKLIB',
+                '"' + brew_prefix / 'var/cracklib/cracklib-words' + '"',
+            )
+        elif cracklib_dict != ''
+            cdata.set('_PATH_CRACKLIB', '"' + cracklib_dict + '"')
+        endif
+    endif
 endif
 
 #
