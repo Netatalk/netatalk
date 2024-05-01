@@ -171,6 +171,11 @@ found_entry:
 
   /* new password */
   passwd = getpass("Enter NEW AFP password: ");
+  if (strlen(passwd) > 8) {
+    fprintf(stderr, "afppasswd: max password length is 8.\n");
+    err = -1;
+    goto update_done;
+  }
   memcpy(password, passwd, sizeof(password));
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
