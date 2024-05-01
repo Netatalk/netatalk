@@ -1728,7 +1728,7 @@ crack = cc.find_library('crack', dirs: libsearch_dirs, required: false)
 cracklib_dirs = [
     '/usr/share/cracklib/cracklib_dict',
     '/var/cache/cracklib/cracklib_dict',
-    brew_prefix / '/var/cache/cracklib/cracklib_words',
+    brew_prefix / '/var/cache/cracklib/cracklib-words',
 ]
 
 if crack.found()
