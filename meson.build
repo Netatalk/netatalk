@@ -1725,21 +1725,22 @@ sed_command = [
 with_cracklib = get_option('with-cracklib')
 crack = cc.find_library('crack', dirs: libsearch_dirs, required: false)
 
+cracklib_dirs = [
+    '/usr/share/cracklib/cracklib_dict',
+    '/var/cache/cracklib/cracklib_dict',
+    brew_prefix / '/var/cache/cracklib/cracklib_dict',
+]
+
 if crack.found()
     have_cracklib = true
     cdata.set('USE_CRACKLIB', 1)
     if with_cracklib == ''
-        if fs.is_dir('/usr/share/cracklib')
-            cdata.set(
-                '_PATH_CRACKLIB',
-                '"/usr/share/cracklib/cracklib_dict"',
-            )
-        elif fs.is_dir('/var/cache/cracklib')
-            cdata.set(
-                '_PATH_CRACKLIB',
-                '"/var/cache/cracklib/cracklib_dict"',
-            )
-        endif
+        foreach dir : cracklib_dirs
+            if fs.is_dir(dir)
+                cdata.set('_PATH_CRACKLIB', dir)
+            endif
+            break
+        endforeach
     elif with_cracklib != ''
         cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '"')
     endif
