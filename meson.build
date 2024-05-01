@@ -1729,12 +1729,19 @@ if crack.found()
     have_cracklib = true
     cdata.set('USE_CRACKLIB', 1)
     if with_cracklib == ''
-        cdata.set(
-            '_PATH_CRACKLIB',
-            '"/usr/' + atalk_libname + '/cracklib_dict"',
-        )
+        if fs.is_dir('/usr/share/cracklib')
+            cdata.set(
+                '_PATH_CRACKLIB',
+                '"/usr/share/cracklib/cracklib_dict"',
+            )
+        elif fs.is_dir('/var/cache/cracklib')
+            cdata.set(
+                '_PATH_CRACKLIB',
+                '"/var/cache/cracklib/cracklib_dict"',
+            )
+        endif
     elif with_cracklib != ''
-        cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '/cracklib_dict"')
+        cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '"')
     endif
 else
     have_cracklib = false

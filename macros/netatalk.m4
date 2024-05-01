@@ -391,7 +391,11 @@ AC_ARG_WITH(cracklib,
 			AC_DEFINE(USE_CRACKLIB, 1, [Define if cracklib should be used])
 			LIBS="$LIBS -lcrack"
 			if test "$cracklib" = "yes"; then
-				cracklib="/usr/$atalk_libname/cracklib_dict"
+				if test -d '/usr/share/cracklib'; then
+					cracklib='/usr/share/cracklib/cracklib_dict'
+				elif test -d '/var/cache/cracklib'; then
+					cracklib='/var/cache/cracklib/cracklib_dict'
+				fi
 			fi
 			AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$cracklib",
 				[path to cracklib dictionary])
