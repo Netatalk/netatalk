@@ -1,7 +1,7 @@
 #! /bin/sh
 # chkconfig: - 91 35
 # description: This package is an implementation of "AFP over TCP"
-#              and provides printer, file sharing, and routing 
+#              and provides printer, file sharing, and routing
 #              services via legacy AppleTalk networking protocol.
 #
 # Netatalk :NETATALK_VERSION: daemons.
@@ -9,6 +9,7 @@
 # its data structures must have time to stablize before running the
 # other processes.
 
+ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
 ATALK_BIN=:BINDIR:
 ATALK_CONF_DIR=:ETCDIR:
 ATALK_SBIN=:SBINDIR:
@@ -35,7 +36,7 @@ RETVAL_AFPD=0
 atalk_startup() {
     # Check that networking is up.
     if [ ${NETWORKING} = "no" ]; then
-         echo "[Network isn't started]"; 
+         echo "[Network isn't started]";
          exit 1;
     fi
 
@@ -44,7 +45,7 @@ atalk_startup() {
          exit 6;
     fi
 
-    if [ x"${ATALKD_RUN}" != x"no" -a -x ${ATALK_SBIN}/atalkd ]; then 
+    if [ x"${ATALKD_RUN}" != x"no" -a -x ${ATALK_SBIN}/atalkd ]; then
          # Quickly probe for appletalk and warn if we can't find it
          #/sbin/modprobe appletalk || echo "[could not load appletalk module]"
          # Check for IP Encapsulation support
@@ -54,10 +55,10 @@ atalk_startup() {
 	RETVAL_ATALKD=$?
 	echo
 
-	if [ -x ${ATALK_BIN}/nbprgstr ]; then	
+	if [ -x ${ATALK_BIN}/nbprgstr ]; then
 	    action "  Registering ${ATALK_NAME}:Workstation${ATALK_ZONE}:" ${ATALK_BIN}/nbprgstr -p 4 \"${ATALK_NAME}:Workstation${ATALK_ZONE}\"
 	    action "  Registering ${ATALK_NAME}:netatalk${ATALK_ZONE}:" ${ATALK_BIN}/nbprgstr -p 4 \"${ATALK_NAME}:netatalk${ATALK_ZONE}\"
-	fi	
+	fi
 
 	if [ x"${PAPD_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/papd ]; then
 	    echo -n "  Starting papd:"
@@ -120,14 +121,14 @@ atalk_startup() {
 case "$1" in
 'start')
 	echo -n 'Starting Netatalk services: '
-	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then 
+	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then
 	    echo -n "(backgrounded)"
 	    atalk_startup >& /dev/null &
 	else
 	    echo
 	    atalk_startup
 	fi
-	echo 
+	echo
 	;;
 'stop')
 	echo 'Shutting down Netatalk services: '

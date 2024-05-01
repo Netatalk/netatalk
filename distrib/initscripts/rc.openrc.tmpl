@@ -5,6 +5,8 @@
 # its data structures must have time to stablize before running the
 # other processes.
 
+ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
+
 depend() {
 	need net
 	use logger dns
