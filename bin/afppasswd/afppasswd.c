@@ -51,7 +51,7 @@
 
 #define FORMAT  ":****************:****************:********\n"
 #define FORMAT_LEN 44
-#define OPTIONS "cafnu:p:"
+#define OPTIONS "cafnu:p:w:"
 #define UID_START 100
 
 #define HEXPASSWDLEN 16
@@ -108,7 +108,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 }
 
 /* this matches the code in uam_randnum.c */
-static int update_passwd(const char *path, const char *name, int flags)
+static int update_passwd(const char *path, const char *name, int flags, char *pass)
 {
   char password[PASSWDLEN + 1], *p, *passwd;
   FILE *fp;
@@ -170,9 +170,12 @@ found_entry:
   }
 
   /* new password */
-  passwd = getpass("Enter NEW AFP password: ");
-  if (strlen(passwd) > 8) {
-    fprintf(stderr, "afppasswd: max password length is 8.\n");
+  if (strlen(pass) < 1)
+    passwd = getpass("Enter NEW AFP password: ");
+  else
+    passwd = pass;
+  if (strlen(passwd) > PASSWDLEN) {
+    fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
     err = -1;
     goto update_done;
   }
@@ -188,7 +191,10 @@ found_entry:
   }
 #endif /* USE_CRACKLIB */
 
-  passwd = getpass("Enter NEW AFP password again: ");
+  if (strlen(pass) < 1)
+    passwd = getpass("Enter NEW AFP password again: ");
+  else
+    passwd = pass;
   if (strcmp(passwd, password) == 0) {
      struct flock lock;
      int fd = fileno(fp);
@@ -260,6 +266,7 @@ int main(int argc, char **argv)
   int flags;
   uid_t uid_min = UID_START, uid;
   char *path = _PATH_AFPDPWFILE;
+  char *password = "";
   int i, err = 0;
 
   extern char *optarg;
@@ -269,7 +276,7 @@ int main(int argc, char **argv)
 
   if (((flags & OPT_ISROOT) == 0) && (argc > 1)) {
     fprintf(stderr, "afppasswd (Netatalk %s)\n", VERSION);
-    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
+    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [-w string] [username]\n");
     fprintf(stderr, "  -a        add a new user\n");
     fprintf(stderr, "  -c        create and initialize password file or specific user\n");
     fprintf(stderr, "  -f        force an action\n");
@@ -278,6 +285,7 @@ int main(int argc, char **argv)
 #endif /* USE_CRACKLIB */
     fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
     fprintf(stderr, "  -p path   path to afppasswd file\n");
+    fprintf(stderr, "  -w string use string as password\n");
     return -1;
   }
 
@@ -303,6 +311,13 @@ int main(int argc, char **argv)
     case 'p': /* path to afppasswd file */
       path = optarg;
       break;
+    case 'w': /* password string */
+      if (strlen(optarg) > PASSWDLEN) {
+        fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
+        return -1;
+      }
+      password = optarg;
+      break;
     default:
       err++;
       break;
@@ -312,9 +327,9 @@ int main(int argc, char **argv)
   if (err || (optind + ((flags & OPT_CREATE) ? 0 :
 			(flags & OPT_ISROOT)) != argc)) {
 #ifdef USE_CRACKLIB
-    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
+    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [-w string] [username]\n");
 #else /* USE_CRACKLIB */
-    fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n");
+    fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [-w string] [username]\n");
 #endif /* USE_CRACKLIB */
     fprintf(stderr, "  -a        add a new user\n");
     fprintf(stderr, "  -c        create and initialize password file or specific user\n");
@@ -324,6 +339,7 @@ int main(int argc, char **argv)
 #endif /* USE_CRACKLIB */
     fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
     fprintf(stderr, "  -p path   path to afppasswd file\n");
+    fprintf(stderr, "  -w string use string as password\n");
     return -1;
   }
 
@@ -351,7 +367,7 @@ int main(int argc, char **argv)
     /* if we're root, we need to specify the username */
     pwd = (flags & OPT_ISROOT) ? getpwnam(argv[optind]) : getpwuid(uid);
     if (pwd)
-      return update_passwd(path, pwd->pw_name, flags);
+      return update_passwd(path, pwd->pw_name, flags, password);
 
     fprintf(stderr, "afppasswd: can't get password entry.\n");
     return -1;
