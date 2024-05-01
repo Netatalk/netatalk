@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
+    <refmiscinfo class="date">01 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -13,7 +13,8 @@
   <refnamediv>
     <refname>afppasswd</refname>
 
-    <refpurpose>AFP Random Number UAM password maintenance utility</refpurpose>
+    <refpurpose>AFP Random Number UAM password maintenance
+    utility</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -35,23 +36,19 @@
   <refsect1>
     <title>Description</title>
 
-    <para><command>afppasswd</command> allows the maintenance of afppasswd
-    files created by netatalk for use by the uams_randnum.so UAM (providing
-    the "Randnum exchange" and "2-Way Randnum exchange" User Authentication
-    Modules).</para>
+    <para><command>afppasswd</command> creates and maintains an afppasswd
+    file, which supplies the user credentials for the "Randnum exchange" and
+    "2-Way Randnum exchange" User Authentication Modules.</para>
 
     <para><command>afppasswd</command> can either be called by root with
-    parameters, or can be called by local system users with no parameters to
-    change their own AFP passwords.</para>
+    parameters to manage all user credentials, or by local system users with
+    no parameters to change their own AFP passwords.</para>
 
     <note>
-      <para>With this utility you can only change the passwords used by two
-      specific UAMs. As they provide only weak password encryption, the use of
-      the "Randnum exchange" and "2-Way Randnum exchange" UAMs is deprecated
-      unless one has to support very old AFP clients, that can not deal with
-      the more secure "DHX" or "DHX2" UAMs instead. Please compare with
-      the <link linkend="authentication">Authentication chapter</link> inside
-      Netatalk's documentation.</para>
+      <para>With this utility you can only change the passwords used by these
+      two Random Number UAMs. As they provide only weak password encryption,
+      their use is discouraged unless one has to support very old AFP clients
+      that can not deal with the more secure "DHX" or "DHX2" UAMs.</para>
     </note>
   </refsect1>
 
@@ -124,6 +121,16 @@
           <para>This is the minimum <emphasis remap="I">user id</emphasis>
           (uid) that <command>afppasswd</command> will use when creating
           users.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-w <emphasis>string</emphasis></term>
+
+        <listitem>
+          <para>Use string as password, instead of typing it interactively.
+          Please use this option only if absolutely necessary, since the
+          password will remain in the terminal history in plain text.</para>
         </listitem>
       </varlistentry>
     </variablelist>
