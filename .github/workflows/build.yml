@@ -239,6 +239,52 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
+  build-archlinux:
+    name: Archlinux
+    runs-on: ubuntu-22.04
+    container:
+      image: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          pacman -Sy --noconfirm \
+            autoconf \
+            automake \
+            cracklib \
+            gcc \
+            libtool \
+            make \
+            meson \
+            ninja \
+            pkgconfig
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --with-cracklib
+      - name: Autotools - Build
+        run: make -j $(nproc)
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
+
   build-fedora:
     name: Fedora
     runs-on: ubuntu-22.04
