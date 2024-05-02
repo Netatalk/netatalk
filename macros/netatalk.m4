@@ -388,15 +388,27 @@ AC_ARG_WITH(cracklib,
 	if test "x$withval" != "xno" ; then
 		cracklib="$withval"
 		AC_CHECK_LIB(crack, main, [
-			AC_DEFINE(USE_CRACKLIB, 1, [Define if cracklib should be used])
 			LIBS="$LIBS -lcrack"
 			if test "$cracklib" = "yes"; then
-				cracklib="/usr/$atalk_libname/cracklib_dict"
+				if test -d '/usr/share/cracklib'; then
+					cracklib='/usr/share/cracklib/pw_dict'
+				elif test -d '/var/cache/cracklib'; then
+					cracklib='/var/cache/cracklib/cracklib_dict'
+				elif test -d '/usr/local/libdata/cracklib'; then
+					cracklib='/usr/local/libdata/cracklib/cracklib-words'
+				elif test -d '/usr/pkg/share/cracklib'; then
+					cracklib='/usr/pkg/share/cracklib/pw_dict'
+				elif test -d '/usr/local/share/cracklib'; then
+					cracklib='/usr/local/share/cracklib/cracklib-small'
+				fi
 			fi
-			AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$cracklib",
-				[path to cracklib dictionary])
-			AC_MSG_RESULT([setting cracklib dictionary to $cracklib])
-			netatalk_cv_with_cracklib=yes
+			if test -n "$cracklib" ; then
+				AC_DEFINE(USE_CRACKLIB, 1, [Define if cracklib should be used])
+				AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$cracklib",
+					[path to cracklib dictionary])
+				AC_MSG_RESULT([setting cracklib dictionary to $cracklib])
+				netatalk_cv_with_cracklib=yes
+			fi
 			],[
 			AC_MSG_ERROR([cracklib not found!])
 			]
