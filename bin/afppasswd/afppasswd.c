@@ -112,9 +112,9 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 }
 
 /* this matches the code in uam_randnum.c */
-static int update_passwd(const char *path, const char *name, int flags, char *pass)
+static int update_passwd(const char *path, const char *name, int flags, const char *pass)
 {
-  char password[PASSWDLEN + 1], *p, *passwd;
+  char password[PASSWDLEN + 1], *p, *passwd = "";
   FILE *fp;
   off_t pos;
   int keyfd = -1, err = 0;
@@ -174,16 +174,24 @@ found_entry:
   }
 
   /* new password */
-  if (strlen(pass) < 1)
+  if (strlen(pass) < 1) {
     passwd = getpass("Enter NEW AFP password: ");
-  else
-    passwd = pass;
-  if (strlen(passwd) > PASSWDLEN) {
-    fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
-    err = -1;
-    goto update_done;
+
+    if (strlen(passwd) > PASSWDLEN) {
+      fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
+      err = -1;
+      goto update_done;
+    }
+    memcpy(password, passwd, sizeof(password));
+  } else {
+    memcpy(password, pass, sizeof(password));
+    if (strlen(pass) < PASSWDLEN) {
+      for (int i = (int) strlen(pass); i <= PASSWDLEN; i++) {
+        password[i] = '\0';
+      }
+    }
   }
-  memcpy(password, passwd, sizeof(password));
+
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
@@ -197,9 +205,8 @@ found_entry:
 
   if (strlen(pass) < 1)
     passwd = getpass("Enter NEW AFP password again: ");
-  else
-    passwd = pass;
-  if (strcmp(passwd, password) == 0) {
+
+  if (strcmp(passwd, password) == 0 || strlen(pass) > 0) {
      struct flock lock;
      int fd = fileno(fp);
 
@@ -270,7 +277,7 @@ int main(int argc, char **argv)
   int flags;
   uid_t uid_min = UID_START, uid;
   char *path = _PATH_AFPDPWFILE;
-  char *password = "";
+  const char *pass = "";
   int i, err = 0;
 
   extern char *optarg;
@@ -320,7 +327,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
         return -1;
       }
-      password = optarg;
+      pass = optarg;
       break;
     default:
       err++;
@@ -371,7 +378,7 @@ int main(int argc, char **argv)
     /* if we're root, we need to specify the username */
     pwd = (flags & OPT_ISROOT) ? getpwnam(argv[optind]) : getpwuid(uid);
     if (pwd)
-      return update_passwd(path, pwd->pw_name, flags, password);
+      return update_passwd(path, pwd->pw_name, flags, pass);
 
     fprintf(stderr, "afppasswd: can't get password entry.\n");
     return -1;
