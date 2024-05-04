@@ -35,9 +35,15 @@ if [ ! -z "${AFP_USER}" ]; then
         groupadd ${AFP_GROUP} || true 2> /dev/null
         usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
     fi
-    if [ ! -z "${AFP_PASS}" ]; then
-        echo "${AFP_USER}:${AFP_PASS}" | chpasswd
+
+    echo "${AFP_USER}:${AFP_PASS}" | chpasswd
+
+    # Creating credentials for the RandNum UAM
+    if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
+    	rm -f /usr/local/etc/netatalk/afppasswd
     fi
+    afppasswd -c
+    afppasswd -a -f -w "${AFP_PASS}" "${AFP_USER}"
 fi
 
 echo "*** Configuring shared volume"
@@ -77,6 +83,7 @@ if [ -z "${MANUAL_CONFIG}" ]; then
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
+uam list = uams_dhx2.so uams_randnum.so
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
 path = /mnt/afpshare
