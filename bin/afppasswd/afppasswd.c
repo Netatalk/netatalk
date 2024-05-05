@@ -120,7 +120,7 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
   int keyfd = -1, err = 0;
 
   if ((fp = fopen(path, "r+")) == NULL) {
-    fprintf(stderr, "afppasswd: can't open %s\n", path);
+    fprintf(stderr, "afppasswd: can't open %s: %s\n", path, strerror(errno));
     return -1;
   }
 
@@ -138,11 +138,11 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
       /* check for a match */
       if (strlen(name) == (p - buf) &&
           strncmp(buf, name, p - buf) == 0) {
-	p++;
-	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
-	  fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
-	  break;
-	}
+      	p++;
+      	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
+      	  fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
+      	  break;
+      	}
 	goto found_entry;
       }
     }
@@ -195,8 +195,9 @@ found_entry:
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
-    if ((passwd = (char *) FascistCheck(password, _PATH_CRACKLIB))) {
-        fprintf(stderr, "Error: %s\n", passwd);
+    const char *pwcheck = FascistCheck(password, _PATH_CRACKLIB);
+    if (pwcheck) {
+        fprintf(stderr, "Error: %s\n", pwcheck);
         err = -1;
         goto update_done;
     }
