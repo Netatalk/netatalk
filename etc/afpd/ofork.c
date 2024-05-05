@@ -9,9 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <string.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
@@ -349,7 +347,7 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
     if ( ! path->st_valid) {
         of_fstatat(dirfd, path);
     }
-    	
+
     if (path->st_errno)
         return NULL;
 
@@ -536,4 +534,3 @@ void of_close_all_forks(const AFPObj *obj)
     }
     return;
 }
-

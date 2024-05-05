@@ -16,9 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* HAVE_CRYPT_H */
