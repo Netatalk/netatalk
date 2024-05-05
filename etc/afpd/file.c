@@ -830,7 +830,8 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     u_char              achar, xyy[4];
     const u_char        *fdType = NULL;
     uint16_t		ashort = 0;
-    uint16_t		bshort, oshort;
+    uint16_t		bshort;
+    uint16_t		oshort;
     uint32_t		aint;
     uint32_t		upriv;
     uint16_t           upriv_bit = 0;
