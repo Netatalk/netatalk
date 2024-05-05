@@ -78,7 +78,8 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 
   if (keyfd > -1) {
     lseek(keyfd, 0, SEEK_SET);
-    read(keyfd, key, sizeof(key));
+    if (read(keyfd, key, sizeof(key)) < 0)
+      fprintf(stderr, "could not read key (%s)\n", strerror(errno));
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
@@ -87,11 +88,12 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
     DES_key_sched((DES_cblock *) key, &schedule);
     memset(key, 0, sizeof(key));
     if (newpwd) {
-	DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd, &schedule,
-		    DES_ENCRYPT);
+      DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd, &schedule,
+        DES_ENCRYPT);
     } else {
       /* decrypt the password */
-      DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf, &schedule, DES_DECRYPT);
+      DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf, &schedule,
+        DES_DECRYPT);
     }
     memset(&schedule, 0, sizeof(schedule));
   }
@@ -116,7 +118,7 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
   int keyfd = -1, err = 0;
 
   if ((fp = fopen(path, "r+")) == NULL) {
-    fprintf(stderr, "afppasswd: can't open %s\n", path);
+    fprintf(stderr, "afppasswd: can't open %s: %s\n", path, strerror(errno));
     return -1;
   }
 
@@ -134,12 +136,12 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
       /* check for a match */
       if (strlen(name) == (p - buf) &&
           strncmp(buf, name, p - buf) == 0) {
-	p++;
-	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
-	  fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
-	  break;
-	}
-	goto found_entry;
+      	p++;
+      	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
+      	  fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
+      	  break;
+      	}
+        goto found_entry;
       }
     }
     pos = ftell(fp);
@@ -191,8 +193,10 @@ found_entry:
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
-    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) {
-        fprintf(stderr, "Error: %s\n", passwd);
+    const char *pwcheck = FascistCheck(password, _PATH_CRACKLIB);
+
+    if (pwcheck) {
+        fprintf(stderr, "Error: %s\n", pwcheck);
         err = -1;
         goto update_done;
     }
@@ -255,7 +259,7 @@ static int create_file(const char *path, uid_t minuid)
     len = strlen(buf);
     if (write(fd, buf, len) != len) {
       fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
-	      strerror(errno));
+        strerror(errno));
       err = -1;
       break;
     }
@@ -332,7 +336,7 @@ int main(int argc, char **argv)
   }
 
   if (err || (optind + ((flags & OPT_CREATE) ? 0 :
-			(flags & OPT_ISROOT)) != argc)) {
+    (flags & OPT_ISROOT)) != argc)) {
 #ifdef USE_CRACKLIB
     fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [-w string] [username]\n");
 #else /* USE_CRACKLIB */
