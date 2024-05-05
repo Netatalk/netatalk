@@ -186,7 +186,7 @@ static struct pam_conv PAM_conversation = {
 };
 
 
-static int dhx_setup(void *obj, unsigned char *ibuf, size_t ibuflen _U_,
+static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
 		     unsigned char *rbuf, size_t *rbuflen)
 {
     uint16_t sessid;
@@ -419,7 +419,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
-			 unsigned char *ibuf, size_t ibuflen _U_,
+			 const unsigned char *ibuf, size_t ibuflen _U_,
 			 unsigned char *rbuf, size_t *rbuflen)
 {
     const char *hostname;
