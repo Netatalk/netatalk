@@ -38,7 +38,7 @@
 
 #include <netatalk/endian.h>
 
-#include <openssl/des.h>
+#include <des.h>
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
