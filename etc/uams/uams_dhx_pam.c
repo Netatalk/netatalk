@@ -266,7 +266,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     }
 
     /* figure out the key. store the key in rbuf for now. */
-    i = DH_compute_key(rbuf, bn, dh);
+    i = (unsigned long) DH_compute_key(rbuf, bn, dh);
 
     /* set the key */
     CAST_set_key(&castkey, i, rbuf);
@@ -331,7 +331,7 @@ pam_fail:
 
 /* -------------------------------- */
 static int login(void *obj, unsigned char *username, int ulen,
-	struct passwd **uam_pwd _U_, unsigned char *ibuf, size_t ibuflen,
+	struct passwd **uam_pwd _U_, const unsigned char *ibuf, size_t ibuflen,
 	unsigned char *rbuf, size_t *rbuflen)
 {
     if (( dhxpwd = uam_getname(obj, (char *)username, ulen)) == NULL ) {
@@ -382,7 +382,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-		     unsigned char *ibuf, size_t ibuflen,
+		     const unsigned char *ibuf, size_t ibuflen,
 		     unsigned char *rbuf, size_t *rbuflen)
 {
     unsigned char *username;

@@ -52,7 +52,8 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
 int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 ret, oflag = 0, adflags = 0, fd = -1;
-    uint16_t            vid, bitmap;
+    uint16_t            vid;
+    uint16_t            bitmap;
     uint32_t            did, maxreply, tmpattr;
     struct vol          *vol;
     struct dir          *dir;
