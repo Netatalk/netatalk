@@ -2042,7 +2042,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     char		*spath, temp[17], *p;
     char                *supath, *upath;
     struct path         *path;
-    int                 err, fd;
+    int                 err;
+    int                 fd;
     struct adouble	ads;
     struct adouble	add;
     struct adouble	*adsp = NULL;
@@ -2051,7 +2052,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     struct ofork	*d_of = NULL;
     int                 crossdev;
 
-    unsigned int        slen, dlen;
+    unsigned int        slen;
+    unsigned int        dlen;
     uint32_t		sid, did;
     uint16_t		vid;
 

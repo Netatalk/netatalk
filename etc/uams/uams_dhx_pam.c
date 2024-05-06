@@ -269,7 +269,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     i = (unsigned long) DH_compute_key(rbuf, bn, dh);
 
     /* set the key */
-    CAST_set_key(&castkey, i, rbuf);
+    CAST_set_key(&castkey, (int) i, rbuf);
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);

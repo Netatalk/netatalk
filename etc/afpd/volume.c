@@ -285,8 +285,9 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
     uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
     VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
-    char *data = NULL, *nameoff = NULL;
-    char *slash = NULL;
+    char *data = NULL;
+    char *nameoff = NULL;
+    const char *slash = NULL;
     char *ade = NULL;
 
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
