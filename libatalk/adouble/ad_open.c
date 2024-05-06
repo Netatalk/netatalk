@@ -657,7 +657,7 @@ EC_CLEANUP:
 }
 
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
-static int ad_header_read_osx(const char *path, struct adouble *ad, const struct stat *hst)
+static int ad_header_read_osx(const char *path, struct adouble *ad, struct stat *hst)
 {
     EC_INIT;
     struct adouble      adosx;
