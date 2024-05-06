@@ -30,11 +30,11 @@ Error checking and logging
 ==========================
 
 We want rigid error checking and concise log messages. This often leads
-to signifant code bloat where the relevant function call is buried in error
+to significant code bloat where the relevant function call is buried in error
 checking and logging statements.
 In order to alleviate error checking and code readability, we provide a set
 of error checking macros in <atalk/errchk.h>. These macros compare the return
-value of statements againt 0, NULL, -1 (and maybe more, check it out).
+value of statements against 0, NULL, -1 (and maybe more, check it out).
 Every macro comes in four flavours: EC_CHECK, EC_CHECK_LOG, EC_CHECK_LOG_ERR
 and EC_CHECK_CUSTOM:
 - EC_CHECK just checks the CHECK
@@ -42,9 +42,9 @@ and EC_CHECK_CUSTOM:
 - EC_CHECK_LOG_ERR allows specifying the return value
 - EC_CHECK_CUSTOM allows custom actions
 The macros EC_CHECK* unconditionally jump to a cleanup label where the
-neccessary cleanup can be done alongside controlling the return value.
+necessary cleanup can be done alongside controlling the return value.
 EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
-performed as appropiate.
+performed as appropriate.
 
 Example:
 - stat() without EC macro:
@@ -81,7 +81,7 @@ EC_CLEANUP:
     EC_EXIT;
   }
 
-A boileplate function template is:
+A boilerplate function template is:
 
 int func(void)
 {
@@ -104,8 +104,8 @@ It has been slightly modified:
 - "include" directive added
 - atalk_iniparser_getstrdup() to complemnt atalk_iniparser_getstring(), it returns allocated
   strings which the caller must free as necessary
-- the API has been modifed such that all atalk_iniparser_get* funcs take a section and
-  a parameter as seperare args instead of one string of the form "section:parameter"
+- the API has been modified such that all atalk_iniparser_get* funcs take a section and
+  a parameter as separate args instead of one string of the form "section:parameter"
   in the original library
 
 CNID Database Daemons
@@ -124,9 +124,9 @@ Advantages:
   database, no locking is needed and changes appear atomic.
 
 - Berkeley DB transactions are difficult to get right with several
-  processes attempting to access the CNID database simultanously. This
+  processes attempting to access the CNID database simultaneously. This
   is much easier with a single process and the database can be made nearly
-  crashproof this way (at a performance cost).
+  crash-proof this way (at a performance cost).
 
 - No problems with user permissions and access to underlying database
   files, the cnid_dbd process runs under a configurable user
@@ -147,7 +147,7 @@ Disadvantages:
 
   i)  IPC overhead.
   ii) r/o access to database pages is possible by more than one
-      process at once, r/w access is possible for nonoverlapping regions.
+      process at once, r/w access is possible for non overlapping regions.
 
   The current implementation of cnid_dbd uses unix domain sockets as
   the IPC mechanism. While this is not the fastest possible method, it
@@ -159,13 +159,13 @@ Disadvantages:
   (no database lookups/changes), so this is just the IPC
   overhead.
 
-  I have not measured the effects of the advantages of simultanous
+  I have not measured the effects of the advantages of simultaneous
   database access.
 
 
 Installation and configuration
 
-There are two executeables that will be built in etc/cnid_dbd and
+There are two executables that will be built in etc/cnid_dbd and
 installed into the systems binaries directories of netatalk
 cnid_metad and cnid_dbd. cnid_metad should run all the
 time with root permissions. It will be notified when an instance of
