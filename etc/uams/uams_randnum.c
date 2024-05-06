@@ -256,15 +256,13 @@ static int randpass(const struct passwd *pwd, const char *file,
     strcpy(path,  pwd->pw_dir );
     strcat(path, "/" );
     strcat(path, file + 2);
-    if (!uid)
-      /* change ourselves to the user */
-      if ( seteuid(pwd->pw_uid) < 0)
-        LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", pwd->pw_uid, strerror(errno));
+    /* change ourselves to the user */
+    if (!uid && (seteuid(pwd->pw_uid) < 0))
+      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", pwd->pw_uid, strerror(errno));
     i = home_passwd(pwd, path, i, passwd, len, set);
-    if (!uid)
-      /* change ourselves back to root */
-      if ( seteuid(0) < 0)
-          LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
+		/* change ourselves back to root */
+    if (!uid && (seteuid(0) < 0))
+      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
     return i;
   }
 
@@ -273,13 +271,11 @@ static int randpass(const struct passwd *pwd, const char *file,
 
   /* handle afppasswd file. we need to make sure that we're root
    * when we do this. */
-  if (uid)
-    if ( seteuid(0) < 0)
-      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
+  if (uid && (seteuid(0) < 0))
+    LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
   i = afppasswd(pwd, file, i, passwd, len, set);
-  if (uid)
-    if ( seteuid(uid) < 0)
-      LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", uid, strerror(errno));
+  if (uid && (seteuid(uid) < 0))
+    LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", uid, strerror(errno));
   return i;
 }
 

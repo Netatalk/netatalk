@@ -135,26 +135,20 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
     db = mod->cnid_open(&args);
 
     if (mod->flags & CNID_FLAG_SETUID) {
-      if (geteuid() != 0) {
-  			if (seteuid(0) < 0) {
-  				LOG(log_error, logtype_afpd,
-  				    "can't seteuid to 0 (%s)", strerror(errno));
-  				exit(EXITERR_SYS);
-  			}
+      if ((geteuid() != 0) && (seteuid(0) < 0)) {
+				LOG(log_error, logtype_afpd,
+				    "can't seteuid to 0 (%s)", strerror(errno));
+				exit(EXITERR_SYS);
   		}
-  		if (gid != getegid() ) {
-  			if (setegid(gid) < 0) {
-  				LOG(log_error, logtype_afpd,
-  				    "can't setegid to %i (%s)", gid, strerror(errno));
-  				exit(EXITERR_SYS);
-  			}
+  		if ((gid != getegid()) && (setegid(gid) < 0)) {
+				LOG(log_error, logtype_afpd,
+				    "can't setegid to %i (%s)", gid, strerror(errno));
+				exit(EXITERR_SYS);
   		}
-  		if (uid != geteuid() ) {
-  			if (seteuid(uid) < 0) {
-  				LOG(log_error, logtype_afpd,
-  				    "can't seteuid to %i (%s)", uid, strerror(errno));
-  				exit(EXITERR_SYS);
-  			}
+  		if ((uid != geteuid()) && (seteuid(uid) < 0)) {
+				LOG(log_error, logtype_afpd,
+				    "can't seteuid to %i (%s)", uid, strerror(errno));
+				exit(EXITERR_SYS);
   		}
     }
 
