@@ -59,60 +59,133 @@ env:
     xsltproc
 
 jobs:
-  build-ubuntu:
-    name: Ubuntu
+  build-alpine:
+    name: Alpine Linux
     runs-on: ubuntu-22.04
+    container:
+      image: alpine:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+          apk add \
+            acl-dev \
+            autoconf \
+            automake \
+            avahi-dev \
+            bison \
+            build-base \
+            cracklib \
+            cracklib-dev \
+            cracklib-words \
+            curl \
+            db-dev \
+            dbus-dev \
+            dbus-glib-dev \
+            flex \
+            gcc \
+            krb5-dev \
+            libevent-dev \
+            libgcrypt-dev \
+            libtool \
+            libtracker \
+            linux-pam-dev \
+            meson \
+            ninja \
+            openldap-dev \
+            openrc \
+            openssl-dev \
+            pkgconfig \
+            talloc-dev \
+            tracker \
+            tracker-dev
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-cracklib \
+            --with-init-style=openrc \
+            --with-libtirpc \
+            --with-tracker-pkgconfig-version=3.0
+      - name: Autotools - Build
+        run: make -j $(nproc)
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Dwith-embedded-ssl=true \
+            -Dwith-init-style=openrc
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
+
+  build-archlinux:
+    name: Arch Linux
+    runs-on: ubuntu-22.04
+    container:
+      image: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          pacman -Sy --noconfirm \
+            autoconf \
+            automake \
+            cracklib \
+            gcc \
+            libtool \
+            make \
+            meson \
+            ninja \
+            pkgconfig
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
         run: |
           ./configure \
             --disable-init-hooks \
-            --enable-krbV-uam \
-            --enable-pgp-uam \
             --with-cracklib \
-            --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
-            --with-init-style=debian-systemd \
-            --with-tracker-pkgconfig-version=3.0
-      - name: Autotools - Generate manual pages
-        run: make html
+            --with-init-style=systemd
       - name: Autotools - Build
-        run: make -j $(nproc) all
+        run: make -j $(nproc)
       - name: Autotools - Run tests
         run: make check
-      - name: Autotools - Run distribution tests
-        run: make distcheck
       - name: Autotools - Install
-        run: sudo make install
+        run: make install
       - name: Autotools - Uninstall
-        run: sudo make uninstall
+        run: make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dbuild-manual=true \
-            -Dwith-embedded-ssl=true \
             -Ddisable-init-hooks=true \
-            -Dwith-init-style=debian-systemd
-      - name: Meson - Build and generate manual pages
+            -Dwith-embedded-ssl=true \
+            -Dwith-init-style=systemd
+      - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
         run: cd build && meson test
-      - name: Meson - Run distribution tests
-        run: cd build && meson dist
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: ninja -C build install
       - name: Meson - Uninstall
-        run: sudo ninja -C build uninstall
+        run: ninja -C build uninstall
 
   build-debian:
-    name: Debian
+    name: Debian Linux
     runs-on: ubuntu-22.04
     container:
       image: debian:bookworm
@@ -164,13 +237,17 @@ jobs:
             --enable-pgp-uam \
             --with-cracklib \
             --with-init-style=debian-sysv \
-            --with-tracker-pkgconfig-version=2.0
+            --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc) all
       - name: Autotools - Run tests
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Start netatalk
+        run: /etc/init.d/netatalk start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: /etc/init.d/netatalk stop
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -188,117 +265,16 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
-  build-alpine:
-    name: Alpine (minimal)
-    runs-on: ubuntu-22.04
-    container:
-      image: alpine:latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          apk add \
-            autoconf \
-            automake \
-            build-base \
-            db-dev \
-            gcc \
-            libevent-dev \
-            libgcrypt-dev \
-            libtool \
-            meson \
-            ninja \
-            openrc \
-            openssl-dev \
-            pkgconfig
-      - name: Autotools - Bootstrap
-        run: ./bootstrap
-      - name: Autotools - Configure
-        run: |
-          ./configure \
-            --with-init-style=openrc
-      - name: Autotools - Build
-        run: make -j $(nproc)
-      - name: Autotools - Run tests
-        run: make check
-      - name: Autotools - Install
-        run: make install
-      - name: Autotools - Uninstall
-        run: make uninstall
-      - name: Meson - Configure
-        run: |
-          meson setup build \
-            -Dbuild-tests=true \
-            -Denable-pgp-uam=disabled \
-            -Dwith-acls=disabled \
-            -Dwith-embedded-ssl=true \
-            -Dwith-init-style=openrc
-      - name: Meson - Build
-        run: ninja -C build
-      - name: Meson - Run tests
-        run: cd build && meson test
-      - name: Meson - Install
-        run: ninja -C build install
-      - name: Meson - Uninstall
-        run: ninja -C build uninstall
-
-  build-archlinux:
-    name: Archlinux
-    runs-on: ubuntu-22.04
-    container:
-      image: archlinux:latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          pacman -Sy --noconfirm \
-            autoconf \
-            automake \
-            cracklib \
-            gcc \
-            libtool \
-            make \
-            meson \
-            ninja \
-            pkgconfig
-      - name: Autotools - Bootstrap
-        run: ./bootstrap
-      - name: Autotools - Configure
-        run: |
-          ./configure \
-            --with-cracklib
-      - name: Autotools - Build
-        run: make -j $(nproc)
-      - name: Autotools - Run tests
-        run: make check
-      - name: Autotools - Install
-        run: make install
-      - name: Autotools - Uninstall
-        run: make uninstall
-      - name: Meson - Configure
-        run: |
-          meson setup build \
-            -Dbuild-tests=true \
-            -Dwith-embedded-ssl=true
-      - name: Meson - Build
-        run: ninja -C build
-      - name: Meson - Run tests
-        run: cd build && meson test
-      - name: Meson - Install
-        run: ninja -C build install
-      - name: Meson - Uninstall
-        run: ninja -C build uninstall
-
   build-fedora:
-    name: Fedora
+    name: Fedora Linux
     runs-on: ubuntu-22.04
     container:
-      image: fedora:rawhide
+      image: fedora:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          dnf -y install \
+          dnf --setopt=install_weak_deps=False --assumeyes install \
             automake \
             avahi-devel \
             bison \
@@ -328,10 +304,11 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
+            --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
-            --with-init-style=redhat-sysv \
+            --with-init-style=redhat-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -345,8 +322,9 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
+            -Ddisable-init-hooks=true \
             -Dwith-embedded-ssl=true \
-            -Dwith-init-style=redhat-sysv
+            -Dwith-init-style=redhat-systemd
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
@@ -357,7 +335,7 @@ jobs:
         run: sudo ninja -C build uninstall
 
   build-opensuse:
-    name: openSUSE
+    name: openSUSE Linux
     runs-on: ubuntu-22.04
     container:
       image: opensuse/tumbleweed:latest
@@ -435,51 +413,116 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+  build-ubuntu:
+    name: Ubuntu Linux
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake berkeley-db libressl libtool meson mysql talloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
         run: |
           ./configure \
+            --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
-            --with-bdb=/opt/homebrew/opt/berkeley-db \
-            --with-init-style=macos-launchd \
-            --with-ssl-dir=/opt/homebrew/opt/libressl
+            --with-cracklib \
+            --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
+            --with-init-style=debian-systemd \
+            --with-tracker-pkgconfig-version=3.0
+      - name: Autotools - Generate manual pages
+        run: make html
       - name: Autotools - Build
         run: make -j $(nproc) all
       - name: Autotools - Run tests
         run: make check
+      - name: Autotools - Run distribution tests
+        run: make distcheck
       - name: Autotools - Install
         run: sudo make install
+      - name: Start netatalk
+        run: sudo systemctl start netatalk && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo systemctl stop netatalk
       - name: Autotools - Uninstall
         run: sudo make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
+            -Dbuild-tests=true \
+            -Dbuild-manual=true \
             -Dwith-embedded-ssl=true \
-            -Dwith-init-style=macos-launchd \
-            -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
-            -Dbuild-tests=true
-      - name: Meson - Build
+            -Ddisable-init-hooks=true \
+            -Dwith-init-style=debian-systemd
+      - name: Meson - Build and generate manual pages
         run: ninja -C build
       - name: Meson - Run tests
         run: cd build && meson test
+      - name: Meson - Run distribution tests
+        run: cd build && meson dist
       - name: Meson - Install
         run: sudo ninja -C build install
+      - name: Start netatalk
+        run: sudo systemctl start netatalk && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo systemctl stop netatalk
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
+
+  build-dflybsd:
+    name: DragonflyBSD
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/dragonflybsd-vm@v1.0.4
+        with:
+          copyback: false
+          usesh: true
+          prepare: |
+            pkg install -y \
+              autoconf \
+              automake \
+              avahi \
+              bison \
+              db5 \
+              gmake \
+              libevent \
+              libgcrypt \
+              libtool \
+              meson \
+              perl5 \
+              pkgconf \
+              py39-gdbm \
+              py39-sqlite3 \
+              py39-tkinter \
+              talloc \
+              tracker3
+          run: |
+            set -e
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --with-ssl-dir=/usr/local \
+              --with-tracker-pkgconfig-version=3.0 \
+              LDFLAGS=-L/usr/local/lib \
+              MAKE=gmake
+            gmake -j2
+            gmake install
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dwith-embedded-ssl=true
+            ninja -C build
+            ninja -C build install
+            ninja -C build uninstall
 
   build-freebsd:
     name: FreeBSD
@@ -526,6 +569,10 @@ jobs:
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
             gmake install
+            /etc/rc.d/netatalk start
+            sleep 2
+            asip-status localhost
+            /etc/rc.d/netatalk stop
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
@@ -534,62 +581,11 @@ jobs:
               -Dwith-init-style=freebsd
             ninja -C build
             ninja -C build install
-            ninja -C build uninstall
-
-  build-openbsd:
-    name: OpenBSD
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build on VM
-        uses: vmactions/openbsd-vm@v1.0.7
-        with:
-          copyback: false
-          prepare: |
-            pkg_add -I \
-              autoconf-2.71 \
-              automake-1.16.5 \
-              avahi \
-              bison \
-              dbus-glib \
-              db-4.6.21p7v0 \
-              gcc-11.2.0p9 \
-              gmake \
-              libevent \
-              libgcrypt \
-              libtalloc \
-              libtool \
-              meson \
-              openldap-client-2.6.6v0 \
-              openpam \
-              pkgconf \
-              tracker3
-          run: |
-            set -e
-            echo "Building with Autotools"
-            export AUTOCONF_VERSION=2.71
-            export AUTOMAKE_VERSION=1.16
-            export CFLAGS=-I/usr/local/include
-            export LDFLAGS=-L/usr/local/lib
-            autoreconf -fi
-            ./configure \
-              --with-init-style=openbsd \
-              --with-tracker-pkgconfig-version=3.0 \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-            gmake -j $(nproc)
-            gmake install
-            gmake uninstall
-            echo "Building with Meson"
-            meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-embedded-ssl=true \
-              -Dwith-init-style=openbsd
-            ninja -C build
-            ninja -C build install
+            /etc/rc.d/netatalk start
+            sleep 2
+            asip-status localhost
+            /etc/rc.d/netatalk stop
+            /etc/rc.d/netatalk disable
             ninja -C build uninstall
 
   build-netbsd:
@@ -638,6 +634,10 @@ jobs:
               PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
             gmake -j $(nproc)
             gmake install
+            service netatalk onestart
+            sleep 2
+            asip-status localhost
+            service netatalk onestop
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
@@ -647,11 +647,14 @@ jobs:
               -Dwith-init-style=netbsd
             ninja -C build
             ninja -C build install
+            service netatalk onestart
+            sleep 2
+            asip-status localhost
+            service netatalk onestop
             ninja -C build uninstall
 
-  build-dflybsd:
-    if: false
-    name: DragonflyBSD
+  build-openbsd:
+    name: OpenBSD
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -659,45 +662,177 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/dragonflybsd-vm@v1.0.4
+        uses: vmactions/openbsd-vm@v1.0.7
         with:
           copyback: false
           prepare: |
-            pkg install -y \
-              autoconf \
-              automake \
+            pkg_add -I \
+              autoconf-2.71 \
+              automake-1.16.5 \
               avahi \
               bison \
-              db5 \
+              dbus-glib \
+              db-4.6.21p7v0 \
+              gcc-11.2.0p9 \
               gmake \
               libevent \
               libgcrypt \
+              libtalloc \
               libtool \
               meson \
-              perl5 \
+              openldap-client-2.6.6v0 \
+              openpam \
               pkgconf \
-              py39-gdbm \
-              py39-sqlite3 \
-              py39-tkinter \
-              talloc \
               tracker3
           run: |
             set -e
             echo "Building with Autotools"
-            ./bootstrap
+            export AUTOCONF_VERSION=2.71
+            export AUTOMAKE_VERSION=1.16
+            export CFLAGS=-I/usr/local/include
+            export LDFLAGS=-L/usr/local/lib
+            autoreconf -fi
             ./configure \
-              --with-ssl-dir=/usr/local \
+              --with-init-style=openbsd \
               --with-tracker-pkgconfig-version=3.0 \
-              LDFLAGS=-L/usr/local/lib \
-              MAKE=gmake
-            gmake -j2
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+            gmake -j $(nproc)
             gmake install
+            rcctl -d start netatalk
+            sleep 2
+            asip-status localhost
+            rcctl -d stop netatalk
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Dwith-embedded-ssl=true
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-embedded-ssl=true \
+              -Dwith-init-style=openbsd
             ninja -C build
             ninja -C build install
+            rcctl -d start netatalk
+            sleep 2
+            asip-status localhost
+            rcctl -d stop netatalk
+            rcctl -d disable netatalk
+            ninja -C build uninstall
+
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install automake berkeley-db libressl libtool meson mysql talloc
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-bdb=/opt/homebrew/opt/berkeley-db \
+            --with-init-style=macos-launchd \
+            --with-ssl-dir=/opt/homebrew/opt/libressl
+      - name: Autotools - Build
+        run: make -j $(nproc) all
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Start netatalk
+        run: sudo /usr/local/bin/netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
+            -Dwith-embedded-ssl=true \
+            -Dwith-init-style=macos-launchd \
+            -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
+            -Dbuild-tests=true
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
+      - name: Start netatalk
+        run: sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
+
+  build-omnios:
+    name: OmniOS
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/omnios-vm@v1.0.1
+        with:
+          copyback: false
+          prepare: |
+            pkg install \
+              build-essential \
+              libtool \
+              pkg-config
+            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
+            tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            pkgin -y install \
+              avahi \
+              dbus-glib \
+              gnome-tracker \
+              libevent \
+              libgcrypt \
+              meson \
+              talloc
+          run: |
+            set -e
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --enable-pgp-uam \
+              --with-bdb=/opt/local \
+              --with-init-style=solaris \
+              --with-ldap=/opt/local \
+              --with-libgcrypt-dir=/opt/local \
+              --with-tracker-pkgconfig-version=3.0 \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
+            gmake -j $(nproc)
+            gmake install
+            svcadm enable svc:/network/netatalk:default
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            svcadm disable svc:/network/netatalk:default
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-embedded-ssl=true \
+              -Dwith-init-style=solaris \
+              -Dwith-ldap=/opt/local
+            ninja -C build
+            ninja -C build install
+            svcadm enable svc:/network/netatalk:default
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            svcadm disable svc:/network/netatalk:default
             ninja -C build uninstall
 
   build-solaris:
@@ -749,62 +884,11 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
+            svcadm enable svc:/network/netatalk:default
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            svcadm disable -s svc:/network/netatalk:default
             gmake uninstall
-
-  build-omnios:
-    name: OmniOS
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build on VM
-        uses: vmactions/omnios-vm@v1.0.1
-        with:
-          copyback: false
-          prepare: |
-            pkg install \
-              build-essential \
-              libtool \
-              pkg-config
-            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
-            tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
-            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            pkgin -y install \
-              avahi \
-              dbus-glib \
-              gnome-tracker \
-              libevent \
-              libgcrypt \
-              meson \
-              talloc
-          run: |
-            set -e
-            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            echo "Building with Autotools"
-            ./bootstrap
-            ./configure \
-              --enable-pgp-uam \
-              --with-bdb=/opt/local \
-              --with-init-style=solaris \
-              --with-ldap=/opt/local \
-              --with-libgcrypt-dir=/opt/local \
-              --with-tracker-pkgconfig-version=3.0 \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
-            gmake -j $(nproc)
-            gmake install
-            gmake uninstall
-            echo "Building with Meson"
-            meson setup build \
-              -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-embedded-ssl=true \
-              -Dwith-init-style=solaris \
-              -Dwith-ldap=/opt/local
-            ninja -C build
-            ninja -C build install
-            ninja -C build uninstall
 
   static_analysis:
     name: Static Analysis
