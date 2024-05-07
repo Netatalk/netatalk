@@ -505,9 +505,6 @@
 /* Define to 1 if you have the <ufs/quota.h> header file. */
 #mesondefine HAVE_UFS_QUOTA_H
 
-/* Define to 1 if you have the <unistd.h> header file. */
-#mesondefine HAVE_UNISTD_H
-
 /* Define to 1 if you have the `unlinkat' function. */
 #mesondefine HAVE_UNLINKAT
 

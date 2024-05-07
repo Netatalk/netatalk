@@ -1,7 +1,5 @@
 compat_sources = [
     'misc.c',
-    'mktemp.c',
-    'pselect.c',
     'strlcpy.c',
 ]
 

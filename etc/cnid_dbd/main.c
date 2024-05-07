@@ -217,8 +217,10 @@ static int delete_db(void)
 
     EC_ZERO( get_lock(LOCK_FREE, bdata(dbpath)) );
     EC_NEG1( cwd = open(".", O_RDONLY) );
-    chdir(cfrombstr(dbpath));
-    system("rm -f cnid2.db lock log.* __db.*");
+    if (chdir(cfrombstr(dbpath)) < 0)
+        LOG(log_error, logtype_cnid, "delete_db: could not chdir to \"%s\"", dbpath, strerror(errno));
+    if (system("rm -f cnid2.db lock log.* __db.*") < 0)
+        LOG(log_error, logtype_cnid, "delete_db: could not rm things");
 
     if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
         LOG(log_error, logtype_cnid, "main: fatal db lock error");

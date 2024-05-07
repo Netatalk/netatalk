@@ -93,7 +93,8 @@ static int setup_out_fd(void)
 ****************************************************************************/
 static void gain_root_privilege(void)
 {
-        seteuid(0);
+	if (seteuid(0) < 0)
+		LOG(log_error, logtype_afpd, "gain_root_privilege: could not seteuid(%i)", 0);
 }
 
 /****************************************************************************
@@ -102,7 +103,8 @@ static void gain_root_privilege(void)
 ****************************************************************************/
 static void gain_root_group_privilege(void)
 {
-        setegid(0);
+	if (setegid(0) < 0)
+		LOG(log_error, logtype_afpd, "gain_root_group_privilege: could not setegid(%i)", 0);
 }
 
 /****************************************************************************
@@ -128,18 +130,24 @@ static int become_user_permanently(uid_t uid, gid_t gid)
 #if USE_SETRESUID
     ret = setresgid(gid,gid,gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setresgid(%i, %i, %i)",
+              gid, gid, gid);
         return -1;
     }
     ret = setgid(gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
     ret = setresuid(uid,uid,uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setresuid(%i, %i, %i)",
+              uid, uid, uid);
         return -1;
     }
     ret = setuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
 #endif
@@ -147,18 +155,22 @@ static int become_user_permanently(uid_t uid, gid_t gid)
 #if USE_SETREUID
     ret = setregid(gid,gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setresgid(%i, %i)", gid, gid);
         return -1;
     }
     ret = setgid(gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
     ret = setreuid(uid,uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setreuid(%i, %i)", uid, uid);
         return -1;
     }
     ret = setuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
 #endif
@@ -166,22 +178,27 @@ static int become_user_permanently(uid_t uid, gid_t gid)
 #if USE_SETEUID
     ret = setegid(gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setegid(%i)", gid);
         return -1;
     }
     ret = setgid(gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
     ret = setuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
     ret = seteuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not seteuid(%i)", uid);
         return -1;
     }
     ret = setuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
 #endif
@@ -189,27 +206,35 @@ static int become_user_permanently(uid_t uid, gid_t gid)
 #if USE_SETUIDX
     ret = setgidx(ID_REAL, gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgidx(%i, %i)", ID_REAL, gid);
         return -1;
     }
     ret = setgidx(ID_EFFECTIVE, gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgidx(%i, %i)",
+              ID_EFFECTIVE, gid);
         return -1;
     }
     ret = setgid(gid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
     ret = setuidx(ID_REAL, uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuidx(%i, %i)", ID_REAL, uid);
         return -1;
     }
     ret = setuidx(ID_EFFECTIVE, uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuidx(%i, %i)",
+              ID_EFFECTIVE, uid);
         return -1;
     }
 
     ret = setuid(uid);
     if (ret != 0) {
+        LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
 #endif

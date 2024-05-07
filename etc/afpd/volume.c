@@ -94,6 +94,8 @@ EC_CLEANUP:
     if (file)
         fclose(file);
     LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    if (ret != 0)
+        return -1;
     return bandsize;
 }
 
@@ -222,10 +224,9 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
                        uint32_t *bfree, uint32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
 {
-    int         spaceflag, rc;
+    int         rc;
     uint32_t   maxsize;
 
-    spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
 
@@ -279,14 +280,15 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 {
     struct adouble  ad;
-    int         bit = 0, isad = 1;
-    uint32_t       aint;
-    u_short     ashort;
-    uint32_t       bfree, btotal, bsize;
-    VolSpace            xbfree, xbtotal; /* extended bytes */
-    char        *data, *nameoff = NULL;
-    char                *slash;
-    char        *ade = NULL;
+    int bit = 0, isad = 1;
+    uint32_t aint;
+    uint16_t ashort;
+    uint32_t bfree = 0, btotal = 0, bsize = 0;
+    VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
+    char *data = NULL;
+    char *nameoff = NULL;
+    const char *slash = NULL;
+    char *ade = NULL;
 
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
 

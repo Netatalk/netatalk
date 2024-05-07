@@ -195,7 +195,7 @@ sysvdir = $(INIT_DIR)
 sysv_SCRIPTS = netatalk
 
 netatalk: rc.netbsd
-	cp -f $< $@
+	cp -f $? $@
 	chmod a+x $@
 
 install-data-hook:

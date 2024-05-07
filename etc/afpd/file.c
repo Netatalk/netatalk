@@ -516,7 +516,7 @@ int getmetadata(const AFPObj *obj,
             }
             break;
         case FILPBIT_EXTDFLEN:
-            aint = htonl(st->st_size >> 32);
+            aint = htonl((uint64_t)st->st_size >> 32);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             aint = htonl(st->st_size);
@@ -525,7 +525,7 @@ int getmetadata(const AFPObj *obj,
             break;
         case FILPBIT_EXTRFLEN:
             if (adp) {
-                aint = htonl(adp->ad_rlen >> 32);
+                aint = htonl((uint64_t)adp->ad_rlen >> 32);
                 memcpy(data, &aint, sizeof( aint ));
                 data += sizeof( aint );
                 aint = htonl(adp->ad_rlen);
@@ -802,7 +802,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         return( AFPERR_NOOBJ );
     }
 
-    if ((u_long)ibuf & 1 ) {
+    if ((intptr_t)ibuf & 1 ) {
         ibuf++;
     }
 
@@ -827,12 +827,15 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
     char		*ade = NULL;
-    u_char              achar, *fdType, xyy[4]; /* uninitialized, OK 310105 */
-    uint16_t		ashort, bshort, oshort;
+    u_char              achar, xyy[4];
+    const u_char        *fdType = NULL;
+    uint16_t		ashort = 0;
+    uint16_t		bshort;
+    uint16_t		oshort;
     uint32_t		aint;
-    uint32_t		upriv;
+    uint32_t		upriv = 0;
     uint16_t           upriv_bit = 0;
-        struct utimbuf	ut;
+    struct utimbuf	ut;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
@@ -1853,7 +1856,7 @@ retry:
 	if (errno == ESTALE) {
 	    errno = ENOENT;
 	}
-#endif	
+#endif
 	if ( errno == ENOENT && !retry) {
 	    /* cnid db is out of sync, reenumerate the directory and update ids */
 	    reenumerate_id(vol, ".", dir);
@@ -1952,7 +1955,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
             return AFPERR_ACCESS;
 #ifdef ESTALE
 	case ESTALE:
-#endif	
+#endif
         case ENOENT:
             /* still try to delete the id */
             err = AFPERR_NOOBJ;
@@ -2040,6 +2043,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     char                *supath, *upath;
     struct path         *path;
     int                 err;
+    int                 fd;
     struct adouble	ads;
     struct adouble	add;
     struct adouble	*adsp = NULL;
@@ -2048,7 +2052,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     struct ofork	*d_of = NULL;
     int                 crossdev;
 
-    int                 slen, dlen;
+    unsigned int        slen;
+    unsigned int        dlen;
     uint32_t		sid, did;
     uint16_t		vid;
 
@@ -2159,7 +2164,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    int fd;
     if ((fd = mkstemp(temp)) == -1) {
         err = AFPERR_MISC;
         goto err_exchangefile;

@@ -100,18 +100,6 @@ static int is_power_of_two(hash_val_t arg)
 }
 
 /*
- * Compute a shift amount from a given table size
- */
-
-static hash_val_t compute_mask(hashcount_t size)
-{
-    assert (is_power_of_two(size));
-    assert (size >= 2);
-
-    return size - 1;
-}
-
-/*
  * Initialize the table of pointers to null.
  */
 
@@ -355,20 +343,6 @@ void hash_free_nodes(hash_t *hash)
 }
 
 /*
- * Obsolescent function for removing all nodes from a table,
- * freeing them and then freeing the table all in one step.
- */
-
-void hash_free(hash_t *hash)
-{
-#ifdef KAZLIB_OBSOLESCENT_DEBUG
-    assert ("call to obsolescent function hash_free()" && 0);
-#endif
-    hash_free_nodes(hash);
-    hash_destroy(hash);
-}
-
-/*
  * Free a dynamic hash table structure.
  */
 
@@ -378,43 +352,6 @@ void hash_destroy(hash_t *hash)
     assert (hash_isempty(hash));
     free(hash->table);
     free(hash);
-}
-
-/*
- * Initialize a user supplied hash structure. The user also supplies a table of
- * chains which is assigned to the hash structure. The table is static---it
- * will not grow or shrink.
- * 1. See note 1. in hash_create().
- * 2. The user supplied array of pointers hopefully contains nchains nodes.
- * 3. See note 7. in hash_create().
- * 4. We must dynamically compute the mask from the given power of two table
- *    size.
- * 5. The user supplied table can't be assumed to contain null pointers,
- *    so we reset it here.
- */
-
-hash_t *hash_init(hash_t *hash, hashcount_t maxcount,
-                  hash_comp_t compfun, hash_fun_t hashfun, hnode_t **table,
-                  hashcount_t nchains)
-{
-    if (hash_val_t_bit == 0)    /* 1 */
-        compute_bits();
-
-    assert (is_power_of_two(nchains));
-
-    hash->table = table;    /* 2 */
-    hash->nchains = nchains;
-    hash->nodecount = 0;
-    hash->maxcount = maxcount;
-    hash->compare = compfun ? compfun : hash_comp_default;
-    hash->function = hashfun ? hashfun : hash_fun_default;
-    hash->dynamic = 0;      /* 3 */
-    hash->mask = compute_mask(nchains); /* 4 */
-    clear_table(hash);      /* 5 */
-
-    assert (hash_verify(hash));
-
-    return hash;
 }
 
 /*
@@ -715,28 +652,6 @@ int hash_verify(hash_t *hash)
     return 1;
 }
 
-/*
- * Test whether the hash table is full and return 1 if this is true,
- * 0 if it is false.
- */
-
-#undef hash_isfull
-int hash_isfull(hash_t *hash)
-{
-    return hash->nodecount == hash->maxcount;
-}
-
-/*
- * Test whether the hash table is empty and return 1 if this is true,
- * 0 if it is false.
- */
-
-#undef hash_isempty
-int hash_isempty(hash_t *hash)
-{
-    return hash->nodecount == 0;
-}
-
 static hnode_t *hnode_alloc(void *context _U_)
 {
     return malloc(sizeof *hnode_alloc(NULL));
@@ -745,21 +660,6 @@ static hnode_t *hnode_alloc(void *context _U_)
 static void hnode_free(hnode_t *node, void *context _U_)
 {
     free(node);
-}
-
-
-/*
- * Create a hash table node dynamically and assign it the given data.
- */
-
-hnode_t *hnode_create(void *data)
-{
-    hnode_t *node = malloc(sizeof *node);
-    if (node) {
-        node->data = data;
-        node->next = NULL;
-    }
-    return node;
 }
 
 /*
@@ -771,21 +671,6 @@ hnode_t *hnode_init(hnode_t *hnode, void *data)
     hnode->data = data;
     hnode->next = NULL;
     return hnode;
-}
-
-/*
- * Destroy a dynamically allocated node.
- */
-
-void hnode_destroy(hnode_t *hnode)
-{
-    free(hnode);
-}
-
-#undef hnode_put
-void hnode_put(hnode_t *node, void *data)
-{
-    node->data = data;
 }
 
 #undef hnode_get
@@ -837,12 +722,9 @@ static hash_val_t hash_fun_default(const void *key)
 
 /* From http://www.azillionmonkeys.com/qed/hash.html */
 #undef get16bits
-#if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__)    \
-    || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
+#if defined(__i386__)
 #define get16bits(d) (*((const uint16_t *) (d)))
-#endif
-
-#if !defined (get16bits)
+#else
 #define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)    \
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif

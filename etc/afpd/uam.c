@@ -222,11 +222,12 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             return pwent;
         }
     }
-#ifndef NO_REAL_USER_NAME
+#if !defined(NO_REAL_USER_NAME)
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
-				CH_UCS2, name, -1, username, sizeof(username))))
-	return NULL;
+    namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
+                            CH_UCS2, name, -1, username, sizeof(username));
+    if (namelen == -1)
+	      return NULL;
 
     setpwent();
     while ((pwent = getpwent())) {
@@ -259,12 +260,14 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
 int uam_checkuser(const struct passwd *pwd)
 {
+#if !defined(DISABLE_SHELLCHECK)
     const char *p;
+#endif /* DISABLE_SHELLCHECK */
 
     if (!pwd)
         return -1;
 
-#ifndef DISABLE_SHELLCHECK
+#if !defined(DISABLE_SHELLCHECK)
 	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
 		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
@@ -434,37 +437,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
     }
 
     return 0;
-}
-
-/* if we need to maintain a connection, this is how we do it.
- * because an action pointer gets passed in, we can stream
- * DSI connections */
-int uam_afp_read(void *handle, char *buf, size_t *buflen,
-                 int (*action)(void *, void *, const int))
-{
-    AFPObj *obj = handle;
-    int len;
-
-    if (!obj)
-        return AFPERR_PARAM;
-
-        len = dsi_writeinit(obj->dsi, buf, *buflen);
-        if (!len || ((len = action(handle, buf, len)) < 0)) {
-            dsi_writeflush(obj->dsi);
-            goto uam_afp_read_err;
-        }
-
-        while ((len = (dsi_write(obj->dsi, buf, *buflen)))) {
-            if ((len = action(handle, buf, len)) < 0) {
-                dsi_writeflush(obj->dsi);
-                goto uam_afp_read_err;
-            }
-        }
-    return 0;
-
-uam_afp_read_err:
-    *buflen = 0;
-    return len;
 }
 
 /* --- papd-specific functions (just placeholders) --- */

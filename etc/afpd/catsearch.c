@@ -111,8 +111,8 @@ struct scrit {
  *
  */
 struct dsitem {
-    cnid_t ds_did;         /* CNID of this directory           */
-    int    ds_checked;     /* Have we checked this directory ? */
+    cnid_t ds_did;               /* CNID of this directory           */
+    uint32_t ds_checked;    /* Have we checked this directory ? */
 };
 
 
@@ -141,7 +141,7 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 	/* check if we have some space on stack... */
 	if (dsidx >= dssize) {
 		dssize += DS_BSIZE;
-		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));	
+		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));
 		if (tmpds == NULL) {
             clearstack();
             free(dstack);
@@ -183,13 +183,13 @@ static int reducestack(void)
 static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adouble *adp)
 {
 	static struct adouble ad;
-	
+
 	struct ofork *of;
 	int isdir;
-	
+
 	if (adp)
 	    return adp;
-	
+
 	isdir  = S_ISDIR(path->st.st_mode);
 
 	if (!isdir && (of = of_findname(vol, path))) {
@@ -203,7 +203,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
         adp = NULL; /* FIXME without resource fork adl_lkup will be call again */
     }
 
-	return adp;	
+	return adp;
 }
 
 /* -------------------- */
@@ -225,7 +225,7 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, stru
 {
 	packed_finder  buf;
 	void           *ptr;
-	
+
     *adp = adl_lkup(vol, path, *adp);
 	ptr = get_finderinfo(vol, path->u_name, *adp, &buf,islnk);
 	return unpack_buffer(finfo, ptr);
@@ -269,7 +269,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	/*retry with the right id */
 
         	cnid_t id;
-        	
+
         	adp = adl_lkup(vol, path, adp);
         	id = get_id(vol, adp, &path->st, path->d_dir->d_did, path->u_name, strlen(path->u_name));
         	if (!id) {
@@ -283,7 +283,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	}
         }
 	}
-		
+
 	/* Kind of optimization:
 	 * -- first check things we've already have - filename
 	 * -- last check things we get from ad_open()
@@ -291,24 +291,24 @@ static int crit_check(struct vol *vol, struct path *path) {
 	 */
 
 	/* Check for filename */
-	if ((c1.rbitmap & (1<<DIRPBIT_LNAME))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_LNAME))) {
 		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, -1, convbuf, 512)) )
 			goto crit_check_ret;
 
-		if ((c1.rbitmap & (1<<CATPBIT_PARTIAL))) {
+		if ((c1.rbitmap & (1U<<CATPBIT_PARTIAL))) {
 			if (strcasestr_w( (ucs2_t*) convbuf, (ucs2_t*) c1.lname) == NULL)
 				goto crit_check_ret;
 		} else
 			if (strcasecmp_w((ucs2_t*) convbuf, (ucs2_t*) c1.lname) != 0)
 				goto crit_check_ret;
 	}
-	
-	if ((c1.rbitmap & (1<<FILPBIT_PDINFO))) {
+
+	if ((c1.rbitmap & (1U<<FILPBIT_PDINFO))) {
 		if ( (size_t)(-1) == (len = convert_charset( CH_UTF8_MAC, CH_UCS2, CH_UTF8, path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
 			goto crit_check_ret;
 		}
 
-		if (c1.rbitmap & (1<<CATPBIT_PARTIAL)) {
+		if (c1.rbitmap & (1U<<CATPBIT_PARTIAL)) {
 			if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t*)c1.utf8name) == NULL)
 				goto crit_check_ret;
 		} else
@@ -326,13 +326,13 @@ static int crit_check(struct vol *vol, struct path *path) {
 		c2.bdate = 0x7fffffff;
 
 	/* Check for modification date */
-	if ((c1.rbitmap & (1<<DIRPBIT_MDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_MDATE))) {
 		if (path->st.st_mtime < c1.mdate || path->st.st_mtime > c2.mdate)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check for creation date... */
-	if ((c1.rbitmap & (1<<DIRPBIT_CDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_CDATE))) {
 		c_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_CREATE, &ac_date) >= 0)
@@ -343,7 +343,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check for backup date... */
-	if ((c1.rbitmap & (1<<DIRPBIT_BDATE))) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_BDATE))) {
 		b_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_BACKUP, &ab_date) >= 0)
@@ -352,35 +352,35 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if (b_date < c1.bdate || b_date > c2.bdate)
 			goto crit_check_ret;
 	}
-				
+
 	/* Check attributes */
-	if ((c1.rbitmap & (1<<DIRPBIT_ATTR)) && c2.attr != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_ATTR)) && c2.attr != 0) {
 		if ((adp = adl_lkup(vol, path, adp))) {
 			ad_getattr(adp, &attr);
 			if ((attr & c2.attr) != c1.attr)
 				goto crit_check_ret;
 		} else
 			goto crit_check_ret;
-	}		
+	}
 
         /* Check file type ID */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
 	    finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		if (finfo->f_type != c1.finfo.f_type)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check creator ID */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
 		if (finfo->creator != c1.finfo.creator)
 			goto crit_check_ret;
 	}
-		
+
 	/* Check finder info attributes */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
@@ -388,17 +388,17 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
 			goto crit_check_ret;
 	}
-	
+
 	/* Check label */
-	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
+	if ((c1.rbitmap & (1U<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
 		if (!finfo) {
 			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
 		if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 			goto crit_check_ret;
-	}	
+	}
 	/* FIXME: Attributes check ! */
-	
+
 	/* All criteria are met. */
 	result |= 1;
 crit_check_ret:
@@ -429,7 +429,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 	if (ext) {
 		*p++ = 0;                  /* Pad */
 	}
-	
+
 	if ( isdir ) {
         ret = getdirparams(obj, vol, c1.dbitmap, path, path->d_dir, p , &tbuf );
 	}
@@ -459,7 +459,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 
 	return 1;
 }
-	
+
 #define VETO_STR \
         "./../.AppleDouble/.AppleDB/Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/.AppleDesktop/.Parent/"
 
@@ -519,7 +519,7 @@ static int catsearch(const AFPObj *obj,
 			closedir(dirpos);
 			dirpos = NULL;
 		}
-		
+
 		if (addstack(vpath, dir, -1) == -1) {
 			result = AFPERR_MISC;
 			goto catsearch_end;
@@ -532,7 +532,7 @@ static int catsearch(const AFPObj *obj,
         result = AFPERR_MISC;
         goto catsearch_end;
     }
-	
+
 	/* So we are beginning... */
     start_time = time(NULL);
 
@@ -548,8 +548,10 @@ static int catsearch(const AFPObj *obj,
 		if (!error && dirpos == NULL)
 			dirpos = opendir(".");
 
-		if (dirpos == NULL)
-			dirpos = opendir(cfrombstr(currentdir->d_fullpath));
+		if (dirpos == NULL) {
+			const char *temp = cfrombstr(currentdir->d_fullpath);
+			dirpos = opendir(temp);
+		}
 
 		if (error || dirpos == NULL) {
 			switch (errno) {
@@ -569,7 +571,7 @@ static int catsearch(const AFPObj *obj,
 			goto catsearch_end;
 		}
 
-		
+
 		while ((entry = readdir(dirpos)) != NULL) {
 			(*pos)++;
 
@@ -618,7 +620,7 @@ static int catsearch(const AFPObj *obj,
 					}
                 }
                 path.m_name = cfrombstr(path.d_dir->d_m_name);
-                	
+
 				if (addstack(path.u_name, path.d_dir, cidx) == -1) {
 					result = AFPERR_MISC;
 					goto catsearch_end;
@@ -636,7 +638,7 @@ static int catsearch(const AFPObj *obj,
 			/* bit 0 means that criteria has been met */
 			if ((ccr & 1)) {
 				r = rslt_add (obj, vol, &path, &rrbuf, ext);
-				
+
 				if (r == 0) {
 					result = AFPERR_MISC;
 					goto catsearch_end;
@@ -754,7 +756,7 @@ static int catsearch_db(const AFPObj *obj,
             goto catsearch_end;
         }
     }
-	
+
 	while (cur_pos < num_matches) {
         char *name;
         cnid_t cnid, did;
@@ -857,7 +859,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     uint16_t	namelen;
     uint16_t	flags;
     char  	    tmppath[256];
-    char        *uname;
+    const char  *uname = NULL;
 
     *rbuflen = 0;
 
@@ -909,8 +911,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
     else {
         /* with catsearch only name and parent id are allowed */
-    	c1.fbitmap &= (1<<FILPBIT_LNAME) | (1<<FILPBIT_PDID);
-    	c1.dbitmap &= (1<<DIRPBIT_LNAME) | (1<<DIRPBIT_PDID);
+    	c1.fbitmap &= (1U<<FILPBIT_LNAME) | (1U<<FILPBIT_PDID);
+    	c1.dbitmap &= (1U<<DIRPBIT_LNAME) | (1U<<DIRPBIT_PDID);
         spec_len = *(unsigned char*)ibuf;
     }
 
@@ -924,7 +926,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     bspec1 = spec1;
     bspec2 = spec2;
     /* File attribute bits... */
-    if (c1.rbitmap & (1 << FILPBIT_ATTR)) {
+    if (c1.rbitmap & (1U << FILPBIT_ATTR)) {
 	    memcpy(&c1.attr, spec1, sizeof(c1.attr));
 	    spec1 += sizeof(c1.attr);
 	    memcpy(&c2.attr, spec2, sizeof(c2.attr));
@@ -932,7 +934,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Parent DID */
-    if (c1.rbitmap & (1 << FILPBIT_PDID)) {
+    if (c1.rbitmap & (1U << FILPBIT_PDID)) {
             memcpy(&c1.pdid, spec1, sizeof(pdid));
 	    spec1 += sizeof(c1.pdid);
 	    memcpy(&c2.pdid, spec2, sizeof(pdid));
@@ -940,7 +942,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     } /* FIXME: PDID - do we demarshall this argument ? */
 
     /* Creation date */
-    if (c1.rbitmap & (1 << FILPBIT_CDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_CDATE)) {
 	    memcpy(&c1.cdate, spec1, sizeof(c1.cdate));
 	    spec1 += sizeof(c1.cdate);
 	    c1.cdate = AD_DATE_TO_UNIX(c1.cdate);
@@ -951,7 +953,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Modification date */
-    if (c1.rbitmap & (1 << FILPBIT_MDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_MDATE)) {
 	    memcpy(&c1.mdate, spec1, sizeof(c1.mdate));
 	    c1.mdate = AD_DATE_TO_UNIX(c1.mdate);
 	    spec1 += sizeof(c1.mdate);
@@ -961,7 +963,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Backup date */
-    if (c1.rbitmap & (1 << FILPBIT_BDATE)) {
+    if (c1.rbitmap & (1U << FILPBIT_BDATE)) {
 	    memcpy(&c1.bdate, spec1, sizeof(c1.bdate));
 	    spec1 += sizeof(c1.bdate);
 	    c1.bdate = AD_DATE_TO_UNIX(c1.bdate);
@@ -971,11 +973,11 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Finder info */
-    if (c1.rbitmap & (1 << FILPBIT_FINFO)) {
+    if (c1.rbitmap & (1U << FILPBIT_FINFO)) {
     	packed_finder buf;
-    	
+
 	    memcpy(buf, spec1, sizeof(buf));
-	    unpack_buffer(&c1.finfo, buf);    	
+	    unpack_buffer(&c1.finfo, buf);
 	    spec1 += sizeof(buf);
 
 	    memcpy(buf, spec2, sizeof(buf));
@@ -983,7 +985,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 	    spec2 += sizeof(buf);
     } /* Finder info */
 
-    if ((c1.rbitmap & (1 << DIRPBIT_OFFCNT)) != 0) {
+    if ((c1.rbitmap & (1U << DIRPBIT_OFFCNT)) != 0) {
         /* Offspring count - only directories */
 		if (c1.fbitmap == 0) {
 	    	memcpy(&c1.offcnt, spec1, sizeof(c1.offcnt));
@@ -1002,22 +1004,22 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     } /* Offspring count/ressource fork length */
 
     /* Long name */
-    if (c1.rbitmap & (1 << FILPBIT_LNAME)) {
-        /* Get the long filename */	
+    if (c1.rbitmap & (1U << FILPBIT_LNAME)) {
+        /* Get the long filename */
 		memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
 		tmppath[(bspec1 + spec1[1])[0]]= 0;
 		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, -1, c1.lname, sizeof(c1.lname));
         if (len == (size_t)(-1))
             return AFPERR_PARAM;
 
-#if 0	
+#if 0
 		/* FIXME: do we need it ? It's always null ! */
 		memcpy(c2.lname, bspec2 + spec2[1] + 1, (bspec2 + spec2[1])[0]);
 		c2.lname[(bspec2 + spec2[1])[0]]= 0;
 #endif
     }
         /* UTF8 Name */
-    if (c1.rbitmap & (1 << FILPBIT_PDINFO)) {
+    if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
 
 		/* offset */
 		memcpy(&namelen, spec1, sizeof(namelen));
@@ -1045,8 +1047,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
     /* Call search */
     *rbuflen = 24;
-    if ((c1.rbitmap & (1 << FILPBIT_PDINFO))
-        && !(c1.rbitmap & (1<<CATPBIT_PARTIAL))
+    if ((c1.rbitmap & (1U << FILPBIT_PDINFO))
+        && !(c1.rbitmap & (1U<<CATPBIT_PARTIAL))
         && (strcmp(vol->v_cnidscheme, "dbd") == 0)
         && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */

@@ -136,7 +136,8 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     DBT key, devdata, diddata;
     int devino = 1, didname = 1;
     int rc;
-    cnid_t id_devino, id_didname;
+    cnid_t id_devino = 0;
+    cnid_t id_didname = 0;
     u_int32_t type_devino  = (unsigned)-1;
     u_int32_t type_didname = (unsigned)-1;
     int update = 0;

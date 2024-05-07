@@ -79,7 +79,7 @@ AC_DEFUN([AC_NETATALK_PATH_BDB],[
 if test "x$bdb_required" = "xyes"; then
     trybdbdir=""
     dobdbsearch=yes
-    bdb_search_dirs="/usr/local /usr"
+    bdb_search_dirs="/usr/local /usr/pkg /usr"
     search_subdirs="/ /db6.1 /db6 /db5 /db5.3 /db5.2 /db5.1 /db51 /db5.0 /db50 /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
 
     bdbfound=no
@@ -222,5 +222,3 @@ if test "x$bdb_required" = "xyes"; then
     AC_SUBST(BDB_PATH)
 fi
 ])
-
-

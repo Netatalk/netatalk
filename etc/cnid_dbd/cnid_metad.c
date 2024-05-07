@@ -70,19 +70,12 @@
 #include <pwd.h>
 #include <grp.h>
 
-/* FIXME */
-#ifdef linux
-#ifndef USE_SETRESUID
-#define USE_SETRESUID 1
+#if defined(__linux__)
 #define SWITCH_TO_GID(gid)  ((setresgid(gid,gid,gid) < 0 || setgid(gid) < 0) ? -1 : 0)
 #define SWITCH_TO_UID(uid)  ((setresuid(uid,uid,uid) < 0 || setuid(uid) < 0) ? -1 : 0)
-#endif  /* USE_SETRESUID */
-#else   /* ! linux */
-#ifndef USE_SETEUID
-#define USE_SETEUID 1
+#else
 #define SWITCH_TO_GID(gid)  ((setegid(gid) < 0 || setgid(gid) < 0) ? -1 : 0)
 #define SWITCH_TO_UID(uid)  ((setuid(uid) < 0 || seteuid(uid) < 0 || setuid(uid) < 0) ? -1 : 0)
-#endif  /* USE_SETEUID */
 #endif  /* linux */
 
 #include <atalk/util.h>
@@ -174,6 +167,7 @@ static struct server *test_usockfn(const char *path)
     time_t t;
     char buf1[8];
     char buf2[8];
+    int ret;
 
     LOG(log_debug, logtype_cnid, "maybe_start_dbd(\"%s\"): BEGIN", volpath);
 
@@ -251,7 +245,6 @@ static struct server *test_usockfn(const char *path)
         return -1;
     }
     if (pid == 0) {
-        int ret;
         /*
          *  Child. Close descriptors and start the daemon. If it fails
          *  just log it. The client process will fail connecting
@@ -291,9 +284,11 @@ static struct server *test_usockfn(const char *path)
                          "-u", username,
                          NULL);
         }
-        /* Yikes! We're still here, so exec failed... */
-        LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
-        daemon_exit(0);
+        if (ret) {
+            /* Yikes! We're still here, so exec failed... */
+            LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
+            daemon_exit(0);
+        }
     }
     /*
      *  Parent.

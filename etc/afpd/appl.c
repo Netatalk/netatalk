@@ -149,57 +149,6 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
     }
     return( p );
 
-
-#if 0
-    char buffer[12 + MAXPATHLEN + 1];
-    int buflen = 12 + MAXPATHLEN + 1;
-    char *ret = mpath;
-    char *path = name;
-    char *uname = NULL;
-    struct bstrList *pathlist = NULL;
-    cnid_t cnid = dir->d_pdid;
-
-    /* Create list for path elements, request 16 list elements for now*/
-    if ((pathlist = bstListCreateMin(16)) == NULL) {
-        LOG(log_error, logtype_afpd, "makemacpath: OOM: %s", strerror(errno));
-        return NULL;
-    }
-
-    while ( cnid != DIRDID_ROOT ) {
-
-        /* construct path, copy already found uname to path element list*/
-        if ((bstrListPush(pathlist, bfromcstr(path))) != BSTR_OK) {
-            afp_errno = AFPERR_MISC;
-            ret = NULL;
-            goto exit;
-        }
-
-        /* next part */
-        AFP_CNID_START("cnid_resolve");
-        uname = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen);
-        AFP_CNID_DONE();
-
-        if (uname == NULL) {
-            afp_errno = AFPERR_NOOBJ;
-            ret = NULL;
-            goto exit;
-        }
-
-        if ((path = utompath(vol, uname, cnid, utf8_encoding())) == NULL) {
-            afp_errno = AFPERR_MISC;
-            ret = NULL;
-            goto exit;
-        }
-    }
-
-
-
-exit:
-    if (pathlist)
-        bstrListDestroy(pathlist);
-
-    return(ret);
-#endif
 }
 
 
@@ -375,6 +324,11 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     unsigned char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
+#if defined(APPLCNAME)
+    char		utomname[ MAXPATHLEN + 1];
+    char		*u, *m;
+    int			i, h;
+#endif
 
     ibuf += 2;
 
@@ -443,42 +397,31 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      * there are any ':'s in the name, it is a upath and must be converted
      * to an mpath.  Hopefully, this code will go away.
      */
-    {
+
 #define hextoint( c )	( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 #define islxdigit(x)	(!isupper(x)&&isxdigit(x))
-
-        char	utomname[ MAXPATHLEN + 1];
-        char		*u, *m;
-        int		i, h;
-
-        if ( len > sizeof(utomname) ) {
-            *rbuflen = 0;
-            return( AFPERR_NOITEM );
-        }
-
-        u = p;
-        m = utomname;
-        i = len;
-        while ( i ) {
-            if ( i >= 3 && i + 2 < len && *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
-                    *(u+2) != '\0' && islxdigit( *(u+2))) {
-                ++u, --i;
-                h = hextoint( *u ) << 4;
-                ++u, --i;
-                h |= hextoint( *u );
-                *m++ = h;
-            } else {
-                *m++ = *u;
-            }
+    u = p;
+    m = utomname;
+    i = len;
+    while ( i ) {
+        if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
+                *(u+2) != '\0' && islxdigit( *(u+2))) {
             ++u, --i;
+            h = hextoint( *u ) << 4;
+            ++u, --i;
+            h |= hextoint( *u );
+            *m++ = h;
+        } else {
+            *m++ = *u;
         }
+        ++u, --i;
+    }
 
-        len = m - utomname;
-        p = utomname;
+    len = m - utomname;
+    p = utomname;
 
-        if ( p[ len - 1 ] == '\0' ) {
-            len--;
-        }
+    if ( p[ len - 1 ] == '\0' ) {
+        len--;
     }
 #endif /* APPLCNAME */
 

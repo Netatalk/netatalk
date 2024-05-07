@@ -23,9 +23,7 @@
 #endif
 
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,7 +93,7 @@ void netatalk_panic(const char *why)
 
 	LOG(log_severe, logtype_default, "PANIC: %s", why);
 	LOG(log_severe, logtype_default, "BACKTRACE: %d stack frames:", backtrace_size);
-	
+
 	if (backtrace_strings) {
 		size_t i;
 
@@ -161,4 +159,3 @@ void fault_setup(void (*fn)(void *))
 	CatchSignal(SIGBUS,SIGNAL_CAST sig_fault);
 #endif
 }
-

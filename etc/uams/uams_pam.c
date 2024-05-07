@@ -11,9 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>

@@ -1407,21 +1407,6 @@ static int check_acl_access(const AFPObj *obj,
     AFP_ASSERT(vol);
 
     /* This check is not used anymore, as OS X Server seems to be ignoring too */
-#if 0
-    /* Get uid or gid from UUID */
-    EC_ZERO_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
-    switch (uuidtype) {
-    case UUID_USER:
-        break;
-    case UUID_GROUP:
-        LOG(log_warning, logtype_afpd, "check_acl_access: afp_access not supported for groups");
-        EC_STATUS(AFPERR_MISC);
-        goto EC_CLEANUP;
-    default:
-        EC_STATUS(AFPERR_MISC);
-        goto EC_CLEANUP;
-    }
-#endif
 
     EC_ZERO_LOG_ERR(ostat(path, &st, vol_syml_opt(vol)), AFPERR_PARAM);
 

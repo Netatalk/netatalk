@@ -7,6 +7,4 @@ libcompat_la_LIBADD =
 
 libcompat_la_SOURCES =	\
 	misc.c \
-	mktemp.c	\
-	pselect.c		\
 	strlcpy.c
