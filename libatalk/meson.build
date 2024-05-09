@@ -1,6 +1,11 @@
 libatalk_sources = []
 libatalk_libs = []
 
+if have_embedded_ssl
+    subdir('ssl')
+    libatalk_libs += libssl
+endif
+
 subdir('acl')
 subdir('adouble')
 subdir('bstring')
@@ -14,11 +19,6 @@ subdir('vfs')
 if host_os != 'darwin'
     subdir('compat')
     libatalk_libs += libcompat
-endif
-
-if have_embedded_ssl
-    subdir('ssl')
-    libatalk_libs += libssl
 endif
 
 if have_spotlight
