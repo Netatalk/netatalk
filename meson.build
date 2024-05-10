@@ -151,6 +151,11 @@ if dl.found()
     netatalk_common_link_args += '-ldl'
 endif
 
+math = cc.find_library('m', required: true)
+if math.found()
+    netatalk_common_link_args += '-lm'
+endif
+
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
 
 ############
