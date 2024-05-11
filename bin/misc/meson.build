@@ -41,4 +41,5 @@ executable(
     dependencies: [mysqlclient, ldap],
     c_args: confdir,
     install: true,
+    build_rpath: libdir,
 )

@@ -185,5 +185,5 @@ executable(
     export_dynamic: true,
     install: true,
     install_dir: sbindir,
-    install_rpath: rpath,
+    build_rpath: libdir,
 )
