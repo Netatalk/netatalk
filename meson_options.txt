@@ -145,7 +145,7 @@ option(
 option(
     'with-embedded-ssl',
     type: 'boolean',
-    value: false,
+    value: true,
     description: 'Enable embedded SSL library',
 )
 option(
