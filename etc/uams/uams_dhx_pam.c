@@ -38,7 +38,7 @@
 #include <openssl/cast.h>
 #include <openssl/err.h>
 #include "openssl_compat.h"
-#endif /* OPENSSL_DHX */
+#endif /* WOLFSSL_DHX */
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
