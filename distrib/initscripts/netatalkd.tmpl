@@ -29,8 +29,12 @@ StartService() {
 
 # The stop subroutine
 StopService() {
-  ConsoleMessage "Stopping netatalk fileserver..."
-  killall -TERM netatalk
+  if pgrep -x netatalk >/dev/null; then 
+      ConsoleMessage "Stopping netatalk fileserver..."
+      killall -TERM netatalk
+  else
+      ConsoleMessage "Netatalk fileserver is not running..."
+  fi
 }
 
 # The restart subroutine
