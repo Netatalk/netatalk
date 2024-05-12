@@ -27,6 +27,7 @@ executable(
     install: true,
     install_dir: sbindir,
     build_rpath: libdir,
+    install_rpath: libdir,
 )
 
 cnid_metad_sources = ['cnid_metad.c', 'usockfd.c', 'db_param.c']
@@ -41,6 +42,7 @@ executable(
     install: true,
     install_dir: sbindir,
     build_rpath: libdir,
+    install_rpath: libdir,
 )
 
 dbd_sources = [
@@ -67,4 +69,5 @@ executable(
     link_args: [dversion, bdb_link_args],
     install: true,
     build_rpath: libdir,
+    install_rpath: libdir,
 )

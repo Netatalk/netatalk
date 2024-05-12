@@ -42,4 +42,5 @@ executable(
     c_args: confdir,
     install: true,
     build_rpath: libdir,
+    install_rpath: libdir,
 )

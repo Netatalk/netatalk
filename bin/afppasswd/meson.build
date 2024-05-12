@@ -14,4 +14,5 @@ executable(
     ],
     install: true,
     build_rpath: libdir,
+    install_rpath: libdir,
 )
