@@ -30,10 +30,11 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef WITH_SENDFILE
+
+#include <errno.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
-#include <errno.h>
 
 #include <atalk/adouble.h>
 #include <atalk/logger.h>

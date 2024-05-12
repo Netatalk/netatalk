@@ -9,11 +9,11 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <atalk/unicode.h>
 #include <atalk/cnid.h>
-#include <atalk/hash.h>
-#include <atalk/vfs.h>
 #include <atalk/globals.h>
+#include <atalk/hash.h>
+#include <atalk/unicode.h>
+#include <atalk/vfs.h>
 
 #define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
 #define AFPVOL_MACNAMELEN    27 /* AFP2 spec */

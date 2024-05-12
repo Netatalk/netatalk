@@ -17,48 +17,47 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <strings.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <grp.h>
-#include <pwd.h>
-#include <errno.h>
-#ifdef HAVE_SOLARIS_ACLS
-#include <sys/acl.h>
-#endif
-#ifdef HAVE_FREEBSD_SUNACL
-#include <sunacl.h>
-#endif
-#ifdef HAVE_POSIX_ACLS
-#include <sys/acl.h>
-#endif
 #ifdef HAVE_ACL_LIBACL_H
 #include <acl/libacl.h>
 #endif
+#include <errno.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
-#include <atalk/errchk.h>
-#include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/logger.h>
-#include <atalk/uuid.h>
+#ifdef HAVE_FREEBSD_SUNACL
+#include <sunacl.h>
+#endif
+
+#if defined(HAVE_POSIX_ACLS) || defined(HAVE_SOLARIS_ACLS)
+#include <sys/acl.h>
+#endif
+
 #include <atalk/acl.h>
-#include <atalk/bstrlib.h>
+#include <atalk/adouble.h>
+#include <atalk/afp.h>
 #include <atalk/bstradd.h>
-#include <atalk/unix.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/uuid.h>
+#include <atalk/vfs.h>
 
-#include "directory.h"
+#include "acl_mappings.h"
+#include "acls.h"
+#include "auth.h"
 #include "desktop.h"
-#include "volume.h"
+#include "directory.h"
 #include "fork.h"
 #include "unix.h"
-#include "acls.h"
-#include "acl_mappings.h"
-#include "auth.h"
+#include "volume.h"
 
 /* for map_acl() */
 #define SOLARIS_2_DARWIN       1

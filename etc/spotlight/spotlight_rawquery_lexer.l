@@ -6,9 +6,13 @@
 
 %{
 #include <stdbool.h>
+
 #include <talloc.h>
+
 #include <gio/gio.h>
+
 #include <atalk/spotlight.h>
+
 #include "sparql_parser.h"
 #define SLQ_VAR ssp_slq
 %}

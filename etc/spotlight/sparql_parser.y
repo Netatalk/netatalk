@@ -1,17 +1,16 @@
 %{
-  #include <atalk/standards.h>
-
   #include <stdbool.h>
   #include <stdio.h>
   #include <string.h>
-  #include <time.h>
   #include <talloc.h>
+  #include <time.h>
 
   #include <gio/gio.h>
 
-  #include <atalk/logger.h>
   #include <atalk/errchk.h>
+  #include <atalk/logger.h>
   #include <atalk/spotlight.h>
+  #include <atalk/standards.h>
 
   #include "sparql_map.h"
 

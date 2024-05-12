@@ -17,9 +17,9 @@
  * $Name:  $
  */
 #define NDEBUG
-#include <stdlib.h>
-#include <stddef.h>
 #include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #define HASH_IMPLEMENTATION
 #include "hash.h"

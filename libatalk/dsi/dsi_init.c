@@ -8,9 +8,10 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+
 #include <atalk/dsi.h>
 
 DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port)

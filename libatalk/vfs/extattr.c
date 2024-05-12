@@ -31,10 +31,10 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <errno.h>
 
 #if HAVE_ATTR_XATTR_H
 #include <attr/xattr.h>
@@ -56,11 +56,11 @@
 #endif
 
 #include <atalk/adouble.h>
-#include <atalk/util.h>
-#include <atalk/logger.h>
-#include <atalk/ea.h>
 #include <atalk/compat.h>
+#include <atalk/ea.h>
 #include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef SOLARIS

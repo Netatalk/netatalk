@@ -9,16 +9,17 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
-
-#include <string.h>
 #include <inttypes.h>
+#include <string.h>
 #include <sys/param.h>
+
 #include <db.h>
 
-#include <atalk/unicode.h>
-#include <atalk/logger.h>
 #include <atalk/cnid_bdb_private.h>
+#include <atalk/logger.h>
+#include <atalk/unicode.h>
 #include <atalk/volume.h>
+
 #include "pack.h"
 
 static const struct vol *volume;

@@ -11,11 +11,11 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include <atalk/logger.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 
-#include "volume.h"
 #include "directory.h"
+#include "volume.h"
 
 #define MANGLE_CHAR '#'
 #define MAX_MANGLE_SUFFIX_LENGTH 999

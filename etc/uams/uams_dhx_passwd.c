@@ -8,19 +8,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/standards.h>
-
+#include <arpa/inet.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
+
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
-#include <sys/time.h>
-#include <time.h>
-#include <pwd.h>
-#include <arpa/inet.h>
 
 #ifdef SHADOWPW
 #include <shadow.h>
@@ -40,8 +39,9 @@
 #include "openssl_compat.h"
 #endif /* WOLFSSL_DHX */
 
-#include <atalk/logger.h>
 #include <atalk/afp.h>
+#include <atalk/logger.h>
+#include <atalk/standards.h>
 #include <atalk/uam.h>
 
 #define KEYSIZE 16

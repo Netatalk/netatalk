@@ -8,10 +8,10 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/param.h>
-#include <string.h>
 #include <ctype.h>
 #include <pwd.h>
+#include <string.h>
+#include <sys/param.h>
 
 #include <atalk/globals.h>
 

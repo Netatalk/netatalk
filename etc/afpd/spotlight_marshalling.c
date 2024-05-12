@@ -16,24 +16,24 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <strings.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <inttypes.h>
+#include <string.h>
+#include <strings.h>
 #include <talloc.h>
 
-#include <atalk/errchk.h>
-#include <atalk/util.h>
-#include <atalk/logger.h>
-#include <atalk/dalloc.h>
 #include <atalk/byteorder.h>
-#include <atalk/netatalk_conf.h>
-#include <atalk/volume.h>
+#include <atalk/dalloc.h>
 #include <atalk/dsi.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/spotlight.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 #define MAX_SLQ_DAT (DSI_DATASIZ - 64)
 #define MAX_SLQ_TOC 8192

@@ -2,13 +2,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <atalk/util.h>
+
 #include <atalk/adouble.h>
-#include <atalk/logger.h>
 #include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
 
 #define FILEIOFF_ATTR 14
 #define AFPFILEIOFF_ATTR 2

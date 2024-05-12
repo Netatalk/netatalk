@@ -1,14 +1,19 @@
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
+#include "config.h"
+
 #include <arpa/inet.h>
 
-#include "config.h"
-#include "volume.h"
+#if defined(HAVE_MNTENT_H)
+#include <mntent.h>
+#endif /* HAVE_MNTENT_H */
 
-#if defined(HAVE_SYS_VFS_H)
-#include <sys/vfs.h>
-#endif /* HAVE_SYS_VFS_H */
+#if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
+#include <sys/mnttab.h>
+#endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
+
+#include <sys/mount.h>
 
 #if defined(HAVE_STATFS_H)
 #include <sys/statfs.h>
@@ -23,15 +28,23 @@
 #define	f_frsize f_bsize
 #endif /* __svr4__ || __NetBSD__ */
 
-#if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
-#include <sys/mnttab.h>
-#endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
+#if defined(HAVE_SYS_VFS_H)
+#include <sys/vfs.h>
+#endif /* HAVE_SYS_VFS_H */
 
-#include <sys/mount.h>
+#include "volume.h"
 
-#if defined(HAVE_MNTENT_H)
-#include <mntent.h>
-#endif /* HAVE_MNTENT_H */
+
+
+
+
+
+
+
+
+
+
+
 
 extern struct afp_options default_options;
 

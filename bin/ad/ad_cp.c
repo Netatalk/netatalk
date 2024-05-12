@@ -50,26 +50,26 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <errno.h>
+#include <libgen.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <libgen.h>
 
-#include <atalk/ftw.h>
 #include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/util.h>
-#include <atalk/unix.h>
-#include <atalk/volume.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/ftw.h>
 #include <atalk/queue.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
+#include <atalk/volume.h>
 
 #include "ad.h"
 

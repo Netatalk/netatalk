@@ -22,15 +22,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <atalk/globals.h>
-#include <atalk/volume.h>
 
 #include <gio/gio.h>
-#include <tracker-sparql.h>
-#include <atalk/dalloc.h>
+
 #ifndef HAVE_TRACKER3
 #include <libtracker-miner/tracker-miner.h>
 #endif
+
+#include <tracker-sparql.h>
+
+#include <atalk/globals.h>
+#include <atalk/volume.h>
+#include <atalk/dalloc.h>
 
 /******************************************************************************
  * Spotlight RPC and marshalling stuff

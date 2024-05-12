@@ -22,11 +22,11 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <stdlib.h>
+
 #include <atalk/cnid.h>
 #include <atalk/list.h>
 #include <atalk/logger.h>
-#include <stdlib.h>
-
 
 #ifdef CNID_BACKEND_LAST
 extern struct _cnid_module cnid_last_module;

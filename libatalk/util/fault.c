@@ -22,15 +22,17 @@
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
 #ifdef HAVE_BACKTRACE_SYMBOLS
 #include <execinfo.h>
 #endif
+
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <atalk/logger.h>
 
 #ifndef SIGNAL_CAST

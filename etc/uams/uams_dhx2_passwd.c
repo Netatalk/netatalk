@@ -11,34 +11,32 @@
 
 #ifdef UAM_DHX2
 
-#include <atalk/standards.h>
-
+#include <arpa/inet.h>
+#include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <pwd.h>
-#include <arpa/inet.h>
+#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif
 
-#include <sys/time.h>
-#include <time.h>
+#ifdef HAVE_LIBGCRYPT
+#include <gcrypt.h>
+#endif
 
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif
 
-#ifdef HAVE_LIBGCRYPT
-#include <gcrypt.h>
-#endif
-
 #include <atalk/afp.h>
-#include <atalk/uam.h>
 #include <atalk/logger.h>
+#include <atalk/standards.h>
+#include <atalk/uam.h>
 
 /* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */
 #define PRIMEBITS 1024

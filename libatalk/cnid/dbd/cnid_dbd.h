@@ -8,10 +8,10 @@
 #ifndef _ATALK_CNID_DBD__H
 #define _ATALK_CNID_DBD__H 1
 
+#include <arpa/inet.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <string.h>
-#include <arpa/inet.h>
 
 #include <atalk/cnid.h>
 

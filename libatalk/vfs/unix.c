@@ -7,24 +7,24 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+#include <atalk/acl.h>
 #include <atalk/afp.h>
-#include <atalk/util.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
-#include <atalk/volume.h>
+#include <atalk/ea.h>
+#include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/unix.h>
-#include <atalk/acl.h>
-#include <atalk/compat.h>
-#include <atalk/errchk.h>
-#include <atalk/ea.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 /* ------------------------- */
 int dir_rx_set(mode_t mode)

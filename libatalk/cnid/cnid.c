@@ -14,22 +14,22 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/param.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
-#include <signal.h>
 #include <unistd.h>
-#include <errno.h>
 
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/list.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/compat.h>
 #include <atalk/volume.h>
 
 /* List of all registered modules. */

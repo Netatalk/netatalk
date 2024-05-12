@@ -9,7 +9,9 @@ http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
 #include <stdint.h>
+
 #include <atalk/unicode.h>
+
 #include "utf16_casetable.h"
 
 /*******************************************************************

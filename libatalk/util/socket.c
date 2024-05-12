@@ -21,24 +21,24 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <time.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <atalk/logger.h>
-#include <atalk/util.h>
 #include <atalk/errchk.h>
+#include <atalk/logger.h>
 #include <atalk/standards.h>
+#include <atalk/util.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 

@@ -9,29 +9,29 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <inttypes.h>
 
-#include <atalk/dsi.h>
-#include <atalk/afp.h>
 #include <atalk/adouble.h>
-#include <atalk/logger.h>
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/bstrlib.h>
+#include <atalk/afp.h>
 #include <atalk/bstradd.h>
-#include <atalk/globals.h>
-#include <atalk/netatalk_conf.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
+#include <atalk/dsi.h>
 #include <atalk/ea.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/util.h>
 
-#include "fork.h"
-#include "file.h"
-#include "directory.h"
 #include "desktop.h"
+#include "directory.h"
+#include "file.h"
+#include "fork.h"
 #include "volume.h"
 
 static int getforkparams(const AFPObj *obj, struct ofork *ofork, uint16_t bitmap, char *buf, size_t *buflen)

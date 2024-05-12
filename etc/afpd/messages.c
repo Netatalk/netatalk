@@ -7,17 +7,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <atalk/afp.h>
 #include <atalk/dsi.h>
-#include <atalk/util.h>
-#include <atalk/unix.h>
-#include <atalk/logger.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
 
 #include "misc.h"
 

@@ -8,18 +8,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
-#include <errno.h>
-#include <arpa/inet.h>
 
-#include <atalk/logger.h>
 #include <atalk/cnid_bdb_private.h>
+#include <atalk/logger.h>
 
-#include "pack.h"
-#include "dbif.h"
 #include "dbd.h"
+#include "dbif.h"
+#include "pack.h"
 
 int dbd_check_indexes(DBD *dbd, char *dbdir)
 {

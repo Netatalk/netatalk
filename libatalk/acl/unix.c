@@ -19,21 +19,21 @@
 
 #ifdef HAVE_ACLS
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <errno.h>
 #include <sys/acl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <atalk/logger.h>
-#include <atalk/afp.h>
-#include <atalk/util.h>
 #include <atalk/acl.h>
+#include <atalk/afp.h>
+#include <atalk/logger.h>
 #include <atalk/unix.h>
+#include <atalk/util.h>
 
 #ifdef HAVE_NFSV4_ACLS
 

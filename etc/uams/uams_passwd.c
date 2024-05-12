@@ -8,28 +8,30 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
+#include <arpa/inet.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
+
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
-#include <pwd.h>
-#include <sys/time.h>
-#include <time.h>
+
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
-#include <arpa/inet.h>
 
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 #include <atalk/logger.h>
+#include <atalk/standards.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
-#include <atalk/compat.h>
-#include <atalk/standards.h>
 
 #define PASSWDLEN 8
 

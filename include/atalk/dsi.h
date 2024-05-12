@@ -7,15 +7,15 @@
 #define _ATALK_DSI_H
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <signal.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 
 #include <atalk/afp.h>
-#include <atalk/server_child.h>
 #include <atalk/globals.h>
+#include <atalk/server_child.h>
 
 /* What a DSI packet looks like:
    0                               32

@@ -22,29 +22,29 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/param.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <arpa/inet.h>
-
-#if defined(EMBEDDED_SSL)
-#include <wolfssl/options.h>
-#include <wolfssl/openssl/des.h>
-#else
-#include <des.h>
-#endif
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
 #endif /* USE_CRACKLIB */
+
+#if defined(EMBEDDED_SSL)
+#include <wolfssl/openssl/des.h>
+#include <wolfssl/options.h>
+#else
+#include <des.h>
+#endif
 
 #define OPT_ISROOT  (1 << 0)
 #define OPT_CREATE  (1 << 1)

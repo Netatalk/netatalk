@@ -32,43 +32,44 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sysexits.h>
-#include <unistd.h>
-#include <stdarg.h>
 #include <string.h>
-#include <libgen.h>
 
-#ifdef HAVE_SOLARIS_ACLS
-#include <sys/acl.h>
-#endif  /* HAVE_SOLARIS_ACLS */
 #ifdef HAVE_FREEBSD_SUNACL
 #include <sunacl.h>
 #endif
 
-#ifdef HAVE_POSIX_ACLS
+#include <sys/mman.h>
+#include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <sysexits.h>
+#include <unistd.h>
+
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif  /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+#include <sys/acl.h>
+#include <sys/types.h>
 #endif /* HAVE_POSIX_ACLS */
 
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
-#include <atalk/logger.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/errchk.h>
-#include <atalk/unicode.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
 
 
 #include "ad.h"

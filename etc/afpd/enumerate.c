@@ -7,31 +7,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/file.h>
 #include <sys/param.h>
 
-#include <atalk/logger.h>
-#include <atalk/afp.h>
 #include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/cnid.h>
-#include <atalk/util.h>
-#include <atalk/bstrlib.h>
+#include <atalk/afp.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
 
 #include "desktop.h"
-#include "directory.h"
 #include "dircache.h"
-#include "volume.h"
+#include "directory.h"
 #include "file.h"
-#include "fork.h"
 #include "filedir.h"
+#include "fork.h"
+#include "volume.h"
 
 #define min(a,b)	((a)<(b)?(a):(b))
 

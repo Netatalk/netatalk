@@ -2,8 +2,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
 #include <arpa/inet.h>
+#include <string.h>
+
 #include <atalk/adouble.h>
 
 int ad_setdate(struct adouble *ad,

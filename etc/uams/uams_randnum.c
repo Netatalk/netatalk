@@ -9,21 +9,21 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <sys/stat.h>
 #include <sys/param.h>
-#include <arpa/inet.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#include <atalk/logger.h>
-#include <atalk/afp.h>
-#include <atalk/uam.h>
+#ifdef USE_CRACKLIB
+#include <crack.h>
+#endif /* USE_CRACKLIB */
 
 #if defined(EMBEDDED_SSL)
 #include <wolfssl/options.h>
@@ -32,9 +32,9 @@
 #include <des.h>
 #endif
 
-#ifdef USE_CRACKLIB
-#include <crack.h>
-#endif /* USE_CRACKLIB */
+#include <atalk/logger.h>
+#include <atalk/afp.h>
+#include <atalk/uam.h>
 
 #define PASSWDLEN 8
 

@@ -11,19 +11,19 @@
 
 #ifdef HAVE_AVAHI
 
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <avahi-common/strlst.h>
 
-#include <atalk/logger.h>
-#include <atalk/util.h>
 #include <atalk/dsi.h>
-#include <atalk/unicode.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
 
-#include "afp_zeroconf.h"
 #include "afp_avahi.h"
+#include "afp_zeroconf.h"
 
 /*****************************************************************
  * Global variables

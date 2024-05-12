@@ -7,8 +7,8 @@
 #ifndef AFPD_MDNS_H
 #define AFPD_MDNS_H
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <dns_sd.h>

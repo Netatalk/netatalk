@@ -11,14 +11,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
 #include <ctype.h>
+#include <stdio.h>
 
-#include <atalk/util.h>
 #include <atalk/bstradd.h>
+#include <atalk/util.h>
 
-#include "mangle.h"
 #include "desktop.h"
+#include "mangle.h"
 
 
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'A' )

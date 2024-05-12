@@ -17,13 +17,13 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef HAVE_LDAP
-
+#include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <string.h>
-#include <errno.h>
-#include <ctype.h>
+#include <sys/time.h>
+
 #define LDAP_DEPRECATED 1
 #include <ldap.h>
 

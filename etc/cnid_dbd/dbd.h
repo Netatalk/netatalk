@@ -11,6 +11,8 @@
 
 #include <atalk/cnid_bdb_private.h>
 
+#include "dbif.h"
+
 extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);
 

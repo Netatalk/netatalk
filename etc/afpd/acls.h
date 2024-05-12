@@ -15,11 +15,12 @@
 #ifndef AFPD_ACLS_H
 #define AFPD_ACLS_H
 
-#ifdef HAVE_SOLARIS_ACLS
-#include <sys/acl.h>
-#endif
 #ifdef HAVE_FREEBSD_SUNACL
 #include <sunacl.h>
+#endif
+
+#ifdef HAVE_SOLARIS_ACLS
+#include <sys/acl.h>
 #endif
 
 #include <atalk/uuid.h>		/* for atalk_uuid_t */

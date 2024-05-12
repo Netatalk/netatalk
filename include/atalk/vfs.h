@@ -25,9 +25,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/volume.h>
-#include <atalk/acl.h>
 
 #define VFS_FUNC_ARGS_VALIDUPATH const struct vol *vol, const char *name
 #define VFS_FUNC_VARS_VALIDUPATH vol, name

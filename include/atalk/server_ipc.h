@@ -1,8 +1,8 @@
 #ifndef ATALK_SERVER_IPC_H
 #define ATALK_SERVER_IPC_H
 
-#include <atalk/server_child.h>
 #include <atalk/globals.h>
+#include <atalk/server_child.h>
 
 /* Remember to add IPC commands to server_ipc.c:ipc_cmd_str[] */
 #define IPC_DISCOLDSESSION   0
