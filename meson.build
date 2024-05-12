@@ -533,7 +533,7 @@ crypto = declare_dependency(
     include_directories: ssl_includes,
 )
 
-if wolfssl.found() or ssl_link_args != []
+if have_embedded_ssl or wolfssl.found() or ssl_link_args != []
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
@@ -542,8 +542,6 @@ endif
 ssl_deps = []
 ssl_type = ''
 
-#if have_embedded_ssl and wolfssl.found()
-#    error('embedded SSL cannot be compiled when WolfSSL is installed')
 if have_embedded_ssl
     ssl_type += 'built-in'
     cdata.set('WOLFSSL_DHX', 1)
