@@ -12,7 +12,6 @@ ENV LIB_DEPS \
     libgcrypt \
     linux-pam \
     openldap \
-    openssl \
     talloc \
     tracker \
     tracker-miners
@@ -33,7 +32,6 @@ ENV BUILD_DEPS \
     meson \
     ninja \
     openldap-dev \
-    openssl-dev \
     pkgconfig \
     talloc-dev \
     tracker-dev
@@ -60,6 +58,7 @@ RUN meson setup build \
     -Dwith-dbus-sysconf-dir=/etc \
     -Dwith-afpstats=disabled \
     -Dwith-dtrace=false \
+    -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
 &&  ninja -C build
 
