@@ -83,7 +83,7 @@ if [ -z "${MANUAL_CONFIG}" ]; then
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
-uam list = uams_dhx2.so uams_randnum.so
+uam list = uams_dhx2.so uams_dhx.so uams_randnum.so
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
 path = /mnt/afpshare
