@@ -19,4 +19,5 @@ executable(
     c_args: [ad, dversion],
     install: true,
     build_rpath: libdir,
+    install_rpath: libdir,
 )
