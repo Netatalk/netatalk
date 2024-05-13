@@ -25,11 +25,11 @@
 #endif
 
 #include <wolfssl/wolfcrypt/settings.h>
-#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
+//#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
     /* turn on GNU extensions for XISASCII */
-    #undef  _GNU_SOURCE
-    #define _GNU_SOURCE
-#endif
+//    #undef  _GNU_SOURCE
+//    #define _GNU_SOURCE
+//#endif
 
 #if !defined(WOLFCRYPT_ONLY) || defined(OPENSSL_EXTRA) || \
     defined(OPENSSL_EXTRA_X509_SMALL)
