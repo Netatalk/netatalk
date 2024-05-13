@@ -262,6 +262,10 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: ninja -C build install
+      - name: Start netatalk
+        run: /etc/init.d/netatalk start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: /etc/init.d/netatalk stop
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
