@@ -41,7 +41,6 @@ localstatedir = prefix / get_option('localstatedir')
 mandir = prefix / get_option('mandir')
 pkgconfdir = prefix / get_option('sysconfdir') / 'netatalk'
 sbindir = prefix / get_option('sbindir')
-rpath = '$ORIGIN/../' + get_option('libdir')
 
 ##################
 # Compiler flags #

@@ -14,7 +14,8 @@ executable(
     export_dynamic: true,
     install: true,
     install_dir: libexecdir,
-    install_rpath: rpath,
+    build_rpath: libdir,
+    install_rpath: libdir,
 )
 
 executable(
@@ -33,7 +34,8 @@ executable(
     export_dynamic: true,
     install: true,
     install_dir: libexecdir,
-    install_rpath: rpath,
+    build_rpath: libdir,
+    install_rpath: libdir,
 )
 
 install_data('pagecount.ps', install_dir: datadir / 'netatalk')
