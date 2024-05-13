@@ -73,8 +73,7 @@ afpdtest = executable(
     ],
     link_args: quota_link_args,
     export_dynamic: true,
-    install: true,
-    install_dir: sbindir,
+    install: false,
 )
 
 test_sh = find_program('test.sh')

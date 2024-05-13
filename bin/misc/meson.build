@@ -28,5 +28,7 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     c_args: acl_ldapconf,
-    install: false,
+    install: true,
+    build_rpath: libdir,
+    install_rpath: libdir,
 )
