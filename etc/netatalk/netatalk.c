@@ -388,6 +388,7 @@ static void show_netatalk_paths( void )
 static void usage(void)
 {
     printf("usage: netatalk [-F configfile] \n");
+    printf("       netatalk -d \n");
     printf("       netatalk -v|-V \n");
 }
 
