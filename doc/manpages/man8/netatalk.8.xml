@@ -50,10 +50,11 @@
 
     <variablelist>
       <varlistentry>
-        <term>-v | -V</term>
+      <varlistentry>
+        <term>-d</term>
 
         <listitem>
-          <para>Print version information and exit.</para>
+          <para>Starts netatalk in non-forking mode, for debugging purposes.</para>
         </listitem>
       </varlistentry>
 
@@ -62,6 +63,13 @@
 
         <listitem>
           <para>Specifies the configuration file to use.</para>
+        </listitem>
+      </varlistentry>
+
+        <term>-v | -V</term>
+
+        <listitem>
+          <para>Print version information and exit.</para>
         </listitem>
       </varlistentry>
 
