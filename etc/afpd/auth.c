@@ -33,9 +33,9 @@
 #include <atalk/spotlight.h>
 #endif
 
-#include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
+#include <atalk/unix.h>
 
 #ifdef HAVE_ACLS
 #include "acls.h"
