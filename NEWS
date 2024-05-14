@@ -1,8 +1,51 @@
 Changes in 3.2.0
 ================
-* UPD: Remove quota support from Netatalk 3, GitHub #493
-* UPD: Regenerate sparql_parser code with GNU Bison, GitHub #337
-* UPD: Code cleanup, GitHub #490, #494
+* NEW: Introduce the Meson build system, GitHub #707
+       GNU Autotools is still supported, but will be removed
+       in a future release. See the newly added INSTALL file.
+* NEW: FreeBSD init script, borrowed from FreeBSD ports, GitHub #876
+       Special thanks to the author, Joe Marcus Clarke.
+* NEW: OpenBSD init script, GitHub #870
+* UPD: BREAKING: Renamed Gentoo init script to openrc, GitHub #868
+       OpenRC is cross platform; confirmed working on Alpine Linux.
+* NEW: Introduce an official Dockerfile and entry script, GitHub #713
+* NEW: BREAKING: LDAP API update, OpenLDAP v2.3 or later required, GitHub #762
+       afp.conf option "ldap server" has been replaced with "ldap uri"
+       and has a new syntax. See the manual for details.
+* NEW: Option to log to file with second (not ms) accuracy, GitHub #580
+       Enable with afp.conf option: "log seconds"
+* NEW: Option to add delay to FCE event emission, GitHub #849
+       Enable with afp.conf option: "fce sendwait"
+* NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
+* UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
+* UPD: BREAKING: Remove quota functionality, GitHub #493
+* UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
+* UPD: BREAKING: Remove bundled talloc, GitHub #479
+       Get the stand-alone talloc library from the Samba project
+       to build with Spotlight support.
+* UPD: BREAKING: Remove generated SPARQL code, GitHub #337
+       This introduces a compile time dependency on
+       a yacc parser and a lexer to build with Spotlight support.
+* UPD: BREAKING: Rename macOS launchd plist to io.netatalk.*, GitHub #778
+       Note: Only the Meson build system will clean up the old plist.
+* NEW: docs: Distribute a manual appendix with the GNU GPL v2, GitHub #745
+* NEW: docs: Distribute the Japanese localization of the manual, GitHub #806
+* NEW: docs: Generate a manual appendix with build instructions, GitHub #791
+* UPD: docs: Document libraries, init scripts in manual, GitHub #808
+* FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
+* FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
+* UPD: Rewrite the afpstats script in Perl, GitHub #893
+       And, improve the formatting of the standard output.
+       Requires the Net::DBus Perl extension.
+       This removes the effective dependency on a Python runtime.
+* UPD: Make Perl and grep optional requirements, GitHub #886
+       When either is missing, do not install the optional Perl scripts.
+* NEW: Build system option "disable-init-hooks", GitHub #796
+       Will skip init script enablement commands that require
+       elevated privileges on the system.
+* FIX: Make cracklib macro properly detect dictionary, GitHub #940
+* FIX: Build with PAM support on FreeBSD 14, GitHub #560
+* FIX: The ability to disable Spotlight at compile time, GitHub #571
 
 Changes in 3.1.18
 =================
