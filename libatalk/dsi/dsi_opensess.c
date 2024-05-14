@@ -8,13 +8,13 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <stdlib.h>
 
 #include <atalk/dsi.h>
-#include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 /* OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)

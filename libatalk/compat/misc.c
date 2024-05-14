@@ -2,8 +2,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <atalk/compat.h>
 

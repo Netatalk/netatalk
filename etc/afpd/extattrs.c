@@ -16,25 +16,25 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <atalk/adouble.h>
-#include <atalk/util.h>
-#include <atalk/vfs.h>
 #include <atalk/afp.h>
-#include <atalk/logger.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
 
-#include "volume.h"
 #include "desktop.h"
 #include "directory.h"
-#include "fork.h"
 #include "extattrs.h"
+#include "fork.h"
+#include "volume.h"
 
 static const char *ea_finderinfo = "com.apple.FinderInfo";
 static const char *ea_resourcefork = "com.apple.ResourceFork";

@@ -28,37 +28,37 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <ctype.h>
+#include <errno.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <ctype.h>
 #include <string.h>
-#include <time.h>
 #include <string.h>
 #include <sys/file.h>
-#include <netinet/in.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <atalk/afp.h>
 #include <atalk/adouble.h>
-#include <atalk/logger.h>
-#include <atalk/cnid.h>
-#include <atalk/cnid_bdb_private.h>
-#include <atalk/util.h>
+#include <atalk/afp.h>
 #include <atalk/bstradd.h>
-#include <atalk/unicode.h>
+#include <atalk/cnid_bdb_private.h>
+#include <atalk/cnid.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
 
 #include "desktop.h"
-#include "directory.h"
 #include "dircache.h"
+#include "directory.h"
 #include "file.h"
-#include "volume.h"
 #include "filedir.h"
 #include "fork.h"
+#include "volume.h"
 
 
 struct finderinfo {

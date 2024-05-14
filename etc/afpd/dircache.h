@@ -17,8 +17,8 @@
 
 #include <sys/types.h>
 
-#include <atalk/volume.h>
 #include <atalk/directory.h>
+#include <atalk/volume.h>
 
 /* Maximum size of the dircache hashtable */
 #define MAX_POSSIBLE_DIRCACHE_SIZE 131072

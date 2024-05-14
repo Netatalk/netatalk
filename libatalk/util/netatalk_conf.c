@@ -16,28 +16,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <errno.h>
+#include <grp.h>
+#include <inttypes.h>
+
+#if HAVE_LANGINFO_H
+#include <langinfo.h>
+#endif
+
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
+#include <netinet/in.h>
+#include <pwd.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <grp.h>
-#include <utime.h>
-#include <errno.h>
 #include <string.h>
 #include <sys/file.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <inttypes.h>
 #include <time.h>
-#include <regex.h>
-#if HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#if HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
+#include <utime.h>
 
 #include <atalk/afp.h>
 #include <atalk/util.h>

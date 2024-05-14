@@ -10,18 +10,11 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
-
-#include <atalk/logger.h>
-#include <atalk/afp.h>
-#include <atalk/uam.h>
-#include <atalk/util.h>
-#include <atalk/compat.h>
-#include <atalk/globals.h>
 
 /* Kerberos includes */
 #ifdef HAVE_GSSAPI_GSSAPI_H
@@ -37,6 +30,13 @@
 #include <krb5.h>
 #endif /* HAVE_KRB5_KRB5_H */
 #endif /* HAVE_KERBEROS */
+
+#include <atalk/afp.h>
+#include <atalk/compat.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/uam.h>
+#include <atalk/util.h>
 
 #define LOG_UAMS(log_level, ...) \
     LOG(log_level, logtype_uams, __VA_ARGS__)

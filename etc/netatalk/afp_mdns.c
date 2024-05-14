@@ -11,18 +11,18 @@
 
 #ifdef HAVE_MDNS
 
-#include <unistd.h>
-#include <time.h>
-#include <pthread.h>
 #include <poll.h>
+#include <pthread.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <atalk/logger.h>
-#include <atalk/util.h>
-#include <atalk/unicode.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
 
-#include "afp_zeroconf.h"
 #include "afp_mdns.h"
+#include "afp_zeroconf.h"
 
 /*
  * We'll store all the DNSServiceRef's here so that we can

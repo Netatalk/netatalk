@@ -10,31 +10,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <atalk/logger.h>
 
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ctype.h>
+#include <grp.h>
 
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
-#include <grp.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
+#include <atalk/compat.h>
+#include <atalk/errchk.h>
+#include <atalk/fce_api.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
-#include <atalk/compat.h>
-#include <atalk/globals.h>
-#include <atalk/fce_api.h>
-#include <atalk/errchk.h>
 
 #include "status.h"
 #include "auth.h"

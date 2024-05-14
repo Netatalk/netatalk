@@ -21,6 +21,7 @@
 #define HASH_H
 
 #include <limits.h>
+
 #include <atalk/hash.h>
 
 extern hash_t *hash_create(hashcount_t, hash_comp_t, hash_fun_t);

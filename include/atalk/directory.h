@@ -24,13 +24,13 @@
 #ifndef ATALK_DIRECTORY_H
 #define ATALK_DIRECTORY_H 1
 
-#include <sys/types.h>
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <stdint.h>
+#include <sys/types.h>
 
-#include <atalk/cnid.h>
 #include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/queue.h>
 #include <atalk/unicode.h>
 

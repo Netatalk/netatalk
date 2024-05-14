@@ -11,8 +11,9 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
-#include <atalk/logger.h>
+
 #include <atalk/adouble.h>
+#include <atalk/logger.h>
 
 off_t ad_size(const struct adouble *ad, const uint32_t eid)
 {

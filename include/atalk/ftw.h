@@ -23,8 +23,8 @@
 #ifndef _ATALK_FTW_H
 #define	_ATALK_FTW_H	1
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 /* Values for the FLAG argument to the user function passed to `ftw'
    and 'nftw'.  */

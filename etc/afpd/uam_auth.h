@@ -10,8 +10,8 @@
 
 #include <pwd.h>
 
-#include <atalk/uam.h>
 #include <atalk/globals.h>
+#include <atalk/uam.h>
 
 struct uam_mod {
     void *uam_module;

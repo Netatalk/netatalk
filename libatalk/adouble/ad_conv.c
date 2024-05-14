@@ -22,24 +22,24 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <errno.h>
-#include <sys/param.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
-#include <arpa/inet.h>
+#include <sys/param.h>
 
-#include <atalk/logger.h>
 #include <atalk/adouble.h>
-#include <atalk/util.h>
-#include <atalk/unix.h>
-#include <atalk/ea.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
 #include <atalk/compat.h>
-#include <atalk/errchk.h>
-#include <atalk/volume.h>
 #include <atalk/dsi.h>
+#include <atalk/ea.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 #include "ad_lock.h"
 

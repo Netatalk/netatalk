@@ -25,10 +25,10 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <sys/param.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>

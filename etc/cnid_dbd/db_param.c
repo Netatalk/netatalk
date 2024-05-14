@@ -9,14 +9,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <string.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 #include <sys/param.h>
-#include <sys/un.h>
 #include <sys/select.h>
+#include <sys/un.h>
+#include <unistd.h>
+
 #include <atalk/logger.h>
 
 #include "db_param.h"

@@ -21,28 +21,28 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <atalk/afp.h>
-#include <atalk/adouble.h>
-#include <atalk/ea.h>
 #include <atalk/acl.h>
-#include <atalk/logger.h>
-#include <atalk/util.h>
-#include <atalk/volume.h>
-#include <atalk/vfs.h>
-#include <atalk/directory.h>
-#include <atalk/unix.h>
-#include <atalk/errchk.h>
-#include <atalk/bstrlib.h>
+#include <atalk/adouble.h>
+#include <atalk/afp.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
 #include <atalk/compat.h>
+#include <atalk/directory.h>
+#include <atalk/ea.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
+#include <atalk/volume.h>
 
 struct perm {
     uid_t uid;

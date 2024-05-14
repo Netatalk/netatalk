@@ -8,17 +8,16 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <errno.h>
-#include <atalk/logger.h>
 #include <arpa/inet.h>
+#include <atalk/logger.h>
+#include <errno.h>
+#include <string.h>
 
 #include <atalk/cnid_bdb_private.h>
 
-
-#include "pack.h"
-#include "dbif.h"
 #include "dbd.h"
+#include "dbif.h"
+#include "pack.h"
 
 
 /*

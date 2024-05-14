@@ -11,17 +11,15 @@
 
 #ifdef UAM_PGP
 
-#include <atalk/standards.h>
-
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* HAVE_CRYPT_H */
-#include <pwd.h>
-#include <atalk/logger.h>
 
 #if defined(WOLFSSL_DHX)
 #include <wolfssl/options.h>
@@ -37,6 +35,8 @@
 #endif /* WOLFSSL_DHX */
 
 #include <atalk/afp.h>
+#include <atalk/logger.h>
+#include <atalk/standards.h>
 #include <atalk/uam.h>
 
 #define KEYSIZE 16

@@ -3,10 +3,11 @@
 #endif
 
 #ifdef DEBUG
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include <atalk/util.h>
 

@@ -24,7 +24,6 @@
 #ifndef AFPD_DIRECTORY_H
 #define AFPD_DIRECTORY_H 1
 
-#include <sys/types.h>
 #include <arpa/inet.h>
 #include <dirent.h>
 
@@ -33,6 +32,8 @@
 #ifndef major
 #include <sys/sysmacros.h>
 #endif
+
+#include <sys/types.h>
 
 #include <atalk/directory.h>
 #include <atalk/globals.h>

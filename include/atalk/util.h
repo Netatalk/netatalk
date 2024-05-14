@@ -11,16 +11,16 @@
 #ifndef _ATALK_UTIL_H
 #define _ATALK_UTIL_H 1
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <poll.h>
-#include <sys/stat.h>
 #include <stdbool.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <atalk/unicode.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
+#include <atalk/unicode.h>
 
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */

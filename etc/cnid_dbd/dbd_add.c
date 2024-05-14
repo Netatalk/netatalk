@@ -8,20 +8,22 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 
-#include <atalk/logger.h>
-#include <atalk/cnid_bdb_private.h>
-#include <atalk/cnid.h>
 #include <db.h>
 
+#include <atalk/cnid_bdb_private.h>
+#include <atalk/cnid.h>
+#include <atalk/logger.h>
+
+#include "dbd.h"
 #include "dbif.h"
 #include "pack.h"
-#include "dbd.h"
+
 
 int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {

@@ -7,21 +7,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <atalk/logger.h>
-
-
 #include <arpa/inet.h>
+#include <ctype.h>
+#include <fcntl.h>
 
 #ifdef HAVE_KERBEROS
 #ifdef HAVE_KRB5_KRB5_H
@@ -31,14 +19,25 @@
 #endif /* HAVE_KRB5_KRB5_H */
 #endif /* HAVE_KERBEROS */
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
 #include <atalk/dsi.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
-#include <atalk/globals.h>
 
-#include "status.h"
 #include "afp_config.h"
 #include "icon.h"
+#include "status.h"
 #include "uam_auth.h"
 
 static   size_t maxstatuslen = 0;

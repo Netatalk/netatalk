@@ -5,12 +5,13 @@
   #include <stdio.h>
   #include <string.h>
   #include <time.h>
-  #include <talloc.h>
 
   #include <gio/gio.h>
 
-  #include <atalk/logger.h>
+  #include <talloc.h>
+
   #include <atalk/errchk.h>
+  #include <atalk/logger.h>
   #include <atalk/spotlight.h>
 
   #include "sparql_map.h"

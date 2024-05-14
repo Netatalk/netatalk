@@ -1,10 +1,11 @@
 #ifndef CMD_DBD_H
 #define CMD_DBD_H
 
-#include <signal.h>
 #include <limits.h>
+#include <signal.h>
 
 #include <atalk/netatalk_conf.h>
+
 #include "dbif.h"
 
 enum logtype {LOGSTD, LOGDEBUG};

@@ -7,18 +7,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-#include <errno.h>
 
 #include <atalk/adouble.h>
-#include <atalk/ea.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/ea.h>
+#include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/errchk.h>
 
 /* XXX: locking has to be checked before each stream of consecutive
  *      ad_writes to prevent a lock in the middle from causing problems.
