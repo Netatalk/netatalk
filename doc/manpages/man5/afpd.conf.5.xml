@@ -6,7 +6,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
+    <refmiscinfo class="date">14 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -336,10 +336,11 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-transall</term>
+        <term>-[no]transall</term>
 
         <listitem>
-          <para>Make both available (default)</para>
+          <para>Enables or disables both transport protocols.
+          Default is <option>-transall</option>.</para>
         </listitem>
       </varlistentry>
     </variablelist>
