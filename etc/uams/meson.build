@@ -256,7 +256,7 @@ if enable_pgp_uam
         'uams_pgp',
         uams_pgp_sources,
         include_directories: root_includes,
-        dependencies: [crypt, crypto, ssl_deps],
+        dependencies: [crypt, ssl_deps],
         name_prefix: '',
         install: true,
         install_dir: libdir / 'netatalk',
