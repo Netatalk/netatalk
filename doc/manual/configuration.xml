@@ -22,15 +22,14 @@
         <secondary>Mac OS X 10.7</secondary>
       </indexterm> (10.7).</para>
 
-    <para>The afpd daemon offers the fileservices to Apple clients. The
-    configuration is managed through the <filename>afp.conf</filename> file
-    which uses an ini style configuration syntax.</para>
+    <para>Netatalk's <command>afpd</command> daemon offers AFP fileservices to
+    Apple clients. The configuration is managed through the
+    <filename>afp.conf</filename> file which uses an ini style configuration
+    syntax.</para>
 
     <para>Support for <link linkend="spotlight">Spotlight</link><indexterm>
         <primary>Spotlight</primary>
-      </indexterm> has been added in Netatalk 3.1. See this <link
-    linkend="spotlight-compile">section</link> for information on how to
-    compile Netatalk with Spotlight support.</para>
+      </indexterm> has been added in Netatalk 3.1.</para>
 
     <para>Mac OS X 10.5 (Leopard) added support for Time Machine backups over
     AFP. Two new functions ensure that backups are written to spinning disk,
