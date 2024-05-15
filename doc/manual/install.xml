@@ -25,10 +25,11 @@
 
       <para>You might also want to have a look at 3rd party package
       repositories for your operating system, such as <ulink
-      url="https://www.opencsw.org/">OpenCSW</ulink> for Solaris and its
-      descendants, and <ulink url="https://brew.sh/">Homebrew</ulink> or
-      <ulink url="https://www.macports.org/">MacPorts</ulink> for
-      macOS.</para>
+      url="https://rpmfind.net/">rpmfind</ulink> for Red Hat based Linux
+      distributions, <ulink url="https://www.opencsw.org/">OpenCSW</ulink> for
+      Solaris and its descendants, and <ulink url="https://brew.sh/">
+      Homebrew</ulink> or <ulink url="https://www.macports.org/">MacPorts
+      </ulink> for macOS.</para>
     </sect2>
 
     <sect2>
@@ -145,12 +146,15 @@ Resolving deltas: 100% (32227/32227), done.
 
         <itemizedlist>
           <listitem>
-            <para>OpenSSL</para>
+            <para>OpenSSL / LibreSSL / WolfSSL</para>
 
-            <para>OpenSSL 1.x or LibreSSL is needed for the older DHCAST128
+            <para>OpenSSL 1.1 or LibreSSL is needed for the older DHCAST128
             (a.k.a. DHX) UAM, which provides the strongest password encryption
             for Classic Mac OS. The older Random Number UAMs uses this
             library, too.</para>
+
+            <para>Note that as of netatalk 3.2.0, a bundled WolfSSL library is
+            distributed with netatalk as the default DHX provider.</para>
           </listitem>
 
           <listitem>
@@ -312,15 +316,16 @@ Resolving deltas: 100% (32227/32227), done.
     <para>The Netatalk distribution comes with several operating system
     specific startup script templates that are tailored according to the
     options given to the build system before compiling. Currently, templates
-    are provided for popular Linux distributions, BSD variants, Solaris
-    descendants, and macOS.</para>
+    are provided for systemd, openrc, in addition to platform specific scripts
+    for popular Linux distributions, BSD variants, Solaris descendants, and
+    macOS.</para>
 
     <para>When building from source, you can configure the build system to
     install the generated startup script(s) <indexterm>
         <primary>Startscript</primary>
 
         <secondary>startup script</secondary>
-      </indexterm> you want by specifying an <option>init-style</option>
+      </indexterm> you want by specifying an <option>with-init-style</option>
     option. For the specific syntax, please refer to the build system's help
     text.</para>
 
