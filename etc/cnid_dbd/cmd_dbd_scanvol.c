@@ -16,31 +16,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <dirent.h>
-#include <fcntl.h>
-#include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <setjmp.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <atalk/adouble.h>
-#include <atalk/unicode.h>
-#include <atalk/netatalk_conf.h>
-#include <atalk/volume.h>
-#include <atalk/ea.h>
-#include <atalk/util.h>
 #include <atalk/acl.h>
-#include <atalk/compat.h>
+#include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
+#include <atalk/ea.h>
 #include <atalk/errchk.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 #include "cmd_dbd.h"
-#include "dbif.h"
 #include "db_param.h"
 #include "dbd.h"
+#include "dbif.h"
 
 /* Some defines to ease code parsing */
 #define ADDIR_OK (addir_ok == 0)

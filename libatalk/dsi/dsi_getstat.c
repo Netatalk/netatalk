@@ -8,9 +8,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
-#include <arpa/inet.h>
 
 #include <atalk/dsi.h>
 

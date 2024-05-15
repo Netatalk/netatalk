@@ -26,20 +26,20 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
+#include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <arpa/inet.h>
+#include <string.h>
 
 #include <atalk/adouble.h>
-#include <atalk/ea.h>
-#include <atalk/logger.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/ea.h>
 #include <atalk/errchk.h>
-#include <atalk/util.h>
+#include <atalk/logger.h>
 #include <atalk/unix.h>
+#include <atalk/util.h>
 
 #include "ad_lock.h"
 

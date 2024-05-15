@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include <atalk/util.h>
 
 #ifndef HAVE_DLFCN_H

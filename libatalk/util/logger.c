@@ -13,26 +13,26 @@ Netatalk 2001 (c)
 
 ========================================================================= */
 
-#include <stdio.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-#include <syslog.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <time.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <syslog.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/unix.h>
+#include <atalk/util.h>
 
 #define COUNT_ARRAY(array) (sizeof((array))/sizeof((array)[0]))
 

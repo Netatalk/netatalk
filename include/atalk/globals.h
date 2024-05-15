@@ -6,20 +6,22 @@
 #ifndef AFPD_GLOBALS_H
 #define AFPD_GLOBALS_H 1
 
-#include <sys/param.h>
 #include <grp.h>
-#include <sys/types.h>
-#include <stdbool.h>
 
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
+#include <stdbool.h>
+#include <sys/param.h>
+#include <sys/types.h>
+
 #include <atalk/afp.h>
 #include <atalk/compat.h>
-#include <atalk/unicode.h>
-#include <atalk/uam.h>
 #include <atalk/iniparser.h>
+#include <atalk/uam.h>
+#include <atalk/unicode.h>
+
 #ifdef WITH_DTRACE
 #include <atalk/afp_dtrace.h>
 #else

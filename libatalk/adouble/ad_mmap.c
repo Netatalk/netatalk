@@ -11,9 +11,9 @@
 
 #ifdef USE_MMAPPED_HEADERS
 #include <stdio.h>
+#include <string.h>
 
 #include <atalk/adouble.h>
-#include <string.h>
 
 #include "ad_lock.h"
 

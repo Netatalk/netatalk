@@ -7,34 +7,37 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ctype.h>
+#include <errno.h>
+
 #ifdef HAVE_GETIFADDRS
 #include <ifaddrs.h>
 #endif
 
-#include <atalk/logger.h>
-#include <atalk/util.h>
-#include <atalk/dsi.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include <atalk/afp.h>
 #include <atalk/compat.h>
-#include <atalk/server_child.h>
-#include <atalk/globals.h>
+#include <atalk/dsi.h>
 #include <atalk/errchk.h>
-#include <atalk/netatalk_conf.h>
 #include <atalk/fce_api.h>
+#include <atalk/globals.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
 #endif
+
+#include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/server_child.h>
+#include <atalk/util.h>
 
 #include "afp_config.h"
 #include "uam_auth.h"

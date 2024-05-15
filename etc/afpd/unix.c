@@ -7,29 +7,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <string.h>
-#include <errno.h>
-#include <limits.h>
 #include <sys/param.h>
-#include <atalk/logger.h>
-#include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/unix.h>
-#include <atalk/acl.h>
 
-#include "auth.h"
-#include "directory.h"
-#include "volume.h"
-#include "unix.h"
-#include "fork.h"
+#include <atalk/acl.h>
+#include <atalk/adouble.h>
+#include <atalk/afp.h>
+#include <atalk/logger.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
+
 #ifdef HAVE_ACLS
 #include "acls.h"
 #endif
+
+#include "auth.h"
+#include "directory.h"
+#include "fork.h"
+#include "unix.h"
+#include "volume.h"
 
 /*
  * Get the free space on a partition.

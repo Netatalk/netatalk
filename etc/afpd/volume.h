@@ -6,13 +6,13 @@
 #ifndef AFPD_VOLUME_H
 #define AFPD_VOLUME_H 1
 
-#include <sys/types.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 
-#include <atalk/volume.h>
 #include <atalk/cnid.h>
-#include <atalk/unicode.h>
 #include <atalk/globals.h>
+#include <atalk/unicode.h>
+#include <atalk/volume.h>
 
 extern int              ustatfs_getvolspace (const struct vol *,
                                              VolSpace *, VolSpace *,

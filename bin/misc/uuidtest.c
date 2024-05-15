@@ -16,22 +16,22 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifdef HAVE_LDAP
 #define LDAP_DEPRECATED 1
 #include <ldap.h>
 #endif
 
-#include <atalk/ldapconfig.h>
-#include <atalk/uuid.h>
-#include <atalk/logger.h>
 #include <atalk/iniparser.h>
+#include <atalk/ldapconfig.h>
+#include <atalk/logger.h>
+#include <atalk/uuid.h>
 
 #define STRNCMP(a, R, b, l) (strncmp(a,b,l) R 0)
 

@@ -7,37 +7,37 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <sys/param.h>
-#include <sys/uio.h>
-#include <sys/time.h>
-#include <sys/socket.h>
 #include <sys/poll.h>
-#include <errno.h>
-#include <sys/wait.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/uio.h>
+#include <sys/wait.h>
 
-#include <atalk/logger.h>
 #include <atalk/adouble.h>
+#include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
-#include <atalk/afp.h>
-#include <atalk/paths.h>
-#include <atalk/util.h>
-#include <atalk/server_child.h>
-#include <atalk/server_ipc.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/paths.h>
+#include <atalk/server_child.h>
+#include <atalk/server_ipc.h>
+#include <atalk/util.h>
 
 #include "afp_config.h"
-#include "status.h"
-#include "fork.h"
-#include "uam_auth.h"
 #include "afpstats.h"
+#include "fork.h"
+#include "status.h"
+#include "uam_auth.h"
 
 #define ASEV_THRESHHOLD 10
 

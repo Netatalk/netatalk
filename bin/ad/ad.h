@@ -15,17 +15,16 @@
 #ifndef AD_H
 #define AD_H
 
-#include <atalk/standards.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <signal.h>
 #include <arpa/inet.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <atalk/globals.h>
-#include <atalk/ftw.h>
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
+#include <atalk/ftw.h>
+#include <atalk/standards.h>
 #include <atalk/volume.h>
 
 #define DIR_DOT_OR_DOTDOT(a) \

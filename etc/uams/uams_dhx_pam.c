@@ -10,20 +10,21 @@
 #endif /* HAVE_CONFIG_H */
 
 #if defined(USE_PAM) && defined(UAM_DHX)
+
+#include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <atalk/logger.h>
-
 #include <unistd.h>
-#include <errno.h>
-#ifdef HAVE_SECURITY_PAM_APPL_H
-#include <security/pam_appl.h>
-#endif
+
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
-#include <arpa/inet.h>
+
+#ifdef HAVE_SECURITY_PAM_APPL_H
+#include <security/pam_appl.h>
+#endif
 
 #if defined(WOLFSSL_DHX)
 #include <wolfssl/options.h>
@@ -41,6 +42,7 @@
 #endif /* WOLFSSL_DHX */
 
 #include <atalk/afp.h>
+#include <atalk/logger.h>
 #include <atalk/uam.h>
 
 #define KEYSIZE 16

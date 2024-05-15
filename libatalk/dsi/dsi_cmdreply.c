@@ -7,8 +7,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 #include <atalk/dsi.h>
 #include <atalk/logger.h>

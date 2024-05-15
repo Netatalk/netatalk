@@ -33,20 +33,19 @@
 #include <unistd.h>
 #undef __USE_GNU
 
-#include <stdlib.h>
-#include <sys/param.h>
 #include <errno.h>
-#include <string.h>
 #include <signal.h>
-#include <sys/types.h>
-#include <sys/time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
 #include <sys/resource.h>
-#include <sys/wait.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-// #define _XPG4_2 1
-#include <sys/socket.h>
-#include <stdio.h>
+#include <sys/wait.h>
 #include <time.h>
 
 #ifndef WEXITSTATUS

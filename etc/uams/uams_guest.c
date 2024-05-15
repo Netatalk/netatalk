@@ -7,17 +7,17 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <pwd.h>
 
-#include <atalk/logger.h>
 #include <atalk/afp.h>
+#include <atalk/compat.h>
+#include <atalk/logger.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
-#include <atalk/compat.h>
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

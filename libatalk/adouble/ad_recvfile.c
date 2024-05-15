@@ -23,12 +23,12 @@
 
 #ifdef WITH_RECVFILE
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
 
 #include <atalk/adouble.h>
 #include <atalk/logger.h>

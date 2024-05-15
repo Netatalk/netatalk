@@ -32,27 +32,27 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <stdarg.h>
 #include <string.h>
-#include <libgen.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
-#include <atalk/logger.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/errchk.h>
+#include <atalk/logger.h>
 #include <atalk/unicode.h>
+#include <atalk/util.h>
 
 /*!
  * Build path relativ to volume root

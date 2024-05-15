@@ -8,26 +8,26 @@
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
-#include <errno.h>
-#include <signal.h>
 #include <time.h>
-#include <pthread.h>
+#include <unistd.h>
 
+#include <atalk/dsi.h>
+#include <atalk/errchk.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/paths.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
-#include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/errchk.h>
-#include <atalk/paths.h>
-#include <atalk/globals.h>
-#include <atalk/dsi.h>
 
 #define IPC_HEADERLEN 14
 #define IPC_MAXMSGSIZE 90

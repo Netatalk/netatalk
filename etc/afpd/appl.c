@@ -8,26 +8,25 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/logger.h>
+#include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-
 #include <sys/param.h>
-#include <atalk/logger.h>
-#include <errno.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
 
-#include "volume.h"
+#include "desktop.h"
 #include "directory.h"
 #include "file.h"
-#include "desktop.h"
+#include "volume.h"
 
 static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 

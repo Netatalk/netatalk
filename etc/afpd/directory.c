@@ -7,43 +7,43 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <assert.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <errno.h>
 #include <utime.h>
-#include <assert.h>
 
 #include <atalk/adouble.h>
-#include <atalk/vfs.h>
 #include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/logger.h>
-#include <atalk/uuid.h>
-#include <atalk/unix.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/errchk.h>
-#include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/uuid.h>
+#include <atalk/vfs.h>
 
-#include "directory.h"
-#include "dircache.h"
 #include "desktop.h"
-#include "volume.h"
-#include "fork.h"
+#include "dircache.h"
+#include "directory.h"
 #include "file.h"
 #include "filedir.h"
-#include "unix.h"
-#include "mangle.h"
+#include "fork.h"
 #include "hash.h"
+#include "mangle.h"
+#include "unix.h"
+#include "volume.h"
 
 /*
  * FIXMEs, loose ends after the dircache rewrite:

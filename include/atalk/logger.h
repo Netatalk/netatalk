@@ -1,13 +1,13 @@
 #ifndef _ATALK_LOGGER_H
 #define _ATALK_LOGGER_H 1
 
-#include <limits.h>
-#include <stdio.h>
-#include <stdbool.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 /* logger is used by pam modules */
 #ifndef UAM_MODULE_EXPORT

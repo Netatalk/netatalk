@@ -7,35 +7,35 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/param.h>
 
-#include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/logger.h>
-#include <atalk/unix.h>
-#include <atalk/bstrlib.h>
-#include <atalk/bstradd.h>
 #include <atalk/acl.h>
-#include <atalk/globals.h>
-#include <atalk/fce_api.h>
-#include <atalk/netatalk_conf.h>
+#include <atalk/adouble.h>
+#include <atalk/afp.h>
+#include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
 #include <atalk/errchk.h>
+#include <atalk/fce_api.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
 
-#include "directory.h"
-#include "dircache.h"
 #include "desktop.h"
-#include "volume.h"
-#include "fork.h"
+#include "dircache.h"
+#include "directory.h"
 #include "file.h"
 #include "filedir.h"
+#include "fork.h"
 #include "unix.h"
+#include "volume.h"
 
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {

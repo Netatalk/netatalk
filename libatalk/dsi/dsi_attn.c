@@ -8,14 +8,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
 
-#include <atalk/dsi.h>
 #include <atalk/afp.h>
+#include <atalk/dsi.h>
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

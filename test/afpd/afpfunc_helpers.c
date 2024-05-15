@@ -16,30 +16,29 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 
-#include <atalk/util.h>
-#include <atalk/cnid.h>
-#include <atalk/logger.h>
-#include <atalk/volume.h>
-#include <atalk/directory.h>
-#include <atalk/queue.h>
 #include <atalk/bstrlib.h>
+#include <atalk/cnid.h>
+#include <atalk/directory.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/queue.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
+#include "afp_config.h"
+#include "dircache.h"
+#include "directory.h"
 #include "file.h"
 #include "filedir.h"
-#include "directory.h"
-#include "dircache.h"
 #include "hash.h"
-#include "afp_config.h"
-#include "volume.h"
-
-#include "test.h"
 #include "subtests.h"
+#include "test.h"
+#include "volume.h"
 
 
 #define rbufsize 128000

@@ -24,14 +24,15 @@
 #ifndef AFPD_FILE_H
 #define AFPD_FILE_H 1
 
-/*#include <sys/stat.h>*/ /* including it here causes some confusion */
-#include <sys/param.h>
 #include <arpa/inet.h>
+#include <sys/param.h>
+/*#include <sys/stat.h>*/ /* including it here causes some confusion */
+
 #include <atalk/adouble.h>
 #include <atalk/globals.h>
 
-#include "volume.h"
 #include "directory.h"
+#include "volume.h"
 
 extern const u_char	ufinderi[];
 

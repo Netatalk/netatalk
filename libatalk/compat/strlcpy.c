@@ -26,8 +26,9 @@
 #include "config.h"
 #endif
 
-#include <atalk/util.h>
 #include <string.h>
+
+#include <atalk/util.h>
 
 #ifndef HAVE_STRLCPY
 /* like strncpy but does not 0 fill the buffer and always null

@@ -18,32 +18,32 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <strings.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <inttypes.h>
+#include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <utime.h>
+
+#include <glib.h>
 #include <talloc.h>
 
-#include <atalk/list.h>
-#include <atalk/errchk.h>
-#include <atalk/util.h>
-#include <atalk/logger.h>
-#include <atalk/dalloc.h>
 #include <atalk/byteorder.h>
-#include <atalk/netatalk_conf.h>
-#include <atalk/volume.h>
-#include <atalk/spotlight.h>
 #include <atalk/compat.h>
+#include <atalk/dalloc.h>
+#include <atalk/errchk.h>
+#include <atalk/list.h>
+#include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/spotlight.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 #include "directory.h"
 #include "etc/spotlight/sparql_parser.h"
-
-#include <glib.h>
 
 #define MAX_SL_RESULTS 20
 

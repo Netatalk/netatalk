@@ -9,28 +9,29 @@
 #endif /* HAVE_CONFIG_H */
 
 #if defined (USE_PAM) && defined (UAM_DHX2)
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <atalk/logger.h>
-
 #include <unistd.h>
-#include <errno.h>
+
 #ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
 #endif
+
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
-
 
 #ifdef HAVE_LIBGCRYPT
 #include <gcrypt.h>
 #endif /* HAVE_LIBGCRYPT */
 
 #include <atalk/afp.h>
-#include <atalk/uam.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/uam.h>
 
 /* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */
 #define PRIMEBITS 1024

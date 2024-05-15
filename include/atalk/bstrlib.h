@@ -17,10 +17,10 @@
 extern "C" {
 #endif
 
+#include <ctype.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <string.h>
-#include <limits.h>
-#include <ctype.h>
 
 #if !defined (BSTRLIB_VSNP_OK) && !defined (BSTRLIB_NOVSNP)
 # if defined (__TURBOC__) && !defined (__BORLANDC__)

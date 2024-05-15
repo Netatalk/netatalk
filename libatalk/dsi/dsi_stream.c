@@ -14,21 +14,21 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
+#include <unistd.h>
 
 #ifdef HAVE_SENDFILEV
 #include <sys/sendfile.h>
 #endif
 
-#include <atalk/logger.h>
 #include <atalk/dsi.h>
+#include <atalk/logger.h>
 #include <atalk/util.h>
 
 #ifndef MSG_MORE

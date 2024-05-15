@@ -110,13 +110,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <strings.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <inttypes.h>
+#include <string.h>
+#include <strings.h>
+
 #include <talloc.h>
 
 #include <atalk/errchk.h>

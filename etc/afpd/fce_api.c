@@ -34,34 +34,33 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-
-#include <string.h>
-#include <stdlib.h>
+#include <arpa/inet.h>
 #include <errno.h>
-#include <time.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdbool.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
-#include <atalk/vfs.h>
-#include <atalk/logger.h>
 #include <atalk/afp.h>
-#include <atalk/util.h>
 #include <atalk/cnid.h>
-#include <atalk/unix.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/unix.h>
+#include <atalk/util.h>
+#include <atalk/vfs.h>
 
-#include "fork.h"
-#include "file.h"
-#include "directory.h"
 #include "desktop.h"
+#include "directory.h"
+#include "file.h"
+#include "fork.h"
 #include "volume.h"
 
 // ONLY USED IN THIS FILE

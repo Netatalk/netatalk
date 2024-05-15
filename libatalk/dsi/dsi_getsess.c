@@ -8,23 +8,22 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-
+#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/time.h>
-#include <atalk/logger.h>
-#include <atalk/util.h>
+#include <unistd.h>
 
 #include <atalk/dsi.h>
+#include <atalk/logger.h>
 #include <atalk/server_child.h>
+#include <atalk/util.h>
 
 /*!
  * Start a DSI session, fork an afpd process

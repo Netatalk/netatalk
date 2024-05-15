@@ -8,33 +8,33 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
+#include <arpa/inet.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <signal.h>
 #include <string.h>
-#include <sys/types.h>
+#include <sys/file.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
-#include <sys/file.h>
-#include <arpa/inet.h>
+#include <unistd.h>
 
-#include <atalk/cnid_bdb_private.h>
-#include <atalk/logger.h>
-#include <atalk/errchk.h>
-#include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/cnid_bdb_private.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 
 #include "db_param.h"
-#include "dbif.h"
 #include "dbd.h"
-#include "comm.h"
+#include "dbif.h"
 #include "pack.h"
+#include "comm.h"
 
 /*
    Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.

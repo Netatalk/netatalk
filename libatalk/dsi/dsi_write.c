@@ -11,17 +11,17 @@
 #endif /* HAVE_CONFIG_H */
 
 /* this streams writes */
+#include <fcntl.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <fcntl.h>
-#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <atalk/dsi.h>
-#include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
 {

@@ -10,44 +10,48 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <string.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <unistd.h>
 #include <sys/socket.h>
-#include <sys/time.h>
+
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <setjmp.h>
-#include <time.h>
+
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <atalk/logger.h>
-#include <atalk/dsi.h>
 #include <atalk/compat.h>
-#include <atalk/util.h>
-#include <atalk/uuid.h>
-#include <atalk/paths.h>
-#include <atalk/server_ipc.h>
+#include <atalk/dsi.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/paths.h>
+#include <atalk/server_ipc.h>
+
 #ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
 #endif
 
-#include "switch.h"
+#include <atalk/util.h>
+#include <atalk/uuid.h>
+
 #include "auth.h"
-#include "fork.h"
 #include "dircache.h"
+#include "fork.h"
+#include "switch.h"
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP

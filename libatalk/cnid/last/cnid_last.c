@@ -11,15 +11,16 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef CNID_BACKEND_LAST
-#include <stdlib.h>
-#include "cnid_last.h"
-#include <atalk/util.h>
-#include <atalk/logger.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "cnid_last.h"
+#include <atalk/logger.h>
+#include <atalk/util.h>
+#include <stdlib.h>
+
 #include <arpa/inet.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /* ------------------------ */
 cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,

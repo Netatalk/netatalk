@@ -8,29 +8,30 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <arpa/inet.h>
 #include <ctype.h>
-#include <atalk/logger.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/time.h>
+
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif /* HAVE_DLFCN_H */
 
+#include <fcntl.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
 
-#include <atalk/dsi.h>
 #include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/globals.h>
-#include <atalk/volume.h>
 #include <atalk/bstrlib.h>
+#include <atalk/dsi.h>
+#include <atalk/globals.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
+#include <atalk/volume.h>
 
 #include "afp_config.h"
 #include "auth.h"

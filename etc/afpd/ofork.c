@@ -7,26 +7,26 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
-#include <errno.h>
+#include <sys/stat.h> /* works around a bug */
+#include <unistd.h>
 
+#include <atalk/bstradd.h>
+#include <atalk/bstrlib.h>
+#include <atalk/ea.h>
+#include <atalk/fce_api.h>
+#include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
-#include <atalk/bstrlib.h>
-#include <atalk/bstradd.h>
-#include <atalk/globals.h>
-#include <atalk/fce_api.h>
-#include <atalk/ea.h>
 
-#include "volume.h"
+#include "desktop.h"
 #include "directory.h"
 #include "fork.h"
-#include "desktop.h"
+#include "volume.h"
 
 /* we need to have a hashed list of oforks (by dev inode) */
 #define OFORK_HASHSIZE  64

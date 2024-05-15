@@ -10,26 +10,29 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <arpa/inet.h>
 #include <errno.h>
+#include <net/if.h>
+
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <stdint.h>
 
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <netinet/tcp.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-
+#include <netinet/tcp.h>
 #include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
+
 #include <atalk/logger.h>
 
 #ifdef __svr4__

@@ -6,12 +6,13 @@
 #ifndef AFPD_FORK_H
 #define AFPD_FORK_H 1
 
-#include <stdio.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 #include <atalk/adouble.h>
-#include "volume.h"
+
 #include "directory.h"
+#include "volume.h"
 
 struct file_key {
     dev_t       dev;

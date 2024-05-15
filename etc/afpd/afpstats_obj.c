@@ -16,18 +16,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <strings.h>
 #include <pwd.h>
+#include <strings.h>
 
 #include <glib-object.h>
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#include <atalk/logger.h>
 #include <atalk/dsi.h>
+#include <atalk/logger.h>
 
-#include "afpstats.h"
 #include "afpstats_obj.h"
+#include "afpstats.h"
 
 struct AFPStatsObj
 {

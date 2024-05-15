@@ -17,18 +17,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <atalk/afp.h>
-#include <atalk/util.h>
-#include <atalk/logger.h>
-#include <atalk/errchk.h>
 #include <atalk/acl.h>
+#include <atalk/afp.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/util.h>
 
 #ifdef HAVE_NFSV4_ACLS
 
