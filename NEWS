@@ -3,6 +3,10 @@ Changes in 3.2.0
 * NEW: Introduce the Meson build system, GitHub #707
        GNU Autotools is still supported, but will be removed
        in a future release. See the newly added INSTALL file.
+* NEW: Bundle WolfSSL as an encryption provider for the DHX UAM, GitHub #358
+       This is enabled by default, controlled by option "with-embedded-ssl"
+       Requires the Meson build system.
+       External OpenSSL 1.1 and LibreSSL are still supported.
 * NEW: FreeBSD init script, borrowed from FreeBSD ports, GitHub #876
        Special thanks to the author, Joe Marcus Clarke.
 * NEW: OpenBSD init script, GitHub #870
@@ -34,6 +38,7 @@ Changes in 3.2.0
 * UPD: docs: Document libraries, init scripts in manual, GitHub #808
 * FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
 * FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
+* FIX: Shore up error handling and type safety, GItHub #952
 * UPD: Rewrite the afpstats script in Perl, GitHub #893
        And, improve the formatting of the standard output.
        Requires the Net::DBus Perl extension.
