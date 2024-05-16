@@ -8,7 +8,9 @@
     <refmiscinfo class="date">13 Jun 2016</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -30,6 +32,7 @@
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
+
         <arg choice="plain">-V</arg>
       </group>
     </cmdsynopsis>
@@ -38,7 +41,8 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>netatalk</command>は、AFPデーモン<command>afpd</command>とCNIDデーモン<command>cnid_metad</command>の起動と再起動を請け負うサービスコントローラデーモンである。これは通常、ブート時にinitシステム (BSDスタイルinit、SysVスタイルinit、systemd、Upstart、OpenRC、SMF等) によって起動される。</para>
+    <para><command>netatalk</command>は、AFPデーモン<command>afpd</command>とCNIDデーモン<command>cnid_metad</command>の起動と再起動を請け負うサービスコントローラデーモンである。これは通常、ブート時にinitシステム
+    (BSDスタイルinit、SysVスタイルinit、systemd、Upstart、OpenRC、SMF等) によって起動される。</para>
   </refsect1>
 
   <refsect1>
@@ -46,10 +50,10 @@
 
     <variablelist>
       <varlistentry>
-        <term>-v | -V</term>
+        <term>-d</term>
 
         <listitem>
-          <para>バージョン情報を表示して終了する。</para>
+          <para>デバッグ目的で、netatalk を非フォーク モードで開始する。</para>
         </listitem>
       </varlistentry>
 
@@ -57,11 +61,17 @@
         <term>-F <replaceable>configfile</replaceable></term>
 
         <listitem>
-          <para>利用する設定ファイルを指定する。 (デフォルトは
-          <filename>@pkgconfdir@/afp.conf</filename> )</para>
+          <para>利用する設定ファイルを指定する。</para>
         </listitem>
       </varlistentry>
 
+      <varlistentry>
+        <term>-v | -V</term>
+
+        <listitem>
+          <para>バージョン情報を表示して終了する。</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
   </refsect1>
 
@@ -81,7 +91,7 @@
         <term>SIGHUP</term>
 
         <listitem>
-          <para><command>SIGHUP</command>を送るとAFPデーモンが設定ファイルを再読み込みします。</para>
+          <para><command>SIGHUP</command>を送るとAFPデーモンが設定ファイルを再読み込みする。</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -92,7 +102,7 @@
 
     <variablelist>
       <varlistentry>
-        <term><filename>@pkgconfdir@/afp.conf</filename></term>
+        <term><filename>afp.conf</filename></term>
 
         <listitem>
           <para><command>netatalk</command>(8)と<command>afpd</command>(8)と<command>cnid_metad</command>(8)が使う設定ファイル</para>
@@ -120,8 +130,9 @@
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

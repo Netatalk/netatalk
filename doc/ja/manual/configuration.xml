@@ -3,1506 +3,1349 @@
   <chapterinfo>
     <author role="first-last">
       <firstname>Eiichirou</firstname>
-      
+
       <surname>UDA（日本語訳）</surname>
     </author>
-    
+
     <pubdate>2016 年 7 月 26 日（訳）</pubdate>
-    
   </chapterinfo>
 
   <title>Netatalk のセットアップ</title>
 
   <sect1>
-    <title>ファイルサービス<indexterm>
-        <primary>ファイルサービス</primary>
+    <title>AFP ファイルサーバーのセットアップ</title>
 
-        <secondary>Netatalk のファイルサービス</secondary>
-      </indexterm></title>
-
-    <para>Netatalk は AFP<indexterm>
+    <para>AFP<indexterm>
         <primary>AFP</primary>
 
         <secondary>Apple Filing Protocol</secondary>
-      </indexterm> サービスを提供するものである．</para>
+      </indexterm> (Apple Filing Protocol) はアップル・マッキントッシュのファイルサービス<indexterm>
+        <primary>ファイルサービス</primary>
+
+        <secondary>Netatalk のファイルサービス</secondary>
+      </indexterm>に用いるプロトコルである。AFP プロトコルは年を追うごとに進展を見せ、最終バージョンは OS X
+    Lion<indexterm>
+        <primary>Lion</primary>
+
+        <secondary>Mac OS X 10.7</secondary>
+      </indexterm> (10.7) のマイナーリリースにあわせて加えられた "AFP 3.4" である。</para>
+
+    <para>Netatalk の afpd デーモンはアップルのクライアントに対して AFP ファイルサービスを提供する。設定ファイルは
+    <filename>afp.conf</filename> のみで、"ini" スタイルの構文で記述する。</para>
+
+    <para><link linkend="spotlight">Spotlight</link><indexterm>
+        <primary>Spotlight</primary>
+      </indexterm> サポートは Netatalk 3.1 より加えられた。</para>
+
+    <para>Mac OS X 10.5 (Leopard) で、AFP 経由での Time Machine
+    バックアップがサポートされるようになった。二つの新機能で、バックアップをただサーバーのキャッシュにではなく、
+    動作中のディスクに書き込むことを確実にしている。ホストのオペレーティングシステムが異なると、
+    このキャッシュをフラッシュする払い出し方も異なる。ヴォリュームを作成するために、Time Machine
+    ターゲットのボリューム作成にはボリュームオプション "<option>time machine = yes</option>"
+    を使用する。</para>
+
+    <para>Netatalk 2.1 以降では UNIX シンボリックリンク<indexterm>
+        <primary>シンボリックリンク</primary>
+
+        <secondary>UNIX シンボリックリンク</secondary>
+      </indexterm>をサーバー上で使うことができる。セマンティクスは例えば NFS と同じである、すなわち、Netatalk
+    はサーバー側でシンボリックリンクを追わないが、代わりにクライアント側でシンボリックリンクを解決できるよう完全に転送して、
+    結果としてクライアントのファイルシステムのビュー内でしかるべき場所を示すリンクとなる。</para>
 
     <sect2>
-      <title>AFP ファイルサーバーのセットアップ</title>
+      <title>afp.conf</title>
 
-      <para>AFP (Apple Filing Protocol) はアップル・マッキントッシュのファイルサービスに用いるプロトコルである．
-      AFP プロトコルは年を追うごとに進展を見せ，最新の変更は OS X Lion<indexterm>
-          <primary>Lion</primary>
+      <para><filename>afp.conf</filename> は、AFP ファイルサーバー及び提供する AFP
+      ボリュームの挙動と設定を決定するために afpd が使用する設定ファイルである。</para>
 
-          <secondary>Mac OS X 10.7</secondary>
-        </indexterm> (10.7) のマイナーリリースにあわせて加えられた "AFP 3.4" である．</para>
+      <para><filename>afp.conf</filename> は複数のサーバーセクションに分割できる。すなわち：
+      <variablelist>
+          <varlistentry>
+            <term>[Global]</term>
 
-      <para>afpd デーモンはアップルのクライアントに対してファイルサービスを提供する．唯一必要な設定ファイルは  
-      <filename>afp.conf</filename> のみで，"ini" スタイルの構文で記述する．</para>
+            <listitem>
+              <para>グローバルセクションで基本的なサーバーオプションを定義する</para>
+            </listitem>
+          </varlistentry>
 
-      <para><link linkend="spotlight">Spotlight</link><indexterm>
-          <primary>Spotlight</primary>
-        </indexterm> サポートは Netatalk 3.1 より加えられた．Spotlight をサポートした Netatalk を
-      コンパイルするための情報はこの<link linkend="spotlight-compile">節</link>を参照のこと．</para>
+          <varlistentry>
+            <term>[Homes]</term>
 
-      <para>Mac OS X 10.5 (Leopard) で，AFP 経由での Time Machine バックアップがサポートされるようになった．
-      二つの新機能で，バックアップをただサーバーのキャッシュにではなく，
-      動作中のディスクに書き込むことを確実にしている．ホストのオペレーティングシステムが異なると，
-      このキャッシュをフラッシュする払い出し方も異なる．ヴォリュームを作成するために，
-      Time Machine ターゲットのボリューム作成にはボリュームオプション "<option>time machine = yes</option>" を使用する．</para>
+            <listitem>
+              <para>ホームセクションでユーザーのホームボリュームを定義する</para>
+            </listitem>
+          </varlistentry>
+        </variablelist><option>Global</option> とも
+      <option>Homes</option>、とも呼ばれないセクションは単なる一つの AFP ボリュームであると解釈される</para>
 
-      <para>Netatalk 2.1 以降では UNIX シンボリックリンク<indexterm>
-          <primary>シンボリックリンク</primary>
+      <para><option>Homes</option> を定義してユーザーのホームディレクトリを共有するために、
+      <option>basedir regex</option> オプションを明記しなければならない。
+      これは全てのユーザーのホームの親ディレクトリのパスあるいは正規表現からなる単純な文字列でよい。</para>
 
-          <secondary>UNIX シンボリックリンク</secondary>
-        </indexterm>をサーバー上で使うことができる．セマンティクスは例えば NFS と同じである，
-      すなわち，Netatalk はサーバー側でシンボリックリンクを追わないが，
-      代わりにクライアント側でシンボリックリンクを解決できるよう完全に転送して，
-      結果としてクライアントのファイルシステムのビュー内でしかるべき場所を示すリンクとなる．</para>
+      <para>例：</para>
 
-      <sect3>
-        <title>afp.conf</title>
-
-        <para><filename>afp.conf</filename> は，AFP ファイルサーバー及び提供する AFP 
-        ボリュームの挙動と設定を決定するために afpd が使用する設定ファイルである．</para>
-
-        <para><filename>afp.conf</filename> は複数のサーバーセクションに分割できる．すなわち：
-          <variablelist>
-            <varlistentry>
-              <term>[Global]</term>
-
-              <listitem>
-                <para>グローバルセクションで基本的なサーバーオプションを定義する</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term>[Homes]</term>
-
-              <listitem>
-                <para>ホームセクションでユーザーのホームボリュームを定義する</para>
-              </listitem>
-            </varlistentry>
-          </variablelist><option>Global</option> とも 
-          <option>Homes</option>，とも呼ばれないセクションは単なる一つの AFP 
-          ボリュームであると解釈される</para>
-
-        <para><option>Homes</option> を定義してユーザーのホームディレクトリを共有するために，
-        <option>basedir regex</option> オプションを明記しなければならない．
-        これは全てのユーザーのホームの親ディレクトリのパスあるいは正規表現からなる単純な文字列でよい．</para>
-
-        <para>例：</para>
-
-        <para><programlisting>[Homes]
+      <para><programlisting>[Homes]
 basedir regex = /home
 </programlisting></para>
 
-        <para>この場合，AFP サーバーにログインできるユーザーはそれぞれ <filename>/home/（ユーザー名）</filename> 
-        というパス名でのユーザーボリュームを使用できる．</para>
+      <para>この場合、AFP サーバーにログインできるユーザーはそれぞれ <filename>/home/（ユーザー名）</filename>
+      というパス名でのユーザーボリュームを使用できる。</para>
 
-        <para>より複雑なセットアップで，例えば二つの異なったファイルシステムにわたって分割された，
-        大量のユーザーホームディレクトリーのあるサーバーなら：
-          <itemizedlist>
-            <listitem>
-              <para>/RAID1/homes</para>
-            </listitem>
+      <para>より複雑なセットアップで、例えば二つの異なったファイルシステムにわたって分割された、
+      大量のユーザーホームディレクトリーのあるサーバーなら： <itemizedlist>
+          <listitem>
+            <para>/RAID1/homes</para>
+          </listitem>
 
-            <listitem>
-              <para>/RAID2/morehomes</para>
-            </listitem>
-          </itemizedlist>以下の設定が必要である：<programlisting>[Homes]
+          <listitem>
+            <para>/RAID2/morehomes</para>
+          </listitem>
+        </itemizedlist>以下の設定が必要である：<programlisting>[Homes]
 basedir regex = /RAID./.*homes
 </programlisting></para>
 
-        <para>もし，<option>basedir regex</option> にシンボリックリンクが含まれる場合，
-        正規化された絶対パスを指定すべきである．つまり，パス <filename>/home</filename> から 
-        <filename>/usr/home</filename> にシンボリックリンクがはられていた場合：<programlisting>[Homes]
+      <para>もし、<option>basedir regex</option> にシンボリックリンクが含まれる場合、
+      正規化された絶対パスを指定すべきである。つまり、パス <filename>/home</filename> から
+      <filename>/usr/home</filename> にシンボリックリンクがはられていた場合：<programlisting>[Homes]
 basedir regex = /usr/home</programlisting></para>
 
-        <para>他の使用できるオプションの詳細な解説については <citerefentry>
-            <refentrytitle>afp.conf</refentrytitle>
-
-            <manvolnum>5</manvolnum>
-          </citerefentry> の man page を参照いただきたい．</para>
-      </sect3>
-    </sect2>
-
-    <sect2 id="CNID-backends">
-      <title>CNID<indexterm>
-          <primary>CNID</primary>
-
-          <secondary>Catalog Node ID</secondary>
-        </indexterm> バックエンド<indexterm>
-          <primary>バックエンド</primary>
-
-          <secondary>CNID バックエンド</secondary>
-        </indexterm></title>
-
-      <para>SMB や NFS のようなほかのプロトコルとは異なり，ほとんどの場合，
-      AFP プロトコルはファイルやディレクトリをパスではなく ID を通して参照している．
-      （その ID は CNID とも言われ，カタログ・ノード ID (Catalog Node ID) の略である）
-      典型的には，まず AFP リクエストで，例えば，<phrase>“サーバーさん id 167 のディレクトリにある，
-      ファイル名 'Test' というのを開いてください．”</phrase>といった調子でディレクトリ ID<indexterm>
-          <primary>DID</primary>
-
-          <secondary>ディレクトリ ID</secondary>
-        </indexterm>とファイル名を用いる．
-      例えば，Mac での "Aliases" は基本的には ID 
-      として作用する（より最近の AFP クライアントでは絶対パスにフォールバックするが，
-      これは Finder のみで当てはまることであり，アプリケーションでは当てはまらない）．</para>
-
-      <para>AFP ボリュームにある各々のファイルに一意のファイル ID<indexterm>
-          <primary>FID</primary>
-
-          <secondary>ファイル ID</secondary>
-        </indexterm> が割り当てられる．仕様により ID は絶対に再利用禁止であり，ID は 32 bit の数字である．
-      （ディレクトリ ID も同じ ID プールを使用する）このため，
-      ある AFP ボリュームにおよそ 40 億個以上のファイル・フォルダーを書き込むと，
-      その時点で ID プールが枯渇され，当該ボリュームへの新ファイルの書き込みができなくなる．
-      愚痴はなしということでお願いしたい :-)</para>
-
-      <para>Netatalk はホストのファイルシステム内で 
-      ID とファイルあるいはフォルダーのマップ（ID との対応付け）をする必要がある．
-      それを実現するためにいくつかの異なる CNID バックエンド<indexterm>
-          <primary>CNID バックエンド</primary>
-        </indexterm>が用意されていて，<citerefentry>
+      <para>他の使用できるオプションの詳細な解説については <citerefentry>
           <refentrytitle>afp.conf</refentrytitle>
 
           <manvolnum>5</manvolnum>
-        </citerefentry> 設定ファイル内で <option>cnid
-      scheme</option><indexterm>
-          <primary>cnidscheme</primary>
-
-          <secondary>特定の CNID を指定する</secondary>
-        </indexterm> オプションで選択が可能である．CNID バックエンドは基本的には，
-        ストアされた ID &lt;-&gt; 名前を一対一対応させるデータベースである．</para>
-
-      <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename> に置かれる．
-      コンパイル時に <command>--localstatedir=PATH</command> オプションで場所を変えられる．</para>
-
-      <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command> 
-      という名のコマンドが用意されていている．</para>
-
-      <note>
-        <para>netatalk で作業する上で，いくつかの CNID に関する点を留意しておかなければならない．
-        すなわち：</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>"<option>vol dbnest = yes</option>"
-            が指定してある時以外はボリュームをネスト（入れ子）にしてはならない．<indexterm>
-                <primary>ボリュームをネスト（入れ子）にする</primary>
-              </indexterm></para>
-
-          </listitem>
-
-          <listitem>
-            <para>CNID バックエンドはデータベースである．
-            それ故 afpd はファイルサーバーとデータベースの混成物とならしめている．</para>
-          </listitem>
-
-          <listitem>
-            <para>もしファイルシステムに空き容量がなくなった場合，データベースは破損するかもしれない．
-            それを回避するために取る策としては，<option>vol dbpath</option> オプションを使用して，
-            データベースファイルをどこか別の場所に置く，か，クオータ<indexterm>
-                <primary>クオータ</primary>
-
-                <secondary>ディスク使用量のクオータ</secondary>
-            </indexterm>を使っているならば CNID 
-            データベースフォルダーがクオータなしでユーザー／グループのオーナーとなっているか確認する．
-            のいずれかである．</para>
-          </listitem>
-
-          <listitem>
-            <para>NFS 経由でマウントされているボリュームの CNID データベースには注意すべきである．
-            いずれにしろそのような構成にすると決める事自体かなり無謀である．
-            が，さらにデータベースもその上に置くとなると決定的にトラブルの元となる．要はデータベースの破損である．
-            もしどうしても NFS<indexterm>
-                <primary>NFS</primary>
-
-                <secondary>ネットワークファイルシステム</secondary>
-              </indexterm> マウントしたボリュームを使わねばならない場合はデータベースをローカルディスクに置くために
-            <option>vol dbpath</option> ディレクティブを使用するべきである．</para>
-          </listitem>
-        </itemizedlist>
-      </note>
-
-      <sect3>
-        <title>cdb<indexterm>
-            <primary>CDB</primary>
-
-            <secondary>"cdb" CNID バックエンド</secondary>
-          </indexterm></title>
-
-        <para>“コンカレント（concurrent:同時進行）データベース”バックエンドは Berkeley DB を基礎としたものである．
-        このバックエンドだと複数の afpd デーモンが CNID データベースに直接アクセスできる．
-        たとえ複数の afpd プロセスがある一つのボリュームに対して動作中の場合でも同期アクセスについては 
-        Berkeley DB ロック機構が全て負ってくれる．欠点としては，一つの afpd 
-        プロセスのクラッシュのみでデータベースの破損するかもしれないという点である．
-        cdb は数多くのユーザーのホームディレクトリを共有するときのみ使用すべきで，
-        <emphasis>かつ</emphasis>，
-        多数の <command>cnid_dbd</command> プロセスという状態は確実に問題を引き起こすということである．</para>
-      </sect3>
-
-      <sect3>
-        <title>dbd<indexterm>
-            <primary>DBD</primary>
-
-            <secondary>"dbd" CNID バックエンド</secondary>
-          </indexterm></title>
-
-        <para>CNID データベースへのアクセスは cnid_dbd デーモンプロセスのみに制限されている．
-        afpd プロセスはデータベースの読み込みと更新のために cnid_dbd デーモン とやりとりをする．
-        データベースが破損する可能性は経験的にはゼロである．</para>
-
-        <para>本バックエンドは Netatalk 2.1 以来，デフォルトのバックエンドとなっている．</para>
-      </sect3>
-
-      <sect3>
-        <title>tdb<indexterm>
-            <primary>tdb</primary>
-
-            <secondary>"tdb" CNID バックエンド</secondary>
-          </indexterm></title>
-
-        <para><abbrev>tdb</abbrev> はまた別の永続性のある CNID データベースの一つであり，
-        Samba の <emphasis>Trivial Database（軽量データベース）</emphasis>のことでもある．
-        ユーザーボリューム用として <abbrev>cdb</abbrev> の代わりに使用することもできる．
-          <important>
-            <para>本バックエンドは，いかなる場合でも，共有されても<emphasis>なく</emphasis>，
-            複数のクライアントが一度にアクセスすることも<emphasis>ない</emphasis>
-            ボリュームにのみ使用すること．</para>
-          </important><abbrev>tdb</abbrev> はメモリーにデータを保持するデータベースとして動作できるので，
-        このバックエンドは内部向けに（メモリーにデータを保持する CNID データベースとして），
-        最初のデータベースが開けない時など，予備として用いることもできる．
-        これはもちろん再起動にすると CNID は失われるということを意味している．</para>
-      </sect3>
-
-      <sect3>
-        <title>last<indexterm>
-            <primary>Last</primary>
-
-            <secondary>"last" CNID バックエンド</secondary>
-          </indexterm></title>
-
-        <para>last バックエンドはメモリーにデータを保持する tdb データベースである．それ故永続性がない．
-        netatalk 3.0 からは，それは自動的に<emphasis>読み込み専用モード</emphasis>になる．
-        このバックエンドは例えば CD-ROM などに有用である．</para>
-      </sect3>
-
-      <sect3>
-        <title>mysql<indexterm>
-            <primary>MySQL</primary>
-
-            <secondary>"mysql" CNID バックエンド</secondary>
-          </indexterm></title>
-
-        <para>CNID バックエンドは MySQL サーバーを使用する．
-        mysql 開発ライブラリが検出されると、自動的に設定される．
-        コンパイル時に<command>--without-mysql-config</command>で無効にする．</para>
-      </sect3>
+        </citerefentry> の man page を参照いただきたい。</para>
     </sect2>
+  </sect1>
 
-    <sect2 id="charsets">
-      <title>Charsets<indexterm>
-          <primary>Charset</primary>
+  <sect1 id="CNID-backends">
+    <title>CNID<indexterm>
+        <primary>CNID</primary>
 
-          <secondary>キャラクターセット</secondary>
-        </indexterm>/Unicode<indexterm>
-          <primary>Unicode</primary>
+        <secondary>Catalog Node ID</secondary>
+      </indexterm> バックエンド<indexterm>
+        <primary>バックエンド</primary>
+
+        <secondary>CNID バックエンド</secondary>
+      </indexterm></title>
+
+    <para>SMB や NFS のようなほかのプロトコルとは異なり、ほとんどの場合、AFP プロトコルはファイルやディレクトリをパスではなく ID
+    を通して参照している。（その ID は CNID とも言われ、カタログ・ノード ID (Catalog Node ID) の略である）
+    典型的には、まず AFP リクエストで、例えば、<phrase>“サーバーさん id 167 のディレクトリにある、ファイル名 'Test'
+    というのを開いてください。”</phrase>といった調子でディレクトリ ID<indexterm>
+        <primary>DID</primary>
+
+        <secondary>ディレクトリ ID</secondary>
+      </indexterm>とファイル名を用いる。例えば、Mac での "Aliases" は基本的には ID として作用する（より最近の AFP
+    クライアントでは絶対パスにフォールバックするが、これは Finder
+    のみで当てはまることであり、アプリケーションでは当てはまらない）。</para>
+
+    <para>AFP ボリュームにある各々のファイルに一意のファイル ID<indexterm>
+        <primary>FID</primary>
+
+        <secondary>ファイル ID</secondary>
+      </indexterm> が割り当てられる。仕様により ID は絶対に再利用禁止であり、ID は 32 bit の数字である。（ディレクトリ
+    ID も同じ ID プールを使用する）このため、ある AFP ボリュームにおよそ 40 億個以上のファイル・フォルダーを書き込むと、その時点で
+    ID プールが枯渇され、当該ボリュームへの新ファイルの書き込みができなくなる。愚痴はなしということでお願いしたい :-)</para>
+
+    <para>Netatalk はホストのファイルシステム内で ID とファイルあるいはフォルダーのマップ（ID との対応付け）をする必要がある。
+    それを実現するためにいくつかの異なる CNID バックエンド<indexterm>
+        <primary>CNID バックエンド</primary>
+      </indexterm>が用意されていて、<citerefentry>
+        <refentrytitle>afp.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> 設定ファイル内で <option>cnid scheme</option><indexterm>
+        <primary>cnidscheme</primary>
+
+        <secondary>特定の CNID を指定する</secondary>
+      </indexterm> オプションで選択が可能である。CNID バックエンドは基本的には、ストアされた ID &lt;-&gt;
+    名前を一対一対応させるデータベースである。</para>
+
+    <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename>
+    に置かれる。コンパイル時に <command>localstatedir=PATH</command>
+    オプションで場所を変えられる。</para>
+
+    <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command>
+    という名のコマンドが用意されていている。</para>
+
+    <note>
+      <para>netatalk で作業する上で、いくつかの CNID に関する点を留意しておかなければならない。すなわち：</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>"<option>vol dbnest = yes</option>"
+          が指定してある時以外はボリュームをネスト（入れ子）にしてはならない。<indexterm>
+              <primary>ボリュームをネスト（入れ子）にする</primary>
+            </indexterm></para>
+        </listitem>
+
+        <listitem>
+          <para>CNID バックエンドはデータベースである。それ故 afpd
+          はファイルサーバーとデータベースの混成物とならしめている。</para>
+        </listitem>
+
+        <listitem>
+          <para>もしファイルシステムに空き容量がなくなった場合、データベースは破損するかもしれない。
+          それを回避するために取る策としては、<option>vol dbpath</option> オプションを使用して、
+          データベースファイルをどこか別の場所に置く、か、クオータ<indexterm>
+              <primary>クオータ</primary>
+
+              <secondary>ディスク使用量のクオータ</secondary>
+            </indexterm>を使っているならば CNID
+          データベースフォルダーがクオータなしでユーザー／グループのオーナーとなっているか確認する。のいずれかである。</para>
+        </listitem>
+
+        <listitem>
+          <para>NFS 経由でマウントされているボリュームの CNID データベースには注意すべきである。
+          いずれにしろそのような構成にすると決める事自体かなり無謀である。
+          が、さらにデータベースもその上に置くとなると決定的にトラブルの元となる。要はデータベースの破損である。もしどうしても
+          NFS<indexterm>
+              <primary>NFS</primary>
+
+              <secondary>ネットワークファイルシステム</secondary>
+            </indexterm> マウントしたボリュームを使わねばならない場合はデータベースをローカルディスクに置くために
+          <option>vol dbpath</option> ディレクティブを使用するべきである。</para>
+        </listitem>
+      </itemizedlist>
+    </note>
+
+    <sect2>
+      <title>cdb<indexterm>
+          <primary>CDB</primary>
+
+          <secondary>"cdb" CNID バックエンド</secondary>
         </indexterm></title>
 
-      <para></para>
-
-      <sect3>
-        <title>なぜ Unicode？</title>
-
-        <para>内部的には，コンピューターは文字（キャラクター）について，
-        テキストについて何も知らない，唯一“数字（数）”ならコンピュータにもわかる．
-        それ故各々の“字”には“数”が割り当てられている．キャラクターセット，しばしば
-        <emphasis>charset</emphasis> あるいは
-        <emphasis>codepage</emphasis><indexterm>
-            <primary>コードページ</primary>
-          </indexterm> とも呼ばれるが，これは“数”と“字”の一対一対応を規定している．</para>
-
-        <para>二つあるいはそれ以上のコンピューターがお互いに通信する必要がある場合，
-        各々は同じキャラクターセットを使う必要がある．1960 年代には ASCII<indexterm>
-            <primary>ASCII</primary>
-
-            <secondary>American Standard Code for Information
-            Interchange</secondary>
-          </indexterm> (American Standard Code for Information Interchange) 
-        キャラクターセットが 
-        ASA（米国標準協会：the American Standards Association）によって標準化された．
-        オリジナルの ASCII 形式は，
-        英語で用いられるアルファベット及び数字を網羅するのに十分な数より多い 128 
-        のキャラクターを表している．今日においても，
-        ASCII はコンピューターで使われるキャラクタースキームの標準的なものである．</para>
-
-        <para>国際的にもっと都合よく，そして若干内輪向けの記号文字を含めるために，
-        つづくバージョンでは 256 のキャラクターを規定した．
-        このエンコードの仕様だと一文字はきっちり 1 バイトに収まるが，
-        明らかに，256 キャラクターというのは，
-        いろいろな言語で用いる全ての文字を一つのキャラクターに一対一対応させるのに依然十分ではなかった．
-        </para>
-
-        <para>結果的には後にローカライズされたキャラクターセットが規定された．
-        例えば ISO-8859 キャラクターセットである．
-        ほとんどのオペレーティングシステムベンダーは自らの要求を満たすために，
-        独自のキャラクターセットを導入した．すなわち IBM であれば 
-        <emphasis>コードページ 437 (DOSLatinUS)</emphasis>，アップルは 
-        <emphasis>MacRoman</emphasis><indexterm>
-            <primary>MacRoman</primary>
-
-            <secondary>MacRoman charset</secondary>
-          </indexterm> コードページ，などである．
-        127 以上のキャラクターが定義されているものを<emphasis>拡張</emphasis>
-        キャラクターと呼ぶ．
-        これらのキャラクターセットは異なるキャラクターに同じ番号をふってあるので，
-        他のキャラクターセットとまたはキャラクターセット同士で衝突を起こす．</para>
-
-        <para>そういったキャラクターセットのほぼ全てが 256 個のキャラクターを定義していて，
-        最初の 128 個（0 から 127 まで）のキャラクターを ASCII と同一対応となるようにしている．        
-        結果的に，違ったコードページを使っているシステム同士の通信では，事実上
-        ASCII キャラクターセット限定となった．</para>
-
-        <para>この問題を新たに解決するために，より大きいキャラクターセットが規定された．
-        より多くのキャラクターマッピングの場所を確保するために，
-        これらのキャラクターセットは一つのキャラクターの格納のために最低でも 2 バイトを使用する．
-        このためそういったキャラクターセットは<emphasis>マルチバイト</emphasis>
-        キャラクターセットと呼ばれる．</para>
-
-        <para>標準化されたマルチバイトキャラクターエンコード方式として知られているものの一つとして
-        <ulink url="http://www.unicode.org/">ユニコード</ulink>がある．
-        マルチバイトキャラクターセット使用の大きな利点として“それ一つで済む”がある．
-        二つのコンピューターが通信しているときに両者が同じキャラクターセットを使用しているか確認する必要がない．</para>
-      </sect3>
-
-      <sect3>
-        <title>Apple で使われている（使われていた）キャラクターセット</title>
-
-        <para>過去に Apple クライアントは，
-        ネットワーク間の通信のためにシングルバイトのキャラクターセットを使用していた．
-        年を経るに従い，Apple はいくつものキャラクターセットを定義したが，
-        欧米ユーザーは <emphasis>MacRoman</emphasis> コードセットを最もよく使用するであろう．</para>
-
-        <para>Apple の定義したコードページに含まれるもの：</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>MacArabic, MacFarsi</para>
-          </listitem>
-
-          <listitem>
-            <para>MacCentralEurope</para>
-          </listitem>
-
-          <listitem>
-            <para>MacChineseSimple</para>
-          </listitem>
-
-          <listitem>
-            <para>MacChineseTraditional</para>
-          </listitem>
-
-          <listitem>
-            <para>MacCroatian</para>
-          </listitem>
-
-          <listitem>
-            <para>MacCyrillic</para>
-          </listitem>
-
-          <listitem>
-            <para>MacDevanagari</para>
-          </listitem>
-
-          <listitem>
-            <para>MacGreek</para>
-          </listitem>
-
-          <listitem>
-            <para>MacHebrew</para>
-          </listitem>
-
-          <listitem>
-            <para>MacIcelandic</para>
-          </listitem>
-
-          <listitem>
-            <para>MacJapanese</para>
-          </listitem>
-
-          <listitem>
-            <para>MacKorean</para>
-          </listitem>
-
-          <listitem>
-            <para>MacRoman</para>
-          </listitem>
-
-          <listitem>
-            <para>MacRomanian</para>
-          </listitem>
-
-          <listitem>
-            <para>MacThai</para>
-          </listitem>
-
-          <listitem>
-            <para>MacTurkish</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>Mac OS X 以降そして AFP3 以降では <ulink url="http://www.utf-8.com/">UTF-8</ulink> 
-        が用いられる．UTF-8 は Unicode キャラクターを ASCII 互換のやり方でエンコードする．
-        各々の Unicode キャラクターは一個から六個の ASCII キャラクターにエンコードされる．
-        故に， UTF-8 自体が本当のキャラクターセットなのではなく，ユニコードキャラクターセットのエンコーディングなのである．</para>
-
-        <para>厄介なことにも Unicode はいくつかの <emphasis> <ulink
-        url="http://www.unicode.org/reports/tr15/index.html">normalization（正規化）</ulink>
-        </emphasis>方式を規定している．<ulink 
-        url="http://www.samba.org">Samba</ulink><indexterm>
-            <primary>Samba</primary>
-          </indexterm> はほとんどの Unix ツールも好んで用いる 
-        <emphasis>precomposed</emphasis><indexterm>
-            <primary>Precomposed</primary>
-
-            <secondary>Precomposed Unicode normalization</secondary>
-          </indexterm> Unicode を使用する．一方 Apple は 
-        <emphasis>decomposed</emphasis><indexterm>
-            <primary>Decomposed</primary>
-
-            <secondary>Decomposed Unicode normalization</secondary>
-          </indexterm> normalization を使うことに決めた．</para>
-
-        <para>例として、ドイツ語の文字 '<keycode>ä</keycode>' についてみてみる．
-        Precomposed normalization を使えば Unicode はこの文字に 0xE4 を対応付ける．
-        Decomposed normalization では 'ä' を正確には 0x61 と 0x308 の二つの文字に対応付ける．
-        0x61 は 'a' に，0x308 は <emphasis>COMBINING
-        DIAERESIS</emphasis>（訳注：いわゆるウムラウト）に対応付けられている．</para>
-
-        <para>Netatalk では precomposed UTF-8 を
-        <emphasis>UTF8</emphasis><indexterm>
-            <primary>UTF8</primary>
-
-            <secondary>Netatalk の precomposed UTF-8 エンコーディング</secondary>
-          </indexterm> と，decomposed UTF-8 を
-        <emphasis>UTF8-MAC</emphasis><indexterm>
-            <primary>UTF8-MAC</primary>
-
-            <secondary>Netatalk の decomposed UTF-8 エンコーディング</secondary>
-          </indexterm> と呼ぶ．</para>
-
-      </sect3>
-
-      <sect3>
-        <title>afpd とキャラクターセット</title>
-
-        <para>新しい AFP 3.x クライアントも古い AFP 2.x クライアントも同時にサポートするために，
-        afpd は使われている様々なキャラクターセット間の変換が可能であることを必要とした．
-        AFP 3.x クライアントは常に UTF8-MAC を，
-        AFP 2.x クライアントは Apple コードページのうちの一つを使う．</para>
-
-        <para>本稿執筆時点（訳注：原文の）で，
-        netatalk は以下の Apple コードページをサポートしている：</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>MAC_CENTRALEUROPE</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_CHINESE_SIMP</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_CHINESE_TRAD</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_CYRILLIC</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_GREEK</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_HEBREW</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_JAPANESE</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_KOREAN</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_ROMAN</para>
-          </listitem>
-
-          <listitem>
-            <para>MAC_TURKISH</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>afpd は三つの異なるキャラクターセットオプションを扱う：</para>
-
-        <variablelist>
-          <varlistentry>
-            <term>unix charset<indexterm>
-                <primary>unix charset</primary>
-
-                <secondary>afpd の unix charset セッティング</secondary>
-              </indexterm></term>
-
-            <listitem>
-              <para>これはオペレーティングシステムの内側で使われているコードページである．
-              もし指定されていなければ，デフォルトで <option>UTF8</option> になる．
-              もし <option>LOCALE</option> が指定されていて，
-              システムが Unix locales をサポートしていれば，afpd はコードページを検出しようとし，
-              afpd は検出したコードページを使って設定ファイルを読む．
-              なので，ボリューム名やログインメッセージなどに拡張文字を使うことができる．
-              <citerefentry>
-                  <refentrytitle>afp.conf</refentrytitle>
-
-                  <manvolnum>5</manvolnum>
-                </citerefentry> を参照のこと．</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>mac charset<indexterm>
-                <primary>mac charset</primary>
-
-                <secondary>afpd の mac charset セッティング</secondary>
-              </indexterm></term>
-
-            <listitem>
-              <para>既に述べたように，
-              旧式の Mac OS クライアント（AFP 2.2 までのもの）は 
-              afpd と通信するのにコードページを用いる．しかしながら，
-              AFP プロトコルにはクライアントが使用しているコードページの折り合いをつけるというサポートはない．
-              もしほかのどこかで指定されていないと，
-              afpd は <emphasis>MacRoman</emphasis> コードページが使われていると仮定する．
-              クライアントが別のコードページ，
-              例えば <emphasis>MacCyrillic</emphasis> を使っていたならば, 
-              それを明示的に設定<emphasis role="bold">しなければならない</emphasis>だろう．
-              <citerefentry>
-                  <refentrytitle>afp.conf</refentrytitle>
-
-                  <manvolnum>5</manvolnum>
-                </citerefentry> を参照のこと．</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>vol charset<indexterm>
-                <primary>vol charset</primary>
-
-                <secondary>afpd の vol charset セッティング</secondary>
-              </indexterm></term>
-
-            <listitem>
-              <para>これは afpd がディスク上のファイル名として使うべき charset を定義する．
-              デフォルトでは <option>unix
-              charset</option> と同じである．もし <ulink
-              url="http://www.gnu.org/software/libiconv/">iconv</ulink><indexterm>
-                  <primary>Iconv</primary>
-
-                  <secondary>iconv エンコーディング変換エンジン</secondary>
-                </indexterm> がインストールしてあるならば，
-                iconv が提供するキャラクターセットも使用することができる．</para>
-
-              <para>afpd はファイルを unix のファイルシステムに保存する時，
-              拡張マッキントッシュキャラクター，
-              あるいは unix のファイル名として不正なキャラクターを保持する手段が必要である．
-              初期のバージョンでは，いわゆる CAP エンコーディング<indexterm>
-                  <primary>CAP エンコーディング</primary>
-
-                  <secondary>CAP スタイルキャラクターエンコーディング</secondary>
-                </indexterm>を使った．拡張キャラクター (&gt;0x7F) は :xx 
-              の 16 進数に変換される．例えば，アップルのロゴ (MacRoman:
-              0xF0) は :f0 として保存される．
-              いくつかの特殊なキャラクターも :xx という表記に変換される．
-              '/' は :2f にエンコードされる．
-              もし， <option>usedots</option> オプションが設定されていなければ，
-              先頭のピリオド '.' は :2e にエンコードされる．</para>
-
-              <para>本ドキュメントでのバージョンではファイル名のデフォルトエンコーディングとして
-              <option>UTF8</option> を使っているにもかかわらず，'/' は ':' に変換される．
-              欧米のユーザーにとって別の有用な設定として <option>vol charset = ISO-8859-15</option> 
-              もあり得る．</para>
-
-              <para>もし，あるキャラクターが <option>mac charset</option> から選定した 
-              <option>vol charset</option> への変換ができない場合，マック上で -50 エラーを受け取るだろう．
-              <emphasis>注意</emphasis>：
-              可能な限り常に，デフォルトの UTF8 ボリュームフォーマットにしてください．
-                            <citerefentry>
-                  <refentrytitle>afp.conf</refentrytitle>
-
-                  <manvolnum>5</manvolnum>
-                </citerefentry> を参照のこと．</para>
-            </listitem>
-          </varlistentry>
-        </variablelist>
-      </sect3>
+      <para>“コンカレント（concurrent:同時進行）データベース”バックエンドは Berkeley DB を基礎としたものである。
+      このバックエンドだと複数の afpd デーモンが CNID データベースに直接アクセスできる。たとえ複数の afpd
+      プロセスがある一つのボリュームに対して動作中の場合でも同期アクセスについては Berkeley DB
+      ロック機構が全て負ってくれる。欠点としては、一つの afpd プロセスのクラッシュのみでデータベースの破損するかもしれないという点である。
+      cdb は数多くのユーザーのホームディレクトリを共有するときのみ使用すべきで、<emphasis>かつ</emphasis>、多数の
+      <command>cnid_dbd</command> プロセスという状態は確実に問題を引き起こすということである。</para>
     </sect2>
 
-    <sect2 id="authentication">
-      <title>認証<indexterm>
-          <primary>認証</primary>
+    <sect2>
+      <title>dbd<indexterm>
+          <primary>DBD</primary>
 
-          <secondary>AFP クライアントとサーバー間の</secondary>
+          <secondary>"dbd" CNID バックエンド</secondary>
         </indexterm></title>
 
-      <sect3>
-        <title>AFP 認証の基本</title>
+      <para>CNID データベースへのアクセスは cnid_dbd デーモンプロセスのみに制限されている。afpd
+      プロセスはデータベースの読み込みと更新のために cnid_dbd デーモン とやりとりをする。
+      データベースが破損する可能性は経験的にはほぼゼロである。</para>
 
-        <para>Apple は AFP クライアントとサーバー間の認証のために 
-        "User Authentication Modules"
-          <indexterm>
-            <primary>UAM</primary>
+      <para>本バックエンドは Netatalk 2.1 以来、デフォルトのバックエンドとなっている。</para>
+    </sect2>
 
-            <secondary>User Authentication Module</secondary>
-          </indexterm> (UAM) と呼ばれる柔軟なモデルを選んだ．
-        AFP クライアントがまず最初に AFP サーバーと接続するとき，
-        サーバーが提供している UAM のリストを問い合わせる．
-        そして，クライアントがサポートしている最も強い暗号化の UAM を選ぶ．</para>
+    <sect2>
+      <title>last<indexterm>
+          <primary>Last</primary>
 
-        <para>数個の UAM は時間をかけて Apple が開発してものであり，
-        サードパーティの開発者によるものもある．</para>
+          <secondary>"last" CNID バックエンド</secondary>
+        </indexterm></title>
+
+      <para>last バックエンドはメモリーにデータを保持する tdb データベースである。それ故永続性がない。netatalk 3.0
+      からは、それは自動的に<emphasis>読み込み専用モード</emphasis>になる。このバックエンドは例えば CD-ROM
+      などに有用である。</para>
+    </sect2>
+
+    <sect2>
+      <title>mysql<indexterm>
+          <primary>MySQL</primary>
+
+          <secondary>"mysql" CNID バックエンド</secondary>
+        </indexterm></title>
+
+      <para>CNID バックエンドは MySQL サーバーを使用する。mysql 開発ライブラリが検出されると、自動的に設定される。
+      コンパイル時に<command>mysql-config</command>で無効にする。</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="charsets">
+    <title>Charsets<indexterm>
+        <primary>Charset</primary>
+
+        <secondary>キャラクターセット</secondary>
+      </indexterm>/Unicode<indexterm>
+        <primary>Unicode</primary>
+      </indexterm></title>
+
+    <sect2>
+      <title>なぜ Unicode？</title>
+
+      <para>内部的には、コンピューターは文字（キャラクター）について、
+      テキストについて何も知らない、唯一“数字（数）”ならコンピュータにもわかる。
+      それ故各々の“字”には“数”が割り当てられている。キャラクターセット、しばしば <emphasis>charset</emphasis>
+      あるいは <emphasis>codepage</emphasis><indexterm>
+          <primary>コードページ</primary>
+        </indexterm> とも呼ばれるが、これは“数”と“字”の一対一対応を規定している。</para>
+
+      <para>二つあるいはそれ以上のコンピューターがお互いに通信する必要がある場合、各々は同じキャラクターセットを使う必要がある。1960
+      年代には ASCII<indexterm>
+          <primary>ASCII</primary>
+
+          <secondary>American Standard Code for Information
+          Interchange</secondary>
+        </indexterm> (American Standard Code for Information Interchange)
+      キャラクターセットが ASA（米国標準協会：the American Standards Association）によって標準化された。
+      オリジナルの ASCII 形式は、英語で用いられるアルファベット及び数字を網羅するのに十分な数より多い 128
+      のキャラクターを表している。今日においても、ASCII はコンピューターで使われるキャラクタースキームの標準的なものである。</para>
+
+      <para>国際的にもっと都合よく、そして若干内輪向けの記号文字を含めるために、つづくバージョンでは 256 のキャラクターを規定した。
+      このエンコードの仕様だと一文字はきっちり 1 バイトに収まるが、明らかに、256 キャラクターというのは、
+      いろいろな言語で用いる全ての文字を一つのキャラクターに一対一対応させるのに依然十分ではなかった。</para>
+
+      <para>結果的には後にローカライズされたキャラクターセットが規定された。例えば ISO-8859 キャラクターセットである。
+      ほとんどのオペレーティングシステムベンダーは自らの要求を満たすために、独自のキャラクターセットを導入した。すなわち IBM であれば
+      <emphasis>コードページ 437 (DOSLatinUS)</emphasis>、アップルは
+      <emphasis>MacRoman</emphasis><indexterm>
+          <primary>MacRoman</primary>
+
+          <secondary>MacRoman charset</secondary>
+        </indexterm> コードページ、などである。127
+      以上のキャラクターが定義されているものを<emphasis>拡張</emphasis> キャラクターと呼ぶ。
+      これらのキャラクターセットは異なるキャラクターに同じ番号をふってあるので、
+      他のキャラクターセットとまたはキャラクターセット同士で衝突を起こす。</para>
+
+      <para>そういったキャラクターセットのほぼ全てが 256 個のキャラクターを定義していて、最初の 128 個（0 から 127
+      まで）のキャラクターを ASCII と同一対応となるようにしている。結果的に、違ったコードページを使っているシステム同士の通信では、事実上
+      ASCII キャラクターセット限定となった。</para>
+
+      <para>この問題を新たに解決するために、より大きいキャラクターセットが規定された。より多くのキャラクターマッピングの場所を確保するために、
+      これらのキャラクターセットは一つのキャラクターの格納のために最低でも 2 バイトを使用する。
+      このためそういったキャラクターセットは<emphasis>マルチバイト</emphasis> キャラクターセットと呼ばれる。</para>
+
+      <para>標準化されたマルチバイトキャラクターエンコード方式として知られているものの一つとして <ulink
+      url="http://www.unicode.org/">ユニコード</ulink>がある。
+      マルチバイトキャラクターセット使用の大きな利点として“それ一つで済む”がある。
+      二つのコンピューターが通信しているときに両者が同じキャラクターセットを使用しているか確認する必要がない。</para>
+    </sect2>
+
+    <sect2>
+      <title>Apple で使われている（使われていた）キャラクターセット</title>
+
+      <para>過去に Apple クライアントは、ネットワーク間の通信のためにシングルバイトのキャラクターセットを使用していた。
+      年を経るに従い、Apple はいくつものキャラクターセットを定義したが、欧米ユーザーは
+      <emphasis>MacRoman</emphasis> コードセットを最もよく使用するであろう。</para>
+
+      <para>Apple の定義したコードページに含まれるもの：</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>MacArabic, MacFarsi</para>
+        </listitem>
+
+        <listitem>
+          <para>MacCentralEurope</para>
+        </listitem>
+
+        <listitem>
+          <para>MacChineseSimple</para>
+        </listitem>
+
+        <listitem>
+          <para>MacChineseTraditional</para>
+        </listitem>
+
+        <listitem>
+          <para>MacCroatian</para>
+        </listitem>
+
+        <listitem>
+          <para>MacCyrillic</para>
+        </listitem>
+
+        <listitem>
+          <para>MacDevanagari</para>
+        </listitem>
+
+        <listitem>
+          <para>MacGreek</para>
+        </listitem>
+
+        <listitem>
+          <para>MacHebrew</para>
+        </listitem>
+
+        <listitem>
+          <para>MacIcelandic</para>
+        </listitem>
+
+        <listitem>
+          <para>MacJapanese</para>
+        </listitem>
+
+        <listitem>
+          <para>MacKorean</para>
+        </listitem>
+
+        <listitem>
+          <para>MacRoman</para>
+        </listitem>
+
+        <listitem>
+          <para>MacRomanian</para>
+        </listitem>
+
+        <listitem>
+          <para>MacThai</para>
+        </listitem>
+
+        <listitem>
+          <para>MacTurkish</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Mac OS X 以降そして AFP3 以降では <ulink
+      url="http://www.utf-8.com/">UTF-8</ulink> が用いられる。UTF-8 は Unicode キャラクターを
+      ASCII 互換のやり方でエンコードする。各々の Unicode キャラクターは一個から六個の ASCII キャラクターにエンコードされる。
+      故に、UTF-8 自体が本当のキャラクターセットなのではなく、ユニコードキャラクターセットのエンコーディングなのである。</para>
+
+      <para>厄介なことにも Unicode はいくつかの <emphasis> <ulink
+      url="http://www.unicode.org/reports/tr15/index.html">normalization（正規化）</ulink>
+      </emphasis>方式を規定している。<ulink
+      url="http://www.samba.org">Samba</ulink><indexterm>
+          <primary>Samba</primary>
+        </indexterm> はほとんどの Unix ツールも好んで用いる
+      <emphasis>precomposed</emphasis><indexterm>
+          <primary>Precomposed</primary>
+
+          <secondary>Precomposed Unicode normalization</secondary>
+        </indexterm> Unicode を使用する。一方 Apple は
+      <emphasis>decomposed</emphasis><indexterm>
+          <primary>Decomposed</primary>
+
+          <secondary>Decomposed Unicode normalization</secondary>
+        </indexterm> normalization を使うことに決めた。</para>
+
+      <para>例として、ドイツ語の文字 '<keycode>ä</keycode>' についてみてみる。Precomposed
+      normalization を使えば Unicode はこの文字に 0xE4 を対応付ける。Decomposed normalization
+      では 'ä' を正確には 0x61 と 0x308 の二つの文字に対応付ける。0x61 は 'a' に、0x308 は
+      <emphasis>COMBINING DIAERESIS</emphasis>（訳注：いわゆるウムラウト）に対応付けられている。</para>
+
+      <para>Netatalk では precomposed UTF-8 を
+      <emphasis>UTF8</emphasis><indexterm>
+          <primary>UTF8</primary>
+
+          <secondary>Netatalk の precomposed UTF-8 エンコーディング</secondary>
+        </indexterm> と、decomposed UTF-8 を
+      <emphasis>UTF8-MAC</emphasis><indexterm>
+          <primary>UTF8-MAC</primary>
+
+          <secondary>Netatalk の decomposed UTF-8 エンコーディング</secondary>
+        </indexterm> と呼ぶ。</para>
+    </sect2>
+
+    <sect2>
+      <title>afpd とキャラクターセット</title>
+
+      <para>新しい AFP 3.x クライアントも古い AFP 2.x クライアントも同時にサポートするために、afpd
+      は使われている様々なキャラクターセット間の変換が可能であることを必要とした。AFP 3.x クライアントは常に UTF8-MAC を、AFP
+      2.x クライアントは Apple コードページのうちの一つを使う。</para>
+
+      <para>本稿執筆時点（訳注：原文の）で、netatalk は以下の Apple コードページをサポートしている：</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>MAC_CENTRALEUROPE</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_CHINESE_SIMP</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_CHINESE_TRAD</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_CYRILLIC</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_GREEK</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_HEBREW</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_JAPANESE</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_KOREAN</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_ROMAN</para>
+        </listitem>
+
+        <listitem>
+          <para>MAC_TURKISH</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>afpd は三つの異なるキャラクターセットオプションを扱う：</para>
+
+      <variablelist>
+        <varlistentry>
+          <term>unix charset<indexterm>
+              <primary>unix charset</primary>
+
+              <secondary>afpd の unix charset セッティング</secondary>
+            </indexterm></term>
+
+          <listitem>
+            <para>これはオペレーティングシステムの内側で使われているコードページである。もし指定されていなければ、デフォルトで
+            <option>UTF8</option> になる。もし <option>LOCALE</option> が指定されていて、
+            システムが Unix locales をサポートしていれば、afpd はコードページを検出しようとし、afpd
+            は検出したコードページを使って設定ファイルを読む。なので、ボリューム名やログインメッセージなどに拡張文字を使うことができる。
+            <citerefentry>
+                <refentrytitle>afp.conf</refentrytitle>
+
+                <manvolnum>5</manvolnum>
+              </citerefentry> を参照のこと。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>mac charset<indexterm>
+              <primary>mac charset</primary>
+
+              <secondary>afpd の mac charset セッティング</secondary>
+            </indexterm></term>
+
+          <listitem>
+            <para>既に述べたように、旧式の Mac OS クライアント（AFP 2.2 までのもの）は afpd
+            と通信するのにコードページを用いる。しかしながら、AFP
+            プロトコルにはクライアントが使用しているコードページの折り合いをつけるというサポートはない。もしほかのどこかで指定されていないと、
+            afpd は <emphasis>MacRoman</emphasis> コードページが使われていると仮定する。
+            クライアントが別のコードページ、例えば <emphasis>MacCyrillic</emphasis> を使っていたならば,
+            それを明示的に設定<emphasis role="bold">しなければならない</emphasis>だろう。
+            <citerefentry>
+                <refentrytitle>afp.conf</refentrytitle>
+
+                <manvolnum>5</manvolnum>
+              </citerefentry> を参照のこと。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>vol charset<indexterm>
+              <primary>vol charset</primary>
+
+              <secondary>afpd の vol charset セッティング</secondary>
+            </indexterm></term>
+
+          <listitem>
+            <para>これは afpd がディスク上のファイル名として使うべき charset を定義する。デフォルトでは
+            <option>unix charset</option> と同じである。もし <ulink
+            url="http://www.gnu.org/software/libiconv/">iconv</ulink><indexterm>
+                <primary>Iconv</primary>
+
+                <secondary>iconv エンコーディング変換エンジン</secondary>
+              </indexterm> がインストールしてあるならば、iconv
+            が提供するキャラクターセットも使用することができる。</para>
+
+            <para>afpd はファイルを unix のファイルシステムに保存する時、拡張マッキントッシュキャラクター、あるいは
+            unix のファイル名として不正なキャラクターを保持する手段が必要である。初期のバージョンでは、いわゆる CAP
+            エンコーディング<indexterm>
+                <primary>CAP エンコーディング</primary>
+
+                <secondary>CAP スタイルキャラクターエンコーディング</secondary>
+              </indexterm>を使った。拡張キャラクター (&gt;0x7F) は :xx の 16
+            進数に変換される。例えば、アップルのロゴ (MacRoman: 0xF0) は :f0 として保存される。
+            いくつかの特殊なキャラクターも :xx という表記に変換される。'/' は :2f にエンコードされる。もし、
+            <option>usedots</option> オプションが設定されていなければ、先頭のピリオド '.' は :2e
+            にエンコードされる。</para>
+
+            <para>本ドキュメントでのバージョンではファイル名のデフォルトエンコーディングとして <option>UTF8</option>
+            を使っているにもかかわらず、'/' は ':' に変換される。欧米のユーザーにとって別の有用な設定として <option>vol
+            charset = ISO-8859-15</option> もあり得る。</para>
+
+            <para>もし、あるキャラクターが <option>mac charset</option> から選定した <option>vol
+            charset</option> への変換ができない場合、マック上で -50 エラーを受け取るだろう。
+            <emphasis>注意</emphasis>： 可能な限り常に、デフォルトの UTF8 ボリュームフォーマットにしてください。
+            <citerefentry>
+                <refentrytitle>afp.conf</refentrytitle>
+
+                <manvolnum>5</manvolnum>
+              </citerefentry> を参照のこと。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="authentication">
+    <title>認証<indexterm>
+        <primary>認証</primary>
+
+        <secondary>AFP クライアントとサーバー間の</secondary>
+      </indexterm></title>
+
+    <sect2>
+      <title>AFP 認証の基本</title>
+
+      <para>Apple は AFP クライアントとサーバー間の認証のために "User Authentication Modules"
+      <indexterm>
+          <primary>UAM</primary>
+
+          <secondary>User Authentication Module</secondary>
+        </indexterm> (UAM) と呼ばれる柔軟なモデルを選んだ。AFP クライアントがまず最初に AFP サーバーと接続するとき、
+      サーバーが提供している UAM のリストを問い合わせる。そして、クライアントがサポートしている最も強い暗号化の UAM を選ぶ。</para>
+
+      <para>数個の UAM は時間をかけて Apple が開発してものであり、サードパーティの開発者によるものもある。</para>
+    </sect2>
+
+    <sect2>
+      <title>Netatalk でサポートされている UAM</title>
+
+      <para>Netatalk はデフォルトで以下のものをサポートしている：</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>"No User Authent"<indexterm>
+              <primary>No User Authent</primary>
+
+              <secondary>“ユーザー認証なし”UAM（ゲストアクセス）</secondary>
+            </indexterm> UAM（ユーザー認証なしのゲスト接続）</para>
+        </listitem>
+
+        <listitem>
+          <para>"Cleartxt Passwrd"<indexterm>
+              <primary>Cleartxt Passwrd</primary>
+
+              <secondary>“クリアテキスト(平文)パスワード”UAM</secondary>
+            </indexterm> UAM（クリアテキスト(平文)パスワード、暗号化なし）</para>
+        </listitem>
+
+        <listitem>
+          <para>"Randnum exchange"<indexterm>
+              <primary>Randnum exchange</primary>
+
+              <secondary>"Randnum exchange" UAM</secondary>
+            </indexterm>、"2-Way Randnum exchange"<indexterm>
+              <primary>2-Way Randnum exchange</primary>
+
+              <secondary>“双方向乱数交換”UAM</secondary>
+            </indexterm> UAM （乱数交換・双方向乱数交換、弱いパスワード暗号化、パスワードを別途保存する）</para>
+        </listitem>
+
+        <listitem>
+          <para>"DHCAST128"<indexterm>
+              <primary>DHCAST128</primary>
+
+              <secondary>"DHCAST128" UAM</secondary>
+            </indexterm> UAM（より強いパスワード暗号化）</para>
+        </listitem>
+
+        <listitem>
+          <para>"DHX2"<indexterm>
+              <primary>DHX2</primary>
+
+              <secondary>"DHX2" UAM</secondary>
+            </indexterm> UAM（DHCAST128 の後継版）</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>他にもオプションとして以下のような UAM がある：</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>"PGPuam 1.0"<indexterm>
+              <primary>PGPuam 1.0</primary>
+
+              <secondary>"PGPuam 1.0" UAM</secondary>
+            </indexterm><indexterm>
+              <primary>uams_pgp.so</primary>
+
+              <secondary>"PGPuam 1.0" UAM</secondary>
+            </indexterm> UAM（Mac OS X 以前のクライアント用、PGP ベースの認証。これを動作させようとするには
+          <ulink url="http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
+          クライアント</ulink>も別途必要である。</para>
+
+          <para>この UAM を有効にするためには、configure オプションに
+          <filename>"enable-pgp-uam"</filename> を追加しなければならない。</para>
+        </listitem>
+
+        <listitem>
+          <para>"Client Krb v2"<indexterm>
+              <primary>Client Krb v2</primary>
+
+              <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
+            </indexterm> UAM （Kerberos V、OS X
+          で“シングルサインオン”環境には最も適当である――下記参照）</para>
+
+          <para><filename>"enable-krbV-uam"</filename> オプションでこの UAM
+          を使用できるようになるであろう。</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>"<option>uam list</option>" を <option>Global</option>
+      セクションで定義することによって、どの UAM を有効化すべきか設定できる。<command>afpd</command> はどの UAM
+      を使っているのか、UAM を有効化した時に問題が起こっているのかどうかを、<filename>netatalk.log</filename>
+      あるいは起動時の syslog にログとして保存する。<citerefentry>
+          <refentrytitle>asip-status</refentrytitle>
+
+          <manvolnum>1</manvolnum>
+        </citerefentry> も AFP サーバーで有効な UAM の問い合わせをするのに使うことができる。</para>
+
+      <para>ある特定の UAM がサーバー上で有効であるということが、直ちに、
+      クライアントもそれを使うことができるということを意味するわけではない。クライアント側でのサポートもまた必要である。Mac OS X
+      以前が使われている古いマッキントッシュでも、DHCAST128 のサポートは AppleShare クライアント 3.8.x
+      以降には存在している。</para>
+
+      <para>OS X では、AFP クライアントをもっと冗長にするクライアント側のテクニックがいくつかあるので、使用する UAM
+      と折り合いをつけるまでに何が起こっているのか見ることができる。<ulink
+      url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">このヒント</ulink>
+      と比較してみるとよい。</para>
+    </sect2>
+
+    <sect2>
+      <title>どの UAM を有効にすべきか？</title>
+
+      <para>第一義的には“何が必要か”と “サポートしようと考えている MAC OS のバージョンの種類”に依存する。
+      基本的にはそのパスワード暗号化の強力さから、可能な限り DHCAST128 および DHX2 を試すべきである。</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>サーバーのボリュームに本当にゲストアクセスを供することが必要な場合以外は、"No User Authent"
+          が無効化されているか確認すべきである。さもないと、意図しない権限のないアクセスを引き起こすことにもなる。
+          ゲストアクセスを有効にしなければならない場合は、アクセスコントロールを使って、
+          ボリューム各々についてゲストアクセスを有効化することを強制するように気を配るべきである。</para>
+        </listitem>
+
+        <listitem>
+          <para>"ClearTxt Passwrd" UAM ではパスワードがネットワーク上を暗号化されずに伝わっていくので、
+          字句そのまんまに良くない。クライアント側のみならずサーバー側でも無効にするよう務めるべきである。注意：もし NetBoot
+          サービスを使用している Mac OS 8/9 にサービスを提供したい場合、cleartext.so の UAM が必要となる。
+          これはそういった Mac のファームウエアに組み込まれた AFP
+          クライアントがこうした基本的な形の認証しか扱わないためである。</para>
+        </listitem>
+
+        <listitem>
+          <para>"Randnum exchange" と "2-Way Randnum exchange" は 56 ビット DES
+          暗号化しか使わないので、これらもやはり回避すべきである。
+          そしてなおかつ不利なのは、パスワードがサーバーに平文テキストとして保存されなければならないこと、および PAM 環境とも古典的な
+          /etc/shadow とも統合がとれない （もしクライアントがこれらの UAM を使わなければならない場合、<citerefentry>
+              <refentrytitle>afppasswd</refentrytitle>
+
+              <manvolnum>1</manvolnum>
+            </citerefentry> ユーティリティを使って別途パスワードを管理しなければならない）という点である。</para>
+        </listitem>
+
+        <listitem>
+          <para>"DHCAST128" あるいは "DHX2" は PAM との統合と強力な暗号化とが組み合わせられているので、
+          ほとんどの人々にとって良い妥協案であろう。</para>
+        </listitem>
+
+        <listitem>
+          <para>Kerberos V<indexterm>
+              <primary>Kerberos V</primary>
+
+              <secondary>"Client Krb v2" UAM</secondary>
+            </indexterm> ("Client Krb v2") UAM を用いれば、Kerberos
+          チケットを用いて真のシングルサインオン環境を実装することが可能である。パスワードがネットワークを通して送られることもない。
+          その代わり、ユーザーのパスワードは appleshare サーバーへのサービスチケットを暗号から復号するのに用いられる。
+          サービスチケットにはクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる （それは appleshare
+          サーバーだけが復号できる）。サービスチケットの暗号化された部分がサーバーに送られ、ユーザーを認証するのに使われる。afpd
+          サービスプリンシパル検知の実装の仕方のために、この認証方法は中間者攻撃に対して脆弱である。</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>様々な UAM の技術的実装についてのより詳細な概要については、Apple の <ulink
+      url="http://developer.apple.com/library/mac/#documentation/Networking/Conceptual/AFP/AFPSecurity/AFPSecurity.html#//apple_ref/doc/uid/TP40000854-CH232-SW1">File
+      Server Security</ulink> ページを見ていただきたい。</para>
+    </sect2>
+
+    <sect2>
+      <title>特定の UAM で別の認証ソースを使う</title>
+
+      <para>いくつかの UAM は別の認証“バックエンド”を使えるようにしてある。いわゆる
+      <filename>uams_cleartext.so</filename>、<filename>uams_dhx.so</filename>
+      及び <filename>uams_dhx2.so</filename>である。これらは
+      <filename>/etc/passwd</filename> (<filename>/etc/shadow</filename>)
+      からの古典的 Unix パスワードでも、システムがサポートしていれば　PAM でもどちらでも使うことができる。
+      <filename>uams_cleartext.so</filename> は
+      <filename>uams_passwd.so</filename> ないしは
+      <filename>uams_pam.so</filename> へのシンボリックリンクとして、
+      <filename>uams_dhx.so</filename> は
+      <filename>uams_dhx_passwd.so</filename> ないしは
+      <filename>uams_dhx_pam.so</filename> へのシンボリックリンクとして、さらには
+      <filename>uams_dhx2.so</filename> は
+      <filename>uams_dhx2_passwd.so</filename> ないしは
+      <filename>uams_dhx2_pam.so</filename>へのシンボリックリンクとすることができる。</para>
+
+      <para>なので、もし Netatalk の UAM フォルダー（デフォルトで
+      <filename>/etc/netatalk/uams/</filename>）が以下のようであれば： <programlisting>uams_clrtxt.so -&gt; uams_pam.so
+uams_dhx.so -&gt; uams_dhx_pam.so
+uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典的な Unix
+      パスワードを使用しているわけである。PAM を使用することで最も有利なのは、例えば LDAP 経由、あるいは NIS
+      経由などの集約した認証環境に Netatalk を統合できることである。そのような環境でのユーザーのログイン資格情報
+      (credentials) の保護は、UAM そのものが供している暗号化の強さにもまた依存している。
+      ということを常に念頭においていただきたい。なので、"ClearTxt Passwrd" や "Randnum exchange" のような弱い
+      UAM をネットワーク上から 完全に除去することを考えるべきである。</para>
+    </sect2>
+
+    <sect2>
+      <title>Netatalk UAM を概要表</title>
+
+      <para>最も一般的に用いられる UAM の概観。</para>
+
+      <table orient="land">
+        <title>Netatalk UAM 概観</title>
+
+        <tgroup align="center" cols="7">
+          <colspec colname="col1" colnum="1" colwidth="0.5*"/>
+
+          <colspec colname="uam_guest" colnum="2" colwidth="1*"/>
+
+          <colspec colname="uam_clrtxt" colnum="3" colwidth="1*"/>
+
+          <colspec colname="uam_randnum" colnum="4" colwidth="1*"/>
+
+          <colspec colname="uam_dhx" colnum="5" colwidth="1*"/>
+
+          <colspec colname="uam_dhx2" colnum="6" colwidth="1*"/>
+
+          <colspec colname="uam_gss" colnum="7" colwidth="1*"/>
+
+          <tbody>
+            <row>
+              <entry align="center" rotate="0" valign="middle">UAM</entry>
+
+              <entry>No User Authent<indexterm>
+                  <primary>uams_guest.so</primary>
+
+                  <secondary>“ユーザー認証なし”UAM（ゲストアクセス）</secondary>
+                </indexterm></entry>
+
+              <entry>Cleartxt Passwrd<indexterm>
+                  <primary>uams_cleartxt.so</primary>
+
+                  <secondary>“クリアテキスト(平文)パスワード”UAM</secondary>
+                </indexterm></entry>
+
+              <entry>(2-Way) Randnum exchange<indexterm>
+                  <primary>uams_randnum.so</primary>
+
+                  <secondary>“（双方向）乱数交換”UAM</secondary>
+                </indexterm></entry>
+
+              <entry>DHCAST128<indexterm>
+                  <primary>uams_dhx.so</primary>
+
+                  <secondary>"DHCAST128" UAM</secondary>
+                </indexterm></entry>
+
+              <entry>DHX2<indexterm>
+                  <primary>uams_dhx2.so</primary>
+
+                  <secondary>"DHX2" UAM</secondary>
+                </indexterm></entry>
+
+              <entry>Client Krb v2<indexterm>
+                  <primary>uams_gss.so</primary>
+
+                  <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
+                </indexterm></entry>
+            </row>
+
+            <row>
+              <entry align="center" rotate="0" valign="middle">パスワード長</entry>
+
+              <entry>ゲストアクセス</entry>
+
+              <entry>最大 8 文字</entry>
+
+              <entry>最大 8 文字</entry>
+
+              <entry>最大 64 文字</entry>
+
+              <entry>最大 256 文字</entry>
+
+              <entry>Kerberos チケット</entry>
+            </row>
+
+            <row>
+              <entry align="center" rotate="0"
+              valign="middle">サポートするクライアント</entry>
+
+              <entry>全ての Mac OS のバージョンで組み込み済</entry>
+
+              <entry>10.0 を除く全ての Mac OS のバージョンで組み込み済。
+              最近のバージョンでは明示的にアクティブ化する必要がある。</entry>
+
+              <entry>ほとんど全ての Mac OS のバージョンで組み込み済</entry>
+
+              <entry>AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では Mac OS X の AFP
+              クライアントに統合したプラグインとしての用意あり。</entry>
+
+              <entry>Mac OS X 10.2 より組み込み済</entry>
+
+              <entry>Mac OS X 10.2 より組み込み済</entry>
+            </row>
+
+            <row>
+              <entry align="center" rotate="0" valign="middle">暗号化</entry>
+
+              <entry>クライアント・サーバー間で認証なくゲストアクセス可能。</entry>
+
+              <entry>パスワードがネットワーク上を暗号化されずに伝わっていく。
+              字句そのままに悪いので、可能ならば全面的に使用を回避すべき （注意：NetBoot サービスの提供には ClearTxt UAM
+              が必要）</entry>
+
+              <entry>DES, 56 ビットに相当する 8 バイトの乱数がネットワーク上に送出。オフラインの辞書攻撃に対して脆弱。
+              パスワードがサーバー上で平文であることが求められる。</entry>
+
+              <entry>パスワードは 128 ビット SSL で暗号化され、ユーザーはサーバーに認証されるが、“逆もまた真”ではない。
+              このため中間者攻撃に対して弱い。</entry>
+
+              <entry>パスワードは libgcrypt の CAST 128、CBC モードを用いて暗号化される。
+              ユーザーはサーバーに認証されるが、“逆もまた真”ではない。このため中間者攻撃に対して弱い。</entry>
+
+              <entry>パスワードがネットワークを通して送られることがない。サービスプリンシパル検知の方法が原因で、
+              この認証方法は中間者攻撃に対して脆弱である。</entry>
+            </row>
+
+            <row>
+              <entry align="center" rotate="0"
+              valign="middle">サーバーがサポートする共有オブジェクト</entry>
+
+              <entry align="center" valign="middle">uams_guest.so</entry>
+
+              <entry align="center" valign="middle">uams_cleartxt.so</entry>
+
+              <entry align="center" valign="middle">uams_randnum.so</entry>
+
+              <entry align="center" valign="middle">uams_dhx.so</entry>
+
+              <entry align="center" valign="middle">uams_dhx2.so</entry>
+
+              <entry align="center" valign="middle">uams_gss.so</entry>
+            </row>
+
+            <row>
+              <entry align="center" rotate="0"
+              valign="middle">パスワードの保管方法</entry>
+
+              <entry align="center" valign="middle">なし</entry>
+
+              <entry align="center" valign="middle">/etc/passwd (/etc/shadow)
+              ないしは PAM</entry>
+
+              <entry align="center"
+              valign="middle">パスワードは別のテキストファイルに平文として保存される</entry>
+
+              <entry align="center" valign="middle">/etc/passwd (/etc/shadow)
+              ないしは PAM</entry>
+
+              <entry align="center" valign="middle">/etc/passwd (/etc/shadow)
+              ないしは PAM</entry>
+
+              <entry align="center" valign="middle">Kerberos キー配布センター*</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>* <ulink
+      url="https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
+      概要</ulink> も一読のこと</para>
+    </sect2>
+
+    <sect2 id="sshtunnel">
+      <title>SSH トンネリング</title>
+
+      <para>トンネリングや VPN のたぐいのもの全ては、AFP 認証や UAM に関してすべきことは概ね皆無である。
+      しかしながらアップルが「SSHを用いて安全な接続を可能にする」というオプションを導入して以来、
+      多数の人が両者について混乱する傾向にある。以下ではその点についても述べる。</para>
+
+      <sect3 id="manualsshtunnel">
+        <title>手動で AFP セッションをトンネリング</title>
+
+        <para>これは、"AFP over TCP" を“話すことができる”最初の AFP
+        サーバーがネットワークに登場して以来うまく動作する。リモートサーバーの AFP ポートをローカルの 548
+        番以外の異なるポートにトンネルし、その後ローカルでこのポートににつなげるだけである。OS X では以下のようにすればよい。</para>
+
+        <programlisting>ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000</programlisting>
+
+        <para>トンネルを確立したならば、“サーバーに接続”ダイアログで
+        <filename>"afp://127.0.0.1:10548"</filename> を使うことができる。ローカルの AFP
+        クライアントは Mac のローカル 10548 番ポートに接続し、そのポートは SSH を通してリモートサーバーの AFP
+        ポート（デフォルトでは 548 番を使う）に転送されているので、端緒の接続試行も含めて全ての AFP
+        トラフィックがネットワークを暗号化されて送られる。</para>
+
+        <para>この手のトンネルは、もし、“真の” VPN を使えないが、インターネットを通じて、弱い認証機構しかない AFP
+        サーバーにアクセスしなければならない場合の理想的な解決手段である。<command>ssh</command> の "-C"
+        オプションでデータ圧縮が可能であり、トンネルの端点を AFP クライアント、サーバーどちらとも異なるようにすることが可能である
+        （詳細については SSH のドキュメントと比較してほしい）という点に留意すべきである。</para>
       </sect3>
 
-      <sect3>
-        <title>Netatalk でサポートされている UAM</title>
+      <sect3 id="autosshtunnel">
+        <title>自動的にトンネル AFP 接続を確立する</title>
 
-        <para>Netatalk はデフォルトで以下のものをサポートしている：</para>
+        <para>Apple は Mac OS X 10.2 から 10.4 で、「サーバーに接続」ダイアログに
+        「SSHを用いて安全な接続を可能にする」チェックボックスを追加した。この考えの裏にあるのは：サーバーが SSH
+        で接続できるというサインを出した時、Mac OS X の AFP クライアントはトンネルを確立しようとし、自動的に全ての AFP
+        トラフィックをこのトンネルを通して送る。ということなのである。</para>
 
-        <itemizedlist>
-          <listitem>
-            <para>"No User Authent"<indexterm>
-                <primary>No User Authent</primary>
+        <para>しかし、この機能が初めて…部分的に、動作するようになるのに Mac OS X 10.3 までかかった。SSH
+        トンネルが確立できない時、AFP クライアントは<emphasis
+        role="strong">何の通知もなく</emphasis>暗号化していない AFP 接続試行にフォールバックした。</para>
 
-                <secondary>“ユーザー認証なし”UAM（ゲストアクセス）</secondary>
-              </indexterm> UAM（ユーザー認証なしのゲスト接続）</para>
-          </listitem>
-
-          <listitem>
-            <para>"Cleartxt Passwrd"<indexterm>
-                <primary>Cleartxt Passwrd</primary>
-
-                <secondary>“クリアテキスト(平文)パスワード”UAM</secondary>
-              </indexterm> UAM（クリアテキスト(平文)パスワード，暗号化なし）</para>
-          </listitem>
-
-          <listitem>
-            <para>"Randnum exchange"<indexterm>
-                <primary>Randnum exchange</primary>
-
-                <secondary>"Randnum exchange" UAM</secondary>
-              </indexterm>，"2-Way Randnum exchange"<indexterm>
-                <primary>2-Way Randnum exchange</primary>
-
-                <secondary>“双方向乱数交換”UAM</secondary>
-              </indexterm> UAM
-            （乱数交換・双方向乱数交換，弱いパスワード暗号化，パスワードを別途保存する）</para>
-          </listitem>
-
-          <listitem>
-            <para>"DHCAST128"<indexterm>
-                <primary>DHCAST128</primary>
-
-                <secondary>"DHCAST128" UAM</secondary>
-              </indexterm> UAM（より強いパスワード暗号化）</para>
-          </listitem>
-
-          <listitem>
-            <para>"DHX2"<indexterm>
-                <primary>DHX2</primary>
-
-                <secondary>"DHX2" UAM</secondary>
-              </indexterm> UAM（DHCAST128 の後継版）</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>他にもオプションとして以下のような UAM がある：</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>"PGPuam 1.0"<indexterm>
-                <primary>PGPuam 1.0</primary>
-
-                <secondary>"PGPuam 1.0" UAM</secondary>
-              </indexterm><indexterm>
-                <primary>uams_pgp.so</primary>
-
-                <secondary>"PGPuam 1.0" UAM</secondary>
-              </indexterm> UAM（Mac OS X 以前のクライアント用，PGP ベースの認証．
-            これを動作させようとするには <ulink
-            url="http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
-            クライアント</ulink>も別途必要である．</para>
-
-            <para>この UAM を有効にするためには，configure オプションに 
-            <filename>"--enable-pgp-uam"</filename> を追加しなければならない．</para>
-          </listitem>
-
-          <listitem>
-            <para>"Kerberos IV"<indexterm>
-                <primary>Kerberos IV</primary>
-
-                <secondary>"Kerberos IV" UAM</secondary>
-              </indexterm><indexterm>
-                <primary>uams_krb4.so</primary>
-
-                <secondary>"Kerberos IV" UAM</secondary>
-              </indexterm>/"AFS Kerberos"<indexterm>
-                <primary>AFS Kerberos</primary>
-
-                <secondary>"AFS Kerberos" UAM (Kerberos IV)</secondary>
-              </indexterm> UAM
-            （<ulink url="http://web.mit.edu/macdev/KfM/Common/Documentation/faq.html">
-            Kerberos v4 ベースの認証</ulink>で AFS ファイルサーバーを使用するのに適している）
-            </para>
-
-            <para>この UAM を有効化するにはコンパイル時点で 
-            <filename>"--enable-krb4-uam"</filename> オプションを使用する．</para>
-          </listitem>
-
-          <listitem>
-            <para>"Client Krb v2"<indexterm>
-                <primary>Client Krb v2</primary>
-
-                <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
-              </indexterm> UAM
-            （Kerberos V，OS X で“シングルサインオン”環境には最も適当である――下記参照）</para>
-
-            <para><filename>"--enable-krbV-uam"</filename> 
-            オプションでこの UAM を使用できるようになるであろう．</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>"<option>uam list</option>" を <option>Global</option> 
-        セクションで定義することによって，どの UAM を有効化すべきか設定できる．
-        <command>afpd</command> はどの UAM を使っているのか，
-        UAM を有効化した時に問題が起こっているのかどうかを， <filename>netatalk.log</filename> 
-        あるいは起動時の syslog にログとして保存する．
+        <para>"<option>advertise ssh</option>" および "<option>fqdn</option>"
+        オプション両方を <option>Global</option> セクションで設定（設定を変更したら、afpd を再起動した後
         <citerefentry>
             <refentrytitle>asip-status</refentrytitle>
 
             <manvolnum>1</manvolnum>
-          </citerefentry>  
-        も AFP サーバーで有効な UAM の問い合わせをするのに使うことができる．</para>
-
-        <para>ある特定の UAM がサーバー上で有効であるということが，直ちに，
-        クライアントもそれを使うことができるということを意味するわけではない．
-        クライアント側でのサポートもまた必要である．
-        Mac OS X 以前が使われている古いマッキントッシュでも，
-        DHCAST128 のサポートは AppleShare クライアント 3.8.x 以降には存在している．</para>
-
-        <para>OS X では，
-        AFP クライアントをもっと冗長にするクライアント側のテクニックがいくつかあるので，
-        使用する UAM と折り合いをつけるまでに何が起こっているのか見ることができる．<ulink
-        url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">このヒント</ulink>
-        と比較してみるとよい．</para>
-      </sect3>
-
-      <sect3>
-        <title>どの UAM を有効にすべきか？</title>
-
-        <para>第一義的には“何が必要か”と
-        “サポートしようと考えている MAC OS のバージョンの種類”に依存する．
-        基本的にはそのパスワード暗号化の強力さから，
-        可能な限り DHCAST128 および DHX2 を試すべきである．</para>
+          </citerefentry> で二重チェックするべき）した時は、SSH トンネルした AFP リクエストの扱いが可能であることを
+        Netatalk の afpd はレポートする。しかし、このオプションを決して使用したくなくなる２、３の理由がある：</para>
 
         <itemizedlist>
           <listitem>
-            <para>サーバーのボリュームに本当にゲストアクセスを供することが必要な場合以外は，
-            "No User Authent" が無効化されているか確認すべきである．
-            さもないと，意図しない権限のないアクセスを引き起こすことにもなる．
-            ゲストアクセスを有効にしなければならない場合は，
-            アクセスコントロールを使って，
-            ボリューム各々についてゲストアクセスを有効化することを強制するように気を配るべきである．</para>
+            <para>こう言うような機能を必要とする大部分のユーザーは、 おそらく使い慣れている VPN はあるとしたら、
+            通常のVPNを使用して AFP サーバーが実行されているネットワークに接続し、 AFP
+            サーバーにアクセスする方が簡単だろう。</para>
+
+            <para>とはいっても、１台の AFP サーバーに接続するという単純なケースでは、 VPN より直接 SSH
+            接続の方がパフォーマンス的に良いだろう。噂と違って、SSH 経由のトンネリングでは、 いわゆる「TCP-over-TCP
+            メルトダウン」は発生しない。何故なら、トンネリングされるAFPデータが TCP
+            データをカプセル化していないためである。</para>
           </listitem>
 
           <listitem>
-            <para>"ClearTxt Passwrd" UAM 
-            ではパスワードがネットワーク上を暗号化されずに伝わっていくので，
-            字句そのまんまに良くない．
-            クライアント側のみならずサーバー側でも無効にするよう務めるべきである．
-            注意：もし NetBoot サービスを使用している Mac OS 8/9 にサービスを提供したい場合，
-            cleartext.so の UAM が必要となる．
-            これはそういった Mac のファームウエアに組み込まれた AFP クライアントがこうした基本的な形の認証しか扱わないためである．</para>
+            <para>このように SSH でその場をしのぐことは AFP 認証機構に直接統合された通常の UAM ではないし、
+            代わりにこの方法では、トンネルの確立を<emphasis role="strong">試行
+            </emphasis>できるのかどうなのかのサインをクライアントに送るために、単一のフラグを用いる。
+            このため、何かがおかしい時に何が起こっているのかを見ようとする気を失ってしまう。</para>
           </listitem>
 
           <listitem>
-            <para>"Randnum exchange" と "2-Way Randnum exchange" は 56 ビット DES 暗号化しか使わないので，
-            これらもやはり回避すべきである．
-            そしてなおかつ不利なのは，パスワードがサーバーに平文テキストとして保存されなければならないこと，
-            および PAM 環境とも古典的な /etc/shadow とも統合がとれない
-            （もしクライアントがこれらの UAM を使わなければならない場合，<citerefentry>
-                <refentrytitle>afppasswd</refentrytitle>
-
-                <manvolnum>1</manvolnum>
-              </citerefentry>
-            ユーティリティを使って別途パスワードを管理しなければならない）という点である．</para>
+            <para>全ての接続試行は localhost から行われているように見えるので、
+            <command>macusers</command> のような Netatalk ツールによって、
+            どのマシンがログオンしているのか制御ができない。</para>
           </listitem>
 
           <listitem>
-            <para>"DHCAST128" あるいは "DHX2" は PAM との統合と強力な暗号化とが組み合わせられているので，
-            ほとんどの人々にとって良い妥協案であろう．</para>
+            <para>実際、AFP セッションが全てが SSH で暗号化されていることを確実にしたい場合は、afpd へのアクセスを
+            localhost のみ発信される接続に制限する必要がある。たとえば、Wietse Venema の TCP
+            ラッパーを使用するか、適切なファイアウォールやパケットフィルタリング機能を使用するなど。</para>
+
+            <para>そうしなければ、10.2 から 10.3.3 を使っている場合は、予想とは逆に：
+            トンネルの確立に失敗したという通知一つもなく、ネットワーク上で暗号化されていない AFP
+            の通信（ログイン資格情報を含む）が起こりえるということである。Apple は Mac OS X 10.3.4
+            になってそれをはじめて修正した。</para>
           </listitem>
 
           <listitem>
-            <para>Kerberos V<indexterm>
-                <primary>Kerberos V</primary>
-
-                <secondary>"Client Krb v2" UAM</secondary>
-              </indexterm> 
-            ("Client Krb v2") UAM を用いれば，
-            Kerberos チケットを用いて真のシングルサインオン環境を実装することが可能である．
-            パスワードがネットワークを通して送られることもない．
-            その代わり，ユーザーのパスワードは appleshare サーバーへのサービスチケットを暗号から復号するのに用いられる．
-            サービスチケットにはクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる
-            （それは appleshare サーバーだけが復号できる）．
-            サービスチケットの暗号化された部分がサーバーに送られ，ユーザーを認証するのに使われる．
-            afpd サービスプリンシパル検知の実装の仕方のために，この認証方法は中間者攻撃に対して脆弱である．</para>
+            <para>SSH 経由で全ての AFP セッションを暗号化するることは、Netatalk
+            サーバーの負荷の著しい上昇を招く可能性がある。
+            ユーザーが信頼できるネットワーク経由で接続している場合、そのような暗号化は無駄かもしれない。</para>
           </listitem>
         </itemizedlist>
-
-        <para>様々な UAM の技術的実装についてのより詳細な概要については，Apple の <ulink
-        url="http://developer.apple.com/library/mac/#documentation/Networking/Conceptual/AFP/AFPSecurity/AFPSecurity.html#//apple_ref/doc/uid/TP40000854-CH232-SW1">File
-        Server Security</ulink> ページを見ていただきたい．</para>
       </sect3>
-
-      <sect3>
-        <title>特定の UAM で別の認証ソースを使う</title>
-
-        <para>いくつかの UAM は別の認証“バックエンド”を使えるようにしてある．
-        いわゆる <filename>uams_cleartext.so</filename>，
-        <filename>uams_dhx.so</filename> 及び
-        <filename>uams_dhx2.so</filename>である．これらは
-        <filename>/etc/passwd</filename> 
-        (<filename>/etc/shadow</filename>) からの古典的 Unix パスワードでも，
-        システムがサポートしていれば　PAM でもどちらでも使うことができる．
-        <filename>uams_cleartext.so</filename> は <filename>uams_passwd.so</filename> ないしは
-        <filename>uams_pam.so</filename> へのシンボリックリンクとして，
-        <filename>uams_dhx.so</filename> は <filename>uams_dhx_passwd.so</filename> ないしは
-        <filename>uams_dhx_pam.so</filename> へのシンボリックリンクとして，さらには
-        <filename>uams_dhx2.so</filename> は <filename>uams_dhx2_passwd.so</filename> ないしは
-        <filename>uams_dhx2_pam.so</filename>へのシンボリックリンクとすることができる．</para>
-
-        <para>なので，もし Netatalk の UAM フォルダー（デフォルトで 
-        <filename>/etc/netatalk/uams/</filename>）が以下のようであれば：
-        <programlisting>uams_clrtxt.so -&gt; uams_pam.so
-uams_dhx.so -&gt; uams_dhx_pam.so
-uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting>
-        PAM さもなくば古典的な Unix パスワードを使用しているわけである．
-        PAM を使用することで最も有利なのは，
-        例えば LDAP 経由，あるいは NIS 経由などの集約した認証環境に Netatalk を統合できることである．
-        そのような環境でのユーザーのログイン資格情報 (credentials) の保護は，
-        UAM そのものが供している暗号化の強さにもまた依存している．
-        ということを常に念頭においていただきたい．
-        なので，"ClearTxt Passwrd" や "Randnum exchange" のような弱い UAM をネットワーク上から
-        完全に除去することを考えるべきである．</para>
-      </sect3>
-
-      <sect3>
-        <title>Netatalk UAM を概要表</title>
-
-        <para>最も一般的に用いられる UAM の概観．</para>
-
-        <table orient="land">
-          <title>Netatalk UAM 概観</title>
-
-          <tgroup align="center" cols="7">
-            <colspec colname="col1" colnum="1" colwidth="0.5*" />
-
-            <colspec colname="uam_guest" colnum="2" colwidth="1*" />
-
-            <colspec colname="uam_clrtxt" colnum="3" colwidth="1*" />
-
-            <colspec colname="uam_randnum" colnum="4" colwidth="1*" />
-
-            <colspec colname="uam_dhx" colnum="5" colwidth="1*" />
-
-            <colspec colname="uam_dhx2" colnum="6" colwidth="1*" />
-
-            <colspec colname="uam_gss" colnum="7" colwidth="1*" />
-
-            <tbody>
-              <row>
-                <entry align="center" rotate="0" valign="middle">UAM</entry>
-
-                <entry>No User Authent<indexterm>
-                    <primary>uams_guest.so</primary>
-
-                    <secondary>“ユーザー認証なし”UAM（ゲストアクセス）</secondary>
-                  </indexterm></entry>
-
-                <entry>Cleartxt Passwrd<indexterm>
-                    <primary>uams_cleartxt.so</primary>
-
-                    <secondary>“クリアテキスト(平文)パスワード”UAM</secondary>
-                  </indexterm></entry>
-
-                <entry>(2-Way) Randnum exchange<indexterm>
-                    <primary>uams_randnum.so</primary>
-
-                    <secondary>“（双方向）乱数交換”UAM</secondary>
-                  </indexterm></entry>
-
-                <entry>DHCAST128<indexterm>
-                    <primary>uams_dhx.so</primary>
-
-                    <secondary>"DHCAST128" UAM</secondary>
-                  </indexterm></entry>
-
-                <entry>DHX2<indexterm>
-                    <primary>uams_dhx2.so</primary>
-
-                    <secondary>"DHX2" UAM</secondary>
-                  </indexterm></entry>
-
-                <entry>Client Krb v2<indexterm>
-                    <primary>uams_gss.so</primary>
-
-                    <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
-                  </indexterm></entry>
-              </row>
-
-              <row>
-                <entry align="center" rotate="0" valign="middle">パスワード長</entry>
-
-                <entry>ゲストアクセス</entry>
-
-                <entry>最大 8 文字</entry>
-
-                <entry>最大 8 文字</entry>
-
-                <entry>最大 64 文字</entry>
-
-                <entry>最大 256 文字</entry>
-
-                <entry>Kerberos チケット</entry>
-              </row>
-
-              <row>
-                <entry align="center" rotate="0" valign="middle">サポートするクライアント</entry>
-
-                <entry>全ての Mac OS のバージョンで組み込み済</entry>
-
-                <entry>10.0 を除く全ての Mac OS のバージョンで組み込み済．
-                最近のバージョンでは明示的にアクティブ化する必要がある．</entry>
-
-                <entry>ほとんど全ての Mac OS のバージョンで組み込み済</entry>
-
-                <entry>AppleShare クライアント 3.8.4 より組み込み済で，
-                3.8.3 では Mac OS X の AFP クライアントに統合したプラグインとしての用意あり．</entry>
-
-                <entry>Mac OS X 10.2 より組み込み済</entry>
-
-                <entry>Mac OS X 10.2 より組み込み済</entry>
-              </row>
-
-              <row>
-                <entry align="center" rotate="0"
-                valign="middle">暗号化</entry>
-
-                <entry>クライアント・サーバー間で認証なくゲストアクセス可能．</entry>
-
-                <entry>パスワードがネットワーク上を暗号化されずに伝わっていく．
-                字句そのままに悪いので，可能ならば全面的に使用を回避すべき
-                （注意：NetBoot サービスの提供には ClearTxt UAM が必要）</entry>
-
-                <entry>DES, 56 ビットに相当する 8 バイトの乱数がネットワーク上に送出．
-                オフラインの辞書攻撃に対して脆弱．
-                パスワードがサーバー上で平文であることが求められる．</entry>
-
-                <entry>パスワードは 128 ビット SSL で暗号化され，
-                ユーザーはサーバーに認証されるが，“逆もまた真”ではない．
-                このため中間者攻撃に対して弱い．</entry>
-
-                <entry>パスワードは libgcrypt の CAST 128，CBC モードを用いて暗号化される．
-                ユーザーはサーバーに認証されるが，“逆もまた真”ではない．
-                このため中間者攻撃に対して弱い．</entry>
-
-                <entry>パスワードがネットワークを通して送られることがない．
-                サービスプリンシパル検知の方法が原因で，
-                この認証方法は中間者攻撃に対して脆弱である．</entry>
-              </row>
-
-              <row>
-                <entry align="center" rotate="0" valign="middle">
-                サーバーがサポートする共有オブジェクト
-                </entry>
-
-                <entry align="center" valign="middle">uams_guest.so</entry>
-
-                <entry align="center" valign="middle">uams_cleartxt.so</entry>
-
-                <entry align="center" valign="middle">uams_randnum.so</entry>
-
-                <entry align="center" valign="middle">uams_dhx.so</entry>
-
-                <entry align="center" valign="middle">uams_dhx2.so</entry>
-
-                <entry align="center" valign="middle">uams_gss.so</entry>
-              </row>
-
-              <row>
-                <entry align="center" rotate="0" valign="middle">パスワードの保管方法</entry>
-
-                <entry align="center" valign="middle">なし</entry>
-
-                <entry align="center" valign="middle">/etc/passwd (/etc/shadow) 
-                ないしは PAM</entry>
-
-                <entry align="center" valign="middle">
-                パスワードは別のテキストファイルに平文として保存される
-                </entry>
-
-                <entry align="center" valign="middle">/etc/passwd (/etc/shadow) 
-                ないしは PAM</entry>
-
-                <entry align="center" valign="middle">/etc/passwd (/etc/shadow) 
-                ないしは PAM</entry>
-
-                <entry align="center" valign="middle">Kerberos キー配布センター*</entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table>
-
-        <para>* <ulink
-        url="https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html">Kerberos
-        概要</ulink> も一読のこと</para>
-      </sect3>
-
-      <sect3 id="sshtunnel">
-        <title>SSH トンネリング</title>
-
-        <para>トンネリングや VPN のたぐいのもの全ては，
-        AFP 認証や UAM に関してすべきことは概ね皆無である．
-        しかしながらアップルが「SSHを用いて安全な接続を可能にする」というオプションを導入して以来，
-        多数の人が両者について混乱する傾向にある．以下ではその点についても述べる．</para>
-
-        <sect4 id="manualsshtunnel">
-          <title>手動で AFP セッションをトンネリング</title>
-
-          <para>これは，
-          "AFP over TCP" を“話すことができる”最初の AFP サーバーがネットワークに登場して以来うまく動作する．
-          リモートサーバーの AFP ポートをローカルの 548 番以外の異なるポートにトンネルし，
-          その後ローカルでこのポートににつなげるだけである．OS X では以下のようにすればよい．</para>
-
-          <programlisting>ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000</programlisting>
-
-          <para>トンネルを確立したならば，
-          “サーバーに接続”ダイアログで <filename>"afp://127.0.0.1:10548"</filename> 
-          を使うことができる．
-          ローカルの AFP クライアントは Mac のローカル 10548 番ポートに接続し，
-          そのポートは SSH を通してリモートサーバーの AFP ポート（デフォルトでは 548 番を使う）に転送されているので，
-          端緒の接続試行も含めて全ての AFP トラフィックがネットワークを暗号化されて送られる．</para>
-
-          <para>この手のトンネルは，もし，“真の” VPN を使えないが，インターネットを通じて，
-          弱い認証機構しかない AFP サーバーにアクセスしなければならない場合の理想的な解決手段である．
-          <command>ssh</command> の "-C" オプションでデータ圧縮が可能であり，
-          トンネルの端点を AFP クライアント，サーバーどちらとも異なるようにすることが可能である
-          （詳細については SSH のドキュメントと比較してほしい）という点に留意すべきである．</para>
-        </sect4>
-
-        <sect4 id="autosshtunnel">
-          <title>自動的にトンネル AFP 接続を確立する</title>
-
-          <para>Apple は Mac OS X 10.2 から 10.4 で，
-          「サーバーに接続」ダイアログに
-          「SSHを用いて安全な接続を可能にする」チェックボックスを追加した．
-          この考えの裏にあるのは：サーバーが SSH で接続できるというサインを出した時，
-          Mac OS X の AFP クライアントはトンネルを確立しようとし，
-          自動的に全ての AFP トラフィックをこのトンネルを通して送る．ということなのである．</para>
-
-          <para>しかし，この機能が初めて…部分的に，
-          動作するようになるのに Mac OS X 10.3 までかかった．
-          SSH トンネルが確立できない時，
-          AFP クライアントは<emphasis role="strong">何の通知もなく</emphasis>暗号化していない 
-          AFP 接続試行にフォールバックした．</para>
-
-          <para>"<option>advertise ssh</option>" および 
-          "<option>fqdn</option>" オプション両方を <option>Global</option> 
-          セクションで設定（設定を変更したら，afpd を再起動した後 <citerefentry>
-              <refentrytitle>asip-status</refentrytitle>
-
-              <manvolnum>1</manvolnum>
-            </citerefentry> で二重チェックするべき）した時は，
-          SSH トンネルした AFP リクエストの扱いが可能であることを Netatalk の afpd はレポートする．
-          しかし，このオプションを決して使用したくなくなる２，３の理由がある：</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="acls">
+    <title>ACL のサーポート<indexterm>
+        <primary>ACL</primary>
+      </indexterm></title>
+
+    <para>afp の ACL サポートは Solaris の ZFS ACL、派生したプラットフォーム、そして、Linux の POSIX 1e
+    ACL で実装されている。</para>
+
+    <sect2>
+      <title>環境設定</title>
+
+      <para>基本的な方式で運用するならば設定することは何もない。Netatalk は ACL をオンザフライで読み込み、そののちいわゆる
+      UARights<indexterm>
+          <primary>UARights</primary>
+        </indexterm> パーミションビット経由で AFP クライアントに送られる有効なパーミッションを算出する。
+      マック上では、これらのビットを Finder ウィンドウ内のパーミッションと調整するために Finder が使用する。例：UNIX
+      のモードでは書き込み専用だが ACL がユーザーに書き込み権限を与えているフォルダーは有効な読み書き権限を表示する。権限のマッピングなしに
+      Finder は読み込み専用アイコンを表示するだろうし、ユーザーはそのフォルダーに書き込みはできないであろう。</para>
+
+      <para>デフォルトでは、認証ユーザーに有効なパーミションは UNIX のモードではなく、前記 UARights<indexterm>
+          <primary>UARights</primary>
+        </indexterm> の機構のみに対応付けられる。この挙動は設定オプション <link linkend="map_acls">map
+      acls</link> で修正することができる。</para>
+
+      <para>しかしながら、Finder の“情報を見る”ウィンドウでもターミナルでも、ACL を見ることは不可能で、そこで見ているのは OS
+      X で ACL がどのように設計されたのかという結果である。もしクライアント上でも ACL
+      を表示させたいと思うならば、諸々を認証ドメイン（ディレクトリサービス、例えば、LDAP
+      やOpenDirectory）の一部と、より内包されているようにして、クライアント側でもサーバー側でもセットアップをおこなうべきである。
+      その理由は、OS X ACL が ただ、uid と gid だけでなく UUID と紐付いているためである。このため、afpd
+      は全てのファイルシステムの uid と git を UUID に紐付けできなければならない。そうすれば、afpd は OS X の UUID
+      に紐付けた UNIX uid と gid も含めたサーバー側の ACL を返すことができる。</para>
+
+      <para>Netatalk は LDAP クエリーを使ってディレクトリサーバーに問い合わせができる。ディレクトリサーバー（Active
+      Directory、Open Directory）が既にユーザーとグループの UUID 属性を提供している。
+      あるいはディレクトリサーバー（例えば
+      OpenLDAP）に使用されていない属性を再利用する（あるいは新たに追加する）のいずれかである。</para>
+
+      <para>より踏み込むと：</para>
+
+      <orderedlist>
+        <listitem>
+          <para>ZFS を使っている Solarisの ZFS ボリュームごとに対して、</para>
+
+          <para>Netatalk を使用したいと思っているあらゆるボリュームを ZFS ACL
+          がわかるように構成すべきである：</para>
+
+          <screen>aclinherit = passthrough
+aclmode = passthrough</screen>
+
+          <para>このひとひねりが何をするのか、どのように適用するのか、についての説明は、ホストの ZFS ドキュメンテーション（例えば
+          man zfs）を確認のこと。</para>
+        </listitem>
+
+        <listitem>
+          <para>認証ドメイン</para>
+
+          <para>サーバーとクライアントがセキュリティ連携の一部となっていて、ユーザー id
+          データは共通のソースから出てこなければならない。Darwin の ACL は UUID に基づいている。なので、AFP 3.2 での
+          ACL の仕様は Darwin の ACL である。故に id
+          データのソースは全てのユーザーとグループの属性を提供できなければならない。ここで UUID は ASCII
+          テキストとして保管されている。言い換えれば：</para>
 
           <itemizedlist>
             <listitem>
-              <para>こう言うような機能を必要とする大部分のユーザーは、
-              おそらく使い慣れている VPN はあるとしたら、
-              通常のVPNを使用して AFP サーバーが実行されているネットワークに接続し、
-              AFP サーバーにアクセスする方が簡単だろう．</para>
-
-              <para>とはいっても、１台の AFP サーバーに接続するという単純なケースでは、
-              VPN より直接 SSH 接続の方がパフォーマンス的に良いだろう．
-              噂と違って、SSH 経由のトンネリングでは、
-              いわゆる「TCP-over-TCP メルトダウン」は発生しない．
-              何故なら、トンネリングされるAFPデータが TCP データをカプセル化していないためである．</para>
+              <para>UUID を何らかの属性に保管している場合は Open Directory サーバーないしは LDAP
+              サーバーが必要である。</para>
             </listitem>
 
             <listitem>
-              <para>このように SSH でその場をしのぐことは AFP 認証機構に直接統合された通常の 
-              UAM ではないし，
-              代わりにこの方法では，
-              トンネルの確立を<emphasis role="strong">試行
-              </emphasis>できるのかどうなのかのサインをクライアントに送るために，
-              単一のフラグを用いる．
-              このため，何かがおかしい時に何が起こっているのかを見ようとする気を失ってしまう．</para>
+              <para>クライアントはこのサーバーを使用するように構成されていなければならない。</para>
             </listitem>
 
             <listitem>
-              <para>全ての接続試行は localhost から行われているように見えるので，
-              <command>macusers</command> のような Netatalk ツールによって，
-              どのマシンがログオンしているのか制御ができない．</para>
+              <para>サーバーは nsswitch と PAM 経由で使用されるよう構成しなければならない。</para>
             </listitem>
 
             <listitem>
-              <para>実際，AFP セッションが全てが SSH で暗号化されていることを確実にしたい場合は，
-              afpd へのアクセスを localhost のみ発信される接続に制限する必要がある．
-              たとえば，Wietse Venema の TCP ラッパーを使用するか，
-              適切なファイアウォールやパケットフィルタリング機能を使用するなど．</para>
-
-              <para>そうしなければ、10.2 から 10.3.3 を使っている場合は，予想とは逆に：
-              トンネルの確立に失敗したという通知一つもなく，
-              ネットワーク上で暗号化されていない AFP の通信（ログイン資格情報を含む）が起こりえるということである．
-              Apple は Mac OS X 10.3.4 になってそれをはじめて修正した．</para>
-            </listitem>
-
-            <listitem>
-              <para>SSH 経由で全ての AFP セッションを暗号化するることは，
-              Netatalk サーバーの負荷の著しい上昇を招く可能性がある</para>
+              <para>Netatalk が LDAP 検索クエリでユーザーとグループの UUID を引き出せるように、<link
+              linkend="afp.conf.5">afp.conf</link> 内で <link
+              linkend="acl_options">ACL 専用のオプションを</link>使って Netatalk
+              を設定しなければならない。</para>
             </listitem>
           </itemizedlist>
-        </sect4>
-      </sect3>
+        </listitem>
+      </orderedlist>
     </sect2>
 
-    <sect2 id="acls">
-      <title>ACL のサーポート<indexterm>
-          <primary>ACL</primary>
-        </indexterm></title>
+    <sect2>
+      <title>OS X の ACL</title>
 
-      <para>afp の ACL サポートは Solaris の ZFS ACL，派生したプラットフォーム，そして，
-      Linux の POSIX 1e ACL で実装されている．</para>
+      <para>アクセス制御リスト (ACL) と共に、Mac OS X は正統的な UNIX のパーミッションモデルの有力な拡張を提案した。
+      ACL は、所定のユーザーあるいはグループのパーミッションのセットを明示的に許可したり拒否するアクセス制御エントリー (ACE)
+      の番号つきリストである。</para>
 
-      <sect3>
-        <title>環境設定</title>
+      <para>ユーザー ID、またはグループ ID と紐付いている UNIX パーミッションとは異なり、ACL は UUID
+      と紐付いている。この理由により、あるオブジェクトの ACL にアクセスすると、サーバーとクライアントは、UUID と ユーザー／グループ ID
+      間の変換をしてくれる、共通のディレクトリサービスを使うことを要求される。</para>
 
-        <para>基本的な方式で運用するならば設定することは何もない．
-        Netatalk は ACL をオンザフライで読み込み，そののちいわゆる UARights<indexterm>
-            <primary>UARights</primary>
-          </indexterm> パーミションビット経由で AFP クライアントに送られる有効なパーミッションを算出する．
-        マック上では，これらのビットを Finder ウィンドウ内のパーミッションと調整するために Finder が使用する．
-        例：UNIX のモードでは書き込み専用だが ACL がユーザーに書き込み権限を与えているフォルダーは有効な読み書き権限を表示する．
-        権限のマッピングなしに Finder は読み込み専用アイコンを表示するだろうし，
-        ユーザーはそのフォルダーに書き込みはできないであろう．</para>
-
-        <para>デフォルトでは，認証ユーザーに有効なパーミションは UNIX のモードではなく，
-        前記 UARights<indexterm>
-            <primary>UARights</primary>
-          </indexterm> の機構のみに対応付けられる．
-        この挙動は設定オプション <link
-        linkend="map_acls">map acls</link> で修正することができる．</para>
-
-        <para>しかしながら，Finder の“情報を見る”ウィンドウでもターミナルでも，
-        ACL を見ることは不可能で，そこで見ているのは OS X で ACL がどのように設計されたのかという結果である．
-        もしクライアント上でも ACL を表示させたいと思うならば，諸々を認証ドメイン（ディレクトリサービス，
-        例えば，LDAP やOpenDirectory）の一部と，より内包されているようにして，
-        クライアント側でもサーバー側でもセットアップをおこなうべきである．
-        その理由は，OS X ACL が ただ，uid と gid だけでなく UUID と紐付いているためである．
-        このため，afpd は全てのファイルシステムの uid と git を UUID に紐付けできなければならない．
-        そうすれば， afpd は OS X の UUID に紐付けた UNIX uid と gid も含めたサーバー側の ACL を返すことができる．
-        </para>
-
-        <para>Netatalk は LDAP クエリーを使ってディレクトリサーバーに問い合わせができる．
-        ディレクトリサーバー（Active Directory，Open Directory）が既にユーザーとグループの UUID 属性を提供している．
-        あるいはディレクトリサーバー（例えば 
-        OpenLDAP）に使用されていない属性を再利用する（あるいは新たに追加する）のいずれかである．</para>
-
-        <para>より踏み込むと：</para>
-
-        <orderedlist>
-          <listitem>
-            <para>ZFS を使っている Solarisの ZFS ボリュームごとに対して，</para>
-            
-            <para>Netatalk を使用したいと思っているあらゆるボリュームを
-            ZFS ACL がわかるように構成すべきである：</para>
-
-            <screen>aclinherit = passthrough
-aclmode = passthrough</screen>
-
-            <para>このひとひねりが何をするのか，どのように適用するのか，についての説明は，
-            ホストの ZFS ドキュメンテーション（例えば man zfs）を確認のこと．</para>
-          </listitem>
-
-          <listitem>
-            <para>認証ドメイン</para>
-
-            <para>サーバーとクライアントがセキュリティ連携の一部となっていて，
-            ユーザー id データは共通のソースから出てこなければならない．
-            Darwin の ACL は UUID に基づいている．
-            なので，AFP 3.2 での ACL の仕様は Darwin の ACL である．
-            故に id データのソースは全てのユーザーとグループの属性を提供できなければならない．
-            ここで UUID は ASCII テキストとして保管されている．言い換えれば：</para>
-
-            <itemizedlist>
-              <listitem>
-                <para>UUID を何らかの属性に保管している場合は 
-                Open Directory サーバーないしは LDAP サーバーが必要である．</para>
-              </listitem>
-
-              <listitem>
-                <para>クライアントはこのサーバーを使用するように構成されていなければならない．</para>
-              </listitem>
-
-              <listitem>
-                <para>サーバーは nsswitch と PAM 経由で使用されるよう構成しなければならない．</para>
-              </listitem>
-
-              <listitem>
-                <para>Netatalk が LDAP 検索クエリでユーザーとグループの UUID を引き出せるように，
-                <link linkend="afp.conf.5">afp.conf</link> 内で <link
-                linkend="acl_options">ACL 専用のオプションを</link>使って Netatalk を設定しなければならない．</para>
-              </listitem>
-            </itemizedlist>
-          </listitem>
-        </orderedlist>
-      </sect3>
-
-      <sect3>
-        <title>OS X の ACL</title>
-
-        <para>アクセス制御リスト (ACL) と共に，
-        Mac OS X は正統的な UNIX のパーミッションモデルの有力な拡張を提案した．
-        ACL は，
-        所定のユーザーあるいはグループのパーミッションのセットを明示的に許可したり拒否するアクセス制御エントリー 
-        (ACE) の番号つきリストである．</para>
-
-        <para>ユーザー ID，またはグループ ID と紐付いている UNIX パーミッションとは異なり，
-        ACL は UUID と紐付いている．この理由により，あるオブジェクトの ACL にアクセスすると，
-        サーバーとクライアントは，UUID と ユーザー／グループ ID 間の変換をしてくれる，
-        共通のディレクトリサービスを使うことを要求される．</para>
-
-        <para>ACL と UNIX のパーミションの相互関係は比較的シンプルなものである．
-        ACL はオプションなので，UNIX パーミションはアクセス制御のデフォルトのメカニズムの役割をする．
-        オブジェクトの UNIX パーミションを変更しても ACL は手付かずのままで，
-        ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない．アクセスチェックの間，
-        OS X は最初に以下の順序で ACE の評価をして，オブジェクトの ACL を検査する：
-        全てのリクエスト権限が許可されるまで，リクエストされた権限が ACE によって明示的に拒否された，
-        あるいはリストの最後までたどり着いた．である．ACL がない，
-        あるいは ACL に許可されたパーミションがリクエストを実行するのに十分でない場合，
-        OS X は次にオブジェクトの UNIX パーミションの評価に入る．
-        つまり，ACL は常に UNIX のパーミションより優先順位が上位ということである．</para>
-      </sect3>
-
-      <sect3>
-        <title>ZFS の ACL</title>
-
-        <para>ZFS の ACL はほぼ OS X の ACL に匹敵するものである．
-        両者ともほぼ同一の良い粒度のパーミションと設定の継承が提供されている．</para>
-      </sect3>
-
-      <sect3>
-        <title>POSIX の ACL</title>
-
-        <sect4>
-          <title>概要</title>
-
-          <para>OS X あるいは NFSv4 の ACL と比較すると，Posix ACL は，
-          伝統的な UNIX パーミションの制限を打開するには異質で汎用性のないアプローチを表現している．
-          実装は Posix 標準を取り込んだものを基礎としている．</para>
-
-          <para>Posix 1003.1e 標準では二つのタイプの ACL を定義している．
-          ファイルとディレクトリは，
-          アクセスチェックのために問い合わせを受けるアクセス ACL を保持することができる．
-          ディレクトリはアクセスチェックには向いていないデフォルトの ACL も保持することができる．
-          デフォルトの ACL 付きでディレクトリの内側に新規オブジェクトが作成された時，
-          デフォルトの ACL はそれがアクセス ACL であるものとして新規オブジェクトに適用される．
-          サブディレクトリは親ディレクトリのデフォルト ACL を継承する．
-          継承制御にそれ以上のメカニズムは何もない．</para>
-
-          <para>設計上，Posix ACL と OS X 間の違いに含まれている特筆すべき点は：</para>
-
-          <para><itemizedlist>
-              <listitem>
-                <para>パーミションモデルは何も細分化されていない．
-                UNIX のパーミション同様，Posix ACL は読み込み，書き込み，そして実行権限を区別している．</para>
-              </listitem>
-
-              <listitem>
-                <para>ACL 内のエントリーに順序はない．</para>
-              </listitem>
-
-              <listitem>
-                <para>Posix ACL は権限を許可することしかできない．
-                エントリーから権限を明示的に拒否する手立てはない．</para>
-              </listitem>
-
-              <listitem>
-                <para>UNIX パーミションは特別なエントリーとして ACL に統合されている．</para>
-              </listitem>
-            </itemizedlist></para>
-
-          <para>Posix 1003.1e は 6 つの異なるタイプの ACL エントリーを定義している．
-          前半の 3 つは標準の UNIX パーミションを統合するのに用いられている．
-          これらは ACL として最小限の形であり，存在することは必須であり，
-          そして各々のタイプにつきたった一つのエントリーだけが ACL 内に許される．</para>
-
-          <para><itemizedlist>
-              <listitem>
-                <para>ACL_USER_OBJ：所有ユーザー（オーナー）のアクセス権限．</para>
-              </listitem>
-
-              <listitem>
-                <para>ACL_GROUP_OBJ：所有グループ（オーナーグループ）のアクセス権限．</para>
-              </listitem>
-
-              <listitem>
-                <para>ACL_OTHER：あらゆるユーザー・グループに対するアクセス権限．</para>
-              </listitem>
-            </itemizedlist></para>
-
-          <para>残りのエントリーのタイプは伝統的パーミションモデルの拡張である：</para>
-
-          <para><itemizedlist>
-              <listitem>
-                <para>ACL_USER：あるユーザーに対するアクセス権を許可する．</para>
-              </listitem>
-
-              <listitem>
-                <para>ACL_GROUP：あるグループに対するアクセス権を許可する．</para>
-              </listitem>
-
-              <listitem>
-                <para>ACL_MASK：ACL_GROUP_OBJ，ACL_USER および ACL_GROUP 
-                タイプのエントリーで許可されうるアクセス権の最大値を制限する．名前の示すように，
-                このエントリーはマスクとして働く．一つの ACL あたり一個だけの ACL_MASK エントリーが許される．
-                もし ACL に，ACL_USER ないしは ACL_GROUP エントリーが含まれているのであれば，
-                ACL_MASK エントリーも存在しなければならない．さもなくば，ACL_MASK はオプションである．</para>
-              </listitem>
-            </itemizedlist></para>
-
-          <para>ACL を意識していないアプリケーションとの互換性を維持のため，
-          Posix 1003.1e は，オブジェクトの UNIX 
-          パーミションを検索したり処理するシステムコールやユーティリティーのセマンティクスを変える．
-          オブジェクトが必要最低限の ACL のみ保持している場合，
-          UNIX パーミションのグループパーミションビットは ACL_GROUP_OBJ エントリーの値に対応する．</para>
-
-          <para>しかしながら，もし ACL に ACL_MASK エントリーが含まれている場合，
-          上記システムコールやユーティリティーの挙動は異なるものとなる．
-          UNIX パーミションのグループパーミションビットは ACL_MASK エントリーの値に対応する，
-          すなわち，"chmod g-w" の呼び出しは，グループに対する書き込みアクセスを無効にするだけでなく，
-          ACL_USER ないしは ACL_GROUP 
-          エントリーによって許可されていた書き込みアクセスのエンティティ全てを無効にするのである．</para>
-        </sect4>
-
-        <sect4>
-          <title>POSIX ACL から OSX の ACL へのマッピング</title>
-
-          <para>クライアントがオブジェクトの ACL を読み込もうとした時，
-          afpd は Posix ACL からそれに等価な OS X の ACL にマップする．
-          オブジェクトの ACL の書き込みには afpd が OS X の ACL を Posix ACL にマップすることが要求される．
-          Posix ACL の設計上の制約から，
-          マッピングを経た結果がオリジナルの ACL 
-          のセマンティクスと概ね同じになるような正確なマッピングを見出すことは通常不可能である．</para>
-
-          <para><itemizedlist>
-              <listitem>
-                <para>afpd はパーミション一式を拒否したエントリーを通告なしに破棄する．
-                これは Posix の設計では表現する手立てがないためである．</para>
-              </listitem>
-
-              <listitem>
-                <para>Posix ACL ではエントリーが順序付きではないので，順序を保管するのは不可能である．</para>
-              </listitem>
-
-              <listitem>
-                <para>継承制御もまた厳しい制限を受けやすい：<itemizedlist>
-                    <listitem>
-                      <para>only_inherit フラグが設定されたエントリーはディレクトリのデフォルト 
-                      ACL の一部にしかならない．</para>
-                    </listitem>
-
-                    <listitem>
-                      <para>少なくとも file_inherit，directory_inherit ないしは limit_inherit 
-                      のうち一つが設定されたエントリーはディレクトリアクセスとデフォルト ACL の一部分となる．
-                      しかし継承に課せられた制約は無視される．</para>
-                    </listitem>
-                  </itemizedlist></para>
-              </listitem>
-
-              <listitem>
-                <para>Posix 側により細分化されたパーミションモデルがないことで，
-                結果としては通常は許可されるパーミションが増えるという結果になる．</para>
-              </listitem>
-            </itemizedlist></para>
-
-          <para>OS X クライアントは Posix 1003.1e 特有の UNIX パーミションと ACL_MASK との関係を意識していないので，
-          afpd は互換性問題を回避するためにこの機能をクライアントに公開せず，
-          そして afpd は *unix パーミションと ACL をアップルの AFP 
-          用リファレンス実装がするのと同じ方法で扱う．
-          オブジェクトの UNIX パーミションがリクエストされた時，afpd は適切なグループ権限を算出し，
-          FPUnixPrivs 構造の "permissions" と "ua_permissions" 
-          要素を介し，オーナーおよび全ての者のアクセス権限も共に付して，リクエストした側に結果を返す．
-          （Apple Filing Protocol Reference の 181 ページ参照）
-          オブジェクトのパーミションを変更すると，afpd は常に ACL_USER_OBJ，ACL_GROUP_OBJ および ACL_OTHERS を更新する．
-          もし ACL_MASK エントリーも存在すれば，新しいグループの権限が有効になり，かつ，
-          既存の ACL_USER あるいは ACL_GROUP 型のエントリーは手付かずになるような ACL_MASK の値の再計算を afpd が行う．</para>
-        </sect4>
-      </sect3>
+      <para>ACL と UNIX のパーミションの相互関係は比較的シンプルなものである。ACL はオプションなので、UNIX
+      パーミションはアクセス制御のデフォルトのメカニズムの役割をする。オブジェクトの UNIX パーミションを変更しても ACL
+      は手付かずのままで、ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない。アクセスチェックの間、OS X
+      は最初に以下の順序で ACE の評価をして、オブジェクトの ACL を検査する： 全てのリクエスト権限が許可されるまで、リクエストされた権限が
+      ACE によって明示的に拒否された、あるいはリストの最後までたどり着いた。である。ACL がない、あるいは ACL
+      に許可されたパーミションがリクエストを実行するのに十分でない場合、OS X は次にオブジェクトの UNIX パーミションの評価に入る。
+      つまり、ACL は常に UNIX のパーミションより優先順位が上位ということである。</para>
     </sect2>
 
-    <sect2 id="fce">
-      <title>ファイルシステム変更イベント<indexterm>
-          <primary>FCE</primary>
-        </indexterm></title>
+    <sect2>
+      <title>ZFS の ACL</title>
 
-      <para>Netatalk には素敵なファイルシステム変更イベント機構が含まれている．ここで，
-      afpd プロセスは，なにがしかのファイルシステムイベントについて，関心を寄せているリスナーに，
-      UDP ネットワークデータグラム経由で通知する．</para>
-
-      <para>この UDP パケットのフォーマットについて，また，
-      これらをリスナー内でどのように使用するかのデモを試してみる C アプリケーションの実例については，
-      Netatalk のソースファイル <filename>bin/misc/fce.c</filename> に目を通していただきたい．</para>
-
-      <para>現在サポートされている FCE （ファイルシステム変更イベント：Filesystem Change Events）は以下である：<itemizedlist>
-          <listitem>
-            <para>ファイル変更：file modification (fmod)</para>
-          </listitem>
-
-          <listitem>
-            <para>ファイル削除：file deletion (fdel)</para>
-          </listitem>
-
-          <listitem>
-            <para>ディレクトリ削除：directory deletion (ddel)</para>
-          </listitem>
-
-          <listitem>
-            <para>ファイル作成：file creation (fcre)</para>
-          </listitem>
-
-          <listitem>
-            <para>ディレクトリ削除：directory deletion (ddel)</para>
-          </listitem>
-        </itemizedlist></para>
-
-      <para>利用可能で基本的な設定オプションの詳細については  <filename><link
-      linkend="fceconf">afp.conf</link></filename> に目を通していただきたい．</para>
+      <para>ZFS の ACL はほぼ OS X の ACL に匹敵するものである。
+      両者ともほぼ同一の良い粒度のパーミションと設定の継承が提供されている。</para>
     </sect2>
+
+    <sect2>
+      <title>POSIX の ACL</title>
+
+      <sect3>
+        <title>概要</title>
+
+        <para>OS X あるいは NFSv4 の ACL と比較すると、Posix ACL は、伝統的な UNIX
+        パーミションの制限を打開するには異質で汎用性のないアプローチを表現している。実装は Posix
+        標準を取り込んだものを基礎としている。</para>
+
+        <para>Posix 1003.1e 標準では二つのタイプの ACL を定義している。ファイルとディレクトリは、
+        アクセスチェックのために問い合わせを受けるアクセス ACL を保持することができる。
+        ディレクトリはアクセスチェックには向いていないデフォルトの ACL も保持することができる。デフォルトの ACL
+        付きでディレクトリの内側に新規オブジェクトが作成された時、デフォルトの ACL はそれがアクセス ACL
+        であるものとして新規オブジェクトに適用される。サブディレクトリは親ディレクトリのデフォルト ACL を継承する。
+        継承制御にそれ以上のメカニズムは何もない。</para>
+
+        <para>設計上、Posix ACL と OS X 間の違いに含まれている特筆すべき点は：</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>パーミションモデルは何も細分化されていない。UNIX のパーミション同様、Posix ACL
+              は読み込み、書き込み、そして実行権限を区別している。</para>
+            </listitem>
+
+            <listitem>
+              <para>ACL 内のエントリーに順序はない。</para>
+            </listitem>
+
+            <listitem>
+              <para>Posix ACL は権限を許可することしかできない。
+              エントリーから権限を明示的に拒否する手立てはない。</para>
+            </listitem>
+
+            <listitem>
+              <para>UNIX パーミションは特別なエントリーとして ACL に統合されている。</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>Posix 1003.1e は 6 つの異なるタイプの ACL エントリーを定義している。前半の 3 つは標準の UNIX
+        パーミションを統合するのに用いられている。これらは ACL として最小限の形であり、存在することは必須であり、
+        そして各々のタイプにつきたった一つのエントリーだけが ACL 内に許される。</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>ACL_USER_OBJ：所有ユーザー（オーナー）のアクセス権限。</para>
+            </listitem>
+
+            <listitem>
+              <para>ACL_GROUP_OBJ：所有グループ（オーナーグループ）のアクセス権限。</para>
+            </listitem>
+
+            <listitem>
+              <para>ACL_OTHER：あらゆるユーザー・グループに対するアクセス権限。</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>残りのエントリーのタイプは伝統的パーミションモデルの拡張である：</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>ACL_USER：あるユーザーに対するアクセス権を許可する。</para>
+            </listitem>
+
+            <listitem>
+              <para>ACL_GROUP：あるグループに対するアクセス権を許可する。</para>
+            </listitem>
+
+            <listitem>
+              <para>ACL_MASK：ACL_GROUP_OBJ、ACL_USER および ACL_GROUP
+              タイプのエントリーで許可されうるアクセス権の最大値を制限する。名前の示すように、このエントリーはマスクとして働く。一つの
+              ACL あたり一個だけの ACL_MASK エントリーが許される。もし ACL に、ACL_USER ないしは
+              ACL_GROUP エントリーが含まれているのであれば、ACL_MASK
+              エントリーも存在しなければならない。さもなくば、ACL_MASK はオプションである。</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>ACL を意識していないアプリケーションとの互換性を維持のため、Posix 1003.1e は、オブジェクトの UNIX
+        パーミションを検索したり処理するシステムコールやユーティリティーのセマンティクスを変える。オブジェクトが必要最低限の ACL
+        のみ保持している場合、UNIX パーミションのグループパーミションビットは ACL_GROUP_OBJ
+        エントリーの値に対応する。</para>
+
+        <para>しかしながら、もし ACL に ACL_MASK エントリーが含まれている場合、
+        上記システムコールやユーティリティーの挙動は異なるものとなる。UNIX パーミションのグループパーミションビットは ACL_MASK
+        エントリーの値に対応する、すなわち、"chmod g-w" の呼び出しは、グループに対する書き込みアクセスを無効にするだけでなく、
+        ACL_USER ないしは ACL_GROUP
+        エントリーによって許可されていた書き込みアクセスのエンティティ全てを無効にするのである。</para>
+      </sect3>
+
+      <sect3>
+        <title>POSIX ACL から OSX の ACL へのマッピング</title>
+
+        <para>クライアントがオブジェクトの ACL を読み込もうとした時、afpd は Posix ACL からそれに等価な OS X の
+        ACL にマップする。オブジェクトの ACL の書き込みには afpd が OS X の ACL を Posix ACL
+        にマップすることが要求される。Posix ACL の設計上の制約から、マッピングを経た結果がオリジナルの ACL
+        のセマンティクスと概ね同じになるような正確なマッピングを見出すことは通常不可能である。</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>afpd はパーミション一式を拒否したエントリーを通告なしに破棄する。これは Posix
+              の設計では表現する手立てがないためである。</para>
+            </listitem>
+
+            <listitem>
+              <para>Posix ACL ではエントリーが順序付きではないので、順序を保管するのは不可能である。</para>
+            </listitem>
+
+            <listitem>
+              <para>継承制御もまた厳しい制限を受けやすい：<itemizedlist>
+                  <listitem>
+                    <para>only_inherit フラグが設定されたエントリーはディレクトリのデフォルト ACL
+                    の一部にしかならない。</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>少なくとも file_inherit、directory_inherit ないしは
+                    limit_inherit のうち一つが設定されたエントリーはディレクトリアクセスとデフォルト ACL
+                    の一部分となる。しかし継承に課せられた制約は無視される。</para>
+                  </listitem>
+                </itemizedlist></para>
+            </listitem>
+
+            <listitem>
+              <para>Posix 側により細分化されたパーミションモデルがないことで、
+              結果としては通常は許可されるパーミションが増えるという結果になる。</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>OS X クライアントは Posix 1003.1e 特有の UNIX パーミションと ACL_MASK
+        との関係を意識していないので、afpd は互換性問題を回避するためにこの機能をクライアントに公開せず、そして afpd は *unix
+        パーミションと ACL をアップルの AFP 用リファレンス実装がするのと同じ方法で扱う。オブジェクトの UNIX
+        パーミションがリクエストされた時、afpd は適切なグループ権限を算出し、FPUnixPrivs 構造の "permissions" と
+        "ua_permissions" 要素を介し、オーナーおよび全ての者のアクセス権限も共に付して、リクエストした側に結果を返す。（Apple
+        Filing Protocol Reference の 181 ページ参照） オブジェクトのパーミションを変更すると、afpd は常に
+        ACL_USER_OBJ、ACL_GROUP_OBJ および ACL_OTHERS を更新する。もし ACL_MASK
+        エントリーも存在すれば、新しいグループの権限が有効になり、かつ、既存の ACL_USER あるいは ACL_GROUP
+        型のエントリーは手付かずになるような ACL_MASK の値の再計算を afpd が行う。</para>
+      </sect3>
+    </sect2>
+  </sect1>
+
+  <sect1 id="fce">
+    <title>ファイルシステム変更イベント<indexterm>
+        <primary>FCE</primary>
+      </indexterm></title>
+
+    <para>Netatalk には素敵なファイルシステム変更イベント機構が含まれている。ここで、afpd
+    プロセスは、なにがしかのファイルシステムイベントについて、関心を寄せているリスナーに、UDP
+    ネットワークデータグラム経由で通知する。</para>
+
+    <para>この UDP パケットのフォーマットについて、また、これらをリスナー内でどのように使用するかのデモを試してみる C
+    アプリケーションの実例については、Netatalk のソースファイル <filename>bin/misc/fce.c</filename>
+    に目を通していただきたい。</para>
+
+    <para>現在サポートされている FCE （ファイルシステム変更イベント：Filesystem Change
+    Events）は以下である：<itemizedlist>
+        <listitem>
+          <para>ファイル変更：file modification (fmod)</para>
+        </listitem>
+
+        <listitem>
+          <para>ファイル削除：file deletion (fdel)</para>
+        </listitem>
+
+        <listitem>
+          <para>ディレクトリ削除：directory deletion (ddel)</para>
+        </listitem>
+
+        <listitem>
+          <para>ファイル作成：file creation (fcre)</para>
+        </listitem>
+
+        <listitem>
+          <para>ディレクトリ削除：directory deletion (ddel)</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>利用可能で基本的な設定オプションの詳細については <filename><link
+    linkend="fceconf">afp.conf</link></filename> に目を通していただきたい。</para>
   </sect1>
 
   <sect1>
@@ -1510,28 +1353,28 @@ aclmode = passthrough</screen>
         <primary>Spotlight</primary>
       </indexterm></title>
 
-    <para>バージョン 3.1 から，Netatalk は Spotlight 検索をサポートしている．
-    Netatalk はメタデータの保存，インデックス化およびサーチエンジンに Gnome
-    <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる．</para>
+    <para>バージョン 3.1 から、Netatalk は Spotlight 検索をサポートしている。Netatalk
+    はメタデータの保存、インデックス化およびサーチエンジンに Gnome <ulink
+    url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる。</para>
 
     <sect2>
       <title>設定</title>
 
-      <para><option>spotlight</option> オプションを使って，
-      グローバルで，あるいは，ボリューム単位ごとに Spotlight とインデックス化を有効にできる．</para>
+      <para><option>spotlight</option> オプションを使って、グローバルで、あるいは、ボリューム単位ごとに
+      Spotlight とインデックス化を有効にできる。</para>
 
       <warning>
-        <para>一旦 Spotlight をどこか単一のボリュームで有効にすると，
-        Spotlight が無効にされたことになるその他全てのボリュームでは全く検索できないようになる．</para>
+        <para>一旦 Spotlight をどこか単一のボリュームで有効にすると、Spotlight
+        が無効にされたことになるその他全てのボリュームでは全く検索できないようになる。</para>
       </warning>
 
-      <para>The <command>dbus-daemon</command> バイナリは Spotlight 機能のためにインストールしなければならない．
-      dbus-daemon へのパスは "configure" の --with-dbus-daemon オプションで決定する．</para>
+      <para>The <command>dbus-daemon</command> バイナリは Spotlight
+      機能のためにインストールしなければならない。dbus-daemon へのパスは "configure" の with-dbus-daemon
+      オプションで決定する。</para>
 
-      <para><command>dbus-daemon</command> バイナリが，他のパスにインストールされている場合，
-      パスを指示するためにグローバルオプション <option>dbus daemon</option> を用いなければならない．
-      例えば Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする：
-      <screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
+      <para><command>dbus-daemon</command> バイナリが、他のパスにインストールされている場合、
+      パスを指示するためにグローバルオプション <option>dbus daemon</option> を用いなければならない。例えば
+      Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする： <screen>dbus daemon = /opt/csw/bin/dbus-daemon</screen></para>
     </sect2>
 
     <sect2>
@@ -1541,28 +1384,27 @@ aclmode = passthrough</screen>
         <listitem>
           <para>大きいファイルシステム</para>
 
-          <para>Linux 上の Tracker はファイルシステム変更の追跡に inotify 
-          カーネルファイルシステム変更イベント API を使用する．大きなファイルシステムではこれが問題になりやすい．
-          なぜなら，この inotofy API は再帰的ディレクトリ監視を提供してはおらず，
-          代わりにあらゆるサブディレクトリの監視が各々で追加されなければならないということを要求してくるからである．</para>
+          <para>Linux 上の Tracker はファイルシステム変更の追跡に inotify カーネルファイルシステム変更イベント
+          API を使用する。大きなファイルシステムではこれが問題になりやすい。なぜなら、この inotofy API
+          は再帰的ディレクトリ監視を提供してはおらず、
+          代わりにあらゆるサブディレクトリの監視が各々で追加されなければならないということを要求してくるからである。</para>
 
-          <para>Solaris ではファイルイベント通知（FEN: File Event Notification) が用いられる．
-          この Solaris のサブシステムではどんな制限とリソース消費があるのか不明である．</para>
+          <para>Solaris ではファイルイベント通知（FEN: File Event Notification) が用いられる。この
+          Solaris のサブシステムではどんな制限とリソース消費があるのか不明である。</para>
 
-          <para>それ故，ライブでのファイルシステム監視は無効にして，
-          その代わりに定期的に Tracker にファイルシステム変更のスキャンを行わせることを推奨する．
-          下記 Tracker オプション，<link
+          <para>それ故、ライブでのファイルシステム監視は無効にして、その代わりに定期的に Tracker
+          にファイルシステム変更のスキャンを行わせることを推奨する。下記 Tracker オプション、<link
           linkend="enable-monitors">enable-monitors</link> および <link
-          linkend="crawling-interval">crawling-interval</link> を参照のこと．</para>
+          linkend="crawling-interval">crawling-interval</link> を参照のこと。</para>
         </listitem>
-       	<listitem>
+
+        <listitem>
           <para>home ディレクトリのインデックスは作成されない</para>
 
-          <para>現在の実装の既知の制限により，
-          ユーザーのhome ディレクトリ内の共有ボリュームは
-          Spotlight によってインデックス付けされない．</para>
+          <para>現在の実装の既知の制限により、ユーザーのhome ディレクトリ内の共有ボリュームは Spotlight
+          によってインデックス付けされない。</para>
 
-          <para>回避策として，ファイルシステム別場所に共有ボリュームを設定する．</para>
+          <para>回避策として、ファイルシステム別場所に共有ボリュームを設定する。</para>
         </listitem>
       </itemizedlist>
     </sect2>
@@ -1570,10 +1412,9 @@ aclmode = passthrough</screen>
     <sect2>
       <title>サーバー上での Tracker コマンドラインツールの使用</title>
 
-      <para>Netatalk は動作中でなければならず，コマンドの実行は root 権限で行わなければならない．
-      そしていくつかの環境変数を設定されなければならない．必要に応じて.tracker_profileを作成し，
-      /root/.profile より source を指定する．PREFIX は Netatalk 
-      をインストールしたベースディレクトリにあわせて読み替える．<screen>$ su
+      <para>Netatalk は動作中でなければならず、コマンドの実行は root 権限で行わなければならない。
+      そしていくつかの環境変数を設定されなければならない。必要に応じて.tracker_profileを作成し、/root/.profile より
+      source を指定する。PREFIX は Netatalk をインストールしたベースディレクトリにあわせて読み替える。<screen>$ su
 # cat .tracker_profile
 PREFIX="/usr/local"
 export XDG_DATA_HOME="$PREFIX/var/netatalk/"
@@ -1583,8 +1424,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 #
 </screen></para>
 
-      <para>OpenCSW の Tracker を使用していたら PATH 
-      も以下のように更新する：<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
+      <para>OpenCSW の Tracker を使用していたら PATH も以下のように更新する：<screen># export PATH=/opt/csw/bin:$PATH</screen></para>
 
       <sect3>
         <title>Tracker コマンド</title>
@@ -1592,6 +1432,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
         <variablelist>
           <varlistentry>
             <term>Tracker の状態の問い合わせ:</term>
+
             <listitem>
               <screen># tracker daemon</screen>
             </listitem>
@@ -1599,6 +1440,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
           <varlistentry>
             <term>Tracker の停止:</term>
+
             <listitem>
               <screen># tracker daemon -t</screen>
             </listitem>
@@ -1606,6 +1448,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
           <varlistentry>
             <term>Tracker の開始:</term>
+
             <listitem>
               <screen># tracker daemon -s</screen>
             </listitem>
@@ -1613,6 +1456,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
           <varlistentry>
             <term>ディレクトリの再インデックス:</term>
+
             <listitem>
               <screen># tracker index -f PATH</screen>
             </listitem>
@@ -1620,6 +1464,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
           <varlistentry>
             <term>Tracker にファイルやディレクトリの情報を問い合わせる:</term>
+
             <listitem>
               <screen># tracker info PATH</screen>
             </listitem>
@@ -1627,77 +1472,75 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
 
           <varlistentry>
             <term>Tracker で検索:</term>
+
             <listitem>
               <screen># tracker search QUERY</screen>
             </listitem>
           </varlistentry>
         </variablelist>
+      </sect3>
 
-        </sect3>
-    </sect2>
+      <sect3>
+        <title>Tracker コマンドラインのより進んだ設定</title>
 
-    <sect2>
-      <title>Tracker コマンドラインのより進んだ設定</title>
+        <para>Tracker はその設定を Gnome dconf バックエンド経由で保管し、これ
+        <command>gsettings</command> コマンドで変更できる。</para>
 
-      <para>Tracker はその設定を Gnome dconf バックエンド経由で保管し，
-      これ <command>gsettings</command> コマンドで変更できる．</para>
+        <para>Gnome dconf の設定は各々のユーザーベースである。よって、Netatalk は Tracker プロセスを root
+        権限で実行するため、設定は root ユーザーのコンテキストで保管され、これら設定の読み込み書き込みも root
+        権限で行われ、Netatalk
+        はこのとき動作中でなければならない。（そして繰り返しになるが、環境を前記のように設定しなければならない）</para>
 
-      <para>Gnome dconf の設定は各々のユーザーベースである．よって，Netatalk
-      は Tracker プロセスを root 権限で実行するため，設定は root 
-      ユーザーのコンテキストで保管され，これら設定の読み込み書き込みも root 
-      権限で行われ，Netatalk 
-      はこのとき動作中でなければならない．（そして繰り返しになるが，環境を前記のように設定しなければならない）</para>
-
-      <para><screen># gsettings list-recursively | grep Tracker
+        <para><screen># gsettings list-recursively | grep Tracker
 org.freedesktop.Tracker.Writeback verbosity 'debug'
 ...</screen></para>
 
-      <para>以下のリストで Tracker
-      の一部重要なオプションおよびそのデフォルト設定について示す．</para>
+        <para>以下のリストで Tracker の一部重要なオプションおよびそのデフォルト設定について示す。</para>
 
-      <variablelist>
-        <varlistentry>
-          <term>org.freedesktop.Tracker.Miner.Files
-          index-recursive-directories</term>
+        <variablelist>
+          <varlistentry>
+            <term>org.freedesktop.Tracker.Miner.Files
+            index-recursive-directories</term>
 
-          <listitem>
-            <para>このオプションは Tracker がどのディレクトリをインデックス化するかを制御する．
-            本オプションは Netatalk ボリュームそれぞれの <option>Spotlight</option> 
-            オプションの設定を反映して自動的に Netatalk によってセットされるので，手動で変更してはならない．</para>
-          </listitem>
-        </varlistentry>
+            <listitem>
+              <para>このオプションは Tracker がどのディレクトリをインデックス化するかを制御する。本オプションは
+              Netatalk ボリュームそれぞれの <option>Spotlight</option> オプションの設定を反映して自動的に
+              Netatalk によってセットされるので、手動で変更してはならない。</para>
+            </listitem>
+          </varlistentry>
 
-        <varlistentry>
-          <term id="enable-monitors">org.freedesktop.Tracker.Miner.Files
-          enable-monitors <parameter> true</parameter></term>
+          <varlistentry>
+            <term id="enable-monitors">org.freedesktop.Tracker.Miner.Files
+            enable-monitors <parameter> true</parameter></term>
 
-          <listitem>
-            <para>この値は Tracker が全ての設定パスの変更を監視するかどうかを制御する．
-            ファイルシステムの変更バックエンド（Linux なら FAM，Solaris なら FEN）に依存しているので，
-            この機能は期待するほどの信頼度をもって動作しないかもしれない．
-            それ故，この機能は無効にして代わりに Tracker 自体の定期的なクローリングに頼るほうが安全であろう．
-            オプション <option>crawling-interval </option> も参照のこと．</para>
-          </listitem>
-        </varlistentry>
+            <listitem>
+              <para>この値は Tracker が全ての設定パスの変更を監視するかどうかを制御する。
+              ファイルシステムの変更バックエンド（Linux なら FAM、Solaris なら FEN）に依存しているので、
+              この機能は期待するほどの信頼度をもって動作しないかもしれない。それ故、この機能は無効にして代わりに Tracker
+              自体の定期的なクローリングに頼るほうが安全であろう。オプション <option>crawling-interval
+              </option> も参照のこと。</para>
+            </listitem>
+          </varlistentry>
 
-        <varlistentry>
-          <term id="crawling-interval">org.freedesktop.Tracker.Miner.Files
-          crawling-interval <parameter>-1</parameter></term>
+          <varlistentry>
+            <term id="crawling-interval">org.freedesktop.Tracker.Miner.Files
+            crawling-interval <parameter>-1</parameter></term>
 
-          <listitem>
-            <para>ファイルシステムがデータベース上で最新であるかチェックする間隔（日にち単位）．
-            最大は 365 まで，デフォルトでは -1，-2 = クローリングは完全に行われない．
-            -1 = スタートアップ時にクローリングが行われる“はず”（シャットダウンが完全でなかった場合）．
-            0 = 強制的にクローリングされる</para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
+            <listitem>
+              <para>ファイルシステムがデータベース上で最新であるかチェックする間隔（日にち単位）。最大は 365 まで、デフォルトでは
+              -1、-2 = クローリングは完全に行われない。-1 =
+              スタートアップ時にクローリングが行われる“はず”（シャットダウンが完全でなかった場合）。0 =
+              強制的にクローリングされる</para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </sect3>
     </sect2>
 
     <sect2>
       <title>サポートされているメタデータ属性</title>
 
-      <para>下記表にサポートされている Spotlight メタデータ属性を挙げる．</para>
+      <para>下記表にサポートされている Spotlight メタデータ属性を挙げる。</para>
 
       <table>
         <title>サポートされている Spotlight メタデータ属性</title>
@@ -1775,13 +1618,13 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
             </row>
 
             <row>
-              <entry>コンテンツの幅（ピクセル）：例えば，画像ならばピクセル幅，動画ならばフレームの幅</entry>
+              <entry>コンテンツの幅（ピクセル）：例えば、画像ならばピクセル幅、動画ならばフレームの幅</entry>
 
               <entry>kMDItemPixelWidth</entry>
             </row>
 
             <row>
-              <entry>コンテンツの高さ（ピクセル）：例えば，画像ならばピクセルでの高さ，動画ならばフレームの高さ</entry>
+              <entry>コンテンツの高さ（ピクセル）：例えば、画像ならばピクセルでの高さ、動画ならばフレームの高さ</entry>
 
               <entry>kMDItemPixelHeight</entry>
             </row>
@@ -1793,7 +1636,7 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
             </row>
 
             <row>
-              <entry>サンプルあたりのビット値（訳注：分解能，量子化ビット数，色深度など）</entry>
+              <entry>サンプルあたりのビット値（訳注：分解能、量子化ビット数、色深度など）</entry>
 
               <entry>kMDItemBitsPerSample</entry>
             </row>
@@ -1811,7 +1654,7 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
             </row>
 
             <row>
-              <entry>ドキュメントの向き．許容される値は 0（ランドスケープ：横向き）と 1 （ポートレイト：縦向き）</entry>
+              <entry>ドキュメントの向き。許容される値は 0（ランドスケープ：横向き）と 1 （ポートレイト：縦向き）</entry>
 
               <entry>kMDItemOrientation</entry>
             </row>
@@ -1849,60 +1692,21 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
         </tgroup>
       </table>
 
+      <sect3>
+        <title>参考</title>
+
+        <orderedlist>
+          <listitem>
+            <para><ulink
+            url="https://developer.apple.com/documentation/coreservices/mditemref/">MDItem</ulink></para>
+          </listitem>
+
+          <listitem>
+            <para><ulink
+            url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">Tracker</ulink></para>
+          </listitem>
+        </orderedlist>
+      </sect3>
     </sect2>
-
-    <sect2>
-      <title>参考</title>
-
-      <orderedlist>
-        <listitem>
-          <para><ulink
-          url="https://developer.apple.com/documentation/coreservices/mditemref/">MDItem</ulink></para>
-        </listitem>
-
-        <listitem>
-          <para><ulink
-          url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">Tracker</ulink></para>
-        </listitem>
-      </orderedlist>
-    </sect2>
-  </sect1>
-
-  <sect1>
-    <title>Netatalk の起動と停止</title>
-
-    <para>Netatalk の配布物は，
-    いくつかのオペレーティングシステム固有のスタートアップ・スクリプト・テンプレートを備えている．
-    これらテンプレートは，コンパイル前に "configure" スクリプトに与えられるオプションに応じて最適化されている．
-    現時点で，RedHat（sysv 形式），RedHat（systemd 形式），SUSE（sysv 形式），SUSE（systemd 形式），
-    Debian（sysv 形式），Debian（systemd 形式），Gentoo，NetBSD，および Solaris 向けのテンプレートが用意されている．
-    "configure" スクリプトにシステムタイプを指示することで，どのスタートアップスクリプト
-      <indexterm>
-        <primary>Startscript</primary>
-
-        <secondary>スタートアップスクリプト</secondary>
-      </indexterm>を生成してインストールするのか選ぶことができる．
-    スタートアップスクリプトを自動でインストールさせるには，
-    <option>--with-init-style</option> オプションで有効なものを "configure" に加える．</para>
-
-    <para>Linux ディストーションの新しいリリースは頻繁に出てくるし，
-    上記で触れたようなほかのシステムのスタートアップの手続きもまた変わりうる．
-    それ故，盲目的にスタートアップスクリプトをインストールするのではなく，
-    自分のシステムで動作するであろうかということをまず見てみる，というのがおそらくいい考えである．
-    Linux ディストーションの RPM あるいは BSD のパッケージのような所定のセットアップの一部として使用する場合，
-    諸々の事は概ねよしなに取り計らわれるだろう．
-    それ故，Netatalk そのものをコンパイルするユーザーには概ね下記のことが当てはまる．</para>
-
-    <para>いかなるスタートアップスクリプト機構を使っていても，下記のデーモンは必要である：</para>
-
-    <itemizedlist>
-      <listitem>
-        <para>netatalk<indexterm>
-            <primary>netatalk</primary>
-          </indexterm></para>
-      </listitem>
-    </itemizedlist>
-
-    <para>加えて，設定ファイル <filename>afp.conf</filename> が正しい場所にあるか確認する．</para>
   </sect1>
 </chapter>

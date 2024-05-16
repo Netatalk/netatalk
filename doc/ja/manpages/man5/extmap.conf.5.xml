@@ -8,35 +8,37 @@
     <refmiscinfo class="date">19 Jan 2013</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>extmap.conf</refname>
 
-    <refpurpose>ファイル名拡張子マッピングを指定するために <command>afpd</command>(8) が利用する設定ファイル</refpurpose>
+    <refpurpose>ファイル名拡張子マッピングを指定するために <command>afpd</command>(8)
+    が利用する設定ファイル</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>@pkgconfdir@/extmap.conf</command>
+      <command>extmap.conf</command>
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
     <title>説明</title>
 
-    <para>
-      <filename>@pkgconfdir@/extmap.conf</filename>はファイル名拡張子マッピングを指定するために<command>afpd</command>が利用する設定ファイルである。</para>
+    <para><filename>extmap.conf</filename>はファイル名拡張子マッピングを指定するために<command>afpd</command>が利用する設定ファイルである。</para>
 
     <para>設定行は以下のように構成される。</para>
 
-    <para><filename>.extension</filename> <replaceable> [ type [
-    creator ] ]</replaceable></para>
+    <para><filename>.extension</filename> <replaceable> [ type [ creator ]
+    ]</replaceable></para>
 
-    <para>ハッシュ文字(“#”) で始まるいかなる行も無視される。ドットで始まる行はファイル名拡張子マッピングを指定する。拡張子 '.' は他の非分類Unixファイルのデフォルトのタイプとクリエータを設定する。</para>
-
+    <para>ハッシュ文字(“#”) で始まるいかなる行も無視される。ドットで始まる行はファイル名拡張子マッピングを指定する。拡張子 '.'
+    は他の非分類Unixファイルのデフォルトのタイプとクリエータを設定する。</para>
   </refsect1>
 
   <refsect1>
@@ -45,15 +47,14 @@
     <example>
       <title>拡張子がjpg。タイプが"JPEG"。クリエータが"ogle"。</title>
 
-            <programlisting>.jpg "JPEG" "ogle"</programlisting>
-          </example>
+      <programlisting>.jpg "JPEG" "ogle"</programlisting>
+    </example>
 
     <example>
       <title>拡張子がlzh。タイプが"LHA "。クリエータは定義されない。</title>
 
-            <programlisting>.lzh "LHA "</programlisting>
-          </example>
-
+      <programlisting>.lzh "LHA "</programlisting>
+    </example>
   </refsect1>
 
   <refsect1>
@@ -71,8 +72,9 @@
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

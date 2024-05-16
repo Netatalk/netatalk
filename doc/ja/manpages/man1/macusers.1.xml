@@ -8,7 +8,9 @@
     <refmiscinfo class="date">13 Oct 2011</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -28,21 +30,24 @@
 
       <group choice="plain">
         <arg choice="plain">-v</arg>
+
         <arg choice="plain">-version</arg>
+
         <arg choice="plain">--version</arg>
+
         <arg choice="plain">-h</arg>
+
         <arg choice="plain">-help</arg>
+
         <arg choice="plain">--help</arg>
       </group>
-
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><command>macusers</command>はAFP経由で接続しているユーザをリストします。</para>
-
+    <para><command>macusers</command>はAFP経由で接続しているユーザをリストする。</para>
   </refsect1>
 
   <refsect1>
@@ -55,7 +60,6 @@
         <listitem>
           <para>バージョンを表示して終了する</para>
         </listitem>
-
       </varlistentry>
 
       <varlistentry>
@@ -64,7 +68,6 @@
         <listitem>
           <para>ヘルプを表示して終了する</para>
         </listitem>
-
       </varlistentry>
     </variablelist>
   </refsect1>
@@ -72,12 +75,17 @@
   <refsect1>
     <title>参照</title>
 
-    <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

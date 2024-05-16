@@ -8,7 +8,9 @@
     <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -26,27 +28,53 @@
     <cmdsynopsis>
       <command>cnid_dbd</command>
 
-        <group choice="plain">
-          <arg choice="plain">-v</arg>
-          <arg choice="plain">-V</arg>
-        </group>
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><command>cnid_dbd</command>はストレージとカタログノードID (CNID)と関連情報の検索のためのインターフェースを<emphasis remap="B">afpd</emphasis>デーモンに提供する。CNIDはMacintoshベースのファイルシステムの構成要素であるが、これの動作は単純にはUnixファイルシステム上にマッピングできない。従って、一つのデータベース内に分離した記憶域が必要となる。<command>cnid_dbd</command>は<emphasis remap="B">afpd</emphasis>の<emphasis remap="B">CNIDバックエンド</emphasis>の一つであり、<emphasis remap="B">dbd</emphasis>バックエンドを実装する。</para>
+    <para><command>cnid_dbd</command>はストレージとカタログノードID
+    (CNID)と関連情報の検索のためのインターフェースを<emphasis
+    remap="B">afpd</emphasis>デーモンに提供する。CNIDはMacintoshベースのファイルシステムの構成要素であるが、これの動作は単純にはUnixファイルシステム上にマッピングできない。従って、一つのデータベース内に分離した記憶域が必要となる。<command>cnid_dbd</command>は<emphasis
+    remap="B">afpd</emphasis>の<emphasis
+    remap="B">CNIDバックエンド</emphasis>の一つであり、<emphasis
+    remap="B">dbd</emphasis>バックエンドを実装する。</para>
 
-    <para><command>cnid_dbd</command>はコマンドラインやシステム起動スクリプトではなく、<emphasis remap="B">cnid_metad</emphasis>デーモンによって起動する。netatalkボリューム一つにつき、<command>cnid_dbd</command>のインスタンスが一つである。</para>
+    <para><command>cnid_dbd</command>はコマンドラインやシステム起動スクリプトではなく、<emphasis
+    remap="B">cnid_metad</emphasis>デーモンによって起動する。netatalkボリューム一つにつき、<command>cnid_dbd</command>のインスタンスが一つである。</para>
 
-    <para><command>cnid_dbd</command>は<emphasis remap="B">Berkeley DB</emphasis>データベースライブラリを用いて、トランザクションで保護したアップデートを行う。トランザクションによる<emphasis remap="B">dbd</emphasis>バックエンドは、たとえシステムが不意にクラッシュしても、CNIDデータベースの破損を防ぐだろう。</para>
+    <para><command>cnid_dbd</command>は<emphasis remap="B">Berkeley
+    DB</emphasis>データベースライブラリを用いて、トランザクションで保護したアップデートを行う。トランザクションによる<emphasis
+    remap="B">dbd</emphasis>バックエンドは、たとえシステムが不意にクラッシュしても、CNIDデータベースの破損を防ぐだろう。</para>
 
-    <para><command>cnid_dbd</command>は起動時に<emphasis remap="B">cnid_metad</emphasis>からの有効なユーザIDとグループIDを継承する。普通、この動作はnetatalkボリュームをクライアントへ提供する<emphasis remap="B">afpd</emphasis>によって生じる。それはボリュームに関連付けられた<emphasis remap="B">Berkeley DB</emphasis>データベースのホームディレクトリ<emphasis remap="I">dbdir</emphasis>を変更する。もし<emphasis remap="B">cnid_metad</emphasis>から継承したユーザIDが0 (root)ならば、<command>cnid_dbd</command>はユーザIDとグループIDをデータベースホームディレクトリの所有者とグループに変更する。そうでない場合は、継承した値を使い続ける。このとき、<command>cnid_dbd</command>はデータベースを開き、ファイル記述子<emphasis remap="I">clntfd</emphasis>を使って要求されたものを提供開始する。同じボリュームへアクセスしようとする次の<emphasis remap="B">afpd</emphasis>のインスタンスは、ファイル記述子<emphasis remap="I">ctrlfd</emphasis>を用いる<emphasis remap="B">cnid_metad</emphasis>によって、既に動いている<command>cnid_dbd</command>へリダイレクトされる。</para>
+    <para><command>cnid_dbd</command>は起動時に<emphasis
+    remap="B">cnid_metad</emphasis>からの有効なユーザIDとグループIDを継承する。普通、この動作はnetatalkボリュームをクライアントへ提供する<emphasis
+    remap="B">afpd</emphasis>によって生じる。それはボリュームに関連付けられた<emphasis
+    remap="B">Berkeley DB</emphasis>データベースのホームディレクトリ<emphasis
+    remap="I">dbdir</emphasis>を変更する。もし<emphasis
+    remap="B">cnid_metad</emphasis>から継承したユーザIDが0
+    (root)ならば、<command>cnid_dbd</command>はユーザIDとグループIDをデータベースホームディレクトリの所有者とグループに変更する。そうでない場合は、継承した値を使い続ける。このとき、<command>cnid_dbd</command>はデータベースを開き、ファイル記述子<emphasis
+    remap="I">clntfd</emphasis>を使って要求されたものを提供開始する。同じボリュームへアクセスしようとする次の<emphasis
+    remap="B">afpd</emphasis>のインスタンスは、ファイル記述子<emphasis
+    remap="I">ctrlfd</emphasis>を用いる<emphasis
+    remap="B">cnid_metad</emphasis>によって、既に動いている<command>cnid_dbd</command>へリダイレクトされる。</para>
 
-    <para><command>cnid_dbd</command>は、永久に動作するか、または不活性期間の後に終了するかを設定できる。もし<command>cnid_dbd</command>がTERMやINTシグナルを受け取った場合、汚れたデータベースバッファをディスクにフラッシュし、<emphasis remap="B">Berkeley DB</emphasis>データベース環境を閉じてから、綺麗に終了する。この方法で<command>cnid_dbd</command>を終了するのは安全な事であり、もし必要なら再起動する。他のシグナルは処理されず、即座に終了するか、もしかすると(トランザクションなしのとき)CNIDデータベースを矛盾した状態のままにしておくか、(トランザクションありのとき)リカバリ中の直近の更新を失うかするだろう。</para>
+    <para><command>cnid_dbd</command>は、永久に動作するか、または不活性期間の後に終了するかを設定できる。もし<command>cnid_dbd</command>がTERMやINTシグナルを受け取った場合、汚れたデータベースバッファをディスクにフラッシュし、<emphasis
+    remap="B">Berkeley
+    DB</emphasis>データベース環境を閉じてから、綺麗に終了する。この方法で<command>cnid_dbd</command>を終了するのは安全な事であり、もし必要なら再起動する。他のシグナルは処理されず、即座に終了するか、もしかすると(トランザクションなしのとき)CNIDデータベースを矛盾した状態のままにしておくか、(トランザクションありのとき)リカバリ中の直近の更新を失うかするだろう。</para>
 
-    <para><emphasis remap="B">Berkeley DB</emphasis>データベースサブシステムは、データベースのホームディレクトリ<emphasis remap="I">dbdir</emphasis>にlog.xxxxxxxxxxという名前のファイルを作る。ここでxxxxxxxxxxは、単調増加する整数である。これらのファイルにはトランザクションにおけるデータベースの変更が記載されている。これらのファイルは、<emphasis remap="I">db_param</emphasis>設定ファイル(以下を見よ)で<emphasis remap="B">logfile_autoremove</emphasis>の値が0 (デフォルトは1)に設定されている場合を除いて、定期的に削除される。</para>
+    <para><emphasis remap="B">Berkeley
+    DB</emphasis>データベースサブシステムは、データベースのホームディレクトリ<emphasis
+    remap="I">dbdir</emphasis>にlog.xxxxxxxxxxという名前のファイルを作る。ここでxxxxxxxxxxは、単調増加する整数である。これらのファイルにはトランザクションにおけるデータベースの変更が記載されている。これらのファイルは、<emphasis
+    remap="I">db_param</emphasis>設定ファイル(以下を見よ)で<emphasis
+    remap="B">logfile_autoremove</emphasis>の値が0
+    (デフォルトは1)に設定されている場合を除いて、定期的に削除される。</para>
   </refsect1>
 
   <refsect1>
@@ -66,14 +94,17 @@
   <refsect1>
     <title>設定</title>
 
-    <para><command>cnid_dbd</command>は起動時、データベースディレクトリ<emphasis remap="I">dbdir</emphasis> の中のファイル<emphasis remap="I">db_param</emphasis>から設定情報を読む。ファイルがない場合やパラメータが載っていない場合、適切なデフォルト値が使われる。ひとつのパラメータのフォーマットは、まずパラメータ名、それに続く一つ以上のスペース、それに続くパラメータ値、それに続く改行で構成される。現在以下のパラメータが認識される:</para>
+    <para><command>cnid_dbd</command>は起動時、データベースディレクトリ<emphasis
+    remap="I">dbdir</emphasis> の中のファイル<emphasis
+    remap="I">db_param</emphasis>から設定情報を読む。ファイルがない場合やパラメータが載っていない場合、適切なデフォルト値が使われる。ひとつのパラメータのフォーマットは、まずパラメータ名、それに続く一つ以上のスペース、それに続くパラメータ値、それに続く改行で構成される。現在以下のパラメータが認識される:</para>
 
     <variablelist remap="TP">
       <varlistentry>
         <term><emphasis remap="B">logfile_autoremove</emphasis></term>
 
         <listitem>
-          <para>もし0を設定した場合、<command>cnid_dbd</command>の起動時に未使用のBerkeley DBトランザクションのログファイル(データベースホームディレクトリの中のlog.xxxxxxxxxx)の定期的な削除が行われない。デフォルトは1。</para>
+          <para>もし0を設定した場合、<command>cnid_dbd</command>の起動時に未使用のBerkeley
+          DBトランザクションのログファイル(データベースホームディレクトリの中のlog.xxxxxxxxxx)の定期的な削除が行われない。デフォルトは1。</para>
         </listitem>
       </varlistentry>
 
@@ -81,7 +112,13 @@
         <term><emphasis remap="B">cachesize</emphasis></term>
 
         <listitem>
-          <para>Berkeley DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの<command>cnid_dbd</command>プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkeley DBに附属する<emphasis remap="B">db_stat</emphasis>ユーティリティに<option>-m</option>オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。<emphasis remap="B">Berkeley DB Tutorial and Reference Guide</emphasis>には、より詳しい情報を記した<emphasis remap="B">Selecting a cache size</emphasis>という章がある。</para>
+          <para>Berkeley
+          DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの<command>cnid_dbd</command>プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkeley
+          DBに附属する<emphasis
+          remap="B">db_stat</emphasis>ユーティリティに<option>-m</option>オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。<emphasis
+          remap="B">Berkeley DB Tutorial and Reference
+          Guide</emphasis>には、より詳しい情報を記した<emphasis remap="B">Selecting a cache
+          size</emphasis>という章がある。</para>
         </listitem>
       </varlistentry>
 
@@ -91,7 +128,12 @@
         <term><emphasis remap="B">flush_interval</emphasis></term>
 
         <listitem>
-          <para><emphasis remap="I">flush_frequency</emphasis> (デフォルト: 1000)と<emphasis remap="I">flush_interval</emphasis> (デフォルト: 1800)はデータベースへの変更を書き戻す頻度を制御する。これらの両方動作は、i) <emphasis remap="I">flush_frequency</emphasis>を越える要求を受け取った場合、ii) 最後の保存/書き戻しから<emphasis remap="I">flush_interval</emphasis>秒よりも経過した場合のどちらかで実行される。ディスクキャッシュ設定のため、あなたのハードディスク設定の確認に慎重を期してください。多くのIDEディスクはデフォルト動作では書き込みを単にキャッシュするだけです。従って、たとえデータベースファイルをフラッシュしても期待した効果は得られないでしょう。</para>
+          <para><emphasis remap="I">flush_frequency</emphasis> (デフォルト:
+          1000)と<emphasis remap="I">flush_interval</emphasis> (デフォルト:
+          1800)はデータベースへの変更を書き戻す頻度を制御する。これらの両方動作は、i) <emphasis
+          remap="I">flush_frequency</emphasis>を越える要求を受け取った場合、ii)
+          最後の保存/書き戻しから<emphasis
+          remap="I">flush_interval</emphasis>秒よりも経過した場合のどちらかで実行される。ディスクキャッシュ設定のため、あなたのハードディスク設定の確認に慎重を期してください。多くのIDEディスクはデフォルト動作では書き込みを単にキャッシュするだけです。従って、たとえデータベースファイルをフラッシュしても期待した効果は得られないでしょう。</para>
         </listitem>
       </varlistentry>
 
@@ -99,7 +141,10 @@
         <term><emphasis remap="B">fd_table_size</emphasis></term>
 
         <listitem>
-          <para><emphasis remap="B">afpd</emphasis>クライアントが<emphasis remap="B">cnid_dbd</emphasis>で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた<emphasis remap="B">afpd</emphasis>プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を<function>select()</function>システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると<command>cnid_dbd</command>のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの<emphasis remap="B">afpd</emphasis>クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。</para>
+          <para><emphasis remap="B">afpd</emphasis>クライアントが<emphasis
+          remap="B">cnid_dbd</emphasis>で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた<emphasis
+          remap="B">afpd</emphasis>プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を<function>select()</function>システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると<command>cnid_dbd</command>のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの<emphasis
+          remap="B">afpd</emphasis>クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。</para>
         </listitem>
       </varlistentry>
 
@@ -116,9 +161,13 @@
   <refsect1>
     <title>アップデート</title>
 
-    <para>Netatalk 2.1の<emphasis>後</emphasis>に出た最初のバージョン、すなわちNetatalk 2.1.1は、手動操作なしに自動的にBerkeley DBアップデートをサポートすることに注意せよ。言い換えると、Netatalk 2.1はBerkeley DBデータベースのアップグレードを準備するコードと、既に準備されている場合にそれをアップグレードするコードを含んでいる。これはバージョン2.0.xからはアップグレードできないことを意味する。なぜならデータベースの準備をしていないからである。</para>
+    <para>Netatalk 2.1の<emphasis>後</emphasis>に出た最初のバージョン、すなわちNetatalk
+    2.1.1は、手動操作なしに自動的にBerkeley DBアップデートをサポートすることに注意せよ。言い換えると、Netatalk
+    2.1はBerkeley
+    DBデータベースのアップグレードを準備するコードと、既に準備されている場合にそれをアップグレードするコードを含んでいる。これはバージョン2.0.xからはアップグレードできないことを意味する。なぜならデータベースの準備をしていないからである。</para>
 
-    <para>異なるバージョンのBerkeley DBライブラリを使っている古いNetatalkをアップデートするためには、以下の手順をとります:</para>
+    <para>異なるバージョンのBerkeley
+    DBライブラリを使っている古いNetatalkをアップデートするためには、以下の手順をとります:</para>
 
     <itemizedlist>
       <listitem>
@@ -136,14 +185,14 @@
       </listitem>
 
       <listitem>
-        <para>再び新しいBerkeley DBユーティリティを使って、<command>db_checkpoint -1 -h &lt;.AppleDBのパス&gt;</command> を実行する</para>
+        <para>再び新しいBerkeley DBユーティリティを使って、<command>db_checkpoint -1 -h
+        &lt;.AppleDBのパス&gt;</command> を実行する</para>
       </listitem>
 
       <listitem>
         <para>新しいバージョンのNetatalkを起動する</para>
       </listitem>
     </itemizedlist>
-
   </refsect1>
 
   <refsect1>
@@ -165,8 +214,9 @@
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

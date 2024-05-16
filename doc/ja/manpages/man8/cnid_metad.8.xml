@@ -8,14 +8,17 @@
     <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>cnid_metad</refname>
 
-    <refpurpose>要求に応じて <command>cnid_dbd</command>(8) デーモンを起動するデーモン</refpurpose>
+    <refpurpose>要求に応じて <command>cnid_dbd</command>(8)
+    デーモンを起動するデーモン</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -31,37 +34,44 @@
     <cmdsynopsis>
       <command>cnid_metad</command>
 
-	<group choice="plain">
-	  <arg choice="plain">-v</arg>
-	  <arg choice="plain">-V</arg>
-	</group>
+      <group choice="plain">
+        <arg choice="plain">-v</arg>
+
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><command>cnid_metad</command>は<emphasis remap="B">afpd</emphasis>からの要求を待ち、<emphasis remap="B">cnid_dbd</emphasis>デーモンのインスタンスを起動する。一度起動した<emphasis remap="B">cnid_dbd</emphasis>インスタンスの状態を絶えず把握し、もし必要なら再起動する。<command>cnid_metad</command>は通常、<command>netatalk</command>(8)によってブート時に起動され、シャットダウンまでずっと動作する。</para>
+    <para><command>cnid_metad</command>は<emphasis
+    remap="B">afpd</emphasis>からの要求を待ち、<emphasis
+    remap="B">cnid_dbd</emphasis>デーモンのインスタンスを起動する。一度起動した<emphasis
+    remap="B">cnid_dbd</emphasis>インスタンスの状態を絶えず把握し、もし必要なら再起動する。<command>cnid_metad</command>は通常、<command>netatalk</command>(8)によってブート時に起動され、シャットダウンまでずっと動作する。</para>
   </refsect1>
 
   <refsect1>
     <title>オプション</title>
 
     <variablelist remap="TP">
- 
-     <varlistentry>
+      <varlistentry>
         <term><option>-d</option></term>
 
         <listitem>
-          <para><emphasis remap="B">cnid_metadはフォアグラウンドに留まり、</emphasis>更に標準入力、標準出力、標準エラー出力のファイル記述子を開いたままにする。デバッグに有用。</para>
+          <para><emphasis
+          remap="B">cnid_metadはフォアグラウンドに留まり、</emphasis>更に標準入力、標準出力、標準エラー出力のファイル記述子を開いたままにする。デバッグに有用。</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term><option>-F</option> <replaceable>configuration file</replaceable></term>
+        <term><option>-F</option> <replaceable>configuration
+        file</replaceable></term>
 
         <listitem>
-          <para>設定ファイルとして<emphasis remap="I">configuration file</emphasis>を使う。デフォルトは<emphasis remap="I">@pkgconfdir@/afp.conf</emphasis>である。</para>
+          <para>設定ファイルとして<emphasis remap="I">configuration
+          file</emphasis>を使う。デフォルトは<emphasis
+          remap="I">afp.conf</emphasis>である。</para>
         </listitem>
       </varlistentry>
 
@@ -78,7 +88,9 @@
   <refsect1>
     <title>警告</title>
 
-    <para><command>cnid_metad</command>はSIGPIPEを除くいかなるシグナルもブロックしないし補足もしない。従って、受け取ったほとんどのシグナルにより終了する。これは、<command>cnid_metad</command>により起動した全ての<emphasis remap="B">cnid_dbd</emphasis>のインスタンスを優雅に終了させる。このような状況により、サブプロセスにアクセスするIPCは<command>cnid_metad</command>によりメモリ上で維持されるだけなので、これは望ましい動作だといえる。<command>cnid_metad</command>が再起動したあとすぐ、<emphasis remap="B">afpd</emphasis>プロセスは透過的に再接続する。</para>
+    <para><command>cnid_metad</command>はSIGPIPEを除くいかなるシグナルもブロックしないし補足もしない。従って、受け取ったほとんどのシグナルにより終了する。これは、<command>cnid_metad</command>により起動した全ての<emphasis
+    remap="B">cnid_dbd</emphasis>のインスタンスを優雅に終了させる。このような状況により、サブプロセスにアクセスするIPCは<command>cnid_metad</command>によりメモリ上で維持されるだけなので、これは望ましい動作だといえる。<command>cnid_metad</command>が再起動したあとすぐ、<emphasis
+    remap="B">afpd</emphasis>プロセスは透過的に再接続する。</para>
   </refsect1>
 
   <refsect1>
@@ -108,8 +120,9 @@
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

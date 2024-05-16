@@ -6,49 +6,59 @@ import re
 import yaml
 import xmltodict
 
-def main():
-  with open('../../.github/workflows/build.yml', 'r') as file:
-    workflow = yaml.safe_load(file)
+lang_en = {
+  "title_1": "Compile Netatalk from Source",
+  "title_2": "Overview",
+  "title_3": "Operating Systems",
+  "heading_1": "Install required packages",
+  "heading_2": "Configure and build",
+  "para_1": "This section describes how to compile Netatalk from source for specific operating systems.",
+  "para_2": "Please note that this chapter is automatically generated and may not be optimized for your system.",
+  "para_3": "Choose either Autotools or Meson as the build system. Test steps are optional.",
+}
+lang_jp = {
+  "title_1": "Netatalk をソースコードからコンパイルする",
+  "title_2": "概要",
+  "title_3": "オペレーティング システム一覧",
+  "heading_1": "必要なパッケージをインストールする",
+  "heading_2": "コンフィグレーションとビルド",
+  "para_1": "本付録では、特定のオペレーティング システムのソースから Netatalk をコンパイルする方法について説明する。",
+  "para_2": "以下文章は自動的に生成されるため、お使いのシステムに最適化されていない可能性があることに注意してください。",
+  "para_3": "ビルド システムとして Autotools と Meson から選択する。 テスト手順は任意である。",
+}
 
-  apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
-  apt_packages = workflow["env"]["APT_PACKAGES"]
+output_en = "compile.xml"
+output_jp = "../ja/manual/compile.xml"
 
+with open('../../.github/workflows/build.yml', 'r') as file:
+  workflow = yaml.safe_load(file)
+
+apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
+apt_packages = workflow["env"]["APT_PACKAGES"]
+
+def generate_docbook(strings, output_file):
   docbook = {
     "appendix": {
       "@id": "compile",
-      "title": "Compile Netatalk from Source",
+      "title": strings["title_1"],
       "sect1": [
         {
           "@id": "compile-overview",
-          "title": "Overview",
+          "title": strings["title_2"],
         },
         {
           "para": [
-            """
-            This section describes how to compile Netatalk from source for specific operating systems.
-            """,
-            """
-            The Netatalk project is in the process of transitioning the build system
-            from GNU Autotools to Meson.
-            During the transitional period,
-            the documentation will contain both Autotools and Meson build instructions.
-            """,
-            """
-            Please note that this document is automatically generated from the GitHub workflow YAML file.
-            This may or may not be the most optimal way to build Netatalk for your system.
-            """,
+            strings["para_1"],
+            strings["para_2"],
           ],
         },
         {
           "@id": "compile-os",
-          "title": "Operating Systems",
+          "title": strings["title_3"],
         },
         {
           "para": [
-            """
-            Note: You only have to use execute the steps for one of the build systems, not both.
-            Additionally, the test steps are entirely optional for compiling from source.
-            """,
+            strings["para_3"],
           ],
           "sect2": [],
         }
@@ -58,7 +68,7 @@ def main():
 
   for key, value in workflow["jobs"].items():
     sections = {}
-    # Skip the SonarQube job
+    # Skip the SonarCloud job
     if value["name"] != "Static Analysis":
       sections["@id"] = key
       sections["title"] = value["name"]
@@ -76,9 +86,9 @@ def main():
 
         # The vmactions jobs have a different structure
         if "uses" in step and step["uses"].startswith("vmactions/"):
-          para.append("Install dependencies")
+          para.append(strings["heading_1"])
           para.append({"screen": step["with"]["prepare"]})
-          para.append("Configure and build")
+          para.append(strings["heading_2"])
           para.append({"screen": step["with"]["run"]})
         else:
           para.append(step["name"])
@@ -90,10 +100,10 @@ def main():
 
   xml = xmltodict.unparse(docbook, pretty=True)
 
-  with open('compile.xml', 'w') as file:
+  with open(output_file, 'w') as file:
     file.write(xml)
 
-  print("Wrote compile.xml")
+  print("Wrote to " + output_file)
 
-if __name__ == '__main__':
-    main()
+generate_docbook(lang_en, output_en)
+generate_docbook(lang_jp, output_jp)

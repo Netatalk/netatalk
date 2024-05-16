@@ -8,7 +8,9 @@
     <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -37,7 +39,10 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>ad</command>は、Netatalk 互換の AppleDouble ファイルユーティリティ一式である。Netatalk 共有ボリューム内の AppleDouble データ (ファイルの拡張属性や、同じディレクトリ内の._fileや、<filename>.AppleDouble</filename>ディレクトリ内のファイル) とCNIDデータベースを適切に更新する。</para>
+    <para><command>ad</command>は、Netatalk 互換の AppleDouble
+    ファイルユーティリティ一式である。Netatalk 共有ボリューム内の AppleDouble データ
+    (ファイルの拡張属性や、同じディレクトリ内の._fileや、<filename>.AppleDouble</filename>ディレクトリ内のファイル)
+    とCNIDデータベースを適切に更新する。</para>
   </refsect1>
 
   <refsect1>
@@ -231,7 +236,8 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-p</term>
 
         <listitem>
-          <para>以下に示すそれぞれのコピー元ファイルの属性を、パーミッションが許す限り維持する: 変更時刻、アクセス時刻、ファイルフラグ、ファイルモード、ユーザIDグループID。ユーザIDとグループIDが維持されない場合、エラーメッセージは表示されず、終了コードは変更されない。</para>
+          <para>以下に示すそれぞれのコピー元ファイルの属性を、パーミッションが許す限り維持する:
+          変更時刻、アクセス時刻、ファイルフラグ、ファイルモード、ユーザIDグループID。ユーザIDとグループIDが維持されない場合、エラーメッセージは表示されず、終了コードは変更されない。</para>
         </listitem>
       </varlistentry>
 
@@ -356,8 +362,9 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

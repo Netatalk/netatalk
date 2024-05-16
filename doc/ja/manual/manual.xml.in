@@ -3,6 +3,7 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
 <!ENTITY Configuration SYSTEM "configuration.xml">
+<!ENTITY Compile SYSTEM "compile.xml">
 <!ENTITY Intro SYSTEM "intro.xml">
 <!ENTITY Install SYSTEM "install.xml">
 <!ENTITY License SYSTEM "gpl.xml">
@@ -91,6 +92,9 @@
 
     &netatalk-config.1;
   </chapter>
+  <?latex \cleardoublepage ?>
+
+  &Compile;
   <?latex \cleardoublepage ?>
 
   &License;

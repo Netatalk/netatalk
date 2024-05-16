@@ -2,21 +2,21 @@
 <chapter id="installation">
   <chapterinfo>
     <date>17.1.2015</date>
-    
+
     <author role="first-last">
       <firstname>Eiichirou</firstname>
-      
+
       <surname>UDA（日本語訳）</surname>
     </author>
-    
+
     <pubdate>2016 年 7 月 26 日（訳）</pubdate>
-    
+
   </chapterinfo>
 
   <title>インストール</title>
 
   <warning>
-    <para>Netatalk 3 は他バージョンと共存できないので，以前に Netatalk の古いバージョンを使ったことがあるなら，
+    <para>Netatalk 3 は他バージョンと共存できないので、以前に Netatalk の古いバージョンを使ったことがあるなら、
     “<link linkend="upgrade">Netatalk 2 からのアップグレード</link>”の章をまず読んでいただきたい！！！</para>
   </warning>
 
@@ -31,60 +31,15 @@
     <sect2>
       <title>バイナリーパッケージ</title>
 
-      <para>Netatalk のバイナリーパッケージは，いくつかの Linux，Unix
-      ディストリビューションに含まれている．通常の配布元も見たいだろうと思う。</para>
+      <para>Netatalk のバイナリーパッケージは、いくつかの Linux、Unix
+      ディストリビューションに含まれている。通常の配布元も見たいだろうと思う。</para>
 
-      <para>Ubuntu パッケージ：<ulink
-      url="https://launchpad.net/ubuntu">https://launchpad.net/ubuntu
-      </ulink></para>
-
-      <para>Debian パッケージ：<ulink
-      url="https://www.debian.org/distrib/packages">http://www.debian.org/
-      </ulink></para>
-
-      <para>様々な RPM パッケージ：<ulink
-      url="http://rpmfind.net/">http://rpmfind.net/</ulink></para>
-
-      <para>Fedora/RHEL パッケージ：<ulink
-      url="http://koji.fedoraproject.org/koji/search">http://koji.fedoraproject.org/koji/search
-      </ulink></para>
-
-      <para>Gentoo パッケージ：<ulink
-      url="http://packages.gentoo.org/">http://packages.gentoo.org/
-      </ulink></para>
-
-      <para>openSUSE パッケージ：<ulink
-      url="http://software.opensuse.org/">http://software.opensuse.org/
-      </ulink></para>
-
-      <para>Solaris パッケージ：<ulink
-      url="http://www.opencsw.org/packages/CSWnetatalk/">http://www.opencsw.org/</ulink></para>
-
-      <para>FreeBSD ポート：<ulink
-      url="http://www.freebsd.org/ports/index.html">http://www.freebsd.org/ports/index.html
-      </ulink></para>
-
-      <para>NetBSD pkgsrc: <ulink
-      url="http://pkgsrc.se/search.php">http://pkgsrc.se/search.php
-      </ulink></para>
-
-      <para>OpenBSD ports:<ulink
-      url="https://openports.pl">https://openports.pl
-      </ulink></para>
-
-      <para>などである．<indexterm>
-          <primary>RPM</primary>
-
-          <secondary>Red Hat Package Manager package</secondary>
-        </indexterm><indexterm>
-          <primary>Deb</primary>
-
-          <secondary>Debian package</secondary>
-        </indexterm><indexterm>
-          <primary>Ports</primary>
-
-          <secondary>FreeBSD port</secondary>
-        </indexterm></para>
+      <para>第三者が提供しているパッケージ リポジトリも参照する手もある。例えば、Red Hat 派生 Linux ディストリビューションの為の<ulink
+      url="https://rpmfind.net/">rpmfind</ulink> Solaris 系 OS の為の
+      <ulink url="https://www.opencsw.org/">OpenCSW</ulink>
+      又は macOS の為の <ulink url="https://brew.sh/">
+      Homebrew</ulink> か <ulink url="https://www.macports.org/">MacPorts
+      </ulink>。</para>
     </sect2>
 
     <sect2>
@@ -94,7 +49,7 @@
         <title>Tarball</title>
 
         <para>Netatalk のソースを tar で固めた .tar.xz および .tar.bz2 形式のものが <ulink
-        url="https://github.com/Netatalk/netatalk">GitHub の netatalk のページ</ulink>にある．</para>
+        url="https://github.com/Netatalk/netatalk">GitHub の netatalk のページ</ulink>にある。</para>
       </sect3>
 
       <sect3>
@@ -104,44 +59,40 @@
 
         <orderedlist>
           <listitem>
-            <para>Git がインストールしてあることを確認する．<command>which
-            git</command> は git のパスを示してくれるはずである．</para>
+            <para>Git がインストールしてあることを確認する。<command>which
+            git</command> は git のパスを示してくれるはずである。</para>
 
             <screen><prompt>$</prompt> <userinput>which git</userinput>
 <computeroutput>/usr/bin/git</computeroutput></screen>
           </listitem>
 
           <listitem>
-            <para>ソースを取得してみよう．</para>
+            <para>ソースを取得してみよう。</para>
 
             <screen><prompt>$</prompt> <userinput>git clone https://github.com/Netatalk/netatalk.git netatalk-code
-</userinput><computeroutput>Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
-remote: Counting objects: 2503, done.
+</userinput><computeroutput>Cloning into 'netatalk-code'...
+remote: Enumerating objects: 41592, done.
 ...
+Resolving deltas: 100% (32227/32227), done.
 </computeroutput></screen>
 
-            <para>上記で Git リポジトリから，Netatalk のソース全体の完全でまっさらのコピーを含む
-            <filename>netatalk-code</filename> という名前のローカルディレクトリが作成される．</para>
+            <para>上記で Git リポジトリから、Netatalk のソース全体の完全でまっさらのコピーを含む
+            <filename>netatalk-code</filename> という名前のローカルディレクトリが作成される。</para>
           </listitem>
 
           <listitem>
-            <para>レポジトリのコピーを最新の状態にしておきたい場合，適宜以下を実行する．</para>
+            <para>ブランチやタグを指定しない場合は、最先端の開発コードが取得さる。例えば、最新の安定した
+　　　　　　　Netatalk 3.1 コードを入手するには、「branch-netatalk-3-1」という名前のブランチをチェックアウトする：</para>
+
+            <screen><prompt>$</prompt> <userinput>git checkout branch-netatalk-3-1</userinput></screen>
+          </listitem>
+
+          <listitem>
+            <para>レポジトリのコピーを最新の状態にしておきたい場合、適宜以下を実行する。</para>
 
             <screen><prompt>$</prompt> <userinput>git pull</userinput></screen>
           </listitem>
-
-          <listitem>
-            <para>netatalk-code ディレクトリに <command>cd</command> して，
-            <command>./bootstrap</command>を実行する．これで次の段階で必要となる
-            <filename>configure</filename> スクリプトが作成される．</para>
-
-            <screen><prompt>$</prompt> <userinput>./bootstrap</userinput></screen>
-          </listitem>
         </orderedlist>
-
-        <para>さらなる情報については<ulink
-        url="https://netatalk.io/docs/Developer-Notes">Developer Notes ページ</ulink>
-        も参照のこと．</para>
       </sect3>
     </sect2>
   </sect1>
@@ -152,12 +103,6 @@ remote: Counting objects: 2503, done.
     <sect2>
       <title>前提条件</title>
 
-      <note>
-        <para>お使いのOSには下記ソフトウェアのバイナリーパッケージが提供される可能性が高い．</para>
-
-        <para>パッケージマネージャで検索すれば見つけられるだろう．</para>
-      </note>
-
       <sect3>
         <title>必要なサードパーティソフトウェア</title>
 
@@ -167,16 +112,23 @@ remote: Counting objects: 2503, done.
                 <primary>BDB</primary>
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
-            <para>書き込みの時に最低でもバージョン 4.6 が必要となる．</para>
+            <para>書き込みの時に最低でもバージョン 4.6 が必要となる。</para>
 
-            <para>推奨バージョンは 5.3 である Sleepycat ライセンスで提供された最終リリースである．</para>
+            <para>推奨バージョンは 5.3 である Sleepycat ライセンスで提供された最終リリースである。</para>
           </listitem>
 
           <listitem>
             <para>Libgcrypt</para>
 
             <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
-            Libgcrypt</ulink> が必要である．</para>
+            Libgcrypt</ulink> が必要である。</para>
+          </listitem>
+
+          <listitem>
+            <para>libevent</para>
+
+            <para>netatalk サービス コントローラー デーモンの内部イベント コールバックは、
+　　　　　　　libevent バージョン 2 に基づいて構築されている。</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -184,39 +136,51 @@ remote: Counting objects: 2503, done.
       <sect3>
         <title>任意のサードパーティソフトウェア</title>
 
-        <para>Netatalk はその機能性を拡充するために以下のサードパーティソフトウェアを使用することができる．</para>
+        <para>Netatalk はその機能性を拡充するために以下のサードパーティソフトウェアを使用することができる。</para>
 
         <itemizedlist>
+          <listitem>
+            <para>OpenSSL / LibreSSL / WolfSSL</para>
+
+            <para>OpenSSL 1.1 又は LibreSSL は、Classic Mac OS に最も強力なパスワード暗号化を提供する DHCAST128 (別名 DHX) UAM に必要。Random Number UAM もこのライブラリを使用している。</para>
+
+            <para>netatalk 3.2.0 以降は、バンドルされている WolfSSL ライブラリがデフォルトの DHX プロバイダーとして netatalk とともに配布されている。</para>
+          </listitem>
+
           <listitem>
             <para>Spotlight<indexterm>
                 <primary>Spotlight</primary>
               </indexterm> サポートのための Tracker</para>
 
             <para>Netatalk はメタデータのバックエンドとして
-            <ulink url="https://tracker.gnome.org">Tracker</ulink> 
-            を使用する．最近の Linux ディストリビューションには，Tracker のバージョン 0.7 以来使用可能な
-            libtracker-sparql が提供されている．</para>
+            <ulink url="https://tracker.gnome.org">Tracker</ulink>
+            を使用する。最近の Linux ディストリビューションには、Tracker のバージョン 0.7 以来使用可能な
+            libtracker-sparql が提供されている。</para>
+
+            <para>Samba プロジェクトの talloc ライブラリと、bison の様な Yacc パーサ、
+            そして flex の様な字句解析ツールも必要になる。</para>
           </listitem>
 
           <listitem>
             <para>Bonjour（Zeroconf としても知られる）のための mDNSresponderPOSIX または Avahi</para>
 
-            <para>サービス探索のために Mac OS X 10.2 及び以降のものは 
-            Bonjour（Zeroconf としても知られる）を使用する．</para>
+            <para>サービス探索のために Mac OS X 10.2 及び以降のバージョンは
+            Bonjour（Zeroconf としても知られる）を使用する。AFP ファイルサーバー又は
+            Time Machine サービスをクライアントに通知することができる。</para>
 
             <para>Avahi は DBUS サポートのもとで (
-            <userinput>--enable-dbus</userinput>) ビルドされなければならない．</para>
+            <userinput>--enable-dbus</userinput>) ビルドされなければならない。</para>
           </listitem>
 
           <listitem>
             <para>TCP wrappers</para>
 
-            <para>TCPD または LOG_TCP としても知られる Wietse Venema のネットワークロガー．</para>
+            <para>TCPD または LOG_TCP としても知られる Wietse Venema のネットワークロガー。</para>
 
             <para>セキュリティオプションは：
             ホストごとドメインごとかつ／ないしはサービスごとのアクセス制御；
             ホスト名のなりすましあるいはホストアドレスのなりすまし検出；
-            早期警告システムを実装するブービートラップ；である．</para>
+            早期警告システムを実装するブービートラップ；である。</para>
           </listitem>
 
           <listitem>
@@ -226,21 +190,78 @@ remote: Counting objects: 2503, done.
                 <secondary>Pluggable Authentication Modules</secondary>
               </indexterm></para>
 
-            <para>PAM はユーザー認証の柔軟な機構を実現する．PAM は SUN<indexterm>
+            <para>PAM はユーザー認証の柔軟な機構を実現する。PAM は SUN<indexterm>
                 <primary>SUN</primary>
 
                 <secondary>Sun Microsystems</secondary>
-              </indexterm> Microsystems によって作り出された．
-            Linux-PAM はアプリケーションがどのようにユーザーを認証するのかを選択できるようなローカルシステム管理を実現する共有ライブラリーのセットである．</para>
+              </indexterm> Microsystems によって作り出された。
+            Linux-PAM はアプリケーションがどのようにユーザーを認証するのかを選択できるようなローカルシステム管理を実現する共有ライブラリーのセットである。</para>
+          </listitem>
+
+          <listitem>
+            <para>Kerberos V</para>
+
+            <para>Kerberos v5 は、マサチューセッツ工科大学で発明されたクライアント サーバー ベースの認証プロトコルである。
+            Kerberos ライブラリを使用すると、netatalk は既存の Kerberos インフラストラクチャで認証するための GSS UAM ライブラリを生成できる。</para>
+          </listitem>
+
+          <listitem>
+            <para>ACL と LDAP</para>
+
+            <para>LDAP は ACL の高度な権限スキームと連携して動作する、オープンな業界標準のユーザー ディレクトリ プロトコルである。
+            一部のオペレーティング システムでは、ACL および LDAP ライブラリがシステムに組み込まれているが、
+            他のオペレーティング システムでは、この機能を有効にするためにサポート パッケージをインストールする必要がある。</para>
+          </listitem>
+
+          <listitem>
+            <para>MySQL</para>
+
+            <para>MySQL 互換のクライアント ライブラリを活用することで、拡張性と信頼性の高い MySQL CNID バックエンドを使用して netatalk を構築できる。
+            管理者は、このバックエンドで使用する別のデータベース インスタンスを提供する必要がある。</para>
+          </listitem>
+
+          <listitem>
+            <para>D-Bus と GLib バインディング</para>
+
+            <para><userinput>afpstats</userinput> ツールに使われ、afpd サーバ状況を参照する子ができる。
+            </para>
           </listitem>
 
           <listitem>
             <para>iconv</para>
 
-            <para>iconv はたくさんの文字エンコーディングの変換ルーチンを提供する．Netatalk 
-            は iconv を使用して内蔵されていない ISO-8859-1 のようなキャラクターセット変換を実現する．
-            glibc システムでは glibc の提供する iconv 実装を使うことができる．さもなくば GNU libiconv
-            実装を使うことができる．</para>
+            <para>iconv はたくさんの文字エンコーディングの変換ルーチンを提供する。Netatalk
+            は iconv を使用して内蔵されていない ISO-8859-1 のようなキャラクターセット変換を実現する。
+            glibc システムでは glibc の提供する iconv 実装を使うことができる。さもなくば GNU libiconv
+            実装を使うことができる。</para>
+          </listitem>
+
+          <listitem>
+            <para>CrackLib</para>
+
+            <para>Random Number UAM と netatalk の固有パスワード管理ツール
+            <userinput>afppasswd</userinput> を使用する際、CrackLib を使う事によって
+            弱いパスワードの設定を防ぐことができる。</para>
+          </listitem>
+
+          <listitem>
+            <para>Perl</para>
+
+            <para><userinput>afpstats</userinput>、
+            <userinput>apple_dump</userinput>、
+            <userinput>asip-status</userinput> 又は
+            <userinput>macusers</userinput> という管理者向けツールは Perl 5.8 以降の実行環境を
+            使用している。下記 Perl モジュールは必須：
+            <emphasis>IO::Socket::IP</emphasis> (asip-status) 又は
+            <emphasis>Net::DBus</emphasis> (afpstats)。</para>
+          </listitem>
+
+          <listitem>
+            <para>DocBook XSL と xsltproc</para>
+
+            <para>本マニュアル含めての netatalk ドキュメンテーションは XML 様式に作成され
+            DocBook XSL スタイルシートを適用し生成されている。フォーマット変換は xsltproc
+            で実施している。</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -253,111 +274,53 @@ remote: Counting objects: 2503, done.
           <secondary>Netatalk のソースからのコンパイル</secondary>
         </indexterm></title>
 
-      <sect3>
-        <title>ビルドの設定をする</title>
+      <para>ビルドシステムの使い方、コードのコンフィグ又はビルドの手順書は <ulink
+      url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
+      ファイルを参考してください。</para>
 
-        <para>バイナリーをビルドするには最初にソースのディレクトリで 
-        <command>./configure</command> プログラムを実行する．これによって Netatalk 
-        がターゲットのオペレーティングシステム向けに自動的に設定されるはずである．
-        もし普通とは違う要求がある場合，以下を実行すれば特殊なオプションで有効化できるものを見ることができる．</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure --help</userinput></screen>
-
-        <para>最も頻繁に使用されるオプションは：</para>
-
-        <itemizedlist>
-          <listitem>
-            <para><option>--with-init-style</option>=redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|netbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd</para>
-
-            <para>このオプションがスタートアップスクリプトをどこにインストールするかの助けになる．</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-bdb</option>=<replaceable>/path/to/bdb/installation/</replaceable></para>
-
-            <para>Berkeley DB を標準的な場所以外にインストールした場合，このオプションを使って netatalk 
-            に Berkeley DB をインストールした場所（訳注：すなわち 
-            <replaceable>/path/to/bdb/installation/</replaceable>
-            ）を指示<emphasis>しなければならない</emphasis>．</para>
-          </listitem>
-
-          <listitem>
-            <para><option>--with-ssl-dir</option>=<replaceable>/path/to/ssl/installation/</replaceable></para>
-
-            <para>OpenSSL または LibreSSL を標準以外の場所にインストールした場合，
-            このオプションを指定<emphasis>しなければならない</emphasis>．</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>そして必要なあらゆるオプションを含めて configure を実行する．</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure [arguments]</userinput></screen>
-
-        <para>Netatalk の Makefile 作成に使われた設定の概要を表示して configure は終了する．</para>
-      </sect3>
-
-      <sect3 id="spotlight-compile">
-        <title>Spotlight<indexterm>
-            <primary>Spotlight</primary>
-          </indexterm></title>
-
-        <para>Netatalk はメタデータのバックエンドに Gnome 
-        <ulink url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる．少なくとも最初に
-        <ulink url="https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/">SPARQL</ulink> 
-        をサポートしたバージョン 0.7 以降が必要である．</para>
-
-        <para>まだインストールしていなければ <emphasis>tracker</emphasis> パッケージと 
-        <emphasis>tracker-devel</emphasis> パッケージをインストールする．Solaris では 
-        <ulink url="http://www.opencsw.org/">OpenCSW</ulink> をインストールした後に OpenCSW 
-        の不安定版レポジトリーにある Tracker のパッケージをインストールする．</para>
-
-        <para>Tracker のパッケージは pkg-config 経由で見つかる．デフォルトのバージョン 0.12 
-        より新しいバージョンがインストールされている場合もあるので，
-        末尾のバージョン番号も渡す必要があるかもしれない．すなわち</para>
-
-        <screen><prompt>$</prompt> <userinput>pkg-config --list-all | grep tracker
-        </userinput>tracker-sparql-3.0             tracker-sparql-3.0 - Tracker : A SPARQL triple store library</screen>
-
-        <para>であれば：</para>
-
-        <screen><prompt>$</prompt> <userinput>./configure --with-tracker-pkgconfig-version=3.0 ...</userinput></screen>
-        
-        <para>とする．</para>
-
-        <para>もし Solaris と OpenCSW 由来の Tracker を使っていれば，PKG_CONFIG_PATH 
-        環境変数を設定し，--with-tracker-prefix configure オプションを加え，
-        LDFLAGS="-R/opt/csw/lib" を加える必要がある．</para>
-
-        <screen>PKG_CONFIG_PATH=/opt/csw/lib/pkgconfig LDFLAGS="-R/opt/csw/lib" ./configure --with-tracker-prefix=/opt/csw --with-tracker-pkgconfig-version=0.16 ...</screen>
-
-        <para>Tracker ライブラリーが見つけられているかどうか，configure の出力を確認する：</para>
-
-        <screen>checking for TRACKER... yes
-        checking for TRACKER_MINER... yes
-        ...
-        Configure summary:
-        ...
-          AFP:
-            Spotlight: yes
-        ...</screen>
-      </sect3>
-
-      <sect3>
-        <title>コンパイルとインストール</title>
-
-        <para>次に以下を実行</para>
-
-        <screen><prompt>$</prompt> <userinput>make</userinput></screen>
-
-        <para>すると Netatalk のバイナリーを生成するはずである．（この段階は完了するのに数分かかる）</para>
-
-        <para>この過程が終了すれば，以下のコマンドを使って</para>
-
-        <screen><prompt>$</prompt> <userinput>make install</userinput></screen>
-
-        <para>ドキュメントとバイナリーのインストール（デフォルトの場所を使う場合は 
-        "root" として行わなければならない）ができる．</para>
-      </sect3>
+      <para>特定の OS に対しての具体的なビルド事例は <link linkend="compile">
+      Netatalk をソースコードからコンパイルする</link> 付録を参考してください。</para>
     </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Netatalk の起動と停止</title>
+
+    <para>Netatalk の配布物は、
+    いくつかのオペレーティングシステム固有のスタートアップ・スクリプト・テンプレートを備えている。
+    これらテンプレートは、コンパイル前に指定できる。
+    現時点で、systemd、openrc、Linux、BSD、Solaris、そして macOS 向けのテンプレートが用意されている。
+    ビルドスクリプトにシステムタイプを指示することで、どのスタートアップスクリプト
+      <indexterm>
+        <primary>Startscript</primary>
+
+        <secondary>スタートアップスクリプト</secondary>
+      </indexterm>を生成してインストールするのか選ぶことができる。
+    スタートアップスクリプトを自動でインストールさせるには、
+    <option>with-init-style</option> オプションで有効なものを加える。</para>
+
+    <para>Linux ディストリビューションの新しいリリースは頻繁に出てくるし、
+    上記で触れたようなほかのシステムのスタートアップの手続きもまた変わりうる。
+    それ故、盲目的にスタートアップスクリプトをインストールするのではなく、
+    自分のシステムで動作するであろうかということをまず見てみる、というのがおそらくいい考えである。</para>
+
+    <para>Linux ディストリビューションの RPM あるいは BSD のパッケージのような所定のセットアップの一部として使用する場合、
+    諸々の事は概ねよしなに取り計らわれるだろう。
+    それ故、Netatalk そのものをコンパイルするユーザーには概ね下記のことが当てはまる。</para>
+
+    <para>いかなるスタートアップスクリプト機構を使っていても、下記のデーモンは必要である：</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>netatalk<indexterm>
+            <primary>netatalk</primary>
+          </indexterm></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>スタートアップスクリプトは無くても、root ユーザとして netatalk デーモンを実行し、
+    使い終わったら SIGTERM で終了させることができす。</para>
+
+    <para>加えて、設定ファイル <filename>afp.conf</filename> が正しい場所にあるか確認する。</para>
   </sect1>
 </chapter>
