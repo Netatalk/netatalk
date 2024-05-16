@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <refentry id="afp_signature.conf.5">
-
   <refmeta>
     <refentrytitle>afp_signature.conf</refentrytitle>
 
@@ -9,35 +8,43 @@
     <refmiscinfo class="date">23 Mar 2012</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>afp_signature.conf</refname>
 
-    <refpurpose>サーバシグネチャを指定するために <command>afpd</command>(8) が利用する設定ファイル</refpurpose>
+    <refpurpose>サーバシグネチャを指定するために <command>afpd</command>(8)
+    が利用する設定ファイル</refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><filename>@localstatedir@/netatalk/afp_signature.conf</filename>はサーバシグネチャを魔法のように自動的に指定するために<command>afpd</command>が利用する設定ファイルである。設定行は以下のように構成される。</para>
+    <para><filename>afp_signature.conf</filename>はサーバシグネチャを魔法のように自動的に指定するために<command>afpd</command>が利用する設定ファイルである。設定行は以下のように構成される。</para>
 
     <para><replaceable>"server name" </replaceable>
     <replaceable>hexa-string</replaceable></para>
 
-    <para>最初のフィールドはサーバ名である。 サーバ名がスペースを含む場合、それを引用符で囲まなければならない。第二のフィールドは16バイトのサーバシグネチャのための32文字の16進数文字列である。</para>
+    <para>最初のフィールドはサーバ名である。
+    サーバ名がスペースを含む場合、それを引用符で囲まなければならない。第二のフィールドは16バイトのサーバシグネチャのための32文字の16進数文字列である。</para>
+
     <para>先頭のスペースとタブは無視される。空行は無視される。頭に#が付いた行は無視される。不正な行は無視される。</para>
 
     <note>
-        <para>サーバシグネチャは同じサーバに二重にログオンするのを防ぐために使われる固有の16バイトの識別子である。</para>
-        <para>Netatalk 2.0以前はgethostid()を使ってサーバシグネチャを生成した。他のサーバが同じシグネチャをもつ問題があった。なぜなら、hostidは十分に固有でないからである。</para>
-        <para>現在のnetatalkは乱数からシグネチャを生成し、それをafp_signature.confに保存する。次回起動したとき、それはこのファイルから読み込まれる。</para>
-        <para>このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。もし意図的にシグネチャを設定したいなら、afp.confで"signature ="オプションを使いなさい。この場合、afp_signature.confは利用されない。</para>
-    </note>
+      <para>サーバシグネチャは同じサーバに二重にログオンするのを防ぐために使われる固有の16バイトの識別子である。</para>
 
-    <para></para>
+      <para>Netatalk
+      2.0以前はgethostid()を使ってサーバシグネチャを生成した。他のサーバが同じシグネチャをもつ問題があった。なぜなら、hostidは十分に固有でないからである。</para>
+
+      <para>現在のnetatalkは乱数からシグネチャを生成し、それをafp_signature.confに保存する。次回起動したとき、それはこのファイルから読み込まれる。</para>
+
+      <para>このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。もし意図的にシグネチャを設定したいなら、afp.confで"signature
+      ="オプションを使いなさい。この場合、afp_signature.confは利用されない。</para>
+    </note>
   </refsect1>
 
   <refsect1>
@@ -70,8 +77,9 @@
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

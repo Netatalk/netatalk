@@ -5,10 +5,12 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">11 Apr 2023</refmiscinfo>
+    <refmiscinfo class="date">15 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -21,7 +23,8 @@
   <refsect1>
     <title>概要</title>
 
-    <para><filename>afp.conf</filename>は<emphasis role="bold">Netatalk</emphasis> AFPファイルサーバの設定ファイルである。</para>
+    <para><filename>afp.conf</filename>は<emphasis
+    role="bold">Netatalk</emphasis> AFPファイルサーバの設定ファイルである。</para>
 
     <para>全てのAFP固有の設定とAFPボリュームの定義がこのファイルを通して行われる。</para>
   </refsect1>
@@ -42,11 +45,14 @@
 
     <para>セミコロン(<quote>;</quote>)やハッシュ文字(<quote>#</quote>)で始まるいかなる行も、空白だけの行と同様に無視される。</para>
 
-    <para><quote> <literal>\</literal> </quote>で終わるいかなる行も、通例のUNIX方式で次の行に続くことを意味する。</para>
+    <para><quote> <literal>\</literal>
+    </quote>で終わるいかなる行も、通例のUNIX方式で次の行に続くことを意味する。</para>
 
-    <para>パラメータにおいて等号の後ろに続く値は、文字列(引用符は必要ない)または真偽値である。真偽値はyes/no、1/0、true/falseで表現する。大文字と小文字の区別は真偽値では意味を持たないが、文字列では保存される。「file perm」のようないくつかの項目は数値を表す。</para>
+    <para>パラメータにおいて等号の後ろに続く値は、文字列(引用符は必要ない)または真偽値である。真偽値はyes/no、1/0、true/falseで表現する。大文字と小文字の区別は真偽値では意味を持たないが、文字列では保存される。「file
+    perm」のようないくつかの項目は数値を表す。</para>
 
-    <para>「<option>include =　<replaceable>path</replaceable></option>」というパラメータは、設定ファイルの中にもう一つの設定ファイルを組み込むことを可能にする。そのファイルはまるでその場所に書き込まれたように、そっくりそのまま組み込まれる。入れ子になった組み込みはサポートされない。</para>
+    <para>「<option>include
+    =　<replaceable>path</replaceable></option>」というパラメータは、設定ファイルの中にもう一つの設定ファイルを組み込むことを可能にする。そのファイルはまるでその場所に書き込まれたように、そっくりそのまま組み込まれる。入れ子になった組み込みはサポートされない。</para>
   </refsect1>
 
   <refsect1>
@@ -58,12 +64,13 @@
 
     <para>一つのボリュームは、アクセスを許可するディレクトリ設定と、そのサービスにおいてユーザに与えるアクセス権設定で成り立つ。ボリュームに対して<option>path</option>オプションを使って共有ディレクトリを指定しなければならない。</para>
 
-    <para><option>path</option>オプションのないボリュームセクションは、他のボリュームセクションから<option>vol preset</option>オプション経由で呼び出され、ボリュームのデフォルト値を決める<emphasis>ボリュームプリセット</emphasis>と見なされる。プリセット<emphasis>と</emphasis>ボリュームセクションの両方で指定されたオプションについては、ボリュームオプション設定がプリセットオプションを完全に上書きする。</para>
+    <para><option>path</option>オプションのないボリュームセクションは、他のボリュームセクションから<option>vol
+    preset</option>オプション経由で呼び出され、ボリュームのデフォルト値を決める<emphasis>ボリュームプリセット</emphasis>と見なされる。プリセット<emphasis>と</emphasis>ボリュームセクションの両方で指定されたオプションについては、ボリュームオプション設定がプリセットオプションを完全に上書きする。</para>
 
     <para>サーバが許可したアクセス権は、ホストシステムの特定のUNIXユーザまたはゲストユーザのアクセス権でマスクされる。サーバはホストシステムの許可以上の許可をしない。</para>
 
-    <para>以下のセクションの例は、一つのAFPボリュームを定義している。ユーザはパス<filename>/foo/bar</filename>への完全なアクセス権を持つ。 <literal>baz</literal>という共有名でアクセスできる:
-    <programlisting> [baz]
+    <para>以下のセクションの例は、一つのAFPボリュームを定義している。ユーザはパス<filename>/foo/bar</filename>への完全なアクセス権を持つ。
+    <literal>baz</literal>という共有名でアクセスできる: <programlisting> [baz]
     path = /foo/bar </programlisting></para>
   </refsect1>
 
@@ -79,7 +86,10 @@
     <refsect2>
       <title>[Homes]セクション</title>
 
-      <para>このセクションはUNIXサーバ側のユーザのホームディレクトリを共有できるようにする。オプションの<option>path</option>パラメータを指定すると、ユーザのホームディレクトリ全体ではなく、サブディレクトリ<option>path</option>が共有される。<option>basedir regex</option>オプションを定義する必要がある。これはホームディレクトリの親ディレクトリにマッチする正規表現である。(H)の印がついているパラメータはこのボリュームセクション用である。オプションパラメータ<option>home name</option>はAFPボリューム名を変更するのに使うものであり、デフォルトは<emphasis>$u's home</emphasis>である。下の「変数置換」の項を見よ。</para>
+      <para>このセクションはUNIXサーバ側のユーザのホームディレクトリを共有できるようにする。オプションの<option>path</option>パラメータを指定すると、ユーザのホームディレクトリ全体ではなく、サブディレクトリ<option>path</option>が共有される。<option>basedir
+      regex</option>オプションを定義する必要がある。これはホームディレクトリの親ディレクトリにマッチする正規表現である。(H)の印がついているパラメータはこのボリュームセクション用である。オプションパラメータ<option>home
+      name</option>はAFPボリューム名を変更するのに使うものであり、デフォルトは<emphasis>$u's
+      home</emphasis>である。下の「変数置換」の項を見よ。</para>
 
       <para>以下の例でこれを解説する。全てのユーザのホームディレクトリは<filename>/home</filename>の下にある:
       <programlisting> [Homes]
@@ -87,7 +97,8 @@
       basedir regex = /home</programlisting>
       ユーザ<emphasis>john</emphasis>について、<filename>/home/john/afp-data</filename>というパスがAFPホームボリュームになる。</para>
 
-      <para><option>basedir regex</option>ががシンボリックリンクを含む場合、正規化した絶対パスを設定してください。<filename>/home</filename>が<filename>/usr/home</filename>にリンクしているとき:
+      <para><option>basedir
+      regex</option>ががシンボリックリンクを含む場合、正規化した絶対パスを設定してください。<filename>/home</filename>が<filename>/usr/home</filename>にリンクしているとき:
       <programlisting> [Homes]
       basedir regex = /usr/home</programlisting></para>
     </refsect2>
@@ -98,7 +109,8 @@
 
     <para>パラメータはセクション固有の属性を定義する。</para>
 
-    <para>いくつかのパラメータは[Global]セクションに固有のものである(たとえば<emphasis>log type</emphasis>)。それ以外は全てボリュームセクションのみに許される。(<emphasis>G</emphasis>)はパラメータが[Global]セクション固有であることを示す。(<emphasis>V</emphasis>)はボリューム固有のセクションで指定できることを示す。</para>
+    <para>いくつかのパラメータは[Global]セクションに固有のものである(たとえば<emphasis>log
+    type</emphasis>)。それ以外は全てボリュームセクションのみに許される。(<emphasis>G</emphasis>)はパラメータが[Global]セクション固有であることを示す。(<emphasis>V</emphasis>)はボリューム固有のセクションで指定できることを示す。</para>
   </refsect1>
 
   <refsect1>
@@ -221,7 +233,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>認証時にユーザ名に@DOMAINを追加する。Active Directory環境で有用。さもなくば、完全な文字列user@domainで参加するユーザを要求するだろう。</para>
+            <para>認証時にユーザ名に@DOMAINを追加する。Active
+            Directory環境で有用。さもなくば、完全な文字列user@domainで参加するユーザを要求するだろう。</para>
           </listitem>
         </varlistentry>
 
@@ -230,7 +243,11 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>例えば"<option>admin auth user = root</option>"を指定すると、通常ユーザのログインが失敗したときにafpdは必ず指定した<option>admin auth user</option>として認証を試みる。これが成功した場合、元の接続ユーザとして通常のセッションが確立される。言い換えると、あなたが<option>admin auth user</option>のパスワードを知っている場合、如何なる他のユーザとしてでも認証できる。</para>
+            <para>例えば"<option>admin auth user =
+            root</option>"を指定すると、通常ユーザのログインが失敗したときにafpdは必ず指定した<option>admin
+            auth
+            user</option>として認証を試みる。これが成功した場合、元の接続ユーザとして通常のセッションが確立される。言い換えると、あなたが<option>admin
+            auth user</option>のパスワードを知っている場合、如何なる他のユーザとしてでも認証できる。</para>
           </listitem>
         </varlistentry>
 
@@ -311,7 +328,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>スペースまたはカンマで区切られたUAMの一覧。(デフォルトは「uams_dhx.so uams_dhx2.so」)</para>
+            <para>スペースまたはカンマで区切られたUAMの一覧。(デフォルトは「uams_dhx.so
+            uams_dhx2.so」)</para>
 
             <para>最も一般的に使われるUAMは以下の通り:</para>
 
@@ -328,7 +346,8 @@
                 <term>uams_clrtxt.so</term>
 
                 <listitem>
-                  <para>(uams_pam.soまたはuams_passwd.so) 暗号化なしで転送されたパスワードによるログインを許可する。(時代遅れ)</para>
+                  <para>(uams_pam.soまたはuams_passwd.so)
+                  暗号化なしで転送されたパスワードによるログインを許可する。(時代遅れ)</para>
                 </listitem>
               </varlistentry>
 
@@ -336,8 +355,9 @@
                 <term>uams_randnum.so</term>
 
                 <listitem>
-                  <para>認証のための乱数および双方向乱数交換を許可する (パスワードを含んだファイル、つまり@pkgconfdir@/afppasswdファイルか"<option>passwd file</option>"で指定したファイルのどちらかが必要)。詳細は
-                  <citerefentry>
+                  <para>認証のための乱数および双方向乱数交換を許可する
+                  (パスワードを含んだファイル、つまりafppasswdファイルか"<option>passwd
+                  file</option>"で指定したファイルのどちらかが必要)。詳細は <citerefentry>
                       <refentrytitle>afppasswd</refentrytitle>
 
                       <manvolnum>1</manvolnum>
@@ -349,7 +369,8 @@
                 <term>uams_dhx.so</term>
 
                 <listitem>
-                  <para>(uams_dhx_pam.soまたはuams_dhx_passwd.so) 認証のためのDiffie-Hellman交換(DHX)を許可する。</para>
+                  <para>(uams_dhx_pam.soまたはuams_dhx_passwd.so)
+                  認証のためのDiffie-Hellman交換(DHX)を許可する。</para>
                 </listitem>
               </varlistentry>
 
@@ -357,7 +378,8 @@
                 <term>uams_dhx2.so</term>
 
                 <listitem>
-                  <para>(uams_dhx2_pam.soまたはuams_dhx2_passwd.so) 認証のためのDiffie-Hellman交換2(DHX2)を許可する。</para>
+                  <para>(uams_dhx2_pam.soまたはuams_dhx2_passwd.so)
+                  認証のためのDiffie-Hellman交換2(DHX2)を許可する。</para>
                 </listitem>
               </varlistentry>
 
@@ -377,7 +399,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>このサーバのためのUAMのデフォルトパスを設定する(デフォルトは@libdir@/netatalk)。</para>
+            <para>このサーバのためのUAMのデフォルトパスを設定する。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -386,11 +408,16 @@
     <refsect2>
       <title>文字セットオプション</title>
 
-      <para>OS XでAppleはAFP3プロトコルを導入した。大きな変更の一つは、AFP3は分解済UTF-8 (UTF8-MAC)としてエンコードされたUnicode名を用いることである。以前のAFP及びOSバージョンはMacRomanやMacCentralEuropeといった文字セットを用いた。</para>
+      <para>OS XでAppleはAFP3プロトコルを導入した。大きな変更の一つは、AFP3は分解済UTF-8
+      (UTF8-MAC)としてエンコードされたUnicode名を用いることである。以前のAFP及びOSバージョンはMacRomanやMacCentralEuropeといった文字セットを用いた。</para>
 
-      <para>AFP3と古いクライアントに同時に応対できるように、<command>afpd</command>はUTF-8とMac文字セットの間の変換ができる必要がある。OS Xですら部分的にMac文字セットに依存している。AFP3以前のクライアントが使うコードページを<command>afpd</command>が検出する方法はないので、あなたは<option>mac charset</option>オプションを使ってそれを指定しなけらばならない。デフォルトはMacRomanであり、多くの西欧ユーザにとって良いであろう。</para>
+      <para>AFP3と古いクライアントに同時に応対できるように、<command>afpd</command>はUTF-8とMac文字セットの間の変換ができる必要がある。OS
+      Xですら部分的にMac文字セットに依存している。AFP3以前のクライアントが使うコードページを<command>afpd</command>が検出する方法はないので、あなたは<option>mac
+      charset</option>オプションを使ってそれを指定しなけらばならない。デフォルトはMacRomanであり、多くの西欧ユーザにとって良いであろう。</para>
 
-      <para><command>afpd</command>はUNIXオペレーティングシステムとも相互に作用する必要があるので、UTF8-MAC/Mac文字セットからUNIX文字セットへ変換できる必要がある。デフォルトで<command>afpd</command>は<emphasis>UTF8</emphasis>を用いる。<option>unix charset</option>オプションを使ってUNIX文字セットを設定できる。<command>afpd</command>のための設定ファイルで拡張文字セットを使う場合、端末が<option>unix charset</option>に一致することを確認してください。</para>
+      <para><command>afpd</command>はUNIXオペレーティングシステムとも相互に作用する必要があるので、UTF8-MAC/Mac文字セットからUNIX文字セットへ変換できる必要がある。デフォルトで<command>afpd</command>は<emphasis>UTF8</emphasis>を用いる。<option>unix
+      charset</option>オプションを使ってUNIX文字セットを設定できる。<command>afpd</command>のための設定ファイルで拡張文字セットを使う場合、端末が<option>unix
+      charset</option>に一致することを確認してください。</para>
 
       <variablelist>
         <varlistentry>
@@ -398,7 +425,9 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Macクライアントの文字セット、例えば<emphasis>MAC_ROMAN</emphasis>を指定する。これは文字列やファイル名をOS9やClassic環境のクライアントコードページに変換するために用いられる。すなわち認証やAFPメッセージ(SIGUSR2 messaging)である。これはボリュームの<option>mac charset</option>のデフォルトにもなる。デフォルトは<emphasis>MAC_ROMAN</emphasis>。</para>
+            <para>Macクライアントの文字セット、例えば<emphasis>MAC_ROMAN</emphasis>を指定する。これは文字列やファイル名をOS9やClassic環境のクライアントコードページに変換するために用いられる。すなわち認証やAFPメッセージ(SIGUSR2
+            messaging)である。これはボリュームの<option>mac
+            charset</option>のデフォルトにもなる。デフォルトは<emphasis>MAC_ROMAN</emphasis>。</para>
           </listitem>
         </varlistentry>
 
@@ -416,7 +445,8 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>ボリュームのファイルシステムのエンコーディングを指定する。デフォルトでは<option>unix charset</option>と同じである。</para>
+            <para>ボリュームのファイルシステムのエンコーディングを指定する。デフォルトでは<option>unix
+            charset</option>と同じである。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -431,7 +461,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>このサーバの乱数UAMパスワードファイルのパスを設定する (デフォルトは@pkgconfdir@/afppasswd)。</para>
+            <para>このサーバの乱数UAMパスワードファイルのパスを設定する。</para>
           </listitem>
         </varlistentry>
 
@@ -455,21 +485,24 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>古いMac OS Xクライアント(10.3.3から10.4)にSSHでトンネルしたAFP接続を魔法のように自動的に確立させる。このオプションを設定した場合、クライアントのFPGetSrvrInfo要求へのサーバの返答は追加エントリを含む。これはクライアントの設定と<citerefentry>
+            <para>古いMac OS
+            Xクライアント(10.3.3から10.4)にSSHでトンネルしたAFP接続を魔法のように自動的に確立させる。このオプションを設定した場合、クライアントのFPGetSrvrInfo要求へのサーバの返答は追加エントリを含む。これはクライアントの設定と<citerefentry>
                 <refentrytitle>sshd</refentrytitle>
 
                 <manvolnum>8</manvolnum>
               </citerefentry>が正しく設定されて動作するサーバ上で実行中であるかに依存する。</para>
 
             <note>
-              <para>SSHを介した全体を暗号化するAFP接続はサーバの負荷を著しく増加させるので、このオプションの設定は推奨しない。一方、バージョン10.3.4より前のMacOS Xにおけるこの機能のAppleクライアント側の実装はセキュリティ欠陥があった。</para>
+              <para>SSHを介した全体を暗号化するAFP接続はサーバの負荷を著しく増加させるので、このオプションの設定は推奨しない。一方、バージョン10.3.4より前のMacOS
+              Xにおけるこの機能のAppleクライアント側の実装はセキュリティ欠陥があった。</para>
             </note>
           </listitem>
         </varlistentry>
 
         <varlistentry>
           <term>afp interfaces = <replaceable>name [name ...]</replaceable>
-            <type>(G)</type></term>
+          <type>(G)</type></term>
+
           <listitem>
             <para>サーバがリッスンするネットワークインターフェースを指定する。デフォルトではシステムの最初のIPアドレスを宣伝するが、入ってくる如何なる要求もリッスンする。</para>
           </listitem>
@@ -480,8 +513,11 @@
           ...]</replaceable> <type>(G)</type></term>
 
           <listitem>
-            <para>サーバが宣伝<emphasis role="bold">および</emphasis>リッスンするIPアドレスを指定する。デフォルトではシステムの最初のIPアドレスを宣伝するが、入ってくる如何なる要求もリッスンする。ネットワークアドレスはIPv4のドット付き10進数フォーマットやIPv6の16進数フォーマットのどちらでも指定してよい。</para>
-            <para>IPv6 address + portの組み合わせは角かっこを使ったフォーマット[IPv6]:portのURLを使わなければならない。</para>
+            <para>サーバが宣伝<emphasis
+            role="bold">および</emphasis>リッスンするIPアドレスを指定する。デフォルトではシステムの最初のIPアドレスを宣伝するが、入ってくる如何なる要求もリッスンする。ネットワークアドレスはIPv4のドット付き10進数フォーマットやIPv6の16進数フォーマットのどちらでも指定してよい。</para>
+
+            <para>IPv6 address +
+            portの組み合わせは角かっこを使ったフォーマット[IPv6]:portのURLを使わなければならない。</para>
           </listitem>
         </varlistentry>
 
@@ -490,7 +526,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>異なるTCPポートをAFPに使わせる。デフォルトは548である。<option>afp listen</option>オプションで何も指定しなかった場合も適用されたデフォルトポートを設定する。</para>
+            <para>異なるTCPポートをAFPに使わせる。デフォルトは548である。<option>afp
+            listen</option>オプションで何も指定しなかった場合も適用されたデフォルトポートを設定する。</para>
           </listitem>
         </varlistentry>
 
@@ -499,7 +536,8 @@
           address[:port] ...]</replaceable> <type>(G)</type></term>
 
           <listitem>
-            <para>CNIDサーバがリッスンするIPアドレスを指定する。デフォルトは<emphasis role="bold">localhost:4700</emphasis>である。</para>
+            <para>CNIDサーバがリッスンするIPアドレスを指定する。デフォルトは<emphasis
+            role="bold">localhost:4700</emphasis>である。</para>
           </listitem>
         </varlistentry>
 
@@ -517,7 +555,11 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>DSI/TCP先読みバッファのサイズを決定する係数。デフォルトは12である。これにDSI server quantum (デフォルトは1MiB)をかけるとバッファサイズになる。この値を増やすと速いローカルネットワークでのボリュームからボリュームへのコピーのスループットが増えるかもしれない。 <emphasis>注記</emphasis>: このバッファはafpdの子プロセス毎に割り当てられるので、大きな値を指定すると大量のメモリが食われる (バッファサイズ * クライアント数)。</para>
+            <para>DSI/TCP先読みバッファのサイズを決定する係数。デフォルトは12である。これにDSI server quantum
+            (デフォルトは1MiB)をかけるとバッファサイズになる。この値を増やすと速いローカルネットワークでのボリュームからボリュームへのコピーのスループットが増えるかもしれない。
+            <emphasis>注記</emphasis>:
+            このバッファはafpdの子プロセス毎に割り当てられるので、大きな値を指定すると大量のメモリが食われる (バッファサイズ *
+            クライアント数)。</para>
           </listitem>
         </varlistentry>
 
@@ -526,7 +568,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>完全修飾ドメイン名をオプションのポート番号と共に指定する。サーバがこれを解決できない場合は破棄される。AppleShare clients 3.8.3以前はこのオプションを評価しない。このオプションはデフォルトで無効である。これによりクライアント側は名前解決を二段階踏むことになるので注意して使ってください。afpdはこのname:portの組み合わせを宣伝しますが自動的にはリッスンしないことにも注意してください。</para>
+            <para>完全修飾ドメイン名をオプションのポート番号と共に指定する。サーバがこれを解決できない場合は破棄される。AppleShare
+            clients
+            3.8.3以前はこのオプションを評価しない。このオプションはデフォルトで無効である。これによりクライアント側は名前解決を二段階踏むことになるので注意して使ってください。afpdはこのname:portの組み合わせを宣伝しますが自動的にはリッスンしないことにも注意してください。</para>
           </listitem>
         </varlistentry>
 
@@ -535,7 +579,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>宣伝用のIPアドレスを決定するため、ホスト名の呼出結果の代わりにこれを用いる。従って、このホスト名から宣伝用IPアドレスが解決されるようになる。これはリスニングには使われないし、<option>afp listen</option>によっても上書きされてしまう。</para>
+            <para>宣伝用のIPアドレスを決定するため、ホスト名の呼出結果の代わりにこれを用いる。従って、このホスト名から宣伝用IPアドレスが解決されるようになる。これはリスニングには使われないし、<option>afp
+            listen</option>によっても上書きされてしまう。</para>
           </listitem>
         </varlistentry>
 
@@ -553,7 +598,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>これはDSI server quantumを指定する。デフォルト値は0x100000 (1MiB)である。最大値は0xFFFFFFFFFであり最小値は32000である。範囲外の値を指定した場合、デフォルト値が設定される。自分が何をしようとしているか確信がない限り、この値を変更しないでください。</para>
+            <para>これはDSI server quantumを指定する。デフォルト値は0x100000
+            (1MiB)である。最大値は0xFFFFFFFFFであり最小値は32000である。範囲外の値を指定した場合、デフォルト値が設定される。自分が何をしようとしているか確信がない限り、この値を変更しないでください。</para>
           </listitem>
         </varlistentry>
 
@@ -613,7 +659,6 @@
           </listitem>
         </varlistentry>
 
-
         <varlistentry>
           <term>zeroconf = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
@@ -656,26 +701,35 @@
           <type>(H)</type></term>
 
           <listitem>
-            <para>ユーザホームの親ディレクトリにマッチする正規表現。<option>basedir regex</option>がシンボリックリンクを含む場合、正規化した絶対パスを設定しなければならない。簡単なケースだとこれは単に一つのパスである。つまり<option>basedir regex = /home</option>である。</para>
+            <para>ユーザホームの親ディレクトリにマッチする正規表現。<option>basedir
+            regex</option>がシンボリックリンクを含む場合、正規化した絶対パスを設定しなければならない。簡単なケースだとこれは単に一つのパスである。つまり<option>basedir
+            regex = /home</option>である。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>chmod request = <replaceable>preserve (デフォルト) | ignore | simple</replaceable>
-          <type>(G)/(V)</type></term>
+          <term>chmod request = <replaceable>preserve (デフォルト) | ignore |
+          simple</replaceable> <type>(G)/(V)</type></term>
 
           <listitem>
             <para>ACLに対応する高度なパーミッション制御。</para>
 
             <itemizedlist>
-              <listitem><para> <option>ignore</option> - UNIXのchmod()要求を完全に無視する。新規作成を上書きして親ディレクトリのACL継承に完全コントロールさせるためにこのオプションを使う。</para></listitem>
-              <listitem><para>
-                <option>preserve</option> - 名前付きユーザとグループのためのZFS ACEやPOSIX ACLグループマスクを維持する
-		      </para></listitem>
-              <listitem><para>
-		<option>simple</option> -  いかなる追加の手順も踏まず、単に要求通りにchmod()する
-		      </para></listitem>
-		    </itemizedlist>
+              <listitem>
+                <para><option>ignore</option> -
+                UNIXのchmod()要求を完全に無視する。新規作成を上書きして親ディレクトリのACL継承に完全コントロールさせるためにこのオプションを使う。</para>
+              </listitem>
+
+              <listitem>
+                <para><option>preserve</option> - 名前付きユーザとグループのためのZFS
+                ACEやPOSIX ACLグループマスクを維持する</para>
+              </listitem>
+
+              <listitem>
+                <para><option>simple</option> -
+                いかなる追加の手順も踏まず、単に要求通りにchmod()する</para>
+              </listitem>
+            </itemizedlist>
           </listitem>
         </varlistentry>
 
@@ -689,8 +743,8 @@
         </varlistentry>
 
         <varlistentry>
-          <term>cnid mysql host = <replaceable>MySQL server address</replaceable>
-          <type>(G)</type></term>
+          <term>cnid mysql host = <replaceable>MySQL server
+          address</replaceable> <type>(G)</type></term>
 
           <listitem>
             <para>mysql CNIDバックエンド利用時のMySQLサーバの名前またはアドレス。</para>
@@ -729,7 +783,8 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>cnid_metadサーバのIPアドレスとポート番号を指定する。CNID dbdバックエンドのために必要。デフォルトはlocalhost:4700。ネットワークアドレスはIPv4のドット分割10進数フォーマットでもよいし、IPv6の16進数フォーマットでもよい。</para>
+            <para>cnid_metadサーバのIPアドレスとポート番号を指定する。CNID
+            dbdバックエンドのために必要。デフォルトはlocalhost:4700。ネットワークアドレスはIPv4のドット分割10進数フォーマットでもよいし、IPv6の16進数フォーマットでもよい。</para>
           </listitem>
         </varlistentry>
 
@@ -738,7 +793,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Spotlight機能が使用するdbus-daemon実行ファイルのパスを設定する。デフォルト値 <filename>[@DBUS_DAEMON_PATH@]</filename> はnetatalkのビルド時に決定される。</para>
+            <para>Spotlight機能が使用するdbus-daemon実行ファイルのパスを設定する。デフォルト値
+            <filename>[@DBUS_DAEMON_PATH@]</filename>
+            はnetatalkのビルド時に決定される。</para>
           </listitem>
         </varlistentry>
 
@@ -758,14 +815,14 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>ファイル拡張子とタイプ/クリエータのマッピングを定義するファイルのパスを設定する。(デフォルトは@pkgconfdir@/extmap.confである)</para>
+            <para>ファイル拡張子とタイプ/クリエータのマッピングを定義するファイルのパスを設定する。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
           <term>force xattr with sticky bit =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
-          <emphasis>no</emphasis>) <type>(G/V)</type></term>
+          <replaceable>BOOLEAN</replaceable> (デフォルト: <emphasis>no</emphasis>)
+          <type>(G/V)</type></term>
 
           <listitem>
             <para>ディレクトリへの書き込み権限があったとしても、スティッキービット設定を使ってメタデータ(拡張属性)を書き込むことに失敗するかもしれない。なぜなら、スティッキービットが設定されている場合、所有者だけが拡張属性への書き込みを許されるからである。</para>
@@ -795,12 +852,16 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
-          <type>(G)/(V)</type></term>
+          <term>ignored attributes = <replaceable>all | nowrite | nodelete |
+          norename</replaceable> <type>(G)/(V)</type></term>
 
           <listitem>
             <para>サーバが無視すべきファイルとディレクトリの属性を設定する。<option>all</option>はオプション全部という意味である。</para>
-            <para>OS Xにおいて、Finderがファイル/ディレクトリのロックを設定する場合、またはターミナルでBSD uchgフラグを設定する場合、3つの属性が全て使われる。従って、Finderロック/BSD uchgフラグを無視する目的で<emphasis>ignored attributes = all</emphasis>の設定を追加してください。</para>
+
+            <para>OS Xにおいて、Finderがファイル/ディレクトリのロックを設定する場合、またはターミナルでBSD
+            uchgフラグを設定する場合、3つの属性が全て使われる。従って、Finderロック/BSD
+            uchgフラグを無視する目的で<emphasis>ignored attributes =
+            all</emphasis>の設定を追加してください。</para>
           </listitem>
         </varlistentry>
 
@@ -809,7 +870,8 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>クライアントがサーバにログオンしたときに表示されるメッセージを設定する。メッセージは<option>unix charset</option>で書く。拡張文字が使える。</para>
+            <para>クライアントがサーバにログオンしたときに表示されるメッセージを設定する。メッセージは<option>unix
+            charset</option>で書く。拡張文字が使える。</para>
           </listitem>
         </varlistentry>
 
@@ -818,9 +880,26 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>クライアント上に表示されるアイコンモデルを指定する。デフォルトではオフになっている。netatalkがZeroconfをサポートしなければならないことに注意してください。例: RackMac (same as Xserve), PowerBook, PowerMac,
-            Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro,
-            AppleTV1,1, AirPort.</para>
+            <para>クライアント上に表示されるアイコンモデルを指定する。デフォルトではクライアント Mac
+            に任せること。netatalkがZeroconfをサポートしなければならないことに注意してください。例:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><option>Laptop</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>RackMount</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>Tower</option></para>
+              </listitem>
+            </itemizedlist>
+
+            <para>macOSは認識しているモデルコードは
+            <filename>/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist
+            </filename> を参照すれば確認できる。(macOS 14 Sonoma の場合)</para>
           </listitem>
         </varlistentry>
 
@@ -828,24 +907,24 @@
           <term>signature = &lt;text&gt; <type>(G)</type></term>
 
           <listitem>
-            <para>サーバシグネチャを指定する。最大長は16文字である。このオプションは障害隔離などを提供するクラスタ環境において有用である。デフォルトでは、afpdは自動的にシグネチャを(乱数を元に)生成し、それを<filename>@localstatedir@/netatalk/afp_signature.conf</filename>に保存する。asip-status(1)も見よ。</para>
+            <para>サーバシグネチャを指定する。最大長は16文字である。このオプションは障害隔離などを提供するクラスタ環境において有用である。デフォルトでは、afpdは自動的にシグネチャを(乱数を元に)生成し、それを<filename>afp_signature.conf</filename>に保存する。asip-status(1)も見よ。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
           <term>solaris share reservations =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
-          <emphasis>yes</emphasis>) <type>(G)</type></term>
+          <replaceable>BOOLEAN</replaceable> (デフォルト: <emphasis>yes</emphasis>)
+          <type>(G)</type></term>
 
           <listitem>
-            <para>Solarisの共有予約を利用する。Solaris CIFSサーバもこれを利用するので、ロックを統一したマルチプロトコルサーバを形成する。</para>
+            <para>Solarisの共有予約を利用する。Solaris
+            CIFSサーバもこれを利用するので、ロックを統一したマルチプロトコルサーバを形成する。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>sparql results limit =
-          <replaceable>NUMBER</replaceable> (デフォルト:
-          <emphasis>無制限</emphasis>) <type>(G)</type></term>
+          <term>sparql results limit = <replaceable>NUMBER</replaceable>
+          (デフォルト: <emphasis>無制限</emphasis>) <type>(G)</type></term>
 
           <listitem>
             <para>SPARQLクエリを介したTrackerからのクエリ結果の数に制限を課す。</para>
@@ -853,29 +932,28 @@
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <term>spotlight = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Spotlight検索を有効にするかどうか。注記: 一度グローバルオプションで有効にすると、有効でないボリュームは全く検索できない。<emphasis>dbus daemon</emphasis>オプションも見よ。</para>
+            <para>Spotlight検索を有効にするかどうか。注記:
+            一度グローバルオプションで有効にすると、有効でないボリュームは全く検索できない。<emphasis>dbus
+            daemon</emphasis>オプションも見よ。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight attributes =
-          <replaceable>カンマで分割した文字列</replaceable> (デフォルト:
-          <emphasis>空</emphasis>) <type>(G)</type></term>
+          <term>spotlight attributes = <replaceable>カンマで分割した文字列</replaceable>
+          (デフォルト: <emphasis>空</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Spotlight検索で使うことを許された属性のリスト。デフォルトでは全ての属性を検索できるが、文字列を渡せば属性をその文字列の要素に制限できる。 例:
-	    <programlisting>spotlight attributes = *,kMDItemTextContent</programlisting></para>
+            <para>Spotlight検索で使うことを許された属性のリスト。デフォルトでは全ての属性を検索できるが、文字列を渡せば属性をその文字列の要素に制限できる。
+            例: <programlisting>spotlight attributes = *,kMDItemTextContent</programlisting></para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight expr =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <term>spotlight expr = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
@@ -884,8 +962,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term>start dbus =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <term>start dbus = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
@@ -894,12 +971,13 @@
         </varlistentry>
 
         <varlistentry>
-          <term>start tracker =
-          <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <term>start tracker = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>"<command>tracker daemon -s</command>"によってTrackerを開始するかどうか。古いTrackerの場合、"<command>tracker-control -s</command>"が代わりに使われる。</para>
+            <para>"<command>tracker daemon
+            -s</command>"によってTrackerを開始するかどうか。古いTrackerの場合、"<command>tracker-control
+            -s</command>"が代わりに使われる。</para>
           </listitem>
         </varlistentry>
 
@@ -917,7 +995,7 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>データベース情報をpathに格納するように設定する。ボリュームが読み込み専用だったとしても、書き込み可能な場所を設定しなければならない。デフォルトは<filename>@localstatedir@/netatalk/CNID/$v/</filename>である。</para>
+            <para>データベース情報をpathに格納するように設定する。ボリュームが読み込み専用だったとしても、書き込み可能な場所を設定しなければならない。</para>
           </listitem>
         </varlistentry>
 
@@ -926,7 +1004,8 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>このオプションをtrueに設定するとNetatalk 2の動作に立ち返る。つまり、それぞれの共有のボリュームルートの下にある.AppleDBというフォルダにCNIDデータベースを格納する。</para>
+            <para>このオプションをtrueに設定するとNetatalk
+            2の動作に立ち返る。つまり、それぞれの共有のボリュームルートの下にある.AppleDBというフォルダにCNIDデータベースを格納する。</para>
           </listitem>
         </varlistentry>
 
@@ -935,12 +1014,13 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Mac OS XのためのUTF8-MACボリューム名の最大長。ハングルはこれに特に敏感なので注意してください。</para>
+            <para>Mac OS
+            XのためのUTF8-MACボリューム名の最大長。ハングルはこれに特に敏感なので注意してください。</para>
 
             <para><programlisting>73: Mac OS X 10.1の制限
 80: Mac OS X 10.4/10.5の制限 (デフォルト)
-255: 最近のMac OS Xの制限</programlisting>
-            Mac OS 9以前はこれに影響されない。なぜならMac文字セットのボリューム名は常に27バイト制限がある。</para>
+255: 最近のMac OS Xの制限</programlisting> Mac OS
+            9以前はこれに影響されない。なぜならMac文字セットのボリューム名は常に27バイト制限がある。</para>
           </listitem>
         </varlistentry>
 
@@ -949,7 +1029,8 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>([Global]セクションで設定したときは) 全ボリューム、(ボリュームセクションで設定したときは)そのボリュームのオプション初期設定となるセクションの<option>name</option>を使う。</para>
+            <para>([Global]セクションで設定したときは)
+            全ボリューム、(ボリュームセクションで設定したときは)そのボリュームのオプション初期設定となるセクションの<option>name</option>を使う。</para>
           </listitem>
         </varlistentry>
 
@@ -958,7 +1039,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>登録サービスをユニークに表した、人間が読めるnameを設定する。このzeroconf nameは最大長63オクテット（バイト）のUTF-8で宣伝される。netatalkがZeroconfをサポートしなければならないことに注意してください。</para>
+            <para>登録サービスをユニークに表した、人間が読めるnameを設定する。このzeroconf
+            nameは最大長63オクテット（バイト）のUTF-8で宣伝される。netatalkがZeroconfをサポートしなければならないことに注意してください。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -985,7 +1067,8 @@
           ...]</replaceable> <type>(G)</type></term>
 
           <listitem>
-            <para>与えられた<option>log level</option>までのログレベルのメッセージを出力するように設定する。</para>
+            <para>与えられた<option>log
+            level</option>までのログレベルのメッセージを出力するように設定する。</para>
 
             <para>デフォルトではafpdは<option>default:note</option>に相当する設定でsyslogに出力する。</para>
 
@@ -1007,20 +1090,47 @@
           <primary>FCE</primary>
         </indexterm>)</title>
 
-	<para>Netatalk には素敵なファイルシステム変更イベント機構が含まれている．ここで， afpd プロセスは，なにがしかのファイルシステムイベントについて，関心を寄せているリスナーに， UDP ネットワークデータグラムで通知する．</para>
+      <para>Netatalk には素敵なファイルシステム変更イベント機構が含まれている。ここで、afpd
+      プロセスは、なにがしかのファイルシステムイベントについて、関心を寄せているリスナーに、UDP ネットワークデータグラムで通知する。</para>
 
       <para>以下の FCE イベントが定義されている:</para>
 
       <itemizedlist>
-        <listitem><para>ファイル変更 (<option>fmod</option>)</para></listitem>
-        <listitem><para>ファイル削除 (<option>fdel</option>)</para></listitem>
-        <listitem><para>ディレクトリ削除 (<option>ddel</option>)</para></listitem>
-        <listitem><para>ファイル作成 (<option>fcre</option>)</para></listitem>
-        <listitem><para>ディレクトリ作成 (<option>dcre</option>)</para></listitem>
-        <listitem><para>ファイル移動または名前変更 (<option>fmov</option>)</para></listitem>
-        <listitem><para>ディレクトリ移動または名前変更 (<option>dmov</option>)</para></listitem>
-        <listitem><para>ログイン (<option>login</option>)</para></listitem>
-        <listitem><para>ログアウト (<option>logout</option>)</para></listitem>
+        <listitem>
+          <para>ファイル変更 (<option>fmod</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ファイル削除 (<option>fdel</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ディレクトリ削除 (<option>ddel</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ファイル作成 (<option>fcre</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ディレクトリ作成 (<option>dcre</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ファイル移動または名前変更 (<option>fmov</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ディレクトリ移動または名前変更 (<option>dmov</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ログイン (<option>login</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>ログアウト (<option>logout</option>)</para>
+        </listitem>
       </itemizedlist>
 
       <variablelist>
@@ -1029,7 +1139,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>FCE イベントを指定された <parameter>host</parameter> に送ることができるようにする．もし指定されていなければデフォルトの <parameter>port</parameter> は 12250 である．複数のリスナーを指定するにはそれぞれのリスナーに対するオプションを一度に指定することである．</para>
+            <para>FCE イベントを指定された <parameter>host</parameter>
+            に送ることができるようにする。もし指定されていなければデフォルトの <parameter>port</parameter> は
+            12250 である。複数のリスナーを指定するにはそれぞれのリスナーに対するオプションを一度に指定することである。</para>
           </listitem>
         </varlistentry>
 
@@ -1038,7 +1150,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>FCE プロトコルのヴァージョンで，デフォルトでは 1 である．fmov，dmov，login あるいは logout イベントのためにはバージョン 2 が必要である．</para>
+            <para>FCE プロトコルのヴァージョンで、デフォルトでは 1 である。fmov、dmov、login あるいは logout
+            イベントのためにはバージョン 2 が必要である。</para>
           </listitem>
         </varlistentry>
 
@@ -1048,7 +1161,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>どの FCE イベントがアクティブかを指定する．デフォルトでは <parameter>fmod,fdel,ddel,fcre,dcre</parameter> である．</para>
+            <para>どの FCE イベントがアクティブかを指定する。デフォルトでは
+            <parameter>fmod,fdel,ddel,fcre,dcre</parameter> である。</para>
           </listitem>
         </varlistentry>
 
@@ -1057,7 +1171,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>FCE イベントを結合する．</para>
+            <para>FCE イベントを結合する。</para>
           </listitem>
         </varlistentry>
 
@@ -1066,7 +1180,21 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>これは，もしクライアントによって FCE ファイル変更イベント (fmod) を送信する前に同じファイルに対する別の変更が同時に行われる場合，常に待機する遅延時間を秒単位で決定する．例えば，フォトショップでファイルを保存することでそのファイル自体の複数のイベントを引き起こす．なぜなら，アプリケーションはその“保存する”たびにファイルを複数回，開き，変更しそして閉じるからである．デフォルトでは 60 秒である．</para>
+            <para>これは、もしクライアントによって FCE ファイル変更イベント (fmod)
+            を送信する前に同じファイルに対する別の変更が同時に行われる場合、常に待機する遅延時間を秒単位で決定する。例えば、フォトショップでファイルを保存することでそのファイル自体の複数のイベントを引き起こす。なぜなら、アプリケーションはその“保存する”たびにファイルを複数回、開き、変更しそして閉じるからである。デフォルトでは
+            60 秒である。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>fce sendwait = <replaceable>ミリ秒</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>各 FCE イベントの発行間の遅延をミリ秒単位で定義する。 非常に多くのファイルを一度に作成または削除するときに、FCE
+            イベントの損失が発生する場合は、これを使用して問題を防げる。 このような操作によって引き起こされる大量のイベントにより、UDP
+            バッファ オーバーフローが発生し、その後パケット損失が発生する可能性があります。 0 から 999 までの値は設定可能。デフォルト:
+            0 ミリ秒。</para>
           </listitem>
         </varlistentry>
 
@@ -1075,13 +1203,14 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>FCE イベントを生成すべきでないファイル名をスラッシュで区切ったリスト．デフォルトでは .DS_Store．</para>
+            <para>FCE イベントを生成すべきでないファイル名をスラッシュで区切ったリスト。デフォルトでは
+            .DS_Store。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>fce ignore directories = <replaceable>NAME[,NAME2,...]</replaceable>
-          <type>(G)</type></term>
+          <term>fce ignore directories =
+          <replaceable>NAME[,NAME2,...]</replaceable> <type>(G)</type></term>
 
           <listitem>
             <para>FCE イベントが生成されないディレクトリのカンマ区切りのリスト。デフォルトは無し。</para>
@@ -1093,10 +1222,10 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>各々の FCE イベントに対して実行されるスクリプト．スクリプト例については，Netatalk のソースの contrib/shell_utils/fce_ev_script.sh を参照のこと．</para>
+            <para>各々の FCE イベントに対して実行されるスクリプト。スクリプト例については、Netatalk のソースの
+            contrib/shell_utils/fce_ev_script.sh を参照のこと。</para>
           </listitem>
         </varlistentry>
-
       </variablelist>
     </refsect2>
 
@@ -1129,9 +1258,12 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>このオプションを有効にすると、afpdはserver notificationの機能があることを宣伝しない。これは、接続中のクライアントが開いているサーバのウインドウの変更を検出するために10秒毎にポーリングするのを目的としている。<emphasis>注記</emphasis>: 同時接続クライアント数とネットワークスピード次第でネットワークの負荷が相当に高くなる!</para>
+            <para>このオプションを有効にすると、afpdはserver
+            notificationの機能があることを宣伝しない。これは、接続中のクライアントが開いているサーバのウインドウの変更を検出するために10秒毎にポーリングするのを目的としている。<emphasis>注記</emphasis>:
+            同時接続クライアント数とネットワークスピード次第でネットワークの負荷が相当に高くなる!</para>
 
-            <para>現在のNetatalkはserver notificationを正確にサポートしており、接続中のクライアントは他のクライアントが内容を変更したときにフォルダ内の一覧を更新できるので、もはやこのオプションは使わないでください。</para>
+            <para>現在のNetatalkはserver
+            notificationを正確にサポートしており、接続中のクライアントは他のクライアントが内容を変更したときにフォルダ内の一覧を更新できるので、もはやこのオプションは使わないでください。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1140,7 +1272,8 @@
     <refsect2 id="acl_options">
       <title>ACL処理のためのオプション</title>
 
-      <para>デフォルトでは、認証済ユーザの有効な権限は記載済UARights権限構造にだけマップされる。UNIXモードではない。この挙動は設定オプション<option>map acls</option>で調整できる:</para>
+      <para>デフォルトでは、認証済ユーザの有効な権限は記載済UARights権限構造にだけマップされる。UNIXモードではない。この挙動は設定オプション<option>map
+      acls</option>で調整できる:</para>
 
       <variablelist id="map_acls">
         <varlistentry>
@@ -1177,9 +1310,17 @@
         </varlistentry>
       </variablelist>
 
-      <para>もしクライアント上で ACL を表示できるようにしたければ， クライアントもサーバーも認証ドメイン（ディレクトリサービス，例えば，LDAP，Open Directory， Active Directory）の一部としてセットアップしなければならない．その理由は，OS X の ACL は単に uid ないしは gid と結合しているのではなく，UUID と結合しているからである．それ故，Netatalk は，OS X の UUID と紐付けした UNIX uid と gid に結合したサーバー側の ACL を返せるように，ファイルシステム全ての uid と gid を UUID と紐付けできるようにしなければならない．</para>
+      <para>もしクライアント上で ACL を表示できるようにしたければ、
+      クライアントもサーバーも認証ドメイン（ディレクトリサービス、例えば、LDAP、Open Directory、Active
+      Directory）の一部としてセットアップしなければならない。その理由は、OS X の ACL は単に uid ないしは gid
+      と結合しているのではなく、UUID と結合しているからである。それ故、Netatalk は、OS X の UUID と紐付けした UNIX
+      uid と gid に結合したサーバー側の ACL を返せるように、ファイルシステム全ての uid と gid を UUID
+      と紐付けできるようにしなければならない。</para>
 
-      <para>Netatalk は LDAP 検索を用いてディレクトリサーバーを検索をすることができる．ディレクトリサーバーが既にユーザーとグループの UUID 属性を提供している（Active Directory，Open Directory）か，ディレクトリサーバー（例えばOpenLDAP）の未使用の属性を再使用（あるいは新しい属性を追加）するか，のいずれかである．</para>
+      <para>Netatalk は LDAP
+      検索を用いてディレクトリサーバーを検索をすることができる。ディレクトリサーバーが既にユーザーとグループの UUID
+      属性を提供している（Active Directory、Open
+      Directory）か、ディレクトリサーバー（例えばOpenLDAP）の未使用の属性を再使用（あるいは新しい属性を追加）するか、のいずれかである。</para>
 
       <para>Netatalk では以下の LDAP オプションが設定されなければならない:</para>
 
@@ -1189,8 +1330,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>認証方式: <option>none | simple |
-            sasl</option></para>
+            <para>認証方式: <option>none | simple | sasl</option></para>
 
             <para><variablelist>
                 <varlistentry>
@@ -1225,7 +1365,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>簡易認証でのユーザーの識別名．</para>
+            <para>簡易認証でのユーザーの識別名。</para>
           </listitem>
         </varlistentry>
 
@@ -1234,23 +1374,24 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>簡易認証でのパスワード．</para>
+            <para>簡易認証でのパスワード。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>ldap server = <parameter>host</parameter>
+          <term>ldap uri = <parameter>ldap://somehost:1234/</parameter>
           <type>(G)</type></term>
 
           <listitem>
-            <para>LDAP サーバーの名前か IP アドレス．これは，LDAP に UUID の問い合わせをできるようにするために，明示的な ACL サポートを必要とする時のみ必要．</para>
+            <para>接続先のLDAP サーバーのURI。選択可能の URI スキームは ldap、ldapi 又は ldaps
+            である。TCP、ICP 又は TLS プロトコルに当たる。実際のサポートは LDAP ライブラリ次第。本オプションは LDAP に
+            UUID の問い合わせをできるようにするために、明示的な ACL サポートを必要とする時のみ必要。</para>
 
             <para>設定の構文的なチェックのために <citerefentry>
                 <refentrytitle>afpldaptest</refentrytitle>
 
                 <manvolnum>1</manvolnum>
-              </citerefentry>
-            を使うこともできる．</para>
+              </citerefentry> を使うこともできる。</para>
           </listitem>
         </varlistentry>
 
@@ -1259,7 +1400,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>LDAP 内のユーザーコンテナの DN．</para>
+            <para>LDAP 内のユーザーコンテナの DN。</para>
           </listitem>
         </varlistentry>
 
@@ -1277,7 +1418,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>LDAP 内のグループコンテナの DN．</para>
+            <para>LDAP 内のグループコンテナの DN。</para>
           </listitem>
         </varlistentry>
 
@@ -1295,9 +1436,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>UUID のある LDAP 属性の名前．</para>
+            <para>UUID のある LDAP 属性の名前。</para>
 
-            <para>注記: これはユーザーでもグループでも双方で用いられる．</para>
+            <para>注記: これはユーザーでもグループでも双方で用いられる。</para>
           </listitem>
         </varlistentry>
 
@@ -1306,7 +1447,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>ユーザーの短縮名のある LDAP 属性の名前．</para>
+            <para>ユーザーの短縮名のある LDAP 属性の名前。</para>
           </listitem>
         </varlistentry>
 
@@ -1315,7 +1456,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>グループの短縮名のある LDAP 属性の名前．</para>
+            <para>グループの短縮名のある LDAP 属性の名前。</para>
           </listitem>
         </varlistentry>
 
@@ -1324,7 +1465,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>ディレクトリでの UUID 文字列のフォーマット．'x' と '-'を続けたもので，それぞれの 'x' は 0-9a-f の値を示し，'-' はそれぞれ区切り文字である．</para>
+            <para>ディレクトリでの UUID 文字列のフォーマット。'x' と '-'を続けたもので、それぞれの 'x' は 0-9a-f
+            の値を示し、'-' はそれぞれ区切り文字である。</para>
 
             <para>デフォルト: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</para>
           </listitem>
@@ -1335,14 +1477,21 @@
           string)</parameter> <type>(G)</type></term>
 
           <listitem>
-            <para>LDAP 属性の UUID のフォーマットは Active Directory からの obhectGUID バイナリーフィールドの使用を許す．もし未指定のままだと string がデフォルトとなる．これはほとんどの LDAP ストアによって ASCII UUID を通して渡される．もし ms-guid が設定されると，サーバーと相互に動作する時 Active Directory 内にあるオブジェクトの objectGUID 属性で用いられる内部 UUID 表記とバイナリー形式が相互に変換される．</para>
-            <para>オプション <option>ldap user filter</option> 及び <option>ldap group filter</option> も参照のこと．</para>
+            <para>LDAP 属性の UUID のフォーマットは Active Directory からの obhectGUID
+            バイナリーフィールドの使用を許す。もし未指定のままだと string がデフォルトとなる。これはほとんどの LDAP ストアによって
+            ASCII UUID を通して渡される。もし ms-guid が設定されると、サーバーと相互に動作する時 Active
+            Directory 内にあるオブジェクトの objectGUID 属性で用いられる内部 UUID
+            表記とバイナリー形式が相互に変換される。</para>
+
+            <para>オプション <option>ldap user filter</option> 及び <option>ldap
+            group filter</option> も参照のこと。</para>
+
             <para><variablelist>
                 <varlistentry>
                   <term>string</term>
 
                   <listitem>
-                    <para>UUID は文字列．例えば OpenDirectory とで使用する．</para>
+                    <para>UUID は文字列。例えば OpenDirectory とで使用する。</para>
                   </listitem>
                 </varlistentry>
 
@@ -1350,7 +1499,7 @@
                   <term>ms-guid</term>
 
                   <listitem>
-                    <para>Active Directory からの objectGUID バイナリー．</para>
+                    <para>Active Directory からの objectGUID バイナリー。</para>
                   </listitem>
                 </varlistentry>
               </variablelist></para>
@@ -1362,8 +1511,12 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>ユーザーオブジェクトにマッチする任意の LDAP フィルター．これは，ユーザーとグループが同じディレクトリのサブツリーに保存されている Active Directory 環境で必要．</para>
-            <para>Active Directory での推奨設定: <parameter>objectClass=user</parameter></para>
+            <para>ユーザーオブジェクトにマッチする任意の LDAP
+            フィルター。これは、ユーザーとグループが同じディレクトリのサブツリーに保存されている Active Directory
+            環境で必要。</para>
+
+            <para>Active Directory での推奨設定:
+            <parameter>objectClass=user</parameter></para>
           </listitem>
         </varlistentry>
 
@@ -1372,11 +1525,14 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>グループオブジェクトにマッチする任意の LDAP フィルター．これは，ユーザーとグループが同じディレクトリのサブツリーに保存されている Active Directory 環境で必要．</para>
-            <para>Active Directory での推奨設定: <parameter>objectClass=group</parameter></para>
+            <para>グループオブジェクトにマッチする任意の LDAP
+            フィルター。これは、ユーザーとグループが同じディレクトリのサブツリーに保存されている Active Directory
+            環境で必要。</para>
+
+            <para>Active Directory での推奨設定:
+            <parameter>objectClass=group</parameter></para>
           </listitem>
         </varlistentry>
-
       </variablelist>
     </refsect2>
   </refsect1>
@@ -1387,14 +1543,17 @@
     <refsect2>
       <title>パラメータ</title>
 
-      <para>セクション名ボリューム名を定義する．同じ名前の二つのボリュームというのは無いであろう．ボリューム名が文字 <keycode>':'</keycode> を含むことはできない． ボリューム名がとても長ければマングルされる．Mac キャラクターセットのボリューム名は27 文字までに制限される．UTF8-MAC ボリューム名は volnamelen パラメータで制限される．</para>
+      <para>セクション名ボリューム名を定義する。同じ名前の二つのボリュームというのは無いであろう。ボリューム名が文字
+      <keycode>':'</keycode> を含むことはできない。ボリューム名がとても長ければマングルされる。Mac
+      キャラクターセットのボリューム名は27 文字までに制限される。UTF8-MAC ボリューム名は volnamelen
+      パラメータで制限される。</para>
 
       <variablelist>
         <varlistentry>
           <term>path = <replaceable>PATH</replaceable> <type>(V)</type></term>
 
           <listitem>
-            <para>パス名は完全修飾パス名でなければならない．</para>
+            <para>パス名は完全修飾パス名でなければならない。</para>
           </listitem>
         </varlistentry>
 
@@ -1403,7 +1562,9 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>メタデータファイルのフォーマットを指定する．これは Mac のリソースフォークの保存にも用いられる．初期のバージョンでは AppleDouble v2 が用いられ，新しいデフォルトのフォーマットは <emphasis role="bold">ea</emphasis> である．</para>
+            <para>メタデータファイルのフォーマットを指定する。これは Mac のリソースフォークの保存にも用いられる。初期のバージョンでは
+            AppleDouble v2 が用いられ、新しいデフォルトのフォーマットは <emphasis
+            role="bold">ea</emphasis> である。</para>
           </listitem>
         </varlistentry>
 
@@ -1412,7 +1573,14 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>Time Machine に有用：報告されるボリュームサイズを制限する．故に Time Machine がバックアップのために実ディスク領域全体を使うことを防止する．例えば "vol size limit = 1000" は報告されるディスク領域を 1 GB に制限する． <emphasis role="bold">重要:</emphasis> これは Time Machine sparsebundle イメージの中身を考慮した概算である．それ故このオプションを使用した時，このボリュームを他のコンテンツを保管するのに使用 “してはならない”．なぜなら勘定に入っていないからである．計算は: sparsebundle の Info.plist XML ファイルからバンドサイズを読む，バンドファイルの数を数えて バンド／ディレクトリ を読む，そしてお互いの乗算をする．ことによって行われる．</para>
+            <para>Time Machine に有用：報告されるボリュームサイズを制限する。故に Time Machine
+            がバックアップのために実ディスク領域全体を使うことを防止する。例えば "vol size limit = 1000"
+            は報告されるディスク領域を 1 GB に制限する。<emphasis role="bold">重要:</emphasis> これは
+            Time Machine sparsebundle
+            イメージの中身を考慮した概算である。それ故このオプションを使用した時、このボリュームを他のコンテンツを保管するのに使用
+            “してはならない”。なぜなら勘定に入っていないからである。計算は: sparsebundle の Info.plist XML
+            ファイルからバンドサイズを読む、バンドファイルの数を数えて バンド／ディレクトリ
+            を読む、そしてお互いの乗算をする。ことによって行われる。</para>
           </listitem>
         </varlistentry>
 
@@ -1421,8 +1589,8 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>この許可オプションは指定された共有にそのユーザーとグループのアクセスを許可する．ユーザーとグループはスペースかコンマで区切って指定する．グループは @ プレフィックスで明示する．例:
-            <programlisting>valid users = user @group</programlisting></para>
+            <para>この許可オプションは指定された共有にそのユーザーとグループのアクセスを許可する。ユーザーとグループはスペースかコンマで区切って指定する。グループは
+            @ プレフィックスで明示する。例: <programlisting>valid users = user @group</programlisting></para>
           </listitem>
         </varlistentry>
 
@@ -1431,16 +1599,18 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>この拒否オプションはその共有にアクセスを許可しないユーザーとグループを指定する．それ以外は "valid users" オプションと同じフォーマットである．</para>
+            <para>この拒否オプションはその共有にアクセスを許可しないユーザーとグループを指定する。それ以外は "valid users"
+            オプションと同じフォーマットである。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>hosts allow = <replaceable>IPホストアドレス/IPマスクビット [
-          ... ]</replaceable> <type>(V)</type></term>
+          <term>hosts allow = <replaceable>IPホストアドレス/IPマスクビット [ ...
+          ]</replaceable> <type>(V)</type></term>
 
           <listitem>
-            <para>列挙されたホストとネットワークのみが許可され，ほかの全ては拒否される．ネットワークアドレスは IPv4 のドット区切りフォーマット， IPv6の16進数フォーマットのどちらでもよい．</para>
+            <para>列挙されたホストとネットワークのみが許可され、ほかの全ては拒否される。ネットワークアドレスは IPv4
+            のドット区切りフォーマット、IPv6の16進数フォーマットのどちらでもよい。</para>
 
             <para>例: hosts allow = 10.1.0.0/16 10.2.1.100
             2001:0db8:1234::/48</para>
@@ -1448,11 +1618,11 @@
         </varlistentry>
 
         <varlistentry>
-          <term>hosts deny = <replaceable>IPホストアドレス/IPマスクビット [
-          ... ]</replaceable> <type>(V)</type></term>
+          <term>hosts deny = <replaceable>IPホストアドレス/IPマスクビット [ ...
+          ]</replaceable> <type>(V)</type></term>
 
           <listitem>
-            <para>列挙されたホストとネットのみが拒否され，ほかの全ては許可される．</para>
+            <para>列挙されたホストとネットのみが拒否され、ほかの全ては許可される。</para>
 
             <para>例: hosts deny = 192.168.100/24 10.1.1.1
             2001:db8::1428:57ab</para>
@@ -1464,7 +1634,9 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>そのボリュームに使う CNID バックエンドをセットする．デフォルトのバックエンドは [@DEFAULT_CNID_SCHEME@] で，有効なバックエンドは [@compiled_backends@] である．</para>
+            <para>そのボリュームに使う CNID バックエンドをセットする。デフォルトのバックエンドは
+            [@DEFAULT_CNID_SCHEME@] で、有効なバックエンドは [@compiled_backends@]
+            である。</para>
           </listitem>
         </varlistentry>
 
@@ -1475,14 +1647,20 @@
           <listitem>
             <para>拡張属性<indexterm>
                 <primary>拡張属性</primary>
-              </indexterm>をどのように保存するか指定する． <option>auto</option> がデフォルトである．</para>
+              </indexterm>をどのように保存するか指定する。<option>auto</option>
+            がデフォルトである。</para>
 
             <variablelist>
               <varlistentry>
                 <term>auto</term>
 
                 <listitem>
-                  <para>（共有ディレクトリ自体に EA を設定することにより） <option>sys</option> を試行して，フォールバックすると <option>ad</option> になる．試行を実行するためにはボリュームが書き込み可能であることが必要である． "<option>read only = yes</option>" ならば <option>auto</option> は <option>none</option> で上書きされる．書き込み専用のボリュームには必要に応じて明確に "<option>ea = sys|ad</option>" を使ってください．</para>
+                  <para>（共有ディレクトリ自体に EA を設定することにより） <option>sys</option>
+                  を試行して、フォールバックすると <option>ad</option>
+                  になる。試行を実行するためにはボリュームが書き込み可能であることが必要である。"<option>read only =
+                  yes</option>" ならば <option>auto</option> は
+                  <option>none</option> で上書きされる。書き込み専用のボリュームには必要に応じて明確に
+                  "<option>ea = sys|ad</option>" を使ってください。</para>
                 </listitem>
               </varlistentry>
 
@@ -1490,22 +1668,24 @@
                 <term>sys</term>
 
                 <listitem>
-                  <para>ファイルシステムの拡張属性を使う．</para>
+                  <para>ファイルシステムの拡張属性を使う。</para>
                 </listitem>
               </varlistentry>
 
-	      <varlistentry>
+              <varlistentry>
                 <term>samba</term>
 
                 <listitem>
-                  <para>ファイルシステムの拡張属性を使うが，Sambaのvfs_streams_xattrとの互換性の目的で，それぞれの拡張属性に値がゼロの1バイトを追加する．</para>                </listitem>
+                  <para>ファイルシステムの拡張属性を使うが、Sambaのvfs_streams_xattrとの互換性の目的で、それぞれの拡張属性に値がゼロの1バイトを追加する。</para>
+                </listitem>
               </varlistentry>
 
               <varlistentry>
                 <term>ad</term>
 
                 <listitem>
-                  <para><emphasis>.AppleDouble</emphasis> ディレクトリ内のファイルを使う．</para>
+                  <para><emphasis>.AppleDouble</emphasis>
+                  ディレクトリ内のファイルを使う。</para>
                 </listitem>
               </varlistentry>
 
@@ -1513,7 +1693,7 @@
                 <term>none</term>
 
                 <listitem>
-                  <para>拡張属性をサポートしない．</para>
+                  <para>拡張属性をサポートしない。</para>
                 </listitem>
               </varlistentry>
             </variablelist>
@@ -1525,7 +1705,10 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>もしグローバル設定を適用する指定がなければ，そのボリュームに対しての Mac クライアントのキャラクターセット，例えば <emphasis>MAC_ROMAN</emphasis>，<emphasis>MAC_CYRILLIC</emphasis> 等を指定する．この設定は Mac キャラクターセットが [Global] セクションで全体的にセットしたキャラクターセットと異なるというボリュームを必要とする時のみ必須である．</para>
+            <para>もしグローバル設定を適用する指定がなければ、そのボリュームに対しての Mac クライアントのキャラクターセット、例えば
+            <emphasis>MAC_ROMAN</emphasis>、<emphasis>MAC_CYRILLIC</emphasis>
+            等を指定する。この設定は Mac キャラクターセットが [Global]
+            セクションで全体的にセットしたキャラクターセットと異なるというボリュームを必要とする時のみ必須である。</para>
           </listitem>
         </varlistentry>
 
@@ -1533,15 +1716,17 @@
           <term>casefold = <option>option</option> <type>(V)</type></term>
 
           <listitem>
-            <para>ファイル名の大文字小文字を変更すべき場合，casefold オプションが処理する．有効なオプションは:</para>
+            <para>ファイル名の大文字小文字を変更すべき場合、casefold オプションが処理する。有効なオプションは:</para>
 
             <para><option>tolower</option> - 双方向で名前を小文字に変換する。</para>
 
             <para><option>toupper</option> - 双方向で名前を大文字に変換する。</para>
 
-            <para><option>xlatelower</option> - クライアントでは小文字に見えて、サーバでは大文字に見える。</para>
+            <para><option>xlatelower</option> -
+            クライアントでは小文字に見えて、サーバでは大文字に見える。</para>
 
-            <para><option>xlateupper</option> - クライアントでは大文字に見えて、サーバでは小文字にみえる。</para>
+            <para><option>xlateupper</option> -
+            クライアントでは大文字に見えて、サーバでは小文字にみえる。</para>
           </listitem>
         </varlistentry>
 
@@ -1550,7 +1735,8 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>このオプションはボリュームパスワードの設定を許可する．パスワードは最大で 8 文字の長さ（これを記入するときには ASCII を強く推奨）</para>
+            <para>このオプションはボリュームパスワードの設定を許可する。パスワードは最大で 8 文字の長さ（これを記入するときには
+            ASCII を強く推奨）</para>
           </listitem>
         </varlistentry>
 
@@ -1562,7 +1748,9 @@
           <type>(V)</type></term>
 
           <listitem>
-            <para>クライアントが要求した権限との論理和(or)をとる． <option>file perm</option> はファイルにのみ， <option>directory perm</option> はディレクトリにのみ用いる． "<option>unix priv = no</option>" と共に用いてはならない．</para>
+            <para>クライアントが要求した権限との論理和(or)をとる。<option>file perm</option>
+            はファイルにのみ、<option>directory perm</option> はディレクトリにのみ用いる。
+            "<option>unix priv = no</option>" と共に用いてはならない。</para>
 
             <example>
               <title>共同ワークグループ用ボリューム</title>
@@ -1578,7 +1766,8 @@ directory perm = 0770</programlisting></para>
           <type>(V)</type></term>
 
           <listitem>
-            <para>権限のマスクを設定する． "<option>unix priv = no</option>" と共に用いてはならない．</para>
+            <para>権限のマスクを設定する。"<option>unix priv = no</option>"
+            と共に用いてはならない。</para>
           </listitem>
         </varlistentry>
 
@@ -1622,7 +1811,8 @@ directory perm = 0770</programlisting></para>
           <term>rolist = <option>users/groups</option> <type>(V)</type></term>
 
           <listitem>
-            <para>信頼するユーザー及びグループの共有に対する読み込み専用アクセスを許可する．フォーマットは allow オプションに準ずる．</para>
+            <para>信頼するユーザー及びグループの共有に対する読み込み専用アクセスを許可する。フォーマットは allow
+            オプションに準ずる。</para>
           </listitem>
         </varlistentry>
 
@@ -1631,7 +1821,8 @@ directory perm = 0770</programlisting></para>
           <type>(V)</type></term>
 
           <listitem>
-            <para>信頼するユーザー及びグループの共有に対する読み込み／書き込みアクセスを許可する．フォーマットは allow オプションに準ずる．</para>
+            <para>信頼するユーザー及びグループの共有に対する読み込み／書き込みアクセスを許可する。フォーマットは allow
+            オプションに準ずる。</para>
           </listitem>
         </varlistentry>
 
@@ -1640,7 +1831,9 @@ directory perm = 0770</programlisting></para>
           <type>(V)</type></term>
 
           <listitem>
-            <para>'/' で区切られた 禁止名のどれかに一致するパスのファイルとディレクトリを隠す．禁止文字列は常に '/' で終わらなければならない．例えば，"veto files = veto1/"，"veto files = veto1/veto2/"．</para>
+            <para>'/' で区切られた 禁止名のどれかに一致するパスのファイルとディレクトリを隠す。禁止文字列は常に '/'
+            で終わらなければならない。例えば、"veto files = veto1/"、"veto files =
+            veto1/veto2/"。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1649,7 +1842,7 @@ directory perm = 0770</programlisting></para>
     <refsect2>
       <title>ボリュームオプション</title>
 
-      <para>ブーリアン型のボリュームオプション．</para>
+      <para>ブーリアン型のボリュームオプション。</para>
 
       <variablelist>
         <varlistentry>
@@ -1657,7 +1850,8 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>ボリュームが ACL をサポートしてるというフラグを立てるかどうか． もし ACL サポートでコンパイルしていれば，これはデフォルトで yes．</para>
+            <para>ボリュームが ACL をサポートしてるというフラグを立てるかどうか。もし ACL
+            サポートでコンパイルしていれば、これはデフォルトで yes。</para>
           </listitem>
         </varlistentry>
 
@@ -1666,9 +1860,12 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>ボリュームが大文字小文字を区別したファイル名をサポートしてるというフラグを立てるかどうか． もしファイルシステムが大文字小文字を区別しなければ no を設定せよ．しかしながらこれは完全には確かめられていない．</para>
+            <para>ボリュームが大文字小文字を区別したファイル名をサポートしてるというフラグを立てるかどうか。
+            もしファイルシステムが大文字小文字を区別しなければ no を設定せよ。しかしながらこれは完全には確かめられていない。</para>
+
             <note>
-              <para>実際には大文字小文字を区別しているにもかかわらず，netatalk 3.1.3 とそれ以前のものはクライアントに kCaseSensitive フラグを通知しなかった．バージョン 3.1.4 からはデフォルトで正しく通知される．</para>
+              <para>実際には大文字小文字を区別しているにもかかわらず、netatalk 3.1.3 とそれ以前のものはクライアントに
+              kCaseSensitive フラグを通知しなかった。バージョン 3.1.4 からはデフォルトで正しく通知される。</para>
             </note>
           </listitem>
         </varlistentry>
@@ -1678,7 +1875,8 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>CNID バックエンド内でデバイス番号を使うかどうか． 例えばクラスターなどでリブートを経るとデバイス番号が固定ではない時有用．</para>
+            <para>CNID バックエンド内でデバイス番号を使うかどうか。
+            例えばクラスターなどでリブートを経るとデバイス番号が固定ではない時有用。</para>
           </listitem>
         </varlistentry>
 
@@ -1687,17 +1885,26 @@ directory perm = 0770</programlisting></para>
           (デフォルト: <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>クライアントからのファイルシステムへのアクセス時， <option>appledouble = v2</option> から <option>appledouble = ea</option> への自動的な変換を行うかどうか．これは概して有用であるがいくらかパフォーマンスが犠牲となる．ボリューム上で <command>dbd</command> を実行しそれで変換をするのが推奨される．その後このオプションを no に設定することもできる．</para>
+            <para>クライアントからのファイルシステムへのアクセス時、<option>appledouble = v2</option>
+            から <option>appledouble = ea</option>
+            への自動的な変換を行うかどうか。これは概して有用であるがいくらかパフォーマンスが犠牲となる。ボリューム上で
+            <command>dbd</command> を実行しそれで変換をするのが推奨される。その後このオプションを no
+            に設定することもできる。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>delete veto files = <replaceable>BOOLEAN</replaceable>
-          (デフォルト: <emphasis>no</emphasis>) <type>(V)</type></term>
+          <term>delete veto files = <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>このオプションは Netatalk が一つあるいはそれ以上の veto されたファイルあるいはディレクトリ（veto files オプションを見よ）を削除しようとした時用いられる．もしこのオプションを no に設定し（デフォルト），そしてもしあるディレクトリが何か非 veto ファイルないしはディレクトリを含んでいたら，ディレクトリの削除は失敗するであろう．これは通常あなたの望むところの動作である．</para>
-            <para>もしこのオプションが yes に設定されていたら，Netatalk は veto 化ディレクトリ・ディレクトリ内も含めあらゆるファイル，ディレクトリを再帰的に削除しようとするであろう．</para>
+            <para>このオプションは Netatalk が一つあるいはそれ以上の veto されたファイルあるいはディレクトリ（veto
+            files オプションを見よ）を削除しようとした時用いられる。もしこのオプションを no
+            に設定し（デフォルト）、そしてもしあるディレクトリが何か非 veto
+            ファイルないしはディレクトリを含んでいたら、ディレクトリの削除は失敗するであろう。これは通常あなたの望むところの動作である。</para>
+
+            <para>もしこのオプションが yes に設定されていたら、Netatalk は veto
+            化ディレクトリ・ディレクトリ内も含めあらゆるファイル、ディレクトリを再帰的に削除しようとするであろう。</para>
           </listitem>
         </varlistentry>
 
@@ -1706,9 +1913,13 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>デフォルトの設定では偽なのでサーバー上でシンボリックリンクは辿られない．これは OS X の AFP サーバーと同じ挙動である．オプションを真に設定すると afpd がサーバー上でシンボリックリンクを辿るようにさせる．今のところ afpd は "wide symlinks" を全く検査しないので，シンボリックリンクは AFP ボリューム以外を指しているかもしれない．</para>
+            <para>デフォルトの設定では偽なのでサーバー上でシンボリックリンクは辿られない。これは OS X の AFP
+            サーバーと同じ挙動である。オプションを真に設定すると afpd がサーバー上でシンボリックリンクを辿るようにさせる。今のところ
+            afpd は "wide symlinks" を全く検査しないので、シンボリックリンクは AFP
+            ボリューム以外を指しているかもしれない。</para>
+
             <note>
-              <para>シンボリックリンクがファイルシステムの境界をまたいで張られている時，このオプションは巧妙に断ち切る．</para>
+              <para>シンボリックリンクがファイルシステムの境界をまたいで張られている時、このオプションは巧妙に断ち切る。</para>
             </note>
           </listitem>
         </varlistentry>
@@ -1718,7 +1929,12 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>ドットファイルを不可視にする． 警告：このオプションを有効にすると，望まない副作用を OS X アプリケーションに引き起こす．つまり， 先頭がドットではじまる一時ファイルにファイルをセーブし，それから一時ファイルを最終的なファイル名にリネームした時， 結果としてセーブしたファイルが見えなくなる．唯一このオプションが有用なのは，Mac OS 9 でドットからはじまるファイルを見えなくさせるためである．Mac OS X では，Finder でもターミナルでもドットではじまるファイルはいずれにしても隠しファイルなので，完全に無駄である．</para>
+            <para>ドットファイルを不可視にする。警告：このオプションを有効にすると、望まない副作用を OS X
+            アプリケーションに引き起こす。つまり、
+            先頭がドットではじまる一時ファイルにファイルをセーブし、それから一時ファイルを最終的なファイル名にリネームした時、
+            結果としてセーブしたファイルが見えなくなる。唯一このオプションが有用なのは、Mac OS 9
+            でドットからはじまるファイルを見えなくさせるためである。Mac OS X では、Finder
+            でもターミナルでもドットではじまるファイルはいずれにしても隠しファイルなので、完全に無駄である。</para>
           </listitem>
         </varlistentry>
 
@@ -1727,7 +1943,8 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>サーバーがネットワーク id をサポートするかどうか．これを <emphasis>no</emphasis> に設定すると結果としてクライアントは ACL AFP 機能を使わなくなる．</para>
+            <para>サーバーがネットワーク id をサポートするかどうか。これを <emphasis>no</emphasis>
+            に設定すると結果としてクライアントは ACL AFP 機能を使わなくなる。</para>
           </listitem>
         </varlistentry>
 
@@ -1736,7 +1953,8 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>preexec からの 0 以外のリターンコードで，クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる．</para>
+            <para>preexec からの 0
+            以外のリターンコードで、クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる。</para>
           </listitem>
         </varlistentry>
 
@@ -1745,16 +1963,18 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>その共有を全てのユーザーに対して読み込み専用と指定する．<option>ea = auto</option> は <option>ea = none</option> で上書きされる．</para>
+            <para>その共有を全てのユーザーに対して読み込み専用と指定する。<option>ea = auto</option> は
+            <option>ea = none</option> で上書きされる。</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>root preexec close= <replaceable>BOOLEAN</replaceable>
-          (デフォルト: <emphasis>no</emphasis>) <type>(V)</type></term>
+          <term>root preexec close= <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>root_preexec からの 0 以外のリターンコードで，クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる．</para>
+            <para>root_preexec からの 0
+            以外のリターンコードで、クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる。</para>
           </listitem>
         </varlistentry>
 
@@ -1763,7 +1983,9 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>低速な再帰的ファイルシステム検索の代わりに高速な CNID データベースの名前検索を用いる．矛盾のない CNID データベースを信頼する，すなわち Samba やローカルのファイルシステムのアクセスが不正確さらには誤った結果を招く．"dbd" CNID db のボリュームのみで動作する．</para>
+            <para>低速な再帰的ファイルシステム検索の代わりに高速な CNID データベースの名前検索を用いる。矛盾のない CNID
+            データベースを信頼する、すなわち Samba やローカルのファイルシステムのアクセスが不正確さらには誤った結果を招く。"dbd"
+            CNID db のボリュームのみで動作する。</para>
           </listitem>
         </varlistentry>
 
@@ -1772,7 +1994,8 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>ボリュームリストを列挙するときにボリュームパスを stat するかどうか．オートマウントや preexec スクリプトで作成されたボリュームに有用である．</para>
+            <para>ボリュームリストを列挙するときにボリュームパスを stat するかどうか。オートマウントや preexec
+            スクリプトで作成されたボリュームに有用である。</para>
           </listitem>
         </varlistentry>
 
@@ -1781,7 +2004,7 @@ directory perm = 0770</programlisting></para>
           <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>このボリュームの Time Machine サポートを有効にするかどうか．</para>
+            <para>このボリュームの Time Machine サポートを有効にするかどうか。</para>
           </listitem>
         </varlistentry>
 
@@ -1790,7 +2013,9 @@ directory perm = 0770</programlisting></para>
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>AFP3 UNIX 権限を使うかどうか．これは OS X クライアントに対しては設定すべきである．<option>file perm</option>， <option>directory perm</option> 及び <option>umask</option> も参照．</para>
+            <para>AFP3 UNIX 権限を使うかどうか。これは OS X
+            クライアントに対しては設定すべきである。<option>file perm</option>、<option>directory
+            perm</option> 及び <option>umask</option> も参照。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1800,14 +2025,20 @@ directory perm = 0770</programlisting></para>
   <refsect1>
     <title>CNID バックエンド</title>
 
-    <para>AFP プロトコルはたいていはファイルとディレクトリを名前ではなく ID で参照する．Netatalk はこの ID を永続的な方法で保管する方法を必要とする．これを達成するためにいくつかの異なる CNID バックエンドが用意されている．CNID データベースはデフォルトで <filename>@localstatedir@/netatalk/CNID/(volumename)/.AppleDB/</filename> ディレクトリに置かれている．</para>
+    <para>AFP プロトコルはたいていはファイルとディレクトリを名前ではなく ID で参照する。Netatalk はこの ID
+    を永続的な方法で保管する方法を必要とする。これを達成するためにいくつかの異なる CNID バックエンドが用意されている。CNID
+    データベースはデフォルトで localstatedir の下に置かれている。</para>
 
     <variablelist>
       <varlistentry>
         <term>cdb</term>
 
         <listitem>
-          <para>"Concurrent database" バックエンドは Oracle Berkeley DB を基礎としている．このバックエンドだと，いくつかの <command>afpd</command> デーモンが直接 CNID データベースにアクセスする．もし一つのボリュームあたり，一つ以上の <command>afpd</command> プロセスがアクティブならば，Berkeley DB ロッキングがアクセスを同期するために用いられる．欠点は単一の <command>afpd</command> プロセスのクラッシュがデータベースを壊すかもしれないということである．</para>
+          <para>"Concurrent database" バックエンドは Oracle Berkeley DB
+          を基礎としている。このバックエンドだと、いくつかの <command>afpd</command> デーモンが直接 CNID
+          データベースにアクセスする。もし一つのボリュームあたり、一つ以上の <command>afpd</command>
+          プロセスがアクティブならば、Berkeley DB ロッキングがアクセスを同期するために用いられる。欠点は単一の
+          <command>afpd</command> プロセスのクラッシュがデータベースを壊すかもしれないということである。</para>
         </listitem>
       </varlistentry>
 
@@ -1815,7 +2046,11 @@ directory perm = 0770</programlisting></para>
         <term>dbd</term>
 
         <listitem>
-          <para>CNID データベースへのアクセスは <command>cnid_metad</command> デーモンプロセスによって制限されている．<command>afpd</command> プロセスはこのデーモンとデータベースの読み込みと更新のために通信する．もし Berkeley DB トランザクションとでビルドすれば，データベースの壊れる可能性は経験的にはゼロである． しかし，パフォーマンスは <option>cdb</option> とによるものより遅いかもしれない．</para>
+          <para>CNID データベースへのアクセスは <command>cnid_metad</command>
+          デーモンプロセスによって制限されている。<command>afpd</command>
+          プロセスはこのデーモンとデータベースの読み込みと更新のために通信する。もし Berkeley DB
+          トランザクションとでビルドすれば、データベースの壊れる可能性は経験的にはゼロである。しかし、パフォーマンスは
+          <option>cdb</option> とによるものより遅いかもしれない。</para>
         </listitem>
       </varlistentry>
 
@@ -1823,32 +2058,43 @@ directory perm = 0770</programlisting></para>
         <term>last</term>
 
         <listitem>
-          <para>このバックエンドは，ID の持続性の点では，例外である．ID はカレントセッションでしか有効ではない．これは基本的には <command>afpd</command> がバージョン 1.5（と1.6）で行ったことである．このバックエンドは，例えば共有 CD-ROM などで有用なので未だに有効である．Netatalk 3.0 からは，これは自動的に<emphasis>読み込み専用モード</emphasis>になる．</para>
+          <para>このバックエンドは、ID の持続性の点では、例外である。ID はカレントセッションでしか有効ではない。これは基本的には
+          <command>afpd</command> がバージョン 1.5（と1.6）で行ったことである。このバックエンドは、例えば共有
+          CD-ROM などで有用なので未だに有効である。Netatalk 3.0
+          からは、これは自動的に<emphasis>読み込み専用モード</emphasis>になる。</para>
 
-          <para><emphasis role="bold">警告</emphasis>: 今や <command>afpd</command> が持続性のある ID データベースに重く依存しているので，このバックエンドをボリュームに使用するのはもはや推奨<emphasis>されていない</emphasis>．エイリアスはおそらく機能しないだろうし，ファイル名のマングリングもサポートされていない．</para>
+          <para><emphasis role="bold">警告</emphasis>: 今や
+          <command>afpd</command> が持続性のある ID
+          データベースに重く依存しているので、このバックエンドをボリュームに使用するのはもはや推奨<emphasis>されていない</emphasis>。エイリアスはおそらく機能しないだろうし、ファイル名のマングリングもサポートされていない。</para>
         </listitem>
       </varlistentry>
     </variablelist>
 
-    <para><command>./configure --help</command> で他の有効なバックエンドがあると表示するかもしれない．にも関わらずそれらは壊れていることもありえるし，あるいは主にテストのために使われていることを注意すべきである． あなたが何をしているのかわかっている場合以外はそれらを使用してはならない．それらは将来のバージョンでそれ以上の通告なく除去されるかもしれない．</para>
+    <para><command>./configure --help</command>
+    で他の有効なバックエンドがあると表示するかもしれない。にも関わらずそれらは壊れていることもありえるし、あるいは主にテストのために使われていることを注意すべきである。
+    あなたが何をしているのかわかっている場合以外はそれらを使用してはならない。それらは将来のバージョンでそれ以上の通告なく除去されるかもしれない。</para>
   </refsect1>
 
   <refsect1>
     <title>文字セットオプション</title>
 
-    <para>OS XでAppleはAFP3プロトコルを導入した。最も重要な変更の一つは、AFP3は分解済UTF-8 としてエンコードされたUnicode名を用いることである。以前のAFP及びOSバージョンはMacRomanやMacCentralEuropeといったコードページを用いた。</para>
+    <para>OS XでAppleはAFP3プロトコルを導入した。最も重要な変更の一つは、AFP3は分解済UTF-8
+    としてエンコードされたUnicode名を用いることである。以前のAFP及びOSバージョンはMacRomanやMacCentralEuropeといったコードページを用いた。</para>
 
     <para><command>afpd</command>がunixファイルシステム上にファイルを保存するとき、拡張されたMacintosh文字やunixファイル名としては不正な文字を維持する方法が必要である。現在のバージョンは今、名前のためのデフォルトエンコーディングとしてUTF-8を用いる。「<keycode>/</keycode>」は「<keycode>:</keycode>」に変換される。</para>
 
-    <para>初期のバージョンはいわゆるCAPエンコーディングを用いた。一つの拡張文字(&gt;0x7F)は一つの :xx シーケンスに変換された。例えば、Appleロゴ (MacRoman: 0xF0)は<literal>:f0</literal>として保存された。幾つかの特殊な文字も :xx表記として変換された。「<keycode>/</keycode>」は<literal>:2f</literal>にエンコードされ、先頭のドット「<keycode>.</keycode>」は<literal>:2e</literal>にエンコードされた。</para>
+    <para>初期のバージョンはいわゆるCAPエンコーディングを用いた。一つの拡張文字(&gt;0x7F)は一つの :xx
+    シーケンスに変換された。例えば、Appleロゴ (MacRoman:
+    0xF0)は<literal>:f0</literal>として保存された。幾つかの特殊な文字も
+    :xx表記として変換された。「<keycode>/</keycode>」は<literal>:2f</literal>にエンコードされ、先頭のドット「<keycode>.</keycode>」は<literal>:2e</literal>にエンコードされた。</para>
 
-    <para><option>vol charset</option>オプションは他のボリュームエンコーディングを選べるようにする。<command>afpd</command>は
+    <para><option>vol
+    charset</option>オプションは他のボリュームエンコーディングを選べるようにする。<command>afpd</command>は
     <citerefentry>
         <refentrytitle><command>iconv</command></refentrytitle>
 
         <manvolnum>1</manvolnum>
-      </citerefentry>
-    が提供する如何なる文字セットも受け入れる。デフォルトのUTF-8を使うことをを強く推奨する。</para>
+      </citerefentry> が提供する如何なる文字セットも受け入れる。デフォルトのUTF-8を使うことをを強く推奨する。</para>
   </refsect1>
 
   <refsect1>
@@ -1878,8 +2124,9 @@ directory perm = 0770</programlisting></para>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

@@ -8,7 +8,9 @@
     <refmiscinfo class="date">10 Nov 2015</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -22,7 +24,8 @@
     <cmdsynopsis>
       <command>netatalk-config</command>
 
-      <arg choice="opt"><arg choice="plain">--prefix </arg><arg choice="opt"><replaceable>=DIR</replaceable></arg></arg>
+      <arg choice="opt"><arg choice="plain">--prefix </arg><arg
+      choice="opt"><replaceable>=DIR</replaceable></arg></arg>
 
       <arg choice="opt"><arg choice="plain">--exec_prefix </arg><arg
       choice="opt"><replaceable>=DIR</replaceable></arg></arg>
@@ -46,8 +49,9 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>netatalk-config</command> は コンパイラー・リンカのフラグを 設定・決定するためのツールである。
-    このフラグは <emphasis remap="I">netatalk</emphasis> ランタイムライブラリを使う プログラムをコンパイル・リンクするときに使われる。</para>
+    <para><command>netatalk-config</command> は コンパイラー・リンカのフラグを
+    設定・決定するためのツールである。 このフラグは <emphasis remap="I">netatalk</emphasis>
+    ランタイムライブラリを使う プログラムをコンパイル・リンクするときに使われる。</para>
   </refsect1>
 
   <refsect1>
@@ -68,7 +72,8 @@
         <term><option>--version</option></term>
 
         <listitem>
-          <para>現在インストールされている <emphasis remap="I">netatalk</emphasis> のバージョンを標準出力に表示する。</para>
+          <para>現在インストールされている <emphasis remap="I">netatalk</emphasis>
+          のバージョンを標準出力に表示する。</para>
         </listitem>
       </varlistentry>
 
@@ -76,7 +81,8 @@
         <term><option>--libs</option></term>
 
         <listitem>
-          <para><emphasis remap="I">netatalk</emphasis> ランタイムライブラリをリンクするのに必要な リンカフラグを表示する。</para>
+          <para><emphasis remap="I">netatalk</emphasis> ランタイムライブラリをリンクするのに必要な
+          リンカフラグを表示する。</para>
         </listitem>
       </varlistentry>
 
@@ -100,7 +106,8 @@
         <term><option>--cflags</option></term>
 
         <listitem>
-          <para><emphasis remap="I">netatalk</emphasis> ランタイムライブラリにリンクされるプログラムを コンパイルするのに必要なコンパイラーフラグを表示する。</para>
+          <para><emphasis remap="I">netatalk</emphasis>
+          ランタイムライブラリにリンクされるプログラムを コンパイルするのに必要なコンパイラーフラグを表示する。</para>
         </listitem>
       </varlistentry>
 
@@ -108,7 +115,8 @@
         <term><option>--macros</option></term>
 
         <listitem>
-          <para><emphasis remap="I">netatalk</emphasis> の m4 ディレクトリを表示する。</para>
+          <para><emphasis remap="I">netatalk</emphasis> の m4
+          ディレクトリを表示する。</para>
         </listitem>
       </varlistentry>
 
@@ -116,9 +124,10 @@
         <term><option>--prefix=PREFIX</option></term>
 
         <listitem>
-          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis remap="I">netatalk</emphasis> を構築したときに使った インストール先プレフィックスではなく PREFIX を使う。
-          このオプションは --exec-prefix が指定されていない場合の 実行プレフィックスとしても使われる。
-          このオプションは --libs や --cflags オプションより 前に指定しなければならない。</para>
+          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis
+          remap="I">netatalk</emphasis> を構築したときに使った インストール先プレフィックスではなく PREFIX
+          を使う。 このオプションは --exec-prefix が指定されていない場合の 実行プレフィックスとしても使われる。 このオプションは
+          --libs や --cflags オプションより 前に指定しなければならない。</para>
         </listitem>
       </varlistentry>
 
@@ -126,8 +135,9 @@
         <term><option>--exec_prefix=PREFIX</option></term>
 
         <listitem>
-          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis remap="I">netatalk</emphasis> を構築したときに使った 実行プログラムのインストール先プレフィックスではなく PREFIX を使う。
-          このオプションは --libs や --cflags オプションより 前に指定しなければならない。</para>
+          <para>このオプションを指定すると、--cflags と --libs を表示する場合に、 <emphasis
+          remap="I">netatalk</emphasis> を構築したときに使った 実行プログラムのインストール先プレフィックスではなく
+          PREFIX を使う。 このオプションは --libs や --cflags オプションより 前に指定しなければならない。</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -144,12 +154,14 @@
     both that copyright notice and this permission notice appear in supporting
     documentation.</para>
 
-    <para>この man ページは Sebastian Rittau が 2001 年に作成した <command>netatalk-config</command> に適合している。</para>
+    <para>この man ページは Sebastian Rittau が 2001 年に作成した
+    <command>netatalk-config</command> に適合している。</para>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
-	<title>Compile Netatalk from Source</title>
+	<title>Netatalk をソースコードからコンパイルする</title>
 	<sect1 id="compile-overview">
-		<title>Overview</title>
+		<title>概要</title>
 	</sect1>
 	<sect1>
-		<para>This section describes how to compile Netatalk from source for specific operating systems.</para>
-		<para>Please note that this chapter is automatically generated and may not be optimized for your system.</para>
+		<para>本付録では、特定のオペレーティング システムのソースから Netatalk をコンパイルする方法について説明する。</para>
+		<para>以下文章は自動的に生成されるため、お使いのシステムに最適化されていない可能性があることに注意してください。</para>
 	</sect1>
 	<sect1 id="compile-os">
-		<title>Operating Systems</title>
+		<title>オペレーティング システム一覧</title>
 	</sect1>
 	<sect1>
-		<para>Choose either Autotools or Meson as the build system. Test steps are optional.</para>
+		<para>ビルド システムとして Autotools と Meson から選択する。 テスト手順は任意である。</para>
 		<sect2 id="build-alpine">
 			<title>Alpine Linux</title>
 			<para>Install dependencies</para>
@@ -601,7 +601,7 @@ xsltproc
 		</sect2>
 		<sect2 id="build-dflybsd">
 			<title>DragonflyBSD</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg install -y \
   autoconf \
@@ -623,7 +623,7 @@ xsltproc
   tracker3
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 echo "Building with Autotools"
@@ -647,7 +647,7 @@ ninja -C build uninstall
 		</sect2>
 		<sect2 id="build-freebsd">
 			<title>FreeBSD</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg install -y \
   autoconf \
@@ -668,7 +668,7 @@ ninja -C build uninstall
   tracker3
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 echo "Building with Autotools"
@@ -707,7 +707,7 @@ ninja -C build uninstall
 		</sect2>
 		<sect2 id="build-netbsd">
 			<title>NetBSD</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg_add \
   autoconf \
@@ -729,7 +729,7 @@ ninja -C build uninstall
   talloc
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 echo "Building with Autotools"
@@ -768,7 +768,7 @@ ninja -C build uninstall
 		</sect2>
 		<sect2 id="build-openbsd">
 			<title>OpenBSD</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg_add -I \
   autoconf-2.71 \
@@ -790,7 +790,7 @@ ninja -C build uninstall
   tracker3
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 echo "Building with Autotools"
@@ -908,7 +908,7 @@ ninja -C build uninstall
 		</sect2>
 		<sect2 id="build-omnios">
 			<title>OmniOS</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg install \
   build-essential \
@@ -927,7 +927,7 @@ pkgin -y install \
   talloc
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
@@ -967,7 +967,7 @@ ninja -C build uninstall
 		</sect2>
 		<sect2 id="build-solaris">
 			<title>Solaris</title>
-			<para>Install required packages</para>
+			<para>必要なパッケージをインストールする</para>
 			<para>
 				<screen>pkg install \
   autoconf \
@@ -994,7 +994,7 @@ make install
 cd ..
 </screen>
 			</para>
-			<para>Configure and build</para>
+			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 echo "Building with Autotools"

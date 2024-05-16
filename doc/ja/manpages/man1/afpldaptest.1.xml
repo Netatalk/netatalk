@@ -8,7 +8,9 @@
     <refmiscinfo class="date">22 Mar 2012</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -24,7 +26,9 @@
 
       <group choice="req">
         <arg choice="plain">-u <replaceable>USER</replaceable></arg>
+
         <arg choice="plain">-g <replaceable>GROUP</replaceable></arg>
+
         <arg choice="plain">-i <replaceable>UUID</replaceable></arg>
       </group>
     </cmdsynopsis>
@@ -34,18 +38,18 @@
 
       <group choice="req">
         <arg choice="plain">-h</arg>
+
         <arg choice="plain">-?</arg>
+
         <arg choice="plain">-:</arg>
       </group>
-
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><command>afpldaptest</command>は@pkgconfdir@/afp.confのldapパラメータを構文チェックするシンプルなコマンドです。</para>
-
+    <para><command>afpldaptest</command>はafp.confのldapパラメータを構文チェックするシンプルなコマンドである。</para>
   </refsect1>
 
   <refsect1>
@@ -74,7 +78,6 @@
         <listitem>
           <para><replaceable>UUID</replaceable>のためのuserかgroupかlocal-uuidを表示する。</para>
         </listitem>
-
       </varlistentry>
 
       <varlistentry>
@@ -83,21 +86,24 @@
         <listitem>
           <para>ヘルプを表示して終了する。</para>
         </listitem>
-
       </varlistentry>
-
     </variablelist>
   </refsect1>
 
   <refsect1>
     <title>参照</title>
 
-    <para><citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+    <para><citerefentry>
+        <refentrytitle>afp.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry></para>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

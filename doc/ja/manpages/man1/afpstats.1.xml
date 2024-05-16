@@ -5,17 +5,19 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">24 Mar 2013</refmiscinfo>
+    <refmiscinfo class="date">27 Apr 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>afpstats</refname>
 
-    <refpurpose>AFPの統計をリストする</refpurpose>
+    <refpurpose>AFP サーバの利用状況を参照する</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -27,30 +29,52 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>afpstats</command>はD-Bus IPC経由でAFPの統計をリストします。</para>
-
+    <para><command>afpstats</command>
+    は接続中のユーザ、マウント中のボリュームなどの利用状況が参照できる。</para>
   </refsect1>
 
   <refsect1>
     <title>注記</title>
 
-    <para><command>afpd</command>がD-Busをサポートしなければならない。"<command>afpd -V</command>"でそれをチェックしてください。</para>
+    <para><command>afpd</command>がD-Busをサポートしなければならない。"<command>afpd
+    -V</command>"でそれをチェックしてください。</para>
 
-    <para><filename>@pkgconfdir@/afp.conf</filename>で"<option>afpstats = yes</option>"を設定しなければならない。</para>
+    <para>その上、<filename>afp.conf</filename> で"<option>afpstats =
+    yes</option>"を設定しなければならない。</para>
+  </refsect1>
 
+  <refsect1>
+    <title>例</title>
+
+    <para><programlisting>$ <emphasis remap="B">afpstats</emphasis>
+Connected user   PID      Login time        State          Mounted volumes
+sandy            452547   Apr 28 21:58:50   active         Test Volume, sandy's Home
+charlie          451969   Apr 28 21:21:32   active         My AFP Volume
+  </programlisting></para>
   </refsect1>
 
   <refsect1>
     <title>参照</title>
 
-    <para><citerefentry><refentrytitle>afpd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-    <citerefentry><refentrytitle>afp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
-    <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+    <para><citerefentry>
+        <refentrytitle>afpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>afp.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>dbus-daemon</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry></para>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>

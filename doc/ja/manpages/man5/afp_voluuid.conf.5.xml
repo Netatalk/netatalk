@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <refentry id="afp_voluuid.conf.5">
-
   <refmeta>
     <refentrytitle>afp_voluuid.conf</refentrytitle>
 
@@ -9,35 +8,38 @@
     <refmiscinfo class="date">27 June 2016</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP ファイルサーバーのマニュアル</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>afp_voluuid.conf</refname>
 
-    <refpurpose>AFPボリュームのUUIDを指定するために <command>afpd</command>(8) が利用する設定ファイル</refpurpose>
+    <refpurpose>AFPボリュームのUUIDを指定するために <command>afpd</command>(8)
+    が利用する設定ファイル</refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>説明</title>
 
-    <para><filename>@localstatedir@/netatalk/afp_voluuid.conf</filename>は全てのAFPボリュームのUUIDを魔法のように自動的に指定するために<command>afpd</command>が利用する設定ファイルである。設定行は以下のように構成される。</para>
+    <para><filename>afp_voluuid.conf</filename>は全てのAFPボリュームのUUIDを魔法のように自動的に指定するために<command>afpd</command>が利用する設定ファイルである。設定行は以下のように構成される。</para>
 
     <para><replaceable>"volume name" </replaceable>
     <replaceable>uuid-string</replaceable></para>
 
     <para>最初のフィールドはボリューム名である。ボリューム名がスペースを含む場合、それを引用符で囲まなければならない。第二のフィールドは36文字からなるUUIDの16進数ASCII文字列表現である。</para>
-    <para>先頭のスペースとタブは無視される。空行は無視される。頭に#が付いた行は無視される。不正な行は無視される。
-    </para>
+
+    <para>先頭のスペースとタブは無視される。空行は無視される。頭に#が付いた行は無視される。不正な行は無視される。</para>
 
     <note>
       <para>このUUIDはTime Machineボリュームの強固な曖昧さ除去を提供する目的でZeroconfによって宣伝される。</para>
+
       <para>MySQL CNIDバックエンドにも使用されている。</para>
+
       <para>このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。</para>
     </note>
-
-    <para></para>
   </refsect1>
 
   <refsect1>
@@ -76,8 +78,9 @@ mary 6331E2D1-446C-B68C-3066-D685AADBE911</programlisting>
   </refsect1>
 
   <refsect1>
-      <title>著作者</title>
+    <title>著作者</title>
 
-      <para><ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink>を参照</para>
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>を参照</para>
   </refsect1>
 </refentry>
