@@ -2,12 +2,12 @@
 .\"     Title: asip-status
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06 May 2016
+.\"      Date: 27 Apr 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk @NETATALK_VERSION@
+.\"    Source: Netatalk 3.2.0
 .\"  Language: English
 .\"
-.TH "ASIP\-STATUS" "1" "06 May 2016" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "ASIP\-STATUS" "1" "27 Apr 2024" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-asip-status \- Queries AFP servers for their capabilities
+asip-status \- Queries an AFP server for its capabilities
 .SH "SYNOPSIS"
 .HP \w'\fBasip\-status\fR\ 'u
 \fBasip\-status\fR [\-4 | \-6] [\-d] [\-i] [\-x] \fIHOSTNAME\fR [\fIPORT\fR]
@@ -39,33 +39,16 @@ asip-status \- Queries AFP servers for their capabilities
 .SH "DESCRIPTION"
 .PP
 \fBasip\-status\fR
-sends a FPGetSrvrInfo request to an AFP server at
+sends an FPGetSrvrInfo request to an AFP server at
 \fIHOSTNAME\fR:\fIPORT\fR
-and displays the results, namely "Machine type", the server\*(Aqs name, supported AFP versions, UAMs and AFP flags, the "server signature" and the network addresses, the server provides AFP services on\&.
+and displays the results: "Machine type", the server\*(Aqs name, supported AFP versions, UAMs and AFP flags, the "server signature" and the network addresses that the server provides AFP services on\&.
 .PP
 When you don\*(Aqt supply
 \fIPORT\fR, then the default AFP port, 548, will be used\&.
 .PP
 Starting with Netatalk 3\&.1\&.9,
 \fBasip\-status\fR
-supports both IPv4 and IPv6\&. It\*(Aqs decided by your system which IP version to use\&. You can use \-4 or \-6 option to specify IP version\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-.PP
-\fBasip\-status\fR
-requires IO::Socket::IP module\&.
-.sp .5v
-.RE
+supports both IPv4 and IPv6\&. By default, your system automatically decides which protocol version to use\&. You can use \-4 or \-6 option to force IPv4 or IPv6, respectively\&.
 .SH "OPTIONS"
 .PP
 \fB\-4\fR

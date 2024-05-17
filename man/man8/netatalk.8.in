@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 13 Jun 2016
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk @NETATALK_VERSION@
+.\"    Source: Netatalk 3.2.0
 .\"  Language: English
 .\"
-.TH "NETATALK" "8" "13 Jun 2016" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "NETATALK" "8" "13 Jun 2016" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,17 +40,22 @@ netatalk \- Netatalk AFP server service controller daemon
 is the service controller daemon responsible for starting and restarting the AFP daemon
 \fBafpd\fR
 and the CNID daemon
-\fBcnid_metad\fR\&. It is normally started at boot time by init system (BSD\-style init, SysV\-sytle init, systemd, Upstart, OpenRC, SMF and so on)\&.
+\fBcnid_metad\fR\&. It is normally started at boot time by an init system (BSD\-style init, SysV\-sytle init, systemd, Upstart, OpenRC, SMF and so on)\&.
 .SH "OPTIONS"
 .PP
-\-v | \-V
+\-d
 .RS 4
-Print version information and exit\&.
+Starts netatalk in non\-forking mode, for debugging purposes\&.
 .RE
 .PP
 \-F \fIconfigfile\fR
 .RS 4
 Specifies the configuration file to use\&.
+.RE
+.PP
+\-v | \-V
+.RS 4
+Print version information and exit\&.
 .RE
 .SH "SIGNALS"
 .PP

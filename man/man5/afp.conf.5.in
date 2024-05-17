@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 11 Apr 2023
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk @NETATALK_VERSION@
+.\"    Source: Netatalk 3.2.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "11 Apr 2023" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "AFP\&.CONF" "5" "11 Apr 2023" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -345,7 +345,7 @@ Allow Kerberos V for authentication (optional)
 .PP
 uam path = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the default path for UAMs for this server (default is @libdir@/netatalk)\&.
+Sets the default path for UAMs for this server (default is /opt/homebrew/lib/netatalk)\&.
 .RE
 .SS "Charset Options"
 .PP
@@ -622,7 +622,7 @@ Specifies the IP address and port of a cnid_metad server, required for CNID dbd 
 dbus daemon = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the path to dbus\-daemon binary used by Spotlight feature\&. The default value
-[@DBUS_DAEMON_PATH@]
+["/opt/homebrew/bin/dbus\-daemon"]
 is determined when building netatalk\&.
 .RE
 .PP
@@ -674,7 +674,44 @@ Sets a message to be displayed when clients logon to the server\&. The message s
 .PP
 mimic model = \fImodel\fR \fB(G)\fR
 .RS 4
-Specifies the icon model that appears on clients\&. Defaults to off\&. Note that netatalk must support Zeroconf\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
+Specifies a custom icon for the mounted AFP volume on macOS / Mac OS X clients\&. Default is to let macOS choose\&. Requires netatalk to be built with Zeroconf\&. Examples:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBLaptop\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBRackMount\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBTower\fR
+.RE
+.sp
+A complete set of supported model codes by a macOS client can be found by inspecting
+/System/Library/CoreServices/CoreTypes\&.bundle/Contents/Info\&.plist
+(as of macOS 14 Sonoma)\&.
 .RE
 .PP
 signature = <text> \fB(G)\fR
@@ -952,6 +989,11 @@ fce holdfmod = \fIseconds\fR \fB(G)\fR
 This determines the time delay in seconds which is always waited if another file modification for the same file is done by a client before sending an FCE file modification event (fmod)\&. For example saving a file in Photoshop would generate multiple events by itself because the application is opening, modifying and closing a file multiple times for every "save"\&. Default: 60 seconds\&.
 .RE
 .PP
+fce sendwait = \fImilliseconds\fR \fB(G)\fR
+.RS 4
+Defines a delay in milliseconds between the emission of each FCE event\&. Use this if you are experiencing lost FCE events when creating or deleting a very large number of files at once\&. The deluge of events that such an operation triggers can lead to UDP buffer overflow and subsequently to packet loss\&. Has to be a number between 0 and 999\&. Default: 0 milliseconds\&.
+.RE
+.PP
 fce ignore names = \fINAME[/NAME2/\&.\&.\&.]\fR \fB(G)\fR
 .RS 4
 Slash delimited list of filenames for which FCE events shall not be generated\&. Default: \&.DS_Store\&.
@@ -1050,7 +1092,7 @@ Password for simple bind\&.
 .PP
 ldap uri = \fIldap://somehost:1234/\fR \fB(G)\fR
 .RS 4
-Specifies the LDAP URI of the server to connect to.\&The URI scheme may be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or SSL respectively (if supported by the LDAP library).\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
+Specifies the LDAP URI of the server to connect to\&. The URI scheme may be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or TLS respectively (if supported by the LDAP library)\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
 .sp
 You can use
 \fBafpldaptest\fR(1)
@@ -1199,7 +1241,7 @@ Example: hosts deny = 192\&.168\&.100/24 10\&.1\&.1\&.1 2001:db8::1428:57ab
 .PP
 cnid scheme = \fIbackend\fR \fB(V)\fR
 .RS 4
-set the CNID backend to be used for the volume, default is [@DEFAULT_CNID_SCHEME@] available schemes: [@compiled_backends@]
+set the CNID backend to be used for the volume, default is ["dbd"] available schemes: ["dbd last mysql"]
 .RE
 .PP
 ea = \fInone|auto|sys|ad|samba\fR \fB(V)\fR

@@ -2,12 +2,12 @@
 .\"     Title: afpstats
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 24 Mar 2013
+.\"      Date: 27 Apr 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk @NETATALK_VERSION@
+.\"    Source: Netatalk 3.2.0
 .\"  Language: English
 .\"
-.TH "AFPSTATS" "1" "24 Mar 2013" "Netatalk @NETATALK_VERSION@" "Netatalk AFP Fileserver Manual"
+.TH "AFPSTATS" "1" "27 Apr 2024" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,21 +28,36 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-afpstats \- List AFP statistics
+afpstats \- List AFP server statistics
 .SH "SYNOPSIS"
 .HP \w'\fBafpstats\fR\ 'u
 \fBafpstats\fR
 .SH "DESCRIPTION"
 .PP
 \fBafpstats\fR
-list AFP statistics via D\-Bus IPC\&.
+list statistics about users connected to the AFP server, their mounted volumes, etc\&.
 .SH "NOTE"
 .PP
 \fBafpd\fR
-must support D\-Bus\&. Check it by "\fBafpd \-V\fR"\&.
+must be built with D\-Bus support\&. Check this with "\fBafpd \-V\fR"\&.
 .PP
-"\fBafpstats = yes\fR" must be set in
+Additionally, "\fBafpstats = yes\fR" must be set in
 afp\&.conf\&.
+.SH "EXAMPLES"
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+$ \fBafpstats\fR
+Connected user   PID      Login time        State          Mounted volumes
+sandy            452547   Apr 28 21:58:50   active         Test Volume, sandy\*(Aqs Home
+charlie          451969   Apr 28 21:21:32   active         My AFP Volume
+  
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBafpd\fR(8),
