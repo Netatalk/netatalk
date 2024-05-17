@@ -10,7 +10,6 @@ ENV LIB_DEPS \
     libgcrypt \
     linux-pam \
     openldap \
-    openssl \
     shadow
 ENV BUILD_DEPS \
     acl-dev \
@@ -26,7 +25,6 @@ ENV BUILD_DEPS \
     meson \
     ninja \
     openldap-dev \
-    openssl-dev \
     pkgconfig
 
 RUN apk update \
@@ -48,6 +46,7 @@ USER builder
 
 RUN meson setup build \
     -Denable-pgp-uam=disabled \
+    -Dwith-embedded-ssl=true \
     -Dwith-libtirpc=true \
 &&  ninja -C build
 
