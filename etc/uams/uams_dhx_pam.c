@@ -24,7 +24,7 @@
 #endif
 
 
-#if defined(WOLFSSL_DHX)
+#if defined(EMBEDDED_SSL)
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/bn.h>
 #include <wolfssl/openssl/dh.h>
@@ -36,7 +36,7 @@
 #include <openssl/dh.h>
 #include <openssl/cast.h>
 #include <openssl/err.h>
-#endif /* WOLFSSL_DHX */
+#endif /* EMBEDDED_SSL */
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>

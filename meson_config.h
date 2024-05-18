@@ -787,9 +787,6 @@
 /* Whether sendfile() should be used */
 #mesondefine WITH_SENDFILE
 
-/* Define if the WolfSSL DHX modules should be built */
-#mesondefine WOLFSSL_DHX
-
 /* xattr functions have additional options */
 #mesondefine XATTR_ADD_OPT
 
