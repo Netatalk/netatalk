@@ -37,7 +37,6 @@ Changes in 3.2.0
 * NEW: docs: Generate a manual appendix with build instructions, GitHub #791
 * UPD: docs: Document libraries, init scripts in manual, GitHub #808
 * FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
-* FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
 * FIX: Shore up error handling and type safety, GItHub #952
 * UPD: Rewrite the afpstats script in Perl, GitHub #893
        And, improve the formatting of the standard output.
