@@ -804,6 +804,14 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         EC_FAIL;
     }
 
+    /*
+     * Since recent CVE fixes have introduced new behavior regarding
+     * ad_entry() output. For now, we will AFP_ASSERT() in EC_CLEANUP to prevent
+     * altering on-disk info. This does introduce an avenue to DOS
+     * the netatalk server by locally writing garbage to the EA. At this
+     * point, the outcome is an acceptable risk to prevent unintended
+     * changes to metadata.
+     */
     if (nentries != ADEID_NUM_EA
         || !ad_entry(ad, ADEID_FINDERI)
         || !ad_entry(ad, ADEID_COMMENT)
@@ -813,6 +821,12 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         || !ad_entry(ad, ADEID_PRIVINO)
         || !ad_entry(ad, ADEID_PRIVSYN)
         || !ad_entry(ad, ADEID_PRIVID)) {
+        LOG(log_error, logtype_ad,
+            "ad_header_read_ea(\"%s\"): invalid metadata EA "
+            "this is now being treated as a fatal error. "
+            "if you see this log entry, please file a bug ticket "
+            "with your upstream vendor and attach the generated "
+            "core file.", path ? fullpathname(path) : "UNKNOWN");
 
         errno = EINVAL;
         EC_FAIL;
@@ -826,17 +840,19 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, const struct 
         ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
 #endif
 
+    // TODO: Remove the assert and restore the branch for cleaning up invalid metadata
+    //       https://github.com/Netatalk/netatalk/issues/400
 EC_CLEANUP:
+    AFP_ASSERT(!(ret != 0 && errno == EINVAL));
+#if 0
     if (ret != 0 && errno == EINVAL) {
         become_root();
         (void)sys_removexattr(path, AD_EA_META);
         unbecome_root();
-        LOG(log_error, logtype_ad,
-            "ad_header_read_ea(%s, %d): deleted invalid metadata EA",
-            path ? fullpathname(path) : "UNKNOWN", nentries);
-
+        LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): deleted invalid metadata EA", fullpathname(path), nentries);
         errno = ENOENT;
     }
+#endif
     EC_EXIT;
 }
 
