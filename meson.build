@@ -484,79 +484,53 @@ message('BDB version: ', bdb_version)
 with_ssl_dir = get_option('with-ssl-dir')
 have_embedded_ssl = get_option('with-embedded-ssl')
 
-wolfssl = dependency('wolfssl', required: false)
-crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
-des = cc.find_library('des', required: false)
+ssl_deps = []
+ssl_link_args = []
+ssl_provider = ''
 
+crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
 if crypt.found()
     cdata.set('HAVE_CRYPT_H', 1)
     cdata.set('HAVE_LIBCRYPT', 1)
 endif
 
-ssl_link_args = []
-ssl_includes = []
-ssl_dirs = [
-    with_ssl_dir,
-    '/usr/local',
-    '/usr/local/openssl',
-    '/usr/local/ssl',
-    '/usr/pkg',
-    '/opt',
-    '/opt/openssl',
-    '/usr' / atalk_libname / 'openssl',
-    '/usr' / atalk_libname / 'ssl',
-    '/usr',
-]
+des = cc.find_library('des', required: false)
+if des.found()
+    cdata.set('HAVE_LIBDES', 1)
+endif
 
-foreach dir : ssl_dirs
-    if fs.exists(dir / 'include/openssl/cast.h')
-        ssl_link_args += ['-L' + dir / atalk_libname, '-L' + dir, '-lcrypto']
-        if enable_rpath
-            ssl_link_args += ['-R' + dir / atalk_libname, '-R' + dir]
-        endif
-        if enable_dtags
-            ssl_link_args += '-Wl,--enable-new-dtags'
-        endif
-        ssl_includes += include_directories(
-            dir / 'include',
-            dir / 'include/openssl',
-        )
-    endif
-    if ssl_link_args != []
-        break
-    endif
-endforeach
+crypto = dependency('libcrypto', required: false)
+libtls = dependency('libtls', required: false)
 
-crypto = declare_dependency(
-    link_args: ssl_link_args,
-    include_directories: ssl_includes,
-)
+if enable_rpath and crypto.found()
+    ssl_link_args += ['-R' / crypto.get_variable(pkgconfig: 'libdir')]
+endif
 
-if have_embedded_ssl or wolfssl.found() or ssl_link_args != []
+if enable_dtags
+    ssl_link_args += '-Wl,--enable-new-dtags'
+endif
+
+if have_embedded_ssl or crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
 endif
 
-ssl_deps = []
-ssl_type = ''
-
 if have_embedded_ssl
-    ssl_type += 'built-in'
-    cdata.set('WOLFSSL_DHX', 1)
+    ssl_provider += 'built-in'
     cdata.set('EMBEDDED_SSL', 1)
-elif wolfssl.found() and fs.read(wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h').contains('OPENSSL_ALL')
-    ssl_deps += wolfssl
-    ssl_type += 'dependency'
-    cdata.set('WOLFSSL_DHX', 1)
-elif ssl_link_args != []
+elif crypto.found()
     ssl_deps += crypto
-    ssl_type += 'dependency'
     cdata.set('OPENSSL_DHX', 1)
+    if libtls.found()
+        ssl_provider += 'LibreSSL'
+    elif not libtls.found()
+        ssl_provider += 'OpenSSL'
+    endif
 else
     have_ssl = false
     warning(
-        'WolfSSL, libressl or OpenSSL version 1.1 is required for DHX UAM support',
+        'Either LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
     )
 endif
 
@@ -1992,7 +1966,7 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
-    '  SSL provider': ssl_type,
+    '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,
 }

@@ -42,7 +42,9 @@
 #if defined(EMBEDDED_SSL)
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/des.h>
-#else
+#elif defined(OPENSSL_DHX)
+#include <openssl/des.h>
+#elif defined(HAVE_LIBDES)
 #include <des.h>
 #endif
 
