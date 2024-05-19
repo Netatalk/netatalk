@@ -1248,7 +1248,6 @@ int getdirparams(const AFPObj *obj,
     struct maccess  ma;
     struct adouble  ad;
     char        *data, *l_nameoff = NULL, *utf_nameoff = NULL;
-    char        *ade = NULL;
     int         bit = 0, isad = 0;
     uint32_t           aint;
     uint16_t       ashort;
@@ -1342,8 +1341,8 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_FINFO :
-            if ( isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
-                memcpy( data, ade, 32 );
+            if ( isad && ad_entry(&ad, ADEID_FINDERI)) {
+                memcpy( data, ad_entry( &ad, ADEID_FINDERI ), 32 );
             } else { /* no appledouble */
                 memset( data, 0, 32 );
                 /* dot files are by default visible */
@@ -1567,7 +1566,6 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
     struct timeval      tv;
 
     char                *upath;
-    char                *ade = NULL;
     struct dir          *dir;
     int         bit, isad = 0;
     int                 cdate, bdate;
@@ -1722,7 +1720,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             }
             break;
         case DIRPBIT_FINFO :
-            if (isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
+            if (isad && ad_entry(&ad, ADEID_FINDERI)) {
                 /* Fixes #2802236 */
                 uint16_t fflags;
                 memcpy(&fflags, finder_buf + FINDERINFO_FRFLAGOFF, sizeof(uint16_t));
@@ -1739,10 +1737,10 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                      * behavior one sees when mounting above another mount
                      * point.
                      */
-                    memcpy( ade, finder_buf, 10 );
-                    memcpy( ade + 14, finder_buf + 14, 18 );
+                    memcpy( ad_entry( &ad, ADEID_FINDERI ), finder_buf, 10 );
+                    memcpy( ad_entry( &ad, ADEID_FINDERI ) + 14, finder_buf + 14, 18 );
                 } else {
-                    memcpy( ade, finder_buf, 32 );
+                    memcpy( ad_entry( &ad, ADEID_FINDERI ), finder_buf, 32 );
                 }
             }
             break;

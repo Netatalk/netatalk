@@ -290,7 +290,6 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
     char *data = NULL;
     char *nameoff = NULL;
     const char *slash = NULL;
-    char *ade = NULL;
 
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
 
@@ -312,9 +311,10 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             slash++;
         else
             slash = vol->v_path;
-        if (ad_getentryoff(&ad, ADEID_NAME) && (ade = ad_entry(&ad, ADEID_NAME)) != NULL) {
+        if (ad_getentryoff(&ad, ADEID_NAME) && ad_entry(&ad, ADEID_NAME)) {
             ad_setentrylen( &ad, ADEID_NAME, strlen( slash ));
-            memcpy(ade, slash, ad_getentrylen( &ad, ADEID_NAME ));
+            memcpy(ad_entry( &ad, ADEID_NAME ), slash,
+                   ad_getentrylen( &ad, ADEID_NAME ));
         }
         vol_setdate(vol->v_vid, &ad, st->st_mtime);
         ad_flush(&ad);
