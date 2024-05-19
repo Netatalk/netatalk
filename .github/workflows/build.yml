@@ -122,7 +122,6 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=openrc
       - name: Meson - Build
         run: ninja -C build
@@ -173,7 +172,6 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Ddisable-init-hooks=true \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=systemd
       - name: Meson - Build
         run: ninja -C build
@@ -254,7 +252,6 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=debian-sysv
       - name: Meson - Build
         run: ninja -C build
@@ -327,7 +324,6 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Ddisable-init-hooks=true \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=redhat-systemd
       - name: Meson - Build
         run: ninja -C build
@@ -406,7 +402,6 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Ddisable-init-hooks=true \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=suse-systemd
       - name: Meson - Build
         run: ninja -C build
@@ -459,7 +454,6 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Dbuild-manual=true \
-            -Dwith-embedded-ssl=true \
             -Ddisable-init-hooks=true \
             -Dwith-init-style=debian-systemd
       - name: Meson - Build and generate manual pages
@@ -522,8 +516,7 @@ jobs:
             gmake install
             gmake uninstall
             echo "Building with Meson"
-            meson setup build \
-              -Dwith-embedded-ssl=true
+            meson setup build
             ninja -C build
             ninja -C build install
             ninja -C build uninstall
@@ -581,7 +574,6 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-embedded-ssl=true \
               -Dwith-init-style=freebsd
             ninja -C build
             ninja -C build install
@@ -647,7 +639,6 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
-              -Dwith-embedded-ssl=true \
               -Dwith-init-style=netbsd
             ninja -C build
             ninja -C build install
@@ -711,7 +702,6 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-embedded-ssl=true \
               -Dwith-init-style=openbsd
             ninja -C build
             ninja -C build install
@@ -759,7 +749,6 @@ jobs:
         run: |
           meson setup build \
             -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
-            -Dwith-embedded-ssl=true \
             -Dwith-init-style=macos-launchd \
             -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
             -Dbuild-tests=true
@@ -828,7 +817,6 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-embedded-ssl=true \
               -Dwith-init-style=solaris \
               -Dwith-ldap=/opt/local
             ninja -C build
