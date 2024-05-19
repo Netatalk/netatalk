@@ -39,7 +39,7 @@
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
-    u_int16_t	vid;
+    uint16_t	vid;
 
     ibuf += 2;
 
@@ -121,8 +121,8 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     u_char		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
     int			itype, cc = AFP_OK, iovcnt = 0;
     size_t 		buflen;
-    u_int32_t           ftype, itag;
-    u_int16_t		bsize, rsize, vid;
+    uint32_t           ftype, itag;
+    uint16_t		bsize, rsize, vid;
 
     buflen = *rbuflen;
     *rbuflen = 0;
@@ -294,7 +294,7 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 {
     struct vol	*vol;
     u_char	fcreator[ 4 ], ih[ 12 ];
-    u_int16_t	vid, iindex, bsize;
+    uint16_t	vid, iindex, bsize;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -367,7 +367,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     off_t       offset;
     ssize_t	rc, buflen;
     u_char	fcreator[ 4 ], ftype[ 4 ], itype, ih[ 12 ];
-    u_int16_t	vid, bsize, rsize;
+    uint16_t	vid, bsize, rsize;
 
     buflen = *rbuflen;
     *rbuflen = 0;
@@ -543,7 +543,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     char	*m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t	 flags;
+    uint16_t	 flags;
         
     if ( *mpath == '\0' ) {
         strcpy(upath, ".");
@@ -581,7 +581,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
     static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char        *m, *u;
-    u_int16_t    flags;
+    uint16_t    flags;
     size_t       outlen;
 
     m = mpath;
@@ -665,8 +665,8 @@ int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol		*vol;
     struct dir		*dir;
     struct path         *path;
-    u_int32_t           did;
-    u_int16_t		vid;
+    uint32_t           did;
+    uint16_t		vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -743,8 +743,8 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
     
     *rbuflen = 0;
     ibuf += 2;
@@ -813,8 +813,8 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;
-    u_int32_t		did;
-    u_int16_t		vid;
+    uint32_t		did;
+    uint16_t		vid;
 
     *rbuflen = 0;
     ibuf += 2;

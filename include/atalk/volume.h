@@ -23,7 +23,7 @@ typedef uint64_t VolSpace;
 
 struct vol {
     struct vol      *v_next;
-    u_int16_t       v_vid;
+    uint16_t       v_vid;
     int             v_flags;
     char            *v_path;
     struct dir      *v_root;
@@ -31,10 +31,10 @@ struct vol {
 
     charset_t       v_volcharset;
     charset_t       v_maccharset;
-    u_int16_t       v_mtou_flags;    /* flags for convert_charset in mtoupath */
-    u_int16_t       v_utom_flags;
+    uint16_t       v_mtou_flags;    /* flags for convert_charset in mtoupath */
+    uint16_t       v_utom_flags;
     long            v_kTextEncoding; /* mac charset encoding in network order
-                                      * FIXME: should be a u_int32_t ? */
+                                      * FIXME: should be a uint32_t ? */
     size_t          max_filename;
     char            *v_veto;
     int             v_adouble;    /* adouble format: v1, v2 */

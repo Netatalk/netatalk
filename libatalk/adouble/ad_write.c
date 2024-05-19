@@ -45,7 +45,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
 }
 
 /* end is always 0 */
-ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int end, const char *buf, const size_t buflen)
+ssize_t ad_write(struct adouble *ad, const uint32_t eid, off_t off, const int end, const char *buf, const size_t buflen)
 {
     struct stat		st;
     ssize_t		cc;

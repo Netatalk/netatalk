@@ -65,7 +65,7 @@ void status_versions(char *data,
                      const DSI *dsi)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     int         len, num, i, count = 0;
 
     memcpy(&status, start + AFPSTATUS_VERSOFF, sizeof(status));
@@ -98,7 +98,7 @@ void status_versions(char *data,
 void status_uams(char *data, const char *authlist)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     struct uam_obj      *uams;
     int         len, num = 0;
 
@@ -462,10 +462,10 @@ int afp_getsession(
     char   *ibuf, size_t ibuflen, 
     char   *rbuf, size_t *rbuflen)
 {
-    u_int16_t           type;
-    u_int32_t           idlen = 0;
-    u_int32_t       boottime;
-    u_int32_t           tklen, tp;
+    uint16_t           type;
+    uint32_t           idlen = 0;
+    uint32_t       boottime;
+    uint32_t           tklen, tp;
     char                *token;
     char                *p;
 
@@ -564,8 +564,8 @@ int afp_getsession(
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     DSI                 *dsi = (DSI *)obj->handle;
-    u_int16_t           type;
-    u_int32_t           tklen;
+    uint16_t           type;
+    uint32_t           tklen;
     pid_t               token;
     int                 i;
 
@@ -731,7 +731,7 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     size_t  len;
     int     i;
     char        type;
-    u_int16_t   len16;
+    uint16_t   len16;
     char        *username;
 
     *rbuflen = 0;
@@ -963,9 +963,9 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
 /* FPGetUserInfo */
 int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    u_int8_t  thisuser;
-    u_int32_t id;
-    u_int16_t bitmap;
+    uint8_t  thisuser;
+    uint32_t id;
+    uint16_t bitmap;
     char *bitmapp;
 
     LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");

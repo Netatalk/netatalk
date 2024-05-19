@@ -42,7 +42,7 @@
 
 #include "atp_internals.h"
 
-ATP atp_open(u_int8_t port, const struct at_addr *saddr)
+ATP atp_open(uint8_t port, const struct at_addr *saddr)
 {
     struct sockaddr_at  addr;
     int			s;

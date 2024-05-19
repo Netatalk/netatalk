@@ -49,9 +49,9 @@ int atp_rreq(
     struct atphdr	req_hdr;	/* request header overlay */
     struct sockaddr_at	faddr;		/* sender's address */
     int			recvlen;	/* length of received packet */
-    u_int16_t		tid;
+    uint16_t		tid;
     int			rc;
-    u_int8_t		func;
+    uint8_t		func;
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_rreq" );

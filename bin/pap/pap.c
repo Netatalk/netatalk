@@ -470,7 +470,7 @@ int main( int ac, char	**av)
 
 static int		data = 0;
 static unsigned char	port;
-static u_int16_t	seq = 0;
+static uint16_t	seq = 0;
 
 static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
 {

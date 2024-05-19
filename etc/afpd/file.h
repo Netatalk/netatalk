@@ -104,20 +104,20 @@ typedef enum {
   kTextEncodingMacKeyboardGlyphs = 41,
 } kTextEncoding_t;
 
-extern char *set_name   (const struct vol *, char *, cnid_t, char *, cnid_t, u_int32_t );
+extern char *set_name   (const struct vol *, char *, cnid_t, char *, cnid_t, uint32_t );
 
 extern struct extmap	*getextmap (const char *);
 extern struct extmap	*getdefextmap (void);
 
-extern int getfilparams (struct vol *, u_int16_t, struct path *,
+extern int getfilparams (struct vol *, uint16_t, struct path *,
                                  struct dir *, char *buf, size_t *);
 
-extern int setfilparams (struct vol *, struct path *, u_int16_t, char *);
+extern int setfilparams (struct vol *, struct path *, uint16_t, char *);
 extern int renamefile   (const struct vol *, int, char *, char *, char *, struct adouble *);
 extern int copyfile     (const struct vol *, const struct vol *, int, char *, char *, char *, struct adouble *);
 extern int deletefile   (const struct vol *, int, char *, int);
 
-extern int getmetadata  (struct vol *vol, u_int16_t bitmap, struct path *path, 
+extern int getmetadata  (struct vol *vol, uint16_t bitmap, struct path *path, 
                          struct dir *dir, char *buf, size_t *buflen, struct adouble *adp);
 
 extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *, int);

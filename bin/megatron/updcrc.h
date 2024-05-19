@@ -7,7 +7,7 @@
 #if W <= 16
 #  define WTYPE	unsigned short
 #else /* W <= 16 */
-#  define WTYPE   u_int32_t
+#  define WTYPE   uint32_t
 #endif /* W <= 16 */
 
 WTYPE updcrc(WTYPE icrc, unsigned char *icp, int icnt);

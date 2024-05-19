@@ -19,10 +19,10 @@ int      usockfd_check   (int, const sigset_t *);
 #define OSSH_ALIGNBYTES (sizeof(int) - 1)
 #endif
 #ifndef __CMSG_ALIGN
-#ifndef u_int
-#define u_int unsigned int
+#ifndef uint
+#define uint unsigned int
 #endif
-#define __CMSG_ALIGN(p) (((u_int)(p) + OSSH_ALIGNBYTES) &~ OSSH_ALIGNBYTES)
+#define __CMSG_ALIGN(p) (((uint)(p) + OSSH_ALIGNBYTES) &~ OSSH_ALIGNBYTES)
 #endif
 
 /* Length of the contents of a control message of length len */

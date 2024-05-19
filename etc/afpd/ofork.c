@@ -127,13 +127,13 @@ struct ofork *
 of_alloc(struct vol *vol,
          struct dir    *dir,
          char      *path,
-         u_int16_t     *ofrefnum,
+         uint16_t     *ofrefnum,
          const int      eid,
          struct adouble *ad,
          struct stat    *st)
 {
     struct ofork        *of;
-    u_int16_t       refnum, of_refnum;
+    uint16_t       refnum, of_refnum;
 
     int         i;
 
@@ -235,7 +235,7 @@ of_alloc(struct vol *vol,
     return( of );
 }
 
-struct ofork *of_find(const u_int16_t ofrefnum )
+struct ofork *of_find(const uint16_t ofrefnum )
 {
     if (!oforks || !nforks)
         return NULL;

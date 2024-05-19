@@ -15,10 +15,10 @@
 #include <atalk/unicode.h>
 #include <atalk/globals.h>
 
-extern struct vol       *getvolbyvid (const u_int16_t);
+extern struct vol       *getvolbyvid (const uint16_t);
 extern int              ustatfs_getvolspace (const struct vol *,
             VolSpace *, VolSpace *,
-            u_int32_t *);
+            uint32_t *);
 extern void             setvoltime (AFPObj *, struct vol *);
 extern int              pollvoltime (AFPObj *);
 extern void             load_volumes (AFPObj *obj);

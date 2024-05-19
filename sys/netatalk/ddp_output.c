@@ -100,7 +100,7 @@ at_cksum( m, skip )
     int		skip;
 {
     u_char	*data, *end;
-    u_int32_t	cksum = 0;
+    uint32_t	cksum = 0;
 
     for (; m; m = m->m_next ) {
 	for ( data = mtod( m, u_char * ), end = data + m->m_len; data < end;

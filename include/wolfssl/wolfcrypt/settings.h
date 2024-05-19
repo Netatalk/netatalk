@@ -1802,10 +1802,10 @@ extern void uITRON4_free(void *p) ;
                     ((CPU_CHAR *)Str_Copy_N((CPU_CHAR *)(pstr_dest), \
                      (CPU_CHAR *)(pstr_src), (CPU_SIZE_T)(len_max)))
     #define XSTRNCMP(pstr_1, pstr_2, len_max) \
-                    ((CPU_INT16S)Str_Cmp_N((CPU_CHAR *)(pstr_1), \
+                    ((CPuint16S)Str_Cmp_N((CPU_CHAR *)(pstr_1), \
                      (CPU_CHAR *)(pstr_2), (CPU_SIZE_T)(len_max)))
     #define XSTRNCASECMP(pstr_1, pstr_2, len_max) \
-                    ((CPU_INT16S)Str_CmpIgnoreCase_N((CPU_CHAR *)(pstr_1), \
+                    ((CPuint16S)Str_CmpIgnoreCase_N((CPU_CHAR *)(pstr_1), \
                      (CPU_CHAR *)(pstr_2), (CPU_SIZE_T)(len_max)))
     #define XSTRSTR(pstr, pstr_srch) \
                     ((CPU_CHAR *)Str_Str((CPU_CHAR *)(pstr), \
@@ -1826,7 +1826,7 @@ extern void uITRON4_free(void *p) ;
     #endif
     #define XMEMSET(pmem, data_val, size) \
                     ((void)Mem_Set((void *)(pmem), \
-                    (CPU_INT08U) (data_val), \
+                    (CPuint08U) (data_val), \
                     (CPU_SIZE_T)(size)))
     #define XMEMCPY(pdest, psrc, size) ((void)Mem_Copy((void *)(pdest), \
                      (void *)(psrc), (CPU_SIZE_T)(size)))

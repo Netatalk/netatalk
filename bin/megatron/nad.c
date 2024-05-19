@@ -309,7 +309,7 @@ static char *utompathsjis( char *from)
 static char *utompathiconv(char *upath)
 {
     char        *m, *u;
-    u_int16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    uint16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
     static char	 mpath[MAXPATHLEN +2]; /* for convert_charset dest_len parameter +2 */
 
@@ -345,7 +345,7 @@ static char *mtoupathiconv(char *mpath)
     char        *m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t    flags = 0;
+    uint16_t    flags = 0;
     static char	 upath[MAXPATHLEN +2]; /* for convert_charset dest_len parameter +2 */
 
     if ( *mpath == '\0' ) {
@@ -492,7 +492,7 @@ int nad_open( char *path, int openflags, struct FHeader *fh, int options)
 
 int nad_header_read(struct FHeader *fh)
 {
-    u_int32_t		temptime;
+    uint32_t		temptime;
     struct stat		st;
     char 		*p;
 
@@ -603,7 +603,7 @@ int nad_header_read(struct FHeader *fh)
 
 int nad_header_write(struct FHeader *fh)
 {
-    u_int32_t		temptime;
+    uint32_t		temptime;
 
     ad_setentrylen( &nad.ad, ADEID_NAME, strlen( nad.macname ));
     memcpy( ad_entry( &nad.ad, ADEID_NAME ), nad.macname, 

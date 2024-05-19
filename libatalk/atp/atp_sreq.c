@@ -50,7 +50,7 @@
  * flags:     ATP_XO, ATP_TREL
  */
 int
-atp_sreq( ATP ah, struct atp_block *atpb, int respcount, u_int8_t flags )
+atp_sreq( ATP ah, struct atp_block *atpb, int respcount, uint8_t flags )
 {
     struct atpbuf	*req_buf;
     int			i;

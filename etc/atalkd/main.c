@@ -1233,8 +1233,8 @@ void bootaddr(struct interface *iface)
  * to manage the i_ports field and the fds for select().
  */
 void setaddr(struct interface *iface,
-             u_int8_t  phase, u_int16_t net, u_int8_t node,
-	     u_int16_t first, u_int16_t last)
+             uint8_t  phase, uint16_t net, uint8_t node,
+	     uint16_t first, uint16_t last)
 {
     int			i;
     struct atserv	*as;

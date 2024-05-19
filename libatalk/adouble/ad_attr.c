@@ -14,15 +14,15 @@
    retrieved from the FinderFlags. This fixes Bug #2802236:
    <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
  */
-int ad_getattr(const struct adouble *ad, u_int16_t *attr)
+int ad_getattr(const struct adouble *ad, uint16_t *attr)
 {
-    u_int16_t fflags;
+    uint16_t fflags;
     *attr = 0;
 
     if (ad->ad_version == AD_VERSION1) {
         if (ad_getentryoff(ad, ADEID_FILEI)) {
             memcpy(attr, ad_entry(ad, ADEID_FILEI) + FILEIOFF_ATTR,
-                   sizeof(u_int16_t));
+                   sizeof(uint16_t));
         }
     }
 #if AD_VERSION == AD_VERSION2
@@ -58,12 +58,12 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 }
 
 /* ----------------- */
-int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
+int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 {
     uint16_t fflags;
 
     /* we don't save open forks indicator */
-    u_int16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
+    uint16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
 
     /* Proactively (10.4 does indeed try to set ATTRBIT_MULTIUSER (=ATTRBIT_EXPFLDR)
        for dirs with SetFile -a M <dir> ) disable all flags not defined for dirs. */
@@ -110,7 +110,7 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
  * return 1 if resource fork has been modified
  */
 #if AD_VERSION == AD_VERSION2
-int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_int32_t id, const cnid_t did, const void *stamp)
+int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint32_t id, const cnid_t did, const void *stamp)
 {
     if ((adp->ad_flags == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
 
@@ -139,9 +139,9 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_in
 }
 
 /* ----------------------------- */
-u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino , const cnid_t did, const void *stamp)
+uint32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino , const cnid_t did, const void *stamp)
 {
-    u_int32_t aint = 0;
+    uint32_t aint = 0;
     dev_t  dev;
     ino_t  ino;
     cnid_t a_did;
@@ -173,9 +173,9 @@ u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino 
 }
 
 /* ----------------------------- */
-u_int32_t ad_forcegetid (struct adouble *adp)
+uint32_t ad_forcegetid (struct adouble *adp)
 {
-    u_int32_t aint = 0;
+    uint32_t aint = 0;
 
     if (adp && (adp->ad_options & ADVOL_CACHE)) {
         memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));

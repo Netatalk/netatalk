@@ -110,7 +110,7 @@ callaurpc(struct vol *vol,
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
 #endif /* USE_OLD_RQUOTA */
 
-int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
+int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
                 struct dqblk *dqp)
 {
 

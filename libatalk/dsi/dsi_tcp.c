@@ -115,7 +115,7 @@ static int dsi_tcp_open(DSI *dsi)
     if (0 == (pid = fork()) ) { /* child */
         static struct itimerval timer = {{0, 0}, {DSI_TCPTIMEOUT, 0}};
         struct sigaction newact, oldact;
-        u_int8_t block[DSI_BLOCKSIZ];
+        uint8_t block[DSI_BLOCKSIZ];
         size_t stored;
 
         /* Immediateyl mark globally that we're a child now */

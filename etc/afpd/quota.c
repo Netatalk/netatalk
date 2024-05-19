@@ -121,7 +121,7 @@ getfreespace(struct vol *vol, VolSpace *bfree, VolSpace *btotal,
 	return 1;
 }
 
-int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const u_int32_t bsize)
+int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const uint32_t bsize)
 {
 	int uret, gret;
 	VolSpace ubfree, ubtotal;
@@ -326,13 +326,13 @@ static int get_linux_xfs_quota(int what, char *path, uid_t euser_id, struct dqbl
 	if ((ret = quotactl(QCMD(Q_XGETQUOTA,(what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t)&D)))
                return ret;
 
-	dqb->bsize = (u_int64_t)512;
-        dqb->dqb_bsoftlimit  = (u_int64_t)D.d_blk_softlimit;
-        dqb->dqb_bhardlimit  = (u_int64_t)D.d_blk_hardlimit;
-        dqb->dqb_ihardlimit  = (u_int64_t)D.d_ino_hardlimit;
-        dqb->dqb_isoftlimit  = (u_int64_t)D.d_ino_softlimit;
-        dqb->dqb_curinodes   = (u_int64_t)D.d_icount;
-        dqb->dqb_curblocks   = (u_int64_t)D.d_bcount; 
+	dqb->bsize = (uint64_t)512;
+        dqb->dqb_bsoftlimit  = (uint64_t)D.d_blk_softlimit;
+        dqb->dqb_bhardlimit  = (uint64_t)D.d_blk_hardlimit;
+        dqb->dqb_ihardlimit  = (uint64_t)D.d_ino_hardlimit;
+        dqb->dqb_isoftlimit  = (uint64_t)D.d_ino_softlimit;
+        dqb->dqb_curinodes   = (uint64_t)D.d_icount;
+        dqb->dqb_curblocks   = (uint64_t)D.d_bcount; 
 #endif
        return ret;
 }
@@ -591,12 +591,12 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
     if( 
         /* if overquota, free space is 0 otherwise hard-current */
         ( overquota( dq ) ? 0 : ( dq->dqb_bhardlimit ? dq->dqb_bhardlimit - 
-                                  dq->dqb_curblocks : ~((u_int64_t) 0) ) )
+                                  dq->dqb_curblocks : ~((uint64_t) 0) ) )
 
       >
         
         ( overquota( &dqg ) ? 0 : ( dqg.dqb_bhardlimit ? dqg.dqb_bhardlimit - 
-                                    dqg.dqb_curblocks : ~((u_int64_t) 0) ) )
+                                    dqg.dqb_curblocks : ~((uint64_t) 0) ) )
 
       ) /* if */
     {
@@ -614,7 +614,7 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 }
 
 
-static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
+static int getquota( struct vol *vol, struct dqblk *dq, const uint32_t bsize)
 {
     char *p;
 
@@ -711,9 +711,9 @@ static int overquota( struct dqblk *dqblk)
 #define tobytes(a, b)  dbtob((VolSpace) (a))
 #endif
 
-int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const u_int32_t bsize)
+int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const uint32_t bsize)
 {
-	u_int64_t this_bsize;
+	uint64_t this_bsize;
 	struct dqblk dqblk;
 
 	this_bsize = bsize;

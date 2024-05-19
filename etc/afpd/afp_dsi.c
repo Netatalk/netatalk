@@ -450,8 +450,8 @@ void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->handle;
     int rc_idx;
-    u_int32_t err, cmd;
-    u_int8_t function;
+    uint32_t err, cmd;
+    uint8_t function;
 
     AFPobj = obj;
     obj->exit = afp_dsi_die;

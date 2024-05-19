@@ -14,7 +14,7 @@
 #include <atalk/asp.h>
 
 /* send off a tickle */
-int asp_tickle(ASP asp, const u_int8_t sid, struct sockaddr_at *sat)
+int asp_tickle(ASP asp, const uint8_t sid, struct sockaddr_at *sat)
 {
   struct atp_block atpb;
   char buf[ASP_HDRSIZ];

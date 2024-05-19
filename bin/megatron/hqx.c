@@ -67,7 +67,7 @@ FILE		*rawhex, *expandhex;
 #endif /* HEXOUTPUT */
 
 static struct hqx_file_data {
-    u_int32_t		forklen[ NUMFORKS ];
+    uint32_t		forklen[ NUMFORKS ];
     u_short		forkcrc[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
     u_short		headercrc;
@@ -240,7 +240,7 @@ ssize_t hqx_read(int fork, char *buffer, size_t length)
 int hqx_header_read(struct FHeader *fh)
 {
     char		*headerbuf, *headerptr;
-    u_int32_t		time_seconds;
+    uint32_t		time_seconds;
     u_short		mask;
     u_short		header_crc;
     char		namelen;

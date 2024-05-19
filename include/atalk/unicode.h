@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <sys/param.h>
 
-#define ucs2_t u_int16_t
+#define ucs2_t uint16_t
 
 #ifndef MIN
 #define MIN(a,b)     ((a)<(b)?(a):(b))
@@ -80,7 +80,7 @@ struct charset_functions {
                    char **outbuf, size_t *outbytesleft);
     size_t (*push)(void *, char **inbuf, size_t *inbytesleft,
                    char **outbuf, size_t *outbytesleft);
-    u_int32_t flags;
+    uint32_t flags;
     const char *iname;
     struct charset_functions *prev, *next;
 };
@@ -94,9 +94,9 @@ extern int atalk_register_charset (struct charset_functions *);
 
 /* from utf16_case.c */
 extern ucs2_t    toupper_w  (ucs2_t);
-extern u_int32_t toupper_sp (u_int32_t);
+extern uint32_t toupper_sp (uint32_t);
 extern ucs2_t    tolower_w  (ucs2_t);
-extern u_int32_t tolower_sp (u_int32_t);
+extern uint32_t tolower_sp (uint32_t);
 
 /* from util_unistr.c */
 extern int      strupper_w (ucs2_t *);
@@ -140,7 +140,7 @@ extern size_t   ucs2_to_charset_allocate (charset_t, char **dest, const ucs2_t *
 extern size_t   utf8_to_charset_allocate (charset_t, char **dest, const char *src);
 extern size_t   ucs2_to_charset (charset_t, const ucs2_t *src, char *dest, size_t);
 
-extern size_t   convert_charset (charset_t, charset_t, charset_t, const char *, size_t, char *, size_t, u_int16_t *);
+extern size_t   convert_charset (charset_t, charset_t, charset_t, const char *, size_t, char *, size_t, uint16_t *);
 
 extern size_t   charset_precompose ( charset_t, char *, size_t, char *, size_t);
 extern size_t   charset_decompose  ( charset_t, char *, size_t, char *, size_t);

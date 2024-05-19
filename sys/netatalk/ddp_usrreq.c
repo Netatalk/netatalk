@@ -26,8 +26,8 @@
 #include "endian.h"
 
 struct ddpcb	*ddpcb = NULL;
-u_int32_t		ddp_sendspace = DDP_MAXSZ; /* Max ddp size + 1 (ddp_type) */
-u_int32_t		ddp_recvspace = 10 * ( 587 + sizeof( struct sockaddr_at ));
+uint32_t		ddp_sendspace = DDP_MAXSZ; /* Max ddp size + 1 (ddp_type) */
+uint32_t		ddp_recvspace = 10 * ( 587 + sizeof( struct sockaddr_at ));
 
 /*ARGSUSED*/
 ddp_usrreq( so, req, m, addr, rights )

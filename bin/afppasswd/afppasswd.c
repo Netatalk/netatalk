@@ -73,7 +73,7 @@ static char buf[MAXPATHLEN + 1];
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 {
-  u_int8_t key[HEXPASSWDLEN];
+  uint8_t key[HEXPASSWDLEN];
   DES_key_schedule schedule;
   unsigned int i, j;
 

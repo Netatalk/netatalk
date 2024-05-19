@@ -93,7 +93,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
         chk_ext = 1;
         if (vol_inv_dots(vol) && *upath == '.') { /* make it invisible */
-            u_int16_t ashort;
+            uint16_t ashort;
             
             ashort = htons(FINDERINFO_INVISIBLE);
             memcpy((char *)data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
@@ -101,7 +101,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
     }
 
     if (islink && !vol_syml_opt(vol)) {
-        u_int16_t linkflag;
+        uint16_t linkflag;
         memcpy(&linkflag, (char *)data + FINDERINFO_FRFLAGOFF, 2);
         linkflag |= htons(FINDERINFO_ISALIAS);
         memcpy((char *)data + FINDERINFO_FRFLAGOFF, &linkflag, 2);
@@ -120,9 +120,9 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
 
 /* ---------------------
 */
-char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t id, u_int32_t utf8) 
+char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t id, uint32_t utf8) 
 {
-    u_int32_t   aint;
+    uint32_t   aint;
     char        *tp = NULL;
     char        *src = name;
     aint = strlen( name );
@@ -149,7 +149,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
         *data++ = aint;
     }
     else {
-        u_int16_t temp;
+        uint16_t temp;
 
         if (aint > UTF8FILELEN_EARLY)  /* FIXME safeguard, anyway if no ascii char it's game over*/
            aint = UTF8FILELEN_EARLY;
@@ -207,8 +207,8 @@ uint32_t get_id(struct vol *vol,
                 const char *upath,
                 const int len) 
 {
-    u_int32_t adcnid;
-    u_int32_t dbcnid = CNID_INVALID;
+    uint32_t adcnid;
+    uint32_t dbcnid = CNID_INVALID;
 
     if (vol->v_cdb != NULL) {
         /* prime aint with what we think is the cnid, set did to zero for
@@ -257,18 +257,18 @@ exit:
              
 /* -------------------------- */
 int getmetadata(struct vol *vol,
-                 u_int16_t bitmap,
+                 uint16_t bitmap,
                  struct path *path, struct dir *dir, 
                  char *buf, size_t *buflen, struct adouble *adp)
 {
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
     int			bit = 0;
-    u_int32_t		aint;
+    uint32_t		aint;
     cnid_t              id = 0;
-    u_int16_t		ashort;
+    uint16_t		ashort;
     u_char              achar, fdType[4];
-    u_int32_t           utf8 = 0;
+    uint32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
 
@@ -364,8 +364,8 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_PDID :
-            memcpy(data, &dir->d_did, sizeof( u_int32_t ));
-            data += sizeof( u_int32_t );
+            memcpy(data, &dir->d_did, sizeof( uint32_t ));
+            data += sizeof( uint32_t );
             LOG(log_debug, logtype_afpd, "metadata('%s'):     Parent DID: %u",
                 path->u_name, ntohl(dir->d_did));
             break;
@@ -403,12 +403,12 @@ int getmetadata(struct vol *vol,
 
         case FILPBIT_LNAME :
             l_nameoff = data;
-            data += sizeof( u_int16_t );
+            data += sizeof( uint16_t );
             break;
 
         case FILPBIT_SNAME :
-            memset(data, 0, sizeof(u_int16_t));
-            data += sizeof( u_int16_t );
+            memset(data, 0, sizeof(uint16_t));
+            data += sizeof( uint16_t );
             break;
 
         case FILPBIT_FNUM :
@@ -450,7 +450,7 @@ int getmetadata(struct vol *vol,
             if (afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
                 utf_nameoff = data;
-                data += sizeof( u_int16_t );
+                data += sizeof( uint16_t );
                 aint = 0;
                 memcpy(data, &aint, sizeof( aint ));
                 data += sizeof( aint );
@@ -572,7 +572,7 @@ int getmetadata(struct vol *vol,
                 
 /* ----------------------- */
 int getfilparams(struct vol *vol,
-                 u_int16_t bitmap,
+                 uint16_t bitmap,
                  struct path *path, struct dir *dir, 
                  char *buf, size_t *buflen )
 {
@@ -625,7 +625,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     struct ofork        *of = NULL;
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
-    u_int16_t		vid;
+    uint16_t		vid;
     struct path		*s_path;
     
     *rbuflen = 0;
@@ -748,7 +748,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     struct dir	*dir;
     struct path *s_path;
     int		did, rc;
-    u_int16_t	vid, bitmap;
+    uint16_t	vid, bitmap;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -802,7 +802,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 extern struct path Cur_Path;
 
 int setfilparams(struct vol *vol,
-                 struct path *path, u_int16_t f_bitmap, char *buf )
+                 struct path *path, uint16_t f_bitmap, char *buf )
 {
     struct adouble	ad, *adp;
     struct extmap	*em;
@@ -810,11 +810,11 @@ int setfilparams(struct vol *vol,
     char                *upath;
     u_char              achar, xyy[4];
     u_char              *fdType = NULL;
-    u_int16_t		ashort = 0;
-    u_int16_t		bshort, oshort;
-    u_int32_t		aint;
-    u_int32_t		upriv = 0;
-    u_int16_t           upriv_bit = 0;
+    uint16_t		ashort = 0;
+    uint16_t		bshort, oshort;
+    uint32_t		aint;
+    uint32_t		upriv = 0;
+    uint16_t           upriv_bit = 0;
     
     struct utimbuf	ut;
 
@@ -824,8 +824,8 @@ int setfilparams(struct vol *vol,
     struct timeval      tv;
     uid_t		f_uid;
     gid_t		f_gid;
-    u_int16_t           bitmap = f_bitmap;
-    u_int32_t           cdate,bdate;
+    uint16_t           bitmap = f_bitmap;
+    uint32_t           cdate,bdate;
     u_char              finder_buf[32];
     int fp;
     ssize_t len;
@@ -1167,8 +1167,8 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 {
 char        type = *ibuf;
 size_t      plen = 0;
-u_int16_t   len16;
-u_int32_t   hint;
+uint16_t   len16;
+uint32_t   hint;
 
     if ( type != 2 && !(afp_version >= 30 && type == 3) ) {
         return -1;
@@ -1226,9 +1226,9 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     struct dir	*dir;
     char	*newname, *p, *upath;
     struct path *s_path;
-    u_int32_t	sdid, ddid;
+    uint32_t	sdid, ddid;
     int         err, retvalue = AFP_OK;
-    u_int16_t	svid, dvid;
+    uint16_t	svid, dvid;
 
     struct adouble ad, *adp;
     int denyreadset;
@@ -1540,7 +1540,7 @@ done:
 
 static int check_attrib(struct adouble *adp)
 {
-u_int16_t   bshort = 0;
+uint16_t   bshort = 0;
 
 	ad_getattr(adp, &bshort);
     /*
@@ -1802,7 +1802,7 @@ int afp_resolveid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     int                 err, retry=0;
     size_t		buflen;
     cnid_t		id, cnid;
-    u_int16_t		vid, bitmap;
+    uint16_t		vid, bitmap;
 
     static char buffer[12 + MAXPATHLEN + 1];
     int len = 12 + MAXPATHLEN + 1;
@@ -2048,8 +2048,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     int                 crossdev;
     
     unsigned int        slen, dlen;
-    u_int32_t		sid, did;
-    u_int16_t		vid;
+    uint32_t		sid, did;
+    uint16_t		vid;
 
     uid_t              uid;
     gid_t              gid;

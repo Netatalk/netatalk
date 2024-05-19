@@ -96,14 +96,14 @@ extern struct path *cname (struct vol *, struct dir *, char **);
 extern int         deletecurdir (struct vol *);
 extern mode_t      mtoumode (struct maccess *);
 extern void        utommode (struct stat *, struct maccess *);
-extern int         getdirparams (const struct vol *, u_int16_t, struct path *,
+extern int         getdirparams (const struct vol *, uint16_t, struct path *,
                                  struct dir *, char *, size_t *);
 
-extern int         setdirparams(struct vol *, struct path *, u_int16_t, char *);
+extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
 extern int         renamedir(const struct vol *, int, char *, char *, struct dir *,
                              struct dir *, char *);
 extern int         path_error(struct path *, int error);
-extern void        setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count);
+extern void        setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
 extern int         for_each_dirent(const struct vol *, char *, dir_loop , void *);
 extern int         check_access(char *name , int mode);

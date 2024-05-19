@@ -45,14 +45,14 @@
 typedef struct ASP {
     ATP			asp_atp;
     struct sockaddr_at	asp_sat;
-    u_int8_t	        asp_wss;
-    u_int8_t            asp_sid;
+    uint8_t	        asp_wss;
+    uint8_t            asp_sid;
     union {
 	struct {
 	    char			*as_status;
 	    int				as_slen;
 	}			asu_status;
-	u_int16_t		asu_seq;
+	uint16_t		asu_seq;
     }			asp_u;
 #define asp_status	asp_u.asu_status.as_status
 #define asp_slen	asp_u.asu_status.as_slen
@@ -100,7 +100,7 @@ extern int asp_cmdreply     (ASP, int);
 extern int asp_wrtcont      (ASP, char *, size_t *);
 #define asp_wrtreply(a,b)   asp_cmdreply((a), (b))
 extern void asp_kill        (int);
-extern int asp_tickle      (ASP, const u_int8_t, struct sockaddr_at *);
+extern int asp_tickle      (ASP, const uint8_t, struct sockaddr_at *);
 extern void asp_stop_tickle (void);
 
 #endif  /* NO_DDP */

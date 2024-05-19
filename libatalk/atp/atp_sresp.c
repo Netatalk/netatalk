@@ -49,7 +49,7 @@ int atp_sresp(
     struct atp_block	*atpb)		/* parameter block */
 {
     int			i;
-    u_int8_t		ctrlinfo;
+    uint8_t		ctrlinfo;
     struct atpbuf	*resp_buf = NULL;
     struct atpbuf	*save_buf = NULL;
 

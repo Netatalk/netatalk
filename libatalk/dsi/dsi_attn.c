@@ -28,8 +28,8 @@ int dsi_attention(DSI *dsi, AFPUserBytes flags)
 {
   /* header + AFPUserBytes */
   char block[DSI_BLOCKSIZ + sizeof(AFPUserBytes)];
-  u_int32_t len, nlen;
-  u_int16_t id;
+  uint32_t len, nlen;
+  uint16_t id;
 
   if (dsi->flags & DSI_SLEEPING)
       return 1;

@@ -57,7 +57,7 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 /* XXX: locks have to be checked before each stream of consecutive
  *      ad_reads to prevent a denial in the middle from causing
  *      problems. */
-ssize_t ad_read( struct adouble *ad, const u_int32_t eid, off_t off, char *buf, const size_t buflen)
+ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 {
     ssize_t     cc;
 

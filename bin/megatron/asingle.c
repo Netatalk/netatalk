@@ -113,8 +113,8 @@ int single_header_read( struct FHeader *fh, int version)
  * 	the actual entries of FILEINFO, FINDERINFO, and DATES.
  */
     u_char		entry_buf[ADEDLEN_FINDERI];
-    u_int32_t		entry_id;
-    u_int32_t		time_seconds;
+    uint32_t		entry_id;
+    uint32_t		time_seconds;
     u_short		mask = 0xfcee;
     u_short		num_entries;
     int			n;
@@ -255,7 +255,7 @@ int single_header_read( struct FHeader *fh, int version)
  * Unless I can't get the current date, in which case use time zero.
  */
     if (( date_entry < 7 ) || ( date_entry > 8 )) {
-	if (( time_seconds = time( NULL )) == (u_int32_t)-1 ) {
+	if (( time_seconds = time( NULL )) == (uint32_t)-1 ) {
 	    time_seconds = AD_DATE_START;
 	} else {
 	    time_seconds = AD_DATE_FROM_UNIX(time_seconds);
@@ -332,7 +332,7 @@ static u_char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
 int single_header_test(void)
 {
     ssize_t		cc;
-    u_int32_t		templong;
+    uint32_t		templong;
 
     cc = read( single.filed, (char *)header_buf, sizeof( header_buf ));
     if ( cc < (ssize_t)sizeof( header_buf )) {
@@ -384,7 +384,7 @@ int single_header_test(void)
 
 ssize_t single_read( int fork, char *buffer, size_t length)
 {
-    u_int32_t		entry_id;
+    uint32_t		entry_id;
     char		*buf_ptr;
     size_t		readlen;
     ssize_t		cc = 1;
