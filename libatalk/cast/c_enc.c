@@ -1,4 +1,4 @@
-/* crypto/cast/cast.h */
+/* crypto/cast/c_enc.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,34 +56,149 @@
  * [including the GNU Public Licence.]
  */
 
-#ifndef HEADER_CAST_H
-#define HEADER_CAST_H
+#include <atalk/cast.h>
+#include "cast_lcl.h"
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+void CAST_encrypt(CAST_LONG *data, const CAST_KEY *key)
+{
+	CAST_LONG l, r, t;
+	const CAST_LONG *k;
 
-#define CAST_ENCRYPT	1
-#define CAST_DECRYPT	0
+	k= &(key->data[0]);
+	l=data[0];
+	r=data[1];
 
-#define CAST_LONG unsigned long
+	E_CAST( 0,k,l,r,+,^,-);
+	E_CAST( 1,k,r,l,^,-,+);
+	E_CAST( 2,k,l,r,-,+,^);
+	E_CAST( 3,k,r,l,+,^,-);
+	E_CAST( 4,k,l,r,^,-,+);
+	E_CAST( 5,k,r,l,-,+,^);
+	E_CAST( 6,k,l,r,+,^,-);
+	E_CAST( 7,k,r,l,^,-,+);
+	E_CAST( 8,k,l,r,-,+,^);
+	E_CAST( 9,k,r,l,+,^,-);
+	E_CAST(10,k,l,r,^,-,+);
+	E_CAST(11,k,r,l,-,+,^);
+	E_CAST(12,k,l,r,+,^,-);
+	E_CAST(13,k,r,l,^,-,+);
+	E_CAST(14,k,l,r,-,+,^);
+	E_CAST(15,k,r,l,+,^,-);
 
-#define CAST_BLOCK	8
-#define CAST_KEY_LENGTH	16
+	data[1]=l&0xffffffffL;
+	data[0]=r&0xffffffffL;
+	}
 
-typedef struct cast_key_st {
-	CAST_LONG data[32];
-} CAST_KEY;
+void CAST_decrypt(CAST_LONG *data, const CAST_KEY *key)
+{
+	CAST_LONG l, r, t;
+	const CAST_LONG *k;
 
+	k= &(key->data[0]);
+	l=data[0];
+	r=data[1];
 
-void CAST_set_key(CAST_KEY *key, int len, const unsigned char *data);
-void CAST_encrypt(CAST_LONG *data, const CAST_KEY *key);
-void CAST_decrypt(CAST_LONG *data, const CAST_KEY *key);
-void CAST_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
-    const CAST_KEY *ks, unsigned char *iv, int encrypt);
+	E_CAST(15,k,l,r,+,^,-);
+	E_CAST(14,k,r,l,-,+,^);
+	E_CAST(13,k,l,r,^,-,+);
+	E_CAST(12,k,r,l,+,^,-);
+	E_CAST(11,k,l,r,-,+,^);
+	E_CAST(10,k,r,l,^,-,+);
+	E_CAST( 9,k,l,r,+,^,-);
+	E_CAST( 8,k,r,l,-,+,^);
+	E_CAST( 7,k,l,r,^,-,+);
+	E_CAST( 6,k,r,l,+,^,-);
+	E_CAST( 5,k,l,r,-,+,^);
+	E_CAST( 4,k,r,l,^,-,+);
+	E_CAST( 3,k,l,r,+,^,-);
+	E_CAST( 2,k,r,l,-,+,^);
+	E_CAST( 1,k,l,r,^,-,+);
+	E_CAST( 0,k,r,l,+,^,-);
 
-#ifdef  __cplusplus
-}
-#endif
+	data[1]=l&0xffffffffL;
+	data[0]=r&0xffffffffL;
+	}
 
-#endif
+void
+CAST_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
+    const CAST_KEY *ks, unsigned char *iv, int encrypt)
+{
+	CAST_LONG tin0, tin1;
+	CAST_LONG tout0, tout1, xor0, xor1;
+	long l = length;
+	CAST_LONG tin[2];
+
+	if (encrypt)
+		{
+		n2l(iv,tout0);
+		n2l(iv,tout1);
+		iv-=8;
+		for (l-=8; l>=0; l-=8)
+			{
+			n2l(in,tin0);
+			n2l(in,tin1);
+			tin0^=tout0;
+			tin1^=tout1;
+			tin[0]=tin0;
+			tin[1]=tin1;
+			CAST_encrypt(tin,ks);
+			tout0=tin[0];
+			tout1=tin[1];
+			l2n(tout0,out);
+			l2n(tout1,out);
+			}
+		if (l != -8)
+			{
+			n2ln(in,tin0,tin1,l+8);
+			tin0^=tout0;
+			tin1^=tout1;
+			tin[0]=tin0;
+			tin[1]=tin1;
+			CAST_encrypt(tin,ks);
+			tout0=tin[0];
+			tout1=tin[1];
+			l2n(tout0,out);
+			l2n(tout1,out);
+			}
+		l2n(tout0,iv);
+		l2n(tout1,iv);
+		}
+	else
+		{
+		n2l(iv,xor0);
+		n2l(iv,xor1);
+		iv-=8;
+		for (l-=8; l>=0; l-=8)
+			{
+			n2l(in,tin0);
+			n2l(in,tin1);
+			tin[0]=tin0;
+			tin[1]=tin1;
+			CAST_decrypt(tin,ks);
+			tout0=tin[0]^xor0;
+			tout1=tin[1]^xor1;
+			l2n(tout0,out);
+			l2n(tout1,out);
+			xor0=tin0;
+			xor1=tin1;
+			}
+		if (l != -8)
+			{
+			n2l(in,tin0);
+			n2l(in,tin1);
+			tin[0]=tin0;
+			tin[1]=tin1;
+			CAST_decrypt(tin,ks);
+			tout0=tin[0]^xor0;
+			tout1=tin[1]^xor1;
+			l2nn(tout0,tout1,out,l+8);
+			xor0=tin0;
+			xor1=tin1;
+			}
+		l2n(xor0,iv);
+		l2n(xor1,iv);
+		}
+	tin0=tin1=tout0=tout1=xor0=xor1=0;
+	tin[0]=tin[1]=0;
+	}
+
