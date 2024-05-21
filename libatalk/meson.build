@@ -29,8 +29,9 @@ if get_option('enable-ddp')
 endif
 
 if have_embedded_ssl
+    subdir('cast')
     subdir('ssl')
-    libatalk_libs += libssl
+    libatalk_libs += [libcast, libssl]
 endif
 
 libatalk = both_libraries(
