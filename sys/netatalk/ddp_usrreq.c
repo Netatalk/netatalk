@@ -295,7 +295,7 @@ at_pcbconnect( ddp, addr )
     struct route	*ro;
     struct at_ifaddr	*aa = 0;
     struct ifnet	*ifp;
-    u_short		hintnet = 0, net;
+    unsigned short		hintnet = 0, net;
 
     if ( addr->m_len != sizeof( *sat ))
 	return( EINVAL );

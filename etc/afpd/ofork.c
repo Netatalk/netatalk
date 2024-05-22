@@ -31,7 +31,7 @@
 static struct ofork *ofork_table[OFORK_HASHSIZE]; /* forks hashed by dev/inode */
 static struct ofork **oforks = NULL;              /* point to allocated table of open forks pointers */
 static int          nforks = 0;
-static u_short      lastrefnum = 0;
+static unsigned short      lastrefnum = 0;
 
 
 /* OR some of each character for the hash*/

@@ -372,8 +372,8 @@ static void as_timer(int sig _U_)
 	     */
 	    if (( iface->i_rt->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
 		iface->i_rt->rt_flags |= RTMPTAB_ZIPQUERY;
-		memcpy( data, &iface->i_rt->rt_firstnet, sizeof( u_short ));
-		data += sizeof( u_short );
+		memcpy( data, &iface->i_rt->rt_firstnet, sizeof( unsigned short ));
+		data += sizeof( unsigned short );
 		n++;
 	    }
 
@@ -420,7 +420,7 @@ static void as_timer(int sig _U_)
 		 * Do ZIP lookups.
 		 */
 		if ( rtmp->rt_iprev && ( rtmp->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
-		    if ( data + sizeof( u_short ) > end || n == 255 ) {
+		    if ( data + sizeof( unsigned short ) > end || n == 255 ) {
 			/* send what we've got */
 			zh.zh_op = ZIPOP_QUERY;
 			zh.zh_count = n;
@@ -441,7 +441,7 @@ static void as_timer(int sig _U_)
 		     * rt_nzq is number of ZIP Queries we've issued for a
 		     * given netrange.  If we've got ziptimeout on, we
 		     * will only ask 3 times for any given netrange.
-		     * Interestingly enough, since rt_nzq is a u_char,
+		     * Interestingly enough, since rt_nzq is a unsigned char,
 		     * it will overflow after a while.  This means we will
 		     * periodically ask for nets that we've decided not to
 		     * ask about, and warn that we can't get it's zone.
@@ -458,8 +458,8 @@ static void as_timer(int sig _U_)
 			sentzipq = 1;
 		    }
 		    rtmp->rt_flags |= RTMPTAB_ZIPQUERY;
-		    memcpy( data, &rtmp->rt_firstnet, sizeof( u_short ));
-		    data += sizeof( u_short );
+		    memcpy( data, &rtmp->rt_firstnet, sizeof( unsigned short ));
+		    data += sizeof( unsigned short );
 		    n++;
 		}
 		rtmp = rtmp->rt_next;

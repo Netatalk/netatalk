@@ -39,7 +39,7 @@
  * O(n^2) searches on a directory.
  */
 struct savedir {
-    u_short	 sd_vid;
+    unsigned short	 sd_vid;
     uint32_t	 sd_did;
     int		 sd_buflen;
     char	 *sd_buf;
@@ -247,7 +247,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     }
     
     header = (ext)?4:2;
-    header *=sizeof( u_char );
+    header *=sizeof( unsigned char );
     
     maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);
     o_path = cname( vol, dir, &ibuf );

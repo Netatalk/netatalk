@@ -53,14 +53,14 @@
  *                           putawayID    4  home directory id
  */
 
-const u_char ufinderi[ADEDLEN_FINDERI] = {
+const unsigned char ufinderi[ADEDLEN_FINDERI] = {
                               0, 0, 0, 0, 0, 0, 0, 0,
                               1, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0
                           };
 
-static const u_char old_ufinderi[] = {
+static const unsigned char old_ufinderi[] = {
                               'T', 'E', 'X', 'T', 'U', 'N', 'I', 'X'
                           };
 
@@ -267,7 +267,7 @@ int getmetadata(struct vol *vol,
     uint32_t		aint;
     cnid_t              id = 0;
     uint16_t		ashort;
-    u_char              achar, fdType[4];
+    unsigned char              achar, fdType[4];
     uint32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
@@ -808,8 +808,8 @@ int setfilparams(struct vol *vol,
     struct extmap	*em;
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
-    u_char              achar, xyy[4];
-    u_char              *fdType = NULL;
+    unsigned char              achar, xyy[4];
+    unsigned char              *fdType = NULL;
     uint16_t		ashort = 0;
     uint16_t		bshort, oshort;
     uint32_t		aint;
@@ -826,7 +826,7 @@ int setfilparams(struct vol *vol,
     gid_t		f_gid;
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
-    u_char              finder_buf[32];
+    unsigned char              finder_buf[32];
     int fp;
     ssize_t len;
     char symbuf[MAXPATHLEN+1];
@@ -934,10 +934,10 @@ int setfilparams(struct vol *vol,
                 buf += 2;
                 /* Keep special case to support crlf translations */
                 if ((unsigned int) achar == 0x04) {
-	       	    fdType = (u_char *)"TEXT";
+	       	    fdType = (unsigned char *)"TEXT";
 		    buf += 2;
                 } else {
-            	    xyy[0] = ( u_char ) 'p';
+            	    xyy[0] = ( unsigned char ) 'p';
             	    xyy[1] = achar;
             	    xyy[3] = *buf++;
             	    xyy[2] = *buf++;
@@ -1649,7 +1649,7 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     char		*upath;
     int                 len;
     cnid_t		did, id;
-    u_short		vid;
+    unsigned short		vid;
     struct path         *s_path;
 
     *rbuflen = 0;
@@ -1908,7 +1908,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     int                 err;
     cnid_t		id;
     cnid_t		fileid;
-    u_short		vid;
+    unsigned short		vid;
     static char buffer[12 + MAXPATHLEN + 1];
     int len = 12 + MAXPATHLEN + 1;
 

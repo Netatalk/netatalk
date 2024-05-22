@@ -300,7 +300,7 @@ int posix_chmod(const char *name, mode_t mode) {
     acl_entry_t group_entry;
     acl_tag_t tag;
     acl_t acl;
-    u_char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
+    unsigned char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
 
     LOG(log_maxdebug, logtype_afpd, "posix_chmod: %s mode: 0x%08x", name, mode);
 
@@ -407,7 +407,7 @@ int posix_fchmod(int fd, mode_t mode) {
     acl_entry_t group_entry;
     acl_tag_t tag;
     acl_t acl;
-    u_char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
+    unsigned char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
 
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.

@@ -13,19 +13,19 @@
 #define _AARP_H 1
 
 union aapa {
-    u_char		ap_pa[4];
+    unsigned char		ap_pa[4];
     struct ap_node {
-	u_char		an_zero;
-	u_char		an_net[2];
-	u_char		an_node;
+	unsigned char		an_zero;
+	unsigned char		an_net[2];
+	unsigned char		an_node;
     } ap_node;
 };
 
 struct ether_aarp {
     struct arphdr	eaa_hdr;
-    u_char		aarp_sha[6];
+    unsigned char		aarp_sha[6];
     union aapa		aarp_spu;
-    u_char		aarp_tha[6];
+    unsigned char		aarp_tha[6];
     union aapa		aarp_tpu;
 };
 #define aarp_hrd	eaa_hdr.ar_hrd
@@ -42,9 +42,9 @@ struct ether_aarp {
 
 struct aarptab {
     struct at_addr	aat_ataddr;
-    u_char		aat_enaddr[ 6 ];
-    u_char		aat_timer;
-    u_char		aat_flags;
+    unsigned char		aat_enaddr[ 6 ];
+    unsigned char		aat_timer;
+    unsigned char		aat_flags;
     struct mbuf		*aat_hold;
 };
 

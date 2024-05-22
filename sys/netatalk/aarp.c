@@ -57,16 +57,16 @@ int			aarptab_size = AARPTAB_SIZE;
 #define AARPT_KILLC	20
 #define AARPT_KILLI	3
 
-extern u_char			etherbroadcastaddr[6];
+extern unsigned char			etherbroadcastaddr[6];
 
-u_char	atmulticastaddr[ 6 ] = {
+unsigned char	atmulticastaddr[ 6 ] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,
 };
 
-u_char	at_org_code[ 3 ] = {
+unsigned char	at_org_code[ 3 ] = {
     0x08, 0x00, 0x07,
 };
-u_char	aarp_org_code[ 3 ] = {
+unsigned char	aarp_org_code[ 3 ] = {
     0x00, 0x00, 0x00,
 };
 
@@ -205,7 +205,7 @@ void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
     (*ac->ac_if.if_output)(&ac->ac_if, m, &sa );
 }
 
-int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, u_char *desten)
+int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, unsigned char *desten)
 {
     struct at_ifaddr	*aa;
     struct ifaddr	ifa;
@@ -309,7 +309,7 @@ void at_aarpinput(struct arpcom *ac, struct mbuf *m)
     struct sockaddr	sa;
     struct at_addr	spa, tpa, ma;
     int			op, s;
-    u_short		net;
+    unsigned short		net;
 
     ea = mtod( m, struct ether_aarp *);
 

@@ -48,7 +48,7 @@ static struct single_file_data {
 } 		single;
 
 extern char	*forkname[];
-static u_char	header_buf[ AD_HEADER_LEN ];
+static unsigned char	header_buf[ AD_HEADER_LEN ];
 
 /* 
  * single_open must be called first.  pass it a filename that is supposed
@@ -112,11 +112,11 @@ int single_header_read( struct FHeader *fh, int version)
  * entry_buf is used for reading in entry descriptors, and for reading in
  * 	the actual entries of FILEINFO, FINDERINFO, and DATES.
  */
-    u_char		entry_buf[ADEDLEN_FINDERI];
+    unsigned char		entry_buf[ADEDLEN_FINDERI];
     uint32_t		entry_id;
     uint32_t		time_seconds;
-    u_short		mask = 0xfcee;
-    u_short		num_entries;
+    unsigned short		mask = 0xfcee;
+    unsigned short		num_entries;
     int			n;
     int			readlen;
     int			date_entry = 0;
@@ -326,7 +326,7 @@ int single_header_read( struct FHeader *fh, int version)
  * "Macintosh       " (that is seven blanks of padding).
  */
 #define MACINTOSH	"Macintosh       "
-static u_char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
+static unsigned char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
 				    0, 0, 0, 0, 0, 0, 0, 0 };
 
 int single_header_test(void)

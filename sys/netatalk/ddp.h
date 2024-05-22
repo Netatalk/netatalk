@@ -43,9 +43,9 @@
 #include <netatalk/endian.h>
 
 struct elaphdr {
-    u_char	el_dnode;
-    u_char	el_snode;
-    u_char	el_type;
+    unsigned char	el_dnode;
+    unsigned char	el_snode;
+    unsigned char	el_type;
 };
 
 #define	SZ_ELAPHDR	3
@@ -83,12 +83,12 @@ struct ddpehdr {
 #define deh_len		deh_u.du_bits.dub_len
 #define deh_sum		deh_u.du_bits.dub_sum
 #define deh_bytes	deh_u.du_bytes
-    u_short		deh_dnet;
-    u_short		deh_snet;
-    u_char		deh_dnode;
-    u_char		deh_snode;
-    u_char		deh_dport;
-    u_char		deh_sport;
+    unsigned short		deh_dnet;
+    unsigned short		deh_snet;
+    unsigned char		deh_dnode;
+    unsigned char		deh_snode;
+    unsigned char		deh_dport;
+    unsigned char		deh_sport;
 };
 
 #define SZ_DDPEHDR      12

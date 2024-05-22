@@ -60,7 +60,7 @@ int session(ATP atp, struct sockaddr_at *sat)
     char		cbuf[ 578 ];
     int			i, cc, timeout = 0, readpending = 0;
     uint16_t		seq = 0, rseq = 1, netseq;
-    u_char		readport = 0;
+    unsigned char		readport = 0;
     char		*start;
     int			linelength, lflength;
 

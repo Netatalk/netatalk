@@ -34,7 +34,7 @@
 #include "volume.h"
 #include "directory.h"
 
-extern const u_char	ufinderi[];
+extern const unsigned char	ufinderi[];
 
 #define FILPBIT_ATTR	 0
 #define FILPBIT_PDID	 1

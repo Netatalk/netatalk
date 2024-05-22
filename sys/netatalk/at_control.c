@@ -282,7 +282,7 @@ at_scrub( ifp, aa )
 #ifndef BSD4_4
     struct sockaddr_at	netsat;
     int			error;
-    u_short		net;
+    unsigned short		net;
 #endif /* ! BSD4_4 */
 
     if ( aa->aa_flags & AFA_ROUTE ) {
@@ -339,7 +339,7 @@ at_ifinit( ifp, aa, sat )
 #endif /* BSD4_4 */
     struct sockaddr_at	netaddr;
     int			s = splimp(), error = 0, i, j, netinc, nodeinc, nnets;
-    u_short		net;
+    unsigned short		net;
 
     oldaddr = aa->aa_addr;
     bzero( AA_SAT( aa ), sizeof( struct sockaddr_at ));

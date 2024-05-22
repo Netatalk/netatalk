@@ -64,8 +64,8 @@
 /* lifted (with modifications) from the bsd quota program */
 static int
 callaurpc(struct vol *vol,
-    u_long prognum, u_long versnum, u_long procnum,
-    xdrproc_t inproc, char *in,
+    unsigned long prognum, unsigned long versnum, unsigned long procnum,
+    xdrproc_t inproc, char *in, 
     xdrproc_t outproc, char *out)
 {
     enum clnt_stat clnt_stat;

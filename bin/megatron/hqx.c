@@ -68,16 +68,16 @@ FILE		*rawhex, *expandhex;
 
 static struct hqx_file_data {
     uint32_t		forklen[ NUMFORKS ];
-    u_short		forkcrc[ NUMFORKS ];
+    unsigned short		forkcrc[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
-    u_short		headercrc;
+    unsigned short		headercrc;
     int			filed;
 } 		hqx;
 
 extern char	*forkname[];
-static u_char	hqx7_buf[8192];
-static u_char	*hqx7_first;
-static u_char	*hqx7_last;
+static unsigned char	hqx7_buf[8192];
+static unsigned char	*hqx7_first;
+static unsigned char	*hqx7_last;
 static int	first_flag;
 
 /* 
@@ -172,7 +172,7 @@ int hqx_close(int keepflag)
 
 ssize_t hqx_read(int fork, char *buffer, size_t length)
 {
-    u_short		storedcrc;
+    unsigned short		storedcrc;
     size_t		readlen;
     size_t		cc;
 
@@ -220,7 +220,7 @@ ssize_t hqx_read(int fork, char *buffer, size_t length)
     cc = hqx_7tobin( buffer, readlen );
     if ( cc > 0 ) {
 	hqx.forkcrc[ fork ] = 
-		updcrc( hqx.forkcrc[ fork ], (u_char *)buffer, cc );
+		updcrc( hqx.forkcrc[ fork ], (unsigned char *)buffer, cc );
 	hqx.forklen[ fork ] -= cc;
     }
 #if DEBUG >= 3
@@ -241,8 +241,8 @@ int hqx_header_read(struct FHeader *fh)
 {
     char		*headerbuf, *headerptr;
     uint32_t		time_seconds;
-    u_short		mask;
-    u_short		header_crc;
+    unsigned short		mask;
+    unsigned short		header_crc;
     char		namelen;
 
 #if HEXOUTPUT
@@ -257,7 +257,7 @@ int hqx_header_read(struct FHeader *fh)
 	fprintf( stderr, "Premature end of file :" );
 	return( -2 );
     }
-    hqx.headercrc = updcrc( hqx.headercrc, (u_char *)&namelen, 
+    hqx.headercrc = updcrc( hqx.headercrc, (unsigned char *)&namelen, 
 	    sizeof( namelen ));
 
 #if HEXOUTPUT
@@ -275,7 +275,7 @@ int hqx_header_read(struct FHeader *fh)
     }
     headerptr = headerbuf;
     hqx.headercrc = updcrc( hqx.headercrc, 
-	    (u_char *)headerbuf, ( namelen + BHH_HEADSIZ - BHH_CRCSIZ ));
+	    (unsigned char *)headerbuf, ( namelen + BHH_HEADSIZ - BHH_CRCSIZ ));
 
 #if HEXOUTPUT
     write( headerfork, headerbuf, ( namelen + BHH_HEADSIZ ));
@@ -382,7 +382,7 @@ int hqx_header_write(struct FHeader *fh _U_)
  * it sets the pointers to the hqx7 buffer up to point to the valid data.
  */
 
-ssize_t hqx7_fill(u_char *hqx7_ptr)
+ssize_t hqx7_fill(unsigned char *hqx7_ptr)
 {
     ssize_t		cc;
     size_t		cs;
@@ -409,7 +409,7 @@ character that should be skipped, namely '\n', '\r'.  0xFD signals ':'.
 0xFC signals a whitespace character.
 */
 
-static const u_char hqxlookup[] = {
+static const unsigned char hqxlookup[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFC, 0xFE, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -457,8 +457,8 @@ int skip_junk(int line)
     int			found = NOWAY;
     int			stopflag;
     int			nc = 0;
-    u_char		c;
-    u_char		prevchar;
+    unsigned char		c;
+    unsigned char		prevchar;
 
     if ( line == FIRST ) {
 	if ( hqx7_fill( hqx7_buf  ) <= 0 ) {
@@ -555,13 +555,13 @@ int skip_junk(int line)
 
 size_t hqx_7tobin( char *outbuf, size_t datalen)
 {
-    static u_char	hqx8[3];
+    static unsigned char	hqx8[3];
     static int		hqx8i;
-    static u_char	prev_hqx8;
-    static u_char	prev_out;
-    static u_char	prev_hqx7;
+    static unsigned char	prev_hqx8;
+    static unsigned char	prev_out;
+    static unsigned char	prev_hqx7;
     static int		eofflag;
-    u_char		hqx7[4];
+    unsigned char		hqx7[4];
     int			hqx7i = 0;
     char		*out_first;
     char		*out_last;
