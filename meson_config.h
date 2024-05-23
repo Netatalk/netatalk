@@ -694,7 +694,28 @@
 #mesondefine __svr4__
 
 /* WolfSSL configuration */
-#include <wolfssl/options.h>
+#define HAVE_AESGCM 1
+#define HAVE_DH_DEFAULT_PARAMS 1
+#define HAVE_TLS_EXTENSIONS 1
+#define NO_CPUID 1
+#define NO_DSA 1
+#define NO_ERROR_QUEUE 1
+#define NO_ERROR_STRINGS 1
+#define NO_FILESYSTEM 1
+#define NO_MD4 1
+#define NO_MD5 1
+#define NO_OLD_TLS 1
+#define NO_PKCS12 1
+#define NO_PSK 1
+#define NO_SHA 1
+#define NO_WOLFSSL_MEMORY 1
+#define OPENSSL_ALL 1
+#define OPENSSL_EXTRA 1
+#define TFM_TIMING_RESISTANT 1
+#define WC_RSA_BLINDING 1
+#define WC_RSA_PSS
+#define WOLFSSL_DES_ECB 1
+#define WOLFSSL_ENCRYPTED_KEYS 1
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */

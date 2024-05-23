@@ -27,7 +27,6 @@
 #endif
 
 #if defined(EMBEDDED_SSL)
-#include <wolfssl/options.h>
 #include <wolfssl/openssl/bn.h>
 #include <wolfssl/openssl/dh.h>
 #include <wolfssl/openssl/err.h>
