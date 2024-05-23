@@ -119,12 +119,12 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
     ibuf += sizeof(sessid);
 
     /* use rbuf as scratch space */
-    CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
+    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)rbuf, CRYPT2BUFLEN, &castkey,
 		     iv, CAST_DECRYPT);
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn(rbuf, KEYSIZE, NULL)))
+    if (!(bn1 = BN_bin2bn((unsigned char *)rbuf, KEYSIZE, NULL)))
       return AFPERR_PARAM;
 
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {

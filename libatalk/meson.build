@@ -17,8 +17,9 @@ if host_os != 'darwin'
 endif
 
 if have_embedded_ssl
+    subdir('cast')
     subdir('ssl')
-    libatalk_libs += libssl
+    libatalk_libs += [libcast, libssl]
 endif
 
 if have_spotlight
