@@ -694,9 +694,10 @@
 #mesondefine __svr4__
 
 /* WolfSSL configuration */
-#include <wolfssl/options.h>
-#define HAVE_OPENSSLEXTRA 1
-#define HAVE_OPENSSLALL 1
+//#include <wolfssl/options.h>
+#define OPENSSL_EXTRA 1
+#define OPENSSL_ALL 1
+#define WOLFSSL_DES_ECB 1
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
