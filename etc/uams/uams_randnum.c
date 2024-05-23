@@ -30,7 +30,6 @@
 #include <atalk/uam.h>
 
 #if defined(EMBEDDED_SSL)
-#include <wolfssl/options.h>
 #include <wolfssl/openssl/des.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/des.h>
