@@ -638,6 +638,7 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+              -Dwith-acls=disabled \
               -Dwith-dtrace=false \
               -Dwith-init-style=netbsd
             ninja -C build
