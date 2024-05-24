@@ -1,2 +1,2 @@
 subdir('atalk')
-subdir('wolfssl')
+#subdir('wolfssl')
