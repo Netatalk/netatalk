@@ -12,9 +12,9 @@
 #include <atalk/cnid_bdb_private.h>
 
 
-extern int      usockfd_create  (char *, mode_t, int);
-extern int      tsockfd_create  (char *, char *, int);
-extern int      usockfd_check   (int, const sigset_t *);
+int      usockfd_create  (char *, mode_t, int);
+int      tsockfd_create  (char *, char *, int);
+int      usockfd_check   (int, const sigset_t *);
 
 #ifndef OSSH_ALIGNBYTES
 #define OSSH_ALIGNBYTES (sizeof(int) - 1)
