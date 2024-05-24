@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <refentry id="afpd.conf.5">
-
   <refmeta>
     <refentrytitle>afpd.conf</refentrytitle>
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">14 May 2024</refmiscinfo>
+    <refmiscinfo class="date">24 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -14,17 +13,16 @@
   <refnamediv>
     <refname>afpd.conf</refname>
 
-    <refpurpose>Configuration file used by <command>afpd</command>(8)
-    to determine the capabilities of its file sharing services</refpurpose>
+    <refpurpose>Configuration file used by <command>afpd</command>(8) to
+    determine the capabilities of its file sharing services</refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>Description</title>
 
-    <para><filename>afpd.conf</filename> is the configuration file
-    used by <command>afpd</command> to determine the behavior and
-    capabilities of one or more virtual file servers that it
-    provides.</para>
+    <para><filename>afpd.conf</filename> is the configuration file used by
+    <command>afpd</command> to determine the behavior and capabilities of one
+    or more virtual file servers that it provides.</para>
 
     <para>Any line not prefixed with # is interpreted. The configuration lines
     are composed like: server name [ options ] If a <option>-</option> is used
@@ -35,13 +33,12 @@
     are listed below.</para>
 
     <note>
-        <para>Each server has to be configured on a <emphasis
-        role="bold">single</emphasis> line. Though, using "\" character,
-        newline escaping is supported.</para>
+      <para>Each server has to be configured on a <emphasis
+      role="bold">single</emphasis> line. Though, using "\" character, newline
+      escaping is supported.</para>
     </note>
 
     <para>The possible options and their meanings are:</para>
-
   </refsect1>
 
   <refsect1>
@@ -122,8 +119,8 @@
               <listitem>
                 <para>allows Random Number and Two-Way Random Number Exchange
                 for authentication (requires a separate file containing the
-                passwords, either afppasswd file or the one specified
-                via <option>-passwdfile</option>. See <citerefentry>
+                passwords, either afppasswd file or the one specified via
+                <option>-passwdfile</option>. See <citerefentry>
                     <refentrytitle>afppasswd</refentrytitle>
 
                     <manvolnum>1</manvolnum>
@@ -196,17 +193,17 @@
 
       <varlistentry>
         <term>-adminauthuser</term>
+
         <listitem>
-          <para>
-            Specifying e.g. <option>-adminauthuser root</option>
-            whenever a normal user login fails, afpd will try to authenticate as
-            the specified <option>adminauthuser</option>. If this succeeds, a normal session is created
-            for the original connecting user. Said differently: if you know the
-            password of <option>adminauthuser</option>, you can authenticate as any other user.
-          </para>
+          <para>Specifying e.g. <option>-adminauthuser root</option> whenever
+          a normal user login fails, afpd will try to authenticate as the
+          specified <option>adminauthuser</option>. If this succeeds, a normal
+          session is created for the original connecting user. Said
+          differently: if you know the password of
+          <option>adminauthuser</option>, you can authenticate as any other
+          user.</para>
         </listitem>
       </varlistentry>
-
     </variablelist>
   </refsect1>
 
@@ -254,8 +251,8 @@
         <listitem>
           <para>Specifies the Mac client's codepage, e.g. "MAC_ROMAN". This is
           used to convert strings and filenames to the clients codepage for
-          Mac OS 9 and Classic, i.e. for authentication and AFP messages (SIGUSR2
-          messaging). This will also be the default for the volumes
+          Mac OS 9 and Classic, i.e. for authentication and AFP messages
+          (SIGUSR2 messaging). This will also be the default for the volumes
           maccharset. Defaults to MAC_ROMAN.</para>
         </listitem>
       </varlistentry>
@@ -267,28 +264,11 @@
 
     <variablelist>
       <varlistentry>
-        <term>-loginmaxfail [<parameter>number</parameter>]</term>
-
-        <listitem>
-          <para>Sets the maximum number of failed logins, if supported by the
-          UAM (currently none)</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>-passwdfile [<parameter>path</parameter>]</term>
 
         <listitem>
-          <para>Sets the path to the Randnum UAM passwd file for this server.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-passwdminlen [<parameter>number</parameter>]</term>
-
-        <listitem>
-          <para>Sets the minimum password length, if supported by the
-          UAM</para>
+          <para>Sets the path to the Randnum UAM passwd file for this
+          server.</para>
         </listitem>
       </varlistentry>
 
@@ -339,8 +319,8 @@
         <term>-[no]transall</term>
 
         <listitem>
-          <para>Enables or disables both transport protocols.
-          Default is <option>-transall</option>.</para>
+          <para>Enables or disables both transport protocols. Default is
+          <option>-transall</option>.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -365,8 +345,8 @@
             </citerefentry> on the server to let things work.</para>
 
           <note>
-            <para>Apple's client side implementation of this feature 
-            in Mac OS X versions prior to 10.3.4 contained a security flaw.</para>
+            <para>Apple's client side implementation of this feature in Mac OS
+            X versions prior to 10.3.4 contained a security flaw.</para>
           </note>
         </listitem>
       </varlistentry>
@@ -426,16 +406,16 @@
 
           <example>
             <title>afpd.conf configuration line</title>
+
             <programlisting>
               fluxxus -hostname afp.example.org -ipaddr 192.168.0.1 -fqdn www.example.com
             </programlisting>
-            <para>
-              <emphasis role="bold">Result</emphasis>
-            </para>
-            <para>
-              (UTF8) Server name: fluxxus, Listening and advertised network address: 192.168.0.1, Advertised network address: www.example.com,
-              hostname is not used.
-            </para>
+
+            <para><emphasis role="bold">Result</emphasis></para>
+
+            <para>(UTF8) Server name: fluxxus, Listening and advertised
+            network address: 192.168.0.1, Advertised network address:
+            www.example.com, hostname is not used.</para>
           </example>
         </listitem>
       </varlistentry>
@@ -479,39 +459,39 @@
 
       <varlistentry>
         <term>-dsireadbuf <replaceable>[number]</replaceable></term>
-        <listitem>
-          <para>
-            Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12.
-            This is multiplied with the DSI server quantum (default ~300k) to give the size of
-            the buffer. Increasing this value might increase throughput in fast local networks
-            for volume to volume copies.
-          </para>
 
-		<note>
-			<para>This buffer is allocated per afpd child process, so
-			specifying large values will eat up large amounts of memory
-			(buffer size * number of clients).</para>
-		</note>
+        <listitem>
+          <para>Scale factor that determines the size of the DSI/TCP readahead
+          buffer, default is 12. This is multiplied with the DSI server
+          quantum (default ~300k) to give the size of the buffer. Increasing
+          this value might increase throughput in fast local networks for
+          volume to volume copies.</para>
+
+          <note>
+            <para>This buffer is allocated per afpd child process, so
+            specifying large values will eat up large amounts of memory
+            (buffer size * number of clients).</para>
+          </note>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-tcprcvbuf <replaceable>[number]</replaceable></term>
+
         <listitem>
-          <para>
-            Try to set TCP receive buffer using setsockpt(). Often OSes impose restrictions
-            on the applications' ability to set this value.
-          </para>
+          <para>Try to set TCP receive buffer using setsockpt(). Often OSes
+          impose restrictions on the applications' ability to set this
+          value.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-tcpsndbuf <replaceable>[number]</replaceable></term>
+
         <listitem>
-          <para>
-            Try to set TCP send buffer using setsockpt(). Often OSes impose restrictions
-            on the applications' ability to set this value.
-          </para>
+          <para>Try to set TCP send buffer using setsockpt(). Often OSes
+          impose restrictions on the applications' ability to set this
+          value.</para>
         </listitem>
       </varlistentry>
 
@@ -521,8 +501,10 @@
         <listitem>
           <para>Disable automatic Zeroconf<indexterm>
               <primary>Zeroconf</primary>
+
               <secondary>Bonjour</secondary>
-            </indexterm> service registration if support was compiled in.</para>
+            </indexterm> service registration if support was compiled
+          in.</para>
         </listitem>
       </varlistentry>
 
@@ -563,35 +545,6 @@
           examine to determine if a print job should be allowed. These files
           are created at login, and if they are to be properly removed, this
           directory probably needs to be umode 1777.</para>
-
-          <note>
-            <para><option>-authprintdir</option> will only work for clients
-            connecting via DDP. Almost all modern Clients will use TCP.</para>
-          </note>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-client_polling</term>
-
-        <listitem>
-          <para>With this switch enabled, afpd won't advertise that it is
-          capable of server notifications, so that connected clients poll the
-          server every 10 seconds to detect changes in opened server windows.
-          </para>
-
-          <note>
-            <para>Depending on the number of simultaneously
-            connected clients and the network's speed, this can lead to a
-            significantly higher load on your network!</para>
-          </note>
-
-          <note>
-            <para>Do not use this option any longer as Netatalk 2.x correctly
-            supports server notifications, allowing connected clients to
-            update folder listings in case another client changed the
-            contents.</para>
-          </note>
         </listitem>
       </varlistentry>
 
@@ -633,42 +586,43 @@
 
       <varlistentry>
         <term>-fcelistener <replaceable>host[:port]</replaceable></term>
+
         <listitem>
-          <para>
-            Enables sending FCE events to the specified <parameter>host</parameter>,
-            default <parameter>port</parameter> is 12250 if not specified. Specifying
-            multiple listeners is done by having this option once for each of them.
-          </para>
+          <para>Enables sending FCE events to the specified
+          <parameter>host</parameter>, default <parameter>port</parameter> is
+          12250 if not specified. Specifying multiple listeners is done by
+          having this option once for each of them.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>-fceevents <replaceable>fmod,fdel,ddel,fcre,dcre,tmsz</replaceable></term>
+        <term>-fceevents
+        <replaceable>fmod,fdel,ddel,fcre,dcre,tmsz</replaceable></term>
+
         <listitem>
-          <para>
-            Specifies which FCE events are active, default is <parameter>fmod,fdel,ddel,fcre,dcre</parameter>.
-          </para>
+          <para>Specifies which FCE events are active, default is
+          <parameter>fmod,fdel,ddel,fcre,dcre</parameter>.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-fcecoalesce <replaceable>all|delete|create</replaceable></term>
+
         <listitem>
-          <para>
-            Coalesce FCE events.
-          </para>
+          <para>Coalesce FCE events.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-fceholdfmod <replaceable>seconds</replaceable></term>
+
         <listitem>
-          <para>
-            This determines the time delay in seconds which is always waited if another file modification for the
-            same file is done by a client before sending an FCE file modification event (fmod). For example, saving
-            a file in Photoshop would generate multiple events by itself because the application is opening,
-            modifying and closing a file multiple times for every "save". Default: 60 seconds.
-          </para>
+          <para>This determines the time delay in seconds which is always
+          waited if another file modification for the same file is done by a
+          client before sending an FCE file modification event (fmod). For
+          example, saving a file in Photoshop would generate multiple events
+          by itself because the application is opening, modifying and closing
+          a file multiple times for every "save". Default: 60 seconds.</para>
         </listitem>
       </varlistentry>
 
@@ -685,19 +639,24 @@
         <term>-[no]icon</term>
 
         <listitem>
-          <para>[Don't] Use the Netatalk icon for mounted volumes. Later Mac OS versions ignores this.</para>
+          <para>[Don't] Use the Netatalk icon for mounted volumes. Later Mac
+          OS versions ignores this.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-keepsessions</term>
+
         <listitem>
-          <para>Enable "Continuous AFP Service". This means the ability to stop the master afpd process with
-          a SIGQUIT signal, possibly install an afpd update and start the afpd process. Existing AFP sessions'
-          afpd processes will remain unaffected. Technically they will be notified of the master afpd shutdown,
-          sleep 15-20 seconds and then try to reconnect their IPC channel to the master afpd process. If this
-          reconnect fails, the sessions are in an undefined state. Therefore it's absolutely critical to restart
-          the master process in time!</para>
+          <para>Enable "Continuous AFP Service". This means the ability to
+          stop the master afpd process with a SIGQUIT signal, possibly install
+          an afpd update and start the afpd process. Existing AFP sessions'
+          afpd processes will remain unaffected. Technically they will be
+          notified of the master afpd shutdown, sleep 15-20 seconds and then
+          try to reconnect their IPC channel to the master afpd process. If
+          this reconnect fails, the sessions are in an undefined state.
+          Therefore it's absolutely critical to restart the master process in
+          time!</para>
         </listitem>
       </varlistentry>
 
@@ -715,19 +674,26 @@
         <term>-mimicmodel <replaceable>model</replaceable></term>
 
         <listitem>
-          <para>Specifies a custom icon for the mounted AFP volume
-          on macOS / Mac OS X clients. Default is to let macOS choose.
-          Requires netatalk to be built with Zeroconf.
-          Examples:</para>
+          <para>Specifies a custom icon for the mounted AFP volume on macOS /
+          Mac OS X clients. Default is to let macOS choose. Requires netatalk
+          to be built with Zeroconf. Examples:</para>
 
           <itemizedlist>
-            <listitem><para><option>Laptop</option></para></listitem>
-            <listitem><para><option>RackMount</option></para></listitem>
-            <listitem><para><option>Tower</option></para></listitem>
+            <listitem>
+              <para><option>Laptop</option></para>
+            </listitem>
+
+            <listitem>
+              <para><option>RackMount</option></para>
+            </listitem>
+
+            <listitem>
+              <para><option>Tower</option></para>
+            </listitem>
           </itemizedlist>
 
-          <para>A complete set of supported model codes by a macOS client
-          can be found by inspecting
+          <para>A complete set of supported model codes by a macOS client can
+          be found by inspecting
           <filename>/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist
           </filename> (as of macOS 14 Sonoma).</para>
         </listitem>
@@ -735,6 +701,7 @@
 
       <varlistentry>
         <term>-noacl2maccess</term>
+
         <listitem>
           <para>Don't map filesystem ACLs to effective permissions.</para>
         </listitem>
@@ -759,27 +726,28 @@
           is "auto". "auto" signature type allows afpd to generate a signature
           and saving it to <filename>afp_signature.conf</filename>
           automatically (based on a random number). The "host" signature type
-          switches back to "auto" because it is obsoleted. The "user" signature
-          type allows an administrator to set up a signature string manually. The
-          maximum length is 16 characters.</para>
+          switches back to "auto" because it is obsoleted. The "user"
+          signature type allows an administrator to set up a signature string
+          manually. The maximum length is 16 characters.</para>
 
           <example>
             <title>Three server definitions using 2 different server
             signatures</title>
 
-            <para><programlisting>first -signature user:USERS 
-            second -signature user:USERS 
+            <para><programlisting>first -signature user:USERS
+            second -signature user:USERS
             third -signature user:ADMINS</programlisting></para>
           </example>
 
-          <para>The first two servers will appear as one logical AFP service to
-          the clients - if a user logs in to the first one and then connects to
-          the second one, the session will be automatically redirected to the first
-          one. But if a client connects to the first and then to the third, they will be
-          asked for the password twice and will see resources of both servers.
-          The traditional method of signature generation causes two independent
-          afpd instances to have the same signature and thus cause clients to
-          be redirected automatically to the server they logged in to first.</para>
+          <para>The first two servers will appear as one logical AFP service
+          to the clients - if a user logs in to the first one and then
+          connects to the second one, the session will be automatically
+          redirected to the first one. But if a client connects to the first
+          and then to the third, they will be asked for the password twice and
+          will see resources of both servers. The traditional method of
+          signature generation causes two independent afpd instances to have
+          the same signature and thus cause clients to be redirected
+          automatically to the server they logged in to first.</para>
         </listitem>
       </varlistentry>
 
@@ -792,9 +760,8 @@
 
           <para><programlisting>73:  limit of Mac OS X 10.1
           80:  limit for Mac OS X 10.4/10.5 (default)
-	  255: limit of spec</programlisting>
-          Mac OS 9 and earlier are not influenced by
-          this, because Maccharset volume name is always limited to 27
+	  255: limit of spec</programlisting> Mac OS 9 and earlier are not influenced
+          by this, because Maccharset volume name is always limited to 27
           bytes.</para>
         </listitem>
       </varlistentry>
@@ -815,9 +782,8 @@
           filename is omitted, the loglevel applies to messages passed to
           syslog.</para>
 
-          <para>By default afpd logs
-          to syslog with a default logging setup equivalent to
-          <option>-setuplog "default log_note"</option>.</para>
+          <para>By default afpd logs to syslog with a default logging setup
+          equivalent to <option>-setuplog "default log_note"</option>.</para>
 
           <para>logtypes: Default, AFPDaemon, Logger, UAMSDaemon</para>
 
@@ -887,8 +853,8 @@
         <term>-tickleval <replaceable>[number]</replaceable></term>
 
         <listitem>
-          <para>Sets the tickle timeout interval (in seconds). Defaults to
-          30. A value of 0 disables session timer tickles.</para>
+          <para>Sets the tickle timeout interval (in seconds). Defaults to 30.
+          A value of 0 disables session timer tickles.</para>
         </listitem>
       </varlistentry>
 
@@ -916,8 +882,8 @@
     <example>
       <title>afpd.conf setup for Kerberos V auth with newline escaping</title>
 
-      <programlisting>- -uamlist uams_dhx.so,uams_dhx2.so,uams_guest.so,uams_gss.so \ 
--k5service afpserver -k5keytab /path/to/afpserver.keytab \ 
+      <programlisting>- -uamlist uams_dhx.so,uams_dhx2.so,uams_guest.so,uams_gss.so \
+-k5service afpserver -k5keytab /path/to/afpserver.keytab \
 -k5realm YOUR.REALM -fqdn your.fqdn.namel:548</programlisting>
     </example>
 

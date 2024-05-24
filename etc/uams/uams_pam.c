@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -36,7 +36,7 @@
 /* Static variables used to communicate between the conversation function
  * and the server_login function
  */
-static pam_handle_t *pamh = NULL; 
+static pam_handle_t *pamh = NULL;
 static const char *hostname;
 static char *PAM_username;
 static char *PAM_password;
@@ -56,17 +56,17 @@ static int PAM_conv (int num_msg,
                      struct pam_message **msg,
 #endif
                      struct pam_response **resp,
-                     void *appdata_ptr _U_) 
+                     void *appdata_ptr _U_)
 {
   struct pam_response *reply;
   int count;
-  
+
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
-  
+
   if (num_msg < 1)
     return PAM_CONV_ERR;
 
-  reply = (struct pam_response *) 
+  reply = (struct pam_response *)
     calloc(num_msg, sizeof(struct pam_response));
 
   if (!reply)
@@ -95,7 +95,7 @@ static int PAM_conv (int num_msg,
       goto pam_fail_conv;
     }
 
-    if (string) {  
+    if (string) {
       reply[count].resp_retcode = 0;
       reply[count].resp = string;
       string = NULL;
@@ -113,7 +113,7 @@ pam_fail_conv:
     case PAM_PROMPT_ECHO_OFF:
     case PAM_PROMPT_ECHO_ON:
       free(reply[count].resp);
-      break;      
+      break;
     }
   }
   free(reply);
@@ -138,7 +138,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 	LOG(log_info, logtype_uams, "uams_pam.c :PAM: unable to retrieve client hostname");
 	hostname = NULL;
     }
-    
+
     ibuf[ PASSWDLEN ] = '\0';
 
     if (( pwd = uam_getname(obj, username, ulen)) == NULL ) {
@@ -157,20 +157,19 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
-    /* use PAM_DISALLOW_NULL_AUTHTOK if passwdminlen > 0 */
     PAM_error = pam_authenticate(pamh,0);
     if (PAM_error != PAM_SUCCESS) {
-      if (PAM_error == PAM_MAXTRIES) 
+      if (PAM_error == PAM_MAXTRIES)
 	err = AFPERR_PWDEXPR;
       goto login_err;
-    }      
+    }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
       if (PAM_error == PAM_NEW_AUTHTOK_REQD) /* Password change required */
 	err = AFPERR_PWDEXPR;
 #ifdef PAM_AUTHTOKEN_REQD
-      else if (PAM_error == PAM_AUTHTOKEN_REQD) 
+      else if (PAM_error == PAM_AUTHTOKEN_REQD)
 	err = AFPERR_PWDCHNG;
 #endif /* PAM_AUTHTOKEN_REQD */
       else
@@ -202,13 +201,13 @@ login_err:
 }
 
 /* --------------------------
-   cleartxt login 
+   cleartxt login
 */
 static int pam_login(void *obj, struct passwd **uam_pwd,
 		     char *ibuf, size_t ibuflen,
 		     char *rbuf, size_t *rbuflen)
 {
-    char *username; 
+    char *username;
     size_t  len, ulen;
 
     *rbuflen = 0;
@@ -237,7 +236,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 		     char *ibuf, size_t ibuflen,
 		     char *rbuf, size_t *rbuflen)
 {
-    char *username; 
+    char *username;
     size_t  len, ulen;
     u_int16_t  temp16;
 
@@ -257,7 +256,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
-    
+
     return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
@@ -289,11 +288,11 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* Set these things up for the conv function */
     PAM_username = username;
-    PAM_password = pw; 
+    PAM_password = pw;
 
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
 			  &lpamh);
-    if (PAM_error != PAM_SUCCESS) 
+    if (PAM_error != PAM_SUCCESS)
       return AFPERR_PARAM;
     pam_set_item(lpamh, PAM_TTY, "afpd");
     pam_set_item(lpamh, PAM_RHOST, hostname);
@@ -312,7 +311,7 @@ static int pam_changepw(void *obj _U_, char *username,
     ibuf += PASSWDLEN;
     PAM_password = ibuf;
     ibuf[PASSWDLEN] = '\0';
-    
+
     /* this really does need to be done as root */
     PAM_error = pam_chauthtok(lpamh, 0);
     seteuid(uid); /* un-root ourselves. */
@@ -394,7 +393,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
                           &pamh);
     if (PAM_error != PAM_SUCCESS) {
-	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -405,16 +404,16 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     pam_set_item(pamh, PAM_RHOST, hostname);
     PAM_error = pam_authenticate(pamh,0);
     if (PAM_error != PAM_SUCCESS) {
-	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
         return(-1);
-    }      
+    }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -423,7 +422,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 
     PAM_error = pam_open_session(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -444,7 +443,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 
 static int uam_setup(const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd", 
+  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
 		   pam_login, NULL, pam_logout, pam_login_ext) < 0)
 	return -1;
 
