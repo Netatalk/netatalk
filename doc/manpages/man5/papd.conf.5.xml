@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <refentry id="papd.conf.5">
-
   <refmeta>
     <refentrytitle>papd.conf</refentrytitle>
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">06 Sep 2004</refmiscinfo>
+    <refmiscinfo class="date">24 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
@@ -14,8 +13,9 @@
   <refnamediv>
     <refname>papd.conf</refname>
 
-    <refpurpose>Configuration file used by <command>papd</command>(8) to determine the
-    configuration of printers used by the Netatalk printing daemon<indexterm>
+    <refpurpose>Configuration file used by <command>papd</command>(8) to
+    determine the configuration of printers used by the Netatalk printing
+    daemon<indexterm>
         <primary>papd.conf</primary>
       </indexterm></refpurpose>
   </refnamediv>
@@ -23,22 +23,26 @@
   <refsect1>
     <title>Description</title>
 
-    <para><emphasis remap="B">papd.conf</emphasis> is the
-    configuration file used by papd to configure the printing services offered
-    by netatalk.
+    <para><emphasis remap="B">papd.conf</emphasis> is the configuration file
+    used by papd to configure the printing services offered by netatalk.
     <emphasis remap="B">papd</emphasis> shares the same defaults as lpd on
-    many systems, but not Solaris.</para>
+    many systems. One notable exception is Solaris.</para>
 
-    <para>Any line not prefixed with <emphasis remap="B">#</emphasis> is
-    interpreted. The configuration lines are composed like:</para>
+    <para>The format of papd.conf is derived from <citerefentry>
+        <refentrytitle>printcap</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> and can contain configurations for one or more printers.
+    Any line not prefixed with <emphasis remap="B">#</emphasis> is
+    interpreted. The configuration lines are composed like this:</para>
 
     <para><emphasis remap="I">printername:[options]</emphasis></para>
 
-    <para>On systems running a System V printing system the simplest case is
+    <para>On systems running a System V printing system, the simplest case is
     to have either no papd.conf, or to have one that has no active lines. In
-    this case, atalkd should auto-discover the local printers on the machine.
-    Please note that you can split lines by using <emphasis
-    remap="B">\\fR.</emphasis></para>
+    this case, <emphasis>atalkd</emphasis> should auto-discover the local
+    printers on the machine. Please note that you can split lines with a
+    <emphasis remap="B">\</emphasis> (backslash).</para>
 
     <para>printername may be just a name (<emphasis remap="B">Printer
     1</emphasis>), or it may be a full name in nbp_name format (<emphasis
@@ -49,16 +53,16 @@
     option (e.g. <emphasis remap="B">pr=|/usr/bin/lpr</emphasis>).</para>
 
     <para>When CUPS support is compiled in, then <emphasis
-    remap="B">cupsautoadd </emphasis> as the first entry in papd.conf will
-    automagically share all CUPS printers by papd utilizing the PPDs assigned
-    in CUPS (customizable -- see below). This can be overwritten for individal
+    remap="B">cupsautoadd</emphasis> as the first entry in papd.conf will
+    automagically configure and make all CUPS printers available to papd
+    (customizable -- see below). This can be overwritten for individual
     printers by subsequently adding individual entries using the CUPS queue
-    name as <emphasis remap="B">pr </emphasis> entry. Note: CUPS support is
+    name as <emphasis remap="B">pr</emphasis> entry. Note: CUPS support is
     mutually exclusive with System V support described above.</para>
 
     <para>The possible options are colon delimited (<emphasis
     remap="B">:</emphasis>), and lines must be terminated with colons. The
-    possible options and flags are:</para>
+    available options and flags are:</para>
 
     <variablelist remap="TP">
       <varlistentry>
@@ -67,12 +71,11 @@
         <listitem>
           <para>The <emphasis remap="B">am</emphasis> option allows specific
           UAMs to be specified for a particular printer. It has no effect if
-          the <emphasis remap="B">au</emphasis> flag is not present or if papd
-          authentication was not built into netatalk. Note: possible values
-          are <emphasis remap="B">uams_guest.so</emphasis> and <emphasis
-          remap="B"> uams_clrtxt.so</emphasis> only. The first method requires
-          a valid username, but no password. The second requires both a valid
-          username and the correct password.</para>
+          the <emphasis remap="B">au</emphasis> flag is not present. Note:
+          possible values are <emphasis remap="B">uams_guest.so</emphasis> and
+          <emphasis remap="B"> uams_clrtxt.so</emphasis> only. The first
+          method requires a valid username, but no password. The second
+          requires both a valid username and the correct password.</para>
         </listitem>
       </varlistentry>
 
@@ -80,9 +83,8 @@
         <term><emphasis remap="B">au</emphasis></term>
 
         <listitem>
-          <para>If present, this flag enables authentication for the printer.
-          Please note that papd authentication must be built into netatalk for
-          this to take effect.</para>
+          <para>If present, this flag enables authentication for the
+          printer.</para>
         </listitem>
       </varlistentry>
 
@@ -103,7 +105,7 @@
         <listitem>
           <para>If used as the first entry in papd.conf this will share all
           CUPS printers via papd. type/zone settings as well as other
-          parameters assigned to this special printer share will apply to all
+          parameters assigned to this special shared printer will apply to all
           CUPS printers. Unless the <emphasis remap="B">pd</emphasis> option
           is set, the CUPS PPDs will be used. To overwrite these global
           settings for individual printers simply add them subsequently to
@@ -116,7 +118,7 @@
 
         <listitem>
           <para>If present, this flag enables a hack to translate line endings
-          originating from pre Mac OS X LaserWriter drivers to let <emphasis
+          originating from pre-Mac OS X LaserWriter drivers to let <emphasis
           remap="B">foomatic-rip</emphasis> recognize foomatic PPD options set
           in the printer dialog. Attention: Use with caution since this might
           corrupt binary print jobs!</para>
@@ -127,7 +129,8 @@
         <term><emphasis remap="B">op=(operator)</emphasis></term>
 
         <listitem>
-          <para>This specifies the operator name, for lpd spooling.</para>
+          <para>This specifies the operator name, for lpd spooling. Default
+          value is "operator".</para>
         </listitem>
       </varlistentry>
 
@@ -135,7 +138,7 @@
         <term><emphasis remap="B">pa=(appletalk address)</emphasis></term>
 
         <listitem>
-          <para>Allows specification of Appletalk addresses. Usually not
+          <para>Allows specification of AppleTalk addresses. Usually not
           needed.</para>
         </listitem>
       </varlistentry>
@@ -155,7 +158,8 @@
 
         <listitem>
           <para>Sets the <emphasis remap="B">lpd</emphasis> or <emphasis
-          remap="B">CUPS</emphasis> printer that this is spooled to.</para>
+          remap="B">CUPS</emphasis> printer that this is spooled to. Default
+          value is "lp".</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -187,8 +191,8 @@ HP Printer:\
     </example>
 
     <para>An alternative to the technique outlined above is to direct papd's
-    output via a pipe into another program. Using this mechanism almost all
-    printing systems can be driven.</para>
+    output via a pipe into another program. Almost any printing system can be
+    driven using this mechanism.</para>
 
     <example>
       <title>papd.conf examples using pipes</title>
@@ -198,18 +202,16 @@ HP Printer:\
       printing is enabled, as is CAP-style authenticated printing. Both
       methods support guest and cleartext authentication as specified by the
       '<option>am</option>' option. The PPD used is
-      <filename>/etc/atalk/ppds/hp8100.ppd</filename>.
-      <programlisting>HP 8100:\
+      <filename>/etc/atalk/ppds/hp8100.ppd</filename>. <programlisting>HP 8100:\
    :pr=|/usr/bin/lpr -Plp:\
    :sp:\
    :ca=/tmp/print:\
-   :am=uams_guest.so,uams_pam.so:\
+   :am=uams_guest.so,uams_clrtxt.so:\
    :pd=/etc/atalk/ppds/hp8100.ppd:
-      </programlisting>
-      </para>
+      </programlisting></para>
     </example>
 
-    <para>Starting with Netatalk 2.0 direct CUPS integration is available. In
+    <para>Starting with Netatalk 2.0, direct CUPS integration is available. In
     this case, defining only a queue name as <option>pr</option> parameter
     won't invoke the SysV lpd daemon but uses CUPS instead. Unless a specific
     PPD has been assigned using the <option>pd</option> switch, the PPD
@@ -228,13 +230,21 @@ HP Printer:\
       All those shares appear in the zone "1st floor" and since no additional
       settings have been made, they use the CUPS printer name as NBP name and
       use the PPD configured in CUPS. The second entry defines different
-      settings for one single CUPS printer. It's NBP name is differing from
-      the printer's name and the registration happens in another zone.
+      settings for one single CUPS printer. Its NBP name is differing from the
+      printer's name and the registration happens in another zone.
       <programlisting>cupsautoadd@1st floor:op=root:
 
 Boss' LaserWriter@2nd floor:\
    :pr=laserwriter-chief:</programlisting></para>
     </example>
+  </refsect1>
+
+  <refsect1>
+    <title>Caveats</title>
+
+    <para>If you are using more than 15 printers in your network, you must
+    specify AppleTalk zones for the papd printer configurations. Otherwise,
+    only some of the printers may appear in the Chooser on Mac clients.</para>
   </refsect1>
 
   <refsect1>
