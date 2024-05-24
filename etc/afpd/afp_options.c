@@ -201,11 +201,11 @@ void afp_options_init(struct afp_options *options)
 
 /* parse an afpd.conf line. i'm doing it this way because it's
  * easy. it is, however, massively hokey. sample afpd.conf:
- * server:AFPServer@zone -loginmesg "blah blah blah" -nodsi 
+ * server:AFPServer@zone -loginmesg "blah blah blah" -nodsi
  * "private machine"@zone2 -noguest -port 11012
  * server2 -nocleartxt -nodsi
  *
- * NOTE: this ignores unknown options 
+ * NOTE: this ignores unknown options
  */
 int afp_options_parseline(char *buf, struct afp_options *options)
 {
@@ -270,8 +270,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->transports |= AFPTRANS_DDP;
     if (strstr(buf, " -noddp"))
         options->transports &= ~AFPTRANS_DDP;
-    if (strstr(buf, "-client_polling"))
-        options->server_notif = 0;
 
     /* figure out options w/ values. currently, this will ignore the setting
      * if memory is lacking. */
@@ -304,16 +302,12 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         }
         opt[j] = 0;
         options->loginmesg = opt;
-        
+
     }
     if ((c = getoption(buf, "-guestname")) && (opt = strdup(c)))
         options->guest = opt;
     if ((c = getoption(buf, "-passwdfile")) && (opt = strdup(c)))
         options->passwdfile = opt;
-    if ((c = getoption(buf, "-passwdminlen")))
-        options->passwdminlen = MIN(1, atoi(c));
-    if ((c = getoption(buf, "-loginmaxfail")))
-        options->loginmaxfail = atoi(c);
     if ((c = getoption(buf, "-tickleval"))) {
         options->tickleval = atoi(c);
         if (options->tickleval < 0) {
@@ -451,7 +445,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
                 options->unixcodepage = opt;
 	}
     }
-	
+
     if ((c = getoption(buf, "-maccodepage"))) {
     	if ((charset_t)-1 == ( options->maccharset = add_charset(c)) ) {
             options->maccharset = CH_MAC;
@@ -462,7 +456,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
                 options->maccodepage = opt;
 	}
     }
-    
+
     if ((c = strstr(buf, "-closevol"))) {
         options->closevol= 1;
     }
@@ -475,7 +469,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-dircachesize")))
         options->dircachesize = atoi(c);
-     
+
     if ((c = getoption(buf, "-tcpsndbuf")))
         options->tcp_sndbuf = atoi(c);
 

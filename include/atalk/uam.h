@@ -12,7 +12,7 @@
 
 /* just a label for exported bits */
 #ifndef UAM_MODULE_EXPORT
-#define UAM_MODULE_EXPORT 
+#define UAM_MODULE_EXPORT
 #endif
 
 /* type of uam */
@@ -25,7 +25,7 @@
 /* things for which we can have uams */
 #define UAM_SERVER_LOGIN         (1 << 0)
 #define UAM_SERVER_CHANGEPW      (1 << 1)
-#define UAM_SERVER_PRINTAUTH     (1 << 2) 
+#define UAM_SERVER_PRINTAUTH     (1 << 2)
 #define UAM_SERVER_LOGIN_EXT     (1 << 3)
 
 /* options */
@@ -48,9 +48,9 @@
 /* some password options. you pass these in the length parameter and
  * get back the corresponding option. not all of these are implemented. */
 #define UAM_PASSWD_FILENAME     (1 << 0)
-#define UAM_PASSWD_MINLENGTH    (1 << 1)
-#define UAM_PASSWD_MAXFAIL      (1 << 2) /* not implemented yet. */
-#define UAM_PASSWD_EXPIRETIME   (1 << 3) /* not implemented yet. */
+// #define UAM_PASSWD_MINLENGTH    (1 << 1)
+// #define UAM_PASSWD_MAXFAIL      (1 << 2)
+// #define UAM_PASSWD_EXPIRETIME   (1 << 3)
 
 /* max lenght of username  */
 #define UAM_USERNAMELEN 	255

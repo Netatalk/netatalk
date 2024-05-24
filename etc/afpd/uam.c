@@ -143,7 +143,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
         uam->u.uam_login.logout = va_arg(ap, void *);
         uam->u.uam_login.login_ext = va_arg(ap, void *);
         break;
-    
+
     case UAM_SERVER_LOGIN: /* expect three arguments */
         uam->u.uam_login.login_ext = NULL;
         uam->u.uam_login.login = va_arg(ap, void *);
@@ -185,7 +185,7 @@ void uam_unregister(const int type, const char *name)
     free(uam);
 }
 
-/* --- helper functions for plugin uams --- 
+/* --- helper functions for plugin uams ---
  * name: user name
  * len:  size of name buffer.
 */
@@ -202,7 +202,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
     if ((pwent = getpwnam(name)))
         return pwent;
-        
+
     /* if we have a NT domain name try with it */
     if (obj->options.ntdomain && obj->options.ntseparator) {
         /* FIXME What about charset ? */
@@ -214,9 +214,9 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             pwent = getpwnam(p);
             free(p);
             if (pwent) {
-                int len = strlen(pwent->pw_name);              
+                int len = strlen(pwent->pw_name);
                 if (len < MAXUSERLEN) {
-                    strncpy(name,pwent->pw_name, MAXUSERLEN);  
+                    strncpy(name,pwent->pw_name, MAXUSERLEN);
                 }else{
                     LOG(log_error, logtype_uams, "MAJOR:The name %s is longer than %d",pwent->pw_name,MAXUSERLEN);
                 }
@@ -237,9 +237,9 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         if ((p = strchr(pwent->pw_gecos, ',')))
             *p = '\0';
 
-	gecoslen = convert_string(obj->options.unixcharset, CH_UCS2, 
+	gecoslen = convert_string(obj->options.unixcharset, CH_UCS2,
 				pwent->pw_gecos, -1, user, sizeof(username));
-	pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2, 
+	pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2,
 				pwent->pw_name, -1, pwname, sizeof(username));
 	if ((size_t)-1 == gecoslen && (size_t)-1 == pwnamelen)
 		continue;
@@ -248,7 +248,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         /* check against both the gecos and the name fields. the user
          * might have just used a different capitalization. */
 
-	if ( (namelen == gecoslen && strncasecmp_w((ucs2_t*)user, (ucs2_t*)username, len) == 0) || 
+	if ( (namelen == gecoslen && strncasecmp_w((ucs2_t*)user, (ucs2_t*)username, len) == 0) ||
 		( namelen == pwnamelen && strncasecmp_w ( (ucs2_t*) pwname, (ucs2_t*) username, len) == 0)) {
             strlcpy(name, pwent->pw_name, len);
             break;
@@ -350,25 +350,9 @@ int uam_afpserver_option(void *private, const int what, void *option,
         if (!len)
             return -1;
 
-        switch (*len) {
-        case UAM_PASSWD_FILENAME:
+        if (*len == UAM_PASSWD_FILENAME) {
             *buf = obj->options.passwdfile;
             *len = strlen(obj->options.passwdfile);
-            break;
-
-        case UAM_PASSWD_MINLENGTH:
-            *((int *) option) = obj->options.passwdminlen;
-            *len = sizeof(obj->options.passwdminlen);
-            break;
-
-        case UAM_PASSWD_MAXFAIL:
-            *((int *) option) = obj->options.loginmaxfail;
-            *len = sizeof(obj->options.loginmaxfail);
-            break;
-
-        case UAM_PASSWD_EXPIRETIME: /* not implemented */
-        default:
-            return -1;
             break;
         }
         break;
@@ -395,13 +379,13 @@ int uam_afpserver_option(void *private, const int what, void *option,
     case UAM_OPTION_PROTOCOL:
         *((int *) option) = obj->proto;
         break;
-        
+
     case UAM_OPTION_CLIENTNAME:
     {
         struct DSI *dsi = obj->handle;
         const struct sockaddr *sa;
         static char hbuf[NI_MAXHOST];
-        
+
         sa = (struct sockaddr *)&dsi->client;
         if (getnameinfo(sa, sizeof(dsi->client), hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
             *buf = hbuf;

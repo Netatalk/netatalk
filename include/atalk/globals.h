@@ -60,7 +60,7 @@ struct afp_options {
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
-    unsigned char passwdbits, passwdminlen, loginmaxfail;
+    unsigned char passwdbits;
     u_int32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
@@ -81,7 +81,7 @@ struct afp_options {
     unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
     char *unixcodepage,*maccodepage;
-    charset_t maccharset, unixcharset; 
+    charset_t maccharset, unixcharset;
     mode_t umask;
     mode_t save_mask;
 #ifdef ADMIN_GRP
@@ -102,7 +102,7 @@ typedef struct _AFPObj {
     int proto;
     unsigned long servernum;
     void *handle;               /* either (DSI *) or (ASP *) */
-    void *config; 
+    void *config;
     struct afp_options options;
     char *Obj, *Type, *Zone;
     char username[MAXUSERLEN];
