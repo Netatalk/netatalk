@@ -703,6 +703,8 @@
 #define NO_MD4 1
 #define NO_MD5 1
 #define HAVE_TLS_EXTENSIONS 1
+#define WOLFSSL_SSL_BN_INCLUDED 1
+#define WOLFSSL_SSL_CRYPTO_INCLUDED 1
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
