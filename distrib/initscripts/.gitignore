@@ -1,10 +1,15 @@
+a2boot
 a2boot.service
+afpd
 afpd.service
+atalkd
 atalkd.service
+cnid_metad
 cnid.service
 io.netatalk.daemon.plist
 netatalk
 netatalkd
+papd
 papd.service
 rc.a2boot.netbsd
 rc.afpd.netbsd
@@ -17,4 +22,5 @@ rc.redhat
 rc.solaris
 rc.suse
 rc.timelord.netbsd
+timelord
 timelord.service

@@ -77,7 +77,7 @@ elif get_option('enable-netbsd')
         custom_target(
             script + '.netbsd',
             input: script + '.netbsd.tmpl',
-            output: script + 'netbsd',
+            output: script.substring(3),
             command: sed_command,
             capture: true,
             install: true,
