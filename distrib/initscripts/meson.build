@@ -11,10 +11,12 @@ if get_option('enable-redhat')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    meson.add_install_script(
-        find_program('chkconfig'),
-        '--add', '/etc/rc.d/init.d/netatalk',
-    )
+    if not get_option('disable-install-privileged')
+        meson.add_install_script(
+            find_program('chkconfig'),
+            '--add', '/etc/rc.d/init.d/netatalk',
+        )
+    endif
 elif get_option('enable-systemd')
     init_style += 'systemd'
     init_dir += systemddir
@@ -37,11 +39,13 @@ elif get_option('enable-systemd')
             install_dir: init_dir,
         )
     endforeach
-    meson.add_install_script(
-        find_program('systemctl'),
-        'daemon-reload',
-        '--no-ask-password',
-    )
+    if not get_option('disable-install-privileged')
+        meson.add_install_script(
+            find_program('systemctl'),
+            'daemon-reload',
+            '--no-ask-password',
+        )
+    endif
 elif get_option('enable-suse')
     init_style += 'suse'
     init_dir += '/etc/init.d'
@@ -55,7 +59,9 @@ elif get_option('enable-suse')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+    if not get_option('disable-install-privileged')
+        meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+    endif
 elif get_option('enable-netbsd')
     init_style += 'netbsd'
     init_dir += '/etc/rc.d'
@@ -91,20 +97,22 @@ elif get_option('enable-solaris')
         install: true,
         install_dir: init_dir,
     )
-    meson.add_install_script(
-        find_program('rm'),
-        '-f', '/etc/rc2.d/S90netatalk',
-    )
-    meson.add_install_script(
-        find_program('ln'),
-        '-s', '/etc/init.d/netatalk',
-        '/etc/rc2.d/S90netatalk',
-    )
-    meson.add_install_script(
-        find_program('ln'),
-        '-s', '/etc/init.d/netatalk',
-        '/etc/rc0.d/K04netatalk',
-    )
+    if not get_option('disable-install-privileged')
+        meson.add_install_script(
+            find_program('rm'),
+            '-f', '/etc/rc2.d/S90netatalk',
+        )
+        meson.add_install_script(
+            find_program('ln'),
+            '-s', '/etc/init.d/netatalk',
+            '/etc/rc2.d/S90netatalk',
+        )
+        meson.add_install_script(
+            find_program('ln'),
+            '-s', '/etc/init.d/netatalk',
+            '/etc/rc0.d/K04netatalk',
+        )
+    endif
 elif get_option('enable-openrc')
     init_style += 'openrc'
     init_dir += '/etc/init.d'
@@ -153,7 +161,10 @@ elif get_option('enable-macos')
         install: true,
         install_dir: init_dir,
     )
-    if not fs.exists('/Library/LaunchDaemons/io.netatalk.daemon.plist')
+    if (
+        not fs.exists('/Library/LaunchDaemons/io.netatalk.daemon.plist')
+        and not get_option('disable-install-privileged')
+    )
         meson.add_install_script(
             find_program('launchctl'),
             'load',
