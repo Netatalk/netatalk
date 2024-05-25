@@ -37,6 +37,7 @@
 #include <wolfssl/ssl.h>
 #endif /* OPENSSL_EXTRA_SSL_GUARD */
 
+#ifndef EMBEDDED_SSL
 #include <wolfssl/openssl/tls1.h>
 #ifndef WOLFCRYPT_ONLY
 #include <wolfssl/openssl/evp.h>
@@ -58,6 +59,7 @@
 #include <wolfssl/wolfcrypt/asn.h>
 
 #include <wolfssl/openssl/x509.h>
+#endif /* EMBEDDED_SSL */
 
 #ifdef __cplusplus
     extern "C" {
@@ -73,7 +75,7 @@
     #undef ASN1_INTEGER
 #endif
 
-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
+#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
 
 typedef WOLFSSL          SSL;
 typedef WOLFSSL_SESSION  SSL_SESSION;
@@ -1684,7 +1686,7 @@ typedef WOLFSSL_CONF_CTX SSL_CONF_CTX;
 #define SSL_CONF_cmd                    wolfSSL_CONF_cmd
 #define SSL_CONF_cmd_value_type         wolfSSL_CONF_cmd_value_type
 
-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
+#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
 
 
 #ifdef WOLFSSL_QUIC

@@ -386,7 +386,7 @@ struct WOLFSSL_EVP_PKEY {
     union {
         char* ptr; /* der format of key */
     } pkey;
-#if (defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL))
+#if (defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL))
     #ifndef NO_RSA
     WOLFSSL_RSA* rsa;
     #endif
@@ -413,7 +413,7 @@ struct WOLFSSL_EVP_PKEY {
     #if defined(WOLFSSL_CMAC) && !defined(NO_AES) && defined(WOLFSSL_AES_DIRECT)
     WOLFSSL_CMAC_CTX* cmacCtx;
     #endif
-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
+#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
 #ifdef HAVE_ECC
     int pkey_curve;
 #endif
