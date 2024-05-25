@@ -222,6 +222,7 @@ check_headers = [
     'sys/vfs.h',
     'sys/xattr.h',
     'termios.h',
+    'ufs/quota.h',
     'unistd.h',
     'xfs/libxfs.h',
     'xfs/xfs/fs.h',
@@ -843,6 +844,62 @@ libevent = dependency(
     required: true,
     not_found_message: 'Libevent library required but not found! Please install the libevent devel package',
 )
+
+#
+# Check for quota support
+#
+
+rpcsvc = cc.find_library('rpcsvc', required: false)
+quota = cc.find_library('libquota', required: false)
+tirpc = dependency('libtirpc', required: false)
+
+quota_link_args = []
+
+rpc_headers = [
+    'rpc/rpc.h',
+    'rpc/pmap_prot.h',
+    'rpcsvc/rquota.h',
+]
+
+foreach header : rpc_headers
+    if cc.has_header(header)
+        cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
+    endif
+endforeach
+
+if get_option('enable-quota').disabled()
+    have_quota = false
+    cdata.set('NO_QUOTA_SUPPORT', 1)
+else
+    if tirpc.found() and get_option('with-libtirpc')
+        have_quota = true
+        cdata.set('NEED_RQUOTA', 1)
+        if get_option('with-libtirpc') and not tirpc.found()
+            message('Libtirpc requested, but library not found')
+        endif
+    elif (
+        rpcsvc.found()
+        and (
+            cc.has_header('rpc/rpc.h')
+            or cc.has_header('rpc/pmap_prot.h')
+            or cc.has_header('rpcsvc/rquota.h')
+        )
+    )
+        have_quota = cc.has_function('main', dependencies: rpcsvc)
+        quota_link_args += '-lrpcsvc'
+        if quota.found()
+            have_quota = cc.has_function('getfsquota', dependencies: quota)
+            cdata.set('HAVE_LIBQUOTA', 1)
+            quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
+        endif
+    else
+        have_quota = false
+    endif
+endif
+
+if get_option('enable-quota').enabled() and not have_quota
+    warning('Quota support requested but required libraries nor found')
+endif
 
 #
 # Check for libgcrypt
@@ -1789,13 +1846,16 @@ endif
 # OS-specific configuration
 #
 
-if host_os.contains('freebsd')
+if host_os.contains('darwin')
+    cdata.set('NO_QUOTA_SUPPORT', 1)
+elif host_os.contains('freebsd')
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os.contains('linux')
     cdata.set('_GNU_SOURCE', 1)
     cdata.set('LINUX', 1)
+    cdata.set('NO_QUOTA_SUPPORT', 1)
 elif host_os.contains('netbsd')
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
@@ -1966,6 +2026,7 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
+    '  Quota support': have_quota,
     '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,

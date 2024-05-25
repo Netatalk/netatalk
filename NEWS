@@ -22,7 +22,6 @@ Changes in 3.2.0
        Enable with afp.conf option: "fce sendwait"
 * NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
 * UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
-* UPD: BREAKING: Remove quota functionality, GitHub #493
 * UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
 * UPD: BREAKING: Remove bundled talloc, GitHub #479
        Get the stand-alone talloc library from the Samba project

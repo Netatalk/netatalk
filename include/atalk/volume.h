@@ -111,9 +111,12 @@ typedef enum {
 /* volume flags */
 #define AFPVOL_OPEN (1<<0)
 
+/* flags for quota 0xxx0 */
 #define AFPVOL_GVSMASK  (7<<2)
 #define AFPVOL_NONE     (0<<2)
+//#define AFPVOL_AFSGVS   (1<<2)
 #define AFPVOL_USTATFS  (1<<3)
+#define AFPVOL_UQUOTA   (1<<4)
 
 #define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
 #define AFPVOL_SPOTLIGHT (1 << 6)   /* Index volume for Spotlight searches */

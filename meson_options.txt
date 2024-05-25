@@ -65,6 +65,12 @@ option(
     description: 'Enable build of PGP UAM module',
 )
 option(
+    'enable-quota',
+    type: 'feature',
+    value: 'auto',
+    description: 'Turn on quota support',
+)
+option(
     'enable-rpath',
     type: 'boolean',
     value: false,
@@ -213,6 +219,12 @@ option(
     type: 'string',
     value: '',
     description: 'Path to libiconv installation. Must contain lib and include dirs',
+)
+option(
+    'with-libtirpc',
+    type: 'boolean',
+    value: false,
+    description: 'Use libtirpc as RPC implementation (instead of sunrpc)',
 )
 option(
     'with-lockfile',

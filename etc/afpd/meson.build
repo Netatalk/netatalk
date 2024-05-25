@@ -24,7 +24,9 @@ afpd_sources = [
     'hash.c',
     'mangle.c',
     'messages.c',
+    'nfsquota.c',
     'ofork.c',
+    'quota.c',
     'status.c',
     'switch.c',
     'uam.c',
@@ -104,7 +106,10 @@ libafpd = static_library(
         statedir,
         uamdir,
     ],
-    link_args: netatalk_common_link_args,
+    link_args: [
+        netatalk_common_link_args,
+        quota_link_args,
+    ],
     install: false,
     build_by_default: false,
 )
