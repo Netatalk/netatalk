@@ -101,6 +101,12 @@ option(
     description: 'Overwrite configuration files during installation',
 )
 option(
+    'disable-install-privileged',
+    type: 'boolean',
+    value: false,
+    description: 'Disable install hooks for OS specific init system',
+)
+option(
     'enable-pgp-uam',
     type: 'feature',
     value: 'auto',

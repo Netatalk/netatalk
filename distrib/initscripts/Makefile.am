@@ -82,11 +82,15 @@ $(sysv_SCRIPTS): rc.redhat
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
+if USE_INSTALL_PRIVILEGED
 	-chkconfig --add $(sysv_SCRIPTS)
+endif
 
 uninstall-startup:
+if USE_INSTALL_PRIVILEGED
 	-chkconfig --del $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -107,9 +111,7 @@ endif
 uninstall-startup:
 if USE_INSTALL_PRIVILEGED
 	-systemctl disable $(service_DATA)
-endif
 	rm -f $(DESTDIR)$(servicedir)/{a2boot,afpd,atalkd,cnid,papd,timelord}.service
-if USE_INSTALL_PRIVILEGED
 	-systemctl daemon-reload
 endif
 
@@ -129,11 +131,15 @@ $(sysv_SCRIPTS): rc.suse
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
+if USE_INSTALL_PRIVILEGED
 	-insserv $(sysv_SCRIPTS)
+endif
 
 uninstall-startup:
+if USE_INSTALL_PRIVILEGED
 	-insserv -d $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -192,15 +198,19 @@ $(sysv_SCRIPTS): rc.solaris
 	chmod a+x $@
 
 install-data-hook:
+if USE_INSTALL_PRIVILEGED
 	rm -f $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
 	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
 	rm -f $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
 	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
+endif
 
 uninstall-startup:
+if USE_INSTALL_PRIVILEGED
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) \
 		$(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS) \
 		$(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -218,11 +228,15 @@ $(sysv_SCRIPTS): rc.openrc
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-#	-rc-update add $(sysv_SCRIPTS) default
+if USE_INSTALL_PRIVILEGED
+	-rc-update add $(sysv_SCRIPTS) default
+endif
 
 uninstall-startup:
-#	-rc-update del $(sysv_SCRIPTS) default
-#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+if USE_INSTALL_PRIVILEGED
+	-rc-update del $(sysv_SCRIPTS) default
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+endif
 
 endif
 
@@ -240,11 +254,15 @@ $(sysv_SCRIPTS): rc.debian
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-#	update-rc.d $(sysv_SCRIPTS) defaults 90 10
+if USE_INSTALL_PRIVILEGED
+	update-rc.d $(sysv_SCRIPTS) defaults 90 10
+endif
 
 uninstall-startup:
-#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
-#	update-rc.d netatalk remove
+if USE_INSTALL_PRIVILEGED
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+	update-rc.d netatalk remove
+endif
 
 endif
 
@@ -259,16 +277,20 @@ bin_SCRIPTS = netatalkd
 launchd_DATA = io.netatalk.daemon.plist
 
 install-data-hook:
+if USE_INSTALL_PRIVILEGED
 	(if [ ! -f $(launchddir)/$(launchd_DATA) ] ; then \
 		cp $(launchd_DATA) $(launchddir) && \
 		launchctl load -w $(launchddir)/$(launchd_DATA); \
 	fi)
+endif
 
 uninstall-startup:
+if USE_INSTALL_PRIVILEGED
 	$(bin_SCRIPTS) stop
 	launchctl unload -w $(launchddir)/$(launchd_DATA)
 	rm -f $(DESTDIR)$(bindir)/$(bin_SCRIPTS)
 	rm -f $(launchddir)/$(launchd_DATA)
+endif
 
 endif
 
