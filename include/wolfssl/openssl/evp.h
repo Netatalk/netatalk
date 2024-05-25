@@ -44,10 +44,14 @@
 #endif
 #include <wolfssl/openssl/sha.h>
 #include <wolfssl/openssl/sha3.h>
+#ifndef EMBEDDED_SSL
 #include <wolfssl/openssl/ripemd.h>
+#endif
 #include <wolfssl/openssl/rsa.h>
+#ifndef EMBEDDED_SSL
 #include <wolfssl/openssl/dsa.h>
 #include <wolfssl/openssl/ec.h>
+#endif
 #include <wolfssl/openssl/dh.h>
 #include <wolfssl/openssl/opensslv.h>
 #include <wolfssl/openssl/compat_types.h>
@@ -55,7 +59,9 @@
 #include <wolfssl/wolfcrypt/aes.h>
 #include <wolfssl/wolfcrypt/des3.h>
 #include <wolfssl/wolfcrypt/arc4.h>
+#ifndef EMBEDDED_SSL
 #include <wolfssl/wolfcrypt/chacha20_poly1305.h>
+#endif
 #include <wolfssl/wolfcrypt/hmac.h>
 #include <wolfssl/wolfcrypt/pwdbased.h>
 #ifdef WOLFSSL_SM3
