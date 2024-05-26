@@ -97,6 +97,7 @@ libafpd = static_library(
         libgcrypt,
         libcnid_deps,
         threads,
+        tirpc,
     ],
     c_args: [
         '-DAPPLCNAME', confdir,

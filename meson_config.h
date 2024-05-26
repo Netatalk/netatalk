@@ -395,6 +395,12 @@
 /* Define to 1 if you have the <rpcsvc/rquota.h> header file. */
 #mesondefine HAVE_RPCSVC_RQUOTA_H
 
+/* Define to 1 if you have the <rpc/pmap_prot.h> header file. */
+#mesondefine HAVE_RPC_PMAP_PROT_H
+
+/* Define to 1 if you have the <rpc/rpc.h> header file. */
+#mesondefine HAVE_RPC_RPC_H
+
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 #mesondefine HAVE_SECURITY_PAM_APPL_H
 

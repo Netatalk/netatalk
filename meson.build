@@ -185,7 +185,6 @@ endif
 check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
-    'attr/xattr.h',
     'dlfcn.h',
     'dns_sd.h',
     'fcntl.h',
