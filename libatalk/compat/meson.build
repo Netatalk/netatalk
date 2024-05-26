@@ -1,7 +1,7 @@
 compat_sources = [
     'misc.c',
-    'strlcpy.c',
     'rquota_xdr.c',
+    'strlcpy.c',
 ]
 
 libcompat = static_library(
