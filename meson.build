@@ -80,7 +80,6 @@ if host_os in ['dragonfly', 'freebsd', 'openbsd']
     root_includes = include_directories(
         '.',
         'include',
-        'sys',
         'etc/afpd',
         '/usr/local/include',
     )
@@ -88,7 +87,6 @@ elif host_os == 'netbsd'
     root_includes = include_directories(
         '.',
         'include',
-        'sys',
         'etc/afpd',
         '/usr/pkg/include',
     )
@@ -96,7 +94,6 @@ elif host_os == 'omnios'
     root_includes = include_directories(
         '.',
         'include',
-        'sys',
         'etc/afpd',
         '/opt/local/include',
     )
@@ -105,7 +102,6 @@ else
         '.',
         'include',
         'etc/afpd',
-        'sys',
     )
 endif
 
