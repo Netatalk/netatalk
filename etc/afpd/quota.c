@@ -124,10 +124,6 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 
 #else /* HAVE_LIBQUOTA */
 
-/*
-#define DEBUG_QUOTA 0
-*/
-
 #define WANT_USER_QUOTA 0
 #define WANT_GROUP_QUOTA 1
 
@@ -140,7 +136,7 @@ int quotactl(int cmd, const char *special, int id, caddr_t addr)
 
 static int overquota( struct dqblk *);
 
-#ifdef linux
+#ifdef __linux__
 
 #ifdef HAVE_LINUX_XQM_H
 #include <linux/xqm.h>
@@ -461,7 +457,7 @@ special(char *file, int *nfs)
 
     if (!found)
 	return (NULL);
-#ifdef linux
+#ifdef __linux__
     if (strcmp(mnt->mnt_type, "xfs") == 0)
 	is_xfs = 1;
 #endif
@@ -522,15 +518,11 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 
 #else /* BSD4_4 */
     if (get_linux_quota (WANT_USER_QUOTA, vol->v_gvs, uid, dq) !=0) {
-#ifdef DEBUG_QUOTA
         LOG(log_debug, logtype_afpd, "user quota did not work!" );
-#endif /* DEBUG_QUOTA */
     }
 
     if (get_linux_quota(WANT_GROUP_QUOTA, vol->v_gvs, getegid(),  &dqg) != 0) {
-#ifdef DEBUG_QUOTA
         LOG(log_debug, logtype_afpd, "group quota did not work!" );
-#endif /* DEBUG_QUOTA */
 
 	return AFP_OK; /* no need to check user vs group quota */
     }
@@ -562,7 +554,9 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
         dq->dqb_curinodes = dqg.dqb_curinodes;
         dq->dqb_btime = dqg.dqb_btime;
         dq->dqb_itime = dqg.dqb_itime;
+#ifdef __linux__
         dq->bsize = dqg.bsize;
+#endif
     } /* if */
 
 #endif /* __svr4__ */
@@ -679,25 +673,9 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 		return( AFPERR_PARAM );
 	}
 
-#ifdef linux
+#ifdef __linux__
 	this_bsize = dqblk.bsize;
 #endif
-
-#ifdef DEBUG_QUOTA
-        LOG(log_debug, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
-        LOG(log_debug, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
-        LOG(log_debug, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
-        LOG(log_debug, logtype_afpd, "dqb_curinodes : %u", dqblk.dqb_curinodes );
-        LOG(log_debug, logtype_afpd, "dqb_bhardlimit: %u", dqblk.dqb_bhardlimit );
-        LOG(log_debug, logtype_afpd, "dqb_bsoftlimit: %u", dqblk.dqb_bsoftlimit );
-        LOG(log_debug, logtype_afpd, "dqb_curblocks : %u", dqblk.dqb_curblocks );
-        LOG(log_debug, logtype_afpd, "dqb_btime     : %u", dqblk.dqb_btime );
-        LOG(log_debug, logtype_afpd, "dqb_itime     : %u", dqblk.dqb_itime );
-        LOG(log_debug, logtype_afpd, "bsize/this_bsize : %u/%u", bsize, this_bsize );
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_bhardlimit size: %u", tobytes( dqblk.dqb_bhardlimit, this_bsize ));
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_bsoftlimit size: %u", tobytes( dqblk.dqb_bsoftlimit, this_bsize ));
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_curblocks  size: %u", tobytes( dqblk.dqb_curblocks, this_bsize ));
-#endif /* DEBUG_QUOTA */
 
 	/* no limit set for this user. it might be set in the future. */
 	if (dqblk.dqb_bsoftlimit == 0 && dqblk.dqb_bhardlimit == 0) {
@@ -717,13 +695,6 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
         	*bfree  = tobytes( dqblk.dqb_bhardlimit, this_bsize  ) -
                  	  tobytes( dqblk.dqb_curblocks, this_bsize );
     	}
-
-#ifdef DEBUG_QUOTA
-        LOG(log_debug, logtype_afpd, "bfree          : %u", *bfree );
-        LOG(log_debug, logtype_afpd, "btotal         : %u", *btotal );
-        LOG(log_debug, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
-        LOG(log_debug, logtype_afpd, "btotal         : %uKB", *btotal/1024 );
-#endif
 
 	return( AFP_OK );
 }
