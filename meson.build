@@ -76,16 +76,11 @@ uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
 # Includes #
 ############
 
-root_includes = include_directories(
-    '.',
-    'include',
-    'etc/afpd',
-)
-
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/usr/local/include',
     )
@@ -93,6 +88,7 @@ elif host_os == 'netbsd'
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/usr/pkg/include',
     )
@@ -100,6 +96,7 @@ elif host_os == 'omnios'
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/opt/local/include',
     )
@@ -108,6 +105,7 @@ else
         '.',
         'include',
         'etc/afpd',
+        'sys',
     )
 endif
 
@@ -199,6 +197,7 @@ check_headers = [
     'pam/pam_appl.h',
     'rpc/pmap/prot.h',
     'rpc/rpc.h',
+    'rpcsvc/rquota.h',
     'security/pam_appl.h',
     'sgtty.h',
     'statfs.h',
