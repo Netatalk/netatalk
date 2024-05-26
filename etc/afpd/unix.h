@@ -63,6 +63,7 @@
 #include <vfs/ufs/quota.h>
 #else /* DragonFly */
 #include <ufs/ufs/quota.h>
+#endif /* DragonFly */
 #endif /* BSD4_4 */
 
 #ifdef HAVE_UFS_QUOTA_H
