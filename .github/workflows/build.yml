@@ -47,12 +47,14 @@ env:
     libpam0g-dev \
     libssl-dev \
     libtalloc-dev \
+    libtirpc-dev \
     libtool \
     libtool-bin \
     libtracker-sparql-3.0-dev \
     libwrap0-dev \
     meson \
     ninja-build \
+    quota \
     systemtap-sdt-dev \
     tcpd \
     tracker \
@@ -215,6 +217,7 @@ jobs:
             libpam0g-dev \
             libssl-dev \
             libtalloc-dev \
+            libtirpc-dev \
             libtool \
             libtool-bin \
             libtracker-sparql-3.0-dev \
@@ -222,6 +225,7 @@ jobs:
             make \
             meson \
             ninja-build \
+            quota \
             systemtap-sdt-dev \
             tcpd \
             tracker
@@ -233,8 +237,10 @@ jobs:
             --disable-dependency-tracking \
             --enable-krbV-uam \
             --enable-pgp-uam \
+            --enable-quota \
             --with-cracklib \
             --with-init-style=debian-sysv \
+            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc) all
@@ -252,7 +258,8 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-init-style=debian-sysv
+            -Dwith-init-style=debian-sysv \
+            -Dwith-libtirpc=true
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
@@ -429,9 +436,11 @@ jobs:
             --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
+            --enable-quota \
             --with-cracklib \
             --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
             --with-init-style=debian-systemd \
+            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Generate manual pages
         run: make html
@@ -455,7 +464,8 @@ jobs:
             -Dbuild-tests=true \
             -Dbuild-manual=true \
             -Ddisable-init-hooks=true \
-            -Dwith-init-style=debian-systemd
+            -Dwith-init-style=debian-systemd \
+            -Dwith-libtirpc=true
       - name: Meson - Build and generate manual pages
         run: ninja -C build
       - name: Meson - Run tests
