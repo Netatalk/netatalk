@@ -41,7 +41,7 @@
 #define dqb_btimelimit  dqb_btime
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
-#if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
+#if defined(linux) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
 /*#include <sys/quota.h>*/
 /*long quotactl (int, const char *, unsigned int, caddr_t); */
@@ -52,7 +52,7 @@
 #include <asm/unistd.h>
 #include <linux/quota.h>
 #endif /* ! NEED_QUOTACTL_WRAPPER */
-#endif /* linux || ultrix || HAVE_QUOTA_H */
+#endif /* linux || HAVE_QUOTA_H */
 
 #ifdef __svr4__
 #include <sys/fs/ufs_quota.h>
@@ -65,10 +65,6 @@
 #ifdef HAVE_UFS_QUOTA_H
 #include <ufs/quota.h>
 #endif /* HAVE_UFS_QUOTA_H */
-
-#ifdef _IBMR2
-#include <jfs/quota.h>
-#endif /* _IBMR2 */
 
 #include <unistd.h>
 #include <sys/types.h>

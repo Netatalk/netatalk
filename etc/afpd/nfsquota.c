@@ -43,7 +43,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h> /* for DEV_BSIZE */
-#include <sys/time.h>  /* <rpc/rpc.h> on ultrix doesn't include this */
+#include <sys/time.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
@@ -155,15 +155,15 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
     case Q_OK: /* we only copy the bits that we need. */
         gettimeofday(&tv, NULL);
 
-#if defined(__svr4__) || defined(TRU64)
+#if defined(__svr4__)
         /* why doesn't using bsize work? */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE
-#else /* __svr4__ || TRU64 */
+#else /* __svr4__ */
         /* NOTE: linux' rquotad program doesn't currently report the
         * correct rq_bsize. */
 	/* NOTE: This is integer division and can introduce rounding errors */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / bsize
-#endif /* __svr4__  || TRU64 */
+#endif /* __svr4__ */
 
         dqp->dqb_bhardlimit =
             gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
@@ -171,13 +171,8 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
             gq_rslt.GQR_RQUOTA.rq_bsoftlimit*NFS_BSIZE;
         dqp->dqb_curblocks =
             gq_rslt.GQR_RQUOTA.rq_curblocks*NFS_BSIZE;
-
-#ifdef ultrix
-        dqp->dqb_bwarn = gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#else /* ultrix */
         dqp->dqb_btimelimit =
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#endif /* ultrix */
 
         *hostpath = ':';
         return AFP_OK;
