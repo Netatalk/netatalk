@@ -101,14 +101,8 @@ callaurpc(struct vol *vol,
 }
 
 
-/* sunos 4 machines structure things a little differently. */
-#ifdef USE_OLD_RQUOTA
-#define GQR_STATUS gqr_status
-#define GQR_RQUOTA gqr_rquota
-#else /* USE_OLD_RQUOTA */
 #define GQR_STATUS status
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
-#endif /* USE_OLD_RQUOTA */
 
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
                 struct dqblk *dqp)
