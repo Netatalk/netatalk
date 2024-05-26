@@ -477,7 +477,9 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     struct quotctl      qc;
 #endif
 
+#ifdef __linux__
     memset(dq, 0, sizeof(struct dqblk));
+#endif
     memset(&dqg, 0, sizeof(dqg));
 	
 #ifdef __svr4__
@@ -548,13 +550,15 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
         dq->dqb_bhardlimit = dqg.dqb_bhardlimit;
         dq->dqb_bsoftlimit = dqg.dqb_bsoftlimit;
         dq->dqb_curblocks = dqg.dqb_curblocks;
+#ifdef __linux__
         dq->dqb_ihardlimit = dqg.dqb_ihardlimit;
         dq->dqb_isoftlimit = dqg.dqb_isoftlimit;
         dq->dqb_curinodes = dqg.dqb_curinodes;
         dq->dqb_btime = dqg.dqb_btime;
         dq->dqb_itime = dqg.dqb_itime;
-#ifdef __linux__
         dq->bsize = dqg.bsize;
+#else
+        dq->dqb_btimelimit = dqg.dqb_btimelimit;
 #endif
     } /* if */
 
