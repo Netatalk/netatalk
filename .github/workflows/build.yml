@@ -89,6 +89,7 @@ jobs:
             krb5-dev \
             libevent-dev \
             libgcrypt-dev \
+            libtirpc-dev \
             libtool \
             libtracker \
             linux-pam-dev \
@@ -98,6 +99,7 @@ jobs:
             openrc \
             openssl-dev \
             pkgconfig \
+            rpcsvc-proto-dev \
             talloc-dev \
             tracker \
             tracker-dev
@@ -124,7 +126,8 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-init-style=openrc
+            -Dwith-init-style=openrc \
+            -Dwith-libtirpc=true
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
