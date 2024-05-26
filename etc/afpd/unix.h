@@ -59,6 +59,9 @@
 #endif /* __svr4__ */
 
 #ifdef BSD4_4
+#if defined(__DragonFly__)
+#include <vfs/ufs/quota.h>
+#else /* DragonFly */
 #include <ufs/ufs/quota.h>
 #endif /* BSD4_4 */
 

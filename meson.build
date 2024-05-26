@@ -898,7 +898,7 @@ else
 endif
 
 if get_option('enable-quota').enabled() and not have_quota
-    warning('Quota support requested but required libraries nor found')
+    warning('Quota support requested but required libraries not found')
 endif
 
 #
