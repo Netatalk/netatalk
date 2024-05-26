@@ -194,7 +194,6 @@ endif
 check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
-    'attr/xattr.h',
     'crypt.h',
     'dirent.h',
     'dlfcn.h',
@@ -730,7 +729,7 @@ endif
 #
 
 rpcsvc = cc.find_library('rpcsvc', required: false)
-quota = cc.find_library('libquota', required: false)
+quota = cc.find_library('quota', required: false)
 tirpc = dependency('libtirpc', required: false)
 
 quota_link_args = []
