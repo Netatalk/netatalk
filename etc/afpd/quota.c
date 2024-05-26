@@ -496,6 +496,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 #else /* __svr4__ */
 #ifndef USRQUOTA
 #define USRQUOTA   0
+#endif
 
 #ifndef QCMD
 #define QCMD(a,b)  (a)
@@ -506,19 +507,18 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 
 #ifdef BSD4_4
     become_root();
-        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
-                       uid, (char *)dq ) != 0 ) {
-            /* try group quotas */
-            if (obj->ngroups >= 1) {
-                if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
-                              obj->groups[0], (char *) &dqg) != 0 ) {
-                    unbecome_root();
-                    return( AFPERR_PARAM );
-                }
+    if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
+                    uid, (char *)dq ) != 0 ) {
+        /* try group quotas */
+        if (obj->ngroups >= 1) {
+            if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
+                            obj->groups[0], (char *) &dqg) != 0 ) {
+                unbecome_root();
+                return( AFPERR_PARAM );
             }
         }
-        unbecome_root();
     }
+    unbecome_root();
 
 #else /* BSD4_4 */
     if (get_linux_quota (WANT_USER_QUOTA, vol->v_gvs, uid, dq) !=0) {
