@@ -886,6 +886,7 @@ else
             cdata.set('HAVE_LIBQUOTA', 1)
             quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
         else
+            have_quota = false
             cdata.set('NO_QUOTA_SUPPORT', 1)
         endif
     else
