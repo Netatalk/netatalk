@@ -844,7 +844,7 @@ libevent = dependency(
 #
 
 rpcsvc = cc.find_library('rpcsvc', required: false)
-quota = cc.find_library('libquota', required: false)
+quota = cc.find_library('quota', required: false)
 tirpc = dependency('libtirpc', required: false)
 
 quota_link_args = []
