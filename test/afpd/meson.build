@@ -72,6 +72,7 @@ afpdtestlib = static_library(
         libgcrypt,
         libcnid_deps,
         threads,
+        tirpc,
     ],
     c_args: [
         '-DAPPLCNAME', confdir,
@@ -148,6 +149,7 @@ afpdtest = executable(
         libgcrypt,
         libcnid_deps,
         threads,
+        tirpc,
     ],
     c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
     link_args: quota_link_args,
