@@ -187,7 +187,10 @@ executable(
         statedir,
         uamdir,
     ],
-    link_args: netatalk_common_link_args,
+    link_args: [
+        netatalk_common_link_args,
+        quota_link_args,
+    ],
     export_dynamic: true,
     install: true,
     install_dir: sbindir,
