@@ -117,7 +117,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 	VolSpace gbfree, gbtotal;
 
 	uret = getfreespace(obj, vol, &ubfree, &ubtotal,
-	    uuid, QUOTA_IDTYPE_USER);
+	    obj->uid, QUOTA_IDTYPE_USER);
 	if (uret == 1) {
 		LOG(log_info, logtype_afpd, "quota_get(%s, user): %d %d",
 		    vol->v_path, (int)ubfree, (int)ubtotal);
