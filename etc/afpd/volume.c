@@ -228,6 +228,9 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 {
     int         rc;
     uint32_t   maxsize;
+#ifndef NO_QUOTA_SUPPORT
+    VolSpace    qfree, qtotal;
+#endif
 
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
@@ -236,6 +239,16 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
         return( rc );
     }
 
+#ifndef NO_QUOTA_SUPPORT
+    if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA ) {
+        if ( uquota_getvolspace(obj, vol, &qfree, &qtotal, *bsize ) == AFP_OK ) {
+            vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_UQUOTA;
+            *xbfree = MIN(*xbfree, qfree);
+            *xbtotal = MIN(*xbtotal, qtotal);
+            goto getvolspace_done;
+        }
+    }
+#endif
     vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_USTATFS;
 
 getvolspace_done:
