@@ -37,7 +37,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#if !defined(NO_QUOTA_SUPPORT) && !defined(HAVE_LIBQUOTA)
+#if !defined(NO_QUOTA_SUPPORT) || defined(HAVE_LIBQUOTA)
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -65,7 +65,7 @@
 static int
 callaurpc(struct vol *vol,
     u_long prognum, u_long versnum, u_long procnum,
-    xdrproc_t inproc, char *in, 
+    xdrproc_t inproc, char *in,
     xdrproc_t outproc, char *out)
 {
     enum clnt_stat clnt_stat;
@@ -187,4 +187,4 @@ int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
     *hostpath = ':';
     return AFPERR_PARAM;
 }
-#endif /* ! NO_QUOTA_SUPPORT && !HAVE_LIBQUOTA */
+#endif /* ! NO_QUOTA_SUPPORT || HAVE_LIBQUOTA */
