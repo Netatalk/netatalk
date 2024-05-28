@@ -22,7 +22,6 @@ Changes in 3.2.0
        Enable with afp.conf option: "fce sendwait"
 * NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
 * UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
-* UPD: BREAKING: Remove quota functionality, GitHub #493
 * UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
 * UPD: BREAKING: Remove bundled talloc, GitHub #479
        Get the stand-alone talloc library from the Samba project
@@ -38,7 +37,8 @@ Changes in 3.2.0
 * UPD: docs: Document libraries, init scripts in manual, GitHub #808
 * FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
 * FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
-* FIX: Shore up error handling and type safety, GItHub #952
+* FIX: quota: Use the NetBSD 6 quota API, GitHub #1028
+* FIX: Shore up error handling and type safety, GitHub #952
 * UPD: Rewrite the afpstats script in Perl, GitHub #893
        And, improve the formatting of the standard output.
        Requires the Net::DBus Perl extension.
