@@ -25,7 +25,9 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/hash.c',
     meson.project_source_root() / 'etc/afpd/mangle.c',
     meson.project_source_root() / 'etc/afpd/messages.c',
+    meson.project_source_root() / 'etc/afpd/nfsquota.c',
     meson.project_source_root() / 'etc/afpd/ofork.c',
+    meson.project_source_root() / 'etc/afpd/quota.c',
     meson.project_source_root() / 'etc/afpd/status.c',
     meson.project_source_root() / 'etc/afpd/switch.c',
     meson.project_source_root() / 'etc/afpd/uam.c',
@@ -70,6 +72,7 @@ afpdtestlib = static_library(
         libgcrypt,
         libcnid_deps,
         threads,
+        tirpc,
     ],
     c_args: [
         '-DAPPLCNAME', confdir,
@@ -138,6 +141,7 @@ afpdtest = executable(
     afpdtest_dtrace_input,
     objects: test_objs,
     include_directories: root_includes,
+    link_with: [test_internal_deps, libatalk],
     dependencies: [
         test_external_deps,
         gss,
@@ -145,9 +149,12 @@ afpdtest = executable(
         libgcrypt,
         libcnid_deps,
         threads,
+        tirpc,
     ],
     c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
-    link_with: [test_internal_deps, libatalk],
+    link_args: quota_link_args,
+    export_dynamic: true,
+    install: false,
 )
 
 test_sh = find_program('test.sh')

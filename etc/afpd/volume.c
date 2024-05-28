@@ -50,6 +50,7 @@
 #include <atalk/util.h>
 #include <atalk/uuid.h>
 #include <atalk/vfs.h>
+#include <atalk/volume.h>
 
 #include "acls.h"
 #include "directory.h"
@@ -230,6 +231,7 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
     uint32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
+    int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
 
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */

@@ -308,6 +308,9 @@
 /* Define if the DHX2 modules should be built with libgcrypt */
 #mesondefine HAVE_LIBGCRYPT
 
+/* define if you have libquota */
+#mesondefine HAVE_LIBQUOTA
+
 /* Define to 1 if you have the `sunacl' library (-lsunacl). */
 #mesondefine HAVE_LIBSUNACL
 
@@ -388,6 +391,15 @@
 
 /* Define to 1 if you have the `renameat' function. */
 #mesondefine HAVE_RENAMEAT
+
+/* Define to 1 if you have the <rpcsvc/rquota.h> header file. */
+#mesondefine HAVE_RPCSVC_RQUOTA_H
+
+/* Define to 1 if you have the <rpc/pmap_prot.h> header file. */
+#mesondefine HAVE_RPC_PMAP_PROT_H
+
+/* Define to 1 if you have the <rpc/rpc.h> header file. */
+#mesondefine HAVE_RPC_RPC_H
 
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 #mesondefine HAVE_SECURITY_PAM_APPL_H
@@ -539,11 +551,17 @@
 /* Disable assertions */
 #mesondefine NDEBUG
 
+/* Define various xdr functions */
+#mesondefine NEED_RQUOTA
+
 /* Define if dlsym() requires a leading underscore in symbol names. */
 #mesondefine NEED_USCORE
 
 /* Define if OS is NetBSD */
 #mesondefine NETBSD
+
+/* Define if Quota support should be disabled */
+#mesondefine NO_QUOTA_SUPPORT
 
 /* Define if the gmtoff member of struct tm is not available */
 #mesondefine NO_STRUCT_TM_GMTOFF

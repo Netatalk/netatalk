@@ -117,7 +117,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 	VolSpace gbfree, gbtotal;
 
 	uret = getfreespace(obj, vol, &ubfree, &ubtotal,
-	    uuid, QUOTA_IDTYPE_USER);
+	    obj->uid, QUOTA_IDTYPE_USER);
 	if (uret == 1) {
 		LOG(log_info, logtype_afpd, "quota_get(%s, user): %d %d",
 		    vol->v_path, (int)ubfree, (int)ubtotal);
@@ -160,10 +160,6 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 
 #else /* HAVE_LIBQUOTA */
 
-/*
-#define DEBUG_QUOTA 0
-*/
-
 #define WANT_USER_QUOTA 0
 #define WANT_GROUP_QUOTA 1
 
@@ -176,7 +172,7 @@ int quotactl(int cmd, const char *special, int id, caddr_t addr)
 
 static int overquota( struct dqblk *);
 
-#ifdef linux
+#ifdef __linux__
 
 #ifdef HAVE_LINUX_XQM_H
 #include <linux/xqm.h>
@@ -439,30 +435,7 @@ mountp( char *file, int *nfs)
 }
 
 #else /* __svr4__ */
-#ifdef ultrix
-/*
-* Return the block-special device name associated with the filesystem
-* on which "file" resides.  Returns NULL on failure.
-*/
-
-static char *
-special( char *file, int *nfs)
-{
-    static struct fs_data	fsd;
-
-    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
-        return( NULL );
-    }
-
-    /* XXX: does this really detect an nfs mounted fs? */
-    if (strchr(fsd.fd_req.devname, ':'))
-        *nfs = 1;
-    return( fsd.fd_req.devname );
-}
-
-#else /* ultrix */
-#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
+#if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4)
 
 static char *
 special(char *file, int *nfs)
@@ -473,14 +446,8 @@ special(char *file, int *nfs)
         return( NULL );
     }
 
-#ifdef TRU64
-    /* Digital UNIX: The struct sfs contains a field sfs.f_type,
-     * the MOUNT_* constants are defined in <sys/mount.h> */
-    if ((sfs.f_type == MOUNT_NFS)||(sfs.f_type == MOUNT_NFS3))
-#else /* TRU64 */
     /* XXX: make sure this really detects an nfs mounted fs */
     if (strchr(sfs.f_mntfromname, ':'))
-#endif /* TRU64 */
         *nfs = 1;
     return( sfs.f_mntfromname );
 }
@@ -526,7 +493,7 @@ special(char *file, int *nfs)
 
     if (!found)
 	return (NULL);
-#ifdef linux
+#ifdef __linux__
     if (strcmp(mnt->mnt_type, "xfs") == 0)
 	is_xfs = 1;
 #endif
@@ -535,7 +502,6 @@ special(char *file, int *nfs)
 }
 
 #endif /* BSD4_4 */
-#endif /* ultrix */
 #endif /* __svr4__ */
 
 
@@ -548,7 +514,9 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     struct quotctl      qc;
 #endif
 
+#ifdef __linux__
     memset(dq, 0, sizeof(struct dqblk));
+#endif
     memset(&dqg, 0, sizeof(dqg));
 	
 #ifdef __svr4__
@@ -560,12 +528,6 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     }
 
 #else /* __svr4__ */
-#ifdef ultrix
-    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
-        return( AFPERR_PARAM );
-    }
-#else /* ultrix */
-
 #ifndef USRQUOTA
 #define USRQUOTA   0
 #endif
@@ -574,45 +536,36 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
 #define QCMD(a,b)  (a)
 #endif
 
-#ifndef TRU64
     /* for group quotas. we only use these if the user belongs
     * to one group. */
-#endif /* TRU64 */
 
 #ifdef BSD4_4
     become_root();
-        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
-                       uid, (char *)dq ) != 0 ) {
-            /* try group quotas */
-            if (obj->ngroups >= 1) {
-                if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
-                              obj->groups[0], (char *) &dqg) != 0 ) {
-                    unbecome_root();
-                    return( AFPERR_PARAM );
-                }
+    if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
+                    uid, (char *)dq ) != 0 ) {
+        /* try group quotas */
+        if (obj->ngroups >= 1) {
+            if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
+                            obj->groups[0], (char *) &dqg) != 0 ) {
+                unbecome_root();
+                return( AFPERR_PARAM );
             }
         }
-        unbecome_root();
     }
+    unbecome_root();
 
 #else /* BSD4_4 */
     if (get_linux_quota (WANT_USER_QUOTA, vol->v_gvs, uid, dq) !=0) {
-#ifdef DEBUG_QUOTA
         LOG(log_debug, logtype_afpd, "user quota did not work!" );
-#endif /* DEBUG_QUOTA */
     }
 
     if (get_linux_quota(WANT_GROUP_QUOTA, vol->v_gvs, getegid(),  &dqg) != 0) {
-#ifdef DEBUG_QUOTA
         LOG(log_debug, logtype_afpd, "group quota did not work!" );
-#endif /* DEBUG_QUOTA */
 
 	return AFP_OK; /* no need to check user vs group quota */
     }
 #endif  /* BSD4_4 */
 
-
-#ifndef TRU64
     /* return either the group quota entry or user quota entry,
        whichever has the least amount of space remaining
     */
@@ -634,17 +587,18 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
         dq->dqb_bhardlimit = dqg.dqb_bhardlimit;
         dq->dqb_bsoftlimit = dqg.dqb_bsoftlimit;
         dq->dqb_curblocks = dqg.dqb_curblocks;
+#ifdef __linux__
         dq->dqb_ihardlimit = dqg.dqb_ihardlimit;
         dq->dqb_isoftlimit = dqg.dqb_isoftlimit;
         dq->dqb_curinodes = dqg.dqb_curinodes;
         dq->dqb_btime = dqg.dqb_btime;
         dq->dqb_itime = dqg.dqb_itime;
         dq->bsize = dqg.bsize;
+#else
+        dq->dqb_btimelimit = dqg.dqb_btimelimit;
+#endif
     } /* if */
 
-#endif /* TRU64 */
-
-#endif /* ultrix */
 #endif /* __svr4__ */
 
     return AFP_OK;
@@ -695,43 +649,8 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const 
     }
 #endif
 
-#ifdef TRU64
-    /* Digital UNIX: Two forms of specifying an NFS filesystem are possible,
-       either 'hostname:path' or 'path@hostname' (Ultrix heritage) */
-    if (vol->v_nfs) {
-	char *hostpath;
-	char pathstring[MNAMELEN];
-	/* MNAMELEN ist defined in <sys/mount.h> */
-	int result;
-	
-	if ((hostpath = strchr(vol->v_gvs,'@')) != NULL ) {
-	    /* convert 'path@hostname' to 'hostname:path',
-	     * call getnfsquota(),
-	     * convert 'hostname:path' back to 'path@hostname' */
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s:%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	
-	    result = getnfsquota(vol, uuid, bsize, dq);
-	
-	    hostpath = strchr(vol->v_gvs,':');
-	    *hostpath = '\0';
-	    sprintf(pathstring,"%s@%s",hostpath+1,vol->v_gvs);
-	    strcpy(vol->v_gvs,pathstring);
-	
-	    return result;
-	}
-	else
-	    /* vol->v_gvs is of the form 'hostname:path' */
-	    return getnfsquota(vol, uuid, bsize, dq);
-    } else
-	/* local filesystem */
-      return getfsquota(obj, vol, obj->uid, dq);
-	
-#else /* TRU64 */
     return vol->v_nfs ? getnfsquota(vol, obj->uid, bsize, dq) :
       getfsquota(obj, vol, obj->uid, dq);
-#endif /* TRU64 */
 }
 
 static int overquota( struct dqblk *dqblk)
@@ -747,11 +666,6 @@ static int overquota( struct dqblk *dqblk)
          dqblk->dqb_bsoftlimit == 0 ) {
         return( 0 );
     }
-#ifdef ultrix
-    if ( dqblk->dqb_bwarn ) {
-        return( 0 );
-    }
-#else /* ultrix */
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -759,7 +673,6 @@ static int overquota( struct dqblk *dqblk)
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
-#endif /* ultrix */
     return( 1 );
 }
 
@@ -800,25 +713,9 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 		return( AFPERR_PARAM );
 	}
 
-#ifdef linux
+#ifdef __linux__
 	this_bsize = dqblk.bsize;
 #endif
-
-#ifdef DEBUG_QUOTA
-        LOG(log_debug, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
-        LOG(log_debug, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
-        LOG(log_debug, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
-        LOG(log_debug, logtype_afpd, "dqb_curinodes : %u", dqblk.dqb_curinodes );
-        LOG(log_debug, logtype_afpd, "dqb_bhardlimit: %u", dqblk.dqb_bhardlimit );
-        LOG(log_debug, logtype_afpd, "dqb_bsoftlimit: %u", dqblk.dqb_bsoftlimit );
-        LOG(log_debug, logtype_afpd, "dqb_curblocks : %u", dqblk.dqb_curblocks );
-        LOG(log_debug, logtype_afpd, "dqb_btime     : %u", dqblk.dqb_btime );
-        LOG(log_debug, logtype_afpd, "dqb_itime     : %u", dqblk.dqb_itime );
-        LOG(log_debug, logtype_afpd, "bsize/this_bsize : %u/%u", bsize, this_bsize );
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_bhardlimit size: %u", tobytes( dqblk.dqb_bhardlimit, this_bsize ));
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_bsoftlimit size: %u", tobytes( dqblk.dqb_bsoftlimit, this_bsize ));
-	LOG(log_debug, logtype_afpd, "dqblk.dqb_curblocks  size: %u", tobytes( dqblk.dqb_curblocks, this_bsize ));
-#endif /* DEBUG_QUOTA */
 
 	/* no limit set for this user. it might be set in the future. */
 	if (dqblk.dqb_bsoftlimit == 0 && dqblk.dqb_bhardlimit == 0) {
@@ -838,13 +735,6 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
         	*bfree  = tobytes( dqblk.dqb_bhardlimit, this_bsize  ) -
                  	  tobytes( dqblk.dqb_curblocks, this_bsize );
     	}
-
-#ifdef DEBUG_QUOTA
-        LOG(log_debug, logtype_afpd, "bfree          : %u", *bfree );
-        LOG(log_debug, logtype_afpd, "btotal         : %u", *btotal );
-        LOG(log_debug, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
-        LOG(log_debug, logtype_afpd, "btotal         : %uKB", *btotal/1024 );
-#endif
 
 	return( AFP_OK );
 }
