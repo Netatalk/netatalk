@@ -764,12 +764,15 @@ else
             or cc.has_header('rpcsvc/rquota.h')
         )
     )
-        have_quota = cc.has_function('main', dependencies: rpcsvc)
+        have_rpcsvc = cc.has_function('main', dependencies: rpcsvc)
         quota_link_args += '-lrpcsvc'
-        if quota.found()
+        if quota.found() and have_rpcsvc
             have_quota = cc.has_function('getfsquota', dependencies: quota)
             cdata.set('HAVE_LIBQUOTA', 1)
             quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
+        else
+            have_quota = false
+            cdata.set('NO_QUOTA_SUPPORT', 1)
         endif
     else
         have_quota = false
