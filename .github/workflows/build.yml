@@ -307,8 +307,10 @@ jobs:
             openssl-devel \
             pam-devel \
             perl \
+            quota-devel \
             systemd \
             systemtap-sdt-devel \
+            tracker \
             tracker-devel
       - name: Autotools - Bootstrap
         run: ./bootstrap
@@ -318,8 +320,10 @@ jobs:
             --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
+            --enable-quota \
             --with-cracklib \
             --with-init-style=redhat-systemd \
+            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -334,7 +338,8 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Ddisable-init-hooks=true \
-            -Dwith-init-style=redhat-systemd
+            -Dwith-init-style=redhat-systemd \
+            -Dwith-libtirpc=true
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests

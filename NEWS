@@ -38,6 +38,7 @@ Changes in 3.2.0
 * FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
 * FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
 * FIX: quota: Use the NetBSD 6 quota API, GitHub #1028
+* FIX: quota: Workaround for rquota.h symbol name on Fedora 40, GitHub #1040
 * FIX: Shore up error handling and type safety, GitHub #952
 * UPD: Rewrite the afpstats script in Perl, GitHub #893
        And, improve the formatting of the standard output.
