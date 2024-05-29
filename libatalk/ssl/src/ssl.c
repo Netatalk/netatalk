@@ -25,11 +25,11 @@
 #endif
 
 #include <wolfssl/wolfcrypt/settings.h>
-//#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
+#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
     /* turn on GNU extensions for XISASCII */
-//    #undef  _GNU_SOURCE
-//    #define _GNU_SOURCE
-//#endif
+    #undef  _GNU_SOURCE
+    #define _GNU_SOURCE
+#endif
 
 #if !defined(WOLFCRYPT_ONLY) || defined(OPENSSL_EXTRA) || \
     defined(OPENSSL_EXTRA_X509_SMALL)
@@ -17602,7 +17602,7 @@ cleanup:
 #endif /* WOLFSSL_ENCRYPTED_KEYS */
 
 
-#if defined(OPENSSL_EXTRA) || defined(HAVE_WEBSERVER) || defined(HAVE_MEMCACHED)
+#if defined(OPENSSL_EXTRA) || defined(HAVE_WEBSERVER) || defined(HAVE_MEMCACHED) || defined(EMBEDDED_SSL)
     unsigned long wolfSSL_ERR_get_error(void)
     {
         WOLFSSL_ENTER("wolfSSL_ERR_get_error");
@@ -18563,7 +18563,7 @@ size_t wolfSSL_get_client_random(const WOLFSSL* ssl, unsigned char* out,
     }
 #endif /* OPENSSL_EXTRA */
 
-#ifdef OPENSSL_EXTRA
+#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
     void wolfSSL_ERR_free_strings(void)
     {
         /* handled internally */
@@ -18574,7 +18574,7 @@ size_t wolfSSL_get_client_random(const WOLFSSL* ssl, unsigned char* out,
         /* nothing to do here */
     }
 
-#endif /* OPENSSL_EXTRA */
+#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
 
 #if defined(OPENSSL_EXTRA) || defined(DEBUG_WOLFSSL_VERBOSE) || \
     defined(HAVE_CURL)
@@ -28154,6 +28154,15 @@ void* wolfSSL_SESSION_get_ex_data(const WOLFSSL_SESSION* session, int idx)
 }
 #endif /* OPENSSL_EXTRA || WOLFSSL_WPAS_SMALL || HAVE_EX_DATA */
 
+#ifdef EMBEDDED_SSL
+void wolfSSL_ERR_load_crypto_strings(void)
+{
+    WOLFSSL_ENTER("wolfSSL_ERR_load_crypto_strings");
+    /* Do nothing */
+    return;
+}
+#endif
+
 /* Note: This is a huge section of API's - through
  *       wolfSSL_X509_OBJECT_get0_X509_CRL */
 #if defined(OPENSSL_ALL) || (defined(OPENSSL_EXTRA) && \
@@ -28241,12 +28250,14 @@ int wolfSSL_ERR_load_ERR_strings(void)
     return WOLFSSL_SUCCESS;
 }
 
+#ifndef EMBEDDED_SSL
 void wolfSSL_ERR_load_crypto_strings(void)
 {
     WOLFSSL_ENTER("wolfSSL_ERR_load_crypto_strings");
     /* Do nothing */
     return;
 }
+#endif
 
 int wolfSSL_FIPS_mode(void)
 {

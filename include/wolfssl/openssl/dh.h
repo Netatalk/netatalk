@@ -26,7 +26,10 @@
 #define WOLFSSL_DH_H_
 
 #include <wolfssl/openssl/bn.h>
+
+#ifndef EMBEDDED_SSL
 #include <wolfssl/openssl/opensslv.h>
+#endif
 
 #ifdef __cplusplus
     extern "C" {
@@ -75,7 +78,7 @@ WOLFSSL_API int wolfSSL_DH_set0_pqg(WOLFSSL_DH *dh, WOLFSSL_BIGNUM *p,
 
 WOLFSSL_API WOLFSSL_DH* wolfSSL_DH_get_2048_256(void);
 
-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
+#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
 
 typedef WOLFSSL_DH                   DH;
 
@@ -128,7 +131,7 @@ typedef WOLFSSL_DH                   DH;
 #define DH_GENERATOR_2 2
 #define DH_GENERATOR_5 5
 
-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
+#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
 
 #ifdef __cplusplus
     }  /* extern "C" */
