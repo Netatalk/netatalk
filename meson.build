@@ -868,6 +868,21 @@ else
     if tirpc.found() and get_option('with-libtirpc')
         have_quota = true
         cdata.set('NEED_RQUOTA', 1)
+
+        rquota_test = cc.compiles(
+            '''
+                #include <rpcsvc/rquota.h>
+                int main(void) {
+                    enum qr_status foo;
+                    foo = Q_OK;
+                    return 0;
+                }
+            ''', dependencies: tirpc
+        )
+        if rquota_test
+            cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
+        endif
+
         if get_option('with-libtirpc') and not tirpc.found()
             message('Libtirpc requested, but library not found')
         endif
