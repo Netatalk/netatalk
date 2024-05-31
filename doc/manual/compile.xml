@@ -887,7 +887,6 @@ ninja -C build uninstall
 				<screen>meson setup build \
   -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
   -Dwith-init-style=macos-launchd \
-  -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
   -Dbuild-tests=true
 </screen>
 			</para>

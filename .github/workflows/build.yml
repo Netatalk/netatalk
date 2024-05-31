@@ -768,7 +768,6 @@ jobs:
           meson setup build \
             -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
             -Dwith-init-style=macos-launchd \
-            -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
             -Dbuild-tests=true
       - name: Meson - Build
         run: ninja -C build
