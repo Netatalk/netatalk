@@ -2,9 +2,13 @@
 
 # This script generates the compile.xml manual page from the GitHub build.yml file.
 
+import datetime
 import re
-import yaml
 import xmltodict
+import yaml
+
+now = datetime.datetime.now()
+date_time = now.strftime("%Y-%m-%d")
 
 lang_en = {
   "title_1": "Compile Netatalk from Source",
@@ -12,9 +16,9 @@ lang_en = {
   "title_3": "Operating Systems",
   "heading_1": "Install required packages",
   "heading_2": "Configure and build",
-  "para_1": "This section describes how to compile Netatalk from source for specific operating systems.",
-  "para_2": "Please note that this chapter is automatically generated and may not be optimized for your system.",
-  "para_3": "Choose either Autotools or Meson as the build system. Test steps are optional.",
+  "para_1": "This appendix describes how to compile Netatalk from source for specific operating systems.",
+  "para_2": "Please note that the steps below are automatically generated, and may not be optimized for your system.",
+  "para_3": "Choose one of the build systems: Autotools or Meson. Test steps are optional.",
 }
 lang_jp = {
   "title_1": "Netatalk をソースコードからコンパイルする",
@@ -22,15 +26,15 @@ lang_jp = {
   "title_3": "オペレーティング システム一覧",
   "heading_1": "必要なパッケージをインストールする",
   "heading_2": "コンフィグレーションとビルド",
-  "para_1": "本付録では、特定のオペレーティング システムのソースから Netatalk をコンパイルする方法について説明する。",
-  "para_2": "以下文章は自動的に生成されるため、お使いのシステムに最適化されていない可能性があることに注意してください。",
-  "para_3": "ビルド システムとして Autotools と Meson から選択する。 テスト手順は任意である。",
+  "para_1": "本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。",
+  "para_2": "本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。",
+  "para_3": "Autotools か Meson のビルドシステムは選択可能。 テスト手順は任意である。",
 }
 
-output_en = "compile.xml"
-output_jp = "../ja/manual/compile.xml"
+output_en = "./manual/compile.xml"
+output_jp = "./ja/manual/compile.xml"
 
-with open('../../.github/workflows/build.yml', 'r') as file:
+with open('../.github/workflows/build.yml', 'r') as file:
   workflow = yaml.safe_load(file)
 
 apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
@@ -40,6 +44,11 @@ def generate_docbook(strings, output_file):
   docbook = {
     "appendix": {
       "@id": "compile",
+      "appendixinfo": [
+        {
+          "pubdate": date_time
+        },
+      ],
       "title": strings["title_1"],
       "sect1": [
         {
@@ -50,6 +59,7 @@ def generate_docbook(strings, output_file):
           "para": [
             strings["para_1"],
             strings["para_2"],
+            strings["para_3"],
           ],
         },
         {
@@ -57,9 +67,6 @@ def generate_docbook(strings, output_file):
           "title": strings["title_3"],
         },
         {
-          "para": [
-            strings["para_3"],
-          ],
           "sect2": [],
         }
       ],

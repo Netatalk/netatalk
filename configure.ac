@@ -261,14 +261,14 @@ AC_CONFIG_FILES([
   doc/ja/Makefile
   doc/ja/manual/Makefile
   doc/ja/manual/manual.xml
-  doc/ja/manual/netatalk.html
+  doc/ja/manual/pageheader.txt
   doc/ja/manpages/Makefile
   doc/ja/manpages/man1/Makefile
   doc/ja/manpages/man5/Makefile
   doc/ja/manpages/man8/Makefile
   doc/manual/Makefile
   doc/manual/manual.xml
-  doc/manual/netatalk.html
+  doc/manual/pageheader.txt
   doc/manpages/Makefile
   doc/manpages/man1/Makefile
   doc/manpages/man5/Makefile

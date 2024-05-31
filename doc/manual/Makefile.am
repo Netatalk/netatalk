@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	install.xml \
 	intro.xml \
 	manual.xml.in \
-	netatalk.html.in \
+	pageheader.txt.in \
 	upgrade.xml
 
 HTML_PAGES = \
@@ -52,7 +52,7 @@ HTML_PAGES = \
 	table-toc.html \
 	upgrade.html
 
-DISTCLEANFILES = manual.xml natatalk.html
+DISTCLEANFILES = manual.xml pageheader.txt
 
 if HAVE_XSLTPROC
 CLEANFILES += $(HTML_PAGES)

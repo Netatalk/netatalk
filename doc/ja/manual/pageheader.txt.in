@@ -1,0 +1,15 @@
+<html>
+    <div id="header">
+        <div id="logo"></div>
+        <div id="menlinks">
+          <a href="/" title="Netatalk ホームに戻る">[main]</a>
+          <a href="/docs" title="Netatalk Wiki">[wiki]</a>
+          <a href="/documentation.html" title="Netatalk マニュアル">[documentation]</a>
+          <a href="/download.html" title="Netatalk をダウンロード">[downloads]</a>
+          <a href="/support.html" title="お問い合わせ">[support]</a>
+          <a href="/links.html" title="Netatalk 関連リンク">[links]</a>
+          <img src="/gfx/end.gif" alt="" width="125" height="7" />
+        </div>
+    </div>
+    <div class="navheader" align="center">Netatalk @NETATALK_VERSION@</div>
+</html>
