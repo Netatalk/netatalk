@@ -1162,7 +1162,7 @@ AC_CONFIG_FILES([Makefile
 	doc/man.xsl
 	doc/manual/Makefile
 	doc/manual/manual.xml
-	doc/manual/netatalk.html
+	doc/manual/pageheader.txt
 	doc/manpages/Makefile
 	doc/manpages/man1/Makefile
 	doc/manpages/man3/Makefile

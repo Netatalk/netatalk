@@ -2,54 +2,60 @@
 
 # This script generates the compile.xml manual page from the GitHub build.yml file.
 
+import datetime
 import re
-import yaml
 import xmltodict
+import yaml
 
-def main():
-  with open('../../.github/workflows/build.yml', 'r') as file:
-    workflow = yaml.safe_load(file)
+now = datetime.datetime.now()
+date_time = now.strftime("%Y-%m-%d")
 
-  apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
-  apt_packages = workflow["env"]["APT_PACKAGES"]
+lang_en = {
+  "title_1": "Compile Netatalk from Source",
+  "title_2": "Overview",
+  "title_3": "Operating Systems",
+  "heading_1": "Install required packages",
+  "heading_2": "Configure and build",
+  "para_1": "This appendix describes how to compile Netatalk from source for specific operating systems.",
+  "para_2": "Please note that the steps below are automatically generated, and may not be optimized for your system.",
+  "para_3": "Choose one of the build systems: Autotools or Meson. Test steps are optional.",
+}
 
+output_en = "./manual/compile.xml"
+
+with open('../.github/workflows/build.yml', 'r') as file:
+  workflow = yaml.safe_load(file)
+
+apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
+apt_packages = workflow["env"]["APT_PACKAGES"]
+
+def generate_docbook(strings, output_file):
   docbook = {
     "appendix": {
       "@id": "compile",
-      "title": "Compile Netatalk from Source",
+      "appendixinfo": [
+        {
+          "pubdate": date_time
+        },
+      ],
+      "title": strings["title_1"],
       "sect1": [
         {
           "@id": "compile-overview",
-          "title": "Overview",
+          "title": strings["title_2"],
         },
         {
           "para": [
-            """
-            This section describes how to compile Netatalk from source for specific operating systems.
-            """,
-            """
-            The Netatalk project is in the process of transitioning the build system
-            from GNU Autotools to Meson.
-            During the transitional period,
-            the documentation will contain both Autotools and Meson build instructions.
-            """,
-            """
-            Please note that this document is automatically generated from the GitHub workflow YAML file.
-            This may or may not be the most optimal way to build Netatalk for your system.
-            """,
+            strings["para_1"],
+            strings["para_2"],
+            strings["para_3"],
           ],
         },
         {
           "@id": "compile-os",
-          "title": "Operating Systems",
+          "title": strings["title_3"],
         },
         {
-          "para": [
-            """
-            Note: You only have to use execute the steps for one of the build systems, not both.
-            Additionally, the test steps are entirely optional for compiling from source.
-            """,
-          ],
           "sect2": [],
         }
       ],
@@ -58,7 +64,7 @@ def main():
 
   for key, value in workflow["jobs"].items():
     sections = {}
-    # Skip the SonarQube job
+    # Skip the SonarCloud job
     if value["name"] != "Static Analysis":
       sections["@id"] = key
       sections["title"] = value["name"]
@@ -76,9 +82,9 @@ def main():
 
         # The vmactions jobs have a different structure
         if "uses" in step and step["uses"].startswith("vmactions/"):
-          para.append("Install dependencies")
+          para.append(strings["heading_1"])
           para.append({"screen": step["with"]["prepare"]})
-          para.append("Configure and build")
+          para.append(strings["heading_2"])
           para.append({"screen": step["with"]["run"]})
         else:
           para.append(step["name"])
@@ -90,10 +96,9 @@ def main():
 
   xml = xmltodict.unparse(docbook, pretty=True)
 
-  with open('compile.xml', 'w') as file:
+  with open(output_file, 'w') as file:
     file.write(xml)
 
-  print("Wrote compile.xml")
+  print("Wrote to " + output_file)
 
-if __name__ == '__main__':
-    main()
+generate_docbook(lang_en, output_en)

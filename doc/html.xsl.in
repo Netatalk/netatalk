@@ -9,7 +9,7 @@
 	<xsl:param name="toc.max.depth" select="2"/>
 
 	<xsl:template name="user.header.navigation">
-		<xsl:variable name="codefile" select="document('netatalk.html',/)"/>
+		<xsl:variable name="codefile" select="document('pageheader.txt',/)"/>
 		<xsl:copy-of select="$codefile/*/node()"/>
 	</xsl:template>
 </xsl:stylesheet>
