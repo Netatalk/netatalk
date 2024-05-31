@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">15 May 2024</refmiscinfo>
+    <refmiscinfo class="date">31 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
 
@@ -32,8 +32,7 @@
   <refsect1 id="FILEFORMATSECT">
     <title>ファイルの書式</title>
 
-    <para>ファイルはセクションとパラメータから構成される。セクションはブラケット[各括弧]で囲まれたセクション名に始まり、次のセクションが始まるまで続く。セクションには次のような書式のパラメータが含まれている:
-    <programlisting>
+    <para>ファイルはセクションとパラメータから構成される。セクションはブラケット[各括弧]で囲まれたセクション名に始まり、次のセクションが始まるまで続く。セクションには次のような書式のパラメータが含まれている:<programlisting>
     <replaceable>name</replaceable> = <replaceable>value </replaceable>
     </programlisting></para>
 
@@ -904,7 +903,8 @@
         </varlistentry>
 
         <varlistentry>
-          <term>signature = &lt;text&gt; <type>(G)</type></term>
+          <term>signature = <replaceable>STRING</replaceable>
+          <type>(G)</type></term>
 
           <listitem>
             <para>サーバシグネチャを指定する。最大長は16文字である。このオプションは障害隔離などを提供するクラスタ環境において有用である。デフォルトでは、afpdは自動的にシグネチャを(乱数を元に)生成し、それを<filename>afp_signature.conf</filename>に保存する。asip-status(1)も見よ。</para>
@@ -1055,7 +1055,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>指定しない場合、Netatalkはsyslogデーモン機能にログを出力する。そうでない場合は<option>logfile</option>に出力する。</para>
+            <para>ログを<option>logfile</option>に出力する。指定しない場合、Netatalkはsyslogデーモン機能にログを出力する。</para>
           </listitem>
         </varlistentry>
 
@@ -1080,6 +1080,16 @@
             <note>
               <para>ログタイプとログレベルはどちらも大文字小文字を区別しない。</para>
             </note>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>log microseconds = <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <emphasis>yes</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>タイムスタンプをマイクロ秒単位の精度でログに記録する。無効にすると、タイムスタンプは秒単位のみを記録する。<option>log
+            file</option> オプションと組み合わせて使用​​した場合にのみ有効になる。</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1187,7 +1197,7 @@
         </varlistentry>
 
         <varlistentry>
-          <term>fce sendwait = <replaceable>ミリ秒</replaceable>
+          <term>fce sendwait = <replaceable>milliseconds</replaceable>
           <type>(G)</type></term>
 
           <listitem>

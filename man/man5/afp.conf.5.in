@@ -2,12 +2,12 @@
 .\"     Title: afp.conf
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11 Apr 2023
+.\"      Date: 31 May 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
 .\"    Source: Netatalk 3.2.0
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "11 Apr 2023" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
+.TH "AFP\&.CONF" "5" "31 May 2024" "Netatalk 3\&.2\&.0" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ file is the configuration file for the
 \fBNetatalk\fR
 AFP file server\&.
 .PP
-All AFP specific configuration and AFP volume definitions are done via this file\&.
+All AFP\-specific configurations and AFP volume definitions are done via this file\&.
 .SH "FILE FORMAT"
 .PP
 The file consists of sections and parameters\&. A section begins with the name of the section in square brackets and continues until the next section begins\&. Sections contain parameters of the form:
@@ -714,7 +714,7 @@ A complete set of supported model codes by a macOS client can be found by inspec
 (as of macOS 14 Sonoma)\&.
 .RE
 .PP
-signature = <text> \fB(G)\fR
+signature = \fISTRING\fR \fB(G)\fR
 .RS 4
 Specify a server signature\&. The maximum length is 16 characters\&. This option is useful for clustered environments, to provide fault isolation etc\&. By default, afpd generates a signature and saves it to a file called
 afp_signature\&.conf
@@ -817,8 +817,9 @@ Specifies a human\-readable name that uniquely describes registered services\&. 
 .PP
 log file = \fIlogfile\fR \fB(G)\fR
 .RS 4
-If not specified Netatalk logs to syslogs daemon facility\&. Otherwise it logs to
-\fBlogfile\fR\&.
+Write logs to
+\fBlogfile\fR
+on the file system\&. If not specified, Netatalk logs to the syslog daemon facility\&.
 .RE
 .PP
 log level = \fItype:level [type:level \&.\&.\&.]\fR \fB(G)\fR, log level = \fItype:level,[type:level, \&.\&.\&.]\fR \fB(G)\fR
@@ -850,10 +851,11 @@ Both logtype and loglevels are case insensitive\&.
 .RE
 .RE
 .PP
-log microseconds = \fIBOOLEAN\fR (default: \fIyes\fR \fB(G)\fR
+log microseconds = \fIBOOLEAN\fR (default: \fIyes\fR) \fB(G)\fR
 .RS 4
-Log timestamps with accuracy down to microseconds\&. If disabled, the timestamps record only full seconds\&. Used in tandem with
-\fBlog file\fR\&.
+Log timestamps with accuracy down to microseconds\&. If disabled, the timestamps record only whole seconds\&. Only takes effect when used in tandem with the
+\fBlog file\fR
+option\&.
 .RE
 .SS "Filesystem Change Events (FCE)"
 .PP

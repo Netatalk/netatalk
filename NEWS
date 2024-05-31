@@ -17,9 +17,9 @@ Changes in 3.2.0
        afp.conf option "ldap server" has been replaced with "ldap uri"
        and has a new syntax. See the manual for details.
 * NEW: Option to log to file with second (not ms) accuracy, GitHub #580
-       Enable with afp.conf option: "log seconds"
+       Enable with afp.conf option: "log microseconds = no"
 * NEW: Option to add delay to FCE event emission, GitHub #849
-       Enable with afp.conf option: "fce sendwait"
+       Set a ms delay with afp.conf option: "fce sendwait"
 * NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
 * UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
 * UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
