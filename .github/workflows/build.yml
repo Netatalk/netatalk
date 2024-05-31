@@ -169,7 +169,7 @@ jobs:
         run: ninja -C build uninstall
 
   build-fedora:
-    name: Fedora
+    name: Fedora Linux
     runs-on: ubuntu-22.04
     container:
       image: fedora:latest
@@ -265,9 +265,7 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Denable-macos=true \
-            -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
-            -Dwith-ssl-dir=/opt/homebrew/opt/libressl \
-            -Denable-macos=true
+            -Dwith-bdb=/opt/homebrew/opt/berkeley-db
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Tests
