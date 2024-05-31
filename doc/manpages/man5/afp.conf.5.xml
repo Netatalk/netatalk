@@ -5,10 +5,12 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">11 Apr 2023</refmiscinfo>
+    <refmiscinfo class="date">31 May 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
+
     <refmiscinfo class="manual">Netatalk AFP Fileserver Manual</refmiscinfo>
+
     <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
   </refmeta>
 
@@ -24,7 +26,7 @@
     <para>The <filename>afp.conf</filename> file is the configuration file for
     the <emphasis role="bold">Netatalk</emphasis> AFP file server.</para>
 
-    <para>All AFP specific configuration and AFP volume definitions are done
+    <para>All AFP-specific configurations and AFP volume definitions are done
     via this file.</para>
   </refsect1>
 
@@ -33,7 +35,7 @@
 
     <para>The file consists of sections and parameters. A section begins with
     the name of the section in square brackets and continues until the next
-    section begins. Sections contain parameters of the form: <programlisting>
+    section begins. Sections contain parameters of the form:<programlisting>
     <replaceable>name</replaceable> = <replaceable>value </replaceable>
     </programlisting></para>
 
@@ -157,7 +159,7 @@
     <title>Variable Substitutions</title>
 
     <para>You can use variables in volume names. The use of variables in paths
-     is limited to $u.</para>
+    is limited to $u.</para>
 
     <orderedlist>
       <listitem>
@@ -313,11 +315,10 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>This specifies a UNIX user name that will be
-            assigned as the default user for all users connecting to
-            this server. This is useful for sharing files. You should
-            also use it carefully as using it incorrectly can cause
-            security problems.</para>
+            <para>This specifies a UNIX user name that will be assigned as the
+            default user for all users connecting to this server. This is
+            useful for sharing files. You should also use it carefully as
+            using it incorrectly can cause security problems.</para>
           </listitem>
         </varlistentry>
 
@@ -326,9 +327,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>This specifies a UNIX group name that will be
-            assigned as the default primary group for all users
-            connecting to this server.</para>
+            <para>This specifies a UNIX group name that will be assigned as
+            the default primary group for all users connecting to this
+            server.</para>
           </listitem>
         </varlistentry>
 
@@ -417,9 +418,9 @@
                 <listitem>
                   <para>allows Random Number and Two-Way Random Number
                   Exchange for authentication (requires a separate file
-                  containing the passwords, either the default afppasswd file or
-                  the one specified via "<option>passwd file</option>"). See
-                  <citerefentry>
+                  containing the passwords, either the default afppasswd file
+                  or the one specified via "<option>passwd file</option>").
+                  See <citerefentry>
                       <refentrytitle>afppasswd</refentrytitle>
 
                       <manvolnum>1</manvolnum>
@@ -542,7 +543,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Sets the path to the Randnum UAM passwd file for this server.</para>
+            <para>Sets the path to the Randnum UAM passwd file for this
+            server.</para>
           </listitem>
         </varlistentry>
 
@@ -589,7 +591,8 @@
 
         <varlistentry>
           <term>afp interfaces = <replaceable>name [name ...]</replaceable>
-            <type>(G)</type></term>
+          <type>(G)</type></term>
+
           <listitem>
             <para>Specifies the network interfaces that the server should
             listens on. The default is advertise the first IP address of the
@@ -608,6 +611,7 @@
             any incoming request. The network address may be specified either
             in dotted-decimal format for IPv4 or in hexadecimal format for
             IPv6.</para>
+
             <para>IPv6 address + port combination must use URL the format
             using square brackets [IPv6]:port</para>
           </listitem>
@@ -775,7 +779,6 @@
           </listitem>
         </varlistentry>
 
-
         <varlistentry>
           <term>zeroconf = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
@@ -812,8 +815,8 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Whether to provide AFP runtime statistics (connected
-            users, open volumes) via dbus.</para>
+            <para>Whether to provide AFP runtime statistics (connected users,
+            open volumes) via dbus.</para>
           </listitem>
         </varlistentry>
 
@@ -831,26 +834,30 @@
         </varlistentry>
 
         <varlistentry>
-          <term>chmod request = <replaceable>preserve (default) | ignore | simple</replaceable>
-          <type>(G)/(V)</type></term>
+          <term>chmod request = <replaceable>preserve (default) | ignore |
+          simple</replaceable> <type>(G)/(V)</type></term>
 
           <listitem>
             <para>Advanced permission control that deals with ACLs.</para>
 
             <itemizedlist>
-              <listitem><para> <option>ignore</option> - UNIX chmod()
-              requests are completely ignored, use this option to
-              allow the parent directory's ACL inheritance full
-              control over new items.  </para></listitem>
-              <listitem><para>
-                <option>preserve</option> - preserve ZFS ACEs for
-                named users and groups or POSIX ACL group mask
-		      </para></listitem>
-              <listitem><para>
-                <option>simple</option> - just to a chmod() as
-                requested without any extra steps
-		      </para></listitem>
-		    </itemizedlist>
+              <listitem>
+                <para><option>ignore</option> - UNIX chmod() requests are
+                completely ignored, use this option to allow the parent
+                directory's ACL inheritance full control over new
+                items.</para>
+              </listitem>
+
+              <listitem>
+                <para><option>preserve</option> - preserve ZFS ACEs for named
+                users and groups or POSIX ACL group mask</para>
+              </listitem>
+
+              <listitem>
+                <para><option>simple</option> - just to a chmod() as requested
+                without any extra steps</para>
+              </listitem>
+            </itemizedlist>
           </listitem>
         </varlistentry>
 
@@ -866,12 +873,12 @@
         </varlistentry>
 
         <varlistentry>
-          <term>cnid mysql host = <replaceable>MySQL server address</replaceable>
-          <type>(G)</type></term>
+          <term>cnid mysql host = <replaceable>MySQL server
+          address</replaceable> <type>(G)</type></term>
 
           <listitem>
-            <para>name or address of a MySQL server for use with the mysql CNID
-            backend.</para>
+            <para>name or address of a MySQL server for use with the mysql
+            CNID backend.</para>
           </listitem>
         </varlistentry>
 
@@ -920,9 +927,10 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Sets the path to dbus-daemon binary used by Spotlight feature.
-            The default value <filename>[@DBUS_DAEMON_PATH@]</filename>
-            is determined when building netatalk.</para>
+            <para>Sets the path to dbus-daemon binary used by Spotlight
+            feature. The default value
+            <filename>[@DBUS_DAEMON_PATH@]</filename> is determined when
+            building netatalk.</para>
           </listitem>
         </varlistentry>
 
@@ -959,13 +967,13 @@
           <emphasis>no</emphasis>) <type>(G/V)</type></term>
 
           <listitem>
-            <para>Writing metadata xattr on directories with the
-            sticky bit set may fail even though we may have write
-            access to a directory, because if the sticky bit is set
-            only the owner is allowed to write xattrs.</para>
+            <para>Writing metadata xattr on directories with the sticky bit
+            set may fail even though we may have write access to a directory,
+            because if the sticky bit is set only the owner is allowed to
+            write xattrs.</para>
 
-            <para>By enabling this option Netatalk will write the
-            metadata xattr as root.</para>
+            <para>By enabling this option Netatalk will write the metadata
+            xattr as root.</para>
           </listitem>
         </varlistentry>
 
@@ -985,22 +993,24 @@
 
           <listitem>
             <para>AFP user home volume name. The default is <emphasis>$u's
-            home</emphasis>. The name must contain "<emphasis>$u</emphasis>".</para>
+            home</emphasis>. The name must contain
+            "<emphasis>$u</emphasis>".</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>ignored attributes = <replaceable>all | nowrite | nodelete | norename</replaceable>
-          <type>(G)/(V)</type></term>
+          <term>ignored attributes = <replaceable>all | nowrite | nodelete |
+          norename</replaceable> <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Specify a set of file and directory attributes that shall
-            be ignored by the server, <option>all</option> includes all
-            the other options.</para>
-            <para>In OS X when the Finder sets a lock on a file/directory or you
-            set the BSD uchg flag in the Terminal, all three attributes are
-            used. Thus in order to ignore the Finder lock/BSD uchg flag, add
-            set <emphasis>ignored attributes = all</emphasis>.</para>
+            <para>Specify a set of file and directory attributes that shall be
+            ignored by the server, <option>all</option> includes all the other
+            options.</para>
+
+            <para>In OS X when the Finder sets a lock on a file/directory or
+            you set the BSD uchg flag in the Terminal, all three attributes
+            are used. Thus in order to ignore the Finder lock/BSD uchg flag,
+            add set <emphasis>ignored attributes = all</emphasis>.</para>
           </listitem>
         </varlistentry>
 
@@ -1020,15 +1030,22 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Specifies a custom icon for the mounted AFP volume
-            on macOS / Mac OS X clients. Default is to let macOS choose.
-            Requires netatalk to be built with Zeroconf.
-            Examples:</para>
+            <para>Specifies a custom icon for the mounted AFP volume on macOS
+            / Mac OS X clients. Default is to let macOS choose. Requires
+            netatalk to be built with Zeroconf. Examples:</para>
 
             <itemizedlist>
-              <listitem><para><option>Laptop</option></para></listitem>
-              <listitem><para><option>RackMount</option></para></listitem>
-              <listitem><para><option>Tower</option></para></listitem>
+              <listitem>
+                <para><option>Laptop</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>RackMount</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>Tower</option></para>
+              </listitem>
             </itemizedlist>
 
             <para>A complete set of supported model codes by a macOS client
@@ -1039,16 +1056,16 @@
         </varlistentry>
 
         <varlistentry>
-          <term>signature = &lt;text&gt; <type>(G)</type></term>
+          <term>signature = <replaceable>STRING</replaceable>
+          <type>(G)</type></term>
 
           <listitem>
             <para>Specify a server signature. The maximum length is 16
             characters. This option is useful for clustered environments, to
-            provide fault isolation etc. By default, afpd generates a signature
-            and saves it to a file called
-            <filename>afp_signature.conf</filename>
-            automatically (based on random numbers). See also
-            asip-status(1).</para>
+            provide fault isolation etc. By default, afpd generates a
+            signature and saves it to a file called
+            <filename>afp_signature.conf</filename> automatically (based on
+            random numbers). See also asip-status(1).</para>
           </listitem>
         </varlistentry>
 
@@ -1065,19 +1082,17 @@
         </varlistentry>
 
         <varlistentry>
-          <term>sparql results limit =
-          <replaceable>NUMBER</replaceable> (default:
-          <emphasis>UNLIMITED</emphasis>) <type>(G)</type></term>
+          <term>sparql results limit = <replaceable>NUMBER</replaceable>
+          (default: <emphasis>UNLIMITED</emphasis>) <type>(G)</type></term>
 
           <listitem>
             <para>Impose a limit on the number of results queried from Tracker
-	    via SPARQL queries.</para>
+            via SPARQL queries.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight =
-          <replaceable>BOOLEAN</replaceable> (default:
+          <term>spotlight = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>no</emphasis>) <type>(G)/(V)</type></term>
 
           <listitem>
@@ -1089,22 +1104,20 @@
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight attributes =
-          <replaceable>COMMA SEPARATED STRING</replaceable> (default:
-          <emphasis>EMPTY</emphasis>) <type>(G)</type></term>
+          <term>spotlight attributes = <replaceable>COMMA SEPARATED
+          STRING</replaceable> (default: <emphasis>EMPTY</emphasis>)
+          <type>(G)</type></term>
 
           <listitem>
             <para>A list of attributes that are allowed to be used in
-            Spotlight searches. By default all attributes can be
-            searched, passing a string limits attributes to elements
-            of the string. Example:
-	    <programlisting>spotlight attributes = *,kMDItemTextContent</programlisting></para>
+            Spotlight searches. By default all attributes can be searched,
+            passing a string limits attributes to elements of the string.
+            Example: <programlisting>spotlight attributes = *,kMDItemTextContent</programlisting></para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>spotlight expr =
-          <replaceable>BOOLEAN</replaceable> (default:
+          <term>spotlight expr = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
@@ -1114,26 +1127,23 @@
         </varlistentry>
 
         <varlistentry>
-          <term>start dbus =
-          <replaceable>BOOLEAN</replaceable> (default:
+          <term>start dbus = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Whether to start a dbus instance for use with Tracker.</para>
+            <para>Whether to start a dbus instance for use with
+            Tracker.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>start tracker =
-          <replaceable>BOOLEAN</replaceable> (default:
+          <term>start tracker = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Whether to start Tracker with
-            "<command>tracker daemon -s</command>".
-            In case of old Tracker,
-            "<command>tracker-control -s</command>"
-            is used instead.</para>
+            <para>Whether to start Tracker with "<command>tracker daemon
+            -s</command>". In case of old Tracker, "<command>tracker-control
+            -s</command>" is used instead.</para>
           </listitem>
         </varlistentry>
 
@@ -1154,8 +1164,9 @@
           <type>(G)/(V)</type></term>
 
           <listitem>
-            <para>Sets the path where the database information will be stored. You have
-            to specify a writable location, even if the volume is read only.</para>
+            <para>Sets the path where the database information will be stored.
+            You have to specify a writable location, even if the volume is
+            read only.</para>
           </listitem>
         </varlistentry>
 
@@ -1164,9 +1175,9 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Setting this option to true brings back Netatalk 2
-            behaviour of storing the CNID database in a folder called
-            .AppleDB inside the volume root of each share.</para>
+            <para>Setting this option to true brings back Netatalk 2 behaviour
+            of storing the CNID database in a folder called .AppleDB inside
+            the volume root of each share.</para>
           </listitem>
         </varlistentry>
 
@@ -1180,10 +1191,9 @@
 
             <para><programlisting>73: limit of Mac OS X 10.1
 80: limit of Mac OS X 10.4/10.5 (default)
-255: limit of recent Mac OS X</programlisting>
-            Mac OS 9 and earlier are not influenced by
-            this, because Maccharset volume name is always limited to 27
-            bytes.</para>
+255: limit of recent Mac OS X</programlisting> Mac OS 9 and earlier are not
+            influenced by this, because Maccharset volume name is always
+            limited to 27 bytes.</para>
           </listitem>
         </varlistentry>
 
@@ -1204,9 +1214,9 @@
 
           <listitem>
             <para>Specifies a human-readable name that uniquely describes
-            registered services. The zeroconf name is advertised as UTF-8,
-            up to 63 octets (bytes) in length. Defaults to hostname. Note
-            that netatalk must support Zeroconf.</para>
+            registered services. The zeroconf name is advertised as UTF-8, up
+            to 63 octets (bytes) in length. Defaults to hostname. Note that
+            netatalk must support Zeroconf.</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1221,8 +1231,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>If not specified Netatalk logs to syslogs daemon facility.
-            Otherwise it logs to <option>logfile</option>.</para>
+            <para>Write logs to <option>logfile</option> on the file system.
+            If not specified, Netatalk logs to the syslog daemon
+            facility.</para>
           </listitem>
         </varlistentry>
 
@@ -1252,14 +1263,14 @@
         </varlistentry>
 
         <varlistentry>
-          <term>log microseconds = <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>yes</emphasis>
-          <type>(G)</type></term>
+          <term>log microseconds = <replaceable>BOOLEAN</replaceable>
+          (default: <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Log timestamps with accuracy down to microseconds.
-            If disabled, the timestamps record only full seconds.
-            Used in tandem with <option>log file</option>.</para>
+            <para>Log timestamps with accuracy down to microseconds. If
+            disabled, the timestamps record only whole seconds. Only takes
+            effect when used in tandem with the <option>log file</option>
+            option.</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -1277,15 +1288,41 @@
       <para>The following FCE events are defined:</para>
 
       <itemizedlist>
-        <listitem><para>file modification (<option>fmod</option>)</para></listitem>
-        <listitem><para>file deletion (<option>fdel</option>)</para></listitem>
-        <listitem><para>directory deletion (<option>ddel</option>)</para></listitem>
-        <listitem><para>file creation (<option>fcre</option>)</para></listitem>
-        <listitem><para>directory creation (<option>dcre</option>)</para></listitem>
-        <listitem><para>file move or rename (<option>fmov</option>)</para></listitem>
-        <listitem><para>directory move or rename (<option>dmov</option>)</para></listitem>
-        <listitem><para>login (<option>login</option>)</para></listitem>
-        <listitem><para>logout (<option>logout</option>)</para></listitem>
+        <listitem>
+          <para>file modification (<option>fmod</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>file deletion (<option>fdel</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>directory deletion (<option>ddel</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>file creation (<option>fcre</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>directory creation (<option>dcre</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>file move or rename (<option>fmov</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>directory move or rename (<option>dmov</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>login (<option>login</option>)</para>
+        </listitem>
+
+        <listitem>
+          <para>logout (<option>logout</option>)</para>
+        </listitem>
       </itemizedlist>
 
       <variablelist>
@@ -1306,8 +1343,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>FCE protocol version, default is 1. You need version
-            2 for the fmov, dmov, login or logout events.</para>
+            <para>FCE protocol version, default is 1. You need version 2 for
+            the fmov, dmov, login or logout events.</para>
           </listitem>
         </varlistentry>
 
@@ -1351,14 +1388,12 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Defines a delay in milliseconds between
-            the emission of each FCE event.
-            Use this if you are experiencing lost FCE events when
-            creating or deleting a very large number of files at once.
-            The deluge of events that such an operation triggers can lead to
-            UDP buffer overflow and subsequently to packet loss.
-            Has to be a number between 0 and 999. Default: 0
-            milliseconds.</para>
+            <para>Defines a delay in milliseconds between the emission of each
+            FCE event. Use this if you are experiencing lost FCE events when
+            creating or deleting a very large number of files at once. The
+            deluge of events that such an operation triggers can lead to UDP
+            buffer overflow and subsequently to packet loss. Has to be a
+            number between 0 and 999. Default: 0 milliseconds.</para>
           </listitem>
         </varlistentry>
 
@@ -1367,33 +1402,31 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Slash delimited list of filenames for which FCE
-            events shall not be generated. Default: .DS_Store.</para>
+            <para>Slash delimited list of filenames for which FCE events shall
+            not be generated. Default: .DS_Store.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>fce ignore directories = <replaceable>NAME[,NAME2,...]</replaceable>
-          <type>(G)</type></term>
+          <term>fce ignore directories =
+          <replaceable>NAME[,NAME2,...]</replaceable> <type>(G)</type></term>
 
           <listitem>
-            <para>Comma delimited list of directories for which FCE
-            events shall not be generated. Default: empty.</para>
+            <para>Comma delimited list of directories for which FCE events
+            shall not be generated. Default: empty.</para>
           </listitem>
         </varlistentry>
-
 
         <varlistentry>
           <term>fce notify script = <replaceable>PATH</replaceable>
           <type>(G)</type></term>
 
           <listitem>
-            <para>Script which will be executed for every FCE event,
-            see contrib/shell_utils/fce_ev_script.sh from the Netatalk
-            sources for an example script.</para>
+            <para>Script which will be executed for every FCE event, see
+            contrib/shell_utils/fce_ev_script.sh from the Netatalk sources for
+            an example script.</para>
           </listitem>
         </varlistentry>
-
       </variablelist>
     </refsect2>
 
@@ -1464,7 +1497,7 @@
                   <term>none</term>
 
                   <listitem>
-                    <para>no mapping of ACLs </para>
+                    <para>no mapping of ACLs</para>
                   </listitem>
                 </varlistentry>
 
@@ -1566,12 +1599,11 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Specifies the LDAP URI of the server to connect to.
-            The URI scheme may be ldap, ldapi or ldaps,
-            specifying LDAP over TCP, ICP or TLS respectively
-            (if supported by the LDAP library).
-            This is only needed for explicit ACL support
-            in order to be able to query LDAP for UUIDs.</para>
+            <para>Specifies the LDAP URI of the server to connect to. The URI
+            scheme may be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP
+            or TLS respectively (if supported by the LDAP library). This is
+            only needed for explicit ACL support in order to be able to query
+            LDAP for UUIDs.</para>
 
             <para>You can use <citerefentry>
                 <refentrytitle>afpldaptest</refentrytitle>
@@ -1674,14 +1706,17 @@
             internal UUID representation is converted to and from the binary
             format used in the objectGUID attribute found on objects in Active
             Directory when interacting with the server.</para>
+
             <para>See also the options <option>ldap user filter</option> and
             <option>ldap group filter</option>.</para>
+
             <para><variablelist>
                 <varlistentry>
                   <term>string</term>
 
                   <listitem>
-                    <para>UUID is a string, use with e.g. OpenDirectory.</para>
+                    <para>UUID is a string, use with e.g.
+                    OpenDirectory.</para>
                   </listitem>
                 </varlistentry>
 
@@ -1697,27 +1732,32 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ldap user filter = <parameter>STRING (default: unused)</parameter>
-          <type>(G)</type></term>
+          <term>ldap user filter = <parameter>STRING (default:
+          unused)</parameter> <type>(G)</type></term>
 
           <listitem>
-            <para>Optional LDAP filter that matches user objects. This is necessary for Active Directory
-            environments where users and groups are stored in the same directory subtree.</para>
-            <para>Recommended setting for Active Directory: <parameter>objectClass=user</parameter>.</para>
+            <para>Optional LDAP filter that matches user objects. This is
+            necessary for Active Directory environments where users and groups
+            are stored in the same directory subtree.</para>
+
+            <para>Recommended setting for Active Directory:
+            <parameter>objectClass=user</parameter>.</para>
           </listitem>
         </varlistentry>
 
         <varlistentry>
-          <term>ldap group filter = <parameter>STRING (default: unused)</parameter>
-          <type>(G)</type></term>
+          <term>ldap group filter = <parameter>STRING (default:
+          unused)</parameter> <type>(G)</type></term>
 
           <listitem>
-            <para>Optional LDAP filter that matches group objects. This is necessary for Active Directory
-            environments where users and groups are stored in the same directory subtree.</para>
-            <para>Recommended setting for Active Directory: <parameter>objectClass=group</parameter>.</para>
+            <para>Optional LDAP filter that matches group objects. This is
+            necessary for Active Directory environments where users and groups
+            are stored in the same directory subtree.</para>
+
+            <para>Recommended setting for Active Directory:
+            <parameter>objectClass=group</parameter>.</para>
           </listitem>
         </varlistentry>
-
       </variablelist>
     </refsect2>
   </refsect1>
@@ -1728,9 +1768,8 @@
     <refsect2>
       <title>Parameters</title>
 
-      <para>The section name defines the volume name.
-      No two volumes may have the same
-      name. The volume name cannot contain the <keycode>':'</keycode>
+      <para>The section name defines the volume name. No two volumes may have
+      the same name. The volume name cannot contain the <keycode>':'</keycode>
       character. The volume name is mangled if it is very long. Mac charset
       volume name is limited to 27 characters. UTF8-MAC volume name is limited
       to volnamelen parameter.</para>
@@ -1766,12 +1805,13 @@
             for backup. Example: "vol size limit = 1000" would limit the
             reported disk space to 1 GB. <emphasis role="bold">IMPORTANT:
             </emphasis> This is an approximated calculation taking into
-            account the contents of Time Machine sparsebundle images. Therefore
-            you MUST NOT use this volume to store other content when using
-            this option, because it would NOT be accounted for. The calculation
-            works by reading the band size from the Info.plist XML file of the
-            sparsebundle, reading the bands/ directory counting the number of
-            band files, and then multiplying one with the other.</para>
+            account the contents of Time Machine sparsebundle images.
+            Therefore you MUST NOT use this volume to store other content when
+            using this option, because it would NOT be accounted for. The
+            calculation works by reading the band size from the Info.plist XML
+            file of the sparsebundle, reading the bands/ directory counting
+            the number of band files, and then multiplying one with the
+            other.</para>
           </listitem>
         </varlistentry>
 
@@ -1870,13 +1910,13 @@
                 </listitem>
               </varlistentry>
 
-	      <varlistentry>
+              <varlistentry>
                 <term>samba</term>
 
                 <listitem>
-                  <para>Use filesystem Extended Attributes, but append
-                  a 0 byte to each xattr in order to be compatible
-                  with Samba's vfs_streams_xattr.</para>
+                  <para>Use filesystem Extended Attributes, but append a 0
+                  byte to each xattr in order to be compatible with Samba's
+                  vfs_streams_xattr.</para>
                 </listitem>
               </varlistentry>
 
@@ -2070,10 +2110,11 @@
             <para>Whether to flag volumes as supporting case-sensitive
             filenames. If the filesystem is case-insensitive, set to no.
             However, it is not fully verified.</para>
+
             <note>
               <para>In spite of being case sensitive as a matter of fact,
-              netatalk 3.1.3 and earlier did not notify kCaseSensitive flag
-              to the client. Starting with 3.1.4, it is notified correctly by
+              netatalk 3.1.3 and earlier did not notify kCaseSensitive flag to
+              the client. Starting with 3.1.4, it is notified correctly by
               default.</para>
             </note>
           </listitem>
@@ -2115,6 +2156,7 @@
             default) then if a directory contains any non-vetoed files or
             directories then the directory delete will fail. This is usually
             what you want.</para>
+
             <para>If this option is set to yes, then Netatalk will attempt to
             recursively delete any files and directories within the vetoed
             directory.</para>
@@ -2131,6 +2173,7 @@
             Setting the option to true causes afpd to follow symlinks on the
             server. symlinks may point outside of the AFP volume, currently
             afpd doesn't do any checks for "wide symlinks".</para>
+
             <note>
               <para>This option will subtly break when the symlinks point
               across filesystem boundaries.</para>
@@ -2144,13 +2187,13 @@
 
           <listitem>
             <para>make dot files invisible. WARNING: enabling this option will
-              lead to unwanted sideeffects were OS X applications when saving
-              files to a temporary file starting with a dot first, then renaming
-              the temp file to its final name, result in the saved file being
-              invisible. The only thing this option is useful for is making
-              files that start with a dot invisible on Mac OS 9. It's
-              completely useless on Mac OS X, as both in Finder and in Terminal
-              files starting with a dot are hidden anyway.</para>
+            lead to unwanted sideeffects were OS X applications when saving
+            files to a temporary file starting with a dot first, then renaming
+            the temp file to its final name, result in the saved file being
+            invisible. The only thing this option is useful for is making
+            files that start with a dot invisible on Mac OS 9. It's completely
+            useless on Mac OS X, as both in Finder and in Terminal files
+            starting with a dot are hidden anyway.</para>
           </listitem>
         </varlistentry>
 
@@ -2204,9 +2247,9 @@
 
           <listitem>
             <para>Use fast CNID database namesearch instead of slow recursive
-            filesystem search. Relies on a consistent CNID database, i.e. Samba
-            or local filesystem access lead to inaccurate or wrong results.
-            Works only for "dbd" CNID db volumes.</para>
+            filesystem search. Relies on a consistent CNID database, i.e.
+            Samba or local filesystem access lead to inaccurate or wrong
+            results. Works only for "dbd" CNID db volumes.</para>
           </listitem>
         </varlistentry>
 
@@ -2251,8 +2294,8 @@
     <para>The AFP protocol primarily refers to files and directories by ID and
     not by name. Netatalk needs a way to store these IDs in a persistent way.
     To achieve this, Netatalk provides multiple CNID backends with different
-    capabilities. The CNID databases are by default located under localstatedir.
-    </para>
+    capabilities. The CNID databases are by default located under
+    localstatedir.</para>
 
     <variablelist>
       <varlistentry>
@@ -2303,18 +2346,18 @@
     decomposed. Previous AFP/OS versions used codepages, like MacRoman,
     MacCentralEurope, etc.</para>
 
-    <para><command>afpd</command> needs a way to preserve extended
-    Macintosh characters, or characters illegal in unix filenames,
-    when saving files on a unix filesystem. This version now uses UTF-8
-    as the default encoding for names. '<keycode>/</keycode>' will be
-    converted to '<keycode>:</keycode>'.</para>
+    <para><command>afpd</command> needs a way to preserve extended Macintosh
+    characters, or characters illegal in unix filenames, when saving files on
+    a unix filesystem. This version now uses UTF-8 as the default encoding for
+    names. '<keycode>/</keycode>' will be converted to
+    '<keycode>:</keycode>'.</para>
 
     <para>Earlier versions used the the so called CAP encoding. An extended
     character (&gt;0x7F) would be converted to a :xx sequence, e.g. the Apple
     Logo (MacRoman: 0xF0) was saved as <literal>:f0</literal>. Some special
     characters would be converted as to :xx notation as well.
-    '<keycode>/</keycode>' would be encoded to <literal>:2f</literal>,
-    a leading dot '<keycode>.</keycode>' might be encoded as
+    '<keycode>/</keycode>' would be encoded to <literal>:2f</literal>, a
+    leading dot '<keycode>.</keycode>' might be encoded as
     <literal>:2e</literal>.</para>
 
     <para>The <option>vol charset</option> option will allow you to select
@@ -2323,9 +2366,8 @@
         <refentrytitle><command>iconv</command></refentrytitle>
 
         <manvolnum>1</manvolnum>
-      </citerefentry>
-      provided charset. It is highly recommended to stick to the default
-    UTF-8.</para>
+      </citerefentry> provided charset. It is highly recommended to stick to
+    the default UTF-8.</para>
   </refsect1>
 
   <refsect1>
@@ -2355,8 +2397,9 @@
   </refsect1>
 
   <refsect1>
-      <title>Author</title>
+    <title>Author</title>
 
-      <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
+    <para>See <ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink></para>
   </refsect1>
 </refentry>
