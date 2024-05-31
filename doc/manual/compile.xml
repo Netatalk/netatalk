@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
+	<appendixinfo>
+		<pubdate>2024-05-31</pubdate>
+	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
 		<title>Overview</title>
 	</sect1>
 	<sect1>
-		<para>This section describes how to compile Netatalk from source for specific operating systems.</para>
-		<para>Please note that this chapter is automatically generated and may not be optimized for your system.</para>
+		<para>This appendix describes how to compile Netatalk from source for specific operating systems.</para>
+		<para>Please note that the steps below are automatically generated, and may not be optimized for your system.</para>
+		<para>Choose one of the build systems: Autotools or Meson. Test steps are optional.</para>
 	</sect1>
 	<sect1 id="compile-os">
 		<title>Operating Systems</title>
 	</sect1>
 	<sect1>
-		<para>Choose either Autotools or Meson as the build system. Test steps are optional.</para>
 		<sect2 id="build-alpine">
 			<title>Alpine Linux</title>
 			<para>Install dependencies</para>

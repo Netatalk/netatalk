@@ -4,9 +4,9 @@ manual_xml = configure_file(
     configuration: cdata,
 )
 
-netatalk_html = configure_file(
-    input: 'netatalk.html.in',
-    output: 'netatalk.html',
+pageheader = configure_file(
+    input: 'pageheader.txt.in',
+    output: 'pageheader.txt',
     configuration: cdata,
 )
 

@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
+	<appendixinfo>
+		<pubdate>2024-05-31</pubdate>
+	</appendixinfo>
 	<title>Netatalk をソースコードからコンパイルする</title>
 	<sect1 id="compile-overview">
 		<title>概要</title>
 	</sect1>
 	<sect1>
-		<para>本付録では、特定のオペレーティング システムのソースから Netatalk をコンパイルする方法について説明する。</para>
-		<para>以下文章は自動的に生成されるため、お使いのシステムに最適化されていない可能性があることに注意してください。</para>
+		<para>本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。</para>
+		<para>本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。</para>
+		<para>Autotools か Meson のビルドシステムは選択可能。 テスト手順は任意である。</para>
 	</sect1>
 	<sect1 id="compile-os">
 		<title>オペレーティング システム一覧</title>
 	</sect1>
 	<sect1>
-		<para>ビルド システムとして Autotools と Meson から選択する。 テスト手順は任意である。</para>
 		<sect2 id="build-alpine">
 			<title>Alpine Linux</title>
 			<para>Install dependencies</para>
