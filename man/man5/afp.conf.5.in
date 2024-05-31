@@ -345,7 +345,7 @@ Allow Kerberos V for authentication (optional)
 .PP
 uam path = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the default path for UAMs for this server (default is /opt/homebrew/lib/netatalk)\&.
+Sets the default path for UAMs for this server (default is /usr/local/lib/x86_64\-linux\-gnu/netatalk)\&.
 .RE
 .SS "Charset Options"
 .PP
@@ -622,7 +622,7 @@ Specifies the IP address and port of a cnid_metad server, required for CNID dbd 
 dbus daemon = \fIpath\fR \fB(G)\fR
 .RS 4
 Sets the path to dbus\-daemon binary used by Spotlight feature\&. The default value
-["/opt/homebrew/bin/dbus\-daemon"]
+["/bin/dbus\-daemon"]
 is determined when building netatalk\&.
 .RE
 .PP
