@@ -14,7 +14,21 @@ AC_DEFUN([AC_CHECK_QUOTA], [
 				netatalk_cv_quotasupport="yes"
 				AC_DEFINE(NEED_RQUOTA, 1, [Define various xdr functions])],
 				[AC_MSG_ERROR([libtirpc requested, but library not found.])]
-				)
+			)
+			old_CFLAGS=$CFLAGS
+			CFLAGS="$CFLAGS $QUOTA_CFLAGS"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+					#include <rpcsvc/rquota.h>
+				]], [[
+					enum qr_status foo;
+					foo = Q_OK;
+				]])],
+				[netatalk_cv_rquota_qr_status="yes"], [netatalk_cv_rquota_qr_status="no"]
+			)
+			CFLAGS=$old_CFLAGS
+			if test x"$netatalk_cv_rquota_qr_status" = x"yes"; then
+				AC_DEFINE(HAVE_RQUOTA_H_QR_STATUS, 1, [rquota.h has enum qr_status member])
+			fi
 		else
 			QUOTA_CFLAGS=""
 			QUOTA_LIBS=""
@@ -36,4 +50,3 @@ AC_DEFUN([AC_CHECK_QUOTA], [
 	AC_SUBST(QUOTA_CFLAGS)
 	AC_SUBST(QUOTA_LIBS)
 ])
-

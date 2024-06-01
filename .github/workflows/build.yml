@@ -192,15 +192,18 @@ jobs:
             meson \
             ninja-build \
             openldap-devel \
-            openssl-devel
+            openssl-devel \
+            quota-devel
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
         run: |
           ./configure \
-            --enable-pgp-uam \
             --enable-krbV-uam \
+            --enable-pgp-uam \
+            --enable-quota \
             --enable-redhat \
+            --enable-libtirpc \
             --with-cracklib=/usr/share/cracklib
       - name: Autotools - Build
         run: make -j $(nproc) all
