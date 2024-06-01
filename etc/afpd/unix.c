@@ -35,7 +35,7 @@
 /*
  * Get the free space on a partition.
  */
-int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
+int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, uint32_t *bsize)
 {
     VolSpace maxVolSpace = UINT64_MAX;
 
@@ -162,7 +162,7 @@ int gmem(const gid_t gid)
     return( 0 );
 }
 
-static mode_t mtoubits(u_char bits)
+static mode_t mtoubits(unsigned char bits)
 {
     mode_t	mode;
 

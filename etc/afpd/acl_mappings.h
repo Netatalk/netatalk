@@ -31,8 +31,8 @@
 #endif
 
 struct ace_rights_map {
-    u_int32_t from;
-    u_int32_t to;
+    uint32_t from;
+    uint32_t to;
 };
 
 #ifdef HAVE_SOLARIS_ACLS
@@ -71,8 +71,8 @@ struct ace_rights_map darwin_to_nfsv4_rights[] = {
 };
 
 struct nfsv4_to_darwin_flags_map {
-    u_int16_t from;
-    u_int32_t to;
+    uint16_t from;
+    uint32_t to;
 };
 
 struct nfsv4_to_darwin_flags_map nfsv4_to_darwin_flags[] = {
@@ -85,8 +85,8 @@ struct nfsv4_to_darwin_flags_map nfsv4_to_darwin_flags[] = {
 };
 
 struct darwin_to_nfsv4_flags_map {
-    u_int32_t from;
-    u_int16_t to;
+    uint32_t from;
+    uint16_t to;
 };
 
 struct darwin_to_nfsv4_flags_map darwin_to_nfsv4_flags[] = {

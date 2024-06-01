@@ -52,7 +52,7 @@ Sockets in the AppleTalk protocol family use the following address structure:
 .nf
 struct sockaddr_at {
     short sat_family;
-    u_char sat_port;
+    unsigned char sat_port;
     struct at_addr sat_addr;
     char sat_zero[ 8 ];
 };

@@ -29,7 +29,7 @@
 
 extern char		nbp_send[ 1024 ];
 extern char		nbp_recv[ 1024 ];
-extern u_char		nbp_port;
+extern unsigned char		nbp_port;
 extern unsigned char    nbp_id;
 
 

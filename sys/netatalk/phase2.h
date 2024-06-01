@@ -27,27 +27,27 @@
  */
 
 struct llc {
-	u_char	llc_dsap;
-	u_char	llc_ssap;
+	unsigned char	llc_dsap;
+	unsigned char	llc_ssap;
 	union {
 	    struct {
-		u_char control;
-		u_char format_id;
-		u_char class;
-		u_char window_x2;
+		unsigned char control;
+		unsigned char format_id;
+		unsigned char class;
+		unsigned char window_x2;
 	    } type_u;
 	    struct {
-		u_char num_snd_x2;
-		u_char num_rcv_x2;
+		unsigned char num_snd_x2;
+		unsigned char num_rcv_x2;
 	    } type_i;
 	    struct {
-		u_char control;
-		u_char num_rcv_x2;
+		unsigned char control;
+		unsigned char num_rcv_x2;
 	    } type_s;
 	    struct {
-		u_char control;
-		u_char org_code[3];
-		u_short ether_type;
+		unsigned char control;
+		unsigned char org_code[3];
+		unsigned short ether_type;
 	    } type_snap;
 	} llc_un;
 };

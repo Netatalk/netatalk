@@ -56,7 +56,7 @@
 /* the secret key */
 static CAST_KEY castkey;
 static struct passwd *dhxpwd;
-static u_int8_t randbuf[16];
+static uint8_t randbuf[16];
 
 
 /* dhx passwd */
@@ -65,15 +65,15 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 			char *rbuf, size_t *rbuflen)
 {
     unsigned char iv[] = "CJalbert";
-    u_int8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
+    uint8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
 		    0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B };
-    u_int8_t g = 0x07;
+    uint8_t g = 0x07;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
     const BIGNUM *pub_key;
-    u_int16_t sessid;
+    uint16_t sessid;
     size_t i;
     DH *dh;
 
@@ -239,7 +239,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char       *username;
     size_t     len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
     
@@ -269,7 +269,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 #endif /* SHADOWPW */
     unsigned char iv[] = "LWallace";
     BIGNUM *bn1, *bn2, *bn3;
-    u_int16_t sessid;
+    uint16_t sessid;
     char *p;
     int err = AFPERR_NOTAUTH;
 

@@ -50,7 +50,7 @@
  *			Global Variables
  */
 
-static u_char			psbuf[ 8192 ];
+static unsigned char			psbuf[ 8192 ];
 static struct psinfo_st		psinfo;
 static int			orderflag, forceflag;
 

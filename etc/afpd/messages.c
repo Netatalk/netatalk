@@ -41,7 +41,7 @@ void readmessage(AFPObj *obj)
     int rc;
     static int c;
     uid_t euid;
-    u_int32_t maxmsgsize;
+    uint32_t maxmsgsize;
 
     maxmsgsize = (obj->proto == AFPPROTO_DSI)?MIN(MAX(((DSI*)obj->handle)->attn_quantum, MAXMESGSIZE),MAXPATHLEN):MAXMESGSIZE;
 
@@ -110,8 +110,8 @@ void readmessage(AFPObj *obj)
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     char *message;
-    u_int16_t type, bitmap;
-    u_int16_t msgsize;
+    uint16_t type, bitmap;
+    uint16_t msgsize;
     size_t outlen = 0;
     size_t msglen = 0;
     int utf8 = 0;

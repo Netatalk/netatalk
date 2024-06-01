@@ -494,9 +494,9 @@ EC_CLEANUP:
  *
  * @returns         access rights
  */
-static u_char acl_permset_to_uarights(acl_entry_t entry) {
+static unsigned char acl_permset_to_uarights(acl_entry_t entry) {
     acl_permset_t permset;
-    u_char rights = 0;
+    unsigned char rights = 0;
 
     if (acl_get_permset(entry, &permset) == -1)
         return rights;
@@ -552,9 +552,9 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
     gid_t *gid;
     uid_t whoami = geteuid();
 
-    u_char group_rights = 0x00;
-    u_char acl_rights = 0x00;
-    u_char mask = 0xff;
+    unsigned char group_rights = 0x00;
+    unsigned char acl_rights = 0x00;
+    unsigned char mask = 0xff;
 
     EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
 

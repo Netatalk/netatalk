@@ -24,7 +24,7 @@ struct at_ifaddr {
 # define aa_dstaddr		aa_ifa.ifa_dstaddr
 #endif /* BSD4_4 */
     int			aa_flags;
-    u_short		aa_firstnet, aa_lastnet;
+    unsigned short		aa_firstnet, aa_lastnet;
     int			aa_probcnt;
     struct at_ifaddr	*aa_next;
 };

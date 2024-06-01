@@ -71,7 +71,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     struct rtmptab  *rtmp;
     char        *end, *nbpop, *zonep, packet[ ATP_BUFSIZ ];
     int         n, i, cc, locallkup;
-    u_char      tmplen;
+    unsigned char      tmplen;
 
     /* initialize per valgrind */
     memset(&sat, 0, sizeof (struct sockaddr_at));
@@ -112,7 +112,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     nn.nn_sat.sat_port = nt.nt_port;
 
     /* object */
-    tmplen = (u_char) *data;
+    tmplen = (unsigned char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
         LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
         return 1;
@@ -123,7 +123,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     data += nn.nn_objlen;
 
     /* type */
-    tmplen = (u_char) *data;
+    tmplen = (unsigned char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
         LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
         return 1;
@@ -134,7 +134,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     data += nn.nn_typelen;
 
     /* zone */
-    tmplen = (u_char) *data;
+    tmplen = (unsigned char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
         LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
         return 1;

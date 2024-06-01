@@ -38,29 +38,29 @@
 #define OPTION_SJIS       (1 << 4)
 
 struct FInfo {
-    u_int32_t		fdType;
-    u_int32_t		fdCreator;
-    u_int16_t		fdFlags;
-    u_int32_t		fdLocation;
-    u_int16_t		fdFldr;
+    uint32_t		fdType;
+    uint32_t		fdCreator;
+    uint16_t		fdFlags;
+    uint32_t		fdLocation;
+    uint16_t		fdFldr;
 };
 
 struct FXInfo {
-    u_int16_t           fdIconID;
-    u_int16_t           fdUnused[3];
-    u_int8_t            fdScript;
-    u_int8_t            fdXFlags;
-    u_int16_t           fdComment;
-    u_int32_t           fdPutAway;
+    uint16_t           fdIconID;
+    uint16_t           fdUnused[3];
+    uint8_t            fdScript;
+    uint8_t            fdXFlags;
+    uint16_t           fdComment;
+    uint32_t           fdPutAway;
 };
 
 struct FHeader {
     char		name[ ADEDLEN_NAME ];
     char		comment[ ADEDLEN_COMMENT ];
-    u_int32_t		forklen[ NUMFORKS ];
-    u_int32_t		create_date;
-    u_int32_t		mod_date;
-    u_int32_t		backup_date;
+    uint32_t		forklen[ NUMFORKS ];
+    uint32_t		create_date;
+    uint32_t		mod_date;
+    uint32_t		backup_date;
     struct FInfo	finder_info;
     struct FXInfo       finder_xinfo;
 };

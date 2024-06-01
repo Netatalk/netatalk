@@ -48,15 +48,15 @@
 	for one of the two functions at a time.
  */
 static struct bin_file_data {
-    u_int32_t		forklen[ NUMFORKS ];
+    uint32_t		forklen[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
     int			filed;
-    u_short		headercrc;
+    unsigned short		headercrc;
     time_t              gmtoff; /* to convert from/to localtime */
 } 		bin;
 
 extern char	*forkname[];
-static u_char	head_buf[HEADBUFSIZ];
+static unsigned char	head_buf[HEADBUFSIZ];
 
 /* 
  * bin_open must be called first.  pass it a filename that is supposed
@@ -236,7 +236,7 @@ ssize_t bin_write(int fork, char *buffer, size_t length)
     ssize_t		writelen;
     ssize_t		cc = 0;
     off_t		pos;
-    u_char		padchar = 0x7f;
+    unsigned char		padchar = 0x7f;
 		/* Not sure why, but it seems this must be 0x7f to match
 		   other converters, not 0. (RLB) */
 
@@ -409,12 +409,12 @@ int bin_header_read(struct FHeader *fh, int revision)
 int bin_header_write(struct FHeader *fh)
 {
     char		*write_ptr;
-    u_int32_t           t;
+    uint32_t           t;
     int			wc;
     int			wr;
 
     memset(head_buf, 0, sizeof( head_buf ));
-    head_buf[ 1 ] = (u_char)strlen( fh->name );
+    head_buf[ 1 ] = (unsigned char)strlen( fh->name );
     memcpy( head_buf + 2, fh->name, head_buf[ 1 ] );
     memcpy( head_buf + 65, &fh->finder_info, 8 );
 
@@ -444,7 +444,7 @@ int bin_header_write(struct FHeader *fh)
 
     head_buf[ 123 ] = 129;
 
-    bin.headercrc = htons( updcrc( (u_short) 0, head_buf, 124 ));
+    bin.headercrc = htons( updcrc( (unsigned short) 0, head_buf, 124 ));
     memcpy(head_buf + 124, &bin.headercrc, sizeof( bin.headercrc ));
 
     bin.forklen[ DATA ] = ntohl( fh->forklen[ DATA ] );
@@ -515,8 +515,8 @@ int test_header(void)
 {
     const char          zeros[25] = "";
     ssize_t		cc;
-    u_short		header_crc;
-    u_char		namelen;
+    unsigned short		header_crc;
+    unsigned char		namelen;
 
 #if DEBUG
     fprintf( stderr, "entering test_header\n" );
@@ -541,7 +541,7 @@ int test_header(void)
 #if DEBUG
       fprintf( stderr, "byte 0 and 74 are both zero\n" );
 #endif /* DEBUG */
-      bin.headercrc = updcrc( (u_short) 0, head_buf, 124 );
+      bin.headercrc = updcrc( (unsigned short) 0, head_buf, 124 );
       memcpy(&header_crc, head_buf + 124, sizeof( header_crc ));
       header_crc = ntohs( header_crc );
       if ( header_crc == bin.headercrc ) {

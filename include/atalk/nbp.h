@@ -38,10 +38,10 @@
 
 struct nbphdr {
 #if BYTE_ORDER == BIG_ENDIAN
-    u_int32_t	nh_op : 4,
+    uint32_t	nh_op : 4,
     		nh_cnt : 4,
 #else /* BYTE_ORDER != BIG_ENDIAN */
-    u_int32_t	nh_cnt : 4,
+    uint32_t	nh_cnt : 4,
     		nh_op : 4,
 #endif /* BYTE_ORDER */
     		nh_id : 8;
@@ -53,10 +53,10 @@ struct nbphdr {
 /* NBP tuple described in IAT 7-16 */
 /* struct nbptuple is misnamed; describes only the entity address */
 struct nbptuple {
-    u_int16_t   nt_net;
-    u_int8_t    nt_node;
-    u_int8_t    nt_port;
-    u_int8_t    nt_enum;
+    uint16_t   nt_net;
+    uint8_t    nt_node;
+    uint8_t    nt_port;
+    uint8_t    nt_enum;
 };
 #define SZ_NBPTUPLE	5
 
@@ -67,11 +67,11 @@ struct nbptuple {
  */
 struct nbpnve {
     struct sockaddr_at	nn_sat;
-    u_int8_t		nn_objlen;
+    uint8_t		nn_objlen;
     char		nn_obj[ NBPSTRLEN ];
-    u_int8_t		nn_typelen;
+    uint8_t		nn_typelen;
     char		nn_type[ NBPSTRLEN ];
-    u_int8_t		nn_zonelen;
+    uint8_t		nn_zonelen;
     char		nn_zone[ NBPSTRLEN ];
 };
 

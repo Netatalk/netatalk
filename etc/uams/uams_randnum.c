@@ -46,7 +46,7 @@
 static DES_cblock	seskey;
 static DES_key_schedule	seskeysched;
 static struct passwd	*randpwd;
-static u_int8_t         randbuf[8];
+static uint8_t         randbuf[8];
 
 /* hash to a 16-bit number. this will generate completely harmless 
  * warnings on 64-bit machines. */
@@ -132,7 +132,7 @@ static int afppasswd(const struct passwd *pwd,
 		     unsigned char *passwd, int len, 
 		     const int set)
 {
-  u_int8_t key[DES_KEY_SZ*2];
+  uint8_t key[DES_KEY_SZ*2];
   char buf[MAXPATHLEN + 1], *p;
   DES_key_schedule	schedule;
   FILE *fp;
@@ -300,7 +300,7 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
 {
 
   char *passwdfile;
-  u_int16_t sessid;
+  uint16_t sessid;
   size_t len;
   int err;
  
@@ -345,7 +345,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 			     char *ibuf, size_t ibuflen _U_, 
 			     char *rbuf _U_, size_t *rbuflen)
 {
-  u_int16_t sessid;
+  uint16_t sessid;
 
   *rbuflen = 0;
 
@@ -384,7 +384,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
 			      char *ibuf, size_t ibuflen _U_, 
 			      char *rbuf, size_t *rbuflen)
 {
-  u_int16_t sessid;
+  uint16_t sessid;
   unsigned int i;
 
   *rbuflen = 0;
@@ -527,7 +527,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 {
     char       *username;
     size_t     len, ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 

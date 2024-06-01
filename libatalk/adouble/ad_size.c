@@ -13,7 +13,7 @@
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 
-off_t ad_size(const struct adouble *ad, const u_int32_t eid)
+off_t ad_size(const struct adouble *ad, const uint32_t eid)
 {
   if (eid == ADEID_DFORK) {
     struct stat st;

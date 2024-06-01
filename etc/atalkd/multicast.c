@@ -315,11 +315,11 @@ int addmulti(const char *name, const unsigned char *data)
     return 0;
 }
 
-static u_int16_t
-atalk_cksum( u_char *data, int len)
+static uint16_t
+atalk_cksum( unsigned char *data, int len)
 {
-    u_char	*end;
-    u_int32_t	cksum = 0;
+    unsigned char	*end;
+    uint32_t	cksum = 0;
 
     for ( end = data + len; data < end; data++ ) {
 	cksum = ( cksum + *data ) << 1;
@@ -333,7 +333,7 @@ atalk_cksum( u_char *data, int len)
 	cksum = 0x0000ffff;
     }
 
-    return( (u_int16_t) cksum );
+    return( (uint16_t) cksum );
 }
 
 /*
@@ -345,12 +345,12 @@ atalk_cksum( u_char *data, int len)
 int
 zone_bcast( struct ziptab *zt)
 {
-    u_char		uname[ 32 ];
-    u_int16_t		cksum;
+    unsigned char		uname[ 32 ];
+    uint16_t		cksum;
     int			i;
 
     if (!zt->zt_bcast &&
-	(zt->zt_bcast = (u_char *) malloc(sizeof( ethermulti ))) == NULL) {
+	(zt->zt_bcast = (unsigned char *) malloc(sizeof( ethermulti ))) == NULL) {
        LOG(log_error, logtype_atalkd, "zone_bcast malloc: %s", strerror(errno) );
        return -1;
      }

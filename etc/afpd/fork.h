@@ -51,11 +51,11 @@ struct ofork {
 #define of_name(a) (a)->of_ad->ad_m_name
 /* in ofork.c */
 extern struct ofork *of_alloc    (struct vol *, struct dir *,
-                                                      char *, u_int16_t *, const int,
+                                                      char *, uint16_t *, const int,
                                                       struct adouble *,
                                                       struct stat *);
 extern void         of_dealloc   (struct ofork *);
-extern struct ofork *of_find     (const u_int16_t);
+extern struct ofork *of_find     (const uint16_t);
 extern struct ofork *of_findname (const struct vol *vol, struct path *);
 extern int          of_rename    (const struct vol *,
                                           struct ofork *,

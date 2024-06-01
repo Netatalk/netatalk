@@ -50,7 +50,7 @@
 #ifdef EBUG
 #include <stdio.h>
 
-static void print_func(u_int8_t ctrlinfo)
+static void print_func(uint8_t ctrlinfo)
 {
     switch ( ctrlinfo & ATP_FUNCMASK ) {
     case ATP_TREQ:
@@ -96,8 +96,8 @@ void atp_print_addr(char *s, struct sockaddr_at *saddr)
 
 
 void atp_build_req_packet( struct atpbuf *pktbuf,
-			   u_int16_t tid,
-			   u_int8_t ctrl,
+			   uint16_t tid,
+			   uint8_t ctrl,
 			   struct atp_block *atpb )
 {
     struct atphdr	hdr;
@@ -118,10 +118,10 @@ void atp_build_req_packet( struct atpbuf *pktbuf,
 }
 
 void atp_build_resp_packet( struct atpbuf *pktbuf,
-			    u_int16_t tid,
-			    u_int8_t ctrl,
+			    uint16_t tid,
+			    uint8_t ctrl,
 			    struct atp_block *atpb,
-			    u_int8_t seqnum )
+			    uint8_t seqnum )
 {
     struct atphdr	hdr;
 
@@ -145,8 +145,8 @@ void atp_build_resp_packet( struct atpbuf *pktbuf,
 int
 atp_recv_atp( ATP ah,
 	      struct sockaddr_at *fromaddr,
-	      u_int8_t *func,
-	      u_int16_t tid,
+	      uint8_t *func,
+	      uint16_t tid,
 	      char *rbuf,
 	      int wait )
 {
@@ -161,8 +161,8 @@ atp_recv_atp( ATP ah,
 */
     struct atpbuf	*pq, *cq;
     struct atphdr	ahdr;
-    u_int16_t		rfunc;
-    u_int16_t		rtid;
+    uint16_t		rfunc;
+    uint16_t		rtid;
     int			i;
     int			dlen = -1;
     int			recvlen;

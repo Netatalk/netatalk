@@ -64,8 +64,8 @@
 /* lifted (with modifications) from the bsd quota program */
 static int
 callaurpc(struct vol *vol,
-    u_long prognum, u_long versnum, u_long procnum,
-    xdrproc_t inproc, char *in,
+    unsigned long prognum, unsigned long versnum, unsigned long procnum,
+    xdrproc_t inproc, char *in, 
     xdrproc_t outproc, char *out)
 {
     enum clnt_stat clnt_stat;
@@ -110,7 +110,7 @@ callaurpc(struct vol *vol,
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
 #endif /* USE_OLD_RQUOTA */
 
-int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
+int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
                 struct dqblk *dqp)
 {
 

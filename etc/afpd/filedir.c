@@ -45,10 +45,10 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     struct stat     *st;
     struct vol      *vol;
     struct dir      *dir;
-    u_int32_t           did;
+    uint32_t           did;
     int         ret;
     size_t      buflen;
-    u_int16_t       fbitmap, dbitmap, vid;
+    uint16_t       fbitmap, dbitmap, vid;
     struct path         *s_path;
 
     *rbuflen = 0;
@@ -109,27 +109,27 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
                 return AFPERR_NOOBJ;
 
             ret = getdirparams(vol, dbitmap, s_path, dir,
-                               rbuf + 3 * sizeof( u_int16_t ), &buflen );
+                               rbuf + 3 * sizeof( uint16_t ), &buflen );
             if (ret != AFP_OK )
                 return( ret );
         }
         /* this is a directory */
-        *(rbuf + 2 * sizeof( u_int16_t )) = (char) FILDIRBIT_ISDIR;
+        *(rbuf + 2 * sizeof( uint16_t )) = (char) FILDIRBIT_ISDIR;
     } else {
         if (fbitmap && AFP_OK != (ret = getfilparams(vol, fbitmap, s_path, curdir,
-                                                     rbuf + 3 * sizeof( u_int16_t ), &buflen )) ) {
+                                                     rbuf + 3 * sizeof( uint16_t ), &buflen )) ) {
             return( ret );
         }
         /* this is a file */
-        *(rbuf + 2 * sizeof( u_int16_t )) = FILDIRBIT_ISFILE;
+        *(rbuf + 2 * sizeof( uint16_t )) = FILDIRBIT_ISFILE;
     }
-    *rbuflen = buflen + 3 * sizeof( u_int16_t );
+    *rbuflen = buflen + 3 * sizeof( uint16_t );
     fbitmap = htons( fbitmap );
     memcpy( rbuf, &fbitmap, sizeof( fbitmap ));
     rbuf += sizeof( fbitmap );
     dbitmap = htons( dbitmap );
     memcpy( rbuf, &dbitmap, sizeof( dbitmap ));
-    rbuf += sizeof( dbitmap ) + sizeof( u_char );
+    rbuf += sizeof( dbitmap ) + sizeof( unsigned char );
     *rbuf = 0;
 
     return( AFP_OK );
@@ -141,7 +141,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     struct vol  *vol;
     struct dir  *dir;
     struct path *path;
-    u_int16_t   vid, bitmap;
+    uint16_t   vid, bitmap;
     int     did, rc;
 
     *rbuflen = 0;
@@ -306,7 +306,7 @@ static int moveandrename(const struct vol *vol,
         }
     }
     if (!ad_metadata(oldunixname, adflags, adp)) {
-        u_int16_t bshort;
+        uint16_t bshort;
 
         ad_getattr(adp, &bshort);
         ad_close_metadata( adp);
@@ -406,9 +406,9 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     struct dir  *sdir;
     char        *oldname, *newname;
     struct path *path;
-    u_int32_t   did;
+    uint32_t   did;
     int         plen;
-    u_int16_t   vid;
+    uint16_t   vid;
     int         isdir = 0;
     int         rc;
 
@@ -482,7 +482,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     struct path         *s_path;
     char        *upath;
     int         did, rc;
-    u_int16_t       vid;
+    uint16_t       vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -596,7 +596,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     int     did;
     int     pdid;
     int         plen;
-    u_int16_t   vid;
+    uint16_t   vid;
     int         rc;
     int     sdir_fd = -1;
 

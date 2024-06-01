@@ -30,7 +30,7 @@
 
 char		nbp_send[ 1024 ];
 char		nbp_recv[ 1024 ];
-u_char		nbp_port = 0;
+unsigned char		nbp_port = 0;
 unsigned char   nbp_id = 0;
 
 int nbp_parse(char *data, struct nbpnve *nn, int len)

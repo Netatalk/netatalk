@@ -11,6 +11,6 @@ ssize_t hqx_read(int fork, char *buffer, size_t length);
 int hqx_header_read(struct FHeader *fh);
 int hqx_header_write(struct FHeader *fh);
 size_t hqx_7tobin(char *outbuf, size_t datalen);
-ssize_t hqx7_fill(u_char *hqx7_ptr);
+ssize_t hqx7_fill(unsigned char *hqx7_ptr);
 
 #endif /* _HQX_H */

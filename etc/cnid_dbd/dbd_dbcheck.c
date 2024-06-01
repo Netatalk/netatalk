@@ -22,7 +22,7 @@
 
 int dbd_check_indexes(DBD *dbd, char *dbdir)
 {
-    u_int32_t c_didname = 0, c_devino = 0, c_cnid = 0;
+    uint32_t c_didname = 0, c_devino = 0, c_cnid = 0;
 
     LOG(log_note, logtype_cnid, "CNID database at `%s' is being checked (quick)", dbdir);
 

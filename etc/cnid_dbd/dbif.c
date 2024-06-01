@@ -592,7 +592,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 {
     int ret, i, cwd;
-    u_int32_t count;
+    uint32_t count;
     struct stat st;
     DB *upgrade_db;
 
@@ -882,7 +882,7 @@ int dbif_env_remove(const char *path)
  *  functions are not expected and therefore error conditions.
  */
 
-int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
+int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, uint32_t flags)
 {
     int ret;
 
@@ -902,7 +902,7 @@ int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
         return 1;
 }
 
-int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
+int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, uint32_t flags)
 {
     int ret;
 
@@ -930,7 +930,7 @@ int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
         return 0;
 }
 
-int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
+int dbif_del(DBD *dbd, const int dbi, DBT *key, uint32_t flags)
 {
     int ret;
 
@@ -1106,7 +1106,7 @@ int dbif_txn_close(DBD *dbd, int ret)
     return 0;
 }
 
-int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min, u_int32_t flags)
+int dbif_txn_checkpoint(DBD *dbd, uint32_t kbyte, uint32_t min, uint32_t flags)
 {
     int ret;
     ret = dbd->db_env->txn_checkpoint(dbd->db_env, kbyte, min, flags);
@@ -1117,7 +1117,7 @@ int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min, u_int32_t flag
         return 0;
 }
 
-int dbif_count(DBD *dbd, const int dbi, u_int32_t *count)
+int dbif_count(DBD *dbd, const int dbi, uint32_t *count)
 {
     int ret;
     DB_BTREE_STAT *sp;

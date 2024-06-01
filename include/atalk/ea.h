@@ -117,9 +117,9 @@ struct ea_entry_ondisk {
 };
 
 struct ea_ondisk {
-    u_int32_t              ea_magic;
-    u_int16_t              ea_version;
-    u_int16_t              ea_count;
+    uint32_t              ea_magic;
+    uint16_t              ea_version;
+    uint16_t              ea_count;
     struct ea_entry_ondisk ea_entries[ea_count];
 };
 #endif /* 0 */

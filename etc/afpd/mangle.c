@@ -30,7 +30,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
   char *p = strrchr(uname, '.');
 
   if (p && p != uname) {
-    u_int16_t flags = CONV_FORCE | CONV_UNESCAPEHEX;
+    uint16_t flags = CONV_FORCE | CONV_UNESCAPEHEX;
     size_t len = convert_charset(vol->v_volcharset, charset,
 				 vol->v_maccharset, p, strlen(p),
 				 extension, MAX_EXT_LENGTH, &flags);
@@ -42,7 +42,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
 
 static char *demangle_checks(const struct vol *vol, char* uname, char * mfilename, size_t prefix, char * ext)
 {
-    u_int16_t flags;
+    uint16_t flags;
     static char buffer[MAXPATHLEN +2];  /* for convert_charset dest_len parameter +2 */
     size_t len;
     size_t mfilenamelen;
@@ -136,7 +136,7 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
 {
     char *t;
     char *u_name;
-    u_int32_t id, file_id;
+    uint32_t id, file_id;
     static char buffer[12 + MAXPATHLEN + 1];
     int len = 12 + MAXPATHLEN + 1;
     struct dir	*dir;
@@ -266,7 +266,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname, c
     k = sprintf(mangle_suffix, "%c%X", MANGLE_CHAR, ntohl(id));
 
     if (filenamelen + k + ext_len > maxlen) {
-      u_int16_t opt = CONV_FORCE | CONV_UNESCAPEHEX;
+      uint16_t opt = CONV_FORCE | CONV_UNESCAPEHEX;
       size_t n = convert_charset(vol->v_volcharset,
 				 (flags & 2) ? CH_UTF8_MAC : vol->v_maccharset,
 				 vol->v_maccharset, uname, strlen(uname),

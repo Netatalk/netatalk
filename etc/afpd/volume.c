@@ -67,7 +67,7 @@
 struct vol *current_vol;        /* last volume from getvolbyvid() */
 
 static struct vol *Volumes = NULL;
-static u_int16_t    lastvid = 0;
+static uint16_t    lastvid = 0;
 static char     *Trash = "\02\024Network Trash Folder";
 
 static struct extmap    *Extmap = NULL, *Defextmap = NULL;
@@ -549,7 +549,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     char        tmpname[AFPVOL_U8MNAMELEN+1];
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
-    u_int16_t   flags;
+    uint16_t   flags;
 
     LOG(log_debug, logtype_afpd, "createvol: Volume '%s'", name);
 
@@ -1506,11 +1506,11 @@ EC_CLEANUP:
 }
 
 static int getvolspace(struct vol *vol,
-                       u_int32_t *bfree, u_int32_t *btotal,
-                       VolSpace *xbfree, VolSpace *xbtotal, u_int32_t *bsize)
+                       uint32_t *bfree, uint32_t *btotal,
+                       VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
 {
     int         rc;
-    u_int32_t   maxsize;
+    uint32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
     int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
@@ -1575,7 +1575,7 @@ void vol_fce_tm_event(void)
  * set volume creation date
  * avoid duplicate, well at least it tries
  */
-static void vol_setdate(u_int16_t id, struct adouble *adp, time_t date)
+static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 {
     struct vol  *volume;
     struct vol  *vol = Volumes;
@@ -1594,13 +1594,13 @@ static void vol_setdate(u_int16_t id, struct adouble *adp, time_t date)
 }
 
 /* ----------------------- */
-static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
+static int getvolparams( uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 {
     struct adouble  ad;
     int bit = 0, isad = 1;
-    u_int32_t aint;
-    u_int16_t ashort;
-    u_int32_t bfree = 0, btotal = 0, bsize = 0;
+    uint32_t aint;
+    uint16_t ashort;
+    uint32_t bfree = 0, btotal = 0, bsize = 0;
     VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
     char *data = NULL, *nameoff = NULL;
     char *slash = NULL;
@@ -1757,7 +1757,7 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
 
         case VOLPBIT_NAME :
             nameoff = data;
-            data += sizeof( u_int16_t );
+            data += sizeof( uint16_t );
             break;
 
         case VOLPBIT_BSIZE:  /* block size */
@@ -1796,7 +1796,7 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
 }
 
 /* ------------------------- */
-static int stat_vol(u_int16_t bitmap, struct vol *vol, char *rbuf, size_t *rbuflen)
+static int stat_vol(uint16_t bitmap, struct vol *vol, char *rbuf, size_t *rbuflen)
 {
     struct stat st;
     int     ret;
@@ -1986,8 +1986,8 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         return AFPERR_PARAM;
     }
     tv.tv_sec = AD_DATE_FROM_UNIX(tv.tv_sec);
-    memcpy(data, &tv.tv_sec, sizeof( u_int32_t));
-    data += sizeof( u_int32_t);
+    memcpy(data, &tv.tv_sec, sizeof( uint32_t));
+    data += sizeof( uint32_t);
     *data = vcnt;
     return( AFP_OK );
 }
@@ -2127,7 +2127,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     struct dir  *dir;
     int     len, ret;
     size_t  namelen;
-    u_int16_t   bitmap;
+    uint16_t   bitmap;
     char        path[ MAXPATHLEN + 1];
     char        *vol_uname;
     char        *vol_mname;
@@ -2386,7 +2386,7 @@ static void deletevol(struct vol *vol)
 int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol  *vol;
-    u_int16_t   vid;
+    uint16_t   vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -2402,7 +2402,7 @@ int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 }
 
 /* ------------------------- */
-struct vol *getvolbyvid(const u_int16_t vid )
+struct vol *getvolbyvid(const uint16_t vid )
 {
     struct vol  *vol;
 
@@ -2523,7 +2523,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
 int afp_getvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,char *rbuf, size_t *rbuflen)
 {
     struct vol  *vol;
-    u_int16_t   vid, bitmap;
+    uint16_t   vid, bitmap;
 
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof( vid ));
@@ -2544,8 +2544,8 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
 {
     struct adouble ad;
     struct vol  *vol;
-    u_int16_t   vid, bitmap;
-    u_int32_t   aint;
+    uint16_t   vid, bitmap;
+    uint32_t   aint;
 
     ibuf += 2;
     *rbuflen = 0;
@@ -2619,7 +2619,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 {
     char        *p,*q,*r;
     struct adouble  ad;
-    u_int16_t   attr;
+    uint16_t   attr;
     struct stat st;
     int     ret;
 

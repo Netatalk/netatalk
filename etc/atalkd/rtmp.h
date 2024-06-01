@@ -32,25 +32,25 @@ struct rtmptab {
 			*rt_prev;
     struct rtmptab	*rt_inext,
 			*rt_iprev;
-    u_short		rt_firstnet, rt_lastnet;
-    u_char		rt_hops;
-    u_char		rt_state;
-    u_char		rt_flags;
-    u_char		rt_nzq;		/* number of zip queries issued */
+    unsigned short		rt_firstnet, rt_lastnet;
+    unsigned char		rt_hops;
+    unsigned char		rt_state;
+    unsigned char		rt_flags;
+    unsigned char		rt_nzq;		/* number of zip queries issued */
     struct gate		*rt_gate;	/* gate is NULL for interfaces */
     struct list		*rt_zt;
     const struct interface    *rt_iface;
 };
 
 struct rtmp_head {
-    u_short	rh_net;
-    u_char	rh_nodelen;
-    u_char	rh_node;
+    unsigned short	rh_net;
+    unsigned char	rh_nodelen;
+    unsigned char	rh_node;
 };
 
 struct rtmp_tuple {
-    u_short	rt_net;
-    u_char	rt_dist;
+    unsigned short	rt_net;
+    unsigned char	rt_dist;
 };
 #define SZ_RTMPTUPLE	3
 

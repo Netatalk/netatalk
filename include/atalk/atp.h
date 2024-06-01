@@ -57,9 +57,9 @@
  |----------------|
 */
 struct atphdr {
-    u_int8_t	atphd_ctrlinfo;	/* control information */
-    u_int8_t	atphd_bitmap;   /* bitmap or sequence number */
-    u_int16_t	atphd_tid;	/* transaction id. */
+    uint8_t	atphd_ctrlinfo;	/* control information */
+    uint8_t	atphd_bitmap;   /* bitmap or sequence number */
+    uint16_t	atphd_tid;	/* transaction id. */
 };
 
 /* ATP protocol parameters
@@ -80,7 +80,7 @@ struct atphdr {
 #define ATP_TRIES_INFINITE	-1	/* for atp_sreq, etc */
 
 struct atpxobuf {
-    u_int16_t		atpxo_tid;
+    uint16_t		atpxo_tid;
     struct timeval	atpxo_tv;
     int			atpxo_reltime;
     struct atpbuf	*atpxo_packet[8];
@@ -99,16 +99,16 @@ struct atpbuf {
 struct atp_handle {
     int			atph_socket;		/* ddp socket */
     struct sockaddr_at	atph_saddr;		/* address */
-    u_int16_t		atph_tid;		/* last tid used */
-    u_int16_t		atph_rtid;		/* last received (rreq) */
-    u_int8_t		atph_rxo;		/* XO flag from last rreq */
+    uint16_t		atph_tid;		/* last tid used */
+    uint16_t		atph_rtid;		/* last received (rreq) */
+    uint8_t		atph_rxo;		/* XO flag from last rreq */
     int			atph_rreltime;		/* release time (secs) */
     struct atpbuf	*atph_sent;		/* packets we send (XO) */
     struct atpbuf	*atph_queue;		/* queue of pending packets */
     int			atph_reqtries;		/* retry count for request */
     int			atph_reqto;		/* retry timeout for request */
     int			atph_rrespcount;	/* expected # of responses */
-    u_int8_t		atph_rbitmap;		/* bitmap for request */
+    uint8_t		atph_rbitmap;		/* bitmap for request */
     struct atpbuf	*atph_reqpkt;		/* last request packet */
     struct timeval	atph_reqtv;		/* when we last sent request */
     struct atpbuf	*atph_resppkt[8];	/* response to request */
@@ -162,7 +162,7 @@ struct atp_block {
 #define atp_sresiov	atp_data.sresdata.atpd_iov
 #define atp_sresiovcnt	atp_data.sresdata.atpd_iovcnt
     } atp_data;
-    u_int8_t		atp_bitmap;	/* response buffer bitmap */
+    uint8_t		atp_bitmap;	/* response buffer bitmap */
 };
 
 
@@ -180,11 +180,11 @@ struct atp_block {
 #define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
 #define ATP_TREL	(3<<6)		/* Trans. RELease */
 
-extern ATP		atp_open  (u_int8_t, 
+extern ATP		atp_open  (uint8_t, 
 				       const struct at_addr *);
 extern int		atp_close (ATP);
 extern int		atp_sreq  (ATP, struct atp_block *, int, 
-				       u_int8_t);
+				       uint8_t);
 extern int		atp_rresp (ATP, struct atp_block *);
 extern int		atp_rsel  (ATP, struct sockaddr_at *, int);
 extern int		atp_rreq  (ATP, struct atp_block *);

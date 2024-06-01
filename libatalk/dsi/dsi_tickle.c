@@ -20,7 +20,7 @@
 int dsi_tickle(DSI *dsi)
 {
   char block[DSI_BLOCKSIZ];
-  u_int16_t id;
+  uint16_t id;
   
   if ((dsi->flags & DSI_SLEEPING) || dsi->in_write)
       return 1;

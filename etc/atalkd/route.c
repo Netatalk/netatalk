@@ -34,11 +34,11 @@ int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 #else /* BSD4_4 */
 
 struct sockaddr_m {
-    u_char	sam_len;
-    u_char	sam_family;
-    u_short	sam_pad;
-    u_short	sam_mask;
-    u_short	sam_pad2;
+    unsigned char	sam_len;
+    unsigned char	sam_family;
+    unsigned short	sam_pad;
+    unsigned short	sam_mask;
+    unsigned short	sam_pad2;
 } mask = { sizeof( struct sockaddr_m ), 0, 0, 0xffff, 0 };
 
 struct rt_msg_at {

@@ -25,7 +25,7 @@
 int		ddp_forward = 1;
 int		ddp_firewall = 0;
 extern int	ddp_cksum;
-extern u_short	at_cksum();
+extern unsigned short	at_cksum();
 
 /*
  * Could probably merge these two code segments a little better...
@@ -133,7 +133,7 @@ ddp_input( m, ifp, elh, phase )
 #endif /* BSD4_4 */
     struct ddpcb	*ddp;
     int			dlen, mlen;
-    u_short		cksum;
+    unsigned short		cksum;
 
     bzero( (caddr_t)&from, sizeof( struct sockaddr_at ));
     if ( elh ) {
@@ -293,7 +293,7 @@ ddp_input( m, ifp, elh, phase )
 
 	ddpe.deh_hops++;
 	ddpe.deh_bytes = htonl( ddpe.deh_bytes );
-	bcopy( (caddr_t)&ddpe, (caddr_t)deh, sizeof( u_short ));
+	bcopy( (caddr_t)&ddpe, (caddr_t)deh, sizeof( unsigned short ));
 	if ( ddp_route( m, &forwro )) {
 	    ddpstat.ddps_cantforward++;
 	} else {
@@ -367,7 +367,7 @@ bprint( data, len )
 	xout[ (i*3) ] = hexdig[ ( *data & 0xf0 ) >> 4 ];
 	xout[ (i*3) + 1 ] = hexdig[ *data & 0x0f ];
 
-	if ( (u_char)*data < 0x7f && (u_char)*data > 0x20 ) {
+	if ( (unsigned char)*data < 0x7f && (unsigned char)*data > 0x20 ) {
 	    aout[ i ] = *data;
 	} else {
 	    aout[ i ] = '.';

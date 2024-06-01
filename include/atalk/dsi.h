@@ -44,12 +44,12 @@ typedef enum {
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
-  u_int8_t dsi_flags;       /* packet type: request or reply */
-  u_int8_t dsi_command;     /* command */
-  u_int16_t dsi_requestID;  /* request ID */
-  u_int32_t dsi_code;       /* error code or data offset */
-  u_int32_t dsi_len;        /* total data length */
-  u_int32_t dsi_reserved;   /* reserved field */
+  uint8_t dsi_flags;       /* packet type: request or reply */
+  uint8_t dsi_command;     /* command */
+  uint16_t dsi_requestID;  /* request ID */
+  uint32_t dsi_code;       /* error code or data offset */
+  uint32_t dsi_len;        /* total data length */
+  uint32_t dsi_reserved;   /* reserved field */
 };
 
 #define DSI_CMDSIZ        8192 
@@ -69,10 +69,10 @@ typedef struct DSI {
   int      msg_request;   /* pending message to the client */
   int      down_request;  /* pending SIGUSR1 down in 5 mn */
 
-  u_int32_t attn_quantum, datasize, server_quantum;
-  u_int16_t serverID, clientID;
+  uint32_t attn_quantum, datasize, server_quantum;
+  uint16_t serverID, clientID;
   char      *status;
-  u_int8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
+  uint8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
   size_t statuslen;
   size_t datalen, cmdlen;
   off_t  read_count, write_count;
@@ -166,7 +166,7 @@ extern DSI *dsi_init (const dsi_proto /*protocol*/,
 			  const char * /*program*/, 
 			  const char * /*host*/, const char * /*address*/,
 			  const char * /*port*/, const int /*proxy*/,
-			  const u_int32_t /* server quantum */);
+			  const uint32_t /* server quantum */);
 extern void dsi_setstatus (DSI *, char *, const size_t);
 
 /* in dsi_getsess.c */

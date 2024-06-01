@@ -130,7 +130,7 @@
 
 
 struct entry {
-    u_int32_t id, offset, len;
+    uint32_t id, offset, len;
 };
 
 static const struct entry entry_order1[ADEID_NUM_V1 +1] = {
@@ -147,7 +147,7 @@ static const struct entry entry_order1[ADEID_NUM_V1 +1] = {
 
 #else /* AD_VERSION == AD_VERSION2 */
 
-static u_int32_t get_eid(struct adouble *ad, u_int32_t eid)
+static uint32_t get_eid(struct adouble *ad, uint32_t eid)
 {
     if (eid <= 15)
         return eid;
@@ -193,7 +193,7 @@ static const struct entry entry_order2[ADEID_NUM_V2 +1] = {
 static int ad_update(struct adouble *ad, const char *path)
 {
     struct stat st;
-    u_int16_t nentries = 0;
+    uint16_t nentries = 0;
     off_t     off, shiftdata=0;
     const struct entry  *eid;
     static off_t entry_len[ADEID_MAX];
@@ -318,7 +318,7 @@ bail_err:
 static int ad_convert(struct adouble *ad, const char *path)
 {
     struct stat st;
-    u_int16_t attr;
+    uint16_t attr;
     char *buf;
     int fd, off;
     int ret = -1;
@@ -477,7 +477,7 @@ bail_err:
 static int parse_entries(struct adouble *ad, uint16_t nentries,
                           size_t valid_data_len)
 {
-    u_int32_t   eid, len, off;
+    uint32_t   eid, len, off;
     char *buf = ad->ad_data + AD_HEADER_LEN;
 
     /* now, read in the entry bits */
@@ -517,7 +517,7 @@ static int parse_entries(struct adouble *ad, uint16_t nentries,
 static int ad_header_read(struct adouble *ad, struct stat *hst)
 {
     char                *buf = ad->ad_data;
-    u_int16_t           nentries;
+    uint16_t           nentries;
     ssize_t             header_len;
     static int          warning = 0;
     struct stat         st;
@@ -612,7 +612,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     /* fix up broken dates */
     if (ad->ad_version == AD_VERSION1) {
-        u_int32_t aint;
+        uint32_t aint;
 
         /* check to see if the ad date is wrong. just see if we have
          * a modification date in the future. */
@@ -1278,7 +1278,7 @@ exit:
 static int new_rfork(const char *path, struct adouble *ad, int adflags)
 {
     const struct entry  *eid;
-    u_int16_t           ashort;
+    uint16_t           ashort;
     struct stat         st;
 
     ad->ad_magic = AD_MAGIC;

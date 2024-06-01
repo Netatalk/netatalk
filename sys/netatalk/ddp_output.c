@@ -27,7 +27,7 @@
 #include "ddp.h"
 #include "ddp_var.h"
 
-u_short	at_cksum();
+unsigned short	at_cksum();
 int	ddp_cksum = 1;
 
 ddp_output( ddp, m )
@@ -41,7 +41,7 @@ ddp_output( ddp, m )
     struct ifnet	*ifp;
     struct at_ifaddr	*aa = NULL;
     struct ddpehdr	*deh;
-    u_short		net;
+    unsigned short		net;
 
 #ifdef BSD4_4
     M_PREPEND( m, sizeof( struct ddpehdr ), M_WAIT );
@@ -94,16 +94,16 @@ ddp_output( ddp, m )
     return( ddp_route( m, &ddp->ddp_route ));
 }
 
-    u_short
+    unsigned short
 at_cksum( m, skip )
     struct mbuf	*m;
     int		skip;
 {
-    u_char	*data, *end;
-    u_int32_t	cksum = 0;
+    unsigned char	*data, *end;
+    uint32_t	cksum = 0;
 
     for (; m; m = m->m_next ) {
-	for ( data = mtod( m, u_char * ), end = data + m->m_len; data < end;
+	for ( data = mtod( m, unsigned char * ), end = data + m->m_len; data < end;
 		data++ ) {
 	    if ( skip ) {
 		skip--;
@@ -120,7 +120,7 @@ at_cksum( m, skip )
     if ( cksum == 0 ) {
 	cksum = 0x0000ffff;
     }
-    return( (u_short)cksum );
+    return( (unsigned short)cksum );
 }
 
 ddp_route( m, ro )
@@ -133,7 +133,7 @@ ddp_route( m, ro )
     struct at_ifaddr	*aa = NULL;
     struct ifnet	*ifp;
     int			mlen;
-    u_short		net;
+    unsigned short		net;
 
     if ( ro->ro_rt && ( ifp = ro->ro_rt->rt_ifp )) {
 #ifdef BSD4_4

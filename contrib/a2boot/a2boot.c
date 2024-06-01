@@ -185,7 +185,7 @@ int main( int ac, char **av )
 /*
 	force port 3 as the semi-official ATP access port        MJ 2002
 */
-    if (( atp = atp_open( (u_int8_t)3, &sat.sat_addr )) == NULL ) {
+    if (( atp = atp_open( (uint8_t)3, &sat.sat_addr )) == NULL ) {
 	LOG(log_error, logtype_default, "main: atp_open: %s", strerror( errno ) );
 	exit( 1 );
     }

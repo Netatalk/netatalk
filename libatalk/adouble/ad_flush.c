@@ -39,7 +39,7 @@
 
 #else
 
-static const u_int32_t set_eid[] = {
+static const uint32_t set_eid[] = {
     0,1,2,3,4,5,6,7,8,
     9,10,11,12,13,14,15,
     AD_DEV, AD_INO, AD_SYN, AD_ID
@@ -53,10 +53,10 @@ static const u_int32_t set_eid[] = {
  */
 int  ad_rebuild_adouble_header(struct adouble *ad)
 {
-    u_int32_t       eid;
-    u_int32_t       temp;
+    uint32_t       eid;
+    uint32_t       temp;
 
-    u_int16_t       nent;
+    uint16_t       nent;
     char        *buf, *nentp;
 
     /*
@@ -106,8 +106,8 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
  */
 int ad_copy_header(struct adouble *add, struct adouble *ads)
 {
-    u_int32_t       eid;
-    u_int32_t       len;
+    uint32_t       eid;
+    uint32_t       len;
 
     for ( eid = 0; eid < ADEID_MAX; eid++ ) {
         if ( ads->ad_eid[ eid ].ade_off == 0 ) {

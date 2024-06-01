@@ -39,8 +39,8 @@
  * O(n^2) searches on a directory.
  */
 struct savedir {
-    u_short	 sd_vid;
-    u_int32_t	 sd_did;
+    unsigned short	 sd_vid;
+    uint32_t	 sd_did;
     int		 sd_buflen;
     char	 *sd_buf;
     char	 *sd_last;
@@ -164,9 +164,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     int				did, ret, len, first = 1;
     size_t			esz;
     char                        *data, *start;
-    u_int16_t			vid, fbitmap, dbitmap, reqcnt, actcnt = 0;
-    u_int16_t			temp16;
-    u_int32_t			sindex, maxsz, sz = 0;
+    uint16_t			vid, fbitmap, dbitmap, reqcnt, actcnt = 0;
+    uint16_t			temp16;
+    uint32_t			sindex, maxsz, sz = 0;
     struct path                 *o_path;
     struct path                 s_path;
     int                         header;
@@ -247,7 +247,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     }
     
     header = (ext)?4:2;
-    header *=sizeof( u_char );
+    header *=sizeof( unsigned char );
     
     maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);
     o_path = cname( vol, dir, &ibuf );
@@ -267,8 +267,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "enumerate(\"%s/%s\", f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
         getcwdpath(), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
-    data = rbuf + 3 * sizeof( u_int16_t );
-    sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
+    data = rbuf + 3 * sizeof( uint16_t );
+    sz = 3 * sizeof( uint16_t );	/* fbitmap, dbitmap, reqcount */
 
     /*
      * Read the directory into a pre-malloced buffer, stored

@@ -450,8 +450,8 @@ void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->handle;
     int rc_idx;
-    u_int32_t err, cmd;
-    u_int8_t function;
+    uint32_t err, cmd;
+    uint8_t function;
 
     AFPobj = obj;
     obj->exit = afp_dsi_die;
@@ -591,7 +591,7 @@ void afp_over_dsi(AFPObj *obj)
             break;
 
         case DSIFUNC_CMD:
-            function = (u_char) dsi->commands[0];
+            function = (unsigned char) dsi->commands[0];
 
             /* AFP replay cache */
             rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
@@ -646,7 +646,7 @@ void afp_over_dsi(AFPObj *obj)
             break;
 
         case DSIFUNC_WRITE: /* FPWrite and FPAddIcon */
-            function = (u_char) dsi->commands[0];
+            function = (unsigned char) dsi->commands[0];
             if ( afp_switch[ function ] != NULL ) {
                 dsi->datalen = DSI_DATASIZ;
                 dsi->flags |= DSI_RUNNING;

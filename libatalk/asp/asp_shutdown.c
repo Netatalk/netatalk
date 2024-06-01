@@ -21,8 +21,8 @@ int asp_shutdown(ASP asp)
     struct atp_block	atpb;
     struct iovec	iov;
     char		*p;
-    u_int16_t		seq;
-    u_int8_t		oport;
+    uint16_t		seq;
+    uint8_t		oport;
 
 
     p = asp->commands;
