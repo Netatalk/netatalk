@@ -1799,23 +1799,23 @@ extern void uITRON4_free(void *p) ;
     #define XSTRCMP(s1,s2) strcmp((s1),(s2))
     #define XSTRLEN(pstr) ((CPU_SIZE_T)Str_Len((CPU_CHAR *)(pstr)))
     #define XSTRNCPY(pstr_dest, pstr_src, len_max) \
-                    ((CPunsigned char *)Str_Copy_N((CPunsigned char *)(pstr_dest), \
-                     (CPunsigned char *)(pstr_src), (CPU_SIZE_T)(len_max)))
+                    ((CPU_CHAR *)Str_Copy_N((CPU_CHAR *)(pstr_dest), \
+                     (CPU_CHAR *)(pstr_src), (CPU_SIZE_T)(len_max)))
     #define XSTRNCMP(pstr_1, pstr_2, len_max) \
-                    ((CPuint16S)Str_Cmp_N((CPunsigned char *)(pstr_1), \
-                     (CPunsigned char *)(pstr_2), (CPU_SIZE_T)(len_max)))
+                    ((CPU_INT16S)Str_Cmp_N((CPU_CHAR *)(pstr_1), \
+                     (CPU_CHAR *)(pstr_2), (CPU_SIZE_T)(len_max)))
     #define XSTRNCASECMP(pstr_1, pstr_2, len_max) \
-                    ((CPuint16S)Str_CmpIgnoreCase_N((CPunsigned char *)(pstr_1), \
-                     (CPunsigned char *)(pstr_2), (CPU_SIZE_T)(len_max)))
+                    ((CPU_INT16S)Str_CmpIgnoreCase_N((CPU_CHAR *)(pstr_1), \
+                     (CPU_CHAR *)(pstr_2), (CPU_SIZE_T)(len_max)))
     #define XSTRSTR(pstr, pstr_srch) \
-                    ((CPunsigned char *)Str_Str((CPunsigned char *)(pstr), \
-                     (CPunsigned char *)(pstr_srch)))
+                    ((CPU_CHAR *)Str_Str((CPU_CHAR *)(pstr), \
+                     (CPU_CHAR *)(pstr_srch)))
     #define XSTRNSTR(pstr, pstr_srch, len_max) \
-                    ((CPunsigned char *)Str_Str_N((CPunsigned char *)(pstr), \
-                     (CPunsigned char *)(pstr_srch),(CPU_SIZE_T)(len_max)))
+                    ((CPU_CHAR *)Str_Str_N((CPU_CHAR *)(pstr), \
+                     (CPU_CHAR *)(pstr_srch),(CPU_SIZE_T)(len_max)))
     #define XSTRNCAT(pstr_dest, pstr_cat, len_max) \
-                    ((CPunsigned char *)Str_Cat_N((CPunsigned char *)(pstr_dest), \
-                     (const CPunsigned char *)(pstr_cat),(CPU_SIZE_T)(len_max)))
+                    ((CPU_CHAR *)Str_Cat_N((CPU_CHAR *)(pstr_dest), \
+                     (const CPU_CHAR *)(pstr_cat),(CPU_SIZE_T)(len_max)))
     #ifndef XATOI /* if custom XATOI is not already defined */
         #define XATOI(s) atoi((s))
     #endif
@@ -1826,7 +1826,7 @@ extern void uITRON4_free(void *p) ;
     #endif
     #define XMEMSET(pmem, data_val, size) \
                     ((void)Mem_Set((void *)(pmem), \
-                    (CPuint08U) (data_val), \
+                    (CPU_INT08U) (data_val), \
                     (CPU_SIZE_T)(size)))
     #define XMEMCPY(pdest, psrc, size) ((void)Mem_Copy((void *)(pdest), \
                      (void *)(psrc), (CPU_SIZE_T)(size)))
