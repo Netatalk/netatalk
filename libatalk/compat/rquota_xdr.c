@@ -82,7 +82,11 @@ xdr_rquota(xdrs, objp)
 bool_t
 xdr_gqr_status(xdrs, objp)
 	XDR *xdrs;
+#if defined(HAVE_RQUOTA_H_QR_STATUS)
+	qr_status *objp;
+#else
 	gqr_status *objp;
+#endif
 {
 	if (!xdr_enum(xdrs, (enum_t *)objp)) {
 		return (FALSE);
