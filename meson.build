@@ -105,6 +105,29 @@ else
     )
 endif
 
+############
+# Programs #
+############
+
+flex = find_program('flex', required: false)
+grep = find_program('grep', required: false)
+perl = find_program('perl', required: false)
+uname = find_program('uname', required: false)
+if host_os == 'darwin'
+    brew = find_program('brew', required: true)
+    brew_prefix = run_command(brew, '--prefix', check: true).stdout().strip()
+    message(brew_prefix)
+    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+else
+    bison = find_program('bison', required: false)
+endif
+
+################
+# Dependencies #
+################
+
+threads = dependency('threads', required: true)
+
 #############
 # Libraries #
 #############
@@ -119,7 +142,7 @@ if host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
 endif
 
-if host_os == 'omnios'
+if uname.found() and run_command(uname, '-n', check: false).stdout().strip().contains('omnios')
     libsearch_dirs += '/opt/local/lib'
 endif
 
@@ -150,22 +173,6 @@ if math.found()
 endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
-
-############
-# Programs #
-############
-
-flex = find_program('flex', required: false)
-grep = find_program('grep', required: false)
-perl = find_program('perl', required: false)
-if host_os == 'darwin'
-    brew = find_program('brew', required: true)
-    brew_prefix = run_command(brew, '--prefix', check: true).stdout().strip()
-    message(brew_prefix)
-    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
-else
-    bison = find_program('bison', required: false)
-endif
 
 #################
 # Header checks #
