@@ -1,44 +1,48 @@
 Changes in 3.2.0
 ================
-* NEW: Introduce the Meson build system, GitHub #707
+* NEW: BREAKING: Introduce the Meson build system, GitHub #707
        GNU Autotools is still supported, but will be removed
        in a future release. See the newly added INSTALL file.
-* NEW: Bundle WolfSSL as an encryption provider for the DHX UAM, GitHub #358
-       This is enabled by default, controlled by option "with-embedded-ssl"
+* NEW: BREAKING: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #358
+       This is enabled by default, controlled by option "-Dwith-embedded-ssl"
        Requires the Meson build system.
        External OpenSSL 1.1 and LibreSSL are still supported.
-* NEW: FreeBSD init script, borrowed from FreeBSD ports, GitHub #876
-       Special thanks to the author, Joe Marcus Clarke.
-* NEW: OpenBSD init script, GitHub #870
-* UPD: BREAKING: Renamed Gentoo init script to openrc, GitHub #868
-       OpenRC is cross platform; confirmed working on Alpine Linux.
-* NEW: Introduce an official Dockerfile and entry script, GitHub #713
-* NEW: BREAKING: LDAP API update, OpenLDAP v2.3 or later required, GitHub #762
+* NEW: BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #762
        afp.conf option "ldap server" has been replaced with "ldap uri"
        and has a new syntax. See the manual for details.
-* NEW: Option to log to file with second (not ms) accuracy, GitHub #580
-       Enable with afp.conf option: "log microseconds = no"
-* NEW: Option to add delay to FCE event emission, GitHub #849
-       Set a ms delay with afp.conf option: "fce sendwait"
-* NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
 * UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
 * UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
 * UPD: BREAKING: Remove bundled talloc, GitHub #479
-       Get the stand-alone talloc library from the Samba project
-       to build with Spotlight support.
+       For Spotlight support, use the talloc library supplied by your OS,
+       or get the source code from the Samba project and build it yourself.
 * UPD: BREAKING: Remove generated SPARQL code, GitHub #337
        This introduces a compile time dependency on
        a yacc parser and a lexer to build with Spotlight support.
 * UPD: BREAKING: Rename macOS launchd plist to io.netatalk.*, GitHub #778
        Note: Only the Meson build system will clean up the old plist.
+* UPD: BREAKING: Renamed Gentoo init script to openrc, GitHub #868
+       OpenRC is cross platform; confirmed working on Alpine Linux.
+* NEW: FreeBSD init script, borrowed from FreeBSD ports, GitHub #876
+       Special thanks to the author, Joe Marcus Clarke.
+* NEW: OpenBSD init script, GitHub #870
+* NEW: Introduce an official Dockerfile and entry script, GitHub #713
+* NEW: Option to log to file with second (not us) accuracy, GitHub #580
+       Enable with afp.conf option: "log microseconds = no"
+* NEW: Option to add delay to FCE event emission, GitHub #849
+       Set a ms delay with afp.conf option: "fce sendwait"
+* NEW: afppasswd: Add -w option to set password from the CLI, GitHub #936
 * NEW: docs: Distribute a manual appendix with the GNU GPL v2, GitHub #745
 * NEW: docs: Distribute the Japanese localization of the manual, GitHub #806
 * NEW: docs: Generate a manual appendix with build instructions, GitHub #791
+       The appendix is generated from the GitHub CI workflow yaml file.
 * UPD: docs: Document libraries, init scripts in manual, GitHub #808
+* UPD: docs: Remove substituted file system paths from manual, GitHub #514
 * FIX: afpd: Prevent theoretical crash in FPSetACL, GitHub #364
+* FIX: libatalk: Fix parsing of macOS-created AppleDouble files, GitHub #270
 * FIX: libatalk: Restore invalid EA metadata cleanup, GitHub #400
 * FIX: quota: Use the NetBSD 6 quota API, GitHub #1028
 * FIX: quota: Workaround for rquota.h symbol name on Fedora 40, GitHub #1040
+* FIX: uams: Allow linking of the PGP UAM, GitHub #548
 * FIX: Shore up error handling and type safety, GitHub #952
 * UPD: Rewrite the afpstats script in Perl, GitHub #893
        And, improve the formatting of the standard output.
@@ -51,7 +55,9 @@ Changes in 3.2.0
        elevated privileges on the system.
 * FIX: Make cracklib macro properly detect dictionary, GitHub #940
 * FIX: Build with PAM support on FreeBSD 14, GitHub #560
-* FIX: The ability to disable Spotlight at compile time, GitHub #571
+* FIX: Allow libevent2 linking on OpenIndiana, GitHub #512
+* FIX: Control all Spotlight dependencies at compile time, GitHub #571
+* UPD: Remove redundant AUTHORS file, GitHub #538
 
 Changes in 3.1.18
 =================
