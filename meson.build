@@ -1075,7 +1075,7 @@ else
     ldap = cc.find_library('ldap', dirs: libsearch_dirs, required: false)
 endif
 
-have_ldap = (ldap.found() and cc.has_function('ldap_init', dependencies: ldap))
+have_ldap = (ldap.found() and cc.has_function('ldap_initialize', dependencies: ldap))
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
 endif
