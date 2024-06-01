@@ -123,6 +123,56 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
+  build-archlinux:
+    name: Arch Linux
+    runs-on: ubuntu-22.04
+    container:
+      image: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          pacman -Sy --noconfirm \
+            autoconf \
+            automake \
+            cracklib \
+            gcc \
+            libtool \
+            make \
+            meson \
+            ninja \
+            pkgconfig
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --disable-install-privileged \
+            --enable-systemd \
+            --with-cracklib
+      - name: Autotools - Build
+        run: make -j $(nproc)
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: make install
+      - name: Autotools - Uninstall
+        run: make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Ddisable-install-privileged=true \
+            -Denable-systemd=true
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: ninja -C build install
+      - name: Meson - Uninstall
+        run: ninja -C build uninstall
+
   build-debian:
     name: Debian Linux
     runs-on: ubuntu-22.04
@@ -228,117 +278,6 @@ jobs:
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: brew install automake berkeley-db krb5 libressl libtool meson
-      - name: Autotools - Bootstrap
-        run: ./bootstrap
-      - name: Autotools - Configure
-        # Disable DDP in the absence of an AppleTalk stack on macOS
-        run: |
-          ./configure \
-            --disable-ddp \
-            --enable-krbV-uam \
-            --enable-macos \
-            --enable-pgp-uam \
-            --with-bdb=/opt/homebrew/opt/berkeley-db \
-            --with-ssl-dir=/opt/homebrew/opt/libressl
-      - name: Autotools - Build
-        run: make -j $(nproc) all
-      - name: Autotools - Run tests
-        run: make check
-      - name: Autotools - Install
-        run: sudo make install
-      - name: Start netatalk
-        run: sudo netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
-      - name: Autotools - Uninstall
-        run: sudo make uninstall
-      - name: Meson - Configure
-        run: |
-          meson setup build \
-            -Dbuild-tests=true \
-            -Denable-macos=true \
-            -Dwith-bdb=/opt/homebrew/opt/berkeley-db
-      - name: Meson - Build
-        run: ninja -C build
-      - name: Meson - Tests
-        run: cd build && meson test
-      - name: Meson - Install
-        run: sudo ninja -C build install
-      - name: Start netatalk
-        run: sudo netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
-      - name: Meson - Uninstall
-        run: sudo ninja -C build uninstall
-
-  build-netbsd:
-    name: "NetBSD"
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-      - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.0.7
-        with:
-          release: "10.0"
-          copyback: false
-          prepare: |
-            pkg_add \
-              autoconf \
-              automake \
-              avahi \
-              db5 \
-              gcc13 \
-              gmake \
-              libcups \
-              libgcrypt \
-              libressl \
-              libtool \
-              meson \
-              pkg-config
-          run: |
-            set -e
-            echo "Building with Autotools"
-            ./bootstrap
-            ./configure \
-              --enable-krbV-uam \
-              --enable-netbsd \
-              --enable-pgp-uam \
-              --with-bdb=/usr/pkg \
-              --with-libgcrypt-dir=/usr/pkg \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
-            gmake -j2 all
-            gmake install
-            service afpd onestart
-            sleep 2
-            asip-status localhost
-            service afpd onestop
-            echo "Building with Meson"
-            meson setup build \
-              -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-              -Denable-netbsd=true
-            ninja -C build
-            ninja -C build install
-            service afpd onestart
-            sleep 2
-            asip-status localhost
-            service afpd onestop
-            ninja -C build uninstall
-
   build-opensuse:
     name: openSUSE Linux
     runs-on: ubuntu-22.04
@@ -406,50 +345,6 @@ jobs:
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
-  build-solaris:
-    name: "Solaris"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-      - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1.0.2
-        with:
-          release: 11.4
-          prepare: |
-            pkg install \
-              autoconf \
-              automake \
-              gcc \
-              libgcrypt \
-              libtool \
-              pkg-config
-            wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
-            wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
-            tar xvf autoconf-2.71.tar.gz
-            tar xvf automake-1.16.5.tar.gz
-            cd autoconf-2.71
-            ./configure --prefix=/usr
-            make
-            make install
-            cd ../automake-1.16.5
-            ./configure --prefix=/usr
-            make
-            make install
-            cd ..
-          run: |
-            set -e
-            echo "Building with Autotools"
-            ./bootstrap
-            ./configure \
-              MAKE=gmake \
-              --enable-cups=no
-            gmake -j $(nproc) all
-            gmake install
-            gmake uninstall
-
   build-ubuntu:
     name: Ubuntu Linux
     runs-on: ubuntu-22.04
@@ -508,6 +403,356 @@ jobs:
         run: sudo systemctl stop afpd
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
+
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install automake berkeley-db libressl libtool meson
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        # Disable DDP in the absence of an AppleTalk stack on macOS
+        run: |
+          ./configure \
+            --disable-ddp \
+            --enable-krbV-uam \
+            --enable-macos \
+            --enable-pgp-uam \
+            --with-bdb=/opt/homebrew/opt/berkeley-db \
+            --with-ssl-dir=/opt/homebrew/opt/libressl
+      - name: Autotools - Build
+        run: make -j $(nproc) all
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Start netatalk
+        run: sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dbuild-tests=true \
+            -Denable-macos=true \
+            -Dwith-bdb=/opt/homebrew/opt/berkeley-db
+      - name: Meson - Build
+        run: ninja -C build
+      - name: Meson - Tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: sudo ninja -C build install
+      - name: Start netatalk
+        run: sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
+
+  build-dflybsd:
+    name: DragonflyBSD
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/dragonflybsd-vm@v1.0.4
+        with:
+          copyback: false
+          usesh: true
+          prepare: |
+            pkg install -y \
+              autoconf \
+              automake \
+              avahi \
+              db5 \
+              gmake \
+              libgcrypt \
+              libtool \
+              meson \
+              perl5 \
+              pkgconf \
+              py39-gdbm \
+              py39-tkinter
+          run: |
+            set -e
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --with-ssl-dir=/usr/local \
+              LDFLAGS=-L/usr/local/lib \
+              MAKE=gmake
+            gmake -j2
+            gmake install
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build
+            ninja -C build
+            ninja -C build install
+            ninja -C build uninstall
+
+  build-freebsd:
+    name: FreeBSD
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/freebsd-vm@v1.0.6
+        with:
+          copyback: false
+          prepare: |
+            pkg install -y \
+              autoconf \
+              automake \
+              avahi \
+              db5 \
+              gmake \
+              libgcrypt \
+              libressl \
+              libtool \
+              meson \
+              openldap26-client-2.6.7 \
+              pkgconf
+          run: |
+            set -e
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --enable-krbV-uam \
+              --enable-pgp-uam \
+              --with-ldap=/usr/local \
+              --with-ssl-dir=/usr/local
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
+            gmake -j $(nproc)
+            gmake install
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig
+            ninja -C build
+            ninja -C build install
+            ninja -C build uninstall
+
+  build-netbsd:
+    name: "NetBSD"
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/netbsd-vm@v1.0.7
+        with:
+          release: "10.0"
+          copyback: false
+          prepare: |
+            pkg_add \
+              autoconf \
+              automake \
+              avahi \
+              db5 \
+              gcc13 \
+              gmake \
+              libcups \
+              libgcrypt \
+              libressl \
+              libtool \
+              meson \
+              pkg-config
+          run: |
+            set -e
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --enable-krbV-uam \
+              --enable-netbsd \
+              --enable-pgp-uam \
+              --with-bdb=/usr/pkg \
+              --with-libgcrypt-dir=/usr/pkg \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
+            gmake -j2 all
+            gmake install
+            service afpd onestart
+            sleep 2
+            asip-status localhost
+            service afpd onestop
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+              -Denable-netbsd=true
+            ninja -C build
+            ninja -C build install
+            service afpd onestart
+            sleep 2
+            asip-status localhost
+            service afpd onestop
+            ninja -C build uninstall
+
+  build-openbsd:
+    name: OpenBSD
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/openbsd-vm@v1.0.7
+        with:
+          copyback: false
+          prepare: |
+            pkg_add -I \
+              autoconf-2.71 \
+              automake-1.16.5 \
+              avahi \
+              db-4.6.21p7v0 \
+              gcc-11.2.0p9 \
+              gmake \
+              libgcrypt \
+              libtool \
+              meson \
+              openldap-client-2.6.6v0 \
+              openpam \
+              pkgconf
+          run: |
+            set -e
+            echo "Building with Autotools"
+            export AUTOCONF_VERSION=2.71
+            export AUTOMAKE_VERSION=1.16
+            export CFLAGS=-I/usr/local/include
+            export LDFLAGS=-L/usr/local/lib
+            autoreconf -fi
+            ./configure \
+              --disable-ddp \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+            gmake -j $(nproc)
+            gmake install
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Denable-ddp=false \
+              -Dpkg_config_path=/usr/local/lib/pkgconfig
+            ninja -C build
+            ninja -C build install
+            ninja -C build uninstall
+
+  build-omnios:
+    name: OmniOS
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build on VM
+        uses: vmactions/omnios-vm@v1.0.1
+        with:
+          copyback: false
+          prepare: |
+            pkg install \
+              build-essential \
+              libtool \
+              pkg-config
+            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz
+            tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            pkgin -y install \
+              avahi \
+              libgcrypt \
+              meson \
+              openldap
+          run: |
+            set -e
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              --disable-install-privileged \
+              --enable-pgp-uam \
+              --with-bdb=/opt/local \
+              --with-ldap=no \
+              --with-libgcrypt-dir=/opt/local
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
+            gmake -j $(nproc)
+            gmake install
+            gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Denable-solaris=true \
+              -Dwith-ldap=/opt/local
+            ninja -C build
+            ninja -C build install
+            chmod 744 /etc/rc2.d/S90netatalk
+            chmod 744 /etc/rc0.d/K04netatalk
+            /etc/rc2.d/S90netatalk start
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            /etc/rc2.d/S90netatalk stop
+            ninja -C build uninstall
+
+  build-solaris:
+    name: "Solaris"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Build on VM"
+        uses: vmactions/solaris-vm@v1.0.2
+        with:
+          release: 11.4
+          prepare: |
+            pkg install \
+              autoconf \
+              automake \
+              gcc \
+              libgcrypt \
+              libtool \
+              pkg-config
+            wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
+            wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
+            tar xvf autoconf-2.71.tar.gz
+            tar xvf automake-1.16.5.tar.gz
+            cd autoconf-2.71
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ../automake-1.16.5
+            ./configure --prefix=/usr
+            make
+            make install
+            cd ..
+          run: |
+            set -e
+            echo "Building with Autotools"
+            ./bootstrap
+            ./configure \
+              MAKE=gmake \
+              --enable-cups=no
+            gmake -j $(nproc) all
+            gmake install
+            gmake uninstall
 
   static_analysis:
     name: Static Analysis
