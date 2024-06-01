@@ -121,6 +121,14 @@ else
     )
 endif
 
+############
+# Programs #
+############
+
+grep = find_program('grep', required: false)
+perl = find_program('perl', required: false)
+uname = find_program('uname', required: false)
+
 ################
 # Dependencies #
 ################
@@ -141,7 +149,7 @@ if host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
 endif
 
-if host_os == 'omnios'
+if uname.found() and run_command(uname, '-n', check: false).stdout().strip().contains('omnios')
     libsearch_dirs += '/opt/local/lib'
 endif
 
@@ -174,13 +182,6 @@ if math.found()
 endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
-
-############
-# Programs #
-############
-
-grep = find_program('grep', required: false)
-perl = find_program('perl', required: false)
 
 #################
 # Header checks #
