@@ -113,7 +113,8 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Denable-openrc=true
+            -Denable-openrc=true \
+            -Dwith-libtirpc=true
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
