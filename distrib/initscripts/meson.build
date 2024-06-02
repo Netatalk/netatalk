@@ -103,6 +103,10 @@ elif get_option('enable-solaris')
             '-f', '/etc/rc2.d/S90netatalk',
         )
         meson.add_install_script(
+            find_program('rm'),
+            '-f', '/etc/rc0.d/K04netatalk',
+        )
+        meson.add_install_script(
             find_program('ln'),
             '-s', '/etc/init.d/netatalk',
             '/etc/rc2.d/S90netatalk',
