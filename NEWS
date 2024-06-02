@@ -1,3 +1,38 @@
+Changes in 2.4.0
+================
+* BREAKING: Introduce the Meson build system, GitHub #776
+  GNU Autotools is still supported, but will be removed
+  in a future release. See the newly added INSTALL file.
+* BREAKING: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #980
+ This is enabled by default, controlled by option "-Dwith-embedded-ssl"
+ Requires the Meson build system.
+ External OpenSSL 1.1 and LibreSSL are still supported.
+* BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #767
+  afp_ldap.conf option "ldap_server" has been replaced with "ldap_uri"
+  and has a new syntax. See the manual for details.
+* BREAKING: Removed obsolete AppleTalk kernel module for Solaris, GitHub #830
+* BREAKING: Overhauled the init scripts, GitHub #869
+  - Gentoo init script turned into cross-platform OpenRC init script,
+    moved to openrc-run, and made avahi-daemon a dependency
+  - Removed superfluous env overrides, relying on netatalk.conf instead
+  - Removed obsoleted rc.atalk.systemd script
+* OpenRC: a2boot and timelord depend on atalkd; use Port 4 #927
+* afpd: Remove multiple deprecated options, GitHub #1001
+* afppasswd: Check for valid password length, GitHub #931
+* afppasswd: Introduce -w option to set password from terminal, GitHub #936
+* docs: Refresh DEVELOPER and AppleTalk readmes, GitHub #831
+* docs: Generate compilation manual page from build.yml, GitHub #838
+* docs: Overhaul the install and configuration chapters, GitHub #874
+* docs: Move documentation from conf file templates to man pages, GitHub #1012
+* Remove hard dependencies on perl and grep, GitHub #886
+* Fix missing rresvport function on systems using musl C library, GitHub #920
+* docker: Alpine based container + Meson build, GitHub #866
+* Fix broken cracklib macro in autotools and meson, GitHub #940
+* Implement disable-install-privileged for Meson, GitHub #1024
+* On macOS, graceful handling of init script stop when not running, GitHub #966
+* Enable building with quota and libtirpc on Fedora, GitHub #1044
+* Update to modern C data types in codebase, GitHub #1009
+
 Changes in 2.3.2
 ================
 * atalkd: Bail out when attempting to -seed a single interface, GitHub #719
