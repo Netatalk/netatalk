@@ -806,7 +806,7 @@ libgcrypt_dir = get_option('with-libgcrypt-dir')
 
 if libgcrypt_dir != ''
     libgcrypt = declare_dependency(
-        link_args: ['-L' + libgcrypt_dir / 'lib', '-lgcrypt'],
+        link_args: ['-L' + libgcrypt_dir / 'lib', '-lgcrypt', '-R' + libgcrypt_dir / 'lib'],
         include_directories: include_directories(libgcrypt_dir / 'include'),
     )
 else
@@ -1068,7 +1068,7 @@ with_ldap = get_option('with-ldap')
 
 if with_ldap != ''
     ldap = declare_dependency(
-        link_args: ['-L' + with_ldap / 'lib', '-lldap'],
+        link_args: ['-L' + with_ldap / 'lib', '-lldap', '-R' + with_ldap / 'lib'],
         include_directories: include_directories(with_ldap / 'include'),
     )
 else
@@ -1114,7 +1114,7 @@ with_libiconv = get_option('with-libiconv')
 
 if with_libiconv != ''
     iconv = declare_dependency(
-        link_args: ['-L' + with_libiconv / 'lib', '-liconv'],
+        link_args: ['-L' + with_libiconv / 'lib', '-liconv', '-R' + with_libiconv / 'lib'],
         include_directories: include_directories(with_libiconv / 'include'),
     )
 else
@@ -1303,7 +1303,7 @@ endif
 
 if with_pam != '' and pam_dir != '/'
     pam = declare_dependency(
-        link_args: ['-L' + with_pam / 'lib', '-lpam'],
+        link_args: ['-L' + with_pam / 'lib', '-lpam', '-R' + with_pam / 'lib'],
         include_directories: include_directories(with_pam / 'include'),
     )
 else
