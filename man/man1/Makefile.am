@@ -1,6 +1,7 @@
 # Makefile.am for man/man1/
 
 GENERATED_MANS	=	ad.1 \
+			aecho.1 \
 			afpldaptest.1 \
 			afppasswd.1 \
 			apple_dump.1 \
