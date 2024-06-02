@@ -919,9 +919,15 @@ endif
 
 libgcrypt_dir = get_option('with-libgcrypt-dir')
 
+libgcrypt_link_args = []
+
 if libgcrypt_dir != ''
+    libgcrypt_link_args += ['-L' + libgcrypt_dir / 'lib', '-lgcrypt']
+    if enable_rpath
+        libgcrypt_link_args += ['-R' + libgcrypt_dir / 'lib']
+    endif
     libgcrypt = declare_dependency(
-        link_args: ['-L' + libgcrypt_dir / 'lib', '-lgcrypt'],
+        link_args: libgcrypt_link_args,
         include_directories: include_directories(libgcrypt_dir / 'include'),
     )
 else
@@ -1246,9 +1252,15 @@ endif
 
 with_ldap = get_option('with-ldap')
 
+ldap_link_args = []
+
 if with_ldap != ''
+    ldap_link_args += ['-L' + with_ldap / 'lib', '-lldap']
+    if enable_rpath
+        ldap_link_args += ['-R' + with_ldap / 'lib']
+    endif
     ldap = declare_dependency(
-        link_args: ['-L' + with_ldap / 'lib', '-lldap'],
+        link_args: ldap_link_args,
         include_directories: include_directories(with_ldap / 'include'),
     )
 else
@@ -1292,9 +1304,15 @@ endif
 
 with_libiconv = get_option('with-libiconv')
 
+libiconv_link_args = []
+
 if with_libiconv != ''
+    libiconv_link_args += ['-L' + with_libiconv / 'lib', '-liconv']
+    if enable_rpath
+        libiconv_link_args += ['-R' + with_libiconv / 'lib']
+    endif
     iconv = declare_dependency(
-        link_args: ['-L' + with_libiconv / 'lib', '-liconv'],
+        link_args: libiconv_link_args,
         include_directories: include_directories(with_libiconv / 'include'),
     )
 else
@@ -1482,6 +1500,7 @@ endif
 with_pam = get_option('with-pam')
 pam_dir = ''
 pam_includes = []
+pam_link_args = []
 uams_options = ''
 pam_paths = [
     '/',
@@ -1503,8 +1522,12 @@ if pam_dir == '' and host_os == 'sunos'
 endif
 
 if with_pam != '' and pam_dir != '/'
+    pam_link_args += ['-L' + with_pam / 'lib', '-lpam']
+    if enable_rpath
+        pam_link_args += ['-R' + with_pam / 'lib']
+    endif
     pam = declare_dependency(
-        link_args: ['-L' + with_pam / 'lib', '-lpam'],
+        link_args: pam_link_args,
         include_directories: include_directories(with_pam / 'include'),
     )
 else
