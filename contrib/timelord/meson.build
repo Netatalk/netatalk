@@ -5,4 +5,6 @@ executable(
     link_with: libatalk,
     install: true,
     install_dir: sbindir,
+    build_rpath: libdir,
+    install_rpath: libdir,
 )
