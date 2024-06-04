@@ -15,8 +15,6 @@ if perl.found() and grep.found()
         [
             appledump_script,
             asipstatus_script,
-            'make-casetable.pl',
-            'make-precompose.h.pl',
         ],
         install_dir: bindir,
     )
