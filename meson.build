@@ -716,7 +716,7 @@ else
         if get_option('with-spooldir') != ''
             spooldir += get_option('with-spooldir')
         else
-            spooldir += localstatedir / 'spool/netatalk'
+            spooldir += prefix / 'var/spool/netatalk'
         endif
     endif
 endif
