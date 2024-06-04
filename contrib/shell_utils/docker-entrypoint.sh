@@ -42,13 +42,18 @@ function helper::configure() {
 	fi
 	echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
+	# Creating credentials for the RandNum UAM
+	set +e
 	if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
 		rm -f /usr/local/etc/netatalk/afppasswd
 	fi
 
-	# Creating credentials for the RandNum UAM
 	afppasswd -c
 	afppasswd -a -f -w "${AFP_PASS}" "${AFP_USER}"
+	if [ $? -ne 0 ]; then
+		echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
+	fi
+	set -e
 
 	echo "*** Configuring shared volume"
 
