@@ -1158,7 +1158,7 @@ if iconv.found() or libiconv.found()
         cdata.set('ICONV_CONST', 'const')
     endif
 
-    if cc.compiles(
+    if cc.run(
         '''
     #include <iconv.h>
     int main(void) {
@@ -1167,7 +1167,7 @@ if iconv.found() or libiconv.found()
         return 0;
     }
     ''',
-    )
+    ).returncode() == 0
         cdata.set('HAVE_UCS2INTERNAL', 1)
     endif
 else
