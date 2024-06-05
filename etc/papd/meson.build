@@ -43,3 +43,7 @@ executable(
     build_rpath: libdir,
     install_rpath: libdir,
 )
+
+if have_cups and spooldir_required
+    install_emptydir(spooldir, install_mode: 'rwxrwxrwx')
+endif
