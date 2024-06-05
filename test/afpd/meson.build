@@ -1,5 +1,3 @@
-test_internal_deps = []
-test_external_deps = []
 test_sources = [
     'afpfunc_helpers.c',
     'subtests.c',
@@ -33,6 +31,10 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 
+test_external_deps = []
+test_internal_deps = []
+test_link_args = []
+
 if have_spotlight
     test_sources += [
         meson.project_source_root() / 'etc/afpd/spotlight.c',
@@ -57,13 +59,14 @@ if have_quota
         meson.project_source_root() / 'etc/afpd/quota.c',
     ]
     if tirpc.found()
-        afpd_external_deps += tirpc
+        test_external_deps += tirpc
     elif rpcsvc.found()
-        afpd_external_deps += rpcsvc
-        netatalk_common_link_args += quota_link_args
-    elif quota.found()
-        afpd_external_deps += rpcsvc
-        netatalk_common_link_args += quota_link_args
+        test_external_deps += rpcsvc
+        netatalk_common_link_args += sunrpc_link_args
+    endif
+    if quota.found()
+        test_external_deps += quota
+        netatalk_common_link_args += libquota_link_args
     endif
 endif
 
@@ -96,7 +99,7 @@ afpdtestlib = static_library(
         statedir,
         uamdir,
     ],
-    link_args: netatalk_common_link_args,
+    link_args: test_link_args,
     install: false,
     build_by_default: false,
 )
@@ -166,7 +169,7 @@ afpdtest = executable(
         tirpc,
     ],
     c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
-    link_args: quota_link_args,
+    link_args: test_link_args,
     export_dynamic: true,
     install: false,
 )

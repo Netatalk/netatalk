@@ -852,7 +852,8 @@ quota = cc.find_library('quota', required: false)
 rpcsvc = cc.find_library('rpcsvc', required: false)
 tirpc = dependency('libtirpc', required: false)
 
-quota_link_args = []
+sunrpc_link_args = []
+libquota_link_args = []
 quota_provider = ''
 
 rpc_headers = [
@@ -872,8 +873,6 @@ if rpc_headers_ok
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
     endforeach
 endif
-
-message(rpc_headers_ok)
 
 if get_option('enable-quota').disabled()
     have_quota = false
@@ -911,8 +910,6 @@ else
         'Please install either libtirpc or libquota if your system supports these libraries.',
     )
 endif
-
-message(quota_link_args)
 
 #
 # Check for libgcrypt
@@ -1779,21 +1776,22 @@ endif
 
 threads = dependency('threads', required: true)
 if threads.found()
+    have_threads = true
     cdata.set('HAVE_PTHREAD', 1)
-endif
 
-# Check for PTHREAD_PRIO_INHERIT
+    # Check for PTHREAD_PRIO_INHERIT
 
-if cc.compiles(
-    '''
-#include <pthread.h>
-int main(void) {
-int i = PTHREAD_PRIO_INHERIT;
-  return i;
-}
-''',
-)
-    cdata.set('HAVE_PTHREAD_PRIO_INHERIT', 1)
+    if cc.compiles(
+        '''
+    #include <pthread.h>
+    int main(void) {
+    int i = PTHREAD_PRIO_INHERIT;
+      return i;
+    }
+    ''',
+    )
+        cdata.set('HAVE_PTHREAD_PRIO_INHERIT', 1)
+    endif
 endif
 
 #

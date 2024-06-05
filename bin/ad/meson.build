@@ -10,11 +10,17 @@ ad_sources = [
     'ad.h',
 ]
 
+ad_deps = []
+
+if use_mysql_backend
+    ad_deps += mysqlclient
+endif
+
 executable(
     'ad',
     ad_sources,
     include_directories: root_includes,
-    dependencies: mysqlclient,
+    dependencies: ad_deps,
     link_with: libatalk,
     c_args: [ad, dversion],
     install: true,

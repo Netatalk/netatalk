@@ -1,7 +1,3 @@
-afpd_internal_deps = []
-afpd_external_deps = []
-afpd_c_args = []
-
 afpd_sources = [
     'afp_config.c',
     'afp_dsi.c',
@@ -32,6 +28,11 @@ afpd_sources = [
     'volume.c',
     'main.c',
 ]
+
+afpd_c_args = []
+afpd_external_deps = [libgcrypt]
+afpd_internal_deps = []
+afpd_link_args = []
 
 if have_spotlight
     afpd_sources += [
@@ -85,11 +86,33 @@ if have_quota
         afpd_external_deps += tirpc
     elif rpcsvc.found()
         afpd_external_deps += rpcsvc
-        netatalk_common_link_args += quota_link_args
-    elif quota.found()
-        afpd_external_deps += rpcsvc
-        netatalk_common_link_args += quota_link_args
+        afpd_link_args += sunrpc_link_args
     endif
+    if quota.found()
+        afpd_external_deps += quota
+        afpd_link_args += libquota_link_args
+    endif
+endif
+
+if have_gssapi
+    afpd_external_deps += gss
+endif
+
+if have_kerberos
+    afpd_external_deps += kerberos
+    afpd_c_args += kerberos_c_args
+endif
+
+if have_tcpwrap
+    afpd_external_deps += wrap
+endif
+
+if use_mysql_backend
+    afpd_external_deps += mysqlclient
+endif
+
+if threads.found()
+    afpd_external_deps += threads
 endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before
@@ -104,19 +127,11 @@ libafpd = static_library(
     afpd_sources,
     include_directories: root_includes,
     link_with: [afpd_internal_deps, libatalk],
-    dependencies: [
-        afpd_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
-        libcnid_deps,
-        threads,
-        tirpc,
-    ],
+    dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', confdir,
+        '-DAPPLCNAME', afpd_c_args,
+        confdir,
         dversion,
-        kerberos_c_args,
         messagedir,
         statedir,
         uamdir,
@@ -182,18 +197,11 @@ executable(
     objects: afpd_objs,
     include_directories: root_includes,
     link_with: [afpd_internal_deps, libatalk],
-    dependencies: [
-        afpd_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
-        libcnid_deps,
-        threads,
-    ],
+    dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', confdir,
+        '-DAPPLCNAME', afpd_c_args,
+        confdir,
         dversion,
-        kerberos_c_args,
         messagedir,
         statedir,
         uamdir,
