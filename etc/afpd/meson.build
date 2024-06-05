@@ -1,5 +1,5 @@
 afpd_internal_deps = []
-afpd_external_deps = []
+afpd_external_deps = [libgcrypt]
 afpd_c_args = []
 
 afpd_sources = [
@@ -76,13 +76,41 @@ if have_acls
     afpd_external_deps += [acl_deps]
 endif
 
+if have_gssapi
+    afpd_external_deps += gss
+endif
+
+if have_kerberos
+    afpd_external_deps += kerberos
+    afpd_c_args += kerberos_c_args
+endif
+
+if have_tcpwrap
+    afpd_external_deps += wrap
+endif
+
+if use_mysql_backend
+    afpd_external_deps += mysqlclient
+endif
+
+if threads.found()
+    afpd_external_deps += threads
+endif
+
 if have_quota
     afpd_sources += [
         'nfsquota.c',
         'quota.c',
     ]
-    afpd_external_deps += quota
+endif
+
+if tirpc.found()
+    afpd_external_deps += tirpc
+endif
+
+if quota.found()
     netatalk_common_link_args += quota_link_args
+    afpd_external_deps += quota
 endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before
@@ -97,19 +125,12 @@ libafpd = static_library(
     afpd_sources,
     include_directories: root_includes,
     link_with: [afpd_internal_deps, libatalk],
-    dependencies: [
-        afpd_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
-        libcnid_deps,
-        threads,
-        tirpc,
-    ],
+    dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', confdir,
+        '-DAPPLCNAME',
+        afpd_c_args,
+        confdir,
         dversion,
-        kerberos_c_args,
         messagedir,
         statedir,
         uamdir,
@@ -175,18 +196,12 @@ executable(
     objects: afpd_objs,
     include_directories: root_includes,
     link_with: [afpd_internal_deps, libatalk],
-    dependencies: [
-        afpd_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
-        libcnid_deps,
-        threads,
-    ],
+    dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', confdir,
+        '-DAPPLCNAME',
+        afpd_c_args,
+        confdir,
         dversion,
-        kerberos_c_args,
         messagedir,
         statedir,
         uamdir,
