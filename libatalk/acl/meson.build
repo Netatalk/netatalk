@@ -4,17 +4,21 @@ acl_sources = [
     'uuid.c',
 ]
 
+libacl_deps = [acl_deps]
+
 if have_ldap
     acl_sources += [
         'ldap.c',
         'ldap_config.c',
     ]
+    libacl_deps += ldap
+    
 endif
 
 libacl = static_library(
     'acl',
     acl_sources,
     include_directories: root_includes,
-    dependencies: [acl_deps, ldap],
+    dependencies: libacl_deps,
     install: false,
 )

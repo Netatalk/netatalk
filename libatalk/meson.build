@@ -1,6 +1,3 @@
-libatalk_sources = []
-libatalk_libs = []
-
 subdir('acl')
 subdir('adouble')
 subdir('bstring')
@@ -11,9 +8,21 @@ subdir('util')
 subdir('unicode')
 subdir('vfs')
 
+libatalk_deps = []
+libatalk_libs = []
+libatalk_sources = []
+
 if host_os != 'darwin'
     subdir('compat')
     libatalk_libs += libcompat
+endif
+
+if have_acls
+    libatalk_deps += acl_deps
+endif
+
+if have_threads
+    libatalk_deps += threads
 endif
 
 if have_embedded_ssl
@@ -31,7 +40,7 @@ libatalk = both_libraries(
     'atalk',
     libatalk_sources,
     include_directories: root_includes,
-    dependencies: [acl_deps, libcnid_deps, threads],
+    dependencies: [libatalk_deps, libcnid_deps],
     link_whole: [
         libacl,
         libadouble,

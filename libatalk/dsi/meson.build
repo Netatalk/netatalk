@@ -13,10 +13,16 @@ dsi_sources = [
     'dsi_write.c',
 ]
 
+libdsi_deps = []
+
+if have_tcpwrap
+    libdsi_deps += wrap
+endif
+
 libdsi = static_library(
     'dsi',
     dsi_sources,
-    dependencies: wrap,
+    dependencies: libdsi_deps,
     include_directories: root_includes,
     install: false,
 )
