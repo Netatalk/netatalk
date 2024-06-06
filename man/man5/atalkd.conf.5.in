@@ -2,12 +2,12 @@
 .\"     Title: atalkd.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08 Mar 2024
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 24 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "ATALKD\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "ATALKD\&.CONF" "5" "24 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,32 +36,64 @@ is the configuration file used by atalkd to configure the Appletalk interfaces a
 .PP
 Any line not prefixed with
 \fB#\fR
-is interpreted\&. The configuration lines are composed like:
+is interpreted\&. Each interface has be configured on an uninterrupted line, with no support for split lines\&. The configuration line format is:
 .PP
-\fIInterface\fR
-\fB[\fR
-\fIoptions\fR
-\fB]\fR
+\fIinterface\fR
+[
+\fB\-seed\fR
+] [
+\fB\-phase\fR
+\fInumber\fR
+] [
+\fB\-net\fR
+\fInet\-range\fR
+] [
+\fB\-addr\fR
+\fIaddress\fR
+] [
+\fB\-zone\fR
+\fIzonename\fR
+] \&.\&.\&.
 .PP
-The simplest case is to have either no atalkd\&.conf, or to have one that has no active lines\&. In this case, atalkd should auto\-discover the local interfaces on the machine\&. Please note that you cannot split lines\&.
+The simplest case is to have either no atalkd\&.conf, or to have one that has no active lines\&. In this case, atalkd will auto\-discover the local interfaces on the machine and write to the atalkd\&.conf file, creating it if one does not exist\&.
 .PP
 The interface is the network interface that this to work over, such as
 \fBeth0\fR
 for Linux, or
 \fBle0\fR
-for Sun\&.
+for Solaris\&.
+.PP
+Note that all fields except the interface are optional\&. The loopback interface is configured automatically\&. If
+\fB\-seed\fR
+is specified, all other fields must be present\&. Also,
+\fBatalkd\fR
+will exit during startup if a router disagrees with its seed information\&. If
+\fB\-seed\fR
+is not given, all other information may be overridden during auto\-configuration\&. If no
+\fB\-phase\fR
+option is given, the default phase as given on the command line is used (the default is 2)\&. If
+\fB\-addr\fR
+is given and
+\fB\-net\fR
+is not, a net\-range of one is assumed\&.
+.PP
+The first \-zone directive for each interface is the ``default\*(Aq\*(Aq zone\&. Under Phase 1, there is only one zone\&. Under Phase 2, all routers on the network are configured with the default zone and must agree\&.
+\fBatalkd\fR
+maps ``*\*(Aq\*(Aq to the default zone of the first interface\&. Note: The default zone for a machine is determined by the configuration of the local routers; to appear in a non\-default zone, each service, e\&.g\&.
+\fBafpd\fR, must individually specify the desired zone\&. See also
+\fBnbp_name\fR(3)\&.
 .PP
 The possible options and their meanings are:
 .PP
 \fB\-addr \fR\fB\fInet\&.node\fR\fR
 .RS 4
-Allows specification of the net and node numbers for this interface, specified in Appletalk numbering format (example:
+Allows specification of the net and node numbers for this interface, specified in AppleTalk numbering format (example:
 \fB\-addr 66\&.6\fR)\&.
 .RE
 .PP
 \fB\-dontroute\fR
 .RS 4
-Disables Appletalk routing\&. It is the opposite of
+Disables AppleTalk routing\&. It is the inverse of
 \fB\-router\fR\&.
 .RE
 .PP
@@ -70,26 +102,28 @@ Disables Appletalk routing\&. It is the opposite of
 Allows the available net to be set, optionally as a range\&.
 .RE
 .PP
-\fB\-noallmulti\fR (linux only)
+\fB\-noallmulti\fR (Linux only)
 .RS 4
-On linux the interfaces, atalkd uses, are set to ALLMULTI by default caused by countless NICs having problems without being forced into this mode (some even don\*(Aqt work with allmulti set)\&. In case, you\*(Aqve a NIC known to support multicasts properly, you might want to set this option causing less packets to be processed
+On Linux, the interfaces atalkd uses are set to ALLMULTI by default, because of countless NICs having problems when not being forced into this mode (some don\*(Aqt even work with ALLMULTI set)\&. In case you have a NIC known to support multicasts properly, you might want to set this option to make fewer packets be processed
 .RE
 .PP
 \fB\-phase ( 1 | 2 )\fR
 .RS 4
-Specifies the Appletalk phase that this interface is to use (either Phase 1 or Phase 2)\&.
+Specifies the AppleTalk phase that this interface is to use (either Phase 1 or Phase 2)\&.
 .RE
 .PP
 \fB\-router\fR
 .RS 4
-Like
-\fB\-seed\fR, but allows single interface routing\&. It is the opposite of
-\fB\-dontroute\fR\&.
+Seed an AppleTalk router on a single interface\&. The inverse option is
+\fB\-dontroute\fR\&. Akin to
+\fB\-seed\fR, but allows single interface routing\&.
 .RE
 .PP
 \fB\-seed\fR
 .RS 4
-The seed option only works if you have multiple interfaces\&. It also causes all missing arguments to be automagically configured from the network\&.
+Seed an AppleTalk router\&. This requires two or more interfaces to be configured\&. If you have a single network interface, use
+\fB\-route\fR
+instead\&. It also causes all missing arguments to be automagically configured from the network\&.
 .RE
 .PP
 \fB\-zone \fR\fB\fIzonename\fR\fR
@@ -97,6 +131,44 @@ The seed option only works if you have multiple interfaces\&. It also causes all
 Specifies a specific zone that this interface should appear on (example:
 \fB\-zone "Parking Lot"\fR)\&. Please note that zones with spaces and other special characters should be enclosed in parentheses\&.
 .RE
+.SH "EXAMPLES"
+.PP
+Single interface on Solaris with auto\-detected parameters\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+   le0
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The same on Linux\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+   eth0
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Below is an example configuration file from a Sun 4/40\&. The machine has two interfaces, ``le0\*(Aq\*(Aq and ``le1\*(Aq\*(Aq\&. The ``le0\*(Aq\*(Aq interface is configured automatically from other routers on the network\&. The machine is the only router for the ``le1\*(Aq\*(Aq interface\&.
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+   le0
+   le1 \-seed \-net 9461\-9471 \-zone netatalk \-zone Argus
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBatalkd\fR(8)

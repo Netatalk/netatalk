@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08 Mar 2024
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 24 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFPD\&.CONF" "5" "24 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -86,7 +86,7 @@ file\&.
 .PP
 \-uamlist \fI[uams list]\fR
 .RS 4
-Comma separated list of UAMs\&. (The default is uams_dhx2\&.so)\&.
+Comma separated list of UAMs\&. (The default is uams_dhx\&.so,uams_dhx2\&.so)\&.
 .sp
 The most commonly used UAMs are:
 .PP
@@ -180,19 +180,9 @@ Specifies the Mac client\*(Aqs codepage, e\&.g\&. "MAC_ROMAN"\&. This is used to
 .RE
 .SH "PASSWORD OPTIONS"
 .PP
-\-loginmaxfail [\fInumber\fR]
-.RS 4
-Sets the maximum number of failed logins, if supported by the UAM (currently none)
-.RE
-.PP
 \-passwdfile [\fIpath\fR]
 .RS 4
 Sets the path to the Randnum UAM passwd file for this server\&.
-.RE
-.PP
-\-passwdminlen [\fInumber\fR]
-.RS 4
-Sets the minimum password length, if supported by the UAM
 .RE
 .PP
 \-[no]savepassword
@@ -220,9 +210,10 @@ to prevent DDP connections from working\&.
 Enables or disables AFP\-over\-TCP
 .RE
 .PP
-\-transall
+\-[no]transall
 .RS 4
-Make both available (default)
+Enables or disables both transport protocols\&. Default is
+\fB\-transall\fR\&.
 .RE
 .SH "TRANSPORT OPTIONS"
 .PP
@@ -359,57 +350,6 @@ Allows users of a certain group to be seen as the superuser when they log in\&. 
 \-authprintdir \fI[path]\fR
 .RS 4
 Specifies the path to be used (per server) to store the files required to do CAP\-style print authentication which papd will examine to determine if a print job should be allowed\&. These files are created at login, and if they are to be properly removed, this directory probably needs to be umode 1777\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-\fB\-authprintdir\fR
-will only work for clients connecting via DDP\&. Almost all modern Clients will use TCP\&.
-.sp .5v
-.RE
-.RE
-.PP
-\-client_polling
-.RS 4
-With this switch enabled, afpd won\*(Aqt advertise that it is capable of server notifications, so that connected clients poll the server every 10 seconds to detect changes in opened server windows\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-Depending on the number of simultaneously connected clients and the network\*(Aqs speed, this can lead to a significantly higher load on your network!
-.sp .5v
-.RE
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-Do not use this option any longer as Netatalk 2\&.x correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
-.sp .5v
-.RE
 .RE
 .PP
 \-closevol
@@ -477,7 +417,44 @@ and should be quoted\&. Extended characters are allowed\&.
 .PP
 \-mimicmodel \fImodel\fR
 .RS 4
-Specifies the shared volume icon that appears on Mac OS X clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
+Specifies a custom icon for the mounted AFP volume on macOS / Mac OS X clients\&. Default is to let macOS choose\&. Requires netatalk to be built with Zeroconf\&. Examples:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBLaptop\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBRackMount\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBTower\fR
+.RE
+.sp
+A complete set of supported model codes by a macOS client can be found by inspecting
+/System/Library/CoreServices/CoreTypes\&.bundle/Contents/Info\&.plist
+(as of macOS 14 Sonoma)\&.
 .RE
 .PP
 \-noacl2maccess
@@ -504,8 +481,8 @@ automatically (based on a random number)\&. The "host" signature type switches b
 .RS 4
 .\}
 .nf
-first \-signature user:USERS 
-            second \-signature user:USERS 
+first \-signature user:USERS
+            second \-signature user:USERS
             third \-signature user:ADMINS
 .fi
 .if n \{\
@@ -653,8 +630,8 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RS 4
 .\}
 .nf
-\- \-uamlist uams_dhx\&.so,uams_dhx2\&.so,uams_guest\&.so,uams_gss\&.so \e 
-\-k5service afpserver \-k5keytab /path/to/afpserver\&.keytab \e 
+\- \-uamlist uams_dhx\&.so,uams_dhx2\&.so,uams_guest\&.so,uams_gss\&.so \e
+\-k5service afpserver \-k5keytab /path/to/afpserver\&.keytab \e
 \-k5realm YOUR\&.REALM \-fqdn your\&.fqdn\&.namel:548
 .fi
 .if n \{\

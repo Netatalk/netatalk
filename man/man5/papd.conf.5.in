@@ -2,12 +2,12 @@
 .\"     Title: papd.conf
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06 Sep 2004
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 24 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "PAPD\&.CONF" "5" "06 Sep 2004" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "PAPD\&.CONF" "5" "24 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,16 +34,21 @@ papd.conf \- Configuration file used by \fBpapd\fR(8) to determine the configura
 \fBpapd\&.conf\fR
 is the configuration file used by papd to configure the printing services offered by netatalk\&.
 \fBpapd\fR
-shares the same defaults as lpd on many systems, but not Solaris\&.
+shares the same defaults as lpd on many systems\&. One notable exception is Solaris\&.
 .PP
-Any line not prefixed with
+The format of papd\&.conf is derived from
+\fBprintcap\fR(5)
+and can contain configurations for one or more printers\&. Any line not prefixed with
 \fB#\fR
-is interpreted\&. The configuration lines are composed like:
+is interpreted\&. The configuration lines are composed like this:
 .PP
 \fIprintername:[options]\fR
 .PP
-On systems running a System V printing system the simplest case is to have either no papd\&.conf, or to have one that has no active lines\&. In this case, atalkd should auto\-discover the local printers on the machine\&. Please note that you can split lines by using
-\fB\e\efR\&.\fR
+On systems running a System V printing system, the simplest case is to have either no papd\&.conf, or to have one that has no active lines\&. In this case,
+\fIatalkd\fR
+should auto\-discover the local printers on the machine\&. Please note that you can split lines with a
+\fB\e\fR
+(backslash)\&.
 .PP
 printername may be just a name (\fBPrinter 1\fR), or it may be a full name in nbp_name format (\fBPrinter 1:LaserWriter@My Zone\fR)\&.
 .PP
@@ -53,12 +58,12 @@ option (e\&.g\&.
 \fBpr=|/usr/bin/lpr\fR)\&.
 .PP
 When CUPS support is compiled in, then
-\fBcupsautoadd \fR
-as the first entry in papd\&.conf will automagically share all CUPS printers by papd utilizing the PPDs assigned in CUPS (customizable \-\- see below)\&. This can be overwritten for individal printers by subsequently adding individual entries using the CUPS queue name as
-\fBpr \fR
+\fBcupsautoadd\fR
+as the first entry in papd\&.conf will automagically configure and make all CUPS printers available to papd (customizable \-\- see below)\&. This can be overwritten for individual printers by subsequently adding individual entries using the CUPS queue name as
+\fBpr\fR
 entry\&. Note: CUPS support is mutually exclusive with System V support described above\&.
 .PP
-The possible options are colon delimited (\fB:\fR), and lines must be terminated with colons\&. The possible options and flags are:
+The possible options are colon delimited (\fB:\fR), and lines must be terminated with colons\&. The available options and flags are:
 .PP
 \fBam=(uams list)\fR
 .RS 4
@@ -66,7 +71,7 @@ The
 \fBam\fR
 option allows specific UAMs to be specified for a particular printer\&. It has no effect if the
 \fBau\fR
-flag is not present or if papd authentication was not built into netatalk\&. Note: possible values are
+flag is not present\&. Note: possible values are
 \fBuams_guest\&.so\fR
 and
 \fB uams_clrtxt\&.so\fR
@@ -75,7 +80,7 @@ only\&. The first method requires a valid username, but no password\&. The secon
 .PP
 \fBau\fR
 .RS 4
-If present, this flag enables authentication for the printer\&. Please note that papd authentication must be built into netatalk for this to take effect\&.
+If present, this flag enables authentication for the printer\&.
 .RE
 .PP
 \fBco=(CUPS options)\fR
@@ -90,26 +95,26 @@ or
 .PP
 \fBcupsautoadd[:type][@zone]\fR
 .RS 4
-If used as the first entry in papd\&.conf this will share all CUPS printers via papd\&. type/zone settings as well as other parameters assigned to this special printer share will apply to all CUPS printers\&. Unless the
+If used as the first entry in papd\&.conf this will share all CUPS printers via papd\&. type/zone settings as well as other parameters assigned to this special shared printer will apply to all CUPS printers\&. Unless the
 \fBpd\fR
 option is set, the CUPS PPDs will be used\&. To overwrite these global settings for individual printers simply add them subsequently to papd\&.conf and assign different settings\&.
 .RE
 .PP
 \fBfo\fR
 .RS 4
-If present, this flag enables a hack to translate line endings originating from pre Mac OS X LaserWriter drivers to let
+If present, this flag enables a hack to translate line endings originating from pre\-Mac OS X LaserWriter drivers to let
 \fBfoomatic\-rip\fR
 recognize foomatic PPD options set in the printer dialog\&. Attention: Use with caution since this might corrupt binary print jobs!
 .RE
 .PP
 \fBop=(operator)\fR
 .RS 4
-This specifies the operator name, for lpd spooling\&.
+This specifies the operator name, for lpd spooling\&. Default value is "operator"\&.
 .RE
 .PP
 \fBpa=(appletalk address)\fR
 .RS 4
-Allows specification of Appletalk addresses\&. Usually not needed\&.
+Allows specification of AppleTalk addresses\&. Usually not needed\&.
 .RE
 .PP
 \fBpd=(path to ppd file)\fR
@@ -123,7 +128,7 @@ Sets the
 \fBlpd\fR
 or
 \fBCUPS\fR
-printer that this is spooled to\&.
+printer that this is spooled to\&. Default value is "lp"\&.
 .RE
 .SH "EXAMPLES"
 .PP
@@ -155,7 +160,7 @@ HP Printer:\e
 .\}
 
 .PP
-An alternative to the technique outlined above is to direct papd\*(Aqs output via a pipe into another program\&. Using this mechanism almost all printing systems can be driven\&.
+An alternative to the technique outlined above is to direct papd\*(Aqs output via a pipe into another program\&. Almost any printing system can be driven using this mechanism\&.
 .PP
 \fBExample.\ \&papd\&.conf examples using pipes\fR
 .PP
@@ -172,17 +177,16 @@ HP 8100:\e
    :pr=|/usr/bin/lpr \-Plp:\e
    :sp:\e
    :ca=/tmp/print:\e
-   :am=uams_guest\&.so,uams_pam\&.so:\e
+   :am=uams_guest\&.so,uams_clrtxt\&.so:\e
    :pd=/etc/atalk/ppds/hp8100\&.ppd:
       
 .fi
 .if n \{\
 .RE
 .\}
-.sp
 
 .PP
-Starting with Netatalk 2\&.0 direct CUPS integration is available\&. In this case, defining only a queue name as
+Starting with Netatalk 2\&.0, direct CUPS integration is available\&. In this case, defining only a queue name as
 \fBpr\fR
 parameter won\*(Aqt invoke the SysV lpd daemon but uses CUPS instead\&. Unless a specific PPD has been assigned using the
 \fBpd\fR
@@ -193,7 +197,7 @@ There exists one special share named "cupsautoadd"\&. If this is present as the 
 .PP
 \fBExample.\ \&papd\&.conf CUPS examples\fR
 .PP
-The first entry sets up automatic sharing of all CUPS printers\&. All those shares appear in the zone "1st floor" and since no additional settings have been made, they use the CUPS printer name as NBP name and use the PPD configured in CUPS\&. The second entry defines different settings for one single CUPS printer\&. It\*(Aqs NBP name is differing from the printer\*(Aqs name and the registration happens in another zone\&.
+The first entry sets up automatic sharing of all CUPS printers\&. All those shares appear in the zone "1st floor" and since no additional settings have been made, they use the CUPS printer name as NBP name and use the PPD configured in CUPS\&. The second entry defines different settings for one single CUPS printer\&. Its NBP name is differing from the printer\*(Aqs name and the registration happens in another zone\&.
 .sp
 .if n \{\
 .RS 4
@@ -208,6 +212,9 @@ Boss\*(Aq LaserWriter@2nd floor:\e
 .RE
 .\}
 
+.SH "CAVEATS"
+.PP
+If you are using more than 15 printers in your network, you must specify AppleTalk zones for the papd printer configurations\&. Otherwise, only some of the printers may appear in the Chooser on Mac clients\&.
 .SH "SEE ALSO"
 .PP
 \fBpapd\fR(8),

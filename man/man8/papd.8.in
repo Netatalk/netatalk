@@ -2,12 +2,12 @@
 .\"     Title: papd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 24 Dec 2023
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 24 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "PAPD" "8" "24 Dec 2023" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "PAPD" "8" "24 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 papd \- AppleTalk print server daemon
 .SH "SYNOPSIS"
 .HP \w'\fBpapd\fR\fB\fR\fB\fR\ 'u
-\fBpapd\fR\fB\fR\fB\fR [\-d] [\-f\ configfile] [\-p\ printcap]
+\fBpapd\fR\fB\fR\fB\fR [\-d] [\-f\ configfile] [\-p\ printcap] [\-P\ pidfile]
 .SH "DESCRIPTION"
 .PP
 \fBpapd\fR
@@ -53,133 +53,13 @@ As of Netatalk 2\&.0, CUPS is also supported\&. Simply using
 \fBcupsautoadd\fR
 as the first papd\&.conf entry will share all CUPS printers automagically\&. It is still possible to overwrite these defaults by individually defining printer shares\&. See
 \fBpapd.conf\fR(5)
-for details\&.
+for details on the configuration file format\&.
 .PP
 \fBpapd\fR
 is typically started at boot time from system init scripts or services\&. It first reads from its configuration file,
-papd\&.conf\&. The file is in the same format as
-/etc/printcap\&. See
-\fBprintcap\fR(5)
-for details\&. The name of the entry is registered with NBP\&.
+papd\&.conf\&.
 .PP
-The following options are supported:
-.TS
-tab(:);
-cB cB cB lB.
-T{
-Name
-T}:T{
-Type
-T}:T{
-Default
-T}:T{
-Description
-T}
-.T&
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l
-c l l l.
-T{
-pd
-T}:T{
-str
-T}:T{
-\*(Aq\&.ppd\*(Aq
-T}:T{
-Pathname to PPD file
-T}
-T{
-pr
-T}:T{
-str
-T}:T{
-\*(Aqlp\*(Aq
-T}:T{
-LPD or CUPS printer name (or pipe to a print
-              command)
-T}
-T{
-op
-T}:T{
-str
-T}:T{
-\*(Aqoperator\*(Aq
-T}:T{
-Operator name for LPD spooling
-T}
-T{
-au
-T}:T{
-bool
-T}:T{
-false
-T}:T{
-Whether to do authenticated printing or not
-T}
-T{
-ca
-T}:T{
-str
-T}:T{
-NULL
-T}:T{
-Pathname used for CAP\-style authentication
-T}
-T{
-sp
-T}:T{
-bool
-T}:T{
-false
-T}:T{
-PSSP\-style authentication
-T}
-T{
-am
-T}:T{
-str
-T}:T{
-NULL
-T}:T{
-UAMS to use for authentication
-T}
-T{
-pa
-T}:T{
-str
-T}:T{
-NULL
-T}:T{
-Printer\*(Aqs AppleTalk address
-T}
-T{
-co
-T}:T{
-str
-T}:T{
-NULL
-T}:T{
-CUPS options as supplied to the \fBlp\fR(1) command with "\-o"
-T}
-T{
-fo
-T}:T{
-bool
-T}:T{
-false
-T}:T{
-adjust lineending for foomatic\-rip
-T}
-.TE
-.sp 1
-If no configuration file is given, the hostname of the machine is used as the NBP name and all options take their default value\&.
+If no configuration file is given, the hostname of the machine is used as the NBP name, and all options take their default value\&.
 .SH "OPTIONS"
 .PP
 \-d
@@ -204,6 +84,13 @@ instead of
 /etc/printcap
 for LPD configuration information\&.
 .RE
+.PP
+\-P \fIpidfile\fR
+.RS 4
+Specifies the file in which
+\fBpapd\fR
+stores its process id\&.
+.RE
 .SH "NOTES"
 .PP
 PSSP
@@ -223,7 +110,11 @@ gets the username from the file with the same AppleTalk address as the machine c
 \fBpapd\fR
 will fall back to PSSP\&.
 .PP
-The list of UAMs to use for authentication (specified with the \*(Aqam\*(Aq option) applies to all printers\&. It is not possible to define different authentication methods on each printer\&. You can specify the list of UAMS multiple times, but only the last setting will be used\&. Currently only uams_guest\&.so and uams_clrtxt\&.so are supported as printer authentication methods\&. The guest method requires a valid username, but not a password\&. The Cleartext UAM requires both a valid username and the correct password\&.
+The list of UAMs to use for authentication (specified with the \*(Aqam\*(Aq option) applies to all printers\&. It is not possible to define different authentication methods on each printer\&. You can specify the list of UAMS multiple times, but only the last setting will be used\&. Currently,
+\fIuams_guest\&.so\fR
+and
+\fIuams_clrtxt\&.so\fR
+are supported as printer authentication methods\&. The guest method requires a valid username, but not a password\&. The Cleartext UAM requires both a valid username and the correct password\&.
 .if n \{\
 .sp
 .\}
@@ -237,10 +128,9 @@ The list of UAMs to use for authentication (specified with the \*(Aqam\*(Aq opti
 .ps -1
 .br
 .PP
-As of this writing, Mac OS X makes no use of PSSP authentication any longer\&. CAP\-style authentication normally won\*(Aqt be an option, either, because of the use of AFP over TCP these days\&.
+Print authentication is only supported on Mac OS 9 and earlier\&.
 .sp .5v
 .RE
-.PP
 .SH "FILES"
 .PP
 papd\&.conf
@@ -260,21 +150,13 @@ PostScript Printer Description file\&. papd answers configuration and font queri
 .SH "CAVEATS"
 .PP
 \fBpapd\fR
-accepts characters with the high bit set (a full 8\-bits) from the clients, but some PostScript printers (including Apple Computer\*(Aqs LaserWriter family) only accept 7\-bit characters on their serial interface by default\&. The same applies for some printers when they\*(Aqre accessed via TCP/IP methods (remote LPR or socket)\&. You will need to configure your printer to accept a full 8 bits or take special precautions and convert the printjob\*(Aqs encoding (e\&.g\&. by using
+accepts characters with the high bit set (a full 8\-bits) from the clients, but some PostScript printers (including Apple\*(Aqs LaserWriter family) only accept 7\-bit characters on their serial interface by default\&. The same applies for some printers when they\*(Aqre accessed via TCP/IP methods (remote LPR or socket)\&. You will need to configure your printer to accept a full 8 bits or take special precautions and convert the printjob\*(Aqs encoding (e\&.g\&. by using
 \fBco="protocol=BCP"\fR
 when using CUPS 1\&.1\&.19 or above)\&.
 .PP
-When printing clients run Mac OS 10\&.2 or above, take care that PPDs do not make use of
+When printing clients run Mac OS X 10\&.2 or later, take care that PPDs do not make use of
 \fB*cupsFilter:\fR
-comments unless the appropriate filters are installed at the client\*(Aqs side, too (remember: Starting with 10\&.2 Apple chose to integrate CUPS into Mac OS X)\&. For in\-depth information on how CUPS uses PPDs see chapter 3\&.4 in
-\m[blue]\fBhttp://tinyurl\&.com/zbxn\fR\m[]\&\s-2\u[1]\d\s+2)\&.
+comments unless the appropriate filters are installed at the client\*(Aqs side, too\&.
 .SH "SEE ALSO"
 .PP
-\fBlpr\fR(1),\fBlprm\fR(1),\fBprintcap\fR(5),\fBlpc\fR(8),\fBlpd\fR(8),
-\fBlp\fR(1)\&.
-.SH "NOTES"
-.IP " 1." 4
-http://tinyurl.com/zbxn
-.RS 4
-\%http://tinyurl.com/zbxn
-.RE
+\fBlp1,lpr\fR(1),\fBlprm\fR(1),\fBprintcap\fR(5),\fBlpc\fR(8),\fBlpd\fR(8),\fBpapd.conf\fR(8)\&.

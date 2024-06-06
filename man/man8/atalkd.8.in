@@ -2,12 +2,12 @@
 .\"     Title: atalkd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08 Mar 2024
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 24 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "ATALKD" "8" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "ATALKD" "8" "24 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,50 +36,16 @@ atalkd \- userland AppleTalk network manager daemon
 .PP
 \fBatalkd\fR
 is responsible for all user level AppleTalk network management\&. This includes routing, name registration and lookup, zone lookup, and the AppleTalk Echo Protocol (similar to
-\fBping\fR(8))\&. Specifically, this corresponds to the RTMP, NBP, ZIP, and AEP protocols\&.
+\fBping\fR(8))\&. Specifically, this corresponds to the RTMP, NBP, ZIP, and AEP protocols in the AppleTalk protocol family\&.
 .PP
+The init system of your OS will typically start the
 \fBatalkd\fR
-is typically started at boot time from system init scripts or services\&. It first reads from its configuration file,
-atalkd\&.conf\&. If there is no configuration file,
+daemon at bootup\&. The daemon first reads from its configuration file,
+atalkd\&.conf\&. If there is no configuration file, or if no interfaces have been defined,
 \fBatalkd\fR
-will attempt to configure all available interfaces and will create a configuration file\&. The file consists of a series of interfaces, one per line\&. Lines with `#\*(Aq in the first column are ignored, as are blank lines\&. The syntax is
-.PP
-\fIinterface\fR
-[
-\fB\-seed\fR
-] [
-\fB\-phase\fR
-\fInumber\fR
-] [
-\fB\-net\fR
-\fInet\-range\fR
-] [
-\fB\-addr\fR
-\fIaddress\fR
-] [
-\fB\-zone\fR
-\fIzonename\fR
-] \&.\&.\&.
-.PP
-Note that all fields except the interface are optional\&. The loopback interface is configured automatically\&. If
-\fB\-seed\fR
-is specified, all other fields must be present\&. Also,
-\fBatalkd\fR
-will exit during bootstrap\%ping, if a router disagrees with its seed information\&. If
-\fB\-seed\fR
-is not given, all other information may be overridden during auto\-configuration\&. If no
-\fB\-phase\fR
-option is given, the default phase as given on the command line is used (the default is 2)\&. If
-\fB\-addr\fR
-is given and
-\fB\-net\fR
-is not, a net\-range of one is assumed\&.
-.PP
-The first \-zone directive for each interface is the ``default\*(Aq\*(Aq zone\&. Under Phase 1, there is only one zone\&. Under Phase 2, all routers on the network are configured with the default zone and must agree\&.
-\fBatalkd\fR
-maps ``*\*(Aq\*(Aq to the default zone of the first interface\&. Note: The default zone for a machine is determined by the configuration of the local routers; to appear in a non\-default zone, each service, e\&.g\&.
-\fBafpd\fR, must individually specify the desired zone\&. See also
-\fBnbp_name\fR(3)\&.
+will attempt to configure all available interfaces and will create a configuration file\&. See
+\fBatalkd.conf\fR(5)
+for details on the configuration file format\&.
 .SH "OPTIONS"
 .PP
 \-1
@@ -124,37 +90,21 @@ Print version information and exit\&.
 .RE
 .SH "ROUTING"
 .PP
-If you are connecting a netatalk router to an existing AppleTalk network, you should first contact your local network administrators to obtain appropriate network addresses\&.
+If you are connecting an
+\fBatalkd\fR
+router to an existing AppleTalk network, you should first contact your local network administrators to obtain appropriate network addresses\&.
 .PP
 \fBatalkd\fR
 can provide routing between interfaces by configuring multiple interfaces\&. Each interface must be assigned a unique net\-range
-between 1 and 65279 (0 and 65535 are illegal, and addresses between 65280 and 65534 are reserved for startup)\&. It is best to choose the smallest useful net\-range, i\&.e\&. if you have three machines on a LAN, don\*(Aqt chose a net\-range of 1000\-2000\&. Each net\-range may have an arbitrary list of zones associated with it\&.
-.SH "EXAMPLES"
+between 1 and 65279 (0 and 65535 are illegal, and addresses between 65280 and 65534 are reserved for startup)\&. It is best to choose the smallest useful net\-range, i\&.e\&. if you have three machines on a LAN, choose a net\-range below 1000\&. Each net\-range may have an arbitrary list of zones associated with it\&.
 .PP
-Below is an example configuration file for a sun4/40\&. The machine has two interfaces, ``le0\*(Aq\*(Aq and ``le1\*(Aq\*(Aq\&. The ``le0\*(Aq\*(Aq interface is configured automatically from other routers on the network\&. The machine is the only router for the ``le1\*(Aq\*(Aq interface\&.
-.PP
-.if n \{\
-.RS 4
-.\}
-.nf
-   le0
-   le1 \-seed \-net 9461\-9471 \-zone netatalk \-zone Argus
-.fi
-.if n \{\
-.RE
-.\}
-.sp
+Note that
 \fBatalkd\fR
-automatically acts as a router if there is more than one interface\&.
+automatically acts as a router if there is more than one interface, and no other configurations are present\&.
 .SH "FILES"
 .PP
 atalkd\&.conf
 configuration file
-.SH "BUGS"
-.PP
-On some systems,
-\fBatalkd\fR
-can not be restarted\&.
 .SH "SEE ALSO"
 .PP
 \fBatalkd.conf\fR(5)

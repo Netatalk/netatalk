@@ -2,12 +2,12 @@
 .\"     Title: afppasswd
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08 Mar 2024
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"      Date: 01 May 2024
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "AFPPASSWD" "1" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFPPASSWD" "1" "01 May 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,10 +35,10 @@ afppasswd \- AFP Random Number UAM password maintenance utility
 .SH "DESCRIPTION"
 .PP
 \fBafppasswd\fR
-allows the maintenance of afppasswd files created by netatalk for use by the uams_randnum\&.so UAM (providing the "Randnum exchange" and "2\-Way Randnum exchange" User Authentication Modules)\&.
+creates and maintains an afppasswd file, which supplies the user credentials for the "Randnum exchange" and "2\-Way Randnum exchange" User Authentication Modules\&.
 .PP
 \fBafppasswd\fR
-can either be called by root with parameters, or can be called by local system users with no parameters to change their own AFP passwords\&.
+can either be called by root with parameters to manage all user credentials, or by local system users with no parameters to change their own AFP passwords\&.
 .if n \{\
 .sp
 .\}
@@ -52,9 +52,7 @@ can either be called by root with parameters, or can be called by local system u
 .ps -1
 .br
 .PP
-With this utility you can only change the passwords used by two specific UAMs\&. As they provide only weak password encryption, the use of the "Randnum exchange" and "2\-Way Randnum exchange" UAMs is deprecated unless one has to support very old AFP clients, that can not deal with the more secure "DHX" or "DHX2" UAMs instead\&. Please compare with the
-Authentication chapter
-inside Netatalk\*(Aqs documentation\&.
+With this utility you can only change the passwords used by these two Random Number UAMs\&. As they provide only weak password encryption, their use is discouraged unless one has to support very old AFP clients that can not deal with the more secure "DHX" or "DHX2" UAMs\&.
 .sp .5v
 .RE
 .SH "EXAMPLE"
@@ -115,6 +113,11 @@ This is the minimum
 (uid) that
 \fBafppasswd\fR
 will use when creating users\&.
+.RE
+.PP
+\-w \fIstring\fR
+.RS 4
+Use string as password, instead of typing it interactively\&. Please use this option only if absolutely necessary, since the password will remain in the terminal history in plain text\&.
 .RE
 .SH "SEE ALSO"
 .PP

@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 08 Mar 2024
-.\"    Manual: @NETATALK_VERSION@
-.\"    Source: @NETATALK_VERSION@
+.\"    Manual: 2.4.0
+.\"    Source: 2.4.0
 .\"  Language: English
 .\"
-.TH "AFP_LDAP\&.CONF" "5" "08 Mar 2024" "@NETATALK_VERSION@" "@NETATALK_VERSION@"
+.TH "AFP_LDAP\&.CONF" "5" "08 Mar 2024" "2\&.4\&.0" "2.4.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -59,9 +59,9 @@ to syntactically check your config
 The required parameters and their meanings are:
 .SH "PARAMETER"
 .PP
-ldap_server
+ldap_uri
 .RS 4
-Name or IP address of your LDAP Server
+Specifies the LDAP URI of the server to connect to\&. The URI scheme may be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or TLS respectively (if supported by the LDAP library)\&. This is only needed for explicit ACL support in order to be able to query LDAP for UUIDs\&.
 .sp
 .RE
 .PP
@@ -151,7 +151,7 @@ Name of the LDAP attribute with the groups short name\&.
 .RS 4
 .\}
 .nf
-ldap_server      = localhost
+ldap_uri         = ldap://somehost:1234/
 ldap_auth_method = simple
 ldap_auth_dn     = cn=admin,dc=domain,dc=org
 ldap_auth_pw     = notthisone
