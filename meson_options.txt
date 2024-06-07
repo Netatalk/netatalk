@@ -84,8 +84,8 @@ option(
 )
 option(
     'with-acls',
-    type: 'feature',
-    value: 'auto',
+    type: 'string',
+    value: '',
     description: 'Include ACL support',
 )
 option(
