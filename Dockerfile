@@ -1,50 +1,49 @@
-FROM alpine:3.19
+FROM debian:bookworm-slim
 
 ENV LIB_DEPS \
-    acl \
-    avahi \
-    bash \
-    db \
-    dbus \
-    dbus-glib \
-    krb5 \
-    libevent \
-    libgcrypt \
-    linux-pam \
-    openldap \
-    talloc \
-    tracker \
-    tracker-miners
+    libavahi-client3 \
+    libdb5.3 \
+    libevent-2.1-7 \
+    libgcrypt20 \
+    libglib2.0-0 \
+    libldap-2.5-0 \
+    libmariadb3 \
+    libpam0g \
+    libtalloc2 \
+    libtracker-sparql-3.0-0 \
+    libwrap0 \
+    systemtap \
+    tracker
 ENV BUILD_DEPS \
-    acl-dev \
-    avahi-dev \
     bison \
-    curl \
-    db-dev \
-    dbus-dev \
-    build-base \
+    build-essential \
+    default-libmysqlclient-dev \
+    file \
     flex \
-    gcc \
-    krb5-dev \
+    libacl1-dev \
+    libattr1-dev \
+    libavahi-client-dev \
+    libcrack2-dev \
+    libdb5.3-dev \
     libevent-dev \
-    libgcrypt-dev \
-    linux-pam-dev \
+    libgcrypt20-dev \
+    libglib2.0-dev \
+    libldap2-dev \
+    libltdl-dev \
+    libpam0g-dev \
+    libtalloc-dev \
+    libtracker-sparql-3.0-dev \
+    libwrap0-dev \
     meson \
-    ninja \
-    openldap-dev \
-    pkgconfig \
-    talloc-dev \
-    tracker-dev
-RUN apk update \
-&&  apk add --no-cache \
+    ninja-build \
+    pkg-config \
+    systemtap-sdt-dev
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends \
     $LIB_DEPS \
     $BUILD_DEPS \
-&&  addgroup builder \
-&&  adduser \
-    --disabled-password \
-    --ingroup builder \
-    --no-create-home \
-    builder
+&&  useradd builder
 
 WORKDIR /netatalk-code
 COPY . .
@@ -54,9 +53,9 @@ USER builder
 
 RUN meson setup build \
     -Denable-pgp-uam=disabled \
+    -Dwith-afpstats=disabled \
     -Dwith-dbus-daemon=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-dir=/etc \
-    -Dwith-afpstats=disabled \
     -Dwith-dtrace=false \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
@@ -64,13 +63,22 @@ RUN meson setup build \
 
 USER root
 
-RUN ninja -C build install \
-&&  apk del $BUILD_DEPS \
+RUN userdel builder \
+&&  ninja -C build install \
+&&  apt-get remove --yes --auto-remove --purge $BUILD_DEPS && \
+    apt-get --quiet --yes autoclean && \
+    apt-get --quiet --yes autoremove && \
+    apt-get --quiet --yes clean \
 &&  rm -rf \
     /netatalk-code \
-    /usr/local/include/atalk \
-    /var/tmp \
+    /usr/include/netatalk \
+    /usr/share/man \
+    /usr/share/mime \
+    /usr/share/doc \
+    /usr/share/poppler \
+    /var/lib/apt/lists \
     /tmp \
+    /var/tmp \
 &&  ln -sf /dev/stdout /var/log/afpd.log
 
 WORKDIR /mnt
