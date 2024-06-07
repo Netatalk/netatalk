@@ -25,9 +25,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/hash.c',
     meson.project_source_root() / 'etc/afpd/mangle.c',
     meson.project_source_root() / 'etc/afpd/messages.c',
-    meson.project_source_root() / 'etc/afpd/nfsquota.c',
     meson.project_source_root() / 'etc/afpd/ofork.c',
-    meson.project_source_root() / 'etc/afpd/quota.c',
     meson.project_source_root() / 'etc/afpd/status.c',
     meson.project_source_root() / 'etc/afpd/switch.c',
     meson.project_source_root() / 'etc/afpd/uam.c',
@@ -51,6 +49,22 @@ endif
 if with_acls
     test_sources += meson.project_source_root() / 'etc/afpd/acls.c'
     test_external_deps += acl_deps
+endif
+
+if have_quota
+    test_sources += [
+        meson.project_source_root() / 'etc/afpd/nfsquota.c',
+        meson.project_source_root() / 'etc/afpd/quota.c',
+    ]
+    if tirpc.found()
+        afpd_external_deps += tirpc
+    elif rpcsvc.found()
+        afpd_external_deps += rpcsvc
+        netatalk_common_link_args += quota_link_args
+    elif quota.found()
+        afpd_external_deps += rpcsvc
+        netatalk_common_link_args += quota_link_args
+    endif
 endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before
@@ -82,7 +96,7 @@ afpdtestlib = static_library(
         statedir,
         uamdir,
     ],
-    #link_args: kerberos_link_args,
+    link_args: netatalk_common_link_args,
     install: false,
     build_by_default: false,
 )
