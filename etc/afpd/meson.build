@@ -24,9 +24,7 @@ afpd_sources = [
     'hash.c',
     'mangle.c',
     'messages.c',
-    'nfsquota.c',
     'ofork.c',
-    'quota.c',
     'status.c',
     'switch.c',
     'uam.c',
@@ -78,6 +76,15 @@ if with_acls
     afpd_external_deps += [acl_deps]
 endif
 
+if have_quota
+    afpd_sources += [
+        'nfsquota.c',
+        'quota.c',
+    ]
+    afpd_external_deps += quota
+    netatalk_common_link_args += quota_link_args
+endif
+
 # For dtrace probes we need to invoke dtrace on all input files, before
 # linking the final executable.
 #
@@ -107,10 +114,7 @@ libafpd = static_library(
         statedir,
         uamdir,
     ],
-    link_args: [
-        netatalk_common_link_args,
-        quota_link_args,
-    ],
+    link_args: netatalk_common_link_args,
     install: false,
     build_by_default: false,
 )
@@ -187,10 +191,7 @@ executable(
         statedir,
         uamdir,
     ],
-    link_args: [
-        netatalk_common_link_args,
-        quota_link_args,
-    ],
+    link_args: netatalk_common_link_args,
     export_dynamic: true,
     install: true,
     install_dir: sbindir,

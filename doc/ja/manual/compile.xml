@@ -66,7 +66,6 @@
   --enable-pgp-uam \
   --with-cracklib \
   --with-init-style=openrc \
-  --with-libtirpc \
   --with-tracker-pkgconfig-version=3.0
 </screen>
 			</para>
@@ -90,8 +89,7 @@
 			<para>
 				<screen>meson setup build \
   -Dbuild-tests=true \
-  -Dwith-init-style=openrc \
-  -Dwith-libtirpc=true
+  -Dwith-init-style=openrc
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -235,7 +233,6 @@ apt-get install --assume-yes --no-install-recommends \
   --enable-quota \
   --with-cracklib \
   --with-init-style=debian-sysv \
-  --with-libtirpc \
   --with-tracker-pkgconfig-version=3.0
 </screen>
 			</para>
@@ -267,8 +264,7 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>
 				<screen>meson setup build \
   -Dbuild-tests=true \
-  -Dwith-init-style=debian-sysv \
-  -Dwith-libtirpc=true
+  -Dwith-init-style=debian-sysv
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -342,7 +338,6 @@ apt-get install --assume-yes --no-install-recommends \
   --enable-quota \
   --with-cracklib \
   --with-init-style=redhat-systemd \
-  --with-libtirpc \
   --with-tracker-pkgconfig-version=3.0
 </screen>
 			</para>
@@ -367,8 +362,7 @@ apt-get install --assume-yes --no-install-recommends \
 				<screen>meson setup build \
   -Dbuild-tests=true \
   -Ddisable-init-hooks=true \
-  -Dwith-init-style=redhat-systemd \
-  -Dwith-libtirpc=true
+  -Dwith-init-style=redhat-systemd
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -539,7 +533,6 @@ xsltproc
   --with-cracklib \
   --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
   --with-init-style=debian-systemd \
-  --with-libtirpc \
   --with-tracker-pkgconfig-version=3.0
 </screen>
 			</para>
@@ -581,8 +574,7 @@ xsltproc
   -Dbuild-tests=true \
   -Dbuild-manual=true \
   -Ddisable-init-hooks=true \
-  -Dwith-init-style=debian-systemd \
-  -Dwith-libtirpc=true
+  -Dwith-init-style=debian-systemd
 </screen>
 			</para>
 			<para>Meson - Build and generate manual pages</para>

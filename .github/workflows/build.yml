@@ -113,7 +113,6 @@ jobs:
             --enable-pgp-uam \
             --with-cracklib \
             --with-init-style=openrc \
-            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -127,8 +126,7 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-init-style=openrc \
-            -Dwith-libtirpc=true
+            -Dwith-init-style=openrc
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
@@ -244,7 +242,6 @@ jobs:
             --enable-quota \
             --with-cracklib \
             --with-init-style=debian-sysv \
-            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc) all
@@ -262,8 +259,7 @@ jobs:
         run: |
           meson setup build \
             -Dbuild-tests=true \
-            -Dwith-init-style=debian-sysv \
-            -Dwith-libtirpc=true
+            -Dwith-init-style=debian-sysv
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
@@ -324,7 +320,6 @@ jobs:
             --enable-quota \
             --with-cracklib \
             --with-init-style=redhat-systemd \
-            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -339,8 +334,7 @@ jobs:
           meson setup build \
             -Dbuild-tests=true \
             -Ddisable-init-hooks=true \
-            -Dwith-init-style=redhat-systemd \
-            -Dwith-libtirpc=true
+            -Dwith-init-style=redhat-systemd
       - name: Meson - Build
         run: ninja -C build
       - name: Meson - Run tests
@@ -449,7 +443,6 @@ jobs:
             --with-cracklib \
             --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
             --with-init-style=debian-systemd \
-            --with-libtirpc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Generate manual pages
         run: make html
@@ -473,8 +466,7 @@ jobs:
             -Dbuild-tests=true \
             -Dbuild-manual=true \
             -Ddisable-init-hooks=true \
-            -Dwith-init-style=debian-systemd \
-            -Dwith-libtirpc=true
+            -Dwith-init-style=debian-systemd
       - name: Meson - Build and generate manual pages
         run: ninja -C build
       - name: Meson - Run tests
