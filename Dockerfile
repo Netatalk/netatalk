@@ -35,7 +35,7 @@ ENV BUILD_DEPS \
     pkg-config
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-&&  apt-get remove --yes --auto-remove --purge libnss3 libnghttp2-14 perl \
+&&  apt-get remove --yes --auto-remove --purge \
 &&  apt-get install --yes --no-install-recommends \
     $LIB_DEPS \
     $BUILD_DEPS \
