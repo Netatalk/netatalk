@@ -58,6 +58,7 @@ env:
     systemtap-sdt-dev \
     tcpd \
     tracker \
+    tracker-miner-fs \
     xsltproc
 
 jobs:
@@ -232,7 +233,8 @@ jobs:
             quota \
             systemtap-sdt-dev \
             tcpd \
-            tracker
+            tracker \
+            tracker-miner-fs
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
