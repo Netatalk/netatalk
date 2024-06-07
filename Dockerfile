@@ -12,8 +12,8 @@ ENV LIB_DEPS \
     libtalloc2 \
     libtracker-sparql-3.0-0 \
     libwrap0 \
-    systemtap \
-    tracker
+    tracker \
+    tracker-miner-fs
 ENV BUILD_DEPS \
     bison \
     build-essential \
@@ -23,24 +23,20 @@ ENV BUILD_DEPS \
     libacl1-dev \
     libattr1-dev \
     libavahi-client-dev \
-    libcrack2-dev \
     libdb5.3-dev \
     libevent-dev \
     libgcrypt20-dev \
-    libglib2.0-dev \
     libldap2-dev \
-    libltdl-dev \
     libpam0g-dev \
     libtalloc-dev \
     libtracker-sparql-3.0-dev \
-    libwrap0-dev \
     meson \
     ninja-build \
-    pkg-config \
-    systemtap-sdt-dev
+    pkg-config
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    apt-get install --yes --no-install-recommends \
+RUN apt-get update \
+&&  apt-get remove --yes --auto-remove --purge libnss3 libnghttp2-14 perl \
+&&  apt-get install --yes --no-install-recommends \
     $LIB_DEPS \
     $BUILD_DEPS \
 &&  useradd builder
@@ -65,10 +61,10 @@ USER root
 
 RUN userdel builder \
 &&  ninja -C build install \
-&&  apt-get remove --yes --auto-remove --purge $BUILD_DEPS && \
-    apt-get --quiet --yes autoclean && \
-    apt-get --quiet --yes autoremove && \
-    apt-get --quiet --yes clean \
+&&  apt-get remove --yes --auto-remove --purge $BUILD_DEPS \
+&&  apt-get --quiet --yes autoclean \
+&&  apt-get --quiet --yes autoremove \
+&&  apt-get --quiet --yes clean \
 &&  rm -rf \
     /netatalk-code \
     /usr/include/netatalk \
