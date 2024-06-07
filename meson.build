@@ -1251,7 +1251,9 @@ with_ldap = get_option('with-ldap')
 
 ldap_link_args = []
 
-if with_ldap != ''
+if with_ldap == 'false'
+    have_ldap = false
+elif with_ldap != ''
     ldap_link_args += ['-L' + with_ldap / 'lib', '-lldap']
     if enable_rpath
         ldap_link_args += ['-R' + with_ldap / 'lib']
@@ -1260,13 +1262,19 @@ if with_ldap != ''
         link_args: ldap_link_args,
         include_directories: include_directories(with_ldap / 'include'),
     )
+    have_ldap = cc.has_function('ldap_initialize', dependencies: ldap)
 else
     ldap = cc.find_library('ldap', dirs: libsearch_dirs, required: false)
+    have_ldap = (
+        ldap.found()
+        and cc.has_function('ldap_initialize', dependencies: ldap)
+    )
 endif
 
-have_ldap = (ldap.found() and cc.has_function('ldap_initialize', dependencies: ldap))
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
+elif with_ldap != 'no' and not ldap.found()
+    message('LDAP support requested but LDAP library not found')
 endif
 
 #
