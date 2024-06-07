@@ -102,7 +102,8 @@ jobs:
             rpcsvc-proto-dev \
             talloc-dev \
             tracker \
-            tracker-dev
+            tracker-dev \
+            tracker-miners
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
