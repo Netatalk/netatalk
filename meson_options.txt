@@ -193,7 +193,7 @@ option(
 option(
     'disable-init-hooks',
     type: 'boolean',
-    value: 'false',
+    value: false,
     description: 'Disable install hooks for OS specific init system',
 )
 option(
@@ -219,12 +219,6 @@ option(
     type: 'string',
     value: '',
     description: 'Path to libiconv installation. Must contain lib and include dirs',
-)
-option(
-    'with-libtirpc',
-    type: 'boolean',
-    value: false,
-    description: 'Use libtirpc as RPC implementation (instead of sunrpc)',
 )
 option(
     'with-lockfile',
