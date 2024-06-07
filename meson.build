@@ -1158,12 +1158,12 @@ acl_includes = []
 acl_link_args = []
 
 if get_option('with-acls').disabled()
-    with_acls = false
+    have_acls = false
 elif host_os == 'darwin'
-    with_acls = false
+    have_acls = false
     message('Darwin ACLs are currently unsupported')
 elif host_os.contains('sunos')
-    with_acls = true
+    have_acls = true
     sec = cc.find_library('sec', required: false)
     acl_deps += sec
     cdata.set('HAVE_ACLS', 1)
@@ -1175,15 +1175,15 @@ elif host_os == 'freebsd'
         dirs: libsearch_dirs,
         required: false,
     )
-    with_acls = cc.has_function('acl', dependencies: sunacl)
-    if with_acls
+    have_acls = cc.has_function('acl', dependencies: sunacl)
+    if have_acls
         acl_deps += sunacl
         cdata.set('HAVE_ACLS', 1)
         cdata.set('HAVE_FREEBSD_SUNACL', 1)
         cdata.set('HAVE_LIBSUNACL', 1)
         cdata.set('HAVE_NFSV4_ACLS', 1)
     else
-        with_acls = false
+        have_acls = false
         warning('libsunacl not found, disabling ZFS ACL support')
     endif
 else
@@ -1215,8 +1215,8 @@ else
             return acl_get_entry(acl, entry_id, entry_p);
         }
     '''
-    with_acls = cc.links(acl_get_entry_code, args: acl_link_args)
-    if with_acls
+    have_acls = cc.links(acl_get_entry_code, args: acl_link_args)
+    if have_acls
         cdata.set('HAVE_ACLS', 1)
         cdata.set('HAVE_POSIX_ACLS', 1)
         acl_get_perm_np_code = '''
@@ -1235,10 +1235,10 @@ else
             cdata.set('HAVE_ACL_FROM_MODE', 1)
         endif
     else
-        with_acls = false
+        have_acls = false
     endif
 
-    if not get_option('with-acls').disabled() and not with_acls
+    if get_option('with-acls').enabled() and not have_acls
         warning('ACL support requested but not found')
     endif
 endif
@@ -1273,7 +1273,7 @@ endif
 
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
-elif with_ldap != 'no' and not ldap.found()
+elif with_ldap != 'no' and not have_ldap
     message('LDAP support requested but LDAP library not found')
 endif
 
@@ -2059,7 +2059,7 @@ endif
 summary(summary_info, bool_yn: true, section: '  UAMs:')
 
 summary_info = {
-    '  ACL support': with_acls,
+    '  ACL support': have_acls,
     '  AFP stats via dbus': with_afpstats,
     '  Cracklib support': have_cracklib,
     '  dtrace probes': with_dtrace,

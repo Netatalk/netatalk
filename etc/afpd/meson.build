@@ -71,7 +71,7 @@ if with_afpstats
     afpd_c_args += '-DDBUS_COMPILATION'
 endif
 
-if with_acls
+if have_acls
     afpd_sources += 'acls.c'
     afpd_external_deps += [acl_deps]
 endif
