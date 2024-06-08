@@ -127,8 +127,7 @@ libafpd = static_library(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME',
-        afpd_c_args,
+        '-DAPPLCNAME', afpd_c_args,
         confdir,
         dversion,
         messagedir,
@@ -198,8 +197,7 @@ executable(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME',
-        afpd_c_args,
+        '-DAPPLCNAME', afpd_c_args,
         confdir,
         dversion,
         messagedir,

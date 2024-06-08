@@ -857,25 +857,18 @@ tirpc = dependency('libtirpc', required: false)
 
 quota_link_args = []
 
-rpc_headers = [
-    'rpc/rpc.h',
-    'rpc/pmap_prot.h',
-    'rpcsvc/rquota.h',
-]
-
-foreach header : rpc_headers
-    if cc.has_header(header)
-        cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
-    endif
-endforeach
-
-if get_option('enable-quota').disabled()
+if (
+    not (
+        cc.has_header('rpc/rpc.h')
+        and cc.has_header('rpc/pmap_prot.h')
+        and cc.has_header('rpcsvc/rquota.h')
+    )
+    or get_option('enable-quota').disabled()
+)
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
 else
-    have_quota = (tirpc.found()
-                  and cc.has_header('<rpc/rpc.h>')
-                  and cc.has_header('<rpcsvc/rquota.h>'))
+    have_quota = tirpc.found()
     if have_quota
         cdata.set('NEED_RQUOTA', 1)
         if cc.compiles(
@@ -892,22 +885,25 @@ else
             cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
         endif
     else
-        have_quota = (rpcsvc.found()
-                     and cc.has_header('rpc/rpc.h')
-                     and cc.has_header('rpc/pmap_prot.h')
-                     and cc.has_header('rpcsvc/rquota.h')
-                     and quota.found()
-                     and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc]))
+        have_quota = rpcsvc.found()
         if have_quota
-            cdata.set('HAVE_LIBQUOTA', 1)
-            quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
+            quota_link_args += '-lrpcsvc'
         else
-            have_quota = false
-            cdata.set('NO_QUOTA_SUPPORT', 1)
-            warning(
-                'Quota support disabled as required libraries not found.',
-                'Please install either libtirpc or libquota if your system supports these libraries.',
+            have_quota = (
+                quota.found()
+                and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
             )
+            if have_quota
+                cdata.set('HAVE_LIBQUOTA', 1)
+                quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
+            else
+                have_quota = false
+                cdata.set('NO_QUOTA_SUPPORT', 1)
+                warning(
+                    'Quota support disabled as required libraries not found.',
+                    'Please install either libtirpc or libquota if your system supports these libraries.',
+                )
+            endif
         endif
     endif
 endif
@@ -1269,7 +1265,10 @@ elif with_ldap != ''
     have_ldap = cc.has_function('ldap_initialize', dependencies: ldap)
 else
     ldap = cc.find_library('ldap', dirs: libsearch_dirs, required: false)
-    have_ldap = (ldap.found() and cc.has_function('ldap_initialize', dependencies: ldap))
+    have_ldap = (
+        ldap.found()
+        and cc.has_function('ldap_initialize', dependencies: ldap)
+    )
 endif
 
 message(ldap_link_args)

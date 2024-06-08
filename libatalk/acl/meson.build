@@ -12,7 +12,7 @@ if have_ldap
         'ldap_config.c',
     ]
     libacl_deps += ldap
-    
+
 endif
 
 libacl = static_library(
