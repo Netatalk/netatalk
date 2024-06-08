@@ -873,7 +873,9 @@ if get_option('enable-quota').disabled()
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
 else
-    have_quota = tirpc.found()
+    have_quota = (tirpc.found()
+                  and cc.has_header('<rpc/rpc.h>')
+                  and cc.has_header('<rpcsvc/rquota.h>'))
     if have_quota
         cdata.set('NEED_RQUOTA', 1)
         if cc.compiles(
