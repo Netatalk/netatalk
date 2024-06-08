@@ -20,7 +20,7 @@ libcompat = static_library(
     'compat',
     compat_sources,
     include_directories: root_includes,
-    dependencies: tlibcompat_deps,
+    dependencies: libcompat_deps,
     link_args: quota_link_args,
     install: false,
 )
