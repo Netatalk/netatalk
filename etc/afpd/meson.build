@@ -108,6 +108,11 @@ if tirpc.found()
     afpd_external_deps += tirpc
 endif
 
+if rpcsvc.found()
+    netatalk_common_link_args += quota_link_args
+    afpd_external_deps += rpcsvc
+endif
+
 if quota.found()
     netatalk_common_link_args += quota_link_args
     afpd_external_deps += quota
