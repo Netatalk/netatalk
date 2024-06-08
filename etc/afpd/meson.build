@@ -102,21 +102,18 @@ if have_quota
         'nfsquota.c',
         'quota.c',
     ]
+    if tirpc.found()
+        afpd_external_deps += tirpc
+    elif rpcsvc.found()
+        netatalk_common_link_args += quota_link_args
+        afpd_external_deps += rpcsvc
+    elif quota.found()
+        netatalk_common_link_args += quota_link_args
+        afpd_external_deps += quota
+    endif
 endif
 
-if tirpc.found()
-    afpd_external_deps += tirpc
-endif
 
-if rpcsvc.found()
-    netatalk_common_link_args += quota_link_args
-    afpd_external_deps += rpcsvc
-endif
-
-if quota.found()
-    netatalk_common_link_args += quota_link_args
-    afpd_external_deps += quota
-endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before
 # linking the final executable.
