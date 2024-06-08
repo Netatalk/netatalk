@@ -56,12 +56,15 @@ if have_quota
         meson.project_source_root() / 'etc/afpd/nfsquota.c',
         meson.project_source_root() / 'etc/afpd/quota.c',
     ]
+
     if tirpc.found()
         afpd_external_deps += tirpc
-    elif rpcsvc.found()
+    endif
+    if rpcsvc.found()
         netatalk_common_link_args += quota_link_args
         afpd_external_deps += rpcsvc
-    elif quota.found()
+    endif
+    if quota.found()
         netatalk_common_link_args += quota_link_args
         afpd_external_deps += quota
     endif
