@@ -76,7 +76,7 @@
 #include "directory.h"
 
 
-#if defined (linux)
+#if defined (__linux__)
 
 #define MAXQUOTAS 2
 
