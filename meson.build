@@ -853,6 +853,7 @@ rpcsvc = cc.find_library('rpcsvc', required: false)
 tirpc = dependency('libtirpc', required: false)
 
 quota_link_args = []
+quota_provider = ''
 
 rpc_headers = [
     'rpc/rpc.h',
@@ -860,9 +861,11 @@ rpc_headers = [
     'rpcsvc/rquota.h',
 ]
 
-rpc_headers_ok = (cc.has_header('rpc/rpc.h')
-                 and cc.has_header('rpc/pmap_prot.h')
-                 and cc.has_header('rpcsvc/rquota.h'))
+rpc_headers_ok = (
+    cc.has_header('rpc/rpc.h')
+    and cc.has_header('rpc/pmap_prot.h')
+    and cc.has_header('rpcsvc/rquota.h')
+)
 
 if rpc_headers_ok
     foreach header : rpc_headers
@@ -872,12 +875,13 @@ endif
 
 message(rpc_headers_ok)
 
-if get_option('enable-quota').disabled() or not rpc_headers_ok
+if get_option('enable-quota').disabled()
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
 elif tirpc.found() and rpc_headers_ok
     have_quota = true
     cdata.set('NEED_RQUOTA', 1)
+    quota_provider += 'libtirpc'
     if cc.compiles(
         '''
                 #include <rpcsvc/rquota.h>
@@ -891,7 +895,7 @@ elif tirpc.found() and rpc_headers_ok
     )
         cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
     endif
-elif rpcsvc.found()
+elif rpcsvc.found() and rpc_headers_ok
     have_quota = true
     sunrpc_link_args += '-lrpcsvc'
     quota_provider += 'SunRPC'
@@ -2067,6 +2071,13 @@ summary_info = {
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
     '  Quota support': have_quota,
+}
+if have_quota
+    summary_info += {
+        '  Quota provider': quota_provider,
+    }
+endif
+summary_info += {
     '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  Zeroconf support': enable_zeroconf,

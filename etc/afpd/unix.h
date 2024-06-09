@@ -27,12 +27,17 @@
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
+#if defined(__DragonFly__)
+#define dqblk ufs_dqblk
+#endif
+
+#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || defined(__linux__)
 #include <sys/mount.h>
+#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || __linux__ */
 
-#if defined(HAVE_MNTENT_H)
+#if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif /* HAVE_MNTENT_H */
-
+#endif /* linux || HAVE_MNTENT_H */
 
 #ifndef NO_QUOTA_SUPPORT
 #if !defined(HAVE_LIBQUOTA)
@@ -61,6 +66,10 @@
 #ifdef BSD4_4
 #if defined(__DragonFly__)
 #include <vfs/ufs/quota.h>
+#elif defined(__NetBSD__)
+#include <ufs/ufs/quota.h>
+#include <ufs/ufs/quota1.h>
+#include <ufs/ufs/quota2.h>
 #else /* DragonFly */
 #include <ufs/ufs/quota.h>
 #endif /* DragonFly */
@@ -74,7 +83,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "directory.h"
-
 
 #if defined (__linux__)
 
@@ -201,5 +209,9 @@ extern int setdirowner      (const struct vol *, const char *, const uid_t, cons
 extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);
 extern void accessmode      (const AFPObj *obj, const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
+
+#ifdef AFS	
+    #define accessmode afsmode
+#endif
 
 #endif /* UNIX_H */
