@@ -154,7 +154,8 @@ jobs:
             make \
             meson \
             ninja \
-            pkgconfig
+            pkgconfig \
+            rpcsvc-proto
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
