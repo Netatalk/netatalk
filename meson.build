@@ -877,7 +877,7 @@ endif
 if get_option('enable-quota').disabled()
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-elif tirpc.found() and rpc_headers_ok
+elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     have_quota = true
     cdata.set('NEED_RQUOTA', 1)
     quota_provider += 'libtirpc'
