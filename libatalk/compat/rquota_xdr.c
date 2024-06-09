@@ -21,7 +21,6 @@
 */
 #if defined(NEED_RQUOTA) || defined(SOLARIS) || (defined(__GNU_LIBRARY__) && __GNU_LIBRARY__ < 6)
 
-#include <rpc/rpc.h>
 #include <rpcsvc/rquota.h>
 
 #ifndef u_int
