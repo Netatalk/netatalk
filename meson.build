@@ -210,9 +210,6 @@ check_headers = [
     'ndir.h',
     'netdb.h',
     'pam/pam_appl.h',
-    'rpcsvc/rquota.h',
-    'rpc/pmap/prot.h',
-    'rpc/rpc.h',
     'security/pam_appl.h',
     'sgtty.h',
     'statfs.h',
@@ -729,11 +726,14 @@ endif
 # Check for quota support
 #
 
-rpcsvc = cc.find_library('rpcsvc', required: false)
+prop = cc.find_library('prop', required: false)
 quota = cc.find_library('quota', required: false)
+rpcsvc = cc.find_library('rpcsvc', required: false)
 tirpc = dependency('libtirpc', required: false)
 
-quota_link_args = []
+sunrpc_link_args = []
+libquota_link_args = []
+quota_provider = ''
 
 rpc_headers = [
     'rpc/rpc.h',
@@ -741,62 +741,53 @@ rpc_headers = [
     'rpcsvc/rquota.h',
 ]
 
-foreach header : rpc_headers
-    if cc.has_header(header)
+rpc_headers_ok = (
+    cc.has_header('rpc/rpc.h')
+    and cc.has_header('rpc/pmap_prot.h')
+    and cc.has_header('rpcsvc/rquota.h')
+)
+
+if rpc_headers_ok
+    foreach header : rpc_headers
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
-    endif
-endforeach
+    endforeach
+endif
 
 if get_option('enable-quota').disabled()
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-else
-    if tirpc.found() and get_option('with-libtirpc')
-        have_quota = true
-        cdata.set('NEED_RQUOTA', 1)
-
-        rquota_test = cc.compiles(
-            '''
+elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
+    have_quota = true
+    cdata.set('NEED_RQUOTA', 1)
+    quota_provider += 'libtirpc'
+    if cc.compiles(
+        '''
                 #include <rpcsvc/rquota.h>
                 int main(void) {
                     enum qr_status foo;
                     foo = Q_OK;
                     return 0;
                 }
-            ''', dependencies: tirpc
-        )
-        if rquota_test
-            cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
-        endif
-
-        if get_option('with-libtirpc') and not tirpc.found()
-            message('Libtirpc requested, but library not found')
-        endif
-    elif (
-        rpcsvc.found()
-        and (
-            cc.has_header('rpc/rpc.h')
-            or cc.has_header('rpc/pmap_prot.h')
-            or cc.has_header('rpcsvc/rquota.h')
-        )
+            ''',
+        dependencies: tirpc,
     )
-        have_rpcsvc = cc.has_function('main', dependencies: rpcsvc)
-        quota_link_args += '-lrpcsvc'
-        if quota.found() and have_rpcsvc
-            have_quota = cc.has_function('getfsquota', dependencies: quota)
-            cdata.set('HAVE_LIBQUOTA', 1)
-            quota_link_args += ['-lquota', '-lprop', '-lrpcsvc']
-        else
-            have_quota = false
-            cdata.set('NO_QUOTA_SUPPORT', 1)
-        endif
-    else
-        have_quota = false
+        cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
     endif
-endif
-
-if get_option('enable-quota').enabled() and not have_quota
-    warning('Quota support requested but required libraries nor found')
+elif rpcsvc.found() and rpc_headers_ok
+    have_quota = true
+    sunrpc_link_args += '-lrpcsvc'
+    quota_provider += 'SunRPC'
+    if quota.found() and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
+        cdata.set('HAVE_LIBQUOTA', 1)
+        libquota_link_args += ['-lquota', '-lprop']
+    endif
+else
+    have_quota = false
+    cdata.set('NO_QUOTA_SUPPORT', 1)
+    warning(
+        'Quota support disabled as required libraries not found.',
+        'Please install either libtirpc or libquota if your system supports these libraries.',
+    )
 endif
 
 #
