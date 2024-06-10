@@ -40,7 +40,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 
-if with_acls
+if have_acls
     test_sources += meson.project_source_root() / 'etc/afpd/acls.c'
     test_external_deps += [acl_deps]
 endif

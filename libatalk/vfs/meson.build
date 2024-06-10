@@ -1,6 +1,6 @@
 vfs_sources = ['ea_sys.c', 'ea.c', 'sys_ea.c', 'unix.c', 'vfs.c']
 
-if with_acls
+if have_acls
     vfs_sources += ['acl.c']
 endif
 
