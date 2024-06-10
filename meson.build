@@ -985,12 +985,12 @@ acl_includes = []
 acl_link_args = []
 
 if get_option('with-acls').disabled()
-    with_acls = false
+    have_acls = false
 elif host_os == 'darwin'
-    with_acls = false
+    have_acls = false
     message('Darwin ACLs are currently unsupported')
 elif host_os.contains('sunos')
-    with_acls = true
+    have_acls = true
     sec = cc.find_library('sec', required: false)
     acl_deps += sec
     cdata.set('HAVE_ACLS', 1)
@@ -1024,8 +1024,8 @@ else
             return acl_get_entry(acl, entry_id, entry_p);
         }
     '''
-    with_acls = cc.links(acl_get_entry_code, args: acl_link_args)
-    if with_acls
+    have_acls = cc.links(acl_get_entry_code, args: acl_link_args)
+    if have_acls
         cdata.set('HAVE_ACLS', 1)
         cdata.set('HAVE_POSIX_ACLS', 1)
         acl_get_perm_np_code = '''
@@ -1044,10 +1044,10 @@ else
             cdata.set('HAVE_ACL_FROM_MODE', 1)
         endif
     else
-        with_acls = false
+        have_acls = false
     endif
 
-    if not get_option('with-acls').disabled() and not with_acls
+    if not get_option('with-acls').disabled() and not have_acls
         warning('ACL support requested but not found')
     endif
 endif
@@ -1801,7 +1801,7 @@ summary(summary_info, bool_yn: true, section: '  UAMs:')
 
 summary_info = {
     '  admin group support': admin_group,
-    '  ACL support': with_acls,
+    '  ACL support': have_acls,
     '  CUPS support': have_cups,
     '  DDP (AppleTalk) support': get_option('enable-ddp'),
     '  Cracklib support': have_cracklib,
