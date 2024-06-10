@@ -22,13 +22,16 @@ executable(
     install: false,
 )
 
-executable(
-    'afpldaptest',
-    'uuidtest.c',
-    include_directories: root_includes,
-    link_with: libatalk,
-    c_args: acl_ldapconf,
-    install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
-)
+if have_ldap
+    executable(
+        'afpldaptest',
+        'uuidtest.c',
+        include_directories: root_includes,
+       dependencies: ldap,
+        link_with: libatalk,
+        c_args: acl_ldapconf,
+        install: true,
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+endif
