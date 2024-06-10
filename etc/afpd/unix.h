@@ -12,7 +12,7 @@
 #include <sys/vfs.h>
 #endif /* HAVE_SYS_VFS_H */
 
-#if defined(HAVE_STATFS_H) 
+#if defined(HAVE_STATFS_H)
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
@@ -29,14 +29,17 @@
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-#if defined(HAVE_SYS_MOUNT_H)
+#if defined(__DragonFly__)
+#define dqblk ufs_dqblk
+#endif
+
+#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || defined(__linux__)
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H */
+#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || __linux__ */
 
-#if defined(HAVE_MNTENT_H)
+#if defined(__linux__) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif /* HAVE_MNTENT_H */
-
+#endif /* linux || HAVE_MNTENT_H */
 
 #ifndef NO_QUOTA_SUPPORT
 #if !defined(HAVE_LIBQUOTA)
@@ -58,12 +61,20 @@
 #endif /* ! NEED_QUOTACTL_WRAPPER */
 #endif /* linux || HAVE_QUOTA_H */
 
-#ifdef __svr4__ 
+#ifdef __svr4__
 #include <sys/fs/ufs_quota.h>
 #endif /* __svr4__ */
 
 #ifdef BSD4_4
+#if defined(__DragonFly__)
+#include <vfs/ufs/quota.h>
+#elif defined(__NetBSD__)
 #include <ufs/ufs/quota.h>
+#include <ufs/ufs/quota1.h>
+#include <ufs/ufs/quota2.h>
+#else /* DragonFly */
+#include <ufs/ufs/quota.h>
+#endif /* DragonFly */
 #endif /* BSD4_4 */
 
 #ifdef HAVE_UFS_QUOTA_H
