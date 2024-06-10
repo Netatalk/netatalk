@@ -1,6 +1,3 @@
-afpd_internal_deps = []
-afpd_external_deps = []
-
 afpd_sources = [
     'afp_asp.c',
     'afp_avahi.c',
@@ -38,9 +35,50 @@ afpd_sources = [
     'volume.c',
 ]
 
+afpd_external_deps = [libgcrypt]
+afpd_internal_deps = [libcnid]
+afpd_link_args = []
+
 if have_acls
     afpd_sources += 'acls.c'
     afpd_external_deps += [acl_deps]
+endif
+
+if have_quota
+    afpd_sources += [
+        'nfsquota.c',
+        'quota.c',
+    ]
+    if tirpc.found()
+        afpd_external_deps += tirpc
+    elif rpcsvc.found()
+        afpd_external_deps += rpcsvc
+        afpd_link_args += sunrpc_link_args
+    endif
+    if quota.found()
+        afpd_external_deps += quota
+        afpd_link_args += libquota_link_args
+    endif
+endif
+
+if have_gssapi
+    afpd_external_deps += gss
+endif
+
+if have_tcpwrap
+    afpd_external_deps += wrap
+endif
+
+if threads.found()
+    afpd_external_deps += threads
+endif
+
+if avahi.found()
+    afpd_external_deps += avahi
+endif
+
+if have_dns
+    afpd_external_deps += dns_sd
 endif
 
 executable(
@@ -48,15 +86,7 @@ executable(
     afpd_sources,
     include_directories: root_includes,
     link_with: [afpd_internal_deps, libatalk],
-    dependencies: [
-        afpd_external_deps,
-        avahi,
-        libgcrypt,
-        dns_sd,
-        threads,
-        tirpc,
-        wrap,
-    ],
+    dependencies: afpd_external_deps,
     c_args: [
         '-DAPPLCNAME', acl_ldapconf,
         afpdconf,
@@ -69,10 +99,7 @@ executable(
         messagedir,
         uamdir,
     ],
-    link_args: [
-        netatalk_common_link_args,
-        quota_link_args,
-    ],
+    link_args: afpd_link_args,
     export_dynamic: true,
     install: true,
     install_dir: sbindir,

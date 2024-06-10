@@ -1,6 +1,3 @@
-test_internal_deps = []
-test_external_deps = []
-
 test_sources = [
     'afpfunc_helpers.c',
     'subtests.c',
@@ -30,9 +27,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/hash.c',
     meson.project_source_root() / 'etc/afpd/mangle.c',
     meson.project_source_root() / 'etc/afpd/messages.c',
-    meson.project_source_root() / 'etc/afpd/nfsquota.c',
     meson.project_source_root() / 'etc/afpd/ofork.c',
-    meson.project_source_root() / 'etc/afpd/quota.c',
     meson.project_source_root() / 'etc/afpd/status.c',
     meson.project_source_root() / 'etc/afpd/switch.c',
     meson.project_source_root() / 'etc/afpd/uam.c',
@@ -40,9 +35,50 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 
+test_external_deps = [libgcrypt]
+test_internal_deps = []
+test_link_args = []
+
 if have_acls
     test_sources += meson.project_source_root() / 'etc/afpd/acls.c'
     test_external_deps += [acl_deps]
+endif
+
+if have_quota
+    test_sources += [
+        meson.project_source_root() / 'etc/afpd/nfsquota.c',
+        meson.project_source_root() / 'etc/afpd/quota.c',
+    ]
+    if tirpc.found()
+        test_external_deps += tirpc
+    elif rpcsvc.found()
+        test_external_deps += rpcsvc
+        test_link_args += sunrpc_link_args
+    endif
+    if quota.found()
+        test_external_deps += quota
+        test_link_args += libquota_link_args
+    endif
+endif
+
+if have_gssapi
+    test_external_deps += gss
+endif
+
+if have_tcpwrap
+    test_external_deps += wrap
+endif
+
+if threads.found()
+    test_external_deps += threads
+endif
+
+if avahi.found()
+    test_external_deps += avahi
+endif
+
+if have_dns
+    test_external_deps += dns_sd
 endif
 
 afpdtest = executable(
@@ -50,14 +86,7 @@ afpdtest = executable(
     test_sources,
     include_directories: root_includes,
     link_with: [test_internal_deps, libatalk],
-    dependencies: [
-        test_external_deps,
-        avahi,
-        libgcrypt,
-        dns_sd,
-        tirpc,
-        wrap,
-    ],
+    dependencies: test_external_deps,
     c_args: [
         '-DAPPLCNAME',
         acl_ldapconf,
@@ -71,7 +100,7 @@ afpdtest = executable(
         messagedir,
         uamdir,
     ],
-    link_args: quota_link_args,
+    link_args: test_link_args,
     export_dynamic: true,
     install: false,
 )

@@ -8,11 +8,17 @@ ad_sources = [
     'ad.c',
 ]
 
+ad_deps = []
+
+if have_acls
+    ad_deps += acl_deps
+endif
+
 executable(
     'ad',
     ad_sources,
     include_directories: root_includes,
-    dependencies: acl_deps,
+    dependencies: ad_deps,
     link_with: [libatalk, libcnid],
     c_args: [ad, dversion],
     install: true,
