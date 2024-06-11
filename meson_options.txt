@@ -113,9 +113,9 @@ option(
     description: 'Enable build of PGP UAM module',
 )
 option(
-    'enable-quota',
-    type: 'feature',
-    value: 'auto',
+    'with-quota',
+    type: 'string',
+    value: '',
     description: 'Turn on quota support',
 )
 option(

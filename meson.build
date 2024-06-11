@@ -725,13 +725,14 @@ endif
 # Check for quota support
 #
 
+with_quota = get_option('with-quota')
+
 prop = cc.find_library('prop', required: false)
 quota = cc.find_library('quota', required: false)
 rpcsvc = cc.find_library('rpcsvc', required: false)
 tirpc = dependency('libtirpc', required: false)
 
-sunrpc_link_args = []
-libquota_link_args = []
+quota_deps = []
 quota_provider = ''
 
 rpc_headers = [
@@ -752,12 +753,13 @@ if rpc_headers_ok
     endforeach
 endif
 
-if get_option('enable-quota').disabled()
+if with_quota == 'false'
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
 elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     have_quota = true
     cdata.set('NEED_RQUOTA', 1)
+    quota_deps += tirpc
     quota_provider += 'libtirpc'
     if cc.compiles(
         '''
@@ -774,19 +776,19 @@ elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     endif
 elif rpcsvc.found() and rpc_headers_ok
     have_quota = true
-    sunrpc_link_args += '-lrpcsvc'
+    quota_deps += rpcsvc
     quota_provider += 'SunRPC'
     if quota.found() and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
+        quota_deps += [quota, prop]
         cdata.set('HAVE_LIBQUOTA', 1)
-        libquota_link_args += ['-lquota', '-lprop']
     endif
 else
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-    warning(
-        'Quota support disabled as required libraries not found.',
-        'Please install either libtirpc or libquota if your system supports these libraries.',
-    )
+endif
+
+if with_quota != 'false' and not have_quota
+    message('Ouota support requested but libtirpc or libquota libraries not found')
 endif
 
 #
@@ -1811,6 +1813,13 @@ summary_info = {
     '  GSSAPI support': have_gssapi,
     '  LDAP support': have_ldap,
     '  Quota support': have_quota,
+}
+if have_quota
+    summary_info += {
+        '  Quota provider': quota_provider,
+    }
+endif
+summary_info += {
     '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  valid shell check': valid_shellcheck,
