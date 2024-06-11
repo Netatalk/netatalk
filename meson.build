@@ -129,6 +129,15 @@ grep = find_program('grep', required: false)
 perl = find_program('perl', required: false)
 uname = find_program('uname', required: false)
 
+macos_prefix = ''
+if host_os == 'darwin'
+    if cpu == 'aarch64'
+        macos_prefix += '/opt/homebrew'
+    elif cpu == 'x86_64'
+        macos_prefix += '/usr/local'
+    endif
+endif
+
 ################
 # Dependencies #
 ################
@@ -414,6 +423,7 @@ bdb_dirs = [
     '/usr/local',
     '/usr/pkg',
     '/opt/local',
+    macos_prefix / 'opt/berkeley-db',
     '/usr',
 ]
 bdb_subdirs = [
