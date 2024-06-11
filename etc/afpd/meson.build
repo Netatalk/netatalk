@@ -37,7 +37,6 @@ afpd_sources = [
 
 afpd_external_deps = [libgcrypt]
 afpd_internal_deps = [libcnid]
-afpd_link_args = []
 
 if have_acls
     afpd_sources += 'acls.c'
@@ -49,16 +48,7 @@ if have_quota
         'nfsquota.c',
         'quota.c',
     ]
-    if tirpc.found()
-        afpd_external_deps += tirpc
-    elif rpcsvc.found()
-        afpd_external_deps += rpcsvc
-        afpd_link_args += sunrpc_link_args
-    endif
-    if quota.found()
-        afpd_external_deps += quota
-        afpd_link_args += libquota_link_args
-    endif
+    afpd_external_deps += [quota_deps]
 endif
 
 if have_gssapi
@@ -99,7 +89,6 @@ executable(
         messagedir,
         uamdir,
     ],
-    link_args: afpd_link_args,
     export_dynamic: true,
     install: true,
     install_dir: sbindir,
