@@ -58,16 +58,7 @@ if have_quota
         meson.project_source_root() / 'etc/afpd/nfsquota.c',
         meson.project_source_root() / 'etc/afpd/quota.c',
     ]
-    if tirpc.found()
-        test_external_deps += tirpc
-    elif rpcsvc.found()
-        test_external_deps += rpcsvc
-        netatalk_common_link_args += sunrpc_link_args
-    endif
-    if quota.found()
-        test_external_deps += quota
-        netatalk_common_link_args += libquota_link_args
-    endif
+    test_external_deps += quota_deps
 endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before

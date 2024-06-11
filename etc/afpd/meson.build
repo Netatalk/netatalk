@@ -82,16 +82,7 @@ if have_quota
         'nfsquota.c',
         'quota.c',
     ]
-    if tirpc.found()
-        afpd_external_deps += tirpc
-    elif rpcsvc.found()
-        afpd_external_deps += rpcsvc
-        afpd_link_args += sunrpc_link_args
-    endif
-    if quota.found()
-        afpd_external_deps += quota
-        afpd_link_args += libquota_link_args
-    endif
+    afpd_external_deps += quota_deps
 endif
 
 if have_gssapi
@@ -129,7 +120,8 @@ libafpd = static_library(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', afpd_c_args,
+        '-DAPPLCNAME',
+        afpd_c_args,
         confdir,
         dversion,
         messagedir,
@@ -199,7 +191,8 @@ executable(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME', afpd_c_args,
+        '-DAPPLCNAME',
+        afpd_c_args,
         confdir,
         dversion,
         messagedir,

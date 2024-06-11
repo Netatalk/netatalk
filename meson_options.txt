@@ -65,10 +65,10 @@ option(
     description: 'Enable build of PGP UAM module',
 )
 option(
-    'enable-quota',
+    'with-quota',
     type: 'feature',
     value: 'auto',
-    description: 'Turn on quota support',
+    description: 'Turn on quota support (default: true)',
 )
 option(
     'enable-rpath',
