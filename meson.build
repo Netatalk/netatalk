@@ -109,15 +109,25 @@ endif
 # Programs #
 ############
 
+macos_prefix = ''
+if host_os == 'darwin'
+    brew = find_program('brew', required: false)
+    if cpu == 'aarch64' and brew.found()
+        macos_prefix += '/opt/homebrew'
+    elif cpu == 'x86_64' and brew.found()
+        macos_prefix += '/usr/local'
+    endif
+endif
+
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
 perl = find_program('perl', required: false)
 uname = find_program('uname', required: false)
 if host_os == 'darwin'
-    brew = find_program('brew', required: true)
-    brew_prefix = run_command(brew, '--prefix', check: true).stdout().strip()
-    message(brew_prefix)
-    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+    bison = find_program(macos_prefix / 'opt/bison/bin/bison', required: false)
+    if not bison.found()
+        bison = find_program('/opt/local/bin/bison', required: false)
+    endif
 else
     bison = find_program('bison', required: false)
 endif
@@ -368,6 +378,7 @@ bdb_dirs = [
     '/usr/local',
     '/usr/pkg',
     '/opt/local',
+    macos_prefix / 'opt/berkeley-db',
     '/usr',
 ]
 bdb_subdirs = [
@@ -1461,7 +1472,7 @@ docbook_xsl_dirs = [
 ]
 
 if host_os == 'darwin'
-    docbook_xsl_dirs += brew_prefix / 'opt/docbook-xsl/docbook-xsl'
+    docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
 endif
 
 if not get_option('build-manual')
