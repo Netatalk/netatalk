@@ -568,7 +568,10 @@ foreach header : gssapi_headers
     endif
 endforeach
 
-if get_option('with-gssapi') != ''
+if get_option('with-gssapi') == 'false'
+    have_gssapi = false
+elif get_option('with-gssapi') != ''
+    have_gssapi = true
     gss = cc.find_library(
         'gssapi',
         dirs: with_gssapi / 'lib',
@@ -579,29 +582,21 @@ else
     gss = cc.find_library('gss', dirs: libsearch_dirs, required: false)
     if not gss.found()
         gss = cc.find_library('gssapi', dirs: libsearch_dirs, required: false)
+        if not gss.found()
+            gss = cc.find_library(
+                'gssapi_krb5',
+                dirs: libsearch_dirs,
+                required: false,
+            )
+            if not gss.found()
+                have_gssapi = false
+            endif
+        endif
     endif
-    if not gss.found()
-        gss = cc.find_library(
-            'gssapi_krb5',
-            dirs: libsearch_dirs,
-            required: false,
-        )
-    endif
-endif
-
-if not gss.found()
-    have_gssapi = false
-else
     have_gssapi = (
         gss.found()
-        and cc.has_function(
-            'gss_acquire_cred',
-            dependencies: gss,
-        )
+        and cc.has_function('gss_acquire_cred', dependencies: gss)
     )
-    if with_gssapi != '' and not have_gssapi
-        error('GSSAPI support requested but not found')
-    endif
 endif
 
 if have_gssapi
@@ -610,6 +605,10 @@ if have_gssapi
         cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
     endif
     cdata.set('HAVE_GSSAPI', 1)
+endif
+
+if with_gssapi != 'false' and not have_gssapi
+    warning('GSSAPI support requested but gssapi library not found')
 endif
 
 #
