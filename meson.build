@@ -585,56 +585,45 @@ gssapi_headers = [
 foreach header : gssapi_headers
     if cc.has_header(
         header,
-        include_directories: include_directories(
-            [with_gssapi / 'include', header_dir],
-        ),
+        include_directories: include_directories(header_dir),
     )
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
     endif
 
 endforeach
 
-if get_option('with-gssapi') != ''
+if get_option('with-gssapi') == 'false'
+    have_gssapi = false
+elif get_option('with-gssapi') != ''
+    have_gssapi = true
     gss = cc.find_library(
         'gssapi',
         dirs: with_gssapi / 'lib',
         required: false,
     )
     gssapi_includes += include_directories(with_gssapi / 'include')
+
 else
     gss = cc.find_library('gss', dirs: libsearch_dirs, required: false)
     if gss.found()
         cdata.set('HAVE_LIBGSS', 1)
-    elif not gss.found()
+    else
         gss = cc.find_library('gssapi', dirs: libsearch_dirs, required: false)
         if gss.found()
             cdata.set('HAVE_LIBGSSAPI', 1)
-        elif not gss.found()
-            gss = cc.find_library(
-                'gssapi_krb5',
-                dirs: libsearch_dirs,
-                required: false,
-            )
+        else
+            gss = cc.find_library('gssapi_krb5', dirs: libsearch_dirs, required: false)
             if gss.found()
                 cdata.set('HAVE_LIBGSSAPI_KRB5', 1)
+            else
+                have_gssapi = false
             endif
         endif
     endif
-endif
-
-if not gss.found()
-    have_gssapi = false
-else
     have_gssapi = (
         gss.found()
-        and cc.has_function(
-            'gss_acquire_cred',
-            dependencies: gss,
-        )
+        and cc.has_function('gss_acquire_cred', dependencies: gss)
     )
-    if with_gssapi != '' and not have_gssapi
-        error('GSSAPI support requested but not found')
-    endif
 endif
 
 if have_gssapi
@@ -1504,7 +1493,7 @@ elif fs.is_dir('/usr/local/share/cracklib')
     cracklib_dict += '/usr/local/share/cracklib/cracklib-small'
 endif
 
-if not crack.found()
+if with_cracklib == 'false'
     have_cracklib = false
 else
     have_cracklib = crack.found() and (with_cracklib != '' or cracklib_dict != '')
@@ -1515,12 +1504,16 @@ else
         elif host_os == 'darwin'
             cdata.set(
                 '_PATH_CRACKLIB',
-                '"' + brew_prefix / 'var/cracklib/cracklib-words' + '"',
+                '"' + macos_prefix / 'var/cracklib/cracklib-words' + '"',
             )
         elif cracklib_dict != ''
             cdata.set('_PATH_CRACKLIB', '"' + cracklib_dict + '"')
         endif
     endif
+endif
+
+if with_cracklib != 'false' and not have_cracklib
+    message('Cracklib support requested but cracklib library not found')
 endif
 
 #
