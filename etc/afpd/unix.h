@@ -35,7 +35,7 @@
 #include <sys/mount.h>
 #endif /* HAVE_SYS_MOUNT_H || BSD4_4 || __linux__ */
 
-#if defined(linux) || defined(HAVE_MNTENT_H)
+#if defined(__linux__) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
 #endif /* linux || HAVE_MNTENT_H */
 
@@ -46,7 +46,7 @@
 #define dqb_btimelimit  dqb_btime
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
-#if defined(linux) || defined(HAVE_QUOTA_H)
+#if defined(__linux__) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
 /*#include <sys/quota.h>*/
 /*long quotactl (int, const char *, unsigned int, caddr_t); */
