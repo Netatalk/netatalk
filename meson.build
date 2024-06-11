@@ -1274,8 +1274,8 @@ endif
 
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
-elif with_ldap != 'no' and not have_ldap
-    message('LDAP support requested but LDAP library not found')
+elif with_ldap != 'false' and not have_ldap
+    warning('LDAP support requested but LDAP library not found')
 endif
 
 #
