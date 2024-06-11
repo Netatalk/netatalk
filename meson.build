@@ -1843,7 +1843,7 @@ elif fs.is_dir('/usr/local/share/cracklib')
     cracklib_dict += '/usr/local/share/cracklib/cracklib-small'
 endif
 
-if not crack.found()
+if with_cracklib == 'false'
     have_cracklib = false
 else
     have_cracklib = crack.found() and (with_cracklib != '' or cracklib_dict != '')
@@ -1854,12 +1854,16 @@ else
         elif host_os == 'darwin'
             cdata.set(
                 '_PATH_CRACKLIB',
-                '"' + brew_prefix / 'var/cracklib/cracklib-words' + '"',
+                '"' + macos_prefix / 'var/cracklib/cracklib-words' + '"',
             )
         elif cracklib_dict != ''
             cdata.set('_PATH_CRACKLIB', '"' + cracklib_dict + '"')
         endif
     endif
+endif
+
+if with_cracklib != 'false' and not have_cracklib
+    warning('Cracklib support requested but cracklib library not found')
 endif
 
 #
