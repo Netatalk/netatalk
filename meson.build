@@ -792,7 +792,7 @@ else
 endif
 
 if with_quota != 'false' and not have_quota
-    warning('Ouota support requested but libtirpc or libquota libraries not found')
+    warning('Quota support requested but libtirpc or libquota libraries not found')
 endif
 
 #
@@ -1641,9 +1641,7 @@ endif
 # OS-specific configuration
 #
 
-if host_os == 'darwin'
-    cdata.set('NO_QUOTA_SUPPORT', 1)
-elif host_os == 'freebsd'
+if host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
@@ -1669,7 +1667,6 @@ int main (void){
     )
         cdata.set('HAVE_ATALK_ADDR', 1)
     endif
-    cdata.set('NO_QUOTA_SUPPORT', 1)
 elif host_os == 'netbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
