@@ -1888,16 +1888,13 @@ endif
 # OS-specific configuration
 #
 
-if host_os.contains('darwin')
-    cdata.set('NO_QUOTA_SUPPORT', 1)
-elif host_os.contains('freebsd')
+if host_os.contains('freebsd')
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os.contains('linux')
     cdata.set('_GNU_SOURCE', 1)
     cdata.set('LINUX', 1)
-    cdata.set('NO_QUOTA_SUPPORT', 1)
 elif host_os.contains('netbsd')
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
