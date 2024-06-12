@@ -2,6 +2,7 @@ subdir('acl')
 subdir('adouble')
 subdir('bstring')
 subdir('cnid')
+subdir('compat')
 subdir('dsi')
 subdir('iniparser')
 subdir('util')
@@ -11,11 +12,6 @@ subdir('vfs')
 libatalk_deps = []
 libatalk_libs = []
 libatalk_sources = []
-
-if host_os != 'darwin'
-    subdir('compat')
-    libatalk_libs += libcompat
-endif
 
 if have_acls
     libatalk_deps += acl_deps
@@ -47,6 +43,7 @@ libatalk = both_libraries(
         libatalk_libs,
         libbstring,
         libcnid,
+        libcompat,
         libdsi,
         libiniparser,
         libunicode,
