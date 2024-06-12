@@ -72,6 +72,8 @@
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/quota1.h>
 #include <ufs/ufs/quota2.h>
+#elif defined(__APPLE__)
+#include <sys/quota.h>
 #else /* DragonFly */
 #include <ufs/ufs/quota.h>
 #endif /* DragonFly */
