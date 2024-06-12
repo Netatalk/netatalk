@@ -636,6 +636,10 @@ if have_gssapi
     cdata.set('HAVE_GSSAPI', 1)
 endif
 
+if with_gssapi != 'false' and not have_gssapi
+    warning('GSSAPI support requested but GSSAPI library not found')
+endif
+
 #
 # Check whether Kerberos V UAM can be built
 #
@@ -788,7 +792,7 @@ else
 endif
 
 if with_quota != 'false' and not have_quota
-    message('Ouota support requested but libtirpc or libquota libraries not found')
+    warning('Ouota support requested but libtirpc or libquota libraries not found')
 endif
 
 #
@@ -1081,7 +1085,7 @@ endif
 if have_ldap
     cdata.set('HAVE_LDAP', 1)
 elif with_ldap != 'false' and not have_ldap
-    message('LDAP support requested but LDAP library not found')
+    warning('LDAP support requested but LDAP library not found')
 endif
 
 #
@@ -1515,7 +1519,7 @@ else
 endif
 
 if with_cracklib != 'false' and not have_cracklib
-    message('Cracklib support requested but cracklib library not found')
+    warning('Cracklib support requested but cracklib library not found')
 endif
 
 #
