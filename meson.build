@@ -1683,6 +1683,8 @@ elif host_os == 'sunos'
     cdata.set('_XOPEN_SOURCE', 600)
     cdata.set('NO_STRUCT_TM_GMTOFF', 1)
     cdata.set('SOLARIS', 1)
+elif host_os == 'darwin'
+    cdata.set('HAVE_BROKEN_DBTOB', 1)
 endif
 
 #

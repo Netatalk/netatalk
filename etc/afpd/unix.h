@@ -49,16 +49,9 @@
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
 #if defined(__linux__) || defined(HAVE_QUOTA_H)
-#ifndef NEED_QUOTACTL_WRAPPER
-/*#include <sys/quota.h>*/
-/*long quotactl (int, const char *, unsigned int, caddr_t); */
-/* extern long quotactl (int, const char *, long, caddr_t); */
-
-#else /* ! NEED_QUOTACTL_WRAPPER */
 #include <asm/types.h>
 #include <asm/unistd.h>
 #include <linux/quota.h>
-#endif /* ! NEED_QUOTACTL_WRAPPER */
 #endif /* linux || HAVE_QUOTA_H */
 
 #ifdef __svr4__
@@ -72,6 +65,9 @@
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/quota1.h>
 #include <ufs/ufs/quota2.h>
+#elif defined(__APPLE__)
+#include <sys/quota.h>
+#define dqb_curblocks dqb_curbytes
 #else /* DragonFly */
 #include <ufs/ufs/quota.h>
 #endif /* DragonFly */

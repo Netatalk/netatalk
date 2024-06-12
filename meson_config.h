@@ -119,6 +119,9 @@
 /* Define to 1 if you have the 'backtrace_symbols' function. */
 #mesondefine HAVE_BACKTRACE_SYMBOLS
 
+/* Define to 1 if dbtob implementation is broken. */
+#mesondefine HAVE_BROKEN_DBTOB
+
 /* Define to 1 if you have the 'chmod' function. */
 #mesondefine HAVE_CHMOD
 

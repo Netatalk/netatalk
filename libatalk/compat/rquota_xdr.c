@@ -17,8 +17,9 @@
 /* list of machines that don't have these functions:
 	solaris
 	linux libc5
+	macOS
 */
-#if defined(NEED_RQUOTA) || defined(SOLARIS) || (defined(__GNU_LIBRARY__) && __GNU_LIBRARY__ < 6)
+#if defined(NEED_RQUOTA) || defined(SOLARIS) || (defined(__GNU_LIBRARY__) && __GNU_LIBRARY__ < 6) || defined(__APPLE__)
 
 #include <rpcsvc/rquota.h>
 
