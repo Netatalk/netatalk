@@ -1667,6 +1667,7 @@ int main (void){
     )
         cdata.set('HAVE_ATALK_ADDR', 1)
     endif
+    cdata.set('HAVE_BROKEN_DBTOB', 1)
 elif host_os == 'netbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
