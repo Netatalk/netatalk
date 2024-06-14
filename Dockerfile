@@ -53,18 +53,18 @@ RUN chown -R builder:builder . \
 USER builder
 
 RUN meson setup build \
-    -Denable-pgp-uam=disabled \
-    -Dwith-dbus-daemon=/usr/bin/dbus-daemon \
-    -Dwith-dbus-sysconf-dir=/etc \
-    -Dwith-afpstats=disabled \
+    -Dwith-pgp-uam=false \
+    -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
+    -Dwith-dbus-sysconf-path=/etc \
+    -Dwith-afpstats=false \
     -Dwith-dtrace=false \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
-&&  ninja -C build
+&&  meson compile -C build
 
 USER root
 
-RUN ninja -C build install \
+RUN meson install -C build \
 &&  apk del $BUILD_DEPS \
 &&  rm -rf \
     /netatalk-code \

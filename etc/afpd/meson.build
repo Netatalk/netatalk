@@ -47,7 +47,7 @@ if have_spotlight
     ]
 endif
 
-if with_afpstats
+if have_afpstats
     #    afpstatsservice = custom_target(
     #        'afpstats_service_glue',
     #        output: 'afpstats_service_glue.h',
@@ -85,7 +85,7 @@ if have_quota
     afpd_external_deps += quota_deps
 endif
 
-if have_gssapi
+if enable_krb5_uam
     afpd_external_deps += gss
 endif
 
@@ -120,8 +120,7 @@ libafpd = static_library(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME',
-        afpd_c_args,
+        '-DAPPLCNAME', afpd_c_args,
         confdir,
         dversion,
         messagedir,
@@ -154,7 +153,7 @@ if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
     )
 endif
 
-if with_dtrace and host_os != 'darwin'
+if have_dtrace and host_os != 'darwin'
     afpd_dtrace_input += custom_target(
         'afp_dtrace.o',
         input: [
@@ -191,8 +190,7 @@ executable(
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
-        '-DAPPLCNAME',
-        afpd_c_args,
+        '-DAPPLCNAME', afpd_c_args,
         confdir,
         dversion,
         messagedir,

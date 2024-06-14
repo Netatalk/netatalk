@@ -126,14 +126,14 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
+            -Dwith-tests=true \
             -Dwith-init-style=openrc
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -176,15 +176,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Ddisable-init-hooks=true \
+            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
             -Dwith-init-style=systemd
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -261,14 +261,14 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
+            -Dwith-tests=true \
             -Dwith-init-style=debian-sysv
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Start netatalk
         run: /etc/init.d/netatalk start && sleep 2 && asip-status localhost
       - name: Stop netatalk
@@ -335,15 +335,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Ddisable-init-hooks=true \
+            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
             -Dwith-init-style=redhat-systemd
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
@@ -413,15 +413,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Ddisable-init-hooks=true \
+            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -466,18 +466,18 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Dbuild-manual=true \
-            -Ddisable-init-hooks=true \
+            -Dwith-tests=true \
+            -Dwith-manual=true \
+            -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd
       - name: Meson - Build and generate manual pages
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Run distribution tests
         run: cd build && meson dist
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Start netatalk
         run: sudo systemctl start netatalk && sleep 2 && asip-status localhost
       - name: Stop netatalk
@@ -531,8 +531,8 @@ jobs:
             gmake uninstall
             echo "Building with Meson"
             meson setup build
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             ninja -C build uninstall
 
   build-freebsd:
@@ -589,8 +589,8 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-init-style=freebsd
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             /etc/rc.d/netatalk start
             sleep 2
             asip-status localhost
@@ -654,8 +654,8 @@ jobs:
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
               -Dwith-init-style=netbsd
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             service netatalk onestart
             sleep 2
             asip-status localhost
@@ -717,8 +717,8 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-init-style=openbsd
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             rcctl -d start netatalk
             sleep 2
             asip-status localhost
@@ -762,15 +762,14 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-bdb=/opt/homebrew/opt/berkeley-db \
             -Dwith-init-style=macos-launchd \
-            -Dbuild-tests=true
+            -Dwith-tests=true
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Start netatalk
         run: sudo netatalkd start && sleep 2 && asip-status localhost
       - name: Stop netatalk
@@ -831,9 +830,9 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-init-style=solaris \
-              -Dwith-ldap=/opt/local
-            ninja -C build
-            ninja -C build install
+              -Dwith-ldap-path=/opt/local
+            meson compile -C build
+            meson install -C build
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -917,9 +916,9 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
-            -Denable-krbV-uam=enabled \
-            -Denable-pgp-uam=enabled
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ninja -C build
+            -Dwith-krbV-uam=true \
+            -Dwith-pgp-uam=true
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

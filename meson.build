@@ -76,6 +76,16 @@ uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
 # Includes #
 ############
 
+macos_prefix = ''
+if host_os == 'darwin'
+    brew = find_program('brew', required: false)
+    if cpu == 'aarch64' and brew.found()
+        macos_prefix += '/opt/homebrew'
+    elif cpu == 'x86_64' and brew.found()
+        macos_prefix += '/usr/local'
+    endif
+endif
+
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
     root_includes = include_directories(
         '.',
@@ -108,16 +118,6 @@ endif
 ############
 # Programs #
 ############
-
-macos_prefix = ''
-if host_os == 'darwin'
-    brew = find_program('brew', required: false)
-    if cpu == 'aarch64' and brew.found()
-        macos_prefix += '/opt/homebrew'
-    elif cpu == 'x86_64' and brew.found()
-        macos_prefix += '/usr/local'
-    endif
-endif
 
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
@@ -348,7 +348,10 @@ message('atalk_libname =', atalk_libname)
 #
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
-if not get_option('enable-rpath')
+
+enable_rpath = get_option('with-rpath')
+
+if not get_option('with-rpath')
     enable_rpath = false
 elif host_os == 'sunos' or host_os == 'netbsd' or get_option('enable-rpath')
     enable_rpath = true
@@ -364,7 +367,7 @@ endif
 # Check for the Berkeley DB library
 #
 
-with_bdb = get_option('with-bdb')
+bdb_path = get_option('with-bdb-path')
 
 bdb_header = ''
 bdb_includes = []
@@ -400,13 +403,13 @@ bdb_subdirs = [
     '',
 ]
 
-if get_option('with-bdb') != ''
+if bdb_path != ''
     foreach subdir : bdb_subdirs
-        if fs.exists(with_bdb / 'include' / subdir / 'db.h')
-            bdb_header += with_bdb / 'include' / subdir / 'db.h'
-            bdb_libdir += with_bdb / 'lib'
+        if fs.exists(bdb_path / 'include' / subdir / 'db.h')
+            bdb_header += bdb_path / 'include' / subdir / 'db.h'
+            bdb_libdir += bdb_path / 'lib'
             bdb_includes += include_directories(
-                with_bdb / 'include' / subdir,
+                bdb_path / 'include' / subdir,
             )
         endif
         if bdb_header != ''
@@ -491,7 +494,6 @@ message('BDB version: ', bdb_version)
 # Check for crypt or SSL (for DHX authentication)
 #
 
-with_ssl_dir = get_option('with-ssl-dir')
 have_embedded_ssl = get_option('with-embedded-ssl')
 
 ssl_deps = []
@@ -548,7 +550,10 @@ endif
 # Check for GSSAPI
 #
 
-with_gssapi = get_option('with-gssapi')
+enable_gssapi = get_option('with-gssapi')
+gssapi_path = get_option('with-gssapi-path')
+
+gss_libs = []
 gssapi_includes = []
 gssapi_headers = [
     'gssapi.h',
@@ -561,23 +566,23 @@ foreach header : gssapi_headers
     if cc.has_header(
         header,
         include_directories: include_directories(
-            [with_gssapi / 'include', header_dir],
+            [gssapi_path / 'include', header_dir],
         ),
     )
         cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
     endif
 endforeach
 
-if get_option('with-gssapi') == 'false'
+if not enable_gssapi
     have_gssapi = false
-elif get_option('with-gssapi') != ''
+elif get_option('with-gssapi-path') != ''
     have_gssapi = true
     gss = cc.find_library(
         'gssapi',
-        dirs: with_gssapi / 'lib',
+        dirs: gssapi_path / 'lib',
         required: false,
     )
-    gssapi_includes += include_directories(with_gssapi / 'include')
+    gssapi_includes += include_directories(gssapi_path / 'include')
 else
     gss = cc.find_library('gss', dirs: libsearch_dirs, required: false)
     if not gss.found()
@@ -593,30 +598,29 @@ else
             endif
         endif
     endif
-    have_gssapi = (
-        gss.found()
-        and cc.has_function('gss_acquire_cred', dependencies: gss)
-    )
-endif
-
-if have_gssapi
-    # Heimdal/MIT compatibility fix
-    if cc.has_header_symbol('gssapi.h', 'GSS_C_NT_HOSTBASED_SERVICE')
-        cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
+    have_gssapi = gss.found() and cc.has_function('gss_acquire_cred', dependencies: gss)
+    if have_gssapi
+        gss_libs += gss
+        cdata.set('HAVE_GSSAPI', 1)
+        # Heimdal/MIT compatibility fix
+        if cc.has_header_symbol('gssapi.h', 'GSS_C_NT_HOSTBASED_SERVICE')
+            cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
+        endif
+    else
+        have_gssapi = false
+        warning('GSSAPI support requested but gssapi libraries not found')
     endif
-    cdata.set('HAVE_GSSAPI', 1)
-endif
-
-if with_gssapi != 'false' and not have_gssapi
-    warning('GSSAPI support requested but gssapi library not found')
 endif
 
 #
 # Check for Kerberos V
 #
 
+enable_kerberos = get_option('with-kerberos')
+
 kerberos = cc.find_library('krb5', dirs: libsearch_dirs, required: false)
 krb5_config = find_program('krb5-config', required: false)
+
 kerberos_c_args = []
 kerberos_headers = [
     'kerberosv5/krb5.h',
@@ -633,46 +637,48 @@ foreach header : kerberos_headers
     endif
 endforeach
 
-if get_option('with-kerberos').disabled()
+if not enable_kerberos
     have_kerberos = false
 else
     have_kerberos = kerberos.found()
-    if get_option('with-kerberos').enabled() and not have_kerberos
-        error('Kerberos support requested but not found')
-    endif
-endif
-
-if have_kerberos
-    if host_os == 'sunos'
-        kerberos_c_args += run_command(
-            krb5_config,
-            '--cflags',
-            check: true,
-        ).stdout().strip()
-    endif
-    cdata.set('HAVE_KERBEROS', 1)
-    kerberos_functions = [
-        'krb5_free_unparsed_name',
-        'krb5_free_error_message',
-        'krb5_free_keytab_entry_contents',
-        'krb5_kt_free_entry',
-    ]
-    foreach function : kerberos_functions
-        if cc.has_function(function, dependencies: kerberos)
-            cdata.set('HAVE_' + function.underscorify().to_upper(), 1)
+    if have_kerberos
+        gss_libs += kerberos
+        cdata.set('HAVE_KERBEROS', 1)
+        if host_os == 'sunos'
+            kerberos_c_args += run_command(
+                krb5_config,
+                '--cflags',
+                check: true,
+            ).stdout().strip()
         endif
-    endforeach
+        kerberos_functions = [
+            'krb5_free_unparsed_name',
+            'krb5_free_error_message',
+            'krb5_free_keytab_entry_contents',
+            'krb5_kt_free_entry',
+        ]
+        foreach function : kerberos_functions
+            if cc.has_function(function, dependencies: kerberos)
+                cdata.set('HAVE_' + function.underscorify().to_upper(), 1)
+            endif
+        endforeach
+    else
+        have_kerberos = false
+        warning('Kerberos API support requested but libkrb5 not found')
+    endif
 endif
 
 #
-# Check whether Kerberos V UAM can be built
+# Check whether Kerberos V UAM should be compiled
 #
 
-if get_option('enable-krbV-uam').disabled()
-    enable_krbV_uam = false
+enable_krb5_uam = get_option('with-krbV-uam')
+
+if not enable_krb5_uam
+    have_krb5_uam = false
 else
-    enable_krbV_uam = have_gssapi
-    if get_option('enable-krbV-uam').enabled() and not have_gssapi
+    have_krb5_uam = have_gssapi
+    if enable_krb5_uam and not have_gssapi
         warning('Need GSSAPI support to build Kerberos V UAM')
     endif
 endif
@@ -681,10 +687,22 @@ endif
 # Check for optional Zeroconf support
 #
 
+enable_zeroconf = get_option('with-zeroconf')
+
 avahi = dependency('avahi-client', required: false)
+
+dns_sd_libs = []
+
 dns_sd = cc.find_library('dns_sd', has_headers: 'dns_sd.h', required: false)
+if dns_sd.found()
+    dns_sd_libs += dns_sd
+endif
+
 system = cc.find_library('system', required: false)
-dns_sd_libs = [dns_sd, system]
+if dns_sd.found()
+    dns_sd_libs += system
+endif
+
 zeroconf_provider = ''
 freebsd_zeroconf_daemon = ''
 
@@ -696,25 +714,36 @@ have_dns = (
     )
 )
 
-if avahi.found()
-    cdata.set('USE_ZEROCONF', 1)
-    cdata.set('HAVE_AVAHI', 1)
-    if avahi.version() >= '0.6.4'
-        cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
+if not enable_zeroconf
+    have_zeroconf = false
+else
+    have_zeroconf = have_dns
+    if have_dns
+        cdata.set('USE_ZEROCONF', 1)
+        cdata.set('HAVE_MDNS', 1)
+        freebsd_zeroconf_daemon = 'mdnsd'
+        zeroconf_provider += 'mDNS'
+    else
+        have_zeroconf = avahi.found()
+        if avahi.found()
+            cdata.set('USE_ZEROCONF', 1)
+            cdata.set('HAVE_AVAHI', 1)
+            if avahi.version() >= '0.6.4'
+                cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
+            endif
+            freebsd_zeroconf_daemon = 'avahi_daemon'
+            zeroconf_provider += 'Avahi'
+        else
+            have_zeroconf = false
+        endif
     endif
-    freebsd_zeroconf_daemon = 'avahi_daemon'
-    zeroconf_provider += 'Avahi'
-elif have_dns
-    cdata.set('USE_ZEROCONF', 1)
-    cdata.set('HAVE_MDNS', 1)
-    freebsd_zeroconf_daemon = 'mdnsd'
-    zeroconf_provider += 'mDNS'
 endif
 
-if get_option('enable-zeroconf').disabled()
-    enable_zeroconf = false
-else
-    enable_zeroconf = avahi.found() or have_dns
+if enable_zeroconf and not have_zeroconf
+    warning(
+        'Zeroconf (Bonjour) support requested but required libraries not found',
+        'Please install Avahi or mDNS',
+    )
 endif
 
 #
@@ -724,37 +753,21 @@ endif
 talloc = dependency('talloc', required: false)
 
 tracker_manager = ''
-tracker_pkgconfig_version = get_option('with-tracker-pkgconfig-version')
 tracker_prefix = get_option('with-tracker-prefix')
 
-if get_option('with-spotlight').disabled()
+if not get_option('with-spotlight')
     have_spotlight = false
 else
     # Check for tracker SPARQL
 
-    if tracker_pkgconfig_version != ''
-        tracker_sparql = dependency(
-            'tracker-sparql-'
-            + get_option('with-tracker-pkgconfig-version'),
-            required: false,
-        )
-    endif
-    tracker_sparql = dependency(
-        'tracker-sparql-3.0',
-        required: false,
-    )
-    if not tracker_sparql.found()
-        tracker_sparql = dependency(
-            'tracker-sparql-2.0',
-            required: false,
-        )
-    endif
-    if not tracker_sparql.found()
-        tracker_sparql = dependency(
-            'tracker-sparql-1.0',
-            required: false,
-        )
-    endif
+    tracker_sparql_version = ['3.0', '2.0', '1.0']
+
+    foreach version : tracker_sparql_version
+        tracker_sparql = dependency('tracker-sparql-' + version, required: false)
+        if tracker_sparql.found()
+            break
+        endif
+    endforeach
 
     if not tracker_sparql.found()
         warning('tracker SPARQL not found (required for Spotlight support)')
@@ -814,11 +827,11 @@ else
                 + '"',
             )
             tracker_manager += 'tracker_control'
-        else
-            warning('tracker not found (required for Spotlight support)')
         endif
-        tracker_ok = (tracker.found() or tracker3.found() or tracker_control.found())
-        if tracker_ok
+        tracker_found = (tracker.found() or tracker3.found() or tracker_control.found())
+        if not tracker_found
+            warning('tracker not found (required for Spotlight support)')
+        else
             # Check for talloc
 
             if talloc.found()
@@ -834,7 +847,7 @@ endif
 
 have_spotlight = (
     tracker_sparql.found()
-    and tracker_ok
+    and tracker_found
     and talloc.found()
     and flex.found()
     and bison.found()
@@ -857,7 +870,7 @@ libevent = dependency(
 # Check for quota support
 #
 
-with_quota = get_option('with-quota')
+enable_quota = get_option('with-quota')
 
 prop = cc.find_library('prop', required: false)
 quota = cc.find_library('quota', required: false)
@@ -885,60 +898,66 @@ if rpc_headers_ok
     endforeach
 endif
 
-if with_quota.disabled()
+if not enable_quota
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
-    have_quota = true
-    cdata.set('NEED_RQUOTA', 1)
-    quota_deps += tirpc
-    quota_provider += 'libtirpc'
-    if cc.compiles(
-        '''
-                #include <rpcsvc/rquota.h>
-                int main(void) {
-                    enum qr_status foo;
-                    foo = Q_OK;
-                    return 0;
-                }
-            ''',
-        dependencies: tirpc,
-    )
-        cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
-    endif
-elif rpcsvc.found() and rpc_headers_ok
-    have_quota = true
-    quota_deps += rpcsvc
-    quota_provider += 'SunRPC'
-    if quota.found() and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
-        quota_deps += [quota, prop]
-        cdata.set('HAVE_LIBQUOTA', 1)
-    endif
 else
-    have_quota = false
-    cdata.set('NO_QUOTA_SUPPORT', 1)
+    have_quota = tirpc.found() and cc.has_header('rpcsvc/rquota.h')
+    if have_quota
+        cdata.set('NEED_RQUOTA', 1)
+        quota_deps += tirpc
+        quota_provider += 'libtirpc'
+        if cc.compiles(
+            '''
+                    #include <rpcsvc/rquota.h>
+                    int main(void) {
+                        enum qr_status foo;
+                        foo = Q_OK;
+                        return 0;
+                    }
+                ''',
+            dependencies: tirpc,
+        )
+            cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
+        endif
+    else
+        have_quota = rpcsvc.found() and rpc_headers_ok
+        if have_quota
+            quota_deps += rpcsvc
+            quota_provider += 'SunRPC'
+            if quota.found() and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
+                quota_deps += [quota, prop]
+                cdata.set('HAVE_LIBQUOTA', 1)
+            endif
+        else
+            have_quota = false
+            cdata.set('NO_QUOTA_SUPPORT', 1)
+        endif
+    endif
 endif
 
-if with_quota.enabled() and not have_quota
-    warning('Quota support requested but required libtirpc or libquota libraries not found')
+if enable_quota and not have_quota
+    warning(
+        'Quota support requested but required libtirpc or libquota libraries not found',
+    )
 endif
 
 #
 # Check for libgcrypt
 #
 
-libgcrypt_dir = get_option('with-libgcrypt-dir')
+libgcrypt_path = get_option('with-libgcrypt-path')
 
 libgcrypt_link_args = []
 
-if libgcrypt_dir != ''
-    libgcrypt_link_args += ['-L' + libgcrypt_dir / 'lib', '-lgcrypt']
+if libgcrypt_path != ''
+    libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
     if enable_rpath
-        libgcrypt_link_args += ['-R' + libgcrypt_dir / 'lib']
+        libgcrypt_link_args += ['-R' + libgcrypt_path / 'lib']
     endif
     libgcrypt = declare_dependency(
         link_args: libgcrypt_link_args,
-        include_directories: include_directories(libgcrypt_dir / 'include'),
+        include_directories: include_directories(libgcrypt_path / 'include'),
     )
 else
     libgcrypt = dependency('libgcrypt', required: false)
@@ -953,7 +972,7 @@ endif
 
 libgcrypt_config = find_program(
     'libgcrypt-config',
-    dirs: libgcrypt_dir + '/bin',
+    dirs: libgcrypt_path + '/bin',
     required: false,
 )
 
@@ -965,24 +984,22 @@ cast5_api = run_command(
 
 # Reserved for future use:
 # libgcrypt_version = libgcrypt_config.version().version_compare('>=1.2.3')
+# have_libgcrypt = libgcrypt_version and cast5_api
 
-if not libgcrypt.found()
-    have_libgcrypt = false
-    error(
-        'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
-    )
+have_libgcrypt = libgcrypt.found() and cast5_api
+if have_libgcrypt
+    cdata.set('HAVE_LIBGCRYPT', 1)
+    cdata.set('UAM_DHX2', 1)
 else
-    # Reserved for future use:
-    # have_libgcrypt = libgcrypt_version and cast5_api
-    have_libgcrypt = libgcrypt.found() and cast5_api
-    if not cast5_api
-        have_libgcrypt = false
+    have_libgcrypt = false
+    if not libgcrypt.found()
+        error(
+            'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
+        )
+    elif not cast5_api
         error(
             'Detected libgcrypt without CAST5, please install a more recent version that contains this API',
         )
-    else
-        cdata.set('HAVE_LIBGCRYPT', 1)
-        cdata.set('UAM_DHX2', 1)
     endif
 endif
 
@@ -1099,15 +1116,17 @@ endif
 # Check for dbus-glib, for AFP stats
 #
 
+enable_afpstats = get_option('with-afpstats')
+
 dbus = dependency('dbus-1', required: false)
 dbus_glib = dependency('dbus-glib-1', required: false)
 glib = dependency('glib-2.0', required: false)
 
-if get_option('with-afpstats').disabled()
-    with_afpstats = false
+if not enable_afpstats
+    have_afpstats = false
 else
-    with_afpstats = dbus.found() and dbus_glib.found() and glib.found()
-    if with_afpstats
+    have_afpstats = dbus.found() and dbus_glib.found() and glib.found()
+    if have_afpstats
         cdata.set('HAVE_DBUS_GLIB', 1)
     endif
 endif
@@ -1116,65 +1135,65 @@ endif
 # Set dbus-daemon path
 #
 
-dbus_daemon_path = ''
-if get_option('with-dbus-daemon') != ''
-    cdata.set('DBUS_DAEMON_PATH', '"' + get_option('with-dbus-daemon') + '"')
-    dbus_daemon_path += get_option('with-dbus-daemon')
+dbus_daemon_path = get_option('with-dbus-daemon-path')
+
+if dbus_daemon_path != ''
+    cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemon_path + '"')
 elif host_os == 'darwin'
     cdata.set('DBUS_DAEMON_PATH', '"' + bindir / 'dbus-daemon' + '"')
-    dbus_daemon_path += bindir / 'dbus-daemon'
 else
     cdata.set('DBUS_DAEMON_PATH', '"/bin/dbus-daemon"')
-    dbus_daemon_path += '/bin/dbus-daemon'
 endif
 
 #
 # Set dbus sysconf directory
 #
 
-dbus_sysconf_dir = ''
+dbus_sysconf_path = get_option('with-dbus-sysconf-path')
 
-if get_option('with-dbus-sysconf-dir') != ''
-    cdata.set('DBUS_SYS_DIR', '"' + get_option('with-dbus-sysconf-dir') + '"')
-    dbus_sysconf_dir += get_option('with-dbus-sysconf-dir')
+if dbus_sysconf_path != ''
+    cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
 elif host_os == 'darwin'
     cdata.set('DBUS_SYS_DIR', '"' + pkgconfdir + '/dbus-1/system.d' + '"')
-    dbus_sysconf_dir += pkgconfdir / 'dbus-1/system.d'
 else
     cdata.set('DBUS_SYS_DIR', '"/etc/dbus-1/system.d"')
-    dbus_sysconf_dir += '/etc/dbus-1/system.d'
 endif
 
 #
 # Check for building PGP UAM
 #
 
-if get_option('enable-pgp-uam').disabled()
-    enable_pgp_uam = false
-else
-    enable_pgp_uam = have_ssl
-    if get_option('enable-pgp-uam').enabled() and not have_ssl
-        error('Need SSL support to build PGP UAM')
-    endif
-endif
+enable_pgp_uam = get_option('with-pgp-uam')
 
-if enable_pgp_uam
-    cdata.set('UAM_PGP', 1)
+if not enable_pgp_uam
+    have_pgp_uam = false
+else
+    have_pgp_uam = have_ssl
+    if have_pgp_uam
+        cdata.set('UAM_PGP', 1)
+    else
+        have_pgp_uam = false
+        warning(
+            'Embedded SSL, LibreSSL or OpenSSL version 1.1 is required to build PGP UAM',
+        )
+    endif
 endif
 
 #
 # Check for ACL support
 #
 
+enable_acls = get_option('with-acls')
+
 acl_deps = []
 acl_includes = []
 acl_link_args = []
 
-if get_option('with-acls').disabled()
+if not enable_acls
     have_acls = false
 elif host_os == 'darwin'
     have_acls = false
-    message('Darwin ACLs are currently unsupported')
+    warning('Darwin ACLs are currently unsupported')
 elif host_os.contains('sunos')
     have_acls = true
     sec = cc.find_library('sec', required: false)
@@ -1251,8 +1270,8 @@ else
         have_acls = false
     endif
 
-    if get_option('with-acls').enabled() and not have_acls
-        warning('ACL support requested but not found')
+    if enable_acls and not have_acls
+        warning('ACL support requested but required libraries not found')
     endif
 endif
 
@@ -1260,33 +1279,36 @@ endif
 # Check for LDAP support, for client-side ACL visibility
 #
 
-with_ldap = get_option('with-ldap')
+enable_ldap = get_option('with-ldap')
+ldap_path = get_option('with-ldap-path')
 
 ldap_link_args = []
 
-if with_ldap == 'false'
-    have_ldap = false
-elif with_ldap != ''
-    ldap_link_args += ['-L' + with_ldap / 'lib', '-lldap']
+if ldap_path != ''
+    ldap_link_args += ['-L' + ldap_path / 'lib', '-lldap']
     if enable_rpath
-        ldap_link_args += ['-R' + with_ldap / 'lib']
+        ldap_link_args += ['-R' + ldap_path / 'lib']
     endif
     ldap = declare_dependency(
         link_args: ldap_link_args,
-        include_directories: include_directories(with_ldap / 'include'),
+        include_directories: include_directories(ldap_path / 'include'),
     )
-    have_ldap = cc.has_function('ldap_initialize', dependencies: ldap)
 else
     ldap = cc.find_library('ldap', dirs: libsearch_dirs, required: false)
-    have_ldap = (
-        ldap.found()
-        and cc.has_function('ldap_initialize', dependencies: ldap)
-    )
 endif
 
-if have_ldap
-    cdata.set('HAVE_LDAP', 1)
-elif with_ldap != 'false' and not have_ldap
+if not enable_ldap
+    have_ldap = false
+else
+    have_ldap = ldap.found() and cc.has_function('ldap_initialize', dependencies: ldap)
+    if have_ldap
+        cdata.set('HAVE_LDAP', 1)
+    else
+        have_ldap = false
+    endif
+endif
+
+if enable_ldap and not have_ldap
     warning('LDAP support requested but LDAP library not found')
 endif
 
@@ -1320,28 +1342,32 @@ endif
 # Check for iconv support
 #
 
-with_libiconv = get_option('with-libiconv')
+enable_iconv = get_option('with-libiconv')
+iconv_path = get_option('with-libiconv-path')
+
+iconv = dependency('iconv', required: false)
+libiconv = cc.find_library('iconv', dirs: libsearch_dirs, required: false)
 
 libiconv_link_args = []
 
-if with_libiconv != ''
-    libiconv_link_args += ['-L' + with_libiconv / 'lib', '-liconv']
+if iconv_path != ''
+    libiconv_link_args += ['-L' + iconv_path / 'lib', '-liconv']
     if enable_rpath
-        libiconv_link_args += ['-R' + with_libiconv / 'lib']
+        libiconv_link_args += ['-R' + iconv_path / 'lib']
     endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
         include_directories: include_directories(with_libiconv / 'include'),
     )
-else
-    iconv = dependency('iconv', required: false)
 endif
 
-libiconv = cc.find_library('iconv', dirs: libsearch_dirs, required: false)
-
-if iconv.found() or libiconv.found()
-    if cc.compiles(
-        '''
+if not enable_iconv
+    have_iconv = false
+else
+    have_iconv = (
+        (iconv.found() or libiconv.found())
+        and cc.compiles(
+            '''
     #include <iconv.h>
     int main(void) {
         iconv_t cd = iconv_open("ASCII", "UTF-8");
@@ -1349,44 +1375,50 @@ if iconv.found() or libiconv.found()
     return 0;
     }
     ''',
+        )
     )
+    if have_iconv
         cdata.set('HAVE_USABLE_ICONV', 1)
-    endif
 
-    if cc.compiles(
-        '''
-    #include <stdlib.h>
-    #include <iconv.h>
-    extern
-    #ifdef __cplusplus
-        "C"
-    #endif
-    #if defined(__STDC__) || defined(__cplusplus)
-        size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
-    #else
-        size_t iconv();
-    #endif
-    ''',
-    )
-        cdata.set('ICONV_CONST', '')
+        if cc.compiles(
+            '''
+        #include <stdlib.h>
+        #include <iconv.h>
+        extern
+        #ifdef __cplusplus
+            "C"
+        #endif
+        #if defined(__STDC__) || defined(__cplusplus)
+            size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+        #else
+            size_t iconv();
+        #endif
+        ''',
+        )
+            cdata.set('ICONV_CONST', '')
+        else
+            cdata.set('ICONV_CONST', 'const')
+        endif
+
+        if cc.run(
+            '''
+        #include <iconv.h>
+        int main(void) {
+            iconv_t cd = iconv_open("ASCII", "UCS-2-INTERNAL");
+            if (cd == 0 || cd == (iconv_t)-1) return -1;
+            return 0;
+        }
+        ''',
+        ).returncode() == 0
+            cdata.set('HAVE_UCS2INTERNAL', 1)
+        endif
     else
-        cdata.set('ICONV_CONST', 'const')
+        have_iconv = false
+        warning(
+            'iconv support requested but required libraries not found',
+            'Please install libiconv',
+        )
     endif
-
-    if cc.run(
-        '''
-    #include <iconv.h>
-    int main(void) {
-        iconv_t cd = iconv_open("ASCII", "UCS-2-INTERNAL");
-        if (cd == 0 || cd == (iconv_t)-1) return -1;
-        return 0;
-    }
-    ''',
-    ).returncode() == 0
-        cdata.set('HAVE_UCS2INTERNAL', 1)
-    endif
-else
-    error('libiconv not found')
 endif
 
 #
@@ -1458,13 +1490,14 @@ endif
 # Check for docbook
 #
 
-with_docbook = get_option('with-docbook')
+docbook_path = get_option('with-docbook-path')
+compile_manual = get_option('with-manual')
 
 xsltproc = find_program('xsltproc', required: false)
 xsl = []
 docbook_root = ''
 docbook_xsl_dirs = [
-    with_docbook,
+    docbook_path,
     '/usr/share/sgml/docbook/xsl-stylesheets',
     '/usr/share/xml/docbook/stylesheet/docbook-xsl',
     '/opt/local/share/xsl/docbook',
@@ -1476,7 +1509,7 @@ if host_os == 'darwin'
     docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
 endif
 
-if not get_option('build-manual')
+if not compile_manual
     build_xml_docs = false
 else
     foreach dir : docbook_xsl_dirs
@@ -1505,7 +1538,7 @@ endif
 
 docbook_ok = xsltproc.found() and docbook_root != ''
 
-if get_option('build-manual') and not docbook_ok
+if compile_manual and not docbook_ok
     error(
         'xsltproc and docbook-xsl stylesheets are required to compile manpages and html documentation',
     )
@@ -1515,7 +1548,9 @@ endif
 # Test for PAM support
 #
 
-with_pam = get_option('with-pam')
+enable_pam = get_option('with-pam')
+pam_path = get_option('with-pam-path')
+
 pam_dir = ''
 pam_includes = []
 pam_link_args = []
@@ -1539,20 +1574,20 @@ if pam_dir == '' and host_os == 'sunos'
     )
 endif
 
-if with_pam != '' and pam_dir != '/'
-    pam_link_args += ['-L' + with_pam / 'lib', '-lpam']
+if pam_path != '' and pam_dir != '/'
+    pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
     if enable_rpath
-        pam_link_args += ['-R' + with_pam / 'lib']
+        pam_link_args += ['-R' + pam_path / 'lib']
     endif
     pam = declare_dependency(
         link_args: pam_link_args,
-        include_directories: include_directories(with_pam / 'include'),
+        include_directories: include_directories(pam_path / 'include'),
     )
 else
     pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
 endif
 
-if get_option('without-pam')
+if not enable_pam
     have_pam = false
 else
     have_pam = (
@@ -1560,110 +1595,118 @@ else
         or cc.has_header('pam/pam_appl.h')
         or cc.has_function('pam_set_item', dependencies: pam)
     )
-endif
-
-if have_pam
-    cdata.set('USE_PAM', 1)
-    uams_options += 'PAM'
-    pampath = pam_dir / 'etc/pam.d'
-    # Debian/SuSE
-    if fs.exists(pampath / 'common-auth')
-        cdata.set('PAM_DIRECTIVE', 'include')
-        cdata.set('PAM_AUTH', 'common-auth')
-        cdata.set('PAM_ACCOUNT', 'common-account')
-        cdata.set('PAM_PASSWORD', 'common-password')
-        if fs.exists(pam_dir / 'common-session-noninteractive')
-            cdata.set('PAM_SESSION', 'common-session-noninteractive')
-        elif fs.exists(pam_dir / 'common-session-nonlogin')
-            cdata.set('PAM_SESSION', 'common-session-nonlogin')
+    if have_pam
+        cdata.set('USE_PAM', 1)
+        uams_options += 'PAM'
+        pampath = pam_dir / 'etc/pam.d'
+        # Debian/SuSE
+        if fs.exists(pampath / 'common-auth')
+            cdata.set('PAM_DIRECTIVE', 'include')
+            cdata.set('PAM_AUTH', 'common-auth')
+            cdata.set('PAM_ACCOUNT', 'common-account')
+            cdata.set('PAM_PASSWORD', 'common-password')
+            if fs.exists(pam_dir / 'common-session-noninteractive')
+                cdata.set('PAM_SESSION', 'common-session-noninteractive')
+            elif fs.exists(pam_dir / 'common-session-nonlogin')
+                cdata.set('PAM_SESSION', 'common-session-nonlogin')
+            else
+                cdata.set('PAM_SESSION', 'common-session')
+            endif
+            # RHEL/FC
+        elif fs.exists(pampath / 'system-auth')
+            cdata.set('PAM_DIRECTIVE', 'include')
+            cdata.set('PAM_AUTH', 'system-auth')
+            cdata.set('PAM_ACCOUNT', 'system-auth')
+            cdata.set('PAM_PASSWORD', 'system-auth')
+            cdata.set('PAM_SESSION', 'system-auth')
+            # FreeBSD
+        elif fs.exists(pampath / 'system')
+            cdata.set('PAM_DIRECTIVE', 'include')
+            cdata.set('PAM_AUTH', 'system')
+            cdata.set('PAM_ACCOUNT', 'system')
+            cdata.set('PAM_PASSWORD', 'system')
+            cdata.set('PAM_SESSION', 'system')
+            # macOS
+        elif fs.exists(pampath / 'chkpasswd')
+            cdata.set('PAM_DIRECTIVE', 'required')
+            cdata.set('PAM_AUTH', 'pam_opendirectory.so')
+            cdata.set('PAM_ACCOUNT', 'pam_opendirectory.so')
+            cdata.set('PAM_PASSWORD', 'pam_permit.so')
+            cdata.set('PAM_SESSION', 'pam_permit.so')
+            # Solaris 11+
+        elif fs.exists(pampath / 'other')
+            cdata.set('PAM_DIRECTIVE', 'include')
+            cdata.set('PAM_AUTH', pam_dir / 'etc/pam.d/other')
+            cdata.set('PAM_ACCOUNT', pam_dir / 'etc/pam.d/other')
+            cdata.set('PAM_PASSWORD', pam_dir / 'etc/pam.d/other')
+            cdata.set('PAM_SESSION', pam_dir / 'etc/pam.d/other')
+            # Fallback
         else
-            cdata.set('PAM_SESSION', 'common-session')
+            cdata.set('PAM_DIRECTIVE', 'required')
+            cdata.set('PAM_AUTH', 'pam_unix.so')
+            cdata.set('PAM_ACCOUNT', 'pam_unix.so')
+            cdata.set('PAM_PASSWORD', '"pam_unix.so use_authtok"')
+            cdata.set('PAM_SESSION', 'pam_unix.so')
         endif
-        # RHEL/FC
-    elif fs.exists(pampath / 'system-auth')
-        cdata.set('PAM_DIRECTIVE', 'include')
-        cdata.set('PAM_AUTH', 'system-auth')
-        cdata.set('PAM_ACCOUNT', 'system-auth')
-        cdata.set('PAM_PASSWORD', 'system-auth')
-        cdata.set('PAM_SESSION', 'system-auth')
-        # FreeBSD
-    elif fs.exists(pampath / 'system')
-        cdata.set('PAM_DIRECTIVE', 'include')
-        cdata.set('PAM_AUTH', 'system')
-        cdata.set('PAM_ACCOUNT', 'system')
-        cdata.set('PAM_PASSWORD', 'system')
-        cdata.set('PAM_SESSION', 'system')
-        # macOS
-    elif fs.exists(pampath / 'chkpasswd')
-        cdata.set('PAM_DIRECTIVE', 'required')
-        cdata.set('PAM_AUTH', 'pam_opendirectory.so')
-        cdata.set('PAM_ACCOUNT', 'pam_opendirectory.so')
-        cdata.set('PAM_PASSWORD', 'pam_permit.so')
-        cdata.set('PAM_SESSION', 'pam_permit.so')
-        # Solaris 11+
-    elif fs.exists(pampath / 'other')
-        cdata.set('PAM_DIRECTIVE', 'include')
-        cdata.set('PAM_AUTH', pam_dir / 'etc/pam.d/other')
-        cdata.set('PAM_ACCOUNT', pam_dir / 'etc/pam.d/other')
-        cdata.set('PAM_PASSWORD', pam_dir / 'etc/pam.d/other')
-        cdata.set('PAM_SESSION', pam_dir / 'etc/pam.d/other')
-        # Fallback
+
+        if pam_dir == ''
+            warning(
+                'PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Please install this file manually. If you are running a Solaris-based host which still relies on /etc/pam.conf you will have to edit this file to get PAM working',
+            )
+        endif
     else
-        cdata.set('PAM_DIRECTIVE', 'required')
-        cdata.set('PAM_AUTH', 'pam_unix.so')
-        cdata.set('PAM_ACCOUNT', 'pam_unix.so')
-        cdata.set('PAM_PASSWORD', '"pam_unix.so use_authtok"')
-        cdata.set('PAM_SESSION', 'pam_unix.so')
+        have_pam = false
+        warning('PAM support requested but required library not found')
     endif
-elif have_pam and (pam_dir == '')
-    warning(
-        'PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Please install this file manually. If you are running a Solaris-based host which still relies on /etc/pam.conf you will have to edit this file to get PAM working',
-    )
 endif
 
 #
 # Check for optional shadow password support
 #
 
-if get_option('with-shadow').disabled()
-    with_shadow = false
-else
-    with_shadow = (cc.has_header('shadow.h'))
-    if get_option('with-shadow').enabled() and not with_shadow
-        error('shadow support not available')
-    endif
-endif
+enable_shadow = get_option('with-shadow')
 
-if with_shadow
-    cdata.set('SHADOWPW', 1)
-    uams_options += ' SHADOW'
+if enable_shadow
+    have_shadow = false
+else
+    have_shadow = (cc.has_header('shadow.h'))
+    if with_shadow
+        cdata.set('SHADOWPW', 1)
+        uams_options += ' SHADOW'
+    else
+        have_shadow = false
+        warning('Shadow password support requested but required header not found')
+    endif
 endif
 
 #
 # Netatalk lockfile path
 #
 
-with_lockfile = get_option('with-lockfile')
-lockfile_path = ''
-if with_lockfile != ''
-    lockfile_path += with_lockfile
+lockfile_path = get_option('with-lockfile-path')
+lockfile = ''
+
+if lockfile_path != ''
+    lockfile += lockfile_path
 elif host_os == 'freebsd'
-    lockfile_path += '/var/spool/lock/netatalk'
+    lockfile += '/var/spool/lock/netatalk'
 elif host_os in ['netbsd', 'openbsd', 'darwin']
-    lockfile_path += '/var/run/netatalk.pid'
+    lockfile += '/var/run/netatalk.pid'
 elif host_os == 'linux'
-    lockfile_path += '/var/lock/netatalk'
+    lockfile += '/var/lock/netatalk'
 else
-    lockfile_path += '/var/spool/locks/netatalk'
+    lockfile += '/var/spool/locks/netatalk'
 endif
 
-cdata.set('PATH_NETATALK_LOCK', '"' + lockfile_path + '"')
+cdata.set('PATH_NETATALK_LOCK', '"' + lockfile + '"')
 
 #
 # Check for largefle support
 #
 
-if get_option('disable-largefile')
+enable_largefile = get_option('with-largefile')
+
+if not enable_largefile
     have_largefile = false
 else
     file_offset_bits_test = cc.compiles(
@@ -1697,26 +1740,29 @@ else
             ''',
     )
 
-    if file_offset_bits_test
-        cdata.set('_FILE_OFFSET_BITS', 64)
-    else
-        if large_files_test
-            cdata.set('_LARGE_FILES', 1)
+    have_largefile = ((file_offset_bits_test or large_files_test) and off_t_test)
+    if have_largefile
+        cdata.set('HAVE_LARGEFILE_SUPPORT', 1)
+        if file_offset_bits_test
+            cdata.set('_FILE_OFFSET_BITS', 64)
+        else
+            if large_files_test
+                cdata.set('_LARGE_FILES', 1)
+            endif
         endif
+    else
+        have_largefile = false
+        warning('Largefile support requested but not available on this platform')
     endif
-endif
-
-have_largefile = ((file_offset_bits_test or large_files_test) and off_t_test)
-
-if have_largefile
-    cdata.set('HAVE_LARGEFILE_SUPPORT', 1)
 endif
 
 #
 # Check for sendfile
 #
 
-if get_option('disable-sendfile')
+enable_sendfile = get_option('with-sendfile')
+
+if not enable_sendfile
     have_sendfile = false
 elif host_os == 'linux'
     cdata.set('SENDFILE_FLAVOR_LINUX', 1)
@@ -1754,6 +1800,8 @@ endif
 # Check for dtrace
 #
 
+enable_dtrace = get_option('with-dtrace')
+
 dtrace = find_program('dtrace', required: false)
 libelf = cc.find_library('elf', required: false)
 dtrace_command = [
@@ -1763,23 +1811,25 @@ dtrace_command = [
 ]
 dtrace_deps = []
 
-if host_os == 'freebsd' and cpu == 'aarch64'
-    with_dtrace = false
-    message('The version of dtrace in aarch64 FreeBSD is currently unsupported')
-elif not get_option('with-dtrace')
-    with_dtrace = false
-else
-    with_dtrace = dtrace.found()
-    if with_dtrace and host_os == 'freebsd'
-        dtrace_deps += libelf
-    endif
-endif
+if not enable_dtrace
+    have_dtrace = false
+elif host_os == 'freebsd' and cpu == 'aarch64'
 
-if with_dtrace
-    cdata.set('WITH_DTRACE', 1)
-endif
-if get_option('with-dtrace') and not dtrace.found()
-    message('Dtrace probe support requested but dtrace not found')
+    # See https://wiki.freebsd.org/arm64#Known_Limitations
+
+    have_dtrace = false
+    warning('The version of dtrace in aarch64 FreeBSD is currently unsupported')
+else
+    have_dtrace = dtrace.found()
+    if have_dtrace
+        cdata.set('WITH_DTRACE', 1)
+        if host_os == 'freebsd'
+            dtrace_deps += libelf
+        endif
+    else
+        have_dtrace = false
+        warning('Dtrace probe support requested but dtrace not found')
+    endif
 endif
 
 #
@@ -1828,7 +1878,9 @@ sed_command = [
 # Check for cracklib support
 #
 
-with_cracklib = get_option('with-cracklib')
+enable_cracklib = get_option('with-cracklib')
+cracklib_path = get_option('with-cracklib-path')
+
 crack = cc.find_library('crack', dirs: libsearch_dirs, required: false)
 cracklib_dict = ''
 
@@ -1844,14 +1896,14 @@ elif fs.is_dir('/usr/local/share/cracklib')
     cracklib_dict += '/usr/local/share/cracklib/cracklib-small'
 endif
 
-if with_cracklib == 'false'
+if not enable_cracklib
     have_cracklib = false
 else
-    have_cracklib = crack.found() and (with_cracklib != '' or cracklib_dict != '')
+    have_cracklib = crack.found() and (cracklib_path != '' or cracklib_dict != '')
     if have_cracklib
         cdata.set('USE_CRACKLIB', 1)
-        if with_cracklib != ''
-            cdata.set('_PATH_CRACKLIB', '"' + with_cracklib + '"')
+        if cracklib_path != ''
+            cdata.set('_PATH_CRACKLIB', '"' + cracklib_path + '"')
         elif host_os == 'darwin'
             cdata.set(
                 '_PATH_CRACKLIB',
@@ -1860,20 +1912,21 @@ else
         elif cracklib_dict != ''
             cdata.set('_PATH_CRACKLIB', '"' + cracklib_dict + '"')
         endif
+    else
+        have_cracklib = false
+        warning('Cracklib support requested but cracklib library not found')
     endif
-endif
-
-if with_cracklib != 'false' and not have_cracklib
-    warning('Cracklib support requested but cracklib library not found')
 endif
 
 #
 # Check for TCP wrappers support
 #
 
+enable_tcpwrap = get_option('with-tcp-wrappers')
+
 wrap = cc.find_library('wrap', required: false)
 
-if not wrap.found() or get_option('disable-tcp-wrappers')
+if not enable_tcpwrap
     have_tcpwrap = false
 else
     tcpwrap_code = '''
@@ -1889,14 +1942,15 @@ int main(void) {
 }
 '''
 
-    have_tcpwrap = cc.links(tcpwrap_code, args: '-lwrap')
+    have_tcpwrap = wrap.found() and cc.links(tcpwrap_code, args: '-lwrap')
     if not have_tcpwrap
         have_tcpwrap = cc.links(tcpwrap_code, args: ['-lwrap', '-lnsl'])
     endif
-    message(have_tcpwrap)
-
     if have_tcpwrap
         cdata.set('TCPWRAP', 1)
+    else
+        have_tcpwrap = false
+        warning('TCP wrappers support requested but required library not found')
     endif
 endif
 
@@ -1935,7 +1989,7 @@ endif
 # Check whether to enable debug code
 #
 
-if get_option('enable-debug')
+if get_option('with-debug')
     cdata.set('DEBUG', 1)
 endif
 
@@ -1943,7 +1997,7 @@ endif
 # Check whether to enable debugging
 #
 
-if get_option('enable-debugging')
+if get_option('with-debugging')
     cdata.set('DEBUGGING', 1)
 endif
 
@@ -1951,7 +2005,7 @@ endif
 # Check for optional valid-shell-check support
 #
 
-if get_option('disable-shell-check')
+if not get_option('with-shell-check')
     cdata.set('DISABLE_SHELLCHECK', 1)
 endif
 
@@ -1994,11 +2048,11 @@ subdir('contrib')
 subdir('distrib')
 subdir('man')
 
-if get_option('build-manual')
+if get_option('with-manual')
     subdir('doc')
 endif
 
-if get_option('build-tests')
+if get_option('with-tests')
     subdir('test')
 endif
 
@@ -2058,7 +2112,7 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  CNID:')
 
 summary_info = {
-    '  Kerberos V': enable_krbV_uam,
+    '  Kerberos V': enable_krb5_uam,
     '  PGP': enable_pgp_uam,
     '  Randnum': '(afppasswd)',
     '  clrtxt': uams_using_options,
@@ -2078,9 +2132,9 @@ summary(summary_info, bool_yn: true, section: '  UAMs:')
 
 summary_info = {
     '  ACL support': have_acls,
-    '  AFP stats via dbus': with_afpstats,
+    '  AFP stats via dbus': have_afpstats,
     '  Cracklib support': have_cracklib,
-    '  dtrace probes': with_dtrace,
+    '  dtrace probes': have_dtrace,
     '  GSSAPI support': have_gssapi,
     '  Kerberos support': have_kerberos,
     '  LDAP support': have_ldap,
@@ -2105,9 +2159,9 @@ summary(summary_info, bool_yn: true, section: '  Options:')
 
 summary_info = {
     '  dbus daemon path': dbus_daemon_path,
-    '  dbus system directory': dbus_sysconf_dir,
+    '  dbus system directory': dbus_sysconf_path,
     '  init directory': init_dir,
-    '  Netatalk lockfile': lockfile_path,
+    '  Netatalk lockfile': lockfile,
 }
 if have_spotlight
     summary_info += {

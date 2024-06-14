@@ -23,7 +23,7 @@ headers = [
     'volume.h',
 ]
 
-if with_dtrace
+if have_dtrace
     run_command(
         dtrace_command,
         '-o', 'afp_dtrace.h',
