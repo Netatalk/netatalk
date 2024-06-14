@@ -31,7 +31,8 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 
-test_external_deps = []
+test_c_args = []
+test_external_deps = [libgcrypt]
 test_internal_deps = []
 test_link_args = []
 
@@ -61,6 +62,27 @@ if have_quota
     test_external_deps += quota_deps
 endif
 
+if enable_krb5_uam
+    test_external_deps += gss
+endif
+
+if have_kerberos
+    test_external_deps += kerberos
+    test_c_args += kerberos_c_args
+endif
+
+if have_tcpwrap
+    test_external_deps += wrap
+endif
+
+if use_mysql_backend
+    test_external_deps += mysqlclient
+endif
+
+if threads.found()
+    test_external_deps += threads
+endif
+
 # For dtrace probes we need to invoke dtrace on all input files, before
 # linking the final executable.
 #
@@ -75,17 +97,12 @@ afpdtestlib = static_library(
     link_with: [test_internal_deps, libatalk],
     dependencies: [
         test_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
         libcnid_deps,
-        threads,
-        tirpc,
     ],
     c_args: [
         '-DAPPLCNAME', confdir,
         dversion,
-        kerberos_c_args,
+        test_c_args,
         messagedir,
         statedir,
         uamdir,
@@ -116,7 +133,7 @@ if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
     )
 endif
 
-if with_dtrace and host_os != 'darwin'
+if have_dtrace and host_os != 'darwin'
     afpdtest_dtrace_input += custom_target(
         'afp_dtrace.o',
         input: [
@@ -152,12 +169,7 @@ afpdtest = executable(
     link_with: [test_internal_deps, libatalk],
     dependencies: [
         test_external_deps,
-        gss,
-        kerberos,
-        libgcrypt,
         libcnid_deps,
-        threads,
-        tirpc,
     ],
     c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
     link_args: test_link_args,

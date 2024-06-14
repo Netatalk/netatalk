@@ -12,7 +12,7 @@ elif get_option('with-init-style') == 'redhat-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('chkconfig'),
             '--add', '/etc/rc.d/init.d/netatalk',
@@ -34,7 +34,7 @@ elif (
         install: true,
         install_dir: init_dir,
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(find_program('systemctl'), 'daemon-reload')
     endif
 elif get_option('with-init-style') == 'debian-systemd'
@@ -48,7 +48,7 @@ elif get_option('with-init-style') == 'debian-systemd'
         install: true,
         install_dir: init_dir,
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(find_program('systemctl'), 'daemon-reload')
     endif
 elif get_option('with-init-style') == 'suse-sysv'
@@ -63,7 +63,7 @@ elif get_option('with-init-style') == 'suse-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('insserv'),
             '/etc/init.d/netatalk',
@@ -81,7 +81,7 @@ elif get_option('with-init-style') == 'freebsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('sh'),
             '/etc/rc.d/netatalk',
@@ -112,7 +112,7 @@ elif get_option('with-init-style') == 'openbsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('rcctl'),
             '-d', 'enable',
@@ -130,7 +130,7 @@ elif get_option('with-init-style') == 'solaris'
         install: true,
         install_dir: init_dir,
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('svccfg'),
             'import',
@@ -152,7 +152,7 @@ elif (
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('rc-update'),
             'add',
@@ -172,7 +172,7 @@ elif get_option('with-init-style') == 'debian-sysv'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-init-hooks')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('update-rc.d'),
             'netatalk',
@@ -204,7 +204,7 @@ elif get_option('with-init-style') == 'macos-launchd'
     )
     if (
         not fs.exists(init_dir / 'io.netatalk.daemon.plist')
-        and not get_option('disable-init-hooks')
+        and get_option('with-init-hooks')
     )
         if fs.exists(init_dir / 'com.netatalk.daemon.plist')
             meson.add_install_script(

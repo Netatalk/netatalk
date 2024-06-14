@@ -1,152 +1,55 @@
-option(
-    'build-manual',
-    type: 'boolean',
-    value: false,
-    description: 'Compile Netatalk documentation',
-)
-option(
-    'build-tests',
-    type: 'boolean',
-    value: false,
-    description: 'Compile tests',
-)
-option(
-    'disable-largefile',
-    type: 'boolean',
-    value: false,
-    description: 'Omit support for large files',
-)
-option(
-    'disable-sendfile',
-    type: 'boolean',
-    value: false,
-    description: 'Disable sendfile syscall',
-)
-option(
-    'disable-shell-check',
-    type: 'boolean',
-    value: false,
-    description: 'Disable checking for a valid shell',
-)
-option(
-    'disable-tcp-wrappers',
-    type: 'boolean',
-    value: false,
-    description: 'Disable TCP wrappers support',
-)
-option(
-    'enable-debug',
-    type: 'boolean',
-    value: false,
-    description: 'Enable verbose debug code',
-)
-option(
-    'enable-debugging',
-    type: 'boolean',
-    value: false,
-    description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
-)
-option(
-    'enable-krbV-uam',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable build of Kerberos V UAM module',
-)
-option(
-    'enable-overwrite',
-    type: 'boolean',
-    value: false,
-    description: 'Overwrite configuration files during installation',
-)
-option(
-    'enable-pgp-uam',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable build of PGP UAM module',
-)
-option(
-    'with-quota',
-    type: 'feature',
-    value: 'auto',
-    description: 'Turn on quota support (default: true)',
-)
-option(
-    'enable-rpath',
-    type: 'boolean',
-    value: false,
-    description: 'Enable RPATH/RUNPATH',
-)
-option(
-    'enable-zeroconf',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable Zeroconf support',
-)
+# The following options are used to enable or disable netatalk features
+# They take the form -Dwith-feature=true || false
+
+# The value: argument corresponds to the default setting
+
 option(
     'with-acls',
-    type: 'feature',
-    value: 'auto',
-    description: 'Include ACL support',
+    type: 'boolean',
+    value: true,
+    description: 'Enable ACL support',
 )
 option(
     'with-afpstats',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable AFP statistics via dbus (enabled if dbus found)',
-)
-option(
-    'with-bdb',
-    type: 'string',
-    value: '',
-    description: 'Specify path to Berkeley DB installation',
+    type: 'boolean',
+    value: true,
+    description: 'Enable AFP statistics via D-Bus',
 )
 option(
     'with-cnid-dbd-backend',
     type: 'boolean',
     value: true,
-    description: 'Build CNID with Database Daemon Data Store',
-)
-option(
-    'with-cnid-default-backend',
-    type: 'string',
-    value: 'dbd',
-    description: 'Set default DID scheme',
+    description: 'Compile CNID with Database Daemon Data Store',
 )
 option(
     'with-cnid-last-backend',
     type: 'boolean',
     value: true,
-    description: 'Build LAST CNID scheme',
+    description: 'Compile LAST CNID scheme',
 )
 option(
     'with-cracklib',
-    type: 'string',
-    value: '',
-    description: 'Enable/set location of cracklib dictionary',
+    type: 'boolean',
+    value: true,
+    description: 'Enable cracklib support',
 )
 option(
-    'with-dbus-daemon',
-    type: 'string',
-    value: '',
-    description: 'Path to DBus daemon',
+    'with-debug',
+    type: 'boolean',
+    value: true,
+    description: 'Enable verbose debug code',
 )
 option(
-    'with-dbus-sysconf-dir',
-    type: 'string',
-    value: '',
-    description: 'Path to dbus system bus security configuration directory',
-)
-option(
-    'with-docbook',
-    type: 'string',
-    value: '',
-    description: 'Path to Docbook XSL directory, default: none',
+    'with-debugging',
+    type: 'boolean',
+    value: true,
+    description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
     'with-dtrace',
     type: 'boolean',
     value: true,
-    description: 'Enable dtrace probes (enabled if dtrace found)',
+    description: 'Enable dtrace probes',
 )
 option(
     'with-embedded-ssl',
@@ -156,16 +59,229 @@ option(
 )
 option(
     'with-gssapi',
+    type: 'boolean',
+    value: true,
+    description: 'Enable GSSAPI support',
+)
+option(
+    'with-init-hooks',
+    type: 'boolean',
+    value: true,
+    description: 'Enable install hooks for OS specific init system',
+)
+option(
+    'with-kerberos',
+    type: 'boolean',
+    value: false,
+    description: 'Enable Kerberos V API support',
+)
+option(
+    'with-krbV-uam',
+    type: 'boolean',
+    value: true,
+    description: 'Enable build of Kerberos V UAM module',
+)
+option(
+    'with-largefile',
+    type: 'boolean',
+    value: true,
+    description: 'Enable support for large files',
+)
+option(
+    'with-ldap',
+    type: 'boolean',
+    value: true,
+    description: 'Enable LDAP support'
+)
+option(
+    'with-libiconv',
+    type: 'boolean',
+    value: true,
+    description: 'Enable iconv support',
+)
+option(
+    'with-manual',
+    type: 'boolean',
+    value: false,
+    description: 'Set path to Docbook XSL directory',
+)
+option(
+    'with-overwrite',
+    type: 'boolean',
+    value: false,
+    description: 'Overwrite configuration files during installation',
+)
+option(
+    'with-pam',
+    type: 'boolean',
+    value: true,
+    description: 'Enable PAM support',
+)
+option(
+    'with-pgp-uam',
+    type: 'boolean',
+    value: false,
+    description: 'Enable build of PGP UAM module',
+)
+option(
+    'with-quota',
+    type: 'boolean',
+    value: true,
+    description: 'Enable quota support',
+)
+option(
+    'with-rpath',
+    type: 'boolean',
+    value: false,
+    description: 'Enable RPATH/RUNPATH',
+)
+option(
+    'with-sendfile',
+    type: 'boolean',
+    value: true,
+    description: 'Enable sendfile syscall',
+)
+option(
+    'with-shadow',
+    type: 'boolean',
+    value: true,
+    description: 'Enable shadow password support',
+)
+option(
+    'with-shell-check',
+    type: 'boolean',
+    value: true,
+    description: 'Enable checking for a valid shell',
+)
+option(
+    'with-spotlight',
+    type: 'boolean',
+    value: true,
+    description: 'Enable Spotlight support',
+)
+option(
+    'with-tcp-wrappers',
+    type: 'boolean',
+    value: true,
+    description: 'Enable TCP wrappers support',
+)
+option(
+    'with-tests',
+    type: 'boolean',
+    value: false,
+    description: 'Compile tests',
+)
+option(
+    'with-zeroconf',
+    type: 'boolean',
+    value: true,
+    description: 'Enable Zeroconf support',
+)
+
+# The following options are used to find dependencies that are installed in
+# unconventional locations.
+# They take the form -Dwith-dependency-path=/path/to/dependency
+# The dependency directory must include lib and include dirs
+
+option(
+    'with-bdb-path',
     type: 'string',
     value: '',
-    description: 'Path to GSSAPI for Kerberos V UAM',
+    description: 'Set path to Berkeley DB installation. Must contain lib and include dirs',
+)
+option(
+    'with-cracklib-path',
+    type: 'string',
+    value: '',
+    description: 'Set location of cracklib dictionary',
+)
+option(
+    'with-dbus-daemon-path',
+    type: 'string',
+    value: '/bin/dbus-daemon',
+    description: 'Set path to D-Bus daemon',
+)
+option(
+    'with-dbus-sysconf-path',
+    type: 'string',
+    value: '/etc/dbus-1/system.d',
+    description: 'Set path to D-Bus system bus security configuration directory',
+)
+option(
+    'with-docbook-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to Docbook XSL directory',
+)
+option(
+    'with-gssapi-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to GSSAPI for Kerberos V UAM. Must contain lib and include dirs',
 )
 option(
     'with-init-dir',
     type: 'string',
     value: 'none',
-    description: 'Path to OS specific init directory, default: none',
+    description: 'Set path to OS specific init directory',
 )
+option(
+    'with-ldap-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to LDAP library. Must contain lib and include dirs'
+)
+option(
+    'with-libgcrypt-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to libgcrypt installation. Must contain lib and include dirs',
+)
+option(
+    'with-libiconv-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to libiconv installation. Must contain lib and include dirs',
+)
+option(
+    'with-lockfile-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to Netatalk lockfile',
+)
+option(
+    'with-mysql-config',
+    type: 'string',
+    value: 'mysql_config',
+    description: 'Set name of mysql-config binary',
+)
+option(
+    'with-pam-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to PAM installation. Must contain lib and include dirs',
+)
+option(
+    'with-tracker-install-prefix',
+    type: 'string',
+    value: '',
+    description: 'Set Tracker installation prefix',
+)
+option(
+    'with-tracker-prefix',
+    type: 'string',
+    value: '',
+    description: 'Set Tracker prefix',
+)
+option(
+    'with-uams-path',
+    type: 'string',
+    value: 'libdir / netatalk',
+    description: 'Set path to UAMs',
+)
+
+# The following options set the preferred init-style and default CNID backend:
+
 option(
     'with-init-style',
     type: 'combo',
@@ -191,98 +307,13 @@ option(
     description: 'Use OS specific init config',
 )
 option(
-    'disable-init-hooks',
-    type: 'boolean',
-    value: false,
-    description: 'Disable install hooks for OS specific init system',
-)
-option(
-    'with-kerberos',
-    type: 'feature',
-    value: 'auto',
-    description: 'Kerberos V support',
-)
-option(
-    'with-ldap',
-    type: 'string',
-    value: '',
-    description: 'LDAP support'
-)
-option(
-    'with-libgcrypt-dir',
-    type: 'string',
-    value: '',
-    description: 'Path where LIBGCRYPT is installed (optional). Must contain lib and include dirs',
-)
-option(
-    'with-libiconv',
-    type: 'string',
-    value: '',
-    description: 'Path to libiconv installation. Must contain lib and include dirs',
-)
-option(
-    'with-lockfile',
-    type: 'string',
-    value: '',
-    description: 'Path to Netatalk lockfile',
-)
-option(
-    'with-mysql-config',
-    type: 'string',
-    value: 'mysql_config',
-    description: 'Path to mysql-config binary',
-)
-option(
-    'with-pam',
-    type: 'string',
-    value: '',
-    description: 'Specify path to PAM installation',
-)
-option(
-    'with-shadow',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable shadow password support',
-)
-option(
-    'with-spotlight',
-    type: 'feature',
-    value: 'auto',
-    description: 'Enable Spotlight support',
-)
-option(
-    'with-ssl-dir',
-    type: 'string',
-    value: '',
-    description: 'Specify path to OpenSSL installation. Must contain lib and include dirs',
-)
-option(
-    'with-tracker-install-prefix',
-    type: 'string',
-    value: '',
-    description: 'Prefix of Tracker (default: none)',
-)
-option(
-    'with-tracker-pkgconfig-version',
-    type: 'string',
-    value: '0.12',
-    description: 'Version suffix of the Tracker SPARQL pkg-config',
-)
-option(
-    'with-tracker-prefix',
-    type: 'string',
-    value: '',
-    description: 'Prefix of Tracker',
-)
-option(
-    'with-uams-path',
-    type: 'string',
-    value: 'libdir / netatalk',
-    description: 'Path to UAMs',
-)
-option(
-    'without-pam',
-    type: 'boolean',
-    value: false,
-    description: 'Disable PAM support',
+    'with-cnid-default-backend',
+    type: 'combo',
+    choices: [
+        'dbd',
+        'last',
+        'mysql',
+    ],
+    value: 'dbd',
+    description: 'Set default DID scheme',
 )
