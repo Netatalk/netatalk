@@ -56,7 +56,6 @@ int phase(struct interface *iface, char **av);
 int net(struct interface *iface, char **av);
 int addr(struct interface *iface, char **av); 
 int zone(struct interface *iface, char **av);
-int noallmulti(struct interface *iface, char **av);
 
 static const struct param {
     char	*p_name;
@@ -68,8 +67,7 @@ static const struct param {
     { "phase",	phase },
     { "net",	net },
     { "addr",	addr },
-    { "zone",	zone },
-    { "noallmulti", noallmulti }
+    { "zone",	zone }
 };
 
 #define ARGV_CHUNK_SIZE 128
@@ -236,11 +234,6 @@ int writeconf(char *cf)
 	    if ( iface->i_flags & IFACE_DONTROUTE) {
 	        fprintf( newconf, " -dontroute");
 	    }
-#ifdef linux
-            if ( !(iface->i_flags & IFACE_ALLMULTI)) {
-	        fprintf( newconf, " -noallmulti");
-            }
-#endif
 
 	    fprintf( newconf, " -phase %d",
 		    ( iface->i_flags & IFACE_PHASE1 ) ? 1 : 2 );
@@ -416,15 +409,6 @@ int readconf(char *cf)
 	    goto read_conf_err;
 	}
 
-#ifdef	linux
-	/* Don't set interface to allmulti if it already is, or -noallmulti was given */
-	if ((ifr.ifr_flags & IFF_ALLMULTI))
-		niface->i_flags |= IFACE_WASALLMULTI; 
-
-	if ((niface->i_flags & IFACE_ALLMULTI) && !(niface->i_flags & IFACE_WASALLMULTI))
-		ifsetallmulti(ifr.ifr_name, 1);
-#endif
-
 	if ( interfaces == NULL ) {
 	    interfaces = niface;
 	} else {
@@ -459,14 +443,6 @@ read_conf_err:
 #endif /* __svr4__ */
     fclose(conf);
     return -1;
-}
-
-int noallmulti( struct interface *iface, char **av _U_)
-{
-    /* Linux specific, no effect on other platforms */
-    iface->i_flags &= !IFACE_ALLMULTI;
-
-    return (1);
 }
 	
 /*ARGSUSED*/
@@ -790,9 +766,6 @@ struct interface *newiface( const char *name)
 #endif /* BSD4_4 */
     niface->i_addr.sat_family = AF_APPLETALK;
     niface->i_caddr.sat_family = AF_APPLETALK;
-#ifdef linux
-    niface->i_flags = IFACE_ALLMULTI;
-#endif
     return( niface );
 }
 

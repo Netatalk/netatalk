@@ -35,8 +35,6 @@ struct interface {
 					   do routing. */
 #define IFACE_DONTROUTE 0x200           /* don't route this interface */
 #define IFACE_ISROUTER  0x400           /* act as a router. */
-#define IFACE_ALLMULTI  0x800		/* set allmulti on this interface, linux only */
-#define IFACE_WASALLMULTI 0x1000	/* don't unset allmulti on this interface on shutdown, linux only */
 #define IFACE_ERROR 	0x2000		/* sendto returned an error */
 
 #define UNSTABLE	2
