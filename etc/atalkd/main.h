@@ -13,8 +13,4 @@ void setaddr ( struct interface *, uint8_t, uint16_t,
 void bootaddr ( struct interface * );
 void dumpconfig ( struct interface * );
 
-#ifdef __linux__
-int ifsetallmulti ( const char *, int);
-#endif
-
 #endif /* ATALKD_MAIN_H */

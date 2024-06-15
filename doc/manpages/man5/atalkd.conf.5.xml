@@ -110,18 +110,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-noallmulti</option> (Linux only)</term>
-
-        <listitem>
-          <para>On Linux, the interfaces atalkd uses are set to ALLMULTI by
-          default, because of countless NICs having problems when not being
-          forced into this mode (some don't even work with ALLMULTI set). In
-          case you have a NIC known to support multicasts properly, you might
-          want to set this option to make fewer packets be processed</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-phase ( 1 | 2 )</option></term>
 
         <listitem>
