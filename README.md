@@ -31,7 +31,7 @@ Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster t
 
 # Installation
 
-Please read the INSTALL file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
+Please read the INSTALL.md file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
 
 # Docker
 
