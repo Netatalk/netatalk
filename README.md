@@ -32,7 +32,7 @@ Additionally, Netatalk can be used to act as an AppleTalk router, providing both
 
 # Installation
 
-Please read the INSTALL file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
+Please read the INSTALL.md file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
 
 # Docker
 
