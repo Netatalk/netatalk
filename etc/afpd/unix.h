@@ -82,8 +82,6 @@
 
 #if defined (__linux__)
 
-#define MAXQUOTAS 2
-
 /* definitions from sys/quota.h */
 #define USRQUOTA  0             /* element used for user quotas */
 #define GRPQUOTA  1             /* element used for group quotas */
