@@ -506,10 +506,12 @@ jobs:
               bison \
               db5 \
               gmake \
+              krb5-devel \
               libevent \
               libgcrypt \
               libtool \
               meson \
+              openldap26-client \
               perl5 \
               pkgconf \
               py39-gdbm \
