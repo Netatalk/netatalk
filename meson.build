@@ -1710,38 +1710,19 @@ enable_largefile = get_option('with-largefile')
 if not enable_largefile
     have_largefile = false
 else
+    # needed for Linux, Solaris...
     file_offset_bits_test = cc.compiles(
         '''
-            #define _FILE_OFFSET_BITS 64
-            #include <sys/types.h>,
-            typedef struct {
-            unsigned int field: sizeof(off_t) == 8;
-            } wxlf;
-            ''',
+        #if !defined(_FILE_OFFSET_BITS) || (_FILE_OFFSET_BITS != 64)
+            #error "Large-file support was not enabled"
+        #endif
+        ''',
     )
 
-    large_files_test = cc.compiles(
-        '''
-            #define _LARGE_FILES 1
-            #include <sys/types.h>,
-            typedef struct {
-                unsigned int field: sizeof(off_t) == 8;
-            } wxlf;
-            ''',
-    )
+    # Needed for AIX, macOS
+    large_files_test = cc.sizeof('off_t') == 8
 
-    off_t_test = cc.compiles(
-        '''
-            #include <stdio.h>
-            #include <stdlib.h>
-            #include <sys/stat.h>
-            int main() {
-                exit((sizeof(off_t) == 8) ? 0 : 1);
-            }
-            ''',
-    )
-
-    have_largefile = ((file_offset_bits_test or large_files_test) and off_t_test)
+    have_largefile = file_offset_bits_test or large_files_test
     if have_largefile
         cdata.set('HAVE_LARGEFILE_SUPPORT', 1)
         if file_offset_bits_test
