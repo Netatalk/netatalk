@@ -547,128 +547,6 @@ else
 endif
 
 #
-# Check for GSSAPI
-#
-
-enable_gssapi = get_option('with-gssapi')
-gssapi_path = get_option('with-gssapi-path')
-
-gss_libs = []
-gssapi_includes = []
-gssapi_headers = [
-    'gssapi.h',
-    'gssapi/gssapi_generic.h',
-    'gssapi/gssapi_krb5.h',
-    'gssapi/gssapi.h',
-]
-
-foreach header : gssapi_headers
-    if cc.has_header(
-        header,
-        include_directories: include_directories(
-            [gssapi_path / 'include', header_dir],
-        ),
-    )
-        cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
-    endif
-endforeach
-
-if not enable_gssapi
-    have_gssapi = false
-elif get_option('with-gssapi-path') != ''
-    have_gssapi = true
-    gss = cc.find_library(
-        'gssapi',
-        dirs: gssapi_path / 'lib',
-        required: false,
-    )
-    gssapi_includes += include_directories(gssapi_path / 'include')
-else
-    gss = cc.find_library('gss', dirs: libsearch_dirs, required: false)
-    if not gss.found()
-        gss = cc.find_library('gssapi', dirs: libsearch_dirs, required: false)
-        if not gss.found()
-            gss = cc.find_library(
-                'gssapi_krb5',
-                dirs: libsearch_dirs,
-                required: false,
-            )
-            if not gss.found()
-                have_gssapi = false
-            endif
-        endif
-    endif
-    have_gssapi = gss.found() and cc.has_function('gss_acquire_cred', dependencies: gss)
-    if have_gssapi
-        gss_libs += gss
-        cdata.set('HAVE_GSSAPI', 1)
-        # Heimdal/MIT compatibility fix
-        if cc.has_header_symbol('gssapi.h', 'GSS_C_NT_HOSTBASED_SERVICE')
-            cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
-        endif
-    else
-        have_gssapi = false
-        warning('GSSAPI support requested but gssapi libraries not found')
-    endif
-endif
-
-#
-# Check for Kerberos V
-#
-
-enable_kerberos = get_option('with-kerberos')
-
-kerberos = cc.find_library('krb5', dirs: libsearch_dirs, required: false)
-krb5_config = find_program('krb5-config', required: false)
-
-kerberos_c_args = []
-kerberos_headers = [
-    'kerberosv5/krb5.h',
-    'krb5.h',
-    'krb5/krb5.h',
-]
-
-foreach header : kerberos_headers
-    if cc.has_header(
-        header,
-        include_directories: include_directories(header_dir),
-    )
-        cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
-    endif
-endforeach
-
-if not enable_kerberos
-    have_kerberos = false
-else
-    have_kerberos = kerberos.found()
-    if have_kerberos
-        gss_libs += kerberos
-        cdata.set('HAVE_KERBEROS', 1)
-        if host_os == 'sunos'
-            kerberos_c_args += run_command(
-                krb5_config,
-                '--cflags',
-                check: true,
-            ).stdout().strip()
-        endif
-        kerberos_functions = [
-            'krb5_free_unparsed_name',
-            'krb5_free_error_message',
-            'krb5_free_keytab_entry_contents',
-            'krb5_kt_free_entry',
-        ]
-        foreach function : kerberos_functions
-            if cc.has_function(function, dependencies: kerberos)
-                cdata.set('HAVE_' + function.underscorify().to_upper(), 1)
-            endif
-        endforeach
-    else
-        have_kerberos = false
-        warning('Kerberos API support requested but libkrb5 not found')
-    endif
-endif
-
-#
 # Check whether Kerberos V UAM should be compiled
 #
 
@@ -676,7 +554,130 @@ enable_krb5_uam = get_option('with-krbV-uam')
 
 if not enable_krb5_uam
     have_krb5_uam = false
+    have_gssapi = false
+    have_kerberos = false
 else
+    #
+    # Check for GSSAPI
+    #
+
+    enable_gssapi = get_option('with-gssapi')
+    gssapi_path = get_option('with-gssapi-path')
+
+    gss_libs = []
+    gssapi_includes = []
+    gssapi_headers = [
+        'gssapi.h',
+        'gssapi/gssapi_generic.h',
+        'gssapi/gssapi_krb5.h',
+        'gssapi/gssapi.h',
+    ]
+
+    foreach header : gssapi_headers
+        if cc.has_header(
+            header,
+            include_directories: include_directories(
+                [gssapi_path / 'include', header_dir],
+            ),
+        )
+            cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
+        endif
+    endforeach
+
+    if not enable_gssapi
+        have_gssapi = false
+    elif get_option('with-gssapi-path') != ''
+        have_gssapi = true
+        gss = cc.find_library(
+            'gssapi',
+            dirs: gssapi_path / 'lib',
+            required: false,
+        )
+        gssapi_includes += include_directories(gssapi_path / 'include')
+    else
+        gss = cc.find_library('gss', dirs: libsearch_dirs, required: false)
+        if not gss.found()
+            gss = cc.find_library('gssapi', dirs: libsearch_dirs, required: false)
+            if not gss.found()
+                gss = cc.find_library(
+                    'gssapi_krb5',
+                    dirs: libsearch_dirs,
+                    required: false,
+                )
+                if not gss.found()
+                    have_gssapi = false
+                endif
+            endif
+        endif
+        have_gssapi = gss.found() and cc.has_function('gss_acquire_cred', dependencies: gss)
+        if have_gssapi
+            gss_libs += gss
+            cdata.set('HAVE_GSSAPI', 1)
+            # Heimdal/MIT compatibility fix
+            if cc.has_header_symbol('gssapi.h', 'GSS_C_NT_HOSTBASED_SERVICE')
+                cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
+            endif
+        else
+            have_gssapi = false
+            warning('GSSAPI support requested but gssapi libraries not found')
+        endif
+    endif
+
+    #
+    # Check for Kerberos V
+    #
+
+    enable_kerberos = get_option('with-kerberos')
+
+    kerberos = cc.find_library('krb5', dirs: libsearch_dirs, required: false)
+    krb5_config = find_program('krb5-config', required: false)
+
+    kerberos_c_args = []
+    kerberos_headers = [
+        'kerberosv5/krb5.h',
+        'krb5.h',
+        'krb5/krb5.h',
+    ]
+
+    foreach header : kerberos_headers
+        if cc.has_header(
+            header,
+            include_directories: include_directories(header_dir),
+        )
+            cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
+        endif
+    endforeach
+
+    if not enable_kerberos
+        have_kerberos = false
+    else
+        have_kerberos = kerberos.found()
+        if have_kerberos
+            gss_libs += kerberos
+            cdata.set('HAVE_KERBEROS', 1)
+            if host_os == 'sunos'
+                kerberos_c_args += run_command(
+                    krb5_config,
+                    '--cflags',
+                    check: true,
+                ).stdout().strip()
+            endif
+            kerberos_functions = [
+                'krb5_free_unparsed_name',
+                'krb5_free_error_message',
+                'krb5_free_keytab_entry_contents',
+                'krb5_kt_free_entry',
+            ]
+            foreach function : kerberos_functions
+                if cc.has_function(function, dependencies: kerberos)
+                    cdata.set('HAVE_' + function.underscorify().to_upper(), 1)
+                endif
+            endforeach
+        else
+            have_kerberos = false
+            warning('Kerberos API support requested but libkrb5 not found')
+        endif
+    endif
     have_krb5_uam = have_gssapi
     if enable_krb5_uam and not have_gssapi
         warning('Need GSSAPI support to build Kerberos V UAM')

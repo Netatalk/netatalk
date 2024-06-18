@@ -72,7 +72,7 @@ option(
 option(
     'with-kerberos',
     type: 'boolean',
-    value: false,
+    value: true,
     description: 'Enable Kerberos V API support',
 )
 option(
