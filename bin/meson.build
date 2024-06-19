@@ -10,7 +10,7 @@ subdir('megatron')
 subdir('uniconv')
 subdir('misc')
 
-if get_option('enable-ddp')
+if have_ddp
     subdir('aecho')
     subdir('getzones')
     subdir('nbp')

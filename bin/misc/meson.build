@@ -27,7 +27,7 @@ if have_ldap
         'afpldaptest',
         'uuidtest.c',
         include_directories: root_includes,
-       dependencies: ldap,
+        dependencies: ldap,
         link_with: libatalk,
         c_args: acl_ldapconf,
         install: true,

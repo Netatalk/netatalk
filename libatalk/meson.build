@@ -20,7 +20,7 @@ if threads.found()
     libatalk_deps += threads
 endif
 
-if get_option('enable-ddp')
+if have_ddp
     subdir('asp')
     subdir('atp')
     subdir('nbp')

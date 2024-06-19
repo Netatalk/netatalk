@@ -79,8 +79,7 @@ afpdtest = executable(
     link_with: [test_internal_deps, libatalk],
     dependencies: test_external_deps,
     c_args: [
-        '-DAPPLCNAME',
-        acl_ldapconf,
+        '-DAPPLCNAME', acl_ldapconf,
         afpdconf,
         afpddefvol,
         afpdpwfile,
