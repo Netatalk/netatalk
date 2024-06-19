@@ -905,9 +905,6 @@ jobs:
     if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Shallow clones should be disabled for a better relevancy of analysis
-          fetch-depth: 0
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -926,4 +923,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
