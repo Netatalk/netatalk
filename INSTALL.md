@@ -79,23 +79,15 @@ options.
 
 Required:
 
-  - libevent 2
   - libgcrypt version 1.2.3 or later (for DHX2 UAM support)
   - Berkeley DB version 4.6.0 or later
-  - perl
-
-Required for Spotlight support:
-  - talloc
-  - tracker version 0.12 or later
-  - bison
-  - flex
 
 Optional:
 
   - avahi or mDNSresponder  (for Zeroconf support)
   - cracklib                (for cracklib support)
+  - cups                    (for CUPS support)
   - Docbook XSL stylesheets (for manpages & manual documentation)
-  - GLib 2 and dbus-glib    (for afpstats support)
   - Kerberos V              (for krbV UAM support)
   - libacl                  (for ACL support)
   - libldap                 (for LDAP support)
@@ -108,12 +100,12 @@ Optional:
   - xsltproc                (for manpages and mananual documentation)
 
 More details about dependencies can be found in the documentation at
-https://netatalk.io/stable/htmldocs/installation
+https://netatalk.io/oldstable/htmldocs/installation
 
 # Compiling with autotools (deprecated)
 
 The rest of this document contains the GNU autotools install
-insructions....
+instructions....
 
 ## Basic Installation
 

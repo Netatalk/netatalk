@@ -12,7 +12,7 @@ endforeach
 foreach file : gen_templates
     if (
         not fs.exists(pkgconfdir / file)
-        or (get_option('enable-overwrite') and fs.exists(pkgconfdir / file))
+        or (get_option('with-overwrite') and fs.exists(pkgconfdir / file))
     )
         install_data(gen_files, install_dir: pkgconfdir)
     else
@@ -22,7 +22,7 @@ endforeach
 
 conf_files = []
 
-if get_option('enable-debian')
+if get_option('with-init-style') == 'debian-sysv'
     conf_files += ['AppleVolumes.system']
 else
     conf_files += ['AppleVolumes.system', 'netatalk.conf']
@@ -32,14 +32,14 @@ if have_ldap
     conf_files += 'afp_ldap.conf'
 endif
 
-if get_option('enable-ddp')
+if have_ddp
     conf_files += ['atalkd.conf', 'papd.conf']
 endif
 
 foreach file : conf_files
     if (
         not fs.exists(pkgconfdir / file)
-        or (get_option('enable-overwrite') and fs.exists(file))
+        or (get_option('with-overwrite') and fs.exists(file))
     )
         install_data(file, install_dir: pkgconfdir)
     else

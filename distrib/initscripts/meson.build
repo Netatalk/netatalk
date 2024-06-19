@@ -1,5 +1,6 @@
-if get_option('enable-redhat')
-    init_style += 'redhat'
+if get_option('with-init-style') == 'none'
+    init_dir += 'none'
+elif get_option('with-init-style') == 'redhat-sysv'
     init_dir += '/etc/rc.d/init.d'
     custom_target(
         'redhat',
@@ -11,15 +12,19 @@ if get_option('enable-redhat')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-install-privileged')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('chkconfig'),
             '--add', '/etc/rc.d/init.d/netatalk',
         )
     endif
-elif get_option('enable-systemd')
-    init_style += 'systemd'
-    init_dir += systemddir
+elif (
+    get_option('with-init-style') == 'gentoo-systemd'
+    or get_option('with-init-style') == 'systemd'
+    or get_option('with-init-style') == 'redhat-systemd'
+    or get_option('with-init-style') == 'suse-systemd'
+)
+    init_dir += '/usr/lib/systemd/system'
     service_data = [
         'a2boot',
         'afpd',
@@ -39,18 +44,43 @@ elif get_option('enable-systemd')
             install_dir: init_dir,
         )
     endforeach
-    if not get_option('disable-install-privileged')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('systemctl'),
             'daemon-reload',
-            '--no-ask-password',
         )
     endif
-elif get_option('enable-suse')
-    init_style += 'suse'
+elif get_option('with-init-style') == 'debian-systemd'
+    init_dir += '/lib/systemd/system'
+    service_data = [
+        'a2boot',
+        'afpd',
+        'atalkd',
+        'cnid',
+        'papd',
+        'timelord',
+    ]
+    foreach service : service_data
+        custom_target(
+            service + '.service',
+            input: service + '.service.tmpl',
+            output: service + '.service',
+            command: sed_command,
+            capture: true,
+            install: true,
+            install_dir: init_dir,
+        )
+    endforeach
+    if get_option('with-init-hooks')
+        meson.add_install_script(
+            find_program('systemctl'),
+            'daemon-reload',
+        )
+    endif
+elif get_option('with-init-style') == 'suse-sysv'
     init_dir += '/etc/init.d'
     custom_target(
-        'suse',
+        'suse_sysv',
         input: 'rc.suse.tmpl',
         output: 'netatalk',
         command: sed_command,
@@ -59,11 +89,13 @@ elif get_option('enable-suse')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-    if not get_option('disable-install-privileged')
-        meson.add_install_script(find_program('insserv'), '/etc/init.d/netatalk')
+    if get_option('with-init-hooks')
+        meson.add_install_script(
+            find_program('insserv'),
+            '/etc/init.d/netatalk',
+        )
     endif
-elif get_option('enable-netbsd')
-    init_style += 'netbsd'
+elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
     rc_scripts = [
         'rc.afpd',
@@ -85,8 +117,7 @@ elif get_option('enable-netbsd')
             install_mode: 'rwxr-xr-x',
         )
     endforeach
-elif get_option('enable-solaris')
-    init_style += 'solaris'
+elif get_option('with-init-style') == 'solaris'
     init_dir += '/etc/init.d'
     custom_target(
         'solaris',
@@ -97,7 +128,7 @@ elif get_option('enable-solaris')
         install: true,
         install_dir: init_dir,
     )
-    if not get_option('disable-install-privileged')
+    if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('rm'),
             '-f', '/etc/rc2.d/S90netatalk',
@@ -117,8 +148,10 @@ elif get_option('enable-solaris')
             '/etc/rc0.d/K04netatalk',
         )
     endif
-elif get_option('enable-openrc')
-    init_style += 'openrc'
+elif (
+    get_option('with-init-style') == 'openrc'
+    or get_option('with-init-style') == 'gentoo-openrc'
+)
     init_dir += '/etc/init.d'
     custom_target(
         'openrc',
@@ -130,8 +163,15 @@ elif get_option('enable-openrc')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-elif get_option('enable-debian')
-    init_style += 'debian-sysv'
+    if get_option('with-init-hooks')
+        meson.add_install_script(
+            find_program('rc-update'),
+            'add',
+            'netatalk',
+            'default',
+        )
+    endif
+elif get_option('with-init-style') == 'debian-sysv'
     init_dir += '/etc/init.d'
     custom_target(
         'debian_sysv',
@@ -143,8 +183,16 @@ elif get_option('enable-debian')
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-elif get_option('enable-macos')
-    init_style += 'macos-launchd'
+    if get_option('with-init-hooks')
+        meson.add_install_script(
+            find_program('update-rc.d'),
+            'netatalk',
+            'defaults',
+            '90',
+            '10',
+        )
+    endif
+elif get_option('with-init-style') == 'macos-launchd'
     init_dir += '/Library/LaunchDaemons'
     custom_target(
         'netatalkd',
@@ -167,15 +215,19 @@ elif get_option('enable-macos')
     )
     if (
         not fs.exists('/Library/LaunchDaemons/io.netatalk.daemon.plist')
-        and not get_option('disable-install-privileged')
+        and get_option('with-init-hooks')
     )
+        if fs.exists(init_dir / 'com.netatalk.daemon.plist')
+            meson.add_install_script(
+                find_program('launchctl'),
+                'load',
+                '-w', '/Library/LaunchDaemons/io.netatalk.daemon.plist',
+            )
+        endif
         meson.add_install_script(
             find_program('launchctl'),
             'load',
-            '-w', '/Library/LaunchDaemons/io.netatalk.daemon.plist',
+            '-w', init_dir / 'io.netatalk.daemon.plist',
         )
     endif
-else
-    init_style += 'none'
-    init_dir += 'none'
 endif

@@ -6,7 +6,7 @@ netatalk_pamd = configure_file(
 
 if (
     not fs.exists(pampath / 'netatalk')
-    or (get_option('enable-overwrite') and fs.exists(pampath / 'netatalk'))
+    or (get_option('with-overwrite') and fs.exists(pampath / 'netatalk'))
 )
     install_data(netatalk_pamd, install_dir: pampath)
 else

@@ -112,15 +112,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Denable-openrc=true \
+            -Dwith-tests=true \
+            -Dwith-init-style=openrc \
             -Dwith-libtirpc=true
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -163,15 +163,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Ddisable-install-privileged=true \
-            -Denable-systemd=true
+            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=systemd
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -208,15 +208,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Denable-debian=true \
+            -Dwith-tests=true \
+            -Dwith-init-style=debian-sysv \
             -Dwith-libtirpc=true
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -268,15 +268,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
+            -Dwith-tests=true \
             -Dwith-libtirpc=true \
-            -Denable-redhat=true
+            -Dwith-init-style=redhat-sysv
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Tests
         run: cd build && meson test
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
@@ -321,7 +321,7 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
-            --disable-install-privileged \
+            --disable-install-priviledged \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
@@ -337,13 +337,15 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=suse-systemd \
+            -Dwith-tests=true
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
-        run: ninja -C build install
+        run: meson install -C build
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -386,19 +388,19 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Dbuild-manual=true \
-            -Ddisable-install-privileged=true \
-            -Denable-systemd=true \
+            -Dwith-tests=true \
+            -Dwith-manual=true \
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=systemd \
             -Dwith-libtirpc=true
       - name: Meson - Build and generate man pages
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Tests
         run: cd build && meson test
       - name: Meson - Distribution tests
         run: cd build && meson dist
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Start netatalk
         run: sudo systemctl start afpd && sleep 2 && asip-status localhost
       - name: Stop netatalk
@@ -444,15 +446,14 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dbuild-tests=true \
-            -Denable-macos=true \
-            -Dwith-bdb=/opt/homebrew/opt/berkeley-db
+            -Dwith-tests=true \
+            -Dwith-init-style=macos-launchd
       - name: Meson - Build
-        run: ninja -C build
+        run: meson compile -C build
       - name: Meson - Tests
         run: cd build && meson test
       - name: Meson - Install
-        run: sudo ninja -C build install
+        run: sudo meson install -C build
       - name: Start netatalk
         run: sudo netatalkd start && sleep 2 && asip-status localhost
       - name: Stop netatalk
@@ -500,8 +501,8 @@ jobs:
             gmake uninstall
             echo "Building with Meson"
             meson setup build
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             ninja -C build uninstall
 
   build-freebsd:
@@ -546,8 +547,8 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             ninja -C build uninstall
 
   build-netbsd:
@@ -598,9 +599,10 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-              -Denable-netbsd=true
-            ninja -C build
-            ninja -C build install
+              -Dwith-init-hooks=false \
+              -Dwith-init-style=netbsd
+            meson compile -C build
+            meson install -C build
             service afpd onestart
             sleep 2
             asip-status localhost
@@ -650,10 +652,10 @@ jobs:
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Denable-ddp=false \
+              -Dwith-ddp=false \
               -Dpkg_config_path=/usr/local/lib/pkgconfig
-            ninja -C build
-            ninja -C build install
+            meson compile -C build
+            meson install -C build
             ninja -C build uninstall
 
   build-omnios:
@@ -700,10 +702,10 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Denable-solaris=true \
-              -Dwith-ldap=/opt/local
-            ninja -C build
-            ninja -C build install
+              -Dwith-init-style=solaris \
+              -Dwith-ldap-path=/opt/local
+            meson compile -C build
+            meson install -C build
             chmod 744 /etc/rc2.d/S90netatalk
             chmod 744 /etc/rc0.d/K04netatalk
             /etc/rc2.d/S90netatalk start
@@ -779,10 +781,10 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
-            -Denable-krbV-uam=enabled \
-            -Denable-pgp-uam=enabled \
+            -Dwith-krbV-uam=true \
+            -Dwith-pgp-uam=true \
             -Dwith-libtirpc=true
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ninja -C build
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

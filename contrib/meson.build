@@ -1,7 +1,7 @@
 subdir('macusers')
 subdir('shell_utils')
 
-if get_option('enable-ddp')
+if have_ddp
     subdir('a2boot')
     subdir('printing')
     subdir('timelord')
