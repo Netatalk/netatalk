@@ -905,6 +905,9 @@ jobs:
     if: ${{ !github.event.pull_request.head.repo.fork }} # Run only if not originating from a fork
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Check out commit history for all branches and tags, for a better relevancy of analysis
+          fetch-depth: 0
       - name: Install dependencies
         run: |
           sudo apt-get update
