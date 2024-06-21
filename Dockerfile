@@ -1,8 +1,9 @@
-FROM alpine:3.19
+FROM alpine:3.20
 
 ENV LIB_DEPS \
     acl \
     avahi \
+    avahi-compat-libdns_sd \
     bash \
     db \
     dbus \
@@ -10,8 +11,11 @@ ENV LIB_DEPS \
     krb5 \
     libevent \
     libgcrypt \
+    libtirpc \
+    libtracker \
     linux-pam \
     openldap \
+    rpcsvc-proto \
     talloc \
     tracker \
     tracker-miners
@@ -22,17 +26,20 @@ ENV BUILD_DEPS \
     curl \
     db-dev \
     dbus-dev \
+    dbus-glib-dev \
     build-base \
     flex \
     gcc \
     krb5-dev \
     libevent-dev \
     libgcrypt-dev \
+    libtirpc-dev \
     linux-pam-dev \
     meson \
     ninja \
     openldap-dev \
     pkgconfig \
+    rpcsvc-proto-dev \
     talloc-dev \
     tracker-dev
 RUN apk update \
