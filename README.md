@@ -113,7 +113,7 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 - `SHARE_NAME` <- the name of the shared volume (default is the final segment of the path)
 - `AFP_GROUP` <- group that owns the shared volume, and that AFP_USER gets assigned to
 - `AFP_UID` <- specify user id of AFP_USER
-- `AFP_GID` <- specify group id of AFP_USER
+- `AFP_GID` <- specify group id of AFP_GROUP
 - `AFPD_OPTIONS` <- options to append to afpd.conf
 - `AVOLUMES_OPTIONS` <- options to append to AppleVolumes.default
 - `ATALKD_OPTIONS` <- options to append to atalkd.conf

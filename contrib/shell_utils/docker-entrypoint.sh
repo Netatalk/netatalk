@@ -29,17 +29,16 @@ function helper::configure() {
 	echo "*** Setting up users and groups"
 
 	if [ ! -z "${AFP_UID}" ]; then
-		cmd="$cmd --uid ${AFP_UID}"
+		uidcmd="-u ${AFP_UID}"
 	fi
 	if [ ! -z "${AFP_GID}" ]; then
-		cmd="$cmd --gid ${AFP_GID}"
-		addgroup -g ${AFP_GID} ${AFP_USER} || true 2> /dev/null
+		gidcmd="-g ${AFP_GID}"
 	fi
-	adduser $cmd --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
 	if [ ! -z "${AFP_GROUP}" ]; then
-		addgroup ${AFP_GROUP} || true 2> /dev/null
-		usermod -aG "${AFP_GROUP}" "${AFP_USER}" || true 2> /dev/null
+		groupcmd="-G ${AFP_GROUP}"
+		addgroup ${gidcmd} ${AFP_GROUP} || true 2> /dev/null
 	fi
+	adduser ${uidcmd} ${groupcmd} --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
 	echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
 	# Creating credentials for the RandNum UAM
