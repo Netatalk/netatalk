@@ -104,7 +104,7 @@ These are required to set the credentials used to authenticate with the file ser
 
 - `AFP_GROUP` <- group that owns the shared volume, and that AFP_USER gets assigned to
 - `AFP_UID` <- specify user id of AFP_USER
-- `AFP_GID` <- specify group id of AFP_USER
+- `AFP_GID` <- specify group id of AFP_GROUP
 - `SERVER_NAME` <- the name of the server reported to Zeroconf
 - `SHARE_NAME` <- the name of the file sharing volume
 - `AFP_LOGLEVEL` <- the verbosity of logs; default is "info"
