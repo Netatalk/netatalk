@@ -17,15 +17,17 @@ if perl.found() and grep.found()
             asipstatus_script,
         ],
         install_dir: bindir,
+        install_mode: 'rwxr-xr-x',
     )
 endif
 
 custom_target(
-    'lp2pap_sh',
-    input: 'lp2pap.sh.tmpl',
-    output: 'lp2pap.sh',
+    'lp2pap_script',
+    input: 'lp2pap.tmpl',
+    output: 'lp2pap',
     command: sed_command,
     capture: true,
     install: true,
     install_dir: bindir,
+    install_mode: 'rwxr-xr-x',
 )

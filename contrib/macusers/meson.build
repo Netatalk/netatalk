@@ -5,5 +5,9 @@ if perl.found() and grep.found()
         configuration: cdata,
     )
 
-    install_data(macusers_script, install_dir: bindir)
+    install_data(
+        macusers_script,
+        install_dir: bindir,
+        install_mode: 'rwxr-xr-x',
+    )
 endif
