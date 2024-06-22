@@ -2,139 +2,165 @@ Changes in 2.4.0
 ================
 * BREAKING: Introduce the Meson build system, GitHub #776
   GNU Autotools is still supported, but will be removed
-  in a future release. See the newly added INSTALL file.
+  in a future release. See the newly added INSTALL.md file.
 * BREAKING: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #980
- This is enabled by default, controlled by option "-Dwith-embedded-ssl"
- Requires the Meson build system.
- External OpenSSL 1.1 and LibreSSL are still supported.
+  Requires the Meson build system, controlled by option `-Dwith-embedded-ssl'.
+  External OpenSSL 1.1 and LibreSSL providers are still supported.
 * BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #767
   afp_ldap.conf option "ldap_server" has been replaced with "ldap_uri"
   and has a new syntax. See the manual for details.
 * BREAKING: Removed obsolete AppleTalk kernel module for Solaris, GitHub #830
 * BREAKING: Overhauled the init scripts, GitHub #869
-  - Gentoo init script turned into cross-platform OpenRC init script,
-    moved to openrc-run, and made avahi-daemon a dependency
-  - Removed superfluous env overrides, relying on netatalk.conf instead
-  - Removed obsoleted rc.atalk.systemd script
-* OpenRC: a2boot and timelord depend on atalkd; use Port 4 #927
-* afpd: Remove multiple deprecated options, GitHub #1001
-* afppasswd: Check for valid password length, GitHub #931
-* afppasswd: Introduce -w option to set password from terminal, GitHub #936
-* docs: Refresh DEVELOPER and AppleTalk readmes, GitHub #831
-* docs: Generate compilation manual page from build.yml, GitHub #838
-* docs: Overhaul the install and configuration chapters, GitHub #874
-* docs: Move documentation from conf file templates to man pages, GitHub #1012
-* Remove hard dependencies on perl and grep, GitHub #886
-* Fix missing rresvport function on systems using musl C library, GitHub #920
-* docker: Alpine based container + Meson build, GitHub #866
-* Fix broken cracklib macro in autotools and meson, GitHub #940
-* Implement disable-install-privileged for Meson, GitHub #1024
-* On macOS, graceful handling of init script stop when not running, GitHub #966
-* Enable building with quota and libtirpc on Fedora, GitHub #1044
-* Update to modern C data types in codebase, GitHub #1009
+       - Gentoo init script turned into cross-platform OpenRC init script,
+       moved to openrc-run, and made avahi-daemon a dependency
+       - Removed superfluous env overrides, relying on netatalk.conf instead
+       - Removed obsoleted rc.atalk.systemd script
+* FIX: OpenRC: a2boot and timelord depend on atalkd; use Port 4 #927
+* UPD: afpd: Remove unused UAM password options, GitHub #1001
+       - loginmaxfail
+       - passwdminlen
+* UPD: atalkd: Remove ancient multicast workaround for Linux, GitHub #1091
+       Removes `-noallmulti' option in atalkd.conf.
+* FIX: afppasswd: Check for valid password length, GitHub #931
+* NEW: afppasswd: -w option to set password from terminal, GitHub #936
+* UPD: Renamed lp2pap.sh to lp2pap to follow naming scheme, GitHub #1112
+* FIX: docs: Refresh DEVELOPER and AppleTalk readmes, GitHub #831
+* NEW: docs: Generate compilation manual page from build.yml, GitHub #838
+* UPD: docs: Overhaul the install and configuration chapters, GitHub #874
+* UPD: docs: Move documentation from conf file templates
+       to man pages, GitHub #1012
+* UPD: build system: Remove hard dependencies on perl and grep, GitHub #886
+* FIX: build system: Autotools can find the cracklib dictionary, GitHub #940
+* FIX: Fix missing rresvport function when using musl C library, GitHub #920
+* UPD: docker: Use Alpine Linux based image instead of Debian 11, GitHub #866
+* FIX: On macOS, graceful handling of init script stop
+       when not running, GitHub #966
+* FIX: Enable building with quota and libtirpc on Fedora, GitHub #1044
+* FIX: Update to modern C data types in codebase, GitHub #1009
 
 Changes in 2.3.2
 ================
-* atalkd: Bail out when attempting to -seed a single interface, GitHub #719
-* pap: Compatibility and nicer status messages for ImageWriters, GitHub #722
-  Based on code from the `image-writer` project by kakwa
-* init: Add macOS launchd init config and helper script, GitHub #735
-* build system: Detect system docbook stylesheets at configure time, GitHub #746
-* docs: Correct descriptions for afpd -D and -T options, GitHub #725
-* docs: Improve man page summaries and contents, GitHub #733
-* docs: Improve layout of generated html and pdf manuals, GitHub #739
-* docs: Add the full text of the GNU GPL v2 license to the manual, GitHub #753
-* Introduce a Docker container configuration and entry script, GitHub #712
-  Special thanks to Eric Harmon for the initial POC and encouragement.
-* Remove binary logo images from revision control, GitHub #715
-  These files now live in the `netatalk-homepage` repo.
+* FIX: atalkd: Bail out when attempting to seed a single interface, GitHub #719
+* NEW: pap: Compatibility and nicer status messages for ImageWriters.
+       Based on code from the `image-writer' project by kakwa, GitHub #722
+* NEW: init: Add macOS launchd init config and helper script, GitHub #735
+* FIX: build system: Detect system docbook stylesheets
+       at configure time, GitHub #746
+* FIX: docs: Correct descriptions for afpd -D and -T options, GitHub #725
+* FIX: docs: Improve man page summaries and contents, GitHub #733
+* FIX: docs: Improve layout of generated html and pdf manuals, GitHub #739
+* NEW: docs: Add the full text of the GNU GPL v2 license
+       to the manual, GitHub #753
+* NEW: Introduce a Docker container configuration and entry script, GitHub #712
+       Special thanks to Eric Harmon for the initial POC and encouragement.
+* UPD: Remove binary logo images from revision control, GitHub #715
+       These files now live in the `netatalk-homepage' repo.
 
 Changes in 2.3.1
 ================
-* afpd: Remove obsoleted AppleDouble osx and sfm formats, GitHub #668
-* uams: Remove obsoleted Kerberos v4 UAM, GitHub #676
-* atalkd: Automatically enable RTMP broadcast quirks mode
-  when configured with the -router switch.
-  Removes the -q command line parameter, GitHub #679
-* papd: Modernize CUPS API usage, GitHub #651 #655 #672 #674 #678 #696 #700
-* macusers: Fallback output when full name not available, GitHub #652
-* libatalk: Appease Fedora gcc incompatible pointer error, GitHub #682
-* Two small memory handling patches ported from netatalk-classic, GitHub #645
-* Generate manual pages through the build system.
-  Introduces the --with-docbook configure option, GitHub #675
-* Fix Zeroconf support on *BSD platforms, GitHub #647
-* Use correct BSD make syntax in initscripts Makefile, GitHub #644
-* Remove obsoleted README and VERSION files for contrib, GitHub #641
-* Update README.AppleTalk with the current state of Linux support.
-* Factual corrections and updates to manual pages.
+* UPD: afpd: Remove obsoleted AppleDouble osx and sfm formats, GitHub #668
+* UPD: uams: Remove obsoleted Kerberos v4 UAM, GitHub #676
+* NEW: atalkd: Automatically enable RTMP broadcast quirks mode
+       when configured with the -router switch.
+       Removes the -q command line parameter, GitHub #679
+* NEW: papd: Modernize CUPS API usage,
+       GitHub #651 #655 #672 #674 #678 #696 #700
+* UPD: macusers: Fallback output when full name not available, GitHub #652
+* FIX: libatalk: Appease Fedora gcc incompatible pointer error, GitHub #682
+* FIX: Two small memory handling patches ported
+       from netatalk-classic, GitHub #645
+* NEW: Generate manual pages through the build system.
+       Introduces the --with-docbook configure option, GitHub #675
+* FIX: Fix Zeroconf support on *BSD platforms, GitHub #647
+* FIX: Use correct BSD make syntax in initscripts Makefile, GitHub #644
+* UPD: Remove obsoleted README and VERSION files for contrib, GitHub #641
+* FIX: Update README.AppleTalk with the current state of Linux support.
+* FIX: Factual corrections and updates to manual pages.
 
 Changes in 2.3.0
 ================
-* afpd: Remove cdb and tdb CNID backends, GitHub #535
-* afpd: Remove nostat option, GitHub #540
-* afpd: Remove the "Force UID/GID" feature, GitHub #516
-* afpd: Remove experimental Dropbox Kludge feature, GitHub #515
-* afpd: Remove afprun module from codebase, GitHub #526
-* afpd: Deprecate AFS (Andrew File System) support, GitHub #554
-* afpd: Enable only DHX2 UAM by default, GitHub #358
-* afpd: Validate size of ace_count in FPSetACL request, GitHub #364
-* afpd: Enable, sort, and flesh out Mac file type translation, GitHub #534
-* afpd: Don't seteuid() if process is already running as that uid, GitHub #532
-* afpd: Use correct username length in afp_changepw, GitHub #627
-* uams: Link PGP UAM with CRYPT_LIBS, GitHub #548
-* uams: Use correct data type to build with PAM support on FreeBSD, GitHub #563
-* atalkd: Introduce 3rd party bridge quirks mode for Asante and Dayna bridges, GitHub #585
-* atalkd: Revert registering of NBP entries of "Workstation" and "netatalk", GitHub #473
-* papd: Use packed structs for pap packets, GitHub #527
-* papd: Use a portable fcntl() call instead of flock(), GitHub #625
-* timelord: Flip the check for tm->tm_gmtoff to appease FreeBSD, GitHub #415
-* config: Name the default home dir shared volume in AppleVolumes.default, GitHub #469
-* distrib: Add Documentation tags to systemd templates, GitHub #378
-* distrib: Write a Description and Short-Description for the Debian init script, GitHub #428
-* docs: Remove redundant AUTHORS file, GitHub #454
-* docs: Add README for the v2.3 branch, GitHub #588
-* docs: Remove obsoleted bug reporting sections, GitHub #455
-* docs: Remove redundant id properties, GitHub #520
-* docs: Use absolute XSL stylesheet path, source VERSION in manpages script, GitHub #458
-* docs: Update URLs in website, GitHub #445
-  - Point to the root of SF downloads where new files are added
-  - Load CSS from the current protocol and domain
-* docs: Standardize man page heading case, GitHub #545
-* docs: Minor cleanup of man pages, GitHub #470
-* docs: Document the correct default log level for afpd, GitHub #552
-* docs: Improve readability of manual README, GitHub #440
-* docs: Document binheader, nadheader, and showpap, GitHub #430
-* docs: Fix user visible typos and improve English grammar, GitHub #381 #382
-* docs: Create man page for cnid2_create tool, GitHub #402
-* docs: Fix typos, improve layout in afpd.conf man page, GitHub #472
-* build system: Default to xz compression for tarballs, GitHub #483
-* build system: Remove vestiges of a Webmin install target, GitHub #467
-* build system: Fold a2boot and timelord under the appletalk conditional, GitHub #423
-* build system: Don't install at.h when glibc header found, GitHub #409
-* build system: Switch from compile-time debug to run-time debug, GitHub #536
-* build system: Correct install hook for static config files, GitHub #408
-* build system: Make libdir the default install location for UAM libs, GitHub #407
-* build system: Option to skip privileged hooks for make install, GitHub #405
-* build system: Rearrange the dummy paths for the distribution tests, GitHub #522
-* build system: Configurable systemd prefix, with default to /usr/lib, GitHub #404
-  - Remove hard-coded systemd path /lib/systemd in Makefile
-  - Introduce check for the two known common prefixes
-  - Introduce --with-systemd-prefix autoconf option
-* build system: Fix detection of Berkeley DB installed in multiarch location, GitHub #380
-* build system: Support building against libtirpc as separate from glibc, GitHub #385
-* build system: Recommend BerkeleyDB 5.3, GitHub #8
-* Port 2.x fork code quality improvements GitHub #488
-  - Remove support for ancient OSes:
-    SunOS, IRIX, AIX, Ultrix, HPUX, Tru64, GNU/kFreeBSD, UnixWare
-  - Remove ancient bug workarounds and standard library shortcomings
-  - Refactor functions
-  - More granular typecasting
-  - Initialize variables
-  - Prevent potential memory leaks
-  - Handle system call return values
-* Improve logger_test, while re-enabling the syslog tests, GitHub #584
-* Rename asip-status.pl to asip-status, GitHub #379
-* Clean up residual CVS commit headers, GitHub #631
+* UPD: afpd: Remove cdb and tdb CNID backends, GitHub #535
+* UPD: afpd: Remove nostat option, GitHub #540
+* UPD: afpd: Remove the "Force UID/GID" feature, GitHub #516
+* UPD: afpd: Remove experimental Dropbox Kludge feature, GitHub #515
+* UPD: afpd: Remove afprun module from codebase, GitHub #526
+* UPD: afpd: Deprecate AFS (Andrew File System) support, GitHub #554
+* UPD: afpd: Enable only DHX2 UAM by default, GitHub #358
+* FIX: afpd: Validate size of ace_count in FPSetACL request, GitHub #364
+* UPD: afpd: Enable, sort, and flesh out Mac file type translation, GitHub #534
+* FIX: afpd: Don't seteuid() if process is already
+       running as that uid, GitHub #532
+* FIX: afpd: Use correct username length in afp_changepw, GitHub #627
+* FIX: uams: Link PGP UAM with CRYPT_LIBS, GitHub #548
+* FIX: uams: Use correct data type to build
+       with PAM support on FreeBSD, GitHub #563
+* NEW: atalkd: Introduce 3rd party bridge quirks mode
+       for Asante and Dayna bridges, GitHub #585
+* UPD: atalkd: Revert registering of NBP entries of
+       "Workstation" and "netatalk", GitHub #473
+* FIX: papd: Use packed structs for pap packets, GitHub #527
+* FIX: papd: Use a portable fcntl() call instead of flock(), GitHub #625
+* FIX: timelord: Flip the check for tm->tm_gmtoff
+       to appease FreeBSD, GitHub #415
+* UPD: config: Name the default home dir shared volume
+       in AppleVolumes.default, GitHub #469
+* FIX: distrib: Add Documentation tags to systemd templates, GitHub #378
+* FIX: distrib: Write a Description and Short-Description
+       for the Debian init script, GitHub #428
+* UPD: docs: Remove redundant AUTHORS file, GitHub #454
+* NEW: docs: Add README for the v2.3 branch, GitHub #588
+* FIX: docs: Remove obsoleted bug reporting sections, GitHub #455
+* FIX: docs: Remove redundant id properties, GitHub #520
+* UPD: docs: Use absolute XSL stylesheet path,
+       source VERSION in manpages script, GitHub #458
+* FIX: docs: Update URLs in website, GitHub #445
+       - Point to the root of SF downloads where new files are added
+       - Load CSS from the current protocol and domain
+* FIX: docs: Standardize man page heading case, GitHub #545
+* FIX: docs: Minor cleanup of man pages, GitHub #470
+* FIX: docs: Document the correct default log level for afpd, GitHub #552
+* FIX: docs: Improve readability of manual README, GitHub #440
+* NEW: docs: Document binheader, nadheader, and showpap, GitHub #430
+* FIX: docs: Fix user visible typos and improve English grammar,
+       GitHub #381 #382
+* NEW: docs: Create man page for cnid2_create tool, GitHub #402
+* FIX: docs: Fix typos, improve layout in afpd.conf man page, GitHub #472
+* NEW: build system: Default to xz compression for tarballs, GitHub #483
+* UPD: build system: Remove vestiges of a Webmin install target, GitHub #467
+* FIX: build system: Fold a2boot and timelord
+       under the appletalk conditional, GitHub #423
+* FIX: build system: Don't install at.h when glibc header found, GitHub #409
+* NEW: build system: Switch from compile-time debug
+       to run-time debug, GitHub #536
+* FIX: build system: Correct install hook for static config files, GitHub #408
+* FIX: build system: Make libdir the default install location
+       for UAM libs, GitHub #407
+* NEW: build system: Option to skip privileged hooks
+       for make install: --disable-install-privileged, GitHub #405
+* FIX: build system: Rearrange the dummy paths
+       for the distribution tests, GitHub #522
+* NEW: build system: Configurable systemd prefix,
+       with default to /usr/lib, GitHub #404
+       - Remove hard-coded systemd path /lib/systemd in Makefile
+       - Introduce check for the two known common prefixes
+       - Introduce --with-systemd-prefix autoconf option
+* FIX: build system: Fix detection of Berkeley DB
+       installed in multiarch location, GitHub #380
+* NEW: build system: Support building against libtirpc
+       as separate from glibc, GitHub #385
+* UPD: build system: Recommend BerkeleyDB 5.3, GitHub #8
+* FIX: Port 2.x fork code quality improvements GitHub #488
+       - Remove support for ancient OSes:
+         SunOS, IRIX, AIX, Ultrix, HPUX, Tru64, GNU/kFreeBSD, UnixWare
+       - Remove ancient bug workarounds and standard library shortcomings
+       - Refactor functions
+       - More granular typecasting
+       - Initialize variables
+       - Prevent potential memory leaks
+       - Handle system call return values
+* FIX: Improve logger_test, while re-enabling the syslog tests, GitHub #584
+* UPD: Rename asip-status.pl to asip-status, GitHub #379
+* FIX: Clean up residual CVS commit headers, GitHub #631
 
 Changes in 2.2.10
 =================
