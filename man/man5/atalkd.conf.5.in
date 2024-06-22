@@ -102,11 +102,6 @@ Disables AppleTalk routing\&. It is the inverse of
 Allows the available net to be set, optionally as a range\&.
 .RE
 .PP
-\fB\-noallmulti\fR (Linux only)
-.RS 4
-On Linux, the interfaces atalkd uses are set to ALLMULTI by default, because of countless NICs having problems when not being forced into this mode (some don\*(Aqt even work with ALLMULTI set)\&. In case you have a NIC known to support multicasts properly, you might want to set this option to make fewer packets be processed
-.RE
-.PP
 \fB\-phase ( 1 | 2 )\fR
 .RS 4
 Specifies the AppleTalk phase that this interface is to use (either Phase 1 or Phase 2)\&.

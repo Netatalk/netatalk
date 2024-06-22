@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-06-07</pubdate>
+		<pubdate>2024-06-22</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -24,7 +24,6 @@
   acl-dev \
   autoconf \
   automake \
-  avahi-dev \
   build-base \
   cracklib \
   cracklib-dev \
@@ -81,14 +80,14 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
-  -Denable-openrc=true \
+  -Dwith-tests=true \
+  -Dwith-init-style=openrc \
   -Dwith-libtirpc=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Run tests</para>
 			<para>
@@ -96,7 +95,7 @@
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>ninja -C build install</screen>
+				<screen>meson install -C build</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -116,7 +115,8 @@
   make \
   meson \
   ninja \
-  pkgconfig
+  pkgconfig \
+  rpcsvc-proto
 </screen>
 			</para>
 			<para>Autotools - Bootstrap</para>
@@ -150,14 +150,14 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
-  -Ddisable-install-privileged=true \
-  -Denable-systemd=true
+  -Dwith-tests=true \
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=systemd
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Run tests</para>
 			<para>
@@ -165,7 +165,7 @@
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>ninja -C build install</screen>
+				<screen>meson install -C build</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -237,14 +237,14 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
-  -Denable-debian=true \
+  -Dwith-tests=true \
+  -Dwith-init-style=debian-sysv \
   -Dwith-libtirpc=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Tests</para>
 			<para>
@@ -252,7 +252,7 @@ xsltproc
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>ninja -C build install</screen>
+				<screen>meson install -C build</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -316,14 +316,14 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
+  -Dwith-tests=true \
   -Dwith-libtirpc=true \
-  -Denable-redhat=true
+  -Dwith-init-style=redhat-sysv
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Tests</para>
 			<para>
@@ -331,7 +331,7 @@ xsltproc
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>sudo ninja -C build install</screen>
+				<screen>sudo meson install -C build</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -378,7 +378,7 @@ zypper in -y \
 			<para>Autotools - Configure</para>
 			<para>
 				<screen>./configure \
-  --disable-install-privileged \
+  --disable-install-priviledged \
   --enable-krbV-uam \
   --enable-pgp-uam \
   --with-cracklib \
@@ -404,12 +404,14 @@ zypper in -y \
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=suse-systemd \
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Run tests</para>
 			<para>
@@ -417,7 +419,7 @@ zypper in -y \
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>ninja -C build install</screen>
+				<screen>meson install -C build</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -505,16 +507,16 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
-  -Dbuild-manual=true \
-  -Ddisable-install-privileged=true \
-  -Denable-systemd=true \
+  -Dwith-tests=true \
+  -Dwith-manual=true \
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=systemd \
   -Dwith-libtirpc=true
 </screen>
 			</para>
 			<para>Meson - Build and generate man pages</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Tests</para>
 			<para>
@@ -526,7 +528,7 @@ xsltproc
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>sudo ninja -C build install</screen>
+				<screen>sudo meson install -C build</screen>
 			</para>
 			<para>Start netatalk</para>
 			<para>
@@ -589,14 +591,13 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dbuild-tests=true \
-  -Denable-macos=true \
-  -Dwith-bdb=/opt/homebrew/opt/berkeley-db
+  -Dwith-tests=true \
+  -Dwith-init-style=macos-launchd
 </screen>
 			</para>
 			<para>Meson - Build</para>
 			<para>
-				<screen>ninja -C build</screen>
+				<screen>meson compile -C build</screen>
 			</para>
 			<para>Meson - Tests</para>
 			<para>
@@ -604,7 +605,7 @@ xsltproc
 			</para>
 			<para>Meson - Install</para>
 			<para>
-				<screen>sudo ninja -C build install</screen>
+				<screen>sudo meson install -C build</screen>
 			</para>
 			<para>Start netatalk</para>
 			<para>
@@ -652,8 +653,8 @@ gmake install
 gmake uninstall
 echo "Building with Meson"
 meson setup build
-ninja -C build
-ninja -C build install
+meson compile -C build
+meson install -C build
 ninja -C build uninstall
 </screen>
 			</para>
@@ -694,8 +695,8 @@ gmake uninstall
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/usr/local/libdata/pkgconfig
-ninja -C build
-ninja -C build install
+meson compile -C build
+meson install -C build
 ninja -C build uninstall
 </screen>
 			</para>
@@ -741,9 +742,10 @@ service afpd onestop
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-  -Denable-netbsd=true
-ninja -C build
-ninja -C build install
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=netbsd
+meson compile -C build
+meson install -C build
 service afpd onestart
 sleep 2
 asip-status localhost
@@ -789,10 +791,10 @@ gmake install
 gmake uninstall
 echo "Building with Meson"
 meson setup build \
-  -Denable-ddp=false \
+  -Dwith-ddp=false \
   -Dpkg_config_path=/usr/local/lib/pkgconfig
-ninja -C build
-ninja -C build install
+meson compile -C build
+meson install -C build
 ninja -C build uninstall
 </screen>
 			</para>
@@ -835,10 +837,10 @@ gmake uninstall
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
-  -Denable-solaris=true \
-  -Dwith-ldap=/opt/local
-ninja -C build
-ninja -C build install
+  -Dwith-init-style=solaris \
+  -Dwith-ldap-path=/opt/local
+meson compile -C build
+meson install -C build
 chmod 744 /etc/rc2.d/S90netatalk
 chmod 744 /etc/rc0.d/K04netatalk
 /etc/rc2.d/S90netatalk start
