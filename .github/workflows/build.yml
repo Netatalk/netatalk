@@ -75,7 +75,6 @@ jobs:
             acl-dev \
             autoconf \
             automake \
-            avahi-dev \
             bison \
             build-base \
             cracklib \
