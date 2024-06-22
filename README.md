@@ -24,7 +24,7 @@ Modern AFP features such as Bonjour and Time Machine are also supported.
 
 # AppleTalk
 
-Netatalk v2 supports the legacy AppleTalk protocol, which means it can act as a bridge between older Macs, networked Apple IIs, and the very latest macOS systems. It is AFP 3.3 compliant with AFP 1.1 and 2.2 backwards compatibility.
+Netatalk v2 supports the legacy AppleTalk protocol, which means it can act as a bridge between older Macs, networked Apple IIs, and the very latest macOS systems. It is AFP 3.3 compliant with full backwards compatibility with older AFP protocol versions.
 
 The included print server daemon can provide Apple II and Macintosh clients with the ability to print to AppleTalk-only printers. In addition, Netatalk is fully integrated with CUPS, allowing any networked Mac to discover and print to a CUPS/AirPrint compatible printer on the network.
 
@@ -37,9 +37,11 @@ Please read the INSTALL.md file. Netatalk can currently be built using meson or 
 # Docker
 
 Netatalk comes with a Dockerfile and entry point script for running a containerized AFP server and AppleTalk router.
-It is configured with the DHX2 UAM for authentication with macOS or Mac OS X, and RandNum UAM for authentication with Classic Mac OS, Macintosh System Software 6 and 7, and GS/OS.
+It comes with user authentication compatible with macOS or Mac OS X, Classic Mac OS, Macintosh System Software 6 and 7, and GS/OS.
 
-For simplicity, exactly one user and one shared volume is supported. It is hard coded to output afpd logs to the container's stdout, default info log level.
+In the default configuration, one user, one shared volume, and one Time Machine volume is supported.
+
+Logs from the afpd process are piped to the container's stdout.
 
 Make sure you have Docker Engine installed, then build the netatalk container:
 
@@ -47,7 +49,7 @@ Make sure you have Docker Engine installed, then build the netatalk container:
 docker build -t netatalk2:latest .
 ```
 
-Alternatively, fetch a pre-built docker container from [Docker Hub](https://hub.docker.com/u/netatalk).
+Alternatively, fetch a pre-built image from [Docker Hub](https://hub.docker.com/u/netatalk).
 
 ## How to Run
 
@@ -80,7 +82,7 @@ volumes:
   afpbackup:
 ```
 
-Sample `docker run` command, using a locally build image. Substitute `/path/to/*` with paths to actual directories on your file system, with appropriate permissions.
+Sample `docker run` command, using a locally built image. Substitute `/path/to/*` with paths to actual directories on your file system, with appropriate permissions.
 
 ```
 docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/path/to/backup:/mnt/afpbackup" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --env ATALKD_INTERFACE=eth0 --name netatalk netatalk2:latest
@@ -90,12 +92,12 @@ docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt
 
 The container requires the `host` network driver, and `NET_ADMIN` capabilities, to allow AppleTalk routing and Zeroconf.
 
-We currently rely on the host's D-Bus for Zeroconf service discovery via Avahi. mDNSResponder is not supported.
-You need a bind mount for `/var/run/dbus:/var/run/dbus` in order for Bonjour service discovery to work.
+We currently rely on the host's D-Bus for Zeroconf service discovery.
+You need a bind mount from `/var/run/dbus` to the host system's D-Bus socket (often the same path) in order for Bonjour service discovery to work.
 
 ## Printing
 
-The CUPS administrative web app should be running on port 631, which is exposed to the host machine by default since we are using the `host` network driver. This is used for configuring CUPS compatible printers for use with the papd print server daemon.
+The CUPS administrative web app is running on port 631 in the container, which is exposed to the host machine by default when using the `host` network driver. This is used to configure CUPS compatible printers for printing from an old Mac or Apple IIGS.
 
 You may have to restart papd (or the entire container) after adding a CUPS printer for it to be picked up as an AppleTalk printer.
 
