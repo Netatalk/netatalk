@@ -287,7 +287,7 @@ option(
     type: 'combo',
     choices: [
         'none',
-        'auto'
+        'auto',
         'debian-systemd',
         'debian-sysv',
         'freebsd',
@@ -317,4 +317,15 @@ option(
     ],
     value: 'dbd',
     description: 'Set default DID scheme',
+)
+
+option(
+    'with-init-system',
+    type: 'combo',
+    choices: [
+        'systemd',
+        'sysv',
+    ],
+    value: 'systemd',
+    description: 'Set init system to be used'
 )

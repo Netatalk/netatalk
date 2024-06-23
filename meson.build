@@ -152,7 +152,9 @@ if host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
 endif
 
-if uname.found() and run_command(uname, '-n', check: false).stdout().strip().contains('omnios')
+uname_command = run_command(uname, '-n', check: false).stdout().strip()
+
+if uname.found() and uname_command.contains('omnios')
     libsearch_dirs += '/opt/local/lib'
 endif
 
