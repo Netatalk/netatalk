@@ -113,7 +113,7 @@ jobs:
           meson setup build \
             -Dwith-tests=true \
             -Dwith-init-style=openrc \
-            -Dwith-libtirpc=true
+            -Dwith-quota=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -209,7 +209,7 @@ jobs:
           meson setup build \
             -Dwith-tests=true \
             -Dwith-init-style=debian-sysv \
-            -Dwith-libtirpc=true
+            -Dwith-quota=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Tests
@@ -254,7 +254,7 @@ jobs:
             --enable-pgp-uam \
             --enable-quota \
             --enable-redhat \
-            --enable-libtirpc \
+            --with-libtirpc \
             --with-cracklib=/usr/share/cracklib
       - name: Autotools - Build
         run: make -j $(nproc) all
@@ -268,7 +268,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-tests=true \
-            -Dwith-libtirpc=true \
+            -Dwith-quota=true \
             -Dwith-init-style=redhat-sysv
       - name: Meson - Build
         run: meson compile -C build
@@ -391,7 +391,7 @@ jobs:
             -Dwith-manual=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
-            -Dwith-libtirpc=true
+            -Dwith-quota=true
       - name: Meson - Build and generate man pages
         run: meson compile -C build
       - name: Meson - Tests
@@ -782,7 +782,7 @@ jobs:
           meson setup build \
             -Dwith-krbV-uam=true \
             -Dwith-pgp-uam=true \
-            -Dwith-libtirpc=true
+            -Dwith-quota=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
