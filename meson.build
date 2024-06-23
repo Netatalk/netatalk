@@ -353,7 +353,7 @@ enable_rpath = get_option('with-rpath')
 
 if not get_option('with-rpath')
     enable_rpath = false
-elif host_os == 'sunos' or host_os == 'netbsd' or get_option('enable-rpath')
+elif host_os == 'sunos' or host_os == 'netbsd'
     enable_rpath = true
 endif
 
