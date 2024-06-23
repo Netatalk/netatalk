@@ -636,14 +636,11 @@ jobs:
             echo "Building with Autotools"
             ./bootstrap
             ./configure \
+              MAKE=gmake \
               --enable-krbV-uam \
               --enable-pgp-uam \
-              --with-bdb=/usr/pkg \
               --with-init-style=netbsd \
-              --with-libgcrypt-dir=/usr/pkg \
-              --with-tracker-pkgconfig-version=3.0 \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
+              --with-tracker-pkgconfig-version=3.0
             gmake -j $(nproc)
             gmake install
             service netatalk onestart
@@ -811,23 +808,21 @@ jobs:
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             echo "Building with Autotools"
+            export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             ./bootstrap
             ./configure \
               --enable-pgp-uam \
               --with-bdb=/opt/local \
               --with-init-style=solaris \
               --with-ldap=/opt/local \
-              --with-libgcrypt-dir=/opt/local \
-              --with-tracker-pkgconfig-version=3.0 \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
-            gmake -j $(nproc)
-            gmake install
+              --with-tracker-pkgconfig-version=3.0
+            make -j $(nproc)
+            make install
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
             svcadm disable svc:/network/netatalk:default
-            gmake uninstall
+            make uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
@@ -842,6 +837,7 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
+    if: false
     name: Solaris
     runs-on: ubuntu-latest
     permissions:

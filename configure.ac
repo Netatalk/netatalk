@@ -143,7 +143,7 @@ dnl Path where UAM modules shall be installed
 AC_ARG_WITH(uams-path, [  --with-uams-path=PATH   path to UAMs [[$libdir/netatalk]]], [uams_path="$withval"], [uams_path="$libdir/netatalk"])
 
 dnl Check for libgcrypt, if found enables DHX2 UAM
-AC_NETATALK_PATH_LIBGCRYPT([1:1.2.3])
+AC_NETATALK_LIBGCRYPT
 
 dnl Check for openssl, if found enables DHX UAM and Randnum UAM
 AC_NETATALK_PATH_SSL
