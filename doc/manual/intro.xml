@@ -3,37 +3,40 @@
   <title>Introduction</title>
 
   <sect1>
-  <title>Legal Notice</title>
+    <title>Legal Notice</title>
 
-  <para>
-  This documentation is distributed under the GNU General Public License (GPL) version 2.  
-  A copy of the license is included in this documentation, as well as within the Netatalk source
-  distribution.  An on-line copy can be found at <ulink
-  url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
-  </para>
+    <para>The Netatalk software package as well as this documentation are
+    distributed under the GNU General Public License (GPL) version 2. A copy
+    of the license is included in this documentation, as well as within the
+    Netatalk source distribution. An on-line copy can be found at <ulink
+    url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink></para>
+
+    <para>This product includes cryptographic software written by Eric Young
+    (eay@cryptsoft.com)</para>
   </sect1>
 
   <sect1>
-  <title>Overview of Netatalk</title>
+    <title>Overview of Netatalk</title>
 
-  <para>Netatalk is an Open Source software package that can be used to turn
-  a *NIX machine into an extremely light-weight and
-  versatile file server for Macintosh computers. It speaks both AFP over TCP
-  as well as the legacy AppleTalk protocol, which means it can act as a bridge between
-  older Macs, networked Apple IIs, and the very latest macOS systems.</para>
+    <para>Netatalk is an Open Source software package that can be used to turn
+    a *NIX machine into an extremely light-weight and versatile file server
+    for Macintosh computers. It speaks both AFP over TCP as well as the legacy
+    AppleTalk protocol, which means it can act as a bridge between older Macs,
+    networked Apple IIs, and the very latest macOS systems.</para>
 
-  <para>Netatalk is AFP 3.3 compliant with AFP 2 backwards compatibility.
-  Its file server offers high transmission speeds and full
-  support for Macintosh metadata (resource forks), while offering a wide range of
-  authentication methods to accommodate any deployment environment.</para>
+    <para>Netatalk is AFP 3.3 compliant with AFP 2 backwards compatibility.
+    Its file server offers high transmission speeds and full support for
+    Macintosh metadata (resource forks), while offering a wide range of
+    authentication methods to accommodate any deployment environment.</para>
 
-  <para>The included print server daemon can provide Apple II and Macintosh clients
-  with the ability to print to AppleTalk-only printers.
-  In addition, Netatalk is fully integrated with CUPS, allowing any networked Mac
-  to discover and print to a CUPS/AirPrint compatible printer on the network.</para>
+    <para>The included print server daemon can provide Apple II and Macintosh
+    clients with the ability to print to AppleTalk-only printers. In addition,
+    Netatalk is fully integrated with CUPS, allowing any networked Mac to
+    discover and print to a CUPS/AirPrint compatible printer on the
+    network.</para>
 
-  <para>Additionally, Netatalk can be used to act as an AppleTalk router,
-  providing both segmentation and zone names in traditional Macintosh networks.
-  </para>
+    <para>Additionally, Netatalk can be used to act as an AppleTalk router,
+    providing both segmentation and zone names in traditional Macintosh
+    networks.</para>
   </sect1>
 </chapter>
