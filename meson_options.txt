@@ -100,13 +100,6 @@ option(
     description: 'Enable iconv support',
 )
 option(
-    'with-libtirpc',
-    type: 'boolean',
-    value: true,
-    description: 'Use libtirpc as RPC implementation (instead of sunrpc)',
-)
-
-option(
     'with-locking',
     type: 'boolean',
     value: true,
