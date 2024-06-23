@@ -93,10 +93,10 @@ function helper::configure() {
 	echo "*** Configuring afpd.conf"
 
 	AFPD_DEFAULT_OPTIONS="-transall -setuplog \"default log_${AFPD_LOGLEVEL:-info} /dev/stdout\""
-	AFPD_UAMS="-uamlist uams_dhx.so,uams_dhx2.so,uams_guest.so,uams_randnum.so"
+	AFPD_UAMS="-uamlist uams_dhx.so,uams_dhx2.so,uams_randnum.so"
 
 	if [ ! -z "${INSECURE_AUTH}" ]; then
-		AFPD_UAMS+=",uams_clrtxt.so"
+		AFPD_UAMS+=",uams_clrtxt.so,uams_guest.so"
 	fi
 	if [ -z "${SERVER_NAME}" ]; then
 		echo "- ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/local/etc/netatalk/afpd.conf
