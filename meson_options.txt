@@ -287,6 +287,7 @@ option(
     type: 'combo',
     choices: [
         'none',
+        'auto'
         'debian-systemd',
         'debian-sysv',
         'freebsd',
@@ -303,7 +304,7 @@ option(
         'suse-sysv',
         'systemd',
     ],
-    value: 'none',
+    value: 'auto',
     description: 'Use OS specific init config',
 )
 option(
