@@ -961,7 +961,7 @@ if libgcrypt_path != ''
         include_directories: include_directories(libgcrypt_path / 'include'),
     )
 else
-    libgcrypt = dependency('libgcrypt', required: false)
+    libgcrypt = dependency('libgcrypt', version : '>=1.2.3', required: false)
     if not libgcrypt.found()
         libgcrypt = cc.find_library(
             'libgcrypt',
@@ -971,23 +971,8 @@ else
     endif
 endif
 
-libgcrypt_config = find_program(
-    'libgcrypt-config',
-    dirs: libgcrypt_path + '/bin',
-    required: false,
-)
+have_libgcrypt = libgcrypt.found()
 
-cast5_api = run_command(
-    libgcrypt_config,
-    '--algorithms',
-    check: false,
-).stdout().strip().contains('cast5')
-
-# Reserved for future use:
-# libgcrypt_version = libgcrypt_config.version().version_compare('>=1.2.3')
-# have_libgcrypt = libgcrypt_version and cast5_api
-
-have_libgcrypt = libgcrypt.found() and cast5_api
 if have_libgcrypt
     cdata.set('HAVE_LIBGCRYPT', 1)
     cdata.set('UAM_DHX2', 1)
@@ -996,10 +981,6 @@ else
     if not libgcrypt.found()
         error(
             'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
-        )
-    elif not cast5_api
-        error(
-            'Detected libgcrypt without CAST5, please install a more recent version that contains this API',
         )
     endif
 endif
