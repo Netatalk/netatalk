@@ -15,10 +15,13 @@
   <sect1>
     <title>法的条項</title>
 
-    <para>本ドキュメントは GNU 一般公衆利用許諾書 (GPL) バージョン 2 のもとで配布されている。 Netatalk
-    ソース一式にも本ドキュメントと同様に許諾書のコピーが同梱されている。許諾書のコピーのオンライン版は <ulink
+    <para>Netatalk のソフトウェアのパッケージまたは本ドキュメントは GNU 一般公衆利用許諾書 (GPL) バージョン 2
+    のもとで配布されている。 Netatalk ソース一式にも本ドキュメントと同様に許諾書のコピーが同梱されている。許諾書のコピーのオンライン版は
+    <ulink
     url="http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt">http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt</ulink>
-    で閲覧できる</para>
+    で閲覧できる。</para>
+
+    <para>この製品には、Eric Youngが作成した暗号化ソフトウェアが含まれている。</para>
   </sect1>
 
   <sect1>
