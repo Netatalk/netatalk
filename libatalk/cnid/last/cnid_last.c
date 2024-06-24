@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  */
 
@@ -94,7 +94,7 @@ cnid_t cnid_last_get(struct _cnid_db *cdb _U_, const cnid_t did _U_, char *name 
 
 
 /* */
-cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, const cnid_t did _U_, 
+cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, const cnid_t did _U_,
     char *name _U_, const size_t len _U_)
 {
     /* FIXME: this function doesn't work in [last] scheme ! */
@@ -136,7 +136,7 @@ static struct _cnid_db *cnid_last_new(const char *volpath)
     cdb->cnid_resolve = cnid_last_resolve;
     cdb->cnid_update = cnid_last_update;
     cdb->cnid_close = cnid_last_close;
-    
+
     return cdb;
 }
 

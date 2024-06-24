@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
+ *    This product includes software developed by the University of
+ *    California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -216,7 +216,7 @@ static void convert_octal (char *string, charset_t dest)
                     *q = '.';
                 p += 2;
             }
-       	    else 
+       	    else
                 *q = '.';
        }
        else {
@@ -304,12 +304,12 @@ size_t used = 0;
 
 static char* pipexlate(char *src)
 {
-    char *p, *q, *dest; 
+    char *p, *q, *dest;
     static char destbuf[MAXPATHLEN +1];
     size_t destlen = MAXPATHLEN;
     int len = 0;
-   
-    dest = destbuf; 
+
+    dest = destbuf;
 
     if (!src)
 	return NULL;
@@ -338,7 +338,7 @@ static char* pipexlate(char *src)
             q =  lp.lp_created_for;
         } else if (is_var(p, "%%")) {
             q = "%";
-        } 
+        }
 
         /* copy the stuff over. if we don't understand something that we
          * should, just skip it over. */
@@ -471,8 +471,8 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 	    FILE *cap_file;
 
 	    memset( auth_string, 0, 256 );
-	    sprintf(addr_filename, "%s/net%d.%dnode%d", 
-		printer->p_authprintdir, addr_net/256, addr_net%256, 
+	    sprintf(addr_filename, "%s/net%d.%dnode%d",
+		printer->p_authprintdir, addr_net/256, addr_net%256,
 		addr_node);
 	    if (stat(addr_filename, &cap_st) == 0) {
 		if ((cap_file = fopen(addr_filename, "r")) != NULL) {
@@ -669,7 +669,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
 	    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
 	    exit(1);
 	}
-	strcpy ( lp.lp_spoolfile, name);	
+	strcpy ( lp.lp_spoolfile, name);
 
 	if (lp.lp_person != NULL) {
 	    if ((pwent = getpwnam(lp.lp_person)) == NULL) {
@@ -729,10 +729,10 @@ int lp_write(struct papfile *in, char *buf, size_t len)
     if (lp.lp_flags & LP_JOBPENDING)
 	lp_print();
 
-    /* foomatic doesn't handle mac line endings, so we convert them for 
+    /* foomatic doesn't handle mac line endings, so we convert them for
      * the Postscript headers
      * REALLY ugly hack, remove ASAP again */
-    if ((printer->p_flags & P_FOOMATIC_HACK) && (in->pf_state & PF_TRANSLATE) && 
+    if ((printer->p_flags & P_FOOMATIC_HACK) && (in->pf_state & PF_TRANSLATE) &&
         (buf[len-1] != '\n') ) {
         if (len <= BUFSIZE) {
 	    if (!last_line_translated) {
@@ -741,7 +741,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
 	    }
 	    else
             	memcpy(tempbuf2, buf, len);
-		
+
             if (tempbuf2[len-1] == '\r')
 	        tempbuf2[len-1] = '\n';
             tempbuf2[len] = 0;
@@ -1066,7 +1066,7 @@ int lp_queue( struct papfile *out)
     int				s;
     size_t			len;
     ssize_t			n;
-	
+
     if (( s = lp_conn_unix()) < 0 ) {
 	LOG(log_error, logtype_papd, "lp_queue: %s", strerror(errno) );
 	return( -1 );
