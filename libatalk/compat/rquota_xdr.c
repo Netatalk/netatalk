@@ -2,8 +2,8 @@
  *
  * taken from the quota-1.55 used on linux. here's the bsd copyright:
  *
- * Copyright (c) 1980, 1990 Regents of the University of California. All
- * rights reserved.
+ * Copyright (c) 1980, 1990 Regents of the University of California.
+ * All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by Robert Elz at
  * The University of Melbourne.
