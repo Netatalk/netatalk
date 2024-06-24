@@ -82,36 +82,10 @@ endif
 endif
 
 #
-# checking for general systemd scripts:
+# checking for systemd scripts:
 #
 
 if USE_SYSTEMD
-
-servicedir	= $(INIT_DIR)
-service_DATA	= netatalk.service
-
-netatalk.service: service.systemd
-	cp -f service.systemd netatalk.service
-
-install-data-hook:
-if USE_INIT_HOOKS
-	-systemctl daemon-reload
-endif
-
-uninstall-startup:
-if USE_INIT_HOOKS
-	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(servicedir)/netatalk.service
-	-systemctl daemon-reload
-endif
-
-endif
-
-#
-# checking for "Debian" style systemd scripts:
-#
-
-if USE_DEBIAN_SYSTEMD
 
 servicedir	= $(INIT_DIR)
 service_DATA	= netatalk.service
