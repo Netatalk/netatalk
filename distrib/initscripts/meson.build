@@ -1,94 +1,128 @@
+init_style = get_option('with-init-style')
+init_system = get_option('with-init-system')
+
+################
+# init targets #
+################
+
+systemd = custom_target(
+    'systemd',
+    input: 'service.systemd.tmpl',
+    output: 'netatalk.service',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: init_dir,
+ )
+
+debian_sysv = custom_target(
+    'debian_sysv',
+    input: 'rc.debian.tmpl',
+    output: 'netatalk',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: init_dir,
+    install_mode: 'rwxr-xr-x',
+)
+
+redhat_sysv = custom_target(
+    'redhat_sysv',
+    input: 'rc.redhat.tmpl',
+    output: 'netatalk',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: init_dir,
+    install_mode: 'rwxr-xr-x',
+)
+
+suse_sysv = custom_target(
+    'suse_sysv',
+    input: 'rc.suse.tmpl',
+    output: 'netatalk',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: init_dir,
+    install_mode: 'rwxr-xr-x',
+)
+
+freebsd = custom_target(
+    'freebsd',
+    input: 'rc.freebsd.tmpl',
+    output: 'netatalk',
+    command: sed_command,
+    capture: true,
+    install: true,
+    install_dir: init_dir,
+    install_mode: 'rwxr-xr-x',
+)
+
+##############
+# init hooks #
+##############
+
+
+systemd_hook = meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+
+debian_sysv_hook = meson.add_install_script(
+    find_program('update-rc.d'),
+    'netatalk',
+    'defaults',
+    '90',
+    '10',
+)
+
+suse_sysv_hook = meson.add_install_script(
+    find_program('insserv'),
+    '/etc/init.d/netatalk',
+)
+
+redhat_sysv_hook = meson.add_install_script(
+    find_program('chkconfig'),
+    '--add', '/etc/rc.d/init.d/netatalk',
+)
+
+##############
+# init macro #
+##############
+
 if get_option('with-init-style') == 'none'
     init_dir += 'none'
 elif (
-    get_option('with-init-style') == 'debian-systemd'
-    or get_option('with-init-style') == 'gentoo-systemd'
-    or get_option('with-init-style') == 'redhat-systemd'
-    or get_option('with-init-style') == 'suse-systemd'
-    or get_option('with-init-style') == 'systemd'
+    init_style == 'debian-systemd'
+    or init_style == 'gentoo-systemd'
+    or init_style == 'redhat-systemd'
+    or init_style == 'suse-systemd'
+    or init_style == 'systemd'
 )
     init_dir += '/usr/lib/systemd/system'
-    custom_target(
-        'systemd',
-        input: 'service.systemd.tmpl',
-        output: 'netatalk.service',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-    )
+    systemd
     if get_option('with-init-hooks')
-        meson.add_install_script(find_program('systemctl'), 'daemon-reload')
+        systemd_hook
     endif
-elif get_option('with-init-style') == 'debian-sysv'
+elif init_style == 'debian-sysv'
     init_dir += '/etc/init.d'
-    custom_target(
-        'debian_sysv',
-        input: 'rc.debian.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
+    debian_sysv
     if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('update-rc.d'),
-            'netatalk',
-            'defaults',
-            '90',
-            '10',
-        )
+        debian_sysv_hook
     endif
-elif get_option('with-init-style') == 'redhat-sysv'
+elif init_style == 'redhat-sysv'
     init_dir += '/etc/rc.d/init.d'
-    custom_target(
-        'redhat_sysv',
-        input: 'rc.redhat.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
+    redhat_sysv
     if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('chkconfig'),
-            '--add', '/etc/rc.d/init.d/netatalk',
-        )
+        redhat_sysv_hook
     endif
-elif get_option('with-init-style') == 'suse-sysv'
+elif init_style == 'suse-sysv'
     init_dir += '/etc/init.d'
-    custom_target(
-        'suse_sysv',
-        input: 'rc.suse.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
+    suse_sysv
     if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('insserv'),
-            '/etc/init.d/netatalk',
-        )
+        suse_sysv_hook
     endif
-elif get_option('with-init-style') == 'freebsd'
+elif init_style == 'freebsd'
     init_dir += '/etc/rc.d'
-    custom_target(
-        'freebsd',
-        input: 'rc.freebsd.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
+    freebsd
     if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('sh'),
@@ -96,7 +130,7 @@ elif get_option('with-init-style') == 'freebsd'
             'enable',
         )
     endif
-elif get_option('with-init-style') == 'netbsd'
+elif init_style == 'netbsd'
     init_dir += '/etc/rc.d'
     custom_target(
         'netbsd',
@@ -108,7 +142,7 @@ elif get_option('with-init-style') == 'netbsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-elif get_option('with-init-style') == 'openbsd'
+elif init_style == 'openbsd'
     init_dir += '/etc/rc.d'
     custom_target(
         'freebsd',
@@ -127,7 +161,7 @@ elif get_option('with-init-style') == 'openbsd'
             'netatalk',
         )
     endif
-elif get_option('with-init-style') == 'solaris'
+elif init_style == 'solaris'
     init_dir += '/lib/svc/manifest/network'
     custom_target(
         'solaris',
@@ -146,8 +180,8 @@ elif get_option('with-init-style') == 'solaris'
         )
     endif
 elif (
-    get_option('with-init-style') == 'openrc'
-    or get_option('with-init-style') == 'gentoo-openrc'
+    init_style == 'openrc'
+    or init_style == 'gentoo-openrc'
 )
     init_dir += '/etc/init.d'
     custom_target(
@@ -168,7 +202,7 @@ elif (
             'default',
         )
     endif
-elif get_option('with-init-style') == 'macos-launchd'
+elif init_style == 'macos-launchd'
     init_dir += '/Library/LaunchDaemons'
     custom_target(
         'netatalkd',
@@ -206,4 +240,37 @@ elif get_option('with-init-style') == 'macos-launchd'
             '-w', init_dir / 'io.netatalk.daemon.plist',
         )
     endif
+elif init_style == 'auto'
+    if uname_command.contains('debian')
+        systemd
+        debian-sysv
+        if init_system == 'systemd'
+            init_dir += '/usr/lib/systemd/system'
+            systemd_hook
+        elif init_system == 'sysv'
+            init_dir += '/etc/init.d'
+            debian_sysv_hook
+        endif
+    elif uname_command.contains('suse')
+        systemd
+        suse_sysv
+        if init_system == 'systemd'
+            init_dir += '/usr/lib/systemd/system'
+            systemd_hook
+        elif init_system == 'sysv'
+            init_dir += '/etc/init.d'
+            suse_sysv_hook
+        endif
+    elif uname_command.contains('redhat')
+        systemd
+        redhat_sysv
+        if init_system == 'systemd'
+            init_dir += '/usr/lib/systemd/system'
+            systemd_hook
+        elif init_system == 'sysv'
+            init_dir += '/etc/init.d'
+            redhat_sysv_hook
+        endif
+    endif
 endif
+
