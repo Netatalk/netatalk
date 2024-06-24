@@ -1,9 +1,6 @@
-
 /*
- *
- * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
- *
  */
 
 #ifdef HAVE_CONFIG_H
