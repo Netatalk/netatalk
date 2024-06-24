@@ -1,4 +1,7 @@
 /*
+   volinfo file handling, command line utilities
+   Copyright (C) Bjoern Fernhomberg 2004
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -12,9 +15,6 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-   .volinfo file handling, command line utilities
-   copyright Bjoern Fernhomberg, 2004
 */
 
 #ifdef HAVE_CONFIG_H
@@ -66,7 +66,7 @@ static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},  /* encode illegal sequence */
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
-    {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
+    {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"},
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
     {0, NULL}
@@ -171,12 +171,12 @@ static char * make_path_absolute(char *path, size_t bufsize)
             *p = '\0';
     }
 
-    if (!getcwd(savecwd, sizeof(savecwd)) || chdir(abspath) < 0)	
+    if (!getcwd(savecwd, sizeof(savecwd)) || chdir(abspath) < 0)
         return NULL;
 
     if (!getcwd(abspath, sizeof(abspath)) || chdir (savecwd) < 0)
         return NULL;
-    
+
     if (strlen(abspath) > bufsize)
         return NULL;
 
@@ -187,7 +187,7 @@ static char * make_path_absolute(char *path, size_t bufsize)
 static char * find_volumeroot(char *path, size_t maxlen)
 {
     char *volume = make_path_absolute(path, maxlen);
-        
+
     if (volume == NULL)
        return NULL;
 
@@ -217,7 +217,7 @@ static int parse_options (char *buf, int *flags, const vol_opt_name_t *options)
     char *p, *q;
     const vol_opt_name_t *op;
 
-    q = p = buf; 
+    q = p = buf;
 
     while ( *p != '\0') {
         if (*p == ' ') {
@@ -235,8 +235,8 @@ static int parse_options (char *buf, int *flags, const vol_opt_name_t *options)
     }
 
     return 0;
-} 
-            
+}
+
 
 
 static int parseline ( char *buf, struct volinfo *vol)
@@ -293,7 +293,7 @@ static int parseline ( char *buf, struct volinfo *vol)
       case CNIDDBDPORT:
         if ((vol->v_dbd_port = strdup(value)) == NULL) {
 	    fprintf (stderr, "strdup: %s", strerror(errno));
-            return -1;            
+            return -1;
         }
         break;
       case CNID_DBPATH:
@@ -324,7 +324,7 @@ static int parseline ( char *buf, struct volinfo *vol)
         parse_options(value, &vol->v_casefold, &vol_opt_casefold[0]);
         break;
     case EXTATTRTYPE:
-        if (strcasecmp(value, "AFPVOL_EA_AD") == 0)    
+        if (strcasecmp(value, "AFPVOL_EA_AD") == 0)
             vol->v_vfs_ea = AFPVOL_EA_AD;
         else if (strcasecmp(value, "AFPVOL_EA_SYS") == 0)
             vol->v_vfs_ea = AFPVOL_EA_SYS;
@@ -334,10 +334,10 @@ static int parseline ( char *buf, struct volinfo *vol)
 	return (-1);
         break;
     }
-        
+
     return 0;
 }
-    
+
 
 int loadvolinfo (char *path, struct volinfo *vol)
 {
@@ -354,7 +354,7 @@ int loadvolinfo (char *path, struct volinfo *vol)
     memset(vol, 0, sizeof(struct volinfo));
     strlcpy(volinfofile, path, sizeof(volinfofile));
 
-    /* volinfo file is in .AppleDesktop */ 
+    /* volinfo file is in .AppleDesktop */
     if ( NULL == find_volumeroot(volinfofile, sizeof(volinfofile)))
         return -1;
 
@@ -377,9 +377,9 @@ int loadvolinfo (char *path, struct volinfo *vol)
 	fprintf (stderr, "error opening volinfo (%s): %s", volinfofile, strerror(errno));
         return (-1);
     }
-    fd = fileno(fp); 
+    fd = fileno(fp);
 
-    /* try to get a read lock */ 
+    /* try to get a read lock */
     lock.l_start  = 0;
     lock.l_whence = SEEK_SET;
     lock.l_len    = 0;
