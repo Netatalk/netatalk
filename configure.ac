@@ -731,12 +731,7 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
 fi
 
 dnl -- check for libgcrypt, if found enables DHX UAM
-AM_PATH_LIBGCRYPT([1:1.2.3],[neta_cv_compile_dhx2=yes
-			neta_cv_have_libgcrypt=yes
-			AC_MSG_NOTICE([Enabling DHX2 UAM])
-			AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if the DHX2 modules should be built with libgcrypt])
-			AC_DEFINE(UAM_DHX2, 1, [Define if the DHX2 UAM modules should be compiled])
-			])
+AC_NETATALK_LIBGCRYPT
 
 dnl -- look for openssl, if found enables DHX UAM and Randnum UAM
 AC_PATH_SSL

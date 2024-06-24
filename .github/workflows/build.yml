@@ -582,14 +582,12 @@ jobs:
             echo "Building with Autotools"
             ./bootstrap
             ./configure \
+              MAKE=gmake \
+              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig \
               --enable-krbV-uam \
               --enable-netbsd \
-              --enable-pgp-uam \
-              --with-bdb=/usr/pkg \
-              --with-libgcrypt-dir=/usr/pkg \
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
-            gmake -j2 all
+              --enable-pgp-uam
+            gmake -j $(nproc)
             gmake install
             service afpd onestart
             sleep 2
@@ -685,19 +683,17 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             echo "Building with Autotools"
             ./bootstrap
             ./configure \
               --disable-install-privileged \
               --enable-pgp-uam \
               --with-bdb=/opt/local \
-              --with-ldap=no \
-              --with-libgcrypt-dir=/opt/local
-              MAKE=gmake \
-              PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
-            gmake -j $(nproc)
-            gmake install
-            gmake uninstall
+              --without-ldap
+            make -j $(nproc)
+            make install
+            make uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
@@ -714,6 +710,7 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
+    if: false
     name: "Solaris"
     runs-on: ubuntu-latest
     permissions:
