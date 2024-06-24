@@ -410,12 +410,8 @@ AC_ARG_ENABLE(openrc,
 AC_ARG_ENABLE(systemd,
 	[  --enable-systemd        use systemd configuration ],[
 	if test "$enableval" = "yes"; then
+		SYSTEMD_PREFIX=/usr/lib
 		sysv_style=systemd
-		if test -d "/lib/systemd"; then
-			SYSTEMD_PREFIX=/lib
-		else
-			SYSTEMD_PREFIX=/usr/lib
-		fi
 	fi
 	AC_MSG_RESULT([enabling systemd support with prefix $SYSTEMD_PREFIX])
 	]
