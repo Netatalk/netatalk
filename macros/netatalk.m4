@@ -583,7 +583,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
         ;;
     "debian-systemd")
 	    AC_MSG_RESULT([enabling debian-style systemd support])
-	    ac_cv_init_dir="/lib/systemd/system"
+	    ac_cv_init_dir="/usr/lib/systemd/system"
 	    ;;
     "solaris")
 	    AC_MSG_RESULT([enabling solaris-style SMF support])
@@ -617,8 +617,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
     AM_CONDITIONAL(USE_OPENRC, test x$init_style = xopenrc || test x$init_style = xgentoo-openrc)
     AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)
-    AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd || test x$init_style = xgentoo-systemd)
-    AM_CONDITIONAL(USE_DEBIAN_SYSTEMD, test x$init_style = xdebian-systemd)
+    AM_CONDITIONAL(USE_SYSTEMD, test x$init_style = xsystemd || test x$init_style = xdebian-systemd || test x$init_style = xgentoo-systemd || test x$init_style = xredhat-systemd || test x$init_style = xsuse-systemd)
     AM_CONDITIONAL(USE_MACOS_LAUNCHD, test x$init_style = xmacos-launchd)
     AM_CONDITIONAL(USE_UNDEF, test x$init_style = xnone)
 
