@@ -1,28 +1,11 @@
 if get_option('with-init-style') == 'none'
     init_dir += 'none'
-elif get_option('with-init-style') == 'redhat-sysv'
-    init_dir += '/etc/rc.d/init.d'
-    custom_target(
-        'redhat',
-        input: 'rc.redhat.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('chkconfig'),
-            '--add', '/etc/rc.d/init.d/netatalk',
-        )
-    endif
 elif (
-    get_option('with-init-style') == 'gentoo-systemd'
-    or get_option('with-init-style') == 'systemd'
+    get_option('with-init-style') == 'debian-systemd'
+    or get_option('with-init-style') == 'gentoo-systemd'
     or get_option('with-init-style') == 'redhat-systemd'
     or get_option('with-init-style') == 'suse-systemd'
+    or get_option('with-init-style') == 'systemd'
 )
     init_dir += '/usr/lib/systemd/system'
     service_data = [
@@ -50,31 +33,43 @@ elif (
             'daemon-reload',
         )
     endif
-elif get_option('with-init-style') == 'debian-systemd'
-    init_dir += '/lib/systemd/system'
-    service_data = [
-        'a2boot',
-        'afpd',
-        'atalkd',
-        'cnid',
-        'papd',
-        'timelord',
-    ]
-    foreach service : service_data
-        custom_target(
-            service + '.service',
-            input: service + '.service.tmpl',
-            output: service + '.service',
-            command: sed_command,
-            capture: true,
-            install: true,
-            install_dir: init_dir,
-        )
-    endforeach
+elif get_option('with-init-style') == 'debian-sysv'
+    init_dir += '/etc/init.d'
+    custom_target(
+        'debian_sysv',
+        input: 'rc.debian.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
     if get_option('with-init-hooks')
         meson.add_install_script(
-            find_program('systemctl'),
-            'daemon-reload',
+            find_program('update-rc.d'),
+            'netatalk',
+            'defaults',
+            '90',
+            '10',
+        )
+    endif
+elif get_option('with-init-style') == 'redhat-sysv'
+    init_dir += '/etc/rc.d/init.d'
+    custom_target(
+        'redhat',
+        input: 'rc.redhat.tmpl',
+        output: 'netatalk',
+        command: sed_command,
+        capture: true,
+        install: true,
+        install_dir: init_dir,
+        install_mode: 'rwxr-xr-x',
+    )
+    if get_option('with-init-hooks')
+        meson.add_install_script(
+            find_program('chkconfig'),
+            '--add', '/etc/rc.d/init.d/netatalk',
         )
     endif
 elif get_option('with-init-style') == 'suse-sysv'
@@ -169,27 +164,6 @@ elif (
             'add',
             'netatalk',
             'default',
-        )
-    endif
-elif get_option('with-init-style') == 'debian-sysv'
-    init_dir += '/etc/init.d'
-    custom_target(
-        'debian_sysv',
-        input: 'rc.debian.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('update-rc.d'),
-            'netatalk',
-            'defaults',
-            '90',
-            '10',
         )
     endif
 elif get_option('with-init-style') == 'macos-launchd'
