@@ -1,13 +1,14 @@
 /*
  * This source file is part of the bstring string library.  This code was
- * written by Paul Hsieh in 2002-2008, and is covered by the BSD open source
+ * written by Paul Hsieh in 2002-2015, and is covered by the BSD open source
  * license and the GPL. Refer to the accompanying documentation for details
  * on usage and license.
  */
 
-/*!
- * @file
- * This file is the core module for implementing the bstring functions.
+/*
+ * bstrlib.h
+ *
+ * This file is the interface for the core bstring functions.
  */
 
 #ifndef BSTRLIB_INCLUDE
@@ -35,10 +36,16 @@ extern "C" {
 typedef struct tagbstring * bstring;
 typedef const struct tagbstring * const_bstring;
 
+/* Version */
+#define BSTR_VER_MAJOR  1
+#define BSTR_VER_MINOR  0
+#define BSTR_VER_UPDATE 0
+
 /* Copy functions */
 #define cstr2bstr bfromcstr
 extern bstring bfromcstr (const char * str);
 extern bstring bfromcstralloc (int mlen, const char * str);
+extern bstring bfromcstrrangealloc (int minl, int maxl, const char* str);
 extern bstring blk2bstr (const void * blk, int len);
 extern char * bstr2cstr (const_bstring s, char z);
 extern int bcstrfree (char * s);
@@ -64,6 +71,7 @@ extern int bconchar (bstring b0, char c);
 extern int bcatcstr (bstring b, const char * s);
 extern int bcatblk (bstring b, const void * s, int len);
 extern int binsert (bstring s1, int pos, const_bstring s2, unsigned char fill);
+extern int binsertblk (bstring s1, int pos, const void * s2, int len, unsigned char fill);
 extern int binsertch (bstring s1, int pos, int len, unsigned char fill);
 extern int breplace (bstring b1, int pos, int len, const_bstring b2, unsigned char fill);
 extern int bdelete (bstring s1, int pos, int len);
@@ -74,8 +82,10 @@ extern int btrunc (bstring b, int n);
 extern int bstricmp (const_bstring b0, const_bstring b1);
 extern int bstrnicmp (const_bstring b0, const_bstring b1, int n);
 extern int biseqcaseless (const_bstring b0, const_bstring b1);
+extern int biseqcaselessblk (const_bstring b, const void * blk, int len);
 extern int bisstemeqcaselessblk (const_bstring b0, const void * blk, int len);
 extern int biseq (const_bstring b0, const_bstring b1);
+extern int biseqblk (const_bstring b, const void * blk, int len);
 extern int bisstemeqblk (const_bstring b0, const void * blk, int len);
 extern int biseqcstr (const_bstring b, const char * s);
 extern int biseqcstrcaseless (const_bstring b, const char * s);
@@ -111,6 +121,7 @@ extern struct bstrList * bsplit (const_bstring str, unsigned char splitChar);
 extern struct bstrList * bsplits (const_bstring str, const_bstring splitStr);
 extern struct bstrList * bsplitstr (const_bstring str, const_bstring splitStr);
 extern bstring bjoin (const struct bstrList * bl, const_bstring sep);
+extern bstring bjoinblk (const struct bstrList * bl, const void * s, int len);
 extern int bsplitcb (const_bstring str, unsigned char splitChar, int pos,
 	int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitscb (const_bstring str, const_bstring splitStr, int pos,
@@ -210,6 +221,16 @@ struct tagbstring {
 
 /* Static constant block parameter pair */
 #define bsStaticBlkParms(q) ((void *)("" q "")), ((int) sizeof(q)-1)
+
+#define bcatStatic(b,s)     ((bcatblk)((b), bsStaticBlkParms(s)))
+#define bfromStatic(s)      ((blk2bstr)(bsStaticBlkParms(s)))
+#define bassignStatic(b,s)  ((bassignblk)((b), bsStaticBlkParms(s)))
+#define binsertStatic(b,p,s,f) ((binsertblk)((b), (p), bsStaticBlkParms(s), (f)))
+#define bjoinStatic(b,s)    ((bjoinblk)((b), bsStaticBlkParms(s)))
+#define biseqStatic(b,s)    ((biseqblk)((b), bsStaticBlkParms(s)))
+#define bisstemeqStatic(b,s) ((bisstemeqblk)((b), bsStaticBlkParms(s)))
+#define biseqcaselessStatic(b,s) ((biseqcaselessblk)((b), bsStaticBlkParms(s)))
+#define bisstemeqcaselessStatic(b,s) ((bisstemeqcaselessblk)((b), bsStaticBlkParms(s)))
 
 /* Reference building macros */
 #define cstr2tbstr btfromcstr
