@@ -683,6 +683,8 @@ static int pam_changepw(void *obj, char *username,
     /* Set these things up for the conv function. the old password
      * is at the end. */
     ibuf += KEYSIZE;
+    if (ibuflen <= PASSWDLEN + PASSWDLEN)
+        return AFPERR_PARAM;
     ibuf[PASSWDLEN + PASSWDLEN] = '\0';
     PAM_password = ibuf + PASSWDLEN;
 
@@ -713,6 +715,8 @@ static int pam_changepw(void *obj, char *username,
 
     /* new password */
     PAM_password = ibuf;
+    if (ibuflen <= PASSWDLEN)
+        return AFPERR_PARAM;
     ibuf[PASSWDLEN] = '\0';
 
     /* this really does need to be done as root */
