@@ -21,7 +21,7 @@ cc = meson.get_compiler('c')
 cdata = configuration_data()
 fs = import('fs')
 prefix = get_option('prefix')
-version = meson.project_version()
+netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
 target_os = target_machine.system()
@@ -79,7 +79,7 @@ afpduuidconf = '-D_PATH_AFPDUUIDCONF="' + pkgconfdir + '/afp_voluuid.conf"'
 cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
 cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'
-dversion = '-DVERSION="' + version + '"'
+dversion = '-DVERSION="' + netatalk_version + '"'
 messagedir = '-DSERVERTEXT="' + localstatedir + '/netatalk/msg/"'
 statedir = '-D_PATH_STATEDIR="' + localstatedir + '/netatalk/"'
 uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
@@ -1530,7 +1530,7 @@ sed_command = [
     '-e', 's@:ETCDIR:@' + pkgconfdir + '@',
     '-e', 's@:SBINDIR:@' + sbindir + '@',
     '-e', 's@:PKGLIBEXECDIR:@' + libexecdir + '@',
-    '-e', 's@:NETATALK_VERSION:@' + version + '@',
+    '-e', 's@:NETATALK_VERSION:@' + netatalk_version + '@',
     '@INPUT@',
 ]
 
@@ -1748,7 +1748,7 @@ cdata.set('exec_prefix', prefix)
 cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
-cdata.set('NETATALK_VERSION', version)
+cdata.set('NETATALK_VERSION', netatalk_version)
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
 cdata.set('pkgconfdir', pkgconfdir)
 cdata.set('prefix', prefix)
@@ -1819,7 +1819,7 @@ summary(summary_info, bool_yn: true, section: 'Compilation:')
 
 uams_using_options = '(' + uams_options + ')'
 
-summary({'Netatalk version': version}, section: 'Configuration Summary:')
+summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:')
 summary_info = {
     '  Initscript style': get_option('with-init-style'),
 }
