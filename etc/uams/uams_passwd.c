@@ -57,7 +57,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* SHADOWPW */
 
 
-    if (ibuflen < PASSWDLEN) {
+    if (ibuflen <= PASSWDLEN) {
         return( AFPERR_PARAM );
     }
     ibuf[ PASSWDLEN ] = '\0';
@@ -160,7 +160,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                              (void *) &username, &ulen) < 0)
         return AFPERR_MISC;
 
-    if (*uname != 3)
+    if (*uname != 3 || ibuflen < 2)
         return AFPERR_PARAM;
     uname++;
     memcpy(&temp16, uname, sizeof(temp16));
