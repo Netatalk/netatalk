@@ -21,7 +21,7 @@ cc = meson.get_compiler('c')
 cdata = configuration_data()
 fs = import('fs')
 prefix = get_option('prefix')
-version = meson.project_version()
+netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
 target_os = target_machine.system()
@@ -67,7 +67,7 @@ afpdpwfile = '-D_PATH_AFPDPWFILE="' + pkgconfdir + '/afppasswd"'
 cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
 cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'
-dversion = '-DVERSION="' + version + '"'
+dversion = '-DVERSION="' + netatalk_version + '"'
 messagedir = '-DSERVERTEXT="' + localstatedir + '/netatalk/msg/"'
 statedir = '-D_PATH_STATEDIR="' + localstatedir + '/netatalk/"'
 uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
@@ -1986,7 +1986,7 @@ cdata.set('exec_prefix', prefix)
 cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
-cdata.set('NETATALK_VERSION', version)
+cdata.set('NETATALK_VERSION', netatalk_version)
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
 cdata.set('pkgconfdir', pkgconfdir)
 cdata.set('prefix', prefix)
