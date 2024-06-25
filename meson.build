@@ -1684,6 +1684,37 @@ if host_os == 'linux'
 endif
 
 #
+# Check for optional server location protocol support (used by Classic Mac OS and Mac OS X to 10.1)
+#
+
+enable_srvloc = get_option('with-srvloc')
+srvloc_path = get_option('with-srvloc-path')
+
+srvloc_link_args = []
+
+if srvloc_path != ''
+    srvloc_link_args += ['-L' + srvloc_path / 'lib', '-lslp']
+    slp = declare_dependency(
+        link_args: srvloc_link_args,
+        include_directories: include_directories(srvloc_path / 'include'),
+    )
+else
+    slp = cc.find_library( 'slp', required: false)
+endif
+
+if not enable_srvloc
+    have_srvloc = false
+else
+    have_srvloc = cc.has_function('SLPOpen', dependencies: slp)
+    if have_srvloc
+        cdata.set('USE_SRVLOC', 1)
+    else
+        have_srvloc = false
+        warning('SLP support requested but slp library not found')
+    endif
+endif
+
+#
 # OS-specific configuration
 #
 
@@ -1870,6 +1901,7 @@ if have_quota
     }
 endif
 summary_info += {
+    '  SLP (srvloc) support': have_srvloc,
     '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  valid shell check': valid_shellcheck,

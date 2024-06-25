@@ -72,6 +72,10 @@ if have_dns
     test_external_deps += dns_sd
 endif
 
+if have_srvloc
+    test_external_deps += slp
+endif
+
 afpdtest = executable(
     'afpdtest',
     test_sources,
