@@ -141,6 +141,8 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 	hostname = NULL;
     }
 
+    if (ibuflen <= PASSWDLEN)
+        return AFPERR_PARAM;
     ibuf[ PASSWDLEN ] = '\0';
 
     if (( pwd = uam_getname(obj, username, ulen)) == NULL ) {
