@@ -688,6 +688,9 @@ int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbufl
     if (ibuflen < 2)
         return send_reply(obj, AFPERR_BADVERS );
 
+    if (ibuf == NULL)
+        return send_reply(obj, AFPERR_PARAM);
+
     ibuf++;
     len = (unsigned char) *ibuf++;
     ibuflen -= 2;
@@ -741,6 +744,9 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
     if (ibuflen < 5)
         return send_reply(obj, AFPERR_BADVERS );
+
+    if (ibuf == NULL)
+        return send_reply(obj, AFPERR_PARAM);
 
     ibuf++;
     ibuf++;     /* pad  */
@@ -829,6 +835,10 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
         return send_reply(obj, AFPERR_PARAM);
     }
 #endif
+    if (ibuflen < len) {
+        LOG(log_error, logtype_afpd, "login_ext: Login failed. Invalid directory service name!" );
+        return send_reply(obj, AFPERR_PARAM);
+    }
     ibuf += len;
     ibuflen -= len;
 

@@ -2425,6 +2425,9 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         return( AFPERR_PARAM );
     }
 
+    if (len >= ibuflen - 1)
+        return AFPERR_PARAM;
+
     ibuf[ len ] = '\0';
 
     if ( len == 0 )
