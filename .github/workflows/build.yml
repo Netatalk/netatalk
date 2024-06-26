@@ -69,6 +69,8 @@ jobs:
             acl-dev \
             autoconf \
             automake \
+            avahi-compat-libdns_sd \
+            avahi-dev \
             build-base \
             cracklib \
             cracklib-dev \
