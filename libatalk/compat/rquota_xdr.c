@@ -80,7 +80,7 @@ bool_t xdr_rquota(XDR *xdrs, rquota *objp)
 #if defined(HAVE_RQUOTA_H_QR_STATUS)
 bool_t xdr_gqr_status(XDR *xdrs, qr_status *objp)
 #else
-xdr_gqr_status(XDR *xdrs, gqr_status *objp)
+bool_t xdr_gqr_status(XDR *xdrs, gqr_status *objp)
 #endif
 {
 	if (!xdr_enum(xdrs, (enum_t *)objp)) {
