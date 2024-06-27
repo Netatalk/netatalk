@@ -51,6 +51,7 @@ env:
     libtool \
     libtool-bin \
     libtracker-sparql-3.0-dev \
+    libwolfssl-dev \
     libwrap0-dev \
     meson \
     ninja-build \
@@ -226,6 +227,7 @@ jobs:
             libtool \
             libtool-bin \
             libtracker-sparql-3.0-dev \
+            libwolfssl-dev \
             libwrap0-dev \
             make \
             meson \
@@ -794,8 +796,8 @@ jobs:
               build-essential \
               libtool \
               pkg-config
-            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20230910.tar.gz
-            tar -zxpf bootstrap-trunk-x86_64-20230910.tar.gz -C /
+            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz
+            tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
               avahi \
