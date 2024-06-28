@@ -721,7 +721,7 @@ avahi = dependency('avahi-client', required: false)
 
 dns_sd_libs = []
 
-dns_sd = cc.find_library('dns_sd', has_headers: 'dns_sd.h', required: false)
+dns_sd = cc.find_library('dns_sd', required: false)
 if dns_sd.found()
     dns_sd_libs += dns_sd
 endif
@@ -735,7 +735,7 @@ zeroconf_provider = ''
 freebsd_zeroconf_daemon = ''
 
 have_dns = (
-    (dns_sd.found() or system.found())
+    (dns_sd.found() or system.found()) and cc.has_header('dns_sd.h')
     and cc.has_function(
         'DNSServiceRegister',
         dependencies: dns_sd_libs,

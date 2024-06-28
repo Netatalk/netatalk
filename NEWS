@@ -6,6 +6,7 @@ Changes in 2.4.2
 * UPD: meson: Add option to override system WolfSSL
        with embedded WolfSSL: `with-ssl-override', GitHub #1175
 * UPD: Remove obsolete Red Hat Upstart and SuSE SysV init scripts, GitHub #1162
+* FIX: Restore Zeroconf functionality for Alpine Linux, GitHub #1198
 * FIX: meson: Fix errors in PAM support macro, GitHub #1179
 * FIX: meson: Fix perl shebang substitution in cnid2_create script, GitHub #1184
 * FIX: meson: Fix errors in shadow password macro, GitHub #1191
