@@ -1,3 +1,19 @@
+Changes in 3.1.19
+=================
+* FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
+       GitHub #1158
+* NEW: Introduce an official Dockerfile and entry script, GitHub #713
+* UPD: docs: Improvements to manual, GitHub #744
+       - Move legal notice into the Introduction chapter
+       - Improve manual page summaries
+       - Print netatalk version number as subtitle
+* NEW: docs: Distribute a manual appendix with the GNU GPL v2 text, GitHub #745
+* NEW: docs: Distribute the Japanese localization of the manual, GitHub #806
+* FIX: docs: Inconsistent man page heading case, GitHub #545
+* UPD: docs: Refresh DEVELOPER readme and Docbook templates, GitHub #638
+* UPD: docs: Clean up remainders of SourgeForge hosting, GitHub #703
+* UPD: docs: Limit max TOC depth to 2 in manual, bump DocBook to 4.5, GitHub #747
+
 Changes in 3.1.18
 =================
 * FIX: CVE-2022-22995: Harden create_appledesktop_folder(), GitHub #480
