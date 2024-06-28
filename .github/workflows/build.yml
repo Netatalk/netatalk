@@ -75,6 +75,7 @@ jobs:
             acl-dev \
             autoconf \
             automake \
+            avahi-compat-libdns_sd \
             avahi-dev \
             bison \
             build-base \
