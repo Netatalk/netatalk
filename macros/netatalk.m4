@@ -518,7 +518,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional initscript install
 AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AC_ARG_WITH(init-style,
-                [  --with-init-style       use OS specific init config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo-openrc|gentoo-systemd|freebsd|netbsd|openbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
+                [  --with-init-style       use OS specific init config [[redhat-systemd|suse-systemd|gentoo-openrc|gentoo-systemd|freebsd|netbsd|openbsd|debian-sysv|debian-systemd|solaris|openrc|systemd|macos-launchd]]],
                 init_style="$withval", init_style=none
     )
     case "$host_os" in
@@ -529,23 +529,9 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     ;;
     esac
     case "$init_style" in
-    "redhat")
-	    AC_MSG_ERROR([--with-init-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
-        ;;
-    "redhat-sysv")
-	    AC_MSG_RESULT([enabling redhat-style sysv initscript support])
-	    ac_cv_init_dir="/etc/rc.d/init.d"
-	    ;;
     "redhat-systemd")
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
 	    ac_cv_init_dir="/usr/lib/systemd/system"
-	    ;;
-    "suse")
-	    AC_MSG_ERROR([--with-init-style=suse is obsoleted. Use suse-sysv or suse-systemd.])
-        ;;
-    "suse-sysv")
-	    AC_MSG_RESULT([enabling suse-style sysv initscript support])
-	    ac_cv_init_dir="/etc/init.d"
 	    ;;
     "suse-systemd")
 	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
@@ -573,9 +559,6 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     "openbsd")
 	    AC_MSG_RESULT([enabling openbsd-style initscript support])
 	    ac_cv_init_dir="/etc/rc.d"
-        ;;
-    "debian")
-	    AC_MSG_ERROR([--with-init-style=debian is obsoleted. Use debian-sysv or debian-systemd.])
         ;;
     "debian-sysv")
 	    AC_MSG_RESULT([enabling debian-style sysv initscript support])
@@ -612,8 +595,6 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
     AM_CONDITIONAL(USE_FREEBSD, test x$init_style = xfreebsd)
     AM_CONDITIONAL(USE_NETBSD, test x$init_style = xnetbsd)
     AM_CONDITIONAL(USE_OPENBSD, test x$init_style = xopenbsd)
-    AM_CONDITIONAL(USE_REDHAT_SYSV, test x$init_style = xredhat-sysv)
-    AM_CONDITIONAL(USE_SUSE_SYSV, test x$init_style = xsuse-sysv)
     AM_CONDITIONAL(USE_SOLARIS, test x$init_style = xsolaris)
     AM_CONDITIONAL(USE_OPENRC, test x$init_style = xopenrc || test x$init_style = xgentoo-openrc)
     AM_CONDITIONAL(USE_DEBIAN_SYSV, test x$init_style = xdebian-sysv)

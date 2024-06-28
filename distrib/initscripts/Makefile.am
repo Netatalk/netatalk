@@ -26,9 +26,7 @@ GENERATED_FILES = \
 	rc.netbsd \
 	rc.openbsd \
 	rc.openrc \
-	rc.redhat \
 	rc.solaris \
-	rc.suse \
 	service.systemd
 
 TEMPLATES = \
@@ -40,9 +38,7 @@ TEMPLATES = \
 	rc.netbsd.tmpl \
 	rc.openbsd.tmpl \
 	rc.openrc.tmpl \
-	rc.redhat.tmpl \
 	rc.solaris.tmpl \
-	rc.suse.tmpl \
 	service.systemd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd cnid_metad
@@ -54,32 +50,6 @@ noinst_DATA = $(GENERATED_FILES)
 # tools, like chkconfig, insserv or rc-update
 
 uninstall: uninstall-startup
-
-#
-# checking for "redhat" style sysv scripts:
-#
-
-if USE_REDHAT_SYSV
-
-sysvdir	= $(INIT_DIR)
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.redhat
-	cp -f rc.redhat $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-if USE_INIT_HOOKS
-	-chkconfig --add $(sysv_SCRIPTS)
-endif
-
-uninstall-startup:
-if USE_INIT_HOOKS
-	-chkconfig --del $(sysv_SCRIPTS)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
-endif
-
-endif
 
 #
 # checking for systemd scripts:
@@ -103,32 +73,6 @@ if USE_INIT_HOOKS
 	-systemctl disable $(service_DATA)
 	rm -f $(DESTDIR)$(servicedir)/netatalk.service
 	-systemctl daemon-reload
-endif
-
-endif
-
-#
-# checking for "SuSE" style sysv scripts:
-#
-
-if USE_SUSE_SYSV
-
-sysvdir	= $(INIT_DIR)
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.suse
-	cp -f rc.suse $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-if USE_INIT_HOOKS
-	-insserv $(sysv_SCRIPTS)
-endif
-
-uninstall-startup:
-if USE_INIT_HOOKS
-	-insserv -d $(sysv_SCRIPTS)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 endif
 
 endif
