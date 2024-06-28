@@ -562,13 +562,44 @@ endif
 crypto = dependency('libcrypto', required: false)
 libtls = dependency('libtls', required: false)
 
-if have_embedded_ssl or crypto.found()
+wolfssl = dependency('wolfssl', required: false)
+
+if wolfssl.found()
+    wolfssl_check = run_command(
+        find_program('cat', required: false),
+        wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h',
+        check: false,
+    ).stdout().strip()
+
+    if (
+        wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
+        and wolfssl_check.contains('WOLFSSL_DES_ECB')
+        and wolfssl_check.contains('OPENSSL_EXTRA')
+        and wolfssl_check.contains('OPENSSL_ALL')
+    )
+        have_wolfssl = true
+        have_embedded_ssl = false
+    else
+        have_wolfssl = false
+        message(
+            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM support'
+        )
+    endif
+else
+    have_wolfssl = false
+endif
+
+if have_wolfssl or have_embedded_ssl or crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
 endif
 
-if have_embedded_ssl
+if have_wolfssl
+    ssl_deps += wolfssl
+    ssl_provider += 'WolfSSL'
+    cdata.set('WOLFSSL_DHX', 1)
+elif have_embedded_ssl
     ssl_provider += 'built-in'
     cdata.set('EMBEDDED_SSL', 1)
 elif crypto.found()
@@ -582,7 +613,7 @@ elif crypto.found()
 else
     have_ssl = false
     warning(
-        'Either LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
+        'Built-in WolfSSL, LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
     )
 endif
 

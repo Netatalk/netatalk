@@ -29,7 +29,10 @@
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
-#if defined(EMBEDDED_SSL)
+#if defined(EMBEDDED_SSL) || defined(WOLFSSL_DHX)
+#if defined(WOLFSSL_DHX)
+#include <wolfssl/options.h>
+#endif
 #include <wolfssl/openssl/des.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/des.h>

@@ -84,20 +84,20 @@ Required:
 
 Optional:
 
-  - avahi or mDNSresponder  (for Zeroconf support)
-  - cracklib                (for cracklib support)
-  - cups                    (for CUPS support)
-  - Docbook XSL stylesheets (for manpages & manual documentation)
-  - Kerberos V              (for krbV UAM support)
-  - libacl                  (for ACL support)
-  - libldap                 (for LDAP support)
-  - libpam                  (for PAM support)
-  - libressl or OpenSSL@1.1 (for Randnum and DHX UAM support.
-                             Built-in SSL supportis also available)
-  - libtirpc / libquota     (for Quota support)
-  - perl                    (for various scripts)
-  - tcpwrap                 (for TCP wrapper support)
-  - xsltproc                (for manpages and mananual documentation)
+  - avahi or mDNSresponder           (for Zeroconf support)
+  - cracklib                         (for cracklib support)
+  - cups                             (for CUPS support)
+  - Docbook XSL stylesheets          (for manpages & manual documentation)
+  - Kerberos V                       (for krbV UAM support)
+  - libacl                           (for ACL support)
+  - libldap                          (for LDAP support)
+  - libpam                           (for PAM support)
+  - WolfSSL, libressl or OpenSSL@1.1 (for Randnum and DHX UAM support.
+                                      Built-in SSL support is also available)
+  - libtirpc / libquota              (for Quota support)
+  - perl                             (for various scripts)
+  - tcpwrap                          (for TCP wrapper support)
+  - xsltproc                         (for manpages and mananual documentation)
 
 More details about dependencies can be found in the documentation at
 https://netatalk.io/oldstable/htmldocs/installation

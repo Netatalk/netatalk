@@ -23,8 +23,10 @@
 #include <pam/pam_appl.h>
 #endif
 
-
-#if defined(EMBEDDED_SSL)
+#if defined(EMBEDDED_SSL) || defined(WOLFSSL_DHX)
+#if defined(WOLFSSL_DHX)
+#include <wolfssl/options.h>
+#endif
 #include <wolfssl/openssl/bn.h>
 #include <wolfssl/openssl/dh.h>
 #include <wolfssl/openssl/err.h>
