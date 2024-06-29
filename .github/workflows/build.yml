@@ -215,8 +215,8 @@ jobs:
             -Dwith-quota=true
       - name: Meson - Build
         run: meson compile -C build
-      - name: Meson - Tests
-        run: cd build && meson test
+      - name: Meson - Distribution Tests
+        run: cd build && meson dist
       - name: Meson - Install
         run: meson install -C build
       - name: Meson - Uninstall
