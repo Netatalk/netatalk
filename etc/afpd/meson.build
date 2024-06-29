@@ -54,28 +54,14 @@ if have_spotlight
 endif
 
 if have_afpstats
-    #    afpstatsservice = custom_target(
-    #        'afpstats_service_glue',
-    #        output: 'afpstats_service_glue.h',
-    #        input: 'afpstats-service.xml',
-    #        command: [
-    #            'dbus-binding-tool',
-    #            '--prefix=afpstats_obj',
-    #            '--mode=glib-server',
-    #            '--output=@OUTPUT@', '@INPUT@',
-    #        ],
-    #    )
     afpd_sources += [
         'afpstats_obj.c',
         'afpstats.c',
-        'afpstats_service_glue.h',
     ]
     afpd_external_deps += [
         dbus,
-        dbus_glib,
         glib,
     ]
-    afpd_c_args += '-DDBUS_COMPILATION'
 endif
 
 if have_acls

@@ -95,7 +95,7 @@ Optional:
   - avahi or mDNSresponder           (for Zeroconf support)
   - cracklib and cracklib dictionary (for password strength check in afppasswd)
   - Docbook XSL and xsltproc         (for manpages & manual documentation)
-  - GLib 2 and dbus-glib             (for afpstats support)
+  - GLib 2 and D-Bus                 (for afpstats support)
   - Kerberos V                       (for krbV UAM support)
   - libacl                           (for ACL support)
   - libldap                          (for LDAP support)

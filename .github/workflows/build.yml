@@ -43,7 +43,6 @@ env:
     libcups2-dev \
     libdb-dev \
     libdbus-1-dev \
-    libdbus-glib-1-dev \
     libevent-dev \
     libgcrypt-dev \
     libglib2.0-dev \
@@ -91,7 +90,6 @@ jobs:
             curl \
             db-dev \
             dbus-dev \
-            dbus-glib-dev \
             docbook-xsl \
             flex \
             gcc \
@@ -163,6 +161,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-afpstats=false \
             -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
@@ -228,7 +227,6 @@ jobs:
             cracklib-devel \
             cups-devel \
             dbus-devel \
-            dbus-glib-devel \
             docbook-style-xsl \
             flex \
             glib2-devel \
@@ -246,6 +244,7 @@ jobs:
             openssl-devel \
             pam-devel \
             perl \
+            perl-Net-DBus \
             quota-devel \
             systemd \
             systemtap-sdt-devel \
@@ -474,6 +473,7 @@ jobs:
               mysql84-client \
               nettle \
               openldap26-client-2.6.8 \
+              p5-Net-DBus \
               perl5 \
               pkgconf \
               talloc \
@@ -515,7 +515,6 @@ jobs:
               avahi \
               bison \
               db5 \
-              dbus-glib \
               docbook-xsl \
               flex \
               gcc13 \
@@ -567,8 +566,8 @@ jobs:
             pkg_add -I \
               avahi \
               bison \
-              dbus-glib \
               db-4.6.21p7v0 \
+              dbus \
               docbook-xsl \
               gcc-11.2.0p11 \
               libevent \
@@ -580,6 +579,7 @@ jobs:
               meson \
               openldap-client-2.6.7v0 \
               openpam \
+              p5-Net-DBus \
               pkgconf \
               tracker3 \
               wget
@@ -621,7 +621,6 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
               avahi \
-              dbus-glib \
               docbook-xsl \
               gnome-tracker \
               libevent \
@@ -680,6 +679,7 @@ jobs:
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-afpstats=false \
               -Dwith-appletalk=true \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-tests=true

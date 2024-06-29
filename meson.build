@@ -1192,21 +1192,25 @@ int main(void) {
 endif
 
 #
-# Check for dbus-glib, for AFP stats
+# Check for dbus and glib, for AFP stats
 #
 
 enable_afpstats = get_option('with-afpstats')
 
+
 dbus = dependency('dbus-1', required: false)
-dbus_glib = dependency('dbus-glib-1', required: false)
 glib = dependency('glib-2.0', required: false)
 
 if not enable_afpstats
     have_afpstats = false
 else
-    have_afpstats = dbus.found() and dbus_glib.found() and glib.found()
+    have_afpstats = dbus.found() and glib.found()
     if have_afpstats
         cdata.set('HAVE_DBUS_GLIB', 1)
+    else
+        warning(
+            'afpstats support requested but required GDBus libraries not found',
+        )
     endif
 endif
 
@@ -2270,7 +2274,7 @@ summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 
 summary_info = {
     '  ACL': have_acls,
-    '  AFP stats via dbus': have_afpstats,
+    '  AFP stats via D-Bus': have_afpstats,
     '  AppleTalk': have_appletalk,
     '  Cracklib': have_cracklib,
     '  CUPS': have_cups,
