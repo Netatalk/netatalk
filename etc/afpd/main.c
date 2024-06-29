@@ -351,7 +351,7 @@ int main(int ac, char **av)
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 #ifdef HAVE_DBUS_GLIB
-    /* Run dbus AFP statics thread */
+    /* Run dbus AFP statistics thread */
     if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS)
         (void)afpstats_init(server_children);
 #endif
