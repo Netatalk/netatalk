@@ -48,8 +48,8 @@
       <sect3>
         <title>Tarball</title>
 
-        <para>Netatalk のソースを tar で固めた .tar.xz および .tar.bz2 形式のものが <ulink
-        url="https://github.com/Netatalk/netatalk">GitHub の netatalk のページ</ulink>にある。</para>
+        <para>tar で固めた Netatalk 安定版ソースコードは <ulink
+        url="https://github.com/Netatalk/netatalk/releases">GitHub の Netatalk リリースページ</ulink>にある。</para>
       </sect3>
 
       <sect3>
