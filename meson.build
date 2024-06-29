@@ -1864,7 +1864,7 @@ sed_command = [
     '-e', 's@:LOCALSTATEDIR:@' + localstatedir + '@',
     '-e', 's@:ETCDIR:@' + pkgconfdir + '@',
     '-e', 's@:SBINDIR:@' + sbindir + '@',
-    '-e', 's@:NETATALK_VERSION:@' + version + '@',
+    '-e', 's@:NETATALK_VERSION:@' + netatalk_version + '@',
     '-e', 's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
     '-e', 's@:ZEROCONF:@' + freebsd_zeroconf_daemon + '@',
     '@INPUT@',
@@ -2090,7 +2090,7 @@ summary(summary_info, bool_yn: true, section: 'Compilation:')
 
 uams_using_options = '(' + uams_options + ')'
 
-summary({'Netatalk version': version}, section: 'Configuration Summary:')
+summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:')
 summary_info = {
     '  Initscript style': get_option('with-init-style'),
 }
