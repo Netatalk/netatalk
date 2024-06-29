@@ -1,3 +1,27 @@
+Changes in 2.4.1
+================
+* FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
+       GitHub #1159
+* UPD: meson: Enable building with system WolfSSL library, GitHub #1161
+       - Build system will attempt to detect
+       that all required headers and symbols are supported
+       - Falls back to the bundled WolfSSL library
+* UPD: meson: Restore SLP (srvloc) support, GitHub #1153
+* FIX: meson: with-rpath syntax is invalid, GitHub #1131
+* FIX: meson: Remove obsolete with-libtirpc option, GitHub #1129
+* FIX: meson: Fix version number substitution, GitHub #1150
+* UPD: autotools and meson: Use pkg-config to find libgcrypt, GitHub #1133
+       - This removes dependency on the now-obsolete libgcrypt-config
+* UPD: docker: Use guest auth only with INSECURE_AUTH flag, GitHub #1127
+* UPD: Debian Trixie expects systemd scripts in /usr/lib, GitHub #1136
+* FIX: Don't attempt to restart atalkd systemd service
+       if NBP registrations fail, GitHub #1141
+* FIX: Add copyright for mac_roman.h, GitHub #1138
+* FIX: Cleanup of copyright headers to make them scanner friendly, GitHub #1143
+* UPD: docs: Indicate license for software package,
+       and add SSLeay notice GitHub, #1126
+* FIX: docs: Rephrase tarball section of manual, GitHub #1165
+
 Changes in 2.4.0
 ================
 * BREAKING: Introduce the Meson build system, GitHub #776
