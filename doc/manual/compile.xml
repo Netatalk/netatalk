@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-06-22</pubdate>
+		<pubdate>2024-06-29</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -24,6 +24,8 @@
   acl-dev \
   autoconf \
   automake \
+  avahi-compat-libdns_sd \
+  avahi-dev \
   build-base \
   cracklib \
   cracklib-dev \
@@ -82,7 +84,7 @@
 				<screen>meson setup build \
   -Dwith-tests=true \
   -Dwith-init-style=openrc \
-  -Dwith-libtirpc=true
+  -Dwith-quota=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -194,6 +196,7 @@ libssl-dev \
 libtirpc-dev \
 libtool \
 libtool-bin \
+libwolfssl-dev \
 libwrap0-dev \
 meson \
 ninja-build \
@@ -239,7 +242,7 @@ xsltproc
 				<screen>meson setup build \
   -Dwith-tests=true \
   -Dwith-init-style=debian-sysv \
-  -Dwith-libtirpc=true
+  -Dwith-quota=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -293,7 +296,7 @@ xsltproc
   --enable-pgp-uam \
   --enable-quota \
   --enable-redhat \
-  --enable-libtirpc \
+  --with-libtirpc \
   --with-cracklib=/usr/share/cracklib
 </screen>
 			</para>
@@ -317,7 +320,7 @@ xsltproc
 			<para>
 				<screen>meson setup build \
   -Dwith-tests=true \
-  -Dwith-libtirpc=true \
+  -Dwith-quota=true \
   -Dwith-init-style=redhat-sysv
 </screen>
 			</para>
@@ -448,6 +451,7 @@ libssl-dev \
 libtirpc-dev \
 libtool \
 libtool-bin \
+libwolfssl-dev \
 libwrap0-dev \
 meson \
 ninja-build \
@@ -511,7 +515,7 @@ xsltproc
   -Dwith-manual=true \
   -Dwith-init-hooks=false \
   -Dwith-init-style=systemd \
-  -Dwith-libtirpc=true
+  -Dwith-quota=true
 </screen>
 			</para>
 			<para>Meson - Build and generate man pages</para>
@@ -726,14 +730,12 @@ ninja -C build uninstall
 echo "Building with Autotools"
 ./bootstrap
 ./configure \
+  MAKE=gmake \
+  PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig \
   --enable-krbV-uam \
   --enable-netbsd \
-  --enable-pgp-uam \
-  --with-bdb=/usr/pkg \
-  --with-libgcrypt-dir=/usr/pkg \
-  MAKE=gmake \
-  PKG_CONFIG_PATH=/usr/pkg/lib/pkgconfig
-gmake -j2 all
+  --enable-pgp-uam
+gmake -j $(nproc)
 gmake install
 service afpd onestart
 sleep 2
@@ -821,19 +823,17 @@ pkgin -y install \
 			<para>
 				<screen>set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
 echo "Building with Autotools"
 ./bootstrap
 ./configure \
   --disable-install-privileged \
   --enable-pgp-uam \
   --with-bdb=/opt/local \
-  --with-ldap=no \
-  --with-libgcrypt-dir=/opt/local
-  MAKE=gmake \
-  PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
-gmake -j $(nproc)
-gmake install
-gmake uninstall
+  --without-ldap
+make -j $(nproc)
+make install
+make uninstall
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
