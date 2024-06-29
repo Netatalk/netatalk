@@ -1,3 +1,56 @@
+Changes in 3.2.1
+================
+* FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
+       GitHub #1158
+* BREAKING: meson: Rework option semantics and feature macros, GitHub #1099
+       - Made syntax of the build options to make them user-friendly
+       - Standardises the syntax of the feature macros
+       - Fixes the logic of the largefile support macro
+       - Disables gssapi support if the Kerberos V UAM is not required
+       - All options are now defined either as `with-*' or `with-*-path'
+       - Please see the Release Notes for a full list of changed options
+* UPD: meson: Enable building with system WolfSSL library, GitHub #1160
+       - Build system will attempt to detect
+       that all required headers and symbols are supported
+       - Falls back to the bundled WolfSSL library
+* FIX: meson: Fix -Doption paths on systems
+       where rpath is enabled by default, GitHub #1053
+* FIX: meson: Fix library search macro on OmniOS hosts, GitHub #1056
+* FIX: meson: Fix rules for installing scripts, GitHub #1070
+       - Install afpstats only when Perl is detected
+       - Don't install scripts only used by netatalk developers
+* FIX: meson: set setuid bit to allow user afppasswd changing, GitHub #1071
+* FIX: meson: Fix logic of libiconv detection macro, GitHub #1075
+* FIX: meson: Address various issues with the meson build system, GitHub #1082
+       - Enables quota support on all flavours of linux and BSD, plus macOS
+       - Adds the quota provider to the configuration summary
+       - Adds a user option to disable LDAP support
+       - Sets dependencies according to user configuration
+       - Improves the syntax of the ACL macro
+* FIX: meson: Further refinements to meson build system, GitHub #1086
+       - Adds user options to disable cracklib and GSSAPI support
+       - Automates Berkeley DB library detection on macOS
+* FIX: meson: Fix issues with quota support on linux and macOS, GitHub #1092
+       - Enables quota support on macOS hosts
+       - Restores missing configuration option for linux hosts
+       - Removes obsolete quota configuration data for linux and macOS hosts
+* FIX: meson: Set executable flags when installing scripts, GitHub #1117
+* UPD: autotools and meson: Use pkg-config to find libgcrypt, GitHub #1132
+       - This removes dependency on the now-obsolete libgcrypt-config
+* FIX: Use portable linux macro in etc/afpd header, GitHub #1083
+* UPD: Debian Trixie expects systemd scripts in /usr/lib, GitHub #1135
+* UPD: Add copyright for mac_roman.h, GitHub #1137
+* FIX: Cleanup of copyright headers to make them scanner friendly, GitHub #1142
+* FIX: Remove unused atalk/talloc.h header, GitHub #1154
+* FIX: docker: Don't bail out when password is longer than 8 chars, GitHub #1067
+* UPD: docker: Bump to Alpine 3.20 base image, GitHub #1111
+* FIX: docker: Rework AFP user's GROUP and GID settings, GitHub #1116
+       - GID now requires GROUP to be set, and applies to that group
+         rather than that of the user.
+* UPD: docs: Indicate license for software package,
+       and add SSLeay notice, GitHub #1125
+* FIX: docs: Rephrase tarball section of manual, GitHub #1164
+
 Changes in 3.2.0
 ================
 * NEW: BREAKING: Introduce the Meson build system, GitHub #707
