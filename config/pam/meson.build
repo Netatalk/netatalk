@@ -5,10 +5,10 @@ netatalk_pamd = configure_file(
 )
 
 if (
-    not fs.exists(pampath / 'netatalk')
+    not fs.exists(pam_confdir / 'netatalk')
     or (get_option('with-overwrite') and fs.exists(pampath / 'netatalk'))
 )
-    install_data(netatalk_pamd, install_dir: pampath)
+    install_data(netatalk_pamd, install_dir: pam_confdir)
 else
     message('not overwriting', file)
 endif
