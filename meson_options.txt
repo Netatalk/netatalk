@@ -238,6 +238,12 @@ option(
     description: 'Set path to PAM installation',
 )
 option(
+    'with-pam-config-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to PAM config directory',
+)
+option(
     'with-srvloc-path',
     type: 'string',
     value: '',
