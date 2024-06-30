@@ -4,4 +4,4 @@ netatalk_pamd = configure_file(
     configuration: cdata,
 )
 
-install_data(netatalk_pamd, install_dir: pampath)
+install_data(netatalk_pamd, install_dir: pam_confdir)

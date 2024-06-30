@@ -262,6 +262,12 @@ option(
     description: 'Set path to PAM installation. Must contain lib and include dirs',
 )
 option(
+    'with-pam-config-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to PAM config directory',
+)
+option(
     'with-tracker-install-prefix',
     type: 'string',
     value: '',
