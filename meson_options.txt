@@ -166,6 +166,12 @@ option(
     description: 'Enable SLP (srvloc) support',
 )
 option(
+    'with-ssl-override',
+    type: 'boolean',
+    value: false,
+    description: 'Force built-in WolfSSL as SSL provider',
+)
+option(
     'with-tcp-wrappers',
     type: 'boolean',
     value: true,
