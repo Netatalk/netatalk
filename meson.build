@@ -542,7 +542,7 @@ if wolfssl.found()
     else
         have_wolfssl = false
         message(
-            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM support'
+            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM support',
         )
     endif
 else
@@ -739,7 +739,8 @@ zeroconf_provider = ''
 freebsd_zeroconf_daemon = ''
 
 have_dns = (
-    (dns_sd.found() or system.found()) and cc.has_header('dns_sd.h')
+    (dns_sd.found() or system.found())
+    and cc.has_header('dns_sd.h')
     and cc.has_function(
         'DNSServiceRegister',
         dependencies: dns_sd_libs,
@@ -1563,51 +1564,55 @@ endif
 
 enable_pam = get_option('with-pam')
 pam_path = get_option('with-pam-path')
+pam_conf_path = get_option('with-pam-config-path')
 
 pam_dir = ''
+pam_confdir = ''
 pam_includes = []
 pam_link_args = []
 uams_options = ''
-pam_paths = [
-    '/',
-    '/usr',
-    '/usr/local',
-]
-
-foreach path : pam_paths
-    if fs.is_dir(path / 'etc/pam.d')
-        pam_dir += path
-    endif
-    break
-endforeach
-
-if pam_dir == '' and host_os == 'sunos'
-    warning(
-        'PAM installation file = /etc/pam.conf. Please edit this file to enable PAM support',
-    )
-endif
-
-if pam_path != '' and pam_dir != '/'
-    pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
-    if enable_rpath
-        pam_link_args += ['-R' + pam_path / 'lib']
-    endif
-    pam = declare_dependency(
-        link_args: pam_link_args,
-        include_directories: include_directories(pam_path / 'include'),
-    )
-else
-    pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
-endif
 
 if not enable_pam
     have_pam = false
 else
+    if host_os != 'sunos'
+        pam_paths = [
+            '/',
+            '/usr',
+            '/usr/local',
+        ]
+
+        foreach path : pam_paths
+            if fs.is_dir(path / 'etc/pam.d')
+                pam_dir += path
+            endif
+            break
+        endforeach
+    else
+        warning(
+            'PAM installation file = /etc/pam.conf. Please edit this file to enable PAM support',
+        )
+    endif
+
+    if pam_path != '' and pam_dir != '/'
+        pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
+        if enable_rpath
+            pam_link_args += ['-R' + pam_path / 'lib']
+        endif
+        pam = declare_dependency(
+            link_args: pam_link_args,
+            include_directories: include_directories(pam_path / 'include'),
+        )
+    else
+        pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
+    endif
+
     have_pam = (
         cc.has_header('security/pam_appl.h')
         or cc.has_header('pam/pam_appl.h')
         or cc.has_function('pam_set_item', dependencies: pam)
     )
+
     if have_pam
         cdata.set('USE_PAM', 1)
         uams_options += 'PAM'
@@ -1618,9 +1623,9 @@ else
             cdata.set('PAM_AUTH', 'common-auth')
             cdata.set('PAM_ACCOUNT', 'common-account')
             cdata.set('PAM_PASSWORD', 'common-password')
-            if fs.exists(pam_dir / 'common-session-noninteractive')
+            if fs.exists(pampath / 'common-session-noninteractive')
                 cdata.set('PAM_SESSION', 'common-session-noninteractive')
-            elif fs.exists(pam_dir / 'common-session-nonlogin')
+            elif fs.exists(pampath / 'common-session-nonlogin')
                 cdata.set('PAM_SESSION', 'common-session-nonlogin')
             else
                 cdata.set('PAM_SESSION', 'common-session')
@@ -1671,6 +1676,12 @@ else
         have_pam = false
         warning('PAM support requested but required library not found')
     endif
+endif
+
+if pam_conf_path != ''
+    pam_confdir += pam_conf_path
+else
+    pam_confdir += prefix / 'etc/pam.d'
 endif
 
 #
@@ -2156,6 +2167,7 @@ summary_info = {
     '  dbus system directory': dbus_sysconf_path,
     '  init directory': init_dir,
     '  Netatalk lockfile': lockfile,
+    '  PAM config directory': pam_confdir,
 }
 if have_spotlight
     summary_info += {
