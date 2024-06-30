@@ -1149,12 +1149,16 @@ endif
 #
 
 dbus_daemon_path = get_option('with-dbus-daemon-path')
+dbus_daemonpath = ''
 
 if dbus_daemon_path != ''
+    dbus_daemonpath += dbus_daemon_path
     cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemon_path + '"')
 elif host_os == 'darwin'
+    dbus_daemonpath += bindir / 'dbus-daemon'
     cdata.set('DBUS_DAEMON_PATH', '"' + bindir / 'dbus-daemon' + '"')
 else
+    dbus_daemonpath += '/bin/dbus-daemon'
     cdata.set('DBUS_DAEMON_PATH', '"/bin/dbus-daemon"')
 endif
 
@@ -1163,13 +1167,14 @@ endif
 #
 
 dbus_sysconf_path = get_option('with-dbus-sysconf-path')
+dbus_sysconfpath = ''
 
 if dbus_sysconf_path != ''
+    dbus_sysconfpath += dbus_sysconf_path
     cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
-elif host_os == 'darwin'
-    cdata.set('DBUS_SYS_DIR', '"' + pkgconfdir + '/dbus-1/system.d' + '"')
 else
-    cdata.set('DBUS_SYS_DIR', '"/etc/dbus-1/system.d"')
+    dbus_sysconfpath += pkgconfdir / 'dbus-1/system.d'
+    cdata.set('DBUS_SYS_DIR', '"' + pkgconfdir + '/dbus-1/system.d' + '"')
 endif
 
 #
@@ -2152,8 +2157,8 @@ endif
 summary(summary_info, bool_yn: true, section: '  Options:')
 
 summary_info = {
-    '  dbus daemon path': dbus_daemon_path,
-    '  dbus system directory': dbus_sysconf_path,
+    '  dbus daemon path': dbus_daemonpath,
+    '  dbus system directory': dbus_sysconfpath,
     '  init directory': init_dir,
     '  Netatalk lockfile': lockfile,
 }
