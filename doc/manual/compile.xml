@@ -282,7 +282,8 @@ xsltproc
   ninja-build \
   openldap-devel \
   openssl-devel \
-  quota-devel
+  quota-devel \
+  systemd
 </screen>
 			</para>
 			<para>Autotools - Bootstrap</para>
@@ -321,7 +322,7 @@ xsltproc
 				<screen>meson setup build \
   -Dwith-tests=true \
   -Dwith-quota=true \
-  -Dwith-init-style=redhat-sysv
+  -Dwith-init-style=redhat-systemd
 </screen>
 			</para>
 			<para>Meson - Build</para>

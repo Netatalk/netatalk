@@ -32,9 +32,7 @@ GENERATED_FILES = \
 	rc.debian		\
 	rc.openrc		\
 	rc.papd.netbsd		\
-	rc.redhat		\
 	rc.solaris		\
-	rc.suse			\
 	rc.timelord.netbsd	\
 	timelord.service
 
@@ -53,9 +51,7 @@ TEMPLATES = \
 	rc.debian.tmpl			\
 	rc.openrc.tmpl			\
 	rc.papd.netbsd.tmpl		\
-	rc.redhat.tmpl			\
 	rc.solaris.tmpl			\
-	rc.suse.tmpl			\
 	rc.timelord.netbsd.tmpl		\
 	timelord.service.tmpl
 
@@ -67,32 +63,6 @@ EXTRA_DIST = $(TEMPLATES)
 # tools, like chkconfig, insserv or rc-update
 
 uninstall: uninstall-startup
-
-#
-# checking for Red Hat style sysv scripts:
-#
-
-if USE_REDHAT
-
-sysvdir	= /etc/rc.d/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.redhat
-	cp -f rc.redhat $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-if USE_INSTALL_PRIVILEGED
-	-chkconfig --add $(sysv_SCRIPTS)
-endif
-
-uninstall-startup:
-if USE_INSTALL_PRIVILEGED
-	-chkconfig --del $(sysv_SCRIPTS)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
-endif
-
-endif
 
 #
 # checking for general systemd scripts:
@@ -113,32 +83,6 @@ if USE_INSTALL_PRIVILEGED
 	-systemctl disable $(service_DATA)
 	rm -f $(DESTDIR)$(servicedir)/{a2boot,afpd,atalkd,cnid,papd,timelord}.service
 	-systemctl daemon-reload
-endif
-
-endif
-
-#
-# checking for SUSE style sysv scripts:
-#
-
-if USE_SUSE
-
-sysvdir	= /etc/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.suse
-	cp -f rc.suse $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-if USE_INSTALL_PRIVILEGED
-	-insserv $(sysv_SCRIPTS)
-endif
-
-uninstall-startup:
-if USE_INSTALL_PRIVILEGED
-	-insserv -d $(sysv_SCRIPTS)
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 endif
 
 endif

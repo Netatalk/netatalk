@@ -318,41 +318,9 @@ AC_ARG_ENABLE(locking,
 
 )
 
-AC_ARG_ENABLE(redhat,
-	[  --enable-redhat         use redhat-style sysv (upstart) configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=redhat
-	fi
-	AC_MSG_RESULT([enabling redhat-style sysv support])
-	]
-)
-
-AC_ARG_ENABLE(redhat-sysv,
-	[  --enable-redhat-sysv    obsoleted ],[
-	echo "ERROR: --enable-redhat-sysv is obsoleted. Use --enable-redhat."
-	exit 1
-	]
-)
-
 AC_ARG_ENABLE(redhat-systemd,
 	[  --enable-redhat-systemd obsoleted ],[
 	echo "ERROR: --enable-redhat-systemd is obsoleted. Use --enable-systemd."
-	exit 1
-	]
-)
-
-AC_ARG_ENABLE(suse,
-	[  --enable-suse           use suse-style sysv configuration ],[
-	if test "$enableval" = "yes"; then
-		sysv_style=suse
-	fi
-	AC_MSG_RESULT([enabling suse-style sysv support])
-	]
-)
-
-AC_ARG_ENABLE(suse-sysv,
-	[  --enable-suse-sysv      obsoleted ],[
-	echo "ERROR: --enable-suse-sysv is obsoleted. Use --enable-suse."
 	exit 1
 	]
 )

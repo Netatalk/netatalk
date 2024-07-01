@@ -247,7 +247,8 @@ jobs:
             ninja-build \
             openldap-devel \
             openssl-devel \
-            quota-devel
+            quota-devel \
+            systemd
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
@@ -256,7 +257,7 @@ jobs:
             --enable-krbV-uam \
             --enable-pgp-uam \
             --enable-quota \
-            --enable-redhat \
+            --enable-systemd \
             --with-libtirpc \
             --with-cracklib=/usr/share/cracklib
       - name: Autotools - Build
@@ -270,9 +271,10 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=redhat-systemd \
             -Dwith-quota=true \
-            -Dwith-init-style=redhat-sysv
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Tests

@@ -54,42 +54,6 @@ elif get_option('with-init-style') == 'debian-sysv'
             '10',
         )
     endif
-elif get_option('with-init-style') == 'redhat-sysv'
-    init_dir += '/etc/rc.d/init.d'
-    custom_target(
-        'redhat',
-        input: 'rc.redhat.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('chkconfig'),
-            '--add', '/etc/rc.d/init.d/netatalk',
-        )
-    endif
-elif get_option('with-init-style') == 'suse-sysv'
-    init_dir += '/etc/init.d'
-    custom_target(
-        'suse_sysv',
-        input: 'rc.suse.tmpl',
-        output: 'netatalk',
-        command: sed_command,
-        capture: true,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('insserv'),
-            '/etc/init.d/netatalk',
-        )
-    endif
 elif get_option('with-init-style') == 'netbsd'
     init_dir += '/etc/rc.d'
     rc_scripts = [
