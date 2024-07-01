@@ -1,7 +1,7 @@
 project(
     'netatalk',
     'c',
-    version: '2.4.1dev',
+    version: '2.4.2dev',
     license: 'GPLv2',
     default_options: ['warning_level=3', 'c_std=c11'],
     meson_version: '>=0.61.2',
@@ -548,6 +548,7 @@ message('BDB version: ', bdb_version)
 #
 
 have_embedded_ssl = get_option('with-embedded-ssl')
+force_embedded_ssl = get_option('with-ssl-override')
 
 ssl_deps = []
 ssl_link_args = []
@@ -562,13 +563,49 @@ endif
 crypto = dependency('libcrypto', required: false)
 libtls = dependency('libtls', required: false)
 
-if have_embedded_ssl or crypto.found()
+wolfssl = dependency('wolfssl', required: false)
+
+if wolfssl.found()
+    wolfssl_check = run_command(
+        find_program('cat', required: false),
+        wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h',
+        check: false,
+    ).stdout().strip()
+
+    if (
+        wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
+        and wolfssl_check.contains('WOLFSSL_DES_ECB')
+        and wolfssl_check.contains('OPENSSL_EXTRA')
+        and wolfssl_check.contains('OPENSSL_ALL')
+    )
+        have_wolfssl = true
+        have_embedded_ssl = false
+    else
+        have_wolfssl = false
+        message(
+            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM support'
+        )
+    endif
+else
+    have_wolfssl = false
+endif
+
+if have_wolfssl or have_embedded_ssl or crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
 endif
 
-if have_embedded_ssl
+if have_wolfssl
+    if force_embedded_ssl
+        ssl_provider += 'built-in'
+        cdata.set('EMBEDDED_SSL', 1)
+    else
+        ssl_deps += wolfssl
+        ssl_provider += 'WolfSSL'
+        cdata.set('WOLFSSL_DHX', 1)
+    endif
+elif have_embedded_ssl
     ssl_provider += 'built-in'
     cdata.set('EMBEDDED_SSL', 1)
 elif crypto.found()
@@ -582,7 +619,7 @@ elif crypto.found()
 else
     have_ssl = false
     warning(
-        'Either LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
+        'Built-in WolfSSL, LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
     )
 endif
 
@@ -1348,51 +1385,55 @@ endif
 
 enable_pam = get_option('with-pam')
 pam_path = get_option('with-pam-path')
+pam_conf_path = get_option('with-pam-config-path')
 
 pam_dir = ''
+pam_confdir = ''
 pam_includes = []
 pam_link_args = []
 uams_options = ''
-pam_paths = [
-    '/',
-    '/usr',
-    '/usr/local',
-]
-
-foreach path : pam_paths
-    if fs.is_dir(path / 'etc/pam.d')
-        pam_dir += path
-    endif
-    break
-endforeach
-
-if pam_dir == '' and host_os == 'sunos'
-    warning(
-        'PAM installation file = /etc/pam.conf. Please edit this file to enable PAM support',
-    )
-endif
-
-if pam_path != '' and pam_dir != '/'
-    pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
-    if enable_rpath
-        pam_link_args += ['-R' + pam_path / 'lib']
-    endif
-    pam = declare_dependency(
-        link_args: pam_link_args,
-        include_directories: include_directories(pam_path / 'include'),
-    )
-else
-    pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
-endif
 
 if not enable_pam
     have_pam = false
 else
+    if host_os != 'sunos'
+        pam_paths = [
+            '/',
+            '/usr',
+            '/usr/local',
+        ]
+
+        foreach path : pam_paths
+            if fs.is_dir(path / 'etc/pam.d')
+                pam_dir += path
+            endif
+            break
+        endforeach
+    else
+        warning(
+            'PAM installation file = /etc/pam.conf. Please edit this file to enable PAM support',
+        )
+    endif
+
+    if pam_path != '' and pam_dir != '/'
+        pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
+        if enable_rpath
+            pam_link_args += ['-R' + pam_path / 'lib']
+        endif
+        pam = declare_dependency(
+            link_args: pam_link_args,
+            include_directories: include_directories(pam_path / 'include'),
+        )
+    else
+        pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
+    endif
+
     have_pam = (
         cc.has_header('security/pam_appl.h')
         or cc.has_header('pam/pam_appl.h')
         or cc.has_function('pam_set_item', dependencies: pam)
     )
+
     if have_pam
         cdata.set('USE_PAM', 1)
         uams_options += 'PAM'
@@ -1403,9 +1444,9 @@ else
             cdata.set('PAM_AUTH', 'common-auth')
             cdata.set('PAM_ACCOUNT', 'common-account')
             cdata.set('PAM_PASSWORD', 'common-password')
-            if fs.exists(pam_dir / 'common-session-noninteractive')
+            if fs.exists(pampath / 'common-session-noninteractive')
                 cdata.set('PAM_SESSION', 'common-session-noninteractive')
-            elif fs.exists(pam_dir / 'common-session-nonlogin')
+            elif fs.exists(pampath / 'common-session-nonlogin')
                 cdata.set('PAM_SESSION', 'common-session-nonlogin')
             else
                 cdata.set('PAM_SESSION', 'common-session')
@@ -1456,6 +1497,12 @@ else
         have_pam = false
         warning('PAM support requested but required library not found')
     endif
+endif
+
+if pam_conf_path != ''
+    pam_confdir += pam_conf_path
+else
+    pam_confdir += prefix / 'etc/pam.d'
 endif
 
 #
@@ -1684,6 +1731,37 @@ if host_os == 'linux'
 endif
 
 #
+# Check for optional server location protocol support (used by Classic Mac OS and Mac OS X to 10.1)
+#
+
+enable_srvloc = get_option('with-srvloc')
+srvloc_path = get_option('with-srvloc-path')
+
+srvloc_link_args = []
+
+if srvloc_path != ''
+    srvloc_link_args += ['-L' + srvloc_path / 'lib', '-lslp']
+    slp = declare_dependency(
+        link_args: srvloc_link_args,
+        include_directories: include_directories(srvloc_path / 'include'),
+    )
+else
+    slp = cc.find_library( 'slp', required: false)
+endif
+
+if not enable_srvloc
+    have_srvloc = false
+else
+    have_srvloc = cc.has_function('SLPOpen', dependencies: slp)
+    if have_srvloc
+        cdata.set('USE_SRVLOC', 1)
+    else
+        have_srvloc = false
+        warning('SLP support requested but slp library not found')
+    endif
+endif
+
+#
 # OS-specific configuration
 #
 
@@ -1870,6 +1948,7 @@ if have_quota
     }
 endif
 summary_info += {
+    '  SLP (srvloc) support': have_srvloc,
     '  SSL provider': ssl_provider,
     '  TCP wrapper support': have_tcpwrap,
     '  valid shell check': valid_shellcheck,

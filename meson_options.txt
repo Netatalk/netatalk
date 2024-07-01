@@ -160,6 +160,18 @@ option(
     description: 'Set path for spooldir used for CUPS support',
 )
 option(
+    'with-srvloc',
+    type: 'boolean',
+    value: true,
+    description: 'Enable SLP (srvloc) support',
+)
+option(
+    'with-ssl-override',
+    type: 'boolean',
+    value: false,
+    description: 'Force built-in WolfSSL as SSL provider',
+)
+option(
     'with-tcp-wrappers',
     type: 'boolean',
     value: true,
@@ -230,6 +242,18 @@ option(
     type: 'string',
     value: '',
     description: 'Set path to PAM installation',
+)
+option(
+    'with-pam-config-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to PAM config directory',
+)
+option(
+    'with-srvloc-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to SLP (srvloc) installation',
 )
 option(
     'with-uams-path',

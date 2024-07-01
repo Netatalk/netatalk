@@ -71,6 +71,10 @@ if have_dns
     afpd_external_deps += dns_sd
 endif
 
+if have_srvloc
+    afpd_external_deps += slp
+endif
+
 executable(
     'afpd',
     afpd_sources,
