@@ -274,7 +274,6 @@ int getmetadata(const AFPObj *obj,
 {
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
-    char		*ade = NULL;
     int			bit = 0;
     uint32_t		aint;
     cnid_t              id = 0;
@@ -475,8 +474,8 @@ int getmetadata(const AFPObj *obj,
                 data += sizeof( aint );
             }
             else {
-                if ( adp && (ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
-                    memcpy(fdType, ade, 4);
+                if ( adp && ad_entry(adp, ADEID_FINDERI)) {
+                    memcpy(fdType, ad_entry( adp, ADEID_FINDERI ), 4 );
 
                     if ( memcmp( fdType, "TEXT", 4 ) == 0 ) {
                         achar = '\x04';
@@ -555,17 +554,8 @@ int getmetadata(const AFPObj *obj,
                10.3 clients freak out. */
 
     	    aint = st->st_mode;
-            /*
-             * ad_open() does not initialize adouble header
-             * for symlinks. Hence this should be skipped to
-             * avoid AFP_ASSERT here. Decision was made to
-             * not alter ad_open() behavior so that
-             * improper ops on symlink adoubles will be
-             * more visible (assert).
-             */
-            if (adp && (ad_meta_fileno(adp) != AD_SYMLINK)
-                && (ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
-	        memcpy(fdType, ade, 4);
+ 	    if (adp && ad_entry(adp, ADEID_FINDERI)) {
+	        memcpy(fdType, ad_entry( adp, ADEID_FINDERI ), 4 );
                 if ( memcmp( fdType, "slnk", 4 ) == 0 ) {
 	 	    aint |= S_IFLNK;
             	}
@@ -1046,13 +1036,12 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             if (isad == 0) {
                 break;
             }
-            ade = ad_entry(adp, ADEID_FINDERI);
-            if (ade == NULL) {
+            if (!ad_entry(adp, ADEID_FINDERI)) {
                 LOG(log_debug, logtype_afpd, "setfilparams(\"%s\"): invalid FinderInfo", path->u_name);
                 break;
             }
-            if (default_type(ade)
-                    && (
+            if (default_type( ad_entry( adp, ADEID_FINDERI ))
+                    && ( 
                      ((em = getextmap( path->m_name )) &&
                       !memcmp(finder_buf, em->em_type, sizeof( em->em_type )) &&
                       !memcmp(finder_buf + 4, em->em_creator,sizeof( em->em_creator)))
@@ -1062,7 +1051,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             )) {
                 memcpy(finder_buf, ufinderi, 8 );
             }
-            memcpy(ade, finder_buf, 32 );
+            memcpy(ad_entry( adp, ADEID_FINDERI ), finder_buf, 32 );
             break;
         case FILPBIT_UNIXPR :
             if (upriv_bit) {
@@ -1074,9 +1063,9 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 break;
             }
             if (obj->afp_version < 30) { /* else it's UTF8 name */
-                if ((ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
-                    memcpy(ade, fdType, 4 );
-                    memcpy(ade + 4, "pdos", 4 );
+                if (ad_entry(adp, ADEID_FINDERI)) {
+                    memcpy(ad_entry( adp, ADEID_FINDERI ), fdType, 4 );
+                    memcpy(ad_entry( adp, ADEID_FINDERI ) + 4, "pdos", 4 );
                 }
                 break;
             }
