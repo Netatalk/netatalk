@@ -210,7 +210,7 @@ option(
 option(
     'with-dbus-sysconf-path',
     type: 'string',
-    value: '/etc/dbus-1/system.d',
+    value: '',
     description: 'Set path to D-Bus system bus security configuration directory',
 )
 option(
