@@ -495,6 +495,7 @@ message('BDB version: ', bdb_version)
 #
 
 have_embedded_ssl = get_option('with-embedded-ssl')
+force_embedded_ssl = get_option('with-ssl-override')
 
 ssl_deps = []
 ssl_link_args = []
@@ -556,9 +557,14 @@ if have_wolfssl or have_embedded_ssl or crypto.found()
 endif
 
 if have_wolfssl
-    ssl_deps += wolfssl
-    ssl_provider += 'WolfSSL'
-    cdata.set('WOLFSSL_DHX', 1)
+    if force_embedded_ssl
+        ssl_provider += 'built-in'
+        cdata.set('EMBEDDED_SSL', 1)
+    else
+        ssl_deps += wolfssl
+        ssl_provider += 'WolfSSL'
+        cdata.set('WOLFSSL_DHX', 1)
+    endif
 elif have_embedded_ssl
     ssl_provider += 'built-in'
     cdata.set('EMBEDDED_SSL', 1)
