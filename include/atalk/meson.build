@@ -3,7 +3,6 @@ headers = [
     'adouble.h',
     'afp.h',
     'bstrlib.h',
-    'cast.h',
     'cnid.h',
     'dictionary.h',
     'ea.h',

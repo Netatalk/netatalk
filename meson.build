@@ -550,7 +550,7 @@ else
     have_wolfssl = false
 endif
 
-if have_wolfssl or have_embedded_ssl or crypto.found()
+if ((have_wolfssl or have_embedded_ssl) and crypto.found()) or crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
@@ -558,14 +558,16 @@ endif
 
 if have_wolfssl
     if force_embedded_ssl
+        ssl_deps += crypto
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)
     else
-        ssl_deps += wolfssl
+        ssl_deps += [crypto, wolfssl]
         ssl_provider += 'WolfSSL'
         cdata.set('WOLFSSL_DHX', 1)
     endif
 elif have_embedded_ssl
+    ssl_deps += crypto
     ssl_provider += 'built-in'
     cdata.set('EMBEDDED_SSL', 1)
 elif crypto.found()
