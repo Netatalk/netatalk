@@ -26,6 +26,8 @@ ENV BUILD_DEPS \
     meson \
     ninja \
     openldap-dev \
+    openssl \
+    openssl-dev \
     pkgconfig \
     rpcsvc-proto-dev
 

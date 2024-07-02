@@ -5,7 +5,6 @@ headers = [
     'afp.h',
     'asp.h',
     'atp.h',
-    'cast.h',
     'cnid.h',
     'compat.h',
     'ddp.h',

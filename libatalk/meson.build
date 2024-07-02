@@ -34,9 +34,8 @@ if have_ddp
 endif
 
 if have_embedded_ssl
-    subdir('cast')
     subdir('ssl')
-    libatalk_libs += [libcast, libssl]
+    libatalk_libs += libssl
 endif
 
 libatalk = both_libraries(

@@ -26,11 +26,11 @@
 #if defined(WOLFSSL_DHX)
 #include <wolfssl/options.h>
 #endif
+#include <openssl/cast.h>
 #include <wolfssl/openssl/bn.h>
 #include <wolfssl/openssl/dh.h>
 #include <wolfssl/openssl/err.h>
 #include <wolfssl/openssl/ssl.h>
-#include <atalk/cast.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
