@@ -22,9 +22,8 @@ if have_threads
 endif
 
 if have_embedded_ssl
-    subdir('cast')
     subdir('ssl')
-    libatalk_libs += [libcast, libssl]
+    libatalk_libs += libssl
 endif
 
 if have_spotlight
