@@ -482,34 +482,14 @@ endif
 #
 
 have_embedded_ssl = get_option('with-embedded-ssl')
-force_embedded_ssl = get_option('with-ssl-override')
+have_ssl_override = get_option('with-ssl-override')
 
 ssl_deps = []
 ssl_link_args = []
 ssl_provider = ''
 
-crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
-if crypt.found()
-    cdata.set('HAVE_CRYPT_H', 1)
-    cdata.set('HAVE_LIBCRYPT', 1)
-endif
-
-des = cc.find_library('des', required: false)
-if des.found()
-    cdata.set('HAVE_LIBDES', 1)
-endif
-
-crypto = dependency('libcrypto', required: false)
-libtls = dependency('libtls', required: false)
-
-if enable_rpath and crypto.found()
-    ssl_link_args += ['-R' / crypto.get_variable(pkgconfig: 'libdir')]
-    if enable_dtags
-        ssl_link_args += '-Wl,--enable-new-dtags'
-    endif
-endif
-
 wolfssl = dependency('wolfssl', required: false)
+nettle = dependency('nettle', required: false)
 
 if wolfssl.found()
     wolfssl_check = run_command(
@@ -525,7 +505,6 @@ if wolfssl.found()
         and wolfssl_check.contains('OPENSSL_ALL')
     )
         have_wolfssl = true
-        have_embedded_ssl = false
     else
         have_wolfssl = false
         message(
@@ -536,39 +515,39 @@ else
     have_wolfssl = false
 endif
 
-if ((have_wolfssl or have_embedded_ssl) and crypto.found()) or crypto.found()
+if (have_ssl_override or have_wolfssl or have_embedded_ssl) and nettle.found()
     have_ssl = true
-    cdata.set('HAVE_LIBCRYPTO', 1)
+    if enable_dtags
+        ssl_link_args += '-Wl,--enable-new-dtags'
+    endif
+    if enable_rpath
+        ssl_link_args += ['-R' / nettle.get_variable(pkgconfig: 'libdir')]
+    endif
     cdata.set('UAM_DHX', 1)
-endif
-
-if have_wolfssl
-    if force_embedded_ssl
+    ssl_deps += nettle
+    if have_ssl_override
+        have_wolfssl = false
         have_embedded_ssl = true
-        ssl_deps += crypto
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)
-    else
-        ssl_deps += [crypto, wolfssl]
+    elif have_wolfssl
+        have_embedded_ssl = false
+        ssl_deps += wolfssl
         ssl_provider += 'WolfSSL'
+        if enable_rpath
+            ssl_link_args += ['-R' / wolfssl.get_variable(pkgconfig: 'libdir')]
+        endif
         cdata.set('WOLFSSL_DHX', 1)
-    endif
-elif have_embedded_ssl
-    ssl_deps += crypto
-    ssl_provider += 'built-in'
-    cdata.set('EMBEDDED_SSL', 1)
-elif crypto.found()
-    ssl_deps += crypto
-    cdata.set('OPENSSL_DHX', 1)
-    if libtls.found()
-        ssl_provider += 'LibreSSL'
-    elif not libtls.found()
-        ssl_provider += 'OpenSSL'
+    elif have_embedded_ssl
+        have_wolfssl = false
+        ssl_provider += 'built-in'
+        cdata.set('EMBEDDED_SSL', 1)
     endif
 else
     have_ssl = false
+        ssl_provider += 'none'
     warning(
-        'Built-in WolfSSL, LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
+        'Built-in WolfSSL, and nettle are required for DHX and RANDNUM support',
     )
 endif
 

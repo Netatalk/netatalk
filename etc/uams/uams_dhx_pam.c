@@ -30,18 +30,20 @@
 #if defined(WOLFSSL_DHX)
 #include <wolfssl/options.h>
 #endif
-#include <openssl/cast.h>
 #include <wolfssl/openssl/bn.h>
 #include <wolfssl/openssl/dh.h>
 #include <wolfssl/openssl/err.h>
 #include <wolfssl/openssl/ssl.h>
+
+#include <nettle/cast128.h>
+#include <nettle/cbc.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
 #include <openssl/err.h>
 #include "openssl_compat.h"
-#endif /* EMBEDDED_SSL */
+#endif /* EMBEDDED_SSL || defined(WOLFSSL_DHX) */
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
@@ -58,7 +60,11 @@
 		     (unsigned long) (a)) & 0xffff)
 
 /* the secret key */
+#if defined(OPENSSL_DHX)
 static CAST_KEY castkey;
+#else
+struct CBC_CTX(struct cast128_ctx, CAST128_BLOCK_SIZE) castkey;
+#endif
 static struct passwd *dhxpwd;
 static uint8_t randbuf[KEYSIZE];
 
@@ -273,7 +279,11 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     i = (unsigned long) DH_compute_key(rbuf, bn, dh);
 
     /* set the key */
+#if defined(OPENSSL_DHX)
     CAST_set_key(&castkey, (int) i, rbuf);
+#else
+    cast5_set_key((struct cast128_ctx *)&castkey, (int) i, rbuf);
+#endif
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -315,9 +325,14 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     memset(rbuf + KEYSIZE, 0, KEYSIZE);
 #endif /* 0 */
 
-    /* encrypt using cast */
+    /* encrypt using cast128 in cbc mode*/
+#if defined(OPENSSL_DHX)
     CAST_cbc_encrypt(rbuf, rbuf, CRYPTBUFLEN, &castkey, msg2_iv,
 		     CAST_ENCRYPT);
+#else
+    CBC_SET_IV(&castkey, msg2_iv);
+    CBC_ENCRYPT(&castkey, cast128_encrypt, CRYPTBUFLEN, rbuf, rbuf);
+#endif
     *rbuflen += CRYPTBUFLEN;
     BN_free(bn);
     DH_free(dh);
@@ -451,8 +466,13 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 	hostname = NULL;
 	}
 
+#if defined(OPENSSL_DHX)
     CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
 		     msg3_iv, CAST_DECRYPT);
+#else
+    CBC_SET_IV(&castkey, msg3_iv);
+    CBC_DECRYPT(&castkey, cast128_decrypt, CRYPTBUFLEN, rbuf, ibuf);
+#endif
     memset(&castkey, 0, sizeof(castkey));
 
     /* check to make sure that the random number is the same. we
@@ -628,8 +648,13 @@ static int pam_changepw(void *obj, unsigned char *username,
     }
 
     /* grab the client's nonce, old password, and new password. */
+#if defined(OPENSSL_DHX)
     CAST_cbc_encrypt(ibuf, ibuf, CHANGEPWBUFLEN, &castkey,
 		     msg3_iv, CAST_DECRYPT);
+#else
+    CBC_SET_IV(&castkey, msg3_iv);
+    CBC_DECRYPT(&castkey, cast128_decrypt, CRYPTBUFLEN, ibuf, ibuf);
+#endif
     memset(&castkey, 0, sizeof(castkey));
 
     /* check to make sure that the random number is the same. we
