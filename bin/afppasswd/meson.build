@@ -9,15 +9,13 @@ if have_cracklib
     afppasswd_deps += crack
 endif
 
-if crypto.found()
-    afppasswd_deps += ssl_deps
-endif
-
 if use_mysql_backend
     afppasswd_deps += mysqlclient
 endif
 
-if have_embedded_ssl
+if have_wolfssl
+    afppasswd_deps += wolfssl
+elif have_embedded_ssl
     afppasswd_libs += libatalk
 endif
 

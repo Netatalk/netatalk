@@ -32,8 +32,6 @@
 #include <wolfssl/openssl/des.h>
 #elif defined(OPENSSL_DHX)
 #include <openssl/des.h>
-#elif defined(HAVE_LIBDES)
-#include <des.h>
 #endif
 
 #include <atalk/logger.h>
