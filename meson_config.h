@@ -293,15 +293,6 @@
 /* Define to 1 if you have the `lgetxattr' function. */
 #mesondefine HAVE_LGETXATTR
 
-/* Define to 1 if you have the `crypt' library (-lcrypt). */
-#mesondefine HAVE_LIBCRYPT
-
-/* Define to 1 if you have the `crypto' library (-lcrypto). */
-#mesondefine HAVE_LIBCRYPTO
-
-/* Define to 1 if you have the `des' library (-ldes). */
-#mesondefine HAVE_LIBDES
-
 /* Define if you have the libdl library or equivalent. */
 #mesondefine HAVE_LIBDL
 
@@ -571,9 +562,6 @@
 
 /* Define if the gmtoff member of struct tm is not available */
 #mesondefine NO_STRUCT_TM_GMTOFF
-
-/* Define if the OpenSSL DHX modules should be built */
-#mesondefine OPENSSL_DHX
 
 /* errno returned by open with O_NOFOLLOW */
 #mesondefine OPEN_NOFOLLOW_ERRNO
