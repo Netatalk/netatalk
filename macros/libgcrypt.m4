@@ -8,7 +8,7 @@ AC_ARG_WITH(libgcrypt-dir,
                    netatalk_cv_libgcrypt=$withval)
     if test x$netatalk_cv_libgcrypt != x ; then
         LIBGCRYPT_CFLAGS="-I$netatalk_cv_libgcrypt/include"
-        LIBGCRYPT_LIBS="-L$netatalk_cv_libgcrypt/lib"
+        LIBGCRYPT_LIBS="-L$netatalk_cv_libgcrypt/lib -lgcrypt -lgpg-error"
     else
         PKG_CHECK_MODULES(LIBGCRYPT, [libgcrypt >= 1.2.3],
             ac_cv_have_libgcrypt=yes,
