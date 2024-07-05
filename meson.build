@@ -547,7 +547,8 @@ if (have_ssl_override or have_wolfssl or have_embedded_ssl) and nettle.found()
     endif
 else
     have_ssl = false
-        ssl_provider += 'none'
+    have_embedded_ssl = false
+    ssl_provider += 'none'
     warning(
         'Built-in WolfSSL, and nettle are required for DHX and RANDNUM support',
     )
