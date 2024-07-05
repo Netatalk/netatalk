@@ -1703,11 +1703,11 @@ endif
 
 enable_shadow = get_option('with-shadow')
 
-if enable_shadow
+if not enable_shadow
     have_shadow = false
 else
     have_shadow = (cc.has_header('shadow.h'))
-    if with_shadow
+    if have_shadow
         cdata.set('SHADOWPW', 1)
         uams_options += ' SHADOW'
     else
