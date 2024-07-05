@@ -1,9 +1,25 @@
+Changes in 3.2.2
+================
+* UPD: meson: Use external SSL dependency to provide cast header, GitHub #1186
+       This reintroduces OpenSSL/LibreSSL as a dependency for the DHX UAM,
+       while removing all source files with the SSLeay copyright notice.
+* UPD: meson: Add option to override system WolfSSL
+       with embedded WolfSSL: `with-ssl-override', GitHub #1176
+* UPD: Remove obsolete Red Hat Upstart and SuSE SysV init scripts, GitHub #1163
+* FIX: meson: Fix errors in PAM support macro, GitHub #1178
+* FIX: meson: Fix perl shebang substitution in cnid2_create script, GitHub #1183
+* FIX: meson: Fix operation of D-Bus path macros, GitHub #1182
+* FIX: meson: Fix errors in shadow password macro, GitHub #1192
+* FIX: autotools: gcc 8.5 expects explicit library flags
+       for libgcrypt, GitHub #1188
+* NEW: Create a security policy, GitHub #1166
+
 Changes in 3.2.1
 ================
 * FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
        GitHub #1158
 * BREAKING: meson: Rework option semantics and feature macros, GitHub #1099
-       - Made syntax of the build options to make them user-friendly
+       - Consistent syntax of the build options to make them user-friendly
        - Standardises the syntax of the feature macros
        - Fixes the logic of the largefile support macro
        - Disables gssapi support if the Kerberos V UAM is not required
