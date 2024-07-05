@@ -2507,9 +2507,11 @@ extern void uITRON4_free(void *p) ;
 /* AES Config */
 #ifndef NO_AES
     /* By default enable all AES key sizes, decryption and CBC */
+    #if !defined(EMBEDDED_SSL)
     #ifndef AES_MAX_KEY_SIZE
         #undef  AES_MAX_KEY_SIZE
         #define AES_MAX_KEY_SIZE    256
+    #endif
     #endif
 
     #ifndef NO_AES_128
@@ -2945,6 +2947,7 @@ extern void uITRON4_free(void *p) ;
 
 /* warning for not using harden build options (default with ./configure) */
 /* do not warn if big integer support is disabled */
+#if !defined(EMBEDDED_SSL)
 #if !defined(WC_NO_HARDEN) && !defined(NO_BIG_INT)
     #if (defined(USE_FAST_MATH) && !defined(TFM_TIMING_RESISTANT)) || \
         (defined(HAVE_ECC) && !defined(ECC_TIMING_RESISTANT)) || \
@@ -2957,6 +2960,7 @@ extern void uITRON4_free(void *p) ;
             #pragma message("Warning: For timing resistance / side-channel attack prevention consider using harden options")
         #endif
     #endif
+#endif
 #endif
 
 #ifdef OPENSSL_COEXIST
