@@ -13,10 +13,14 @@ if use_mysql_backend
     afppasswd_deps += mysqlclient
 endif
 
-if have_wolfssl
-    afppasswd_deps += wolfssl
+if have_ssl_override
+    afppasswd_libs += libatalk
+    afppasswd_deps += nettle
+elif have_wolfssl
+    afppasswd_deps += [nettle, wolfssl]
 elif have_embedded_ssl
     afppasswd_libs += libatalk
+    afppasswd_deps += nettle
 endif
 
 if enable_rpath
