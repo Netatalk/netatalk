@@ -9,6 +9,10 @@
  * by the Free Software Foundation version 2 of the License or later
  * version if explicitly stated by any of above copyright holders.
  *
+ * 2024/07/05: Rafal Lewczuk gave permission to change the license
+ * to a later verion of the GNU GPL in
+ * https://github.com/Netatalk/netatalk/issues/1193
+ *
  */
 
 /*
