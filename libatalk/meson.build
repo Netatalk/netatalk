@@ -21,11 +21,6 @@ if have_threads
     libatalk_deps += threads
 endif
 
-if have_embedded_ssl
-    subdir('ssl')
-    libatalk_libs += libssl
-endif
-
 if have_spotlight
     subdir('talloc')
     libatalk_libs += libtalloc
