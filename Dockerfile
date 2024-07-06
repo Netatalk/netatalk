@@ -2,18 +2,20 @@ FROM alpine:3.20
 
 ENV LIB_DEPS \
     acl \
+    avahi \
+    avahi-compat-libdns_sd \
     bash \
     cups \
     db \
     krb5 \
     libgcrypt \
-    libtirpc \
     linux-pam \
     openldap \
-    rpcsvc-proto \
+    openssl \
     shadow
 ENV BUILD_DEPS \
     acl-dev \
+    avahi-dev \
     cups-dev \
     curl \
     db-dev \
@@ -21,15 +23,12 @@ ENV BUILD_DEPS \
     gcc \
     krb5-dev \
     libgcrypt-dev \
-    libtirpc-dev \
     linux-pam-dev \
     meson \
     ninja \
     openldap-dev \
-    openssl \
     openssl-dev \
-    pkgconfig \
-    rpcsvc-proto-dev
+    pkgconfig
 
 RUN apk update \
 &&  apk add --no-cache \
@@ -50,6 +49,10 @@ USER builder
 
 RUN meson setup build \
     -Dwith-cracklib=false \
+    -Dwith-embedded-ssl=true \
+    -Dwith-init-style=none \
+    -Dwith-pgp-uam=false \
+    -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
 
