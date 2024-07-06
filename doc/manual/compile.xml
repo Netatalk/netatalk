@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-06-29</pubdate>
+		<pubdate>2024-07-06</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -296,7 +296,7 @@ xsltproc
   --enable-krbV-uam \
   --enable-pgp-uam \
   --enable-quota \
-  --enable-redhat \
+  --enable-systemd \
   --with-libtirpc \
   --with-cracklib=/usr/share/cracklib
 </screen>
@@ -320,9 +320,10 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dwith-tests=true \
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=redhat-systemd \
   -Dwith-quota=true \
-  -Dwith-init-style=redhat-systemd
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
