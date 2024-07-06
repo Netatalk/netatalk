@@ -237,8 +237,6 @@ AC_CONFIG_FILES([
   bin/Makefile
   bin/ad/Makefile
   bin/afppasswd/Makefile
-  bin/cnid/Makefile
-  bin/cnid/cnid2_create
   bin/misc/Makefile
   config/Makefile
   config/pam/Makefile
