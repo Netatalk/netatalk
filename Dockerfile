@@ -11,10 +11,10 @@ ENV LIB_DEPS \
     krb5 \
     libevent \
     libgcrypt \
-    libtirpc \
     libtracker \
     linux-pam \
     openldap \
+    openssl \
     rpcsvc-proto \
     talloc \
     tracker \
@@ -33,12 +33,10 @@ ENV BUILD_DEPS \
     krb5-dev \
     libevent-dev \
     libgcrypt-dev \
-    libtirpc-dev \
     linux-pam-dev \
     meson \
     ninja \
     openldap-dev \
-    openssl \
     openssl-dev \
     pkgconfig \
     rpcsvc-proto-dev \
@@ -62,13 +60,15 @@ RUN chown -R builder:builder . \
 USER builder
 
 RUN meson setup build \
-    -Dwith-pgp-uam=false \
+    -Dwith-afpstats=false \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
-    -Dwith-afpstats=false \
     -Dwith-dtrace=false \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
+    -Dwith-pgp-uam=false \
+    -Dwith-quota=false \
+    -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
 
 USER root
