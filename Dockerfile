@@ -15,7 +15,6 @@ ENV LIB_DEPS \
     linux-pam \
     openldap \
     openssl \
-    rpcsvc-proto \
     talloc \
     tracker \
     tracker-miners
@@ -39,7 +38,6 @@ ENV BUILD_DEPS \
     openldap-dev \
     openssl-dev \
     pkgconfig \
-    rpcsvc-proto-dev \
     talloc-dev \
     tracker-dev
 RUN apk update \
