@@ -80,6 +80,12 @@ elif [ ! -z "${AFP_USER}" ]; then
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpbackup
 fi
 
+UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
+
+if [ ! -z "${INSECURE_AUTH}" ]; then
+    UAMS+=" uams_clrtxt.so uams_guest.so"
+fi
+
 if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
     cat <<EOF > /usr/local/etc/afp.conf
@@ -87,7 +93,7 @@ if [ -z "${MANUAL_CONFIG}" ]; then
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
-uam list = uams_dhx2.so uams_dhx.so uams_randnum.so
+uam list = ${UAMS}
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
 path = /mnt/afpshare

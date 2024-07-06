@@ -108,6 +108,7 @@ These are required to set the credentials used to authenticate with the file ser
 - `SERVER_NAME` <- the name of the server reported to Zeroconf
 - `SHARE_NAME` <- the name of the file sharing volume
 - `AFP_LOGLEVEL` <- the verbosity of logs; default is "info"
+- `INSECURE_AUTH` <- when non-zero, enable the "Clear Text" and "Guest" UAMs
 - `MANUAL_CONFIG` <- when non-zero, skip netatalk config file modification, allowing you to manually manage them
 
 # Webmin module
