@@ -318,36 +318,6 @@ endif
 #################
 
 #
-# Check whether to check for 64_bit libraries
-#
-
-run_command(
-    cc,
-    '-c', meson.project_source_root() / 'libatalk/dummy.c',
-    '-o', meson.global_build_root() / 'dummy.o',
-    check: false,
-)
-compiler_mode = run_command(
-    '/usr/bin/file',
-    meson.global_build_root() / 'dummy.o',
-    check: true,
-).stdout().strip().contains('ELF 64')
-
-if (cpu in ['ppc64', 's390x', 'sparc64', 'x86_64', 'i386'] and compiler_mode)
-    if target_os in ['dragonfly', 'freebsd', 'netbsd', 'openbsd']
-        atalk_libname = 'lib'
-    elif target_os == 'sunos'
-        atalk_libname = 'lib/64'
-    else
-        atalk_libname = 'lib64'
-    endif
-else
-    atalk_libname = 'lib'
-endif
-
-message('atalk_libname =', atalk_libname)
-
-#
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
 
@@ -373,7 +343,7 @@ bdb_path = get_option('with-bdb-path')
 
 bdb_header = ''
 bdb_includes = []
-bdb_libdir = []
+bdb_libdir = ''
 bdb_link_args = []
 bdb_major_version = ''
 bdb_minor_version = ''
@@ -423,7 +393,7 @@ else
         foreach subdir : bdb_subdirs
             if fs.exists(dir / 'include' / subdir / 'db.h')
                 bdb_header += dir / 'include' / subdir / 'db.h'
-                bdb_libdir += [dir / atalk_libname, dir / 'lib']
+                bdb_libdir += dir / 'lib'
                 bdb_includes += include_directories(
                     dir / 'include' / subdir,
                 )
@@ -485,12 +455,6 @@ else
         'Berkeley DB library required but not found! Please specify an installation path using the -Dwith-bdb= configure option (must include lib and include dirs)',
     )
 endif
-
-# To be removed after testing complete:
-message('BDB header: ', bdb_header)
-message('BDB libdir: ', bdb_libdir)
-message('BDB linker arguments: ', bdb_link_args)
-message('BDB version: ', bdb_version)
 
 #
 # Check for crypt or SSL (for DHX authentication)
