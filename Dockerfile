@@ -13,8 +13,8 @@ ENV LIB_DEPS \
     libgcrypt \
     libtracker \
     linux-pam \
+    nettle \
     openldap \
-    openssl \
     talloc \
     tracker \
     tracker-miners
@@ -35,8 +35,8 @@ ENV BUILD_DEPS \
     linux-pam-dev \
     meson \
     ninja \
+    nettle-dev \
     openldap-dev \
-    openssl-dev \
     pkgconfig \
     talloc-dev \
     tracker-dev
