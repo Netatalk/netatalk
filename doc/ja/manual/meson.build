@@ -66,6 +66,5 @@ manual_gen = custom_target(
         manual_stylesheet_ja,
         '@INPUT@',
     ],
-    install: true,
-    install_dir: datadir / 'doc/netatalk/ja',
+    install: false,
 )
