@@ -36,6 +36,7 @@ manual_gen = custom_target(
         'afp.conf.5.html',
         'afpd.8.html',
         'afpldaptest.1.html',
+        'afppasswd.1.html',
         'apple_dump.1.html',
         'asip-status.1.html',
         'cnid_dbd.8.html',
