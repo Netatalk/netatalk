@@ -44,7 +44,7 @@ HTML_PAGES = \
 	man-pages.html \
 	manual-index.html \
 	netatalk.8.html \
-	netatalkconfig.1.html \
+	netatalk-config.1.html \
 	pr01.html \
 	table-toc.html \
 	upgrade.html
