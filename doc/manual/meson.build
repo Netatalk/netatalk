@@ -68,6 +68,7 @@ manual_gen = custom_target(
         'netatalk-config.1.html',
         'pap.1.html',
         'papd.8.html',
+        'papd.conf.5.html',
         'papstatus.8.html',
         'psf.8.html',
         'psorder.1.html',
