@@ -53,7 +53,7 @@ manual_gen = custom_target(
         'man-pages.html',
         'manual-index.html',
         'netatalk.8.html',
-        'netatalkconfig.1.html',
+        'netatalk-config.1.html',
         'table-toc.html',
         'upgrade.html',
     ],
