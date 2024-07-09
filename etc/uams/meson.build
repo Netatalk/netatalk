@@ -344,7 +344,7 @@ if enable_pgp_uam
     )
 endif
 
-if have_gssapi
+if have_krb5_uam
     uams_gss_sources = ['uams_gss.c']
 
     uams_gss = shared_module(
