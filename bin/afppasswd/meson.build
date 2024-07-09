@@ -21,18 +21,34 @@ if have_embedded_ssl
     afppasswd_libs += libatalk
 endif
 
-executable(
-    'afppasswd',
-    afppasswd_sources,
-    include_directories: root_includes,
-    dependencies: afppasswd_deps,
-    link_with: afppasswd_libs,
-    c_args: [
-        afpdpwfile,
-        dversion,
-    ],
-    install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
-    install_mode: 'rwsr-xr-x',
-)
+if enable_rpath
+    executable(
+        'afppasswd',
+        afppasswd_sources,
+        include_directories: root_includes,
+        dependencies: afppasswd_deps,
+        link_with: afppasswd_libs,
+        c_args: [
+            afpdpwfile,
+            dversion,
+        ],
+        install: true,
+        install_mode: 'rwsr-xr-x',
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+else
+    executable(
+        'afppasswd',
+        afppasswd_sources,
+        include_directories: root_includes,
+        dependencies: afppasswd_deps,
+        link_with: afppasswd_libs,
+        c_args: [
+            afpdpwfile,
+            dversion,
+        ],
+        install: true,
+        install_mode: 'rwsr-xr-x',
+    )
+endif

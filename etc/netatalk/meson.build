@@ -11,15 +11,28 @@ elif avahi.found()
     netatalk_deps += avahi
 endif
 
-executable(
-    'netatalk',
-    netatalk_sources,
-    include_directories: root_includes,
-    link_with: libatalk,
-    dependencies: netatalk_deps,
-    c_args: [confdir, statedir, afpd, cnid_metad, dversion],
-    install: true,
-    install_dir: sbindir,
-    build_rpath: libdir,
-    install_rpath: libdir,
-)
+if enable_rpath
+    executable(
+        'netatalk',
+        netatalk_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: netatalk_deps,
+        c_args: [confdir, statedir, afpd, cnid_metad, dversion],
+        install: true,
+        install_dir: sbindir,
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+else
+    executable(
+        'netatalk',
+        netatalk_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: netatalk_deps,
+        c_args: [confdir, statedir, afpd, cnid_metad, dversion],
+        install: true,
+        install_dir: sbindir,
+    )
+endif
