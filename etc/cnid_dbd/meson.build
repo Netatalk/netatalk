@@ -23,34 +23,7 @@ if use_dbd_backend
         cnid_dbd_deps += mysqlclient
     endif
 
-    executable(
-        'cnid_dbd',
-        cnid_dbd_sources,
-        include_directories: [bdb_includes, root_includes],
-        link_with: libatalk,
-        dependencies: [cnid_dbd_deps, db],
-        c_args: [cnid_dbd, dversion],
-        link_args: bdb_link_args,
-        install: true,
-        install_dir: sbindir,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-
     cnid_metad_sources = ['cnid_metad.c', 'usockfd.c', 'db_param.c']
-
-    executable(
-        'cnid_metad',
-        cnid_metad_sources,
-        include_directories: root_includes,
-        link_with: libatalk,
-        dependencies: cnid_dbd_deps,
-        c_args: [cnid_dbd, dversion],
-        install: true,
-        install_dir: sbindir,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
 
     dbd_sources = [
         'cmd_dbd.c',
@@ -66,16 +39,75 @@ if use_dbd_backend
         'pack.c',
     ]
 
-    executable(
-        'dbd',
-        dbd_sources,
-        include_directories: [bdb_includes, root_includes],
-        link_with: libatalk,
-        dependencies: [cnid_dbd_deps, db],
-        c_args: dversion,
-        link_args: bdb_link_args,
-        install: true,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
+    if enable_rpath
+        executable(
+            'cnid_dbd',
+            cnid_dbd_sources,
+            include_directories: [bdb_includes, root_includes],
+            link_with: libatalk,
+            dependencies: [cnid_dbd_deps, db],
+            c_args: [cnid_dbd, dversion],
+            link_args: bdb_link_args,
+            install: true,
+            install_dir: sbindir,
+            build_rpath: libdir,
+            install_rpath: libdir,
+        )
+        executable(
+            'cnid_metad',
+            cnid_metad_sources,
+            include_directories: root_includes,
+            link_with: libatalk,
+            dependencies: cnid_dbd_deps,
+            c_args: [cnid_dbd, dversion],
+            install: true,
+            install_dir: sbindir,
+            build_rpath: libdir,
+            install_rpath: libdir,
+        )
+        executable(
+            'dbd',
+            dbd_sources,
+            include_directories: [bdb_includes, root_includes],
+            link_with: libatalk,
+            dependencies: [cnid_dbd_deps, db],
+            c_args: dversion,
+            link_args: bdb_link_args,
+            install: true,
+            build_rpath: libdir,
+            install_rpath: libdir,
+        )
+    else
+        executable(
+            'cnid_dbd',
+            cnid_dbd_sources,
+            include_directories: [bdb_includes, root_includes],
+            link_with: libatalk,
+            dependencies: [cnid_dbd_deps, db],
+            c_args: [cnid_dbd, dversion],
+            link_args: bdb_link_args,
+            install: true,
+            install_dir: sbindir,
+        )
+        executable(
+            'cnid_metad',
+            cnid_metad_sources,
+            include_directories: root_includes,
+            link_with: libatalk,
+            dependencies: cnid_dbd_deps,
+            c_args: [cnid_dbd, dversion],
+            install: true,
+            install_dir: sbindir,
+        )
+        executable(
+            'dbd',
+            dbd_sources,
+            include_directories: [bdb_includes, root_includes],
+            link_with: libatalk,
+            dependencies: [cnid_dbd_deps, db],
+            c_args: dversion,
+            link_args: bdb_link_args,
+            install: true,
+        )
+    endif
 endif

@@ -194,7 +194,7 @@ jobs:
     name: Debian Linux
     runs-on: ubuntu-22.04
     container:
-      image: debian:bookworm
+      image: debian:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -243,11 +243,12 @@ jobs:
         run: |
           ./configure \
             --disable-dependency-tracking \
+            --disable-init-hooks \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --enable-quota \
             --with-cracklib \
-            --with-init-style=debian-sysv \
+            --with-init-style=debian-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
         run: make -j $(nproc) all
@@ -255,27 +256,20 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
-      - name: Start netatalk
-        run: /etc/init.d/netatalk start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: /etc/init.d/netatalk stop
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
         run: |
           meson setup build \
             -Dwith-tests=true \
-            -Dwith-init-style=debian-sysv
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=debian-systemd
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
         run: cd build && meson test
       - name: Meson - Install
         run: meson install -C build
-      - name: Start netatalk
-        run: /etc/init.d/netatalk start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: /etc/init.d/netatalk stop
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -378,7 +372,6 @@ jobs:
             dbus-1-glib-devel \
             flex \
             glib2-devel \
-            krb5-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
@@ -400,7 +393,7 @@ jobs:
         run: |
           ./configure \
             --disable-init-hooks \
-            --enable-krbV-uam \
+            --disable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
             --with-init-style=suse-systemd \
@@ -416,6 +409,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-krbV-uam=false \
             -Dwith-tests=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd
@@ -566,7 +560,7 @@ jobs:
               libressl \
               libtool \
               meson \
-              openldap26-client-2.6.7 \
+              openldap26-client-2.6.8 \
               pkgconf \
               talloc \
               tracker3
