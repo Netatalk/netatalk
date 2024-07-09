@@ -681,7 +681,11 @@ else
             warning('Kerberos API support requested but libkrb5 not found')
         endif
     endif
-    have_krb5_uam = have_gssapi
+    if have_gssapi and have_kerberos
+        have_krb5_uam = true
+    else
+        have_krb5_uam = false
+    endif
     if enable_krb5_uam and not have_gssapi
         warning('Need GSSAPI support to build Kerberos V UAM')
     endif
@@ -2094,7 +2098,7 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  CNID:')
 
 summary_info = {
-    '  Kerberos V': enable_krb5_uam,
+    '  Kerberos V': have_krb5_uam,
     '  PGP': enable_pgp_uam,
     '  Randnum': '(afppasswd)',
     '  clrtxt': uams_using_options,

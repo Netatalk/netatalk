@@ -85,7 +85,7 @@ if have_quota
     afpd_external_deps += quota_deps
 endif
 
-if enable_krb5_uam
+if have_krb5_uam
     afpd_external_deps += gss
 endif
 
