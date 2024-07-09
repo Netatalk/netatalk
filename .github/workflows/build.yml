@@ -193,7 +193,8 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
-            --enable-debian \
+            --disable-install-priviledged \
+            --enable-systemd \
             --enable-krbV-uam \
             --enable-pgp-uam \
             --enable-quota \
@@ -210,9 +211,10 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
-            -Dwith-init-style=debian-sysv \
-            -Dwith-quota=true
+            -Dwith-init-hooks=false \
+            -Dwith-init-style=debian-systemd \
+            -Dwith-quota=true \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Tests
@@ -308,7 +310,6 @@ jobs:
           zypper in -y \
             cracklib-devel \
             glib2-devel \
-            krb5-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
@@ -326,10 +327,10 @@ jobs:
         run: |
           ./configure \
             --disable-install-priviledged \
-            --enable-krbV-uam \
+            --disable-krbV-uam \
             --enable-pgp-uam \
-            --with-cracklib \
-            --enable-systemd
+            --enable-systemd \
+            --with-cracklib
       - name: Autotools - Build
         run: make -j $(nproc)
       - name: Autotools - Run tests
@@ -343,6 +344,7 @@ jobs:
           meson setup build \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd \
+            -Dwith-krbV-uam=false \
             -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
@@ -532,7 +534,7 @@ jobs:
               libressl \
               libtool \
               meson \
-              openldap26-client-2.6.7 \
+              openldap26-client-2.6.8 \
               pkgconf
           run: |
             set -e
