@@ -380,12 +380,10 @@ endif
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
 
-enable_rpath = get_option('with-rpath')
-
-if not get_option('with-rpath')
-    enable_rpath = false
-elif host_os == 'sunos' or host_os == 'netbsd'
+if host_os == 'sunos' or host_os == 'netbsd'
     enable_rpath = true
+else
+    enable_rpath = get_option('with-rpath')
 endif
 
 if host_os == 'linux'
@@ -594,9 +592,9 @@ endif
 # Check whether Kerberos V UAM can be built
 #
 
-enable_krb5_uam = get_option('with-krbV-uam')
+enable_krbV_uam = get_option('with-krbV-uam')
 
-if not enable_krb5_uam
+if not enable_krbV_uam
     have_krb5_uam = false
     have_gssapi = false
 else

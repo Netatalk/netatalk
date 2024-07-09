@@ -7,13 +7,24 @@ megatron_sources = [
     'updcrc.c',
 ]
 
-executable(
-    'megatron',
-    megatron_sources,
-    include_directories: root_includes,
-    link_with: libatalk,
-    c_args: dversion,
-    install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
-)
+if enable_rpath
+    executable(
+        'megatron',
+        megatron_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        c_args: dversion,
+        install: true,
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+else
+    executable(
+        'megatron',
+        megatron_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        c_args: dversion,
+        install: true,
+    )
+endif

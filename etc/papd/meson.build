@@ -14,35 +14,58 @@ papd_sources = [
     'uam.c',
 ]
 
-executable(
-    'papd',
-    papd_sources,
-    include_directories: root_includes,
-    link_with: libatalk,
-    dependencies: cups,
-    c_args: [
-        '-D_PATH_PAPDCONF="' + pkgconfdir + '/papd.conf"',
-        '-D_PATH_PAPDUAMPATH="' + libdir + '/netatalk/"',
-        '-DSPOOLDIR="' + spooldir + '/"',
-        dversion,
-    ],
-    export_dynamic: true,
-    install: true,
-    install_dir: sbindir,
-    build_rpath: libdir,
-    install_rpath: libdir,
-)
+papd_c_args = [
+    '-D_PATH_PAPDCONF="' + pkgconfdir + '/papd.conf"',
+    '-D_PATH_PAPDUAMPATH="' + libdir + '/netatalk/"',
+    '-DSPOOLDIR="' + spooldir + '/"',
+    dversion,
+]
 
-executable(
-    'showppd',
-    ['ppd.c', 'showppd.c'],
-    include_directories: root_includes,
-    link_with: libatalk,
-    c_args: '-DSHOWPPD',
-    install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
-)
+if enable_rpath
+    executable(
+        'papd',
+        papd_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: cups,
+        c_args: papd_c_args,
+        export_dynamic: true,
+        install: true,
+        install_dir: sbindir,
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+    executable(
+        'showppd',
+        ['ppd.c', 'showppd.c'],
+        include_directories: root_includes,
+        link_with: libatalk,
+        c_args: '-DSHOWPPD',
+        install: true,
+        build_rpath: libdir,
+        install_rpath: libdir,
+    )
+else
+    executable(
+        'papd',
+        papd_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: cups,
+        c_args: papd_c_args,
+        export_dynamic: true,
+        install: true,
+        install_dir: sbindir,
+    )
+    executable(
+        'showppd',
+        ['ppd.c', 'showppd.c'],
+        include_directories: root_includes,
+        link_with: libatalk,
+        c_args: '-DSHOWPPD',
+        install: true,
+    )
+endif
 
 if have_cups and spooldir_required
     install_emptydir(spooldir, install_mode: 'rwxrwxrwx')
