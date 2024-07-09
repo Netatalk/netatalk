@@ -62,7 +62,7 @@ if have_quota
     test_external_deps += quota_deps
 endif
 
-if enable_krb5_uam
+if have_krb5_uam
     test_external_deps += gss
 endif
 
