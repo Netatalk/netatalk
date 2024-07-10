@@ -344,7 +344,6 @@ jobs:
           meson setup build \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd \
-            -Dwith-krbV-uam=false \
             -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build

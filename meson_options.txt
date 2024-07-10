@@ -76,6 +76,12 @@ option(
     description: 'Enable install hooks for OS specific init system',
 )
 option(
+    'with-kerberos',
+    type: 'boolean',
+    value: true,
+    description: 'Enable Kerberos V API support',
+)
+option(
     'with-krbV-uam',
     type: 'boolean',
     value: true,
