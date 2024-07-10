@@ -331,15 +331,6 @@
 /* Define if the DHX2 modules should be built with libgcrypt */
 #mesondefine HAVE_LIBGCRYPT
 
-/* Define to 1 if you have the 'gss' library (-lgss). */
-#mesondefine HAVE_LIBGSS
-
-/* Define to 1 if you have the 'gssapi' library (-lgssapi). */
-#mesondefine HAVE_LIBGSSAPI
-
-/* Define to 1 if you have the 'gssapi_krb5' library (-lgssapi_krb5). */
-#mesondefine HAVE_LIBGSSAPI_KRB5
-
 /* Define to 1 if you have the 'nsl' library (-lnsl). */
 #mesondefine HAVE_LIBNSL
 
