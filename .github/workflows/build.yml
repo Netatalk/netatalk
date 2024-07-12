@@ -370,7 +370,6 @@ jobs:
             cracklib-devel \
             dbus-1-devel \
             flex \
-            glib2-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
