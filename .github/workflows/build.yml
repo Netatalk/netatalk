@@ -348,7 +348,7 @@ jobs:
     name: openSUSE Linux
     runs-on: ubuntu-22.04
     container:
-      image: opensuse/leap:latest
+      image: opensuse/tumbleweed:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -371,7 +371,6 @@ jobs:
             dbus-1-devel \
             dbus-1-glib-devel \
             flex \
-            glib2-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
