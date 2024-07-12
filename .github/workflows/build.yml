@@ -348,7 +348,7 @@ jobs:
     name: openSUSE Linux
     runs-on: ubuntu-22.04
     container:
-      image: opensuse/tumbleweed:latest
+      image: opensuse/leap:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
