@@ -625,6 +625,8 @@ jobs:
               libressl \
               libtool \
               meson \
+              p5-Net-DBus \
+              perl \
               pkg-config \
               talloc
           run: |
