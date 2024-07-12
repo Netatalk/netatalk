@@ -393,9 +393,7 @@ zypper in -y \
   bison \
   cracklib-devel \
   dbus-1-devel \
-  dbus-1-glib-devel \
   flex \
-  glib2-devel \
   libacl-devel \
   libavahi-devel \
   libdb-4_8-devel \
