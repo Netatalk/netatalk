@@ -1,3 +1,19 @@
+Changes in 3.2.3
+================
+* UPD: Record note of permission to upgrade CNID code
+       to a later GPL, GitHub #1194
+* UPD: Remove long-obsoleted cnid2_create script, GitHub #1203
+* UPD: docker: Add option to enable ClearText and Guest UAMs, GitHub #1202
+* FIX: docs: Standardize reference entry naming
+       for netatalk-config man page, GitHub #1208
+* FIX: meson: Generate afppasswd manual html page, GitHub #1210
+* UPD: meson: Remove obsolete 64 bit library check, GitHub #1207
+* FIX: meson: Enable rpath for binaries
+       only when with-rpath is enabled, GitHub #1214
+* FIX: meson: Require kerberos before enabling krb5 UAM,
+       not just GSSAPI, GitHub #1218
+* FIX: meson: Restore linking with 64-bit libdb on Solaris, GitHub #1222
+
 Changes in 3.2.2
 ================
 * UPD: meson: Use external SSL dependency to provide cast header, GitHub #1186
