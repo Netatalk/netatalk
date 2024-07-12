@@ -309,7 +309,6 @@ jobs:
             wget &&
           zypper in -y \
             cracklib-devel \
-            glib2-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
