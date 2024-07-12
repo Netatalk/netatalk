@@ -704,7 +704,8 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-init-style=solaris \
-              -Dwith-ldap-path=/opt/local
+              -Dwith-ldap-path=/opt/local \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             chmod 744 /etc/rc2.d/S90netatalk
@@ -729,6 +730,7 @@ jobs:
         with:
           release: 11.4
           prepare: |
+            pkg update --accept
             pkg install \
               autoconf \
               automake \
@@ -736,6 +738,7 @@ jobs:
               libgcrypt \
               libtool \
               pkg-config
+            pip install meson
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
             tar xvf autoconf-2.71.tar.gz
@@ -759,6 +762,20 @@ jobs:
             gmake -j $(nproc) all
             gmake install
             gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-init-style=solaris \
+              -Dwith-pgp-uam=true
+            meson compile -C build
+            meson install -C build
+            chmod 744 /etc/rc2.d/S90netatalk
+            chmod 744 /etc/rc0.d/K04netatalk
+            /etc/rc2.d/S90netatalk start
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            /etc/rc2.d/S90netatalk stop
+            ninja -C build uninstall
 
   static_analysis:
     name: Static Analysis
