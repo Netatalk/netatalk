@@ -1,14 +1,24 @@
 Changes in 2.4.3
 ================
-* UPD: Record note of permission to upgrade CNID code
-       to a later GPL, GitHub #1195
-* FIX: meson: Generate papd.conf manual html page, GitHub #1209
-* UPD: meson: Remove obsolete 64 bit library check, GitHub #1211
+* NEW: meson: Introduce pkgconfdir override option, GitHub #1238
+       The new option is called `with-pkgconfdir-path'
+       and is analogous to the `with-pkgconfdir' Autotools option.
+       Additionally, the hard-coded "netatalk" path suffix has been removed.
+* NEW: meson: Introduce `debian' init style option
+       that installs both sysv and systemd, GitHub #1118
 * FIX: meson: Enable rpath for binaries
        only when with-rpath is enabled, GitHub #1216
 * UPD: meson: Introduce check for Kerberos API
        when building krbV UAM, GitHub #1219
+* FIX: meson: Restore the missing papd.conf manual html page, GitHub #1209
+* UPD: meson: Remove obsolete 64 bit library check, GitHub #1211
 * FIX: meson: Restore linking with 64-bit libdb on Solaris, GitHub #1223
+* FIX: meson: Fixing linking when building with
+       the `with-ssl-override' option, GitHub #1229
+* FIX: meson: Add DES library check, POSIX threads check,
+       SSL capability check, additional refactoring, GitHub #1244
+* UPD: Record note of permission to upgrade CNID code
+       to a later GPL, GitHub #1195
 
 Changes in 2.4.2
 ================
