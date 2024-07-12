@@ -581,6 +581,7 @@ endif
 
 if have_wolfssl
     if force_embedded_ssl
+        have_embedded_ssl = true
         ssl_deps += crypto
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)
