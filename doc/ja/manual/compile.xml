@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-06-29</pubdate>
+		<pubdate>2024-07-12</pubdate>
 	</appendixinfo>
 	<title>Netatalk をソースコードからコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -233,11 +233,12 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>
 				<screen>./configure \
   --disable-dependency-tracking \
+  --disable-init-hooks \
   --enable-krbV-uam \
   --enable-pgp-uam \
   --enable-quota \
   --with-cracklib \
-  --with-init-style=debian-sysv \
+  --with-init-style=debian-systemd \
   --with-tracker-pkgconfig-version=3.0
 </screen>
 			</para>
@@ -253,14 +254,6 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>
 				<screen>make install</screen>
 			</para>
-			<para>Start netatalk</para>
-			<para>
-				<screen>/etc/init.d/netatalk start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
-			</para>
-			<para>Stop netatalk</para>
-			<para>
-				<screen>/etc/init.d/netatalk stop</screen>
-			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>make uninstall</screen>
@@ -269,7 +262,8 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>
 				<screen>meson setup build \
   -Dwith-tests=true \
-  -Dwith-init-style=debian-sysv
+  -Dwith-init-hooks=false \
+  -Dwith-init-style=debian-systemd
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -283,14 +277,6 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>Meson - Install</para>
 			<para>
 				<screen>meson install -C build</screen>
-			</para>
-			<para>Start netatalk</para>
-			<para>
-				<screen>/etc/init.d/netatalk start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
-			</para>
-			<para>Stop netatalk</para>
-			<para>
-				<screen>/etc/init.d/netatalk stop</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -410,7 +396,6 @@ zypper in -y \
   dbus-1-glib-devel \
   flex \
   glib2-devel \
-  krb5-devel \
   libacl-devel \
   libavahi-devel \
   libdb-4_8-devel \
@@ -436,7 +421,7 @@ zypper in -y \
 			<para>
 				<screen>./configure \
   --disable-init-hooks \
-  --enable-krbV-uam \
+  --disable-krbV-uam \
   --enable-pgp-uam \
   --with-cracklib \
   --with-init-style=suse-systemd \
@@ -677,7 +662,7 @@ ninja -C build uninstall
   libressl \
   libtool \
   meson \
-  openldap26-client-2.6.7 \
+  openldap26-client-2.6.8 \
   pkgconf \
   talloc \
   tracker3
@@ -957,7 +942,8 @@ echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
   -Dwith-init-style=solaris \
-  -Dwith-ldap-path=/opt/local
+  -Dwith-ldap-path=/opt/local \
+  -Dwith-pgp-uam=true
 meson compile -C build
 meson install -C build
 svcadm enable svc:/network/netatalk:default
@@ -982,6 +968,7 @@ ninja -C build uninstall
   libgcrypt \
   libtool \
   pkg-config
+pip install meson
 wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
 wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
 tar xvf autoconf-2.71.tar.gz
@@ -1006,6 +993,7 @@ echo "Building with Autotools"
   --enable-krbV-uam \
   --enable-pgp-uam \
   --with-init-style=solaris \
+  --with-tracker-pkgconfig-version=2.0 \
   --without-afpstats \
   MAKE=gmake \
   PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
@@ -1016,6 +1004,18 @@ sleep 2
 /usr/local/bin/asip-status localhost
 svcadm disable -s svc:/network/netatalk:default
 gmake uninstall
+echo "Building with Meson"
+meson setup build \
+  -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+  -Dwith-init-style=solaris \
+  -Dwith-pgp-uam=true
+meson compile -C build
+meson install -C build
+svcadm enable svc:/network/netatalk:default
+sleep 2
+/usr/local/bin/asip-status localhost
+svcadm disable svc:/network/netatalk:default
+ninja -C build uninstall
 </screen>
 			</para>
 		</sect2>
