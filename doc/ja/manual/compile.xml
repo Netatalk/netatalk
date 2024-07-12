@@ -724,6 +724,8 @@ ninja -C build uninstall
   libressl \
   libtool \
   meson \
+  p5-Net-DBus \
+  perl \
   pkg-config \
   talloc
 </screen>
