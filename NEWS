@@ -13,6 +13,8 @@ Changes in 3.2.3
 * FIX: meson: Require kerberos before enabling krb5 UAM,
        not just GSSAPI, GitHub #1218
 * FIX: meson: Restore linking with 64-bit libdb on Solaris, GitHub #1222
+* FIX: meson: Fixing linking when building with
+       the `with-ssl-override' option, GitHub #1227
 
 Changes in 3.2.2
 ================
