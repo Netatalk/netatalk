@@ -316,6 +316,22 @@ endif
 #################
 
 #
+# Check for 64-bit libraries
+#
+
+run_command(
+    cc,
+    '-c', meson.project_source_root() / 'libatalk/dummy.c',
+    '-o', meson.global_build_root() / 'dummy.o',
+    check: false,
+)
+compiler_64_bit_mode = run_command(
+    '/usr/bin/file',
+    meson.global_build_root() / 'dummy.o',
+    check: true,
+).stdout().strip().contains('ELF 64')
+
+#
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
 
@@ -389,7 +405,11 @@ else
         foreach subdir : bdb_subdirs
             if fs.exists(dir / 'include' / subdir / 'db.h')
                 bdb_header += dir / 'include' / subdir / 'db.h'
-                bdb_libdir += dir / 'lib'
+                if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
+                    bdb_libdir += dir / 'lib/64'
+                else
+                    bdb_libdir += dir / 'lib'
+                endif
                 bdb_includes += include_directories(
                     dir / 'include' / subdir,
                 )

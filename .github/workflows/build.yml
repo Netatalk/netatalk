@@ -823,7 +823,8 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-init-style=solaris \
-              -Dwith-ldap-path=/opt/local
+              -Dwith-ldap-path=/opt/local \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             svcadm enable svc:/network/netatalk:default
@@ -856,6 +857,7 @@ jobs:
               libgcrypt \
               libtool \
               pkg-config
+            pip install meson
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
             tar xvf autoconf-2.71.tar.gz
@@ -877,6 +879,7 @@ jobs:
               --enable-krbV-uam \
               --enable-pgp-uam \
               --with-init-style=solaris \
+              --with-tracker-pkgconfig-version=2.0 \
               --without-afpstats \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
@@ -887,6 +890,18 @@ jobs:
             /usr/local/bin/asip-status localhost
             svcadm disable -s svc:/network/netatalk:default
             gmake uninstall
+            echo "Building with Meson"
+            meson setup build \
+              -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-init-style=solaris \
+              -Dwith-pgp-uam=true
+            meson compile -C build
+            meson install -C build
+            svcadm enable svc:/network/netatalk:default
+            sleep 2
+            /usr/local/bin/asip-status localhost
+            svcadm disable svc:/network/netatalk:default
+            ninja -C build uninstall
 
   static_analysis:
     name: Static Analysis
