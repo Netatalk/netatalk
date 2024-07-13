@@ -16,7 +16,7 @@ if have_acls
     libatalk_deps += acl_deps
 endif
 
-if threads.found()
+if have_threads
     libatalk_deps += threads
 endif
 

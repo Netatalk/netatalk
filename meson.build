@@ -20,7 +20,6 @@ cc = meson.get_compiler('c')
 
 cdata = configuration_data()
 fs = import('fs')
-prefix = get_option('prefix')
 netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
@@ -406,12 +405,6 @@ else
     enable_rpath = get_option('with-rpath')
 endif
 
-if host_os == 'linux'
-    enable_dtags = true
-else
-    enable_dtags = false
-endif
-
 #
 # Check for the Berkeley DB library
 #
@@ -538,7 +531,6 @@ have_embedded_ssl = get_option('with-embedded-ssl')
 force_embedded_ssl = get_option('with-ssl-override')
 
 ssl_deps = []
-ssl_link_args = []
 ssl_provider = ''
 
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
@@ -547,9 +539,13 @@ if crypt.found()
     cdata.set('HAVE_LIBCRYPT', 1)
 endif
 
+des = cc.find_library('des', required: false)
+if des.found()
+    cdata.set('HAVE_LIBDES', 1)
+endif
+
 crypto = dependency('libcrypto', required: false)
 libtls = dependency('libtls', required: false)
-
 wolfssl = dependency('wolfssl', required: false)
 
 if wolfssl.found()
@@ -577,10 +573,12 @@ else
     have_wolfssl = false
 endif
 
-if ((have_wolfssl or have_embedded_ssl) and crypto.found()) or crypto.found()
+if crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
+else
+    have_ssl = false
 endif
 
 if have_wolfssl
@@ -607,7 +605,6 @@ elif crypto.found()
         ssl_provider += 'OpenSSL'
     endif
 else
-    have_ssl = false
     warning(
         'Built-in WolfSSL, LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
     )
@@ -1629,6 +1626,30 @@ sed_command = [
 ]
 
 #
+# Check for POSIX threads
+#
+
+threads = dependency('threads', required: true)
+if threads.found()
+    have_threads = true
+    cdata.set('HAVE_PTHREAD', 1)
+
+    # Check for PTHREAD_PRIO_INHERIT
+
+    if cc.compiles(
+        '''
+    #include <pthread.h>
+    int main(void) {
+    int i = PTHREAD_PRIO_INHERIT;
+      return i;
+    }
+    ''',
+    )
+        cdata.set('HAVE_PTHREAD_PRIO_INHERIT', 1)
+    endif
+endif
+
+#
 # Check for cracklib support
 #
 
@@ -1869,7 +1890,7 @@ endif
 #cdata.set('PATH_NETATALK_LOCK', lockfile_path)
 #cdata.set('SBINDIR', sbindir)
 
-cdata.set('exec_prefix', prefix)
+cdata.set('exec_prefix', exec_prefix)
 cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
