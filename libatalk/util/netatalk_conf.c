@@ -1465,7 +1465,7 @@ static int readextmap(const char *file)
 
     LOG(log_debug, logtype_afpd, "readextmap: loading \"%s\"", file);
 
-    EC_NULL_LOGSTR( fp = fopen(file, "r"), "Couldn't open extension maping file %s", file);
+    EC_NULL_LOGSTR( fp = fopen(file, "r"), "Couldn't open extension mapping file %s", file);
 
     while (fgets(buf, sizeof(buf), fp) != NULL) {
         initline(strlen(buf), buf);
