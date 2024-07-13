@@ -59,7 +59,7 @@ if have_tcpwrap
     afpd_external_deps += wrap
 endif
 
-if threads.found()
+if have_threads
     afpd_external_deps += threads
 endif
 

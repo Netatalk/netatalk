@@ -52,15 +52,19 @@ if have_quota
     test_external_deps += [quota_deps]
 endif
 
-if have_gssapi
+if have_krb5_uam
     test_external_deps += gss
+endif
+
+if have_kerberos
+    test_external_deps += kerberos
 endif
 
 if have_tcpwrap
     test_external_deps += wrap
 endif
 
-if threads.found()
+if have_threads
     test_external_deps += threads
 endif
 
@@ -81,7 +85,10 @@ afpdtest = executable(
     test_sources,
     include_directories: root_includes,
     link_with: [test_internal_deps, libatalk],
-    dependencies: test_external_deps,
+    dependencies: [
+        test_external_deps,
+        libcnid_deps,
+    ],
     c_args: [
         '-DAPPLCNAME', acl_ldapconf,
         afpdconf,

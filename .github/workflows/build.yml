@@ -193,7 +193,6 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
-            --disable-install-priviledged \
             --enable-systemd \
             --enable-krbV-uam \
             --enable-pgp-uam \
@@ -326,7 +325,6 @@ jobs:
       - name: Autotools - Configure
         run: |
           ./configure \
-            --disable-install-priviledged \
             --disable-krbV-uam \
             --enable-pgp-uam \
             --enable-systemd \
@@ -565,9 +563,9 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.0.7
+        uses: vmactions/netbsd-vm@v1
         with:
-          release: "10.0"
+          release: "9.4"
           copyback: false
           prepare: |
             pkg_add \
