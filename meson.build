@@ -20,7 +20,6 @@ cc = meson.get_compiler('c')
 
 cdata = configuration_data()
 fs = import('fs')
-prefix = get_option('prefix')
 netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
@@ -300,6 +299,7 @@ at_functions = [
 
 foreach f : at_functions
     if cc.has_function(f)
+        have_atfuncs = true
         cdata.set('HAVE_' + f.underscorify().to_upper(), 1)
         cdata.set('_ATFILE_SOURCE', 1)
         cdata.set('HAVE_ATFUNCS', 1)
@@ -432,9 +432,9 @@ endif
 
 if enable_rpath
     bdb_link_args += '-R' + bdb_libdir
-endif
-if enable_dtags
-    bdb_link_args += '-Wl,--enable-new-dtags'
+    if enable_dtags
+        bdb_link_args += '-Wl,--enable-new-dtags'
+    endif
 endif
 
 if bdb_header != ''
@@ -505,10 +505,9 @@ libtls = dependency('libtls', required: false)
 
 if enable_rpath and crypto.found()
     ssl_link_args += ['-R' / crypto.get_variable(pkgconfig: 'libdir')]
-endif
-
-if enable_dtags
-    ssl_link_args += '-Wl,--enable-new-dtags'
+    if enable_dtags
+        ssl_link_args += '-Wl,--enable-new-dtags'
+    endif
 endif
 
 wolfssl = dependency('wolfssl', required: false)
@@ -2030,7 +2029,7 @@ endif
 #cdata.set('PATH_NETATALK_LOCK', lockfile_path)
 #cdata.set('SBINDIR', sbindir)
 
-cdata.set('exec_prefix', prefix)
+cdata.set('exec_prefix', exec_prefix)
 cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
