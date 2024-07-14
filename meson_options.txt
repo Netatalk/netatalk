@@ -256,6 +256,12 @@ option(
     description: 'Set path to PAM config directory',
 )
 option(
+    'with-pkgconfdir-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to the package conf dir that overrides sysconfdir',
+)
+option(
     'with-srvloc-path',
     type: 'string',
     value: '',

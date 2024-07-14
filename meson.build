@@ -39,8 +39,12 @@ libdir = prefix / get_option('libdir')
 libexecdir = prefix / get_option('libexecdir')
 localstatedir = prefix / get_option('localstatedir')
 mandir = prefix / get_option('mandir')
-pkgconfdir = prefix / get_option('sysconfdir') / 'netatalk'
+pkgconfdir = get_option('with-pkgconfdir-path')
 sbindir = prefix / get_option('sbindir')
+
+if pkgconfdir == ''
+    pkgconfdir = prefix / get_option('sysconfdir')
+endif
 
 ##################
 # Compiler flags #
@@ -1924,6 +1928,7 @@ summary_info = {
     'Library directory': libdir,
     'Manual page directory': mandir,
     'System executable directory': sbindir,
+    'Package conf directory': pkgconfdir,
 }
 summary(summary_info, bool_yn: true, section: 'Directories:')
 
