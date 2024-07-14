@@ -1865,7 +1865,7 @@ endif
 # Check for optional initscript install
 #
 
-init_dir = ''
+init_dirs = []
 
 sed_command = [
     find_program('sed', required: false),
@@ -2165,7 +2165,7 @@ summary(summary_info, bool_yn: true, section: '  Options:')
 summary_info = {
     '  dbus daemon path': dbus_daemonpath,
     '  dbus system directory': dbus_sysconfpath,
-    '  init directory': init_dir,
+    '  init directory': init_dirs,
     '  Netatalk lockfile': lockfile,
     '  PAM config directory': pam_confdir,
 }
