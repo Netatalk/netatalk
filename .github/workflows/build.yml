@@ -213,6 +213,7 @@ jobs:
           meson setup build \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd \
+            -Dwith-pkgconfdir-path=/etc/netatalk \
             -Dwith-quota=true \
             -Dwith-tests=true
       - name: Meson - Build
