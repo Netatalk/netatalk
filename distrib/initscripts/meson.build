@@ -1,13 +1,18 @@
 if get_option('with-init-style') == 'none'
-    init_dir += 'none'
-elif (
-    get_option('with-init-style') == 'debian-systemd'
+    init_dir = 'none'
+    init_dirs += init_dir
+endif
+
+if (
+    get_option('with-init-style') == 'debian'
+    or get_option('with-init-style') == 'debian-systemd'
     or get_option('with-init-style') == 'gentoo-systemd'
     or get_option('with-init-style') == 'redhat-systemd'
     or get_option('with-init-style') == 'suse-systemd'
     or get_option('with-init-style') == 'systemd'
 )
-    init_dir += '/usr/lib/systemd/system'
+    init_dir = '/usr/lib/systemd/system'
+    init_dirs += init_dir
     custom_target(
         'systemd',
         input: 'service.systemd.tmpl',
@@ -20,8 +25,14 @@ elif (
     if get_option('with-init-hooks')
         meson.add_install_script(find_program('systemctl'), 'daemon-reload')
     endif
-elif get_option('with-init-style') == 'debian-sysv'
-    init_dir += '/etc/init.d'
+endif
+
+if (
+  get_option('with-init-style') == 'debian'
+  or get_option('with-init-style') == 'debian-sysv'
+)
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'debian_sysv',
         input: 'rc.debian.tmpl',
@@ -41,8 +52,11 @@ elif get_option('with-init-style') == 'debian-sysv'
             '10',
         )
     endif
-elif get_option('with-init-style') == 'freebsd'
-    init_dir += '/etc/rc.d'
+endif
+
+if get_option('with-init-style') == 'freebsd'
+    init_dir = '/etc/rc.d'
+    init_dirs += init_dir
     custom_target(
         'freebsd',
         input: 'rc.freebsd.tmpl',
@@ -60,8 +74,11 @@ elif get_option('with-init-style') == 'freebsd'
             'enable',
         )
     endif
-elif get_option('with-init-style') == 'netbsd'
-    init_dir += '/etc/rc.d'
+endif
+
+if get_option('with-init-style') == 'netbsd'
+    init_dir = '/etc/rc.d'
+    init_dirs += init_dir
     custom_target(
         'netbsd',
         input: 'rc.netbsd.tmpl',
@@ -72,8 +89,11 @@ elif get_option('with-init-style') == 'netbsd'
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
     )
-elif get_option('with-init-style') == 'openbsd'
-    init_dir += '/etc/rc.d'
+endif
+
+if get_option('with-init-style') == 'openbsd'
+    init_dir = '/etc/rc.d'
+    init_dirs += init_dir
     custom_target(
         'freebsd',
         input: 'rc.openbsd.tmpl',
@@ -91,8 +111,11 @@ elif get_option('with-init-style') == 'openbsd'
             'netatalk',
         )
     endif
-elif get_option('with-init-style') == 'solaris'
-    init_dir += '/lib/svc/manifest/network'
+endif
+
+if get_option('with-init-style') == 'solaris'
+    init_dir = '/lib/svc/manifest/network'
+    init_dirs += init_dir
     custom_target(
         'solaris',
         input: 'netatalk.xml.tmpl',
@@ -109,11 +132,14 @@ elif get_option('with-init-style') == 'solaris'
             '/lib/svc/manifest/network/netatalk.xml',
         )
     endif
-elif (
+endif
+
+if (
     get_option('with-init-style') == 'openrc'
     or get_option('with-init-style') == 'gentoo-openrc'
 )
-    init_dir += '/etc/init.d'
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'openrc',
         input: 'rc.openrc.tmpl',
@@ -132,8 +158,11 @@ elif (
             'default',
         )
     endif
-elif get_option('with-init-style') == 'macos-launchd'
-    init_dir += '/Library/LaunchDaemons'
+endif
+
+if get_option('with-init-style') == 'macos-launchd'
+    init_dir = '/Library/LaunchDaemons'
+    init_dirs += init_dir
     custom_target(
         'netatalkd',
         input: 'netatalkd.tmpl',
