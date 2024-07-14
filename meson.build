@@ -20,7 +20,6 @@ cc = meson.get_compiler('c')
 
 cdata = configuration_data()
 fs = import('fs')
-prefix = get_option('prefix')
 netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
@@ -406,12 +405,6 @@ else
     enable_rpath = get_option('with-rpath')
 endif
 
-if host_os == 'linux'
-    enable_dtags = true
-else
-    enable_dtags = false
-endif
-
 #
 # Check for the Berkeley DB library
 #
@@ -538,7 +531,6 @@ have_embedded_ssl = get_option('with-embedded-ssl')
 force_embedded_ssl = get_option('with-ssl-override')
 
 ssl_deps = []
-ssl_link_args = []
 ssl_provider = ''
 
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
@@ -549,7 +541,6 @@ endif
 
 crypto = dependency('libcrypto', required: false)
 libtls = dependency('libtls', required: false)
-
 wolfssl = dependency('wolfssl', required: false)
 
 if wolfssl.found()
@@ -1869,7 +1860,7 @@ endif
 #cdata.set('PATH_NETATALK_LOCK', lockfile_path)
 #cdata.set('SBINDIR', sbindir)
 
-cdata.set('exec_prefix', prefix)
+cdata.set('exec_prefix', exec_prefix)
 cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
