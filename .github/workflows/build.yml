@@ -604,8 +604,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/netbsd-vm@v1.0.7
+        uses: vmactions/netbsd-vm@v1
         with:
+          release: "9.4"
           copyback: false
           prepare: |
             pkg_add \
