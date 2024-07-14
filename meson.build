@@ -1612,7 +1612,7 @@ endif
 # Check for optional initscript install
 #
 
-init_dir = ''
+init_dirs = []
 
 sed_command = [
     find_program('sed', required: false),
@@ -2004,6 +2004,12 @@ if have_zeroconf
     }
 endif
 summary(summary_info, bool_yn: true, section: '  Options:')
+
+summary_info = {
+    '  init directory': init_dirs,
+    '  PAM config directory': pam_confdir,
+}
+summary(summary_info, bool_yn: true, section: '  Paths:')
 
 summary_info = {'  Docbook': build_xml_docs}
 summary(summary_info, bool_yn: true, section: '  Documentation:')

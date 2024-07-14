@@ -275,6 +275,7 @@ option(
     type: 'combo',
     choices: [
         'none',
+        'debian',
         'debian-systemd',
         'debian-sysv',
         'gentoo-openrc',

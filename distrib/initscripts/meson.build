@@ -1,13 +1,18 @@
 if get_option('with-init-style') == 'none'
-    init_dir += 'none'
-elif (
-    get_option('with-init-style') == 'debian-systemd'
+    init_dir = 'none'
+    init_dirs += init_dir
+endif
+
+if (
+    get_option('with-init-style') == 'debian'
+    or get_option('with-init-style') == 'debian-systemd'
     or get_option('with-init-style') == 'gentoo-systemd'
     or get_option('with-init-style') == 'redhat-systemd'
     or get_option('with-init-style') == 'suse-systemd'
     or get_option('with-init-style') == 'systemd'
 )
-    init_dir += '/usr/lib/systemd/system'
+    init_dir = '/usr/lib/systemd/system'
+    init_dirs += init_dir
     service_data = [
         'a2boot',
         'afpd',
@@ -33,8 +38,14 @@ elif (
             'daemon-reload',
         )
     endif
-elif get_option('with-init-style') == 'debian-sysv'
-    init_dir += '/etc/init.d'
+endif
+
+if (
+  get_option('with-init-style') == 'debian'
+  or get_option('with-init-style') == 'debian-sysv'
+)
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'debian_sysv',
         input: 'rc.debian.tmpl',
@@ -54,8 +65,11 @@ elif get_option('with-init-style') == 'debian-sysv'
             '10',
         )
     endif
-elif get_option('with-init-style') == 'netbsd'
-    init_dir += '/etc/rc.d'
+endif
+
+if get_option('with-init-style') == 'netbsd'
+    init_dir = '/etc/rc.d'
+    init_dirs += init_dir
     rc_scripts = [
         'rc.afpd',
         'rc.atalkd',
@@ -76,8 +90,11 @@ elif get_option('with-init-style') == 'netbsd'
             install_mode: 'rwxr-xr-x',
         )
     endforeach
-elif get_option('with-init-style') == 'solaris'
-    init_dir += '/etc/init.d'
+endif
+
+if get_option('with-init-style') == 'solaris'
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'solaris',
         input: 'rc.solaris.tmpl',
@@ -107,11 +124,14 @@ elif get_option('with-init-style') == 'solaris'
             '/etc/rc0.d/K04netatalk',
         )
     endif
-elif (
+endif
+
+if (
     get_option('with-init-style') == 'openrc'
     or get_option('with-init-style') == 'gentoo-openrc'
 )
-    init_dir += '/etc/init.d'
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'openrc',
         input: 'rc.openrc.tmpl',
@@ -130,8 +150,11 @@ elif (
             'default',
         )
     endif
-elif get_option('with-init-style') == 'macos-launchd'
-    init_dir += '/Library/LaunchDaemons'
+endif
+
+if get_option('with-init-style') == 'macos-launchd'
+    init_dir = '/Library/LaunchDaemons'
+    init_dirs += init_dir
     custom_target(
         'netatalkd',
         input: 'netatalkd.tmpl',
