@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-07-12</pubdate>
+		<pubdate>2024-07-14</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -213,7 +213,6 @@ xsltproc
 			<para>Autotools - Configure</para>
 			<para>
 				<screen>./configure \
-  --disable-install-priviledged \
   --enable-systemd \
   --enable-krbV-uam \
   --enable-pgp-uam \
@@ -243,6 +242,7 @@ xsltproc
 				<screen>meson setup build \
   -Dwith-init-hooks=false \
   -Dwith-init-style=debian-systemd \
+  -Dwith-pkgconfdir-path=/etc/netatalk \
   -Dwith-quota=true \
   -Dwith-tests=true
 </screen>
@@ -363,7 +363,6 @@ xsltproc
   wget &amp;&amp;
 zypper in -y \
   cracklib-devel \
-  glib2-devel \
   libacl-devel \
   libavahi-devel \
   libdb-4_8-devel \
@@ -384,7 +383,6 @@ zypper in -y \
 			<para>Autotools - Configure</para>
 			<para>
 				<screen>./configure \
-  --disable-install-priviledged \
   --disable-krbV-uam \
   --enable-pgp-uam \
   --enable-systemd \
