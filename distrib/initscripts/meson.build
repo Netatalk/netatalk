@@ -183,7 +183,8 @@ elif (
     init_style == 'openrc'
     or init_style == 'gentoo-openrc'
 )
-    init_dir += '/etc/init.d'
+    init_dir = '/etc/init.d'
+    init_dirs += init_dir
     custom_target(
         'openrc',
         input: 'rc.openrc.tmpl',
