@@ -1949,7 +1949,7 @@ summary_info = {
     'Library directory': libdir,
     'Manual page directory': mandir,
     'System executable directory': sbindir,
-    'Package conf directory': pkgconfdir,
+    'Package config directory': pkgconfdir,
 }
 summary(summary_info, bool_yn: true, section: 'Directories:')
 
@@ -2034,6 +2034,7 @@ summary(summary_info, bool_yn: true, section: '  Options:')
 summary_info = {
     '  init directory': init_dirs,
     '  PAM config directory': pam_confdir,
+    '  CUPS print spool directory': spooldir,
 }
 summary(summary_info, bool_yn: true, section: '  Paths:')
 
