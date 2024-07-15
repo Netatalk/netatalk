@@ -15,17 +15,31 @@ custom_target(
 )
 
 if (
-    not fs.exists(pkgconfdir / 'afp.conf')
-    or (get_option('with-overwrite') and fs.exists(pkgconfdir / 'afp.conf'))
+    fs.exists(pkgconfdir / 'afp.conf')
+    and not get_option('with-overwrite')
 )
-    install_data(afp_conf, install_dir: pkgconfdir)
+    message('will not replace existing', pkgconfdir / 'afp.conf')
 else
-    message('not overwriting', 'afp.conf')
+    install_data(afp_conf, install_dir: pkgconfdir)
 endif
 
-install_data('extmap.conf', install_dir: pkgconfdir)
+if (
+    fs.exists(pkgconfdir / 'extmap.conf')
+    and not get_option('with-overwrite')
+)
+    message('will not replace existing', pkgconfdir / 'extmap.conf')
+else
+    install_data('extmap.conf', install_dir: pkgconfdir)
+endif
 
-install_data('netatalk-dbus.conf', install_dir: dbus_sysconf_path)
+if (
+    fs.exists(dbus_sysconfpath / 'netatalk-dbus.conf')
+    and not get_option('with-overwrite')
+)
+    message('will not replace existing', dbus_sysconfpath / 'netatalk-dbus.conf')
+else
+    install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
+endif
 
 install_data('README', install_dir: localstatedir / 'netatalk')
 
