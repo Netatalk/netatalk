@@ -70,7 +70,7 @@ psf_symlinks = [
     'tfwpaprev',
     'ofmpap',
     'ifmpap',
-    'tfmpap ',
+    'tfmpap',
     'ifmpaprev',
     'tfmpaprev',
     'ofwmpap',
