@@ -37,11 +37,12 @@ includedir = prefix / get_option('includedir')
 libdir = prefix / get_option('libdir')
 localstatedir = prefix / get_option('localstatedir')
 mandir = prefix / get_option('mandir')
-pkgconfdir = get_option('with-pkgconfdir-path')
 sbindir = prefix / get_option('sbindir')
+sysconfdir = prefix / get_option('sysconfdir')
 
+pkgconfdir = get_option('with-pkgconfdir-path')
 if pkgconfdir == ''
-    pkgconfdir = prefix / get_option('sysconfdir')
+    pkgconfdir = sysconfdir
 endif
 
 ##################
@@ -1174,8 +1175,8 @@ if dbus_sysconf_path != ''
     dbus_sysconfpath += dbus_sysconf_path
     cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
 else
-    dbus_sysconfpath += pkgconfdir / 'dbus-1/system.d'
-    cdata.set('DBUS_SYS_DIR', '"' + pkgconfdir + '/dbus-1/system.d' + '"')
+    dbus_sysconfpath += sysconfdir / 'dbus-1/system.d'
+    cdata.set('DBUS_SYS_DIR', '"' + sysconfdir + '/dbus-1/system.d' + '"')
 endif
 
 #
