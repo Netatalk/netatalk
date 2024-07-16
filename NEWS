@@ -1,3 +1,16 @@
+Changes in 3.2.4
+================
+* NEW: meson: Introduce pkgconfdir override option, GitHub #1241
+       The new option is called `with-pkgconfdir-path'
+       and is analogous to the `with-pkgconfdir' Autotools option.
+       Additionally, the hard-coded "netatalk" path suffix has been removed.
+* NEW: meson: Introduce `debian' init style option
+       that installs both sysv and systemd, GitHub #1239
+* FIX: meson: Add have_atfuncs check,
+       and make dtags dependent on rpath flag, GitHub #1236
+* FIX: meson: Correct overwrite install logic for config files, GitHub #1253
+* FIX: Fix typo in netatalk_conf.c log message
+
 Changes in 3.2.3
 ================
 * UPD: Record note of permission to upgrade CNID code
