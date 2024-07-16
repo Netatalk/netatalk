@@ -28,3 +28,18 @@ else
         install: true,
     )
 endif
+
+megatron_symlinks = [
+    'binheader',
+    'hqx2bin',
+    'macbinary',
+    'nadheader',
+    'single2bin',
+    'unbin',
+    'unhex',
+    'unsingle',
+]
+
+foreach link : megatron_symlinks
+    install_symlink(link, install_dir: bindir, pointing_to: 'megatron')
+endforeach

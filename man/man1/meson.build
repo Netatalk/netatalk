@@ -26,3 +26,22 @@ endif
 foreach file : man1_files
     install_data(file + '.in', rename: file, install_dir: mandir / 'man1')
 endforeach
+
+man1_staticfiles = [
+    'binheader.1',
+    'hqx2bin.1',
+    'macbinary.1',
+    'nadheader.1',
+    'nbplkup.1',
+    'nbprgstr.1',
+    'nbpunrgstr.1',
+    'papstatus.1',
+    'single2bin.1',
+    'unbin.1',
+    'unhex.1',
+    'unsingle.1',
+]
+
+foreach file : man1_staticfiles
+    install_data(file, install_dir: mandir / 'man1')
+endforeach

@@ -11,3 +11,12 @@ man5_files = [
 foreach file : man5_files
     install_data(file + '.in', rename: file, install_dir: mandir / 'man5')
 endforeach
+
+man5_staticfiles = [
+    'AppleVolumes.5',
+    'AppleVolumes.system.5',
+]
+
+foreach file : man5_staticfiles
+    install_data(file, install_dir: mandir / 'man5')
+endforeach
