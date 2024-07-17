@@ -49,6 +49,7 @@ libatalk = both_libraries(
         libutil,
         libvfs,
     ],
-    soversion: 18,
+    version: '18.0.0',
+    soversion: '18',
     install: true,
 )
