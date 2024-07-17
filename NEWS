@@ -6,6 +6,7 @@ Changes in 3.2.4
        Additionally, the hard-coded "netatalk" path suffix has been removed.
 * NEW: meson: Introduce `debian' init style option
        that installs both sysv and systemd, GitHub #1239
+* UPD: meson: Define long-form soversion as 18.0.0, GitHub #1256
 * FIX: meson: Add have_atfuncs check,
        and make dtags dependent on rpath flag, GitHub #1236
 * FIX: meson: Correct overwrite install logic for config files, GitHub #1253
