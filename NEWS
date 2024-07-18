@@ -1,3 +1,15 @@
+Changes in 2.4.4
+================
+* BREAKING: meson: Adjust libatalk soversion to 0.0.0, GitHub #1258
+       This was previously set to `18' which was a mistake from when
+       the Meson build system was backported from 3.x.
+       `0.0.0' is in line with the soversion used by Autotools.
+* FIX: meson: Remove redundant space in psf symlink list, GitHub #1247
+* UPD: meson: Print spool dir in setup summary, GitHub #1248
+* FIX: meson: Overwrite install logic for package config files, GitHub #1252
+* FIX: meson: Symlink select binaries and install man page aliases, GitHub #1255
+* FIX: docker: Move config files from the old pkgconfdir location, GitHub #1260
+
 Changes in 2.4.3
 ================
 * NEW: meson: Introduce pkgconfdir override option, GitHub #1238
