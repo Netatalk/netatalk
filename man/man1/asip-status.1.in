@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 27 Apr 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk 3.2.3
+.\"    Source: Netatalk 3.2.4
 .\"  Language: English
 .\"
-.TH "ASIP\-STATUS" "1" "27 Apr 2024" "Netatalk 3\&.2\&.3" "Netatalk AFP Fileserver Manual"
+.TH "ASIP\-STATUS" "1" "27 Apr 2024" "Netatalk 3\&.2\&.4" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
