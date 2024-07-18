@@ -53,6 +53,7 @@ RUN meson setup build \
     -Dwith-init-style=none \
     -Dwith-pgp-uam=false \
     -Dwith-quota=false \
+    -Dwith-srvloc=false \
     -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
 
