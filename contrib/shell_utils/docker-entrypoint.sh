@@ -44,7 +44,7 @@ function helper::configure() {
 	# Creating credentials for the RandNum UAM
 	set +e
 	if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
-		rm -f /usr/local/etc/netatalk/afppasswd
+		rm -f /usr/local/etc/afppasswd
 	fi
 
 	afppasswd -c
@@ -80,14 +80,14 @@ function helper::configure() {
 	echo "*** Configuring AppleVolumes.default"
 
 	# Clean up residual configurations
-	sed -i '/^~/d' /usr/local/etc/netatalk/AppleVolumes.default
-	sed -i '/^\//d' /usr/local/etc/netatalk/AppleVolumes.default
+	sed -i '/^~/d' /usr/local/etc/AppleVolumes.default
+	sed -i '/^\//d' /usr/local/etc/AppleVolumes.default
 
 	# Modify netatalk configuration files
 	if [ -z "${SHARE_NAME}" ]; then
-	    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/local/etc/netatalk/AppleVolumes.default
+	    echo "/mnt/afpshare ${AVOLUMES_OPTIONS}" | tee -a /usr/local/etc/AppleVolumes.default
 	else
-	    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/local/etc/netatalk/AppleVolumes.default
+	    echo "/mnt/afpshare \"${SHARE_NAME}\" ${AVOLUMES_OPTIONS}" | tee -a /usr/local/etc/AppleVolumes.default
 	fi
 
 	echo "*** Configuring afpd.conf"
@@ -99,20 +99,24 @@ function helper::configure() {
 		AFPD_UAMS+=",uams_clrtxt.so,uams_guest.so"
 	fi
 	if [ -z "${SERVER_NAME}" ]; then
-		echo "- ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/local/etc/netatalk/afpd.conf
+		echo "- ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/local/etc/afpd.conf
 	else
-		echo "\"${SERVER_NAME}\" ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/local/etc/netatalk/afpd.conf
+		echo "\"${SERVER_NAME}\" ${AFPD_DEFAULT_OPTIONS} ${AFPD_UAMS} ${AFPD_OPTIONS}" | tee /usr/local/etc/afpd.conf
 	fi
 
 	echo "*** Configuring atalkd.conf"
 
-	echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/local/etc/netatalk/atalkd.conf
+	echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" | tee /usr/local/etc/atalkd.conf
 
 	echo "*** Configuring papd.conf"
 
-	echo "cupsautoadd:op=root:" | tee /usr/local/etc/netatalk/papd.conf
+	echo "cupsautoadd:op=root:" | tee /usr/local/etc/papd.conf
 }
 
+# Move config file from an earlier location (2.4.2 and earlier)
+if [ -d "/usr/local/etc/netatalk" ]; then
+    mv /usr/local/etc/netatalk/* /usr/local/etc
+fi
 
 [ -z "${MANUAL_CONFIG}" ] && helper::configure
 
