@@ -1,12 +1,15 @@
 Changes in 3.2.4
 ================
+* UPD: autotools: Restore ABI versioning of libatalk,
+       and set it to 18.0.0, GitHub #1261
+* UPD: meson: Define long-form soversion as 18.0.0, GitHub #1256
+       Previously, only `18' was defined.
 * NEW: meson: Introduce pkgconfdir override option, GitHub #1241
        The new option is called `with-pkgconfdir-path'
        and is analogous to the `with-pkgconfdir' Autotools option.
        Additionally, the hard-coded "netatalk" path suffix has been removed.
 * NEW: meson: Introduce `debian' init style option
        that installs both sysv and systemd, GitHub #1239
-* UPD: meson: Define long-form soversion as 18.0.0, GitHub #1256
 * FIX: meson: Add have_atfuncs check,
        and make dtags dependent on rpath flag, GitHub #1236
 * FIX: meson: Correct overwrite install logic for config files, GitHub #1253
