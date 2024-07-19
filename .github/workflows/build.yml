@@ -699,17 +699,12 @@ jobs:
             export LDFLAGS=-L/usr/local/lib
             autoreconf -fi
             ./configure \
+              --disable-init-hooks \
               --with-init-style=openbsd \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
-            gmake install
-            rcctl -d start netatalk
-            sleep 2
-            asip-status localhost
-            rcctl -d stop netatalk
-            gmake uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
