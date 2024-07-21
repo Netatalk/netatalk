@@ -101,8 +101,7 @@ extern int         getdirparams (const AFPObj *obj, const struct vol *, uint16_t
                                  struct dir *, char *, size_t *);
 
 extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
-extern int         renamedir(struct vol *, int, char *, char *, struct dir *,
-                             struct dir *, char *);
+extern int         renamedir(struct vol *, int, char *, char *, struct dir *, char *);
 extern int         path_error(struct path *, int error);
 extern void        setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
