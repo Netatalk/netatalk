@@ -45,8 +45,6 @@
 #endif
 #include <nettle/des.h>
 #include <wolfssl/openssl/des.h>
-#elif defined(OPENSSL_DHX)
-#include <openssl/des.h>
 #endif
 
 #define OPT_ISROOT  (1 << 0)
@@ -73,22 +71,14 @@ static char buf[MAXPATHLEN + 1];
 static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 {
   uint8_t key[HEXPASSWDLEN];
-#if defined(OPENSSL_DHX)
-  DES_key_schedule schedule;
-#else
   struct des_ctx schedule;
-#endif
   unsigned int i, j;
 
   if (!newpwd) {
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
-#if defined(OPENSSL_DHX)
-    if (j <= DES_KEY_SZ)
-#else
     if (j <= DES_KEY_SIZE)
-#endif
       memset(buf + j, 0, sizeof(key) - j);
   }
 
@@ -99,33 +89,15 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-#if defined(OPENSSL_DHX)
-    if (j <= DES_KEY_SZ)
-#else
     if (j <= DES_KEY_SIZE)
-#endif
       memset(key + j, 0, sizeof(key) - j);
-#if defined(OPENSSL_DHX)
-    DES_key_sched((DES_cblock *) key, &schedule);
-#else
     des_set_key(&schedule, key);
-#endif
     memset(key, 0, sizeof(key));
     if (newpwd) {
-#if defined(OPENSSL_DHX)
-      DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd, &schedule,
-        DES_ENCRYPT);
-#else
       des_encrypt(&schedule, HEXPASSWDLEN, (uint8_t *)newpwd, (uint8_t *)newpwd);
-#endif
     } else {
       /* decrypt the password */
-#if defined(OPENSSL_DHX)
-      DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf, &schedule,
-        DES_DECRYPT);
-#else
       des_decrypt(&schedule, HEXPASSWDLEN, (uint8_t *)buf, (uint8_t *)buf);
-#endif
     }
     memset(&schedule, 0, sizeof(schedule));
   }
@@ -134,11 +106,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
     const unsigned char hextable[] = "0123456789ABCDEF";
 
     /* convert to hex */
-#if defined(OPENSSL_DHX)
-    for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-#else
     for (i = j = 0; i < DES_KEY_SIZE; i++, j += 2) {
-#endif
       buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
       buf[j + 1] = hextable[newpwd[i] & 0x0F];
     }

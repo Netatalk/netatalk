@@ -31,8 +31,6 @@
 #endif
 #include <nettle/des.h>
 #include <wolfssl/openssl/des.h>
-#elif defined(OPENSSL_DHX)
-#include <openssl/des.h>
 #endif
 
 #include <atalk/logger.h>
@@ -41,13 +39,8 @@
 
 #define PASSWDLEN 8
 
-#if defined(OPENSSL_DHX)
-static DES_cblock	seskey;
-static DES_key_schedule	seskeysched;
-#else
 static unsigned char seskey[8];
 struct des_ctx	seskeysched;
-#endif
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
@@ -135,17 +128,9 @@ static int afppasswd(const struct passwd *pwd,
 		     unsigned char *passwd, int len,
 		     const int set)
 {
-#if defined(OPENSSL_DHX)
-  uint8_t key[DES_KEY_SZ*2];
-#else
   uint8_t key[DES_KEY_SIZE*2];
-#endif
   char buf[MAXPATHLEN + 1], *p;
-#if defined(OPENSSL_DHX)
-  DES_key_schedule schedule;
-#else
   struct des_ctx schedule;
-#endif
   FILE *fp;
   unsigned int i, j;
   int keyfd = -1, err = 0;
@@ -189,11 +174,7 @@ afppasswd_found:
     /* convert to binary. */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       p[j] = (unhex(p[i]) << 4) | unhex(p[i + 1]);
-#if defined(OPENSSL_DHX)
-    if (j <= DES_KEY_SZ)
-#else
     if (j <= DES_KEY_SIZE)
-#endif
       memset(p + j, 0, sizeof(key) - j);
   }
 
@@ -205,35 +186,18 @@ afppasswd_found:
       /* convert to binary key */
       for (i = j = 0; i < strlen((char *) key); i += 2, j++)
 	key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-#if defined(OPENSSL_DHX)
-      if (j <= DES_KEY_SZ)
-#else
       if (j <= DES_KEY_SIZE)
-#endif
 	memset(key + j, 0, sizeof(key) - j);
-#if defined(OPENSSL_DHX)
-      DES_key_sched((DES_cblock *) key, &schedule);
-#else
       des_set_key(&schedule, key);
-#endif
       memset(key, 0, sizeof(key));
 
       if (set) {
 	/* NOTE: this takes advantage of the fact that passwd doesn't
 	 *       get used after this call if it's being set. */
-#if defined(OPENSSL_DHX)
-	DES_ecb_encrypt((DES_cblock *) passwd, (DES_cblock *) passwd, &schedule,
-		    DES_ENCRYPT);
-#else
   des_encrypt(&schedule, PASSWDLEN, passwd, passwd);
-#endif
       } else {
 	/* decrypt the password */
-#if defined(OPENSSL_DHX)
-	DES_ecb_encrypt((DES_cblock *) p, (DES_cblock *) p, &schedule, DES_DECRYPT);
-#else
   des_decrypt(&schedule, PASSWDLEN, (unsigned char *)p, (unsigned char *)p);
-#endif
       }
       memset(&schedule, 0, sizeof(schedule));
   }
@@ -244,11 +208,7 @@ afppasswd_found:
     int fd = fileno(fp);
 
     /* convert to hex password */
-#if defined(OPENSSL_DHX)
-    for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-#else
     for (i = j = 0; i < DES_KEY_SIZE; i++, j += 2) {
-#endif
       key[j] = hextable[(passwd[i] & 0xF0) >> 4];
       key[j + 1] = hextable[passwd[i] & 0x0F];
     }
@@ -388,18 +348,9 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 
   /* encrypt. this saves a little space by using the fact that
    * des can encrypt in-place without side-effects. */
-#if defined(OPENSSL_DHX)
-  DES_key_sched((DES_cblock *) seskey, &seskeysched);
-#else
   des_set_key(&seskeysched, seskey);
-#endif
   memset(seskey, 0, sizeof(seskey));
-#if defined(OPENSSL_DHX)
-  DES_ecb_encrypt((DES_cblock *) randbuf, (DES_cblock *) randbuf,
-	       &seskeysched, DES_ENCRYPT);
-#else
   des_encrypt(&seskeysched, PASSWDLEN, randbuf, randbuf);
-#endif
   memset(&seskeysched, 0, sizeof(seskeysched));
 
   /* test against what the client sent */
@@ -440,18 +391,9 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     seskey[i] <<= 1;
 
   /* encrypt randbuf */
-#if defined(OPENSSL_DHX)
-  DES_key_sched((DES_cblock *) seskey, &seskeysched);
-#else
   des_set_key(&seskeysched, seskey);
-#endif
   memset(seskey, 0, sizeof(seskey));
-#if defined(OPENSSL_DHX)
-  DES_ecb_encrypt( (DES_cblock *) randbuf, (DES_cblock *) randbuf,
-	       &seskeysched, DES_ENCRYPT);
-#else
   des_encrypt(&seskeysched, PASSWDLEN, randbuf, randbuf);
-#endif
 
   /* test against client's reply */
   if (memcmp(randbuf, ibuf, sizeof(randbuf))) { /* != */
@@ -463,12 +405,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
   memset(randbuf, 0, sizeof(randbuf));
 
   /* encrypt client's challenge and send back */
-#if defined(OPENSSL_DHX)
-  DES_ecb_encrypt( (DES_cblock *) ibuf, (DES_cblock *) rbuf,
-	       &seskeysched, DES_ENCRYPT);
-#else
   des_encrypt(&seskeysched, PASSWDLEN, (unsigned char *)rbuf, (unsigned char *)ibuf);
-#endif
   memset(&seskeysched, 0, sizeof(seskeysched));
   *rbuflen = sizeof(randbuf);
 
@@ -503,31 +440,15 @@ static int randnum_changepw(void *obj, const char *username _U_,
       return err;
 
     /* use old passwd to decrypt new passwd */
-#if defined(OPENSSL_DHX)
-    DES_key_sched((DES_cblock *) seskey, &seskeysched);
-#else
     des_set_key(&seskeysched, seskey);
-#endif
     ibuf += PASSWDLEN; /* new passwd */
     ibuf[PASSWDLEN] = '\0';
-#if defined(OPENSSL_DHX)
-    DES_ecb_encrypt( (DES_cblock *) ibuf, (DES_cblock *) ibuf, &seskeysched, DES_DECRYPT);
-#else
     des_decrypt(&seskeysched, PASSWDLEN, (unsigned char *)ibuf, (unsigned char *)ibuf);
-#endif
 
     /* now use new passwd to decrypt old passwd */
-#if defined(OPENSSL_DHX)
-    DES_key_sched((DES_cblock *) ibuf, &seskeysched);
-#else
     des_set_key(&seskeysched, (unsigned char *)ibuf);
-#endif
     ibuf -= PASSWDLEN; /* old passwd */
-#if defined(OPENSSL_DHX)
-    DES_ecb_encrypt((DES_cblock *) ibuf, (DES_cblock *) ibuf, &seskeysched, DES_DECRYPT);
-#else
     des_decrypt(&seskeysched, PASSWDLEN, (unsigned char *)ibuf, (unsigned char *)ibuf);
-#endif
     if (memcmp(seskey, ibuf, sizeof(seskey)))
 	err = AFPERR_NOTAUTH;
     else if (memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0)
