@@ -267,7 +267,6 @@ jobs:
           meson setup build \
             -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=debian-systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk
       - name: Meson - Build
         run: meson compile -C build
@@ -469,8 +468,7 @@ jobs:
           meson setup build \
             -Dwith-tests=true \
             -Dwith-manual=true \
-            -Dwith-init-hooks=false \
-            -Dwith-init-style=debian-systemd
+            -Dwith-init-hooks=false
       - name: Meson - Build and generate manual pages
         run: meson compile -C build
       - name: Meson - Run tests
@@ -592,8 +590,7 @@ jobs:
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-init-style=freebsd
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig
             meson compile -C build
             meson install -C build
             /etc/rc.d/netatalk start
@@ -658,8 +655,7 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-              -Dwith-dtrace=false \
-              -Dwith-init-style=netbsd
+              -Dwith-dtrace=false
             meson compile -C build
             meson install -C build
             service netatalk onestart
@@ -717,8 +713,7 @@ jobs:
             gmake -j $(nproc)
             echo "Building with Meson"
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-init-style=openbsd
+              -Dpkg_config_path=/usr/local/lib/pkgconfig
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
@@ -764,7 +759,6 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-init-style=macos-launchd \
             -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
@@ -830,7 +824,6 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-init-style=solaris \
               -Dwith-ldap-path=/opt/local \
               -Dwith-pgp-uam=true
             meson compile -C build
@@ -901,7 +894,6 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-              -Dwith-init-style=solaris \
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build

@@ -1,15 +1,14 @@
-if get_option('with-init-style') == 'none'
-    init_dir = 'none'
-    init_dirs += init_dir
+if init_style == 'none'
+    init_dirs += 'none'
 endif
 
 if (
-    get_option('with-init-style') == 'debian'
-    or get_option('with-init-style') == 'debian-systemd'
-    or get_option('with-init-style') == 'gentoo-systemd'
-    or get_option('with-init-style') == 'redhat-systemd'
-    or get_option('with-init-style') == 'suse-systemd'
-    or get_option('with-init-style') == 'systemd'
+    init_style == 'debian'
+    or init_style == 'debian-systemd'
+    or init_style == 'gentoo-systemd'
+    or init_style == 'redhat-systemd'
+    or init_style == 'suse-systemd'
+    or init_style == 'systemd'
 )
     init_dir = '/usr/lib/systemd/system'
     init_dirs += init_dir
@@ -28,8 +27,8 @@ if (
 endif
 
 if (
-  get_option('with-init-style') == 'debian'
-  or get_option('with-init-style') == 'debian-sysv'
+  init_style == 'debian'
+  or init_style == 'debian-sysv'
 )
     init_dir = '/etc/init.d'
     init_dirs += init_dir
@@ -54,7 +53,7 @@ if (
     endif
 endif
 
-if get_option('with-init-style') == 'freebsd'
+if init_style == 'freebsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
     custom_target(
@@ -76,7 +75,7 @@ if get_option('with-init-style') == 'freebsd'
     endif
 endif
 
-if get_option('with-init-style') == 'netbsd'
+if init_style == 'netbsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
     custom_target(
@@ -91,7 +90,7 @@ if get_option('with-init-style') == 'netbsd'
     )
 endif
 
-if get_option('with-init-style') == 'openbsd'
+if init_style == 'openbsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
     custom_target(
@@ -113,7 +112,7 @@ if get_option('with-init-style') == 'openbsd'
     endif
 endif
 
-if get_option('with-init-style') == 'solaris'
+if init_style == 'solaris'
     init_dir = '/lib/svc/manifest/network'
     init_dirs += init_dir
     custom_target(
@@ -135,8 +134,8 @@ if get_option('with-init-style') == 'solaris'
 endif
 
 if (
-    get_option('with-init-style') == 'openrc'
-    or get_option('with-init-style') == 'gentoo-openrc'
+    init_style == 'openrc'
+    or init_style == 'gentoo-openrc'
 )
     init_dir = '/etc/init.d'
     init_dirs += init_dir
@@ -160,7 +159,7 @@ if (
     endif
 endif
 
-if get_option('with-init-style') == 'macos-launchd'
+if init_style == 'macos-launchd'
     init_dir = '/Library/LaunchDaemons'
     init_dirs += init_dir
     custom_target(
