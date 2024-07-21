@@ -20,7 +20,6 @@ Options:
   --libs-dirs   only print the -L/-R part of --libs
   --libs-names  only print the -l part of --libs
   --help        display this help and exit
-  --macros      print the path to m4 macros
 
   --prefix[=DIR]
   --exec_prefix[=DIR]
@@ -73,12 +72,6 @@ while test $# -gt 0; do
       ;;
     --libs-names)
       af_echo_libs_l=yes
-      ;;
-    --macros*)
-
-echo -I @prefix@/include/netatalk/macros
-exit
-
       ;;
     --prefix=*)
       prefix=$af_optarg
