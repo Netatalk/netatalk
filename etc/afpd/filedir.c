@@ -363,7 +363,7 @@ static int moveandrename(const AFPObj *obj,
                 of_rename(vol, opened, sdir, oldname, curdir, newname);
         }
     } else {
-        rc = renamedir(vol, sdir_fd, oldunixname, upath, sdir, curdir, newname);
+        rc = renamedir(vol, sdir_fd, oldunixname, upath, curdir, newname);
     }
     if ( rc == AFP_OK && id ) {
         /* renaming may have moved the file/dir across a filesystem */
