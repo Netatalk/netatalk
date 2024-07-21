@@ -136,6 +136,31 @@ else
     bison = find_program('bison', required: false)
 endif
 
+##############
+# Init Style #
+##############
+
+uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
+init_style = get_option('with-init-style')
+
+if init_style == 'auto'
+    if uname_stdout.to_lower().contains('debian') or uname_stdout.to_lower().contains('ubuntu')
+        init_style = 'debian-systemd'
+    elif host_os == 'freebsd'
+        init_style = 'freebsd'
+    elif host_os == 'netbsd'
+        init_style = 'netbsd'
+    elif host_os == 'openbsd'
+        init_style = 'openbsd'
+    elif host_os == 'darwin'
+        init_style = 'macos-launchd'
+    elif host_os == 'sunos'
+        init_style = 'solaris'
+    else
+        init_style = 'none'
+    endif
+endif
+
 #############
 # Libraries #
 #############
@@ -150,7 +175,7 @@ if host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
 endif
 
-if uname.found() and run_command(uname, '-n', check: false).stdout().strip().contains('omnios')
+if uname.found() and uname_stdout.to_lower().contains('omnios')
     libsearch_dirs += '/opt/local/lib'
 endif
 
@@ -2083,7 +2108,7 @@ uams_using_options = '(' + uams_options + ')'
 
 summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:')
 summary_info = {
-    '  Initscript style': get_option('with-init-style'),
+    '  Initscript style': init_style,
 }
 summary(summary_info, bool_yn: true, section: '  Init Style:')
 
