@@ -1,8 +1,6 @@
 # Quick start
 
-Netatalk can be built by using Meson or GNU Autotools.
-The meson build system is the recommended build system for the main
-branch, autotools support may be be removed at some point in the future.
+Netatalk uses the Meson build system.
 
 Meson only supports out-of-tree builds, and must be passed a directory to put
 built and generated sources into. We'll call that directory "build" here. It's
@@ -109,85 +107,3 @@ Optional:
 
 More details about dependencies can be found in the documentation at
 https://netatalk.io/stable/htmldocs/installation
-
-# Compiling with autotools (deprecated)
-
-The rest of this document contains the GNU autotools install
-insructions....
-
-## Basic Installation
-
-
-   The `configure` shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile` in each directory of the package.
-It may also create one or more `.h` files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status` that
-you can run in the future to recreate the current configuration, a file
-`config.cache` that saves the results of its tests to speed up
-reconfiguring, and a file `config.log` containing compiler output
-(useful mainly for debugging `configure`).
-
-   The simplest way to compile this package is:
-
-  1. `cd` to the directory containing the package's source code and type
-     './bootstrap' to create the configure file for your system. Then
-     type `./configure` to configure the package.
-
-     Running `configure` takes awhile.  While running, it prints some
-     messages telling which features it is checking for.
-
-  2. Type `make` to compile the package.
-
-  3. Optionally, type `make check` to run any self-tests that come with
-     the package.
-
-  4. Type `make install` to install the programs and any data files and
-     documentation.
-
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean`.  To also remove the
-     files that `configure` created (so you can compile the package for
-     a different kind of computer), type `make distclean`.
-
-## Compilers and Options
-
-   Some systems require unusual options for compilation or linking that
-the `configure` script does not know about.  You can give `configure`
-initial values for variables by setting them in the environment.  Using
-a Bourne-compatible shell, you can do that on the command line like
-this:
-
-```
-CC=gcc CFLAGS=-O2 LIBS=-lposix ./configure
-```
-
-Or on systems that have the `env` program, you can do it like this:
-
-```
-env CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib ./configure
-```
-
-## Installation Names
-
-   By default, `make install` will install the package's files in
-`/usr/local/bin`, `/usr/local/man`, etc.  You can specify an
-installation prefix other than `/usr/local` by giving `configure` the
-option `--prefix=PATH`.
-
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure` the option `--exec-prefix=PATH`, the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
-
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=PATH` to specify different values for particular
-kinds of files.  Run `configure --help` for a list of the directories
-you can set and what kinds of files go in them.
-
-## Optional Features
-
-   Netatalk has `--enable-FEATURE` options to pass to `configure`, where
-FEATURE indicates an optional part of the package. Run `configure --help`
-to see which configuration options are available.
