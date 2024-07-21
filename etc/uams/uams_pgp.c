@@ -32,11 +32,6 @@
 
 #include <nettle/cast128.h>
 #include <nettle/cbc.h>
-
-#elif defined(OPENSSL_DHX)
-#include <openssl/bn.h>
-#include <openssl/dh.h>
-#include <openssl/cast.h>
 #endif /* EMBEDDED_SSL */
 
 #include <atalk/afp.h>
