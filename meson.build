@@ -136,12 +136,6 @@ else
     bison = find_program('bison', required: false)
 endif
 
-################
-# Dependencies #
-################
-
-threads = dependency('threads', required: true)
-
 #############
 # Libraries #
 #############
