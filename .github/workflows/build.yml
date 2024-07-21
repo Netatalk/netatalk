@@ -33,6 +33,7 @@ env:
   APT_PACKAGES: |
     bison \
     docbook-xsl \
+    file \
     flex \
     libacl1-dev \
     libavahi-client-dev \
@@ -45,7 +46,8 @@ env:
     libglib2.0-dev \
     libkrb5-dev \
     libldap2-dev \
-    libmysqlclient-dev \
+    libmariadb-dev \
+    libmariadb-dev-compat \
     libpam0g-dev \
     libtalloc-dev \
     libtirpc-dev \
@@ -85,14 +87,15 @@ jobs:
             db-dev \
             dbus-dev \
             dbus-glib-dev \
+            docbook-xsl \
             flex \
             gcc \
             krb5-dev \
             libevent-dev \
             libgcrypt-dev \
             libtirpc-dev \
-            libtool \
             libtracker \
+            libxslt \
             linux-pam-dev \
             meson \
             nettle-dev \
@@ -108,8 +111,11 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
-            -Dwith-init-style=openrc
+            -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets \
+            -Dwith-init-style=openrc \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run tests
@@ -131,7 +137,9 @@ jobs:
           pacman -Sy --noconfirm \
             cracklib \
             db \
+            docbook-xsl \
             gcc \
+            libxslt \
             meson \
             nettle \
             ninja \
@@ -140,8 +148,11 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -160,42 +171,14 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install --assume-yes --no-install-recommends \
-            bison \
-            default-libmysqlclient-dev \
-            file \
-            flex \
-            gcc \
-            libacl1-dev \
-            libavahi-client-dev \
-            libcrack2-dev \
-            libdb-dev \
-            libdbus-1-dev \
-            libdbus-glib-1-dev \
-            libevent-dev \
-            libgcrypt-dev \
-            libglib2.0-dev \
-            libkrb5-dev \
-            libldap2-dev \
-            libpam0g-dev \
-            libtalloc-dev \
-            libtirpc-dev \
-            libtracker-sparql-3.0-dev \
-            libwolfssl-dev \
-            libwrap0-dev \
-            meson \
-            nettle-dev \
-            ninja-build \
-            quota \
-            systemtap-sdt-dev \
-            tcpd \
-            tracker \
-            tracker-miner-fs
+          apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Configure
         run: |
           meson setup build \
             -Dwith-tests=true \
             -Dwith-init-hooks=false \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
             -Dwith-pkgconfdir-path=/etc/netatalk
       - name: Build
         run: meson compile -C build
@@ -222,6 +205,7 @@ jobs:
             cracklib-devel \
             dbus-devel \
             dbus-glib-devel \
+            docbook-style-xsl \
             flex \
             glib2-devel \
             krb5-devel \
@@ -229,6 +213,7 @@ jobs:
             libdb-devel \
             libgcrypt-devel \
             libtalloc-devel \
+            libxslt \
             meson \
             nettle-devel \
             ninja-build \
@@ -244,9 +229,11 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=redhat-systemd
+            -Dwith-init-style=redhat-systemd \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run tests
@@ -266,18 +253,14 @@ jobs:
       - name: Install dependencies
         run: |
           zypper in -y \
-            file \
-            gawk \
-            gcc \
-            meson \
-            ninja \
-            pkg-config \
-            systemd \
-            wget \
             bison \
             cracklib-devel \
             dbus-1-devel \
+            docbook-xsl-stylesheets \
+            file \
             flex \
+            gawk \
+            gcc \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
@@ -288,17 +271,25 @@ jobs:
             libtalloc-devel \
             libtdb-devel \
             libtracker-sparql-3_0-0 \
+            libxslt-tools \
+            meson \
+            ninja \
             openldap2-devel \
             pam-devel \
+            pkg-config \
+            systemd \
             systemtap-sdt-devel \
             tcpd-devel \
             tracker
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
+            -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=suse-systemd
+            -Dwith-init-style=suse-systemd \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run tests
@@ -320,9 +311,10 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
+            -Dwith-init-hooks=false \
             -Dwith-manual=true \
-            -Dwith-init-hooks=false
+            -Dwith-pgp-uam=true \
+            -Dwith-tests=true
       - name: Build and generate manual pages
         run: meson compile -C build
       - name: Run tests
@@ -356,9 +348,11 @@ jobs:
               avahi \
               bison \
               db5 \
+              docbook-xsl \
               krb5-devel \
               libevent \
               libgcrypt \
+              libxslt \
               meson \
               nettle \
               openldap26-client \
@@ -371,7 +365,9 @@ jobs:
               tracker3
           run: |
             set -e
-            meson setup build
+            meson setup build \
+              -Dwith-manual=true \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             ninja -C build uninstall
@@ -393,10 +389,11 @@ jobs:
               avahi \
               bison \
               db5 \
+              docbook-xsl \
               flex \
               libevent \
               libgcrypt \
-              libtool \
+              libxslt \
               meson \
               nettle \
               openldap26-client-2.6.8 \
@@ -407,7 +404,9 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-manual=true \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             /etc/rc.d/netatalk start
@@ -436,11 +435,13 @@ jobs:
               bison \
               db5 \
               dbus-glib \
+              docbook-xsl \
               flex \
               gcc13 \
               gnome-tracker \
               libevent \
               libgcrypt \
+              libxslt \
               meson \
               nettle \
               p5-Net-DBus \
@@ -451,7 +452,9 @@ jobs:
             set -e
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-              -Dwith-dtrace=false
+              -Dwith-dtrace=false \
+              -Dwith-manual=true \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             service netatalk onestart
@@ -478,11 +481,13 @@ jobs:
               bison \
               dbus-glib \
               db-4.6.21p7v0 \
+              docbook-xsl \
               gcc-11.2.0p11 \
               libevent \
               libgcrypt \
               libnettle \
               libtalloc \
+              libxslt \
               meson \
               openldap-client-2.6.7v0 \
               openpam \
@@ -491,7 +496,9 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-manual=true \
+              -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
@@ -511,10 +518,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install berkeley-db libtool meson mysql talloc
+        run: brew install berkeley-db docbook-xsl libxslt meson mysql talloc
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -551,9 +560,11 @@ jobs:
             pkgin -y install \
               avahi \
               dbus-glib \
+              docbook-xsl \
               gnome-tracker \
               libevent \
               libgcrypt \
+              libxslt \
               meson \
               nettle \
               talloc
@@ -563,6 +574,7 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-ldap-path=/opt/local \
+              -Dwith-manual=true \
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
@@ -592,12 +604,15 @@ jobs:
               gcc \
               libevent \
               libgcrypt \
+              ninja \
               pkg-config
             pip install meson
           run: |
             set -e
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
+              -Dwith-manual=true \
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
@@ -629,8 +644,10 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
-            -Dwith-krbV-uam=true \
-            -Dwith-pgp-uam=true
+            -Dwith-init-style=none \
+            -Dwith-manual=true \
+            -Dwith-pgp-uam=true \
+            -Dwith-tests=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
