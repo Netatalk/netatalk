@@ -2057,7 +2057,6 @@ subdir('config')
 subdir('etc')
 subdir('contrib')
 subdir('distrib')
-subdir('man')
 
 if get_option('with-manual')
     subdir('doc')

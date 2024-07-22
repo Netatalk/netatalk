@@ -1,33 +1,35 @@
-manxml = [
-    'ad',
-    'afpldaptest',
-    'afppasswd',
-    'afpstats',
-    'apple_dump',
-    'asip-status',
-    'dbd',
-    'macusers',
-    'netatalk-config',
+manfiles = [
+    'ad.1',
+    'afpldaptest.1',
+    'afppasswd.1',
+    'afpstats.1',
+    'apple_dump.1',
+    'asip-status.1',
+    'dbd.1',
+    'macusers.1',
+    'netatalk-config.1',
 ]
 
-foreach man : manxml
+foreach man : manfiles
     man_xmlfile = configure_file(
-        input: man + '.1.xml',
-        output: man + '.1.xml',
+        input: man + '.xml',
+        output: man + '.xml',
         configuration: cdata,
     )
 
-    man_gen = custom_target(
-        man + '.1',
+    custom_target(
+        man,
         input: man_xmlfile,
-        output: man + '.1',
+        output: man,
         command: [
             manpages_command,
             '&&',
             'cp',
             '@OUTPUT@',
-            meson.project_source_root() / 'man/man1' / man + '.1.in',
+            man,
         ],
+        install: true,
+        install_dir: mandir / 'man1',
         build_by_default: true,
     )
 endforeach

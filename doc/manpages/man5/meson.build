@@ -1,23 +1,30 @@
-manxml = ['afp_signature.conf', 'afp_voluuid.conf', 'afp.conf', 'extmap.conf']
+manfiles = [
+    'afp_signature.conf.5',
+    'afp_voluuid.conf.5',
+    'afp.conf.5',
+    'extmap.conf.5',
+]
 
-foreach man : manxml
+foreach man : manfiles
     man_xmlfile = configure_file(
-        input: man + '.5.xml',
-        output: man + '.5.xml',
+        input: man + '.xml',
+        output: man + '.xml',
         configuration: cdata,
     )
 
-    man_gen = custom_target(
-        man + '.5',
+    custom_target(
+        man,
         input: man_xmlfile,
-        output: man + '.5',
+        output: man,
         command: [
             manpages_command,
             '&&',
             'cp',
             '@OUTPUT@',
-            meson.project_source_root() / 'man/man5' / man + '.5.in',
+            man,
         ],
+        install: true,
+        install_dir: mandir / 'man5',
         build_by_default: true,
     )
 endforeach

@@ -1,23 +1,30 @@
-manxml = ['afpd', 'cnid_dbd', 'cnid_metad', 'netatalk']
+manfiles = [
+    'afpd.8',
+    'cnid_dbd.8',
+    'cnid_metad.8',
+    'netatalk.8',
+]
 
-foreach man : manxml
+foreach man : manfiles
     man_xmlfile = configure_file(
-        input: man + '.8.xml',
-        output: man + '.8.xml',
+        input: man + '.xml',
+        output: man + '.xml',
         configuration: cdata,
     )
 
-    man_gen = custom_target(
-        man + '.8',
+    custom_target(
+        man,
         input: man_xmlfile,
-        output: man + '.8',
+        output: man,
         command: [
             manpages_command,
             '&&',
             'cp',
             '@OUTPUT@',
-            meson.project_source_root() / 'man/man8' / man + '.8.in',
+            man,
         ],
+        install: true,
+        install_dir: mandir / 'man8',
         build_by_default: true,
     )
 endforeach
