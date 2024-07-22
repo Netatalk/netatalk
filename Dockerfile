@@ -37,9 +37,11 @@ ENV BUILD_DEPS \
     ninja \
     nettle-dev \
     openldap-dev \
+    perl \
     pkgconfig \
     talloc-dev \
-    tracker-dev
+    tracker-dev \
+    unicode-character-database
 RUN apk update \
 &&  apk add --no-cache \
     $LIB_DEPS \
@@ -64,6 +66,7 @@ RUN meson setup build \
     -Dwith-dtrace=false \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
+    -Dwith-manual=false \
     -Dwith-pgp-uam=false \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \

@@ -1,6 +1,6 @@
 uams_guest_sources = ['uams_guest.c']
 
-uams_guest = shared_module(
+shared_module(
     'uams_guest',
     uams_guest_sources,
     include_directories: root_includes,
@@ -10,7 +10,7 @@ uams_guest = shared_module(
     install_dir: libdir / 'netatalk',
 )
 
-uams_guest = static_library(
+static_library(
     'uams_guest',
     uams_guest_sources,
     include_directories: root_includes,
@@ -21,7 +21,7 @@ uams_guest = static_library(
 
 uams_passwd_sources = ['uams_passwd.c']
 
-uams_passwd = shared_module(
+shared_module(
     'uams_passwd',
     uams_passwd_sources,
     include_directories: root_includes,
@@ -31,7 +31,7 @@ uams_passwd = shared_module(
     install_dir: libdir / 'netatalk',
 )
 
-uams_passwd = static_library(
+static_library(
     'uams_passwd',
     uams_passwd_sources,
     include_directories: root_includes,
@@ -50,7 +50,7 @@ if have_ssl
     uams_dhx_passwd_sources = ['uams_dhx_passwd.c']
 
     if enable_rpath
-        uams_dhx_passwd = shared_module(
+        shared_module(
             'uams_dhx_passwd',
             uams_dhx_passwd_sources,
             include_directories: root_includes,
@@ -63,7 +63,7 @@ if have_ssl
             build_rpath: libdir,
             install_rpath: libdir,
         )
-        uams_dhx_passwd = static_library(
+        static_library(
             'uams_dhx_passwd',
             uams_dhx_passwd_sources,
             include_directories: root_includes,
@@ -76,7 +76,7 @@ if have_ssl
             install_rpath: libdir,
         )
     else
-        uams_dhx_passwd = shared_module(
+        shared_module(
             'uams_dhx_passwd',
             uams_dhx_passwd_sources,
             include_directories: root_includes,
@@ -87,7 +87,7 @@ if have_ssl
             install: true,
             install_dir: libdir / 'netatalk',
         )
-        uams_dhx_passwd = static_library(
+        static_library(
             'uams_dhx_passwd',
             uams_dhx_passwd_sources,
             include_directories: root_includes,
@@ -102,7 +102,7 @@ if have_ssl
         uams_dhx_pam_sources = ['uams_dhx_pam.c']
 
         if enable_rpath
-            uams_dhx_pam = shared_module(
+            shared_module(
                 'uams_dhx_pam',
                 uams_dhx_pam_sources,
                 include_directories: [pam_includes, root_includes],
@@ -115,7 +115,7 @@ if have_ssl
                 build_rpath: libdir,
                 install_rpath: libdir,
             )
-            uams_dhx_pam = static_library(
+            static_library(
                 'uams_dhx_pam',
                 uams_dhx_pam_sources,
                 include_directories: [pam_includes, root_includes],
@@ -128,7 +128,7 @@ if have_ssl
                 install_rpath: libdir,
             )
         else
-            uams_dhx_pam = shared_module(
+            shared_module(
                 'uams_dhx_pam',
                 uams_dhx_pam_sources,
                 include_directories: [pam_includes, root_includes],
@@ -139,7 +139,7 @@ if have_ssl
                 install: true,
                 install_dir: libdir / 'netatalk',
             )
-            uams_dhx_pam = static_library(
+            static_library(
                 'uams_dhx_pam',
                 uams_dhx_pam_sources,
                 include_directories: [pam_includes, root_includes],
@@ -168,7 +168,7 @@ endif
 if have_libgcrypt
     uams_dhx2_passwd_sources = ['uams_dhx2_passwd.c']
 
-    uams_dhx2_passwd = shared_module(
+    shared_module(
         'uams_dhx2_passwd',
         uams_dhx2_passwd_sources,
         include_directories: root_includes,
@@ -179,7 +179,7 @@ if have_libgcrypt
         install_dir: libdir / 'netatalk',
     )
 
-    uams_dhx2_passwd = static_library(
+    static_library(
         'uams_dhx2_passwd',
         uams_dhx2_passwd_sources,
         include_directories: root_includes,
@@ -191,7 +191,7 @@ if have_libgcrypt
     if have_pam
         uams_dhx2_pam_sources = ['uams_dhx2_pam.c']
 
-        uams_dhx2_pam = shared_module(
+        shared_module(
             'uams_dhx2_pam',
             uams_dhx2_pam_sources,
             include_directories: [pam_includes, root_includes],
@@ -202,7 +202,7 @@ if have_libgcrypt
             install_dir: libdir / 'netatalk',
         )
 
-        uams_dhx2_pam = static_library(
+        static_library(
             'uams_dhx2_pam',
             uams_dhx2_pam_sources,
             include_directories: [pam_includes, root_includes],
@@ -229,7 +229,7 @@ endif
 if have_pam
     uams_pam_sources = ['uams_pam.c']
 
-    uams_pam = shared_module(
+    shared_module(
         'uams_pam',
         uams_pam_sources,
         include_directories: [pam_includes, root_includes],
@@ -240,7 +240,7 @@ if have_pam
         install_dir: libdir / 'netatalk',
     )
 
-    uams_pam = static_library(
+    static_library(
         'uams_pam',
         uams_pam_sources,
         include_directories: [pam_includes, root_includes],
@@ -267,7 +267,7 @@ if have_ssl
     uams_randnum_sources = ['uams_randnum.c']
 
     if enable_rpath
-        uams_randnum = shared_module(
+        shared_module(
             'uams_randnum',
             uams_randnum_sources,
             include_directories: root_includes,
@@ -280,7 +280,7 @@ if have_ssl
             build_rpath: libdir,
             install_rpath: libdir,
         )
-        uams_randnum = static_library(
+        static_library(
             'uams_randnum',
             uams_randnum_sources,
             include_directories: root_includes,
@@ -293,7 +293,7 @@ if have_ssl
             install_rpath: libdir,
         )
     else
-        uams_randnum = shared_module(
+        shared_module(
             'uams_randnum',
             uams_randnum_sources,
             include_directories: root_includes,
@@ -304,7 +304,7 @@ if have_ssl
             install: true,
             install_dir: libdir / 'netatalk',
         )
-        uams_randnum = static_library(
+        static_library(
             'uams_randnum',
             uams_randnum_sources,
             include_directories: root_includes,
@@ -320,7 +320,7 @@ endif
 if enable_pgp_uam
     uams_pgp_sources = ['uams_pgp.c']
 
-    uams_pgp = shared_module(
+    shared_module(
         'uams_pgp',
         uams_pgp_sources,
         include_directories: root_includes,
@@ -331,7 +331,7 @@ if enable_pgp_uam
         install_dir: libdir / 'netatalk',
     )
 
-    uams_pgp = static_library(
+    static_library(
         'uams_pgp',
         uams_pgp_sources,
         include_directories: root_includes,
@@ -345,7 +345,7 @@ endif
 if have_krb5_uam
     uams_gss_sources = ['uams_gss.c']
 
-    uams_gss = shared_module(
+    shared_module(
         'uams_gss',
         uams_gss_sources,
         include_directories: [gssapi_includes, root_includes],
@@ -357,7 +357,7 @@ if have_krb5_uam
         install_dir: libdir / 'netatalk',
     )
 
-    uams_gss = static_library(
+    static_library(
         'uams_gss',
         uams_gss_sources,
         include_directories: [gssapi_includes, root_includes],
