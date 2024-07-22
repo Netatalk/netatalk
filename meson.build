@@ -1375,7 +1375,7 @@ if iconv_path != ''
     endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
-        include_directories: include_directories(with_libiconv / 'include'),
+        include_directories: include_directories(iconv_path / 'include'),
     )
 endif
 
