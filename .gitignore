@@ -1,6 +1,13 @@
-afp_dtrace.h
+# Generated source files
+etc/spotlight/sparql_parser.c
+etc/spotlight/sparql_parser.h
+etc/spotlight/spotlight_rawquery_lexer.c
+include/atalk/afp_dtrace.h
+libatalk/unicode/precompose.h
+libatalk/unicode/utf16_case.c
+libatalk/unicode/utf16_casetable.h
+
+# Temporary build files
 build/**
 docker-compose.yml
-sparql_parser.c
-sparql_parser.h
-spotlight_rawquery_lexer.c
+UnicodeData.txt

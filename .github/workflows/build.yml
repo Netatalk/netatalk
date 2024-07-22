@@ -62,6 +62,7 @@ env:
     tcpd \
     tracker \
     tracker-miner-fs \
+    unicode-data \
     xsltproc
 
 jobs:
@@ -102,12 +103,14 @@ jobs:
             ninja \
             openldap-dev \
             openrc \
+            perl \
             pkgconfig \
             rpcsvc-proto-dev \
             talloc-dev \
             tracker \
             tracker-dev \
-            tracker-miners
+            tracker-miners \
+            unicode-character-database
       - name: Configure
         run: |
           meson setup build \
@@ -143,8 +146,10 @@ jobs:
             meson \
             nettle \
             ninja \
+            perl \
             pkgconfig \
-            rpcsvc-proto
+            rpcsvc-proto \
+            unicode-character-database
       - name: Configure
         run: |
           meson setup build \
@@ -225,7 +230,8 @@ jobs:
             systemd \
             systemtap-sdt-devel \
             tracker \
-            tracker-devel
+            tracker-devel \
+            unicode-ucd
       - name: Configure
         run: |
           meson setup build \
@@ -276,11 +282,13 @@ jobs:
             ninja \
             openldap2-devel \
             pam-devel \
+            perl \
             pkg-config \
             systemd \
             systemtap-sdt-devel \
             tcpd-devel \
-            tracker
+            tracker \
+            unicode-ucd
       - name: Configure
         run: |
           meson setup build \
@@ -315,7 +323,7 @@ jobs:
             -Dwith-manual=true \
             -Dwith-pgp-uam=true \
             -Dwith-tests=true
-      - name: Build and generate manual pages
+      - name: Build
         run: meson compile -C build
       - name: Run tests
         run: cd build && meson test
@@ -362,9 +370,11 @@ jobs:
               py39-sqlite3 \
               py39-tkinter \
               talloc \
-              tracker3
+              tracker3 \
+              wget
           run: |
             set -e
+            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dwith-manual=true \
               -Dwith-pgp-uam=true
@@ -400,9 +410,11 @@ jobs:
               perl5 \
               pkgconf \
               talloc \
-              tracker3
+              tracker3 \
+              wget
           run: |
             set -e
+            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-manual=true \
@@ -447,7 +459,8 @@ jobs:
               p5-Net-DBus \
               perl \
               pkg-config \
-              talloc
+              talloc \
+              tex-unicode-data
           run: |
             set -e
             meson setup build \
@@ -492,9 +505,11 @@ jobs:
               openldap-client-2.6.7v0 \
               openpam \
               pkgconf \
-              tracker3
+              tracker3 \
+              wget
           run: |
             set -e
+            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-manual=true \
@@ -518,7 +533,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install berkeley-db docbook-xsl libxslt meson mysql talloc
+        run: |
+          brew install berkeley-db docbook-xsl libxslt meson mysql talloc
+          wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
       - name: Configure
         run: |
           meson setup build \
@@ -571,6 +588,7 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-ldap-path=/opt/local \
@@ -604,11 +622,14 @@ jobs:
               gcc \
               libevent \
               libgcrypt \
+              nettle \
               ninja \
-              pkg-config
+              pkg-config \
+              wget
             pip install meson
           run: |
             set -e
+            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \

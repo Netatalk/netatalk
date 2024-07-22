@@ -125,7 +125,7 @@ endif
 
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
-perl = find_program('perl', required: false)
+perl = find_program('perl', required: true)
 uname = find_program('uname', required: false)
 if host_os == 'darwin'
     bison = find_program(macos_prefix / 'opt/bison/bin/bison', required: false)
@@ -494,6 +494,37 @@ else
     error(
         'Berkeley DB library required but not found! Please specify an installation path using the -Dwith-bdb= configure option (must include lib and include dirs)',
     )
+endif
+
+#
+# Check for Unicode Character Database
+#
+
+unicode_dirs = [
+    '/usr/share/unicode',
+    '/usr/share/unicode/ucd',
+    '/usr/pkg/share/texmf-dist/tex/generic/unicode-data',
+    '/usr/local/share/texmf-dist/tex/generic/unicode-data/',
+]
+
+unicode_data_path = get_option('with-unicode-data-path')
+
+if unicode_data_path == ''
+    unicode_data_file = 'UnicodeData.txt'
+    foreach dir : unicode_dirs
+        if fs.exists(dir / 'UnicodeData.txt')
+            unicode_data_file = dir / 'UnicodeData.txt'
+            break
+        endif
+    endforeach
+else
+    unicode_data_file = unicode_data_path / 'UnicodeData.txt'
+endif
+
+if fs.exists(unicode_data_file)
+    message('Using Unicode Character Database: ' + unicode_data_file)
+else
+    error('UnicodeData.txt not found. Specify path with -Dwith-unicode-data-path')
 endif
 
 #
