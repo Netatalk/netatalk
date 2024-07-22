@@ -138,6 +138,7 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Sy --noconfirm \
+            avahi \
             cracklib \
             db \
             docbook-xsl \

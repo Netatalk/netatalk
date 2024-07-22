@@ -35,7 +35,7 @@ libwolfssl = shared_library(
     wolfssl_sources,
     dependencies: threads,
     include_directories: wolfssl_includes,
-    install: false,
+    install: true,
 )
 
 libssl_dep = declare_dependency(

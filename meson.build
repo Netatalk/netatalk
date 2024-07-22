@@ -534,6 +534,10 @@ endif
 have_embedded_ssl = get_option('with-embedded-ssl')
 have_ssl_override = get_option('with-ssl-override')
 
+if have_ssl_override
+    have_embedded_ssl = true
+endif
+
 ssl_deps = []
 ssl_link_args = []
 ssl_provider = ''
@@ -564,7 +568,7 @@ else
     have_wolfssl = false
 endif
 
-if (have_ssl_override or have_wolfssl or have_embedded_ssl) and nettle.found()
+if (have_wolfssl or have_embedded_ssl) and nettle.found()
     have_ssl = true
     if enable_dtags
         ssl_link_args += '-Wl,--enable-new-dtags'
@@ -574,14 +578,7 @@ if (have_ssl_override or have_wolfssl or have_embedded_ssl) and nettle.found()
     endif
     cdata.set('UAM_DHX', 1)
     ssl_deps += nettle
-    if have_ssl_override
-        libwolfssl_proj = subproject('wolfssl')
-        libssl = libwolfssl_proj.get_variable('libssl_dep')
-        have_wolfssl = false
-        have_embedded_ssl = true
-        ssl_provider += 'built-in'
-        cdata.set('EMBEDDED_SSL', 1)
-    elif have_wolfssl
+    if have_wolfssl and not have_ssl_override
         have_embedded_ssl = false
         ssl_deps += wolfssl
         ssl_provider += 'WolfSSL'
@@ -1408,7 +1405,7 @@ if iconv_path != ''
     endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
-        include_directories: include_directories(with_libiconv / 'include'),
+        include_directories: include_directories(iconv_path / 'include'),
     )
 endif
 
