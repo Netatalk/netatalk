@@ -297,6 +297,12 @@ option(
     value: 'libdir / netatalk',
     description: 'Set path to UAMs',
 )
+option(
+    'with-unicode-data-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to UnicodeData.txt',
+)
 
 # The following options set the preferred init-style and default CNID backend:
 

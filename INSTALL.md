@@ -77,12 +77,14 @@ options.
 
 Required:
 
+  - Berkeley DB version 4.6.0 or later
   - libevent 2
   - libgcrypt version 1.2.3 or later (for DHX2 UAM support)
-  - Berkeley DB version 4.6.0 or later
   - perl
+  - UnicodeData.txt
 
 Required for Spotlight support:
+
   - talloc
   - tracker version 0.12 or later
   - bison
@@ -92,18 +94,15 @@ Optional:
 
   - avahi or mDNSresponder           (for Zeroconf support)
   - cracklib                         (for cracklib support)
-  - Docbook XSL stylesheets          (for manpages & manual documentation)
+  - Docbook XSL and xsltproc         (for manpages & manual documentation)
   - GLib 2 and dbus-glib             (for afpstats support)
   - Kerberos V                       (for krbV UAM support)
   - libacl                           (for ACL support)
   - libldap                          (for LDAP support)
   - libpam                           (for PAM support)
-  - WolfSSL, libressl or OpenSSL@1.1 (for Randnum and DHX UAM support.
-                                      Built-in SSL support is also available)
-  - libtirpc / libquota              (for Quota support)
-  - perl                             (for various scripts)
+  - libtirpc or libquota             (for Quota support)
+  - nettle / WolfSSL                 (for Randnum and DHX UAM support)
   - tcpwrap                          (for TCP wrapper support)
-  - xsltproc                         (for manpages and mananual documentation)
 
 More details about dependencies can be found in the documentation at
 https://netatalk.io/stable/htmldocs/installation
