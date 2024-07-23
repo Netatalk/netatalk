@@ -103,7 +103,7 @@ option(
     'with-manual',
     type: 'boolean',
     value: false,
-    description: 'Set path to Docbook XSL directory',
+    description: 'Compile Netatalk documentation',
 )
 option(
     'with-overwrite',
