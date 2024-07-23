@@ -100,12 +100,6 @@ option(
     description: 'Enable iconv support',
 )
 option(
-    'with-manual',
-    type: 'boolean',
-    value: false,
-    description: 'Set path to Docbook XSL directory',
-)
-option(
     'with-overwrite',
     type: 'boolean',
     value: false,
@@ -307,6 +301,17 @@ option(
 # The following options set the preferred init-style and default CNID backend:
 
 option(
+    'with-cnid-default-backend',
+    type: 'combo',
+    choices: [
+        'dbd',
+        'last',
+        'mysql',
+    ],
+    value: 'dbd',
+    description: 'Set default DID scheme',
+)
+option(
     'with-init-style',
     type: 'combo',
     choices: [
@@ -331,13 +336,13 @@ option(
     description: 'Use OS specific init config',
 )
 option(
-    'with-cnid-default-backend',
+    'with-manual',
     type: 'combo',
     choices: [
-        'dbd',
-        'last',
-        'mysql',
+        'none',
+        'local',
+        'www',
     ],
-    value: 'dbd',
-    description: 'Set default DID scheme',
+    value: 'local',
+    description: 'Compile Netatalk documentation',
 )

@@ -1539,7 +1539,7 @@ endif
 #
 
 docbook_path = get_option('with-docbook-path')
-compile_manual = get_option('with-manual')
+compile_manual = get_option('with-manual') != 'none'
 
 xsltproc = find_program('xsltproc', required: false)
 xsl = []
@@ -2086,7 +2086,7 @@ subdir('etc')
 subdir('contrib')
 subdir('distrib')
 
-if get_option('with-manual')
+if get_option('with-manual') != 'none'
     subdir('doc')
 endif
 
@@ -2215,5 +2215,8 @@ if have_spotlight
 endif
 summary(summary_info, bool_yn: true, section: '  Paths:')
 
-summary_info = {'  Docbook': build_xml_docs}
+summary_info = {
+    '  Docbook': build_xml_docs,
+    '  Manual style': get_option('with-manual'),
+}
 summary(summary_info, bool_yn: true, section: '  Documentation:')
