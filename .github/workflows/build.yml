@@ -156,6 +156,7 @@ jobs:
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
             -Dwith-pgp-uam=true \
+            -Dwith-rpath=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
