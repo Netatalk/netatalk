@@ -182,48 +182,25 @@ if have_dtrace and host_os != 'darwin'
     afpd_external_deps += dtrace_deps
 endif
 
-if enable_rpath
-    executable(
-        'afpd',
-        afpd_dtrace_input,
-        objects: afpd_objs,
-        include_directories: root_includes,
-        link_with: [afpd_internal_deps, libatalk],
-        dependencies: afpd_external_deps,
-        c_args: [
-            '-DAPPLCNAME', afpd_c_args,
-            confdir,
-            dversion,
-            messagedir,
-            statedir,
-            uamdir,
-        ],
-        link_args: netatalk_common_link_args,
-        export_dynamic: true,
-        install: true,
-        install_dir: sbindir,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-else
-    executable(
-        'afpd',
-        afpd_dtrace_input,
-        objects: afpd_objs,
-        include_directories: root_includes,
-        link_with: [afpd_internal_deps, libatalk],
-        dependencies: afpd_external_deps,
-        c_args: [
-            '-DAPPLCNAME', afpd_c_args,
-            confdir,
-            dversion,
-            messagedir,
-            statedir,
-            uamdir,
-        ],
-        link_args: netatalk_common_link_args,
-        export_dynamic: true,
-        install: true,
-        install_dir: sbindir,
-    )
-endif
+executable(
+    'afpd',
+    afpd_dtrace_input,
+    objects: afpd_objs,
+    include_directories: root_includes,
+    link_with: [afpd_internal_deps, libatalk],
+    dependencies: afpd_external_deps,
+    c_args: [
+        '-DAPPLCNAME', afpd_c_args,
+        confdir,
+        dversion,
+        messagedir,
+        statedir,
+        uamdir,
+    ],
+    link_args: netatalk_common_link_args,
+    export_dynamic: true,
+    install: true,
+    install_dir: sbindir,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
+)

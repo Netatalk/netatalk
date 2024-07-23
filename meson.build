@@ -340,6 +340,12 @@ else
     enable_rpath = get_option('with-rpath')
 endif
 
+if enable_rpath
+    rpath_libdir = libdir
+else
+    rpath_libdir = ''
+endif
+
 if host_os == 'linux'
     enable_dtags = true
 else
