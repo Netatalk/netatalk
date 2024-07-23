@@ -1,4 +1,4 @@
-# This file is part of netatalk :NETATALK_VERSION:.
+# This file is part of netatalk @netatalk_version@.
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients
@@ -9,8 +9,8 @@ After=network.target avahi-daemon.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=:SBINDIR:/netatalk
-PIDFile=:PATH_NETATALK_LOCK:
+ExecStart=@sbindir@/netatalk
+PIDFile=@lockfile_path@
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=1

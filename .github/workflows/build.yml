@@ -114,7 +114,6 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets \
             -Dwith-init-style=openrc \
             -Dwith-pgp-uam=true \
             -Dwith-tests=true

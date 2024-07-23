@@ -10,7 +10,7 @@
 # Description:       Enables the netatalk AFP file sharing server.
 ### END INIT INFO
 #
-# netatalk      Netatalk :NETATALK_VERSION: initscript
+# netatalk      Netatalk @netatalk_version@ initscript
 #
 
 set -e
@@ -21,7 +21,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DESC="Netatalk"
 NAME=netatalk
 SCRIPTNAME=/etc/init.d/$NAME
-DAEMON=:SBINDIR:/netatalk
+DAEMON=@sbindir@/netatalk
 PIDFILE=/var/run/lock/netatalk
 
 # Guard to prevent execution if netatalk was removed.

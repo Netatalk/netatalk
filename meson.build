@@ -45,6 +45,14 @@ if pkgconfdir == ''
     pkgconfdir = sysconfdir
 endif
 
+if host_os == 'darwin'
+    homedir = '/Users'
+elif host_os == 'sunos'
+    homedir = '/export/home'
+else
+    homedir = '/home'
+endif
+
 ##################
 # Compiler flags #
 ##################
@@ -136,35 +144,11 @@ else
     bison = find_program('bison', required: false)
 endif
 
-##############
-# Init Style #
-##############
-
-uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
-init_style = get_option('with-init-style')
-
-if init_style == 'auto'
-    if uname_stdout.to_lower().contains('debian') or uname_stdout.to_lower().contains('ubuntu')
-        init_style = 'debian-systemd'
-    elif host_os == 'freebsd'
-        init_style = 'freebsd'
-    elif host_os == 'netbsd'
-        init_style = 'netbsd'
-    elif host_os == 'openbsd'
-        init_style = 'openbsd'
-    elif host_os == 'darwin'
-        init_style = 'macos-launchd'
-    elif host_os == 'sunos'
-        init_style = 'solaris'
-    else
-        init_style = 'none'
-    endif
-endif
-
 #############
 # Libraries #
 #############
 
+uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
 libsearch_dirs = []
 
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
@@ -765,7 +749,6 @@ if dns_sd.found()
 endif
 
 zeroconf_provider = ''
-freebsd_zeroconf_daemon = ''
 
 have_dns = (
     (dns_sd.found() or system.found())
@@ -783,7 +766,7 @@ else
     if have_dns
         cdata.set('USE_ZEROCONF', 1)
         cdata.set('HAVE_MDNS', 1)
-        freebsd_zeroconf_daemon = 'mdnsd'
+        cdata.set('freebsd_zeroconf', 'mdnsd')
         zeroconf_provider += 'mDNS'
     else
         have_zeroconf = avahi.found()
@@ -793,7 +776,7 @@ else
             if avahi.version() >= '0.6.4'
                 cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
             endif
-            freebsd_zeroconf_daemon = 'avahi_daemon'
+            cdata.set('freebsd_zeroconf', 'avahi_daemon')
             zeroconf_provider += 'Avahi'
         else
             have_zeroconf = false
@@ -885,7 +868,7 @@ else
             cdata.set(
                 'TRACKER_PREFIX',
                 '"'
-                + tracker_control.get_variable(pkgconfig: 'prefix')
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
                 + '"',
             )
             tracker_manager += 'tracker_control'
@@ -1548,6 +1531,7 @@ docbook_xsl_dirs = [
     docbook_path,
     '/usr/share/sgml/docbook/xsl-stylesheets',
     '/usr/share/xml/docbook/stylesheet/docbook-xsl',
+    '/usr/share/xml/docbook/xsl-stylesheets',
     '/opt/local/share/xsl/docbook',
     '/usr/local/share/xsl/docbook',
     '/usr/pkg/share/xsl/docbook',
@@ -1899,19 +1883,26 @@ endif
 # Check for optional initscript install
 #
 
+init_style = get_option('with-init-style')
 init_dirs = []
 
-sed_command = [
-    find_program('sed', required: false),
-    '-e', 's@:BINDIR:@' + bindir + '@',
-    '-e', 's@:LOCALSTATEDIR:@' + localstatedir + '@',
-    '-e', 's@:ETCDIR:@' + pkgconfdir + '@',
-    '-e', 's@:SBINDIR:@' + sbindir + '@',
-    '-e', 's@:NETATALK_VERSION:@' + netatalk_version + '@',
-    '-e', 's@:PATH_NETATALK_LOCK:@' + lockfile_path + '@',
-    '-e', 's@:ZEROCONF:@' + freebsd_zeroconf_daemon + '@',
-    '@INPUT@',
-]
+if init_style == 'auto'
+    if uname_stdout.to_lower().contains('debian') or uname_stdout.to_lower().contains('ubuntu')
+        init_style = 'debian-systemd'
+    elif host_os == 'freebsd'
+        init_style = 'freebsd'
+    elif host_os == 'netbsd'
+        init_style = 'netbsd'
+    elif host_os == 'openbsd'
+        init_style = 'openbsd'
+    elif host_os == 'darwin'
+        init_style = 'macos-launchd'
+    elif host_os == 'sunos'
+        init_style = 'solaris'
+    else
+        init_style = 'none'
+    endif
+endif
 
 #
 # Check for cracklib support
@@ -1997,6 +1988,8 @@ endif
 # OS-specific configuration
 #
 
+cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
+
 if host_os.contains('freebsd')
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
@@ -2052,18 +2045,15 @@ endif
 # Variable substitution
 #
 
-# Reserved for future use:
-#cdata.set('BINDIR', bindir)
-#cdata.set('ETCDIR', pkgconfdir)
-#cdata.set('PATH_NETATALK_LOCK', lockfile_path)
-#cdata.set('SBINDIR', sbindir)
-
+cdata.set('bindir', bindir)
+cdata.set('etcdir', pkgconfdir)
 cdata.set('exec_prefix', exec_prefix)
-cdata.set('includedir', includedir)
+cdata.set('homedir', homedir)
 cdata.set('libdir', libdir)
+cdata.set('includedir', includedir)
 cdata.set('localstatedir', localstatedir)
-cdata.set('NETATALK_VERSION', netatalk_version)
-cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
+cdata.set('lockfile_path', lockfile_path)
+cdata.set('netatalk_version', netatalk_version)
 cdata.set('pkgconfdir', pkgconfdir)
 cdata.set('prefix', prefix)
 cdata.set('sbindir', sbindir)
@@ -2202,6 +2192,7 @@ summary_info = {
     '  init directory': init_dirs,
     '  Netatalk lockfile': lockfile,
     '  PAM config directory': pam_confdir,
+    '  User home basedir': homedir,
 }
 if have_spotlight
     summary_info += {

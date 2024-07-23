@@ -11,7 +11,7 @@
 
     <refmiscinfo class="manual">Netatalk AFP Fileserver Manual</refmiscinfo>
 
-    <refmiscinfo class="version">@NETATALK_VERSION@</refmiscinfo>
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
   </refmeta>
 
   <refnamediv>

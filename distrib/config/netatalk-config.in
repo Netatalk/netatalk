@@ -196,7 +196,7 @@ if test "X$af_echo_exec_prefix" = "Xyes"; then
 fi
 
 if test "X$af_echo_version" = "Xyes"; then
-        echo @NETATALK_VERSION@
+        echo @netatalk_version@
         exit 0
 fi
 
