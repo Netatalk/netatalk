@@ -855,7 +855,7 @@ else
             cdata.set(
                 'TRACKER_PREFIX',
                 '"'
-                + tracker_control.get_variable(pkgconfig: 'prefix')
+                + tracker_sparql.get_variable(pkgconfig: 'prefix')
                 + '"',
             )
             tracker_manager += 'tracker_control'
