@@ -434,9 +434,10 @@ endif
 
 if enable_rpath
     bdb_link_args += '-R' + bdb_libdir
-    if enable_dtags
-        bdb_link_args += '-Wl,--enable-new-dtags'
-    endif
+endif
+
+if enable_dtags
+    bdb_link_args += '-Wl,--enable-new-dtags'
 endif
 
 if bdb_header != ''
