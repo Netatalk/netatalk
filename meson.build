@@ -141,12 +141,6 @@ if host_os == 'darwin'
     endif
 endif
 
-################
-# Dependencies #
-################
-
-threads = dependency('threads', required: true)
-
 #############
 # Libraries #
 #############
