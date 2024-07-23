@@ -16,26 +16,14 @@ if use_mysql_backend
     ad_deps += mysqlclient
 endif
 
-if enable_rpath
-    executable(
-        'ad',
-        ad_sources,
-        include_directories: root_includes,
-        dependencies: ad_deps,
-        link_with: libatalk,
-        c_args: [ad, dversion],
-        install: true,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-else
-    executable(
-        'ad',
-        ad_sources,
-        include_directories: root_includes,
-        dependencies: ad_deps,
-        link_with: libatalk,
-        c_args: [ad, dversion],
-        install: true,
-    )
-endif
+executable(
+    'ad',
+    ad_sources,
+    include_directories: root_includes,
+    dependencies: ad_deps,
+    link_with: libatalk,
+    c_args: [ad, dversion],
+    install: true,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
+)
