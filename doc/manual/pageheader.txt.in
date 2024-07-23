@@ -11,5 +11,5 @@
           <img src="/gfx/end.gif" alt="" width="125" height="7" />
         </div>
     </div>
-    <div class="navheader" align="center">Netatalk @NETATALK_VERSION@</div>
+    <div class="navheader" align="center">Netatalk @netatalk_version@</div>
 </html>

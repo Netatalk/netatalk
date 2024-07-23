@@ -4,14 +4,10 @@ afp_conf = configure_file(
     configuration: cdata,
 )
 
-custom_target(
-    'dbus_session',
+dbus_session_conf = configure_file(
     input: 'dbus-session.conf.tmpl',
     output: 'dbus-session.conf',
-    command: sed_command,
-    capture: true,
-    install: true,
-    install_dir: pkgconfdir,
+    configuration: cdata,
 )
 
 if (
@@ -30,6 +26,15 @@ if (
     message('will not replace existing', pkgconfdir / 'extmap.conf')
 else
     install_data('extmap.conf', install_dir: pkgconfdir)
+endif
+
+if (
+    fs.exists(pkgconfdir / 'dbus-session.conf')
+    and not get_option('with-overwrite')
+)
+    message('will not replace existing', pkgconfdir / 'dbus-session.conf')
+else
+    install_data(dbus_session_conf, install_dir: pkgconfdir)
 endif
 
 if (

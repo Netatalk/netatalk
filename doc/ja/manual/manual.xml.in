@@ -31,7 +31,7 @@
   <title>Netatalk マニュアル</title>
 
   <bookinfo>
-    <subtitle>バージョン @NETATALK_VERSION@</subtitle>
+    <subtitle>バージョン @netatalk_version@</subtitle>
   </bookinfo>
 
   <?latex \setcounter{page}{3} ?>

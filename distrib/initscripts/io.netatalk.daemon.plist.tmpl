@@ -5,13 +5,13 @@
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>:SBINDIR:::BINDIR::/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<string>@sbindir@:@bindir@:/usr/bin:/bin:/usr/sbin:/sbin</string>
 	</dict>
 	<key>Label</key>
 	<string>io.netatalk.daemon</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>:BINDIR:/netatalkd</string>
+		<string>@bindir@/netatalkd</string>
 		<string>start</string>
 	</array>
 	<key>RunAtLoad</key>

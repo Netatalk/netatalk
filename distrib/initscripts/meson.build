@@ -12,12 +12,10 @@ if (
 )
     init_dir = '/usr/lib/systemd/system'
     init_dirs += init_dir
-    custom_target(
-        'systemd',
+    configure_file(
         input: 'service.systemd.tmpl',
         output: 'netatalk.service',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
     )
@@ -32,12 +30,10 @@ if (
 )
     init_dir = '/etc/init.d'
     init_dirs += init_dir
-    custom_target(
-        'debian_sysv',
+    configure_file(
         input: 'rc.debian.tmpl',
         output: 'netatalk',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
@@ -56,12 +52,10 @@ endif
 if init_style == 'freebsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
-    custom_target(
-        'freebsd',
+    configure_file(
         input: 'rc.freebsd.tmpl',
         output: 'netatalk',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
@@ -78,12 +72,10 @@ endif
 if init_style == 'netbsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
-    custom_target(
-        'netbsd',
+    configure_file(
         input: 'rc.netbsd.tmpl',
         output: 'netatalk',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
@@ -93,12 +85,10 @@ endif
 if init_style == 'openbsd'
     init_dir = '/etc/rc.d'
     init_dirs += init_dir
-    custom_target(
-        'freebsd',
+    configure_file(
         input: 'rc.openbsd.tmpl',
         output: 'netatalk',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
@@ -115,12 +105,10 @@ endif
 if init_style == 'solaris'
     init_dir = '/lib/svc/manifest/network'
     init_dirs += init_dir
-    custom_target(
-        'solaris',
+    configure_file(
         input: 'netatalk.xml.tmpl',
         output: 'netatalk.xml',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
     )
@@ -139,12 +127,10 @@ if (
 )
     init_dir = '/etc/init.d'
     init_dirs += init_dir
-    custom_target(
-        'openrc',
+    configure_file(
         input: 'rc.openrc.tmpl',
         output: 'netatalk',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
@@ -162,22 +148,18 @@ endif
 if init_style == 'macos-launchd'
     init_dir = '/Library/LaunchDaemons'
     init_dirs += init_dir
-    custom_target(
-        'netatalkd',
+    configure_file(
         input: 'netatalkd.tmpl',
         output: 'netatalkd',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: bindir,
         install_mode: 'rwxr-xr-x',
     )
-    custom_target(
-        'plist',
+    configure_file(
         input: 'io.netatalk.daemon.plist.tmpl',
         output: 'io.netatalk.daemon.plist',
-        command: sed_command,
-        capture: true,
+        configuration: cdata,
         install: true,
         install_dir: init_dir,
     )

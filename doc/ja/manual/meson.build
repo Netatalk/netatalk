@@ -4,7 +4,7 @@ manual_xml = configure_file(
     configuration: cdata,
 )
 
-pageheader = configure_file(
+configure_file(
     input: 'pageheader.txt.in',
     output: 'pageheader.txt',
     configuration: cdata,
@@ -27,7 +27,7 @@ foreach page : manual_pages
     )
 endforeach
 
-manual_gen = custom_target(
+custom_target(
     'manual',
     output: [
         'ad.1.html',

@@ -24,11 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Netatalk :NETATALK_VERSION: daemons.
+# Netatalk @netatalk_version@ daemons.
 #
 
 # PROVIDE: netatalk
-# REQUIRE: DAEMON :ZEROCONF:
+# REQUIRE: DAEMON @freebsd_zeroconf@
 # KEYWORD: shutdown
 #
 # AFP fileserver for Mac clients.  Add the following to /etc/rc.conf to
@@ -46,7 +46,7 @@ rcvar=netatalk_enable
 
 load_rc_config ${name}
 
-command=":SBINDIR:/${name}"
+command="@sbindir@/${name}"
 
 extra_commands="reload"
 reload_cmd="netatalk_reload"

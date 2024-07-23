@@ -105,7 +105,7 @@ while ($arg = shift @ARGV)
         printf ("another file.\n");
         exit 1;
     } elsif ($arg =~ /^(-v|-version|--version)$/ ) {
-        printf ("%s \(Netatalk @NETATALK_VERSION@\)\n", basename($0));
+        printf ("%s \(Netatalk @netatalk_version@\)\n", basename($0));
         exit 1;
     } elsif ($arg eq "-a") {
         $finderinfo = 0;

@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Start/stop the Netatalk :NETATALK_VERSION: daemons.
+# Start/stop the Netatalk @netatalk_version@ daemons.
 #
 
 #
@@ -20,8 +20,8 @@ killproc() {
 netatalk_startup() {
     echo 'starting netatalk daemons: \c'
 
-    if [ -x :SBINDIR:/netatalk ]; then
-        :SBINDIR:/netatalk
+    if [ -x @sbindir@/netatalk ]; then
+        @sbindir@/netatalk
         echo ' netatalk\c'
     fi
 
@@ -42,7 +42,7 @@ case "$1" in
 
         echo 'stopping netatalk daemons:\c'
 
-        if [ -x :SBINDIR:/netatalk ]; then
+        if [ -x @sbindir@/netatalk ]; then
             killproc netatalk;                      echo ' netatalk\c'
         fi
 

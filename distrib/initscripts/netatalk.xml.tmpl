@@ -23,7 +23,7 @@
         <method_context>
         </method_context>
 
-        <exec_method type="method" name="start" exec=":SBINDIR:/netatalk" timeout_seconds="60"/>
+        <exec_method type="method" name="start" exec="@sbindir@/netatalk" timeout_seconds="60"/>
 
         <exec_method type="method" name="stop" exec=":kill" timeout_seconds="60"/>
 
@@ -33,7 +33,7 @@
         </property_group>
 
         <property_group name="application" type="application">
-            <propval name="config_file" type="astring" value=":ETCDIR:/afp.conf"/>
+            <propval name="config_file" type="astring" value="@etcdir@/afp.conf"/>
         </property_group>
 
         <stability value="Evolving"/>

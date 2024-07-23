@@ -16,7 +16,7 @@
 #
 
 #
-# This edition is a part of netatalk @NETATALK_VERSION@.
+# This edition is a part of netatalk @netatalk_version@.
 #
 
 use strict;
@@ -45,7 +45,7 @@ if ($main::showver ==1)
 {
         print "$0\n";
         print "Original edition: 7 May 1997 \(v1.0\) James W. Abendschan\n";
-        print "This edition is a part of Netatalk @NETATALK_VERSION@\n";
+        print "This edition is a part of Netatalk @netatalk_version@\n";
         exit(-1);
 }
 
