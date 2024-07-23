@@ -1967,6 +1967,8 @@ endif
 # OS-specific configuration
 #
 
+cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
+
 if host_os.contains('freebsd')
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
@@ -2033,7 +2035,6 @@ cdata.set('includedir', includedir)
 cdata.set('libdir', libdir)
 cdata.set('localstatedir', localstatedir)
 cdata.set('NETATALK_VERSION', netatalk_version)
-cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
 cdata.set('pkgconfdir', pkgconfdir)
 cdata.set('prefix', prefix)
 cdata.set('sbindir', sbindir)
