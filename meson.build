@@ -350,7 +350,7 @@ else
 endif
 
 if host_os == 'linux'
-    enable_dtags = true
+    enable_dtags = false
 else
     enable_dtags = false
 endif
