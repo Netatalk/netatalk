@@ -546,7 +546,7 @@ if wolfssl.found()
     else
         have_wolfssl = false
         message(
-            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM support',
+            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM UAMs',
         )
     endif
 else
@@ -583,7 +583,7 @@ else
     have_embedded_ssl = false
     ssl_provider += 'none'
     warning(
-        'Built-in WolfSSL, and nettle are required for DHX and RANDNUM support',
+        'WolfSSL (embedded or system) and Nettle are required for DHX and RANDNUM UAMs',
     )
 endif
 
@@ -1206,7 +1206,7 @@ else
     else
         have_pgp_uam = false
         warning(
-            'Embedded SSL, LibreSSL or OpenSSL version 1.1 is required to build PGP UAM',
+            'WolfSSL (embedded or system) and Nettle are required for PGP UAM',
         )
     endif
 endif
@@ -2152,10 +2152,18 @@ if have_ssl
     summary_info += {
         '  DHX': uams_using_options,
     }
+else
+    summary_info += {
+        '  DHX': false,
+    }
 endif
 if have_libgcrypt
     summary_info += {
         '  DHX2': uams_using_options,
+    }
+else
+    summary_info += {
+        '  DHX2': false,
     }
 endif
 summary(summary_info, bool_yn: true, section: '  UAMs:')
