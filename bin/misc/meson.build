@@ -40,27 +40,15 @@ if use_mysql_backend
 endif
 
 if have_ldap
-    if enable_rpath
-        executable(
-            'afpldaptest',
-            afpldaptest_sources,
-            include_directories: root_includes,
-            link_with: libatalk,
-            dependencies: [afpldaptest_deps, ldap],
-            c_args: confdir,
-            install: true,
-            build_rpath: libdir,
-            install_rpath: libdir,
-        )
-    else
-        executable(
-            'afpldaptest',
-            afpldaptest_sources,
-            include_directories: root_includes,
-            link_with: libatalk,
-            dependencies: [afpldaptest_deps, ldap],
-            c_args: confdir,
-            install: true,
-        )
-    endif
+    executable(
+        'afpldaptest',
+        afpldaptest_sources,
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: [afpldaptest_deps, ldap],
+        c_args: confdir,
+        install: true,
+        build_rpath: rpath_libdir,
+        install_rpath: rpath_libdir,
+    )
 endif
