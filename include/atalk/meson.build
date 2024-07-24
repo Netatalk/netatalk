@@ -1,9 +1,13 @@
 headers = [
     'acl.h',
     'adouble.h',
+    'aep.h',
     'afp.h',
+    'asp.h',
+    'atp.h',
     'bstrlib.h',
     'cnid.h',
+    'ddp.h',
     'dictionary.h',
     'ea.h',
     'globals.h',
@@ -12,6 +16,9 @@ headers = [
     'list.h',
     'logger.h',
     'netatalk_conf.h',
+    'nbp.h',
+    'netddp.h',
+    'pap.h',
     'paths.h',
     'standards.h',
     'uam.h',
@@ -20,6 +27,7 @@ headers = [
     'util.h',
     'vfs.h',
     'volume.h',
+    'zip.h',
 ]
 
 if have_dtrace
