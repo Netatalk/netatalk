@@ -43,7 +43,7 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 		    spoolerror( outfile, "Ignoring job." );
 		}
 		state = 1;
-	}	
+	}
 	if ( infile->pf_state & PF_QUERY )
 	{
 		infile->pf_state |= PF_BOT;

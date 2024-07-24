@@ -111,11 +111,11 @@ static void atalkd_exit(const int i)
   for (iface = interfaces; iface; iface = iface->i_next) {
     if (ifconfig( iface->i_name, SIOCDIFADDR, &iface->i_addr)) {
 #if defined(__linux__)
-      if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr)) 
+      if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr))
 	continue;
 #endif /* __linux__ */
-      LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s", 
-	      ntohs(iface->i_addr.sat_addr.s_net), 
+      LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s",
+	      ntohs(iface->i_addr.sat_addr.s_net),
 	      iface->i_addr.sat_addr.s_node, strerror(errno));
     }
   }
@@ -125,11 +125,11 @@ static void atalkd_exit(const int i)
   exit(i);
 }
 
-/* XXX need better error handling for gone interfaces, delete routes and so on 
+/* XXX need better error handling for gone interfaces, delete routes and so on
  * moreover there's no way to put an interface back short of restarting atalkd
  * thus after the first time, silently fail
 */
-static ssize_t sendto_iface(struct interface *iface, int sockfd, const void *buf, size_t len, 
+static ssize_t sendto_iface(struct interface *iface, int sockfd, const void *buf, size_t len,
                        const struct sockaddr_at	 *dest_addr)
 {
     ssize_t ret = sendto( sockfd, buf, len, 0, (struct sockaddr *)dest_addr, sizeof( struct sockaddr_at ));
@@ -239,7 +239,7 @@ static void as_timer(int sig _U_)
 			}
 
 			if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
-			    LOG(log_error, logtype_atalkd, "as_timer: can't route %u.%u to loop: %s", 
+			    LOG(log_error, logtype_atalkd, "as_timer: can't route %u.%u to loop: %s",
 			            ntohs( iface->i_addr.sat_addr.s_net ),
 				    iface->i_addr.sat_addr.s_node, strerror(errno) );
 			    atalkd_exit( 1 );
@@ -255,7 +255,7 @@ static void as_timer(int sig _U_)
 		     * to become available in rtmp_packet().
 		     */
 		    LOG(log_info, logtype_atalkd, "config for no router" );
-		      
+
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
 			iface->i_rt->rt_firstnet = htons( OS_STARTUP_FIRSTNET );
 			iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
@@ -479,8 +479,8 @@ static void as_timer(int sig _U_)
 	}
 
 	/*
-	 * Send RTMP broadcasts if we have multiple interfaces or our 
-	 * interface is configured as a router.  
+	 * Send RTMP broadcasts if we have multiple interfaces or our
+	 * interface is configured as a router.
 	 */
 	if ((iface->i_flags & IFACE_ISROUTER)) {
 #ifdef BSD4_4
@@ -656,7 +656,7 @@ static void consistency()
 		}
 	    }
 	    if ( lz == 0 ) {
-		LOG(log_error, logtype_atalkd, "no map from %u-%u to %.*s", 
+		LOG(log_error, logtype_atalkd, "no map from %u-%u to %.*s",
 		    ntohs( rtmp->rt_firstnet ),
 		    ntohs( rtmp->rt_lastnet ),
 		    zt->zt_len, zt->zt_name );
@@ -808,7 +808,7 @@ int main( int ac, char **av)
     struct sigaction	sv;
     struct itimerval	it;
     sigset_t            signal_set, old_set;
-    
+
     struct interface	*iface;
     int			status;
     struct atport	*ap;
@@ -921,7 +921,7 @@ int main( int ac, char **av)
 	}
 
         /* set up router flag information. if we have multiple interfaces
-	 * and DONTROUTE isn't set, set up ROUTER. i is the number of 
+	 * and DONTROUTE isn't set, set up ROUTER. i is the number of
 	 * interfaces that don't have the DONTROUTE flag set. */
 	if ((i > IFBASE) && ((iface->i_flags & IFACE_DONTROUTE) == 0)) {
 	  iface->i_flags |= IFACE_ISROUTER;
@@ -948,7 +948,7 @@ int main( int ac, char **av)
 		}
 	    }
 	}
-	
+
 	if (( iface->i_flags & IFACE_PHASE1 ) == 0 ) {
 	    iface->i_rt->rt_flags |= RTMPTAB_EXTENDED;
 	}
@@ -1212,7 +1212,7 @@ void bootaddr(struct interface *iface)
 		ciface = ciface->i_next;
 		bootaddr( ciface );
 	    }
-	    
+
 	} else if (zip_getnetinfo( iface ) < 0) {
 	  LOG(log_error, logtype_atalkd, "bootaddr (zip_getnetinfo): %s", strerror(errno));
 	  atalkd_exit(1);
@@ -1374,7 +1374,7 @@ void dumpconfig( struct interface *iface)
 	printf( " -seed" );
     }
 
-    if ( iface->i_flags & IFACE_DONTROUTE) 
+    if ( iface->i_flags & IFACE_DONTROUTE)
         printf( " -dontroute");
 
     printf( " -phase" );

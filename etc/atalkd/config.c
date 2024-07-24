@@ -52,9 +52,9 @@
 int router(struct interface *iface, char **av);
 int dontroute(struct interface *iface, char **av);
 int seed(struct interface *iface, char **av);
-int phase(struct interface *iface, char **av); 
+int phase(struct interface *iface, char **av);
 int net(struct interface *iface, char **av);
-int addr(struct interface *iface, char **av); 
+int addr(struct interface *iface, char **av);
 int zone(struct interface *iface, char **av);
 
 static const struct param {
@@ -246,17 +246,17 @@ int writeconf(char *cf)
 		    iface->i_addr.sat_addr.s_node );
 	    for ( l = iface->i_rt->rt_zt; l; l = l->l_next ) {
                 /* codepage conversion */
-                if ((size_t)(-1) == (len = convert_string_allocate(CH_MAC, CH_UNIX, 
+                if ((size_t)(-1) == (len = convert_string_allocate(CH_MAC, CH_UNIX,
                                       ((struct ziptab *)l->l_data)->zt_name,
                                       ((struct ziptab *)l->l_data)->zt_len,
                                       &zonename)) ) {
-                    if ( NULL == 
+                    if ( NULL ==
                       (zonename = strdup(((struct ziptab *)l->l_data)->zt_name))) {
 		        LOG(log_error, logtype_atalkd, "malloc: %s",  strerror(errno) );
 		        return( -1 );
                     }
                     len = ((struct ziptab *)l->l_data)->zt_len;
-                } 
+                }
 		fprintf( newconf, " -zone \"%.*s\"", (int)len, zonename);
                 free(zonename);
 	    }
@@ -384,7 +384,7 @@ int readconf(char *cf)
 		if ( strcmp( argv[ i ], params[ j ].p_name ) == 0 ) {
 		    if ( params[ j ].p_func != NULL ) {
 			cc = (*params[ j ].p_func)( niface, &argv[ i + 1 ] );
-			if (cc < 0) 
+			if (cc < 0)
 			  goto read_conf_err;
 			break;
 		    }
@@ -444,7 +444,7 @@ read_conf_err:
     fclose(conf);
     return -1;
 }
-	
+
 /*ARGSUSED*/
 int router(struct interface *iface, char **av _U_)
 {
@@ -721,7 +721,7 @@ int getifconf(void)
 	  fprintf(stderr, "%s: disabled.\n", ifr.ifr_name);
 	  continue;
 	}
-	
+
 	if (( niface = newiface( ifr.ifr_name )) == NULL ) {
 	    perror( "newiface" );
 	    close(s);

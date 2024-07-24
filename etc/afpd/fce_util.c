@@ -127,7 +127,7 @@ bool fce_handle_coalescation(int event, const char *path)
 			/* Invalidate entry */
 			fh->fce_h_tv.tv_sec = 0;
 			oldest_entry = 0;
-			oldest_entry_idx = i;			
+			oldest_entry_idx = i;
 			continue;
 		}
 

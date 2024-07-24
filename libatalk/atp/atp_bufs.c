@@ -21,7 +21,7 @@
  *	netatalk@itd.umich.edu
  */
 
-/* 
+/*
  * Our own memory maintenance for atp
 */
 

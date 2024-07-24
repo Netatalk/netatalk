@@ -245,9 +245,9 @@ int main(int ac, char **av)
       exit(1);
     default:
       exit(0);
-    }      
+    }
 
-    if ( debug ) 
+    if ( debug )
 	fault_setup(NULL);
 
     /*
@@ -280,7 +280,7 @@ int main(int ac, char **av)
 			pr->p_name = atname;
 		}
 	}
-			
+
 	if (( pr->p_atp = atp_open( ATADDR_ANYPORT, &pr->p_addr )) == NULL ) {
 	    LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
 	    papd_exit( 1 );
@@ -406,7 +406,7 @@ int main(int ac, char **av)
 		     * just die(), let's try to continue. Maybe some sockets
 		     * will close, and we can continue;
 		     */
-		    if (( atp = atp_open( ATADDR_ANYPORT, 
+		    if (( atp = atp_open( ATADDR_ANYPORT,
 					  &pr->p_addr)) == NULL ) {
 			LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
 			r_buf.user_bytes[2] = 0xff;
@@ -472,7 +472,7 @@ int main(int ac, char **av)
 			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 			    exit( 1 );
 			}
-			
+
 			if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
 			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 			    exit( 1 );
@@ -744,9 +744,9 @@ static void getprinters( char *cf)
 	}
 
 	/* get printer's appletalk address. */
-	if (( p = pgetstr( "pa", &a )) == NULL ) 
+	if (( p = pgetstr( "pa", &a )) == NULL )
 	    memcpy(&pr->p_addr, &defprinter.p_addr, sizeof(pr->p_addr));
-	else 
+	else
 	    atalk_aton(p, &pr->p_addr);
 
 #ifdef HAVE_CUPS

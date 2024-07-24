@@ -60,10 +60,10 @@ size_t mb_generic_push( int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
 			(*inbytesleft)  -= 2;
 			(*outbytesleft) -= 1;
 		}
-		else	
+		else
 		{
 			errno = EILSEQ;
-			return (size_t) -1;	
+			return (size_t) -1;
 		}
         }
 
@@ -94,12 +94,12 @@ size_t mb_generic_pull ( int (*char_func)(ucs2_t *, const unsigned char *), void
 			(*inbytesleft) -=1;
 			(*outbytesleft)-=2;
 			len++;
-			
+
 		}
-		else	
+		else
 		{
 			errno = EILSEQ;
-			return (size_t) -1;	
+			return (size_t) -1;
 		}
         }
 

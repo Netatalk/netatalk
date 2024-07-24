@@ -166,7 +166,7 @@ static size_t mac_hebrew_pull ( void *cd _U_, char **inbuf, size_t *inbytesleft,
 	    if (temp == 1) {       /* 0x81 --> 0x05f2+0x05b7 */
 	        if (*outbytesleft < 4) {
 	            errno = E2BIG;
-	            return (size_t) -1;	
+	            return (size_t) -1;
 	        }
 		SSVAL((*outbuf),0,0x05f2);
 		SSVAL((*outbuf),2,0x05b7);
@@ -177,7 +177,7 @@ static size_t mac_hebrew_pull ( void *cd _U_, char **inbuf, size_t *inbytesleft,
 	    else if (temp == 2) { /* 0xc0 -> 0xf86a 0x05dc 0x05b9*/
 	        if (*outbytesleft < 6) {
 	            errno = E2BIG;
-	            return (size_t) -1;	
+	            return (size_t) -1;
 	        }
 		SSVAL((*outbuf),0,0xf86a);
 		SSVAL((*outbuf),2,0x05dc);
@@ -189,7 +189,7 @@ static size_t mac_hebrew_pull ( void *cd _U_, char **inbuf, size_t *inbytesleft,
 	    else if (temp == 3) { /* 0xde --> 0x05b8 0xf87f */
 	        if (*outbytesleft < 4) {
 	            errno = E2BIG;
-	            return (size_t) -1;	
+	            return (size_t) -1;
 	        }
 		SSVAL((*outbuf),0,0x05b8);
 		SSVAL((*outbuf),2,0xf87f);
@@ -206,10 +206,10 @@ static size_t mac_hebrew_pull ( void *cd _U_, char **inbuf, size_t *inbytesleft,
 	    (*inbuf)        +=1;
 	    (*inbytesleft) -=1;
 	}
-	else	
+	else
 	{
 	    errno = EILSEQ;
-	    return (size_t) -1;	
+	    return (size_t) -1;
 	}
     }
 

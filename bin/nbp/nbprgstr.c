@@ -42,7 +42,7 @@ int main(int ac, char **av)
     char		*convname = NULL;
     int			s, c, port = 0;
     charset_t		chMac = CH_MAC;
-    
+
     extern char		*optarg;
     extern int		optind;
 

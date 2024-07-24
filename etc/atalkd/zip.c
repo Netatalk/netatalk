@@ -254,7 +254,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		}
 	    }
 	    if ( gate == NULL ) {
-		LOG(log_info, logtype_atalkd, "zip reply from non-gateway %u.%u", 
+		LOG(log_info, logtype_atalkd, "zip reply from non-gateway %u.%u",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 		return 1;
 	    }
@@ -371,7 +371,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		}
 	    }
 	    if ( gate == NULL ) {
-		LOG(log_info, logtype_atalkd, "zip ereply from non-gateway %u.%u", 
+		LOG(log_info, logtype_atalkd, "zip ereply from non-gateway %u.%u",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 		return 1;
 	    }
@@ -670,7 +670,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 	        LOG(log_error, logtype_atalkd, "zip_packet: addzone");
 	        return -1;
 	    }
-	    
+
 	    /*
 	     * The netrange we received from the router doesn't match the
 	     * range we have locally. This is not a problem, unless we
@@ -1018,7 +1018,7 @@ int addzone(struct rtmptab *rt, int len, char *zone)
 	ziplast = zt;
     }
 
-    if ((cc = add_list( &zt->zt_rt, rt )) < 0) 
+    if ((cc = add_list( &zt->zt_rt, rt )) < 0)
       return -1;
 
     if (cc)
@@ -1036,7 +1036,7 @@ int addzone(struct rtmptab *rt, int len, char *zone)
 	 * We get the repeat for local nets which have zone information
 	 * already: we ask anyway, just to make sure.
 	 */
-	
+
 	return 0;
     }
     if ( exists ) {

@@ -246,7 +246,7 @@ int copy_fork(int eid, struct adouble *add, struct adouble *ads, char *buf, size
 
     if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
     	return -1;
-    	
+
 #if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
     /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
     off_t   offset = 0;

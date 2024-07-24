@@ -29,7 +29,7 @@
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
 static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL}}, &uam_login,
 				   &uam_login};
-static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL}}, &uam_changepw, 
+static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL}}, &uam_changepw,
 				      &uam_changepw};
 static struct uam_obj uam_printer = {"", "", 0, {{NULL, NULL, NULL}}, &uam_printer,
 					&uam_printer};
@@ -41,25 +41,25 @@ static struct uam_obj uam_printer = {"", "", 0, {{NULL, NULL, NULL}}, &uam_print
 int getuamnames(const int type, char *uamnames)
 {
     struct uam_obj *prev, *start;
-  
+
     if (!(start = UAM_LIST(type)))
         return(-1);
-  
+
     prev = start;
-      
+
     while((prev = prev->uam_prev) != start) {
         strcat(uamnames, prev->uam_name);
         strcat(uamnames, "\n");
     }
- 
+
     strcat(uamnames, "*\n");
     return(0);
 }
-  
+
 
 /* just do a linked list search. this could be sped up with a hashed
  * list, but i doubt anyone's going to have enough uams to matter. */
-struct uam_obj *auth_uamfind(const int type, const char *name, 
+struct uam_obj *auth_uamfind(const int type, const char *name,
 			     const int len)
 {
   struct uam_obj *prev, *start;
@@ -68,7 +68,7 @@ struct uam_obj *auth_uamfind(const int type, const char *name,
     return NULL;
 
   prev = start;
-  while ((prev = prev->uam_prev) != start) 
+  while ((prev = prev->uam_prev) != start)
     if (strndiacasecmp(prev->uam_name, name, len) == 0)
       return prev;
 
@@ -83,7 +83,7 @@ int auth_register(const int type, struct uam_obj *uam)
     return -1;
 
   if (!(start = UAM_LIST(type)))
-    return 1; 
+    return 1;
 
   uam_attach(start, uam);
   return 0;
@@ -92,11 +92,11 @@ int auth_register(const int type, struct uam_obj *uam)
 /* load all of the modules */
 int auth_load(const char *path, const char *list)
 {
-  char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p; 
+  char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p;
   struct uam_mod *mod;
   struct stat st;
   size_t len;
-  
+
   if (!path || !list || (len = strlen(path)) > sizeof(name) - 2)
     return -1;
 

@@ -44,7 +44,7 @@ int markline( struct papfile *pf, char **start, int *linelength, int *crlflength
     p = pf->pf_data + *linelength;
 
     *crlflength=0;
-    while(*crlflength < pf->pf_datalen-*linelength && 
+    while(*crlflength < pf->pf_datalen-*linelength &&
     (p[*crlflength]=='\r' || p[*crlflength]=='\n')) {
 	(*crlflength)++;
     }

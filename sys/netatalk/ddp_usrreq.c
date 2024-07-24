@@ -74,7 +74,7 @@ ddp_usrreq( so, req, m, addr, rights )
     case PRU_BIND :
 	error = at_pcbsetaddr( ddp, addr );
 	break;
-    
+
     case PRU_SOCKADDR :
 	at_sockaddr( ddp, addr );
 	break;

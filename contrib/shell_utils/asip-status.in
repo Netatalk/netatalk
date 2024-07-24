@@ -164,7 +164,7 @@ sub sendpacket
 	{
 		$buf .= $b;
 		print "." if ($main::debug);
-	}	
+	}
 
 	close ($asip_sock);
 
@@ -191,7 +191,7 @@ sub sendpacket
 			print " via unknown IP version\n";
 		}
 		return (parse_packet($buf));
-	}	
+	}
 }
 
 
@@ -206,7 +206,7 @@ sub parse_packet
 	for ($i=0;$i<length($buf);$i++)
  	{
  		push(@packet, substr($buf, $i, 1));
- 	}	
+ 	}
 
 	my ($flags) = unpack("C", @packet[0]);
 	my ($cmd) = unpack("C", @packet[1]);
@@ -245,7 +245,7 @@ sub parse_packet
 	if ($datalen == 0)
 	{
 		print "No data in packet?\n";
-	}	
+	}
 	if (($datalen > 0) && ($cmd == 3))
 	{
 		my (@AFPpacket) = @packet[($edo+16)..($edo+16+$datalen)];
@@ -255,7 +255,7 @@ sub parse_packet
 	{
 		print "I don't know how to parse this type of packet.\n";
 		return(2);
-	}	
+	}
 }
 
 
@@ -324,7 +324,7 @@ sub parse_FPGetSrvrInfo()
 	{
                 my ($signature) = join("",  @packet[$signature_offset..$signature_offset+15]);
 
-		print "Signature:\n";	
+		print "Signature:\n";
 		hexdump($signature);
 	}
 
@@ -431,7 +431,7 @@ sub extract
 	else
 	{
 		$hack = 1;
-	}	
+	}
 	#print ">> extracting $count items from offset $offset\n";
 	for ($i=0;$i<$count;$i++)
 	{
@@ -454,7 +454,7 @@ sub draw_icon
 	my ($i, $j);
 
 	# icons are 32x32 bitmaps; 128 byte icon + 128 byte mask
-	# to show the mask, change 128 to 256.	
+	# to show the mask, change 128 to 256.
 
 	for ($i=0;$i<128;$i++)
 	{
@@ -471,7 +471,7 @@ sub draw_icon
 			{
 				print " ";
 			}
-		}	
+		}
 		$cols++;
 		if ($cols == 4)
 		{
@@ -531,13 +531,13 @@ sub hexdump
 		else
 		{
 			$str .= ".";
-		}	
+		}
 		if ($pc == 16)
 		{
 			print " $str\n";
 			undef $str;
 			$pc = 0;
-		}	
+		}
  	}
 	print "   " x (16 - $pc);
  	print " $str \n";
@@ -586,7 +586,7 @@ sub extract_network_address
 			# quad
 			my ($ip) = sprintf "%d.%d.%d.%d (IPv4 address)",
 				$nap[0], $nap[1], @nap[2], @nap[3];
-	
+
 			print "Network address: $ip\n";
 		}
 		elsif ($type == 2)

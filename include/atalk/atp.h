@@ -25,7 +25,7 @@
 #define _ATALK_ATP_H 1
 
 #ifndef NO_DDP
- 
+
 #include <sys/types.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -180,10 +180,10 @@ struct atp_block {
 #define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
 #define ATP_TREL	(3<<6)		/* Trans. RELease */
 
-extern ATP		atp_open  (uint8_t, 
+extern ATP		atp_open  (uint8_t,
 				       const struct at_addr *);
 extern int		atp_close (ATP);
-extern int		atp_sreq  (ATP, struct atp_block *, int, 
+extern int		atp_sreq  (ATP, struct atp_block *, int,
 				       uint8_t);
 extern int		atp_rresp (ATP, struct atp_block *);
 extern int		atp_rsel  (ATP, struct sockaddr_at *, int);

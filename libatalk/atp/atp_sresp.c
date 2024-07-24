@@ -60,7 +60,7 @@ int atp_sresp(
     /* check parameters
     */
     for ( i = atpb->atp_sresiovcnt - 1; i >= 0; --i ) {
-	if ( atpb->atp_sresiov[ i ].iov_len > ATP_MAXDATA ) 
+	if ( atpb->atp_sresiov[ i ].iov_len > ATP_MAXDATA )
 	    break;
     }
     if ( i >= 0 || atpb->atp_sresiovcnt < 1 || atpb->atp_sresiovcnt > 8 ) {
@@ -139,7 +139,7 @@ bprint( resp_buf->atpbuf_info.atpbuf_data, resp_buf->atpbuf_dlen );
 		(struct timezone *) 0 );
 	save_buf->atpbuf_info.atpbuf_xo.atpxo_tid = ah->atph_rtid;
 	save_buf->atpbuf_info.atpbuf_xo.atpxo_reltime = ah->atph_rreltime;
-	memcpy( &save_buf->atpbuf_addr, atpb->atp_saddr, 
+	memcpy( &save_buf->atpbuf_addr, atpb->atp_saddr,
 		sizeof( struct sockaddr_at ));
 
 	/* add to list of packets we have sent

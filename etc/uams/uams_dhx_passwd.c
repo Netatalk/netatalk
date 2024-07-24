@@ -272,7 +272,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     username[ len ] = '\0';
     return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
-			
+
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 			    char *ibuf, size_t ibuflen _U_,
 			    char *rbuf, size_t *rbuflen)

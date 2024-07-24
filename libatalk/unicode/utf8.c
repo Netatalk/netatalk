@@ -273,7 +273,7 @@ static size_t utf8_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		errno = E2BIG;
 		return -1;
 	}
-	
+
 	return 0;
 
 toobig:

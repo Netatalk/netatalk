@@ -31,7 +31,7 @@ struct interface {
 #define IFACE_NOROUTER	0x040		/* no router on interface */
 #define IFACE_LOOP	0x080		/* has a loopback route */
 #define IFACE_RSEED     0x100           /* almost the same as seed. RSEED
-					   says that we should try to 
+					   says that we should try to
 					   do routing. */
 #define IFACE_DONTROUTE 0x200           /* don't route this interface */
 #define IFACE_ISROUTER  0x400           /* act as a router. */

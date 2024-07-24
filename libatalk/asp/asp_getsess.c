@@ -50,8 +50,8 @@ static struct asp_child    **asp_ac = NULL;
 
 /* send tickles and check tickle status of connections
  * thoughts on using a hashed list:
- * + child_cleanup, finding slots 
- * - tickle_handler, freeing, tickles 
+ * + child_cleanup, finding slots
+ * - tickle_handler, freeing, tickles
  * if setup for a large number of connections,
  * + space: if actual connections < potential
  * - space: actual connections ~ potential
@@ -59,12 +59,12 @@ static struct asp_child    **asp_ac = NULL;
 static void tickle_handler(int sig _U_)
 {
   int sid;
-  
+
   /* check status */
   for (sid = 0; sid < children->nsessions; sid++) {
-    if (asp_ac[sid] == NULL || asp_ac[sid]->ac_state == ACSTATE_DEAD) 
+    if (asp_ac[sid] == NULL || asp_ac[sid]->ac_state == ACSTATE_DEAD)
       continue;
-    
+
     if (++asp_ac[sid]->ac_state >= ACSTATE_BAD) {
       /* kill. if already dead, just continue */
       if (kill( asp_ac[ sid ]->ac_pid, SIGTERM) == 0)
@@ -95,7 +95,7 @@ static void child_cleanup(const pid_t pid)
 /* kill children */
 void asp_kill(int sig)
 {
-  if (children) 
+  if (children)
     server_child_kill(children, CHILD_ASPFORK, sig);
 }
 
@@ -103,20 +103,20 @@ void asp_stop_tickle(void)
 {
     if (server_asp && server_asp->inited) {
     	static const struct itimerval timer = {{0, 0}, {0, 0}};
-	
+
 	setitimer(ITIMER_REAL, &timer, NULL);
     }
 }
 
 /*
  * This call handles open, tickle, and getstatus requests. On a
- * successful open, it forks a child process. 
+ * successful open, it forks a child process.
  * It returns an ASP to the child and parent and NULL if there is
  * an error.
  */
 static void set_asp_ac(int sid, struct asp_child *tmp);
 
-ASP asp_getsession(ASP asp, server_child *server_children, 
+ASP asp_getsession(ASP asp, server_child *server_children,
 		   const int tickleval)
 {
     struct sigaction    action;
@@ -136,7 +136,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	return NULL;
 
       /* only calloc once */
-      if (!asp_ac && (asp_ac = (struct asp_child **) 
+      if (!asp_ac && (asp_ac = (struct asp_child **)
 	   calloc(server_children->nsessions, sizeof(struct asp_child *)))
 	   == NULL)
 	return NULL;
@@ -146,7 +146,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       /* install cleanup pointer */
       server_child_setup(children, CHILD_ASPFORK, child_cleanup);
 
-      /* install tickle handler 
+      /* install tickle handler
        * we are the parent process
        */
       memset(&action, 0, sizeof(action));
@@ -169,7 +169,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
       asp->inited = 1;
     }
-		    
+
     memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
@@ -187,7 +187,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       }
       return( NULL );
     }
-    
+
     switch ( asp->cmdbuf[ 0 ] ) {
     case ASPFUNC_TICKLE:
       sid = asp->cmdbuf[1];
@@ -208,7 +208,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
 	/* asp->data is big enough ... */
         memcpy( asp->data, asp->asp_status, MIN(asp->asp_slen, i*ASP_CMDSIZ));
-	
+
         buflen = MIN(asp->asp_slen, i*ASP_CMDSIZ);
         buf = asp->data;
         iovcnt = 0;
@@ -258,8 +258,8 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	  }
 	}
 
-	if ((atp = atp_open(ATADDR_ANYPORT, 
-			    &(atp_sockaddr(asp->asp_atp)->sat_addr))) == NULL) 
+	if ((atp = atp_open(ATADDR_ANYPORT,
+			    &(atp_sockaddr(asp->asp_atp)->sat_addr))) == NULL)
 	  return NULL;
 
     int dummy[2];
@@ -273,7 +273,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	      free( asp_ac[i] );
 	  }
 	  free(asp_ac);
-	  
+
 	  server_child_free(children);
 	  children = NULL;
 	  atp_close(asp->asp_atp);
@@ -286,38 +286,38 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	  asp->asp_sid = sid;
 	  asp->asp_flags = ASPFL_SSS;
 	  return asp;
-	  
+
 	case -1 : /* error */
 	  asp->cmdbuf[ 0 ] = 0;
 	  asp->cmdbuf[ 1 ] = 0;
 	  asperr = ASPERR_SERVBUSY;
 	  break;
-	  
+
 	default : /* parent process */
-	  /* we need atomic setting or pb with tickle_handler */ 
+	  /* we need atomic setting or pb with tickle_handler */
       if (server_child_add(children, CHILD_ASPFORK, pid, (long)dummy)) {
 	    if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
-            kill(pid, SIGQUIT); 
+            kill(pid, SIGQUIT);
             break;
         }
         asp_ac_tmp->ac_pid = pid;
         asp_ac_tmp->ac_state = ACSTATE_OK;
         asp_ac_tmp->ac_sat = sat;
         asp_ac_tmp->ac_sat.sat_port = asp->cmdbuf[1];
-	    
+
         asp->cmdbuf[0] = atp_sockaddr(atp)->sat_port;
         asp->cmdbuf[1] = sid;
         set_asp_ac(sid, asp_ac_tmp);
         asperr = ASPERR_OK;
         break;
       } else {
-	    kill(pid, SIGQUIT); 
+	    kill(pid, SIGQUIT);
 	    break;
       }
 	  atp_close(atp);
 	  break;
 	}
-	
+
       } else {
 	asp->cmdbuf[0] = asp->cmdbuf[1] = 0;
 	asperr = ASPERR_SERVBUSY;
