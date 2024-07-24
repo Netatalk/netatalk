@@ -1996,6 +1996,19 @@ int main(void) {
 endif
 
 #
+# Check whether to enable DDP
+#
+
+enable_ddp = get_option('with-ddp')
+
+if not enable_ddp
+    have_ddp = false
+    cdata.set('NO_DDP', 1)
+else
+    have_ddp = true
+endif
+
+#
 # OS-specific configuration
 #
 
@@ -2209,6 +2222,7 @@ summary_info = {
     '  ACL': have_acls,
     '  AFP stats via dbus': have_afpstats,
     '  Cracklib': have_cracklib,
+    '  DDP (AppleTalk)': have_ddp,
     '  dtrace probes': have_dtrace,
     '  GSSAPI': have_gssapi,
     '  Kerberos': have_kerberos,
