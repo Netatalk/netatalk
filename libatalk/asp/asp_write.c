@@ -83,7 +83,7 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
     /* get rid of the 4-byte headers */
     p = buf;
     for ( iovcnt = 0; iovcnt < atpb.atp_rresiovcnt; iovcnt++ ) {
-   	memmove(p, (char *) iov[ iovcnt ].iov_base + ASP_HDRSIZ, 
+   	memmove(p, (char *) iov[ iovcnt ].iov_base + ASP_HDRSIZ,
 		iov[ iovcnt ].iov_len - ASP_HDRSIZ );
 	p += ( iov[ iovcnt ].iov_len - ASP_HDRSIZ );
     }

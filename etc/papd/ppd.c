@@ -71,7 +71,7 @@ static char* my_fgets(char *buf, size_t bufsize, FILE *stream)
 {
     int p;           /* uninitialized, OK 310105 */
     size_t count = 0;
- 
+
     while (count < (bufsize - 1) && EOF != (p=fgetc(stream))) {
         buf[count] = p;
         count++;
@@ -232,7 +232,7 @@ int read_ppd(char *file, int fcnt)
 		break;
 	    }
 	}
-	if ( pfe->pd_name && pe->pe_value ) { 
+	if ( pfe->pd_name && pe->pe_value ) {
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
 		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
@@ -281,7 +281,7 @@ struct ppd_feature *ppd_feature( const char *feature, int len)
 
     if (len > sizeof(ppd_feature_main) -1)
         return( NULL );
-        
+
     for ( end = feature + len, p = feature, q = ppd_feature_main;
 	    (p <= end) && (*p != '\n') && (*p != '\r'); p++, q++ ) {
 	*q = *p;

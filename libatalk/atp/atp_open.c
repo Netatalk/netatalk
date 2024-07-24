@@ -56,7 +56,7 @@ ATP atp_open(uint8_t port, const struct at_addr *saddr)
 
     memset(&addr, 0, sizeof(addr));
     addr.sat_port = port;
-    if (saddr) 
+    if (saddr)
       memcpy(&addr.sat_addr, saddr, sizeof(struct at_addr));
     if ((s = netddp_open(&addr, NULL)) < 0)
         return NULL;

@@ -160,8 +160,8 @@ int main(int ac, char **av)
 	exit( -1 );
     }
     for ( i = 0; i < c; i++ ) {
-	
-	if ((size_t)(-1) == (obj_len = convert_string_allocate( chMac, 
+
+	if ((size_t)(-1) == (obj_len = convert_string_allocate( chMac,
                        CH_UNIX, nn[ i ].nn_obj, nn[ i ].nn_objlen, &obj)) ) {
             obj_len = nn[ i ].nn_objlen;
             if (( obj = strdup(nn[ i ].nn_obj)) == NULL ) {

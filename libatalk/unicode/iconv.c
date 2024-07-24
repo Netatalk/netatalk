@@ -229,7 +229,7 @@ size_t atalk_iconv(atalk_iconv_t cd,
 	while (*inbytesleft > 0) {
 		bufp = cvtbuf;
 		bufsize = sizeof(cvtbuf);
-		
+
 		if (cd->pull(cd->cd_pull, (char **)inbuf, inbytesleft, &bufp, &bufsize) == (size_t)-1
 		       && errno != E2BIG) {
 		    return -1;
@@ -279,7 +279,7 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 	/* check if we have a builtin function for this conversion */
 	from = find_charset_functions(fromcode);
 	if (from) ret->pull = from->pull;
-	
+
 	to = find_charset_functions(tocode);
 	if (to) ret->push = to->push;
 
@@ -301,7 +301,7 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 	  if (!ret->push && ret->cd_pull) iconv_close((iconv_t)ret->cd_pull);
 	}
 #endif
-	
+
 	if (!ret->push || !ret->pull) {
 		SAFE_FREE(ret->from_name);
 		SAFE_FREE(ret->to_name);
@@ -373,7 +373,7 @@ static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		errno = E2BIG;
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -391,7 +391,7 @@ static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		else {
 			errno = EILSEQ;
 			return -1;
-		}	
+		}
 		(*inbytesleft)  -= 2;
 		(*outbytesleft) -= 1;
 		(*inbuf)  += 2;
@@ -407,7 +407,7 @@ static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 		errno = E2BIG;
 		return -1;
 	}
-	
+
 	return ir_count;
 }
 

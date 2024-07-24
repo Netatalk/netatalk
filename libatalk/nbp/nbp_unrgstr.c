@@ -88,7 +88,7 @@ int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct
 
     memset( &to, 0, sizeof( struct sockaddr_at ));
     to.sat_family = AF_APPLETALK;
-    if (addr) 
+    if (addr)
       memcpy(&to.sat_addr, addr, sizeof(struct at_addr));
 #ifdef BSD4_4
     to.sat_len = sizeof( struct sockaddr_at );

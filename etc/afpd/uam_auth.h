@@ -44,7 +44,7 @@ struct uam_obj {
     (b)->uam_prev = (a)->uam_prev; \
     (b)->uam_next = (a); \
     (a)->uam_prev = (b); \
-} while (0)				
+} while (0)
 
 #define uam_detach(a) do { \
     (a)->uam_prev->uam_next = (a)->uam_next; \

@@ -75,11 +75,11 @@ static void done(int sig _U_)
 	if ( nrecv ) {
 	    printf( "round-trip (ms)  min/avg/max = %ld/%ld/%ld\n",
 		    (unsigned long) minms, (unsigned long) totalms / nrecv, (unsigned long) maxms );
-	}	
+	}
     }
     exit( 0 );
 }
-  
+
 static void aep_send(int sig _U_)
 {
     struct timeval	tv;
@@ -127,7 +127,7 @@ int main(int ac, char **av)
 
     extern char		*optarg;
     extern int		optind;
-  
+
     memset(&saddr, 0, sizeof(saddr));
     while (( cc = getopt( ac, av, "c:A:" )) != EOF ) {
 	switch ( cc ) {
@@ -151,12 +151,12 @@ int main(int ac, char **av)
 	usage( av[ 0 ] );
 	exit( 1 );
     }
-    
+
     /*
      * Save the port, since nbp_lookup calls getservbyname() to get the
      * nbp port.
      */
-    if (( se = getservbyname( "echo", "ddp" )) == NULL ) 
+    if (( se = getservbyname( "echo", "ddp" )) == NULL )
        port = 4;
     else
        port = ntohs( se->s_port );
@@ -179,11 +179,11 @@ int main(int ac, char **av)
     }
     target.sat_port = port;
 
-    if ((sock = netddp_open(saddr.sat_addr.s_net || saddr.sat_addr.s_node ? 
+    if ((sock = netddp_open(saddr.sat_addr.s_net || saddr.sat_addr.s_node ?
 			 &saddr : NULL, NULL)) < 0) {
        perror("ddp_open");
        exit(1);
-    }        
+    }
 
     sv.sa_handler = aep_send;
     sigemptyset( &sv.sa_mask );
@@ -215,7 +215,7 @@ int main(int ac, char **av)
 
     for (;;) {
 	satlen = sizeof( struct sockaddr_at );
-	if (( cc = netddp_recvfrom( sock, buf, sizeof( buf ), 0, 
+	if (( cc = netddp_recvfrom( sock, buf, sizeof( buf ), 0,
 				    (struct sockaddr *) &sat,
 				    &satlen )) < 0 ) {
 	    if ( errno == EINTR ) {

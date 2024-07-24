@@ -109,8 +109,8 @@ void atp_build_req_packet( struct atpbuf *pktbuf,
     hdr.atphd_tid = htons( tid );
     *(pktbuf->atpbuf_info.atpbuf_data) = DDPTYPE_ATP;
     memcpy(pktbuf->atpbuf_info.atpbuf_data + 1, &hdr, sizeof( struct atphdr ));
-    memcpy(pktbuf->atpbuf_info.atpbuf_data + ATP_HDRSIZE, 
-	   atpb->atp_sreqdata, atpb->atp_sreqdlen ); 
+    memcpy(pktbuf->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
+	   atpb->atp_sreqdata, atpb->atp_sreqdlen );
 
     /* set length
     */
@@ -130,11 +130,11 @@ void atp_build_resp_packet( struct atpbuf *pktbuf,
     hdr.atphd_ctrlinfo = ctrl;
     hdr.atphd_bitmap = seqnum;
     hdr.atphd_tid = htons( tid );
-    memcpy(pktbuf->atpbuf_info.atpbuf_data + 1, &hdr, 
+    memcpy(pktbuf->atpbuf_info.atpbuf_data + 1, &hdr,
 	   sizeof( struct atphdr ));
     memcpy(pktbuf->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
 	  atpb->atp_sresiov[ seqnum ].iov_base,
-	  atpb->atp_sresiov[ seqnum ].iov_len ); 
+	  atpb->atp_sresiov[ seqnum ].iov_len );
 
     /* set length
     */
@@ -150,11 +150,11 @@ atp_recv_atp( ATP ah,
 	      char *rbuf,
 	      int wait )
 {
-/* 
+/*
   Receive a packet from address fromaddr of the correct function type
   and with the correct tid.  fromaddr = AT_ANY... and function == ATP_TYPEANY
   and tid == ATP_TIDANY can be used to wildcard match.
-  
+
   recv_atp returns the length of the packet received (or -1 if error)
   The function code for the packet received is returned in *func (ATP_TREQ or
     ATP_TRESP).
@@ -179,7 +179,7 @@ atp_recv_atp( ATP ah,
 #endif /* EBUG */
     for ( pq = NULL, cq = ah->atph_queue; cq != NULL;
       pq = cq, cq = cq->atpbuf_next ) {
-	memcpy(&ahdr, cq->atpbuf_info.atpbuf_data + 1, 
+	memcpy(&ahdr, cq->atpbuf_info.atpbuf_data + 1,
 	       sizeof( struct atphdr ));
 	rfunc = ahdr.atphd_ctrlinfo & ATP_FUNCMASK;
 #ifdef EBUG
@@ -232,7 +232,7 @@ atp_recv_atp( ATP ah,
 	faddrlen = sizeof( struct sockaddr_at );
 	memset( &faddr, 0, sizeof( struct sockaddr_at ));
 
-	if (( recvlen = netddp_recvfrom( ah->atph_socket, rbuf, 
+	if (( recvlen = netddp_recvfrom( ah->atph_socket, rbuf,
 					 ATP_BUFSIZ, 0,
 					 (struct sockaddr *) &faddr,
 					 &faddrlen )) < 0 ) {
@@ -255,7 +255,7 @@ atp_recv_atp( ATP ah,
 		for ( pq = NULL, cq = ah->atph_sent; cq != NULL;
 		  pq = cq, cq = cq->atpbuf_next ) {
 		    if ( at_addr_eq( &faddr, &cq->atpbuf_addr ) &&
-		      cq->atpbuf_info.atpbuf_xo.atpxo_tid == ntohs( rtid )) 
+		      cq->atpbuf_info.atpbuf_xo.atpxo_tid == ntohs( rtid ))
 			break;
 		}
 		if ( cq != NULL ) {
@@ -291,7 +291,7 @@ atp_recv_atp( ATP ah,
 		if (( inbuf = atp_alloc_buf()) == NULL ) {
 		    return -1;
 		}
-		memcpy( &inbuf->atpbuf_addr, &faddr, 
+		memcpy( &inbuf->atpbuf_addr, &faddr,
 			sizeof( struct sockaddr_at ));
 		inbuf->atpbuf_next = ah->atph_queue;
 		inbuf->atpbuf_dlen = (size_t) recvlen;
@@ -308,7 +308,7 @@ atp_recv_atp( ATP ah,
 }
 
 
-int at_addr_eq( 
+int at_addr_eq(
     struct sockaddr_at	*paddr,		/* primary address */
     struct sockaddr_at	*saddr)		/* secondary address */
 {

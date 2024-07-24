@@ -99,7 +99,7 @@
     <variablelist remap="TP">
       <varlistentry>
         <term><option>-v, -V</option></term>
-	
+
         <listitem>
           <para>Show version and exit.</para>
         </listitem>

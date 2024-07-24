@@ -182,7 +182,7 @@ void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
 	bcopy( aarp_org_code, llc->llc_org_code, sizeof( aarp_org_code ));
 	llc->llc_ether_type = htons( ETHERTYPE_AARP );
 
-	
+
 	bcopy( &AA_SAT( aa )->sat_addr.s_net, ea->aarp_spnet,
 		sizeof( ea->aarp_spnet ));
 	ea->aarp_spnode = AA_SAT( aa )->sat_addr.s_node;
@@ -277,12 +277,12 @@ void aarpinput(struct arpcom *ac, struct mbuf *m)
     if ( ntohs( ar->ar_hrd ) != AARPHRD_ETHER ) {
 	goto out;
     }
-    
+
     if ( m->m_len < sizeof( struct arphdr ) + 2 * ar->ar_hln +
 	    2 * ar->ar_pln ) {
 	goto out;
     }
-    
+
     switch( ntohs( ar->ar_pro )) {
     case ETHERTYPE_AT :
 	at_aarpinput( ac, m );

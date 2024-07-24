@@ -78,14 +78,14 @@ function dbd_proto.dissector(buffer, pinfo, tree)
 	    	if val ~= 0 then
 	    	   item = fname(buffer, pinfo, subtree, val, 36)
 	    	   item:add(len, buffer(36, 4))
-	    		
+
 	    	end
 	    end
     else
     	    pinfo.cols.info = "Reply"
 
     	    local rply = {}
-    	
+
 	    local val = buffer(0,4):uint()
     	    rply.error = val
 	    subtree:add(error, buffer(0,4))
@@ -109,7 +109,7 @@ function dbd_proto.dissector(buffer, pinfo, tree)
 
 	    val = buffer(16,4):uint()
     	    rply.len = val
-	
+
 	    if rply.error == 0 and rply.did ~= 0 then
 	       subtree = fname(buffer, pinfo, subtree, val, 16)
 	       subtree:add(len, buffer(16,4))

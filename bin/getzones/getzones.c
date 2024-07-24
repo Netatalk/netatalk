@@ -75,7 +75,7 @@ int main( int argc, char *argv[])
     saddr.sat_family = AF_APPLETALK;
     if (( se = getservbyname( "zip", "ddp" )) == NULL )
 	saddr.sat_port = 6;
-    else 
+    else
         saddr.sat_port = ntohs( se->s_port );
 
     if ( argc == optind ) {

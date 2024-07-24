@@ -205,7 +205,7 @@ int main( int ac, char	**av)
 	case 'E' :
 	    noeof = 1;
 	    break;
-	   
+
 	case 'A':
 	    if (!atalk_aton(optarg, &addr)) {
 	      fprintf(stderr, "Bad address.\n");
@@ -309,7 +309,7 @@ int main( int ac, char	**av)
 
 	if(debug){ printf( "< STATUS\n" ), fflush( stdout );}
 
-	memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9, 
+	memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9,
 		((char *)rniov[ 0 ].iov_base)[ 8 ] );
 	st_buf[ (int) ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
 	if ( strstr( st_buf, "idle" ) != NULL ) {
@@ -812,7 +812,7 @@ static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
         /*
          * The stinking LaserWriter IINTX puts crap in this
          * field.
-         * 
+         *
          * The Imagewriter II doesn't handle this well, either
          */
         if ( ! is_imagewriter &&  ((char *)rniov[ 0 ].iov_base)[ 0 ] != 0 ) {
@@ -833,7 +833,7 @@ static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
 	    if ( waitforprinter ) {
 		char	st_buf[ 1024 ];	/* XXX too big */
 
-		memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9, 
+		memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9,
 			((char *)rniov[ 0 ].iov_base)[ 8 ] );
 		st_buf[ (int) ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
 		if ( strstr( st_buf, "waiting" ) != NULL ) {

@@ -292,7 +292,7 @@ int rtmp_replace(struct rtmptab *replace)
     LOG(log_info, logtype_atalkd, "rtmp_replace %u-%u", ntohs(replace->rt_firstnet),
 	   ntohs(replace->rt_lastnet));
     for ( iface = interfaces; iface; iface = iface->i_next ) {
-        if ((replace->rt_iface != iface) && 
+        if ((replace->rt_iface != iface) &&
 	    ((iface->i_flags & IFACE_ISROUTER) == 0))
 	  continue;
 
@@ -339,7 +339,7 @@ static int rtmp_new(struct rtmptab *rtmp)
      * Do we already have a gateway for this route?
      */
     for ( i = interfaces; i; i = i->i_next ) {
-        if ((rtmp->rt_iface != i) && 
+        if ((rtmp->rt_iface != i) &&
 	    ((i->i_flags & IFACE_ISROUTER) == 0))
 	  continue;
 
@@ -410,21 +410,21 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 
     iface = ap->ap_iface;
 
-    /* linux 2.6 sends broadcast queries to the first available socket 
-       (in our case the last configured) 
+    /* linux 2.6 sends broadcast queries to the first available socket
+       (in our case the last configured)
        try to find the right one.
        Note: now a misconfigured or plugged router can broadcast
        a wrong route
     */
     for ( iface2 = interfaces; iface2; iface2 = iface2->i_next ) {
-        if ( iface2->i_rt && from->sat_addr.s_net >= iface2->i_rt->rt_firstnet && 
-                from->sat_addr.s_net <= iface2->i_rt->rt_lastnet) 
+        if ( iface2->i_rt && from->sat_addr.s_net >= iface2->i_rt->rt_firstnet &&
+                from->sat_addr.s_net <= iface2->i_rt->rt_lastnet)
         {
               iface = iface2;
         }
     }
     /* end of linux 2.6 workaround */
-    
+
     /* ignore our own packets */
     if ( from->sat_addr.s_net == iface->i_addr.sat_addr.s_net &&
 	    from->sat_addr.s_node == iface->i_addr.sat_addr.s_node  ) {
@@ -448,7 +448,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 	    LOG(log_info, logtype_atalkd, "rtmp_packet bad node len (%d)", rh.rh_nodelen );
 	    return 1;
 	}
-	if (( from->sat_addr.s_net != 0 && 
+	if (( from->sat_addr.s_net != 0 &&
 	      from->sat_addr.s_net != rh.rh_net ) ||
 	      from->sat_addr.s_node != rh.rh_node ) {
 	    LOG(log_info, logtype_atalkd, "rtmp_packet address mismatch" );
@@ -461,7 +461,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
   	        if ((cc = looproute( iface, RTMP_DEL )) < 0) {
 		  LOG(log_error, logtype_atalkd, "rtmp_packet: looproute");
 		  return -1;
-	        } 
+	        }
 
 		if (cc)
 		  LOG(log_error, logtype_atalkd, "rtmp_packet: can't remove loopback: %s",
@@ -728,7 +728,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 		    gate->g_rt->rt_prev->rt_next = rtmp;
 		    gate->g_rt->rt_prev = rtmp;
 		}
-		
+
 		if (rtmp_new( rtmp ) < 0) {
 		    LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_new");
 		    return -1;

@@ -51,9 +51,9 @@ const char *AfpNum2name(int num)
     case AFP_SETFORKPARAM  : return "AFP_SETFORKPARAM";     /*  31 */
     case AFP_SETVOLPARAM   : return "AFP_SETVOLPARAM ";     /*  32 */
 	case AFP_WRITE 		   : return "AFP_WRITE";		    /*  33 */
-	case AFP_GETFLDRPARAM  : return "AFP_GETFLDRPARAM";	    /*  34 */	
-	case AFP_SETFLDRPARAM  : return "AFP_SETFLDRPARAM";	    /*  35 */	
-	case AFP_CHANGEPW      : return "AFP_CHANGEPW";	        /*  36 */	
+	case AFP_GETFLDRPARAM  : return "AFP_GETFLDRPARAM";	    /*  34 */
+	case AFP_SETFLDRPARAM  : return "AFP_SETFLDRPARAM";	    /*  35 */
+	case AFP_CHANGEPW      : return "AFP_CHANGEPW";	        /*  36 */
     case AFP_GETUSERINFO   : return "AFP_GETUSERINFO";      /*  37 */
     case AFP_GETSRVRMSG    : return "AFP_GETSRVRMSG";       /*  38 */
     case AFP_CREATEID      : return "AFP_CREATEID";         /*  39 */
@@ -85,7 +85,7 @@ const char *AfpNum2name(int num)
     /* version 3.1 */
     case AFP_ENUMERATE_EXT2: return "AFP_ENUMERATE_EXT2";   /*  68 */
     case AFP_ZZZ  : return "AFP_ZZZ";	    /* 122 */
-    /* version 3.2 */															
+    /* version 3.2 */
     case AFP_GETEXTATTR         : return "AFP_GETEXTATTR";	      /* 69 */
     case AFP_SETEXTATTR         : return "AFP_SETEXTATTR";	      /* 70 */
     case AFP_REMOVEATTR         : return "AFP_REMOVEATTR";	      /* 71 */
@@ -97,7 +97,7 @@ const char *AfpNum2name(int num)
     case AFP_SYNCDIR            : return "AFP_SYNCDIR";	          /* 78 */
     case AFP_SYNCFORK           : return "AFP_SYNCFORK";	      /* 79 */
 	}
-	return "not yet defined";								
+	return "not yet defined";
 }
 
 #define AFPERR2NAME(err) case err : return #err

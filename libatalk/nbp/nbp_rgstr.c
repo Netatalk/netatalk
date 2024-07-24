@@ -97,7 +97,7 @@ int nbp_rgstr( struct sockaddr_at *sat, const char *obj, const char *type, const
 	*data++ = '*'; /* default zone */
     }
 
-    
+
     if ( nbp_port == 0 ) {
 	if (( se = getservbyname( "nbp", "ddp" )) == NULL ) {
 	    nbp_port = 2;
@@ -107,7 +107,7 @@ int nbp_rgstr( struct sockaddr_at *sat, const char *obj, const char *type, const
     }
     to.sat_port = nbp_port;
 
-    if ( netddp_sendto( s, nbp_send, data - nbp_send, 0, 
+    if ( netddp_sendto( s, nbp_send, data - nbp_send, 0,
 			(struct sockaddr *)&to,
 			sizeof( struct sockaddr_at )) < 0 ) {
         goto register_err;

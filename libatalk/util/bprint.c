@@ -45,7 +45,7 @@ void bprint( data, len )
 	xout[ (i*3) + 2 ] = ' ';
     }
 
-    if ( i ) 	
+    if ( i )
 	printf( "%-48s\t%-16s\n", xout, aout );
 
     printf("(end)\n");

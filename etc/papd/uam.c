@@ -60,7 +60,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
 
   /* version check would go here */
 
-  if (!mod->uam_fcn->uam_setup || 
+  if (!mod->uam_fcn->uam_setup ||
       ((*mod->uam_fcn->uam_setup)(name) < 0)) {
     LOG(log_error, logtype_papd, "uam_load(%s): uam_setup failed", name);
     goto uam_load_err;
@@ -110,7 +110,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
     uam->uam_count++;
     return 0;
   }
-  
+
   /* allocate space for uam */
   if ((uam = calloc(1, sizeof(struct uam_obj))) == NULL)
     return -1;
@@ -210,11 +210,11 @@ int uam_checkuser(const struct passwd *pwd)
 {
   char *p;
 
-  if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0')) 
+  if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0'))
     return -1;
 
   while ((p = getusershell())) {
-    if ( strcmp( p, pwd->pw_shell ) == 0 ) 
+    if ( strcmp( p, pwd->pw_shell ) == 0 )
       break;
   }
   endusershell();

@@ -373,10 +373,10 @@ static void show_netatalk_paths( void )
   printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
   printf( "                  afpd:\t%s\n", _PATH_AFPD);
   printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
-  
+
 #ifdef WITH_SPOTLIGHT
   printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
-  printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");  
+  printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
   printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
 #endif
 

@@ -27,7 +27,7 @@ struct uam_obj {
   int uam_count;
   union {
     struct {
-      int (*login) (void *, struct passwd **, 
+      int (*login) (void *, struct passwd **,
 			char *, int, char *, int *);
       int (*logincont) (void *, struct passwd **, char *,
 			    int, char *, int *);
@@ -45,7 +45,7 @@ struct uam_obj {
     (b)->uam_prev = (a)->uam_prev; \
     (b)->uam_next = (a); \
     (a)->uam_prev = (b); \
-} while (0)				     
+} while (0)
 
 #define uam_detach(a) do { \
     (a)->uam_prev->uam_next = (a)->uam_next; \

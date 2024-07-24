@@ -46,10 +46,10 @@ resend_request(ATP ah)
 	    ah->atph_reqpkt->atpbuf_dlen );
 #endif /* EBUG */
 
-    memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, 
+    memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1,
 	sizeof( struct atphdr ));
     req_hdr.atphd_bitmap = ah->atph_rbitmap;
-    memcpy( ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, &req_hdr, 
+    memcpy( ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, &req_hdr,
 	    sizeof( struct atphdr ));
 
     gettimeofday( &ah->atph_reqtv, (struct timezone *)0 );
@@ -69,7 +69,7 @@ resend_request(ATP ah)
 }
 
 int
-atp_rsel( 
+atp_rsel(
     ATP			ah,		/* open atp handle */
     struct sockaddr_at	*faddr,		/* address to receive from */
     int			func)		/* which function(s) to wait for;
@@ -151,13 +151,13 @@ timeout :
 	if ( !requesting || errno != EINTR ) {
 	    break;	/* error */
 	}
-	    
+
 	if ( ah->atph_reqtries <= 0 &&
 		ah->atph_reqtries != ATP_TRIES_INFINITE ) {
 	    errno = ETIMEDOUT;
 	    break;
 	}
-	
+
 	if ( resend_request( ah ) < 0 ) {
 	    break;	/* error */
 	}
@@ -184,7 +184,7 @@ timeout :
 	 * we got a request: check to see if it is a duplicate (XO)
 	 * while we are at it, we expire old XO responses from sent list
 	 */
-	memcpy( &req_hdr, abuf->atpbuf_info.atpbuf_data + 1, 
+	memcpy( &req_hdr, abuf->atpbuf_info.atpbuf_data + 1,
 		sizeof( struct atphdr ));
 	tid = ntohs( req_hdr.atphd_tid );
 	gettimeofday( &tv, (struct timezone *)0 );
@@ -262,7 +262,7 @@ timeout :
     /*
      * we got a response: update bitmap
      */
-    memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, 
+    memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1,
 	    sizeof( struct atphdr ));
     if ( requesting && ah->atph_rbitmap & ( 1<<resp_hdr.atphd_bitmap )
 		&& req_hdr.atphd_tid == resp_hdr.atphd_tid ) {
@@ -321,7 +321,7 @@ timeout :
 	 * the release consists of DDP type byte + ATP header + 4 user bytes
 	 */
 	req_hdr.atphd_ctrlinfo = ATP_TREL;
-	memcpy( ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, &req_hdr, 
+	memcpy( ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, &req_hdr,
 	    sizeof( struct atphdr ));
 	memset( ah->atph_reqpkt->atpbuf_info.atpbuf_data + ATP_HDRSIZE, 0, 4 );
 	ah->atph_reqpkt->atpbuf_dlen = sizeof( struct atphdr ) + ATP_HDRSIZE;
@@ -333,7 +333,7 @@ timeout :
 #ifdef DROP_ATPTREL
 	if (( ++release_count % 10 ) != 0 ) {
 #endif /* DROP_ATPTREL */
-	netddp_sendto( ah->atph_socket, 
+	netddp_sendto( ah->atph_socket,
 		       ah->atph_reqpkt->atpbuf_info.atpbuf_data,
 		       ah->atph_reqpkt->atpbuf_dlen, 0,
 		       (struct sockaddr *) &ah->atph_reqpkt->atpbuf_addr,

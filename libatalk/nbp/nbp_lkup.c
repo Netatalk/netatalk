@@ -52,7 +52,7 @@ int nbp_lookup( const char *obj, const char *type, const char *zone, struct nbpn
 
     memset(&addr, 0, sizeof(addr));
     memset(&from, 0, sizeof(from));
-    if (ataddr) 
+    if (ataddr)
       memcpy(&addr.sat_addr, ataddr, sizeof(struct at_addr));
     if ((s = netddp_open(&addr, &from)) < 0)
       return -1;

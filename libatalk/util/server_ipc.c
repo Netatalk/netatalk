@@ -223,7 +223,7 @@ int ipc_server_read(server_child_t *children, int fd)
             LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
                 ret, ipc.len, strerror(errno));
             return -1;
-    	}	
+    	}
     }
     ipc.msg = buf;
 

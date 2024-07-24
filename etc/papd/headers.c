@@ -4,7 +4,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h" 
+#include "config.h"
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
@@ -27,7 +27,7 @@ static char *get_text(char *start, int linelength)
     char *p, *q;
     char *t, *ret;
     char *stop;
-    
+
     /* 1023 is arbitrary 255 max for comment but some may be escape \xxx and space and keyword */
 
     if (linelength > 1023)
@@ -45,7 +45,7 @@ static char *get_text(char *start, int linelength)
             break;
         }
     }
-    
+
     for ( ; p < stop; p++ ) {
         if (*p != ' ' && *p != '\t') {
             break;
@@ -54,7 +54,7 @@ static char *get_text(char *start, int linelength)
 
     if ( p < stop && *p == '(' ) {
         int count;
-        /* start with ( then it's a <text> */ 
+        /* start with ( then it's a <text> */
         p++;
         for ( q = p, count = 1; q < stop; q++, t++ ) {
             if (*q == '(') {

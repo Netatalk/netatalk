@@ -60,7 +60,7 @@ typedef struct ASP {
     int			asp_flags;
     char		child, inited, *commands;
     char                cmdbuf[ASP_CMDMAXSIZ];
-    char                data[ASP_DATAMAXSIZ];  
+    char                data[ASP_DATAMAXSIZ];
     size_t		cmdlen, datalen;
     off_t 		read_count, write_count;
 } *ASP;

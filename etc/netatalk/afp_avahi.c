@@ -66,7 +66,7 @@ static void register_stuff(void) {
         /* Build AFP volumes list */
         int i = 0;
         strlist = avahi_string_list_add_printf(strlist, "sys=waMa=0,adVF=0x100");
-		
+
         for (volume = getvolumes(); volume; volume = volume->v_next) {
 
             if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, -1, tmpname, 255) <= 0) {
@@ -85,7 +85,7 @@ static void register_stuff(void) {
                         volume->v_localname);
                     strlist = avahi_string_list_add_printf(strlist, "dk%u=adVN=%s,adVF=0xa1",
                                                            i++, tmpname);
-                }	
+                }
             }
         }
 
@@ -200,7 +200,7 @@ static void publish_reply(AvahiEntryGroup *g,
             avahi_strerror(avahi_client_errno(ctx->client)));
         avahi_threaded_poll_quit(ctx->threaded_poll);
         break;
-		
+
     case AVAHI_ENTRY_GROUP_FAILURE:
         LOG(log_error, logtype_afpd, "Failed to register service: %s",
             avahi_strerror(avahi_client_errno(ctx->client)));

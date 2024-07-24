@@ -61,7 +61,7 @@ int main(int ac, char **av)
 
     extern char		*optarg;
     extern int		optind;
-    
+
     memset(&addr, 0, sizeof(addr));
     while ((c = getopt(ac, av, "A:m:")) != EOF) {
       switch (c) {
@@ -89,9 +89,9 @@ int main(int ac, char **av)
     }
 
     /* Convert the name */
-    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac, 
+    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
                         av[optind], -1, &convname))
-        convname = av[optind]; 
+        convname = av[optind];
 
     /*
      * Get the name. If Type or Obj aren't specified, error.

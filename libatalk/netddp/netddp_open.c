@@ -29,9 +29,9 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
     int s;
     socklen_t len;
 
-    if ((s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0) 
+    if ((s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0)
 	return -1;
-    
+
     if (!addr)
 	return s;
 

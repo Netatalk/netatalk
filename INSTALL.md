@@ -52,7 +52,7 @@ When using Meson, to review the options which Meson chose, run:
 meson configure
 ```
 
-With additional arguments the `meson setup build` command can be used to 
+With additional arguments the `meson setup build` command can be used to
 configure Netatalk according to user preference. All generic options passed to
 this command take the form `-Doption=value`.
 

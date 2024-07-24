@@ -82,7 +82,7 @@ int atp_rreq(
 	return -1;
     }
 
-    memcpy( &req_hdr, req_buf->atpbuf_info.atpbuf_data + 1, 
+    memcpy( &req_hdr, req_buf->atpbuf_info.atpbuf_data + 1,
 	    sizeof( struct atphdr ));
     tid = ntohs( req_hdr.atphd_tid );
 
@@ -101,7 +101,7 @@ int atp_rreq(
     }
 
     atpb->atp_rreqdlen = recvlen - ATP_HDRSIZE;
-    memcpy( atpb->atp_rreqdata, 
+    memcpy( atpb->atp_rreqdata,
 	    req_buf->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
 	    recvlen - ATP_HDRSIZE );
     atpb->atp_bitmap = req_hdr.atphd_bitmap;

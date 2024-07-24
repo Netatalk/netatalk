@@ -153,7 +153,7 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 	int retval, flags = 0;
 	int valuelength = (int)size;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
@@ -265,7 +265,7 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	int retval, flags = ATTR_DONTFOLLOW;
 	int valuelength = (int)size;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
@@ -444,7 +444,7 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 	char *ptr;
 	char *ptr1;
 	ssize_t ptrsize;
-	
+
 	if (ret <= 0 || size == 0)
 		return ret;
 	ptrsize = ret;
@@ -587,7 +587,7 @@ int sys_removexattr (const char *path, const char *uname)
 #elif defined(HAVE_ATTR_REMOVE)
 	int flags = 0;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
@@ -622,7 +622,7 @@ int sys_fremovexattr (int filedes _U_, const char *path, const char *uname)
 #elif defined(HAVE_ATTR_REMOVE)
 	int flags = 0;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
@@ -655,7 +655,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 #elif defined(HAVE_ATTR_REMOVE)
 	int flags = ATTR_DONTFOLLOW;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
 
 	return attr_remove(path, attrname, flags);
@@ -711,7 +711,7 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 #elif defined(HAVE_ATTR_SET)
 	int myflags = 0;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
 	if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
@@ -838,7 +838,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 #elif defined(HAVE_ATTR_SET)
 	int myflags = ATTR_DONTFOLLOW;
 	char *attrname = strchr(name,'.') + 1;
-	
+
 	if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
 	if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
 	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;

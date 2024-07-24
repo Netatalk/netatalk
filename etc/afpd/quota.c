@@ -305,7 +305,7 @@ static int get_linux_xfs_quota(int what, char *path, uid_t euser_id, struct dqbl
 	int ret = -1;
 #ifdef HAVE_LINUX_XQM_H
 	struct fs_disk_quota D;
-	
+
 	memset (&D, 0, sizeof(D));
 
 	if ((ret = quotactl(QCMD(Q_XGETQUOTA,(what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t)&D)))
@@ -497,7 +497,7 @@ special(char *file, int *nfs)
     if (strcmp(mnt->mnt_type, "xfs") == 0)
 	is_xfs = 1;
 #endif
-	
+
     return( mnt->mnt_fsname );
 }
 
@@ -518,7 +518,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     memset(dq, 0, sizeof(struct dqblk));
 #endif
     memset(&dqg, 0, sizeof(dqg));
-	
+
 #ifdef __svr4__
     qc.op = Q_GETQUOTA;
     qc.uid = uid;
@@ -708,7 +708,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 	struct dqblk dqblk;
 
 	this_bsize = bsize;
-			
+
 	if (getquota(obj, vol, &dqblk, bsize) != 0 ) {
 		return( AFPERR_PARAM );
 	}
