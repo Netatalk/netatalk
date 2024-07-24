@@ -1988,10 +1988,18 @@ if have_ssl
     summary_info += {
         '  DHX': uams_using_options,
     }
+else
+    summary_info += {
+        '  DHX': false,
+    }
 endif
 if have_libgcrypt
     summary_info += {
         '  DHX2': uams_using_options,
+    }
+else
+    summary_info += {
+        '  DHX2': false,
     }
 endif
 summary(summary_info, bool_yn: true, section: '  UAMs:')
