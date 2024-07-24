@@ -921,6 +921,39 @@ libevent = dependency(
 )
 
 #
+# Check for CUPS
+#
+
+cups = dependency('cups', required: false)
+spooldir = ''
+cups_config = find_program('cups-config', required: false)
+
+if not (get_option('with-ddp') or get_option('with-cups'))
+    have_cups = false
+    spooldir_required = false
+    cdata.set('DISABLE_SPOOL', 1)
+else
+    have_cups = cups.found() and cups_config.found()
+    if have_cups
+        spooldir_required = true
+        cdata.set('HAVE_CUPS', 1)
+        cups_api_version = run_command(
+            cups_config,
+            '--api-version',
+            check: true,
+        ).stdout().strip()
+        cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
+        if get_option('with-spooldir') != ''
+            spooldir += get_option('with-spooldir')
+        else
+            spooldir += prefix / 'var/spool/netatalk'
+        endif
+    else
+        warning('CUPS not found, you might need to specify the path to cups-config')
+    endif
+endif
+
+#
 # Check for quota support
 #
 
@@ -2222,6 +2255,7 @@ summary_info = {
     '  ACL': have_acls,
     '  AFP stats via dbus': have_afpstats,
     '  Cracklib': have_cracklib,
+    '  CUPS': have_cups,
     '  DDP (AppleTalk)': have_ddp,
     '  dtrace probes': have_dtrace,
     '  GSSAPI': have_gssapi,
@@ -2253,6 +2287,7 @@ summary_info = {
     '  init directory': init_dirs,
     '  Netatalk lockfile': lockfile,
     '  PAM config directory': pam_confdir,
+    '  CUPS print spool directory': spooldir,
     '  User home basedir': homedir,
 }
 if have_spotlight
