@@ -20,15 +20,6 @@ else
 endif
 
 if (
-    fs.exists(pkgconfdir / 'extmap.conf')
-    and not get_option('with-overwrite')
-)
-    message('will not replace existing', pkgconfdir / 'extmap.conf')
-else
-    install_data('extmap.conf', install_dir: pkgconfdir)
-endif
-
-if (
     fs.exists(pkgconfdir / 'dbus-session.conf')
     and not get_option('with-overwrite')
 )
@@ -45,6 +36,23 @@ if (
 else
     install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
 endif
+
+static_conf_files = ['extmap.conf']
+
+if have_ddp
+    static_conf_files += ['atalkd.conf', 'papd.conf']
+endif
+
+foreach file : static_conf_files
+    if (
+        fs.exists(pkgconfdir / file)
+        and not get_option('with-overwrite')
+    )
+        message('will not replace existing', pkgconfdir / file)
+    else
+        install_data(file, install_dir: pkgconfdir)
+    endif
+endforeach
 
 install_data('README', install_dir: localstatedir / 'netatalk')
 
