@@ -34,6 +34,12 @@ option(
     description: 'Enable cracklib support',
 )
 option(
+    'with-cups',
+    type: 'boolean',
+    value: true,
+    description: 'Enable CUPS support',
+)
+option(
     'with-ddp',
     type: 'boolean',
     value: true,
@@ -158,6 +164,12 @@ option(
     type: 'boolean',
     value: true,
     description: 'Enable checking for a valid shell',
+)
+option(
+    'with-spooldir',
+    type: 'string',
+    value: '',
+    description: 'Set path for spooldir used for CUPS support',
 )
 option(
     'with-spotlight',
