@@ -39,6 +39,7 @@ env:
     libacl1-dev \
     libavahi-client-dev \
     libcrack2-dev \
+    libcups2-dev \
     libdb-dev \
     libdbus-1-dev \
     libdbus-glib-1-dev \
@@ -85,6 +86,8 @@ jobs:
             cracklib \
             cracklib-dev \
             cracklib-words \
+            cups \
+            cups-dev \
             curl \
             db-dev \
             dbus-dev \
@@ -208,6 +211,7 @@ jobs:
             bison \
             chkconfig \
             cracklib-devel \
+            cups-devel \
             dbus-devel \
             dbus-glib-devel \
             docbook-style-xsl \
@@ -444,6 +448,7 @@ jobs:
               flex \
               gcc13 \
               gnome-tracker \
+              libcups \
               libevent \
               libgcrypt \
               libxslt \
