@@ -34,6 +34,12 @@ option(
     description: 'Enable cracklib support',
 )
 option(
+    'with-ddp',
+    type: 'boolean',
+    value: true,
+    description: 'Enable DDP (Appletalk)',
+)
+option(
     'with-debug',
     type: 'boolean',
     value: true,
