@@ -21,6 +21,19 @@ if have_threads
     libatalk_deps += threads
 endif
 
+if have_ddp
+    subdir('asp')
+    subdir('atp')
+    subdir('nbp')
+    subdir('netddp')
+    libatalk_libs += [
+        libasp,
+        libatp,
+        libnbp,
+        libnetddp,
+    ]
+endif
+
 if have_spotlight
     subdir('talloc')
     libatalk_libs += libtalloc
@@ -44,7 +57,7 @@ libatalk = library(
         libutil,
         libvfs,
     ],
-    version: '18.0.0',
-    soversion: '18',
+    version: '19.0.0',
+    soversion: '19',
     install: true,
 )
