@@ -2183,6 +2183,7 @@ subdir('config')
 subdir('etc')
 subdir('contrib')
 subdir('distrib')
+subdir('sys')
 
 if get_option('with-manual') != 'none'
     subdir('doc')
