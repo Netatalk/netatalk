@@ -67,9 +67,14 @@ netatalk_common_flags = [
     '-Wno-all',
     '-Wno-deprecated-declarations',
 ]
-netatalk_common_link_args = []
+
+if host_os == 'linux'
+    netatalk_common_flags += '-D_GNU_SOURCE'
+endif
 
 add_global_arguments(netatalk_common_flags, language: 'c')
+
+netatalk_common_link_args = []
 
 # Per target
 
@@ -102,6 +107,7 @@ if host_os in ['dragonfly', 'freebsd', 'openbsd']
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/usr/local/include',
     )
@@ -109,6 +115,7 @@ elif host_os == 'netbsd'
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/usr/pkg/include',
     )
@@ -116,6 +123,7 @@ elif host_os == 'omnios'
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
         '/opt/local/include',
     )
@@ -123,6 +131,7 @@ else
     root_includes = include_directories(
         '.',
         'include',
+        'sys',
         'etc/afpd',
     )
 endif
@@ -928,7 +937,7 @@ cups = dependency('cups', required: false)
 spooldir = ''
 cups_config = find_program('cups-config', required: false)
 
-if not (get_option('with-ddp') or get_option('with-cups'))
+if not (get_option('with-appletalk') or get_option('with-cups'))
     have_cups = false
     spooldir_required = false
     cdata.set('DISABLE_SPOOL', 1)
@@ -2029,16 +2038,16 @@ int main(void) {
 endif
 
 #
-# Check whether to enable DDP
+# Check whether to enable DDP (AppleTalk)
 #
 
-enable_ddp = get_option('with-ddp')
+enable_appletalk = get_option('with-appletalk')
 
-if not enable_ddp
-    have_ddp = false
+if not enable_appletalk
+    have_appletalk = false
     cdata.set('NO_DDP', 1)
 else
-    have_ddp = true
+    have_appletalk = true
 endif
 
 #
@@ -2046,13 +2055,32 @@ endif
 #
 
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
+use_glibc_at_header = false
 
 if host_os.contains('freebsd')
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os.contains('linux')
+    use_glibc_at_header = cc.has_header('netatalk/at.h')
     cdata.set('_GNU_SOURCE', 1)
+    if cc.compiles(
+        '''
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <linux/atalk.h>
+
+struct atalk_addr foo;
+
+int main (void){
+
+    ;
+    return 0;
+}
+''',
+    )
+        cdata.set('HAVE_ATALK_ADDR', 1)
+    endif
     cdata.set('HAVE_BROKEN_DBTOB', 1)
     cdata.set('LINUX', 1)
 elif host_os.contains('netbsd')
@@ -2063,6 +2091,7 @@ elif host_os.contains('netbsd')
 elif host_os.contains('openbsd')
     cdata.set('BSD4_4', 1)
     cdata.set('UAM_DHX', 1) # OpenBSD does not have crypt.h, uses unistd.h
+    cdata.set('NO_DDP', 1)
 elif host_os.contains('sunos')
     cdata.set('__EXTENSIONS__', 1)
     cdata.set('__svr4__', 1)
@@ -2255,9 +2284,9 @@ summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 summary_info = {
     '  ACL': have_acls,
     '  AFP stats via dbus': have_afpstats,
+    '  AppleTalk': have_appletalk,
     '  Cracklib': have_cracklib,
     '  CUPS': have_cups,
-    '  DDP (AppleTalk)': have_ddp,
     '  dtrace probes': have_dtrace,
     '  GSSAPI': have_gssapi,
     '  Kerberos': have_kerberos,

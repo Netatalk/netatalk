@@ -40,10 +40,10 @@ option(
     description: 'Enable CUPS support',
 )
 option(
-    'with-ddp',
+    'with-appletalk',
     type: 'boolean',
-    value: true,
-    description: 'Enable DDP (Appletalk)',
+    value: false,
+    description: 'Enable the AppleTalk transport layer, services and utilities',
 )
 option(
     'with-debug',

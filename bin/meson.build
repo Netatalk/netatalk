@@ -8,7 +8,7 @@ endif
 
 subdir('misc')
 
-if have_ddp
+if have_appletalk
     subdir('aecho')
     subdir('getzones')
     subdir('nbp')
