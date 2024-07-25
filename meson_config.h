@@ -70,6 +70,9 @@
 /* Define to 1 if you have the `asprintf' function. */
 #mesondefine HAVE_ASPRINTF
 
+/* set if struct at_addr is called atalk_addr */
+#mesondefine HAVE_ATALK_ADDR
+
 /* whether at funcs are available */
 #mesondefine HAVE_ATFUNCS
 
@@ -114,6 +117,9 @@
 
 /* Define to 1 if you have the <crypt.h> header file. */
 #mesondefine HAVE_CRYPT_H
+
+/* Define to enable CUPS Support */
+#mesondefine HAVE_CUPS
 
 /* Define if support for dbus-glib was found */
 #mesondefine HAVE_DBUS_GLIB
@@ -556,6 +562,9 @@
 
 /* Define if OS is NetBSD */
 #mesondefine NETBSD
+
+/* Define if DDP should be disabled */
+#mesondefine NO_DDP
 
 /* Define if Quota support should be disabled */
 #mesondefine NO_QUOTA_SUPPORT

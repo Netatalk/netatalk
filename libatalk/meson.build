@@ -21,7 +21,7 @@ if have_threads
     libatalk_deps += threads
 endif
 
-if have_ddp
+if have_appletalk
     subdir('asp')
     subdir('atp')
     subdir('nbp')

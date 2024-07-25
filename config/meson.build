@@ -39,7 +39,7 @@ endif
 
 static_conf_files = ['extmap.conf']
 
-if have_ddp
+if have_appletalk
     static_conf_files += ['atalkd.conf', 'papd.conf']
 endif
 

@@ -1,3 +1,3 @@
-if have_ddp
+if have_appletalk
 		subdir('netatalk')
 endif
