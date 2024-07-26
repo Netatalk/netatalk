@@ -16,6 +16,13 @@ manual_stylesheet = configure_file(
     configuration: cdata,
 )
 
+if get_option('with-readmes')
+    install_data(
+        'DEVELOPER',
+        install_dir: datadir / 'doc/netatalk',
+    )
+endif
+
 subdir('manpages')
 subdir('manual')
 

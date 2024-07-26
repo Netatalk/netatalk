@@ -135,6 +135,8 @@ flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
 perl = find_program('perl', required: true)
 uname = find_program('uname', required: false)
+cmarkgfm = find_program('cmark-gfm', required: false)
+
 if host_os == 'darwin'
     bison = find_program(macos_prefix / 'opt/bison/bin/bison', required: false)
     if not bison.found()
@@ -2074,6 +2076,57 @@ configure_file(
     output: 'config.h',
     configuration: cdata,
 )
+
+#########################
+# Prepare documentation #
+#########################
+
+
+if get_option('with-readmes')
+    readmes = [
+        'CONTRIBUTORS',
+        'NEWS',
+    ]
+
+    if cmarkgfm.found()
+        readmes_md = [
+            'INSTALL',
+            'README',
+            'SECURITY',
+        ]
+
+        foreach file : readmes_md
+            custom_target(
+                'readmes_' + file,
+                input: file + '.md',
+                output: file + '.txt',
+                command: [
+                    'cmark-gfm',
+                    '--width', '80',
+                    '--to', 'plaintext',
+                    '@INPUT@',
+                ],
+                capture: true,
+                install: true,
+                install_dir: datadir / 'doc/netatalk',
+            )
+        endforeach
+    else
+        warning('cmark-gfm is required for markdown to text conversion')
+        readmes += [
+            'INSTALL.md',
+            'README.md',
+            'SECURITY.md',
+        ]
+    endif
+
+    foreach file : readmes
+        install_data(
+            file,
+            install_dir: datadir / 'doc/netatalk',
+        )
+    endforeach
+endif
 
 subdir('include')
 subdir('libatalk')
