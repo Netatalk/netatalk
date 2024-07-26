@@ -21,51 +21,29 @@ papd_c_args = [
     dversion,
 ]
 
-if enable_rpath
-    executable(
-        'papd',
-        papd_sources,
-        include_directories: root_includes,
-        link_with: libatalk,
-        dependencies: cups,
-        c_args: papd_c_args,
-        export_dynamic: true,
-        install: true,
-        install_dir: sbindir,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-    executable(
-        'showppd',
-        ['ppd.c', 'showppd.c'],
-        include_directories: root_includes,
-        link_with: libatalk,
-        c_args: '-DSHOWPPD',
-        install: true,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-else
-    executable(
-        'papd',
-        papd_sources,
-        include_directories: root_includes,
-        link_with: libatalk,
-        dependencies: cups,
-        c_args: papd_c_args,
-        export_dynamic: true,
-        install: true,
-        install_dir: sbindir,
-    )
-    executable(
-        'showppd',
-        ['ppd.c', 'showppd.c'],
-        include_directories: root_includes,
-        link_with: libatalk,
-        c_args: '-DSHOWPPD',
-        install: true,
-    )
-endif
+executable(
+    'papd',
+    papd_sources,
+    include_directories: root_includes,
+    link_with: libatalk,
+    dependencies: cups,
+    c_args: papd_c_args,
+    export_dynamic: true,
+    install: true,
+    install_dir: sbindir,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
+)
+executable(
+    'showppd',
+    ['ppd.c', 'showppd.c'],
+    include_directories: root_includes,
+    link_with: libatalk,
+    c_args: '-DSHOWPPD',
+    install: true,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
+)
 
 if have_cups and spooldir_required
     install_emptydir(spooldir, install_mode: 'rwxrwxrwx')
