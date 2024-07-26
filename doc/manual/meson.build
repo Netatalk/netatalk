@@ -20,7 +20,7 @@ manual_pages = [
 ]
 
 foreach page : manual_pages
-    manual_xmlfile = configure_file(
+    configure_file(
         input: page,
         output: page,
         configuration: cdata,
