@@ -1642,7 +1642,7 @@ else
 
     if have_pam
         cdata.set('USE_PAM', 1)
-        uams_options += 'PAM'
+        uams_options += 'PAM '
         pampath = pam_dir / 'etc/pam.d'
         # Debian/SuSE
         if fs.exists(pampath / 'common-auth')
@@ -1723,7 +1723,7 @@ else
     have_shadow = (cc.has_header('shadow.h'))
     if have_shadow
         cdata.set('SHADOWPW', 1)
-        uams_options += ' SHADOW'
+        uams_options += 'SHADOW'
     else
         have_shadow = false
         warning('Shadow password support requested but required header not found')
@@ -2181,8 +2181,6 @@ summary(summary_info, bool_yn: true, section: 'Compilation:')
 
 # Configuration summary
 
-uams_using_options = '(' + uams_options + ')'
-
 summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:')
 summary_info = {
     '  Initscript style': init_style,
@@ -2201,30 +2199,19 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  CNID:')
 
 summary_info = {
-    '  Kerberos V': have_krb5_uam,
-    '  PGP': enable_pgp_uam,
-    '  Randnum': '(afppasswd)',
-    '  clrtxt': uams_using_options,
-    '  guest': true,
+    '  Access control': uams_options,
 }
-if have_ssl
-    summary_info += {
-        '  DHX': uams_using_options,
-    }
-else
-    summary_info += {
-        '  DHX': false,
-    }
-endif
-if have_libgcrypt
-    summary_info += {
-        '  DHX2': uams_using_options,
-    }
-else
-    summary_info += {
-        '  DHX2': false,
-    }
-endif
+summary(summary_info, bool_yn: true, section: '  Authentication:')
+
+summary_info = {
+    '  ClearTxt': true,
+    '  DHX': have_ssl,
+    '  DHX2': have_libgcrypt,
+    '  Guest': true,
+    '  Kerberos V': have_krb5_uam,
+    '  PGP': have_pgp_uam,
+    '  RandNum': have_ssl,
+}
 summary(summary_info, bool_yn: true, section: '  UAMs:')
 
 summary_info = {

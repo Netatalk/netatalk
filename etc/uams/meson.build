@@ -47,7 +47,34 @@ if have_embedded_ssl
 endif
 
 if have_ssl
+    uams_randnum_sources = ['uams_randnum.c']
     uams_dhx_passwd_sources = ['uams_dhx_passwd.c']
+
+    shared_module(
+        'uams_randnum',
+        uams_randnum_sources,
+        include_directories: root_includes,
+        dependencies: [crack, pam, ssl_deps, nettle],
+        link_with: ssl_links,
+        name_prefix: '',
+        name_suffix: 'so',
+        install: true,
+        install_dir: libdir / 'netatalk',
+        build_rpath: rpath_libdir,
+        install_rpath: rpath_libdir,
+    )
+    static_library(
+        'uams_randnum',
+        uams_randnum_sources,
+        include_directories: root_includes,
+        dependencies: [crack, pam, ssl_deps, nettle],
+        link_with: ssl_links,
+        name_prefix: '',
+        install: true,
+        install_dir: libdir / 'netatalk',
+        build_rpath: rpath_libdir,
+        install_rpath: rpath_libdir,
+    )
 
     shared_module(
         'uams_dhx_passwd',
@@ -216,37 +243,7 @@ else
     )
 endif
 
-if have_ssl
-    uams_randnum_sources = ['uams_randnum.c']
-
-    shared_module(
-        'uams_randnum',
-        uams_randnum_sources,
-        include_directories: root_includes,
-        dependencies: [crack, pam, ssl_deps, nettle],
-        link_with: ssl_links,
-        name_prefix: '',
-        name_suffix: 'so',
-        install: true,
-        install_dir: libdir / 'netatalk',
-        build_rpath: rpath_libdir,
-        install_rpath: rpath_libdir,
-    )
-    static_library(
-        'uams_randnum',
-        uams_randnum_sources,
-        include_directories: root_includes,
-        dependencies: [crack, pam, ssl_deps, nettle],
-        link_with: ssl_links,
-        name_prefix: '',
-        install: true,
-        install_dir: libdir / 'netatalk',
-        build_rpath: rpath_libdir,
-        install_rpath: rpath_libdir,
-    )
-endif
-
-if enable_pgp_uam
+if have_pgp_uam
     uams_pgp_sources = ['uams_pgp.c']
 
     shared_module(
