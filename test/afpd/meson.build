@@ -179,5 +179,15 @@ afpdtest = executable(
 
 test_sh = find_program('test.sh')
 
-test('test1', test_sh)
-test('test2', afpdtest)
+test(
+    'test1',
+    test_sh,
+    is_parallel: false,
+    priority: 1,
+)
+test(
+    'test2',
+    afpdtest,
+    is_parallel: false,
+    priority: 0,
+)

@@ -159,6 +159,8 @@ jobs:
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
+      - name: Run tests
+        run: cd build && meson test
       - name: Install
         run: meson install -C build
       - name: Uninstall
