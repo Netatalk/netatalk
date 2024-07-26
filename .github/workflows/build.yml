@@ -32,6 +32,7 @@ on:
 env:
   APT_PACKAGES: |
     bison \
+    cmark-gfm \
     docbook-xsl \
     file \
     flex \
@@ -524,7 +525,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db docbook-xsl libxslt meson mysql talloc
+          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
           wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
       - name: Configure
         run: |

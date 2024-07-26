@@ -124,6 +124,12 @@ option(
     description: 'Enable quota support',
 )
 option(
+    'with-readmes',
+    type: 'boolean',
+    value: true,
+    description: 'Install README documentation',
+)
+option(
     'with-rpath',
     type: 'boolean',
     value: false,
@@ -344,5 +350,5 @@ option(
         'www',
     ],
     value: 'local',
-    description: 'Compile Netatalk documentation',
+    description: 'Build and install the html manual',
 )
