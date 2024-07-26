@@ -16,6 +16,9 @@ manual_stylesheet = configure_file(
     configuration: cdata,
 )
 
-subdir('ja')
 subdir('manpages')
 subdir('manual')
+
+if get_option('with-manual') == 'www'
+    subdir('ja')
+endif
