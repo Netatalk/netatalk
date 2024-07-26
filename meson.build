@@ -577,36 +577,35 @@ if crypto.found()
     have_ssl = true
     cdata.set('HAVE_LIBCRYPTO', 1)
     cdata.set('UAM_DHX', 1)
-else
-    have_ssl = false
-endif
-
-if have_wolfssl
-    if force_embedded_ssl
-        have_embedded_ssl = true
+    if have_wolfssl
+        if force_embedded_ssl
+            have_embedded_ssl = true
+            ssl_deps += crypto
+            ssl_provider += 'built-in'
+            cdata.set('EMBEDDED_SSL', 1)
+        else
+            ssl_deps += [crypto, wolfssl]
+            ssl_provider += 'WolfSSL'
+            cdata.set('WOLFSSL_DHX', 1)
+        endif
+    elif have_embedded_ssl
         ssl_deps += crypto
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)
     else
-        ssl_deps += [crypto, wolfssl]
-        ssl_provider += 'WolfSSL'
-        cdata.set('WOLFSSL_DHX', 1)
-    endif
-elif have_embedded_ssl
-    ssl_deps += crypto
-    ssl_provider += 'built-in'
-    cdata.set('EMBEDDED_SSL', 1)
-elif crypto.found()
-    ssl_deps += crypto
-    cdata.set('OPENSSL_DHX', 1)
-    if libtls.found()
-        ssl_provider += 'LibreSSL'
-    elif not libtls.found()
-        ssl_provider += 'OpenSSL'
+        ssl_deps += crypto
+        cdata.set('OPENSSL_DHX', 1)
+        if libtls.found()
+            ssl_provider += 'LibreSSL'
+        elif not libtls.found()
+            ssl_provider += 'OpenSSL'
+        endif
     endif
 else
+    have_ssl = false
+    ssl_provider += 'none'
     warning(
-        'Built-in WolfSSL, LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
+        'LibreSSL or OpenSSL version 1.1 is required for DHX and RANDNUM support',
     )
 endif
 
@@ -1834,6 +1833,7 @@ endif
 #
 
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
+use_glibc_at_header = false
 
 if host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
@@ -1986,16 +1986,17 @@ summary(summary_info, bool_yn: true, section: '  CNID:')
 summary_info = {
     '  Kerberos V': have_krb5_uam,
     '  PGP': enable_pgp_uam,
-    '  Randnum': '(afppasswd)',
     '  clrtxt': uams_using_options,
     '  guest': true,
 }
 if have_ssl
     summary_info += {
+        '  Randnum': '(afppasswd)',
         '  DHX': uams_using_options,
     }
 else
     summary_info += {
+        '  Randnum': false,
         '  DHX': false,
     }
 endif

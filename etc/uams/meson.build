@@ -245,7 +245,7 @@ else
     )
 endif
 
-if enable_pgp_uam
+if have_pgp_uam
     uams_pgp_sources = ['uams_pgp.c']
 
     uams_pgp = shared_module(

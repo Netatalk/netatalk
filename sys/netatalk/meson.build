@@ -7,7 +7,7 @@ netatalk_headers = [
     'phase2.h',
 ]
 
-if host_os != 'linux'
+if use_glibc_at_header
     netatalk_headers += 'at.h'
 endif
 

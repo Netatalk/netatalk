@@ -5,7 +5,7 @@ if have_cracklib
     afppasswd_deps += crack
 endif
 
-if crypto.found()
+if have_ssl
     afppasswd_deps += ssl_deps
 endif
 
