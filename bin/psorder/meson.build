@@ -3,22 +3,12 @@ psorder_sources = [
     'psorder.c',
 ]
 
-if enable_rpath
-    executable(
-        'psorder',
-        psorder_sources,
-        include_directories: root_includes,
-        link_with: libatalk,
-        install: true,
-        build_rpath: libdir,
-        install_rpath: libdir,
-    )
-else
-    executable(
-        'psorder',
-        psorder_sources,
-        include_directories: root_includes,
-        link_with: libatalk,
-        install: true,
-    )
-endif
+executable(
+    'psorder',
+    psorder_sources,
+    include_directories: root_includes,
+    link_with: libatalk,
+    install: true,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
+)

@@ -23,27 +23,15 @@ executable(
 )
 
 if have_ldap
-    if enable_rpath
-        executable(
-            'afpldaptest',
-            'uuidtest.c',
-            include_directories: root_includes,
-            dependencies: ldap,
-            link_with: libatalk,
-            c_args: acl_ldapconf,
-            install: true,
-            build_rpath: libdir,
-            install_rpath: libdir,
-        )
-    else
-        executable(
-            'afpldaptest',
-            'uuidtest.c',
-            include_directories: root_includes,
-            dependencies: ldap,
-            link_with: libatalk,
-            c_args: acl_ldapconf,
-            install: true,
-        )
-    endif
+    executable(
+        'afpldaptest',
+        'uuidtest.c',
+        include_directories: root_includes,
+        dependencies: ldap,
+        link_with: libatalk,
+        c_args: acl_ldapconf,
+        install: true,
+        build_rpath: rpath_libdir,
+        install_rpath: rpath_libdir,
+    )
 endif
