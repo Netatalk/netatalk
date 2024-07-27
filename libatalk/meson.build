@@ -26,7 +26,7 @@ if have_spotlight
     libatalk_libs += libtalloc
 endif
 
-libatalk = both_libraries(
+libatalk = library(
     'atalk',
     libatalk_sources,
     include_directories: root_includes,
