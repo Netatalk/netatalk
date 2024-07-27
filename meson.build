@@ -1042,7 +1042,8 @@ endif
 # Check for Extended Attributes support
 #
 
-ea = '"ad'
+netatalk_ea = '"ad'
+ea_summary = 'AppleDouble'
 attr = cc.find_library('attr', required: false)
 
 if host_os == 'sunos'
@@ -1125,9 +1126,10 @@ else
 endif
 
 if have_ea
-    netatalk_ea = ea + '|sys"'
+    netatalk_ea += '|sys"'
+    ea_summary += ', filesystem EA'
 else
-    netatalk_ea = ea + '"'
+    netatalk_ea += '"'
 endif
 
 cdata.set('EA_MODULES', netatalk_ea)
@@ -1723,7 +1725,7 @@ else
     have_shadow = (cc.has_header('shadow.h'))
     if have_shadow
         cdata.set('SHADOWPW', 1)
-        uams_options += 'SHADOW'
+        uams_options += 'shadow'
     else
         have_shadow = false
         warning('Shadow password support requested but required header not found')
@@ -2176,32 +2178,21 @@ summary_info = {
     'host CPU': cpu,
     'host endianness': build_machine.endian(),
     'C compiler': cc.get_id(),
+    'Shared or static libraries': get_option('default_library'),
 }
 summary(summary_info, bool_yn: true, section: 'Compilation:')
 
 # Configuration summary
 
 summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:')
-summary_info = {
-    '  Initscript style': init_style,
-}
-summary(summary_info, bool_yn: true, section: '  Init Style:')
-
-summary_info = {
-    '  Extended Attributes': netatalk_ea,
-    '  Spotlight support': have_spotlight,
-}
-summary(summary_info, bool_yn: true, section: '  AFP:')
-
-summary_info = {
-    '  Backends': summary_backends,
-}
-summary(summary_info, bool_yn: true, section: '  CNID:')
 
 summary_info = {
     '  Access control': uams_options,
+    '  CNID backends': summary_backends,
+    '  Extended Attributes': ea_summary,
+    '  Init script style': init_style,
 }
-summary(summary_info, bool_yn: true, section: '  Authentication:')
+summary(summary_info, bool_yn: true, section: '  Options:')
 
 summary_info = {
     '  ClearTxt': true,
@@ -2212,17 +2203,17 @@ summary_info = {
     '  PGP': have_pgp_uam,
     '  RandNum': have_ssl,
 }
-summary(summary_info, bool_yn: true, section: '  UAMs:')
+summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 
 summary_info = {
-    '  ACL support': have_acls,
+    '  ACL': have_acls,
     '  AFP stats via dbus': have_afpstats,
-    '  Cracklib support': have_cracklib,
+    '  Cracklib': have_cracklib,
     '  dtrace probes': have_dtrace,
-    '  GSSAPI support': have_gssapi,
-    '  Kerberos support': have_kerberos,
-    '  LDAP support': have_ldap,
-    '  Quota support': have_quota,
+    '  GSSAPI': have_gssapi,
+    '  Kerberos': have_kerberos,
+    '  LDAP': have_ldap,
+    '  Quota': have_quota,
 }
 if have_quota
     summary_info += {
@@ -2230,16 +2221,17 @@ if have_quota
     }
 endif
 summary_info += {
+    '  Spotlight': have_spotlight,
     '  SSL provider': ssl_provider,
-    '  TCP wrapper support': have_tcpwrap,
-    '  Zeroconf support': have_zeroconf,
+    '  TCP wrapper': have_tcpwrap,
+    '  Zeroconf': have_zeroconf,
 }
 if enable_zeroconf
     summary_info += {
         '  Zeroconf provider': zeroconf_provider,
     }
 endif
-summary(summary_info, bool_yn: true, section: '  Options:')
+summary(summary_info, bool_yn: true, section: '  Features:')
 
 summary_info = {
     '  dbus daemon path': dbus_daemonpath,
