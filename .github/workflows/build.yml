@@ -184,7 +184,8 @@ jobs:
             -Dwith-tests=true \
             -Dwith-init-hooks=false \
             -Dwith-pgp-uam=true \
-            -Dwith-pkgconfdir-path=/etc/netatalk
+            -Dwith-pkgconfdir-path=/etc/netatalk \
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run tests
@@ -322,8 +323,6 @@ jobs:
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
-        run: cd build && meson test
       - name: Run distribution tests
         run: cd build && meson dist
       - name: Install
@@ -373,8 +372,11 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             ninja -C build uninstall
 
@@ -413,8 +415,11 @@ jobs:
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             /etc/rc.d/netatalk start
             sleep 2
@@ -461,8 +466,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             service netatalk onestart
             sleep 2
@@ -506,8 +514,11 @@ jobs:
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             rcctl -d start netatalk
             sleep 2
@@ -584,8 +595,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-ldap-path=/opt/local \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             svcadm enable svc:/network/netatalk:default
             sleep 2
@@ -624,8 +638,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             svcadm enable svc:/network/netatalk:default
             sleep 2
