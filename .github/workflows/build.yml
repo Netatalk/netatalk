@@ -114,9 +114,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-style=openrc \
-            -Dwith-quota=true
+            -Dwith-quota=true \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -165,9 +165,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=systemd
+            -Dwith-init-style=systemd \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -391,11 +391,11 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-manual=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
-            -Dwith-quota=true
+            -Dwith-quota=true \
+            -Dwith-tests=true
       - name: Meson - Build and generate man pages
         run: meson compile -C build
       - name: Meson - Tests
@@ -449,8 +449,8 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
-            -Dwith-init-style=macos-launchd
+            -Dwith-init-style=macos-launchd \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Tests
@@ -601,8 +601,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-init-hooks=false \
-              -Dwith-init-style=netbsd
+              -Dwith-init-style=netbsd \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             service afpd onestart
             sleep 2
@@ -653,8 +656,8 @@ jobs:
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
-              -Dwith-ddp=false \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-ddp=false
             meson compile -C build
             meson install -C build
             ninja -C build uninstall
@@ -764,8 +767,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-init-style=solaris \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             chmod 744 /etc/rc2.d/S90netatalk
             chmod 744 /etc/rc0.d/K04netatalk
