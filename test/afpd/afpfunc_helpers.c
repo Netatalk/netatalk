@@ -53,12 +53,12 @@ static size_t rbuflen;
     (p) += (size);                 \
     (len) += (size)
 
-#define PUSHVAL(p, type, val, len)         \
+#define PUSHVAL(p, t, val, len)         \
     { \
-        type type = val;                          \
-        memcpy(p, &type, sizeof(type));           \
-        (p) += sizeof(type);                      \
-        (len) += sizeof(type);                    \
+        t type = val;                          \
+        memcpy(p, &type, sizeof(t));           \
+        (p) += sizeof(t);                      \
+        (len) += sizeof(t);                    \
     }
 
 static int push_path(char **bufp, const char *name)
