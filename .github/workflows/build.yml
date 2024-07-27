@@ -128,8 +128,8 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
-            -Dwith-init-style=openrc
+            -Dwith-init-style=openrc \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -178,9 +178,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=systemd
+            -Dwith-init-style=systemd \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -261,10 +261,10 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd \
-            -Dwith-pkgconfdir-path=/etc/netatalk
+            -Dwith-pkgconfdir-path=/etc/netatalk \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -333,9 +333,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=redhat-systemd
+            -Dwith-init-style=redhat-systemd \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -408,9 +408,9 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=suse-systemd
+            -Dwith-init-style=suse-systemd \
+            -Dwith-tests=true
       - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run tests
@@ -461,14 +461,12 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
-            -Dwith-tests=true \
             -Dwith-manual=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=debian-systemd
+            -Dwith-init-style=debian-systemd \
+            -Dwith-tests=true
       - name: Meson - Build and generate manual pages
         run: meson compile -C build
-      - name: Meson - Run tests
-        run: cd build && meson test
       - name: Meson - Run distribution tests
         run: cd build && meson dist
       - name: Meson - Install
@@ -650,8 +648,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
-              -Dwith-init-style=netbsd
+              -Dwith-init-style=netbsd \
+              -Dwith-tests=false
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             service netatalk onestart
             sleep 2
@@ -891,8 +892,11 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-init-style=solaris \
-              -Dwith-pgp-uam=true
+              -Dwith-pgp-uam=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build && meson test
+            cd ..
             meson install -C build
             svcadm enable svc:/network/netatalk:default
             sleep 2
