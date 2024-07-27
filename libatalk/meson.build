@@ -38,7 +38,7 @@ if have_embedded_ssl
     libatalk_libs += libssl
 endif
 
-libatalk = both_libraries(
+libatalk = library(
     'atalk',
     libatalk_sources,
     include_directories: root_includes,
