@@ -49,7 +49,6 @@ env:
     libkrb5-dev \
     libldap2-dev \
     libmariadb-dev \
-    libmariadb-dev-compat \
     libpam0g-dev \
     libtalloc-dev \
     libtirpc-dev \
@@ -102,6 +101,7 @@ jobs:
             libtracker \
             libxslt \
             linux-pam-dev \
+            mariadb-dev \
             meson \
             nettle-dev \
             ninja \
@@ -146,6 +146,7 @@ jobs:
             docbook-xsl \
             gcc \
             libxslt \
+            mariadb-clients \
             meson \
             nettle \
             ninja \
@@ -224,6 +225,7 @@ jobs:
             libtalloc-devel \
             libxslt \
             meson \
+            mysql-devel \
             nettle-devel \
             ninja-build \
             openldap-devel \
@@ -361,6 +363,7 @@ jobs:
               libgcrypt \
               libxslt \
               meson \
+              mysql80-client \
               nettle \
               openldap26-client \
               perl5 \
@@ -403,6 +406,7 @@ jobs:
               libgcrypt \
               libxslt \
               meson \
+              mysql84-client \
               nettle \
               openldap26-client-2.6.8 \
               perl5 \
@@ -453,6 +457,7 @@ jobs:
               libgcrypt \
               libxslt \
               meson \
+              mysql-client \
               nettle \
               p5-Net-DBus \
               perl \
@@ -501,6 +506,7 @@ jobs:
               libnettle \
               libtalloc \
               libxslt \
+              mariadb-client \
               meson \
               openldap-client-2.6.7v0 \
               openpam \
@@ -581,6 +587,7 @@ jobs:
               libgcrypt \
               libxslt \
               meson \
+              mysql-client \
               nettle \
               talloc
           run: |
