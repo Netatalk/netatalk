@@ -1,4 +1,6 @@
 util_sources = [
+    'atalk_addr.c',
+    'bprint.c',
     'cnid.c',
     'fault.c',
     'getiface.c',

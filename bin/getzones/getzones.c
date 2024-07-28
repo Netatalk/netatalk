@@ -21,6 +21,8 @@
 #include <atalk/unicode.h>
 #include <atalk/zip.h>
 
+#define MACCHARSET "MAC_ROMAN"
+
 static void print_zones(short n, char *buf);
 
 static void usage( char *s)
@@ -63,6 +65,9 @@ int main( int argc, char *argv[])
 	    ++errflg;
 	}
     }
+
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, MACCHARSET);
 
     if ( errflg || argc - optind > 1 ) {
 	usage( argv[ 0 ] );

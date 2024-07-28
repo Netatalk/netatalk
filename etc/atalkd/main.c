@@ -63,6 +63,7 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
 #define elements(a)	(sizeof(a)/sizeof((a)[0]))
 
 #define PKTSZ	1024
+#define MACCHARSET "MAC_ROMAN"
 
 extern int aep_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
 
@@ -884,6 +885,8 @@ int main( int ac, char **av)
      * it and initialize our data structures. If we're not going to read
      * our config file, use GIFCONF to initialize our data structures.
      */
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, MACCHARSET);
     if ( readconf( configfile ) < 0 && getifconf() < 0 ) {
 	fprintf( stderr, "%s: can't get interfaces, exiting.\n", prog );
 	if (interfaces != NULL)

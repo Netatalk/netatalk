@@ -72,7 +72,7 @@ static const struct param {
 
 #define ARGV_CHUNK_SIZE 128
 #define MAXLINELEN 2048
-static char **parseline(const char *line)
+static char **at_parseline(const char *line)
 {
     const char	 *p;
     int		  argc = 0;
@@ -214,7 +214,7 @@ int writeconf(char *cf)
     iface = interfaces->i_next;
 
     while ( conf == NULL || fgets( line, sizeof( line ), conf ) != NULL ) {
-	if ( conf != NULL && ( argv = parseline( line )) == NULL ) {
+	if ( conf != NULL && ( argv = at_parseline( line )) == NULL ) {
 	    if ( fputs( line, newconf ) == EOF ) {
 		LOG(log_error, logtype_atalkd, "fputs: %s", strerror(errno) );
 		return( -1 );
@@ -329,7 +329,7 @@ int readconf(char *cf)
 #endif /* __svr4__ */
 
     while ( fgets( line, sizeof( line ), conf ) != NULL ) {
-	if (( argv = parseline( line )) == NULL ) {
+	if (( argv = at_parseline( line )) == NULL ) {
 	    continue;
 	}
 
