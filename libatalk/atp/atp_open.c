@@ -32,6 +32,9 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
@@ -50,9 +53,9 @@ ATP atp_open(uint8_t port, const struct at_addr *saddr)
     struct timeval	tv;
     int			pid;
 
-#ifdef DEBUG
+#ifdef EBUG
     printf( "<%d> atp_open\n", getpid());
-#endif /* DEBUG */
+#endif /* EBUG */
 
     memset(&addr, 0, sizeof(addr));
     addr.sat_port = port;

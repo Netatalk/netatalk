@@ -54,6 +54,7 @@
 #include "uam_auth.h"
 #include "print_cups.h"
 
+#define MACCHARSET "MAC_ROMAN"
 
 /* This maps to TReq and TResp, per "Inside AppleTalk" 10-13 */
 
@@ -165,6 +166,11 @@ int main(int ac, char **av)
     char		cbuf[ 8 ];
     int			c;
     char 		*atname;
+    char* string, * macName = MACCHARSET;
+
+    /* Set codepages here since it is no longer auto-initialzed anymore*/
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, MACCHARSET);
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
 	perror( "gethostname" );

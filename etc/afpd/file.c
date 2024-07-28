@@ -871,7 +871,9 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
         }
         switch(  bit ) {
         case FILPBIT_ATTR :
-            change_mdate = 1;
+            /* Preserve file dates during a GS/OS folder copy */
+            if (obj->afp_version >= 30)
+                change_mdate = 1;
             memcpy(&ashort, buf, sizeof( ashort ));
             buf += sizeof( ashort );
             break;

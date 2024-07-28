@@ -20,6 +20,8 @@
 #include <atalk/util.h>
 #include <atalk/unicode.h>
 
+#define MACCHARSET "MAC_ROMAN"
+
 static void Usage(char *av0)
 {
     char	*p;
@@ -45,6 +47,9 @@ int main(int ac, char **av)
 
     extern char		*optarg;
     extern int		optind;
+
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, MACCHARSET);
 
     memset(&ataddr, 0, sizeof(ataddr));
     while (( c = getopt( ac, av, "p:A:m:" )) != EOF ) {

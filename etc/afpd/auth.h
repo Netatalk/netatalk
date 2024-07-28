@@ -16,6 +16,9 @@ struct afp_versions {
 };
 
 static const struct afp_versions  afp_versions[] = {
+    { "AFPVersion 1.1", 11 },
+    { "AFPVersion 2.0", 20 },
+    { "AFPVersion 2.1", 21 },
     { "AFP2.2", 22 },
     { "AFPX03", 30 },
     { "AFP3.1", 31 },

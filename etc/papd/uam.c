@@ -60,8 +60,10 @@ struct uam_mod *uam_load(const char *path, const char *name)
 
   /* version check would go here */
 
+  /* TODO: Temporary hack below to get this to compile with 3.x, we really should be passing an AFPObj as the first parameter */
+
   if (!mod->uam_fcn->uam_setup ||
-      ((*mod->uam_fcn->uam_setup)(name) < 0)) {
+      ((*mod->uam_fcn->uam_setup)(NULL,name) < 0)) {
     LOG(log_error, logtype_papd, "uam_load(%s): uam_setup failed", name);
     goto uam_load_err;
   }

@@ -36,6 +36,8 @@ enum logtypes {
   logtype_cnid,
   logtype_afpd,
   logtype_dsi,
+  logtype_atalkd,
+  logtype_papd,
   logtype_uams,
   logtype_fce,
   logtype_ad,
@@ -109,6 +111,9 @@ extern UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker]
 
 void setuplog(const char *loglevel, const char *logfile, const bool log_us_timestamp);
 void set_processname(const char *processname);
+
+/* Setup the level and type of log that will be logged to syslog. */
+void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
 
 /* LOG macro func no.1: log the message to file */
 UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, const bool log_us_timestamp, int line, char *message, ...);

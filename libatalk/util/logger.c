@@ -93,7 +93,6 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG  /* logtype_sl */
 };
 
-static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
 
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
 static const char *log_src_filename;
@@ -317,7 +316,7 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
 }
 
 /* Setup syslog logging */
-static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
+void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
 {
     /*
      * FIXME:

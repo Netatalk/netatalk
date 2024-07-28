@@ -13,6 +13,9 @@
 /* Define if CNID LAST scheme backend should be compiled. */
 #mesondefine CNID_BACKEND_LAST
 
+/* CUPS API Version */
+#mesondefine CUPS_API_VERSION
+
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
 
@@ -39,6 +42,9 @@
 
 /* Define if shell check should be disabled */
 #mesondefine DISABLE_SHELLCHECK
+
+/* Define to enable spooldir support */
+#mesondefine DISABLE_SPOOL
 
 /* BSD compatibility macro */
 #mesondefine DLSYM_PREPEND_UNDERSCORE
@@ -151,6 +157,12 @@
 
 /* Define if you have the _dyld_func_lookup function. */
 #mesondefine HAVE_DYLD
+
+/* Define if errno declaration exists */
+#mesondefine HAVE_ERRNO
+
+/* Define to 1 if you have the <errno.h> header file. */
+#mesondefine HAVE_ERRNO_H
 
 /* extattr API has full fledged fds for EAs */
 #mesondefine HAVE_EAFD
