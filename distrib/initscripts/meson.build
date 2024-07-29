@@ -50,7 +50,7 @@ if (
 endif
 
 if init_style == 'freebsd'
-    init_dir = '/etc/rc.d'
+    init_dir = '/usr/local/etc/rc.d'
     init_dirs += init_dir
     configure_file(
         input: 'rc.freebsd.tmpl',
@@ -63,7 +63,7 @@ if init_style == 'freebsd'
     if get_option('with-init-hooks')
         meson.add_install_script(
             find_program('sh'),
-            '/etc/rc.d/netatalk',
+            '/usr/local/etc/rc.d/netatalk',
             'enable',
         )
     endif
