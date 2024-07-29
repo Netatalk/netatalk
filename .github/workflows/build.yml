@@ -575,10 +575,10 @@ jobs:
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
             gmake install
-            /etc/rc.d/netatalk start
+            /usr/local/etc/rc.d/netatalk start
             sleep 2
-            asip-status localhost
-            /etc/rc.d/netatalk stop
+            /usr/local/bin/asip-status localhost
+            /usr/local/etc/rc.d/netatalk stop
             gmake uninstall
             echo "Building with Meson"
             meson setup build \
@@ -586,11 +586,11 @@ jobs:
               -Dwith-init-style=freebsd
             meson compile -C build
             meson install -C build
-            /etc/rc.d/netatalk start
+            /usr/local/etc/rc.d/netatalk start
             sleep 2
-            asip-status localhost
-            /etc/rc.d/netatalk stop
-            /etc/rc.d/netatalk disable
+            /usr/local/bin/asip-status localhost
+            /usr/local/etc/rc.d/netatalk stop
+            /usr/local/etc/rc.d/netatalk disable
             ninja -C build uninstall
 
   build-netbsd:
