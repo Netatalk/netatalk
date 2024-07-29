@@ -301,8 +301,8 @@ jobs:
             libgcrypt-devel \
             libtalloc-devel \
             libtool \
+            mariadb-connector-c-devel \
             meson \
-            mysql-devel \
             ninja-build \
             openldap-devel \
             openssl-devel \
