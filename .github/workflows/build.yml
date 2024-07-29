@@ -418,11 +418,11 @@ jobs:
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
-            /etc/rc.d/netatalk start
+            /usr/local/etc/rc.d/netatalk start
             sleep 2
             /usr/local/bin/asip-status localhost
-            /etc/rc.d/netatalk stop
-            /etc/rc.d/netatalk disable
+            /usr/local/etc/rc.d/netatalk stop
+            /usr/local/etc/rc.d/netatalk disable
             ninja -C build uninstall
 
   build-netbsd:
