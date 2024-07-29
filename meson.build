@@ -1534,7 +1534,7 @@ endif
 # Check for mysql CNID backend
 
 mysqlclient = dependency('mysqlclient', required: false)
-mariadb = dependency('mariadb', required: false)
+mariadb = dependency('libmariadb', required: false)
 
 use_mysql_backend = false
 

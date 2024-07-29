@@ -224,8 +224,8 @@ jobs:
             libgcrypt-devel \
             libtalloc-devel \
             libxslt \
+            mariadb-connector-c-devel \
             meson \
-            mysql-devel \
             nettle-devel \
             ninja-build \
             openldap-devel \
