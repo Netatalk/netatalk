@@ -28,6 +28,12 @@ option(
     description: 'Compile LAST CNID scheme',
 )
 option(
+    'with-cnid-mysql-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Compile MySQL CNID scheme',
+)
+option(
     'with-cracklib',
     type: 'boolean',
     value: true,
@@ -254,12 +260,6 @@ option(
     type: 'string',
     value: '',
     description: 'Set path to Netatalk lockfile',
-)
-option(
-    'with-mysql-config',
-    type: 'string',
-    value: 'mysql_config',
-    description: 'Set name of mysql-config binary',
 )
 option(
     'with-pam-path',

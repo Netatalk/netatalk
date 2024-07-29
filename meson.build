@@ -1469,16 +1469,23 @@ endif
 # Check for mysql CNID backend
 
 mysqlclient = dependency('mysqlclient', required: false)
+mariadb = dependency('mariadb', required: false)
 
-if not mysqlclient.found()
-    use_mysql_backend = false
-else
-    use_mysql_backend = (
-        mysqlclient.found()
-        and fs.exists(
-            mysqlclient.get_variable(pkgconfig: 'includedir') / 'mysql.h',
+use_mysql_backend = false
+
+if get_option('with-cnid-mysql-backend')
+    if mysqlclient.found()
+        mysql_deps = mysqlclient
+    else
+        mysql_deps = mariadb
+    endif
+    if mysql_deps.found()
+        use_mysql_backend = (
+            fs.exists(
+                mysql_deps.get_variable(pkgconfig: 'includedir') / 'mysql.h',
+            )
         )
-    )
+    endif
     if use_mysql_backend
         cnid_backends += ' mysql'
         cdata.set('CNID_BACKEND_MYSQL', 1)

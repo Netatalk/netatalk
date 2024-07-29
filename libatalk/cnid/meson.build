@@ -11,7 +11,7 @@ endif
 if use_mysql_backend
     subdir('mysql')
     libcnid_libs += libcnid_mysql
-    libcnid_deps += mysqlclient
+    libcnid_deps += mysql_deps
 endif
 
 cnid_sources = ['cnid_init.c', 'cnid.c']
