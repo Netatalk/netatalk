@@ -2,6 +2,14 @@ if init_style == 'none'
     init_dirs += 'none'
 endif
 
+init_dir_override = get_option('with-init-dir')
+
+if init_dir_override != ''
+    init_dir = init_dir_override
+else
+    init_dir = ''
+endif
+
 if (
     init_style == 'debian'
     or init_style == 'debian-systemd'
@@ -10,7 +18,9 @@ if (
     or init_style == 'suse-systemd'
     or init_style == 'systemd'
 )
-    init_dir = '/usr/lib/systemd/system'
+    if init_dir_override == ''
+        init_dir = '/usr/lib/systemd/system'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'service.systemd.tmpl',
@@ -28,7 +38,9 @@ if (
   init_style == 'debian'
   or init_style == 'debian-sysv'
 )
-    init_dir = '/etc/init.d'
+    if init_dir_override == ''
+        init_dir = '/etc/init.d'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'rc.debian.tmpl',
@@ -50,7 +62,9 @@ if (
 endif
 
 if init_style == 'freebsd'
-    init_dir = '/usr/local/etc/rc.d'
+    if init_dir_override == ''
+        init_dir = '/usr/local/etc/rc.d'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'rc.freebsd.tmpl',
@@ -70,7 +84,9 @@ if init_style == 'freebsd'
 endif
 
 if init_style == 'netbsd'
-    init_dir = '/etc/rc.d'
+    if init_dir_override == ''
+        init_dir = '/etc/rc.d'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'rc.netbsd.tmpl',
@@ -83,7 +99,9 @@ if init_style == 'netbsd'
 endif
 
 if init_style == 'openbsd'
-    init_dir = '/etc/rc.d'
+    if init_dir_override == ''
+        init_dir = '/etc/rc.d'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'rc.openbsd.tmpl',
@@ -103,7 +121,9 @@ if init_style == 'openbsd'
 endif
 
 if init_style == 'solaris'
-    init_dir = '/lib/svc/manifest/network'
+    if init_dir_override == ''
+        init_dir = '/lib/svc/manifest/network'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'netatalk.xml.tmpl',
@@ -125,7 +145,9 @@ if (
     init_style == 'openrc'
     or init_style == 'gentoo-openrc'
 )
-    init_dir = '/etc/init.d'
+    if init_dir_override == ''
+        init_dir = '/etc/init.d'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'rc.openrc.tmpl',
@@ -146,7 +168,9 @@ if (
 endif
 
 if init_style == 'macos-launchd'
-    init_dir = '/Library/LaunchDaemons'
+    if init_dir_override == ''
+        init_dir = '/Library/LaunchDaemons'
+    endif
     init_dirs += init_dir
     configure_file(
         input: 'netatalkd.tmpl',

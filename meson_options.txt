@@ -252,7 +252,7 @@ option(
 option(
     'with-init-dir',
     type: 'string',
-    value: 'none',
+    value: '',
     description: 'Set path to OS specific init directory',
 )
 option(
