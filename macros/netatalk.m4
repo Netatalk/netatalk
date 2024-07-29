@@ -31,7 +31,7 @@ AC_DEFUN([AX_CHECK_DOCBOOK], [
         fi
       done
   fi
-  
+
   if test -n "$DOCBOOK_ROOT" ; then
     AC_CHECK_PROG(XSLTPROC,xsltproc,xsltproc,)
     if test -n "$XSLTPROC"; then
@@ -234,7 +234,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
         AC_DEFINE(TRACKER_MANAGING_COMMAND, "tracker-control", [tracker managing command])
         ac_cv_have_tracker=yes
     else
-        AC_MSG_WARN([tracker not found (required for Spotlight support)])    
+        AC_MSG_WARN([tracker not found (required for Spotlight support)])
     fi
 
     AC_PROG_LEX([noyywrap])
@@ -258,7 +258,7 @@ AC_DEFUN([AC_NETATALK_SPOTLIGHT], [
     if test x"$ac_cv_have_talloc" = x"no" ; then
         AC_MSG_WARN([talloc library not found (required for Spotlight support)])
     fi
-    
+
     dnl Enable Spotlight support
     if test x"$ac_cv_have_talloc" = x"yes" -a x"$ac_cv_have_tracker" = x"yes" -a x"$ac_cv_have_tracker_sparql" = x"yes"; then
         AC_DEFINE(WITH_SPOTLIGHT, 1, [Define whether to enable Spotlight support])
@@ -550,7 +550,7 @@ AC_DEFUN([AC_NETATALK_INIT_STYLE], [
         ;;
     "freebsd")
 	    AC_MSG_RESULT([enabling freebsd-style initscript support])
-	    ac_cv_init_dir="/etc/rc.d"
+	    ac_cv_init_dir="/usr/local/etc/rc.d"
         ;;
     "netbsd")
 	    AC_MSG_RESULT([enabling netbsd-style initscript support])
@@ -662,7 +662,7 @@ fi
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then
 	AC_MSG_RESULT([ * Linux specific configuration])
-    AC_DEFINE(LINUX, 1, [OS is Linux])	
+    AC_DEFINE(LINUX, 1, [OS is Linux])
 	dnl ----- check if we need the quotactl wrapper
     AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
 		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
@@ -774,7 +774,7 @@ AC_ARG_ENABLE(krbV-uam,
 			])
 		fi
 	]
-	
+
 )
 
 AC_MSG_CHECKING([whether Kerberos V UAM should be build])
