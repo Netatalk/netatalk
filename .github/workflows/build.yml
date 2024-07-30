@@ -708,7 +708,6 @@ jobs:
             autoreconf -fi
             ./configure \
               --disable-init-hooks \
-              --prefix=/usr \
               --with-init-style=openbsd \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
@@ -723,7 +722,8 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-init-style=openbsd
+              -Dwith-init-style=openbsd \
+              -Dwith-rpath=true
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
