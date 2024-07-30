@@ -708,6 +708,7 @@ jobs:
             autoreconf -fi
             ./configure \
               --disable-init-hooks \
+              --prefix=/usr \
               --with-init-style=openbsd \
               --with-tracker-pkgconfig-version=3.0 \
               MAKE=gmake \
