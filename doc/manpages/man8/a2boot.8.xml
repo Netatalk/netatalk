@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="a2boot.8">
+  <refmeta>
+    <refentrytitle>a2boot</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">08 Mar 2024</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP Fileserver Manual</refmiscinfo>
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>a2boot</refname>
+
+    <refpurpose>Apple II netboot server daemon</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>a2boot</command>
+
+      <arg choice="opt">-d</arg>
+
+      <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><emphasis remap="B">a2boot</emphasis> is a netboot server for
+    Apple IIe and IIGS computers. It allows compatible clients to boot into
+    ProDOS or GS/OS over an AppleTalk network.
+    This is functionally comparable to the Apple II netboot software included
+    in early versions of AppleShare File Server for Macintosh.</para>
+
+    <para>When running, the daemon will create the following
+    hard-coded AFP volumes.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Apple //e Boot</para>
+      </listitem>
+      <listitem>
+        <para>Apple //gs</para>
+      </listitem>
+      <listitem>
+        <para>ProDOS16 Image</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>These volumes need to be populated with the appropriate
+    ProDOS or GS/OS system files in order to function as boot volumes.
+    For more information, see the documentation for
+    AppleShare File Server for Macintosh.</para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Debug mode, i.e. don't disassociate from controlling
+          TTY.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option> <replaceable>nbpname</replaceable></term>
+
+        <listitem>
+          <para>Register this server as <emphasis
+          remap="I">nbpname</emphasis>. This defaults to the hostname.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+      <title>Author</title>
+
+      <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
+  </refsect1>
+</refentry>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="timelord.8">
+  <refmeta>
+    <refentrytitle>timelord</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">15 Feb 2023</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+    <refmiscinfo class="manual">Netatalk AFP Fileserver Manual</refmiscinfo>
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>timelord</refname>
+
+    <refpurpose>Macintosh time server daemon</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>timelord</command>
+
+      <arg choice="opt">-d</arg>
+
+      <arg choice="opt">-l</arg>
+
+      <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para><emphasis remap="B">timelord</emphasis> is a simple time server for
+    Macintosh computers that use the <emphasis remap="B">tardis</emphasis>
+    client. It has the same capabilities as the "Timelord" CDEV for Macintosh.</para>
+
+    <para><emphasis remap="B">tardis</emphasis> is implemented as a Chooser
+    extension. In the Chooser, choose the <emphasis remap="B">timelord
+    </emphasis> instance to synchronize the Mac's system time with. Once
+    synchronized, <emphasis remap="B">tardis</emphasis> will automatically
+    synchronize with the server at boot, or scheduled
+    at regular intervals while the Mac is running
+    (the latter requires tardis 1.4).</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Debug mode, i.e. don't disassociate from controlling
+          TTY.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-l</option></term>
+
+        <listitem>
+          <para>Return the time zone adjusted localtime of the server.
+          The default behavior without this option is GMT.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option> <replaceable>nbpname</replaceable></term>
+
+        <listitem>
+          <para>Register this server as <emphasis
+          remap="I">nbpname</emphasis>. This defaults to the hostname.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+      <title>Author</title>
+
+      <para>See <ulink url='https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS'>CONTRIBUTORS</ulink></para>
+  </refsect1>
+</refentry>
