@@ -518,7 +518,7 @@ jobs:
               tracker3
           run: |
             set -e
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             ./bootstrap
             ./configure \
               --with-ssl-dir=/usr/local \
@@ -528,7 +528,7 @@ jobs:
             gmake -j2
             gmake install
             gmake uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
             meson setup build
             meson compile -C build
             meson install -C build
@@ -567,7 +567,7 @@ jobs:
               tracker3
           run: |
             set -e
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -585,7 +585,7 @@ jobs:
             /usr/local/bin/asip-status localhost
             /usr/local/etc/rc.d/netatalk stop
             gmake uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-init-style=freebsd
@@ -635,7 +635,7 @@ jobs:
               talloc
           run: |
             set -e
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             ./bootstrap
             ./configure \
               MAKE=gmake \
@@ -650,7 +650,7 @@ jobs:
             asip-status localhost
             service netatalk onestop
             gmake uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
@@ -700,7 +700,7 @@ jobs:
               tracker3
           run: |
             set -e
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             export CFLAGS=-I/usr/local/include
@@ -719,11 +719,13 @@ jobs:
             asip-status localhost
             rcctl -d stop netatalk
             gmake uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
+            export CFLAGS=
+            export LDFLAGS=
             meson setup build \
+              --prefix=/usr \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-init-style=openbsd \
-              -Dwith-rpath=true
+              -Dwith-init-style=openbsd
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
@@ -816,7 +818,7 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             ./bootstrap
             ./configure \
@@ -832,7 +834,7 @@ jobs:
             /usr/local/bin/asip-status localhost
             svcadm disable svc:/network/netatalk:default
             make uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-init-style=solaris \
@@ -886,7 +888,7 @@ jobs:
             cd ..
           run: |
             set -e
-            echo "Building with Autotools"
+            echo "*** Building with Autotools"
             ./bootstrap
             ./configure \
               --enable-krbV-uam \
@@ -903,7 +905,7 @@ jobs:
             /usr/local/bin/asip-status localhost
             svcadm disable -s svc:/network/netatalk:default
             gmake uninstall
-            echo "Building with Meson"
+            echo "*** Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-init-style=solaris \
