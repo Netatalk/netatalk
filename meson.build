@@ -290,6 +290,8 @@ at_functions = [
     'unlinkat',
 ]
 
+have_atfuncs = false
+
 foreach f : at_functions
     if cc.has_function(f)
         have_atfuncs = true
