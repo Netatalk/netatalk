@@ -11,6 +11,10 @@ project(
 
 cc = meson.get_compiler('c')
 
+if not cc.compiles('int func() { return 0; }')
+    error('The C compiler cannot compile code. Please check the logs.')
+endif
+
 # Reserved for future use:
 # cc.has_function_attribute('unused', required: false)
 
