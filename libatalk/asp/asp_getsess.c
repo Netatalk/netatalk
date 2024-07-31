@@ -20,9 +20,7 @@
 #include <sys/uio.h>
 #include <sys/socket.h>
 #include <sys/param.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
 
 #include <netatalk/at.h>
 #include <atalk/logger.h>
@@ -45,7 +43,7 @@
 #endif /* ! MIN */
 
 static ASP server_asp;
-static struct server_child *children = NULL;
+static server_child_t *children = NULL;
 static struct asp_child    **asp_ac = NULL;
 
 /* send tickles and check tickle status of connections
@@ -61,7 +59,7 @@ static void tickle_handler(int sig _U_)
   int sid;
 
   /* check status */
-  for (sid = 0; sid < children->nsessions; sid++) {
+  for (sid = 0; sid < children->servch_nsessions; sid++) {
     if (asp_ac[sid] == NULL || asp_ac[sid]->ac_state == ACSTATE_DEAD)
       continue;
 
@@ -80,23 +78,11 @@ static void tickle_handler(int sig _U_)
   }
 }
 
-static void child_cleanup(const pid_t pid)
-{
-  int i;
-
-  for (i = 0; i < children->nsessions; i++)
-    if (asp_ac[i] && (asp_ac[i]->ac_pid == pid)) {
-      asp_ac[i]->ac_state = ACSTATE_DEAD;
-      break;
-    }
-}
-
-
 /* kill children */
 void asp_kill(int sig)
 {
   if (children)
-    server_child_kill(children, CHILD_ASPFORK, sig);
+    server_child_kill(children, sig);
 }
 
 void asp_stop_tickle(void)
@@ -116,7 +102,7 @@ void asp_stop_tickle(void)
  */
 static void set_asp_ac(int sid, struct asp_child *tmp);
 
-ASP asp_getsession(ASP asp, server_child *server_children,
+ASP asp_getsession(ASP asp, server_child_t *server_children,
 		   const int tickleval)
 {
     struct sigaction    action;
@@ -137,14 +123,11 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
       /* only calloc once */
       if (!asp_ac && (asp_ac = (struct asp_child **)
-	   calloc(server_children->nsessions, sizeof(struct asp_child *)))
+	   calloc(server_children->servch_nsessions, sizeof(struct asp_child *)))
 	   == NULL)
 	return NULL;
 
       server_asp = asp;
-
-      /* install cleanup pointer */
-      server_child_setup(children, CHILD_ASPFORK, child_cleanup);
 
       /* install tickle handler
        * we are the parent process
@@ -243,11 +226,11 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       break;
 
     case ASPFUNC_OPEN :
-      if (children->count < children->nsessions) {
+      if (children->servch_count < children->servch_nsessions) {
       struct asp_child    *asp_ac_tmp;
 
 	/* find a slot */
-	for (sid = 0; sid < children->nsessions; sid++) {
+	for (sid = 0; sid < children->servch_nsessions; sid++) {
 	  if (asp_ac[sid] == NULL)
 	    break;
 
@@ -265,10 +248,9 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     int dummy[2];
 	switch ((pid = fork())) {
 	case 0 : /* child */
-	  parent_or_child = 1;
 	  server_reset_signal();
 	  /* free/close some things */
-	  for (i = 0; i < children->nsessions; i++ ) {
+	  for (i = 0; i < children->servch_nsessions; i++ ) {
 	    if ( asp_ac[i] != NULL )
 	      free( asp_ac[i] );
 	  }
@@ -295,7 +277,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
 	default : /* parent process */
 	  /* we need atomic setting or pb with tickle_handler */
-      if (server_child_add(children, CHILD_ASPFORK, pid, (long)dummy)) {
+      if (server_child_add(children, pid, (long)dummy)) {
 	    if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
             kill(pid, SIGQUIT);
             break;

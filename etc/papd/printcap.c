@@ -46,9 +46,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <atalk/paths.h>
 
 #include "printcap.h"

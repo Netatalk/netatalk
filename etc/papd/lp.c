@@ -90,9 +90,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <pwd.h>
 
 #include <atalk/logger.h>

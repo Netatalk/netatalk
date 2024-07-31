@@ -118,6 +118,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-init-style=openrc \
             -Dwith-pgp-uam=true \
             -Dwith-tests=true
@@ -159,6 +160,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
@@ -187,6 +189,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
             -Dwith-pgp-uam=true \
             -Dwith-pkgconfdir-path=/etc/netatalk \
@@ -243,6 +246,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=redhat-systemd \
             -Dwith-pgp-uam=true \
@@ -299,6 +303,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd \
@@ -325,6 +330,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
             -Dwith-pgp-uam=true \
             -Dwith-tests=true
@@ -381,6 +387,7 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
+              -Dwith-appletalk=true \
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
@@ -422,6 +429,7 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
+              -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-pgp-uam=true
             meson compile -C build
@@ -471,6 +479,7 @@ jobs:
           run: |
             set -e
             meson setup build \
+              -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
               -Dwith-pgp-uam=true \
@@ -599,6 +608,7 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
+              -Dwith-appletalk=true \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-ldap-path=/opt/local \
               -Dwith-pgp-uam=true
@@ -639,6 +649,7 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
+              -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-pgp-uam=true \
@@ -675,6 +686,7 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-init-style=none \
             -Dwith-pgp-uam=true \
             -Dwith-tests=true
