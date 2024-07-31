@@ -28,9 +28,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 
 #ifdef __svr4__
 #include <sys/sockio.h>

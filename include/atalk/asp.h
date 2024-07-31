@@ -91,7 +91,7 @@ typedef struct ASP {
 
 extern ASP asp_init         (ATP);
 extern void asp_setstatus   (ASP, char *, const int);
-extern ASP asp_getsession   (ASP, server_child *, const int);
+extern ASP asp_getsession   (ASP, server_child_t *, const int);
 extern int asp_close        (ASP);
 extern int asp_shutdown     (ASP);
 extern int asp_attention    (ASP, AFPUserBytes);

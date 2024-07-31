@@ -18,9 +18,7 @@
 
 /* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif /* ! WEXITSTATUS */

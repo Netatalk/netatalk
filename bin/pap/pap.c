@@ -17,9 +17,7 @@
 #include <atalk/pap.h>
 #include <atalk/nbp.h>
 #include <atalk/util.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <stdio.h>
 #include <string.h>
 #include <string.h>

@@ -50,12 +50,7 @@
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#ifdef HAVE_SYS_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_SYS_FCNTL_H */
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
