@@ -1,3 +1,21 @@
+Changes in 2.4.5
+================
+* BREAKING: meson: Allow choosing shared or static libraries to build,
+       GitHub #1322
+       In practice, only shared libraries are built by default now.
+       Use the `default_library' option to control what is built.
+* FIX: meson: Fix syntax error with libiconv path, GitHub #1280
+* FIX: meson: default OPEN_NOFOLLOW_ERRNO overwrites platform customization, GitHub #1287
+* FIX: meson: Remove duplicate dependency check for posix threads, GitHub #1298
+* FIX: meson: Better output when cryptographic UAMs aren't built, GitHub #1301
+* FIX: meson: Prioritize tests and run single-threaded to avoid race condition, GitHub #1313
+* FIX: meson: Better way to handle rpath executable targets, GitHub #1318
+* FIX: meson: Refactor libcrypto check and print better status messages, GitHub #1319
+* FIX: meson: Do a compiler sanity check before header checks, GitHub #1362
+* FIX: meson: Declare have_atfuncs globally to avoid failure later, GitHub #1364
+* FIX: autotools/meson: Avoid using reserved keyword to build the tests on NetBSD, GitHub #1329
+* FIX: Remove duplicate header include in server_child.h, GitHub #1304
+
 Changes in 2.4.4
 ================
 * BREAKING: meson: Adjust libatalk soversion to 0.0.0, GitHub #1258
@@ -7,7 +25,8 @@ Changes in 2.4.4
 * FIX: meson: Remove redundant space in psf symlink list, GitHub #1247
 * UPD: meson: Print spool dir in setup summary, GitHub #1248
 * FIX: meson: Overwrite install logic for package config files, GitHub #1252
-* FIX: meson: Symlink select binaries and install man page aliases, GitHub #1255
+* FIX: meson: Symlink select binaries and install man page aliases,
+       GitHub #1255
 * FIX: docker: Move config files from the old pkgconfdir location, GitHub #1260
 
 Changes in 2.4.3
