@@ -4,6 +4,8 @@ Changes in 3.2.5
        GitHub #1321
        In practice, only shared libraries are built by default now.
        Use the `default_library' option to control what is built.
+* FIX: meson: Control the MySQL CNID backend, and support MariaDB, GitHub #1341
+       Introduces a new boolean `with-cnid-mysql-backend' option.
 * FIX: meson: Implement with-init-dir option, GitHub #1346
 * FIX: autotools/meson: Install FreeBSD init script into correct location,
        GitHub #1345
@@ -14,15 +16,15 @@ Changes in 3.2.5
        GitHub #1286
 * FIX: meson: Don't make dtags depend on rpath, GitHub #1293
 * FIX: meson: Remove duplicate dependency check for posix threads, GitHub #1297
-* FIX: meson: Better output when cryptographic UAMs aren't buil, GitHub #1302
+* FIX: meson: Better output when cryptographic UAMs aren't built, GitHub #1302
 * FIX: meson: Prioritize tests and run single-threaded to avoid race condition,
        GitHub #1312
 * FIX: meson: Better way to handle rpath executable targets, GitHub #1315
 * FIX: meson: Refactor libcrypto check and print better status messages,
        GitHub #1299
-* FIX: meson: Control the MySQL CNID backend, and support MariaDB, GitHub #1341
-       Introduces a new boolean `with-cnid-mysql-backend' option.
 * FIX: meson: Look for libmariadb dependency to appease Fedora, GitHub #1348
+* FIX: meson: Declare have_atfuncs globally to avoid failure later, GitHub #1357
+* FIX: meson: Do a compiler sanity check before header checks, GitHub #1356
 * FIX: Avoid using reserved keyword to build the tests on NetBSD, GitHub #1328
 
 Changes in 3.2.4
