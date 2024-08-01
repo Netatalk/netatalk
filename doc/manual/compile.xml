@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-07-14</pubdate>
+		<pubdate>2024-08-01</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -82,9 +82,9 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dwith-tests=true \
   -Dwith-init-style=openrc \
-  -Dwith-quota=true
+  -Dwith-quota=true \
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -152,9 +152,9 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dwith-tests=true \
   -Dwith-init-hooks=false \
-  -Dwith-init-style=systemd
+  -Dwith-init-style=systemd \
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -512,11 +512,11 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dwith-tests=true \
   -Dwith-manual=true \
   -Dwith-init-hooks=false \
   -Dwith-init-style=systemd \
-  -Dwith-quota=true
+  -Dwith-quota=true \
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build and generate man pages</para>
@@ -596,8 +596,8 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
-  -Dwith-tests=true \
-  -Dwith-init-style=macos-launchd
+  -Dwith-init-style=macos-launchd \
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Meson - Build</para>
@@ -746,8 +746,11 @@ echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
   -Dwith-init-hooks=false \
-  -Dwith-init-style=netbsd
+  -Dwith-init-style=netbsd \
+  -Dwith-tests=true
 meson compile -C build
+cd build &amp;&amp; meson test
+cd ..
 meson install -C build
 service afpd onestart
 sleep 2
@@ -794,8 +797,8 @@ gmake install
 gmake uninstall
 echo "Building with Meson"
 meson setup build \
-  -Dwith-ddp=false \
-  -Dpkg_config_path=/usr/local/lib/pkgconfig
+  -Dpkg_config_path=/usr/local/lib/pkgconfig \
+  -Dwith-ddp=false
 meson compile -C build
 meson install -C build
 ninja -C build uninstall
@@ -896,8 +899,11 @@ echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
   -Dwith-init-style=solaris \
-  -Dwith-pgp-uam=true
+  -Dwith-pgp-uam=true \
+  -Dwith-tests=true
 meson compile -C build
+cd build &amp;&amp; meson test
+cd ..
 meson install -C build
 chmod 744 /etc/rc2.d/S90netatalk
 chmod 744 /etc/rc0.d/K04netatalk
