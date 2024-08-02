@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+# Netatalk @netatalk_version@ init script.
+# Timelord time server (timelord)
+
+name=$RC_SVCNAME
+command="@sbindir@/${RC_SVCNAME}"
+
+depend() {
+		need net
+		need atalkd
+}

@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# PROVIDE: papd
+# REQUIRE: atalkd
+#
+# AppleTalk print server daemon.  (netatalk @netatalk_version@)
+# Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+. /etc/rc.subr
+
+name="papd"
+rcvar=$name
+command="@sbindir@/papd"
+pidfile="/var/run/${name}.pid"
+required_files="@etcdir@/papd.conf"
+
+load_rc_config $name
+run_rc_command "$1"

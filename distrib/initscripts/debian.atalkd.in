@@ -1,0 +1,86 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          atalkd
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start and stop atalkd daemon
+# Description:       Enables the AppleTalk network manager daemon.
+### END INIT INFO
+#
+# netatalk      Netatalk @netatalk_version@ initscript
+
+set -e
+
+. /lib/lsb/init-functions
+
+ATALK_NAME=`/bin/hostname --short`
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="AppleTalk network manager"
+NAME=atalkd
+SCRIPTNAME=/etc/init.d/$NAME
+DAEMON=@sbindir@/$NAME
+PIDFILE=/var/lock/$NAME
+
+# Guard to prevent execution if netatalk was removed.
+test -x $DAEMON || exit 0
+
+status(){
+    set +e
+    EXIT_CODE=`start-stop-daemon --status --exec $DAEMON; echo $?`
+    set -e
+    echo $EXIT_CODE
+}
+
+case "$1" in
+    start)
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo -n "Starting $NAME"
+            start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PIDFILE
+            echo "."
+            @bindir@/nbprgstr -p 4 "$ATALK_NAME:Workstation"
+            @bindir@/nbprgstr -p 4 "$ATALK_NAME:netatalk"
+        else
+            echo "$NAME is already running."
+        fi
+        ;;
+
+    stop)
+        echo -n "Stopping $NAME"
+        @bindir@/nbpunrgstr "$ATALK_NAME:Workstation"
+        @bindir@/nbpunrgstr "$ATALK_NAME:netatalk"
+        start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+        echo "."
+        ;;
+
+    restart)
+        $0 force-reload
+        ;;
+
+    force-reload)
+        echo -n "Restarting $NAME"
+        start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
+        echo -n "."
+        start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PIDFILE
+        echo -n "."
+        echo " Done."
+        ;;
+
+    status)
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -eq 0 ]; then
+            echo "$NAME is running."
+        elif [ $EXIT_CODE -eq 4 ]; then
+            echo "Could not access PID file for $NAME."
+        else
+            echo "$NAME is not running."
+        fi
+        exit $EXIT_CODE
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 1
+        ;;
+esac

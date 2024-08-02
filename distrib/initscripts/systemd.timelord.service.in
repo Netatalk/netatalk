@@ -1,0 +1,19 @@
+# This file is part of Netatalk @netatalk_version@.
+
+[Unit]
+Description=AppleTalk Timelord time server daemon
+Documentation=man:timelord(8)
+Documentation=https://netatalk.io/
+After=network-online.target atalkd.service
+Requires=atalkd.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=@sbindir@/timelord -l
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=atalkd.service

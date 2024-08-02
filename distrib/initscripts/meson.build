@@ -22,13 +22,24 @@ if (
         init_dir = '/usr/lib/systemd/system'
     endif
     init_dirs += init_dir
-    configure_file(
-        input: 'service.systemd.tmpl',
-        output: 'netatalk.service',
-        configuration: cdata,
-        install: true,
-        install_dir: init_dir,
-    )
+    service_data = ['netatalk']
+    if have_appletalk
+        service_data += [
+            'a2boot',
+            'atalkd',
+            'papd',
+            'timelord',
+        ]
+    endif
+    foreach service : service_data
+        configure_file(
+            input: 'systemd.' + service + '.service.in',
+            output: service + '.service',
+            configuration: cdata,
+            install: true,
+            install_dir: init_dir,
+        )
+    endforeach
     if get_option('with-init-hooks')
         meson.add_install_script(find_program('systemctl'), 'daemon-reload')
     endif
@@ -42,22 +53,35 @@ if (
         init_dir = '/etc/init.d'
     endif
     init_dirs += init_dir
-    configure_file(
-        input: 'rc.debian.tmpl',
-        output: 'netatalk',
-        configuration: cdata,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('update-rc.d'),
-            'netatalk',
-            'defaults',
-            '90',
-            '10',
+    service_data = ['netatalk']
+    if have_appletalk
+        service_data += [
+            'a2boot',
+            'atalkd',
+            'papd',
+            'timelord',
+        ]
+    endif
+    foreach service : service_data
+        configure_file(
+            input: 'debian.' + service + '.in',
+            output: service,
+            configuration: cdata,
+            install: true,
+            install_dir: init_dir,
+            install_mode: 'rwxr-xr-x',
         )
+    endforeach
+    if get_option('with-init-hooks')
+        foreach service : service_data
+            meson.add_install_script(
+                find_program('update-rc.d'),
+                service,
+                'defaults',
+                '90',
+                '10',
+            )
+        endforeach
     endif
 endif
 
@@ -67,7 +91,7 @@ if init_style == 'freebsd'
     endif
     init_dirs += init_dir
     configure_file(
-        input: 'rc.freebsd.tmpl',
+        input: 'freebsd.netatalk.in',
         output: 'netatalk',
         configuration: cdata,
         install: true,
@@ -88,14 +112,25 @@ if init_style == 'netbsd'
         init_dir = '/etc/rc.d'
     endif
     init_dirs += init_dir
-    configure_file(
-        input: 'rc.netbsd.tmpl',
-        output: 'netatalk',
-        configuration: cdata,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
+    service_data = ['netatalk']
+    if have_appletalk
+        service_data += [
+            'a2boot',
+            'atalkd',
+            'papd',
+            'timelord',
+        ]
+    endif
+    foreach service : service_data
+        configure_file(
+            input: 'netbsd.' + service + '.in',
+            output: service,
+            configuration: cdata,
+            install: true,
+            install_dir: init_dir,
+            install_mode: 'rwxr-xr-x',
+        )
+    endforeach
 endif
 
 if init_style == 'openbsd'
@@ -104,7 +139,7 @@ if init_style == 'openbsd'
     endif
     init_dirs += init_dir
     configure_file(
-        input: 'rc.openbsd.tmpl',
+        input: 'openbsd.netatalk.in',
         output: 'netatalk',
         configuration: cdata,
         install: true,
@@ -126,7 +161,7 @@ if init_style == 'solaris'
     endif
     init_dirs += init_dir
     configure_file(
-        input: 'netatalk.xml.tmpl',
+        input: 'solaris.netatalk.xml.in',
         output: 'netatalk.xml',
         configuration: cdata,
         install: true,
@@ -149,21 +184,34 @@ if (
         init_dir = '/etc/init.d'
     endif
     init_dirs += init_dir
-    configure_file(
-        input: 'rc.openrc.tmpl',
-        output: 'netatalk',
-        configuration: cdata,
-        install: true,
-        install_dir: init_dir,
-        install_mode: 'rwxr-xr-x',
-    )
-    if get_option('with-init-hooks')
-        meson.add_install_script(
-            find_program('rc-update'),
-            'add',
-            'netatalk',
-            'default',
+    service_data = ['netatalk']
+    if have_appletalk
+        service_data += [
+            'a2boot',
+            'atalkd',
+            'papd',
+            'timelord',
+        ]
+    endif
+    foreach service : service_data
+        configure_file(
+            input: 'openrc.' + service + '.in',
+            output: service,
+            configuration: cdata,
+            install: true,
+            install_dir: init_dir,
+            install_mode: 'rwxr-xr-x',
         )
+    endforeach
+    if get_option('with-init-hooks')
+        foreach service : service_data
+            meson.add_install_script(
+                find_program('rc-update'),
+                'add',
+                service,
+                'default',
+            )
+        endforeach
     endif
 endif
 
@@ -173,7 +221,7 @@ if init_style == 'macos-launchd'
     endif
     init_dirs += init_dir
     configure_file(
-        input: 'netatalkd.tmpl',
+        input: 'macos.netatalk.in',
         output: 'netatalkd',
         configuration: cdata,
         install: true,
@@ -181,7 +229,7 @@ if init_style == 'macos-launchd'
         install_mode: 'rwxr-xr-x',
     )
     configure_file(
-        input: 'io.netatalk.daemon.plist.tmpl',
+        input: 'macos.netatalk.plist.in',
         output: 'io.netatalk.daemon.plist',
         configuration: cdata,
         install: true,
