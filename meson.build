@@ -2180,8 +2180,16 @@ if get_option('with-readmes')
         'NEWS',
     ]
 
+    foreach file : readmes
+        install_data(
+            file,
+            install_dir: datadir / 'doc/netatalk',
+        )
+    endforeach
+
     if cmarkgfm.found()
         readmes_md = [
+            'DOCKER',
             'INSTALL',
             'README',
             'SECURITY',
@@ -2205,19 +2213,7 @@ if get_option('with-readmes')
         endforeach
     else
         warning('cmark-gfm is required for markdown to text conversion')
-        readmes += [
-            'INSTALL.md',
-            'README.md',
-            'SECURITY.md',
-        ]
     endif
-
-    foreach file : readmes
-        install_data(
-            file,
-            install_dir: datadir / 'doc/netatalk',
-        )
-    endforeach
 endif
 
 subdir('include')
