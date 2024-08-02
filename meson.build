@@ -29,6 +29,32 @@ cpu = host_machine.cpu_family()
 host_os = host_machine.system()
 target_os = target_machine.system()
 
+linux_distro = ''
+
+if host_os == 'linux' and fs.exists('/etc/os-release')
+    os_release = fs.read('/etc/os-release').strip()
+    if os_release.contains('alpine')
+        linux_distro = 'alpine'
+    elif os_release.contains('arch')
+        linux_distro = 'arch'
+    elif os_release.contains('centos')
+        linux_distro = 'centos'
+    elif os_release.contains('gentoo')
+        linux_distro = 'gentoo'
+    elif os_release.contains('suse')
+        linux_distro = 'suse'
+    elif os_release.contains('fedora')
+        linux_distro = 'fedora'
+    elif os_release.contains('rhel')
+        linux_distro = 'rhel'
+    elif os_release.contains('ubuntu')
+        linux_distro = 'ubuntu'
+    elif os_release.contains('debian')
+        linux_distro = 'debian'
+    endif
+    message('Linux distro detected: ' + linux_distro)
+endif
+
 #########
 # Paths #
 #########
@@ -1955,8 +1981,12 @@ init_style = get_option('with-init-style')
 init_dirs = []
 
 if 'auto' in init_style
-    if uname_stdout.to_lower().contains('debian') or uname_stdout.to_lower().contains('ubuntu')
-        init_style = ['systemd']
+    if host_os == 'linux'
+        if linux_distro in ['arch', 'centos', 'debian', 'fedora', 'rhel', 'suse', 'ubuntu']
+            init_style = ['systemd']
+        elif linux_distro in ['alpine', 'gentoo']
+            init_style = ['openrc']
+        endif
     elif host_os == 'freebsd'
         init_style = ['freebsd']
     elif host_os == 'netbsd'

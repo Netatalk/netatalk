@@ -119,7 +119,6 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
-            -Dwith-init-style=openrc \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -162,7 +161,6 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=systemd \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -246,7 +244,6 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=systemd \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -303,7 +300,6 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=systemd \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
