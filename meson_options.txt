@@ -172,12 +172,6 @@ option(
     description: 'Enable checking for a valid shell',
 )
 option(
-    'with-spooldir',
-    type: 'string',
-    value: '',
-    description: 'Set path for spooldir used for CUPS support',
-)
-option(
     'with-spotlight',
     type: 'boolean',
     value: true,
@@ -298,6 +292,12 @@ option(
     description: 'Set path to the package conf dir that overrides sysconfdir',
 )
 option(
+    'with-spooldir',
+    type: 'string',
+    value: '',
+    description: 'Set path for spooldir used for CUPS support',
+)
+option(
     'with-tracker-install-prefix',
     type: 'string',
     value: '',
@@ -322,7 +322,7 @@ option(
     description: 'Set path to UnicodeData.txt',
 )
 
-# The following options set the preferred init-style and default CNID backend:
+# The following options offer a choice from pre-defined selections
 
 option(
     'with-cnid-default-backend',
@@ -333,30 +333,24 @@ option(
         'mysql',
     ],
     value: 'dbd',
-    description: 'Set default DID scheme',
+    description: 'Set default CNID scheme',
 )
 option(
     'with-init-style',
-    type: 'combo',
+    type: 'array',
     choices: [
         'none',
         'auto',
-        'debian',
-        'debian-systemd',
         'debian-sysv',
         'freebsd',
-        'gentoo-openrc',
-        'gentoo-systemd',
         'macos-launchd',
         'netbsd',
         'openbsd',
         'openrc',
-        'redhat-systemd',
         'solaris',
-        'suse-systemd',
         'systemd',
     ],
-    value: 'auto',
+    value: ['auto'],
     description: 'Use OS specific init config',
 )
 option(
