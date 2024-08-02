@@ -120,7 +120,6 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-style=openrc \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -164,7 +163,6 @@ jobs:
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -191,7 +189,6 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
-            -Dwith-pgp-uam=true \
             -Dwith-pkgconfdir-path=/etc/netatalk \
             -Dwith-tests=true
       - name: Build
@@ -249,7 +246,6 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=redhat-systemd \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -307,7 +303,6 @@ jobs:
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -332,7 +327,6 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -387,8 +381,7 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dwith-appletalk=true \
-              -Dwith-pgp-uam=true
+              -Dwith-appletalk=true
             meson compile -C build
             meson install -C build
             ninja -C build uninstall
@@ -430,8 +423,7 @@ jobs:
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dwith-appletalk=true \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-pgp-uam=true
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig
             meson compile -C build
             meson install -C build
             /usr/local/etc/rc.d/netatalk start
@@ -482,7 +474,6 @@ jobs:
               -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-dtrace=false \
-              -Dwith-pgp-uam=true \
               -Dwith-tests=true
             meson compile -C build
             cd build && meson test
@@ -530,8 +521,7 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-pgp-uam=true
+              -Dpkg_config_path=/usr/local/lib/pkgconfig
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
@@ -557,7 +547,6 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -610,8 +599,7 @@ jobs:
             meson setup build \
               -Dwith-appletalk=true \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-ldap-path=/opt/local \
-              -Dwith-pgp-uam=true
+              -Dwith-ldap-path=/opt/local
             meson compile -C build
             meson install -C build
             svcadm enable svc:/network/netatalk:default
@@ -652,7 +640,6 @@ jobs:
               -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-              -Dwith-pgp-uam=true \
               -Dwith-tests=true
             meson compile -C build
             cd build && meson test
@@ -688,7 +675,6 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-style=none \
-            -Dwith-pgp-uam=true \
             -Dwith-tests=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
