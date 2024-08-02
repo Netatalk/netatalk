@@ -189,6 +189,7 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
+            -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
             -Dwith-tests=true
       - name: Build
@@ -245,7 +246,7 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=redhat-systemd \
+            -Dwith-init-style=systemd \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -302,7 +303,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-init-style=suse-systemd \
+            -Dwith-init-style=systemd \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build

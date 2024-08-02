@@ -1954,21 +1954,21 @@ endif
 init_style = get_option('with-init-style')
 init_dirs = []
 
-if init_style == 'auto'
+if 'auto' in init_style
     if uname_stdout.to_lower().contains('debian') or uname_stdout.to_lower().contains('ubuntu')
-        init_style = 'debian-systemd'
+        init_style = ['systemd']
     elif host_os == 'freebsd'
-        init_style = 'freebsd'
+        init_style = ['freebsd']
     elif host_os == 'netbsd'
-        init_style = 'netbsd'
+        init_style = ['netbsd']
     elif host_os == 'openbsd'
-        init_style = 'openbsd'
+        init_style = ['openbsd']
     elif host_os == 'darwin'
-        init_style = 'macos-launchd'
+        init_style = ['macos-launchd']
     elif host_os == 'sunos'
-        init_style = 'solaris'
+        init_style = ['solaris']
     else
-        init_style = 'none'
+        init_style = ['none']
     endif
 endif
 
