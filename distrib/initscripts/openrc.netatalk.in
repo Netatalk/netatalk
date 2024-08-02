@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+
+# Netatalk @netatalk_version@ init script.
+# AFP file server (netatalk)
+
+name=$RC_SVCNAME
+command="@sbindir@/${RC_SVCNAME}"
+pidfile=@lockfile_path@
+
+depend() {
+		need net
+		use logger dns
+		use avahi-daemon
+}

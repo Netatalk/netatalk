@@ -1,0 +1,22 @@
+# This file is part of Netatalk @netatalk_version@.
+
+[Unit]
+Description=Netatalk AppleTalk daemon
+Documentation=man:atalkd(8) man:atalkd.conf(5) man:nbp(1)
+Documentation=https://netatalk.io/
+After=network-online.target
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStartPre=/bin/sh -c 'systemctl set-environment ATALK_NAME=$$(hostname|cut -d. -f1)'
+ExecStart=@sbindir@/atalkd
+ExecStartPost=-@bindir@/nbprgstr -p 4 "${ATALK_NAME}:Workstation"
+ExecStartPost=-@bindir@/nbprgstr -p 4 "${ATALK_NAME}:netatalk"
+ExecStop=-@bindir@/nbpunrgstr "${ATALK_NAME}:Workstation"
+ExecStop=-@bindir@/nbpunrgstr "${ATALK_NAME}:netatalk"
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

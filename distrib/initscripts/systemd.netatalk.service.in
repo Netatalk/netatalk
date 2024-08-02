@@ -1,4 +1,4 @@
-# This file is part of netatalk @netatalk_version@.
+# This file is part of Netatalk @netatalk_version@.
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients

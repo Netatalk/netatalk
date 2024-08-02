@@ -1,0 +1,41 @@
+#!/sbin/openrc-run
+
+# Netatalk @netatalk_version@ init script.
+# AppleTalk network manager daemon (atalkd)
+
+ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
+
+name=$RC_SVCNAME
+command="@sbindir@/${RC_SVCNAME}"
+
+depend() {
+		need net
+}
+
+start() {
+    ebegin "Starting $name"
+    start-stop-daemon --start --quiet --exec @sbindir@/$name
+    eend $?
+    for reg in \
+        "${ATALK_NAME}:Workstation" \
+        "${ATALK_NAME}:netatalk"
+    do
+        ebegin "Registering $reg"
+        @bindir@/nbprgstr -p 4 "$reg"
+        eend $?
+    done
+}
+
+stop() {
+    ebegin "Stopping $name"
+    start-stop-daemon --stop --quiet --exec @sbindir@/$name
+    eend $?
+    for reg in \
+        "${ATALK_NAME}:Workstation" \
+        "${ATALK_NAME}:netatalk"
+    do
+        ebegin "Unregistering $reg"
+        @bindir@/nbpunrgstr "$reg"
+        eend $?
+    done
+}

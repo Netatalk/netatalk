@@ -1,0 +1,83 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          netatalk
+# Required-Start:    $remote_fs $syslog
+# Should-Start:      avahi-daemon
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start and stop netatalk daemon
+# Description:       Enables the netatalk AFP file sharing server.
+### END INIT INFO
+#
+# netatalk      Netatalk @netatalk_version@ initscript
+#
+
+set -e
+
+. /lib/lsb/init-functions
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="Netatalk"
+NAME=netatalk
+SCRIPTNAME=/etc/init.d/$NAME
+DAEMON=@sbindir@/$NAME
+PIDFILE=@lockfile_path@
+
+# Guard to prevent execution if netatalk was removed.
+test -x $DAEMON || exit 0
+
+status(){
+    set +e
+    EXIT_CODE=`start-stop-daemon --status --exec $DAEMON; echo $?`
+    set -e
+    echo $EXIT_CODE
+}
+
+case "$1" in
+    start)
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo -n "Starting Netatalk"
+            start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON
+            echo "."
+        else
+            echo "Netatalk is already running."
+        fi
+        ;;
+
+    stop)
+        echo -n "Stopping Netatalk"
+        start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+        echo "."
+        ;;
+
+    restart)
+        $0 force-reload
+        ;;
+
+    force-reload)
+        echo -n "Restarting Netatalk Daemons."
+        start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
+        echo -n "."
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON
+        echo -n "."
+        echo " Done."
+        ;;
+
+    status)
+        EXIT_CODE=`status`
+        if [ $EXIT_CODE -eq 0 ]; then
+            echo "Netatalk is running."
+        elif [ $EXIT_CODE -eq 4 ]; then
+            echo "Could not access PID file for $NAME."
+        else
+            echo "Netatalk is not running."
+        fi
+        exit $EXIT_CODE
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# PROVIDE: a2boot
+# REQUIRE: atalkd
+#
+# AppleTalk Apple II netboot daemon. (netatalk @netatalk_version@)
+# Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+. /etc/rc.subr
+
+name="a2boot"
+rcvar=$name
+command="@sbindir@/a2boot"
+pidfile="/var/run/${name}.pid"
+
+load_rc_config $name
+run_rc_command "$1"
+
