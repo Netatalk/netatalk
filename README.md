@@ -15,7 +15,17 @@ A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing 
 If you need Netatalk to provide AFP over [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) (DDP) in order to do file sharing with very old Macs or Apple II computers, please install the latest *old stable* Netatalk 2.x version.
 AppleTalk support was removed in Netatalk 3.0, however 2.x is still being actively maintained.
 
-Find the latest Netatalk 2.x releases at https://netatalk.io or in the [GitHub Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
+Find the latest Netatalk 2.x releases at [netatalk.io](https://netatalk.io/) or in the [GitHub Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
+
+# Community
+
+Netatalk developers and users hang out in online communal spaces like [TinkerDifferent](https://tinkerdifferent.com/) or [68kmla](https://68kmla.org/).
+You can head over there if you want to ask for help or share your experiences.
+
+There is also an official [Netatalk Discussions](https://github.com/Netatalk/netatalk/discussions) board on GitHub which is the best place to ask for technical assistance.
+
+Finally, the traditional place where Netatalk developers and users interact with each other are the [netatalk-admins](https://sourceforge.net/p/netatalk/mailman/netatalk-admins/) and [netatalk-devel](https://sourceforge.net/p/netatalk/mailman/netatalk-devel/) mailing lists.
+While these lists aren't as active as they used to be, the archives are a veritable treasure trove of decades of Mac networking know-how.
 
 # Why Should I Use Netatalk?
 
@@ -31,136 +41,41 @@ Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster t
 
 # Installation
 
-Please read the INSTALL.md file. Netatalk can currently be built using meson or GNU autotools. It is possible that Netatalk will transition fully to meson at some point in the future.
+See [INSTALL.md](https://github.com/Netatalk/netatalk/blob/main/INSTALL.md)
 
 # Docker
 
-Netatalk comes with a Dockerfile and entry point script for running a containerized AFP server.
-
-For simplicity, exactly one user, one shared volume, and one Time Machine volume is supported. It is hard coded to output afpd logs to the container's stdout, default info log level.
-
-Make sure you have Docker Engine installed, then build the netatalk container:
-
-```
-docker build -t netatalk3 .
-```
-
-Alternatively, fetch a pre-built docker container from [Docker Hub](https://hub.docker.com/u/netatalk).
-
-## How to Run
-
-Once the container is ready, run it with `docker run` or `docker compose`.
-When running, expose either port 548 for AFP, or use the `host` network driver.
-The former option is more secure, but you will have to manually specify the IP address when connecting to the file server.
-
-It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
-Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
-
-Sample `docker-compose.yml` with docker managed volume and Zeroconf
-
-```
-services:
-  netatalk:
-    image: netatalk3:latest
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - afpshare:/mnt/afpshare
-      - afpbackup:/mnt/afpbackup
-      - /var/run/dbus:/var/run/dbus
-    environment:
-      - "AFP_USER=atalk"
-      - "AFP_PASS=atalk"
-volumes:
-  afpshare:
-  afpbackup:
-```
-
-Sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
-
-```
-docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/path/to/backup:/mnt/afpbackup" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --name netatalk netatalk3:latest
-```
-
-## Constraints
-
-In order to use Zeroconf service discovery, the container requires the "host" network driver and NET_ADMIN capabilities.
-
-Additionally, we rely on the host's DBUS for Zeroconf, achieved with a bind mount for `/var/run/dbus:/var/run/dbus`.
-
-Note that the Dockerfile currently only supports Avahi for Zeroconf; no mDNS support at present.
-
-## Environment Variables
-
-### Mandatory
-
-These are required to set the credentials used to authenticate with the file server.
-
-- `AFP_USER`
-- `AFP_PASS`
-
-### Optional
-
-- `AFP_GROUP` <- group that owns the shared volume, and that AFP_USER gets assigned to
-- `AFP_UID` <- specify user id of AFP_USER
-- `AFP_GID` <- specify group id of AFP_GROUP
-- `SERVER_NAME` <- the name of the server reported to Zeroconf
-- `SHARE_NAME` <- the name of the file sharing volume
-- `AFP_LOGLEVEL` <- the verbosity of logs; default is "info"
-- `INSECURE_AUTH` <- when non-zero, enable the "Clear Text" and "Guest" UAMs
-- `MANUAL_CONFIG` <- when non-zero, skip netatalk config file modification, allowing you to manually manage them
+See [DOCKER.md](https://github.com/Netatalk/netatalk/blob/main/DOCKER.md)
 
 # Webmin module
 
-An administrative GUI webapp in the form of a first-party module for Webmin can be found in a sister repository:
+An administrative GUI webapp in the form of a first-party module for Webmin can be found in a [sister repository](https://github.com/Netatalk/netatalk-webmin)
 
-https://github.com/Netatalk/netatalk-webmin
+See the [README](https://github.com/Netatalk/netatalk-webmin/blob/main/README.md) in that repo for instructions how to install and get started with the module.
 
-See the README in that repo for instructions how to install and get started with the module.
-
-This wiki page provides an overview of the module's feature set:
-
-https://github.com/Netatalk/netatalk/wiki/Webmin-Module
+An [overview of the module's feature set](https://github.com/Netatalk/netatalk/wiki/Webmin-Module) can be found in the wiki.
 
 # Contributions
 
-Bug reports and feature requests can be filed as GitHub issue ticket:
+Bug reports and feature requests should be filed as [GitHub issue tickets](https://github.com/Netatalk/netatalk/issues).
 
-https://github.com/Netatalk/netatalk/issues
-
-Before contributing code to the project, please read the guidelines in the wiki on how to prepare a PR that is likely to be accepted by the maintainers:
-
-https://github.com/Netatalk/netatalk/wiki/Developer-Notes
+Before contributing code to the project, please read the [coding guidelines](https://github.com/Netatalk/netatalk/wiki/Developer-Notes) in the wiki on how to prepare a PR that is likely to be accepted by the maintainers.
 
 PRs are automatically picked up by GitHub CI, which runs the builds, integration tests, as well as static analysis scan on SonarCloud.
 
 # Documentation
 
-The latest version of the Netatalk manual can be found at:
+To aid in your installation and configuration of Netatalk, a comprehensive [html manual](https://netatalk.io/stable/htmldocs/) is published online.
 
-https://netatalk.io/stable/htmldocs/
-
-Each Netatalk program and configuration file also has a *NIX man page which can be accessed on the command line, f.e. `man afpd`.
+Additionally, each Netatalk program and configuration file also has a _troff_ man page which can be accessed on the command line, f.e. `man afpd`.
 
 # Wiki
 
-Collaborative articles can be found on the Netatalk wiki hosted on GitHub.
+Collaborative articles can be found on the [Netatalk wiki](https://github.com/Netatalk/netatalk/wiki) hosted on GitHub.
 
-Editing is open to all registered GitHub users. Please feel free to edit existing and create new articles.
-
-https://github.com/Netatalk/netatalk/wiki
-
-# Mailing Lists
-
-Netatalk contributors and maintainers interact with each other primarily on the netatalk-admins and netatalk-devel mailing list.
-
-Subscribe and participate, or read archived discussion threads at:
-
-https://sourceforge.net/p/netatalk/mailman/
+Editing is open to all registered GitHub users.
+We welcome improvements to existing material, as well as brand new articles on topics concerning Netatalk or Mac networking in general.
 
 # Website
 
-The Netatalk website is where project updates and resources are published.
-
-https://netatalk.io
+The Netatalk website [netatalk.io](https://netatalk.io) is where project updates and resources are published, including documentation, release notes, security advisories, links to related projects, and more.
