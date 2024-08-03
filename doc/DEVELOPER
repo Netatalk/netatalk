@@ -3,28 +3,46 @@ Information for Netatalk Developers
 
 For basic installation instructions, see the Installation chapter
 in the html manual published on https://netatalk.io
-and the INSTALL file in the root of the source tree.
+and the INSTALL.md file in the root of the source tree.
 
 Netatalk is an implementation of Apple Filing Protocol (AFP) over TCP.
-DSI is a session layer used to carry AFP over TCP.
+The session layer used to carry AFP over TCP is called DSI.
+
+Netatalk also supports the AppleTalk Protocol Suite for legacy Macs,
+Lisas and Apple IIs via the "atalkd" daemon.
+It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
+PAP, and ASP, while expecting the kernel to supply DDP.
+The complete stack looks like this on a BSD-derived system:
+
 The complete stack looks like this:
 
-          AFP
-           |
-          DSI
-           |
-           | (port:548)
-           |
-   -+---------------------------+- (kernel boundary)
-    |         Socket            |
-    +------------+--------------+
-    |     TCP    |    UDP       |
-    +------------+--------------+
-    |       IP v4 or v6         |
-    +---------------------------+
-    |     Network-Interface     |
-    +---------------------------+
+AFP                          AFP
+ |                            |
+ASP    PAP                   DSI
+  \   /                       |
+   ATP RTMP NBP ZIP AEP       |
+    |    |   |   |   |        |
+-+---------------------------------------------------+- (kernel boundary)
+|                    Socket                         |
++-----------------------+------------+--------------+
+|                       |     TCP    |    UDP       |
+|          DDP          +------------+--------------+
+|                       |           IP              |
++-----------------------+---------------------------+
+|                Network-Interface                  |
++---------------------------------------------------+
 
+* DDP is a socket to socket protocol that all other AppleTalk protocols
+  are built on top of.
+
+* "atalkd" implements RTMP, NBP, ZIP, and AEP.
+  It is the AppleTalk equivalent of Unix "routed".
+
+* There is also a client-stub library for NBP.
+  ATP and ASP are implemented as libraries.
+
+* "papd" allows Macs to spool to "lpd", and "pap" allows Unix
+  machines to print to AppleTalk connected printers.
 
 Error checking and logging
 ==========================

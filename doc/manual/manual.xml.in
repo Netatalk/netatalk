@@ -2,6 +2,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 
+<!ENTITY AppleTalk SYSTEM "appletalk.xml">
 <!ENTITY Configuration SYSTEM "configuration.xml">
 <!ENTITY Compile SYSTEM "compile.xml">
 <!ENTITY Intro SYSTEM "intro.xml">
@@ -62,6 +63,9 @@
   <?latex \cleardoublepage ?>
 
   &Configuration;
+  <?latex \cleardoublepage ?>
+
+  &AppleTalk;
   <?latex \cleardoublepage ?>
 
   &Upgrade;
