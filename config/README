@@ -1,1 +1,2 @@
-This directory contains modifiable Netatalk configuration files and the CNID databases.
+This directory contains CNID (Catalog Node ID) databases where Netatalk stores
+records of shared files and folders.
