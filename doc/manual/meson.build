@@ -11,6 +11,7 @@ configure_file(
 )
 
 manual_pages = [
+    'appletalk.xml',
     'compile.xml',
     'configuration.xml',
     'gpl.xml',
@@ -40,6 +41,7 @@ custom_target(
         'afpldaptest.1.html',
         'afppasswd.1.html',
         'apple_dump.1.html',
+        'appletalk.html',
         'asip-status.1.html',
         'atalk.4.html',
         'atalkd.8.html',

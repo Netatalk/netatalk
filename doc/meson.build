@@ -16,11 +16,20 @@ manual_stylesheet = configure_file(
     configuration: cdata,
 )
 
+
+
 if get_option('with-readmes')
-    install_data(
+    readmes = [
         'DEVELOPER',
-        install_dir: datadir / 'doc/netatalk',
-    )
+        'README.AppleTalk',
+    ]
+
+    foreach file : readmes
+        install_data(
+            file,
+            install_dir: datadir / 'doc/netatalk',
+        )
+    endforeach
 endif
 
 subdir('manpages')
