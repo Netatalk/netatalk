@@ -54,7 +54,7 @@ foreach file : static_conf_files
     endif
 endforeach
 
-install_data('README', install_dir: localstatedir / 'netatalk')
+install_data('README', install_dir: localstatedir / 'netatalk/CNID')
 
 if have_pam
     subdir('pam')
