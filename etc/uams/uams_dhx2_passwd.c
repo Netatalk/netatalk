@@ -9,8 +9,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef UAM_DHX2
-
 #include <arpa/inet.h>
 #include <errno.h>
 #include <pwd.h>
@@ -627,6 +625,3 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx2_passwd = {
     UAM_MODULE_VERSION,
     uam_setup, uam_cleanup
 };
-
-#endif /* UAM_DHX2 */
-

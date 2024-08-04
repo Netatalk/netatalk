@@ -647,20 +647,8 @@
 /* Path to Tracker */
 #mesondefine TRACKER_PREFIX
 
-/* Define if the DHX UAM modules should be compiled */
-#mesondefine UAM_DHX
-
-/* Define if the DHX2 UAM modules should be compiled */
-#mesondefine UAM_DHX2
-
-/* Define if the PGP UAM module should be compiled */
-#mesondefine UAM_PGP
-
 /* Define if cracklib should be used */
 #mesondefine USE_CRACKLIB
-
-/* Define to enable PAM support */
-#mesondefine USE_PAM
 
 /* Define to enable Zeroconf support */
 #mesondefine USE_ZEROCONF
