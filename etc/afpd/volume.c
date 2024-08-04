@@ -24,6 +24,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/asp.h>
 #include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 

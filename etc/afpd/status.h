@@ -1,6 +1,7 @@
 #ifndef AFPD_STATUS_H
 #define AFPD_STATUS_H 1
 
+#include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
 
@@ -33,9 +34,10 @@
 /* AFPSTATUS_MACHLEN is the number of characters for the MachineType. */
 #define AFPSTATUS_MACHLEN     16
 
-extern void status_versions (char * /*status*/, const DSI *);
+extern void status_versions (char * /*status*/, const ASP, const DSI *);
 extern void status_uams (char * /*status*/, const char * /*authlist*/);
 extern void status_init (AFPObj *, DSI *dsi);
+// TODO: Replace the above with extern void status_init (AFPConfig *, AFPConfig *, const struct afp_options *);
 extern void set_signature(struct afp_options *);
 
 /* FP functions */
