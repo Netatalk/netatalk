@@ -2025,7 +2025,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     EC_INIT;
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
-    int c _U_;
+    char *c;
     const char *p;
     char *q, *r;
     char val[MAXVAL];
@@ -2123,6 +2123,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->disconnected   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "disconnect time",24);
     options->splice_size    = atalk_iniparser_getint   (config, INISEC_GLOBAL, "splice size",    64*1024);
     options->sparql_limit   = atalk_iniparser_getint   (config, INISEC_GLOBAL, "sparql results limit", 0);
+
+    c = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ddp address", "");
+    atalk_aton(c, &options->ddpaddr);
 
     p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "map acls", "rights");
     if (STRCMP(p, ==, "rights"))

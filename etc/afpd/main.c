@@ -22,6 +22,8 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/atp.h>
+#include <atalk/asp.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>
@@ -98,6 +100,8 @@ static bool reset_listening_sockets(const AFPObj *config)
 /* ------------------ */
 static void afp_goaway(int sig)
 {
+    asp_kill(sig);
+
     switch( sig ) {
 
     case SIGTERM:

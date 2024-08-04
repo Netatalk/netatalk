@@ -24,10 +24,7 @@
 #ifndef _ATALK_AEP_H
 #define _ATALK_AEP_H 1
 
-#ifndef NO_DDP
-
 #define AEPOP_REQUEST	1
 #define AEPOP_REPLY	2
 
-#endif  /* NO_DDP */
 #endif

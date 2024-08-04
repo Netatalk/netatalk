@@ -58,7 +58,7 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data, const DSI *dsi)
+void status_versions(char *data, const ASP asp, const DSI *dsi)
 {
     char                *start = data;
     uint16_t           status;
@@ -68,6 +68,7 @@ void status_versions( char *data, const DSI *dsi)
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
 
     for ( i = 0; i < num; i++ ) {
+        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         count++;
     }
@@ -75,6 +76,7 @@ void status_versions( char *data, const DSI *dsi)
     *data++ = count;
 
     for ( i = 0; i < num; i++ ) {
+        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;

@@ -11,8 +11,6 @@
 #ifndef _ATALK_NETDDP_H
 #define _ATALK_NETDDP_H 1
 
-#ifndef NO_DDP
-
 #include <sys/types.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -27,6 +25,4 @@ extern int netddp_open   (struct sockaddr_at *, struct sockaddr_at *);
 #define netddp_sendto    sendto
 #define netddp_recvfrom  recvfrom
 
-#endif  /* NO_DDP */
 #endif /* netddp.h */
-

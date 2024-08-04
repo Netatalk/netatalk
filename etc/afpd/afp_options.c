@@ -65,6 +65,15 @@ static void show_version( void )
 		printf( "%d.%d ", afp_versions[ i ].av_number/10, afp_versions[ i ].av_number%10);
 	}
 	puts( "" );
+  printf( "        TCP/IP Support:\t" );
+  puts( "Yes" );
+
+	printf( "AppleTalk Support:\t" );
+#ifdef NO_DDP
+	puts( "No" );
+#else
+	puts( "Yes" );
+#endif
 
 	printf( "         CNID backends:\t" );
 #ifdef CNID_BACKEND_DBD
@@ -173,6 +182,10 @@ static void show_paths( void )
 {
 	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
 	printf( "           extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
+#ifndef NO_DDP
+	printf( "           atalkd.conf:\t%s\n", _PATH_CONFDIR "atalkd.conf");
+	printf( "             papd.conf:\t%s\n", _PATH_CONFDIR "papd.conf");
+#endif
 	printf( "       state directory:\t%s\n", _PATH_STATEDIR);
 	printf( "    afp_signature.conf:\t%s\n", _PATH_STATEDIR "afp_signature.conf");
 	printf( "      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");

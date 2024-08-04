@@ -16,6 +16,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
+#include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/iniparser.h>
@@ -102,6 +103,8 @@ struct afp_options {
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char *hostname;
+    char *server;
+    struct at_addr ddpaddr;
     char *listen, *interfaces, *port;
     char *Cnid_srv, *Cnid_port;
     char *configfile;
@@ -145,11 +148,14 @@ struct afp_options {
 };
 
 typedef struct AFPObj {
+    int proto;
+    void *handle;               /* either (DSI *) or (ASP *) */
     const char *cmdlineconfigfile;
     int cmdlineflags;
     const void *signature;
     struct DSI *dsi;
     struct afp_options options;
+    char *Obj, *Type, *Zone;
     dictionary *iniconfig;
     char username[MAXUSERLEN];
     /* to prevent confusion, only use these in afp_* calls */
@@ -202,6 +208,7 @@ extern const char *AfpErr2name(int err);
 /* directory.c */
 extern struct dir rootParent;
 
+extern void afp_over_asp (AFPObj *);
 extern void afp_over_dsi (AFPObj *);
 extern void afp_over_dsi_sighandlers(AFPObj *obj);
 #endif /* globals.h */

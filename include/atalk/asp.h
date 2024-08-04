@@ -24,8 +24,6 @@
 #ifndef _ATALK_ASP_H
 #define _ATALK_ASP_H 1
 
-#ifndef NO_DDP
-
 #include <sys/types.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
@@ -103,5 +101,4 @@ extern void asp_kill        (int);
 extern int asp_tickle      (ASP, const uint8_t, struct sockaddr_at *);
 extern void asp_stop_tickle (void);
 
-#endif  /* NO_DDP */
 #endif

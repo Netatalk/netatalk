@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include <atalk/afp.h>
+#include <atalk/asp.h>
 #include <atalk/bstrlib.h>
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
