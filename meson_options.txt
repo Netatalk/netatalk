@@ -100,12 +100,6 @@ option(
     description: 'Enable build of Kerberos V UAM module',
 )
 option(
-    'with-largefile',
-    type: 'boolean',
-    value: true,
-    description: 'Enable support for large files',
-)
-option(
     'with-ldap',
     type: 'boolean',
     value: true,

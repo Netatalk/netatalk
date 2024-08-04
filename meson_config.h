@@ -295,9 +295,6 @@
 /* Define to 1 if you have the <langinfo.h> header file. */
 #mesondefine HAVE_LANGINFO_H
 
-/* LARGEFILE support */
-#mesondefine HAVE_LARGEFILE_SUPPORT
-
 /* Whether LDAP is available */
 #mesondefine HAVE_LDAP
 
