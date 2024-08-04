@@ -16,8 +16,6 @@ manual_stylesheet = configure_file(
     configuration: cdata,
 )
 
-
-
 if get_option('with-readmes')
     readmes = [
         'DEVELOPER',
@@ -35,6 +33,6 @@ endif
 subdir('manpages')
 subdir('manual')
 
-if get_option('with-manual') == 'www'
+if 'ja' in get_option('with-manual-l10n')
     subdir('ja')
 endif
