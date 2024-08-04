@@ -419,8 +419,8 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dwith-appletalk=true \
-              -Dpkg_config_path=/usr/local/libdata/pkgconfig
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-appletalk=true
             meson compile -C build
             meson install -C build
             /usr/local/etc/rc.d/netatalk start
@@ -468,8 +468,8 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
+              -Dwith-appletalk=true \
               -Dwith-dtrace=false \
               -Dwith-tests=true
             meson compile -C build
@@ -518,7 +518,8 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig
+              -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-appletalk=true
             meson compile -C build
             meson install -C build
             rcctl -d start netatalk
@@ -544,6 +545,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -594,8 +596,8 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dwith-appletalk=true \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-appletalk=true \
               -Dwith-ldap-path=/opt/local
             meson compile -C build
             meson install -C build
@@ -634,8 +636,8 @@ jobs:
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
-              -Dwith-appletalk=true \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-appletalk=true \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-tests=true
             meson compile -C build
