@@ -12,9 +12,8 @@ Netatalk also supports the AppleTalk Protocol Suite for legacy Macs,
 Lisas and Apple IIs via the "atalkd" daemon.
 It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
 PAP, and ASP, while expecting the kernel to supply DDP.
-The complete stack looks like this on a BSD-derived system:
 
-The complete stack looks like this:
+The complete stack looks like this on a BSD-derived system:
 
 AFP                          AFP
  |                            |
