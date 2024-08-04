@@ -9,8 +9,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef UAM_PGP
-
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -194,5 +192,3 @@ UAM_MODULE_EXPORT struct uam_export uams_pgp = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
-
-#endif /* UAM_PGP */

@@ -8,8 +8,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#if defined (USE_PAM) && defined (UAM_DHX2)
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -963,5 +961,3 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx2_pam = {
     UAM_MODULE_VERSION,
     uam_setup, uam_cleanup
 };
-
-#endif /* USE_PAM && UAM_DHX2 */

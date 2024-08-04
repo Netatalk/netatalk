@@ -612,7 +612,6 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
     if enable_rpath
         ssl_link_args += ['-R' / nettle.get_variable(pkgconfig: 'libdir')]
     endif
-    cdata.set('UAM_DHX', 1)
     ssl_deps += nettle
     if have_wolfssl and not have_ssl_override
         have_embedded_ssl = false
@@ -1104,7 +1103,6 @@ have_libgcrypt = libgcrypt.found()
 
 if have_libgcrypt
     cdata.set('HAVE_LIBGCRYPT', 1)
-    cdata.set('UAM_DHX2', 1)
 else
     have_libgcrypt = false
     if not libgcrypt.found()
@@ -1286,9 +1284,8 @@ enable_pgp_uam = get_option('with-pgp-uam')
 if not enable_pgp_uam
     have_pgp_uam = false
 else
-    have_pgp_uam = have_ssl
-    if have_pgp_uam
-        cdata.set('UAM_PGP', 1)
+    if have_ssl
+        have_pgp_uam = have_ssl
     else
         have_pgp_uam = false
         warning(
@@ -1726,7 +1723,6 @@ else
     )
 
     if have_pam
-        cdata.set('USE_PAM', 1)
         uams_options += 'PAM '
         pampath = pam_dir / 'etc/pam.d'
         # Debian/SuSE
@@ -2132,11 +2128,8 @@ elif host_os.contains('netbsd')
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EFTYPE')
-    cdata.set('UAM_DHX', 1) # NetBSD does not have crypt.h, uses unistd.h
 elif host_os.contains('openbsd')
     cdata.set('BSD4_4', 1)
-    cdata.set('UAM_DHX', 1) # OpenBSD does not have crypt.h, uses unistd.h
-    cdata.set('NO_DDP', 1)
 elif host_os.contains('sunos')
     cdata.set('__EXTENSIONS__', 1)
     cdata.set('__svr4__', 1)
