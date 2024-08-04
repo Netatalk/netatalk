@@ -1831,37 +1831,29 @@ cdata.set('PATH_NETATALK_LOCK', '"' + lockfile + '"')
 # Check for largefle support
 #
 
-enable_largefile = get_option('with-largefile')
+# needed for Linux, Solaris...
+file_offset_bits_test = cc.compiles(
+    '''
+    #if !defined(_FILE_OFFSET_BITS) || (_FILE_OFFSET_BITS != 64)
+        #error "Large-file support was not enabled"
+    #endif
+    ''',
+)
 
-if not enable_largefile
-    have_largefile = false
-else
-    # needed for Linux, Solaris...
-    file_offset_bits_test = cc.compiles(
-        '''
-        #if !defined(_FILE_OFFSET_BITS) || (_FILE_OFFSET_BITS != 64)
-            #error "Large-file support was not enabled"
-        #endif
-        ''',
-    )
+# Needed for AIX, macOS
+large_files_test = cc.sizeof('off_t') == 8
 
-    # Needed for AIX, macOS
-    large_files_test = cc.sizeof('off_t') == 8
-
-    have_largefile = file_offset_bits_test or large_files_test
-    if have_largefile
-        cdata.set('HAVE_LARGEFILE_SUPPORT', 1)
-        if file_offset_bits_test
-            cdata.set('_FILE_OFFSET_BITS', 64)
-        else
-            if large_files_test
-                cdata.set('_LARGE_FILES', 1)
-            endif
-        endif
+have_largefile = file_offset_bits_test or large_files_test
+if have_largefile
+    if file_offset_bits_test
+        cdata.set('_FILE_OFFSET_BITS', 64)
     else
-        have_largefile = false
-        warning('Largefile support requested but not available on this platform')
+        if large_files_test
+            cdata.set('_LARGE_FILES', 1)
+        endif
     endif
+else
+    error('Largefile support required but not available on this platform')
 endif
 
 #
