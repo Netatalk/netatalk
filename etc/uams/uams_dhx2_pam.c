@@ -9,6 +9,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <gcrypt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,10 +22,6 @@
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
-
-#ifdef HAVE_LIBGCRYPT
-#include <gcrypt.h>
-#endif /* HAVE_LIBGCRYPT */
 
 #include <atalk/afp.h>
 #include <atalk/globals.h>

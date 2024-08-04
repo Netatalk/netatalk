@@ -11,6 +11,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <gcrypt.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,10 +22,6 @@
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-
-#ifdef HAVE_LIBGCRYPT
-#include <gcrypt.h>
 #endif
 
 #ifdef SHADOWPW
