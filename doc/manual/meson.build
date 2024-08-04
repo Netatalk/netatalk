@@ -86,3 +86,8 @@ custom_target(
     install: true,
     install_dir: datadir / 'doc/netatalk/htmldocs',
 )
+
+install_data(
+    'netatalk.css',
+    install_dir: datadir / 'doc/netatalk/htmldocs',
+)

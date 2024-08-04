@@ -358,3 +358,12 @@ option(
     value: 'local',
     description: 'Build and install the html manual',
 )
+option(
+    'with-manual-l10n',
+    type: 'array',
+    choices: [
+        'ja',
+    ],
+    value: [],
+    description: 'Choose the localizations of the html manual to build',
+)
