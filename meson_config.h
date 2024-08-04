@@ -130,10 +130,6 @@
 /* Define if support for dbus-glib was found */
 #mesondefine HAVE_DBUS_GLIB
 
-/* Define to 1 if you have the declaration of `cygwin_conv_path', and to 0 if
-   you don't. */
-#mesondefine HAVE_DECL_CYGWIN_CONV_PATH
-
 /* Define to 1 if you have the `dirfd' function. */
 #mesondefine HAVE_DIRFD
 
@@ -316,9 +312,6 @@
 
 /* Define if libdlloader will be built on this platform */
 #mesondefine HAVE_LIBDLLOADER
-
-/* Define if the DHX2 modules should be built with libgcrypt */
-#mesondefine HAVE_LIBGCRYPT
 
 /* define if you have libquota */
 #mesondefine HAVE_LIBQUOTA

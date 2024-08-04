@@ -1101,15 +1101,10 @@ endif
 
 have_libgcrypt = libgcrypt.found()
 
-if have_libgcrypt
-    cdata.set('HAVE_LIBGCRYPT', 1)
-else
-    have_libgcrypt = false
-    if not libgcrypt.found()
-        error(
-            'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
-        )
-    endif
+if not have_libgcrypt
+    error(
+        'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
+    )
 endif
 
 #
