@@ -62,6 +62,7 @@ extern int          of_rename    (const struct vol *,
                                           struct dir *, const char *,
                                           struct dir *, const char *);
 extern int          of_flush     (const struct vol *);
+extern void         of_pforkdesc (FILE *);
 extern int          of_stat      (const struct vol *vol, struct path *);
 extern int          of_statdir   (struct vol *vol, struct path *);
 extern int          of_closefork (const AFPObj *obj, struct ofork *ofork);

@@ -21,9 +21,12 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#include <netatalk/at.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/atp.h>
+#include <atalk/asp.h>
 #include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/dsi.h>
@@ -322,6 +325,7 @@ static int iconopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
+    struct iovec	iov[ 2 ];
     u_char		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
     int			itype, cc = AFP_OK, iovcnt = 0;
     size_t 		buflen;
@@ -417,29 +421,64 @@ addicon_err:
         return cc;
     }
 
-    DSI *dsi = obj->dsi;
+    switch (obj->proto) {
+    case AFPPROTO_ASP:
+        buflen = bsize;
+        if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
+            return( AFPERR_PARAM );
 
-    iovcnt = dsi_writeinit(dsi, rbuf, buflen);
-
-    /* add headers at end of file */
-    if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-        dsi_writeflush(dsi);
-        return AFPERR_PARAM;
-    }
-
-    if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-        dsi_writeflush(dsi);
-        return AFPERR_PARAM;
-    }
-
-    while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-        if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-            dsi_writeflush(dsi);
-            return AFPERR_PARAM;
+        /*
+         * We're at the end of the file, add the headers, etc.  */
+        if ( cc == 0 ) {
+            iov[ 0 ].iov_base = (caddr_t)imh;
+            iov[ 0 ].iov_len = sizeof( imh );
+            iov[ 1 ].iov_base = rbuf;
+            iov[ 1 ].iov_len = bsize;
+            iovcnt = 2;
         }
+
+        /*
+         * We found an icon to replace.
+         */
+        if ( cc > 0 ) {
+            iov[ 0 ].iov_base = rbuf;
+            iov[ 0 ].iov_len = bsize;
+            iovcnt = 1;
+        }
+
+        if ( writev( si.sdt_fd, iov, iovcnt ) < 0 ) {
+            LOG(log_error, logtype_afpd, "afp_addicon(%s): writev: %s", icon_dtfile(vol, fcreator), strerror(errno) );
+            return( AFPERR_PARAM );
+        }
+        break;
+    case AFPPROTO_DSI:
+        {
+            DSI *dsi = obj->dsi;
+
+            iovcnt = dsi_writeinit(dsi, rbuf, buflen);
+
+            /* add headers at end of file */
+            if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
+                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+                dsi_writeflush(dsi);
+                return AFPERR_PARAM;
+            }
+
+            if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+                dsi_writeflush(dsi);
+                return AFPERR_PARAM;
+            }
+
+            while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
+                if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+                    LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+                    dsi_writeflush(dsi);
+                    return AFPERR_PARAM;
+                }
+            }
+        }
+        break;
     }
 
     close( si.sdt_fd );

@@ -34,6 +34,12 @@ afpd_external_deps = [libgcrypt]
 afpd_internal_deps = []
 afpd_link_args = []
 
+if have_appletalk
+    afpd_sources += [
+        'afp_asp.c',
+    ]
+endif
+
 if have_spotlight
     afpd_sources += [
         'spotlight.c',
