@@ -73,7 +73,13 @@ option(
     'with-init-hooks',
     type: 'boolean',
     value: true,
-    description: 'Enable install hooks for OS specific init system',
+    description: 'Enable install hooks for the configured init system',
+)
+option(
+    'with-install-hooks',
+    type: 'boolean',
+    value: true,
+    description: 'Enable OS specific install hooks',
 )
 option(
     'with-kerberos',
