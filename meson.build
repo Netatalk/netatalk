@@ -941,7 +941,7 @@ libgcrypt_link_args = []
 if libgcrypt_path != ''
     libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
     if enable_rpath
-        libgcrypt_link_args += ['-R' + libgcrypt_path / 'lib']
+        libgcrypt_link_args += ['-Wl,-rpath,' + libgcrypt_path / 'lib']
     endif
     libgcrypt = declare_dependency(
         link_args: libgcrypt_link_args,
@@ -1194,7 +1194,7 @@ ldap_link_args = []
 if ldap_path != ''
     ldap_link_args += ['-L' + ldap_path / 'lib', '-lldap', ]
     if enable_rpath
-        ldap_link_args += ['-R' + ldap_path / 'lib']
+        ldap_link_args += ['-Wl,-rpath,' + ldap_path / 'lib']
     endif
     ldap = declare_dependency(
         link_args: ldap_link_args,
@@ -1260,7 +1260,7 @@ libiconv_link_args = []
 if iconv_path != ''
     libiconv_link_args += ['-L' + iconv_path / 'lib', '-liconv']
     if enable_rpath
-        libiconv_link_args += ['-R' + iconv_path / 'lib']
+        libiconv_link_args += ['-Wl,-rpath,' + iconv_path / 'lib']
     endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
@@ -1467,7 +1467,7 @@ else
     if pam_path != '' and pam_dir != '/'
         pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
         if enable_rpath
-            pam_link_args += ['-R' + pam_path / 'lib']
+            pam_link_args += ['-Wl,-rpath,' + pam_path / 'lib']
         endif
         pam = declare_dependency(
             link_args: pam_link_args,
