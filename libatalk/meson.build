@@ -10,7 +10,18 @@ subdir('unicode')
 subdir('vfs')
 
 libatalk_deps = []
-libatalk_libs = []
+libatalk_libs = [
+    libacl,
+    libadouble,
+    libbstring,
+    libcnid,
+    libcompat,
+    libdsi,
+    libiniparser,
+    libunicode,
+    libutil,
+    libvfs,
+]
 libatalk_sources = []
 
 if have_acls
@@ -44,20 +55,19 @@ libatalk = library(
     libatalk_sources,
     include_directories: root_includes,
     dependencies: [libatalk_deps, libcnid_deps],
-    link_whole: [
-        libacl,
-        libadouble,
-        libatalk_libs,
-        libbstring,
-        libcnid,
-        libcompat,
-        libdsi,
-        libiniparser,
-        libunicode,
-        libutil,
-        libvfs,
-    ],
+    link_whole: libatalk_libs,
     version: '19.0.0',
     soversion: '19',
     install: true,
 )
+
+if host_os == 'linux' and get_option('with-install-hooks')
+    ldconfig = find_program('ldconfig', required: false)
+    if ldconfig.found()
+        if run_command(ldconfig, '-v', check: false).returncode() == 0
+            meson.add_install_script(ldconfig, '-v', skip_if_destdir: true)
+        else
+            warning('You may have to take steps for netatalk to find the libatalk shared library.')
+        endif
+    endif
+ endif

@@ -1,0 +1,2 @@
+# The location of the libatalk shared library for the dynamic linker cache
+@libdir@

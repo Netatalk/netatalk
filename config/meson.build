@@ -54,6 +54,16 @@ foreach file : static_conf_files
     endif
 endforeach
 
+if host_os == 'linux' and fs.exists('/etc/ld.so.conf.d')
+    configure_file(
+        input: 'libatalk.conf.in',
+        output: 'libatalk.conf',
+        configuration: cdata,
+        install: true,
+        install_dir: '/etc/ld.so.conf.d',
+    )
+endif
+
 install_data('README', install_dir: localstatedir / 'netatalk/CNID')
 
 if have_pam
