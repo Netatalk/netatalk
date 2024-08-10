@@ -126,6 +126,8 @@ jobs:
         run: cd build && meson test
       - name: Install
         run: meson install -C build
+      - name: Start netatalk
+        run: /usr/local/sbin/netatalk -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -168,6 +170,8 @@ jobs:
         run: cd build && meson test
       - name: Install
         run: meson install -C build
+      - name: Start netatalk
+        run: /usr/local/sbin/netatalk -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -196,6 +200,8 @@ jobs:
         run: cd build && meson test
       - name: Install
         run: meson install -C build
+      - name: Start netatalk
+        run: /usr/local/sbin/netatalk -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -251,6 +257,8 @@ jobs:
         run: cd build && meson test
       - name: Install
         run: sudo meson install -C build
+      - name: Start netatalk
+        run: /usr/local/sbin/netatalk -V
       - name: Uninstall
         run: sudo ninja -C build uninstall
 
@@ -307,6 +315,8 @@ jobs:
         run: cd build && meson test
       - name: Install
         run: meson install -C build
+      - name: Start netatalk
+        run: /usr/local/sbin/netatalk -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -381,6 +391,7 @@ jobs:
               -Dwith-appletalk=true
             meson compile -C build
             meson install -C build
+            /usr/local/sbin/netatalk -V
             ninja -C build uninstall
 
   build-freebsd:
