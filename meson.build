@@ -400,12 +400,6 @@ else
     rpath_libdir = ''
 endif
 
-if host_os == 'linux'
-    enable_dtags = true
-else
-    enable_dtags = false
-endif
-
 #
 # Check for the Berkeley DB library
 #
@@ -484,11 +478,7 @@ else
 endif
 
 if enable_rpath
-    bdb_link_args += '-R' + bdb_libdir
-endif
-
-if enable_dtags
-    bdb_link_args += '-Wl,--enable-new-dtags'
+    bdb_link_args += '-Wl,-rpath,' + bdb_libdir
 endif
 
 if bdb_header != ''
@@ -606,11 +596,8 @@ endif
 
 if (have_wolfssl or have_embedded_ssl) and nettle.found()
     have_ssl = true
-    if enable_dtags
-        ssl_link_args += '-Wl,--enable-new-dtags'
-    endif
     if enable_rpath
-        ssl_link_args += ['-R' / nettle.get_variable(pkgconfig: 'libdir')]
+        ssl_link_args += ['-Wl,-rpath,' / nettle.get_variable(pkgconfig: 'libdir')]
     endif
     ssl_deps += nettle
     if have_wolfssl and not have_ssl_override
@@ -618,7 +605,7 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
         ssl_deps += wolfssl
         ssl_provider += 'WolfSSL'
         if enable_rpath
-            ssl_link_args += ['-R' / wolfssl.get_variable(pkgconfig: 'libdir')]
+            ssl_link_args += ['-Wl,-rpath,' / wolfssl.get_variable(pkgconfig: 'libdir')]
         endif
         cdata.set('WOLFSSL_DHX', 1)
     elif have_embedded_ssl
@@ -1082,7 +1069,7 @@ libgcrypt_link_args = []
 if libgcrypt_path != ''
     libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
     if enable_rpath
-        libgcrypt_link_args += ['-R' + libgcrypt_path / 'lib']
+        libgcrypt_link_args += ['-Wl,-rpath,' + libgcrypt_path / 'lib']
     endif
     libgcrypt = declare_dependency(
         link_args: libgcrypt_link_args,
@@ -1397,7 +1384,7 @@ ldap_link_args = []
 if ldap_path != ''
     ldap_link_args += ['-L' + ldap_path / 'lib', '-lldap']
     if enable_rpath
-        ldap_link_args += ['-R' + ldap_path / 'lib']
+        ldap_link_args += ['-Wl,-rpath,' + ldap_path / 'lib']
     endif
     ldap = declare_dependency(
         link_args: ldap_link_args,
@@ -1463,7 +1450,7 @@ libiconv_link_args = []
 if iconv_path != ''
     libiconv_link_args += ['-L' + iconv_path / 'lib', '-liconv']
     if enable_rpath
-        libiconv_link_args += ['-R' + iconv_path / 'lib']
+        libiconv_link_args += ['-Wl,-rpath,' + iconv_path / 'lib']
     endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
@@ -1701,7 +1688,7 @@ else
     if pam_path != '' and pam_dir != '/'
         pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
         if enable_rpath
-            pam_link_args += ['-R' + pam_path / 'lib']
+            pam_link_args += ['-Wl,-rpath,' + pam_path / 'lib']
         endif
         pam = declare_dependency(
             link_args: pam_link_args,
