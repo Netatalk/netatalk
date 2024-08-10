@@ -109,6 +109,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -123,6 +125,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: meson install -C build
+      - name: Meson - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -160,6 +164,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -174,6 +180,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: meson install -C build
+      - name: Meson - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -205,6 +213,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -221,6 +231,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: meson install -C build
+      - name: Meson - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -268,6 +280,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
+      - name: Autotools - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: sudo make uninstall
       - name: Meson - Configure
@@ -283,6 +297,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: sudo meson install -C build
+      - name: Meson - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
@@ -335,6 +351,8 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: make install
+      - name: Autotools - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -349,6 +367,8 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: meson install -C build
+      - name: Meson - Start netatalk
+        run: /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -501,11 +521,13 @@ jobs:
               MAKE=gmake
             gmake -j2
             gmake install
+            /usr/local/sbin/afpd -V
             gmake uninstall
             echo "Building with Meson"
             meson setup build
             meson compile -C build
             meson install -C build
+            /usr/local/sbin/afpd -V
             ninja -C build uninstall
 
   build-freebsd:
