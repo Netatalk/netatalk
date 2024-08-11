@@ -10,6 +10,9 @@ manual_stylesheet = configure_file(
     configuration: cdata,
 )
 
-subdir('ja')
 subdir('manpages')
 subdir('manual')
+
+if 'ja' in get_option('with-manual-l10n')
+    subdir('ja')
+endif

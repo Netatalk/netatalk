@@ -340,3 +340,12 @@ option(
     value: 'dbd',
     description: 'Set default DID scheme',
 )
+option(
+    'with-manual-l10n',
+    type: 'array',
+    choices: [
+        'ja',
+    ],
+    value: [],
+    description: 'Choose the localizations of the html manual to build',
+)
