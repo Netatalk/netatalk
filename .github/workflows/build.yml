@@ -735,6 +735,9 @@ jobs:
               MAKE=gmake \
               PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             gmake -j $(nproc)
+            gmake install
+            /usr/local/sbin/netatalk -V
+            gmake uninstall
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
