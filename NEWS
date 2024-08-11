@@ -1,3 +1,23 @@
+Changes in 2.4.6
+================
+* BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
+       GitHub #1387
+       This fixes the issue of the libatalk.so shared library not being found
+       when configuring with a non-standard library path, e.g. /usr/local/lib .
+       New Meson option `-Dwith-install-hooks' controls this behavior,
+       allowing you to disable the install hook in non-privileged environments.
+       On Linux systems with glibc, we now install the following config file:
+       /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Install htmldocs into htmldocs subdir, GitHub #1392
+       Previously, the html manual files were installed into the root
+       of the netatalk doc directory. Now they are put under netatalk/htmldocs .
+* BREAKING: meson: Use modern linker flag for rpath, remove dtags override,
+       GitHub #1385
+       When configuring with `-Dwith-rpath=true' the linker flags
+       `-Wl,-rpath,' will be prepended instead of the old `-R' flag.
+       On Linux platforms, we no longer prepend `-Wl,--enable-new-dtags',
+       either.
+
 Changes in 2.4.5
 ================
 * BREAKING: meson: Allow choosing shared or static libraries to build,
@@ -5,15 +25,20 @@ Changes in 2.4.5
        In practice, only shared libraries are built by default now.
        Use the `default_library' option to control what is built.
 * FIX: meson: Fix syntax error with libiconv path, GitHub #1280
-* FIX: meson: default OPEN_NOFOLLOW_ERRNO overwrites platform customization, GitHub #1287
+* FIX: meson: default OPEN_NOFOLLOW_ERRNO overwrites platform customization,
+       GitHub #1287
 * FIX: meson: Remove duplicate dependency check for posix threads, GitHub #1298
 * FIX: meson: Better output when cryptographic UAMs aren't built, GitHub #1301
-* FIX: meson: Prioritize tests and run single-threaded to avoid race condition, GitHub #1313
+* FIX: meson: Prioritize tests and run single-threaded to avoid race condition,
+       GitHub #1313
 * FIX: meson: Better way to handle rpath executable targets, GitHub #1318
-* FIX: meson: Refactor libcrypto check and print better status messages, GitHub #1319
+* FIX: meson: Refactor libcrypto check and print better status messages,
+       GitHub #1319
 * FIX: meson: Do a compiler sanity check before header checks, GitHub #1362
-* FIX: meson: Declare have_atfuncs globally to avoid failure later, GitHub #1364
-* FIX: autotools/meson: Avoid using reserved keyword to build the tests on NetBSD, GitHub #1329
+* FIX: meson: Declare have_atfuncs globally to avoid failure later,
+       GitHub #1364
+* FIX: autotools/meson: Avoid using reserved keyword to build the tests
+       on NetBSD, GitHub #1329
 * FIX: Remove duplicate header include in server_child.h, GitHub #1304
 
 Changes in 2.4.4
