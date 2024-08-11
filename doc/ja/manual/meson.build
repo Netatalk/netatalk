@@ -68,5 +68,5 @@ manual_gen = custom_target(
         '@INPUT@',
     ],
     install: true,
-    install_dir: datadir / 'doc/netatalk/ja',
+    install_dir: datadir / 'doc/netatalk/htmldocs/ja',
 )
