@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 12 Nov 2015
-.\"    Manual: 2.4.5
-.\"    Source: 2.4.5
+.\"    Manual: 2.4.6
+.\"    Source: 2.4.6
 .\"  Language: English
 .\"
-.TH "APPLE_DUMP" "1" "12 Nov 2015" "2\&.4\&.5" "2.4.5"
+.TH "APPLE_DUMP" "1" "12 Nov 2015" "2\&.4\&.6" "2.4.6"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
