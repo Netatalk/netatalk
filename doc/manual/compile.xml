@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-08-01</pubdate>
+		<pubdate>2024-08-11</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -75,6 +75,10 @@
 			<para>
 				<screen>make install</screen>
 			</para>
+			<para>Autotools - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
+			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>make uninstall</screen>
@@ -98,6 +102,10 @@
 			<para>Meson - Install</para>
 			<para>
 				<screen>meson install -C build</screen>
+			</para>
+			<para>Meson - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -145,6 +153,10 @@
 			<para>
 				<screen>make install</screen>
 			</para>
+			<para>Autotools - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
+			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>make uninstall</screen>
@@ -168,6 +180,10 @@
 			<para>Meson - Install</para>
 			<para>
 				<screen>meson install -C build</screen>
+			</para>
+			<para>Meson - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -233,6 +249,10 @@ xsltproc
 			<para>
 				<screen>make install</screen>
 			</para>
+			<para>Autotools - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
+			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>make uninstall</screen>
@@ -258,6 +278,10 @@ xsltproc
 			<para>Meson - Install</para>
 			<para>
 				<screen>meson install -C build</screen>
+			</para>
+			<para>Meson - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -315,6 +339,10 @@ xsltproc
 			<para>
 				<screen>sudo make install</screen>
 			</para>
+			<para>Autotools - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
+			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>sudo make uninstall</screen>
@@ -339,6 +367,10 @@ xsltproc
 			<para>Meson - Install</para>
 			<para>
 				<screen>sudo meson install -C build</screen>
+			</para>
+			<para>Meson - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -401,6 +433,10 @@ zypper in -y \
 			<para>
 				<screen>make install</screen>
 			</para>
+			<para>Autotools - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
+			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
 				<screen>make uninstall</screen>
@@ -424,6 +460,10 @@ zypper in -y \
 			<para>Meson - Install</para>
 			<para>
 				<screen>meson install -C build</screen>
+			</para>
+			<para>Meson - Start netatalk</para>
+			<para>
+				<screen>/usr/local/sbin/afpd -V</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -655,11 +695,13 @@ echo "Building with Autotools"
   MAKE=gmake
 gmake -j2
 gmake install
+/usr/local/sbin/afpd -V
 gmake uninstall
 echo "Building with Meson"
 meson setup build
 meson compile -C build
 meson install -C build
+/usr/local/sbin/afpd -V
 ninja -C build uninstall
 </screen>
 			</para>
