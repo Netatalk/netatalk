@@ -1,3 +1,29 @@
+Changes in 3.2.6
+================
+* BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
+       GitHub #1386
+       This fixes the issue of the libatalk.so shared library not being found
+       when configuring with a non-standard library path, e.g. /usr/local/lib .
+       New Meson option `-Dwith-install-hooks' controls this behavior,
+       allowing you to disable the install hook in non-privileged environments.
+       On Linux systems with glibc, we now install the following config file:
+       /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Introduce option to control which manual l10n to build,
+       GitHub #1390
+       New Meson option `-Dwith-manual-l10n' default to empty, can be set to
+       `ja' to build the Japanese localization of the html manual.
+       This changes the default behavior of the build system
+       to not build the Japanese html manual by default.
+* BREAKING: meson: Install htmldocs into htmldocs subdir, GitHub #1391
+       Previously, the html manual files were installed into the root
+       of the netatalk doc directory. Now they are put under netatalk/htmldocs .
+* BREAKING: meson: Use modern linker flag for rpath, remove dtags override,
+       GitHub #1384
+       When configuring with `-Dwith-rpath=true' the linker flags
+       `-Wl,-rpath,' will be prepended instead of the old `-R' flag.
+       On Linux platforms, we no longer prepend `-Wl,--enable-new-dtags',
+       either.
+
 Changes in 3.2.5
 ================
 * BREAKING: meson: Allow choosing shared or static libraries to build,
