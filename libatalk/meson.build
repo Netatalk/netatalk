@@ -64,10 +64,10 @@ libatalk = library(
 if host_os == 'linux' and get_option('with-install-hooks')
     ldconfig = find_program('ldconfig', required: false)
     if ldconfig.found()
-        if run_command(ldconfig, '-v', check: false).returncode() == 0
+        if run_command(ldconfig, '-N', '-X', check: false).returncode() == 0
             meson.add_install_script(ldconfig, '-v', skip_if_destdir: true)
         else
-            warning('You may have to take steps for netatalk to find the libatalk shared library.')
+            warning('You may have to run ldconfig manually for netatalk to find the libatalk shared library.')
         endif
     endif
  endif
