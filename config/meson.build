@@ -41,8 +41,6 @@ else
     install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
 endif
 
-install_data('README', install_dir: localstatedir / 'netatalk')
-
 if (
     fs.exists('/etc/ld.so.conf.d')
     and get_option('with-ldsoconf')
@@ -56,6 +54,7 @@ if (
     )
 endif
 
+install_data('README', install_dir: localstatedir / 'netatalk')
 install_data('README', install_dir: localstatedir / 'netatalk/CNID')
 
 if have_pam
