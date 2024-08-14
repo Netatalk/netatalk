@@ -32,6 +32,12 @@ executable(
     install_rpath: rpath_libdir,
 )
 
+install_data(
+    'etc2ps.sh',
+    install_dir: libexecdir,
+    install_mode: 'rwxr-xr-x',
+)
+
 install_data('pagecount.ps', install_dir: datadir / 'netatalk')
 
 psf_symlinks = [
