@@ -235,7 +235,9 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 #endif
 
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
-    maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
+    maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
+        (((obj->afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
+         ? 0x7fffffffL : 0xffffffffL);
 
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
         return( rc );
@@ -583,6 +585,13 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         /* set password bit if there's a volume password */
         *data = (volume->v_password) ? AFPSRVR_PASSWD : 0;
 
+        /* Apple 2 clients running ProDOS-8 expect one volume to have
+           bit 0 of this byte set.  They will not recognize anything
+           on the server unless this is the case.  I have not
+           completely worked this out, but it's related to booting
+           from the server.  Support for that function is a ways
+           off.. <shirsch@ibm.net> */
+        *data |= (volume->v_flags & AFPVOL_A2VOL) ? AFPSRVR_CONFIGINFO : 0;
         *data++ |= 0; /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
         *data++ = len;
         memcpy(data, namebuf, len );
