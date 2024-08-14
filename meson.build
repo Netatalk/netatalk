@@ -68,6 +68,12 @@ if host_os == 'linux'
     netatalk_common_flags += '-D_GNU_SOURCE'
 endif
 
+lockfile_path = get_option('with-lockfile-path')
+
+if lockfile_path != ''
+    netatalk_common_flags += '-D_PATH_LOCKDIR="' + lockfile_path + '"'
+endif
+
 add_global_arguments(netatalk_common_flags, language: 'c')
 
 netatalk_common_link_args = []
