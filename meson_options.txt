@@ -256,6 +256,12 @@ option(
     description: 'Set path to libiconv installation. Must contain lib and include dirs',
 )
 option(
+    'with-lockfile-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to the Netatalk daemon lockfile directory',
+)
+option(
     'with-pam-path',
     type: 'string',
     value: '',
