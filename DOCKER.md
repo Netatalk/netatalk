@@ -21,31 +21,20 @@ The former option is more secure, but you will have to manually specify the IP a
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
-Sample `docker-compose.yml` with docker managed volume and Zeroconf
+You can use the sample [docker-compose.yml](https://github.com/Netatalk/netatalk/blob/main/docker-compose.yml) that is distributed with this source code.
+
+Below follows a sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions, and `AFP_USER` and `AFP_PASS` with the appropriate user and password.
 
 ```
-services:
-  netatalk:
-    image: netatalk3:latest
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - afpshare:/mnt/afpshare
-      - afpbackup:/mnt/afpbackup
-      - /var/run/dbus:/var/run/dbus
-    environment:
-      - "AFP_USER=atalk"
-      - "AFP_PASS=atalk"
-volumes:
-  afpshare:
-  afpbackup:
-```
-
-Sample `docker run` command. Substitute `/path/to/share` with an actual path on your file system with appropriate permissions.
-
-```
-docker run --rm --network host --cap-add=NET_ADMIN --volume "/path/to/share:/mnt/afpshare" --volume "/path/to/backup:/mnt/afpbackup" --volume "/var/run/dbus:/var/run/dbus" --env AFP_USER=atalk --env AFP_PASS=atalk --name netatalk netatalk3:latest
+docker run --rm \
+  --network host \
+  --cap-add=NET_ADMIN \
+  --volume "/path/to/share:/mnt/afpshare" \
+  --volume "/path/to/backup:/mnt/afpbackup" \
+  --volume "/var/run/dbus:/var/run/dbus" \
+  --env AFP_USER= \
+  --env AFP_PASS= \
+  --name netatalk netatalk3:latest
 ```
 
 ## Constraints
