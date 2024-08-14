@@ -2198,6 +2198,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>legacy volume size = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>Limit disk size reporting to 2GB for legacy clients. This can
+            be used for older Macintoshes running System 7.1 or earlier and
+            using newer AppleShare clients.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>network ids = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
@@ -2216,6 +2227,18 @@
             <para>A non-zero return code from preexec close the volume being
             immediately, preventing clients to mount/see the volume in
             question.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>prodos = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>Enable ProDOS support. This option should only be enabled
+            for volumes you expect to netboot an Apple II from. In addition to
+            setting the boot flag on the volume, it restricts the volume free
+            space shown to 32MB.</para>
           </listitem>
         </varlistentry>
 

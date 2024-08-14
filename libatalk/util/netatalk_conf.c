@@ -918,6 +918,10 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_RO;
     if (getoption_bool(obj->iniconfig, section, "invisible dots", preset, 0))
         volume->v_flags |= AFPVOL_INV_DOTS;
+    if (getoption_bool(obj->iniconfig, section, "legacy volume size", preset, 0))
+        volume->v_flags |= AFPVOL_LIMITSIZE;
+    if (getoption_bool(obj->iniconfig, section, "prodos", preset, 0))
+        volume->v_flags |= AFPVOL_A2VOL;
     if (!getoption_bool(obj->iniconfig, section, "stat vol", preset, 1))
         volume->v_flags |= AFPVOL_NOSTAT;
     if (getoption_bool(obj->iniconfig, section, "unix priv", preset, 1))
