@@ -54,7 +54,10 @@ foreach file : static_conf_files
     endif
 endforeach
 
-if host_os == 'linux' and fs.exists('/etc/ld.so.conf.d')
+if (
+    fs.exists('/etc/ld.so.conf.d')
+    and get_option('with-ldsoconf')
+)
     configure_file(
         input: 'libatalk.conf.in',
         output: 'libatalk.conf',
