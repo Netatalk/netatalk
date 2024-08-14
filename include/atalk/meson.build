@@ -19,6 +19,8 @@ headers = [
     'netddp.h',
     'pap.h',
     'paths.h',
+    'queue.h',
+    'rtmp.h',
     'server_child.h',
     'server_ipc.h',
     'uam.h',

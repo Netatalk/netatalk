@@ -7,7 +7,7 @@ netatalk_headers = [
     'phase2.h',
 ]
 
-if use_glibc_at_header
+if not use_glibc_at_header
     netatalk_headers += 'at.h'
 endif
 
