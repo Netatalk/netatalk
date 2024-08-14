@@ -106,6 +106,12 @@ option(
     description: 'Enable LDAP support'
 )
 option(
+    'with-ldsoconf',
+    type: 'boolean',
+    value: true,
+    description: 'Enable custom library search path for the run-time linker',
+)
+option(
     'with-libiconv',
     type: 'boolean',
     value: true,
