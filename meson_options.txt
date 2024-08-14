@@ -238,6 +238,12 @@ option(
     description: 'Set path to GSSAPI for Kerberos V UAM. Must contain lib and include dirs',
 )
 option(
+    'with-init-dir',
+    type: 'string',
+    value: '',
+    description: 'Set path to init system directory',
+)
+option(
     'with-ldap-path',
     type: 'string',
     value: '',

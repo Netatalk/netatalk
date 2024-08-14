@@ -3,6 +3,14 @@ if get_option('with-init-style') == 'none'
     init_dirs += init_dir
 endif
 
+init_dir_override = get_option('with-init-dir')
+
+if init_dir_override != ''
+    init_dir = init_dir_override
+else
+    init_dir = ''
+endif
+
 if (
     get_option('with-init-style') == 'debian'
     or get_option('with-init-style') == 'debian-systemd'
@@ -11,7 +19,9 @@ if (
     or get_option('with-init-style') == 'suse-systemd'
     or get_option('with-init-style') == 'systemd'
 )
-    init_dir = '/usr/lib/systemd/system'
+    if init_dir_override == ''
+        init_dir = '/usr/lib/systemd/system'
+    endif
     init_dirs += init_dir
     service_data = [
         'a2boot',
@@ -44,7 +54,9 @@ if (
   get_option('with-init-style') == 'debian'
   or get_option('with-init-style') == 'debian-sysv'
 )
-    init_dir = '/etc/init.d'
+    if init_dir_override == ''
+        init_dir = '/etc/init.d'
+    endif
     init_dirs += init_dir
     custom_target(
         'debian_sysv',
@@ -68,7 +80,9 @@ if (
 endif
 
 if get_option('with-init-style') == 'netbsd'
-    init_dir = '/etc/rc.d'
+    if init_dir_override == ''
+        init_dir = '/etc/rc.d'
+    endif
     init_dirs += init_dir
     rc_scripts = [
         'rc.afpd',
@@ -93,7 +107,9 @@ if get_option('with-init-style') == 'netbsd'
 endif
 
 if get_option('with-init-style') == 'solaris'
-    init_dir = '/etc/init.d'
+    if init_dir_override == ''
+        init_dir = '/etc/init.d'
+    endif
     init_dirs += init_dir
     custom_target(
         'solaris',
@@ -130,7 +146,9 @@ if (
     get_option('with-init-style') == 'openrc'
     or get_option('with-init-style') == 'gentoo-openrc'
 )
-    init_dir = '/etc/init.d'
+    if init_dir_override == ''
+        init_dir = '/etc/init.d'
+    endif
     init_dirs += init_dir
     custom_target(
         'openrc',
@@ -153,7 +171,9 @@ if (
 endif
 
 if get_option('with-init-style') == 'macos-launchd'
-    init_dir = '/Library/LaunchDaemons'
+    if init_dir_override == ''
+        init_dir = '/Library/LaunchDaemons'
+    endif
     init_dirs += init_dir
     custom_target(
         'netatalkd',
