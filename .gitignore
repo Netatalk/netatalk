@@ -9,5 +9,4 @@ libatalk/unicode/utf16_casetable.h
 
 # Temporary build files
 build/**
-docker-compose.yml
 UnicodeData.txt

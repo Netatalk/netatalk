@@ -66,7 +66,7 @@ RUN meson setup build \
     -Dwith-dtrace=false \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
-    -Dwith-manual=false \
+    -Dwith-manual=none \
     -Dwith-pgp-uam=false \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
