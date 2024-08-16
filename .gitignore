@@ -3,7 +3,6 @@ build-aux/**
 aclocal.m4
 config.*
 configure
-docker-compose.yml
 libtool
 Makefile
 Makefile.in
