@@ -13,13 +13,13 @@
 /* lock file path. this should be re-organized a bit. */
 #if ! defined (_PATH_LOCKDIR)
 #  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__) || defined (__APPLE__)
-#    define _PATH_LOCKDIR	"/var/run/"
+#    define _PATH_LOCKDIR	"/var/run"
 #  elif defined (BSD4_4)
-#      define _PATH_LOCKDIR	"/var/spool/lock/"
+#      define _PATH_LOCKDIR	"/var/spool/lock"
 #  elif defined (__linux__)
-#    define _PATH_LOCKDIR	"/var/lock/"
+#    define _PATH_LOCKDIR	"/var/lock"
 #  else
-#    define _PATH_LOCKDIR	"/var/spool/locks/"
+#    define _PATH_LOCKDIR	"/var/spool/locks"
 #  endif
 #endif
 
@@ -40,9 +40,9 @@
 #define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
 #define _PATH_ATALKDTMP		"atalkd.tmp"
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd.pid")
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/atalkd.pid")
 #else
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/atalkd")
 #endif
 
 /*
@@ -50,29 +50,29 @@
  */
 #define _PATH_TMPPAGEORDER	"/tmp/psorderXXXXXX"
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd.pid")
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/papd.pid")
 #else
-#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd")
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/papd")
 #endif
 
 /*
  * afpd paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
-#define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
+#define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"/afpd_ipc")
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/afpd.pid")
 #else
-#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/afpd")
 #endif
 
 /*
  * cnid_metad paths
  */
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__) || defined (__OpenBSD__)
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad.pid")
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/cnid_metad.pid")
 #else
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"/cnid_metad")
 #endif
 
 #endif /* atalk/paths.h */
