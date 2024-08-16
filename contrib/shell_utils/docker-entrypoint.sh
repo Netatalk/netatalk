@@ -105,6 +105,11 @@ valid users = ${AFP_USER}
 EOF
 fi
 
+if [ -f "/var/lock/netatalk" ]; then
+    echo "*** Removing residual lock file"
+    rm -f /var/lock/netatalk
+fi
+
 echo "*** Starting AFP server"
 
 # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
