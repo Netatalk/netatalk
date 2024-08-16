@@ -1,0 +1,19 @@
+services:
+  netatalk:
+    image: netatalk/netatalk2:latest
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - afpshare:/mnt/afpshare
+      - afpbackup:/mnt/afpbackup
+      - /var/run/dbus:/var/run/dbus
+    environment:
+      - "SERVER_NAME=Netatalk Server"
+      - "SHARE_NAME=Shared Volume"
+      - "AFP_USER="
+      - "AFP_PASS="
+      - "ATALKD_INTERFACE=eth0"
+volumes:
+  afpshare:
+  afpbackup:
