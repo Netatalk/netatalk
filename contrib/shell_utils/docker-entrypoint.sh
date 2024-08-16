@@ -22,33 +22,40 @@ set -eo pipefail
 
 echo "*** Setting up users and groups"
 
-if [ ! -z "${AFP_USER}" ]; then
-    if [ ! -z "${AFP_UID}" ]; then
-        uidcmd="-u ${AFP_UID}"
-    fi
-    if [ ! -z "${AFP_GID}" ]; then
-        gidcmd="-g ${AFP_GID}"
-    fi
-    if [ ! -z "${AFP_GROUP}" ]; then
-        groupcmd="-G ${AFP_GROUP}"
-        addgroup ${gidcmd} ${AFP_GROUP} || true 2> /dev/null
-    fi
-    adduser ${uidcmd} ${groupcmd} --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
-
-    echo "${AFP_USER}:${AFP_PASS}" | chpasswd
-
-    # Creating credentials for the RandNum UAM
-    set +e
-    if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
-    	rm -f /usr/local/etc/netatalk/afppasswd
-    fi
-    afppasswd -c
-    afppasswd -a -f -w "${AFP_PASS}" "${AFP_USER}"
-    if [ $? -ne 0 ]; then
-        echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
-    fi
-    set -e
+if [ -z "${AFP_USER}" ]; then
+    echo "ERROR: AFP_USER needs to be set to use this Docker container."
+    exit 1
 fi
+if [ -z "${AFP_PASS}" ]; then
+    echo "ERROR: AFP_PASS needs to be set to use this Docker container."
+    exit 1
+fi
+
+if [ ! -z "${AFP_UID}" ]; then
+    uidcmd="-u ${AFP_UID}"
+fi
+if [ ! -z "${AFP_GID}" ]; then
+    gidcmd="-g ${AFP_GID}"
+fi
+if [ ! -z "${AFP_GROUP}" ]; then
+    groupcmd="-G ${AFP_GROUP}"
+    addgroup ${gidcmd} ${AFP_GROUP} || true 2> /dev/null
+fi
+adduser ${uidcmd} ${groupcmd} --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
+
+echo "${AFP_USER}:${AFP_PASS}" | chpasswd
+
+# Creating credentials for the RandNum UAM
+set +e
+if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
+    rm -f /usr/local/etc/netatalk/afppasswd
+fi
+afppasswd -c
+afppasswd -a -f -w "${AFP_PASS}" "${AFP_USER}"
+if [ $? -ne 0 ]; then
+    echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
+fi
+set -e
 
 echo "*** Configuring shared volume"
 
