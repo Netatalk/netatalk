@@ -4,7 +4,6 @@ compile
 config.*
 configure
 depcomp
-docker-compose.yml
 install-sh
 libtool
 ltmain.sh
