@@ -1,3 +1,16 @@
+Changes in 3.2.7
+================
+* NEW: meson: Ability to control the run-time linker path config file,
+       GitHub #1396
+       New boolean Meson option: `-Dwith-ldsoconf'
+       When set to false, do not create /etc/ld.so.conf.d/libatalk.conf
+* FIX: meson: Allow ldconfig to run unprivileged during setup, GitHub #1407
+* FIX: Docker: Add entry script step to clean up any residual lock file,
+       GitHub #1412
+* NEW: Docker: Ship a docker-compose.yml sample file, GitHub #1414
+* NEW: Docker: Check for AFP_USER and AFP_PASS when launching container,
+       GitHub #1415
+
 Changes in 3.2.6
 ================
 * BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
