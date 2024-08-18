@@ -108,7 +108,7 @@ option(
 option(
     'with-ldsoconf',
     type: 'boolean',
-    value: true,
+    value: false,
     description: 'Enable custom library search path for the run-time linker',
 )
 option(
@@ -150,7 +150,7 @@ option(
 option(
     'with-rpath',
     type: 'boolean',
-    value: false,
+    value: true,
     description: 'Enable RPATH/RUNPATH',
 )
 option(
