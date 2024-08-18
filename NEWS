@@ -1,3 +1,17 @@
+Changes in 2.4.7
+================
+* NEW: meson: Ability to control the run-time linker path config file,
+       GitHub #1395
+       New boolean Meson option: `-Dwith-ldsoconf'
+       When set to false, do not create /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Enable rpath by default, while disabling ldsoconf
+       by default, GitHub #1419
+* NEW: meson: Introduce a with-init-dir option, GitHub #1403
+* NEW: meson: Introduce a with-lockfile-path option, GitHub #1404
+* FIX: meson: Allow ldconfig to run unprivileged during setup, GitHub #1408
+* FIX: meson: Correctly install AppleTalk headers and etc2ps.sh, GitHub #1398
+* NEW: docker: Ship a docker-compose.yml sample file, GitHub #1416
+
 Changes in 2.4.6
 ================
 * BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
