@@ -66,6 +66,10 @@
 #define HEXPASSWDLEN 16
 #define PASSWDLEN 8
 
+#ifndef DES_KEY_SZ
+#define DES_KEY_SZ (sizeof(DES_cblock))
+#endif
+
 static char buf[MAXPATHLEN + 1];
 
 /* if newpwd is null, convert buf from hex to binary. if newpwd isn't
