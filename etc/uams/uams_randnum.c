@@ -122,6 +122,10 @@ home_passwd_fail:
  *
  * key file:
  * key (in hex) */
+#ifndef DES_KEY_SZ
+#define DES_KEY_SZ (sizeof(DES_cblock))
+#endif
+
 #define PASSWD_ILLEGAL '*'
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 static int afppasswd(const struct passwd *pwd,
