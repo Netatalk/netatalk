@@ -40,11 +40,13 @@
 typedef struct WOLFSSL_BIGNUM {
     int neg;        /* openssh deference */
     void *internal; /* our big num */
+#if !defined(NO_BIG_INT) || defined(WOLFSSL_SP_MATH)
     mp_int mpi;
+#endif
 } WOLFSSL_BIGNUM;
 
 #define WOLFSSL_BN_ULONG unsigned long
-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
 #define BN_ULONG         WOLFSSL_BN_ULONG
 #endif
 
@@ -182,7 +184,7 @@ WOLFSSL_API WOLFSSL_BIGNUM *wolfSSL_BN_mod_inverse(
     WOLFSSL_BN_CTX *ctx);
 
 
-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
 
 #define BN_RAND_TOP_ANY     WOLFSSL_BN_RAND_TOP_ANY
 #define BN_RAND_TOP_ONE     WOLFSSL_BN_RAND_TOP_ONE
@@ -286,7 +288,7 @@ typedef WOLFSSL_BN_GENCB BN_GENCB;
 
 #define BN_prime_checks 0
 
-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
 
 
 #ifdef __cplusplus
