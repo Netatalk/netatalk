@@ -29,7 +29,7 @@
 #include <wolfssl/openssl/bn.h>
 #endif
 
- #include <wolfssl/internal.h>
+#include <wolfssl/internal.h>
 #ifndef WC_NO_RNG
     #include <wolfssl/wolfcrypt/random.h>
 #endif
@@ -2433,4 +2433,3 @@ void wolfSSL_BN_CTX_start(WOLFSSL_BN_CTX *ctx)
 #endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
 
 #endif /* !WOLFSSL_SSL_BN_INCLUDED */
-

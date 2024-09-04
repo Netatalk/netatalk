@@ -1970,7 +1970,7 @@ int wolfSSL_HMAC_cleanup(WOLFSSL_HMAC_CTX* ctx)
  * @return  NULL on failure.
  */
 unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
-    int key_len, const unsigned char* data, int len, unsigned char* md,
+    int key_len, const unsigned char* data, size_t len, unsigned char* md,
     unsigned int* md_len)
 {
     unsigned char* ret = NULL;
@@ -2004,7 +2004,7 @@ unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
 #endif
     if (rc == 0)  {
         /* Get the HMAC output length. */
-        hmacLen = wolfssl_mac_len((unsigned char)type);
+        hmacLen = (int)wolfssl_mac_len((unsigned char)type);
         /* 0 indicates the digest is not supported. */
         if (hmacLen == 0) {
             rc = BAD_FUNC_ARG;
@@ -2013,16 +2013,16 @@ unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
     /* Initialize the wolfSSL HMAC object. */
     if ((rc == 0) && (wc_HmacInit(hmac, heap, INVALID_DEVID) == 0)) {
         /* Set the key into the wolfSSL HMAC object. */
-        rc = wc_HmacSetKey(hmac, type, (const byte*)key, key_len);
+        rc = wc_HmacSetKey(hmac, type, (const byte*)key, (word32)key_len);
         if (rc == 0) {
            /* Update the wolfSSL HMAC object with data. */
-            rc = wc_HmacUpdate(hmac, data, len);
+            rc = wc_HmacUpdate(hmac, data, (word32)len);
         }
         /* Finalize the wolfSSL HMAC object. */
         if ((rc == 0) && (wc_HmacFinal(hmac, md) == 0)) {
             /* Return the length of the HMAC output if required. */
             if (md_len != NULL) {
-                *md_len = hmacLen;
+                *md_len = (unsigned int)hmacLen;
             }
             /* Set the buffer to return. */
             ret = md;
@@ -2273,7 +2273,7 @@ int wolfSSL_CMAC_Final(WOLFSSL_CMAC_CTX* ctx, unsigned char* out, size_t* len)
             len32 = (word32)blockSize;
             /* Return size if required. */
             if (len != NULL) {
-                *len = blockSize;
+                *len = (size_t)blockSize;
             }
         }
     }
@@ -3500,4 +3500,3 @@ void wolfSSL_RC4(WOLFSSL_RC4_KEY* key, size_t len, const unsigned char* in,
  ******************************************************************************/
 
 #endif /* WOLFSSL_SSL_CRYPTO_INCLUDED */
-

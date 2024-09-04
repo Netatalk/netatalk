@@ -1,7 +1,7 @@
 project(
     'wolfssl',
     'c',
-    version: '5.7.0',
+    version: '5.7.2',
     license: 'GPLv2',
     default_options: ['warning_level=3', 'c_std=c11'],
     meson_version: '>=0.61.2',
