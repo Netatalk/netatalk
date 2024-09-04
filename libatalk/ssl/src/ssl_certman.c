@@ -141,14 +141,12 @@ WOLFSSL_CERT_MANAGER* wolfSSL_CertManagerNew_ex(void* heap)
     #ifdef HAVE_ECC
         cm->minEccKeySz = MIN_ECCKEY_SZ;
     #endif
-    #ifdef HAVE_PQC
     #ifdef HAVE_FALCON
         cm->minFalconKeySz = MIN_FALCONKEY_SZ;
     #endif /* HAVE_FALCON */
     #ifdef HAVE_DILITHIUM
         cm->minDilithiumKeySz = MIN_DILITHIUMKEY_SZ;
     #endif /* HAVE_DILITHIUM */
-    #endif /* HAVE_PQC */
 
         /* Set heap hint to use in certificate manager operations. */
         cm->heap = heap;
@@ -700,7 +698,7 @@ int CM_VerifyBuffer_ex(WOLFSSL_CERT_MANAGER* cm, const unsigned char* buff,
 
         /* Parse DER into decoded certificate fields and verify signature
          * against a known CA. */
-        ret = ParseCertRelative(cert, CERT_TYPE, VERIFY, cm);
+        ret = ParseCertRelative(cert, CERT_TYPE, VERIFY, cm, NULL);
      }
 
 #ifdef HAVE_CRL
@@ -1819,7 +1817,7 @@ int wolfSSL_CertManagerCheckCRL(WOLFSSL_CERT_MANAGER* cm,
             InitDecodedCert(cert, der, (word32)sz, NULL);
 
             /* Parse certificate and perform CRL checks. */
-            ret = ParseCertRelative(cert, CERT_TYPE, VERIFY_CRL, cm);
+            ret = ParseCertRelative(cert, CERT_TYPE, VERIFY_CRL, cm, NULL);
             if (ret != 0) {
                 WOLFSSL_MSG("ParseCert failed");
             }
@@ -2291,7 +2289,7 @@ int wolfSSL_CertManagerCheckOCSP(WOLFSSL_CERT_MANAGER* cm,
             InitDecodedCert(cert, der, (word32)sz, NULL);
 
             /* Parse certificate and perform CRL checks. */
-            ret = ParseCertRelative(cert, CERT_TYPE, VERIFY_OCSP, cm);
+            ret = ParseCertRelative(cert, CERT_TYPE, VERIFY_OCSP, cm, NULL);
             if (ret != 0) {
                 WOLFSSL_MSG("ParseCert failed");
             }
