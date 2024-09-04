@@ -218,9 +218,9 @@ enum Ctc_SigType {
     CTC_FALCON_LEVEL1 = 273,
     CTC_FALCON_LEVEL5 = 276,
 
-    CTC_DILITHIUM_LEVEL2     = 213,
-    CTC_DILITHIUM_LEVEL3     = 216,
-    CTC_DILITHIUM_LEVEL5     = 220,
+    CTC_DILITHIUM_LEVEL2     = 218,
+    CTC_DILITHIUM_LEVEL3     = 221,
+    CTC_DILITHIUM_LEVEL5     = 225,
 
     CTC_SPHINCS_FAST_LEVEL1  = 281,
     CTC_SPHINCS_FAST_LEVEL3  = 283,
@@ -516,7 +516,7 @@ typedef struct Cert {
 #endif
 #ifdef WOLFSSL_DUAL_ALG_CERTS
     /* These will not point to managed buffers. They will point to buffers that
-     * are managed by others. No cleanup neccessary. */
+     * are managed by others. No cleanup necessary. */
     /* Subject Alternative Public Key Info */
     byte *sapkiDer;
     int sapkiLen;
@@ -799,8 +799,7 @@ WOLFSSL_API int wc_DhPrivKeyToDer(DhKey* key, byte* out, word32* outSz);
      (defined(HAVE_CURVE25519) && defined(HAVE_CURVE25519_KEY_EXPORT)) || \
      (defined(HAVE_ED448)      && defined(HAVE_ED448_KEY_EXPORT)) || \
      (defined(HAVE_CURVE448)   && defined(HAVE_CURVE448_KEY_EXPORT)) || \
-     (defined(HAVE_PQC) && (defined(HAVE_FALCON) || \
-                            defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS))))
+     (defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS)))
     #define WC_ENABLE_ASYM_KEY_EXPORT
 #endif
 
@@ -809,8 +808,7 @@ WOLFSSL_API int wc_DhPrivKeyToDer(DhKey* key, byte* out, word32* outSz);
      (defined(HAVE_CURVE25519) && defined(HAVE_CURVE25519_KEY_IMPORT)) || \
      (defined(HAVE_ED448)      && defined(HAVE_ED448_KEY_IMPORT)) || \
      (defined(HAVE_CURVE448)   && defined(HAVE_CURVE448_KEY_IMPORT)) || \
-     (defined(HAVE_PQC) && (defined(HAVE_FALCON) || \
-                            defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS))))
+     (defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS)))
     #define WC_ENABLE_ASYM_KEY_IMPORT
 #endif
 
