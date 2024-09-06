@@ -25,10 +25,6 @@
 
 #include <wolfssl/wolfcrypt/settings.h>
 
-#ifdef EMBEDDED_SSL
-#include <wolfssl/openssl/bn.h>
-#endif
-
  #include <wolfssl/internal.h>
 #ifndef WC_NO_RNG
     #include <wolfssl/wolfcrypt/random.h>
@@ -83,7 +79,7 @@ static int wolfssl_bn_set_neg(WOLFSSL_BIGNUM* bn, int neg)
 }
 #endif /* OPENSSL_EXTRA && !NO_ASN */
 
-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
 /* Get the internal representation value into an MP integer.
  *
  * When calling wolfssl_bn_get_value, mpi should be cleared by caller if no
@@ -307,9 +303,9 @@ void wolfSSL_BN_clear(WOLFSSL_BIGNUM* bn)
         mp_forcezero((mp_int*)bn->internal);
     }
 }
-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
 
-#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 
 static WOLFSSL_BIGNUM* bn_one = NULL;
 
@@ -2430,7 +2426,7 @@ void wolfSSL_BN_CTX_start(WOLFSSL_BN_CTX *ctx)
 }
 #endif
 
-#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA */
 
 #endif /* !WOLFSSL_SSL_BN_INCLUDED */
 
