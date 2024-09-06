@@ -722,7 +722,9 @@
 
 /* WolfSSL configuration */
 
+#define HAVE_AESGCM
 #define HAVE_DH_DEFAULT_PARAMS
+#define HAVE_TLS_EXTENSIONS
 #define NO_CPUID
 #define NO_DO178
 #define NO_DSA
@@ -737,9 +739,10 @@
 #define NO_RC4
 #define NO_SHA
 #define NO_WOLFSSL_MEMORY
+#define OPENSSL_ALL
+#define OPENSSL_EXTRA
 #define TFM_TIMING_RESISTANT
 #define WC_NO_ASYNC_THREADING
-#define WC_NO_RSA_OAEP
 #define WC_RSA_BLINDING
 #define WC_RSA_PSS
 #define WOLFSSL_DES_ECB
