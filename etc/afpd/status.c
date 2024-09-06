@@ -30,6 +30,8 @@
 #include <unistd.h>
 
 #include <atalk/dsi.h>
+#include <atalk/atp.h>
+#include <atalk/asp.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
@@ -86,7 +88,7 @@ static void status_flags(char *data,
 static int status_server(char *data, const char *server, const struct afp_options *options)
 {
     char                *start = data;
-    char                *Obj;
+    char                * Obj, * Type, * Zone;
     char		buf[32];
     uint16_t           status;
     size_t		len;
@@ -96,6 +98,9 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
+#ifndef NO_DDP
+    nbp_name(server, &Obj, &Type, &Zone);
+#endif
     if ((size_t)-1 == (len = convert_string(
                            options->unixcharset, options->maccharset,
                            Obj, -1, buf, sizeof(buf))) ) {
@@ -191,6 +196,9 @@ static uint16_t status_signature(char *data, int *servoffset,
 }
 
 static size_t status_netaddress(char *data, int *servoffset,
+#ifndef NO_DDP
+                             const ASP asp,
+#endif
                              const DSI *dsi,
                              const struct afp_options *options)
 {
@@ -216,6 +224,9 @@ static size_t status_netaddress(char *data, int *servoffset,
        connection, but we don't have the ip address. to get around this,
        we turn off the status flag for tcp/ip. */
     *data++ = ((options->fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) +
+#ifndef NO_DDP
+        (asp ? 1 : 0) +
+#endif
               (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn && dsi)? 1 : 0);
 
     /* ip address */
@@ -289,6 +300,23 @@ static size_t status_netaddress(char *data, int *servoffset,
         }
     }
 
+#ifndef NO_DDP
+    if (asp) {
+        const struct sockaddr_at* ddpaddr = atp_sockaddr(asp->asp_atp);
+
+        /* ddp address */
+        *data++ = 6;
+        *data++ = 0x03; /* ddp address */
+        memcpy(data, &ddpaddr->sat_addr.s_net, sizeof(ddpaddr->sat_addr.s_net));
+        data += sizeof(ddpaddr->sat_addr.s_net);
+        memcpy(data, &ddpaddr->sat_addr.s_node,
+            sizeof(ddpaddr->sat_addr.s_node));
+        data += sizeof(ddpaddr->sat_addr.s_node);
+        memcpy(data, &ddpaddr->sat_port, sizeof(ddpaddr->sat_port));
+        data += sizeof(ddpaddr->sat_port);
+    }
+#endif /* ! NO_DDP */
+
     /* calculate/store Directory Services Names offset */
     offset = htons(data - begin);
     *servoffset += sizeof(offset);
@@ -338,6 +366,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 				 const DSI *dsi _U_,
 				 const struct afp_options *options)
 {
+    char* Obj, * Type, * Zone;
     uint16_t namelen;
     size_t len;
     char *begin = data;
@@ -348,7 +377,10 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     data += offset;
 
     LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
-
+    Obj = (char*)(options->server ? options->server : options->hostname);
+#ifndef NO_DDP
+    nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
+#endif
     if ((len = convert_string(options->unixcharset,
                               CH_UTF8_MAC,
                               options->hostname,
@@ -400,15 +432,25 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPObj *obj, DSI *dsi)
+void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
 {
+#ifndef NO_DDP
+    ASP asp;
+#endif
     char *status = dsi->status;
     size_t statuslen;
     int c, sigoff, ipok = 0;
-    const struct afp_options *options = &obj->options;
+    const struct afp_options *options = &dsi_obj->options;
 
     maxstatuslen = sizeof(dsi->status);
 
+#ifndef NO_DDP
+    if (asp_obj->Obj) {
+        asp = asp_obj->handle;
+    }
+    else
+        asp = NULL;
+#endif
     if (dsi->server.ss_family == AF_INET) { /* IPv4 */
         const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
         ipok = sa4->sin_addr.s_addr ? 1 : 0;
@@ -451,14 +493,22 @@ void status_init(AFPObj *obj, DSI *dsi)
     /* returns offset to signature offset */
     c = status_server(status, options->hostname, options);
     status_machine(status);
-    status_versions(status, dsi);
+    status_versions(status, 
+#ifndef NO_DDP
+                    asp,
+#endif
+                    dsi);
     status_uams(status, options->uamlist);
     status_icon(status, icon, sizeof(icon), c);
 
     sigoff = status_signature(status, &c, options);
     /* c now contains the offset where the netaddress offset lives */
 
-    status_netaddress(status, &c, dsi, options);
+    status_netaddress(status, &c,
+#ifndef NO_DDP
+                      asp,
+#endif
+                      dsi, options);
     /* c now contains the offset where the Directory Names Count offset lives */
 
     statuslen = status_directorynames(status, &c, dsi, options);
@@ -466,6 +516,14 @@ void status_init(AFPObj *obj, DSI *dsi)
 
     if ( statuslen < maxstatuslen)
         statuslen = status_utf8servername(status, &c, dsi, options);
+
+#ifndef NO_DDP
+    if (asp_obj->Obj) {
+        asp_setstatus(asp, status, statuslen);
+        asp_obj->signature = status + sigoff;
+        //asp_obj->statuslen = statuslen;
+    }
+#endif /* ! NO_DDP */
 
     dsi->signature = status + sigoff;
     dsi->statuslen = statuslen;

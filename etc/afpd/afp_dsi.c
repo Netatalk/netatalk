@@ -109,7 +109,7 @@ static void afp_dsi_close(AFPObj *obj)
         (*obj->logout)();
     }
 
-    LOG(log_note, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written",
+    LOG(log_note, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written via DSI",
         dsi->read_count/1024.0, dsi->write_count/1024.0);
     log_dircache_stat();
 

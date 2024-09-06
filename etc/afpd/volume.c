@@ -965,6 +965,10 @@ int  pollvoltime(AFPObj *obj)
     struct vol       *vol;
     struct timeval   tv;
     struct stat      st;
+    if (obj->proto == AFPPROTO_DSI)
+    {
+        obj->handle = obj->dsi;
+    }
 
     if (!(obj->afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF))
         return 0;
@@ -976,7 +980,7 @@ int  pollvoltime(AFPObj *obj)
         if ( (vol->v_flags & AFPVOL_OPEN)  && vol->v_mtime + 30 < tv.tv_sec) {
             if ( !stat( vol->v_path, &st ) && vol->v_mtime != st.st_mtime ) {
                 vol->v_mtime = st.st_mtime;
-                if (!obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
+                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
                     return -1;
                 return 1;
             }
@@ -989,6 +993,10 @@ int  pollvoltime(AFPObj *obj)
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
     struct timeval  tv;
+    if (obj->proto == AFPPROTO_DSI)
+    {
+        obj->handle = obj->dsi;
+    }
 
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path, strerror(errno) );
@@ -1007,7 +1015,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
          * AFP 3.2 and above clients seem to be ok without so many notification
          */
         if (obj->afp_version < 32 && obj->options.flags & OPTION_SERVERNOTIF) {
-            obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+            obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
     }
 }

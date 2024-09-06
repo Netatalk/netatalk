@@ -34,6 +34,7 @@
 #define UAM_OPTION_RANDNUM      (1 << 4) /* request a random number */
 #define UAM_OPTION_HOSTNAME     (1 << 5) /* get host name */
 #define UAM_OPTION_COOKIE       (1 << 6) /* cookie handle */
+#define UAM_OPTION_PROTOCOL	(1 << 7) /* DSI or ASP */
 #define UAM_OPTION_CLIENTNAME   (1 << 8) /* get client IP address */
 #define UAM_OPTION_KRB5SERVICE  (1 << 9) /* service name for krb5 principal */
 #define UAM_OPTION_MACCHARSET   (1 << 10) /* mac charset handle */

@@ -385,6 +385,10 @@ int uam_afpserver_option(void *private, const int what, void *option,
             *len = strlen(obj->options.hostname);
         break;
 
+    case UAM_OPTION_PROTOCOL:
+        *((int*)option) = obj->proto;
+        break;
+
     case UAM_OPTION_CLIENTNAME:
     {
         struct DSI *dsi = obj->dsi;

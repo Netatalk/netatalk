@@ -62,6 +62,20 @@ static void of_unhash(struct ofork *of)
     }
 }
 
+void of_pforkdesc( FILE *f)
+{
+    int ofrefnum;
+
+    if (!oforks)
+        return;
+
+    for ( ofrefnum = 0; ofrefnum < nforks; ofrefnum++ ) {
+        if ( oforks[ ofrefnum ] != NULL ) {
+            fprintf( f, "%d <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]));
+        }
+    }
+}
+
 int of_flush(const struct vol *vol)
 {
     int refnum;

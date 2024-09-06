@@ -87,6 +87,8 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_cnid */
     DEFAULT_LOG_CONFIG, /* logtype_afpd */
     DEFAULT_LOG_CONFIG, /* logtype_dsi */
+    DEFAULT_LOG_CONFIG, /* logtype_atalkd */
+    DEFAULT_LOG_CONFIG, /* logtype_papd */
     DEFAULT_LOG_CONFIG, /* logtype_uams */
     DEFAULT_LOG_CONFIG, /* logtype_fce */
     DEFAULT_LOG_CONFIG, /* logtype_ad */

@@ -22,6 +22,8 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/atp.h>
+#include <atalk/asp.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>
@@ -43,13 +45,16 @@
 
 unsigned char nologin = 0;
 
-static AFPObj obj;
+static AFPObj dsi_obj;
+static AFPObj asp_obj;
 static server_child_t *server_children;
 static sig_atomic_t reloadconfig = 0;
 static sig_atomic_t gotsigchld = 0;
 static struct asev *asev;
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children);
+static int asp_start(AFPObj* obj, server_child_t* server_children);
+static void asp_cleanup(const AFPObj* obj);
 
 static void afp_exit(int ret)
 {
@@ -60,44 +65,59 @@ static void afp_exit(int ret)
 /* ------------------
    initialize fd set we are waiting for.
 */
-static bool init_listening_sockets(const AFPObj *config)
+static bool init_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 {
     DSI *dsi;
     int numlisteners;
 
-    for (numlisteners = 0, dsi = config->dsi; dsi; dsi = dsi->next) {
+    for (numlisteners = 0, dsi = dsiconfig->dsi; dsi; dsi = dsi->next) {
         numlisteners++;
     }
-
-    asev = asev_init(config->options.connections + numlisteners + ASEV_THRESHHOLD);
+    asev = asev_init(dsiconfig->options.connections + numlisteners + ASEV_THRESHHOLD);
     if (asev == NULL) {
         return false;
     }
 
-    for (dsi = config->dsi; dsi; dsi = dsi->next) {
-        if (!(asev_add_fd(asev, dsi->serversock, LISTEN_FD, dsi))) {
+    for (dsi = dsiconfig->dsi; dsi; dsi = dsi->next) {
+        if (!(asev_add_fd(asev, dsi->serversock, LISTEN_FD, dsi, AFPPROTO_DSI))) {
             return false;
         }
     }
-
+#ifndef NO_DDP
+        if (!(asev_add_fd(asev, aspconfig->fd, LISTEN_FD, 0, AFPPROTO_ASP))) {
+            return false;
+        }
+#endif /* no afp/asp */
     return true;
 }
 
-static bool reset_listening_sockets(const AFPObj *config)
+static bool reset_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 {
     const DSI *dsi;
 
-    for (dsi = config->dsi; dsi; dsi = dsi->next) {
+    for (dsi = dsiconfig->dsi; dsi; dsi = dsi->next) {
         if (!(asev_del_fd(asev, dsi->serversock))) {
             return false;
         }
     }
+#ifndef NO_DDP
+    if (aspconfig->fd) /* only attempt to reset asp socket if we have one */
+    {
+        if (!(asev_del_fd(asev, aspconfig->fd))) {
+            return false;
+        }
+    }
+#endif /* no afp/asp */
     return true;
 }
 
 /* ------------------ */
 static void afp_goaway(int sig)
 {
+#ifndef NO_DDP
+    asp_kill(sig);
+#endif /* ! NO_DDP */
+
     switch( sig ) {
 
     case SIGTERM:
@@ -105,6 +125,12 @@ static void afp_goaway(int sig)
         LOG(log_note, logtype_afpd, "AFP Server shutting down");
         if (server_children)
             server_child_kill(server_children, SIGTERM);
+#ifndef NO_DDP
+        if ((asp_obj.Obj))
+        {
+            asp_cleanup(&asp_obj);
+        }
+#endif /* ! NO_DDP */
         _exit(0);
         break;
 
@@ -193,27 +219,37 @@ int main(int ac, char **av)
     int                 ret;
 
     /* Parse argv args and initialize default options */
-    afp_options_parse_cmdline(&obj, ac, av);
+    afp_options_parse_cmdline(&dsi_obj, ac, av);
 
-    if (!(obj.cmdlineflags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
+    if (!(dsi_obj.cmdlineflags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
         exit(EXITERR_SYS);
 
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
-    if (afp_config_parse(&obj, "afpd") != 0)
+    if (afp_config_parse(&dsi_obj, "afpd") != 0)
         afp_exit(EXITERR_CONF);
 
     /* Save the user's current umask */
-    obj.options.save_mask = umask(obj.options.umask);
+    dsi_obj.options.save_mask = umask(dsi_obj.options.umask);
 
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here.
      * XXX: this should really be setup after the initial connections. */
-    if (!(server_children = server_child_alloc(obj.options.connections))) {
+    if (!(server_children = server_child_alloc(dsi_obj.options.connections))) {
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
+
+#ifndef NO_DDP
+    /* initialize appletalk protocol support if enabled */
+    if (dsi_obj.options.flags & OPTION_DDP)
+    {
+        afp_options_parse_cmdline(&asp_obj, ac, av);
+        if (afp_config_parse(&asp_obj, "afpd") != 0)
+            afp_exit(EXITERR_CONF);
+    }
+#endif /* no afp/asp */
 
     sigemptyset(&sigs);
     pthread_sigmask(SIG_SETMASK, &sigs, NULL);
@@ -316,10 +352,10 @@ int main(int ac, char **av)
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 #ifdef HAVE_DBUS_GLIB
     /* Run dbus AFP statics thread */
-    if (obj.options.flags & OPTION_DBUS_AFPSTATS)
+    if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS)
         (void)afpstats_init(server_children);
 #endif
-    if (configinit(&obj) != 0) {
+    if (configinit(&dsi_obj, &asp_obj) != 0) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
         afp_exit(EXITERR_CONF);
     }
@@ -329,7 +365,7 @@ int main(int ac, char **av)
     cnid_init();
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
-    if (!(init_listening_sockets(&obj))) {
+    if (!(init_listening_sockets(&dsi_obj, &asp_obj))) {
         LOG(log_error, logtype_afpd, "main: couldn't initialize socket handler");
         afp_exit(EXITERR_CONF);
     }
@@ -361,25 +397,42 @@ int main(int ac, char **av)
         if (reloadconfig) {
             nologin++;
 
-            if (!(reset_listening_sockets(&obj))) {
+            if (!(reset_listening_sockets(&dsi_obj, &asp_obj))) {
                 LOG(log_error, logtype_afpd, "main: reset socket handlers");
                 afp_exit(EXITERR_CONF);
             }
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
+            configfree(&dsi_obj, NULL);
+            afp_config_free(&dsi_obj);
+#ifndef NO_DDP
+            if ((asp_obj.Obj))
+            {
+                asp_cleanup(&asp_obj);
+                configfree(&asp_obj, NULL);
+                afp_config_free(&asp_obj);
+            }
+#endif /* no afp/asp */
 
-            configfree(&obj, NULL);
-            afp_config_free(&obj);
-
-            if (afp_config_parse(&obj, "afpd") != 0)
+            if (afp_config_parse(&dsi_obj, "afpd") != 0)
                 afp_exit(EXITERR_CONF);
 
-            if (configinit(&obj) != 0) {
+#ifndef NO_DDP
+            /* initialize appletalk protocol support if enabled */
+            if (dsi_obj.options.flags & OPTION_DDP)
+            {
+                afp_options_parse_cmdline(&asp_obj, ac, av);
+                if (afp_config_parse(&asp_obj, "afpd") != 0)
+                    afp_exit(EXITERR_CONF);
+            }
+#endif /* no afp/asp */
+
+            if (configinit(&dsi_obj, &asp_obj) != 0) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 afp_exit(EXITERR_CONF);
             }
 
-            if (!(init_listening_sockets(&obj))) {
+            if (!(init_listening_sockets(&dsi_obj, &asp_obj))) {
                 LOG(log_error, logtype_afpd, "main: couldn't initialize socket handler");
                 afp_exit(EXITERR_CONF);
             }
@@ -410,24 +463,37 @@ int main(int ac, char **av)
                 switch (asev->data[i].fdtype) {
 
                 case LISTEN_FD:
-                    if ((child = dsi_start(&obj, (DSI *)(asev->data[i].private), server_children))) {
-                        if (!(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child))) {
-                            LOG(log_error, logtype_afpd, "out of asev slots");
+                    switch (asev->data[i].protocol) {
 
-                            /*
-                             * Close IPC fd here and mark it as unused
-                             */
-                            close(child->afpch_ipc_fd);
-                            child->afpch_ipc_fd = -1;
+                    case AFPPROTO_DSI:
+                        if ((child = dsi_start(&dsi_obj, (DSI*)(asev->data[i].private), server_children))) {
+                            if (!(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child, 0))) {
+                                LOG(log_error, logtype_afpd, "out of asev slots");
 
-                            /*
-                             * Being unfriendly here, but we really
-                             * want to get rid of it. The 'child'
-                             * handle gets cleaned up in the SIGCLD
-                             * handler.
-                             */
-                            kill(child->afpch_pid, SIGKILL);
+                                /*
+                                 * Close IPC fd here and mark it as unused
+                                 */
+                                close(child->afpch_ipc_fd);
+                                child->afpch_ipc_fd = -1;
+
+                                /*
+                                 * Being unfriendly here, but we really
+                                 * want to get rid of it. The 'child'
+                                 * handle gets cleaned up in the SIGCLD
+                                 * handler.
+                                 */
+                                kill(child->afpch_pid, SIGKILL);
+                            }
                         }
+                        break;
+#ifndef NO_DDP
+                    case AFPPROTO_ASP:
+                        asp_start(&asp_obj, server_children);
+                        break;
+#endif /* no afp/asp */ 
+                    default:
+                        LOG(log_debug, logtype_afpd, "main: unknown protocol type");
+                        break;
                     }
                     break;
 
@@ -467,9 +533,33 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_chil
     /* we've forked. */
     if (child == NULL) {
         configfree(obj, dsi);
-        afp_over_dsi(obj); /* start a session */
+	afp_over_dsi(obj); /* start a session */
         exit (0);
     }
 
     return child;
 }
+#ifndef NO_DDP
+static int asp_start(AFPObj* obj, server_child_t *server_children)
+{
+    ASP asp;
+
+    if (!(asp = asp_getsession(obj->handle, server_children, obj->options.tickleval))) {
+        LOG(log_error, logtype_afpd, "main: asp_getsession: %s", strerror(errno));
+	exit(EXITERR_CLNT);
+    }
+
+    if (asp->child) {
+        afp_over_asp(obj);
+        exit(0);
+    }
+    return 0;
+}
+static void asp_cleanup(const AFPObj* obj)
+{
+    /* we need to stop tickle handler */
+    asp_stop_tickle();
+    nbp_unrgstr(obj->Obj, obj->Type, obj->Zone,
+        &obj->options.ddpaddr);
+}
+#endif /* no afp/asp */ 

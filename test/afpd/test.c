@@ -44,7 +44,7 @@
 
 /* Stuff from main.c which of cource can't be added as source to testbin */
 unsigned char nologin = 0;
-static AFPObj obj;
+static AFPObj obj, aspobj;
 #define ARGNUM 3
 static char *args[] = {"test", "-F", "test.conf"};
 /* Static variables */
@@ -64,7 +64,7 @@ int main()
     TEST( afp_options_parse_cmdline(&obj, 3, &args[0]) );
 
     TEST_int( afp_config_parse(&obj, NULL), 0);
-    TEST_int( configinit(&obj), 0);
+    TEST_int( configinit(&obj, &aspobj), 0);
     TEST( cnid_init() );
     TEST( load_volumes(&obj, LV_ALL) );
     TEST_int( dircache_init(8192), 0);

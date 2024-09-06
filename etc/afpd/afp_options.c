@@ -65,7 +65,15 @@ static void show_version( void )
 		printf( "%d.%d ", afp_versions[ i ].av_number/10, afp_versions[ i ].av_number%10);
 	}
 	puts( "" );
+	printf("        TCP/IP Support:\t");
+	puts("Yes");
 
+	printf("AppleTalk Support:\t");
+#ifdef NO_DDP
+	puts("No");
+#else
+	puts("Yes");
+#endif
 	printf( "         CNID backends:\t" );
 #ifdef CNID_BACKEND_DBD
 	printf( "dbd " );

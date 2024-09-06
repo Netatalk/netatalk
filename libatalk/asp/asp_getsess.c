@@ -277,7 +277,10 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
 
 	default : /* parent process */
 	  /* we need atomic setting or pb with tickle_handler */
-      if (server_child_add(children, pid, (long)dummy)) {
+        /* TODO: This was "(long)dummy" in 2.x for 3rd parameter since we don't have IPC on ASP.
+        * Right now this throws an error in child_handler() in main.c, so setting to -1 to
+        * mitigate that. Original 2.x code wasn't checking IPC handles on close */
+      if (server_child_add(children, pid, -1 )) {
 	    if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
             kill(pid, SIGQUIT);
             break;

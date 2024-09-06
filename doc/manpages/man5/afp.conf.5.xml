@@ -629,6 +629,17 @@
         </varlistentry>
 
         <varlistentry>
+          <term>appletalk = <replaceable>BOOLEAN</replaceable> (default:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>Enables support for AFP-over-Appletalk. This option requires
+            that your operating system supports the AppleTalk networking
+            protocol.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>cnid listen = <replaceable>ip address[:port] [ip
           address[:port] ...]</replaceable> <type>(G)</type></term>
 
