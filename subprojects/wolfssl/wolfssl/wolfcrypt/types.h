@@ -303,7 +303,8 @@ typedef struct w64wrapper {
     #ifndef WARN_UNUSED_RESULT
         #if defined(WOLFSSL_LINUXKM) && defined(__must_check)
             #define WARN_UNUSED_RESULT __must_check
-        #elif defined(__GNUC__) && (__GNUC__ >= 4)
+        #elif (defined(__GNUC__) && (__GNUC__ >= 4)) || \
+            (defined(__IAR_SYSTEMS_ICC__) && (__VER__ >= 9040001))
             #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
         #else
             #define WARN_UNUSED_RESULT
@@ -311,7 +312,7 @@ typedef struct w64wrapper {
     #endif /* WARN_UNUSED_RESULT */
 
     #ifndef WC_MAYBE_UNUSED
-        #if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+        #if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__) || defined(__IAR_SYSTEMS_ICC__)
             #define WC_MAYBE_UNUSED __attribute__((unused))
         #else
             #define WC_MAYBE_UNUSED
@@ -429,6 +430,9 @@ typedef struct w64wrapper {
     #define XSTR_SIZEOF(x) (sizeof(x) - 1) /* -1 to not count the null char */
 
     #define XELEM_CNT(x) (sizeof((x))/sizeof(*(x)))
+
+    #define WC_SAFE_SUM_WORD32(in1, in2, out) ((in2) <= 0xffffffffU - (in1) ? \
+                ((out) = (in1) + (in2), 1) : ((out) = 0xffffffffU, 0))
 
     /* idea to add global alloc override by Moises Guimaraes  */
     /* default to libc stuff */
@@ -589,7 +593,7 @@ typedef struct w64wrapper {
     #endif
 
     #define WC_DECLARE_HEAP_ARRAY(VAR_NAME, VAR_TYPE, VAR_ITEMS, VAR_SIZE, HEAP) \
-        VAR_TYPE* VAR_NAME[VAR_ITEMS]; \
+        VAR_TYPE* VAR_NAME[VAR_ITEMS] = { NULL, }; \
         int idx##VAR_NAME = 0, inner_idx_##VAR_NAME
     #define WC_HEAP_ARRAY_ARG(VAR_NAME, VAR_TYPE, VAR_ITEMS, VAR_SIZE) \
         VAR_TYPE* VAR_NAME[VAR_ITEMS]
@@ -766,7 +770,7 @@ typedef struct w64wrapper {
                 defined(WOLFSSL_ZEPHYR) || defined(MICROCHIP_PIC24)
             /* XC32 version < 1.0 does not support strncasecmp. */
             #define USE_WOLF_STRNCASECMP
-            #define XSTRNCASECMP(s1,s2) wc_strncasecmp(s1,s2)
+            #define XSTRNCASECMP(s1,s2,n) wc_strncasecmp((s1),(s2),(n))
         #elif defined(USE_WINDOWS_API) || defined(FREERTOS_TCP_WINSIM)
             #define XSTRNCASECMP(s1,s2,n) _strnicmp((s1),(s2),(n))
         #else
@@ -820,6 +824,10 @@ typedef struct w64wrapper {
                         return ret;
                     }
                 #define XSNPRINTF _xsnprintf_
+            #elif defined(FREESCALE_MQX)
+                /* see wc_port.h for fio.h and nio.h includes.  MQX does not
+                   have stdio.h available, so it needs its own section. */
+                #define XSNPRINTF snprintf
             #elif defined(WOLF_C89)
                 #include <stdio.h>
                 #define XSPRINTF sprintf
@@ -1208,14 +1216,14 @@ typedef struct w64wrapper {
         WC_PK_TYPE_CURVE25519_KEYGEN = 16,
         WC_PK_TYPE_RSA_GET_SIZE = 17,
         #define _WC_PK_TYPE_MAX WC_PK_TYPE_RSA_GET_SIZE
-    #if defined(HAVE_PQC) && defined(WOLFSSL_HAVE_KYBER)
+    #if defined(WOLFSSL_HAVE_KYBER)
         WC_PK_TYPE_PQC_KEM_KEYGEN = 18,
         WC_PK_TYPE_PQC_KEM_ENCAPS = 19,
         WC_PK_TYPE_PQC_KEM_DECAPS = 20,
         #undef _WC_PK_TYPE_MAX
         #define _WC_PK_TYPE_MAX WC_PK_TYPE_PQC_KEM_DECAPS
     #endif
-    #if defined(HAVE_PQC) && (defined(HAVE_DILITHIUM) || defined(HAVE_FALCON))
+    #if defined(HAVE_DILITHIUM) || defined(HAVE_FALCON)
         WC_PK_TYPE_PQC_SIG_KEYGEN = 21,
         WC_PK_TYPE_PQC_SIG_SIGN = 22,
         WC_PK_TYPE_PQC_SIG_VERIFY = 23,
@@ -1226,7 +1234,7 @@ typedef struct w64wrapper {
         WC_PK_TYPE_MAX = _WC_PK_TYPE_MAX
     };
 
-    #if defined(HAVE_PQC)
+#if defined(WOLFSSL_HAVE_KYBER)
     /* Post quantum KEM algorithms */
     enum wc_PqcKemType {
         WC_PQC_KEM_TYPE_NONE = 0,
@@ -1238,7 +1246,9 @@ typedef struct w64wrapper {
     #endif
         WC_PQC_KEM_TYPE_MAX = _WC_PQC_KEM_TYPE_MAX
     };
+#endif
 
+#if defined(HAVE_DILITHIUM) || defined(HAVE_FALCON)
     /* Post quantum signature algorithms */
     enum wc_PqcSignatureType {
         WC_PQC_SIG_TYPE_NONE = 0,
@@ -1255,7 +1265,7 @@ typedef struct w64wrapper {
     #endif
         WC_PQC_SIG_TYPE_MAX = _WC_PQC_SIG_TYPE_MAX
     };
-    #endif
+#endif
 
     /* settings detection for compile vs runtime math incompatibilities */
     enum {
@@ -1397,6 +1407,20 @@ typedef struct w64wrapper {
         #endif
         typedef void*            THREAD_TYPE;
         #define WOLFSSL_THREAD
+    #elif defined(WOLFSSL_USER_THREADING)
+        /* User can define user specific threading types
+         *  THREAD_RETURN
+         *  TREAD_TYPE
+         *  WOLFSSL_THREAD
+         * e.g.
+         *  typedef unsigned int  THREAD_RETURN;
+         *  typedef size_t        THREAD_TYPE;
+         *  #define WOLFSSL_THREAD void
+         *
+         * User can also implement their own wolfSSL_NewThread(),
+         * wolfSSL_JoinThread() and wolfSSL_Cond signaling if they want.
+         * Otherwise, those functions are omitted.
+        */
     #elif defined(WOLFSSL_MDK_ARM) || defined(WOLFSSL_KEIL_TCP_NET) || \
           defined(FREESCALE_MQX)
         typedef unsigned int  THREAD_RETURN;
@@ -1419,6 +1443,7 @@ typedef struct w64wrapper {
             k_thread_stack_t* threadStack;
         } THREAD_TYPE;
         #define WOLFSSL_THREAD
+        extern void* wolfsslThreadHeapHint;
     #elif defined(NETOS)
         typedef UINT        THREAD_RETURN;
         typedef struct {
@@ -1632,6 +1657,9 @@ typedef struct w64wrapper {
     #endif
     #ifndef SAVE_VECTOR_REGISTERS2
         #define SAVE_VECTOR_REGISTERS2() 0
+    #endif
+    #ifndef CAN_SAVE_VECTOR_REGISTERS
+        #define CAN_SAVE_VECTOR_REGISTERS() 1
     #endif
     #ifndef WC_DEBUG_SET_VECTOR_REGISTERS_RETVAL
         #define WC_DEBUG_SET_VECTOR_REGISTERS_RETVAL(x) WC_DO_NOTHING

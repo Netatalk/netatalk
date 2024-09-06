@@ -50,8 +50,8 @@ This library contains implementation for the random number generator.
     #define FIPS_NO_WRAPPERS
 
     #ifdef USE_WINDOWS_API
-        #pragma code_seg(".fipsA$c")
-        #pragma const_seg(".fipsB$c")
+        #pragma code_seg(".fipsA$i")
+        #pragma const_seg(".fipsB$i")
     #endif
 #endif
 
@@ -128,6 +128,8 @@ This library contains implementation for the random number generator.
 #elif defined(WOLFSSL_TELIT_M2MB)
 #elif defined(WOLFSSL_SCE) && !defined(WOLFSSL_SCE_NO_TRNG)
 #elif defined(WOLFSSL_IMXRT1170_CAAM)
+#elif defined(CY_USING_HAL) && defined(COMPONENT_WOLFSSL)
+    #include "cyhal_trng.h" /* Infineon/Cypress HAL RNG implementation */
 #elif defined(WOLFSSL_GETRANDOM)
     #include <errno.h>
     #include <sys/random.h>
@@ -149,6 +151,15 @@ This library contains implementation for the random number generator.
 
 #if defined(WOLFSSL_HAVE_PSA) && !defined(WOLFSSL_PSA_NO_RNG)
 #include <wolfssl/wolfcrypt/port/psa/psa.h>
+#endif
+
+#if FIPS_VERSION3_GE(6,0,0)
+    const unsigned int wolfCrypt_FIPS_drbg_ro_sanity[2] =
+                                                     { 0x1a2b3c4d, 0x00000011 };
+    int wolfCrypt_FIPS_DRBG_sanity(void)
+    {
+        return 0;
+    }
 #endif
 
 #if defined(HAVE_INTEL_RDRAND) || defined(HAVE_INTEL_RDSEED) || \
@@ -611,6 +622,9 @@ static int Hash_DRBG_Generate(DRBG_internal* drbg, byte* out, word32 outSz)
     }
 
     if (drbg->reseedCtr == RESEED_INTERVAL) {
+#if FIPS_VERSION3_GE(6,0,0)
+        printf("Reseed triggered\n");
+#endif
         return DRBG_NEED_RESEED;
     }
     else {
@@ -1456,7 +1470,7 @@ int wc_Entropy_Get(int bits, unsigned char* entropy, word32 len)
     Entropy_StopThread();
 #endif
 
-    if (ret != BAD_MUTEX_E) {
+    if (ret != WC_NO_ERR_TRACE(BAD_MUTEX_E)) {
         /* Unlock mutex now we are done. */
         wc_UnLockMutex(&entropy_mutex);
     }
@@ -1472,7 +1486,7 @@ int wc_Entropy_Get(int bits, unsigned char* entropy, word32 len)
  * @return  ENTROPY_RT_E or ENTROPY_APT_E on failure.
  * @return  BAD_MUTEX_E when unable to lock mutex.
  */
-int wc_Entropy_OnDemandTest()
+int wc_Entropy_OnDemandTest(void)
 {
     int ret = 0;
 
@@ -1488,7 +1502,7 @@ int wc_Entropy_OnDemandTest()
         ret = Entropy_HealthTest_Startup();
     }
 
-    if (ret != BAD_MUTEX_E) {
+    if (ret != WC_NO_ERR_TRACE(BAD_MUTEX_E)) {
         /* Unlock mutex now we are done. */
         wc_UnLockMutex(&entropy_mutex);
     }
@@ -1500,7 +1514,7 @@ int wc_Entropy_OnDemandTest()
  * @return  0 on success.
  * @return  Negative on failure.
  */
-int Entropy_Init()
+int Entropy_Init(void)
 {
     int ret = 0;
 
@@ -1537,7 +1551,7 @@ int Entropy_Init()
 
 /* Finalize the data associated with the MemUse Entropy source.
  */
-void Entropy_Final()
+void Entropy_Final(void)
 {
     /* Only finalize when initialized. */
     if (entropy_memuse_initialized) {
@@ -1854,7 +1868,7 @@ int wc_RNG_GenerateBlock(WC_RNG* rng, byte* output, word32 sz)
     #endif
     {
         ret = wc_CryptoCb_RandomBlock(rng, output, sz);
-        if (ret != CRYPTOCB_UNAVAILABLE)
+        if (ret != WC_NO_ERR_TRACE(CRYPTOCB_UNAVAILABLE))
             return ret;
         /* fall-through when unavailable */
     }
@@ -2662,7 +2676,7 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
     #endif
     {
         ret = wc_CryptoCb_RandomSeed(os, output, sz);
-        if (ret != CRYPTOCB_UNAVAILABLE)
+        if (ret != WC_NO_ERR_TRACE(CRYPTOCB_UNAVAILABLE))
             return ret;
         /* fall-through when unavailable */
     }
@@ -3462,7 +3476,7 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
             }
 
             /* driver could be waiting for entropy */
-            if (ret != RAN_BLOCK_E && ret != 0) {
+            if (ret != WC_NO_ERR_TRACE(RAN_BLOCK_E) && ret != 0) {
                 return ret;
             }
 #ifndef WOLFSSL_IMXRT1170_CAAM
@@ -3717,25 +3731,33 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
 
 #elif defined(WOLFSSL_ZEPHYR)
 
-        #include <version.h>
+    #include <version.h>
 
     #if KERNEL_VERSION_NUMBER >= 0x30500
         #include <zephyr/random/random.h>
     #else
-        #include <zephyr/random/rand32.h>
+        #if KERNEL_VERSION_NUMBER >= 0x30100
+            #include <zephyr/random/rand32.h>
+        #else
+            #include <random/rand32.h>
+        #endif
     #endif
 
     #ifndef _POSIX_C_SOURCE
-        #include <zephyr/posix/time.h>
+        #if KERNEL_VERSION_NUMBER >= 0x30100
+            #include <zephyr/posix/time.h>
+        #else
+            #include <posix/time.h>
+        #endif
     #else
         #include <time.h>
     #endif
 
-        int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
-        {
-            sys_rand_get(output, sz);
-            return 0;
-        }
+    int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
+    {
+        sys_rand_get(output, sz);
+        return 0;
+    }
 
 #elif defined(WOLFSSL_TELIT_M2MB)
 
@@ -3832,6 +3854,40 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
         return ret;
     }
 
+#elif defined(CY_USING_HAL) && defined(COMPONENT_WOLFSSL)
+
+    /* Infineon/Cypress HAL RNG implementation */
+    int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
+    {
+        cyhal_trng_t obj;
+        cy_rslt_t result;
+        uint32_t val;
+        word32 i = 0;
+
+        (void)os;
+
+        result = cyhal_trng_init(&obj);
+        if (result == CY_RSLT_SUCCESS) {
+            while (i < sz) {
+                /* If not aligned or there is odd/remainder add single byte */
+                if( (i + sizeof(word32)) > sz ||
+                    ((wc_ptr_t)&output[i] % sizeof(word32)) != 0
+                ) {
+                    val = cyhal_trng_generate(&obj);
+                    output[i++] = (byte)val;
+                }
+                else {
+                    /* Use native 32 instruction */
+                    val = cyhal_trng_generate(&obj);
+                    *((uint32_t*)&output[i]) = val;
+                    i += sizeof(word32);
+                }
+            }
+            cyhal_trng_free(&obj);
+        }
+        return 0;
+    }
+
 #elif defined(WOLFSSL_SAFERTOS) || defined(WOLFSSL_LEANPSK) || \
       defined(WOLFSSL_IAR_ARM)  || defined(WOLFSSL_MDK_ARM) || \
       defined(WOLFSSL_uITRON4)  || defined(WOLFSSL_uTKERNEL2) || \
@@ -3853,14 +3909,14 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
 
     int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
     {
-        int ret = WC_HW_E;
+        int ret = WC_NO_ERR_TRACE(WC_HW_E);
 
         #ifndef WOLF_CRYPTO_CB_FIND
         if (os->devId != INVALID_DEVID)
         #endif
         {
             ret = wc_CryptoCb_RandomSeed(os, output, sz);
-            if (ret == CRYPTOCB_UNAVAILABLE) {
+            if (ret == WC_NO_ERR_TRACE(CRYPTOCB_UNAVAILABLE)) {
                 ret = WC_HW_E;
             }
         }
@@ -3898,7 +3954,7 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
         #endif
         {
             ret = wc_CryptoCb_RandomSeed(os, output, sz);
-            if (ret != CRYPTOCB_UNAVAILABLE)
+            if (ret != WC_NO_ERR_TRACE(CRYPTOCB_UNAVAILABLE))
                 return ret;
             /* fall-through when unavailable */
             ret = 0; /* reset error code */

@@ -26,10 +26,6 @@
 
 #include <wolfssl/wolfcrypt/settings.h>
 
-#ifdef EMBEDDED_SSL
-#include <wolfssl/openssl/des.h>
-#endif
-
 #ifndef WOLFSSL_SSL_CRYPTO_INCLUDED
     #ifndef WOLFSSL_IGNORE_FILE_WARN
         #warning ssl_crypto.c does not need to be compiled separately from ssl.c
@@ -1970,7 +1966,7 @@ int wolfSSL_HMAC_cleanup(WOLFSSL_HMAC_CTX* ctx)
  * @return  NULL on failure.
  */
 unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
-    int key_len, const unsigned char* data, int len, unsigned char* md,
+    int key_len, const unsigned char* data, size_t len, unsigned char* md,
     unsigned int* md_len)
 {
     unsigned char* ret = NULL;
@@ -2004,7 +2000,7 @@ unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
 #endif
     if (rc == 0)  {
         /* Get the HMAC output length. */
-        hmacLen = wolfssl_mac_len((unsigned char)type);
+        hmacLen = (int)wolfssl_mac_len((unsigned char)type);
         /* 0 indicates the digest is not supported. */
         if (hmacLen == 0) {
             rc = BAD_FUNC_ARG;
@@ -2013,16 +2009,16 @@ unsigned char* wolfSSL_HMAC(const WOLFSSL_EVP_MD* evp_md, const void* key,
     /* Initialize the wolfSSL HMAC object. */
     if ((rc == 0) && (wc_HmacInit(hmac, heap, INVALID_DEVID) == 0)) {
         /* Set the key into the wolfSSL HMAC object. */
-        rc = wc_HmacSetKey(hmac, type, (const byte*)key, key_len);
+        rc = wc_HmacSetKey(hmac, type, (const byte*)key, (word32)key_len);
         if (rc == 0) {
            /* Update the wolfSSL HMAC object with data. */
-            rc = wc_HmacUpdate(hmac, data, len);
+            rc = wc_HmacUpdate(hmac, data, (word32)len);
         }
         /* Finalize the wolfSSL HMAC object. */
         if ((rc == 0) && (wc_HmacFinal(hmac, md) == 0)) {
             /* Return the length of the HMAC output if required. */
             if (md_len != NULL) {
-                *md_len = hmacLen;
+                *md_len = (unsigned int)hmacLen;
             }
             /* Set the buffer to return. */
             ret = md;
@@ -2273,7 +2269,7 @@ int wolfSSL_CMAC_Final(WOLFSSL_CMAC_CTX* ctx, unsigned char* out, size_t* len)
             len32 = (word32)blockSize;
             /* Return size if required. */
             if (len != NULL) {
-                *len = blockSize;
+                *len = (size_t)blockSize;
             }
         }
     }
@@ -2307,7 +2303,7 @@ int wolfSSL_CMAC_Final(WOLFSSL_CMAC_CTX* ctx, unsigned char* out, size_t* len)
  * START OF DES API
  ******************************************************************************/
 
-#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 #ifndef NO_DES3
 /* Set parity of the DES key.
  *
@@ -2909,7 +2905,7 @@ void wolfSSL_DES_ecb_encrypt(WOLFSSL_DES_cblock* in, WOLFSSL_DES_cblock* out,
 }
 #endif
 #endif /* NO_DES3 */
-#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA */
 
 /*******************************************************************************
  * END OF DES API
