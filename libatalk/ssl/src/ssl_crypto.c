@@ -26,10 +26,6 @@
 
 #include <wolfssl/wolfcrypt/settings.h>
 
-#ifdef EMBEDDED_SSL
-#include <wolfssl/openssl/des.h>
-#endif
-
 #ifndef WOLFSSL_SSL_CRYPTO_INCLUDED
     #ifndef WOLFSSL_IGNORE_FILE_WARN
         #warning ssl_crypto.c does not need to be compiled separately from ssl.c
@@ -2307,7 +2303,7 @@ int wolfSSL_CMAC_Final(WOLFSSL_CMAC_CTX* ctx, unsigned char* out, size_t* len)
  * START OF DES API
  ******************************************************************************/
 
-#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 #ifndef NO_DES3
 /* Set parity of the DES key.
  *
@@ -2909,7 +2905,7 @@ void wolfSSL_DES_ecb_encrypt(WOLFSSL_DES_cblock* in, WOLFSSL_DES_cblock* out,
 }
 #endif
 #endif /* NO_DES3 */
-#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA */
 
 /*******************************************************************************
  * END OF DES API
