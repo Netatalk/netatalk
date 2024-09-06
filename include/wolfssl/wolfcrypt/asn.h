@@ -780,6 +780,20 @@ extern const WOLFSSL_ObjectInfo wolfssl_object_info[];
     #define WOLFSSL_TLS_FEATURE_SUM 92
 #endif
 
+/* Maximum number of allowed subject alternative names in a certificate.
+ * Any certificate containing more than this number of subject
+ * alternative names will cause an error when attempting to parse. */
+#ifndef WOLFSSL_MAX_ALT_NAMES
+#define WOLFSSL_MAX_ALT_NAMES 128
+#endif
+
+/* Maximum number of allowed name constraints in a certificate.
+ * Any certificate containing more than this number of name constraints
+ * will cause an error when attempting to parse. */
+#ifndef WOLFSSL_MAX_NAME_CONSTRAINTS
+#define WOLFSSL_MAX_NAME_CONSTRAINTS 128
+#endif
+
 #if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
 /* NIDs */
 #define NID_undef 0
@@ -934,7 +948,7 @@ enum Misc_ASN {
     ASN_GEN_TIME_SZ     =  15,     /* 7 numbers * 2 + Zulu tag */
 #ifdef HAVE_SPHINCS
     MAX_ENCODED_SIG_SZ  = 51200,
-#elif defined(HAVE_PQC)
+#elif defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
     MAX_ENCODED_SIG_SZ  = 5120,
 #elif !defined(NO_RSA)
 #ifdef WOLFSSL_HAPROXY
@@ -969,6 +983,9 @@ enum Misc_ASN {
     MAX_DSA_PRIVKEY_SZ  = (DSA_INTS * MAX_DSA_INT_SZ) + MAX_SEQ_SZ +
                           MAX_VERSION_SZ, /* Maximum size of a DSA Private
                                       key taken from DsaKeyIntsToDer. */
+#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
+    MAX_PQC_PUBLIC_KEY_SZ = 2592, /* Maximum size of a Dilithium public key. */
+#endif
     MAX_RSA_E_SZ        =  16,     /* Max RSA public e size */
     MAX_CA_SZ           =  32,     /* Max encoded CA basic constraint length */
     MAX_SN_SZ           =  35,     /* Max encoded serial number (INT) length */
@@ -1015,7 +1032,11 @@ enum Misc_ASN {
     OCSP_NONCE_EXT_SZ   = 35,      /* OCSP Nonce Extension size */
     MAX_OCSP_EXT_SZ     = 58,      /* Max OCSP Extension length */
     MAX_OCSP_NONCE_SZ   = 16,      /* OCSP Nonce size           */
+#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
+    MAX_PUBLIC_KEY_SZ   = MAX_PQC_PUBLIC_KEY_SZ + MAX_ALGO_SZ + MAX_SEQ_SZ * 2,
+#else
     MAX_PUBLIC_KEY_SZ   = MAX_DSA_PUBKEY_SZ + MAX_ALGO_SZ + MAX_SEQ_SZ * 2,
+#endif
 #ifdef WOLFSSL_ENCRYPTED_KEYS
     HEADER_ENCRYPTED_KEY_SIZE = 88,/* Extra header size for encrypted key */
 #else
@@ -1143,9 +1164,9 @@ enum Key_Sum {
     DHk               = 647, /* dhKeyAgreement OID: 1.2.840.113549.1.3.1 */
     FALCON_LEVEL1k    = 273, /* 1.3.9999.3.6 */
     FALCON_LEVEL5k    = 276, /* 1.3.9999.3.9 */
-    DILITHIUM_LEVEL2k = 213,    /* 1.3.6.1.4.1.2.267.7.4.4 */
-    DILITHIUM_LEVEL3k = 216,    /* 1.3.6.1.4.1.2.267.7.6.5 */
-    DILITHIUM_LEVEL5k = 220,    /* 1.3.6.1.4.1.2.267.7.8.7 */
+    DILITHIUM_LEVEL2k = 218,    /* 1.3.6.1.4.1.2.267.12.4.4 */
+    DILITHIUM_LEVEL3k = 221,    /* 1.3.6.1.4.1.2.267.12.6.5 */
+    DILITHIUM_LEVEL5k = 225,    /* 1.3.6.1.4.1.2.267.12.8.7 */
     SPHINCS_FAST_LEVEL1k   = 281, /* 1 3 9999 6 7 4 */
     SPHINCS_FAST_LEVEL3k   = 283, /* 1 3 9999 6 8 3 + 2 (See GetOID() in asn.c) */
     SPHINCS_FAST_LEVEL5k   = 282, /* 1 3 9999 6 9 3 */
@@ -1476,9 +1497,13 @@ struct SignatureCtx {
     #ifdef HAVE_ED448
         struct ed448_key* ed448;
     #endif
-    #ifdef HAVE_PQC
+    #if defined(HAVE_FALCON)
         struct falcon_key* falcon;
+    #endif
+    #if defined(HAVE_DILITHIUM)
         struct dilithium_key* dilithium;
+    #endif
+    #if defined(HAVE_SPHINCS)
         struct sphincs_key* sphincs;
     #endif
         void* ptr;
@@ -2017,10 +2042,9 @@ struct Signer {
     word32 cm_idx;
 #endif
 #ifdef WOLFSSL_DUAL_ALG_CERTS
-    /* The Subject Alternative Public Key Info (SAPKI) will NOT be cached.
-     * Caching of it is NOT SUPPORTED yet. */
-    byte *sapkiDer;
-    int sapkiLen;
+    word32  sapkiOID; /* key type */
+    byte*   sapkiDer;
+    int     sapkiLen;
 #endif /* WOLFSSL_DUAL_ALG_CERTS */
     byte type;
 
@@ -2107,6 +2131,7 @@ WOLFSSL_LOCAL int StreamOctetString(const byte* inBuf, word32 inBufSz,
 
 WOLFSSL_ASN_API void FreeAltNames(DNS_entry* altNames, void* heap);
 WOLFSSL_ASN_API DNS_entry* AltNameNew(void* heap);
+WOLFSSL_ASN_API DNS_entry* AltNameDup(DNS_entry* from, void* heap);
 #ifndef IGNORE_NAME_CONSTRAINTS
     WOLFSSL_ASN_API void FreeNameSubtrees(Base_entry* names, void* heap);
 #endif /* IGNORE_NAME_CONSTRAINTS */
@@ -2128,14 +2153,20 @@ WOLFSSL_LOCAL int DecodePolicyOID(char *out, word32 outSz, const byte *in,
                                   word32 inSz);
 WOLFSSL_LOCAL int EncodePolicyOID(byte *out, word32 *outSz,
                                   const char *in, void* heap);
-WOLFSSL_API int CheckCertSignature(const byte*,word32,void*,void* cm);
 WOLFSSL_LOCAL int CheckCertSignaturePubKey(const byte* cert, word32 certSz,
         void* heap, const byte* pubKey, word32 pubKeySz, int pubKeyOID);
-#ifdef OPENSSL_EXTRA
-WOLFSSL_API int wc_CheckCertSigPubKey(const byte* cert, word32 certSz,
-                                      void* heap, const byte* pubKey,
-                                      word32 pubKeySz, int pubKeyOID);
-#endif
+#if defined(OPENSSL_EXTRA) || defined(WOLFSSL_SMALL_CERT_VERIFY)
+    WOLFSSL_API int wc_CheckCertSignature(const byte* cert, word32 certSz,
+                                          void* heap, void* cm);
+    /* Depricated public API name kept for backwards build compatibility */
+    #define CheckCertSignature(cert, certSz, heap, cm) \
+        wc_CheckCertSignature(cert, certSz, heap, cm)
+
+    WOLFSSL_API int wc_CheckCertSigPubKey(const byte* cert, word32 certSz,
+                                        void* heap, const byte* pubKey,
+                                        word32 pubKeySz, int pubKeyOID);
+#endif /* OPENSSL_EXTRA || WOLFSSL_SMALL_CERT_VERIFY */
+
 #ifdef WOLFSSL_DUAL_ALG_CERTS
 WOLFSSL_LOCAL int wc_ConfirmAltSignature(
     const byte* buf, word32 bufSz,
@@ -2156,7 +2187,7 @@ WOLFSSL_LOCAL int CheckCSRSignaturePubKey(const byte* cert, word32 certSz,
 WOLFSSL_ASN_API int AddSignature(byte* buf, int bodySz, const byte* sig, int sigSz,
                         int sigAlgoType);
 WOLFSSL_LOCAL int ParseCertRelative(DecodedCert* cert, int type, int verify,
-                                    void* cm);
+                                    void* cm, Signer *extraCa);
 WOLFSSL_LOCAL int DecodeToKey(DecodedCert* cert, int verify);
 #ifdef WOLFSSL_ASN_TEMPLATE
 WOLFSSL_LOCAL int DecodeCert(DecodedCert* cert, int verify, int* criticalExt);
@@ -2165,6 +2196,8 @@ WOLFSSL_LOCAL int TryDecodeRPKToKey(DecodedCert* cert);
 WOLFSSL_LOCAL int wc_GetPubX509(DecodedCert* cert, int verify, int* badDate);
 
 WOLFSSL_LOCAL const byte* OidFromId(word32 id, word32 type, word32* oidSz);
+WOLFSSL_LOCAL Signer* findSignerByName(Signer *list, byte *hash);
+WOLFSSL_LOCAL int FillSigner(Signer* signer, DecodedCert* cert, int type, DerBuffer *der);
 WOLFSSL_LOCAL Signer* MakeSigner(void* heap);
 WOLFSSL_LOCAL void    FreeSigner(Signer* signer, void* heap);
 WOLFSSL_LOCAL void    FreeSignerTable(Signer** table, int rows, void* heap);
@@ -2308,7 +2341,8 @@ WOLFSSL_LOCAL int GetNameHash(const byte* source, word32* idx, byte* hash,
                               int maxIdx);
 WOLFSSL_LOCAL int GetNameHash_ex(const byte* source, word32* idx, byte* hash,
                                  int maxIdx, word32 sigOID);
-WOLFSSL_LOCAL int wc_CheckPrivateKeyCert(const byte* key, word32 keySz, DecodedCert* der);
+WOLFSSL_LOCAL int wc_CheckPrivateKeyCert(const byte* key, word32 keySz,
+                                         DecodedCert* der, int checkAlt);
 WOLFSSL_LOCAL int wc_CheckPrivateKey(const byte* privKey, word32 privKeySz,
                                      const byte* pubKey, word32 pubKeySz, enum Key_Sum ks);
 WOLFSSL_LOCAL int StoreDHparams(byte* out, word32* outLen, mp_int* p, mp_int* g);
@@ -2347,8 +2381,11 @@ WOLFSSL_LOCAL void FreeSignatureCtx(SignatureCtx* sigCtx);
 
 WOLFSSL_LOCAL int SetAsymKeyDerPublic(const byte* pubKey, word32 pubKeyLen,
     byte* output, word32 outLen, int keyType, int withHeader);
-WOLFSSL_LOCAL int DecodeAsymKeyPublic(const byte* input, word32* inOutIdx, word32 inSz,
-    byte* pubKey, word32* pubKeyLen, int keyType);
+WOLFSSL_LOCAL int DecodeAsymKeyPublic_Assign(const byte* input,
+    word32* inOutIdx, word32 inSz, const byte** pubKey, word32* pubKeyLen,
+    int keyType);
+WOLFSSL_LOCAL int DecodeAsymKeyPublic(const byte* input, word32* inOutIdx,
+    word32 inSz, byte* pubKey, word32* pubKeyLen, int keyType);
 
 #ifndef NO_CERTS
 
@@ -2358,7 +2395,10 @@ WOLFSSL_LOCAL int wc_EncryptedInfoParse(EncryptedInfo* info,
 WOLFSSL_LOCAL int PemToDer(const unsigned char* buff, long sz, int type,
                           DerBuffer** pDer, void* heap, EncryptedInfo* info,
                           int* eccKey);
-WOLFSSL_LOCAL int AllocDer(DerBuffer** der, word32 length, int type, void* heap);
+WOLFSSL_LOCAL int AllocDer(DerBuffer** der, word32 length, int type,
+    void* heap);
+WOLFSSL_LOCAL int AllocCopyDer(DerBuffer** der, const unsigned char* buff,
+    word32 length, int type, void* heap);
 WOLFSSL_LOCAL void FreeDer(DerBuffer** der);
 
 #if (defined(WOLFSSL_CERT_GEN) && defined(WOLFSSL_CERT_EXT)) || \
@@ -2527,7 +2567,7 @@ struct OcspResponse {
 
     byte*   source;          /* pointer to source buffer, not owned */
     word32  maxIdx;          /* max offset based on init size */
-
+    Signer* pendingCAs;
 #ifdef OPENSSL_EXTRA
     int     verifyError;
 #endif
@@ -2652,9 +2692,10 @@ WOLFSSL_LOCAL void FreeDecodedCRL(DecodedCRL* dcrl);
     || (defined(HAVE_CURVE25519) && defined(HAVE_CURVE25519_KEY_IMPORT)) \
     || (defined(HAVE_ED448) && defined(HAVE_ED448_KEY_IMPORT)) \
     || (defined(HAVE_CURVE448) && defined(HAVE_CURVE448_KEY_IMPORT)) \
-    || (defined(HAVE_PQC) && defined(HAVE_FALCON)) \
-    || (defined(HAVE_PQC) && defined(HAVE_DILITHIUM)) \
-    || (defined(HAVE_PQC) && defined(HAVE_SPHINCS)))
+    || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS))
+WOLFSSL_LOCAL int DecodeAsymKey_Assign(const byte* input, word32* inOutIdx,
+    word32 inSz, const byte** privKey, word32* privKeyLen, const byte** pubKey,
+    word32* pubKeyLen, int keyType);
 WOLFSSL_LOCAL int DecodeAsymKey(const byte* input, word32* inOutIdx,
     word32 inSz, byte* privKey, word32* privKeyLen, byte* pubKey,
     word32* pubKeyLen, int keyType);
