@@ -1,0 +1,487 @@
+From 18486bf7c39906022b03c601e81f3b2dbac25ae5 Mon Sep 17 00:00:00 2001
+From: dgsga <181612+dgsga@users.noreply.github.com>
+Date: Sat, 25 May 2024 17:45:53 +0100
+Subject: [PATCH] Embedded SSL: Remove the OpenSSL compatibility layer
+
+---
+ include/wolfssl/openssl/bn.h  |  6 ++---
+ include/wolfssl/openssl/dh.h  |  7 ++++--
+ include/wolfssl/openssl/err.h |  4 ++--
+ include/wolfssl/openssl/evp.h |  6 +++++
+ include/wolfssl/openssl/ssl.h |  6 +++--
+ include/wolfssl/ssl.h         |  4 ++--
+ libatalk/ssl/src/pk.c         | 20 +++++++++-------
+ libatalk/ssl/src/ssl.c        | 25 ++++++++++++++------
+ libatalk/ssl/src/ssl_bn.c     | 12 ++++++----
+ libatalk/ssl/src/ssl_crypto.c |  8 +++++--
+ meson_config.h                | 43 ++++++++++++++++++-----------------
+ 11 files changed, 88 insertions(+), 53 deletions(-)
+
+diff --git a/include/wolfssl/openssl/bn.h b/include/wolfssl/openssl/bn.h
+index 973b85565c..886fc234b4 100644
+--- a/include/wolfssl/openssl/bn.h
++++ b/include/wolfssl/openssl/bn.h
+@@ -44,7 +44,7 @@ typedef struct WOLFSSL_BIGNUM {
+ } WOLFSSL_BIGNUM;
+ 
+ #define WOLFSSL_BN_ULONG unsigned long
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ #define BN_ULONG         WOLFSSL_BN_ULONG
+ #endif
+ 
+@@ -182,7 +182,7 @@ WOLFSSL_API WOLFSSL_BIGNUM *wolfSSL_BN_mod_inverse(
+     WOLFSSL_BN_CTX *ctx);
+ 
+ 
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ 
+ #define BN_RAND_TOP_ANY     WOLFSSL_BN_RAND_TOP_ANY
+ #define BN_RAND_TOP_ONE     WOLFSSL_BN_RAND_TOP_ONE
+@@ -286,7 +286,7 @@ typedef WOLFSSL_BN_GENCB BN_GENCB;
+ 
+ #define BN_prime_checks 0
+ 
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ 
+ 
+ #ifdef __cplusplus
+diff --git a/include/wolfssl/openssl/dh.h b/include/wolfssl/openssl/dh.h
+index eacd033c90..bb0b5f6999 100644
+--- a/include/wolfssl/openssl/dh.h
++++ b/include/wolfssl/openssl/dh.h
+@@ -26,7 +26,10 @@
+ #define WOLFSSL_DH_H_
+ 
+ #include <wolfssl/openssl/bn.h>
++
++#ifndef EMBEDDED_SSL
+ #include <wolfssl/openssl/opensslv.h>
++#endif
+ 
+ #ifdef __cplusplus
+     extern "C" {
+@@ -75,7 +78,7 @@ WOLFSSL_API int wolfSSL_DH_set0_pqg(WOLFSSL_DH *dh, WOLFSSL_BIGNUM *p,
+ 
+ WOLFSSL_API WOLFSSL_DH* wolfSSL_DH_get_2048_256(void);
+ 
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ 
+ typedef WOLFSSL_DH                   DH;
+ 
+@@ -128,7 +131,7 @@ typedef WOLFSSL_DH                   DH;
+ #define DH_GENERATOR_2 2
+ #define DH_GENERATOR_5 5
+ 
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ 
+ #ifdef __cplusplus
+     }  /* extern "C" */
+diff --git a/include/wolfssl/openssl/err.h b/include/wolfssl/openssl/err.h
+index 178afa5f47..e9a99653b5 100644
+--- a/include/wolfssl/openssl/err.h
++++ b/include/wolfssl/openssl/err.h
+@@ -24,7 +24,7 @@
+ 
+ #include <wolfssl/wolfcrypt/logging.h>
+ 
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ /* err.h for openssl */
+ #define ERR_load_ERR_strings             wolfSSL_ERR_load_ERR_strings
+ #define ERR_load_crypto_strings          wolfSSL_ERR_load_crypto_strings
+@@ -57,7 +57,7 @@
+ #define SSLerr(f,r)  ERR_put_error(0,(f),(r),__FILE__,__LINE__)
+ #define ECerr(f,r)   ERR_put_error(0,(f),(r),__FILE__,__LINE__)
+ 
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ 
+ #endif /* WOLFSSL_OPENSSL_ERR_ */
+ 
+diff --git a/include/wolfssl/openssl/evp.h b/include/wolfssl/openssl/evp.h
+index bdeabf2556..3f8fa5bb7d 100644
+--- a/include/wolfssl/openssl/evp.h
++++ b/include/wolfssl/openssl/evp.h
+@@ -44,10 +44,14 @@
+ #endif
+ #include <wolfssl/openssl/sha.h>
+ #include <wolfssl/openssl/sha3.h>
++#ifndef EMBEDDED_SSL
+ #include <wolfssl/openssl/ripemd.h>
++#endif
+ #include <wolfssl/openssl/rsa.h>
++#ifndef EMBEDDED_SSL
+ #include <wolfssl/openssl/dsa.h>
+ #include <wolfssl/openssl/ec.h>
++#endif
+ #include <wolfssl/openssl/dh.h>
+ #include <wolfssl/openssl/opensslv.h>
+ #include <wolfssl/openssl/compat_types.h>
+@@ -55,7 +59,9 @@
+ #include <wolfssl/wolfcrypt/aes.h>
+ #include <wolfssl/wolfcrypt/des3.h>
+ #include <wolfssl/wolfcrypt/arc4.h>
++#ifndef EMBEDDED_SSL
+ #include <wolfssl/wolfcrypt/chacha20_poly1305.h>
++#endif
+ #include <wolfssl/wolfcrypt/hmac.h>
+ #include <wolfssl/wolfcrypt/pwdbased.h>
+ #ifdef WOLFSSL_SM3
+diff --git a/include/wolfssl/openssl/ssl.h b/include/wolfssl/openssl/ssl.h
+index 5cd96e26f5..226d267e46 100644
+--- a/include/wolfssl/openssl/ssl.h
++++ b/include/wolfssl/openssl/ssl.h
+@@ -37,6 +37,7 @@
+ #include <wolfssl/ssl.h>
+ #endif /* OPENSSL_EXTRA_SSL_GUARD */
+ 
++#ifndef EMBEDDED_SSL
+ #include <wolfssl/openssl/tls1.h>
+ #ifndef WOLFCRYPT_ONLY
+ #include <wolfssl/openssl/evp.h>
+@@ -58,6 +59,7 @@
+ #include <wolfssl/wolfcrypt/asn.h>
+ 
+ #include <wolfssl/openssl/x509.h>
++#endif /* EMBEDDED_SSL */
+ 
+ #ifdef __cplusplus
+     extern "C" {
+@@ -73,7 +75,7 @@
+     #undef ASN1_INTEGER
+ #endif
+ 
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ 
+ typedef WOLFSSL          SSL;
+ typedef WOLFSSL_SESSION  SSL_SESSION;
+@@ -1684,7 +1686,7 @@ typedef WOLFSSL_CONF_CTX SSL_CONF_CTX;
+ #define SSL_CONF_cmd                    wolfSSL_CONF_cmd
+ #define SSL_CONF_cmd_value_type         wolfSSL_CONF_cmd_value_type
+ 
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ 
+ 
+ #ifdef WOLFSSL_QUIC
+diff --git a/include/wolfssl/ssl.h b/include/wolfssl/ssl.h
+index 804ec44bbb..071dbbc5fe 100644
+--- a/include/wolfssl/ssl.h
++++ b/include/wolfssl/ssl.h
+@@ -386,7 +386,7 @@ struct WOLFSSL_EVP_PKEY {
+     union {
+         char* ptr; /* der format of key */
+     } pkey;
+-#if (defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL))
++#if (defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL))
+     #ifndef NO_RSA
+     WOLFSSL_RSA* rsa;
+     #endif
+@@ -413,7 +413,7 @@ struct WOLFSSL_EVP_PKEY {
+     #if defined(WOLFSSL_CMAC) && !defined(NO_AES) && defined(WOLFSSL_AES_DIRECT)
+     WOLFSSL_CMAC_CTX* cmacCtx;
+     #endif
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ #ifdef HAVE_ECC
+     int pkey_curve;
+ #endif
+diff --git a/libatalk/ssl/src/pk.c b/libatalk/ssl/src/pk.c
+index d7d32dd528..c24532efcd 100644
+--- a/libatalk/ssl/src/pk.c
++++ b/libatalk/ssl/src/pk.c
+@@ -25,6 +25,10 @@
+ 
+ #include <wolfssl/wolfcrypt/settings.h>
+ 
++#ifdef EMBEDDED_SSL
++#include <wolfssl/openssl/dh.h>
++#endif
++
+  #include <wolfssl/internal.h>
+ #ifndef WC_NO_RNG
+     #include <wolfssl/wolfcrypt/random.h>
+@@ -6170,7 +6174,7 @@ WOLFSSL_DH *wolfSSL_DSA_dup_DH(const WOLFSSL_DSA *dsa)
+ 
+ #ifndef NO_DH
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ 
+ /*
+  * DH constructor/deconstructor APIs
+@@ -7701,10 +7705,10 @@ int wolfSSL_PEM_write_DHparams(XFILE fp, WOLFSSL_DH* dh)
+  * DH get/set APIs
+  */
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined (OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ 
+ #if defined(WOLFSSL_QT) || defined(OPENSSL_ALL) \
+-    || defined(WOLFSSL_OPENSSH) || defined(OPENSSL_EXTRA)
++    || defined(WOLFSSL_OPENSSH) || defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ 
+ /* Set the members of DhKey into WOLFSSL_DH
+  * Specify elements to set via the 2nd parameter
+@@ -7921,7 +7925,7 @@ void wolfSSL_DH_get0_pqg(const WOLFSSL_DH *dh, const WOLFSSL_BIGNUM **p,
+ 
+ #if !defined(HAVE_FIPS) || (defined(HAVE_FIPS) && !defined(WOLFSSL_DH_EXTRA)) \
+  || (defined(HAVE_FIPS_VERSION) && FIPS_VERSION_GT(2,0))
+-#if defined(OPENSSL_ALL) || \
++#if defined(OPENSSL_ALL) || defined(EMBEDDED_SSL) || \
+     defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x10100000L
+ /* Sets the parameters p, g and optionally q into the DH key.
+  *
+@@ -8025,7 +8029,7 @@ int wolfSSL_DH_set_length(WOLFSSL_DH *dh, long len)
+ 
+     return ret;
+ }
+-#endif /* OPENSSL_ALL || (v1.1.0 or later) */
++#endif /* OPENSSL_ALL || EMBEDDED_SSL || (v1.1.0 or later) */
+ #endif
+ 
+ /* Get the public and private keys requested.
+@@ -8105,7 +8109,7 @@ int wolfSSL_DH_set0_key(WOLFSSL_DH *dh, WOLFSSL_BIGNUM *pub_key,
+     return ret;
+ }
+ 
+-#endif /* OPENSSL_EXTRA */
++#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+ 
+ /*
+  * DH check APIs
+@@ -8354,7 +8358,7 @@ int wolfSSL_DH_generate_parameters_ex(WOLFSSL_DH* dh, int prime_len,
+         * HAVE_LIGHTY || WOLFSSL_HAPROXY || WOLFSSL_OPENSSH ||
+         * HAVE_SBLIM_SFCB)) */
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ 
+ #if !defined(HAVE_FIPS) || (defined(HAVE_FIPS) && !defined(WOLFSSL_DH_EXTRA)) \
+  || (defined(HAVE_FIPS_VERSION) && FIPS_VERSION_GT(2,0))
+@@ -8611,7 +8615,7 @@ int wolfSSL_DH_compute_key(unsigned char* key, const WOLFSSL_BIGNUM* otherPub,
+ #endif /* !HAVE_FIPS || (HAVE_FIPS && !WOLFSSL_DH_EXTRA) ||
+         * HAVE_FIPS_VERSION > 2 */
+ 
+-#endif /* OPENSSL_EXTRA */
++#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+ 
+ #endif /* NO_DH */
+ 
+diff --git a/libatalk/ssl/src/ssl.c b/libatalk/ssl/src/ssl.c
+index 28ad6bd1cc..e15dbce9bf 100644
+--- a/libatalk/ssl/src/ssl.c
++++ b/libatalk/ssl/src/ssl.c
+@@ -25,11 +25,11 @@
+ #endif
+ 
+ #include <wolfssl/wolfcrypt/settings.h>
+-//#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
++#if defined(OPENSSL_EXTRA) && !defined(_WIN32)
+     /* turn on GNU extensions for XISASCII */
+-//    #undef  _GNU_SOURCE
+-//    #define _GNU_SOURCE
+-//#endif
++    #undef  _GNU_SOURCE
++    #define _GNU_SOURCE
++#endif
+ 
+ #if !defined(WOLFCRYPT_ONLY) || defined(OPENSSL_EXTRA) || \
+     defined(OPENSSL_EXTRA_X509_SMALL)
+@@ -17602,7 +17602,7 @@ int wolfSSL_set_compression(WOLFSSL* ssl)
+ #endif /* WOLFSSL_ENCRYPTED_KEYS */
+ 
+ 
+-#if defined(OPENSSL_EXTRA) || defined(HAVE_WEBSERVER) || defined(HAVE_MEMCACHED)
++#if defined(OPENSSL_EXTRA) || defined(HAVE_WEBSERVER) || defined(HAVE_MEMCACHED) || defined(EMBEDDED_SSL)
+     unsigned long wolfSSL_ERR_get_error(void)
+     {
+         WOLFSSL_ENTER("wolfSSL_ERR_get_error");
+@@ -18563,7 +18563,7 @@ size_t wolfSSL_get_client_random(const WOLFSSL* ssl, unsigned char* out,
+     }
+ #endif /* OPENSSL_EXTRA */
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+     void wolfSSL_ERR_free_strings(void)
+     {
+         /* handled internally */
+@@ -18574,7 +18574,7 @@ size_t wolfSSL_get_client_random(const WOLFSSL* ssl, unsigned char* out,
+         /* nothing to do here */
+     }
+ 
+-#endif /* OPENSSL_EXTRA */
++#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+ 
+ #if defined(OPENSSL_EXTRA) || defined(DEBUG_WOLFSSL_VERBOSE) || \
+     defined(HAVE_CURL)
+@@ -28154,6 +28154,15 @@ void* wolfSSL_SESSION_get_ex_data(const WOLFSSL_SESSION* session, int idx)
+ }
+ #endif /* OPENSSL_EXTRA || WOLFSSL_WPAS_SMALL || HAVE_EX_DATA */
+ 
++#ifdef EMBEDDED_SSL
++void wolfSSL_ERR_load_crypto_strings(void)
++{
++    WOLFSSL_ENTER("wolfSSL_ERR_load_crypto_strings");
++    /* Do nothing */
++    return;
++}
++#endif
++
+ /* Note: This is a huge section of API's - through
+  *       wolfSSL_X509_OBJECT_get0_X509_CRL */
+ #if defined(OPENSSL_ALL) || (defined(OPENSSL_EXTRA) && \
+@@ -28241,12 +28250,14 @@ int wolfSSL_ERR_load_ERR_strings(void)
+     return WOLFSSL_SUCCESS;
+ }
+ 
++#ifndef EMBEDDED_SSL
+ void wolfSSL_ERR_load_crypto_strings(void)
+ {
+     WOLFSSL_ENTER("wolfSSL_ERR_load_crypto_strings");
+     /* Do nothing */
+     return;
+ }
++#endif
+ 
+ int wolfSSL_FIPS_mode(void)
+ {
+diff --git a/libatalk/ssl/src/ssl_bn.c b/libatalk/ssl/src/ssl_bn.c
+index cbb4a92fac..887ada8ade 100644
+--- a/libatalk/ssl/src/ssl_bn.c
++++ b/libatalk/ssl/src/ssl_bn.c
+@@ -25,6 +25,10 @@
+ 
+ #include <wolfssl/wolfcrypt/settings.h>
+ 
++#ifdef EMBEDDED_SSL
++#include <wolfssl/openssl/bn.h>
++#endif
++
+  #include <wolfssl/internal.h>
+ #ifndef WC_NO_RNG
+     #include <wolfssl/wolfcrypt/random.h>
+@@ -79,7 +83,7 @@ static int wolfssl_bn_set_neg(WOLFSSL_BIGNUM* bn, int neg)
+ }
+ #endif /* OPENSSL_EXTRA && !NO_ASN */
+ 
+-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
++#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(EMBEDDED_SSL)
+ /* Get the internal representation value into an MP integer.
+  *
+  * When calling wolfssl_bn_get_value, mpi should be cleared by caller if no
+@@ -303,9 +307,9 @@ void wolfSSL_BN_clear(WOLFSSL_BIGNUM* bn)
+         mp_forcezero((mp_int*)bn->internal);
+     }
+ }
+-#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
++#endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL || EMBEDDED_SSL */
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ 
+ static WOLFSSL_BIGNUM* bn_one = NULL;
+ 
+@@ -2426,7 +2430,7 @@ void wolfSSL_BN_CTX_start(WOLFSSL_BN_CTX *ctx)
+ }
+ #endif
+ 
+-#endif /* OPENSSL_EXTRA */
++#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+ 
+ #endif /* !WOLFSSL_SSL_BN_INCLUDED */
+ 
+diff --git a/libatalk/ssl/src/ssl_crypto.c b/libatalk/ssl/src/ssl_crypto.c
+index 3c73b88f51..4021658a9f 100644
+--- a/libatalk/ssl/src/ssl_crypto.c
++++ b/libatalk/ssl/src/ssl_crypto.c
+@@ -26,6 +26,10 @@
+ 
+ #include <wolfssl/wolfcrypt/settings.h>
+ 
++#ifdef EMBEDDED_SSL
++#include <wolfssl/openssl/des.h>
++#endif
++
+ #ifndef WOLFSSL_SSL_CRYPTO_INCLUDED
+     #ifndef WOLFSSL_IGNORE_FILE_WARN
+         #warning ssl_crypto.c does not need to be compiled separately from ssl.c
+@@ -2303,7 +2307,7 @@ int wolfSSL_CMAC_Final(WOLFSSL_CMAC_CTX* ctx, unsigned char* out, size_t* len)
+  * START OF DES API
+  ******************************************************************************/
+ 
+-#ifdef OPENSSL_EXTRA
++#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+ #ifndef NO_DES3
+ /* Set parity of the DES key.
+  *
+@@ -2905,7 +2909,7 @@ void wolfSSL_DES_ecb_encrypt(WOLFSSL_DES_cblock* in, WOLFSSL_DES_cblock* out,
+ }
+ #endif
+ #endif /* NO_DES3 */
+-#endif /* OPENSSL_EXTRA */
++#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+ 
+ /*******************************************************************************
+  * END OF DES API
+diff --git a/meson_config.h b/meson_config.h
+index 6709a350c4..366e2f8090 100644
+--- a/meson_config.h
++++ b/meson_config.h
+@@ -694,28 +694,29 @@
+ #mesondefine __svr4__
+ 
+ /* WolfSSL configuration */
+-#define HAVE_AESGCM 1
+-#define HAVE_DH_DEFAULT_PARAMS 1
+-#define HAVE_TLS_EXTENSIONS 1
+-#define NO_CPUID 1
+-#define NO_DSA 1
+-#define NO_ERROR_QUEUE 1
+-#define NO_ERROR_STRINGS 1
+-#define NO_FILESYSTEM 1
+-#define NO_MD4 1
+-#define NO_MD5 1
+-#define NO_OLD_TLS 1
+-#define NO_PKCS12 1
+-#define NO_PSK 1
+-#define NO_SHA 1
+-#define NO_WOLFSSL_MEMORY 1
+-#define OPENSSL_ALL 1
+-#define OPENSSL_EXTRA 1
+-#define TFM_TIMING_RESISTANT 1
+-#define WC_RSA_BLINDING 1
++
++#define HAVE_DH_DEFAULT_PARAMS
++#define NO_CPUID
++#define NO_DO178
++#define NO_DSA
++#define NO_ERROR_QUEUE
++#define NO_ERROR_STRINGS
++#define NO_FILESYSTEM
++#define NO_MD4
++#define NO_MD5
++#define NO_OLD_TLS
++#define NO_PKCS12
++#define NO_PSK
++#define NO_RC4
++#define NO_SHA
++#define NO_WOLFSSL_MEMORY
++#define TFM_TIMING_RESISTANT
++#define WC_NO_ASYNC_THREADING
++#define WC_NO_RSA_OAEP
++#define WC_RSA_BLINDING
+ #define WC_RSA_PSS
+-#define WOLFSSL_DES_ECB 1
+-#define WOLFSSL_ENCRYPTED_KEYS 1
++#define WOLFSSL_DES_ECB
++#define WOLFSSL_ENCRYPTED_KEYS
+ 
+ /* Define to `__inline__' or `__inline' if that's what the C compiler
+    calls it, or to nothing if 'inline' is not supported under any name.  */

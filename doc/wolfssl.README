@@ -1,0 +1,10 @@
+This package contains a modified version of the wolfssl library,
+which enables encrypted authentication with Classic Mac OS clients.
+Specifically, it makes up the backbone of the DHX and RandNum UAMs.
+
+When upgrading the library version with an upstream stable release,
+the local modifications should be retained.
+
+Adapt and apply the following patch to the wolfssl code:
+
+18486bf7c39906022b03c601e81f3b2dbac25ae5.patch
