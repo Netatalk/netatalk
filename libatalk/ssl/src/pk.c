@@ -25,10 +25,6 @@
 
 #include <wolfssl/wolfcrypt/settings.h>
 
-#ifdef EMBEDDED_SSL
-#include <wolfssl/openssl/dh.h>
-#endif
-
  #include <wolfssl/internal.h>
 #ifndef WC_NO_RNG
     #include <wolfssl/wolfcrypt/random.h>
@@ -6174,7 +6170,7 @@ WOLFSSL_DH *wolfSSL_DSA_dup_DH(const WOLFSSL_DSA *dsa)
 
 #ifndef NO_DH
 
-#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 
 /*
  * DH constructor/deconstructor APIs
@@ -7705,10 +7701,10 @@ int wolfSSL_PEM_write_DHparams(XFILE fp, WOLFSSL_DH* dh)
  * DH get/set APIs
  */
 
-#if defined (OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 
 #if defined(WOLFSSL_QT) || defined(OPENSSL_ALL) \
-    || defined(WOLFSSL_OPENSSH) || defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+    || defined(WOLFSSL_OPENSSH) || defined(OPENSSL_EXTRA)
 
 /* Set the members of DhKey into WOLFSSL_DH
  * Specify elements to set via the 2nd parameter
@@ -7925,7 +7921,7 @@ void wolfSSL_DH_get0_pqg(const WOLFSSL_DH *dh, const WOLFSSL_BIGNUM **p,
 
 #if !defined(HAVE_FIPS) || (defined(HAVE_FIPS) && !defined(WOLFSSL_DH_EXTRA)) \
  || (defined(HAVE_FIPS_VERSION) && FIPS_VERSION_GT(2,0))
-#if defined(OPENSSL_ALL) || defined(EMBEDDED_SSL) || \
+#if defined(OPENSSL_ALL) || \
     defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x10100000L
 /* Sets the parameters p, g and optionally q into the DH key.
  *
@@ -8029,7 +8025,7 @@ int wolfSSL_DH_set_length(WOLFSSL_DH *dh, long len)
 
     return ret;
 }
-#endif /* OPENSSL_ALL || EMBEDDED_SSL || (v1.1.0 or later) */
+#endif /* OPENSSL_ALL || (v1.1.0 or later) */
 #endif
 
 /* Get the public and private keys requested.
@@ -8109,7 +8105,7 @@ int wolfSSL_DH_set0_key(WOLFSSL_DH *dh, WOLFSSL_BIGNUM *pub_key,
     return ret;
 }
 
-#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA */
 
 /*
  * DH check APIs
@@ -8358,7 +8354,7 @@ int wolfSSL_DH_generate_parameters_ex(WOLFSSL_DH* dh, int prime_len,
         * HAVE_LIGHTY || WOLFSSL_HAPROXY || WOLFSSL_OPENSSH ||
         * HAVE_SBLIM_SFCB)) */
 
-#if defined(OPENSSL_EXTRA) || defined(EMBEDDED_SSL)
+#ifdef OPENSSL_EXTRA
 
 #if !defined(HAVE_FIPS) || (defined(HAVE_FIPS) && !defined(WOLFSSL_DH_EXTRA)) \
  || (defined(HAVE_FIPS_VERSION) && FIPS_VERSION_GT(2,0))
@@ -8615,7 +8611,7 @@ int wolfSSL_DH_compute_key(unsigned char* key, const WOLFSSL_BIGNUM* otherPub,
 #endif /* !HAVE_FIPS || (HAVE_FIPS && !WOLFSSL_DH_EXTRA) ||
         * HAVE_FIPS_VERSION > 2 */
 
-#endif /* OPENSSL_EXTRA || EMBEDDED_SSL */
+#endif /* OPENSSL_EXTRA */
 
 #endif /* NO_DH */
 
