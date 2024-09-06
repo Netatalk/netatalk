@@ -539,7 +539,8 @@ struct asev *asev_init(int max)
 bool asev_add_fd(struct asev *asev,
                  int fd,
                  enum asev_fdtype fdtype,
-                 void *private)
+                 void *private,
+		 int protocol)
 {
     if (asev == NULL) {
         return false;
@@ -553,6 +554,7 @@ bool asev_add_fd(struct asev *asev,
     asev->fdset[asev->used].events = POLLIN;
     asev->data[asev->used].fdtype = fdtype;
     asev->data[asev->used].private = private;
+    asev->data[asev->used].protocol = protocol;
     asev->used++;
 
     return true;
@@ -592,6 +594,7 @@ bool asev_del_fd(struct asev *asev, int fd)
                 asev->fdset[i].fd = -1;
                 asev->data[i].fdtype = 0;
                 asev->data[i].private = NULL;
+                asev->data[i].protocol = 0;
             } else {
                 /*
                  * Move down by one all subsequent elements

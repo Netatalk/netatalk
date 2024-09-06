@@ -176,6 +176,7 @@ struct asev_data {
     enum asev_fdtype fdtype;  /* IPC fd or listening socket fd                 */
     void            *private; /* pointer to AFPconfig for listening socket and *
                                * pointer to afp_child_t for IPC fd             */
+    int             protocol; /* protocol type ASP or DSI                      */
 };
 
 /**
@@ -189,7 +190,7 @@ struct asev {
 };
 
 extern struct asev *asev_init(int max);
-extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype, void *private);
+extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype, void *private, int protocol);
 extern bool asev_del_fd(struct asev *sev, int fd);
 
 extern int send_fd(int socket, int fd);

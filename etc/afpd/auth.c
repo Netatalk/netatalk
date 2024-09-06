@@ -58,7 +58,11 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data, const DSI *dsi)
+void status_versions( char *data,
+#ifndef NO_DDP
+                      const ASP asp,
+#endif
+                      const DSI *dsi)
 {
     char                *start = data;
     uint16_t           status;
@@ -68,6 +72,9 @@ void status_versions( char *data, const DSI *dsi)
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
 
     for ( i = 0; i < num; i++ ) {
+#ifndef NO_DDP
+        if (!asp && (afp_versions[i].av_number <= 21)) continue;
+#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         count++;
     }
@@ -75,6 +82,9 @@ void status_versions( char *data, const DSI *dsi)
     *data++ = count;
 
     for ( i = 0; i < num; i++ ) {
+#ifndef NO_DDP
+        if (!asp && (afp_versions[i].av_number <= 21)) continue;
+#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;
@@ -123,7 +133,14 @@ static int send_reply(const AFPObj *obj, const int err)
     if ((err == AFP_OK) || (err == AFPERR_AUTHCONT))
         return err;
 
-    obj->reply(obj->dsi, err);
+    if (obj->proto == AFPPROTO_DSI)
+    {
+        obj->reply(obj->dsi, err);
+    }
+    else
+    {
+        obj->reply(obj->handle, err);
+    }
     obj->exit(0);
 
     return AFP_OK;
@@ -806,12 +823,14 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
 {
-    DSI *dsi = (DSI *)(obj->dsi);
-
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     of_close_all_forks(obj);
     close_all_vol(obj);
-    dsi->flags = DSI_AFP_LOGGED_OUT;
+    if (obj->proto == AFPPROTO_DSI)
+    {
+        DSI* dsi = (DSI*)(obj->dsi);
+        dsi->flags = DSI_AFP_LOGGED_OUT;
+    }
     *rbuflen = 0;
 
     /* Send FCE login event */

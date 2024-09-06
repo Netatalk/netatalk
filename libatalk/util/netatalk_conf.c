@@ -52,6 +52,7 @@
 #include <atalk/unix.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
+#include <atalk/asp.h>
 #include <atalk/uuid.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/bstrlib.h>
@@ -436,12 +437,25 @@ static char *volxlate(const AFPObj *obj,
             }
         } else if (IS_VAR(p, "$c")) {
             if (IS_AFP_SESSION(obj)) {
-                DSI *dsi = obj->dsi;
-                len = sprintf(dest, "%s:%u",
-                              getip_string((struct sockaddr *)&dsi->client),
-                              getip_port((struct sockaddr *)&dsi->client));
-                dest += len;
-                destlen -= len;
+#ifndef NO_DDP
+                if (obj->proto == AFPPROTO_ASP) {
+                    ASP asp = obj->handle;
+
+                    len = sprintf(dest, "%u.%u", ntohs(asp->asp_sat.sat_addr.s_net),
+                        asp->asp_sat.sat_addr.s_node);
+                    dest += len;
+                    destlen -= len;
+
+                }
+#endif
+                if (obj->proto == AFPPROTO_DSI) {
+                    DSI* dsi = obj->dsi;
+                    len = sprintf(dest, "%s:%u",
+                        getip_string((struct sockaddr*)&dsi->client),
+                        getip_port((struct sockaddr*)&dsi->client));
+                    dest += len;
+                    destlen -= len;
+                }
             }
         } else if (IS_VAR(p, "$d")) {
             q = path;
@@ -456,8 +470,18 @@ static char *volxlate(const AFPObj *obj,
         } else if (IS_VAR(p, "$h")) {
             q = obj->options.hostname;
         } else if (IS_VAR(p, "$i")) {
-            DSI *dsi = obj->dsi;
-            q = getip_string((struct sockaddr *)&dsi->client);
+#ifndef NO_DDP
+            if (obj->proto == AFPPROTO_ASP) {
+                ASP asp = obj->handle;
+                len = sprintf(dest, "%u", ntohs(asp->asp_sat.sat_addr.s_net));
+                dest += len;
+                destlen -= len;
+            }
+#endif
+            if (obj->proto == AFPPROTO_DSI) {
+                DSI* dsi = obj->dsi;
+                q = getip_string((struct sockaddr*)&dsi->client);
+            }
         } else if (IS_VAR(p, "$s")) {
             q = obj->options.hostname;
         } else if (obj->username[0] && IS_VAR(p, "$u")) {
@@ -2082,6 +2106,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->passwdbits |= PASSWD_SET;
     if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "spotlight expr", 1))
         options->flags |= OPTION_SPOTLIGHT_EXPR;
+    if (atalk_iniparser_getboolean(config, INISEC_GLOBAL, "appletalk", 0))
+        options->flags |= OPTION_DDP;
 
     /* figure out options w values */
     options->loginmesg      = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "login message",  NULL);

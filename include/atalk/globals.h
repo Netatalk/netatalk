@@ -16,6 +16,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
+#include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/iniparser.h>
@@ -64,13 +65,14 @@
 #define OPTION_SPOTLIGHT_VOL (1 << 14) /* whether spotlight shall be enabled by default for volumes */
 #define OPTION_RECVFILE      (1 << 15)
 #define OPTION_SPOTLIGHT_EXPR (1 << 16) /* whether to allow Spotlight logic expressions */
+#define OPTION_DDP     (1 << 17) /* whether to allow connections via appletalk/ddp */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)
 #define PASSWD_NOSAVE  (1 << 1)
 #define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
 
-#define IS_AFP_SESSION(obj) ((obj)->dsi && (obj)->dsi->serversock == -1)
+#define IS_AFP_SESSION(obj) (((obj)->dsi && (obj)->dsi->serversock == -1) || ((obj)->Type))
 
 /**********************************************************************************************
  * Ini config sections
@@ -79,7 +81,9 @@
 #define INISEC_GLOBAL "Global"
 #define INISEC_HOMES  "Homes"
 
+
 struct DSI;
+
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
 
 struct afp_volume_name {
@@ -101,7 +105,10 @@ struct afp_options {
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
-    char *hostname;
+    char* hostname, *server;
+#ifndef NO_DDP
+    struct at_addr ddpaddr;
+#endif
     char *listen, *interfaces, *port;
     char *Cnid_srv, *Cnid_port;
     char *configfile;
@@ -110,6 +117,7 @@ struct afp_options {
     char *uuidconf;
     char *guest, *loginmesg, *keyfile, *passwdfile, *extmapfile;
     char *uamlist;
+    char authprintdir;
     char *signatureopt;
     unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
@@ -147,9 +155,15 @@ struct afp_options {
 typedef struct AFPObj {
     const char *cmdlineconfigfile;
     int cmdlineflags;
+    int proto;
     const void *signature;
     struct DSI *dsi;
+    void* handle;
+    #ifndef NO_DDP
+    int fd;
+    #endif /* NO_DDP */
     struct afp_options options;
+    char *Obj, *Type, *Zone;
     dictionary *iniconfig;
     char username[MAXUSERLEN];
     /* to prevent confusion, only use these in afp_* calls */
@@ -202,6 +216,9 @@ extern const char *AfpErr2name(int err);
 /* directory.c */
 extern struct dir rootParent;
 
+#ifndef NO_DDP
+extern void afp_over_asp (AFPObj *);
+#endif /* NO_DDP */
 extern void afp_over_dsi (AFPObj *);
 extern void afp_over_dsi_sighandlers(AFPObj *obj);
 #endif /* globals.h */

@@ -758,16 +758,16 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbu
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
-    *rbuflen = cc;
 
     if ((size_t)cc < *rbuflen)
         return AFPERR_EOF;
+    *rbuflen = cc;
     return AFP_OK;
 }
 
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen, int is64)
 {
-    DSI          *dsi = obj->dsi;
+    DSI *dsi;
     struct ofork *ofork;
     off_t        offset, saveoff, reqcount, savereqcount, size;
     ssize_t      cc, err;
@@ -803,6 +803,11 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     offset   = get_off_t(&ibuf, is64);
     reqcount = get_off_t(&ibuf, is64);
 
+    if (reqcount < 0 || offset < 0) {
+        err = AFPERR_PARAM;
+        goto afp_read_err;
+    }
+
     /* zero request count */
     err = AFP_OK;
     if (!reqcount) {
@@ -811,101 +816,125 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 
     AFP_READ_START((long)reqcount);
 
-    /* reqcount isn't always truthful. we need to deal with that. */
-    size = ad_size(ofork->of_ad, eid);
-
-    LOG(log_debug, logtype_afpd,
-        "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %" PRIu64 ")",
-        ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount, size);
-
-    if (offset >= size) {
-        err = AFPERR_EOF;
-        goto afp_read_err;
-    }
-
-    /* subtract off the offset */
-    if (reqcount + offset > size) {
-        reqcount = size - offset;
-        err = AFPERR_EOF;
-    }
-
-    savereqcount = reqcount;
-    saveoff = offset;
-
-    if (reqcount < 0 || offset < 0) {
-        err = AFPERR_PARAM;
-        goto afp_read_err;
-    }
-
-    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
-        if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
-            err = AFPERR_LOCK;
-            goto afp_read_err;
+    switch (obj->proto) {
+#ifndef NO_DDP
+    case AFPPROTO_ASP:
+        if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+            if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
+                err = AFPERR_LOCK;
+                goto afp_read_err;
+            }
         }
-    }
+        /* for asp, just send a packet at the requested buffer size */
+        *rbuflen = MIN(reqcount, *rbuflen);
+        cc = read_file(ofork, eid, offset, rbuf, rbuflen);
 
-#ifdef WITH_SENDFILE
-    if (!(eid == ADEID_DFORK && ad_data_fileno(ofork->of_ad) == AD_SYMLINK) &&
-        !(obj->options.flags & OPTION_NOSENDFILE)) {
-        int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
-        if (dsi_stream_read_file(dsi, fd, offset, reqcount, err) < 0) {
-            LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
-                of_name(ofork), strerror(errno));
-            goto afp_read_exit;
-        }
-        goto afp_read_done;
-    }
-#endif
-
-    *rbuflen = MIN(reqcount, dsi->server_quantum);
-
-    cc = read_file(ofork, eid, offset, ibuf, rbuflen);
     if (cc < 0) {
         err = cc;
         goto afp_read_done;
+
     }
+    break;
+#endif
 
-    LOG(log_debug, logtype_afpd,
-        "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
-        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
+    case AFPPROTO_DSI:
+        dsi = obj->dsi; 
+        /* reqcount isn't always truthful. we need to deal with that. */
+        size = ad_size(ofork->of_ad, eid);
 
-    offset += *rbuflen;
+        LOG(log_debug, logtype_afpd,
+            "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %" PRIu64 ")",
+            ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, reqcount, size);
 
-    /*
-     * dsi_readinit() returns size of next read buffer. by this point,
-     * we know that we're sending some data. if we fail, something
-     * horrible happened.
-     */
-    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0)
-        goto afp_read_exit;
-    *rbuflen = cc;
+        if (offset >= size) {
+            err = AFPERR_EOF;
+            goto afp_read_err;
+        }
 
-    while (*rbuflen > 0) {
-        /*
-         * This loop isn't really entered anymore, we've already
-         * sent the whole requested block in dsi_readinit().
-         */
-        cc = read_file(ofork, eid, offset, ibuf, rbuflen);
-        if (cc < 0)
-            goto afp_read_exit;
+        /* subtract off the offset */
+        if (reqcount + offset > size) {
+            reqcount = size - offset;
+            err = AFPERR_EOF;
+        }
 
-        offset += *rbuflen;
-        /* dsi_read() also returns buffer size of next allocation */
-        cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
-        if (cc < 0)
-            goto afp_read_exit;
-        *rbuflen = cc;
-    }
-    dsi_readdone(dsi);
-    goto afp_read_done;
+        savereqcount = reqcount;
+        saveoff = offset;
 
-afp_read_exit:
-    LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork), strerror(errno));
-    dsi_readdone(dsi);
-   if (obj->options.flags & OPTION_AFP_READ_LOCK)
-       ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
-    obj->exit(EXITERR_CLNT);
+        if (reqcount < 0 || offset < 0) {
+            err = AFPERR_PARAM;
+            goto afp_read_err;
+        }
 
+        if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+            if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
+                err = AFPERR_LOCK;
+                goto afp_read_err;
+            }
+        }
+
+#ifdef WITH_SENDFILE
+            if (!(eid == ADEID_DFORK && ad_data_fileno(ofork->of_ad) == AD_SYMLINK) &&
+                !(obj->options.flags & OPTION_NOSENDFILE)) {
+                int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+                if (dsi_stream_read_file(dsi, fd, offset, reqcount, err) < 0) {
+                    LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
+                        of_name(ofork), strerror(errno));
+                    goto afp_read_exit;
+                }
+                goto afp_read_done;
+            }
+#endif
+
+            * rbuflen = MIN(reqcount, dsi->server_quantum);
+            cc = read_file(ofork, eid, offset, ibuf, rbuflen);
+
+            if (cc < 0) {
+                err = cc;
+                goto afp_read_done;
+            }
+
+            LOG(log_debug, logtype_afpd,
+                "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
+                of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
+            offset += *rbuflen;
+
+            /*
+             * dsi_readinit() returns size of next read buffer. by this point,
+             * we know that we're sending some data. if we fail, something
+             * horrible happened.
+             */
+            if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0)
+                goto afp_read_exit;
+            *rbuflen = cc;
+
+            while (*rbuflen > 0) {
+                /*
+                 * This loop isn't really entered anymore, we've already
+                 * sent the whole requested block in dsi_readinit().
+                 */
+                cc = read_file(ofork, eid, offset, ibuf, rbuflen);
+                if (cc < 0)
+                    goto afp_read_exit;
+
+                offset += *rbuflen;
+                /* dsi_read() also returns buffer size of next allocation */
+                cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
+                if (cc < 0)
+                    goto afp_read_exit;
+                *rbuflen = cc;
+            }
+            dsi_readdone(dsi);
+            goto afp_read_done;
+
+
+        afp_read_exit:
+            LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork), strerror(errno));
+            dsi_readdone(dsi);
+            if (obj->options.flags & OPTION_AFP_READ_LOCK)
+                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
+            obj->exit(EXITERR_CLNT);
+            break;
+    } /* switch */
 afp_read_done:
     if (obj->options.flags & OPTION_AFP_READ_LOCK)
         ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
@@ -1113,10 +1142,16 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     off_t           offset, saveoff, reqcount, oldsize, newsize;
     int             endflag, eid, err = AFP_OK;
     uint16_t        ofrefnum;
+    DSI* dsi = obj->dsi;
+    char* rcvbuf;
+        size_t          rcvbuflen;
     ssize_t         cc;
-    DSI             *dsi = obj->dsi;
-    char            *rcvbuf = (char *)dsi->commands;
-    size_t          rcvbuflen = dsi->server_quantum;
+
+    if (dsi)
+    {
+        rcvbuf = (char*)dsi->commands;
+        rcvbuflen = dsi->server_quantum;
+    }
 
     /* figure out parameters */
     ibuf++;
@@ -1187,71 +1222,99 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         }
     }
 
-    /* find out what we have already */
-    if ((cc = dsi_writeinit(dsi, rcvbuf, rcvbuflen)) > 0) {
-        ssize_t written;
-        if ((written = write_file(ofork, eid, offset, rcvbuf, cc)) != cc) {
-            dsi_writeflush(dsi);
+    switch (obj->proto) {
+#ifndef NO_DDP
+    case AFPPROTO_ASP:
+        if (asp_wrtcont(obj->handle, rbuf, rbuflen) < 0) {
+            *rbuflen = 0;
+            LOG(log_error, logtype_afpd, "afp_write: asp_wrtcont: %s", strerror(errno));
+            return(AFPERR_PARAM);
+        }
+
+        if (obj->options.flags & OPTION_DEBUG) {
+            printf("(write) len: %ld\n", (unsigned long)*rbuflen);
+            bprint(rbuf, *rbuflen);
+        }
+
+        if ((cc = write_file(ofork, eid, offset, rbuf, *rbuflen)) < 0) {
             *rbuflen = 0;
             if (obj->options.flags & OPTION_AFP_READ_LOCK)
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
-            if (written > 0)
-                /* It's used for the read size and as error code in write_file(), ugh */
-                written = AFPERR_MISC;
-            return written;
+                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
+            return cc;
         }
-    }
+        offset += cc;
+        break;
+#endif /* no afp/asp */
+    case AFPPROTO_DSI:
+    {
+        /* find out what we have already */
+        if ((cc = dsi_writeinit(dsi, rcvbuf, rcvbuflen)) > 0) {
+            ssize_t written;
+            if ((written = write_file(ofork, eid, offset, rcvbuf, cc)) != cc) {
+                dsi_writeflush(dsi);
+                *rbuflen = 0;
+                if (obj->options.flags & OPTION_AFP_READ_LOCK)
+                    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+                if (written > 0)
+                    /* It's used for the read size and as error code in write_file(), ugh */
+                    written = AFPERR_MISC;
+                return written;
+            }
+        }
 
-    offset += cc;
+        offset += cc;
 
 #ifdef WITH_RECVFILE
-    if (obj->options.flags & OPTION_RECVFILE) {
-        LOG(log_maxdebug, logtype_afpd, "afp_write(fork: %" PRIu16 " [%s], off: %" PRIu64 ", size: %" PRIu32 ")",
-            ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, dsi->datasize);
+        if (obj->options.flags & OPTION_RECVFILE) {
+            LOG(log_maxdebug, logtype_afpd, "afp_write(fork: %" PRIu16 " [%s], off: %" PRIu64 ", size: %" PRIu32 ")",
+                ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset, dsi->datasize);
 
-        if ((cc = ad_recvfile(ofork->of_ad, eid, dsi->socket, offset, dsi->datasize, obj->options.splice_size)) < dsi->datasize) {
-            switch (errno) {
-            case EDQUOT:
-            case EFBIG:
-            case ENOSPC:
-                cc = AFPERR_DFULL;
-                dsi_writeflush(dsi);
-                break;
-            case ENOSYS:
-                goto afp_write_loop;
-            default:
-                /* Low level error, can't do much to back up */
-                cc = AFPERR_MISC;
-                LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno));
+            if ((cc = ad_recvfile(ofork->of_ad, eid, dsi->socket, offset, dsi->datasize, obj->options.splice_size)) < dsi->datasize) {
+                switch (errno) {
+                case EDQUOT:
+                case EFBIG:
+                case ENOSPC:
+                    cc = AFPERR_DFULL;
+                    dsi_writeflush(dsi);
+                    break;
+                case ENOSYS:
+                    goto afp_write_loop;
+                default:
+                    /* Low level error, can't do much to back up */
+                    cc = AFPERR_MISC;
+                    LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno));
+                }
+                *rbuflen = 0;
+                if (obj->options.flags & OPTION_AFP_READ_LOCK)
+                    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+                return cc;
             }
-            *rbuflen = 0;
-            if (obj->options.flags & OPTION_AFP_READ_LOCK)
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
-            return cc;
-        }
 
-        offset += cc;
-        goto afp_write_done;
-    }
+            offset += cc;
+            goto afp_write_done;
+        }
 #endif
 
-afp_write_loop:
-    /* loop until everything gets written. currently
-     * dsi_write handles the end case by itself. */
-    while ((cc = dsi_write(dsi, rcvbuf, rcvbuflen))) {
+    afp_write_loop:
+        /* loop until everything gets written. currently
+         * dsi_write handles the end case by itself. */
+        while ((cc = dsi_write(dsi, rcvbuf, rcvbuflen))) {
 
-        if ((cc = write_file(ofork, eid, offset, rcvbuf, cc)) < 0) {
-            dsi_writeflush(dsi);
-            *rbuflen = 0;
-            if (obj->options.flags & OPTION_AFP_READ_LOCK)
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
-            return cc;
+            if ((cc = write_file(ofork, eid, offset, rcvbuf, cc)) < 0) {
+                dsi_writeflush(dsi);
+                *rbuflen = 0;
+                if (obj->options.flags & OPTION_AFP_READ_LOCK)
+                    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+                return cc;
+            }
+
+            LOG(log_debug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
+                (intmax_t)cc, (intmax_t)offset);
+
+            offset += cc;
         }
-
-        LOG(log_debug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
-            (intmax_t)cc, (intmax_t)offset);
-
-        offset += cc;
+    }
+    break;
     }
 
 afp_write_done:
@@ -1271,8 +1334,10 @@ afp_write_done:
     return( AFP_OK );
 
 afp_write_err:
-    dsi_writeinit(dsi, rcvbuf, rcvbuflen);
-    dsi_writeflush(dsi);
+    if (obj->proto == AFPPROTO_DSI) {
+        dsi_writeinit(dsi, rcvbuf, rcvbuflen);
+        dsi_writeflush(dsi);
+    }
 
     if (err != AFP_OK) {
         *rbuflen = 0;
