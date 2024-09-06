@@ -25,10 +25,10 @@
 #define WOLFSSL_OPENSSLV_H_
 
 #include <wolfssl/wolfcrypt/settings.h>
+#include <wolfssl/version.h>
 
 #if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
 
-#ifndef OPENSSL_VERSION_NUMBER
 /* api version compatibility */
 #if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER == 0x009070dfL) ||\
     defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER == 0x0090810fL) ||\
@@ -54,11 +54,8 @@
 #else
      #define OPENSSL_VERSION_NUMBER 0x0090810fL
 #endif
-#endif
 
-#ifndef OPENSSL_VERSION_TEXT
 #define OPENSSL_VERSION_TEXT             "wolfSSL " LIBWOLFSSL_VERSION_STRING
-#endif
 #define OPENSSL_VERSION                  0
 
 #ifndef OPENSSL_IS_WOLFSSL
