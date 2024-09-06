@@ -105,7 +105,6 @@ typedef WOLFSSL_DES_LONG DES_LONG;
 #define DES_ede3_cbc_encrypt  wolfSSL_DES_ede3_cbc_encrypt
 #define DES_cbc_cksum         wolfSSL_DES_cbc_cksum
 #define DES_check_key_parity  wolfSSL_DES_check_key_parity
-#define DES_KEY_SZ            (sizeof(DES_cblock))
 
 #ifdef __cplusplus
     } /* extern "C" */
