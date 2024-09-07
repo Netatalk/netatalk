@@ -156,7 +156,8 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto \
-            unicode-character-database
+            unicode-character-database \
+            wolfssl
       - name: Configure
         run: |
           meson setup build \
@@ -475,7 +476,8 @@ jobs:
               perl \
               pkg-config \
               talloc \
-              tex-unicode-data
+              tex-unicode-data \
+              wolfssl
           run: |
             set -e
             meson setup build \
