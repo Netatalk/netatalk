@@ -348,6 +348,37 @@ jobs:
       - name: Uninstall
         run: sudo ninja -C build uninstall
 
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc wolfssl
+          wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+      - name: Configure
+        run: |
+          meson setup build \
+            -Dwith-appletalk=true \
+            -Dwith-tests=true
+      - name: Build
+        run: meson compile -C build
+      - name: Run tests
+        run: cd build && meson test
+      - name: Install
+        run: sudo meson install -C build
+      - name: Start netatalk
+        run: sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Uninstall
+        run: sudo ninja -C build uninstall
+
   build-dflybsd:
     name: DragonflyBSD
     runs-on: ubuntu-22.04
@@ -540,37 +571,6 @@ jobs:
             rcctl -d disable netatalk
             ninja -C build uninstall
 
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc wolfssl
-          wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
-      - name: Configure
-        run: |
-          meson setup build \
-            -Dwith-appletalk=true \
-            -Dwith-tests=true
-      - name: Build
-        run: meson compile -C build
-      - name: Run tests
-        run: cd build && meson test
-      - name: Install
-        run: sudo meson install -C build
-      - name: Start netatalk
-        run: sudo netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
-      - name: Uninstall
-        run: sudo ninja -C build uninstall
-
   build-omnios:
     name: OmniOS
     runs-on: ubuntu-22.04
@@ -619,7 +619,6 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
-    if: false
     name: Solaris
     runs-on: ubuntu-latest
     permissions:
@@ -628,7 +627,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1.0.2
+        uses: vmactions/solaris-vm@v1.0.6
         with:
           copyback: false
           prepare: |
@@ -641,6 +640,7 @@ jobs:
               nettle \
               ninja \
               pkg-config \
+              python/pip \
               wget
             pip install meson
           run: |
