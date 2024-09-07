@@ -31,17 +31,15 @@ lang_en = {
   "heading_2": "Configure and build",
   "para_1": "This appendix describes how to compile Netatalk from source for specific operating systems.",
   "para_2": "Please note that the steps below are automatically generated, and may not be optimized for your system.",
-  "para_3": "Choose one of the build systems: Autotools or Meson. Test steps are optional.",
 }
 lang_jp = {
-  "title_1": "Netatalk をソースコードからコンパイルする",
+  "title_1": "ソースコードから Netatalk をコンパイルする",
   "title_2": "概要",
   "title_3": "オペレーティング システム一覧",
   "heading_1": "必要なパッケージをインストールする",
   "heading_2": "コンフィグレーションとビルド",
   "para_1": "本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。",
   "para_2": "本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。",
-  "para_3": "Autotools か Meson のビルドシステムは選択可能。 テスト手順は任意である。",
 }
 
 output_en = "./manual/compile.xml"
@@ -72,7 +70,6 @@ def generate_docbook(strings, output_file):
           "para": [
             strings["para_1"],
             strings["para_2"],
-            strings["para_3"],
           ],
         },
         {
