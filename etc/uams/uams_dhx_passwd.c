@@ -37,11 +37,6 @@
 
 #include <nettle/cast128.h>
 #include <nettle/cbc.h>
-#elif defined(OPENSSL_DHX)
-#include <openssl/bn.h>
-#include <openssl/dh.h>
-#include <openssl/cast.h>
-#include "openssl_compat.h"
 #endif /* EMBEDDED_SSL || defined(WOLFSSL_DHX) */
 
 #include <atalk/afp.h>
@@ -59,11 +54,7 @@
 		     (unsigned long) (a)) & 0xffff)
 
 /* the secret key */
-#if defined(OPENSSL_DHX)
-static CAST_KEY castkey;
-#else
 struct CBC_CTX(struct cast128_ctx, CAST128_BLOCK_SIZE) castkey;
-#endif
 static struct passwd *dhxpwd;
 static uint8_t randbuf[16];
 
@@ -149,11 +140,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     i = DH_compute_key((unsigned char *)rbuf, bn, dh);
 
     /* set the key */
-#if defined(OPENSSL_DHX)
-    CAST_set_key(&castkey, i, (unsigned char *)rbuf);
-#else
     cast5_set_key((struct cast128_ctx *)&castkey, i, (unsigned char *)rbuf);
-#endif
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -188,12 +175,8 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* 0 */
 
     /* encrypt using cast */
-#if defined(OPENSSL_DHX)
-    CAST_cbc_encrypt((unsigned char *)rbuf, (unsigned char *)rbuf, CRYPTBUFLEN, &castkey, iv, CAST_ENCRYPT);
-#else
     CBC_SET_IV(&castkey, iv);
     CBC_ENCRYPT(&castkey, cast128_encrypt, CRYPTBUFLEN, (unsigned char *)rbuf, (unsigned char *)rbuf);
-#endif
     *rbuflen += CRYPTBUFLEN;
     BN_free(bn);
     DH_free(dh);
@@ -296,13 +279,8 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     ibuf += sizeof(sessid);
 
     /* use rbuf as scratch space */
-#if defined(OPENSSL_DHX)
-    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)rbuf, CRYPT2BUFLEN, &castkey,
-		     iv, CAST_DECRYPT);
-#else
     CBC_SET_IV(&castkey, iv);
     CBC_DECRYPT(&castkey, cast128_decrypt, CRYPT2BUFLEN, (unsigned char *)rbuf, (unsigned char *)ibuf);
-#endif
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */

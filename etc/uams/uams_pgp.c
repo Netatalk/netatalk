@@ -49,11 +49,7 @@
 
 /* the secret key */
 static struct passwd *pgppwd;
-#if defined(OPENSSL_DHX)
-static CAST_KEY castkey;
-#else
 struct CBC_CTX(struct cast128_ctx, CAST128_BLOCK_SIZE) castkey;
-#endif
 static uint8_t randbuf[16];
 
 /* pgp passwd */
@@ -122,13 +118,8 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
     ibuf += sizeof(sessid);
 
     /* use rbuf as scratch space */
-#if defined(OPENSSL_DHX)
-    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)rbuf, CRYPT2BUFLEN, &castkey,
-		     iv, CAST_DECRYPT);
-#else
     CBC_SET_IV(&castkey, iv);
     CBC_DECRYPT(&castkey, cast128_decrypt, CRYPT2BUFLEN, (unsigned char *)rbuf, (unsigned char *)ibuf);
-#endif
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
