@@ -580,6 +580,7 @@ if wolfssl.found()
 
     if (
         wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
+        and wolfssl_check.contains('WOLFSSL_DES_ECB')
         and wolfssl_check.contains('OPENSSL_EXTRA')
         and wolfssl_check.contains('OPENSSL_ALL')
     )
@@ -600,7 +601,12 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
         ssl_link_args += ['-Wl,-rpath,' / nettle.get_variable(pkgconfig: 'libdir')]
     endif
     ssl_deps += nettle
-    if have_wolfssl and not have_ssl_override
+    if have_ssl_override
+        have_wolfssl = false
+        have_embedded_ssl = true
+        ssl_provider += 'built-in'
+        cdata.set('EMBEDDED_SSL', 1)
+    elif have_wolfssl
         have_embedded_ssl = false
         ssl_deps += wolfssl
         ssl_provider += 'WolfSSL'
@@ -609,8 +615,6 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
         endif
         cdata.set('WOLFSSL_DHX', 1)
     elif have_embedded_ssl
-        libwolfssl_proj = subproject('wolfssl')
-        libssl = libwolfssl_proj.get_variable('libssl_dep')
         have_wolfssl = false
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)

@@ -45,6 +45,11 @@ if have_appletalk
     ]
 endif
 
+if have_embedded_ssl
+    subdir('ssl')
+    libatalk_libs += libssl
+endif
+
 if have_spotlight
     subdir('talloc')
     libatalk_libs += libtalloc

@@ -39,7 +39,7 @@ library(
 ssl_links = []
 
 if have_embedded_ssl
-    ssl_deps += libssl
+    ssl_links += libatalk
 endif
 
 if have_ssl
