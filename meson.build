@@ -340,16 +340,10 @@ compiler_64_bit_mode = run_command(
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
 
-if host_os == 'sunos' or host_os == 'netbsd'
-    enable_rpath = true
-else
-    enable_rpath = get_option('with-rpath')
-endif
+rpath_libdir = ''
 
-if enable_rpath
+if host_os == 'sunos' or host_os == 'netbsd' or get_option('with-rpath')
     rpath_libdir = libdir
-else
-    rpath_libdir = ''
 endif
 
 #
@@ -429,10 +423,6 @@ else
     endforeach
 endif
 
-if enable_rpath
-    bdb_link_args += '-Wl,-rpath,' + bdb_libdir
-endif
-
 if bdb_header != ''
     have_bdb = true
     bdb_major_version += run_command(
@@ -498,10 +488,6 @@ endif
 
 crypto = dependency('libcrypto', required: false)
 libtls = dependency('libtls', required: false)
-
-if enable_rpath and crypto.found()
-    ssl_link_args += ['-Wl,-rpath,' / crypto.get_variable(pkgconfig: 'libdir')]
-endif
 
 wolfssl = dependency('wolfssl', required: false)
 
@@ -978,9 +964,6 @@ libgcrypt_link_args = []
 
 if libgcrypt_path != ''
     libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
-    if enable_rpath
-        libgcrypt_link_args += ['-Wl,-rpath,' + libgcrypt_path / 'lib']
-    endif
     libgcrypt = declare_dependency(
         link_args: libgcrypt_link_args,
         include_directories: include_directories(libgcrypt_path / 'include'),
@@ -1298,9 +1281,6 @@ ldap_link_args = []
 
 if ldap_path != ''
     ldap_link_args += ['-L' + ldap_path / 'lib', '-lldap']
-    if enable_rpath
-        ldap_link_args += ['-Wl,-rpath,' + ldap_path / 'lib']
-    endif
     ldap = declare_dependency(
         link_args: ldap_link_args,
         include_directories: include_directories(ldap_path / 'include'),
@@ -1364,9 +1344,6 @@ libiconv_link_args = []
 
 if iconv_path != ''
     libiconv_link_args += ['-L' + iconv_path / 'lib', '-liconv']
-    if enable_rpath
-        libiconv_link_args += ['-Wl,-rpath,' + iconv_path / 'lib']
-    endif
     iconv = declare_dependency(
         link_args: libiconv_link_args,
         include_directories: include_directories(iconv_path / 'include'),
@@ -1601,9 +1578,6 @@ else
 
     if pam_path != '' and pam_dir != '/'
         pam_link_args += ['-L' + pam_path / 'lib', '-lpam']
-        if enable_rpath
-            pam_link_args += ['-Wl,-rpath,' + pam_path / 'lib']
-        endif
         pam = declare_dependency(
             link_args: pam_link_args,
             include_directories: include_directories(pam_path / 'include'),
