@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 30 Mar 2011
-.\"    Manual: 2.4.7
-.\"    Source: 2.4.7
+.\"    Manual: 2.4.8
+.\"    Source: 2.4.8
 .\"  Language: English
 .\"
-.TH "AFPLDAPTEST" "1" "30 Mar 2011" "2\&.4\&.7" "2.4.7"
+.TH "AFPLDAPTEST" "1" "30 Mar 2011" "2\&.4\&.8" "2.4.8"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
