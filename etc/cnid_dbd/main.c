@@ -444,6 +444,10 @@ static void switch_to_user(char *dir)
         LOG(log_error, logtype_cnid, "error in stat for %s: %s", dir, strerror(errno));
         exit(1);
     }
+    if (setgroups(0, NULL) < 0) {
+        LOG(log_error, logtype_cnid, "error in setgroups: %s", strerror(errno));
+        exit(1);
+    }
     if (!getuid()) {
         LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", st.st_uid, st.st_gid);
         if (setgid(st.st_gid) < 0 || setuid(st.st_uid) < 0) {
