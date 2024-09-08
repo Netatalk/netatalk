@@ -1,3 +1,11 @@
+Changes in 3.2.8
+================
+* UPD: Bump bundled WolfSSL library to stable version 5.7.2, GitHub #1433
+       Resolves CVE-2024-1544, CVE-2024-5288, CVE-2024-5991, CVE-2024-5814
+* UPD: Revert local modifications to the bundled WolfSSL library, GitHub #1432
+* FIX: Enable building against a shared WolfSSL 5.7.2 library, GitHub #1421
+* FIX: meson: Do not define rpath with a linker argument, GitHub #1443
+
 Changes in 3.2.7
 ================
 * NEW: meson: Ability to control the run-time linker path config file,
