@@ -5,6 +5,7 @@ ENV LIB_DEPS \
     avahi \
     avahi-compat-libdns_sd \
     bash \
+    cups \
     db \
     dbus \
     dbus-glib \
@@ -17,11 +18,13 @@ ENV LIB_DEPS \
     openldap \
     talloc \
     tracker \
-    tracker-miners
+    tracker-miners \
+    tzdata
 ENV BUILD_DEPS \
     acl-dev \
     avahi-dev \
     bison \
+    cups-dev \
     curl \
     db-dev \
     dbus-dev \
@@ -61,6 +64,7 @@ USER builder
 
 RUN meson setup build \
     -Dwith-afpstats=false \
+    -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
     -Dwith-dtrace=false \

@@ -87,6 +87,11 @@ elif [ ! -z "${AFP_USER}" ]; then
     chown "${AFP_USER}:${AFP_USER}" /mnt/afpbackup
 fi
 
+if [ -f "/var/lock/netatalk" ]; then
+    echo "*** Removing residual lock files"
+    rm -f /var/lock/netatalk
+fi
+
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
 if [ ! -z "${INSECURE_AUTH}" ]; then
@@ -97,6 +102,7 @@ if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
     cat <<EOF > /usr/local/etc/afp.conf
 [Global]
+appletalk = yes
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
@@ -112,9 +118,21 @@ valid users = ${AFP_USER}
 EOF
 fi
 
-if [ -f "/var/lock/netatalk" ]; then
-    echo "*** Removing residual lock file"
-    rm -f /var/lock/netatalk
+if [ -z "${ATALKD_INTERFACE}" ]; then
+	echo "WARNING The AppleTalk services will NOT be started. The requirements are:"
+	echo "- The host OS has an AppleTalk networking stack, e.g. Linux or NetBSD."
+	echo "- The Docker container uses the \`host' network driver with the \`NET_ADMIN' capability."
+	echo "- The \`ATALKD_INTERFACE' environment variable is set to a valid host network interface."
+else
+    echo "*** Configuring AppleTalk"
+    echo "${ATALKD_INTERFACE} ${ATALKD_OPTIONS}" > /usr/local/etc/atalkd.conf
+    echo "cupsautoadd:op=root:" > /usr/local/etc/papd.conf
+
+	echo "*** Starting AppleTalk services (this will take a minute)"
+	atalkd
+	papd
+	timelord -l
+	a2boot
 fi
 
 echo "*** Starting AFP server"
