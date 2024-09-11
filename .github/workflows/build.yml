@@ -842,6 +842,7 @@ jobs:
               --with-tracker-pkgconfig-version=3.0
             make -j $(nproc)
             make install
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -855,6 +856,7 @@ jobs:
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -913,6 +915,7 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -928,6 +931,7 @@ jobs:
             cd build && meson test
             cd ..
             meson install -C build
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
