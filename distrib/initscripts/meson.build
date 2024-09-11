@@ -206,9 +206,9 @@ if 'solaris' in init_style
     )
     if get_option('with-init-hooks')
         meson.add_install_script(
-            find_program('svccfg'),
-            'import',
-            '/lib/svc/manifest/network/netatalk.xml',
+            find_program('svcadm'),
+            'restart',
+            'manifest-import',
         )
     endif
 endif
