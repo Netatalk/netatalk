@@ -740,7 +740,6 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
-    if: false
     name: "Solaris"
     runs-on: ubuntu-latest
     permissions:
@@ -749,7 +748,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
       - name: "Build on VM"
-        uses: vmactions/solaris-vm@v1.0.2
+        uses: vmactions/solaris-vm@v1.0.6
         with:
           release: 11.4
           prepare: |
@@ -760,7 +759,9 @@ jobs:
               gcc \
               libgcrypt \
               libtool \
-              pkg-config
+              ninja \
+              pkg-config \
+              python/pip
             pip install meson
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
