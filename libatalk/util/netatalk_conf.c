@@ -2162,6 +2162,13 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
     }
 
+#ifndef NO_DDP
+    if ((q = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ddp address", NULL)))
+        atalk_aton(q, &options->ddpaddr);
+    if (q)
+        free(q);
+#endif
+
     if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
     } else {
@@ -2383,6 +2390,9 @@ void afp_config_free(AFPObj *obj)
 
     obj->options.flags = 0;
     obj->options.passwdbits = 0;
+#ifndef NO_DDP
+    atalk_aton("0.0", &obj->options.ddpaddr);
+#endif
 
     /* Free everything called from afp_config_parse() */
     free_extmap();
