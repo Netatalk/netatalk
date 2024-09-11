@@ -501,6 +501,57 @@ jobs:
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install automake berkeley-db libressl libtool meson mysql talloc
+      - name: Autotools - Bootstrap
+        run: ./bootstrap
+      - name: Autotools - Configure
+        run: |
+          ./configure \
+            --enable-krbV-uam \
+            --enable-pgp-uam \
+            --with-bdb=/opt/homebrew/opt/berkeley-db \
+            --with-init-style=macos-launchd \
+            --with-ssl-dir=/opt/homebrew/opt/libressl
+      - name: Autotools - Build
+        run: make -j $(nproc) all
+      - name: Autotools - Run tests
+        run: make check
+      - name: Autotools - Install
+        run: sudo make install
+      - name: Start netatalk
+        run: sudo /usr/local/bin/netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Autotools - Uninstall
+        run: sudo make uninstall
+      - name: Meson - Configure
+        run: |
+          meson setup build \
+            -Dwith-init-style=macos-launchd \
+            -Dwith-tests=true
+      - name: Meson - Build
+        run: meson compile -C build
+      - name: Meson - Run tests
+        run: cd build && meson test
+      - name: Meson - Install
+        run: sudo meson install -C build
+      - name: Start netatalk
+        run: sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Stop netatalk
+        run: sudo netatalkd stop
+      - name: Meson - Uninstall
+        run: sudo ninja -C build uninstall
+
   build-dflybsd:
     name: DragonflyBSD
     runs-on: ubuntu-22.04
@@ -748,57 +799,6 @@ jobs:
             rcctl -d disable netatalk
             ninja -C build uninstall
 
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: brew install automake berkeley-db libressl libtool meson mysql talloc
-      - name: Autotools - Bootstrap
-        run: ./bootstrap
-      - name: Autotools - Configure
-        run: |
-          ./configure \
-            --enable-krbV-uam \
-            --enable-pgp-uam \
-            --with-bdb=/opt/homebrew/opt/berkeley-db \
-            --with-init-style=macos-launchd \
-            --with-ssl-dir=/opt/homebrew/opt/libressl
-      - name: Autotools - Build
-        run: make -j $(nproc) all
-      - name: Autotools - Run tests
-        run: make check
-      - name: Autotools - Install
-        run: sudo make install
-      - name: Start netatalk
-        run: sudo /usr/local/bin/netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
-      - name: Autotools - Uninstall
-        run: sudo make uninstall
-      - name: Meson - Configure
-        run: |
-          meson setup build \
-            -Dwith-init-style=macos-launchd \
-            -Dwith-tests=true
-      - name: Meson - Build
-        run: meson compile -C build
-      - name: Meson - Run tests
-        run: cd build && meson test
-      - name: Meson - Install
-        run: sudo meson install -C build
-      - name: Start netatalk
-        run: sudo netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
-      - name: Meson - Uninstall
-        run: sudo ninja -C build uninstall
-
   build-omnios:
     name: OmniOS
     runs-on: ubuntu-22.04
@@ -864,7 +864,6 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
-    if: false
     name: Solaris
     runs-on: ubuntu-latest
     permissions:
@@ -873,7 +872,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1.0.2
+        uses: vmactions/solaris-vm@v1.0.6
         with:
           copyback: false
           prepare: |
@@ -886,7 +885,9 @@ jobs:
               libevent \
               libgcrypt \
               libtool \
-              pkg-config
+              ninja \
+              pkg-config \
+              python/pip
             pip install meson
             wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
             wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
