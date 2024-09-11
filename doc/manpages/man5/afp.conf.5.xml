@@ -651,6 +651,16 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ddp address = <replaceable>ddp address</replaceable> <type>(G)</type></term>
+
+          <listitem>
+            <para>Specifies the DDP address of the server. The default is to
+            auto-assign an address (0.0). This is only useful if you are
+            running AppleTalk on more than one interface.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>disconnect time = <replaceable>number</replaceable>
           <type>(G)</type></term>
 
