@@ -612,6 +612,7 @@ jobs:
               -Dwith-ldap-path=/opt/local
             meson compile -C build
             meson install -C build
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -655,6 +656,7 @@ jobs:
             cd build && meson test
             cd ..
             meson install -C build
+            sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
             /usr/local/bin/asip-status localhost
