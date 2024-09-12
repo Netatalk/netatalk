@@ -15,8 +15,7 @@
 
         <secondary>Netatalk's File Services</secondary>
       </indexterm>. The protocol has evolved over the years. The final
-    revision of the protocol, AFP 3.4, was introduced with a minor release of
-    OS X Lion<indexterm>
+    revision of the protocol, AFP 3.4, was introduced with OS X Lion<indexterm>
         <primary>Lion</primary>
 
         <secondary>Mac OS X 10.7</secondary>
@@ -29,13 +28,13 @@
 
     <para>Support for <link linkend="spotlight">Spotlight</link><indexterm>
         <primary>Spotlight</primary>
-      </indexterm> has been added in Netatalk 3.1.</para>
+      </indexterm> was added in Netatalk 3.1.</para>
 
-    <para>Mac OS X 10.5 (Leopard) added support for Time Machine backups over
-    AFP. Two new functions ensure that backups are written to spinning disk,
-    not just in the server's cache. Different host operating systems honour
-    this cache flushing differently. To make a volume a Time Machine target,
-    use the volume option "<option>time machine = yes</option>".</para>
+    <para>Mac OS X 10.5 (Leopard) introduced support for Time Machine backups
+    over AFP. Two new functions ensure that backups are written to disk, not
+    just in the server's cache. Different host operating systems honor this
+    cache flushing differently. To make a volume a Time Machine target, use
+    the volume option "<option>time machine = yes</option>".</para>
 
     <para>Starting with Netatalk 2.1 UNIX symlinks<indexterm>
         <primary>symlink</primary>
@@ -235,7 +234,7 @@ basedir regex = /usr/home</programlisting></para>
 
       <para>The last backend is an in-memory tdb database. It is not
       persistent. Starting with netatalk 3.0, it operates in <emphasis>read
-      only mode</emphasis> automatically. This is useful e.g. for
+      only mode</emphasis> automatically. This is useful e.g. for mounting
       CD-ROMs.</para>
     </sect2>
 
@@ -246,10 +245,8 @@ basedir regex = /usr/home</programlisting></para>
           <secondary>"mysql" CNID backend</secondary>
         </indexterm></title>
 
-      <para>CNID backend using a MySQL server. It gets automatically
-      configured if the MySQL client development libraries are detected.
-      Disable it through the <command>mysql-config</command> setting of the
-      build system.</para>
+      <para>CNID backend using a MySQL server. The MySQL server has to be
+      provisioned by the system administrator.</para>
     </sect2>
   </sect1>
 
@@ -412,7 +409,7 @@ basedir regex = /usr/home</programlisting></para>
           <primary>Precomposed</primary>
 
           <secondary>Precomposed Unicode normalization</secondary>
-        </indexterm> Unicode, which most Unix tools prefer as well, Apple
+        </indexterm> Unicode, which most UNIX tools prefer as well, Apple
       decided to use the <emphasis>decomposed</emphasis><indexterm>
           <primary>Decomposed</primary>
 
@@ -504,7 +501,7 @@ basedir regex = /usr/home</programlisting></para>
           <listitem>
             <para>This is the codepage used internally by your operating
             system. If not specified, it defaults to <option>UTF8</option>. If
-            <option>LOCALE</option> is specified and your system support Unix
+            <option>LOCALE</option> is specified and your system support UNIX
             locales, afpd tries to detect the codepage. afpd uses this
             codepage to read its configuration files, so you can use extended
             characters for volume names, login messages, etc. See
@@ -559,8 +556,8 @@ basedir regex = /usr/home</programlisting></para>
             as well.</para>
 
             <para>afpd needs a way to preserve extended Macintosh characters,
-            or characters illegal in Unix filenames, when saving files on a
-            Unix filesystem. Earlier versions used the the so called CAP
+            or characters illegal in UNIX filenames, when saving files on a
+            UNIX filesystem. Earlier versions used the the so called CAP
             encoding<indexterm>
                 <primary>CAP encoding</primary>
 
@@ -682,11 +679,8 @@ basedir regex = /usr/home</programlisting></para>
               <secondary>"PGPuam 1.0" UAM</secondary>
             </indexterm> UAM (PGP-based authentication for pre-Mac OS X
           clients. You'll also need the <ulink
-          url="http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
+          url="https://web.archive.org/web/20190121142716/http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
           client</ulink> to let this work)</para>
-
-          <para>You may have to enable it at compile time to have this UAM
-          available.</para>
         </listitem>
 
         <listitem>
@@ -695,10 +689,7 @@ basedir regex = /usr/home</programlisting></para>
 
               <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
             </indexterm> UAM (Kerberos V, suitable for "Single Sign On"
-          Scenarios with OS X clients -- see below)</para>
-
-          <para>You may have to deliberately enable this one too when
-          compiling the code.</para>
+          Scenarios with macOS clients – see below)</para>
         </listitem>
       </itemizedlist>
 
@@ -715,10 +706,10 @@ basedir regex = /usr/home</programlisting></para>
 
       <para>Having a specific UAM available at the server does not
       automatically mean that a client can use it. Client-side support is also
-      necessary. For older Macintoshes running Mac OS &lt; X DHCAST128 support
-      exists since AppleShare client 3.8.x.</para>
+      necessary. For older Macintoshes running Classic Mac OS, DHCAST128
+      support exists since AppleShare client 3.8.x.</para>
 
-      <para>On OS X, there exist some client-side techniques to make the
+      <para>On macOS, there exist some client-side techniques to make the
       AFP-client more verbose, so one can have a look what's happening while
       negotiating the UAMs to use. Compare with this <ulink
       url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
@@ -727,9 +718,9 @@ basedir regex = /usr/home</programlisting></para>
     <sect2>
       <title>Which UAMs to activate?</title>
 
-      <para>It depends primarily on your needs and on the kind of Mac OS
-      versions you have to support. Basically one should try to use DHCAST128
-      and DHX2 where possible because of its strength of password
+      <para>It depends primarily on your needs and on the kind of macOS
+      clients you have to support. If your network consists of exclusively
+      macOS (Mac OS X) clients, DHX2 is sufficient, and provides the strongest
       encryption.</para>
 
       <itemizedlist>
@@ -739,16 +730,24 @@ basedir regex = /usr/home</programlisting></para>
           lead accidentally to unauthorized access. In case you must enable
           guest access take care that you enforce this on a per volume base
           using the access controls.</para>
+
+          <para>Note: "No User Authent" is required to use Apple II NetBoot
+          services (<citerefentry>
+              <refentrytitle>a2boot</refentrytitle>
+
+              <manvolnum>8</manvolnum>
+            </citerefentry>) to boot an Apple //e over AFP.</para>
         </listitem>
 
         <listitem>
           <para>The "ClearTxt Passwrd" UAM is as bad as it sounds since
           passwords go unencrypted over the wire. Try to avoid it at both the
-          server's side as well as on the client's. Note: If you want to
-          provide Mac OS 8/9 clients with NetBoot-services then you need
-          uams_cleartext.so since the AFP-client integrated into the Mac's
-          firmware can only deal with this basic form of
-          authentication.</para>
+          server's side as well as on the client's.</para>
+
+          <para>Note: If you want to provide Mac OS 8/9 clients with
+          NetBoot-services then you need uams_cleartext.so since the
+          AFP-client integrated into the Mac's firmware can only deal with
+          this basic form of authentication.</para>
         </listitem>
 
         <listitem>
@@ -763,11 +762,15 @@ basedir regex = /usr/home</programlisting></para>
               <manvolnum>1</manvolnum>
             </citerefentry> utility, in order for clients to use these
           UAMs)</para>
+
+          <para>However, this is the strongest form of authentication that can
+          be used with Macintosh System Software 7.1 or earlier.</para>
         </listitem>
 
         <listitem>
-          <para>"DHCAST128" or "DHX2" should be the sweet spot for most people
-          since it combines stronger encryption with PAM integration.</para>
+          <para>"DHCAST128" ("DHX") or "DHX2" should be the sweet spot for
+          most people since it combines stronger encryption with PAM
+          integration.</para>
         </listitem>
 
         <listitem>
@@ -778,9 +781,9 @@ basedir regex = /usr/home</programlisting></para>
             </indexterm> ("Client Krb v2") UAM, it's possible to implement
           real single sign on scenarios using Kerberos tickets. The password
           is not sent over the network. Instead, the user password is used to
-          decrypt a service ticket for the appleshare server. The service
+          decrypt a service ticket for the AppleShare server. The service
           ticket contains an encryption key for the client and some encrypted
-          data (which only the appleshare server can decrypt). The encrypted
+          data (which only the AppleShare server can decrypt). The encrypted
           portion of the service ticket is sent to the server and used to
           authenticate the user. Because of the way that the afpd service
           principal detection is implemented, this authentication method is
@@ -800,7 +803,7 @@ basedir regex = /usr/home</programlisting></para>
       <para>Some UAMs provide the ability to use different authentication
       "backends", namely <filename>uams_cleartext.so</filename>,
       <filename>uams_dhx.so</filename> and <filename>uams_dhx2.so</filename>.
-      They can use either classic Unix passwords from
+      They can use either classic UNIX passwords from
       <filename>/etc/passwd</filename> (<filename>/etc/shadow</filename>) or
       PAM if the system supports that. <filename>uams_cleartext.so</filename>
       can be symlinked to either <filename>uams_passwd.so</filename> or
@@ -815,7 +818,7 @@ basedir regex = /usr/home</programlisting></para>
       <filename>/etc/netatalk/uams/</filename>):<programlisting>uams_clrtxt.so -&gt; uams_pam.so
 uams_dhx.so -&gt; uams_dhx_pam.so
 uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
-      otherwise classic Unix passwords. The main advantage of using PAM is
+      otherwise classic UNIX passwords. The main advantage of using PAM is
       that one can integrate Netatalk in centralized authentication scenarios,
       e.g. via LDAP, NIS and the like. Please always keep in mind that the
       protection of your user's login credentials in such scenarios also
@@ -912,12 +915,12 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
               <entry>built-in into all Mac OS versions</entry>
 
               <entry>built-in in all Mac OS versions except 10.0. Has to be
-              activated explicitly in recent Mac OS X versions</entry>
+              activated explicitly in later Mac OS X versions</entry>
 
               <entry>built-in into almost all Mac OS versions</entry>
 
               <entry>built-in since AppleShare client 3.8.4, available as a
-              plug-in for 3.8.3, integrated in Mac OS X' AFP client</entry>
+              plug-in for 3.8.3, integrated in macOS's AFP client</entry>
 
               <entry>built-in since Mac OS X 10.2</entry>
 
@@ -1014,7 +1017,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         <para>This works since the first AFP servers that spoke "AFP over TCP"
         appeared in networks. One simply tunnels the remote server's AFP port
         to a local port different than 548 and connects locally to this port
-        afterwards. On OS X this can be done by</para>
+        afterwards. On macOS this can be done by</para>
 
         <programlisting>ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000</programlisting>
 
@@ -1040,7 +1043,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
         <para>From Mac OS X 10.2 to 10.4, Apple added an "Allow Secure
         Connections Using SSH" checkbox to the "Connect to Server" dialog. The
         idea behind this was: When the server signals that it can be contacted
-        by SSH then Mac OS X's AFP client tries to establish the tunnel and
+        by SSH then macOS's AFP client tries to establish the tunnel and
         automagically send all AFP traffic through it.</para>
 
         <para>But it took until the release of Mac OS X 10.3 that this feature
@@ -1148,14 +1151,14 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
       linkend="map_acls">map acls</link>.</para>
 
       <para>However, neither in Finder "Get Info" windows nor in the Terminal
-      will you be able to see the ACLs, because of how ACLs in OS X are
+      will you be able to see the ACLs, because of how ACLs in macOS are
       designed. If you want to be able to display ACLs on the client, things
       get more involved as you must then setup both client and server to be
       part on a authentication domain (directory service, e.g. LDAP,
-      OpenDirectory). The reason is, that in OS X ACLs are bound to UUIDs, not
-      just uid's or gid's. Therefore afpd must be able to map every filesystem
-      uid and gid to a UUID so that it can return the server side ACLs which
-      are bound to UNIX uid and gid mapped to OS X UUIDs.</para>
+      OpenDirectory). The reason is, that in macOS ACLs are bound to UUIDs,
+      not just uid's or gid's. Therefore afpd must be able to map every
+      filesystem uid and gid to a UUID so that it can return the server side
+      ACLs which are bound to UNIX uid and gid mapped to macOS UUIDs.</para>
 
       <para>Netatalk can query a directory server using LDAP queries. Either
       the directory server already provides an UUID attribute for user and
@@ -1217,9 +1220,9 @@ aclmode = passthrough</screen>
     </sect2>
 
     <sect2>
-      <title>OS X ACLs</title>
+      <title>macOS ACLs</title>
 
-      <para>With Access Control Lists (ACLs) Mac OS X offers a powerful
+      <para>With Access Control Lists (ACLs), macOS offers a powerful
       extension of the traditional UNIX permissions model. An ACL is an
       ordered list of Access Control Entries (ACEs) explicitly granting or
       denying a set of permissions to a given user or group.</para>
@@ -1233,20 +1236,20 @@ aclmode = passthrough</screen>
       are optional UNIX permissions act as a default mechanism for access
       control. Changing an objects's UNIX permissions will leave it's ACL
       intact and modifying an ACL will never change the object's UNIX
-      permissions. While doing access checks, OS X first examines an object's
+      permissions. While doing access checks, macOS first examines an object's
       ACL evaluating ACEs in order until all requested rights have been
       granted, a requested right has been explicitly denied by an ACE or the
       end of the list has been reached. In case there is no ACL or the
       permissions granted by the ACL are not sufficient to fulfill the
-      request, OS X next evaluates the object's UNIX permissions. Therefore
+      request, macOS next evaluates the object's UNIX permissions. Therefore
       ACLs always have precedence over UNIX permissions.</para>
     </sect2>
 
     <sect2>
       <title>ZFS ACLs</title>
 
-      <para>ZFS ACLs closely match OS X ACLs. Both offer mostly identical fine
-      grained permissions and inheritance settings.</para>
+      <para>ZFS ACLs closely match macOS ACLs. Both offer mostly identical
+      fine grained permissions and inheritance settings.</para>
     </sect2>
 
     <sect2>
@@ -1255,10 +1258,10 @@ aclmode = passthrough</screen>
       <sect3>
         <title>Overview</title>
 
-        <para>Compared to OS X or NFSv4 ACLs, Posix ACLs represent a
+        <para>Compared to macOS or NFSv4 ACLs, POSIX ACLs represent a
         different, less versatile approach to overcome the limitations of the
         traditional UNIX permissions. Implementations are based on the
-        withdrawn Posix 1003.1e standard.</para>
+        withdrawn POSIX 1003.1e standard.</para>
 
         <para>The standard defines two types of ACLs. Files and directories
         can have access ACLs which are consulted for access checks.
@@ -1268,13 +1271,13 @@ aclmode = passthrough</screen>
         Subdirectories inherit default ACLs from their parent. There are no
         further mechanisms of inheritance control.</para>
 
-        <para>Architectural differences between Posix ACLs and OS X ACLs
+        <para>Architectural differences between POSIX ACLs and macOS ACLs
         especially involve:</para>
 
         <para><itemizedlist>
             <listitem>
               <para>No fine-granular permissions model. Like UNIX permissions
-              Posix ACLs only differentiate between read, write and execute
+              POSIX ACLs only differentiate between read, write and execute
               permissions.</para>
             </listitem>
 
@@ -1283,7 +1286,7 @@ aclmode = passthrough</screen>
             </listitem>
 
             <listitem>
-              <para>Posix ACLs can only grant rights. There is no way to
+              <para>POSIX ACLs can only grant rights. There is no way to
               explicitly deny rights by an entry.</para>
             </listitem>
 
@@ -1293,7 +1296,7 @@ aclmode = passthrough</screen>
             </listitem>
           </itemizedlist></para>
 
-        <para>Posix 1003.1e defines 6 different types of ACL entries. The
+        <para>POSIX 1003.1e defines 6 different types of ACL entries. The
         first three types are used to integrate standard UNIX permissions.
         They form a minimal ACL, their presence is mandatory and only one
         entry of each type is allowed within an ACL.</para>
@@ -1335,10 +1338,10 @@ aclmode = passthrough</screen>
           </itemizedlist></para>
 
         <para>In order to maintain compatibility with applications not aware
-        of ACLs, Posix 1003.1e changes the semantics of system calls and
-        utilities which retrieve or manipulate an objects UNIX permissions. In
-        case an object only has a minimal ACL, the group permissions bits of
-        the UNIX permissions correspond to the value of the ACL_GROUP_OBJ
+        of ACLs, POSIX 1003.1e changes the semantics of system calls and
+        utilities which retrieve or manipulate an object's UNIX permissions.
+        In case an object only has a minimal ACL, the group permissions bits
+        of the UNIX permissions correspond to the value of the ACL_GROUP_OBJ
         entry.</para>
 
         <para>However, if the ACL also contains an ACL_MASK entry, the
@@ -1350,12 +1353,12 @@ aclmode = passthrough</screen>
       </sect3>
 
       <sect3>
-        <title>Mapping POSIX ACLs to OS X ACLs</title>
+        <title>Mapping POSIX ACLs to macOS ACLs</title>
 
         <para>When a client wants to read an object's ACL, afpd maps it's
-        Posix ACL onto an equivalent OS X ACL. Writing an object's ACL
-        requires afpd to map an OS X ACL onto a Posix ACL. Due to
-        architectural restrictions of Posix ACLs, it is usually impossible to
+        POSIX ACL onto an equivalent macOS ACL. Writing an object's ACL
+        requires afpd to map an macOS ACL onto a POSIX ACL. Due to
+        architectural restrictions of POSIX ACLs, it is usually impossible to
         find an exact mapping so that the result of the mapping process will
         be an approximation of the original ACL's semantic.</para>
 
@@ -1363,11 +1366,11 @@ aclmode = passthrough</screen>
             <listitem>
               <para>afpd silently discard entries which deny a set of
               permissions because they they can't be represented within the
-              Posix architecture.</para>
+              POSIX architecture.</para>
             </listitem>
 
             <listitem>
-              <para>As entries within Posix ACLs are unordered, it is
+              <para>As entries within POSIX ACLs are unordered, it is
               impossible to preserve order.</para>
             </listitem>
 
@@ -1390,13 +1393,13 @@ aclmode = passthrough</screen>
             </listitem>
 
             <listitem>
-              <para>The lack of a fine-granular permission model on the Posix
+              <para>The lack of a fine-granular permission model on the POSIX
               side will normally result in an increase of granted
               permissions.</para>
             </listitem>
           </itemizedlist></para>
 
-        <para>As OS X clients aren't aware of the Posix 1003.1e specific
+        <para>As macOS clients aren't aware of the POSIX 1003.1e specific
         relationship between UNIX permissions and ACL_MASK, afpd does not
         expose this feature to the client to avoid compatibility issues and
         handles *unix permissions and ACLs the same way as Apple's reference
@@ -1418,9 +1421,9 @@ aclmode = passthrough</screen>
         <primary>FCE</primary>
       </indexterm></title>
 
-    <para>Netatalk includes a nifty filesystem change event mechanism where
-    afpd processes notfiy interested listeners about certain filesystem event
-    by UDP network datagrams.</para>
+    <para>Netatalk includes a nifty filesystem change event (FCE) mechanism
+    where afpd processes notfiy interested listeners about certain filesystem
+    event by UDP network datagrams.</para>
 
     <para>For the format of the UDP packets and for an example C application
     that demonstrates how to use these in a listener, take a look at the
@@ -1477,7 +1480,7 @@ aclmode = passthrough</screen>
       </indexterm></title>
 
     <para>Starting with version 3.1 Netatalk supports Spotlight searching.
-    Netatalk uses Gnome <ulink
+    Netatalk uses GNOME <ulink
     url="https://projects.gnome.org/tracker/">Tracker</ulink> as metadata
     store, indexer and search engine.</para>
 
@@ -1488,7 +1491,7 @@ aclmode = passthrough</screen>
       volume basis with the <option>spotlight</option> option.</para>
 
       <warning>
-        <para>Once Spotlight is enable for a single volume, all other volumes
+        <para>Once Spotlight is enabled for a single volume, all other volumes
         for which spotlight is disabled won't be searchable at all.</para>
       </warning>
 

@@ -41,8 +41,6 @@
       <arg choice="opt">--libs-names</arg>
 
       <arg choice="opt">--cflags</arg>
-
-      <arg choice="opt">--macros</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -108,15 +106,6 @@
         <listitem>
           <para><emphasis remap="I">netatalk</emphasis>
           ランタイムライブラリにリンクされるプログラムを コンパイルするのに必要なコンパイラーフラグを表示する。</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--macros</option></term>
-
-        <listitem>
-          <para><emphasis remap="I">netatalk</emphasis> の m4
-          ディレクトリを表示する。</para>
         </listitem>
       </varlistentry>
 

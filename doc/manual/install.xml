@@ -3,9 +3,8 @@
   <title>Installation</title>
 
   <warning>
-    <para>Netatalk 3 cannot coexist with earlier versions of Netatalk. See the
-    <link linkend="upgrade">upgrading</link> chapter in this manual if you
-    want to migrate a Netatalk 2 installation to Netatalk 3.</para>
+    <para>Before upgrading from Netatalk 2 or 3 to Netatalk 4, please read the
+    <link linkend="upgrade">upgrading</link> chapter in this manual.</para>
   </warning>
 
   <sect1>
@@ -19,9 +18,10 @@
       <title>Binary packages</title>
 
       <para>Binary packages of Netatalk are included in the package
-      repositories of some Linux and BSD distributions. Installing Netatalk
-      through this channel will give you the most seamless experience, with
-      managed updates when new package versions are available.</para>
+      repositories of some Linux, BSD, and Solaris-like distributions.
+      Installing Netatalk through this channel will give you the most seamless
+      experience, with managed updates when new package versions are
+      available.</para>
 
       <para>You might also want to have a look at 3rd party package
       repositories for your operating system, such as <ulink
@@ -118,7 +118,14 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>The recommended version is 5.3, the final release under the
             permissive Sleepycat license, and therefore the most widely
-            available edition.</para>
+            distributed version.</para>
+          </listitem>
+
+          <listitem>
+            <para>libevent</para>
+
+            <para>Internal event callbacks in the netatalk service controller
+            daemon are built on libevent version 2.</para>
           </listitem>
 
           <listitem>
@@ -130,10 +137,16 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>libevent</para>
+            <para>Perl and UnicodeData.txt</para>
 
-            <para>Internal event callbacks in the netatalk service controller
-            daemon are built on libevent version 2.</para>
+            <para>The build system uses Perl and the Unicode Character
+            Database to generate Netatalk's Unicode character conversion
+            sources.</para>
+
+            <para>Additionally, Netatalk's administrative utility scripts rely
+            on the Perl runtime, version 5.8 or later. The required Perl
+            modules include <emphasis>IO::Socket::IP</emphasis> (asip-status)
+            and <emphasis>Net::DBus</emphasis> (afpstats).</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -146,53 +159,91 @@ Resolving deltas: 100% (32227/32227), done.
 
         <itemizedlist>
           <listitem>
-            <para>OpenSSL / LibreSSL / WolfSSL</para>
+            <para>ACL and LDAP</para>
 
-            <para>OpenSSL 1.1 or LibreSSL is needed for the older DHCAST128
-            (a.k.a. DHX) UAM, which provides the strongest password encryption
-            for Classic Mac OS. The older Random Number UAMs uses this
-            library, too.</para>
-
-            <para>Note that as of netatalk 3.2.0, a bundled WolfSSL library is
-            distributed with netatalk as the default DHX provider.</para>
+            <para>LDAP is an open and industry-standard user directory
+            protocol that works in tandem with the advanced permissions scheme
+            of ACL. On some operating systems ACL and LDAP libraries are built
+            in to the system, while on others you have to install supporting
+            packages to enable this functionality.</para>
           </listitem>
 
           <listitem>
-            <para>Tracker for Spotlight<indexterm>
-                <primary>Spotlight</primary>
-              </indexterm> support</para>
-
-            <para>Netatalk uses <ulink
-            url="https://tracker.gnome.org">Tracker</ulink> as the metadata
-            backend. The minimum required version is 0.7 as this was the first
-            version to support <ulink
-            url="https://gnome.pages.gitlab.gnome.org/tracker/">SPARQL</ulink>.</para>
-
-            <para>Samba's talloc library, a Yacc parser such as bison, and a
-            lexer like flex are also required for Spotlight.</para>
-          </listitem>
-
-          <listitem>
-            <para>mDNSresponder or Avahi for Bonjour</para>
+            <para>Avahi or mDNSresponder for Bonjour</para>
 
             <para>Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for
             automatic service discovery. Netatalk can advertise AFP file
             sharing and Time Machine volumes by using Avahi or
             mDNSResponder.</para>
 
-            <para>The Avahi library itself must be built with DBUS support (
-            <userinput>--enable-dbus</userinput>).</para>
+            <para>The Avahi library itself must have been built with D-Bus
+            support.</para>
           </listitem>
 
           <listitem>
-            <para>TCP wrappers</para>
+            <para>CrackLib</para>
 
-            <para>Wietse Venema's network logger, also known as TCPD or
-            LOG_TCP.</para>
+            <para>When using the Random Number UAMs and netatalk's own
+            <userinput>afppasswd</userinput> password manager, CrackLib can
+            help protect against setting weak passwords for authentication
+            with netatalk.</para>
+          </listitem>
 
-            <para>Security options are: access control per host, domain and/or
-            service; detection of host name spoofing or host address spoofing;
-            booby traps to implement an early-warning system.</para>
+          <listitem>
+            <para>D-Bus and GLib bindings</para>
+
+            <para>Used by the <userinput>afpstats</userinput> tool to inquire
+            afpd about file server usage statistics.</para>
+          </listitem>
+
+          <listitem>
+            <para>DocBook XSL and xsltproc</para>
+
+            <para>The Netatalk documentation, including this manual, are
+            authored in XML format. Then we leverage DocBook XSL stylesheets
+            and xsltproc to transcode the XML to other human-readable formats
+            such as troff (for man pages), html, or pdf.</para>
+          </listitem>
+
+          <listitem>
+            <para>iconv</para>
+
+            <para>iconv provides conversion routines for many character
+            encodings. Netatalk uses it to provide charsets it does not have
+            built in conversions for, like ISO-8859-1. On glibc systems,
+            Netatalk can use the glibc provided iconv implementation.
+            Otherwise you can use the GNU libiconv implementation.</para>
+          </listitem>
+
+          <listitem>
+            <para>Kerberos V</para>
+
+            <para>Kerberos v5 is a client-server based authentication protocol
+            invented at the Massachusetts Institute of Technology. With the
+            Kerberos library, netatalk can produce the GSS UAM library for
+            authentication with existing Kerberos infrastructure.</para>
+          </listitem>
+
+          <listitem>
+            <para>MySQL or MariaDB</para>
+
+            <para>By leveraging a MySQL-compatible client library, netatalk
+            can be built with a MySQL CNID backend that is highly scalable and
+            reliable. The administrator has to provide a separate database
+            instance for use with this backend.</para>
+          </listitem>
+
+          <listitem>
+            <para>Nettle and WolfSSL</para>
+
+            <para>Nettle and WolfSSL are needed for the DHCAST128 (a.k.a. DHX)
+            UAM, which provides the strongest password encryption for Classic
+            Mac OS. The older Random Number UAMs rely on these libraries,
+            too.</para>
+
+            <para>Note: We currently bundle WolfSSL with Netatalk in case a
+            full-featured WolfSSL library isn't distributed with your
+            OS.</para>
           </listitem>
 
           <listitem>
@@ -213,79 +264,29 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>Kerberos V</para>
+            <para>TCP wrappers</para>
 
-            <para>Kerberos v5 is a client-server based authentication protocol
-            invented at the Massachusetts Institute of Technology. With the
-            Kerberos library, netatalk can produce the GSS UAM library for
-            authentication with existing Kerberos infrastructure.</para>
+            <para>Wietse Venema's network logger, also known as TCPD or
+            LOG_TCP.</para>
+
+            <para>Security options are: access control per host, domain and/or
+            service; detection of host name spoofing or host address spoofing;
+            booby traps to implement an early-warning system.</para>
           </listitem>
 
           <listitem>
-            <para>ACL and LDAP</para>
+            <para>Tracker / talloc / bison / flex</para>
 
-            <para>LDAP is an open and industry-standard user directory
-            protocol that works in tandem with the advanced permissions scheme
-            of ACL. On some operating systems ACL and LDAP libraries are built
-            in to the system, while on others you have to install supporting
-            packages to enable this functionality.</para>
-          </listitem>
+            <para>Netatalk uses <ulink
+            url="https://tracker.gnome.org">Tracker</ulink> as the metadata
+            backend for Spotlight<indexterm>
+                <primary>Spotlight</primary>
+              </indexterm> search indexing. The minimum required version is
+            0.7 as this was the first version to support <ulink
+            url="https://gnome.pages.gitlab.gnome.org/tracker/">SPARQL</ulink>.</para>
 
-          <listitem>
-            <para>MySQL</para>
-
-            <para>By leveraging a MySQL-compatible client library, netatalk
-            can be built with a MySQL CNID backend that is highly scalable and
-            reliable. The administrator has to provide a separate database
-            instance for use with this backend.</para>
-          </listitem>
-
-          <listitem>
-            <para>D-Bus and GLib bindings</para>
-
-            <para>Used by the <userinput>afpstats</userinput> tool to inquire
-            afpd about file server usage statistics.</para>
-          </listitem>
-
-          <listitem>
-            <para>iconv</para>
-
-            <para>iconv provides conversion routines for many character
-            encodings. Netatalk uses it to provide charsets it does not have
-            built in conversions for, like ISO-8859-1. On glibc systems,
-            Netatalk can use the glibc provided iconv implementation.
-            Otherwise you can use the GNU libiconv implementation.</para>
-          </listitem>
-
-          <listitem>
-            <para>CrackLib</para>
-
-            <para>When using the Random Number UAMs and netatalk's own
-            <userinput>afppasswd</userinput> password manager, CrackLib can
-            help protect against setting weak passwords for authentication
-            with netatalk.</para>
-          </listitem>
-
-          <listitem>
-            <para>Perl</para>
-
-            <para>Administrative utilities such as
-            <userinput>afpstats</userinput>,
-            <userinput>apple_dump</userinput>,
-            <userinput>asip-status</userinput> and
-            <userinput>macusers</userinput> rely on the Perl runtime, version
-            5.8 or later. The required Perl modules include
-            <emphasis>IO::Socket::IP</emphasis> (asip-status) and
-            <emphasis>Net::DBus</emphasis> (afpstats).</para>
-          </listitem>
-
-          <listitem>
-            <para>DocBook XSL and xsltproc</para>
-
-            <para>The netatalk documentation (such as this manual) are
-            authored in XML format, and then styled with DocBook XSL
-            stylesheets. We rely on xsltproc to transcode the XML to other
-            human-readable formats.</para>
+            <para>Samba's talloc library, a Yacc parser such as bison, and a
+            lexer like flex are also required for Spotlight.</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -320,19 +321,22 @@ Resolving deltas: 100% (32227/32227), done.
     for popular Linux distributions, BSD variants, Solaris descendants, and
     macOS.</para>
 
-    <para>When building from source, you can configure the build system to
-    install the generated startup script(s) <indexterm>
+    <para>When building from source, the Netatalk build system will attempt to
+    detect which init style is appropriate for your platform. You can also
+    configure the build system to install the specific type of startup
+    script(s) <indexterm>
         <primary>Startscript</primary>
 
         <secondary>startup script</secondary>
-      </indexterm> you want by specifying an <option>with-init-style</option>
-    option. For the specific syntax, please refer to the build system's help
+      </indexterm> you want by specifying the <option>with-init-style</option>
+    option. For the syntax, please refer to the build system's help
     text.</para>
 
-    <para>Since new releases of Linux distributions appear all the time and
-    the startup procedure for the other systems mentioned above might change
-    as well, it is probably a good idea to not blindly install a startup
-    script but to confirm first that it will work on your system.</para>
+    <para>Since new Linux, *BSD, and Solaris-like distributions appear at
+    regular intervals, and the startup procedure for the other systems
+    mentioned above might change as well, it is a good idea to not blindly
+    install a startup script but to confirm first that it will work on your
+    system.</para>
 
     <para>If you use Netatalk as part of a fixed setup, like a Linux
     distribution, an RPM or a BSD package, things will probably have been
@@ -358,5 +362,12 @@ Resolving deltas: 100% (32227/32227), done.
     <filename>afp.conf</filename> is in the right place. You can inquire
     netatalk where it is expecting the file to be by running the
     <userinput>netatalk -V</userinput> command.</para>
+
+    <para>If you want to run AppleTalk services, you also need to start the
+    <command>atalkd</command> daemon, plus the optional
+    <command>papd</command>, <command>timelord</command>, and
+    <command>a2boot</command> daemons. See the <link
+    linkend="appletalk">AppleTalk</link> chapter in this manual for more
+    information.</para>
   </sect1>
 </chapter>
