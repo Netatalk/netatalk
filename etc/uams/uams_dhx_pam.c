@@ -198,6 +198,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     size_t i;
     BIGNUM *bn, *gbn, *pbn;
     const BIGNUM *pub_key;
+    int nwritten;
     DH *dh;
 
     /* get the client's public key */
@@ -272,9 +273,13 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
 
     /* figure out the key. store the key in rbuf for now. */
     i = (unsigned long) DH_compute_key(rbuf, bn, dh);
+    if (i < KEYSIZE) {
+        memmove( rbuf + KEYSIZE - i, rbuf, i );
+        memset( rbuf, 0, KEYSIZE - i );
+    }
 
     /* set the key */
-    CAST_set_key(&castkey, (int) i, rbuf);
+    CAST_set_key(&castkey, KEYSIZE, rbuf);
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -283,7 +288,11 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     *rbuflen += sizeof(sessid);
 
     /* public key */
-    BN_bn2bin(pub_key, rbuf);
+    nwritten = BN_bn2bin(pub_key, rbuf);
+    if (nwritten < KEYSIZE) {
+        memmove( rbuf + KEYSIZE - nwritten, rbuf, nwritten );
+        memset( rbuf, 0, KEYSIZE - nwritten );
+    }
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
 
