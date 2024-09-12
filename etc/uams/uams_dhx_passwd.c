@@ -10,6 +10,7 @@
 
 #include <atalk/standards.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,6 +79,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     BIGNUM *bn, *gbn, *pbn;
     const BIGNUM *pub_key;
     uint16_t sessid;
+    int nwritten;
     size_t i;
     DH *dh;
 
@@ -146,10 +148,14 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
     /* figure out the key. use rbuf as a temporary buffer. */
     i = DH_compute_key((unsigned char *)rbuf, bn, dh);
-    
+    if (i < KEYSIZE) {
+        memmove( rbuf + KEYSIZE - i, rbuf, i );
+        memset( rbuf, 0, KEYSIZE - i );
+    }
+
     /* set the key */
-    CAST_set_key(&castkey, i, (unsigned char *)rbuf);
-    
+    CAST_set_key(&castkey, KEYSIZE, (unsigned char *)rbuf);
+
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
@@ -157,7 +163,11 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     *rbuflen += sizeof(sessid);
     
     /* send our public key */
-    BN_bn2bin(pub_key, (unsigned char *)rbuf); 
+    nwritten = BN_bn2bin(pub_key, (unsigned char *)rbuf);
+    if (nwritten < KEYSIZE) {
+        memmove( rbuf + KEYSIZE - nwritten, rbuf, nwritten );
+        memset( rbuf, 0, KEYSIZE - nwritten );
+    }
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
 
@@ -281,8 +291,13 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
-    if (sessid != dhxhash(obj))
+    if (sessid != dhxhash(obj)) {
+    /* Log Entry */
+           LOG(log_info, logtype_uams, "uams_dhx_passwd.c :passwd Session ID - DHXHash Mismatch -- %s",
+		  strerror(errno));
+    /* Log Entry */
       return AFPERR_PARAM;
+    }
     ibuf += sizeof(sessid);
    
     /* use rbuf as scratch space */
