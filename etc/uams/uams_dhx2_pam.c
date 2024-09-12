@@ -497,7 +497,11 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf, siz
     *rbuflen += 2;
 
     /* Client nonce + 1 */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, NULL, clientNonce);
+    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, &nwritten, clientNonce);
+    if (nwritten < 16) {
+        memmove( rbuf + 16 - nwritten, rbuf, nwritten );
+        memset( rbuf, 0, 16 - nwritten );
+    }
     /* Server nonce */
     memcpy(rbuf+16, serverNonce_bin, 16);
 
