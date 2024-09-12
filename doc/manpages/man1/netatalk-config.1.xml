@@ -39,8 +39,6 @@
       <arg choice="opt">--libs-names</arg>
 
       <arg choice="opt">--cflags</arg>
-
-      <arg choice="opt">--macros</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -108,15 +106,6 @@
           <para>Print the compiler flags that are necessary to compile a
           program linked against the <emphasis remap="I">netatalk</emphasis>
           run-time libraries.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--macros</option></term>
-
-        <listitem>
-          <para>Print the <emphasis remap="I">netatalk</emphasis> m4
-          directory.</para>
         </listitem>
       </varlistentry>
 

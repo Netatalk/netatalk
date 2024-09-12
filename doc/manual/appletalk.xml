@@ -13,6 +13,9 @@
     different protocols for different uses: address resolution, address/name
     mapping, service location, establishing connections, and the like.</para>
 
+    <para>Netatalk builds upon the AppleTalk protocols to provide file
+    services and other services to old Mac and Apple II clients.</para>
+
     <para>A complete overview can be found inside the <ulink
     url="https://github.com/Netatalk/netatalk/blob/main/doc/README.AppleTalk">developer
     documentation</ulink>.</para>
@@ -20,7 +23,7 @@
     <sect2>
       <title>To use AppleTalk or not</title>
 
-      <para>You'll need the AppleTalk support built into netatalk in case you
+      <para>You'll need the AppleTalk support built into Netatalk in case you
       want to provide printing services via PAP by <citerefentry>
           <refentrytitle>papd</refentrytitle>
 
@@ -48,7 +51,7 @@
       establishing the AFP connection itself via AFP over TCP (see the
       developer documentation for details on this cool feature, too).</para>
 
-      <para>To use the different base AppleTalk protocols with netatalk, one
+      <para>To use the different base AppleTalk protocols with Netatalk, one
       has to use <citerefentry>
           <refentrytitle>atalkd</refentrytitle>
 
@@ -58,8 +61,17 @@
 
       <para>To use AppleTalk/atalkd, your system has to have kernel support
       for AppleTalk. If missing, you will be restricted to AFP over TCP, and
-      won't be able to use either of the AppleTalk services described
-      here.</para>
+      won't be able to use either of the AppleTalk services described in this
+      chapter.</para>
+
+      <example>
+        <title>Enable AppleTalk in afp.conf</title>
+
+        <para><programlisting>appletalk = yes</programlisting>If Netatalk has
+        been built with AppleTalk support (pass
+        <userinput>-Dwith-appletalk=true</userinput> to the build system),
+        this activates AFP over AppleTalk.</para>
+      </example>
     </sect2>
 
     <sect2>
@@ -74,73 +86,73 @@
       <para>In case, you have more than one active network interface, you have
       to make a decision:</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>Using only one interface: Just add the interface name (en1,
-          le0, eth2, ... for example) to atalkd.conf on a single line. Do only
-          list <emphasis>one</emphasis> interface here.</para>
+      <sect3>
+        <title>Using only one interface</title>
 
-          <example>
-            <title>atalkd.conf containing one entry</title>
+        <para>Just add the interface name (en1, le0, eth2, ... for example) to
+        atalkd.conf on a single line. Do only list <emphasis>one</emphasis>
+        interface here.</para>
 
-            <para><programlisting>eth0</programlisting>AppleTalk networking
-            should be enabled on eth0 interface. All the necessary
-            configuration will be fetched from the network</para>
-          </example>
+        <example>
+          <title>atalkd.conf containing one entry</title>
 
-          <para>At startup time, atalkd will add the real settings (address
-          and network and eventually a zone) to atalkd.conf on its own</para>
+          <para><programlisting>eth0</programlisting>AppleTalk networking
+          should be enabled on eth0 interface. All the necessary configuration
+          will be fetched from the network</para>
+        </example>
 
-          <example>
-            <title>atalkd.conf containing one entry after atalkd
-            started</title>
+        <para>At startup time, atalkd will add the real settings (address and
+        network and eventually a zone) to atalkd.conf on its own</para>
 
-            <para><programlisting>eth0 -phase 2 -net 0-65534 -addr 65280.166</programlisting>
-            atalkd filled in the AppleTalk settings that apply to this network
-            segment. A netrange of 0-65534 indicates that there is no
-            AppleTalk router present, so atalkd will fetch an address that
-            matches the following criteria: netrange from inside the so called
-            "startup range" 65280-65533 and a node address between 142 and
-            255.</para>
-          </example>
-        </listitem>
+        <example>
+          <title>atalkd.conf containing one entry after atalkd started</title>
 
-        <listitem>
-          <para>When using several interfaces you have to add them line by
-          line following the <emphasis>-dontroute</emphasis> switch in
-          atalkd.conf.</para>
+          <para><programlisting>eth0 -phase 2 -net 0-65534 -addr 65280.166</programlisting>
+          atalkd filled in the AppleTalk settings that apply to this network
+          segment. A netrange of 0-65534 indicates that there is no AppleTalk
+          router present, so atalkd will fetch an address that matches the
+          following criteria: netrange from inside the so called "startup
+          range" 65280-65533 and a node address between 142 and 255.</para>
+        </example>
+      </sect3>
 
-          <example>
-            <title>atalkd.conf containing several entries with the -dontroute
-            option</title>
+      <sect3>
+        <title>Using several interfaces</title>
 
-            <para><programlisting>eth0 -dontroute eth1 -dontroute eth2 -dontroute</programlisting>AppleTalk
-            networking should be enabled on all three interfaces, but no
-            routing should be done between the different segments. Again, all
-            the necessary configuration will be fetched from the connected
-            networks.</para>
-          </example>
+        <para>When using several interfaces you have to add them line by line
+        following the <emphasis>-dontroute</emphasis> switch in
+        atalkd.conf.</para>
 
-          <example>
-            <title>atalkd.conf containing several entries with the -dontroute
-            option after atalkd started</title>
+        <example>
+          <title>atalkd.conf containing several entries with the -dontroute
+          option</title>
 
-            <para><programlisting>eth0 -dontroute -phase 2 -net 0-65534 -addr 65280.152
+          <para><programlisting>eth0 -dontroute eth1 -dontroute eth2 -dontroute</programlisting>AppleTalk
+          networking should be enabled on all three interfaces, but no routing
+          should be done between the different segments. Again, all the
+          necessary configuration will be fetched from the connected
+          networks.</para>
+        </example>
+
+        <example>
+          <title>atalkd.conf containing several entries with the -dontroute
+          option after atalkd started</title>
+
+          <para><programlisting>eth0 -dontroute -phase 2 -net 0-65534 -addr 65280.152
 eth1 -dontroute -phase 2 -net 0-65534 -addr 65280.208
 eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisting>
-            On eth0 and eth1, there are no other routers present, so atalkd
-            chooses an address from within the startup range. But on eth2
-            there lives an already connected AppleTalk router, publishing one
-            zone called "Printers" and forcing clients to assign themselves an
-            address in a netrange between 1 and 1000.</para>
-          </example>
+          On eth0 and eth1, there are no other routers present, so atalkd
+          chooses an address from within the startup range. But on eth2 there
+          lives an already connected AppleTalk router, publishing one zone
+          called "Printers" and forcing clients to assign themselves an
+          address in a netrange between 1 and 1000.</para>
+        </example>
 
-          <para>In this case, atalkd will handle each interface as it would be
-          the only active one. This can have some side effects when it comes
-          to the point where AFP clients want to do the magic switch from
-          AppleTalk to TCP, so use this with caution.</para>
-        </listitem>
-      </itemizedlist>
+        <para>In this case, atalkd will handle each interface as it would be
+        the only active one. This can have some side effects when it comes to
+        the point where AFP clients want to do the magic switch from AppleTalk
+        to TCP, so use this with caution.</para>
+      </sect3>
 
       <para>In case, you have more than one active network interface and do
       not take special precautions as outlined above, then autoconfiguration
@@ -163,8 +175,8 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
           <secondary>AppleTalk router</secondary>
         </indexterm></title>
 
-      <para>There exist several types of AppleTalk routers: seed, non-seed and
-      so called soft-seed routers.</para>
+      <para>Several types of AppleTalk routers exist: seed, non-seed and so
+      called soft-seed routers.</para>
 
       <itemizedlist>
         <listitem>
@@ -224,10 +236,10 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
       </itemizedlist>
 
       <warning>
-        <para>Unless you are the network admin yourself, consider asking
-        her/him before changing anything related to AppleTalk routing, as
-        changing these settings might have side effects for all of your
-        AppleTalk network clients!</para>
+        <para>Unless you are the network admin yourself, consider asking them
+        before changing anything related to AppleTalk routing, as changing
+        these settings might have side effects for all of your AppleTalk
+        network clients!</para>
       </warning>
 
       <para>In an AppleTalk network netranges have to be unique and must not
@@ -386,11 +398,11 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
         <primary>Printing</primary>
       </indexterm></title>
 
-    <para>Netatalk can act as both a PAP<indexterm>
+    <para>Netatalk can act both as a PAP<indexterm>
         <primary>PAP</primary>
 
         <secondary>Printer Access Protocol</secondary>
-      </indexterm> client to access AppleTalk-capable printers and a PAP
+      </indexterm> client to access AppleTalk-capable printers, and as a PAP
     server. The former by using the <citerefentry>
         <refentrytitle><command>pap</command></refentrytitle>
 
@@ -581,7 +593,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
       </indexterm></title>
 
     <sect2 id="timelord">
-      <title>Using Netatalk as a time server for Macintoshes</title>
+      <title>Timelord</title>
 
       <para><command>timelord</command><indexterm>
           <primary>timelord</primary>
@@ -602,6 +614,29 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
 
       <para>For further information please have a look at the <citerefentry>
           <refentrytitle>timelord</refentrytitle>
+
+          <manvolnum>8</manvolnum>
+        </citerefentry> manual page.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="netboot">
+    <title>NetBoot Services</title>
+
+    <sect2 id="a2netboot">
+      <title>Apple 2 NetBooting</title>
+
+      <para><command>a2boot</command><indexterm>
+          <primary>a2boot</primary>
+        </indexterm> is a service that allows you to boot an Apple //e or
+      Apple IIGS into ProDOS or GS/OS through an AFP volume served by
+      Netatalk.</para>
+
+      <para>You need to supply the appropriate boot blocks and system files
+      provided by Apple yourself.</para>
+
+      <para>For further information please have a look at the <citerefentry>
+          <refentrytitle>a2boot</refentrytitle>
 
           <manvolnum>8</manvolnum>
         </citerefentry> manual page.</para>

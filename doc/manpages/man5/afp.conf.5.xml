@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">31 May 2024</refmiscinfo>
+    <refmiscinfo class="date">12 Sep 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
 
@@ -651,7 +651,8 @@
         </varlistentry>
 
         <varlistentry>
-          <term>ddp address = <replaceable>ddp address</replaceable> <type>(G)</type></term>
+          <term>ddp address = <replaceable>ddp address</replaceable>
+          <type>(G)</type></term>
 
           <listitem>
             <para>Specifies the DDP address of the server. The default is to
@@ -1958,6 +1959,12 @@
                 </listitem>
               </varlistentry>
             </variablelist>
+
+            <warning>
+              <para>The <emphasis role="bold">samba</emphasis> option should
+              not be used on a volume that was previously set to <emphasis
+              role="bold">sys</emphasis>. This may lead data loss.</para>
+            </warning>
           </listitem>
         </varlistentry>
 
@@ -2219,13 +2226,13 @@
         </varlistentry>
 
         <varlistentry>
-          <term>legacy volume size = <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>no</emphasis>) <type>(V)</type></term>
+          <term>legacy volume size = <replaceable>BOOLEAN</replaceable>
+          (default: <emphasis>no</emphasis>) <type>(V)</type></term>
 
           <listitem>
-            <para>Limit disk size reporting to 2GB for legacy clients. This can
-            be used for older Macintoshes running System 7.1 or earlier and
-            using newer AppleShare clients.</para>
+            <para>Limit disk size reporting to 2GB for legacy clients. This
+            can be used for older Macintoshes running System 7.1 or earlier
+            and using newer AppleShare clients.</para>
           </listitem>
         </varlistentry>
 

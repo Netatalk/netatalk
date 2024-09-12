@@ -6,16 +6,15 @@
 [![License: GPL v2](https://img.shields.io/github/license/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/blob/main/COPYING)
 [<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="20" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
-Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.4 over TCP/IP.
+Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.4 over TCP/IP and AppleTalk.
 AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
 A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for macOS and Classic Mac OS clients.
 
 # AppleTalk
 
-If you need Netatalk to provide AFP over [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) (DDP) in order to do file sharing with very old Macs or Apple II computers, please install the latest *old stable* Netatalk 2.x version.
-AppleTalk support was removed in Netatalk 3.0, however 2.x is still being actively maintained.
+Netatalk provides AFP over the [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) family of protocols in order to provide file sharing and other services with very old Macs or Apple II computers.
 
-Find the latest Netatalk 2.x releases at [netatalk.io](https://netatalk.io/) or in the [GitHub Releases section](https://github.com/Netatalk/netatalk/releases?q=%22Netatalk+2%22&expanded=false).
+All versions of Netatalk except the 3.x release series support AppleTalk.
 
 # Community
 
@@ -29,7 +28,7 @@ While these lists aren't as active as they used to be, the archives are a verita
 
 # Why Should I Use Netatalk?
 
-If you have a local network of Macs - macOS, Mac OS X, and all the way back to Classic Mac OS -
+If you have a local network macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
 running a Netatalk AppleShare server allows you to share, collaborate on, and back up files comfortably.
 The latest macOS at the time of writing (macOS 14 Sonoma) ships with an AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
