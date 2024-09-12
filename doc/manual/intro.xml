@@ -16,7 +16,7 @@
     <title>Overview of Netatalk</title>
 
     <para>Netatalk is an Open Source software package that can be used to turn
-    a *NIX machine into a fast, light-weight and reliable file server for
+    a *NIX machine into a performant and light-weight file server for
     Macintosh computers. It provides a TCP/IP as well as a traditional
     AppleTalk transport layer.</para>
 

@@ -334,6 +334,7 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-hooks=false \
+            -Dwith-manual-l10n=ja \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build

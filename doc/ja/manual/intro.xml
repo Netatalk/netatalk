@@ -6,8 +6,6 @@
 
       <surname>UDA（日本語訳）</surname>
     </author>
-
-    <pubdate>2015 年 6 月 10 日（訳）</pubdate>
   </chapterinfo>
 
   <title>序説</title>
@@ -25,14 +23,24 @@
   <sect1>
     <title>Netatalk 概要</title>
 
-    <para>Netatalk は、*NIX マシンを極めて高性能で極めて軽いマッキントッシュコンピューター用ファイルサーバーに変身させる、
-    オープンソースのソフトウェアのパッケージである。</para>
+    <para>Netatalk は、*NIX マシンを Macintosh コンピュータ用の高性能で軽量なファイル
+    サーバーに変えるために使用できるオープン ソース ソフトウェア パッケージです。TCP/IP と従来の AppleTalk
+    トランスポート層を提供します。</para>
 
-    <para>Netatalk の AFP 3.4 準拠のファイルサーバーは、考え得る最高のユーザーエクスペリエンス
-    （マッキントッシュのメタデータの完全なサポート。クラシック Mac OS と macOS の混在環境も問題なくサポート）をもたらしつつ、Mac が
-    Samba/NFS 経由でサーバーにアクセスしたのと比較して著しく高い転送速度をもたらす。</para>
+    <para>Netatalk の AFP 3.4 準拠のファイル サーバーを使用すると、macOS クライアントの転送速度が Samba/NFS
+    に比べて著しく高速になり、ユーザーには可能な限り Mac のようなユーザー エクスペリエンスが提供されます。Mac メタデータ (macOS
+    拡張ファイル属性と Classic Mac OS リソース フォーク) の読み取りと書き込みが可能で、新旧の Mac
+    が混在する環境を容易にします。</para>
 
-    <para>あらゆる導入環境に対応できるよう、さまざまな認証方法が付属しています。 Bonjour サービス検出、Time Machine
-    バックアップ、 Spotlight インデックス検索などの最新の macOS 機能もサポートされている。</para>
+    <para>Netatalk には、Kerberos、ACL、LDAP など、ほとんどの展開環境に対応できるさまざまな機能が搭載されています。
+    Bonjour サービス検出、Time Machine バックアップ、Spotlight インデックス検索などの最新の macOS
+    機能が提供されます。</para>
+
+    <para>レガシー Mac および Apple II を使用した AppleTalk ネットワークの場合、Netatalk はプリント
+    サーバー、タイム サーバー、および Apple II NetBoot サーバーを提供します。プリント サーバーは CUPS
+    と完全に統合されているため、古い Mac はネットワーク上の最新の CUPS/AirPrint 互換プリンターを検出して印刷できます。</para>
+
+    <para>さらに、Netatalk は AppleTalk ネットワーク管理デーモンを介して AppleTalk ルーターとして構成でき、従来の
+    Macintosh ネットワークでセグメンテーションとゾーン名の両方を提供します。</para>
   </sect1>
 </chapter>

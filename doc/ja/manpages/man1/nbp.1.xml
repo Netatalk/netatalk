@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="nbp.1">
+  <refmeta>
+    <refentrytitle>nbp</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">24 June 2004</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバ マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>nbp</refname>
+
+    <refname>nbplkup</refname>
+
+    <refname>nbprgstr</refname>
+
+    <refname>nbpunrgstr</refname>
+
+    <refpurpose>NBP データベースへのアクセス</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>nbplkup<indexterm>
+          <primary>nbp</primary>
+        </indexterm><indexterm>
+          <primary>nbplkup</primary>
+        </indexterm></command>
+
+      <arg>-r <replaceable>maxresponses</replaceable></arg>
+
+      <arg>-A <replaceable>address</replaceable></arg>
+
+      <arg>-m <replaceable>maccodepage</replaceable></arg>
+
+      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>nbprgstr<indexterm>
+          <primary>nbprgstr</primary>
+        </indexterm></command>
+
+      <arg>-A <replaceable>アドレス</replaceable></arg>
+
+      <arg>-p <replaceable>ポート</replaceable></arg>
+
+      <arg>-m <replaceable>maccodepage</replaceable></arg>
+
+      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>nbpunrgstr<indexterm>
+          <primary>nbpunrgstr</primary>
+        </indexterm></command>
+
+      <arg>-A <replaceable>アドレス</replaceable></arg>
+
+      <arg>-m <replaceable>maccodepage</replaceable></arg>
+
+      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>nbprgstr</command> は、指定された <replaceable>port</replaceable>
+    で、<citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry> に <replaceable>nbpname</replaceable>
+    を登録します。<command>nbpunrgstr</command> は、<emphasis
+    remap="B">atalkd</emphasis> に、<replaceable>nbpname</replaceable>
+    がアドバタイズされなくなったことを通知します。</para>
+
+    <para><command>nbplkup</command> は、AppleTalk インターネットに登録されているエンティティを最大
+    <replaceable>maxresponses</replaceable> (デフォルトは 1000) 個表示します。 <emphasis
+    remap="I"><replaceable>nbpname</replaceable></emphasis> は、<citerefentry>
+        <refentrytitle>nbp_name</refentrytitle>
+
+        <manvolnum>3</manvolnum>
+      </citerefentry>によって解析されます。 <emphasis remap="I">object</emphasis>
+    または<emphasis remap="I">type</emphasis>の`<emphasis
+    remap="B">=</emphasis>'は任意のものに一致し、<emphasis
+    remap="I">zone</emphasis>の`<emphasis
+    remap="B">*</emphasis>'はローカルゾーンを意味します。デフォルト値は、<emphasis
+    remap="B">NBPLKUP</emphasis> 環境変数から取得され、<replaceable>nbpname</replaceable>
+    として解析されます。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>環境変数</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>NBPLKUP</term>
+
+        <listitem>
+          <para>nbplkup のデフォルトの nbpname</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ATALK_MAC_CHARSET</term>
+
+        <listitem>
+          <para>Appletalk ネットワーク上のクライアントが使用するコードページ</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ATALK_UNIX_CHARSET</term>
+
+        <listitem>
+          <para>このシェルで拡張文字を表示するために使用するコードページ。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <para>ローカル ゾーンでタイプ <emphasis remap="B">LaserWriter</emphasis>
+    のすべてのデバイスを検索します。</para>
+
+    <screen><prompt>example%</prompt> <userinput>nbplkup :LaserWriter</userinput>
+<computeroutput> <computeroutput>              Petoskey:LaserWriter        7942.129:218
+             Gloucester:LaserWriter        8200.188:186
+                 Rahway:LaserWriter        7942.2:138
+             517 Center:LaserWriter        7942.2:132
+                  ionia:LaserWriter        7942.2:136
+     Evil DEC from Hell:LaserWriter        7942.2:130
+              Hamtramck:LaserWriter        7942.2:134
+         Iron Mountain :LaserWriter        7942.128:250</computeroutput></computeroutput>
+<prompt>example%</prompt>
+</screen>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>nbp_name</refentrytitle>
+
+        <manvolnum>3</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
+    を参照してください</para>
+  </refsect1>
+</refentry>

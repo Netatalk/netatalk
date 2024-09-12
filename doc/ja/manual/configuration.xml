@@ -6,8 +6,6 @@
 
       <surname>UDA（日本語訳）</surname>
     </author>
-
-    <pubdate>2016 年 7 月 26 日（訳）</pubdate>
   </chapterinfo>
 
   <title>Netatalk のセットアップ</title>
@@ -28,7 +26,7 @@
         <primary>Lion</primary>
 
         <secondary>Mac OS X 10.7</secondary>
-      </indexterm> (10.7) のマイナーリリースにあわせて加えられた "AFP 3.4" である。</para>
+      </indexterm> (10.7) で加えられた "AFP 3.4" である。</para>
 
     <para>Netatalk の afpd デーモンはアップルのクライアントに対して AFP ファイルサービスを提供する。設定ファイルは
     <filename>afp.conf</filename> のみで、"ini" スタイルの構文で記述する。</para>
@@ -144,8 +142,8 @@ basedir regex = /usr/home</programlisting></para>
 
         <secondary>ファイル ID</secondary>
       </indexterm> が割り当てられる。仕様により ID は絶対に再利用禁止であり、ID は 32 bit の数字である。（ディレクトリ
-    ID も同じ ID プールを使用する）このため、ある AFP ボリュームにおよそ 40 億個以上のファイル・フォルダーを書き込むと、その時点で
-    ID プールが枯渇され、当該ボリュームへの新ファイルの書き込みができなくなる。愚痴はなしということでお願いしたい :-)</para>
+    ID も同じ ID プールを使用する）このため、ある AFP ボリュームにおよそ 40 億個以上のファイル・フォルダーを書き込むと、その時点で ID
+    プールが枯渇され、当該ボリュームへの新ファイルの書き込みができなくなる。愚痴はなしということでお願いしたい :-)</para>
 
     <para>Netatalk はホストのファイルシステム内で ID とファイルあるいはフォルダーのマップ（ID との対応付け）をする必要がある。
     それを実現するためにいくつかの異なる CNID バックエンド<indexterm>
@@ -162,8 +160,7 @@ basedir regex = /usr/home</programlisting></para>
     名前を一対一対応させるデータベースである。</para>
 
     <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename>
-    に置かれる。コンパイル時に <command>localstatedir=PATH</command>
-    オプションで場所を変えられる。</para>
+    に置かれる。コンパイル時に <command>localstatedir=PATH</command> オプションで場所を変えられる。</para>
 
     <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command>
     という名のコマンドが用意されていている。</para>
@@ -257,8 +254,8 @@ basedir regex = /usr/home</programlisting></para>
           <secondary>"mysql" CNID バックエンド</secondary>
         </indexterm></title>
 
-      <para>CNID バックエンドは MySQL サーバーを使用する。mysql 開発ライブラリが検出されると、自動的に設定される。
-      コンパイル時に<command>mysql-config</command>で無効にする。</para>
+      <para>CNID バックエンドは MySQL サーバーを使用する。MySQL
+      サーバーはシステム管理者がプロビジョニングする必要があります。</para>
     </sect2>
   </sect1>
 
@@ -407,7 +404,7 @@ basedir regex = /usr/home</programlisting></para>
       </emphasis>方式を規定している。<ulink
       url="http://www.samba.org">Samba</ulink><indexterm>
           <primary>Samba</primary>
-        </indexterm> はほとんどの Unix ツールも好んで用いる
+        </indexterm> はほとんどの UNIX ツールも好んで用いる
       <emphasis>precomposed</emphasis><indexterm>
           <primary>Precomposed</primary>
 
@@ -501,7 +498,7 @@ basedir regex = /usr/home</programlisting></para>
           <listitem>
             <para>これはオペレーティングシステムの内側で使われているコードページである。もし指定されていなければ、デフォルトで
             <option>UTF8</option> になる。もし <option>LOCALE</option> が指定されていて、
-            システムが Unix locales をサポートしていれば、afpd はコードページを検出しようとし、afpd
+            システムが UNIX locales をサポートしていれば、afpd はコードページを検出しようとし、afpd
             は検出したコードページを使って設定ファイルを読む。なので、ボリューム名やログインメッセージなどに拡張文字を使うことができる。
             <citerefentry>
                 <refentrytitle>afp.conf</refentrytitle>
@@ -550,8 +547,8 @@ basedir regex = /usr/home</programlisting></para>
               </indexterm> がインストールしてあるならば、iconv
             が提供するキャラクターセットも使用することができる。</para>
 
-            <para>afpd はファイルを unix のファイルシステムに保存する時、拡張マッキントッシュキャラクター、あるいは
-            unix のファイル名として不正なキャラクターを保持する手段が必要である。初期のバージョンでは、いわゆる CAP
+            <para>afpd はファイルを unix のファイルシステムに保存する時、拡張マッキントッシュキャラクター、あるいは unix
+            のファイル名として不正なキャラクターを保持する手段が必要である。初期のバージョンでは、いわゆる CAP
             エンコーディング<indexterm>
                 <primary>CAP エンコーディング</primary>
 
@@ -665,11 +662,9 @@ basedir regex = /usr/home</programlisting></para>
 
               <secondary>"PGPuam 1.0" UAM</secondary>
             </indexterm> UAM（Mac OS X 以前のクライアント用、PGP ベースの認証。これを動作させようとするには
-          <ulink url="http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
+          <ulink
+          url="https://web.archive.org/web/20190121142716/http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
           クライアント</ulink>も別途必要である。</para>
-
-          <para>この UAM を有効にするためには、configure オプションに
-          <filename>"enable-pgp-uam"</filename> を追加しなければならない。</para>
         </listitem>
 
         <listitem>
@@ -677,11 +672,8 @@ basedir regex = /usr/home</programlisting></para>
               <primary>Client Krb v2</primary>
 
               <secondary>"Client Krb v2" UAM (Kerberos V)</secondary>
-            </indexterm> UAM （Kerberos V、OS X
+            </indexterm> UAM （Kerberos V、macOS
           で“シングルサインオン”環境には最も適当である――下記参照）</para>
-
-          <para><filename>"enable-krbV-uam"</filename> オプションでこの UAM
-          を使用できるようになるであろう。</para>
         </listitem>
       </itemizedlist>
 
@@ -695,11 +687,11 @@ basedir regex = /usr/home</programlisting></para>
         </citerefentry> も AFP サーバーで有効な UAM の問い合わせをするのに使うことができる。</para>
 
       <para>ある特定の UAM がサーバー上で有効であるということが、直ちに、
-      クライアントもそれを使うことができるということを意味するわけではない。クライアント側でのサポートもまた必要である。Mac OS X
-      以前が使われている古いマッキントッシュでも、DHCAST128 のサポートは AppleShare クライアント 3.8.x
+      クライアントもそれを使うことができるということを意味するわけではない。クライアント側でのサポートもまた必要である。Classic Mac OS
+      が使われている古い Macintosh では、DHCAST128 のサポートは AppleShare クライアント 3.8.x
       以降には存在している。</para>
 
-      <para>OS X では、AFP クライアントをもっと冗長にするクライアント側のテクニックがいくつかあるので、使用する UAM
+      <para>macOS では、AFP クライアントをもっと冗長にするクライアント側のテクニックがいくつかあるので、使用する UAM
       と折り合いをつけるまでに何が起こっているのか見ることができる。<ulink
       url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">このヒント</ulink>
       と比較してみるとよい。</para>
@@ -708,8 +700,8 @@ basedir regex = /usr/home</programlisting></para>
     <sect2>
       <title>どの UAM を有効にすべきか？</title>
 
-      <para>第一義的には“何が必要か”と “サポートしようと考えている MAC OS のバージョンの種類”に依存する。
-      基本的にはそのパスワード暗号化の強力さから、可能な限り DHCAST128 および DHX2 を試すべきである。</para>
+      <para>それは主に、ニーズとサポートする必要がある macOS クライアントの種類に依存する。ネットワークが macOS (Mac OS
+      X) クライアントのみで構成されている場合は、DHX2 で十分であり、最も強力な暗号化を提供する。</para>
 
       <itemizedlist>
         <listitem>
@@ -717,14 +709,22 @@ basedir regex = /usr/home</programlisting></para>
           が無効化されているか確認すべきである。さもないと、意図しない権限のないアクセスを引き起こすことにもなる。
           ゲストアクセスを有効にしなければならない場合は、アクセスコントロールを使って、
           ボリューム各々についてゲストアクセスを有効化することを強制するように気を配るべきである。</para>
+
+          <para>注意：Apple II NetBoot サービス (<citerefentry>
+              <refentrytitle>a2boot</refentrytitle>
+
+              <manvolnum>8</manvolnum>
+            </citerefentry>) を使用して AFP 経由で Apple //e
+          を起動するには、「ユーザー認証なし」が必要である。</para>
         </listitem>
 
         <listitem>
           <para>"ClearTxt Passwrd" UAM ではパスワードがネットワーク上を暗号化されずに伝わっていくので、
-          字句そのまんまに良くない。クライアント側のみならずサーバー側でも無効にするよう務めるべきである。注意：もし NetBoot
-          サービスを使用している Mac OS 8/9 にサービスを提供したい場合、cleartext.so の UAM が必要となる。
-          これはそういった Mac のファームウエアに組み込まれた AFP
-          クライアントがこうした基本的な形の認証しか扱わないためである。</para>
+          字句そのまんまに良くない。クライアント側のみならずサーバー側でも無効にするよう務めるべきである。</para>
+
+          <para>注意：もし NetBoot サービスを使用している Mac OS 8/9
+          にサービスを提供したい場合、cleartext.so の UAM が必要となる。 これはそういった Mac
+          のファームウエアに組み込まれた AFP クライアントがこうした基本的な形の認証しか扱わないためである。</para>
         </listitem>
 
         <listitem>
@@ -736,11 +736,13 @@ basedir regex = /usr/home</programlisting></para>
 
               <manvolnum>1</manvolnum>
             </citerefentry> ユーティリティを使って別途パスワードを管理しなければならない）という点である。</para>
+
+          <para>ただし、これは 漢字Talk 7.1 以前で使用できる最も強力な認証形式である。</para>
         </listitem>
 
         <listitem>
-          <para>"DHCAST128" あるいは "DHX2" は PAM との統合と強力な暗号化とが組み合わせられているので、
-          ほとんどの人々にとって良い妥協案であろう。</para>
+          <para>"DHCAST128" ("DHX") あるいは "DHX2" は PAM
+          との統合と強力な暗号化とが組み合わせられているので、 ほとんどの人々にとって良い妥協案であろう。</para>
         </listitem>
 
         <listitem>
@@ -750,8 +752,8 @@ basedir regex = /usr/home</programlisting></para>
               <secondary>"Client Krb v2" UAM</secondary>
             </indexterm> ("Client Krb v2") UAM を用いれば、Kerberos
           チケットを用いて真のシングルサインオン環境を実装することが可能である。パスワードがネットワークを通して送られることもない。
-          その代わり、ユーザーのパスワードは appleshare サーバーへのサービスチケットを暗号から復号するのに用いられる。
-          サービスチケットにはクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる （それは appleshare
+          その代わり、ユーザーのパスワードは AppleShare サーバーへのサービスチケットを暗号から復号するのに用いられる。
+          サービスチケットにはクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる （それは AppleShare
           サーバーだけが復号できる）。サービスチケットの暗号化された部分がサーバーに送られ、ユーザーを認証するのに使われる。afpd
           サービスプリンシパル検知の実装の仕方のために、この認証方法は中間者攻撃に対して脆弱である。</para>
         </listitem>
@@ -769,7 +771,7 @@ basedir regex = /usr/home</programlisting></para>
       <filename>uams_cleartext.so</filename>、<filename>uams_dhx.so</filename>
       及び <filename>uams_dhx2.so</filename>である。これらは
       <filename>/etc/passwd</filename> (<filename>/etc/shadow</filename>)
-      からの古典的 Unix パスワードでも、システムがサポートしていれば　PAM でもどちらでも使うことができる。
+      からの古典的 UNIX パスワードでも、システムがサポートしていれば PAM でもどちらでも使うことができる。
       <filename>uams_cleartext.so</filename> は
       <filename>uams_passwd.so</filename> ないしは
       <filename>uams_pam.so</filename> へのシンボリックリンクとして、
@@ -783,12 +785,12 @@ basedir regex = /usr/home</programlisting></para>
       <para>なので、もし Netatalk の UAM フォルダー（デフォルトで
       <filename>/etc/netatalk/uams/</filename>）が以下のようであれば： <programlisting>uams_clrtxt.so -&gt; uams_pam.so
 uams_dhx.so -&gt; uams_dhx_pam.so
-uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典的な Unix
+uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典的な UNIX
       パスワードを使用しているわけである。PAM を使用することで最も有利なのは、例えば LDAP 経由、あるいは NIS
-      経由などの集約した認証環境に Netatalk を統合できることである。そのような環境でのユーザーのログイン資格情報
-      (credentials) の保護は、UAM そのものが供している暗号化の強さにもまた依存している。
-      ということを常に念頭においていただきたい。なので、"ClearTxt Passwrd" や "Randnum exchange" のような弱い
-      UAM をネットワーク上から 完全に除去することを考えるべきである。</para>
+      経由などの集約した認証環境に Netatalk を統合できることである。そのような環境でのユーザーのログイン資格情報 (credentials)
+      の保護は、UAM そのものが供している暗号化の強さにもまた依存している。 ということを常に念頭においていただきたい。なので、"ClearTxt
+      Passwrd" や "Randnum exchange" のような弱い UAM をネットワーク上から
+      完全に除去することを考えるべきである。</para>
     </sect2>
 
     <sect2>
@@ -882,7 +884,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典�
 
               <entry>ほとんど全ての Mac OS のバージョンで組み込み済</entry>
 
-              <entry>AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では Mac OS X の AFP
+              <entry>AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では macOS の AFP
               クライアントに統合したプラグインとしての用意あり。</entry>
 
               <entry>Mac OS X 10.2 より組み込み済</entry>
@@ -970,7 +972,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典�
 
         <para>これは、"AFP over TCP" を“話すことができる”最初の AFP
         サーバーがネットワークに登場して以来うまく動作する。リモートサーバーの AFP ポートをローカルの 548
-        番以外の異なるポートにトンネルし、その後ローカルでこのポートににつなげるだけである。OS X では以下のようにすればよい。</para>
+        番以外の異なるポートにトンネルし、その後ローカルでこのポートににつなげるだけである。macOS では以下のようにすればよい。</para>
 
         <programlisting>ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000</programlisting>
 
@@ -991,7 +993,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典�
 
         <para>Apple は Mac OS X 10.2 から 10.4 で、「サーバーに接続」ダイアログに
         「SSHを用いて安全な接続を可能にする」チェックボックスを追加した。この考えの裏にあるのは：サーバーが SSH
-        で接続できるというサインを出した時、Mac OS X の AFP クライアントはトンネルを確立しようとし、自動的に全ての AFP
+        で接続できるというサインを出した時、macOS の AFP クライアントはトンネルを確立しようとし、自動的に全ての AFP
         トラフィックをこのトンネルを通して送る。ということなのである。</para>
 
         <para>しかし、この機能が初めて…部分的に、動作するようになるのに Mac OS X 10.3 までかかった。SSH
@@ -1077,12 +1079,12 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> PAM さもなくば古典�
         </indexterm> の機構のみに対応付けられる。この挙動は設定オプション <link linkend="map_acls">map
       acls</link> で修正することができる。</para>
 
-      <para>しかしながら、Finder の“情報を見る”ウィンドウでもターミナルでも、ACL を見ることは不可能で、そこで見ているのは OS
-      X で ACL がどのように設計されたのかという結果である。もしクライアント上でも ACL
+      <para>しかしながら、Finder の“情報を見る”ウィンドウでもターミナルでも、ACL を見ることは不可能で、そこで見ているのは OS X
+      で ACL がどのように設計されたのかという結果である。もしクライアント上でも ACL
       を表示させたいと思うならば、諸々を認証ドメイン（ディレクトリサービス、例えば、LDAP
       やOpenDirectory）の一部と、より内包されているようにして、クライアント側でもサーバー側でもセットアップをおこなうべきである。
-      その理由は、OS X ACL が ただ、uid と gid だけでなく UUID と紐付いているためである。このため、afpd
-      は全てのファイルシステムの uid と git を UUID に紐付けできなければならない。そうすれば、afpd は OS X の UUID
+      その理由は、macOS ACL が ただ、uid と gid だけでなく UUID と紐付いているためである。このため、afpd
+      は全てのファイルシステムの uid と git を UUID に紐付けできなければならない。そうすれば、afpd は macOS の UUID
       に紐付けた UNIX uid と gid も含めたサーバー側の ACL を返すことができる。</para>
 
       <para>Netatalk は LDAP クエリーを使ってディレクトリサーバーに問い合わせができる。ディレクトリサーバー（Active
@@ -1141,10 +1143,10 @@ aclmode = passthrough</screen>
     </sect2>
 
     <sect2>
-      <title>OS X の ACL</title>
+      <title>macOS の ACL</title>
 
-      <para>アクセス制御リスト (ACL) と共に、Mac OS X は正統的な UNIX のパーミッションモデルの有力な拡張を提案した。
-      ACL は、所定のユーザーあるいはグループのパーミッションのセットを明示的に許可したり拒否するアクセス制御エントリー (ACE)
+      <para>アクセス制御リスト (ACL) と共に、macOS は正統的な UNIX のパーミッションモデルの有力な拡張を提案した。 ACL
+      は、所定のユーザーあるいはグループのパーミッションのセットを明示的に許可したり拒否するアクセス制御エントリー (ACE)
       の番号つきリストである。</para>
 
       <para>ユーザー ID、またはグループ ID と紐付いている UNIX パーミッションとは異なり、ACL は UUID
@@ -1153,17 +1155,17 @@ aclmode = passthrough</screen>
 
       <para>ACL と UNIX のパーミションの相互関係は比較的シンプルなものである。ACL はオプションなので、UNIX
       パーミションはアクセス制御のデフォルトのメカニズムの役割をする。オブジェクトの UNIX パーミションを変更しても ACL
-      は手付かずのままで、ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない。アクセスチェックの間、OS X
+      は手付かずのままで、ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない。アクセスチェックの間、macOS
       は最初に以下の順序で ACE の評価をして、オブジェクトの ACL を検査する： 全てのリクエスト権限が許可されるまで、リクエストされた権限が
       ACE によって明示的に拒否された、あるいはリストの最後までたどり着いた。である。ACL がない、あるいは ACL
-      に許可されたパーミションがリクエストを実行するのに十分でない場合、OS X は次にオブジェクトの UNIX パーミションの評価に入る。
+      に許可されたパーミションがリクエストを実行するのに十分でない場合、macOS は次にオブジェクトの UNIX パーミションの評価に入る。
       つまり、ACL は常に UNIX のパーミションより優先順位が上位ということである。</para>
     </sect2>
 
     <sect2>
       <title>ZFS の ACL</title>
 
-      <para>ZFS の ACL はほぼ OS X の ACL に匹敵するものである。
+      <para>ZFS の ACL はほぼ macOS の ACL に匹敵するものである。
       両者ともほぼ同一の良い粒度のパーミションと設定の継承が提供されている。</para>
     </sect2>
 
@@ -1173,7 +1175,7 @@ aclmode = passthrough</screen>
       <sect3>
         <title>概要</title>
 
-        <para>OS X あるいは NFSv4 の ACL と比較すると、Posix ACL は、伝統的な UNIX
+        <para>macOS あるいは NFSv4 の ACL と比較すると、Posix ACL は、伝統的な UNIX
         パーミションの制限を打開するには異質で汎用性のないアプローチを表現している。実装は Posix
         標準を取り込んだものを基礎としている。</para>
 
@@ -1184,7 +1186,7 @@ aclmode = passthrough</screen>
         であるものとして新規オブジェクトに適用される。サブディレクトリは親ディレクトリのデフォルト ACL を継承する。
         継承制御にそれ以上のメカニズムは何もない。</para>
 
-        <para>設計上、Posix ACL と OS X 間の違いに含まれている特筆すべき点は：</para>
+        <para>設計上、Posix ACL と macOS 間の違いに含まれている特筆すべき点は：</para>
 
         <para><itemizedlist>
             <listitem>
@@ -1237,10 +1239,10 @@ aclmode = passthrough</screen>
 
             <listitem>
               <para>ACL_MASK：ACL_GROUP_OBJ、ACL_USER および ACL_GROUP
-              タイプのエントリーで許可されうるアクセス権の最大値を制限する。名前の示すように、このエントリーはマスクとして働く。一つの
-              ACL あたり一個だけの ACL_MASK エントリーが許される。もし ACL に、ACL_USER ないしは
-              ACL_GROUP エントリーが含まれているのであれば、ACL_MASK
-              エントリーも存在しなければならない。さもなくば、ACL_MASK はオプションである。</para>
+              タイプのエントリーで許可されうるアクセス権の最大値を制限する。名前の示すように、このエントリーはマスクとして働く。一つの ACL
+              あたり一個だけの ACL_MASK エントリーが許される。もし ACL に、ACL_USER ないしは ACL_GROUP
+              エントリーが含まれているのであれば、ACL_MASK エントリーも存在しなければならない。さもなくば、ACL_MASK
+              はオプションである。</para>
             </listitem>
           </itemizedlist></para>
 
@@ -1259,8 +1261,8 @@ aclmode = passthrough</screen>
       <sect3>
         <title>POSIX ACL から OSX の ACL へのマッピング</title>
 
-        <para>クライアントがオブジェクトの ACL を読み込もうとした時、afpd は Posix ACL からそれに等価な OS X の
-        ACL にマップする。オブジェクトの ACL の書き込みには afpd が OS X の ACL を Posix ACL
+        <para>クライアントがオブジェクトの ACL を読み込もうとした時、afpd は Posix ACL からそれに等価な macOS の
+        ACL にマップする。オブジェクトの ACL の書き込みには afpd が macOS の ACL を Posix ACL
         にマップすることが要求される。Posix ACL の設計上の制約から、マッピングを経た結果がオリジナルの ACL
         のセマンティクスと概ね同じになるような正確なマッピングを見出すことは通常不可能である。</para>
 
@@ -1295,10 +1297,10 @@ aclmode = passthrough</screen>
             </listitem>
           </itemizedlist></para>
 
-        <para>OS X クライアントは Posix 1003.1e 特有の UNIX パーミションと ACL_MASK
+        <para>macOS クライアントは Posix 1003.1e 特有の UNIX パーミションと ACL_MASK
         との関係を意識していないので、afpd は互換性問題を回避するためにこの機能をクライアントに公開せず、そして afpd は *unix
         パーミションと ACL をアップルの AFP 用リファレンス実装がするのと同じ方法で扱う。オブジェクトの UNIX
-        パーミションがリクエストされた時、afpd は適切なグループ権限を算出し、FPUnixPrivs 構造の "permissions" と
+        パーミションがリクエストされた時、afpd は適切なグループ権限を算出し、FPUNIXPrivs 構造の "permissions" と
         "ua_permissions" 要素を介し、オーナーおよび全ての者のアクセス権限も共に付して、リクエストした側に結果を返す。（Apple
         Filing Protocol Reference の 181 ページ参照） オブジェクトのパーミションを変更すると、afpd は常に
         ACL_USER_OBJ、ACL_GROUP_OBJ および ACL_OTHERS を更新する。もし ACL_MASK
@@ -1313,16 +1315,15 @@ aclmode = passthrough</screen>
         <primary>FCE</primary>
       </indexterm></title>
 
-    <para>Netatalk には素敵なファイルシステム変更イベント機構が含まれている。ここで、afpd
-    プロセスは、なにがしかのファイルシステムイベントについて、関心を寄せているリスナーに、UDP
+    <para>Netatalk には素敵なファイルシステム変更イベント (Filesystem Change Events, FCE)
+    機構が含まれている。ここで、afpd プロセスは、なにがしかのファイルシステムイベントについて、関心を寄せているリスナーに、UDP
     ネットワークデータグラム経由で通知する。</para>
 
     <para>この UDP パケットのフォーマットについて、また、これらをリスナー内でどのように使用するかのデモを試してみる C
     アプリケーションの実例については、Netatalk のソースファイル <filename>bin/misc/fce.c</filename>
     に目を通していただきたい。</para>
 
-    <para>現在サポートされている FCE （ファイルシステム変更イベント：Filesystem Change
-    Events）は以下である：<itemizedlist>
+    <para>現在サポートされているファイルシステム変更イベントは以下である：<itemizedlist>
         <listitem>
           <para>ファイル変更：file modification (fmod)</para>
         </listitem>
@@ -1354,7 +1355,7 @@ aclmode = passthrough</screen>
       </indexterm></title>
 
     <para>バージョン 3.1 から、Netatalk は Spotlight 検索をサポートしている。Netatalk
-    はメタデータの保存、インデックス化およびサーチエンジンに Gnome <ulink
+    はメタデータの保存、インデックス化およびサーチエンジンに GNOME <ulink
     url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる。</para>
 
     <sect2>

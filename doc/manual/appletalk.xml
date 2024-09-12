@@ -9,12 +9,13 @@
         <secondary>The AppleTalk protocol suite</secondary>
       </indexterm> Transport Layer</title>
 
-    <para>AppleTalk, the network protocol family created by Apple, contains
-    different protocols for different uses: address resolution, address/name
-    mapping, service location, establishing connections, and the like.</para>
+    <para>AppleTalk is a network protocol family created by Apple which
+    predates TCP/IP. It contains different protocols for different uses:
+    address resolution, address/name mapping, service location, establishing
+    connections, and the like.</para>
 
-    <para>Netatalk builds upon the AppleTalk protocols to provide file
-    services and other services to old Mac and Apple II clients.</para>
+    <para>Netatalk implements the AppleTalk protocols to serve files over AFP
+    and provide other services to old Mac and Apple II clients.</para>
 
     <para>A complete overview can be found inside the <ulink
     url="https://github.com/Netatalk/netatalk/blob/main/doc/README.AppleTalk">developer
@@ -23,22 +24,18 @@
     <sect2>
       <title>To use AppleTalk or not</title>
 
-      <para>You'll need the AppleTalk support built into Netatalk in case you
-      want to provide printing services via PAP by <citerefentry>
+      <para>You'll need the AppleTalk support built into Netatalk to provide
+      file services to older AFP clients not capable of using AFP over TCP. It
+      also enables printing services via PAP by <citerefentry>
           <refentrytitle>papd</refentrytitle>
 
           <manvolnum>8</manvolnum>
-        </citerefentry> or file services via AppleTalk via <citerefentry>
-          <refentrytitle>afpd</refentrytitle>
-
-          <manvolnum>8</manvolnum>
-        </citerefentry> for older AFP clients not capable of using AFP over
-      TCP. You'll need it also if you want to use the AppleTalk-based
-      timeserver <citerefentry>
+        </citerefentry>, a timeserver <citerefentry>
           <refentrytitle>timelord</refentrytitle>
 
           <manvolnum>8</manvolnum>
-        </citerefentry> for older Mac clients, or netboot server <citerefentry>
+        </citerefentry> for older Mac clients, and NetBoot server
+      <citerefentry>
           <refentrytitle>a2boot</refentrytitle>
 
           <manvolnum>8</manvolnum>
@@ -152,20 +149,20 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
         the only active one. This can have some side effects when it comes to
         the point where AFP clients want to do the magic switch from AppleTalk
         to TCP, so use this with caution.</para>
+
+        <para>In case, you have more than one active network interface and do
+        not take special precautions as outlined above, then autoconfiguration
+        of the interfaces might fail in a situation where one of your network
+        interfaces is connected to a network where <emphasis>no</emphasis>
+        other active AppleTalk router is present and supplies appropriate
+        routing settings.</para>
+
+        <para>For further information see <citerefentry>
+            <refentrytitle>atalkd.conf</refentrytitle>
+
+            <manvolnum>5</manvolnum>
+          </citerefentry> and the developer documentation.</para>
       </sect3>
-
-      <para>In case, you have more than one active network interface and do
-      not take special precautions as outlined above, then autoconfiguration
-      of the interfaces might fail in a situation where one of your network
-      interfaces is connected to a network where <emphasis>no</emphasis> other
-      active AppleTalk router is present and supplies appropriate routing
-      settings.</para>
-
-      <para>For further information see <citerefentry>
-          <refentrytitle>atalkd.conf</refentrytitle>
-
-          <manvolnum>5</manvolnum>
-        </citerefentry> and the developer documentation.</para>
     </sect2>
 
     <sect2>
@@ -277,7 +274,7 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
       name, you supply with the <emphasis>-zone</emphasis> switch in
       atalkd.conf).</para>
 
-      <para>Given, you finished the steps outlined above, you might want to
+      <para>If you finished the steps outlined above, you might want to
       edit atalkd.conf to fit your needs.</para>
 
       <para>You'll have to set the following options in atalkd.conf:</para>
@@ -606,9 +603,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
         </indexterm>.</para>
 
       <para>Netatalk's <command>timelord</command> is compatible with the
-      <ulink
-      url="https://macintoshgarden.org/apps/tardis-and-timelord">tardis</ulink>
-      client for Macintosh developed at the <ulink
+      tardis client for Macintosh developed at the <ulink
       url="https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html">
       University of Melbourne.</ulink></para>
 

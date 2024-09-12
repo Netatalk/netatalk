@@ -15,62 +15,8 @@
 
     <para>Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the
     new version on top of the old one. The primary difference is that Netatalk
-    4 brings back a handful of core AppleTalk services, config files, and man
+    4 brings back essential AppleTalk services, configuration files, and man
     pages that were removed between Netatalk 2 and Netatalk 3.</para>
-
-    <para>Restored binaries: <itemizedlist>
-        <listitem>
-          <para>aecho</para>
-        </listitem>
-
-        <listitem>
-          <para>getzones</para>
-        </listitem>
-
-        <listitem>
-          <para>nbplkup</para>
-        </listitem>
-
-        <listitem>
-          <para>nbprgstr</para>
-        </listitem>
-
-        <listitem>
-          <para>nbpunrgstr</para>
-        </listitem>
-
-        <listitem>
-          <para>pap</para>
-        </listitem>
-      </itemizedlist></para>
-
-    <para>Restored daemons: <itemizedlist>
-        <listitem>
-          <para>a2boot</para>
-        </listitem>
-
-        <listitem>
-          <para>atalkd</para>
-        </listitem>
-
-        <listitem>
-          <para>papd</para>
-        </listitem>
-
-        <listitem>
-          <para>timelord</para>
-        </listitem>
-      </itemizedlist></para>
-
-    <para>Restored config files: <itemizedlist>
-        <listitem>
-          <para>atalkd.conf</para>
-        </listitem>
-
-        <listitem>
-          <para>papd.conf</para>
-        </listitem>
-      </itemizedlist></para>
   </sect1>
 
   <sect1>
@@ -96,7 +42,7 @@
 
       <para><itemizedlist>
           <listitem>
-            <para>ini style syntax (like Samba’s smb.conf)</para>
+            <para>ini style syntax (akin to Samba's smb.conf)</para>
           </listitem>
 
           <listitem>
@@ -224,14 +170,16 @@
           </listitem>
 
           <listitem>
-            <para>Manually recreate configuration in <option>afp.conf</option>
-            and <option>extmap.conf</option></para>
+            <para>Manually recreate configurations in
+            <option>afp.conf</option> and <option>extmap.conf</option></para>
           </listitem>
 
           <listitem>
-            <para>Update your Netatalk start script (SMF, systemd,
-            whatever...) to only start <link
-            linkend="netatalk.8">netatalk</link></para>
+            <para>Update your Netatalk init script to start <link
+            linkend="netatalk.8">netatalk</link> instead of
+            <command>afpd</command> and <command>cnid_metad</command>, or
+            replace it with the appropriate stock init script for your
+            system.</para>
           </listitem>
 
           <listitem>
@@ -607,15 +555,15 @@
               <row>
                 <entry>ATALK_ZONE</entry>
 
-                <entry>-</entry>
+                <entry>ddp zone</entry>
 
                 <entry>no</entry>
 
-                <entry>-</entry>
+                <entry>no</entry>
+
+                <entry>(G)</entry>
 
                 <entry>-</entry>
-
-                <entry>not yet supported</entry>
               </row>
             </tbody>
           </tgroup>
@@ -671,7 +619,7 @@
 
                 <entry>uam list</entry>
 
-                <entry>-U uams_dhx.so,uams_dhx2.so</entry>
+                <entry>uams_dhx.so,uams_dhx2.so</entry>
 
                 <entry>uams_dhx.so uams_dhx2.so</entry>
 
@@ -1768,7 +1716,7 @@
 
                 <entry>-</entry>
 
-                <entry>use "vol preset ="</entry>
+                <entry>use "vol preset"</entry>
               </row>
 
               <row>
@@ -2479,7 +2427,7 @@
 
                 <entry>legacy volume size</entry>
 
-                <entry>-</entry>
+                <entry>no</entry>
 
                 <entry>no</entry>
 

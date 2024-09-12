@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="papd.8">
+  <refmeta>
+    <refentrytitle>papd</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">24 May 2024</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバー マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>papd</refname>
+
+    <refpurpose>AppleTalk プリント サーバー デーモン</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>papd<indexterm>
+          <primary>papd</primary>
+        </indexterm><indexterm>
+          <primary>UAM</primary>
+
+          <secondary>ユーザー認証モジュール</secondary>
+        </indexterm></command>
+
+      <arg>-d</arg>
+
+      <arg>-f configfile</arg>
+
+      <arg>-p printcap</arg>
+
+      <arg>-P pidfile</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>papd</command> は AppleTalk プリンタ デーモンです。このデーモンは、プリンタ アクセス
+    プロトコル (PAP) を使用して、AppleTalk クライアント (通常は Macintosh コンピュータ) からの印刷ジョブを受け入れます。
+    System V 印刷システムで使用する場合、<command>papd</command> はジョブを <citerefentry>
+        <refentrytitle>lpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry> スプール ディレクトリに直接スプールし、ネットワークからジョブを受け入れた後に
+    <command>lpd</command> を起動して適切なスプール ディレクトリを再検査させます。実際の印刷とスプールは、すべて
+    <command>lpd</command> によって処理されます。</para>
+
+    <para><command>papd</command> は、印刷ジョブを外部プログラムにパイプして処理することもできます。これは、CUPS
+    を使用していないシステムで推奨される方法です。これは、使用されているすべての種類の <command>lpd</command>
+    との互換性の問題を回避するためです。</para>
+
+    <para>Netatalk 2.0 以降では、CUPS もサポートされています。 <emphasis
+    remap="B">cupsautoadd</emphasis> を papd.conf の最初のエントリとして使用するだけで、すべての CUPS
+    プリンタが自動的に共有されます。プリンタ共有を個別に定義することで、これらのデフォルトを上書きすることも可能です。設定ファイルの形式の詳細については、<citerefentry>
+        <refentrytitle>papd.conf</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry> を参照してください。</para>
+
+    <para><command>papd</command> は通常、システムの init
+    スクリプトまたはサービスからブート時に起動されます。まず、設定ファイル <filename>papd.conf</filename>
+    から読み取ります。</para>
+
+    <para>設定ファイルが指定されていない場合は、マシンのホスト名が NBP
+    名として使用され、すべてのオプションはデフォルト値になります。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-d</term>
+
+        <listitem>
+          <para>ターミナルからフォークまたは切断しません。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>設定情報については、<filename>papd.conf</filename>
+          ではなく、<replaceable>configfile</replaceable> を参照してください。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-p <replaceable>printcap</replaceable></term>
+
+        <listitem>
+          <para>LPD 構成情報については、<filename>/etc/printcap</filename>
+          ではなく、<replaceable>printcap</replaceable> を参照してください。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P <replaceable>pidfile</replaceable></term>
+
+        <listitem>
+          <para><command>papd</command> がプロセス ID を保存するファイルを指定します。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>注意</title>
+
+    <para>PSSP<indexterm>
+        <primary>PSSP</primary>
+
+        <secondary>プリント サーバー セキュリティ プロトコル</secondary>
+      </indexterm> (プリント サーバー セキュリティ プロトコル) は、プリント サーバーへの PostScript プリンタ
+    クエリを通じて実行される認証プロトコル<indexterm>
+        <primary>認証印刷</primary>
+      </indexterm> です。PSSP を使用するには、クライアント Mac に LaserWriter 8.6.1
+    以降が必要です。ユーザーは、印刷する前にユーザー名とパスワードを入力するよう求められます。PSSP
+    を初めて有効にしたときに、クライアントが印刷に認証が必要であることを認識できるように、各クライアントでプリンタを再設定する必要がある場合があります。PSSP
+    はプリンタごとに有効にできます。PSSP は、以下で説明する CAP
+    スタイルの認証よりも堅牢であるため、プリンタを認証する方法として推奨されます。</para>
+
+    <para>CAP スタイルの認証<indexterm>
+        <primary>CAP スタイルの認証</primary>
+
+        <secondary>旧式の印刷認証</secondary>
+      </indexterm> geその名前は、CAP (Columbia AppleTalk パッケージ) が Mac
+    クライアントの印刷を認証するために使用する方法に由来しています。この方法では、印刷する前にユーザーがファイル共有にログインする必要があります。<command>afpd</command>
+    は、クライアントの AppleTalk
+    アドレスにちなんで名付けられた一時ファイルにユーザー名を記録し、ユーザーが切断すると一時ファイルを削除します。したがって、CAP
+    スタイルの認証は、TCP/IP 経由で <command>afpd</command>
+    に接続されているクライアントでは機能しません。<command>papd</command> は、接続しているマシンと同じ AppleTalk
+    アドレスを持つファイルからユーザー名を取得します。CAP スタイルの認証は、どの Mac クライアントでも機能します。特定のプリンタで CAP と
+    PSSP の両方が有効になっている場合、最初に CAP が試され、次に <command>papd</command> が PSSP
+    にフォールバックします。</para>
+
+    <para>認証に使用する UAM のリスト ('am' オプションで指定)
+    は、すべてのプリンタに適用されます。プリンタごとに異なる認証方法を定義することはできません。UAMS
+    のリストは複数回指定できますが、最後の設定のみが使用されます。現在、プリンタ認証方法として
+    <emphasis>uams_guest.so</emphasis> と <emphasis>uams_clrtxt.so</emphasis>
+    がサポートされています。ゲスト メソッドでは、有効なユーザー名が必要ですが、パスワードは必要ありません。 Cleartext UAM
+    には、有効なユーザー名と正しいパスワードの両方が必要です。</para>
+
+    <note>
+      <para>印刷認証は、Mac OS 9 以前でのみサポートされています。</para>
+    </note>
+  </refsect1>
+
+  <refsect1>
+    <title>ファイル</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><filename>papd.conf</filename></term>
+
+        <listitem>
+          <para>デフォルトの設定ファイル。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename>/etc/printcap</filename></term>
+
+        <listitem>
+          <para>プリンタ機能データベース。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename>.ppd</filename></term>
+
+        <listitem>
+          <para>PostScript プリンタ記述ファイル。 papd は、設定された PPD
+          ファイルを参照して、印刷クライアントからの設定およびフォントのクエリに応答します。このようなファイルは、Adobe, Inc.
+          またはプリンタの製造元から入手できます。PPD ファイルが設定されていない場合、papd
+          はデフォルトの応答を返すため、クライアントが過度に大きなジョブを送信する可能性があります。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>注意事項</title>
+
+    <para><command>papd</command> は、クライアントから上位ビットが設定された文字 (完全な 8 ビット)
+    を受け入れますが、一部の PostScript プリンタ (Apple の LaserWriter ファミリを含む) は、デフォルトでシリアル
+    インターフェイスで 7 ビット文字のみを受け入れます。TCP/IP メソッド (リモート LPR またはソケット)
+    経由でアクセスされる一部のプリンタにも同じことが当てはまります。プリンタを 8
+    ビット全体を受け入れるように設定するか、特別な予防措置を講じて印刷ジョブのエンコードを変換する必要があります (たとえば、CUPS 1.1.19
+    以降を使用している場合は、<emphasis remap="B">co="protocol=BCP"</emphasis>
+    を使用します)。</para>
+
+    <para>印刷クライアントが Mac OS X 10.2
+    以降を実行している場合は、適切なフィルタがクライアント側にもインストールされていない限り、PPD が <emphasis
+    remap="B">*cupsFilter:</emphasis> コメントを使用しないように注意してください。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle><citerefentry>
+            <refentrytitle>lp</refentrytitle>
+
+            <manvolnum>1</manvolnum>
+          </citerefentry>,lpr</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lprm</refentrytitle>
+
+        <manvolnum>1</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>printcap</refentrytitle>
+
+        <manvolnum>5</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lpc</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>lpd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>,<citerefentry>
+        <refentrytitle>papd.conf</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
+    を参照してください</para>
+  </refsect1>
+</refentry>
