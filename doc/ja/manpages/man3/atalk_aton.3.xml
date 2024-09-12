@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="atalk_aton.3">
+  <refmeta>
+    <refentrytitle>atalk_aton</refentrytitle>
+
+    <manvolnum>3</manvolnum>
+
+    <refmiscinfo class="date">12 Jan 1994</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバ マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>atalk_aton</refname>
+
+    <refpurpose>AppleTalk アドレス解析<indexterm>
+        <primary>atalk_aton</primary>
+      </indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+      <funcsynopsisinfo>#include &lt;sys/types.h&gt;
+#include &lt;netatalk/at.h&gt;</funcsynopsisinfo>
+
+      <funcprototype>
+        <funcdef><function>atalk_aton</function></funcdef>
+
+        <paramdef>char * <parameter>cp</parameter></paramdef>
+
+        <paramdef>struct at_addr * <parameter>ata</parameter></paramdef>
+      </funcprototype>
+    </funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><function>atalk_aton()</function> ルーチンは、AppleTalk アドレスの ASCII
+    表現をシステム コールに適した形式に変換します。許容される ASCII 表現には、16 進数と 10 進数の両方が含まれ、3 桁または 2
+    桁です。たとえば、アドレス `0x1f6b.77' のネットワーク部分は `8043' で、ノード部分は `119'
+    です。この同じアドレスは、`8043.119'、`31.107.119'、または `0x1f.6b.77' と表記できます。アドレスが 16
+    進数で、最初の桁が `A-F' のいずれかである場合、先頭の `0x' が 10 進数になります。冗長です。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>atalk</refentrytitle>
+
+        <manvolnum>4</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
+    を参照してください</para>
+  </refsect1>
+</refentry>

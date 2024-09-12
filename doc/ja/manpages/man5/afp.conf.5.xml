@@ -5,7 +5,7 @@
 
     <manvolnum>5</manvolnum>
 
-    <refmiscinfo class="date">31 May 2024</refmiscinfo>
+    <refmiscinfo class="date">12 Sep 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
 
@@ -50,8 +50,8 @@
     <para>パラメータにおいて等号の後ろに続く値は、文字列(引用符は必要ない)または真偽値である。真偽値はyes/no、1/0、true/falseで表現する。大文字と小文字の区別は真偽値では意味を持たないが、文字列では保存される。「file
     perm」のようないくつかの項目は数値を表す。</para>
 
-    <para>「<option>include
-    =　<replaceable>path</replaceable></option>」というパラメータは、設定ファイルの中にもう一つの設定ファイルを組み込むことを可能にする。そのファイルはまるでその場所に書き込まれたように、そっくりそのまま組み込まれる。入れ子になった組み込みはサポートされない。</para>
+    <para>「<option>include =
+    <replaceable>path</replaceable></option>」というパラメータは、設定ファイルの中にもう一つの設定ファイルを組み込むことを可能にする。そのファイルはまるでその場所に書き込まれたように、そっくりそのまま組み込まれる。入れ子になった組み込みはサポートされない。</para>
   </refsect1>
 
   <refsect1>
@@ -531,12 +531,32 @@
         </varlistentry>
 
         <varlistentry>
+          <term>appletalk = <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <emphasis>no</emphasis>) <type>(G)</type></term>
+
+          <listitem>
+            <para>AFP-over-Appletalk のサポートを有効にする。このオプションを使用するには、オペレーティング
+            システムが AppleTalk ネットワーク プロトコルをサポートしている必要がある。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>cnid listen = <replaceable>ip address[:port] [ip
           address[:port] ...]</replaceable> <type>(G)</type></term>
 
           <listitem>
             <para>CNIDサーバがリッスンするIPアドレスを指定する。デフォルトは<emphasis
             role="bold">localhost:4700</emphasis>である。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>ddp address = <replaceable>ddp address</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>サーバーの DDP アドレスを指定する。デフォルトでは、アドレス (0.0)
+            が自動的に割り当てられる。これは、複数のインターフェイスで AppleTalk を実行している場合にのみ役立つ。</para>
           </listitem>
         </varlistentry>
 
@@ -1707,6 +1727,12 @@
                 </listitem>
               </varlistentry>
             </variablelist>
+
+            <warning>
+              <para><emphasis role="bold">samba</emphasis> オプションは、以前に
+              <emphasis role="bold">sys</emphasis>
+              に設定されたボリュームでは使用しないでください。これにより、データが失われる可能性がある。</para>
+            </warning>
           </listitem>
         </varlistentry>
 
@@ -1949,6 +1975,16 @@ directory perm = 0770</programlisting></para>
         </varlistentry>
 
         <varlistentry>
+          <term>legacy volume size = <replaceable>BOOLEAN</replaceable>
+          (デフォルト: <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>レガシー クライアントのディスク サイズ レポートを 2GB に制限する。これは、System 7.1
+            以前を実行し、新しい AppleShare クライアントを使用している古い Macintosh で使用できる。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>network ids = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>yes</emphasis>) <type>(V)</type></term>
 
@@ -1965,6 +2001,17 @@ directory perm = 0770</programlisting></para>
           <listitem>
             <para>preexec からの 0
             以外のリターンコードで、クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>prodos = <replaceable>BOOLEAN</replaceable> (デフォルト:
+          <emphasis>no</emphasis>) <type>(V)</type></term>
+
+          <listitem>
+            <para>ProDOS サポートを有効にする。このオプションは、Apple II
+            をネットブートする予定のボリュームに対してのみ有効にする必要がある。ボリュームにブート
+            フラグを設定するだけでなく、表示されるボリュームの空き領域を 32MB に制限する。</para>
           </listitem>
         </varlistentry>
 

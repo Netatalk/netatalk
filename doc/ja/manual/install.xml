@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="installation">
   <chapterinfo>
-    <date>17.1.2015</date>
-
     <author role="first-last">
       <firstname>Eiichirou</firstname>
 
       <surname>UDA（日本語訳）</surname>
     </author>
-
-    <pubdate>2016 年 7 月 26 日（訳）</pubdate>
-
   </chapterinfo>
 
   <title>インストール</title>
 
   <warning>
-    <para>Netatalk 3 は他バージョンと共存できないので、以前に Netatalk の古いバージョンを使ったことがあるなら、
-    “<link linkend="upgrade">Netatalk 2 からのアップグレード</link>”の章をまず読んでいただきたい！！！</para>
+    <para>Netatalk 2 または 3 から Netatalk 4 にアップグレードする前に、このマニュアルの <link
+    linkend="upgrade">アップグレード</link> の章を必ずお読みください。</para>
   </warning>
 
   <sect1>
@@ -31,15 +26,14 @@
     <sect2>
       <title>バイナリーパッケージ</title>
 
-      <para>Netatalk のバイナリーパッケージは、いくつかの Linux、Unix
+      <para>Netatalk のバイナリーパッケージは、いくつかの Linux、BSD、Solaris
       ディストリビューションに含まれている。通常の配布元も見たいだろうと思う。</para>
 
-      <para>第三者が提供しているパッケージ リポジトリも参照する手もある。例えば、Red Hat 派生 Linux ディストリビューションの為の<ulink
-      url="https://rpmfind.net/">rpmfind</ulink> Solaris 系 OS の為の
-      <ulink url="https://www.opencsw.org/">OpenCSW</ulink>
-      又は macOS の為の <ulink url="https://brew.sh/">
-      Homebrew</ulink> か <ulink url="https://www.macports.org/">MacPorts
-      </ulink>。</para>
+      <para>第三者が提供しているパッケージ リポジトリも参照する手もある。例えば、Red Hat 派生 Linux
+      ディストリビューションの為の<ulink url="https://rpmfind.net/">rpmfind</ulink> Solaris
+      系 OS の為の <ulink url="https://www.opencsw.org/">OpenCSW</ulink> 又は macOS
+      の為の <ulink url="https://brew.sh/"> Homebrew</ulink> か <ulink
+      url="https://www.macports.org/">MacPorts </ulink>。</para>
     </sect2>
 
     <sect2>
@@ -49,7 +43,8 @@
         <title>Tarball</title>
 
         <para>tar で固めた Netatalk 安定版ソースコードは <ulink
-        url="https://github.com/Netatalk/netatalk/releases">GitHub の Netatalk リリースページ</ulink>にある。</para>
+        url="https://github.com/Netatalk/netatalk/releases">GitHub の Netatalk
+        リリースページ</ulink>にある。</para>
       </sect3>
 
       <sect3>
@@ -59,8 +54,8 @@
 
         <orderedlist>
           <listitem>
-            <para>Git がインストールしてあることを確認する。<command>which
-            git</command> は git のパスを示してくれるはずである。</para>
+            <para>Git がインストールしてあることを確認する。<command>which git</command> は git
+            のパスを示してくれるはずである。</para>
 
             <screen><prompt>$</prompt> <userinput>which git</userinput>
 <computeroutput>/usr/bin/git</computeroutput></screen>
@@ -81,8 +76,8 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>ブランチやタグを指定しない場合は、最先端の開発コードが取得さる。例えば、最新の安定した
-　　　　　　　Netatalk 3.1 コードを入手するには、「branch-netatalk-3-1」という名前のブランチをチェックアウトする：</para>
+            <para>ブランチやタグを指定しない場合は、最先端の開発コードが取得さる。例えば、最新の安定した Netatalk 3.1
+            コードを入手するには、「branch-netatalk-3-1」という名前のブランチをチェックアウトする：</para>
 
             <screen><prompt>$</prompt> <userinput>git checkout branch-netatalk-3-1</userinput></screen>
           </listitem>
@@ -110,25 +105,39 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Berkeley DB<indexterm>
                 <primary>BDB</primary>
+
                 <secondary>Berkeley DB</secondary>
               </indexterm>.</para>
+
             <para>書き込みの時に最低でもバージョン 4.6 が必要となる。</para>
 
             <para>推奨バージョンは 5.3 である Sleepycat ライセンスで提供された最終リリースである。</para>
           </listitem>
 
           <listitem>
-            <para>Libgcrypt</para>
+            <para>libevent</para>
 
-            <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
-            Libgcrypt</ulink> が必要である。</para>
+            <para>netatalk サービス コントローラー デーモンの内部イベント コールバックは、 libevent バージョン 2
+            に基づいて構築されている。</para>
           </listitem>
 
           <listitem>
-            <para>libevent</para>
+            <para>Libgcrypt</para>
 
-            <para>netatalk サービス コントローラー デーモンの内部イベント コールバックは、
-　　　　　　　libevent バージョン 2 に基づいて構築されている。</para>
+            <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink
+            url="http://directory.fsf.org/wiki/Libgcrypt"> Libgcrypt</ulink>
+            が必要である。</para>
+          </listitem>
+
+          <listitem>
+            <para>Perl と UnicodeData.txt</para>
+
+            <para>ビルド システムは、Perl と Unicode 文字データベースを使用して、Netatalk の Unicode
+            文字変換ソースを生成します。</para>
+
+            <para>さらに、Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン 5.8
+            以降に依存します。必須 Perl モジュールは以下： <emphasis>IO::Socket::IP</emphasis>
+            (asip-status) 又は <emphasis>Net::DBus</emphasis> (afpstats)。</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -140,128 +149,120 @@ Resolving deltas: 100% (32227/32227), done.
 
         <itemizedlist>
           <listitem>
-            <para>OpenSSL / LibreSSL / WolfSSL</para>
+            <para>ACL と LDAP</para>
 
-            <para>OpenSSL 1.1 又は LibreSSL は、Classic Mac OS に最も強力なパスワード暗号化を提供する DHCAST128 (別名 DHX) UAM に必要。Random Number UAM もこのライブラリを使用している。</para>
-
-            <para>netatalk 3.2.0 以降は、バンドルされている WolfSSL ライブラリがデフォルトの DHX プロバイダーとして netatalk とともに配布されている。</para>
+            <para>LDAP は、ACL の高度な権限スキームと連携して動作するオープンで業界標準のユーザー ディレクトリ
+            プロトコルです。一部のオペレーティング システムでは ACL と LDAP
+            ライブラリがシステムに組み込まれていますが、他のオペレーティング システムではこの機能を有効にするためにサポート
+            パッケージをインストールする必要があります。</para>
           </listitem>
 
           <listitem>
-            <para>Spotlight<indexterm>
-                <primary>Spotlight</primary>
-              </indexterm> サポートのための Tracker</para>
+            <para>Bonjour 用の Avahi または mDNSresponder</para>
 
-            <para>Netatalk はメタデータのバックエンドとして
-            <ulink url="https://tracker.gnome.org">Tracker</ulink>
-            を使用する。最近の Linux ディストリビューションには、Tracker のバージョン 0.7 以来使用可能な
-            libtracker-sparql が提供されている。</para>
+            <para>Mac OS X 10.2 以降では、自動サービス検出に Bonjour (別名 Zeroconf) を使用します。
+            Netatalk は、Avahi または mDNSResponder を使用して AFP ファイル共有と Time Machine
+            ボリュームをアドバタイズできます。</para>
 
-            <para>Samba プロジェクトの talloc ライブラリと、bison の様な Yacc パーサ、
-            そして flex の様な字句解析ツールも必要になる。</para>
+            <para>Avahi ライブラリ自体は、D-Bus サポートを使用してビルドされている必要があります。</para>
           </listitem>
 
           <listitem>
-            <para>Bonjour（Zeroconf としても知られる）のための mDNSresponderPOSIX または Avahi</para>
+            <para>CrackLib</para>
 
-            <para>サービス探索のために Mac OS X 10.2 及び以降のバージョンは
-            Bonjour（Zeroconf としても知られる）を使用する。AFP ファイルサーバー又は
-            Time Machine サービスをクライアントに通知することができる。</para>
-
-            <para>Avahi は DBUS サポートのもとで (
-            <userinput>--enable-dbus</userinput>) ビルドされなければならない。</para>
+            <para>Random Number UAM と netatalk 独自の
+            <userinput>afppasswd</userinput> パスワード マネージャを使用する場合、CrackLib は
+            netatalk での認証に弱いパスワードを設定するのを防ぐのに役立ちます。</para>
           </listitem>
 
           <listitem>
-            <para>TCP wrappers</para>
+            <para>D-Bus および GLib バインディング</para>
 
-            <para>TCPD または LOG_TCP としても知られる Wietse Venema のネットワークロガー。</para>
+            <para>afpd にファイル サーバーの使用統計を問い合わせるために
+            <userinput>afpstats</userinput> ツールによって使用されます。</para>
+          </listitem>
 
-            <para>セキュリティオプションは：
-            ホストごとドメインごとかつ／ないしはサービスごとのアクセス制御；
-            ホスト名のなりすましあるいはホストアドレスのなりすまし検出；
-            早期警告システムを実装するブービートラップ；である。</para>
+          <listitem>
+            <para>DocBook XSL およびxsltproc</para>
+
+            <para>このマニュアルを含む Netatalk ドキュメントは、XML 形式で作成されています。次に、DocBook XSL
+            スタイルシートと xsltproc を使用して、XML を troff (マニュアル ページ用)、html、pdf
+            などの人間が読める形式に変換します。</para>
+          </listitem>
+
+          <listitem>
+            <para>iconv</para>
+
+            <para>iconv は、多くの文字エンコードの変換ルーチンを提供します。Netatalk は、ISO-8859-1
+            など、組み込みの変換がない文字セットを提供するためにこれを使用します。glibc システムでは、Netatalk は glibc
+            が提供する iconv 実装を使用できます。それ以外の場合は、GNU libiconv 実装を使用できます。</para>
+          </listitem>
+
+          <listitem>
+            <para>Kerberos V</para>
+
+            <para>Kerberos v5 は、マサチューセッツ工科大学で発明されたクライアント サーバー
+            ベースの認証プロトコルです。Kerberos ライブラリを使用すると、netatalk は既存の Kerberos
+            インフラストラクチャでの認証用に GSS UAM ライブラリを作成できます。</para>
+          </listitem>
+
+          <listitem>
+            <para>MySQL または MariaDB</para>
+
+            <para>MySQL 互換のクライアント ライブラリを活用することで、netatalk は、スケーラビリティと信頼性に優れた
+            MySQL CNID バックエンドを使用して構築できます。管理者は、このバックエンドで使用するために別のデータベース
+            インスタンスを用意する必要があります。</para>
+          </listitem>
+
+          <listitem>
+            <para>Nettle と WolfSSL</para>
+
+            <para>Nettle と WolfSSL は、Classic Mac OS に最も強力なパスワード暗号化を提供する
+            DHCAST128 (別名 DHX) UAM に必要です。古い Random Number UAM
+            もこれらのライブラリに依存しています。</para>
+
+            <para>注: 現在、フル機能の WolfSSL ライブラリが OS に配布されていない場合に備えて、WolfSSL を
+            Netatalk にバンドルしています。</para>
           </listitem>
 
           <listitem>
             <para>PAM<indexterm>
                 <primary>PAM</primary>
 
-                <secondary>Pluggable Authentication Modules</secondary>
+                <secondary>プラグ可能な認証モジュール</secondary>
               </indexterm></para>
 
-            <para>PAM はユーザー認証の柔軟な機構を実現する。PAM は SUN<indexterm>
+            <para>PAM は、ユーザーを認証するための柔軟なメカニズムを提供します。 PAM は SUN<indexterm>
                 <primary>SUN</primary>
 
                 <secondary>Sun Microsystems</secondary>
-              </indexterm> Microsystems によって作り出された。
-            Linux-PAM はアプリケーションがどのようにユーザーを認証するのかを選択できるようなローカルシステム管理を実現する共有ライブラリーのセットである。</para>
+              </indexterm> Microsystems によって発明されました。Linux-PAM は、ローカル
+            システム管理者がアプリケーションによるユーザー認証方法を選択できるようにする共有ライブラリ スイートです。</para>
           </listitem>
 
           <listitem>
-            <para>Kerberos V</para>
+            <para>TCP ラッパー</para>
 
-            <para>Kerberos v5 は、マサチューセッツ工科大学で発明されたクライアント サーバー ベースの認証プロトコルである。
-            Kerberos ライブラリを使用すると、netatalk は既存の Kerberos インフラストラクチャで認証するための GSS UAM ライブラリを生成できる。</para>
+            <para>Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれます。</para>
+
+            <para>セキュリティ
+            オプションは次のとおりです。ホスト、ドメイン、および/またはサービスごとのアクセス制御、ホスト名のスプーフィングまたはホスト
+            アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装します。</para>
           </listitem>
 
           <listitem>
-            <para>ACL と LDAP</para>
+            <para>Tracker / talloc / bison / flex</para>
 
-            <para>LDAP は ACL の高度な権限スキームと連携して動作する、オープンな業界標準のユーザー ディレクトリ プロトコルである。
-            一部のオペレーティング システムでは、ACL および LDAP ライブラリがシステムに組み込まれているが、
-            他のオペレーティング システムでは、この機能を有効にするためにサポート パッケージをインストールする必要がある。</para>
-          </listitem>
+            <para>Netatalk は、Spotlight<indexterm>
+                <primary>Spotlight</primary>
+              </indexterm> 検索インデックスのメタデータ バックエンドとして <ulink
+            url="https://tracker.gnome.org">Tracker</ulink>
+            を使用します。必要な最小限のバージョンは 0.7 です。これは <ulink
+            url="https://gnome.pages.gitlab.gnome.org/tracker/">SPARQL</ulink>
+            をサポートする最初のバージョンだからです。</para>
 
-          <listitem>
-            <para>MySQL</para>
-
-            <para>MySQL 互換のクライアント ライブラリを活用することで、拡張性と信頼性の高い MySQL CNID バックエンドを使用して netatalk を構築できる。
-            管理者は、このバックエンドで使用する別のデータベース インスタンスを提供する必要がある。</para>
-          </listitem>
-
-          <listitem>
-            <para>D-Bus と GLib バインディング</para>
-
-            <para><userinput>afpstats</userinput> ツールに使われ、afpd サーバ状況を参照する子ができる。
-            </para>
-          </listitem>
-
-          <listitem>
-            <para>iconv</para>
-
-            <para>iconv はたくさんの文字エンコーディングの変換ルーチンを提供する。Netatalk
-            は iconv を使用して内蔵されていない ISO-8859-1 のようなキャラクターセット変換を実現する。
-            glibc システムでは glibc の提供する iconv 実装を使うことができる。さもなくば GNU libiconv
-            実装を使うことができる。</para>
-          </listitem>
-
-          <listitem>
-            <para>CrackLib</para>
-
-            <para>Random Number UAM と netatalk の固有パスワード管理ツール
-            <userinput>afppasswd</userinput> を使用する際、CrackLib を使う事によって
-            弱いパスワードの設定を防ぐことができる。</para>
-          </listitem>
-
-          <listitem>
-            <para>Perl</para>
-
-            <para><userinput>afpstats</userinput>、
-            <userinput>apple_dump</userinput>、
-            <userinput>asip-status</userinput> 又は
-            <userinput>macusers</userinput> という管理者向けツールは Perl 5.8 以降の実行環境を
-            使用している。下記 Perl モジュールは必須：
-            <emphasis>IO::Socket::IP</emphasis> (asip-status) 又は
-            <emphasis>Net::DBus</emphasis> (afpstats)。</para>
-          </listitem>
-
-          <listitem>
-            <para>DocBook XSL と xsltproc</para>
-
-            <para>本マニュアル含めての netatalk ドキュメンテーションは XML 様式に作成され
-            DocBook XSL スタイルシートを適用し生成されている。フォーマット変換は xsltproc
-            で実施している。</para>
+            <para>Spotlight には、Samba の talloc ライブラリ、bison などの Yacc パーサー、flex
+            などのレキサーも必要です。</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -278,37 +279,36 @@ Resolving deltas: 100% (32227/32227), done.
       url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
       ファイルを参考してください。</para>
 
-      <para>特定の OS に対しての具体的なビルド事例は <link linkend="compile">
-      Netatalk をソースコードからコンパイルする</link> 付録を参考してください。</para>
+      <para>特定の OS に対しての具体的なビルド事例は <link linkend="compile"> Netatalk
+      をソースコードからコンパイルする</link> 付録を参考してください。</para>
     </sect2>
   </sect1>
 
   <sect1>
     <title>Netatalk の起動と停止</title>
 
-    <para>Netatalk の配布物は、
-    いくつかのオペレーティングシステム固有のスタートアップ・スクリプト・テンプレートを備えている。
-    これらテンプレートは、コンパイル前に指定できる。
-    現時点で、systemd、openrc、Linux、BSD、Solaris、そして macOS 向けのテンプレートが用意されている。
-    ビルドスクリプトにシステムタイプを指示することで、どのスタートアップスクリプト
-      <indexterm>
+    <para>Netatalk ディストリビューションには、コンパイル前にビルド システムに指定されたオプションに応じて調整される、オペレーティング
+    システム固有の起動スクリプト テンプレートがいくつか付属しています。現在、テンプレートは、一般的な Linux ディストリビューション、BSD
+    バリアント、Solaris 派生、および macOS 用のプラットフォーム固有のスクリプトに加えて、systemd、openrc
+    用に提供されています。</para>
+
+    <para>ソースからビルドする場合、Netatalk ビルド システムは、どの init
+    スタイルがプラットフォームに適しているかを検出しようとします。また、<option>with-init-style</option>
+    オプションを指定して、必要な特定のタイプの起動スクリプト <indexterm>
         <primary>Startscript</primary>
 
-        <secondary>スタートアップスクリプト</secondary>
-      </indexterm>を生成してインストールするのか選ぶことができる。
-    スタートアップスクリプトを自動でインストールさせるには、
-    <option>with-init-style</option> オプションで有効なものを加える。</para>
+        <secondary>startup script</secondary>
+      </indexterm> をインストールするようにビルド システムを構成することもできます。構文については、ビルド システムのヘルプ
+    テキストを参照してください。</para>
 
-    <para>Linux ディストリビューションの新しいリリースは頻繁に出てくるし、
-    上記で触れたようなほかのシステムのスタートアップの手続きもまた変わりうる。
-    それ故、盲目的にスタートアップスクリプトをインストールするのではなく、
-    自分のシステムで動作するであろうかということをまず見てみる、というのがおそらくいい考えである。</para>
+    <para>新しい Linux、*BSD、および Solaris
+    のようなディストリビューションが定期的に登場し、上記の他のシステムの起動手順も変更される可能性があるため、起動スクリプトを盲目的にインストールするのではなく、まずシステムで機能することを確認することをお勧めします。</para>
 
-    <para>Linux ディストリビューションの RPM あるいは BSD のパッケージのような所定のセットアップの一部として使用する場合、
-    諸々の事は概ねよしなに取り計らわれるだろう。
-    それ故、Netatalk そのものをコンパイルするユーザーには概ね下記のことが当てはまる。</para>
+    <para>Linux ディストリビューション、RPM、または BSD パッケージなどの固定セットアップの一部として Netatalk
+    を使用する場合は、おそらく適切に準備されているでしょう。したがって、前の段落は、Netatalk
+    を自分でコンパイルした人にほとんど当てはまります。</para>
 
-    <para>いかなるスタートアップスクリプト機構を使っていても、下記のデーモンは必要である：</para>
+    <para>次のデーモンは、使用するスタートアップ スクリプト メカニズムによって起動する必要があります:</para>
 
     <itemizedlist>
       <listitem>
@@ -318,9 +318,16 @@ Resolving deltas: 100% (32227/32227), done.
       </listitem>
     </itemizedlist>
 
-    <para>スタートアップスクリプトは無くても、root ユーザとして netatalk デーモンを実行し、
-    使い終わったら SIGTERM で終了させることができす。</para>
+    <para>スタートアップ スクリプトがない場合は、このデーモンを直接 (root として) 起動し、使い終わったら SIGTERM
+    で終了することもできます。</para>
 
-    <para>加えて、設定ファイル <filename>afp.conf</filename> が正しい場所にあるか確認する。</para>
+    <para>さらに、構成ファイル <filename>afp.conf</filename> が適切な場所にあることを確認してください。
+    <userinput>netatalk -V</userinput> コマンドを実行すると、netatalk
+    がファイルの場所を予測しているかどうかを問い合わせることができます。</para>
+
+    <para>AppleTalk サービスを実行する場合は、<command>atalkd</command> デーモンに加えて、オプションの
+    <command>papd</command>、<command>timelord</command>、<command>a2boot</command>
+    デーモンも起動する必要があります。詳細については、このマニュアルの <link
+    linkend="appletalk">AppleTalk</link> の章を参照してください。</para>
   </sect1>
 </chapter>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="getzones.1">
+  <refmeta>
+    <refentrytitle>getzones</refentrytitle>
+
+    <manvolnum>1</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバ マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>getzones</refname>
+
+    <refpurpose>AppleTalk ゾーン名を一覧表示する</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>getzones<indexterm>
+          <primary>getzones</primary>
+        </indexterm></command>
+
+      <group choice="opt">
+        <arg choice="plain">-m</arg>
+
+        <arg choice="plain">-l</arg>
+      </group>
+
+      <arg choice="opt"><replaceable>address</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><emphasis remap="B">Getzones</emphasis> は、Zone Information Protocol
+    (ZIP) を使用して AppleTalk ゾーン名のリストを取得するために使用されます。GetZoneList 要求を AppleTalk
+    ルーターに送信します。デフォルトでは、ローカルで実行されている <citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry> にリクエストを送信します。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist remap="TP">
+      <varlistentry>
+        <term><option>-m</option></term>
+
+        <listitem>
+          <para>ローカル ゾーンの名前のみを一覧表示します。これは、ZIP GetMyZone
+          リクエストを送信することで実現されます。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-l</option></term>
+
+        <listitem>
+          <para>ローカル ゾーンを一覧表示します。これは、GetLocalZones 要求を送信することで実現されます。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis remap="I">address</emphasis></term>
+
+        <listitem>
+          <para>AppleTalk ルーターに <emphasis remap="I">address</emphasis> で接続します。
+          <emphasis remap="I">address</emphasis> は、<citerefentry>
+              <refentrytitle>atalk_aton</refentrytitle>
+
+              <manvolnum>3</manvolnum>
+            </citerefentry> によって解析されます。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <para><citerefentry>
+        <refentrytitle>atalk_aton</refentrytitle>
+
+        <manvolnum>3</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
+    を参照してください</para>
+  </refsect1>
+</refentry>

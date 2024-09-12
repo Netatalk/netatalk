@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="atalk.4">
+  <refmeta>
+    <refentrytitle>atalk</refentrytitle>
+
+    <manvolnum>4</manvolnum>
+
+    <refmiscinfo class="date">17 Dec 1991</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバ マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>atalk</refname>
+
+    <refpurpose>AppleTalk プロトコル ファミリ<indexterm>
+        <primary>atalk</primary>
+      </indexterm></refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+      <funcsynopsisinfo>#include &lt;sys/types.h&gt;
+#include &lt;netatalk/at.h&gt;</funcsynopsisinfo>
+    </funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para>AppleTalk プロトコル ファミリは、データグラム配信プロトコル (DDP) の上位層にあり、AppleTalk
+    アドレス形式を使用するプロトコルのコレクションです。AppleTalk ファミリは、SOCK_STREAM (ADSP)、SOCK_DGRAM
+    (DDP)、SOCK_RDM (ATP)、および SOCK_SEQPACKET (ASP) を提供します。現在、DDP
+    のみがカーネルに実装されています。ATP と ASP は、ユーザー レベルのライブラリに実装されています。 ADSP
+    も計画されています。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>アドレス指定</title>
+
+    <para>AppleTalk アドレスは 3 バイトの量で、ネットワーク バイト オーダーで保存されます。インクルード ファイル
+    &lt;<emphasis remap="B">netatalk/at.h</emphasis>&gt; は AppleTalk
+    アドレス形式を定義します。</para>
+
+    <para>AppleTalk プロトコル ファミリのソケットは、次のアドレス構造を使用します:</para>
+
+    <programlisting remap=".nf">struct sockaddr_at {
+    short sat_family;
+    unsigned char sat_port;
+    struct at_addr sat_addr;
+    char sat_zero[ 8 ];
+};
+</programlisting>
+
+    <para>ソケットのポートは、<citerefentry>
+        <refentrytitle>bind</refentrytitle>
+
+        <manvolnum>2</manvolnum>
+      </citerefentry> で設定できます。 <emphasis remap="B">bind</emphasis> のノードは、常に
+    <emphasis remap="B">ATADDR_ANYNODE</emphasis>: ``このノード。''
+    でなければなりません。ネットは、<emphasis remap="B">ATADDR_ANYNET</emphasis> または <emphasis
+    remap="B">ATADDR_LATENET</emphasis> です。 <emphasis
+    remap="B">ATADDR_ANYNET</emphasis> は、マシンの ``プライマリ'' アドレス (最初に構成されたアドレス)
+    に対応します。 <emphasis remap="B">ATADDR_LATENET</emphasis>
+    により、送信パケット内のアドレスはパケットの送信時に決定されます (つまり、遅れて決定されます)。<emphasis
+    remap="B">ATADDR_LATENET</emphasis> は、ネットワーク インターフェイスごとに 1
+    つのソケットを開くことと同じです。ソケットのポートと プライマリ アドレスまたは <emphasis
+    remap="B">ATADDR_LATENET</emphasis> のいずれかが、<citerefentry>
+        <refentrytitle>getsockname</refentrytitle>
+
+        <manvolnum>2</manvolnum>
+      </citerefentry> で返されます。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>参照</title>
+
+    <!-- .BR ddp (4P), -->
+
+    <!-- .BR atp (3N), -->
+
+    <!-- .BR asp (3N), -->
+
+    <para><citerefentry>
+        <refentrytitle>bind</refentrytitle>
+
+        <manvolnum>2</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>getsockname</refentrytitle>
+
+        <manvolnum>2</manvolnum>
+      </citerefentry>, <citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para><ulink
+    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
+    を参照してください</para>
+  </refsect1>
+</refentry>
