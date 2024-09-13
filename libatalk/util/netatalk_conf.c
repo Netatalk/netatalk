@@ -2167,6 +2167,13 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         atalk_aton(q, &options->ddpaddr);
     if (q)
         free(q);
+
+    if ((p = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ddp zone", NULL))) {
+        if (strlen(p) <= 32)
+        {
+            EC_NULL_LOG(options->zone = strdup(p));
+        }
+    }
 #endif
 
     if ((p = atalk_iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
@@ -2387,12 +2394,14 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.maccodepage);
     if (obj->options.volcodepage)
         CONFIG_ARG_FREE(obj->options.volcodepage);
+#ifndef NO_DDP
+    if (obj->options.zone)
+        CONFIG_ARG_FREE(obj->options.zone);
+    atalk_aton("0.0", &obj->options.ddpaddr);
+#endif
 
     obj->options.flags = 0;
     obj->options.passwdbits = 0;
-#ifndef NO_DDP
-    atalk_aton("0.0", &obj->options.ddpaddr);
-#endif
 
     /* Free everything called from afp_config_parse() */
     free_extmap();

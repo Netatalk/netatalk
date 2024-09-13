@@ -105,7 +105,7 @@ struct afp_options {
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
-    char* hostname, *server;
+    char* hostname, *zone;
 #ifndef NO_DDP
     struct at_addr ddpaddr;
 #endif

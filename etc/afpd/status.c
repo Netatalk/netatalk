@@ -88,7 +88,7 @@ static void status_flags(char *data,
 static int status_server(char *data, const char *server, const struct afp_options *options)
 {
     char                *start = data;
-    char                * Obj, * Type, * Zone;
+    char*       Obj;
     char		buf[32];
     uint16_t           status;
     size_t		len;
@@ -98,9 +98,7 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
-#ifndef NO_DDP
-    nbp_name(server, &Obj, &Type, &Zone);
-#endif
+
     if ((size_t)-1 == (len = convert_string(
                            options->unixcharset, options->maccharset,
                            Obj, -1, buf, sizeof(buf))) ) {
@@ -366,7 +364,6 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 				 const DSI *dsi _U_,
 				 const struct afp_options *options)
 {
-    char* Obj, * Type, * Zone;
     uint16_t namelen;
     size_t len;
     char *begin = data;
@@ -377,10 +374,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     data += offset;
 
     LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
-    Obj = (char*)(options->server ? options->server : options->hostname);
-#ifndef NO_DDP
-    nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
-#endif
+
     if ((len = convert_string(options->unixcharset,
                               CH_UTF8_MAC,
                               options->hostname,
@@ -445,7 +439,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
     maxstatuslen = sizeof(dsi->status);
 
 #ifndef NO_DDP
-    if (asp_obj->Obj) {
+    if (asp_obj->handle) {
         asp = asp_obj->handle;
     }
     else
@@ -518,7 +512,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
         statuslen = status_utf8servername(status, &c, dsi, options);
 
 #ifndef NO_DDP
-    if (asp_obj->Obj) {
+    if (asp_obj->handle) {
         asp_setstatus(asp, status, statuslen);
         asp_obj->signature = status + sigoff;
         //asp_obj->statuslen = statuslen;
