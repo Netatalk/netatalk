@@ -34,7 +34,10 @@
     defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER == 0x0090810fL) ||\
     defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER == 0x10100000L) ||\
     defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER == 0x10001040L)
-     /* valid version */
+    /* valid version */
+#elif defined(OPENSSL_VERSION_NUMBER)
+    /* unrecognized version, but continue. */
+    #define WOLFSSL_OPENSSL_VERSION_NUMBER_UNRECOGNIZED
 #elif defined(WOLFSSL_APACHE_HTTPD) || defined(HAVE_LIBEST) || \
       defined(WOLFSSL_BIND) || defined(WOLFSSL_NGINX) || \
       defined(WOLFSSL_RSYSLOG) || defined(WOLFSSL_KRB) || defined(HAVE_STUNNEL) || \
@@ -55,11 +58,15 @@
      #define OPENSSL_VERSION_NUMBER 0x0090810fL
 #endif
 
-#define OPENSSL_VERSION_TEXT             "wolfSSL " LIBWOLFSSL_VERSION_STRING
-#define OPENSSL_VERSION                  0
+#ifndef OPENSSL_VERSION_TEXT
+    #define OPENSSL_VERSION_TEXT "wolfSSL " LIBWOLFSSL_VERSION_STRING
+#endif
+#ifndef OPENSSL_VERSION
+    #define OPENSSL_VERSION 0
+#endif
 
 #ifndef OPENSSL_IS_WOLFSSL
-#define OPENSSL_IS_WOLFSSL
+    #define OPENSSL_IS_WOLFSSL
 #endif
 
 #endif /* OPENSSL_EXTRA || OPENSSL_EXTRA_X509_SMALL */
