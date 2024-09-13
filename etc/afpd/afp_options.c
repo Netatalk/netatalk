@@ -68,7 +68,7 @@ static void show_version( void )
 	printf("        TCP/IP Support:\t");
 	puts("Yes");
 
-	printf("AppleTalk Support:\t");
+	printf("     AppleTalk Support:\t");
 #ifdef NO_DDP
 	puts("No");
 #else
