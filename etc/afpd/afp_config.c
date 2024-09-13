@@ -68,6 +68,7 @@ void configfree(AFPObj *obj, DSI *dsi)
         {
             atp_close(((ASP) (obj->handle))->asp_atp);
             free(obj->handle);
+            obj->handle = NULL;
         }
         return;
     }
@@ -146,20 +147,21 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 
         /* register asp server */
         Obj = (char*)asp_obj->options.hostname;
-        if (asp_obj->options.server && (size_t)-1 == (convert_string_allocate(asp_obj->options.unixcharset, asp_obj->options.maccharset,
-            asp_obj->options.server, strlen(asp_obj->options.server), &convname))) {
-            if ((convname = strdup(asp_obj->options.server)) == NULL) {
+
+        if (asp_obj->options.zone && (size_t)-1 == (convert_string_allocate(asp_obj->options.unixcharset, asp_obj->options.maccharset,
+            asp_obj->options.zone, strlen(asp_obj->options.zone), &convname))) {
+            if ((convname = strdup(asp_obj->options.zone)) == NULL) {
                 LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno));
                 asp_close(asp);
                 goto serv_free_return;
             }
         }
 
-        if (nbp_name(convname, &Obj, &Type, &Zone)) {
-            LOG(log_error, logtype_afpd, "main: can't parse %s", asp_obj->options.server);
-            asp_close(asp);
-            goto serv_free_return;
+        /* set a custom zone if user requested one */
+        if (asp_obj->options.zone) {
+            Zone = strdup(convname);
         }
+
         if (convname)
             free(convname);
 
@@ -200,7 +202,7 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         asp_obj->handle = asp;
 
     serv_free_return:
-        if (asp_obj->Obj)
+        if (asp_obj->handle)
         {
             LOG(log_note, logtype_afpd, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type, Zone,
                 ntohs(atp_sockaddr(atp)->sat_addr.s_net),

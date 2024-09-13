@@ -662,6 +662,18 @@
         </varlistentry>
 
         <varlistentry>
+          <term>ddp zone = <replaceable>ddp zone</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Specifies the AppleTalk zone to register the server in. The
+            default is to register the server in the default zone of the last
+            interface configured by the system.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term>disconnect time = <replaceable>number</replaceable>
           <type>(G)</type></term>
 

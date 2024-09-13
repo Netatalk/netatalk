@@ -126,7 +126,7 @@ static void afp_goaway(int sig)
         if (server_children)
             server_child_kill(server_children, SIGTERM);
 #ifndef NO_DDP
-        if ((asp_obj.Obj))
+        if ((asp_obj.handle))
         {
             asp_cleanup(&asp_obj);
         }
@@ -406,11 +406,11 @@ int main(int ac, char **av)
             configfree(&dsi_obj, NULL);
             afp_config_free(&dsi_obj);
 #ifndef NO_DDP
-            if ((asp_obj.Obj))
+            afp_config_free(&asp_obj);
+            if ((asp_obj.handle))
             {
                 asp_cleanup(&asp_obj);
                 configfree(&asp_obj, NULL);
-                afp_config_free(&asp_obj);
             }
 #endif /* no afp/asp */
 
