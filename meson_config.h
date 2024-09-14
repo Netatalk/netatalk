@@ -707,34 +707,6 @@
 /* Solaris compatibility macro */
 #mesondefine __svr4__
 
-/* WolfSSL configuration */
-
-#define HAVE_AESGCM
-#define HAVE_DH_DEFAULT_PARAMS
-#define HAVE_TLS_EXTENSIONS
-#define NO_CPUID
-#define NO_DO178
-#define NO_DSA
-#define NO_ERROR_QUEUE
-#define NO_ERROR_STRINGS
-#define NO_FILESYSTEM
-#define NO_MD4
-#define NO_MD5
-#define NO_OLD_TLS
-#define NO_PKCS12
-#define NO_PSK
-#define NO_RC4
-#define NO_SHA
-#define NO_WOLFSSL_MEMORY
-#define OPENSSL_ALL
-#define OPENSSL_EXTRA
-#define TFM_TIMING_RESISTANT
-#define WC_NO_ASYNC_THREADING
-#define WC_RSA_BLINDING
-#define WC_RSA_PSS
-#define WOLFSSL_DES_ECB
-#define WOLFSSL_ENCRYPTED_KEYS
-
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus

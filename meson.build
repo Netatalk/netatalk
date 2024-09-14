@@ -571,7 +571,6 @@ if wolfssl.found()
 
     if (
         wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
-        and wolfssl_check.contains('WOLFSSL_DES_ECB')
         and wolfssl_check.contains('OPENSSL_EXTRA')
         and wolfssl_check.contains('OPENSSL_ALL')
     )
@@ -590,6 +589,8 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
     have_ssl = true
     ssl_deps += nettle
     if have_ssl_override
+        libwolfssl_proj = subproject('wolfssl')
+        libssl = libwolfssl_proj.get_variable('libssl_dep')
         have_wolfssl = false
         have_embedded_ssl = true
         ssl_provider += 'built-in'
@@ -600,6 +601,8 @@ if (have_wolfssl or have_embedded_ssl) and nettle.found()
         ssl_provider += 'WolfSSL'
         cdata.set('WOLFSSL_DHX', 1)
     elif have_embedded_ssl
+        libwolfssl_proj = subproject('wolfssl')
+        libssl = libwolfssl_proj.get_variable('libssl_dep')
         have_wolfssl = false
         ssl_provider += 'built-in'
         cdata.set('EMBEDDED_SSL', 1)

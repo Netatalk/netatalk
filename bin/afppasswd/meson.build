@@ -16,8 +16,7 @@ endif
 if have_wolfssl and not have_ssl_override
     afppasswd_deps += [nettle, wolfssl]
 elif have_embedded_ssl
-    afppasswd_libs += libatalk
-    afppasswd_deps += nettle
+    afppasswd_deps += [nettle, libssl]
 endif
 
 executable(
