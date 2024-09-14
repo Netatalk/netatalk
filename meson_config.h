@@ -709,9 +709,11 @@
 
 /* WolfSSL configuration */
 
-#define HAVE_AESGCM
 #define HAVE_DH_DEFAULT_PARAMS
 #define HAVE_TLS_EXTENSIONS
+#define NO_AES
+#define NO_AES_CBC
+#define NO_AESGCM_AEAD
 #define NO_CPUID
 #define NO_DO178
 #define NO_DSA
@@ -734,6 +736,7 @@
 #define WC_RSA_PSS
 #define WOLFSSL_DES_ECB
 #define WOLFSSL_ENCRYPTED_KEYS
+#define WOLFSSL_NO_DEF_TICKET_ENC_CB
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
