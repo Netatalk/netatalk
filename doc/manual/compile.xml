@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-08-11</pubdate>
+		<pubdate>2024-09-15</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -909,7 +909,9 @@ pkg install \
   gcc \
   libgcrypt \
   libtool \
-  pkg-config
+  ninja \
+  pkg-config \
+  python/pip
 pip install meson
 wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz --no-check-certificate
 wget https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz --no-check-certificate
