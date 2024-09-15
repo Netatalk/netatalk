@@ -30,6 +30,10 @@ if [ -z "${AFP_PASS}" ]; then
     echo "ERROR: AFP_PASS needs to be set to use this Docker container."
     exit 1
 fi
+if [ -z "${AFP_GROUP}" ]; then
+    echo "ERROR: AFP_GROUP needs to be set to use this Docker container."
+    exit 1
+fi
 
 if [ ! -z "${AFP_UID}" ]; then
     uidcmd="-u ${AFP_UID}"
@@ -37,11 +41,10 @@ fi
 if [ ! -z "${AFP_GID}" ]; then
     gidcmd="-g ${AFP_GID}"
 fi
-if [ ! -z "${AFP_GROUP}" ]; then
-    groupcmd="-G ${AFP_GROUP}"
-    addgroup ${gidcmd} ${AFP_GROUP} || true 2> /dev/null
-fi
-adduser ${uidcmd} ${groupcmd} --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
+
+adduser ${uidcmd} --no-create-home --disabled-password "${AFP_USER}" || true 2> /dev/null
+addgroup ${gidcmd} ${AFP_GROUP} || true 2> /dev/null
+addgroup ${AFP_USER} ${AFP_GROUP}
 
 echo "${AFP_USER}:${AFP_PASS}" | chpasswd
 
@@ -56,6 +59,22 @@ if [ $? -ne 0 ]; then
     echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
 fi
 set -e
+
+# Crude way to create a second AFP user for testing purposes
+if [ ! -z "${AFP_USER2}" ]; then
+    adduser --no-create-home --disabled-password "${AFP_USER2}" || true 2> /dev/null
+    addgroup ${AFP_USER2} ${AFP_GROUP}
+
+    echo "${AFP_USER2}:${AFP_PASS2}" | chpasswd
+
+    # Creating credentials for the RandNum UAM
+    set +e
+    afppasswd -a -f -w "${AFP_PASS2}" "${AFP_USER2}"
+    if [ $? -ne 0 ]; then
+        echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
+    fi
+    set -e
+fi
 
 echo "*** Configuring shared volume"
 
@@ -76,20 +95,25 @@ echo "*** Fixing permissions"
 # Workarounds for afpd being weird about the permissions of the shared volume root
 chmod 2775 /mnt/afpshare
 chmod 2775 /mnt/afpbackup
-if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
-    chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare
-    chown "${AFP_UID}:${AFP_GID}" /mnt/afpbackup
-elif [ ! -z "${AFP_USER}" ] && [ ! -z "${AFP_GROUP}" ]; then
-    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpshare
-    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpbackup
-elif [ ! -z "${AFP_USER}" ]; then
-    chown "${AFP_USER}:${AFP_USER}" /mnt/afpshare
-    chown "${AFP_USER}:${AFP_USER}" /mnt/afpbackup
+
+if [ ! -z "${AFP_GID}" ]; then
+    chown "0:${AFP_GID}" /mnt/afpshare /mnt/afpbackup
+else
+    chown "root:${AFP_GROUP}" /mnt/afpshare /mnt/afpbackup
 fi
 
+echo "*** Removing residual lock files"
+
 if [ -f "/var/lock/netatalk" ]; then
-    echo "*** Removing residual lock files"
     rm -f /var/lock/netatalk
+fi
+
+if [ -f "/var/lock/atalkd" ]; then
+    rm -f /var/lock/atalkd
+fi
+
+if [ -f "/var/lock/papd" ]; then
+    rm -f /var/lock/papd
 fi
 
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
@@ -110,11 +134,14 @@ uam list = ${UAMS}
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
 path = /mnt/afpshare
-valid users = ${AFP_USER}
+valid users = ${AFP_USER} ${AFP_USER2}
+rwlist = ${AFP_USER} ${AFP_USER2}
+file perm = 0660
+directory perm = 0770
 [Time Machine]
 path = /mnt/afpbackup
 time machine = yes
-valid users = ${AFP_USER}
+valid users = ${AFP_USER} ${AFP_USER2}
 EOF
 fi
 
