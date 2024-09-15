@@ -462,8 +462,7 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Sets the default path for UAMs for this server (default is
-            @libdir@/netatalk).</para>
+            <para>Sets the default path for UAMs for this server.</para>
           </listitem>
         </varlistentry>
       </variablelist>
