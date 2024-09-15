@@ -69,7 +69,7 @@ env:
 jobs:
   build-alpine:
     name: Alpine Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: alpine:latest
     steps:
@@ -133,7 +133,7 @@ jobs:
 
   build-archlinux:
     name: Arch Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: archlinux:latest
     steps:
@@ -177,7 +177,7 @@ jobs:
 
   build-debian:
     name: Debian Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: debian:latest
     steps:
@@ -207,7 +207,7 @@ jobs:
 
   build-fedora:
     name: Fedora Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: fedora:latest
     steps:
@@ -264,7 +264,7 @@ jobs:
 
   build-opensuse:
     name: openSUSE Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: opensuse/tumbleweed:latest
     steps:
@@ -322,7 +322,7 @@ jobs:
 
   build-ubuntu:
     name: Ubuntu Linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -382,14 +382,14 @@ jobs:
 
   build-dflybsd:
     name: DragonflyBSD
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/dragonflybsd-vm@v1.0.4
+        uses: vmactions/dragonflybsd-vm@v1.0.7
         with:
           copyback: false
           usesh: true
@@ -428,14 +428,14 @@ jobs:
 
   build-freebsd:
     name: FreeBSD
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.0.6
+        uses: vmactions/freebsd-vm@v1.1.1
         with:
           copyback: false
           prepare: |
@@ -475,14 +475,14 @@ jobs:
 
   build-netbsd:
     name: NetBSD
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/netbsd-vm@v1
+        uses: vmactions/netbsd-vm@v1.1.1
         with:
           release: "9.4"
           copyback: false
@@ -527,14 +527,14 @@ jobs:
 
   build-openbsd:
     name: OpenBSD
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1
+        uses: vmactions/openbsd-vm@v1.1.1
         with:
           copyback: false
           prepare: |
@@ -574,14 +574,14 @@ jobs:
 
   build-omnios:
     name: OmniOS
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/omnios-vm@v1.0.1
+        uses: vmactions/omnios-vm@v1.0.6
         with:
           copyback: false
           prepare: |
@@ -629,7 +629,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1.0.6
+        uses: vmactions/solaris-vm@v1.0.7
         with:
           copyback: false
           prepare: |
@@ -666,7 +666,7 @@ jobs:
 
   static_analysis:
     name: Static Analysis
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       # Directory where build-wrapper output will be placed
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
@@ -681,7 +681,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
+        uses: SonarSource/sonarcloud-github-c-cpp@v3
       - name: Run build-wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
