@@ -367,7 +367,10 @@ int uam_afpserver_option(void *private, const int what, void *option,
         break;
 
     case UAM_OPTION_SIGNATURE:
-        *buf = (void *)obj->dsi->signature;
+        if (obj->proto == AFPPROTO_DSI)
+            *buf = (void *)obj->dsi->signature;
+        else
+            *buf = (void *)obj->signature;
         if (len)
             *len = 16;
         break;
@@ -391,7 +394,11 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
     case UAM_OPTION_CLIENTNAME:
     {
-        struct DSI *dsi = obj->dsi;
+        struct DSI *dsi;
+        if (obj->proto == AFPPROTO_DSI)
+            dsi = obj->dsi;
+        else
+            dsi = obj->handle;
         const struct sockaddr *sa;
         static char hbuf[NI_MAXHOST];
 
