@@ -96,10 +96,10 @@ echo "*** Fixing permissions"
 chmod 2775 /mnt/afpshare
 chmod 2775 /mnt/afpbackup
 
-if [ ! -z "${AFP_GID}" ]; then
-    chown "0:${AFP_GID}" /mnt/afpshare /mnt/afpbackup
+if [ ! -z "${AFP_UID}" ] && [ ! -z "${AFP_GID}" ]; then
+    chown "${AFP_UID}:${AFP_GID}" /mnt/afpshare /mnt/afpbackup
 else
-    chown "root:${AFP_GROUP}" /mnt/afpshare /mnt/afpbackup
+    chown "${AFP_USER}:${AFP_GROUP}" /mnt/afpshare /mnt/afpbackup
 fi
 
 echo "*** Removing residual lock files"
