@@ -11,6 +11,7 @@ services:
     environment:
       - AFP_USER=
       - AFP_PASS=
+      - AFP_GROUP=afpusers
       - ATALKD_INTERFACE=
       - TZ=
 volumes:

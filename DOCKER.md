@@ -36,6 +36,7 @@ docker run --rm \
   --volume "/var/run/dbus:/var/run/dbus" \
   --env AFP_USER= \
   --env AFP_PASS= \
+  --env AFP_GROUP=afpusers \
   --env ATALKD_INTERFACE= \
   --env TZ= \
   --name netatalk netatalk:latest
@@ -63,6 +64,7 @@ These are required to set the credentials used to authenticate with the file ser
 | --- | --- |
 | `AFP_USER` | Username to authenticate with the file server |
 | `AFP_PASS` | Password to authenticate with the file server |
+| `AFP_GROUP` | Group that owns the shared volume dirs |
 
 ### Mandatory for AppleTalk
 
@@ -75,7 +77,6 @@ These are required to set the credentials used to authenticate with the file ser
 
 | Variable        | Description                                                    |
 |-----------------|----------------------------------------------------------------|
-| `AFP_GROUP`     | `AFP_USER`'s group that owns the shared volume                 |
 | `AFP_UID`       | Specify user id of `AFP_USER`                                  |
 | `AFP_GID`       | Specify group id of `AFP_GROUP`                                |
 | `SERVER_NAME`   | The name of the server reported to Zeroconf                    |
@@ -83,3 +84,4 @@ These are required to set the credentials used to authenticate with the file ser
 | `AFP_LOGLEVEL`  | The verbosity of logs; default is "info"                       |
 | `INSECURE_AUTH` | When non-zero, enable the "ClearTxt" and "Guest" UAMs          |
 | `MANUAL_CONFIG` | When non-zero, enable manual management of config files        |
+
