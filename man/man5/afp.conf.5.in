@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 31 May 2024
 .\"    Manual: Netatalk AFP Fileserver Manual
-.\"    Source: Netatalk 3.2.8
+.\"    Source: Netatalk 3.2.9
 .\"  Language: English
 .\"
-.TH "AFP\&.CONF" "5" "31 May 2024" "Netatalk 3\&.2\&.8" "Netatalk AFP Fileserver Manual"
+.TH "AFP\&.CONF" "5" "31 May 2024" "Netatalk 3\&.2\&.9" "Netatalk AFP Fileserver Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -345,7 +345,7 @@ Allow Kerberos V for authentication (optional)
 .PP
 uam path = \fIpath\fR \fB(G)\fR
 .RS 4
-Sets the default path for UAMs for this server (default is /usr/local/lib/x86_64\-linux\-gnu/netatalk)\&.
+Sets the default path for UAMs for this server\&.
 .RE
 .SS "Charset Options"
 .PP
