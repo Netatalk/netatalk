@@ -1,3 +1,13 @@
+Changes in 3.2.9
+================
+* UPD: Use the recommended command to import Solaris init manifest,
+       GitHub #1451
+* FIX: uams: Make sure the DHX2 client nonce is aligned appropriately,
+       GitHub #1456
+* FIX: uams: Fix DHCAST128 key alignment problem, GitHub #1464
+* FIX: wolfssl: OpenSSL coexistence tweaks, GitHub #1469
+* FIX: docs: Remove straggler path substitution in afp.conf, GitHub #1480
+
 Changes in 3.2.8
 ================
 * UPD: Bump bundled WolfSSL library to stable version 5.7.2, GitHub #1433
