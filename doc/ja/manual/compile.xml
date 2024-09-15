@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-09-07</pubdate>
+		<pubdate>2024-09-15</pubdate>
 	</appendixinfo>
-	<title>Netatalk をソースコードからコンパイルする</title>
+	<title>ソースコードから Netatalk をコンパイルする</title>
 	<sect1 id="compile-overview">
 		<title>概要</title>
 	</sect1>
 	<sect1>
 		<para>本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。</para>
 		<para>本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。</para>
-		<para>Autotools か Meson のビルドシステムは選択可能。 テスト手順は任意である。</para>
 	</sect1>
 	<sect1 id="compile-os">
 		<title>オペレーティング システム一覧</title>
@@ -395,6 +394,7 @@ xsltproc
 				<screen>meson setup build \
   -Dwith-appletalk=true \
   -Dwith-init-hooks=false \
+  -Dwith-manual-l10n=ja \
   -Dwith-tests=true
 </screen>
 			</para>
@@ -417,6 +417,46 @@ xsltproc
 			<para>Stop netatalk</para>
 			<para>
 				<screen>sudo systemctl stop netatalk</screen>
+			</para>
+			<para>Uninstall</para>
+			<para>
+				<screen>sudo ninja -C build uninstall</screen>
+			</para>
+		</sect2>
+		<sect2 id="build-macos">
+			<title>macOS</title>
+			<para>Install dependencies</para>
+			<para>
+				<screen>brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc wolfssl
+wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+</screen>
+			</para>
+			<para>Configure</para>
+			<para>
+				<screen>meson setup build \
+  -Dwith-appletalk=true \
+  -Dwith-tests=true
+</screen>
+			</para>
+			<para>Build</para>
+			<para>
+				<screen>meson compile -C build</screen>
+			</para>
+			<para>Run tests</para>
+			<para>
+				<screen>cd build &amp;&amp; meson test</screen>
+			</para>
+			<para>Install</para>
+			<para>
+				<screen>sudo meson install -C build</screen>
+			</para>
+			<para>Start netatalk</para>
+			<para>
+				<screen>sudo netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
+			</para>
+			<para>Stop netatalk</para>
+			<para>
+				<screen>sudo netatalkd stop</screen>
 			</para>
 			<para>Uninstall</para>
 			<para>
@@ -597,46 +637,6 @@ ninja -C build uninstall
 </screen>
 			</para>
 		</sect2>
-		<sect2 id="build-macos">
-			<title>macOS</title>
-			<para>Install dependencies</para>
-			<para>
-				<screen>brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc wolfssl
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
-</screen>
-			</para>
-			<para>Configure</para>
-			<para>
-				<screen>meson setup build \
-  -Dwith-appletalk=true \
-  -Dwith-tests=true
-</screen>
-			</para>
-			<para>Build</para>
-			<para>
-				<screen>meson compile -C build</screen>
-			</para>
-			<para>Run tests</para>
-			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
-			</para>
-			<para>Install</para>
-			<para>
-				<screen>sudo meson install -C build</screen>
-			</para>
-			<para>Start netatalk</para>
-			<para>
-				<screen>sudo netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
-			</para>
-			<para>Stop netatalk</para>
-			<para>
-				<screen>sudo netatalkd stop</screen>
-			</para>
-			<para>Uninstall</para>
-			<para>
-				<screen>sudo ninja -C build uninstall</screen>
-			</para>
-		</sect2>
 		<sect2 id="build-omnios">
 			<title>OmniOS</title>
 			<para>必要なパッケージをインストールする</para>
@@ -672,6 +672,7 @@ meson setup build \
   -Dwith-ldap-path=/opt/local
 meson compile -C build
 meson install -C build
+sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
 /usr/local/bin/asip-status localhost
@@ -693,6 +694,7 @@ ninja -C build uninstall
   nettle \
   ninja \
   pkg-config \
+  python/pip \
   wget
 pip install meson
 </screen>
@@ -710,6 +712,7 @@ meson compile -C build
 cd build &amp;&amp; meson test
 cd ..
 meson install -C build
+sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
 /usr/local/bin/asip-status localhost
