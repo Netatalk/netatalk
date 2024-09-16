@@ -257,6 +257,7 @@ check_headers = [
     'mntent.h',
     'netdb.h',
     'pam/pam_appl.h',
+    'poll.h',
     'security/pam_appl.h',
     'sgtty.h',
     'statfs.h',
