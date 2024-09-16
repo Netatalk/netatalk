@@ -8,12 +8,12 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-#include <sys/poll.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
