@@ -133,7 +133,7 @@
         <primary>CAP スタイルの認証</primary>
 
         <secondary>旧式の印刷認証</secondary>
-      </indexterm> geその名前は、CAP (Columbia AppleTalk パッケージ) が Mac
+      </indexterm> geその名前は、CAP (Columbia AppleTalk Package) が Mac
     クライアントの印刷を認証するために使用する方法に由来しています。この方法では、印刷する前にユーザーがファイル共有にログインする必要があります。<command>afpd</command>
     は、クライアントの AppleTalk
     アドレスにちなんで名付けられた一時ファイルにユーザー名を記録し、ユーザーが切断すると一時ファイルを削除します。したがって、CAP
@@ -243,6 +243,6 @@
 
     <para><ulink
     url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
-    を参照してください</para>
+    を参照</para>
   </refsect1>
 </refentry>

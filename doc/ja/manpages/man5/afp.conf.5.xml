@@ -535,8 +535,8 @@
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>AFP-over-Appletalk のサポートを有効にする。このオプションを使用するには、オペレーティング
-            システムが AppleTalk ネットワーク プロトコルをサポートしている必要がある。</para>
+            <para>AFP-over-Appletalk のサポートを有効にする。このオプションを使用するには、オペレーティング システムが
+            AppleTalk ネットワーク プロトコルをサポートしている必要がある。</para>
           </listitem>
         </varlistentry>
 
@@ -557,6 +557,17 @@
           <listitem>
             <para>サーバーの DDP アドレスを指定する。デフォルトでは、アドレス (0.0)
             が自動的に割り当てられる。これは、複数のインターフェイスで AppleTalk を実行している場合にのみ役立つ。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>ddp zone = <replaceable>ddp zone</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>サーバーを登録する AppleTalk
+            ゾーンを指定する。デフォルトでは、システムによって最後に構成されたインターフェースのデフォルト
+            ゾーンにサーバーが登録される。</para>
           </listitem>
         </varlistentry>
 
