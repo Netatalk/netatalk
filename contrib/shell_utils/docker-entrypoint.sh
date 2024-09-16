@@ -60,7 +60,7 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-# Crude way to create a second AFP user for testing purposes
+# Crude way to create a second AFP user
 if [ ! -z "${AFP_USER2}" ]; then
     adduser --no-create-home --disabled-password "${AFP_USER2}" || true 2> /dev/null
     addgroup ${AFP_USER2} ${AFP_GROUP}
@@ -122,6 +122,12 @@ if [ ! -z "${INSECURE_AUTH}" ]; then
     UAMS+=" uams_clrtxt.so uams_guest.so"
 fi
 
+if [ ! -z "${DISABLE_TIMEMACHINE}" ]; then
+    TIMEMACHINE="no"
+else
+    TIMEMACHINE="yes"
+fi
+
 if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
     cat <<EOF > /usr/local/etc/afp.conf
@@ -138,10 +144,13 @@ valid users = ${AFP_USER} ${AFP_USER2}
 rwlist = ${AFP_USER} ${AFP_USER2}
 file perm = 0660
 directory perm = 0770
-[Time Machine]
+[${SHARE2_NAME:-Time Machine}]
 path = /mnt/afpbackup
-time machine = yes
+time machine = ${TIMEMACHINE}
 valid users = ${AFP_USER} ${AFP_USER2}
+rwlist = ${AFP_USER} ${AFP_USER2}
+file perm = 0660
+directory perm = 0770
 EOF
 fi
 
