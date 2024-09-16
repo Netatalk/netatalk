@@ -28,7 +28,7 @@
   <sect1>
     <title>Netatalk 2 からのアップグレード</title>
 
-    <para>Netatalk の主要な変更は以下の二点：<orderedlist>
+    <para>Netatalk 4 の主要な変更は以下の3点：<orderedlist>
         <listitem>
           <para>これまでの設定ファイルすべてが廃止され、ほぼ全オプション名を変更し、全く新しい設定ファイルとしての
           <filename><link
@@ -38,6 +38,11 @@
         <listitem>
           <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する "<option>appledouble =
           ea</option>" という新しい AppleDouble のバックエンド。</para>
+        </listitem>
+
+        <listitem>
+          <para>AppleTalk トランスポート層はデフォルトで無効になっている。非常に古い Mac で Netatalk
+          を使用する場合は、"<option>appletalk = yes</option>" オプションで有効にしてください。</para>
         </listitem>
       </orderedlist></para>
 
@@ -552,13 +557,13 @@
 
                 <entry>ddp zone</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
                 <entry>(G)</entry>
 
-                <entry>-</entry>
+                <entry>4.0で新規追加</entry>
               </row>
             </tbody>
           </tgroup>
@@ -1251,7 +1256,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>-</entry>
+                <entry>4.0で新規追加</entry>
               </row>
 
               <row>
@@ -2091,7 +2096,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>-</entry>
+                <entry>4.0で新規追加</entry>
               </row>
 
               <row>
@@ -2213,7 +2218,7 @@
 
                 <entry>-</entry>
 
-                <entry><emphasis role="bold">yes</emphasis></entry>
+                <entry>yes</entry>
 
                 <entry>(V)</entry>
 
@@ -2365,13 +2370,13 @@
 
                 <entry>prodos</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
                 <entry>no</entry>
 
                 <entry>(V)</entry>
 
-                <entry>-</entry>
+                <entry>4.0で新規追加</entry>
               </row>
 
               <row>
@@ -2421,13 +2426,13 @@
 
                 <entry>legacy volume size</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
                 <entry>no</entry>
 
                 <entry>(V)</entry>
 
-                <entry>-</entry>
+                <entry>4.0で新規追加</entry>
               </row>
 
               <row>

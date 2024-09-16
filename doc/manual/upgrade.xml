@@ -22,8 +22,8 @@
   <sect1>
     <title>Upgrading from Netatalk 2</title>
 
-    <para>There are two major changes between Netatalk 2 and the later
-    versions:<orderedlist>
+    <para>There are three major changes between Netatalk 2 and Netatalk
+    4:<orderedlist>
         <listitem>
           <para>New configuration file <filename><link
           linkend="afp.conf.5">afp.conf</link></filename>, obsoleting all
@@ -34,6 +34,12 @@
           <para>New AppleDouble backend "<option>appledouble = ea</option>"
           which stores Mac metadata and resource forks in extended attributes
           of the filesystem.</para>
+        </listitem>
+
+        <listitem>
+          <para>The AppleTalk transport layer is disabled by default. If you
+          want to use Netatalk with very old Macs, turn it on with the
+          "<option>appletalk = yes</option>" option.</para>
         </listitem>
       </orderedlist></para>
 
@@ -557,13 +563,13 @@
 
                 <entry>ddp zone</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
                 <entry>(G)</entry>
 
-                <entry>-</entry>
+                <entry>New in 4.0</entry>
               </row>
             </tbody>
           </tgroup>
@@ -1256,7 +1262,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>-</entry>
+                <entry>New in 4.0</entry>
               </row>
 
               <row>
@@ -1424,7 +1430,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>-</entry>
+                <entry>New in 4.0</entry>
               </row>
 
               <row>
@@ -2219,7 +2225,7 @@
 
                 <entry>-</entry>
 
-                <entry><emphasis role="bold">yes</emphasis></entry>
+                <entry>yes</entry>
 
                 <entry>(V)</entry>
 
@@ -2377,7 +2383,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>-</entry>
+                <entry>New in 4.0</entry>
               </row>
 
               <row>
@@ -2427,13 +2433,13 @@
 
                 <entry>legacy volume size</entry>
 
-                <entry>no</entry>
+                <entry>-</entry>
 
                 <entry>no</entry>
 
                 <entry>(V)</entry>
 
-                <entry>-</entry>
+                <entry>New in 4.0</entry>
               </row>
 
               <row>
