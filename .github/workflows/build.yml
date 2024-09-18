@@ -33,6 +33,7 @@ env:
   APT_PACKAGES: |
     autoconf \
     automake \
+    cracklib-runtime \
     docbook-xsl \
     libacl1-dev \
     libavahi-client-dev \
