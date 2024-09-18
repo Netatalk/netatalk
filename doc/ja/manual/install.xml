@@ -173,6 +173,8 @@ Resolving deltas: 100% (32227/32227), done.
             <para>Random Number UAM と netatalk 独自の
             <userinput>afppasswd</userinput> パスワード マネージャを使用する場合、CrackLib は
             netatalk での認証に弱いパスワードを設定するのを防ぐのに役立ちます。</para>
+
+            <para>ランタイム パッケージで別途配布されることもある CrackLib 辞書も必須である。</para>
           </listitem>
 
           <listitem>
