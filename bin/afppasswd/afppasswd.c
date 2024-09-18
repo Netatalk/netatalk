@@ -35,18 +35,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <gcrypt.h>
+
+#ifndef DES_KEY_SZ
+#define DES_KEY_SZ 8
+#endif
+
 #ifdef USE_CRACKLIB
 #include <crack.h>
 #endif /* USE_CRACKLIB */
-
-#if defined(EMBEDDED_SSL) || defined(WOLFSSL_DHX)
-#if defined(WOLFSSL_DHX)
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/settings.h>
-#endif
-#include <nettle/des.h>
-#include <wolfssl/openssl/des.h>
-#endif
 
 #define OPT_ISROOT  (1 << 0)
 #define OPT_CREATE  (1 << 1)
@@ -64,10 +61,6 @@
 #define HEXPASSWDLEN 16
 #define PASSWDLEN 8
 
-#ifndef DES_KEY_SZ
-#define DES_KEY_SZ (sizeof(DES_cblock))
-#endif
-
 static char buf[MAXPATHLEN + 1];
 
 /* if newpwd is null, convert buf from hex to binary. if newpwd isn't
@@ -76,14 +69,15 @@ static char buf[MAXPATHLEN + 1];
 static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 {
   uint8_t key[HEXPASSWDLEN];
-  struct des_ctx schedule;
   unsigned int i, j;
+  gcry_cipher_hd_t ctx;
+  gcry_error_t ctxerror;
 
   if (!newpwd) {
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
-    if (j <= DES_KEY_SIZE)
+    if (j <= DES_KEY_SZ)
       memset(buf + j, 0, sizeof(key) - j);
   }
 
@@ -94,24 +88,25 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
     /* convert to binary */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-    if (j <= DES_KEY_SIZE)
+    if (j <= DES_KEY_SZ)
       memset(key + j, 0, sizeof(key) - j);
-    des_set_key(&schedule, key);
     memset(key, 0, sizeof(key));
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
     if (newpwd) {
-      des_encrypt(&schedule, HEXPASSWDLEN, (uint8_t *)newpwd, (uint8_t *)newpwd);
+        ctxerror = gcry_cipher_encrypt(ctx, newpwd, DES_KEY_SZ, NULL, 0);
     } else {
       /* decrypt the password */
-      des_decrypt(&schedule, HEXPASSWDLEN, (uint8_t *)buf, (uint8_t *)buf);
+        ctxerror = gcry_cipher_decrypt(ctx, buf, DES_KEY_SZ, NULL, 0);
     }
-    memset(&schedule, 0, sizeof(schedule));
+    gcry_cipher_close(ctx);
   }
 
   if (newpwd) {
     const unsigned char hextable[] = "0123456789ABCDEF";
 
     /* convert to hex */
-    for (i = j = 0; i < DES_KEY_SIZE; i++, j += 2) {
+    for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
       buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
       buf[j + 1] = hextable[newpwd[i] & 0x0F];
     }

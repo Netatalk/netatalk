@@ -13,11 +13,8 @@ if use_mysql_backend
     afppasswd_deps += mysqlclient
 endif
 
-if have_wolfssl and not have_ssl_override
-    afppasswd_deps += [nettle, wolfssl]
-elif have_embedded_ssl
-    afppasswd_libs += libatalk
-    afppasswd_deps += nettle
+if have_libgcrypt
+    afppasswd_deps += [libgcrypt]
 endif
 
 executable(
