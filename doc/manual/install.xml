@@ -188,6 +188,9 @@ Resolving deltas: 100% (32227/32227), done.
             <userinput>afppasswd</userinput> password manager, CrackLib can
             help protect against setting weak passwords for authentication
             with netatalk.</para>
+
+            <para>The CrackLib dictionary, which is sometimes distributed
+            separately in a runtime package, is also a requirement.</para>
           </listitem>
 
           <listitem>

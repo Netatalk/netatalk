@@ -33,6 +33,7 @@ env:
   APT_PACKAGES: |
     bison \
     cmark-gfm \
+    cracklib-runtime \
     docbook-xsl \
     file \
     flex \
