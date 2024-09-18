@@ -25,13 +25,10 @@
 #include <crack.h>
 #endif /* USE_CRACKLIB */
 
-#if defined(EMBEDDED_SSL) || defined(WOLFSSL_DHX)
-#if defined(WOLFSSL_DHX)
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/settings.h>
-#endif
-#include <nettle/des.h>
-#include <wolfssl/openssl/des.h>
+#include <gcrypt.h>
+
+#ifndef DES_KEY_SZ
+#define DES_KEY_SZ 8
 #endif
 
 #include <atalk/logger.h>
@@ -41,7 +38,6 @@
 #define PASSWDLEN 8
 
 static unsigned char seskey[8];
-struct des_ctx	seskeysched;
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
@@ -122,10 +118,6 @@ home_passwd_fail:
  *
  * key file:
  * key (in hex) */
-#ifndef DES_KEY_SZ
-#define DES_KEY_SZ (sizeof(DES_cblock))
-#endif
-
 #define PASSWD_ILLEGAL '*'
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 static int afppasswd(const struct passwd *pwd,
@@ -133,13 +125,14 @@ static int afppasswd(const struct passwd *pwd,
 		     unsigned char *passwd, int len,
 		     const int set)
 {
-  uint8_t key[DES_KEY_SIZE*2];
+  uint8_t key[DES_KEY_SZ*2];
   char buf[MAXPATHLEN + 1], *p;
-  struct des_ctx schedule;
   FILE *fp;
   unsigned int i, j;
   int keyfd = -1, err = 0;
   off_t pos;
+  gcry_cipher_hd_t ctx;
+  gcry_error_t ctxerror;
 
   if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
@@ -179,7 +172,7 @@ afppasswd_found:
     /* convert to binary. */
     for (i = j = 0; i < sizeof(key); i += 2, j++)
       p[j] = (unhex(p[i]) << 4) | unhex(p[i + 1]);
-    if (j <= DES_KEY_SIZE)
+    if (j <= DES_KEY_SZ)
       memset(p + j, 0, sizeof(key) - j);
   }
 
@@ -191,20 +184,20 @@ afppasswd_found:
       /* convert to binary key */
       for (i = j = 0; i < strlen((char *) key); i += 2, j++)
 	key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-      if (j <= DES_KEY_SIZE)
+      if (j <= DES_KEY_SZ)
 	memset(key + j, 0, sizeof(key) - j);
-      des_set_key(&schedule, key);
-      memset(key, 0, sizeof(key));
+      ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+      ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
 
       if (set) {
 	/* NOTE: this takes advantage of the fact that passwd doesn't
 	 *       get used after this call if it's being set. */
-  des_encrypt(&schedule, PASSWDLEN, passwd, passwd);
+          ctxerror = gcry_cipher_encrypt(ctx, passwd, len, NULL, 0);
       } else {
 	/* decrypt the password */
-  des_decrypt(&schedule, PASSWDLEN, (unsigned char *)p, (unsigned char *)p);
+          ctxerror = gcry_cipher_decrypt(ctx, p, DES_KEY_SZ, NULL, 0);
       }
-      memset(&schedule, 0, sizeof(schedule));
+      gcry_cipher_close(ctx);
   }
 
   if (set) {
@@ -213,7 +206,7 @@ afppasswd_found:
     int fd = fileno(fp);
 
     /* convert to hex password */
-    for (i = j = 0; i < DES_KEY_SIZE; i++, j += 2) {
+    for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
       key[j] = hextable[(passwd[i] & 0xF0) >> 4];
       key[j + 1] = hextable[passwd[i] & 0x0F];
     }
@@ -342,6 +335,8 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 			     char *rbuf _U_, size_t *rbuflen)
 {
   uint16_t sessid;
+  gcry_cipher_hd_t ctx;
+  gcry_error_t ctxerror;
 
   *rbuflen = 0;
 
@@ -353,10 +348,10 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 
   /* encrypt. this saves a little space by using the fact that
    * des can encrypt in-place without side-effects. */
-  des_set_key(&seskeysched, seskey);
-  memset(seskey, 0, sizeof(seskey));
-  des_encrypt(&seskeysched, PASSWDLEN, randbuf, randbuf);
-  memset(&seskeysched, 0, sizeof(seskeysched));
+  ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+  ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
+  ctxerror = gcry_cipher_encrypt(ctx, randbuf, sizeof(randbuf), NULL, 0);
+  gcry_cipher_close(ctx);
 
   /* test against what the client sent */
   if (memcmp( randbuf, ibuf, sizeof(randbuf) )) { /* != */
@@ -381,9 +376,10 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
 {
   uint16_t sessid;
   unsigned int i;
+  gcry_cipher_hd_t ctx;
+  gcry_error_t ctxerror;
 
   *rbuflen = 0;
-
   /* compare session id */
   memcpy(&sessid, ibuf, sizeof(sessid));
   if (sessid != randhash(obj))
@@ -396,24 +392,23 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     seskey[i] <<= 1;
 
   /* encrypt randbuf */
-  des_set_key(&seskeysched, seskey);
-  memset(seskey, 0, sizeof(seskey));
-  des_encrypt(&seskeysched, PASSWDLEN, randbuf, randbuf);
+  ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+  ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
+  ctxerror = gcry_cipher_encrypt(ctx, randbuf, sizeof(randbuf), NULL, 0);
 
   /* test against client's reply */
   if (memcmp(randbuf, ibuf, sizeof(randbuf))) { /* != */
     memset(randbuf, 0, sizeof(randbuf));
-    memset(&seskeysched, 0, sizeof(seskeysched));
+    gcry_cipher_close(ctx);
     return AFPERR_NOTAUTH;
   }
   ibuf += sizeof(randbuf);
   memset(randbuf, 0, sizeof(randbuf));
 
   /* encrypt client's challenge and send back */
-  des_encrypt(&seskeysched, PASSWDLEN, (unsigned char *)rbuf, (unsigned char *)ibuf);
-  memset(&seskeysched, 0, sizeof(seskeysched));
+  ctxerror = gcry_cipher_encrypt(ctx, rbuf, sizeof(randbuf), ibuf, sizeof(randbuf));
+  gcry_cipher_close(ctx);
   *rbuflen = sizeof(randbuf);
-
   *uam_pwd = randpwd;
   return AFP_OK;
 }
@@ -429,6 +424,8 @@ static int randnum_changepw(void *obj, const char *username _U_,
     char *passwdfile;
     int err;
     size_t len;
+    gcry_cipher_hd_t ctx;
+    gcry_error_t ctxerror;
 
     if (uam_checkuser(pwd) < 0)
       return AFPERR_ACCESS;
@@ -445,15 +442,19 @@ static int randnum_changepw(void *obj, const char *username _U_,
       return err;
 
     /* use old passwd to decrypt new passwd */
-    des_set_key(&seskeysched, seskey);
     ibuf += PASSWDLEN; /* new passwd */
     ibuf[PASSWDLEN] = '\0';
-    des_decrypt(&seskeysched, PASSWDLEN, (unsigned char *)ibuf, (unsigned char *)ibuf);
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, ibuflen + PASSWDLEN, NULL, 0);
+    gcry_cipher_close(ctx);
 
     /* now use new passwd to decrypt old passwd */
-    des_set_key(&seskeysched, (unsigned char *)ibuf);
     ibuf -= PASSWDLEN; /* old passwd */
-    des_decrypt(&seskeysched, PASSWDLEN, (unsigned char *)ibuf, (unsigned char *)ibuf);
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, ibuflen, NULL, 0);
+    gcry_cipher_close(ctx);
     if (memcmp(seskey, ibuf, sizeof(seskey)))
 	err = AFPERR_NOTAUTH;
     else if (memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0)
@@ -467,7 +468,6 @@ static int randnum_changepw(void *obj, const char *username _U_,
         err = randpass(pwd, passwdfile, (unsigned char *)ibuf + PASSWDLEN, sizeof(seskey), 1);
 
     /* zero out some fields */
-    memset(&seskeysched, 0, sizeof(seskeysched));
     memset(seskey, 0, sizeof(seskey));
     memset(ibuf, 0, sizeof(seskey)); /* old passwd */
     memset(ibuf + PASSWDLEN, 0, sizeof(seskey)); /* new passwd */
@@ -487,6 +487,9 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
     size_t len, ulen;
 
     *rbuflen = 0;
+
+    if (!gcry_check_version(GCRYPT_VERSION))
+        LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
                              (void *) &username, &ulen) < 0)

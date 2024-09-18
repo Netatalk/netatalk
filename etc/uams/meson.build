@@ -43,23 +43,7 @@ if have_embedded_ssl
 endif
 
 if have_ssl
-    uams_randnum_sources = ['uams_randnum.c']
     uams_dhx_passwd_sources = ['uams_dhx_passwd.c']
-
-    library(
-        'uams_randnum',
-        uams_randnum_sources,
-        include_directories: root_includes,
-        dependencies: [crack, pam, ssl_deps, nettle],
-        link_with: ssl_links,
-        name_prefix: '',
-        name_suffix: lib_suffix,
-        override_options: 'b_lundef=false',
-        install: true,
-        install_dir: libdir / 'netatalk',
-        build_rpath: rpath_libdir,
-        install_rpath: rpath_libdir,
-    )
 
     library(
         'uams_dhx_passwd',
@@ -111,7 +95,22 @@ if have_ssl
 endif
 
 if have_libgcrypt
+    uams_randnum_sources = ['uams_randnum.c']
     uams_dhx2_passwd_sources = ['uams_dhx2_passwd.c']
+
+    library(
+        'uams_randnum',
+        uams_randnum_sources,
+        include_directories: root_includes,
+        dependencies: [crack, pam, libgcrypt],
+        name_prefix: '',
+        name_suffix: lib_suffix,
+        override_options: 'b_lundef=false',
+        install: true,
+        install_dir: libdir / 'netatalk',
+        build_rpath: rpath_libdir,
+        install_rpath: rpath_libdir,
+    )
 
     library(
         'uams_dhx2_passwd',
