@@ -1898,7 +1898,12 @@ else
         endif
     else
         have_cracklib = false
-        warning('Cracklib support requested but cracklib library not found')
+        if not crack.found()
+            warning('Cracklib support requested but cracklib library not found')
+        endif
+        if not (cracklib_path != '' or cracklib_dict != '')
+            warning('Cracklib support requested but cracklib dictionary not found')
+        endif
     endif
 endif
 
