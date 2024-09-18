@@ -1914,13 +1914,10 @@ if not enable_tcpwrap
     have_tcpwrap = false
 else
     tcpwrap_code = '''
-int allow_severity = 0;
-int deny_severity = 0;
-
+#include <tcpd.h>
 int main(void) {
-
-    hosts_access();
-
+    int allow_severity = 0;
+    int deny_severity = 0;
     ;
     return 0;
 }
