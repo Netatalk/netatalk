@@ -125,7 +125,9 @@ jobs:
       - name: Autotools - Install
         run: make install
       - name: Autotools - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -140,7 +142,9 @@ jobs:
       - name: Meson - Install
         run: meson install -C build
       - name: Meson - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -180,7 +184,9 @@ jobs:
       - name: Autotools - Install
         run: make install
       - name: Autotools - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -196,7 +202,9 @@ jobs:
       - name: Meson - Install
         run: meson install -C build
       - name: Meson - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -267,7 +275,9 @@ jobs:
       - name: Autotools - Install
         run: make install
       - name: Autotools - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -284,7 +294,9 @@ jobs:
       - name: Meson - Install
         run: meson install -C build
       - name: Meson - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -344,7 +356,9 @@ jobs:
       - name: Autotools - Install
         run: sudo make install
       - name: Autotools - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: sudo make uninstall
       - name: Meson - Configure
@@ -360,7 +374,9 @@ jobs:
       - name: Meson - Install
         run: sudo meson install -C build
       - name: Meson - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
 
@@ -423,7 +439,9 @@ jobs:
       - name: Autotools - Install
         run: make install
       - name: Autotools - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Autotools - Uninstall
         run: make uninstall
       - name: Meson - Configure
@@ -439,7 +457,9 @@ jobs:
       - name: Meson - Install
         run: meson install -C build
       - name: Meson - Start netatalk
-        run: /usr/local/sbin/netatalk -V
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
       - name: Meson - Uninstall
         run: ninja -C build uninstall
 
@@ -475,9 +495,14 @@ jobs:
         run: make distcheck
       - name: Autotools - Install
         run: sudo make install
-      - name: Start netatalk
-        run: sudo systemctl start netatalk && sleep 2 && asip-status localhost
-      - name: Stop netatalk
+      - name: Autotools - Start netatalk
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
+          sudo systemctl start netatalk
+          sleep 2
+          asip-status localhost
+      - name: Autotools - Stop netatalk
         run: sudo systemctl stop netatalk
       - name: Autotools - Uninstall
         run: sudo make uninstall
@@ -488,15 +513,20 @@ jobs:
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd \
             -Dwith-tests=true
-      - name: Meson - Build and generate manual pages
+      - name: Meson - Build
         run: meson compile -C build
       - name: Meson - Run distribution tests
         run: cd build && meson dist
       - name: Meson - Install
         run: sudo meson install -C build
-      - name: Start netatalk
-        run: sudo systemctl start netatalk && sleep 2 && asip-status localhost
-      - name: Stop netatalk
+      - name: Meson - Start netatalk
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
+          sudo systemctl start netatalk
+          sleep 1
+          asip-status localhost
+      - name: Meson - Stop netatalk
         run: sudo systemctl stop netatalk
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
@@ -528,9 +558,12 @@ jobs:
         run: make check
       - name: Autotools - Install
         run: sudo make install
-      - name: Start netatalk
-        run: sudo /usr/local/bin/netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
+      - name: Autotools - Start netatalk
+        run: |
+          /usr/local/sbin/netatalk -V
+          /usr/local/sbin/afpd -V
+          sudo /usr/local/bin/netatalkd start && sleep 2 && asip-status localhost
+      - name: Autotools - Stop netatalk
         run: sudo netatalkd stop
       - name: Autotools - Uninstall
         run: sudo make uninstall
@@ -545,9 +578,12 @@ jobs:
         run: cd build && meson test
       - name: Meson - Install
         run: sudo meson install -C build
-      - name: Start netatalk
-        run: sudo netatalkd start && sleep 2 && asip-status localhost
-      - name: Stop netatalk
+      - name: Meson - Start netatalk
+        run: |
+          /opt/homebrew/sbin/netatalk -V
+          /opt/homebrew/sbin/afpd -V
+          sudo netatalkd start && sleep 2 && asip-status localhost
+      - name: Meson - Stop netatalk
         run: sudo netatalkd stop
       - name: Meson - Uninstall
         run: sudo ninja -C build uninstall
@@ -599,12 +635,14 @@ jobs:
             gmake -j2
             gmake install
             /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             gmake uninstall
             echo "Building with Meson"
             meson setup build
             meson compile -C build
             meson install -C build
             /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             ninja -C build uninstall
 
   build-freebsd:
@@ -653,6 +691,8 @@ jobs:
               PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
             gmake -j $(nproc)
             gmake install
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             /usr/local/etc/rc.d/netatalk start
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -664,6 +704,8 @@ jobs:
               -Dwith-init-style=freebsd
             meson compile -C build
             meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             /usr/local/etc/rc.d/netatalk start
             sleep 2
             /usr/local/bin/asip-status localhost
@@ -718,6 +760,8 @@ jobs:
               --with-tracker-pkgconfig-version=3.0
             gmake -j $(nproc)
             gmake install
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             service netatalk onestart
             sleep 2
             asip-status localhost
@@ -733,6 +777,8 @@ jobs:
             cd build && meson test
             cd ..
             meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             service netatalk onestart
             sleep 2
             asip-status localhost
@@ -792,6 +838,8 @@ jobs:
               -Dwith-init-style=openbsd
             meson compile -C build
             meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             rcctl -d start netatalk
             sleep 2
             asip-status localhost
@@ -842,6 +890,8 @@ jobs:
               --with-tracker-pkgconfig-version=3.0
             make -j $(nproc)
             make install
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
@@ -856,6 +906,8 @@ jobs:
               -Dwith-pgp-uam=true
             meson compile -C build
             meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
@@ -916,6 +968,8 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
             gmake -j $(nproc)
             gmake install
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
@@ -932,6 +986,8 @@ jobs:
             cd build && meson test
             cd ..
             meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
             sleep 2
             svcadm enable svc:/network/netatalk:default
             sleep 2
