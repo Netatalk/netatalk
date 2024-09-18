@@ -126,7 +126,7 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink
             url="http://directory.fsf.org/wiki/Libgcrypt"> Libgcrypt</ulink>
-            が必要である。</para>
+            が必要である。古い Random Number UAM もこれらのライブラリに依存しています。</para>
           </listitem>
 
           <listitem>
@@ -218,10 +218,9 @@ Resolving deltas: 100% (32227/32227), done.
             <para>Nettle と WolfSSL</para>
 
             <para>Nettle と WolfSSL は、Classic Mac OS に最も強力なパスワード暗号化を提供する
-            DHCAST128 (別名 DHX) UAM に必要です。古い Random Number UAM
-            もこれらのライブラリに依存しています。</para>
+            DHCAST128 (別名 DHX) UAM に必要です。</para>
 
-            <para>注: 現在、フル機能の WolfSSL ライブラリが OS に配布されていない場合に備えて、WolfSSL を
+            <para>注意: 現在、フル機能の WolfSSL ライブラリが OS に配布されていない場合に備えて、WolfSSL を
             Netatalk にバンドルしています。</para>
           </listitem>
 
