@@ -79,7 +79,7 @@ Required:
 
   - Berkeley DB version 4.6.0 or later
   - libevent 2
-  - libgcrypt version 1.2.3 or later (for DHX2 UAM support)
+  - libgcrypt version 1.2.3 or later (for DHX2 and RandNum UAM support)
   - perl
   - UnicodeData.txt
 
@@ -101,7 +101,7 @@ Optional:
   - libldap                          (for LDAP support)
   - libpam                           (for PAM support)
   - libtirpc or libquota             (for Quota support)
-  - nettle / WolfSSL                 (for Randnum and DHX UAM support)
+  - nettle / WolfSSL                 (for DHX UAM support)
   - tcpwrap                          (for TCP wrapper support)
 
 More details about dependencies can be found in the documentation at
