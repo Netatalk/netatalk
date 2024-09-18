@@ -284,6 +284,8 @@ typedef struct wc_CryptoInfo {
 #if HAVE_ANONYMOUS_INLINE_AGGREGATES
         union {
 #endif
+// TODO: Workaround for https://github.com/wolfSSL/wolfssl/issues/7984
+	#ifndef NO_AES
         #ifdef HAVE_AESGCM
             struct {
                 Aes*        aes;
@@ -360,6 +362,7 @@ typedef struct wc_CryptoInfo {
                 word32      sz;
             } aesecb;
         #endif /* HAVE_AES_ECB */
+	#endif
         #ifndef NO_DES3
             struct {
                 Des3*       des;
@@ -429,6 +432,8 @@ typedef struct wc_CryptoInfo {
         word32 sz;
     } seed;
 #endif
+// TODO: Workaround for https://github.com/wolfSSL/wolfssl/issues/7984
+#ifndef NO_AES
 #ifdef WOLFSSL_CMAC
     struct {
         Cmac* cmac;
@@ -441,6 +446,7 @@ typedef struct wc_CryptoInfo {
         word32  inSz;
         int type;
     } cmac;
+#endif
 #endif
 #ifdef WOLF_CRYPTO_CB_CMD
     struct {      /* uses wc_AlgoType=ALGO_NONE */
@@ -640,10 +646,13 @@ WOLFSSL_LOCAL int wc_CryptoCb_RandomBlock(WC_RNG* rng, byte* out, word32 sz);
 WOLFSSL_LOCAL int wc_CryptoCb_RandomSeed(OS_Seed* os, byte* seed, word32 sz);
 #endif
 
+// TODO: Workaround for https://github.com/wolfSSL/wolfssl/issues/7984
+#ifndef NO_AES
 #ifdef WOLFSSL_CMAC
 WOLFSSL_LOCAL int wc_CryptoCb_Cmac(Cmac* cmac, const byte* key, word32 keySz,
         const byte* in, word32 inSz, byte* out, word32* outSz, int type,
         void* ctx);
+#endif
 #endif
 
 #endif /* WOLF_CRYPTO_CB */
