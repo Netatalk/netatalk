@@ -1168,7 +1168,7 @@ else
 endif
 
 if have_ea
-    netatalk_ea += '|sys"'
+    netatalk_ea += ' | sys"'
     ea_summary += ', filesystem EA'
 else
     netatalk_ea += '"'
