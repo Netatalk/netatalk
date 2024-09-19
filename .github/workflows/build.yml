@@ -167,6 +167,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
+            -Dwith-ssl-override=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
