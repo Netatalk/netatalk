@@ -1080,7 +1080,7 @@ else
 endif
 
 if have_ea
-    netatalk_ea = ea + '|sys"'
+    netatalk_ea = ea + ' | sys"'
 else
     netatalk_ea = ea + '"'
 endif
