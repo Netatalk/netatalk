@@ -510,7 +510,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/dragonflybsd-vm@v1.0.7
+        uses: vmactions/dragonflybsd-vm@v1.0.8
         with:
           copyback: false
           usesh: true
@@ -556,7 +556,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.1.1
+        uses: vmactions/freebsd-vm@v1.1.3
         with:
           copyback: false
           prepare: |
@@ -596,15 +596,15 @@ jobs:
             ninja -C build uninstall
 
   build-netbsd:
-    name: "NetBSD"
+    name: NetBSD
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
-        uses: vmactions/netbsd-vm@v1.1.1
+      - name: Build on VM
+        uses: vmactions/netbsd-vm@v1.1.3
         with:
           release: "9.4"
           copyback: false
@@ -665,7 +665,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1.1.1
+        uses: vmactions/openbsd-vm@v1.1.2
         with:
           copyback: false
           prepare: |
@@ -765,14 +765,14 @@ jobs:
             ninja -C build uninstall
 
   build-solaris:
-    name: "Solaris"
+    name: Solaris
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Build on VM"
+      - name: Build on VM
         uses: vmactions/solaris-vm@v1.0.7
         with:
           release: 11.4
