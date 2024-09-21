@@ -134,7 +134,7 @@ Resolving deltas: 100% (32227/32227), done.
             <para>The <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
             Libgcrypt</ulink> library enables the DHX2 UAM, which is required
             to authenticate with OS X 10.7 and later. The older Random Number
-            UAMs rely on this library, too.</para>
+            and DHCAST128 (a.k.a. DHX) UAMs rely on this library, too.</para>
           </listitem>
 
           <listitem>
@@ -235,18 +235,6 @@ Resolving deltas: 100% (32227/32227), done.
             can be built with a MySQL CNID backend that is highly scalable and
             reliable. The administrator has to provide a separate database
             instance for use with this backend.</para>
-          </listitem>
-
-          <listitem>
-            <para>Nettle and WolfSSL</para>
-
-            <para>Nettle and WolfSSL are needed for the DHCAST128 (a.k.a. DHX)
-            UAM, which provides the strongest password encryption for Classic
-            Mac OS.</para>
-
-            <para>Note: We currently bundle WolfSSL with Netatalk in case a
-            full-featured WolfSSL library isn't distributed with your
-            OS.</para>
           </listitem>
 
           <listitem>

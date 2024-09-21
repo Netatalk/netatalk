@@ -29,6 +29,7 @@ library(
     'uams_passwd',
     uams_passwd_sources,
     include_directories: root_includes,
+    dependencies: crypt,
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -42,15 +43,16 @@ if have_embedded_ssl
     ssl_links += libatalk
 endif
 
-if have_ssl
+if have_libgcrypt
+    uams_randnum_sources = ['uams_randnum.c']
+    uams_dhx2_passwd_sources = ['uams_dhx2_passwd.c']
     uams_dhx_passwd_sources = ['uams_dhx_passwd.c']
 
     library(
-        'uams_dhx_passwd',
-        uams_dhx_passwd_sources,
+        'uams_randnum',
+        uams_randnum_sources,
         include_directories: root_includes,
-        dependencies: ssl_deps,
-        link_with: ssl_links,
+        dependencies: [crack, libgcrypt],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -60,49 +62,11 @@ if have_ssl
         install_rpath: rpath_libdir,
     )
 
-    if have_pam
-        uams_dhx_pam_sources = ['uams_dhx_pam.c']
-
-        library(
-            'uams_dhx_pam',
-            uams_dhx_pam_sources,
-            include_directories: [pam_includes, root_includes],
-            dependencies: [pam, ssl_deps],
-            link_with: ssl_links,
-            name_prefix: '',
-            name_suffix: lib_suffix,
-            override_options: 'b_lundef=false',
-            install: true,
-            install_dir: libdir / 'netatalk',
-            build_rpath: rpath_libdir,
-            install_rpath: rpath_libdir,
-        )
-
-        if build_shared_lib
-            install_symlink(
-                'uams_dhx.so',
-                install_dir: libdir / 'netatalk',
-                pointing_to: 'uams_dhx_pam.so',
-            )
-        endif
-    elif build_shared_lib
-        install_symlink(
-            'uams_dhx.so',
-            install_dir: libdir / 'netatalk',
-            pointing_to: 'uams_dhx_passwd.so',
-        )
-    endif
-endif
-
-if have_libgcrypt
-    uams_randnum_sources = ['uams_randnum.c']
-    uams_dhx2_passwd_sources = ['uams_dhx2_passwd.c']
-
     library(
-        'uams_randnum',
-        uams_randnum_sources,
+        'uams_dhx_passwd',
+        uams_dhx_passwd_sources,
         include_directories: root_includes,
-        dependencies: [crack, pam, libgcrypt],
+        dependencies: [libgcrypt, crypt],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -116,7 +80,7 @@ if have_libgcrypt
         'uams_dhx2_passwd',
         uams_dhx2_passwd_sources,
         include_directories: root_includes,
-        dependencies: libgcrypt,
+        dependencies: [libgcrypt, crypt],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -152,6 +116,38 @@ if have_libgcrypt
             pointing_to: 'uams_dhx2_passwd.so',
         )
     endif
+    if have_pam
+        uams_dhx_pam_sources = ['uams_dhx_pam.c']
+
+        library(
+            'uams_dhx_pam',
+            uams_dhx_pam_sources,
+            include_directories: [pam_includes, root_includes],
+            dependencies: [pam, libgcrypt],
+            name_prefix: '',
+            name_suffix: lib_suffix,
+            override_options: 'b_lundef=false',
+            install: true,
+            install_dir: libdir / 'netatalk',
+            build_rpath: rpath_libdir,
+            install_rpath: rpath_libdir,
+        )
+
+        if build_shared_lib
+            install_symlink(
+                'uams_dhx.so',
+                install_dir: libdir / 'netatalk',
+                pointing_to: 'uams_dhx_pam.so',
+            )
+        endif
+    elif build_shared_lib
+        install_symlink(
+            'uams_dhx.so',
+            install_dir: libdir / 'netatalk',
+            pointing_to: 'uams_dhx_passwd.so',
+        )
+    endif
+
 endif
 
 if have_pam
