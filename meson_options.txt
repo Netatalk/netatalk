@@ -184,6 +184,12 @@ option(
     description: 'Compile tests',
 )
 option(
+    'with-webmin',
+    type: 'boolean',
+    value: false,
+    description: 'Package and install the Netatalk Webmin module',
+)
+option(
     'with-zeroconf',
     type: 'boolean',
     value: true,

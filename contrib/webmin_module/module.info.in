@@ -1,0 +1,5 @@
+name=Netatalk Manager
+category=servers
+os_support=macos solaris *-linux freebsd openbsd netbsd
+desc=Netatalk Mac File Sharing
+version=@netatalk_version@

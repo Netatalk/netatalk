@@ -1971,6 +1971,36 @@ else
 endif
 
 #
+# Check whether to install the Netatalk Webmin Module
+#
+
+with_webmin = get_option('with-webmin')
+have_webmin = false
+install_webmin = false
+
+webmin_dirs = [
+    '/usr/share/webmin',
+    '/usr/libexec/webmin',
+    '/opt/webmin',
+]
+
+if with_webmin
+    tar = find_program('tar', required: true)
+    webmin_install_script = 'install-module.pl'
+    have_webmin = true
+    foreach dir : webmin_dirs
+        if fs.exists(dir / webmin_install_script)
+            webmin = find_program(dir / webmin_install_script, required: true)
+            install_webmin = true
+            break
+        endif
+    endforeach
+    if not install_webmin
+        warning('Webmin module will be generated but not installed, because Webmin could not be found')
+    endif
+endif
+
+#
 # OS-specific configuration
 #
 
@@ -2063,6 +2093,126 @@ cdata.set('sbindir', sbindir)
 
 if perl.found()
     cdata.set('PERL', perl.full_path())
+endif
+
+if have_webmin
+    init_netatalk_start = ''
+    init_netatalk_stop = ''
+    init_netatalk_restart = ''
+    init_atalkd_start = ''
+    init_atalkd_stop = ''
+    init_atalkd_restart = ''
+    init_papd_start = ''
+    init_papd_stop = ''
+    init_papd_restart = ''
+    init_timelord_start = ''
+    init_timelord_stop = ''
+    init_timelord_restart = ''
+    init_a2boot_start = ''
+    init_a2boot_stop = ''
+    init_a2boot_restart = ''
+
+    if 'systemd' in init_style
+        init_netatalk_start = 'systemmctl start netatalk'
+        init_netatalk_stop = 'systemctl stop netatalk'
+        init_netatalk_restart = 'systemctl restart netatalk'
+        init_atalkd_start = 'systemctl start atalkd'
+        init_atalkd_stop = 'systemctl stop atalkd'
+        init_atalkd_restart = 'systemctl restart atalkd'
+        init_papd_start = 'systemctl start papd'
+        init_papd_stop = 'systemctl stop papd'
+        init_papd_restart = 'systemctl restart papd'
+        init_timelord_start = 'systemctl start timelord'
+        init_timelord_stop = 'systemctl stop timelord'
+        init_timelord_restart = 'systemctl restart timelord'
+        init_a2boot_start = 'systemctl start a2boot'
+        init_a2boot_stop = 'systemctl stop a2boot'
+        init_a2boot_restart = 'systemctl restart a2boot'
+    elif 'openrc' in init_style
+        init_netatalk_start = 'rc-service netatalk start'
+        init_netatalk_stop = 'rc-service netatalk stop'
+        init_netatalk_restart = 'rc-service netatalk restart'
+        init_atalkd_start = 'rc-service atalkd start'
+        init_atalkd_stop = 'rc-service atalkd stop'
+        init_atalkd_restart = 'rc-service atalkd restart'
+        init_papd_start = 'rc-service papd start'
+        init_papd_stop = 'rc-service papd stop'
+        init_papd_restart = 'rc-service papd restart'
+        init_timelord_start = 'rc-service timelord start'
+        init_timelord_stop = 'rc-service timelord stop'
+        init_timelord_restart = 'rc-service timelord restart'
+        init_a2boot_start = 'rc-service a2boot start'
+        init_a2boot_stop = 'rc-service a2boot stop'
+        init_a2boot_restart = 'rc-service a2boot restart'
+    elif 'debian-sysv' in init_style
+        init_netatalk_start = 'service netatalk start'
+        init_netatalk_stop = 'service netatalk stop'
+        init_netatalk_restart = 'service netatalk restart'
+        init_atalkd_start = 'service atalkd start'
+        init_atalkd_stop = 'service atalkd stop'
+        init_atalkd_restart = 'service atalkd restart'
+        init_papd_start = 'service papd start'
+        init_papd_stop = 'service papd stop'
+        init_papd_restart = 'service papd restart'
+        init_timelord_start = 'service timelord start'
+        init_timelord_stop = 'service timelord stop'
+        init_timelord_restart = 'service timelord restart'
+        init_a2boot_start = 'service a2boot start'
+        init_a2boot_stop = 'service a2boot stop'
+        init_a2boot_restart = 'service a2boot restart'
+    elif 'freebsd' in init_style
+        init_dir_override = get_option('with-init-dir')
+        if init_dir_override == ''
+            init_dir = '/usr/local/etc/rc.d'
+        endif
+        init_netatalk_start = init_dir + '/netatalk start'
+        init_netatalk_stop = init_dir + '/netatalk stop'
+        init_netatalk_restart = init_dir + '/netatalk restart'
+    elif 'macos-launchd' in init_style
+        init_netatalk_start = 'netadalkd start'
+        init_netatalk_stop = 'netatalkd stop'
+        init_netatalk_restart = 'netatalkd restart'
+    elif 'netbsd' in init_style
+        init_netatalk_start = 'service netatalk onestart'
+        init_netatalk_stop = 'service netatalk onestop'
+        init_netatalk_restart = 'service netatalk onerestart'
+        init_atalkd_start = 'service atalkd onestart'
+        init_atalkd_stop = 'service atalkd onestop'
+        init_atalkd_restart = 'service atalkd onerestart'
+        init_papd_start = 'service papd onestart'
+        init_papd_stop = 'service papd onestop'
+        init_papd_restart = 'service papd onerestart'
+        init_timelord_start = 'service timelord onestart'
+        init_timelord_stop = 'service timelord onestop'
+        init_timelord_restart = 'service timelord onerestart'
+        init_a2boot_start = 'service a2boot onestart'
+        init_a2boot_stop = 'service a2boot onestop'
+        init_a2boot_restart = 'service a2boot onerestart'
+    elif 'openbsd' in init_style
+        init_netatalk_start = 'rcctl -d start netatalk'
+        init_netatalk_stop = 'rcctl -d stop netatalk'
+        init_netatalk_restart = 'rcctl -d reload netatalk'
+    elif 'solaris' in init_style
+        init_netatalk_start = 'svcadm enable svc:/network/netatalk:default'
+        init_netatalk_stop = 'svcadm disable svc:/network/netatalk:default'
+        init_netatalk_restart = 'svcadm restart svc:/network/netatalk:default'
+    endif
+
+    cdata.set('init_netatalk_start', init_netatalk_start)
+    cdata.set('init_netatalk_stop', init_netatalk_stop)
+    cdata.set('init_netatalk_restart', init_netatalk_restart)
+    cdata.set('init_atalkd_start', init_atalkd_start)
+    cdata.set('init_atalkd_stop', init_atalkd_stop)
+    cdata.set('init_atalkd_restart', init_atalkd_restart)
+    cdata.set('init_papd_start', init_papd_start)
+    cdata.set('init_papd_stop', init_papd_stop)
+    cdata.set('init_papd_restart', init_papd_restart)
+    cdata.set('init_timelord_start', init_timelord_start)
+    cdata.set('init_timelord_stop', init_timelord_stop)
+    cdata.set('init_timelord_restart', init_timelord_restart)
+    cdata.set('init_a2boot_start', init_a2boot_start)
+    cdata.set('init_a2boot_stop', init_a2boot_stop)
+    cdata.set('init_a2boot_restart', init_a2boot_restart)
 endif
 
 configure_file(
@@ -2213,6 +2363,7 @@ endif
 summary_info += {
     '  Spotlight': have_spotlight,
     '  TCP wrapper': have_tcpwrap,
+    '  Webmin module': have_webmin,
     '  Zeroconf': have_zeroconf,
 }
 if enable_zeroconf
