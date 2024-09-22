@@ -48,9 +48,9 @@ See [DOCKER.md](https://github.com/Netatalk/netatalk/blob/main/DOCKER.md)
 
 # Webmin module
 
-An administrative GUI webapp in the form of a first-party module for Webmin can be found in a [sister repository](https://github.com/Netatalk/netatalk-webmin)
+An administrative GUI frontend built on the Webmin 2.0 platform is distributed with Netatalk.
 
-See the [README](https://github.com/Netatalk/netatalk-webmin/blob/main/README.md) in that repo for instructions how to install and get started with the module.
+See the [Webmin README](https://github.com/Netatalk/netatalk/blob/main/contrib/webmin_module/README.md) for instructions how to install and get started with the module.
 
 An [overview of the module's feature set](https://github.com/Netatalk/netatalk/wiki/Webmin-Module) can be found in the wiki.
 

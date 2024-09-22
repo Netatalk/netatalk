@@ -1,0 +1,10 @@
+lang=de
+
+afpconf_filedoesntexist=Datei '$1' wurde nicht gefunden. Bitte prüfen Sie die Konfiguration des Moduls.
+afpconf_err_file=Datei '$1' kann nicht gelesen werden. Grund: $2.
+afpconf_unexpectedeof=Unerwartetes Dateiende.
+afpconf_err_duplicatesection=Sektion [$1] erneut definiert (Zeile $2).
+afpconf_syntax_err_sectionheader=Fehlerhafter Sektionskopf '$1' in Zeile $2.
+afpconf_err_duplicatekey=Doppelter Schlüssel '$1' in Sektion [$2] (Zeile $3).
+afpconf_syntax_err=Syntaxfehler in '$1' (Zeile $2).
+afpconf_err_no_section=Nicht leere Zeile '$1' ohne Sektionskopf (Zeile $2).
