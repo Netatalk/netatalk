@@ -446,14 +446,14 @@ static int randnum_changepw(void *obj, const char *username _U_,
     ibuf[PASSWDLEN] = '\0';
     ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
     ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, ibuflen + PASSWDLEN, NULL, 0);
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
     gcry_cipher_close(ctx);
 
     /* now use new passwd to decrypt old passwd */
-    ibuf -= PASSWDLEN; /* old passwd */
     ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-    ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, ibuflen, NULL, 0);
+    ctxerror = gcry_cipher_setkey(ctx, ibuf, DES_KEY_SZ);
+    ibuf -= PASSWDLEN; /* old passwd */
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
     gcry_cipher_close(ctx);
     if (memcmp(seskey, ibuf, sizeof(seskey)))
 	err = AFPERR_NOTAUTH;
