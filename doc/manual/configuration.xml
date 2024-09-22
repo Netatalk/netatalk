@@ -669,21 +669,6 @@ basedir regex = /usr/home</programlisting></para>
 
       <itemizedlist>
         <listitem>
-          <para>"PGPuam 1.0"<indexterm>
-              <primary>PGPuam 1.0</primary>
-
-              <secondary>"PGPuam 1.0" UAM</secondary>
-            </indexterm><indexterm>
-              <primary>uams_pgp.so</primary>
-
-              <secondary>"PGPuam 1.0" UAM</secondary>
-            </indexterm> UAM (PGP-based authentication for pre-Mac OS X
-          clients. You'll also need the <ulink
-          url="https://web.archive.org/web/20190121142716/http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
-          client</ulink> to let this work)</para>
-        </listitem>
-
-        <listitem>
           <para>"Client Krb v2"<indexterm>
               <primary>Client Krb v2</primary>
 
