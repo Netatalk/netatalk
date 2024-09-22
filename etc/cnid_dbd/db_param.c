@@ -87,11 +87,6 @@ static int parse_int(char *val)
     return result;
 }
 
-
-/* TODO: This configuration file reading routine is neither very robust (%s
-   buffer overflow) nor elegant, we need to add support for whitespace in
-   filenames as well. */
-
 struct db_param *db_param_read(char *dir)
 {
     FILE *fp;
@@ -123,7 +118,7 @@ struct db_param *db_param_read(char *dir)
     }
     parse_err = 0;
 
-    while ((items = fscanf(fp, " %s %s", key, val)) != EOF) {
+    while ((items = fscanf(fp, " %64s %1024s", key, val)) != EOF) {
         if (items != 2) {
             LOG(log_error, logtype_cnid, "error parsing config file");
             parse_err++;
