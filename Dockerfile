@@ -7,7 +7,6 @@ ENV LIB_DEPS \
     bash \
     db \
     dbus \
-    dbus-glib \
     krb5 \
     libevent \
     libgcrypt \
@@ -25,7 +24,6 @@ ENV BUILD_DEPS \
     curl \
     db-dev \
     dbus-dev \
-    dbus-glib-dev \
     build-base \
     flex \
     gcc \
