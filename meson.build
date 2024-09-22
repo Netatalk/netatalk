@@ -548,6 +548,12 @@ endif
 # Check for crypt or SSL (for DHX authentication)
 #
 
+crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
+if crypt.found()
+    cdata.set('HAVE_CRYPT_H', 1)
+    cdata.set('HAVE_LIBCRYPT', 1)
+endif
+
 have_embedded_ssl = get_option('with-embedded-ssl')
 have_ssl_override = get_option('with-ssl-override')
 
@@ -2244,11 +2250,11 @@ summary(summary_info, bool_yn: true, section: '  Options:')
 
 summary_info = {
     '  ClearTxt': true,
-    '  DHX': have_ssl,
+    '  DHX': have_libgcrypt,
     '  DHX2': have_libgcrypt,
     '  Guest': true,
     '  Kerberos V': have_krb5_uam,
-    '  RandNum': have_ssl,
+    '  RandNum': have_libgcrypt,
 }
 summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 

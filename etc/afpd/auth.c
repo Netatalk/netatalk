@@ -297,7 +297,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     (void)umask(obj->options.umask);
 
     /* Some PAM module might have reset our signal handlers and timer, so we need to reestablish them */
-    afp_over_dsi_sighandlers(obj);
+    if (obj->proto == AFPPROTO_DSI)
+        afp_over_dsi_sighandlers(obj);
 
     /* Send FCE login event */
     fce_register(obj, FCE_LOGIN, "", NULL);

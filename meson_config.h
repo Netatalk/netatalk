@@ -304,6 +304,9 @@
 /* Define to 1 if you have the `lgetxattr' function. */
 #mesondefine HAVE_LGETXATTR
 
+/* Define to 1 if you have the `crypt' library (-lcrypt). */
+#mesondefine HAVE_LIBCRYPT
+
 /* Define if you have the libdl library or equivalent. */
 #mesondefine HAVE_LIBDL
 

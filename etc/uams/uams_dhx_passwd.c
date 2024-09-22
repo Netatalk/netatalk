@@ -26,19 +26,7 @@
 #include <shadow.h>
 #endif /* SHADOWPW */
 
-#if defined(EMBEDDED_SSL) || defined(WOLFSSL_DHX)
-#if defined(WOLFSSL_DHX)
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/settings.h>
-#endif
-#include <wolfssl/openssl/bn.h>
-#include <wolfssl/openssl/dh.h>
-#include <wolfssl/openssl/err.h>
-#include <wolfssl/openssl/ssl.h>
-
-#include <nettle/cast128.h>
-#include <nettle/cbc.h>
-#endif /* EMBEDDED_SSL || defined(WOLFSSL_DHX) */
+#include <gcrypt.h>
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
@@ -55,7 +43,7 @@
 		     (unsigned long) (a)) & 0xffff)
 
 /* the secret key */
-struct CBC_CTX(struct cast128_ctx, CAST128_BLOCK_SIZE) castkey;
+gcry_mpi_t K;
 static struct passwd *dhxpwd;
 static uint8_t randbuf[16];
 
@@ -65,18 +53,28 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 			char *rbuf, size_t *rbuflen)
 {
     unsigned char iv[] = "CJalbert";
-    uint8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
+    static const unsigned char p_binary[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
 		    0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B };
-    uint8_t g = 0x07;
+    static const unsigned char g_binary[] = { 0x07 };
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    BIGNUM *bn, *gbn, *pbn;
-    const BIGNUM *pub_key;
     uint16_t sessid;
-    int nwritten;
+    size_t nwritten;
     size_t i;
-    DH *dh;
+    gcry_check_version(GCRYPT_VERSION);
+
+    gcry_mpi_t p, g, Rb, Ma, Mb;
+    p = gcry_mpi_new(0);
+    g = gcry_mpi_new(0);
+    Rb = gcry_mpi_new(0);
+    Ma = gcry_mpi_new(0);
+    Mb = gcry_mpi_new(0);
+    K = gcry_mpi_new(0);
+    unsigned char Rb_binary[32], K_binary[16];
+    gcry_cipher_hd_t ctx;
+    gcry_error_t ctxerror;
+
     *rbuflen = 0;
 
     if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
@@ -98,55 +96,38 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     if (!dhxpwd->pw_passwd)
       return AFPERR_NOTAUTH;
 
-    /* get the client's public key */
-    if (!(bn = BN_bin2bn((unsigned char *)ibuf, KEYSIZE, NULL))) {
-      return AFPERR_PARAM;
-    }
+    /* Extract Ma, client's "public" key */
+    gcry_mpi_scan(&Ma, GCRYMPI_FMT_USG, ibuf, KEYSIZE, NULL);
 
-    /* get our primes */
-    if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
+    /* Get p and g into a form that libgcrypt can use */
+    gcry_mpi_scan(&p, GCRYMPI_FMT_USG, p_binary, sizeof(p_binary), NULL);
+    gcry_mpi_scan(&g, GCRYMPI_FMT_USG, g_binary, sizeof(g_binary), NULL);
 
-    if (!(pbn = BN_bin2bn(p, sizeof(p), NULL))) {
-      BN_free(gbn);
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
+    /* Get random bytes for Rb. */
+    gcry_randomize(Rb_binary, sizeof(Rb_binary), GCRY_STRONG_RANDOM);
 
-    /* okay, we're ready */
-    if (!(dh = DH_new())) {
-      BN_free(pbn);
-      BN_free(gbn);
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
+    /* Translate the binary form of Rb into libgcrypt's preferred form */
+    gcry_mpi_scan(&Rb, GCRYMPI_FMT_USG, Rb_binary, sizeof(Rb_binary), NULL);
 
-    if (!DH_set0_pqg(dh, pbn, NULL, gbn)) {
-      BN_free(pbn);
-      BN_free(gbn);
-      goto passwd_fail;
-    }
+    /* Mb = g^Rb mod p <- This is our "public" key, which we exchange
+     * with the client to help make K, the session key. */
+    gcry_mpi_powm(Mb, g, Rb, p);
 
-    /* generate key and make sure we have enough space */
-    if (!DH_generate_key(dh)) {
-      goto passwd_fail;
-    }
-    DH_get0_key(dh, &pub_key, NULL);
-    if (BN_num_bytes(pub_key) > KEYSIZE) {
-      goto passwd_fail;
-    }
+    /* K = Ma^Rb mod p <- This nets us the "session key", which we
+     * actually use to encrypt and decrypt data. */
+    gcry_mpi_powm(K, Ma, Rb, p);
 
-    /* figure out the key. use rbuf as a temporary buffer. */
-    i = DH_compute_key((unsigned char *)rbuf, bn, dh);
+    /* Clean up */
+    gcry_mpi_release(p);
+    gcry_mpi_release(g);
+    gcry_mpi_release(Ma);
+    gcry_mpi_release(Rb);
+
+    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
     if (i < KEYSIZE) {
-        memmove( rbuf + KEYSIZE - i, rbuf, i );
-        memset( rbuf, 0, KEYSIZE - i );
+        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
+        memset(K_binary, 0, sizeof(K_binary) - i);
     }
-
-    /* set the key */
-    cast5_set_key((struct cast128_ctx *)&castkey, KEYSIZE, (unsigned char *)rbuf);
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -154,47 +135,60 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
 
-    /* send our public key */
-    nwritten = BN_bn2bin(pub_key, (unsigned char *)rbuf);
+    gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, KEYSIZE, &nwritten, Mb);
     if (nwritten < KEYSIZE) {
-        memmove( rbuf + KEYSIZE - nwritten, rbuf, nwritten );
-        memset( rbuf, 0, KEYSIZE - nwritten );
+        memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
+        memset(rbuf, 0, KEYSIZE - nwritten);
     }
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
+    gcry_mpi_release(Mb);
 
     /* buffer to be encrypted */
     i = sizeof(randbuf);
-    if (uam_afpserver_option(obj, UAM_OPTION_RANDNUM, (void *) randbuf,
-			     &i) < 0) {
-      *rbuflen = 0;
-      goto passwd_fail;
+    if (uam_afpserver_option(obj, UAM_OPTION_RANDNUM, (void*)randbuf,
+        &i) < 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
     }
     memcpy(rbuf, &randbuf, sizeof(randbuf));
 
-#if 0
     /* get the signature. it's always 16 bytes. */
+#if 0
     if (uam_afpserver_option(obj, UAM_OPTION_SIGNATURE,
-			     (void *) &name, NULL) < 0) {
-      *rbuflen = 0;
-      goto passwd_fail;
+        (void*)&name, NULL) < 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
     }
     memcpy(rbuf + KEYSIZE, name, KEYSIZE);
 #else /* 0 */
     memset(rbuf + KEYSIZE, 0, KEYSIZE);
 #endif /* 0 */
 
-    /* encrypt using cast */
-    CBC_SET_IV(&castkey, iv);
-    CBC_ENCRYPT(&castkey, cast128_encrypt, CRYPTBUFLEN, (unsigned char *)rbuf, (unsigned char *)rbuf);
+    /* Set up our encryption context. */
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
+        GCRY_CIPHER_MODE_CBC, 0);
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        goto passwd_fail;
+    /* Set the binary form of K as our key for this encryption context. */
+    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        goto passwd_fail;
+    /* Set the initialization vector for server->client transfer. */
+    ctxerror = gcry_cipher_setiv(ctx, iv, sizeof(iv));
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        goto passwd_fail;
+    /* Encrypt the ciphertext from the server. */
+    ctxerror = gcry_cipher_encrypt(ctx, rbuf, CRYPTBUFLEN, NULL, 0);
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        goto passwd_fail;
     *rbuflen += CRYPTBUFLEN;
-    BN_free(bn);
-    DH_free(dh);
+    gcry_cipher_close(ctx);
+
     return AFPERR_AUTHCONT;
 
 passwd_fail:
-    BN_free(bn);
-    DH_free(dh);
+    gcry_mpi_release(K);
     return AFPERR_PARAM;
 }
 
@@ -275,7 +269,11 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     struct spwd *sp;
 #endif /* SHADOWPW */
     unsigned char iv[] = "LWallace";
-    BIGNUM *bn1, *bn2, *bn3;
+    gcry_mpi_t bn1, bn2, bn3;
+    gcry_cipher_hd_t ctx;
+    gcry_error_t ctxerror;
+    unsigned char K_binary[16];
+    size_t i;
     uint16_t sessid;
     char *p;
     int err = AFPERR_NOTAUTH;
@@ -293,41 +291,53 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
     ibuf += sizeof(sessid);
 
-    /* use rbuf as scratch space */
-    CBC_SET_IV(&castkey, iv);
-    CBC_DECRYPT(&castkey, cast128_decrypt, CRYPT2BUFLEN, (unsigned char *)rbuf, (unsigned char *)ibuf);
-
-    /* check to make sure that the random number is the same. we
-     * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn((unsigned char *)rbuf, KEYSIZE, NULL)))
-      return AFPERR_PARAM;
-
-    if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {
-      BN_free(bn1);
-      return AFPERR_PARAM;
+    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+    if (i < KEYSIZE) {
+        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
+        memset(K_binary, 0, sizeof(K_binary) - i);
     }
+
+    /* Set up our encryption context. */
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
+        GCRY_CIPHER_MODE_CBC, 0);
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        return AFPERR_PARAM;
+    /* Set the binary form of K as our key for this encryption context. */
+    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        return AFPERR_PARAM;
+    /* Set the initialization vector for client->server transfer. */
+    ctxerror = gcry_cipher_setiv(ctx, iv, sizeof(iv));
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        return AFPERR_PARAM;
+
+    /* Decrypt the ciphertext from the client. */
+    ctxerror = gcry_cipher_decrypt(ctx, rbuf, CRYPT2BUFLEN, ibuf, CRYPT2BUFLEN);
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR)
+        return AFPERR_PARAM;
+
+    gcry_cipher_close(ctx);
+
+    bn1 = gcry_mpi_snew(KEYSIZE);
+    gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, rbuf, KEYSIZE, NULL);
+    bn2 = gcry_mpi_snew(sizeof(randbuf));
+    gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
 
     /* zero out the random number */
     memset(rbuf, 0, sizeof(randbuf));
     memset(randbuf, 0, sizeof(randbuf));
     rbuf += KEYSIZE;
 
-    if (!(bn3 = BN_new())) {
-      BN_free(bn2);
-      BN_free(bn1);
-      return AFPERR_PARAM;
-    }
+    bn3 = gcry_mpi_snew(0);
+    gcry_mpi_sub(bn3, bn1, bn2);
+    gcry_mpi_release(bn2);
+    gcry_mpi_release(bn1);
 
-    BN_sub(bn3, bn1, bn2);
-    BN_free(bn2);
-    BN_free(bn1);
-
-    /* okay. is it one more? */
-    if (!BN_is_one(bn3)) {
-      BN_free(bn3);
-      return AFPERR_PARAM;
+    if (gcry_mpi_cmp_ui(bn3, 1UL) != 0) {
+        gcry_mpi_release(bn3);
+        return AFPERR_PARAM;
     }
-    BN_free(bn3);
+    gcry_mpi_release(bn3);
 
     rbuf[PASSWDLEN] = '\0';
     p = crypt( rbuf, dhxpwd->pw_passwd );
