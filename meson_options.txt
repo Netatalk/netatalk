@@ -48,7 +48,7 @@ option(
 option(
     'with-debugging',
     type: 'boolean',
-    value: true,
+    value: false,
     description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
