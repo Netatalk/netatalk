@@ -1248,25 +1248,6 @@ else
 endif
 
 #
-# Check for building PGP UAM
-#
-
-enable_pgp_uam = get_option('with-pgp-uam')
-
-if not enable_pgp_uam
-    have_pgp_uam = false
-else
-    if have_ssl
-        have_pgp_uam = have_ssl
-    else
-        have_pgp_uam = false
-        warning(
-            'WolfSSL (embedded or system) and Nettle are required for PGP UAM',
-        )
-    endif
-endif
-
-#
 # Check for ACL support
 #
 
@@ -2267,7 +2248,6 @@ summary_info = {
     '  DHX2': have_libgcrypt,
     '  Guest': true,
     '  Kerberos V': have_krb5_uam,
-    '  PGP': have_pgp_uam,
     '  RandNum': have_ssl,
 }
 summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')

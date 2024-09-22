@@ -136,12 +136,6 @@ option(
     description: 'Enable PAM support',
 )
 option(
-    'with-pgp-uam',
-    type: 'boolean',
-    value: true,
-    description: 'Enable build of PGP UAM module',
-)
-option(
     'with-quota',
     type: 'boolean',
     value: true,

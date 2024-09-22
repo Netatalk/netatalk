@@ -184,22 +184,6 @@ elif build_shared_lib
     )
 endif
 
-if have_pgp_uam
-    uams_pgp_sources = ['uams_pgp.c']
-
-    library(
-        'uams_pgp',
-        uams_pgp_sources,
-        include_directories: root_includes,
-        dependencies: ssl_deps,
-        name_prefix: '',
-        name_suffix: lib_suffix,
-        override_options: 'b_lundef=false',
-        install: true,
-        install_dir: libdir / 'netatalk',
-    )
-endif
-
 if have_krb5_uam
     uams_gss_sources = ['uams_gss.c']
 
