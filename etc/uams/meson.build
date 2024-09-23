@@ -52,8 +52,6 @@ if have_libgcrypt
         override_options: 'b_lundef=false',
         install: true,
         install_dir: libdir / 'netatalk',
-        build_rpath: rpath_libdir,
-        install_rpath: rpath_libdir,
     )
 
     library(
@@ -66,8 +64,6 @@ if have_libgcrypt
         override_options: 'b_lundef=false',
         install: true,
         install_dir: libdir / 'netatalk',
-        build_rpath: rpath_libdir,
-        install_rpath: rpath_libdir,
     )
 
     library(
@@ -123,8 +119,6 @@ if have_libgcrypt
             override_options: 'b_lundef=false',
             install: true,
             install_dir: libdir / 'netatalk',
-            build_rpath: rpath_libdir,
-            install_rpath: rpath_libdir,
         )
 
         if build_shared_lib
