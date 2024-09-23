@@ -816,8 +816,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 
     AFP_READ_START((long)reqcount);
 
-    switch (obj->proto) {
 #ifndef NO_DDP
+    switch (obj->proto) {
     case AFPPROTO_ASP:
         if (obj->options.flags & OPTION_AFP_READ_LOCK) {
             if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount, ofork->of_refnum) < 0) {
@@ -835,9 +835,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 
     }
     break;
-#endif
 
     case AFPPROTO_DSI:
+#endif
         dsi = obj->dsi; 
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
@@ -933,8 +933,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
             if (obj->options.flags & OPTION_AFP_READ_LOCK)
                 ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
             obj->exit(EXITERR_CLNT);
+#ifndef NO_DDP
             break;
     } /* switch */
+#endif
 afp_read_done:
     if (obj->options.flags & OPTION_AFP_READ_LOCK)
         ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount, ofork->of_refnum);
