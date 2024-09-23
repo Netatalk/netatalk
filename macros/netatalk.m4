@@ -148,9 +148,9 @@ AC_DEFUN([AC_NETATALK_DBUS_GLIB], [
 
   AC_ARG_WITH(
       dbus-sysconf-dir,
-      [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sprefix}/etc/dbus-1/system.d/)])],
+      [AS_HELP_STRING([--with-dbus-sysconf-dir=PATH],[Path to dbus system bus security configuration directory (default: ${sprefix}/share/dbus-1/system.d/)])],
       ac_cv_dbus_sysdir=$withval,
-      ac_cv_dbus_sysdir=${prefix}/etc/dbus-1/system.d
+      ac_cv_dbus_sysdir=${prefix}/share/dbus-1/system.d
   )
   DBUS_SYS_DIR=""
   if test x$atalk_cv_with_dbus = xyes ; then

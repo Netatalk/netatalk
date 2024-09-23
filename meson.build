@@ -1150,8 +1150,8 @@ if dbus_sysconf_path != ''
     dbus_sysconfpath += dbus_sysconf_path
     cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
 else
-    dbus_sysconfpath += sysconfdir / 'dbus-1/system.d'
-    cdata.set('DBUS_SYS_DIR', '"' + sysconfdir + '/dbus-1/system.d' + '"')
+    dbus_sysconfpath += datadir / 'dbus-1/system.d'
+    cdata.set('DBUS_SYS_DIR', '"' + datadir + '/dbus-1/system.d' + '"')
 endif
 
 #
