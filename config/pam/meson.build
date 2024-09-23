@@ -1,5 +1,5 @@
 netatalk_pamd = configure_file(
-    input: 'netatalk.tmpl',
+    input: 'netatalk.in',
     output: 'netatalk',
     configuration: cdata,
 )
