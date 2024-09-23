@@ -1,11 +1,11 @@
 afp_conf = configure_file(
-    input: 'afp.conf.tmpl',
+    input: 'afp.conf.in',
     output: 'afp.conf',
     configuration: cdata,
 )
 
 dbus_session_conf = configure_file(
-    input: 'dbus-session.conf.tmpl',
+    input: 'dbus-session.conf.in',
     output: 'dbus-session.conf',
     configuration: cdata,
 )
