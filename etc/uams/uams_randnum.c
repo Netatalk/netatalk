@@ -134,6 +134,9 @@ static int afppasswd(const struct passwd *pwd,
   gcry_cipher_hd_t ctx;
   gcry_error_t ctxerror;
 
+  if (!gcry_check_version(GCRYPT_VERSION))
+      LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
+
   if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
     return AFPERR_ACCESS;
@@ -427,6 +430,9 @@ static int randnum_changepw(void *obj, const char *username _U_,
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
 
+    if (!gcry_check_version(GCRYPT_VERSION))
+        LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
+
     if (uam_checkuser(pwd) < 0)
       return AFPERR_ACCESS;
 
@@ -487,9 +493,6 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
     size_t len, ulen;
 
     *rbuflen = 0;
-
-    if (!gcry_check_version(GCRYPT_VERSION))
-        LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
                              (void *) &username, &ulen) < 0)
