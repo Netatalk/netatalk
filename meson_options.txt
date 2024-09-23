@@ -70,12 +70,6 @@ option(
     description: 'Enable dtrace probes',
 )
 option(
-    'with-embedded-ssl',
-    type: 'boolean',
-    value: true,
-    description: 'Enable embedded SSL library',
-)
-option(
     'with-gssapi',
     type: 'boolean',
     value: true,
@@ -176,12 +170,6 @@ option(
     type: 'boolean',
     value: true,
     description: 'Enable Spotlight support',
-)
-option(
-    'with-ssl-override',
-    type: 'boolean',
-    value: false,
-    description: 'Force built-in WolfSSL as SSL provider',
 )
 option(
     'with-tcp-wrappers',

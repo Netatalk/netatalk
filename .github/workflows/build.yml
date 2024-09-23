@@ -53,7 +53,6 @@ env:
     libtalloc-dev \
     libtirpc-dev \
     libtracker-sparql-3.0-dev \
-    libwolfssl-dev \
     libwrap0-dev \
     meson \
     nettle-dev \
@@ -241,7 +240,6 @@ jobs:
             nettle-devel \
             ninja-build \
             openldap-devel \
-            openssl-devel \
             pam-devel \
             perl \
             perl-Net-DBus \
@@ -375,7 +373,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc wolfssl
+          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
           wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
       - name: Configure
         run: |
@@ -434,8 +432,7 @@ jobs:
               py39-tkinter \
               talloc \
               tracker3 \
-              wget \
-              wolfssl
+              wget
           run: |
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
@@ -478,8 +475,7 @@ jobs:
               pkgconf \
               talloc \
               tracker3 \
-              wget \
-              wolfssl
+              wget
           run: |
             set -e
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
