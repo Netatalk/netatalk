@@ -131,10 +131,10 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Libgcrypt</para>
 
-            <para>The <ulink url="http://directory.fsf.org/wiki/Libgcrypt">
-            Libgcrypt</ulink> library enables the DHX2 UAM, which is required
-            to authenticate with OS X 10.7 and later. The older Random Number
-            and DHCAST128 (a.k.a. DHX) UAMs rely on this library, too.</para>
+            <para>The <ulink url="https://gnupg.org/software/libgcrypt/">
+            Libgcrypt</ulink> library supplies the encryption for the standard
+            User Authentication Modules (UAMs). They are: DHX2, DHCAST128
+            (a.k.a. DHX) and RandNum.</para>
           </listitem>
 
           <listitem>

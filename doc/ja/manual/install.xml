@@ -124,9 +124,9 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Libgcrypt</para>
 
-            <para>OS X 10.7 とそれ以降で必須となった DHX2 のために <ulink
-            url="http://directory.fsf.org/wiki/Libgcrypt"> Libgcrypt</ulink>
-            が必要である。古い Random Number UAM もこれらのライブラリに依存しています。</para>
+            <para><ulink url="https://gnupg.org/software/libgcrypt/">
+            Libgcrypt</ulink> ライブラリは、標準のユーザー認証モジュール (UAM)
+            の暗号化を提供します。これらは、DHX2、DHCAST128 (別名 DHX)、および RandNum です。</para>
           </listitem>
 
           <listitem>
@@ -214,16 +214,6 @@ Resolving deltas: 100% (32227/32227), done.
             <para>MySQL 互換のクライアント ライブラリを活用することで、netatalk は、スケーラビリティと信頼性に優れた
             MySQL CNID バックエンドを使用して構築できます。管理者は、このバックエンドで使用するために別のデータベース
             インスタンスを用意する必要があります。</para>
-          </listitem>
-
-          <listitem>
-            <para>Nettle と WolfSSL</para>
-
-            <para>Nettle と WolfSSL は、Classic Mac OS に最も強力なパスワード暗号化を提供する
-            DHCAST128 (別名 DHX) UAM に必要です。</para>
-
-            <para>注意: 現在、フル機能の WolfSSL ライブラリが OS に配布されていない場合に備えて、WolfSSL を
-            Netatalk にバンドルしています。</para>
           </listitem>
 
           <listitem>
