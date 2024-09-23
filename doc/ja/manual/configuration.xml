@@ -653,21 +653,6 @@ basedir regex = /usr/home</programlisting></para>
 
       <itemizedlist>
         <listitem>
-          <para>"PGPuam 1.0"<indexterm>
-              <primary>PGPuam 1.0</primary>
-
-              <secondary>"PGPuam 1.0" UAM</secondary>
-            </indexterm><indexterm>
-              <primary>uams_pgp.so</primary>
-
-              <secondary>"PGPuam 1.0" UAM</secondary>
-            </indexterm> UAM（Mac OS X 以前のクライアント用、PGP ベースの認証。これを動作させようとするには
-          <ulink
-          url="https://web.archive.org/web/20190121142716/http://www.vmeng.com/vinnie/papers/pgpuam.html">PGPuam
-          クライアント</ulink>も別途必要である。</para>
-        </listitem>
-
-        <listitem>
           <para>"Client Krb v2"<indexterm>
               <primary>Client Krb v2</primary>
 

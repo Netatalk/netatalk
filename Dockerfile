@@ -13,7 +13,6 @@ ENV LIB_DEPS \
     libgcrypt \
     libtracker \
     linux-pam \
-    nettle \
     openldap \
     talloc \
     tracker \
@@ -36,7 +35,6 @@ ENV BUILD_DEPS \
     linux-pam-dev \
     meson \
     ninja \
-    nettle-dev \
     openldap-dev \
     perl \
     pkgconfig \
@@ -69,7 +67,6 @@ RUN meson setup build \
     -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
     -Dwith-manual=none \
-    -Dwith-pgp-uam=false \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
