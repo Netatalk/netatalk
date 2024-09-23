@@ -115,6 +115,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -159,6 +160,7 @@ jobs:
           meson setup build \
             -Dwith-afpstats=false \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
@@ -190,6 +192,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
@@ -249,6 +252,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
       - name: Build
@@ -307,6 +311,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
@@ -336,6 +341,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-manual-l10n=ja \
             -Dwith-tests=true
@@ -623,6 +629,7 @@ jobs:
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-appletalk=true \
+              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-ldap-path=/opt/local
             meson compile -C build
             meson install -C build
@@ -666,6 +673,7 @@ jobs:
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-afpstats=false \
               -Dwith-appletalk=true \
+              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-tests=true
             meson compile -C build
