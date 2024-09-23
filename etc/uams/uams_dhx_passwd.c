@@ -62,7 +62,9 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     uint16_t sessid;
     size_t nwritten;
     size_t i;
-    gcry_check_version(GCRYPT_VERSION);
+
+    if (!gcry_check_version(GCRYPT_VERSION))
+        LOG(log_info, logtype_uams, "uams_dhx_passwd.c : libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
 
     gcry_mpi_t p, g, Rb, Ma, Mb;
     p = gcry_mpi_new(0);
