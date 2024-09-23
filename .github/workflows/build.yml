@@ -117,6 +117,7 @@ jobs:
             --enable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-init-style=openrc \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
@@ -134,6 +135,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-style=openrc \
             -Dwith-tests=true
       - name: Meson - Build
@@ -177,6 +179,7 @@ jobs:
           ./configure \
             --disable-init-hooks \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-init-style=systemd
       - name: Autotools - Build
         run: make -j $(nproc)
@@ -193,6 +196,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-init-style=systemd \
             -Dwith-tests=true
@@ -267,6 +271,7 @@ jobs:
             --enable-pgp-uam \
             --enable-quota \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-init-style=debian-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
@@ -284,6 +289,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
@@ -348,6 +354,7 @@ jobs:
             --enable-pgp-uam \
             --enable-quota \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-init-style=redhat-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
@@ -365,6 +372,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-init-style=redhat-systemd \
             -Dwith-tests=true
@@ -431,6 +439,7 @@ jobs:
             --disable-krbV-uam \
             --enable-pgp-uam \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-init-style=suse-systemd \
             --with-tracker-pkgconfig-version=3.0
       - name: Autotools - Build
@@ -448,6 +457,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-init-style=suse-systemd \
             -Dwith-tests=true
@@ -483,6 +493,7 @@ jobs:
             --enable-pgp-uam \
             --enable-quota \
             --with-cracklib \
+            --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
             --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
             --with-init-style=debian-systemd \
             --with-tracker-pkgconfig-version=3.0
@@ -510,6 +521,7 @@ jobs:
       - name: Meson - Configure
         run: |
           meson setup build \
+            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-manual=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-systemd \
@@ -886,6 +898,7 @@ jobs:
             ./configure \
               --enable-pgp-uam \
               --with-bdb=/opt/local \
+              --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
               --with-init-style=solaris \
               --with-ldap=/opt/local \
               --with-tracker-pkgconfig-version=3.0
@@ -902,6 +915,7 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-init-style=solaris \
               -Dwith-ldap-path=/opt/local \
               -Dwith-pgp-uam=true
@@ -962,6 +976,7 @@ jobs:
             ./configure \
               --enable-krbV-uam \
               --enable-pgp-uam \
+              --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
               --with-init-style=solaris \
               --with-tracker-pkgconfig-version=2.0 \
               --without-afpstats \
@@ -980,6 +995,7 @@ jobs:
             echo "Building with Meson"
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-init-style=solaris \
               -Dwith-pgp-uam=true \
               -Dwith-tests=true
