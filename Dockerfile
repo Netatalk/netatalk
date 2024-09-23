@@ -64,7 +64,6 @@ RUN meson setup build \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
     -Dwith-dtrace=false \
-    -Dwith-embedded-ssl=true \
     -Dwith-init-style=none \
     -Dwith-manual=none \
     -Dwith-quota=false \

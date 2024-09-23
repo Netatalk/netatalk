@@ -2,7 +2,7 @@ if have_bdb
     subdir('ad')
 endif
 
-if have_ssl
+if have_libgcrypt
     subdir('afppasswd')
 endif
 

@@ -545,78 +545,13 @@ else
 endif
 
 #
-# Check for crypt or SSL (for DHX authentication)
+# Check for crypt (for DHX authentication)
 #
 
 crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
 if crypt.found()
     cdata.set('HAVE_CRYPT_H', 1)
     cdata.set('HAVE_LIBCRYPT', 1)
-endif
-
-have_embedded_ssl = get_option('with-embedded-ssl')
-have_ssl_override = get_option('with-ssl-override')
-
-if have_ssl_override
-    have_embedded_ssl = true
-endif
-
-ssl_deps = []
-ssl_link_args = []
-ssl_provider = ''
-
-wolfssl = dependency('wolfssl', required: false)
-nettle = dependency('nettle', required: false)
-
-if wolfssl.found()
-    wolfssl_check = run_command(
-        find_program('cat', required: false),
-        wolfssl.get_variable(pkgconfig: 'includedir') / 'wolfssl/options.h',
-        check: false,
-    ).stdout().strip()
-
-    if (
-        wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
-        and wolfssl_check.contains('WOLFSSL_DES_ECB')
-        and wolfssl_check.contains('OPENSSL_EXTRA')
-        and wolfssl_check.contains('OPENSSL_ALL')
-    )
-        have_wolfssl = true
-    else
-        have_wolfssl = false
-        message(
-            'The WolfSSL package on this system does not have the correct configuration for DHX and RANDNUM UAMs',
-        )
-    endif
-else
-    have_wolfssl = false
-endif
-
-if (have_wolfssl or have_embedded_ssl) and nettle.found()
-    have_ssl = true
-    ssl_deps += nettle
-    if have_ssl_override
-        have_wolfssl = false
-        have_embedded_ssl = true
-        ssl_provider += 'built-in'
-        cdata.set('EMBEDDED_SSL', 1)
-    elif have_wolfssl
-        have_embedded_ssl = false
-        ssl_deps += wolfssl
-        ssl_provider += 'WolfSSL'
-        cdata.set('WOLFSSL_DHX', 1)
-    elif have_embedded_ssl
-        have_wolfssl = false
-        ssl_provider += 'built-in'
-        cdata.set('EMBEDDED_SSL', 1)
-    endif
-else
-    have_ssl = false
-    have_embedded_ssl = false
-    ssl_provider += 'none'
-    warning(
-        'WolfSSL (embedded or system) and Nettle are required for DHX and RANDNUM UAMs',
-    )
 endif
 
 #
@@ -1082,7 +1017,7 @@ have_libgcrypt = libgcrypt.found()
 
 if not have_libgcrypt
     error(
-        'Libgcrypt library required for DHX2 UAM! Please install version 1.2.3 or later',
+        'Libgcrypt library required for encrypted user auth! Please install version 1.2.3 or later',
     )
 endif
 
@@ -2277,7 +2212,6 @@ if have_quota
 endif
 summary_info += {
     '  Spotlight': have_spotlight,
-    '  SSL provider': ssl_provider,
     '  TCP wrapper': have_tcpwrap,
     '  Zeroconf': have_zeroconf,
 }

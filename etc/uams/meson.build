@@ -37,12 +37,6 @@ library(
     install_dir: libdir / 'netatalk',
 )
 
-ssl_links = []
-
-if have_embedded_ssl
-    ssl_links += libatalk
-endif
-
 if have_libgcrypt
     uams_randnum_sources = ['uams_randnum.c']
     uams_dhx2_passwd_sources = ['uams_dhx2_passwd.c']
