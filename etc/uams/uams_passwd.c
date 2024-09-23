@@ -57,7 +57,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* SHADOWPW */
 
 
-    if (ibuflen <= PASSWDLEN) {
+    if (ibuflen < PASSWDLEN) {
         return( AFPERR_PARAM );
     }
     ibuf[ PASSWDLEN ] = '\0';
