@@ -1,0 +1,76 @@
+.TH "MACIPGW" 8 "July 23, 1997" "netatalk 1.4"
+.SH NAME
+macipgw \- MacIP Gateway Daemon
+.SH SYNOPSIS
+.B macipgw
+[\ \fB\-d\ debugclass\ \fR]
+[\ \fB\-n\ nameserver\ \fR]
+[\ \fB\-z\ zone\ \fR]
+[\ \fB\-V\ \fR]
+\fBnetwork netmask
+.SH DESCRIPTION
+.B macipgw
+provides IP connectivity for devices connected through an AppleTalk-only
+network, i.\ e. LocalTalk or Apple Remote Access (ARA). \fBmacipgw\fR is
+normally started out of \fB/etc/rc\fR.
+.LP
+MacIP (formerly known as KIP) is a protocol that allows the encapsulation of
+IP packets in AppleTalk packets. \fBmacipgw\fR registers itself as a MacIP
+gateway on the AppleTalk network and configures and brings up a tunnel
+interface (see \fBtun(4)\fR). It then forwards IP packets received from the
+AppleTalk network to the kernel through the tunnel interface. Likewise, IP
+packets received through the tunnel are forwarded to the AppleTalk device
+registered for the destination IP address.
+.LP
+Unlike other MacIP gateways, \fBmacipgw\fR needs its own IP (sub-)net to
+operate, and does not use proxy-ARP for the addresses registered. The
+gateway will always use the first address in the network for the local
+address, i.\ e. 192.168.1.1 for the network 192.168.1.0/24.
+.LP
+\fBmacipgw\fR will log operational messages through \fBsyslog(3)\fR under
+the facility \fBLOG_DAEMON\fR.
+.SH OPTIONS
+.TP
+.BI \-d " debugclass"
+Specifies that the daemon should not fork, and that a trace of all actions
+be written to \fBstdout\fR. See the source code for useful values of
+.IR debugclass .
+.TP
+.BI \-n " nameserver"
+Specifies the IP address of a DNS name server the AppleTalk devices
+connected through the gateway should use. 
+.TP
+.BI \-z " zone"
+Specifies that \fBmacipgw\fR should register in \fIzone\fR instead of the
+default zone.
+.TP
+.B \-V
+Show version information and exit.
+.TP
+.B network
+Specifies the network number to use for the clients.
+.TP
+.B netmask
+Specifies the netmask for the network.
+.SH EXAMPLE
+\fB/usr/local/libexec/macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0
+255.255.255.0\fR
+
+Starts \fBmacipgw\fR, assigning the Class C network 192.168.1.0 for devices
+connected through the gateway, specifying that the system \fBmacipgw\fR is
+running on can be used as a name server, and that it should register in the
+zone \fIRemote Users\fR.
+.SH FILES
+.TP 20
+.B /usr/local/libexec/macipgw
+.SH SEE ALSO
+.BR tun(4) ,
+.BR ip(4) ,
+.BR atalkd(8) ,
+.BR syslog(3) ,
+.BR syslogd(8)
+.SH BUGS
+No information besides the log messages is available on which AppleTalk
+devices are using the gateway.
+.SH AUTHOR
+Stefan Bethke <Stefan.Bethke@Hanse.DE>
