@@ -60,7 +60,9 @@ if have_afpstats
     ]
     afpd_external_deps += [
         dbus,
+        gio,
         glib,
+        gobject,
     ]
 endif
 

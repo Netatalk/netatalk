@@ -158,7 +158,6 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-afpstats=false \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
@@ -671,7 +670,6 @@ jobs:
             wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-              -Dwith-afpstats=false \
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
