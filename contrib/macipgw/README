@@ -9,5 +9,5 @@ packets, thus allowing Macs connected through an AppleTalk-only network
 
 On *BSD, you will need one tunnel device for macipgw.  See tun(4) for details.
 
-The original author was <Stefan.Bethke@Hanse.DE>.  This is now part of the
-netatalk-classic project; please file issues on GitHub.
+The original author is <Stefan.Bethke@Hanse.DE>.
+It has been included in the netatalk project with his blessing.
