@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-09-15</pubdate>
+		<pubdate>2024-09-24</pubdate>
 	</appendixinfo>
 	<title>Netatalk をソースコードからコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -68,6 +68,7 @@
   --enable-krbV-uam \
   --enable-pgp-uam \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=openrc \
   --with-tracker-pkgconfig-version=3.0
 </screen>
@@ -86,7 +87,9 @@
 			</para>
 			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
@@ -95,6 +98,7 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-style=openrc \
   -Dwith-tests=true
 </screen>
@@ -113,7 +117,9 @@
 			</para>
 			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -147,6 +153,7 @@
 				<screen>./configure \
   --disable-init-hooks \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=systemd
 </screen>
 			</para>
@@ -164,7 +171,9 @@
 			</para>
 			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
@@ -173,6 +182,7 @@
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-init-style=systemd \
   -Dwith-tests=true
@@ -192,7 +202,9 @@
 			</para>
 			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -256,6 +268,7 @@ apt-get install --assume-yes --no-install-recommends \
   --enable-pgp-uam \
   --enable-quota \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=debian-systemd \
   --with-tracker-pkgconfig-version=3.0
 </screen>
@@ -274,7 +287,9 @@ apt-get install --assume-yes --no-install-recommends \
 			</para>
 			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
@@ -283,6 +298,7 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-init-style=debian-systemd \
   -Dwith-pkgconfdir-path=/etc/netatalk \
@@ -303,7 +319,9 @@ apt-get install --assume-yes --no-install-recommends \
 			</para>
 			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -356,6 +374,7 @@ apt-get install --assume-yes --no-install-recommends \
   --enable-pgp-uam \
   --enable-quota \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=redhat-systemd \
   --with-tracker-pkgconfig-version=3.0
 </screen>
@@ -374,7 +393,9 @@ apt-get install --assume-yes --no-install-recommends \
 			</para>
 			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
@@ -383,6 +404,7 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-init-style=redhat-systemd \
   -Dwith-tests=true
@@ -402,7 +424,9 @@ apt-get install --assume-yes --no-install-recommends \
 			</para>
 			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -458,6 +482,7 @@ zypper in -y \
   --disable-krbV-uam \
   --enable-pgp-uam \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=suse-systemd \
   --with-tracker-pkgconfig-version=3.0
 </screen>
@@ -476,7 +501,9 @@ zypper in -y \
 			</para>
 			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Autotools - Uninstall</para>
 			<para>
@@ -485,6 +512,7 @@ zypper in -y \
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-init-style=suse-systemd \
   -Dwith-tests=true
@@ -504,7 +532,9 @@ zypper in -y \
 			</para>
 			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>/usr/local/sbin/netatalk -V</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+</screen>
 			</para>
 			<para>Meson - Uninstall</para>
 			<para>
@@ -519,6 +549,7 @@ zypper in -y \
 sudo apt-get install --assume-yes --no-install-recommends autoconf \
 automake \
 bison \
+cracklib-runtime \
 docbook-xsl \
 flex \
 libacl1-dev \
@@ -565,6 +596,7 @@ xsltproc
   --enable-pgp-uam \
   --enable-quota \
   --with-cracklib \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-docbook=/usr/share/xml/docbook/stylesheet/docbook-xsl \
   --with-init-style=debian-systemd \
   --with-tracker-pkgconfig-version=3.0
@@ -590,11 +622,16 @@ xsltproc
 			<para>
 				<screen>sudo make install</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>sudo systemctl start netatalk &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+sudo systemctl start netatalk
+sleep 2
+asip-status localhost
+</screen>
 			</para>
-			<para>Stop netatalk</para>
+			<para>Autotools - Stop netatalk</para>
 			<para>
 				<screen>sudo systemctl stop netatalk</screen>
 			</para>
@@ -605,13 +642,14 @@ xsltproc
 			<para>Meson - Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-manual=true \
   -Dwith-init-hooks=false \
   -Dwith-init-style=debian-systemd \
   -Dwith-tests=true
 </screen>
 			</para>
-			<para>Meson - Build and generate manual pages</para>
+			<para>Meson - Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
@@ -623,11 +661,16 @@ xsltproc
 			<para>
 				<screen>sudo meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>sudo systemctl start netatalk &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+sudo systemctl start netatalk
+sleep 1
+asip-status localhost
+</screen>
 			</para>
-			<para>Stop netatalk</para>
+			<para>Meson - Stop netatalk</para>
 			<para>
 				<screen>sudo systemctl stop netatalk</screen>
 			</para>
@@ -668,11 +711,14 @@ xsltproc
 			<para>
 				<screen>sudo make install</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Autotools - Start netatalk</para>
 			<para>
-				<screen>sudo /usr/local/bin/netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
+				<screen>/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+sudo /usr/local/bin/netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost
+</screen>
 			</para>
-			<para>Stop netatalk</para>
+			<para>Autotools - Stop netatalk</para>
 			<para>
 				<screen>sudo netatalkd stop</screen>
 			</para>
@@ -699,11 +745,14 @@ xsltproc
 			<para>
 				<screen>sudo meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Meson - Start netatalk</para>
 			<para>
-				<screen>sudo netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost</screen>
+				<screen>/opt/homebrew/sbin/netatalk -V
+/opt/homebrew/sbin/afpd -V
+sudo netatalkd start &amp;&amp; sleep 2 &amp;&amp; asip-status localhost
+</screen>
 			</para>
-			<para>Stop netatalk</para>
+			<para>Meson - Stop netatalk</para>
 			<para>
 				<screen>sudo netatalkd stop</screen>
 			</para>
@@ -752,12 +801,14 @@ echo "Building with Autotools"
 gmake -j2
 gmake install
 /usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 gmake uninstall
 echo "Building with Meson"
 meson setup build
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 ninja -C build uninstall
 </screen>
 			</para>
@@ -802,6 +853,8 @@ echo "Building with Autotools"
   PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
 gmake -j $(nproc)
 gmake install
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 /usr/local/etc/rc.d/netatalk start
 sleep 2
 /usr/local/bin/asip-status localhost
@@ -813,6 +866,8 @@ meson setup build \
   -Dwith-init-style=freebsd
 meson compile -C build
 meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 /usr/local/etc/rc.d/netatalk start
 sleep 2
 /usr/local/bin/asip-status localhost
@@ -862,6 +917,8 @@ echo "Building with Autotools"
   --with-tracker-pkgconfig-version=3.0
 gmake -j $(nproc)
 gmake install
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 service netatalk onestart
 sleep 2
 asip-status localhost
@@ -877,6 +934,8 @@ meson compile -C build
 cd build &amp;&amp; meson test
 cd ..
 meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 service netatalk onestart
 sleep 2
 asip-status localhost
@@ -896,7 +955,7 @@ ninja -C build uninstall
   bison \
   dbus-glib \
   db-4.6.21p7v0 \
-  gcc-11.2.0p9 \
+  gcc-11.2.0p11 \
   gmake \
   libevent \
   libgcrypt \
@@ -904,7 +963,7 @@ ninja -C build uninstall
   libtool \
   mariadb-client \
   meson \
-  openldap-client-2.6.6v0 \
+  openldap-client-2.6.7v0 \
   openpam \
   pkgconf \
   tracker3
@@ -932,6 +991,8 @@ meson setup build \
   -Dwith-init-style=openbsd
 meson compile -C build
 meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 rcctl -d start netatalk
 sleep 2
 asip-status localhost
@@ -973,11 +1034,14 @@ export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
 ./configure \
   --enable-pgp-uam \
   --with-bdb=/opt/local \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=solaris \
   --with-ldap=/opt/local \
   --with-tracker-pkgconfig-version=3.0
 make -j $(nproc)
 make install
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
@@ -987,11 +1051,14 @@ make uninstall
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-style=solaris \
   -Dwith-ldap-path=/opt/local \
   -Dwith-pgp-uam=true
 meson compile -C build
 meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
@@ -1041,6 +1108,7 @@ echo "Building with Autotools"
 ./configure \
   --enable-krbV-uam \
   --enable-pgp-uam \
+  --with-dbus-sysconf-dir=/usr/share/dbus-1/system.d \
   --with-init-style=solaris \
   --with-tracker-pkgconfig-version=2.0 \
   --without-afpstats \
@@ -1048,6 +1116,8 @@ echo "Building with Autotools"
   PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig
 gmake -j $(nproc)
 gmake install
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
@@ -1057,6 +1127,7 @@ gmake uninstall
 echo "Building with Meson"
 meson setup build \
   -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-style=solaris \
   -Dwith-pgp-uam=true \
   -Dwith-tests=true
@@ -1064,6 +1135,8 @@ meson compile -C build
 cd build &amp;&amp; meson test
 cd ..
 meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
 sleep 2
 svcadm enable svc:/network/netatalk:default
 sleep 2
