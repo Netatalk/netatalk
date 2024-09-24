@@ -1141,16 +1141,18 @@ enable_afpstats = get_option('with-afpstats')
 
 dbus = dependency('dbus-1', required: false)
 glib = dependency('glib-2.0', required: false)
+gobject = dependency('gobject-2.0', required: false)
+gio = dependency('gio-2.0', required: false)
 
 if not enable_afpstats
     have_afpstats = false
 else
-    have_afpstats = dbus.found() and glib.found()
+    have_afpstats = dbus.found() and glib.found() and gobject.found() and gio.found()
     if have_afpstats
         cdata.set('HAVE_DBUS_GLIB', 1)
     else
         warning(
-            'afpstats support requested but required GDBus libraries not found',
+            'afpstats support requested but required D-Bus and GLib libraries not found',
         )
     endif
 endif
