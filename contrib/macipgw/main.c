@@ -1,8 +1,6 @@
 /*
  * AppleTalk MacIP Gateway
  *
- * $Id: main.c,v 1.1.1.1 2001/10/28 15:01:49 stefanbethke Exp $
- *
  * (c) 1997 Stefan Bethke. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
