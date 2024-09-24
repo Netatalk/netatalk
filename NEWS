@@ -1,3 +1,12 @@
+Changes in 2.4.10
+=================
+* FIX: uams: Correct shadow password length check for ClearTxt, GitHub #1528
+* FIX: cnid_dbd: Set explicit max length of db_params to prevent potential
+       buffer overflow, GitHub #694
+* FIX: meson: Format afpd help text output to match autotools, GitHub #1499
+* FIX: meson: Throw missing cracklib dictionary warning, GitHub #1495
+* FIX: meson: Use a valid code sample for the TCP Wrappers check, GitHub #1491
+
 Changes in 2.4.9
 ================
 * FIX: uams: Make sure the DHX2 client nonce is aligned appropriately,
