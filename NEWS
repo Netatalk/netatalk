@@ -1,3 +1,16 @@
+Changes in 3.2.10
+=================
+* BREAKING: Install netatalk-dbus.conf into datadir by default, GitHub #1533
+       Previously: sysconfdir. This can be overridden by the build system.
+* FIX: uams: Correct shadow password length check for ClearTxt, GitHub #1528
+* FIX: cnid_dbd: Set explicit max length of db_params to prevent potential
+       buffer overflow, GitHub #694
+* FIX: meson: Debugging was enabled by default causing tickles
+       to not be sent out, GitHub #1514
+* FIX: meson: Format afpd help text output to match autotools, GitHub #1499
+* FIX: meson: Throw missing cracklib dictionary warning, GitHub #1495
+* FIX: meson: Use a valid code sample for the TCP Wrappers check, GitHub #1491
+
 Changes in 3.2.9
 ================
 * UPD: Use the recommended command to import Solaris init manifest,
