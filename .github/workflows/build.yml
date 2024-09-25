@@ -93,7 +93,8 @@ jobs:
             openrc \
             openssl-dev \
             pkgconfig \
-            rpcsvc-proto-dev
+            rpcsvc-proto-dev \
+            wolfssl
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
@@ -150,7 +151,8 @@ jobs:
             meson \
             ninja \
             pkgconfig \
-            rpcsvc-proto
+            rpcsvc-proto \
+            wolfssl
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
@@ -450,7 +452,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: brew install automake berkeley-db libressl libtool meson
+        run: brew install automake berkeley-db libressl libtool meson wolfssl
       - name: Autotools - Bootstrap
         run: ./bootstrap
       - name: Autotools - Configure
@@ -527,7 +529,8 @@ jobs:
               perl5 \
               pkgconf \
               py39-gdbm \
-              py39-tkinter
+              py39-tkinter \
+              wolfssl
           run: |
             set -e
             echo "Building with Autotools"
@@ -571,7 +574,8 @@ jobs:
               libtool \
               meson \
               openldap26-client-2.6.8 \
-              pkgconf
+              pkgconf \
+              wolfssl
           run: |
             set -e
             echo "Building with Autotools"
@@ -621,7 +625,8 @@ jobs:
               libressl \
               libtool \
               meson \
-              pkg-config
+              pkg-config \
+              wolfssl
           run: |
             set -e
             echo "Building with Autotools"
