@@ -1,3 +1,104 @@
+Changes in 3.2.10
+=================
+* BREAKING: Install netatalk-dbus.conf into datadir by default, GitHub #1533
+       Previously: sysconfdir. This can be overridden by the build system.
+* FIX: uams: Correct shadow password length check for ClearTxt, GitHub #1528
+* FIX: cnid_dbd: Set explicit max length of db_params to prevent potential
+       buffer overflow, GitHub #694
+* FIX: meson: Debugging was enabled by default causing tickles
+       to not be sent out, GitHub #1514
+* FIX: meson: Format afpd help text output to match autotools, GitHub #1499
+* FIX: meson: Throw missing cracklib dictionary warning, GitHub #1495
+* FIX: meson: Use a valid code sample for the TCP Wrappers check, GitHub #1491
+
+Changes in 3.2.9
+================
+* UPD: Use the recommended command to import Solaris init manifest,
+       GitHub #1451
+* FIX: uams: Make sure the DHX2 client nonce is aligned appropriately,
+       GitHub #1456
+* FIX: uams: Fix DHCAST128 key alignment problem, GitHub #1464
+* FIX: wolfssl: OpenSSL coexistence tweaks, GitHub #1469
+* FIX: docs: Remove straggler path substitution in afp.conf, GitHub #1480
+
+Changes in 3.2.8
+================
+* UPD: Bump bundled WolfSSL library to stable version 5.7.2, GitHub #1433
+       Resolves CVE-2024-1544, CVE-2024-5288, CVE-2024-5991, CVE-2024-5814
+* UPD: Revert local modifications to the bundled WolfSSL library, GitHub #1432
+* FIX: Enable building against a shared WolfSSL 5.7.2 library, GitHub #1421
+* FIX: meson: Do not define rpath with a linker argument, GitHub #1443
+
+Changes in 3.2.7
+================
+* NEW: meson: Ability to control the run-time linker path config file,
+       GitHub #1396
+       New boolean Meson option: `-Dwith-ldsoconf'
+       When set to false, do not create /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Enable rpath by default, while disabling ldsoconf
+       by default, GitHub #1417
+* FIX: meson: Allow ldconfig to run unprivileged during setup, GitHub #1407
+* FIX: docker: Add entry script step to clean up any residual lock file,
+       GitHub #1412
+* NEW: docker: Ship a docker-compose.yml sample file, GitHub #1414
+* NEW: docker: Check for AFP_USER and AFP_PASS when launching container,
+       GitHub #1415
+
+Changes in 3.2.6
+================
+* BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
+       GitHub #1386
+       This fixes the issue of the libatalk.so shared library not being found
+       when configuring with a non-standard library path, e.g. /usr/local/lib .
+       New Meson option `-Dwith-install-hooks' controls this behavior,
+       allowing you to disable the install hook in non-privileged environments.
+       On Linux systems with glibc, we now install the following config file:
+       /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Introduce option to control which manual l10n to build,
+       GitHub #1390
+       New Meson option `-Dwith-manual-l10n' default to empty, can be set to
+       `ja' to build the Japanese localization of the html manual.
+       This changes the default behavior of the build system
+       to not build the Japanese html manual by default.
+* BREAKING: meson: Install htmldocs into htmldocs subdir, GitHub #1391
+       Previously, the html manual files were installed into the root
+       of the netatalk doc directory. Now they are put under netatalk/htmldocs .
+* BREAKING: meson: Use modern linker flag for rpath, remove dtags override,
+       GitHub #1384
+       When configuring with `-Dwith-rpath=true' the linker flags
+       `-Wl,-rpath,' will be prepended instead of the old `-R' flag.
+       On Linux platforms, we no longer prepend `-Wl,--enable-new-dtags',
+       either.
+
+Changes in 3.2.5
+================
+* BREAKING: meson: Allow choosing shared or static libraries to build,
+       GitHub #1321
+       In practice, only shared libraries are built by default now.
+       Use the `default_library' option to control what is built.
+* FIX: meson: Control the MySQL CNID backend, and support MariaDB, GitHub #1341
+       Introduces a new boolean `with-cnid-mysql-backend' option.
+* FIX: meson: Implement with-init-dir option, GitHub #1346
+* FIX: autotools/meson: Install FreeBSD init script into correct location,
+       GitHub #1345
+* FIX: meson: Fix syntax error with libiconv path, GitHub #1279
+* FIX: meson: Correct description for with-manual option, GitHub #1282
+* FIX: meson: Correct prefix lookup for tracker-control, GitHub #1284
+* FIX: meson: default OPEN_NOFOLLOW_ERRNO overwrites platform customization,
+       GitHub #1286
+* FIX: meson: Don't make dtags depend on rpath, GitHub #1293
+* FIX: meson: Remove duplicate dependency check for posix threads, GitHub #1297
+* FIX: meson: Better output when cryptographic UAMs aren't built, GitHub #1302
+* FIX: meson: Prioritize tests and run single-threaded to avoid race condition,
+       GitHub #1312
+* FIX: meson: Better way to handle rpath executable targets, GitHub #1315
+* FIX: meson: Refactor libcrypto check and print better status messages,
+       GitHub #1299
+* FIX: meson: Look for libmariadb dependency to appease Fedora, GitHub #1348
+* FIX: meson: Declare have_atfuncs globally to avoid failure later, GitHub #1357
+* FIX: meson: Do a compiler sanity check before header checks, GitHub #1356
+* FIX: Avoid using reserved keyword to build the tests on NetBSD, GitHub #1328
+
 Changes in 3.2.4
 ================
 * UPD: autotools: Restore ABI versioning of libatalk,
