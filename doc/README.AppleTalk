@@ -81,8 +81,11 @@ you will need either need a kernel module for your operating system,
 or a userland AppleTalk stack.
 
 Look at the Solaris STREAMS module if your operating system supports
-that framework. Otherwise, look at the ddp code in NetBSD
-if your operating system is BSDish in nature.
+that framework. This module used to distributed with Netatalk until
+version 2.3 (sys/solaris).
+
+Otherwise, look at the ddp code in NetBSD if your operating system
+is BSDish in nature.
 
 If your operating system looks different than these two cases,
 you'll have to roll your own implementation.
