@@ -4,6 +4,7 @@ manfiles = [
     'atalkd.8',
     'cnid_dbd.8',
     'cnid_metad.8',
+    'macipgw.8',
     'netatalk.8',
     'papd.8',
     'papstatus.8',

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id="macipgw.8">
+  <refmeta>
+    <refentrytitle>macipgw</refentrytitle>
+
+    <manvolnum>8</manvolnum>
+
+    <refmiscinfo class="date">25 July 1997</refmiscinfo>
+
+    <refmiscinfo class="source">Netatalk</refmiscinfo>
+
+    <refmiscinfo class="manual">Netatalk AFP ファイルサーバ マニュアル</refmiscinfo>
+
+    <refmiscinfo class="version">@netatalk_version@</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>macipgw</refname>
+
+    <refpurpose>MacIP ゲートウェイ デーモン</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>macipgw</command>
+
+      <arg>-d <replaceable>debugclass</replaceable></arg>
+
+      <arg>-n <replaceable>nameserver</replaceable></arg>
+
+      <arg>-z <replaceable>zone</replaceable></arg>
+
+      <arg>-V</arg>
+
+      <arg choice="plain"><replaceable>network</replaceable></arg>
+
+      <arg choice="plain"><replaceable>netmask</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>説明</title>
+
+    <para><command>macipgw</command> は、AppleTalk のみのネットワークを介して接続されたデバイスに IP
+    接続を提供します。つまり、LocalTalk または Apple Remote Access (ARA)
+    です。<command>macipgw</command> は通常、<filename>/etc/rc</filename>
+    から起動されます。</para>
+
+    <para>MacIP (以前は KIP と呼ばれていました) は、IP パケットを AppleTalk パケットにカプセル化できるプロトコルです。
+    <command>macipgw</command> は、AppleTalk ネットワーク上の MacIP ゲートウェイとして自身を登録し、トンネル
+    インターフェイスを設定して起動します (<citerefentry>
+        <refentrytitle>tun</refentrytitle>
+
+        <manvolnum>4</manvolnum>
+      </citerefentry> を参照)。次に、AppleTalk ネットワークから受信した IP パケットをトンネル
+    インターフェイスを介してカーネルに転送します。同様に、トンネル経由で受信された IP パケットは、宛先 IP アドレスに登録されている
+    AppleTalk デバイスに転送されます。</para>
+
+    <para>他の MacIP ゲートウェイとは異なり、<command>macipgw</command> は動作するために独自の IP
+    (サブネット) ネットを必要とし、登録されたアドレスに対してプロキシ ARP
+    を使用しません。ゲートウェイは、常にネットワークの最初のアドレスをローカル アドレスとして使用します。つまり、ネットワーク
+    192.168.1.0/24 の場合は 192.168.1.1 です。</para>
+
+    <para><command>macipgw</command> は、<emphasis
+    remap="B">LOG_DAEMON</emphasis> 機能の下で、<citerefentry>
+        <refentrytitle>syslog</refentrytitle>
+
+        <manvolnum>3</manvolnum>
+      </citerefentry> を介して操作メッセージをログに記録します。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>オプション</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>-d <replaceable>debugclass</replaceable></term>
+
+        <listitem>
+          <para>デーモンがフォークせず、すべてのアクションのトレースが書き込まれるように指定します<emphasis
+          remap="B">stdout</emphasis> に出力します。 debugclass の有用な値については、ソース
+          コードを参照してください。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-n <replaceable>nameserver</replaceable></term>
+
+        <listitem>
+          <para>ゲートウェイ経由で接続された AppleTalk デバイスが使用する DNS ネーム サーバーの IP
+          アドレスを指定します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-z <replaceable>zone</replaceable></term>
+
+        <listitem>
+          <para><command>macipgw</command>
+          は、デフォルトのゾーンではなく、ゾーンに登録する必要があります。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-V</term>
+
+        <listitem>
+          <para>バージョン情報を表示して終了します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><replaceable>network</replaceable></term>
+
+        <listitem>
+          <para>クライアントに使用するネットワーク番号を指定します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><replaceable>netmask</replaceable></term>
+
+        <listitem>
+          <para>ネットワークのネットマスクを指定します。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>例</title>
+
+    <screen><userinput>/usr/local/libexec/macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0 255.255.255.0</userinput>
+</screen>
+
+    <para><command>macipgw</command> を起動し、ゲートウェイ経由で接続されたデバイスにクラス C ネットワーク
+    192.168.1.0 を割り当て、<command>macipgw</command> が動作しているシステムをネーム
+    サーバーとして使用でき、ゾーン Remote Users に登録する必要があることを指定します。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>ファイル</title>
+
+    <para><filename>/usr/local/libexec/macipgw</filename></para>
+  </refsect1>
+
+  <refsect1>
+    <title>関連項目</title>
+
+    <para><citerefentry>
+        <refentrytitle>tun</refentrytitle>
+
+        <manvolnum>4</manvolnum>
+      </citerefentry></para>
+
+    <para><citerefentry>
+        <refentrytitle>ip</refentrytitle>
+
+        <manvolnum>4</manvolnum>
+      </citerefentry></para>
+
+    <para><citerefentry>
+        <refentrytitle>atalkd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+
+    <para><citerefentry>
+        <refentrytitle>syslog</refentrytitle>
+
+        <manvolnum>3</manvolnum>
+      </citerefentry></para>
+
+    <para><citerefentry>
+        <refentrytitle>syslogd</refentrytitle>
+
+        <manvolnum>8</manvolnum>
+      </citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+    <title>バグ</title>
+
+    <para>ログ メッセージ以外に、どの AppleTalk デバイスがゲートウェイを使用しているかに関する情報はありません。</para>
+  </refsect1>
+
+  <refsect1>
+    <title>著者</title>
+
+    <para>Stefan Bethke &lt;Stefan.Bethke@Hanse.DE&gt;</para>
+  </refsect1>
+</refentry>
