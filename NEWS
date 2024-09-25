@@ -1,3 +1,34 @@
+Changes in 4.0.0
+================
+* NEW: Reintroduce AppleTalk / DDP support, GitHub #220
+       Controlled with the new build system option `-Dwith-appletalk'.
+       Revived daemons: atalkd, papd, timelord, a2boot
+       Revived config files: atalkd.conf, papd.conf
+       Revived utilities: aecho, getzones, nbplkup, nbprgstr, nbpunrgstr, pap,
+       papstatus
+* NEW: Bundle macipgw, the MacIP Gateway daemon by Stefan Bethke, GitHub #1204
+* UPD: uams: All encrypted UAMs depend on Libgcrypt now, GitHub #1488, #1506
+       This means we remove the bundled wolfSSL library.
+       A big thanks to the wolfSSL team for all their support!
+* FIX: uams: Remove unhelpful Libgcrypt version check, GitHub #1550
+* UPD: Remove the obsoleted PGP UAM, GitHub #1507
+* NEW: Bundle, configure and install the Webmin module, GitHub #518
+       Controlled with the new build system option `-Dwith-webmin'.
+* UPD: Migrate afpstats from dbus-glib to GDBus, GitHub #666
+       Special thanks to Simon McVittie for his help!
+* UPD: Remove canned troff man pages from distribution, GitHub #460
+       The build system now generates them on the fly.
+       Introduces a build time dependency on DocBook XSL and xsltproc.
+* UPD: Remove generated Unicode conversion tables, GitHub #1220
+       Introduces a build time dependency on the UnicodeData.txt database.
+* UPD: Detect host OS home dir and configure afp.conf on the fly, GitHub #1274
+* UPD: meson: Autodetect init style for host OS, #1124
+* UPD: meson: Allow building with multiple init styles, GitHub #1291
+* NEW: meson: Introduce `-Dwith-readmes' option for installing additional docs.
+       GitHub #1310
+* UPD: Remove the Autotools build system. Meson is now the only choice.
+       GitHub #1213
+
 Changes in 3.2.10
 =================
 * BREAKING: Install netatalk-dbus.conf into datadir by default, GitHub #1533
