@@ -499,10 +499,10 @@ if wolfssl.found()
     ).stdout().strip()
 
     if (
-        wolfssl_check.contains('HAVE_DH_DEFAULT_PARAMS')
-        and wolfssl_check.contains('WOLFSSL_DES_ECB')
-        and wolfssl_check.contains('OPENSSL_EXTRA')
-        and wolfssl_check.contains('OPENSSL_ALL')
+        wolfssl_check.contains('#define HAVE_DH_DEFAULT_PARAMS')
+        and wolfssl_check.contains('#define WOLFSSL_DES_ECB')
+        and wolfssl_check.contains('#define OPENSSL_EXTRA')
+        and wolfssl_check.contains('#define OPENSSL_ALL')
     )
         have_wolfssl = true
         have_embedded_ssl = false
