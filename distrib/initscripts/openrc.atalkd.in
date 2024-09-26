@@ -30,12 +30,4 @@ stop() {
     ebegin "Stopping $name"
     start-stop-daemon --stop --quiet --exec @sbindir@/$name
     eend $?
-    for reg in \
-        "${ATALK_NAME}:Workstation" \
-        "${ATALK_NAME}:netatalk"
-    do
-        ebegin "Unregistering $reg"
-        @bindir@/nbpunrgstr "$reg"
-        eend $?
-    done
 }

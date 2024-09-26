@@ -11,4 +11,5 @@ depend() {
 		need net
 		use logger dns
 		use avahi-daemon
+		use atalkd
 }
