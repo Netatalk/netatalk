@@ -675,11 +675,6 @@ macip_open(char *zone, uint32_t net, uint32_t mask, uint32_t ns,
 			break;
 	}
 
-	if ((gMacip.atp = atp_open(0, NULL)) == NULL) {
-		if (gDebug & DEBUG_MACIP)
-			perror("macip_open: atp_open");
-		return -1;
-	}
 	gMacip.sock = gMacip.atp->atph_socket;
 
 	strcpy(gMacip.name, iptoa(gMacip.addr));
