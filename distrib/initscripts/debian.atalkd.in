@@ -49,8 +49,6 @@ case "$1" in
 
     stop)
         echo -n "Stopping $NAME"
-        @bindir@/nbpunrgstr "$ATALK_NAME:Workstation"
-        @bindir@/nbpunrgstr "$ATALK_NAME:netatalk"
         start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
         echo "."
         ;;
