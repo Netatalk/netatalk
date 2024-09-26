@@ -134,8 +134,12 @@ static int afppasswd(const struct passwd *pwd,
   gcry_cipher_hd_t ctx;
   gcry_error_t ctxerror;
 
-  if (!gcry_check_version(GCRYPT_VERSION))
-      LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
+  if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
+      LOG(log_error, logtype_uams,
+          "UAM RandNum: libgcrypt versions mismatch. Needs: %s Has: %s",
+          UAM_NEED_LIBGCRYPT_VERSION, gcry_check_version(NULL));
+      return AFPERR_MISC;
+  }
 
   if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
