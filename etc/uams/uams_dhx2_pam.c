@@ -77,8 +77,10 @@ static int dh_params_generate (unsigned int bits) {
 
     /* Version check should be the very first call because it
        makes sure that important subsystems are initialized. */
-    if (!gcry_check_version (GCRYPT_VERSION)) {
-        LOG(log_error, logtype_uams, "PAM DHX2: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
+    if (!gcry_check_version (UAM_NEED_LIBGCRYPT_VERSION)) {
+        LOG(log_error, logtype_uams,
+            "PAM DHX2: libgcrypt versions mismatch. Needs: %s Has: %s",
+            UAM_NEED_LIBGCRYPT_VERSION, gcry_check_version (NULL));
         result = AFPERR_MISC;
         goto error;
     }
