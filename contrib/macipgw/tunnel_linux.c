@@ -1,5 +1,6 @@
 /*
  * (c) 2013, 1997 Stefan Bethke. All rights reserved.
+ * (c) 2015 Jason King. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 
 #include <linux/if.h>
 #include <linux/if_tun.h>
+#include <linux/route.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,79 +53,133 @@ static struct tunnel gTunnel;
 
 static outputfunc_t gOutput;
 
-#define ROUTE_DEL 0
-#define ROUTE_ADD 1
+static void set_sin(struct sockaddr *s, uint32_t ip)
+{
+	struct sockaddr_in *sin = (struct sockaddr_in *)s;
+	bzero (sin, sizeof (*sin));
+	sin->sin_family      = AF_INET;
+	sin->sin_addr.s_addr = htonl(ip);
+}
 
 static int tunnel_ifconfig(void)
 {
-	char cmd[2048], addr[256], mask[256], net[256];
+	int sk;
+	struct ifreq ifrq;
 
-	bzero(cmd, sizeof(cmd));
-	bzero(addr, sizeof(addr));
-	bzero(mask, sizeof(mask));
-	bzero(net, sizeof(net));
-	strncpy(addr, iptoa(gTunnel.net + 1), sizeof(addr) - 1);
-	strncpy(mask, iptoa(gTunnel.mask), sizeof(mask) - 1);
-	strncpy(net, iptoa(gTunnel.net), sizeof(net) - 1);
-	snprintf(cmd, sizeof(cmd),
-		 "/sbin/ifconfig %s inet %s mtu %d up pointopoint",
-		 gTunnel.name, addr, 586);
-	if (gDebug & DEBUG_TUNNEL)
-		fprintf(stderr, "tunnel_ifconfig: %s\n", cmd);
-	return system(cmd);
+	printf ("device = %s\n", gTunnel.name);
+
+	sk = socket (PF_INET, SOCK_DGRAM, IPPROTO_IP);
+	if (sk < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: socket");
+		return -1;
+	}
+
+	bzero (&ifrq, sizeof (ifrq));
+	strncpy (ifrq.ifr_name,  gTunnel.name, IFNAMSIZ);
+	if (ioctl (sk, SIOCGIFFLAGS, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: SIOCGIFFLAGS");
+		close (sk);
+		return -1;
+	}
+
+	ifrq.ifr_flags |= IFF_UP;
+	if (ioctl (sk, SIOCSIFFLAGS, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: SIOCSIFFLAGS");
+		close (sk);
+		return -1;
+	}
+
+	ifrq.ifr_mtu = 586;
+	if (ioctl (sk, SIOCSIFMTU, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: SIOCSIFMTU");
+		close (sk);
+		return -1;
+	}
+
+	set_sin (&ifrq.ifr_addr,      gTunnel.net+1);
+	if (ioctl (sk, SIOCSIFADDR, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: SIOCSIFADDR");
+		close (sk);
+		return -1;
+	}
+
+	set_sin (&ifrq.ifr_addr,      gTunnel.mask);
+	if (ioctl (sk, SIOCSIFNETMASK, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_ifconfig: SIOCSIFNETMASK");
+		close (sk);
+		return -1;
+	}
+
+	if (gDebug & DEBUG_TUNNEL) {
+		printf ("tunnel_ifconfig: setting address %s -> ", iptoa(gTunnel.net+1));
+		printf ("%s netmask ", iptoa(gTunnel.net));
+		printf ("%s\n", iptoa(gTunnel.mask));
+	}
+
+	close (sk);
+	return 0;
 }
 
-
-static int tunnel_route(int op, uint32_t net, uint32_t mask, uint32_t gw)
+static int tunnel_create(char *dev, int flags)
 {
-	char cmd[2048], saddr[256], smask[256], snet[256];
+	struct ifreq ifr;
+	int fd;
+	char *tundev = "/dev/net/tun";
 
-	bzero(cmd, sizeof(cmd));
-	bzero(saddr, sizeof(saddr));
-	bzero(smask, sizeof(smask));
-	bzero(snet, sizeof(snet));
-	strncpy(saddr, iptoa(gw), sizeof(saddr) - 1);
-	strncpy(smask, iptoa(mask), sizeof(smask) - 1);
-	strncpy(snet, iptoa(net), sizeof(snet) - 1);
-	snprintf(cmd, sizeof(cmd),
-		 "/sbin/route %s -net %s gw %s netmask %s",
-		 op == ROUTE_ADD ? "add" : "delete", snet, saddr, smask);
-	if (gDebug & DEBUG_TUNNEL)
-		fprintf(stderr, "tunnel_route: %s\n", cmd);
-	return system(cmd);
+	if( (fd = open(tundev, O_RDWR)) < 0 ) {
+		return fd;
+	}
+
+	memset(&ifr, 0, sizeof(ifr));
+	ifr.ifr_flags = flags;
+	strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+	if (ioctl(fd, TUNSETIFF, (void *) &ifr) < 0 ) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_alloc: TUNSETIFF");
+		close(fd);
+		return -1;
+	}
+	strcpy(dev, ifr.ifr_name);
+
+	return fd;
 }
+
 
 int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
 {
-	struct ifreq ifr;
-	int err;
+	int i;
+	char s[32];
 
-	if ((gTunnel.dev = open("/dev/net/tun", O_RDWR)) < 0) {
-		perror("open(/dev/net/tun)");
+	gTunnel.dev = 0;
+	for (i=0; i<=9; i++) {
+		sprintf (s, "tun%d", i);
+		gTunnel.dev = tunnel_create (s, IFF_TUN | IFF_NO_PI);
+		if (gTunnel.dev > 0)
+			break;
+	}
+
+	if (gTunnel.dev < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_open: open");
 		return -1;
 	}
 
-	bzero(&ifr, sizeof(ifr));
-	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-	if ((err = ioctl(gTunnel.dev, TUNSETIFF, (void *) &ifr)) < 0) {
-		close(gTunnel.dev);
-		perror("ioctl(tun, TUNSETIFF)");
-		return -1;
+	strcpy (gTunnel.name, s);
+	if (gDebug & DEBUG_TUNNEL) {
+		printf ("tunnel_open: %s:%s opened.\n", s, gTunnel.name);
 	}
 
-	strcpy(gTunnel.name, ifr.ifr_name);
+	gTunnel.net   = net;
+	gTunnel.mask  = mask;
 
-	gTunnel.net = net;
-	gTunnel.mask = mask;
-
-	if (tunnel_ifconfig() < 0) {
-		return -1;
-	}
-
-	tunnel_route(ROUTE_DEL, gTunnel.net, gTunnel.mask,
-		     gTunnel.net + 1);
-	if (tunnel_route
-	    (ROUTE_ADD, gTunnel.net, gTunnel.mask, gTunnel.net + 1) < 0) {
+	if (tunnel_ifconfig () < 0) {
 		return -1;
 	}
 
@@ -135,9 +191,34 @@ int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
 
 void tunnel_close(void)
 {
-	close(gTunnel.dev);
-	tunnel_route(ROUTE_DEL, gTunnel.net, gTunnel.mask,
-		     gTunnel.net + 1);
+	int sk;
+	struct ifreq ifrq;
+
+	sk = socket (PF_INET, SOCK_DGRAM, 0);
+	if (sk < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_close: socket");
+		return;
+	}
+
+	bzero (&ifrq, sizeof (ifrq));
+	strncpy (ifrq.ifr_name,  gTunnel.name, IFNAMSIZ);
+
+	if (ioctl (sk, SIOCGIFFLAGS, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_close: SIOCGIFFLAGS");
+		close (sk);
+		return;
+	}
+	ifrq.ifr_flags &= ~IFF_UP;
+	if (ioctl (sk, SIOCSIFFLAGS, &ifrq) < 0) {
+		if (gDebug & DEBUG_TUNNEL)
+			perror ("tunnel_close: SIOCSIFFLAGS");
+		close (sk);
+		return;
+	}
+
+	close (gTunnel.dev);
 }
 
 
