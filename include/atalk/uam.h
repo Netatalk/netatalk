@@ -22,6 +22,9 @@
 /* in case something drastic has to change */
 #define UAM_MODULE_VERSION       1
 
+/* define if minimum version of libgcrypt is required */
+#define UAM_NEED_LIBGCRYPT_VERSION  NULL
+
 /* things for which we can have uams */
 #define UAM_SERVER_LOGIN         (1 << 0)
 #define UAM_SERVER_CHANGEPW      (1 << 1)
