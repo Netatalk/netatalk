@@ -4,7 +4,6 @@
 # KEYWORD: shutdown
 #
 # AFP fileserver for Macintosh clients (netatalk @netatalk_version@)
-#
 
 . /etc/rc.subr
 

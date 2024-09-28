@@ -3,11 +3,7 @@
 # PROVIDE: atalkd
 # REQUIRE: DAEMON
 #
-# AppleTalk daemon. (netatalk @netatalk_version@)
-# If you use AppleTalk, Make sure not to start atalkd in the background:
-# its data structures must have time to stablize before running the
-# other processes.
-#
+# AppleTalk daemon (netatalk @netatalk_version@)
 
 . /etc/rc.subr
 
