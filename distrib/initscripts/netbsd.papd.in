@@ -3,11 +3,7 @@
 # PROVIDE: papd
 # REQUIRE: atalkd
 #
-# AppleTalk print server daemon.  (netatalk @netatalk_version@)
-# Make sure not to start atalkd in the background:
-# its data structures must have time to stablize before running the
-# other processes.
-#
+# AppleTalk print server daemon (netatalk @netatalk_version@)
 
 . /etc/rc.subr
 
