@@ -8,7 +8,19 @@
 
 Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.4 over TCP/IP and AppleTalk.
 AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
-A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for macOS and Classic Mac OS clients.
+A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for Mac clients.
+
+# Why Should I Use Netatalk?
+
+If you have a local network macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
+running a Netatalk AppleShare server allows you to share, collaborate on, and back up files comfortably.
+The latest macOS at the time of writing (macOS 15 Sequoia) ships with an AFP client,
+so Netatalk can act as a seamless bridge between new and old Macs.
+
+Compared to cross-platform file sharing protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
+with seamless integration of Mac filesystem metadata (such as resource forks on Classic Mac OS) and modern macOS services such as Bonjour, Time Machine, and Spotlight.
+
+Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster transfer speeds](https://github.com/Netatalk/netatalk/wiki/Benchmarks), as well as stronger backwards compatibility with OS X 10.8 Mountain Lion clients, and earlier.
 
 # AppleTalk
 
@@ -18,25 +30,13 @@ All versions of Netatalk except the 3.x release series support AppleTalk.
 
 # Community
 
-Netatalk developers and users hang out in online communal spaces like [TinkerDifferent](https://tinkerdifferent.com/) or [68kmla](https://68kmla.org/).
-You can head over there if you want to ask for help or share your experiences.
+Netatalk developers and users can be found in online communal spaces like [TinkerDifferent](https://tinkerdifferent.com/) or [68kmla](https://68kmla.org/).
+You can head over there if you want to ask for help or share your Netatalk stories.
 
 There is also an official [Netatalk Discussions](https://github.com/Netatalk/netatalk/discussions) board on GitHub which is the best place to ask for technical assistance.
 
 Finally, the traditional place where Netatalk developers and users interact with each other are the [netatalk-admins](https://sourceforge.net/p/netatalk/mailman/netatalk-admins/) and [netatalk-devel](https://sourceforge.net/p/netatalk/mailman/netatalk-devel/) mailing lists.
 While these lists aren't as active as they used to be, the archives are a veritable treasure trove of decades of Mac networking know-how.
-
-# Why Should I Use Netatalk?
-
-If you have a local network macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
-running a Netatalk AppleShare server allows you to share, collaborate on, and back up files comfortably.
-The latest macOS at the time of writing (macOS 14 Sonoma) ships with an AFP client,
-so Netatalk can act as a seamless bridge between new and old Macs.
-
-Compared to cross-platform file sharing protocols NFS and FTP, Netatalk delivers full integration
-of Classic Mac OS metadata (resource forks) and macOS services such as Bonjour, Time Machine, and Spotlight.
-
-Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster transfer speeds](https://github.com/Netatalk/netatalk/wiki/Benchmarks), as well as stronger backwards compatibility with OS X 10.8 Mountain Lion and earlier.
 
 # Installation
 
