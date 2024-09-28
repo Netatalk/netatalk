@@ -1,0 +1,19 @@
+#!/sbin/openrc-run
+
+# Netatalk @netatalk_version@ init script.
+# MacIP Gateway daemon (macipgw)
+# Adjust the arguments to match your network.
+
+name=$RC_SVCNAME
+command="@sbindir@/${RC_SVCNAME}"
+
+depend() {
+	need net
+	need atalkd
+}
+
+start() {
+    ebegin "Starting $name"
+    start-stop-daemon --start --quiet --exec @sbindir@/$name -n 8.8.8.8 192.168.151.0 255.255.255.0
+    eend $?
+}

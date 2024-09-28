@@ -20,6 +20,7 @@ if 'debian-sysv' in init_style
         service_data += [
             'a2boot',
             'atalkd',
+            'macipgw',
             'papd',
             'timelord',
         ]
@@ -118,6 +119,7 @@ if 'netbsd' in init_style
         service_data += [
             'a2boot',
             'atalkd',
+            'macipgw',
             'papd',
             'timelord',
         ]
@@ -166,6 +168,7 @@ if 'openrc' in init_style
         service_data += [
             'a2boot',
             'atalkd',
+            'macipgw',
             'papd',
             'timelord',
         ]
@@ -223,6 +226,7 @@ if 'systemd' in init_style
         service_data += [
             'a2boot',
             'atalkd',
+            'macipgw',
             'papd',
             'timelord',
         ]
