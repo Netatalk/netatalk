@@ -36,7 +36,11 @@
 #include "unix.h"
 
 #ifdef HAVE_LIBQUOTA
+#ifdef HAVE_SYS_QUOTA_H
+#include <sys/quota.h>
+#else
 #include <quota.h>
+#endif
 
 
 static int

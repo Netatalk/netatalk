@@ -487,6 +487,9 @@
 /* Define to 1 if you have the <sys/param.h> header file. */
 #mesondefine HAVE_SYS_PARAM_H
 
+/* Define to 1 if you have the <sys/quota.h> header file. */
+#mesondefine HAVE_SYS_QUOTA_H
+
 /* Define to 1 if you have the <sys/statvfs.h> header file. */
 #mesondefine HAVE_SYS_STATVFS_H
 

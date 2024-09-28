@@ -273,6 +273,7 @@ check_headers = [
     'sys/mnttab.h',
     'sys/mount.h',
     'sys/param.h',
+    'sys/quota.h',
     'sys/stat.h',
     'sys/statvfs.h',
     'sys/types.h',
