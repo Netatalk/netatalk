@@ -1,0 +1,19 @@
+# This file is part of Netatalk @netatalk_version@.
+
+[Unit]
+Description=MacIP Gateway daemon
+Documentation=man:macipgw(8)
+Documentation=https://netatalk.io/
+After=network-online.target atalkd.service
+Requires=atalkd.service
+
+[Service]
+Type=forking
+GuessMainPID=no
+ExecStart=@sbindir@/macipgw -n 8.8.8.8 192.168.151.0 255.255.255.0
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+Also=atalkd.service
