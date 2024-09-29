@@ -751,6 +751,7 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t
 static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbuf, size_t *rbuflen)
 {
     ssize_t cc;
+    int eof = 0;
 
     cc = ad_read(ofork->of_ad, eid, offset, rbuf, *rbuflen);
     if ( cc < 0 ) {
@@ -760,8 +761,13 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbu
     }
 
     if ((size_t)cc < *rbuflen)
-        return AFPERR_EOF;
+        eof = 1;
+    
     *rbuflen = cc;
+    
+    if ( eof ) {
+        return( AFPERR_EOF );
+    }
     return AFP_OK;
 }
 
