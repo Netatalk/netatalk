@@ -5,13 +5,12 @@ on:
       - main
       - branch-*
     paths-ignore:
+      - "**.md"
       - "CONTRIBUTORS"
       - "COPYING"
       - "COPYRIGHT"
       - "Dockerfile"
-      - "INSTALL.md"
       - "NEWS"
-      - "README.md"
   pull_request:
     branches:
       - main
@@ -21,13 +20,12 @@ on:
       - synchronize
       - reopened
     paths-ignore:
+      - "**.md"
       - "CONTRIBUTORS"
       - "COPYING"
       - "COPYRIGHT"
       - "Dockerfile"
-      - "INSTALL.md"
       - "NEWS"
-      - "README.md"
 
 env:
   APT_PACKAGES: |
