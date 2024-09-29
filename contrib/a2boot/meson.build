@@ -16,6 +16,6 @@ executable(
     c_args: a2boot_c_args,
     install: true,
     install_dir: sbindir,
-    build_rpath: libdir,
-    install_rpath: libdir,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
 )

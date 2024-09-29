@@ -4,8 +4,8 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
 )
 executable(
     'papstatus',
@@ -13,6 +13,6 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     install: true,
-    build_rpath: libdir,
-    install_rpath: libdir,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
 )
