@@ -22,7 +22,6 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#include <sys/errno.h>
 #include <sys/uio.h>
 
 #include <netatalk/at.h>
@@ -30,6 +29,7 @@
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
 
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
