@@ -10,6 +10,7 @@ This table indicates the Netatalk release series that are current guaranteed to 
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 4.0.x   | :white_check_mark: |
 | 3.2.x   | :white_check_mark: |
 | 3.1.x   | :white_check_mark: |
 | 3.0.x   | :x:                |
