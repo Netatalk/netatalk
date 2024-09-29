@@ -23,7 +23,6 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/ioctl.h>
-#include <sys/errno.h>
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 
@@ -31,6 +30,7 @@
 #include <linux/if_tun.h>
 #include <linux/route.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
