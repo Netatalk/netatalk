@@ -2,7 +2,7 @@
 
 The Netatalk Project takes cyber security very seriously.
 We commit to follow up to and resolve potential security flaws in our code as quickly as we can.
-The reporter of an accepted and patched vulnerability will be given credit in the advisory published by this project.
+The reporter of an accepted and patched vulnerability will be given credit in the advisorfy published by this project.
 
 ## Supported Versions
 
