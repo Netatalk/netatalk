@@ -24,9 +24,9 @@ Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster t
 
 # AppleTalk
 
-Netatalk provides AFP over the [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) family of protocols in order to provide file sharing and other services with very old Macs or Apple II computers.
+Netatalk supports the [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) family of protocols, allowing it to provide AFP file sharing and other services with very old Macs or Apple II computers.
 
-All versions of Netatalk except the 3.x release series support AppleTalk.
+All versions of Netatalk except the 3.x release series can speak AppleTalk.
 
 # Community
 
@@ -60,7 +60,12 @@ Bug reports and feature requests should be filed as [GitHub issue tickets](https
 
 Before contributing code to the project, please read the [coding guidelines](https://github.com/Netatalk/netatalk/wiki/Developer-Notes) in the wiki on how to prepare a PR that is likely to be accepted by the maintainers.
 
-PRs are automatically picked up by GitHub CI, which runs the builds, integration tests, as well as static analysis scan on SonarCloud.
+PRs are automatically picked up by GitHub CI, which runs the builds, integration tests, as well as static analysis scan on SonarCloud (the latter only for PRs created by project members.)
+
+# Security
+
+We would love to hear from you if you think you found a security vulnerability in Netatalk.
+Please file a [security issue ticket](https://github.com/Netatalk/netatalk/security/advisories/new) with us, and we will follow up with you as soon as possible.
 
 # Documentation
 
