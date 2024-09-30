@@ -59,6 +59,7 @@ custom_target(
         'index.html',
         'installation.html',
         'intro.html',
+        'macipgw.8.html',
         'macusers.1.html',
         'man-pages.html',
         'manual-index.html',
