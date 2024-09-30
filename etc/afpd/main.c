@@ -29,6 +29,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/nbp.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/paths.h>
 #include <atalk/server_child.h>
@@ -490,7 +491,7 @@ int main(int ac, char **av)
                     case AFPPROTO_ASP:
                         asp_start(&asp_obj, server_children);
                         break;
-#endif /* no afp/asp */ 
+#endif /* no afp/asp */
                     default:
                         LOG(log_debug, logtype_afpd, "main: unknown protocol type");
                         break;
@@ -562,4 +563,4 @@ static void asp_cleanup(const AFPObj* obj)
     nbp_unrgstr(obj->Obj, obj->Type, obj->Zone,
         &obj->options.ddpaddr);
 }
-#endif /* no afp/asp */ 
+#endif /* no afp/asp */

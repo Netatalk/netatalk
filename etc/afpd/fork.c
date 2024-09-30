@@ -18,6 +18,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/asp.h>
 #include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
@@ -762,9 +763,9 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbu
 
     if ((size_t)cc < *rbuflen)
         eof = 1;
-    
+
     *rbuflen = cc;
-    
+
     if ( eof ) {
         return( AFPERR_EOF );
     }
@@ -844,7 +845,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 #endif
 
     case AFPPROTO_DSI:
-        dsi = obj->dsi; 
+        dsi = obj->dsi;
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
 
@@ -1401,4 +1402,3 @@ int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     memcpy(rbuf, &bitmap, sizeof( bitmap ));
     return( AFP_OK );
 }
-

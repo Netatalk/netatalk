@@ -31,6 +31,7 @@
 #include <atalk/errchk.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
+#include <atalk/nbp.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
