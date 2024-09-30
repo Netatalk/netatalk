@@ -3,7 +3,7 @@
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  *
- * modified from main.c. this handles afp over asp. 
+ * modified from main.c. this handles afp over asp.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,6 +31,7 @@
 #include <atalk/compat.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "switch.h"
 #include "auth.h"
@@ -219,19 +220,19 @@ void afp_over_asp(AFPObj *obj)
     child = obj;
     asp = (ASP) obj->handle;
 
-    /* install signal handlers 
+    /* install signal handlers
      * With ASP tickle handler is done in the parent process
     */
     memset(&action, 0, sizeof(action));
 
     /* install SIGHUP */
-    action.sa_handler = afp_asp_reload; 
+    action.sa_handler = afp_asp_reload;
     sigemptyset( &action.sa_mask );
     sigaddset(&action.sa_mask, SIGTERM);
     sigaddset(&action.sa_mask, SIGUSR1);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
-#endif    
+#endif
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_asp: sigaction: %s", strerror(errno) );
@@ -245,7 +246,7 @@ void afp_over_asp(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR1);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
-#endif    
+#endif
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_asp: sigaction: %s", strerror(errno) );
@@ -267,13 +268,13 @@ void afp_over_asp(AFPObj *obj)
 #endif /* SERVERTEXT */
 
     /*  SIGUSR1 - set down in 5 minutes  */
-    action.sa_handler = afp_asp_timedown; 
+    action.sa_handler = afp_asp_timedown;
     sigemptyset( &action.sa_mask );
     sigaddset(&action.sa_mask, SIGHUP);
     sigaddset(&action.sa_mask, SIGTERM);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
-#endif    
+#endif
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_asp: sigaction: %s", strerror(errno) );
