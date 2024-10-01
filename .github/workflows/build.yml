@@ -120,7 +120,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
       - name: Start netatalk
@@ -166,7 +166,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
       - name: Start netatalk
@@ -199,7 +199,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
       - name: Start netatalk
@@ -257,7 +257,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: sudo meson install -C build
       - name: Start netatalk
@@ -317,7 +317,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
       - name: Start netatalk
@@ -347,7 +347,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run distribution tests
-        run: cd build && meson dist
+        run: cd build && meson dist && cd ..
       - name: Install
         run: sudo meson install -C build
       - name: Start netatalk
@@ -374,7 +374,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
-          wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+          curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
       - name: Configure
         run: |
           meson setup build \
@@ -383,7 +383,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run tests
-        run: cd build && meson test
+        run: cd build && meson test && cd ..
       - name: Install
         run: sudo meson install -C build
       - name: Start netatalk
@@ -430,11 +430,10 @@ jobs:
               py39-sqlite3 \
               py39-tkinter \
               talloc \
-              tracker3 \
-              wget
+              tracker3
           run: |
             set -e
-            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dwith-appletalk=true
             meson compile -C build
@@ -472,11 +471,10 @@ jobs:
               perl5 \
               pkgconf \
               talloc \
-              tracker3 \
-              wget
+              tracker3
           run: |
             set -e
-            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-appletalk=true
@@ -532,7 +530,8 @@ jobs:
               -Dwith-dtrace=false \
               -Dwith-tests=true
             meson compile -C build
-            cd build && meson test
+            cd build
+            meson test
             cd ..
             meson install -C build
             /usr/local/sbin/netatalk -V
@@ -573,11 +572,10 @@ jobs:
               openpam \
               p5-Net-DBus \
               pkgconf \
-              tracker3 \
-              wget
+              tracker3
           run: |
             set -e
-            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-appletalk=true
@@ -624,7 +622,7 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-appletalk=true \
@@ -662,12 +660,11 @@ jobs:
               libgcrypt \
               ninja \
               pkg-config \
-              python/pip \
-              wget
+              python/pip
             pip install meson
           run: |
             set -e
-            wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-appletalk=true \
@@ -675,7 +672,8 @@ jobs:
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-tests=true
             meson compile -C build
-            cd build && meson test
+            cd build
+            meson test
             cd ..
             meson install -C build
             /usr/local/sbin/netatalk -V
