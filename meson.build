@@ -1504,6 +1504,7 @@ endif
 
 docbook_path = get_option('with-docbook-path')
 compile_manual = get_option('with-manual') != 'none'
+build_xml_docs = false
 
 xsltproc = find_program('xsltproc', required: false)
 xsl = []
@@ -1522,9 +1523,7 @@ if host_os == 'darwin'
     docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
 endif
 
-if not compile_manual
-    build_xml_docs = false
-else
+if compile_manual
     foreach dir : docbook_xsl_dirs
         foreach format : ['html', 'manpages']
             if fs.exists(dir / format / 'docbook.xsl')
@@ -1552,7 +1551,7 @@ endif
 docbook_ok = xsltproc.found() and docbook_root != ''
 
 if compile_manual and not docbook_ok
-    error(
+    warning(
         'xsltproc and docbook-xsl stylesheets are required to compile manpages and html documentation',
     )
 endif
