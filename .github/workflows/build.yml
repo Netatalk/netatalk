@@ -50,6 +50,7 @@ env:
     libldap2-dev \
     libmariadb-dev \
     libpam0g-dev \
+    libsqlite3-dev \
     libtalloc-dev \
     libtirpc-dev \
     libtracker-sparql-3.0-dev \
@@ -106,6 +107,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
+            sqlite-dev \
             talloc-dev \
             tracker \
             tracker-dev \
@@ -154,6 +156,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto \
+            sqlite \
             unicode-character-database
       - name: Configure
         run: |
@@ -242,6 +245,7 @@ jobs:
             perl \
             perl-Net-DBus \
             quota-devel \
+            sqlite-devel \
             systemd \
             systemtap-sdt-devel \
             tracker \
@@ -301,6 +305,7 @@ jobs:
             pam-devel \
             perl \
             pkg-config \
+            sqlite3-devel \
             systemd \
             systemtap-sdt-devel \
             tcpd-devel \
@@ -373,7 +378,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
+          brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql sqlite talloc
           wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
       - name: Configure
         run: |
@@ -429,6 +434,7 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
+              sqlite \
               talloc \
               tracker3 \
               wget
@@ -471,6 +477,7 @@ jobs:
               p5-Net-DBus \
               perl5 \
               pkgconf \
+              sqlite3 \
               talloc \
               tracker3 \
               wget
@@ -522,6 +529,7 @@ jobs:
               p5-Net-DBus \
               perl \
               pkg-config \
+              sqlite3 \
               talloc \
               tex-unicode-data
           run: |
@@ -573,6 +581,7 @@ jobs:
               openpam \
               p5-Net-DBus \
               pkgconf \
+              sqlite \
               tracker3 \
               wget
           run: |
@@ -620,6 +629,7 @@ jobs:
               libxslt \
               meson \
               mysql-client \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -663,6 +673,7 @@ jobs:
               ninja \
               pkg-config \
               python/pip \
+              sqlite-3 \
               wget
             pip install meson
           run: |
