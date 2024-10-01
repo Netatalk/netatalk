@@ -31,3 +31,13 @@ foreach man : manfiles
         build_by_default: true,
     )
 endforeach
+
+nbp_staticmans = [
+    'nbplkup.1',
+    'nbprgstr.1',
+    'nbpunrgstr.1',
+]
+
+foreach man : nbp_staticmans
+    install_data('nbp.1', rename: man, install_dir: mandir / 'man1')
+endforeach
