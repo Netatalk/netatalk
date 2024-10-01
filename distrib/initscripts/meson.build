@@ -97,14 +97,26 @@ if 'macos-launchd' in init_style
         if fs.exists(init_dir / 'com.netatalk.daemon.plist')
             meson.add_install_script(
                 find_program('launchctl'),
+                'bootout',
+                'system/',
+                init_dir / 'com.netatalk.daemon.plist',
+            )
+            meson.add_install_script(
+                find_program('launchctl'),
                 'disable',
                 'system/com.netatalk.daemon',
             )
         endif
         meson.add_install_script(
             find_program('launchctl'),
-            'load',
-            '-w', init_dir / 'io.netatalk.daemon.plist',
+            'enable',
+            'system/io.netatalk.daemon',
+        )
+        meson.add_install_script(
+            find_program('launchctl'),
+            'bootstrap',
+            'system/',
+            init_dir / 'io.netatalk.daemon.plist',
         )
     endif
 endif
