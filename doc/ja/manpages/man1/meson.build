@@ -10,7 +10,6 @@ manfiles = [
     'getzones.1',
     'macusers.1',
     'nbp.1',
-    'netatalk-config.1',
     'pap.1',
 ]
 

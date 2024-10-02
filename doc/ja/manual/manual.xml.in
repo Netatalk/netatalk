@@ -36,7 +36,6 @@
 <!ENTITY nbp.1 SYSTEM "../manpages/man1/nbp.1.xml">
 <!ENTITY nbp_name.3 SYSTEM "../manpages/man3/nbp_name.3.xml">
 <!ENTITY netatalk.8 SYSTEM "../manpages/man8/netatalk.8.xml">
-<!ENTITY netatalk-config.1 SYSTEM "../manpages/man1/netatalk-config.1.xml">
 <!ENTITY pap.1 SYSTEM "../manpages/man1/pap.1.xml">
 <!ENTITY papd.8 SYSTEM "../manpages/man8/papd.8.xml">
 <!ENTITY papd.conf.5 SYSTEM "../manpages/man5/papd.conf.5.xml">
@@ -128,8 +127,6 @@
     &nbp_name.3;
 
     &netatalk.8;
-
-    &netatalk-config.1;
 
     &pap.1;
 
