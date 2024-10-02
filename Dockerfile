@@ -59,6 +59,7 @@ RUN chown -R builder:builder . \
 USER builder
 
 RUN meson setup build \
+    -Dbuildtype=release \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
