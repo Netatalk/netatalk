@@ -133,6 +133,7 @@ if [ -z "${MANUAL_CONFIG}" ]; then
     cat <<EOF > /usr/local/etc/afp.conf
 [Global]
 appletalk = yes
+ddp zone = ${ATALKD_ZONE}
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 spotlight = yes
@@ -152,6 +153,11 @@ rwlist = ${AFP_USER} ${AFP_USER2}
 file perm = 0660
 directory perm = 0770
 EOF
+fi
+
+
+if [ ! -z "${ATALKD_ZONE}" ]; then
+    echo "-router -zone ${ATALKD_ZONE}" > /usr/local/etc/atalkd.conf
 fi
 
 if [ -z "${ATALKD_INTERFACE}" ]; then
