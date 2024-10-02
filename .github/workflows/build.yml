@@ -114,6 +114,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-tests=true
@@ -158,6 +159,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
@@ -190,6 +192,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
@@ -250,6 +253,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
@@ -309,6 +313,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
@@ -339,6 +344,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
@@ -378,6 +384,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-tests=true
       - name: Build
@@ -435,6 +442,7 @@ jobs:
             set -e
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
+              -Dbuildtype=release \
               -Dwith-appletalk=true
             meson compile -C build
             meson install -C build
@@ -476,6 +484,7 @@ jobs:
             set -e
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
+              -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-appletalk=true
             meson compile -C build
@@ -525,6 +534,7 @@ jobs:
           run: |
             set -e
             meson setup build \
+              -Dbuildtype=release \
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dtrace=false \
@@ -577,6 +587,7 @@ jobs:
             set -e
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
+              -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-appletalk=true
             meson compile -C build
@@ -624,6 +635,7 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
+              -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
@@ -666,6 +678,7 @@ jobs:
             set -e
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
+              -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
