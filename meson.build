@@ -2364,7 +2364,6 @@ endif
 summary_info += {
     '  Spotlight': have_spotlight,
     '  TCP wrapper': have_tcpwrap,
-    '  Webmin module': have_webmin,
     '  Zeroconf': have_zeroconf,
 }
 if enable_zeroconf
@@ -2400,3 +2399,8 @@ summary_info = {
     '  Manual style': get_option('with-manual'),
 }
 summary(summary_info, bool_yn: true, section: '  Documentation:')
+
+summary_info = {
+    '  Webmin module': have_webmin,
+}
+summary(summary_info, bool_yn: true, section: '  Add-ons:')
