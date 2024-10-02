@@ -702,7 +702,32 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+          sudo apt-get install --assume-yes --no-install-recommends \
+            bison \
+            cracklib-runtime \
+            flex \
+            libacl1-dev \
+            libavahi-client-dev \
+            libcrack2-dev \
+            libcups2-dev \
+            libdb-dev \
+            libdbus-1-dev \
+            libevent-dev \
+            libgcrypt-dev \
+            libglib2.0-dev \
+            libkrb5-dev \
+            libldap2-dev \
+            libmariadb-dev \
+            libpam0g-dev \
+            libtalloc-dev \
+            libtirpc-dev \
+            libtracker-sparql-3.0-dev \
+            libwrap0-dev \
+            meson \
+            ninja-build \
+            systemtap-sdt-dev \
+            tracker-miner-fs \
+            unicode-data
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v3
       - name: Run build-wrapper
@@ -711,6 +736,7 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-style=none \
+            -Dwith-readmes=false \
             -Dwith-tests=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
