@@ -66,7 +66,6 @@ custom_target(
         'nbp.1.html',
         'nbp_name.3.html',
         'netatalk.8.html',
-        'netatalk-config.1.html',
         'pap.1.html',
         'papd.8.html',
         'papd.conf.5.html',
