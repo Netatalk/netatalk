@@ -702,6 +702,10 @@ endif
 
 enable_zeroconf = get_option('with-zeroconf')
 
+have_zeroconf = false
+
+zeroconf_provider = ''
+
 avahi = dependency('avahi-client', required: false)
 
 dns_sd_libs = []
@@ -716,8 +720,6 @@ if dns_sd.found()
     dns_sd_libs += system
 endif
 
-zeroconf_provider = ''
-
 have_dns = (
     (dns_sd.found() or system.found())
     and cc.has_header('dns_sd.h')
@@ -727,28 +729,22 @@ have_dns = (
     )
 )
 
-if not enable_zeroconf
-    have_zeroconf = false
-else
-    have_zeroconf = have_dns
-    if have_dns
+if enable_zeroconf
+    if avahi.found()
+        have_zeroconf = true
+        cdata.set('USE_ZEROCONF', 1)
+        cdata.set('HAVE_AVAHI', 1)
+        if avahi.version() >= '0.6.4'
+            cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
+        endif
+        cdata.set('freebsd_zeroconf', 'avahi_daemon')
+        zeroconf_provider += 'Avahi'
+    elif have_dns
+        have_zeroconf = true
         cdata.set('USE_ZEROCONF', 1)
         cdata.set('HAVE_MDNS', 1)
         cdata.set('freebsd_zeroconf', 'mdnsd')
         zeroconf_provider += 'mDNS'
-    else
-        have_zeroconf = avahi.found()
-        if avahi.found()
-            cdata.set('USE_ZEROCONF', 1)
-            cdata.set('HAVE_AVAHI', 1)
-            if avahi.version() >= '0.6.4'
-                cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
-            endif
-            cdata.set('freebsd_zeroconf', 'avahi_daemon')
-            zeroconf_provider += 'Avahi'
-        else
-            have_zeroconf = false
-        endif
     endif
 endif
 

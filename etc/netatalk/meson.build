@@ -5,10 +5,10 @@ if use_mysql_backend
     netatalk_deps += mysqlclient
 endif
 
-if have_dns
-    netatalk_deps += dns_sd_libs
-elif avahi.found()
+if avahi.found()
     netatalk_deps += avahi
+elif have_dns
+    netatalk_deps += dns_sd_libs
 endif
 
 executable(
