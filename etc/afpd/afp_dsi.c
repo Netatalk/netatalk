@@ -599,7 +599,7 @@ void afp_over_dsi(AFPObj *obj)
 
         case DSIFUNC_CMD:
 
-            function = (u_char) dsi->commands[0];
+            function = (uint8_t) dsi->commands[0];
 
             /* AFP replay cache */
             rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
@@ -656,7 +656,7 @@ void afp_over_dsi(AFPObj *obj)
             break;
 
         case DSIFUNC_WRITE: /* FPWrite and FPAddIcon */
-            function = (u_char) dsi->commands[0];
+            function = (uint8_t) dsi->commands[0];
             if ( afp_switch[ function ] != NULL ) {
                 dsi->datalen = DSI_DATASIZ;
                 dsi->flags |= DSI_RUNNING;

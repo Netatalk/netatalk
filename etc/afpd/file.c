@@ -59,14 +59,14 @@
  *                           putawayID    4  home directory id
  */
 
-const u_char ufinderi[ADEDLEN_FINDERI] = {
+const uint8_t ufinderi[ADEDLEN_FINDERI] = {
                               0, 0, 0, 0, 0, 0, 0, 0,
                               1, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0
                           };
 
-static const u_char old_ufinderi[] = {
+static const uint8_t old_ufinderi[] = {
                               'T', 'E', 'X', 'T', 'U', 'N', 'I', 'X'
                           };
 
@@ -279,7 +279,7 @@ int getmetadata(const AFPObj *obj,
     uint32_t		aint;
     cnid_t              id = 0;
     uint16_t		ashort;
-    u_char              achar, fdType[4];
+    uint8_t              achar, fdType[4];
     uint32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
@@ -828,8 +828,8 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     int			bit, isad = 1, err = AFP_OK;
     char                *upath;
     char		*ade = NULL;
-    u_char              achar, xyy[4];
-    const u_char        *fdType = NULL;
+    uint8_t              achar, xyy[4];
+    const uint8_t        *fdType = NULL;
     uint16_t		ashort = 0;
     uint16_t		bshort;
     uint16_t		oshort;
@@ -845,7 +845,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     gid_t		f_gid;
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
-    u_char              finder_buf[32];
+    uint8_t              finder_buf[32];
     int symlinked = S_ISLNK(path->st.st_mode);
     int fp;
     ssize_t len;
@@ -957,10 +957,10 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 buf += 2;
                 /* Keep special case to support crlf translations */
                 if ((unsigned int) achar == 0x04) {
-	       	    fdType = (u_char *)"TEXT";
+	       	    fdType = (uint8_t *)"TEXT";
 		    buf += 2;
                 } else {
-            	    xyy[0] = ( u_char ) 'p';
+            	    xyy[0] = ( uint8_t ) 'p';
             	    xyy[1] = achar;
             	    xyy[3] = *buf++;
             	    xyy[2] = *buf++;

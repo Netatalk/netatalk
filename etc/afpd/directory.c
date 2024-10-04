@@ -1579,7 +1579,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
     uint16_t           bitmap = d_bitmap;
-    u_char              finder_buf[32];
+    uint8_t              finder_buf[32];
     uint32_t       upriv;
     mode_t              mpriv = 0;
     bool                set_upriv = false, set_maccess = false;
