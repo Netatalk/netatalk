@@ -35,7 +35,7 @@ static int pathcmp(char *p, int plen, char *q, int qlen)
     return (( plen == qlen && memcmp( p, q, plen ) == 0 ) ? 0 : 1 );
 }
 
-static int applopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
+static int applopen(struct vol *vol, uint8_t creator[ 4 ], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
 

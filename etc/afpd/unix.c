@@ -151,7 +151,7 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct mac
 #endif
 }
 
-static mode_t mtoubits(u_char bits)
+static mode_t mtoubits(uint8_t bits)
 {
     mode_t	mode;
 
