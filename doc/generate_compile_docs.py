@@ -29,8 +29,15 @@ lang_en = {
   "title_3": "Operating Systems",
   "heading_1": "Install required packages",
   "heading_2": "Configure and build",
-  "para_1": "This appendix describes how to compile Netatalk from source for specific operating systems.",
-  "para_2": "Please note that the steps below are automatically generated, and may not be optimized for your system.",
+  "para_1": """
+  This appendix describes how to compile Netatalk from source for specific operating systems.
+  Before starting, please read through the Installation chapter first.
+  You need to have a copy of Netatalk's source code before proceeding.
+  """,
+  "para_2": """
+  Please note that these guides are automatically generated, and may not be optimized for your system.
+  Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.
+  """,
 }
 lang_jp = {
   "title_1": "ソースコードから Netatalk をコンパイルする",
@@ -38,8 +45,15 @@ lang_jp = {
   "title_3": "オペレーティング システム一覧",
   "heading_1": "必要なパッケージをインストールする",
   "heading_2": "コンフィグレーションとビルド",
-  "para_1": "本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。",
-  "para_2": "本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。",
+  "para_1": """
+  本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。
+  開始する前に、まずインストールの章をお読みください。
+  続行する前に、Netatalk のソース コードのコピーが必要になる。
+  """,
+  "para_2": """
+  本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。
+  また、技術的な制約により、一部の OS では Netatalk を起動する手順が不完全である。
+  """,
 }
 
 output_en = "./manual/compile.xml"
