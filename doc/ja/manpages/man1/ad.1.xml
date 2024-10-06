@@ -5,7 +5,7 @@
 
     <manvolnum>1</manvolnum>
 
-    <refmiscinfo class="date">17 Mar 2024</refmiscinfo>
+    <refmiscinfo class="date">5 Oct 2024</refmiscinfo>
 
     <refmiscinfo class="source">Netatalk</refmiscinfo>
 
@@ -24,7 +24,7 @@
     <cmdsynopsis>
       <command>ad</command>
 
-      <arg choice="req">ls | cp | mv | rm</arg>
+      <arg choice="req">ls | cp | mv | rm | set</arg>
 
       <arg>...</arg>
     </cmdsynopsis>
@@ -111,6 +111,24 @@
     </cmdsynopsis>
 
     <para>ファイルやディレクトリを削除する。</para>
+
+    <cmdsynopsis>
+      <command>ad set</command>
+
+      <arg choice="opt">-t <replaceable>type</replaceable></arg>
+
+      <arg choice="opt">-c <replaceable>creator</replaceable></arg>
+
+      <arg choice="opt">-l <replaceable>label</replaceable></arg>
+
+      <arg choice="opt">-f <replaceable>flags</replaceable></arg>
+
+      <arg choice="opt">-a <replaceable>attributes</replaceable></arg>
+
+      <arg choice="req">file</arg>
+    </cmdsynopsis>
+
+    <para>ファイルにメタデータを設定します。</para>
 
     <cmdsynopsis>
       <command>ad -v|--version</command>
@@ -345,6 +363,88 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         </listitem>
       </varlistentry>
     </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>ad set</title>
+
+    <para>ファイルにメタデータを設定します。</para>
+
+    <para>set ユーティリティは、AFP ボリューム内のファイルのメタデータを変更します。</para>
+
+    <para>オプションは次のとおりです。</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>-t <replaceable>type</replaceable></term>
+
+        <listitem>
+          <para>ファイルの 4 文字のファイル タイプを変更します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-c <replaceable>creator</replaceable></term>
+
+        <listitem>
+          <para>ファイルの 4 文字の作成者タイプを変更します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-l <replaceable>label</replaceable></term>
+
+        <listitem>
+          <para>ファイルの色ラベルを変更します。使用可能な色については、以下のリストを参照してください。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f <replaceable>flags</replaceable></term>
+
+        <listitem>
+          <para>ファイルの Finder フラグを変更します。使用可能なフラグについては、以下のリストを参照してください。大文字はフラグを設定し、小文字はフラグを削除します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-a <replaceable>attributes</replaceable></term>
+
+        <listitem>
+          <para>ファイルの属性を変更します。使用可能な属性については、以下のリストを参照してください。大文字はフラグを設定し、小文字はフラグを削除します。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para><emphasis>旗の説明</emphasis></para>
+
+    <programlisting>
+Color Labels:
+
+  none | grey | green | violet | blue | yellow | red | orange
+
+Finder Flags (valid for (f)iles and/or (d)irectories):
+
+  d = On Desktop                      (f/d)
+  e = Hidden extension                (f/d)
+  m = Shared (can run multiple times) (f)
+  n = No INIT resources               (f)
+  i = Inited                          (f/d)
+  c = Custom icon                     (f/d)
+  t = Stationery                      (f)
+  s = Name locked                     (f/d)
+  b = Bundle                          (f/d)
+  v = Invisible                       (f/d)
+  a = Alias file                      (f/d)
+
+AFP Attributes:
+
+  y = System                          (f/d)
+  w = No write                        (f)
+  p = Needs backup                    (f/d)
+  r = No rename                       (f/d)
+  l = No delete                       (f/d)
+  o = No copy                         (f)
+  </programlisting>
   </refsect1>
 
   <refsect1>
