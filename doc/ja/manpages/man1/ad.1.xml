@@ -128,7 +128,7 @@
       <arg choice="req">file</arg>
     </cmdsynopsis>
 
-    <para>ファイルにメタデータを設定します。</para>
+    <para>ファイルにメタデータを設定する。</para>
 
     <cmdsynopsis>
       <command>ad -v|--version</command>
@@ -230,7 +230,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-f</term>
 
         <listitem>
-          <para>それぞれの配布先パス名が既に存在している場合、それを削除してから新しいファイルを作成する。パーミッションに関わらず確認プロンプトを出しません。(-fオプションは手前の-iオプションと-nオプションを無効にします。)</para>
+          <para>それぞれの配布先パス名が既に存在している場合、それを削除してから新しいファイルを作成する。パーミッションに関わらず確認プロンプトを出さない。(-fオプションは手前の-iオプションと-nオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -238,7 +238,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-i</term>
 
         <listitem>
-          <para>存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならばファイルコピーを試みる。(-iオプションは手前の-fオプションと-nオプションを無効にします。)</para>
+          <para>存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならばファイルコピーを試みる。(-iオプションは手前の-fオプションと-nオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -246,7 +246,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-n</term>
 
         <listitem>
-          <para>存在するファイルを上書きしない。 (-nオプションは手前の-fオプションと-iオプションを無効にします。)</para>
+          <para>存在するファイルを上書きしない。 (-nオプションは手前の-fオプションと-iオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -307,7 +307,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-f</term>
 
         <listitem>
-          <para>配布先パスに上書きする前に確認プロンプトを出さない。(-fオプションは手前の-iオプションと-nオプションを無効にします。)</para>
+          <para>配布先パスに上書きする前に確認プロンプトを出さない。(-fオプションは手前の-iオプションと-nオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -315,7 +315,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-i</term>
 
         <listitem>
-          <para>存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならば移動を試みる。(-iオプションは手前の-fオプションと-nオプションを無効にします。)</para>
+          <para>存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならば移動を試みる。(-iオプションは手前の-fオプションと-nオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -323,7 +323,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-n</term>
 
         <listitem>
-          <para>存在するファイルを上書きしない。 (-nオプションは手前の-fオプションと-iオプションを無効にします。)</para>
+          <para>存在するファイルを上書きしない。 (-nオプションは手前の-fオプションと-iオプションを無効にする。)</para>
         </listitem>
       </varlistentry>
 
@@ -368,18 +368,18 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
   <refsect1>
     <title>ad set</title>
 
-    <para>ファイルにメタデータを設定します。</para>
+    <para>ファイルにメタデータを設定する。</para>
 
-    <para>set ユーティリティは、AFP ボリューム内のファイルのメタデータを変更します。</para>
+    <para>set ユーティリティは、AFP ボリューム内のファイルのメタデータを変更する。</para>
 
-    <para>オプションは次のとおりです。</para>
+    <para>オプションは次の通り。</para>
 
     <variablelist>
       <varlistentry>
         <term>-t <replaceable>type</replaceable></term>
 
         <listitem>
-          <para>ファイルの 4 文字のファイル タイプを変更します。</para>
+          <para>ファイルの 4 文字のファイル タイプを変更する。</para>
         </listitem>
       </varlistentry>
 
@@ -387,7 +387,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-c <replaceable>creator</replaceable></term>
 
         <listitem>
-          <para>ファイルの 4 文字の作成者タイプを変更します。</para>
+          <para>ファイルの 4 文字の作成者タイプを変更する。</para>
         </listitem>
       </varlistentry>
 
@@ -395,7 +395,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-l <replaceable>label</replaceable></term>
 
         <listitem>
-          <para>ファイルの色ラベルを変更します。使用可能な色については、以下のリストを参照してください。</para>
+          <para>ファイルの色ラベルを変更する。使用可能な色については、以下のリストを参照。</para>
         </listitem>
       </varlistentry>
 
@@ -403,7 +403,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-f <replaceable>flags</replaceable></term>
 
         <listitem>
-          <para>ファイルの Finder フラグを変更します。使用可能なフラグについては、以下のリストを参照してください。大文字はフラグを設定し、小文字はフラグを削除します。</para>
+          <para>ファイルの Finder フラグを変更する。使用可能なフラグについては、以下のリストを参照。大文字はフラグを設定し、小文字はフラグを削除する。</para>
         </listitem>
       </varlistentry>
 
@@ -411,7 +411,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-a <replaceable>attributes</replaceable></term>
 
         <listitem>
-          <para>ファイルの属性を変更します。使用可能な属性については、以下のリストを参照してください。大文字はフラグを設定し、小文字はフラグを削除します。</para>
+          <para>ファイルの属性を変更する。使用可能な属性については、以下のリストを参照。大文字はフラグを設定し、小文字はフラグを削除する。</para>
         </listitem>
       </varlistentry>
     </variablelist>
