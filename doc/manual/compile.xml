@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-09-29</pubdate>
+		<pubdate>2024-10-06</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
 		<title>Overview</title>
 	</sect1>
 	<sect1>
-		<para>This appendix describes how to compile Netatalk from source for specific operating systems.</para>
-		<para>Please note that the steps below are automatically generated, and may not be optimized for your system.</para>
+		<para>
+  This appendix describes how to compile Netatalk from source for specific operating systems.
+  Before starting, please read through the Installation chapter first.
+  You need to have a copy of Netatalk's source code before proceeding.
+  </para>
+		<para>
+  Please note that these guides are automatically generated, and may not be optimized for your system.
+  Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.
+  </para>
 	</sect1>
 	<sect1 id="compile-os">
 		<title>Operating Systems</title>
@@ -61,6 +68,7 @@
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-tests=true
@@ -72,13 +80,13 @@
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -114,6 +122,7 @@
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
@@ -127,13 +136,13 @@
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -187,6 +196,7 @@ xsltproc
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
@@ -201,13 +211,13 @@ xsltproc
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -256,6 +266,7 @@ xsltproc
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
@@ -268,13 +279,13 @@ xsltproc
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>sudo meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -324,6 +335,7 @@ xsltproc
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
@@ -337,13 +349,13 @@ xsltproc
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -397,6 +409,7 @@ xsltproc
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
@@ -410,17 +423,21 @@ xsltproc
 			</para>
 			<para>Run distribution tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson dist</screen>
+				<screen>cd build &amp;&amp; meson dist &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>sudo meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
-sudo systemctl start netatalk
+</screen>
+			</para>
+			<para>Start netatalk</para>
+			<para>
+				<screen>sudo systemctl start netatalk
 sleep 1
 asip-status localhost
 </screen>
@@ -439,12 +456,13 @@ asip-status localhost
 			<para>Install dependencies</para>
 			<para>
 				<screen>brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
 				<screen>meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-tests=true
 </screen>
@@ -455,17 +473,21 @@ wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 			</para>
 			<para>Run tests</para>
 			<para>
-				<screen>cd build &amp;&amp; meson test</screen>
+				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
 			<para>Install</para>
 			<para>
 				<screen>sudo meson install -C build</screen>
 			</para>
-			<para>Start netatalk</para>
+			<para>Check netatalk capabilities</para>
 			<para>
 				<screen>/opt/homebrew/sbin/netatalk -V
 /opt/homebrew/sbin/afpd -V
-sudo netatalkd start
+</screen>
+			</para>
+			<para>Start netatalk</para>
+			<para>
+				<screen>sudo netatalkd start
 sleep 1
 asip-status localhost
 </screen>
@@ -501,15 +523,15 @@ asip-status localhost
   py39-sqlite3 \
   py39-tkinter \
   talloc \
-  tracker3 \
-  wget
+  tracker3
 </screen>
 			</para>
 			<para>Configure and build</para>
 			<para>
 				<screen>set -e
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
+  -Dbuildtype=release \
   -Dwith-appletalk=true
 meson compile -C build
 meson install -C build
@@ -539,15 +561,15 @@ ninja -C build uninstall
   perl5 \
   pkgconf \
   talloc \
-  tracker3 \
-  wget
+  tracker3
 </screen>
 			</para>
 			<para>Configure and build</para>
 			<para>
 				<screen>set -e
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
+  -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/libdata/pkgconfig \
   -Dwith-appletalk=true
 meson compile -C build
@@ -592,12 +614,14 @@ ninja -C build uninstall
 			<para>
 				<screen>set -e
 meson setup build \
+  -Dbuildtype=release \
   -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
   -Dwith-appletalk=true \
   -Dwith-dtrace=false \
   -Dwith-tests=true
 meson compile -C build
-cd build &amp;&amp; meson test
+cd build
+meson test
 cd ..
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -631,15 +655,15 @@ ninja -C build uninstall
   openpam \
   p5-Net-DBus \
   pkgconf \
-  tracker3 \
-  wget
+  tracker3
 </screen>
 			</para>
 			<para>Configure and build</para>
 			<para>
 				<screen>set -e
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
+  -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/lib/pkgconfig \
   -Dwith-appletalk=true
 meson compile -C build
@@ -681,8 +705,9 @@ pkgin -y install \
 			<para>
 				<screen>set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
+  -Dbuildtype=release \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
@@ -712,23 +737,24 @@ ninja -C build uninstall
   libgcrypt \
   ninja \
   pkg-config \
-  python/pip \
-  wget
+  python/pip
 pip install meson
 </screen>
 			</para>
 			<para>Configure and build</para>
 			<para>
 				<screen>set -e
-wget https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
+  -Dbuildtype=release \
   -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
   -Dwith-tests=true
 meson compile -C build
-cd build &amp;&amp; meson test
+cd build
+meson test
 cd ..
 meson install -C build
 /usr/local/sbin/netatalk -V
