@@ -1,3 +1,28 @@
+Changes in 4.0.1
+================
+* UPD: Update license grant to reflect the retroactive rescission
+       of U.C Berkeley clause 3, GitHub #1567
+* FIX: meson: Don't always build AppleTalk utils with RPATH, GitHub #1568
+* FIX: docs: Build the macipgw html manual page, GitHub #1569
+* FIX: Explicitly import headers to appease gcc on Debian Sid, GitHub #1571
+* UPD: docs: Install static redirect man pages for nbp tools, GitHub #1575
+* FIX: meson: Missing xsltproc and docbook-xsl treated
+       as non-fatal error, GitHub #1581
+* UPD: docker: Build with optimizations, without debug symbols, GitHub #1584
+* UPD: meson: In summary, list Webmin module under
+       a new Add-ons section, GitHub #1586
+* UPD: initscripts: Use launchctl bootstrap and
+       enable directives for installing on macOS, GitHub #1583
+* UPD: Remove obsoleted netatalk-config script, GitHub #1587
+* FIX: Change u_char data types to the portable uint8_t, GitHub #1590
+* FIX: meson: Detect native Avahi before mDNS, GitHub #1591
+* UPD: initscripts: Remove the redundant systemd Also directive, GitHub #1593
+* UPD: docs: Flesh out the compile appendix
+       and break down start steps, GitHub #1595
+* FIX: Fix seg fault in ad set utility
+       when not in a netatalk volume, GitHub #1597
+* UPD: Update ad manual page to cover 'ad set' utility, GitHub #1599
+
 Changes in 4.0.0
 ================
 * NEW: Reintroduce AppleTalk / DDP support, GitHub #220
