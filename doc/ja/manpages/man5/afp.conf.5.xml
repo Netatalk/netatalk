@@ -504,6 +504,10 @@
 
           <listitem>
             <para>サーバがリッスンするネットワークインターフェースを指定する。デフォルトではシステムの最初のIPアドレスを宣伝するが、入ってくる如何なる要求もリッスンする。</para>
+
+            <note>
+              <para><option>afp listen</option> オプションと同時に使用しないでください。</para>
+            </note>
           </listitem>
         </varlistentry>
 
@@ -517,6 +521,10 @@
 
             <para>IPv6 address +
             portの組み合わせは角かっこを使ったフォーマット[IPv6]:portのURLを使わなければならない。</para>
+
+            <note>
+              <para><option>afp interfaces</option> オプションと同時に使用しないでください。</para>
+            </note>
           </listitem>
         </varlistentry>
 
