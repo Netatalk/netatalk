@@ -20,9 +20,14 @@
     <title>Netatalk 3 からのアップグレード</title>
 
     <para>Netatalk 3 から Netatalk 4
-    へのアップグレードは簡単。古いバージョンの上に新しいバージョンをインストールするだけ。主な違いは、Netatalk 4 では、Netatalk 2
-    と Netatalk 3 の間で削除された AppleTalk サービス、構成ファイル、およびマニュアル
-    ページがいくつか復活していることである。</para>
+    へのアップグレードは簡単。古いバージョンの上に新しいバージョンをインストールするだけ。Netatalk 4 での主要な変更点は、Netatalk 2
+    と Netatalk 3 の間で削除された AppleTalk サービス、構成ファイル、およびツールを一部復活させたことである。</para>
+
+    <para>主に、<command><link linkend="atalkd.8">atalkd</link></command> デーモンと
+    <filename><link linkend="atalkd.conf.5">atalkd.conf</link></filename>
+    設定ファイル、また <command><link linkend="papd.8">papd</link></command> デーモンと
+    <filename><link linkend="papd.conf.5">papd.conf</link></filename>
+    設定ファイルが追加された。</para>
   </sect1>
 
   <sect1>
@@ -30,24 +35,29 @@
 
     <para>Netatalk 4 の主要な変更は以下の3点：<orderedlist>
         <listitem>
-          <para>これまでの設定ファイルすべてが廃止され、ほぼ全オプション名を変更し、全く新しい設定ファイルとしての
-          <filename><link
-          linkend="afp.conf.5">afp.conf</link></filename>を追加した。</para>
+          <para>これまでの AFP 設定ファイルすべてが廃止され、AFP
+          に関してのほぼ全オプション名を変更し、新しい設定ファイルを追加した： <filename><link
+          linkend="afp.conf.5">afp.conf</link></filename> と <filename><link
+          linkend="extmap.conf.5">extmap.conf</link></filename></para>
         </listitem>
 
         <listitem>
-          <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する "<option>appledouble =
-          ea</option>" という新しい AppleDouble のバックエンド。</para>
+          <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する <option>appledouble =
+          ea</option> という新しい AppleDouble のバックエンド。</para>
         </listitem>
 
         <listitem>
           <para>AppleTalk トランスポート層はデフォルトで無効になっている。非常に古い Mac で Netatalk
-          を使用する場合は、"<option>appletalk = yes</option>" オプションで有効にしてください。</para>
+          を使用する場合は、<filename>afp.conf</filename> にて <option>appletalk =
+          yes</option> オプションで有効にしてください。 それから、<command>netatalk</command>
+          を起動する前に <command>atalkd</command> デーモンを立ち上げてください。</para>
         </listitem>
       </orderedlist></para>
 
     <sect2>
       <title>設定まわりの変更点</title>
+
+      <para><filename>afp.conf</filename></para>
 
       <para><itemizedlist>
           <listitem>
@@ -69,25 +79,42 @@
           <para>ほとんどのオプション名は変更されたので、 詳細については <link
           linkend="afp.conf.5">afp.conf</link> の manpage 全体を読むこと</para>
         </warning></para>
+
+      <para><filename>extmap.conf</filename></para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>Classic Mac OS type/creator と拡張子の関連付け</para>
+          </listitem>
+
+          <listitem>
+            <para>2.x
+            とは異なり、マッピングはデフォルトで無効になっている。有効にするには、ファイル内の行のコメントを解除する</para>
+          </listitem>
+
+          <listitem>
+            <para><filename>AppleVolumes.system</filename> の廃止</para>
+          </listitem>
+        </itemizedlist></para>
     </sect2>
 
     <sect2>
       <title>新たな AppleDouble バックエンド</title>
 
-      <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する "<option>appledouble =
-      ea</option>" という新しい AppleDouble のバックエンド。<itemizedlist>
+      <para>マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する <option>appledouble =
+      ea</option> という新しい AppleDouble のバックエンド。<itemizedlist>
           <listitem>
             <para>デフォルトのバックエンドである（！）</para>
           </listitem>
 
           <listitem>
-            <para>拡張属性のあるファイルシステムが必須。 さもなくば "<option>appledouble =
-            v2</option>" オプションの使用が代替となる</para>
+            <para>拡張属性のあるファイルシステムが必須。 さもなくば <option>appledouble = v2</option>
+            オプションの使用が代替となる</para>
           </listitem>
 
           <listitem>
-            <para>"<option>appledouble = v2</option>" から "<option>appledouble
-            = ea</option>" ファイルシステムへの変換はアクセス時、その都度行われる（無効にすることも可能）</para>
+            <para><option>appledouble = v2</option> から <option>appledouble =
+            ea</option> ファイルシステムへの変換はアクセス時、その都度行われる（無効にすることも可能）</para>
           </listitem>
 
           <listitem>
@@ -143,7 +170,7 @@
 
           <listitem>
             <para>CNID データベースはデフォルトで <filename>/var/netatalk/CNID/</filename>
-            以下に保存される。</para>
+            以下に保存される。以前は各共有ボリュームにて保存されていた。</para>
           </listitem>
 
           <listitem>
@@ -153,10 +180,6 @@
 
           <listitem>
             <para>SLP 及び AFP プロキシのサポート機能は削除。</para>
-          </listitem>
-
-          <listitem>
-            <para>type/creator と拡張子の関連付けサポート機能は削除</para>
           </listitem>
         </itemizedlist></para>
     </sect2>
@@ -180,7 +203,8 @@
 
           <listitem>
             <para><command>afpd</command> と <command>cnid_metad</command>
-            の代わりに <link linkend="netatalk.8">netatalk</link> 起動にのみ関連している、
+            の代わりに <command><link
+            linkend="netatalk.8">netatalk</link></command> 起動にのみ関連している、
             Netatalk 起動スクリプトを更新するか、標準の起動スクリプトに置き換える。</para>
           </listitem>
 

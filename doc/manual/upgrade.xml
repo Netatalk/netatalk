@@ -15,8 +15,15 @@
 
     <para>Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the
     new version on top of the old one. The primary difference is that Netatalk
-    4 brings back essential AppleTalk services, configuration files, and man
-    pages that were removed between Netatalk 2 and Netatalk 3.</para>
+    4 brings back essential AppleTalk services, configuration files, and tools
+    that were removed between Netatalk 2 and Netatalk 3.</para>
+
+    <para>Notably, the <command><link
+    linkend="atalkd.8">atalkd</link></command> daemon with its <filename><link
+    linkend="atalkd.conf.5">atalkd.conf</link></filename> configuration file,
+    and the <command><link linkend="papd.8">papd</link></command> daemon with
+    its <filename><link linkend="papd.conf.5">papd.conf</link></filename>
+    configuration file are once more available.</para>
   </sect1>
 
   <sect1>
@@ -25,13 +32,14 @@
     <para>There are three major changes between Netatalk 2 and Netatalk
     4:<orderedlist>
         <listitem>
-          <para>New configuration file <filename><link
-          linkend="afp.conf.5">afp.conf</link></filename>, obsoleting all
-          previous configuration files and renaming most options.</para>
+          <para>New configuration files that replaces most of the previous
+          ones: <filename><link
+          linkend="afp.conf.5">afp.conf</link></filename> and <filename><link
+          linkend="extmap.conf.5">extmap.conf</link></filename></para>
         </listitem>
 
         <listitem>
-          <para>New AppleDouble backend "<option>appledouble = ea</option>"
+          <para>New AppleDouble backend <option>appledouble = ea</option>
           which stores Mac metadata and resource forks in extended attributes
           of the filesystem.</para>
         </listitem>
@@ -39,12 +47,17 @@
         <listitem>
           <para>The AppleTalk transport layer is disabled by default. If you
           want to use Netatalk with very old Macs, turn it on with the
-          "<option>appletalk = yes</option>" option.</para>
+          <option>appletalk = yes</option> option in
+          <filename>afp.conf</filename>. Then start the
+          <command>atalkd</command> daemon before <command>netatalk</command>
+          in order to activate the AppleTalk transport layer.</para>
         </listitem>
       </orderedlist></para>
 
     <sect2>
       <title>New configuration</title>
+
+      <para><filename>afp.conf</filename></para>
 
       <para><itemizedlist>
           <listitem>
@@ -66,12 +79,29 @@
           <para>most option names have changed, read the full manpage <link
           linkend="afp.conf.5">afp.conf</link> for details</para>
         </warning></para>
+
+      <para><filename>extmap.conf</filename></para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>maps file extensions to Classic Mac OS type/creator</para>
+          </listitem>
+
+          <listitem>
+            <para>unlike 2.x, the mappings are disabled by default; uncomment
+            the lines in the file to enable them</para>
+          </listitem>
+
+          <listitem>
+            <para>obsoletes <filename>AppleVolumes.system</filename></para>
+          </listitem>
+        </itemizedlist></para>
     </sect2>
 
     <sect2>
       <title>New AppleDouble backend</title>
 
-      <para>New AppleDouble backend "<option>appledouble = ea</option>" which
+      <para>New AppleDouble backend <option>appledouble = ea</option> which
       stores Mac metadata and resource forks in extended attributes of the
       filesystem.<itemizedlist>
           <listitem>
@@ -80,13 +110,13 @@
 
           <listitem>
             <para>requires a filesystem with Extended Attributes, fallback is
-            "<option>appledouble = v2</option>"</para>
+            <option>appledouble = v2</option></para>
           </listitem>
 
           <listitem>
-            <para>converts filesystems from "<option>appledouble =
-            v2</option>" to "<option>appledouble = ea</option>" on the fly
-            when accessed (can be disabled)</para>
+            <para>converts filesystems from <option>appledouble = v2</option>
+            to <option>appledouble = ea</option> on the fly when accessed (can
+            be disabled)</para>
           </listitem>
 
           <listitem>
@@ -144,8 +174,9 @@
           </listitem>
 
           <listitem>
-            <para>The CNID databases are now stored under
-            <filename>/var/netatalk/CNID/</filename> by default.</para>
+            <para>All CNID databases are now stored under
+            <filename>/var/netatalk/CNID/</filename> by default, rather than
+            in the individual shared volume directories</para>
           </listitem>
 
           <listitem>
@@ -155,10 +186,6 @@
 
           <listitem>
             <para>Removed SLP and AFP proxy support</para>
-          </listitem>
-
-          <listitem>
-            <para>Removed type/creator extension mapping support</para>
           </listitem>
         </itemizedlist></para>
     </sect2>
@@ -181,8 +208,8 @@
           </listitem>
 
           <listitem>
-            <para>Update your Netatalk init script to start <link
-            linkend="netatalk.8">netatalk</link> instead of
+            <para>Update your Netatalk init script to start <command><link
+            linkend="netatalk.8">netatalk</link></command> instead of
             <command>afpd</command> and <command>cnid_metad</command>, or
             replace it with the appropriate stock init script for your
             system.</para>
@@ -1708,7 +1735,7 @@
 
                 <entry>-</entry>
 
-                <entry>move to extmap.conf</entry>
+                <entry>moved to extmap.conf</entry>
               </row>
 
               <row>
