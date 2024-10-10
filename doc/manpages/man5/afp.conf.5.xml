@@ -596,6 +596,10 @@
             <para>Specifies the network interfaces that the server should
             listens on. The default is advertise the first IP address of the
             system, but to listen for any incoming request.</para>
+
+            <note>
+              <para>Do not use at the same time as the <option>afp listen</option> option.</para>
+            </note>
           </listitem>
         </varlistentry>
 
@@ -613,6 +617,10 @@
 
             <para>IPv6 address + port combination must use URL the format
             using square brackets [IPv6]:port</para>
+
+            <note>
+              <para>Do not use at the same time as the <option>afp interfaces</option> option.</para>
+            </note>
           </listitem>
         </varlistentry>
 
