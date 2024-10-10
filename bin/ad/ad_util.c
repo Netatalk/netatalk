@@ -119,7 +119,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
         && vol->vol->v_adouble != AD_VERSION_EA)
         ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
 
-    if (vol->vol->v_vfs_ea != AFPVOL_EA_SYS)
+    if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS)
         ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
 
     if ((vol->vol->v_flags & AFPVOL_NODEV))
