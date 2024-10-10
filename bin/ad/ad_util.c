@@ -116,7 +116,7 @@ int openvol(const char *path, afpvol_t *vol)
     if (vol->volinfo.v_adouble != AD_VERSION2)
         ERROR("Unsupported adouble versions: %u", vol->volinfo.v_adouble);
 
-    if (vol->volinfo.v_vfs_ea != AFPVOL_EA_SYS)
+    if (vol->volinfo.v_vfs_ea != AFPVOL_EA_AD && vol->volinfo.v_vfs_ea != AFPVOL_EA_SYS)
         ERROR("Unsupported Extended Attributes option: %u", vol->volinfo.v_vfs_ea);
 
     /* initialize sufficient struct vol for VFS initialisation */
