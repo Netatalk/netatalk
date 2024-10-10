@@ -208,6 +208,12 @@ option(
     description: 'Set path to Berkeley DB installation. Must contain lib and include dirs',
 )
 option(
+    'with-bdb-version',
+    type: 'string',
+    value: '',
+    description: 'Set installed Berkeley DB version to link against',
+)
+option(
     'with-cracklib-path',
     type: 'string',
     value: '',
