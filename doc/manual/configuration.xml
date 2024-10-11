@@ -165,8 +165,8 @@ basedir regex = /usr/home</programlisting></para>
     database storing ID &lt;-&gt; name mappings.</para>
 
     <para>The CNID databases are by default located in
-    <filename>/var/netatalk/CNID</filename>. You can change the location by
-    configuring <command>localstatedir</command> at compile time.</para>
+    <filename>$prefix/var/netatalk/CNID</filename>. You can change the location by
+    configuring <command>-Dwith-statedir-path=PATH</command> at compile time.</para>
 
     <para>There is a command line utility called <command>dbd</command>
     available which can be used to verify, repair and rebuild the CNID
