@@ -169,7 +169,7 @@
           </listitem>
 
           <listitem>
-            <para>CNID データベースはデフォルトで <filename>/var/netatalk/CNID/</filename>
+            <para>CNID データベースはデフォルトで <filename>$prefix/var/netatalk/CNID/</filename>
             以下に保存される。以前は各共有ボリュームにて保存されていた。</para>
           </listitem>
 
@@ -211,7 +211,7 @@
           <listitem>
             <para><filename>afp_voluuid.conf</filename> 及び
             <filename>afp_signature.conf</filename> を localstate ディレクトリ
-            （デフォルトでは <filename>/var/netatalk/</filename>）、に移動。 正しいパスを見つけるために
+            （デフォルトでは <filename>$prefix/var/netatalk/</filename>）、に移動。 正しいパスを見つけるために
             <command>afpd -v</command> コマンドが有用</para>
           </listitem>
 
@@ -1948,7 +1948,7 @@
                 <entry><emphasis role="bold">（ボリュームディレクトリ）</emphasis></entry>
 
                 <entry><emphasis
-                role="bold">var/netatalk/CNID/</emphasis></entry>
+                role="bold">$prefix/var/netatalk/CNID/</emphasis></entry>
 
                 <entry>(G)</entry>
 

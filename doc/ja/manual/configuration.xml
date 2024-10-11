@@ -159,8 +159,8 @@ basedir regex = /usr/home</programlisting></para>
       </indexterm> オプションで選択が可能である。CNID バックエンドは基本的には、ストアされた ID &lt;-&gt;
     名前を一対一対応させるデータベースである。</para>
 
-    <para>The CNID データベースはデフォルトで <filename>/var/netatalk/CNID</filename>
-    に置かれる。コンパイル時に <command>localstatedir=PATH</command> オプションで場所を変えられる。</para>
+    <para>CNID データベースはデフォルトで <filename>$prefix/var/netatalk/CNID</filename>
+    に置かれる。コンパイル時に <command>-Dwith-statedir-path=PATH</command> オプションで場所を変えられる。</para>
 
     <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command>
     という名のコマンドが用意されていている。</para>

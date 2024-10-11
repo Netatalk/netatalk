@@ -175,7 +175,7 @@
 
           <listitem>
             <para>All CNID databases are now stored under
-            <filename>/var/netatalk/CNID/</filename> by default, rather than
+            <filename>$prefix/var/netatalk/CNID/</filename> by default, rather than
             in the individual shared volume directories</para>
           </listitem>
 
@@ -218,7 +218,7 @@
           <listitem>
             <para>Move <filename>afp_voluuid.conf</filename> and
             <filename>afp_signature.conf</filename> to the localstate
-            directory (default <filename>/var/netatalk/</filename>), you can
+            directory (default <filename>$prefix/var/netatalk/</filename>), you can
             use <command>afpd -v</command> in order to find the correct
             path</para>
           </listitem>
