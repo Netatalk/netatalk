@@ -85,7 +85,7 @@ if statedir_override != ''
     localstatedir = statedir_override
 endif
 
-spooldir = prefix / 'var/spool/netatalk'
+spooldir = get_option('localstatedir') / 'spool' / 'netatalk'
 
 spooldir_override = get_option('with-spooldir')
 if spooldir_override != ''
