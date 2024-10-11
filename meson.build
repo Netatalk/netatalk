@@ -400,6 +400,9 @@ endif
 #
 
 bdb_path = get_option('with-bdb-path')
+bdb_req_version = get_option('with-bdb-version')
+
+have_bdb = false
 
 bdb_header = ''
 bdb_includes = []
@@ -409,108 +412,125 @@ bdb_major_version = ''
 bdb_minor_version = ''
 bdb_version = ''
 
-bdb_dirs = [
-    '/usr/local',
-    '/usr/pkg',
-    '/opt/local',
-    macos_prefix / 'opt/berkeley-db',
-    '/usr',
-]
+if bdb_path != ''
+    bdb_dirs = [ bdb_path ]
+else
+    bdb_dirs = [
+        '/usr/local',
+        '/usr/pkg',
+        '/opt/local',
+        macos_prefix / 'opt/berkeley-db',
+        '/usr',
+    ]
+endif
+
 bdb_subdirs = [
     'db4.6',
-    'db4.7',
-    'db4.8',
-    'db4',
     'db46',
+    'db4.7',
     'db47',
+    'db4.8',
     'db48',
+    'db4',
     'db5.0',
-    'db5.1',
-    'db5.2',
-    'db5.3',
-    'db5',
     'db50',
+    'db5.1',
     'db51',
+    'db5.2',
+    'db52',
+    'db5.3',
+    'db53',
+    'db5',
     'db6.1',
+    'db61',
+    'db6.2',
+    'db62',
     '',
 ]
 
-if bdb_path != ''
-    foreach subdir : bdb_subdirs
-        if fs.exists(bdb_path / 'include' / subdir / 'db.h')
-            bdb_header += bdb_path / 'include' / subdir / 'db.h'
-            bdb_libdir += bdb_path / 'lib'
-            bdb_includes += include_directories(
-                bdb_path / 'include' / subdir,
-            )
-        endif
-        if bdb_header != ''
-            break
-        endif
-    endforeach
-else
-    foreach dir : bdb_dirs
-        foreach subdir : bdb_subdirs
-            if fs.exists(dir / 'include' / subdir / 'db.h')
-                bdb_header += dir / 'include' / subdir / 'db.h'
-                if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
-                    bdb_libdir += dir / 'lib/64'
-                else
-                    bdb_libdir += dir / 'lib'
-                endif
-                bdb_includes += include_directories(
-                    dir / 'include' / subdir,
-                )
-            endif
-            if bdb_header != ''
-                break
-            endif
-        endforeach
-        if bdb_header != ''
-            break
-        endif
-    endforeach
+if bdb_req_version != ''
+    if not bdb_req_version.version_compare('>=4.6')
+        error('Berkley DB library version is below supported 4.6')
+    endif
+    message('Searching for Berkley DB library version', bdb_req_version)
 endif
 
-if bdb_header != ''
-    have_bdb = true
-    bdb_major_version += run_command(
-        'grep',
-        'DB_VERSION_MAJOR',
-        bdb_header,
-        check: true,
-    ).stdout().strip().substring(25)
+foreach dir : bdb_dirs
+    foreach subdir : bdb_subdirs
+        bdb_include_path = dir / 'include' / subdir
+        bdb_header = bdb_include_path / 'db.h'
+        if fs.exists(bdb_header)
+            bdb_includes = include_directories(bdb_include_path)
 
-    bdb_minor_version += run_command(
-        'grep',
-        'DB_VERSION_MINOR',
-        bdb_header,
-        check: true,
-    ).stdout().strip().substring(25)
+            bdb_major_version = run_command(
+                'grep',
+                'DB_VERSION_MAJOR',
+                bdb_header,
+                check: true,
+            ).stdout().strip().substring(25)
+        
+            bdb_minor_version = run_command(
+                'grep',
+                'DB_VERSION_MINOR',
+                bdb_header,
+                check: true,
+            ).stdout().strip().substring(25)
+        
+            bdb_version = bdb_major_version + '.' + bdb_minor_version
 
-    bdb_version += bdb_major_version + '.' + bdb_minor_version
-    bdb_minimum_version = bdb_version.version_compare('>=4.6')
+            if not bdb_version.version_compare('>=4.6')
+                continue
+            endif
 
-    bdb_libnames = [
-        'db',
-        'db' + bdb_major_version,
-        'db' + bdb_major_version + '.' + bdb_minor_version,
-        'db' + bdb_major_version + bdb_minor_version,
-        'db-' + bdb_major_version,
-        'db-' + bdb_major_version + '.' + bdb_minor_version,
-    ]
+            if bdb_req_version != '' and not bdb_version.version_compare('~' + bdb_req_version)
+                continue
+            endif
 
-    foreach name : bdb_libnames
-        db = cc.find_library(name, dirs: bdb_libdir, required: false)
-        if db.found()
-            break
+            message('Berkley DB header found at', bdb_header)
+
+            # Now find lib file matching header
+            if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
+                bdb_libdir = dir / 'lib/64'
+            else
+                bdb_libdir = dir / 'lib'
+            endif
+
+            # Guess lib name starting from more specific ones
+            bdb_libnames = [
+                'db-' + bdb_major_version + '.' + bdb_minor_version,
+                'db'  + bdb_major_version + '.' + bdb_minor_version,
+                'db'  + bdb_major_version + bdb_minor_version,
+                'db-' + bdb_major_version,
+                'db'  + bdb_major_version,
+                'db',
+            ]
+
+            foreach name : bdb_libnames
+                db = cc.find_library(name, dirs: bdb_libdir, required: false)
+                if db.found()
+                    have_bdb = true
+                    break
+                endif
+            endforeach
+
+            if have_bdb
+                break
+            endif
         endif
     endforeach
-else
-    have_bdb = false
-    error(
-        'Berkeley DB library required but not found! Please specify an installation path using the -Dwith-bdb= configure option (must include lib and include dirs)',
-    )
+
+    if have_bdb
+        break
+    endif
+endforeach
+
+if not have_bdb
+    if bdb_req_version != ''
+        msg = 'Berkeley DB library version ' + bdb_req_version + ' requested via -Dwith-bdb-version= not found!'
+    else
+        msg = 'Berkeley DB library required but not found!'
+    endif
+    error(msg, 'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)')
 endif
 
 #
