@@ -298,6 +298,12 @@ option(
     description: 'Set path for spooldir used for CUPS support',
 )
 option(
+    'with-statedir-path',
+    type: 'string',
+    value: '',
+    description: 'Set path for statedir used for CNID databases etc.',
+)
+option(
     'with-tracker-install-prefix',
     type: 'string',
     value: '',

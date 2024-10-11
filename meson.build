@@ -65,7 +65,6 @@ bindir = prefix / get_option('bindir')
 datadir = prefix / get_option('datadir')
 includedir = prefix / get_option('includedir')
 libdir = prefix / get_option('libdir')
-localstatedir = prefix / get_option('localstatedir')
 mandir = prefix / get_option('mandir')
 sbindir = prefix / get_option('sbindir')
 sysconfdir = prefix / get_option('sysconfdir')
@@ -73,6 +72,24 @@ sysconfdir = prefix / get_option('sysconfdir')
 pkgconfdir = get_option('with-pkgconfdir-path')
 if pkgconfdir == ''
     pkgconfdir = sysconfdir
+endif
+
+# TODO: This breaks FHS. Should be /var/lib or the platform-specific equivalent.
+# Meson's built-in option is called sharedstatedir.
+# Will keep the non-standard location for now to avoid breaking existing setups.
+# Ref: https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s08.html
+localstatedir = prefix / get_option('localstatedir')
+
+statedir_override = get_option('with-statedir-path')
+if statedir_override != ''
+    localstatedir = statedir_override
+endif
+
+spooldir = prefix / 'var/spool/netatalk'
+
+spooldir_override = get_option('with-spooldir')
+if spooldir_override != ''
+    spooldir = spooldir_override
 endif
 
 if host_os == 'darwin'
@@ -900,7 +917,6 @@ libevent = dependency(
 #
 
 cups = dependency('cups', required: false)
-spooldir = ''
 cups_config = find_program('cups-config', required: false)
 
 if not (get_option('with-appletalk') or get_option('with-cups'))
@@ -918,11 +934,6 @@ else
             check: true,
         ).stdout().strip()
         cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
-        if get_option('with-spooldir') != ''
-            spooldir += get_option('with-spooldir')
-        else
-            spooldir += prefix / 'var/spool/netatalk'
-        endif
     else
         warning('CUPS not found, you might need to specify the path to cups-config')
     endif
@@ -2325,6 +2336,7 @@ summary_info = {
     'Manual page directory': mandir,
     'System executable directory': sbindir,
     'Package conf directory': pkgconfdir,
+    'Shared state directory': localstatedir,
 }
 summary(summary_info, bool_yn: true, section: 'Directories:')
 
@@ -2395,7 +2407,7 @@ summary_info = {
     '  init directory': init_dirs,
     '  Netatalk lockfile': lockfile,
     '  PAM config directory': pam_confdir,
-    '  CUPS print spool directory': spooldir,
+    '  Print spool directory': spooldir,
     '  User home basedir': homedir,
 }
 if have_spotlight
