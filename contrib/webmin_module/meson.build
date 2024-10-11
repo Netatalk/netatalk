@@ -8,7 +8,6 @@ webmin_files = [
     'edit_print.cgi',
     'edit_vol_section.cgi',
     'index.cgi',
-    'netatalk-lib.pl',
     'README.md',
     'restart.cgi',
     'save_atalk.cgi',
@@ -41,6 +40,14 @@ configure_file(
 configure_file(
     input: 'module.info.in',
     output: 'module.info',
+    configuration: cdata,
+    install_dir: webmin_build_dir,
+    install_tag: 'webmin',
+)
+
+configure_file(
+    input: 'netatalk-lib.pl.in',
+    output: 'netatalk-lib.pl',
     configuration: cdata,
     install_dir: webmin_build_dir,
     install_tag: 'webmin',
