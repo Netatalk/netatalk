@@ -117,7 +117,6 @@ struct afp_options {
     char *uuidconf;
     char *guest, *loginmesg, *keyfile, *passwdfile, *extmapfile;
     char *uamlist;
-    char authprintdir;
     char *signatureopt;
     unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
