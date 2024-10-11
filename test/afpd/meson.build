@@ -45,7 +45,7 @@ if have_spotlight
     test_external_deps += [
         glib,
         talloc,
-        tracker_sparql,
+        sparql,
     ]
 endif
 

@@ -1465,9 +1465,11 @@ aclmode = passthrough</screen>
       </indexterm></title>
 
     <para>Starting with version 3.1 Netatalk supports Spotlight searching.
-    Netatalk uses GNOME <ulink
-    url="https://projects.gnome.org/tracker/">Tracker</ulink> as metadata
-    store, indexer and search engine.</para>
+      Netatalk uses GNOME <ulink
+      url="https://projects.gnome.org/tracker/">Tracker</ulink> or its later
+      incarnation TinySPARQL/<ulink
+      url="https://gnome.pages.gitlab.gnome.org/localsearch/">LocalSearch
+      </ulink> as metadata store, indexer and search engine.</para>
 
     <sect2>
       <title>Configuration</title>

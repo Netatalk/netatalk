@@ -177,7 +177,7 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     event_del(timer_ev);
 
 #ifdef WITH_SPOTLIGHT
-    system(TRACKER_MANAGING_COMMAND " -t");
+    system(INDEXER_COMMAND " -t");
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -187,7 +187,7 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
-    system(TRACKER_MANAGING_COMMAND " -t");
+    system(INDEXER_COMMAND " -t");
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -377,7 +377,7 @@ static void show_netatalk_paths( void )
 #ifdef WITH_SPOTLIGHT
   printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
   printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
-  printf( "       tracker manager:\t%s\n", TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND);
+  printf( "       indexer manager:\t%s\n", INDEXER_COMMAND);
 #endif
 
 #ifndef SOLARIS
@@ -503,8 +503,8 @@ int main(int argc, char **argv)
         set_sl_volumes();
 
         if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
-            LOG(log_note, logtype_default, "Starting Tracker: " TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND " -s");
-            system(TRACKER_PREFIX "/bin/" TRACKER_MANAGING_COMMAND " -s");
+            LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
+            system(INDEXER_COMMAND " -s");
         }
     }
 #endif
