@@ -23,7 +23,7 @@ executable(
         glib,
         mysqlclient,
         talloc,
-        tracker_sparql,
+        sparql,
     ],
     c_args: ['-DMAIN'],
     install: false,
@@ -41,7 +41,7 @@ libspotlight = static_library(
     dependencies: [
         glib,
         talloc,
-        tracker_sparql,
+        sparql,
     ],
     include_directories: root_includes,
     c_args: ['-DDBUS_API_SUBJECT_TO_CHANGE', statedir],

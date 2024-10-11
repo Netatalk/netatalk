@@ -1128,7 +1128,7 @@
 
           <listitem>
             <para>Impose a limit on the number of results queried from Tracker
-            via SPARQL queries.</para>
+            or LocalSearch via SPARQL queries.</para>
           </listitem>
         </varlistentry>
 
@@ -1172,8 +1172,8 @@
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Whether to start a dbus instance for use with
-            Tracker.</para>
+            <para>Whether to start a dbus instance for use with Tracker or
+            LocalSearch.</para>
           </listitem>
         </varlistentry>
 
@@ -1182,9 +1182,10 @@
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Whether to start Tracker with "<command>tracker daemon
-            -s</command>". In case of old Tracker, "<command>tracker-control
-            -s</command>" is used instead.</para>
+            <para>Whether to start Tracker or LocalSearch with "<command>tracker
+            daemon -s</command>" or "<command>localsearch daemon -s</command>".
+            In case of old Tracker, "<command>tracker-control -s</command>" is
+            used instead.</para>
           </listitem>
         </varlistentry>
 

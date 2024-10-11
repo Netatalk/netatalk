@@ -625,11 +625,8 @@
 /* Define if TCP wrappers should be used */
 #mesondefine TCPWRAP
 
-/* tracker managing command */
-#mesondefine TRACKER_MANAGING_COMMAND
-
-/* Path to Tracker */
-#mesondefine TRACKER_PREFIX
+/* Indexer managing command */
+#mesondefine INDEXER_COMMAND
 
 /* Define if cracklib should be used */
 #mesondefine USE_CRACKLIB

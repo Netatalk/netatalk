@@ -49,7 +49,7 @@ if have_spotlight
     afpd_external_deps += [
         glib,
         talloc,
-        tracker_sparql,
+        sparql,
     ]
 endif
 

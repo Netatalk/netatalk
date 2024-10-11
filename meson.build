@@ -781,27 +781,32 @@ endif
 
 talloc = dependency('talloc', required: false)
 
-tracker_manager = ''
 tracker_prefix = get_option('with-tracker-prefix')
 
 if not get_option('with-spotlight')
     have_spotlight = false
 else
-    # Check for tracker SPARQL
+    # Check for SPARQL
 
-    tracker_sparql_version = ['3.0', '2.0', '1.0']
+    sparql_versions = [
+        'tracker-sparql-3.0',
+        'tracker-sparql-2.0',
+        'tracker-sparql-1.0'
+    ]
 
-    foreach version : tracker_sparql_version
-        tracker_sparql = dependency('tracker-sparql-' + version, required: false)
-        if tracker_sparql.found()
+    foreach sparql_version : sparql_versions
+        sparql = dependency(sparql_version, required: false)
+        if sparql.found()
             break
         endif
     endforeach
 
-    if not tracker_sparql.found()
-        warning('tracker SPARQL not found (required for Spotlight support)')
+    if not sparql.found()
+        warning('Tracker SPARQL or TinySPARQL not found (required for Spotlight support)')
     else
-        # Check for tracker
+        sparql_prefix = sparql.get_variable(pkgconfig: 'prefix')
+
+        # Check for indexer
 
         tracker = find_program(
             'tracker',
@@ -818,49 +823,36 @@ else
             dirs: tracker_prefix + '/bin',
             required: false,
         )
+        localsearch = find_program(
+            'localsearch',
+            dirs: tracker_prefix + '/bin',
+            required: false,
+        )
 
-        if tracker.found()
-            cdata.set(
-                'TRACKER_MANAGING_COMMAND',
-                '"tracker daemon"',
-            )
-            cdata.set(
-                'TRACKER_PREFIX',
-                '"'
-                + tracker_sparql.get_variable(pkgconfig: 'prefix')
-                + '"',
-            )
-            tracker_manager += 'tracker'
+        indexer_command = ''
+
+        if localsearch.found()
+            cdata.set('HAVE_TRACKER3', 1)
+            indexer_command = '"' + localsearch.full_path() + ' daemon"'
         elif tracker3.found()
             cdata.set('HAVE_TRACKER3', 1)
-            cdata.set(
-                'TRACKER_MANAGING_COMMAND',
-                '"tracker3 daemon"',
-            )
-            cdata.set(
-                'TRACKER_PREFIX',
-                '"'
-                + tracker_sparql.get_variable(pkgconfig: 'prefix')
-                + '"',
-            )
-            tracker_manager += 'tracker3'
+            indexer_command = '"' + tracker3.full_path() + ' daemon"'
+        elif tracker.found()
+            indexer_command = '"' + tracker.full_path() + ' daemon"'
         elif tracker_control.found()
-            cdata.set(
-                'TRACKER_MANAGING_COMMAND',
-                '"tracker-control"',
-            )
-            cdata.set(
-                'TRACKER_PREFIX',
-                '"'
-                + tracker_sparql.get_variable(pkgconfig: 'prefix')
-                + '"',
-            )
-            tracker_manager += 'tracker_control'
+            indexer_command = '"' + tracker_control.full_path() + '"'
         endif
-        tracker_found = (tracker.found() or tracker3.found() or tracker_control.found())
-        if not tracker_found
-            warning('tracker not found (required for Spotlight support)')
+        indexer_found = (
+            tracker.found()
+            or tracker3.found()
+            or tracker_control.found()
+            or localsearch.found()
+        )
+        if not indexer_found
+            warning('Tracker or LocalSearch not found (required for Spotlight support)')
         else
+            cdata.set('INDEXER_COMMAND', indexer_command)
+
             # Check for talloc
 
             if talloc.found()
@@ -875,8 +867,8 @@ else
 endif
 
 have_spotlight = (
-    tracker_sparql.found()
-    and tracker_found
+    sparql.found()
+    and indexer_found
     and talloc.found()
     and flex.found()
     and bison.found()
@@ -2400,12 +2392,7 @@ summary_info = {
 }
 if have_spotlight
     summary_info += {
-        '  tracker prefix': tracker_sparql.get_variable(pkgconfig: 'prefix'),
-        '  tracker install prefix': tracker_sparql.get_variable(
-            pkgconfig: 'prefix',
-        ),
-        '  tracker manager': tracker_sparql.get_variable(pkgconfig: 'prefix') / 'bin' / tracker_manager
-        + ' daemon',
+        '  Indexer command': indexer_command,
     }
 endif
 summary(summary_info, bool_yn: true, section: '  Paths:')

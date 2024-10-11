@@ -86,7 +86,7 @@ Required:
 Required for Spotlight support:
 
   - talloc
-  - tracker version 0.12 or later
+  - tracker version 0.12 or later, or tinysparql and localsearch version 3.8.0 or later
   - bison
   - flex
 
