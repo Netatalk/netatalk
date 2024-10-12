@@ -1,6 +1,4 @@
-FROM alpine:3.20
-
-ENV LIB_DEPS \
+ARG RUN_DEPS="\
     acl \
     avahi \
     avahi-compat-libdns_sd \
@@ -17,8 +15,9 @@ ENV LIB_DEPS \
     talloc \
     tracker \
     tracker-miners \
-    tzdata
-ENV BUILD_DEPS \
+    tzdata \
+    bash"
+ARG BUILD_DEPS="\
     acl-dev \
     avahi-dev \
     bison \
@@ -40,23 +39,23 @@ ENV BUILD_DEPS \
     pkgconfig \
     talloc-dev \
     tracker-dev \
-    unicode-character-database
+    unicode-character-database"
+
+FROM alpine:3.20 as build
+
+ARG RUN_DEPS
+ARG BUILD_DEPS
+ENV RUN_DEPS=$RUN_DEPS
+ENV BUILD_DEPS=$BUILD_DEPS
+
 RUN apk update \
 &&  apk add --no-cache \
-    $LIB_DEPS \
-    $BUILD_DEPS \
-&&  addgroup builder \
-&&  adduser \
-    --disabled-password \
-    --ingroup builder \
-    --no-create-home \
-    builder
+    $RUN_DEPS \
+    $BUILD_DEPS
 
 WORKDIR /netatalk-code
 COPY . .
-RUN chown -R builder:builder . \
-&&  rm -rf build || true
-USER builder
+RUN rm -rf build
 
 RUN meson setup build \
     -Dbuildtype=release \
@@ -71,19 +70,23 @@ RUN meson setup build \
     -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
 
-USER root
+RUN meson install --destdir=/staging/ -C build
 
-RUN meson install -C build \
-&&  apk del $BUILD_DEPS \
-&&  rm -rf \
-    /netatalk-code \
-    /usr/local/include/atalk \
-    /var/tmp \
-    /tmp \
-&&  ln -sf /dev/stdout /var/log/afpd.log
+FROM alpine:3.20 as deploy
+
+ARG RUN_DEPS
+ENV RUN_DEPS=$RUN_DEPS
+
+COPY --from=build /staging/ /
+
+RUN apk update \
+&&  apk add --no-cache $RUN_DEPS
+
+RUN ln -sf /dev/stdout /var/log/afpd.log
+
+COPY /contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
 
 WORKDIR /mnt
-COPY contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
 EXPOSE 548
 VOLUME ["/mnt/afpshare", "/mnt/afpbackup"]
 CMD ["/entrypoint.sh"]
