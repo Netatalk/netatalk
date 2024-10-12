@@ -1,6 +1,6 @@
 FROM alpine:3.20
 
-ENV LIB_DEPS \
+ENV LIB_DEPS="\
     acl \
     avahi \
     avahi-compat-libdns_sd \
@@ -17,8 +17,8 @@ ENV LIB_DEPS \
     talloc \
     tracker \
     tracker-miners \
-    tzdata
-ENV BUILD_DEPS \
+    tzdata"
+ENV BUILD_DEPS="\
     acl-dev \
     avahi-dev \
     bison \
@@ -40,7 +40,7 @@ ENV BUILD_DEPS \
     pkgconfig \
     talloc-dev \
     tracker-dev \
-    unicode-character-database
+    unicode-character-database"
 RUN apk update \
 &&  apk add --no-cache \
     $LIB_DEPS \
