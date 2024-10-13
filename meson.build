@@ -467,9 +467,9 @@ bdb_subdirs = [
 
 if bdb_req_version != ''
     if not bdb_req_version.version_compare('>=4.6')
-        error('Berkley DB library version is below supported 4.6')
+        error('Berkeley DB library version is below supported 4.6')
     endif
-    message('Searching for Berkley DB library version', bdb_req_version)
+    message('Searching for Berkeley DB library version', bdb_req_version)
 endif
 
 foreach dir : bdb_dirs
@@ -479,19 +479,29 @@ foreach dir : bdb_dirs
         if fs.exists(bdb_header)
             bdb_includes = include_directories(bdb_include_path)
 
-            bdb_major_version = run_command(
+            grep_result = run_command(
                 'grep',
                 'DB_VERSION_MAJOR',
                 bdb_header,
-                check: true,
-            ).stdout().strip().substring(25)
+                check: false,
+            )
+            if grep_result.returncode() != 0
+                warning('Unable to determine Berkeley DB major version from header', bdb_header)
+                continue
+            endif
+            bdb_major_version = grep_result.stdout().strip().substring(25)
         
-            bdb_minor_version = run_command(
+            grep_result = run_command(
                 'grep',
                 'DB_VERSION_MINOR',
                 bdb_header,
-                check: true,
-            ).stdout().strip().substring(25)
+                check: false,
+            )
+            if grep_result.returncode() != 0
+                warning('Unable to determine Berkeley DB minor version from header', bdb_header)
+                continue
+            endif
+            bdb_minor_version = grep_result.stdout().strip().substring(25)
         
             bdb_version = bdb_major_version + '.' + bdb_minor_version
 
@@ -503,7 +513,7 @@ foreach dir : bdb_dirs
                 continue
             endif
 
-            message('Berkley DB header found at', bdb_header)
+            message('Berkeley DB header found at', bdb_header)
 
             # Now find lib file matching header
             if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
