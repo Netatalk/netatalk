@@ -523,7 +523,8 @@
             portの組み合わせは角かっこを使ったフォーマット[IPv6]:portのURLを使わなければならない。</para>
 
             <note>
-              <para><option>afp interfaces</option> オプションと同時に使用しないでください。</para>
+              <para><option>afp interfaces</option>
+              オプションと同時に使用しないでください。</para>
             </note>
           </listitem>
         </varlistentry>
@@ -900,6 +901,31 @@
             uchgフラグを設定する場合、3つの属性が全て使われる。従って、Finderロック/BSD
             uchgフラグを無視する目的で<emphasis>ignored attributes =
             all</emphasis>の設定を追加してください。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>legacy icon = <replaceable>icon</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Classic Mac OS の Finder に表示される共有ボリューム アイコンを設定する。
+            デフォルトでは、使用されているトランスポート層 (TCP/IP または AppleTalk) を示すアイコンが表示される。
+            有効なアイコン名の例は以下になる。</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><option>daemon</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>globe</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>hagar</option></para>
+              </listitem>
+            </itemizedlist>
           </listitem>
         </varlistentry>
 

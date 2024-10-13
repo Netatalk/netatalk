@@ -402,7 +402,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
 /* returns actual offset to signature */
 static void status_icon(char *data, const unsigned char *icondata,
-                        const int iconlen, const int sigoffset)
+                        const size_t iconlen, const int sigoffset)
 {
     char                *start = data;
     char                *sigdata = data + sigoffset;
@@ -435,6 +435,8 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
     size_t statuslen;
     int c, sigoff, ipok = 0;
     const struct afp_options *options = &dsi_obj->options;
+    const unsigned char *icon;
+    size_t iconlen;
 
     maxstatuslen = sizeof(dsi->status);
 
@@ -493,8 +495,39 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
 #endif
                     dsi);
     status_uams(status, options->uamlist);
-    status_icon(status, icon, sizeof(icon), c);
 
+    if (strcmp(options->legacyicon, "daemon") == 0) {
+        icon = daemon_icon;
+        iconlen = sizeof(daemon_icon);
+    }
+    else if (strcmp(options->legacyicon, "declogo") == 0) {
+        icon = declogo_icon;
+        iconlen = sizeof(declogo_icon);
+    }
+    else if (strcmp(options->legacyicon, "globe") == 0) {
+        icon = globe_icon;
+        iconlen = sizeof(globe_icon);
+    }
+    else if (strcmp(options->legacyicon, "hagar") == 0) {
+        icon = hagar_icon;
+        iconlen = sizeof(hagar_icon);
+    }
+    else if (strcmp(options->legacyicon, "sunlogo") == 0) {
+        icon = sunlogo_icon;
+        iconlen = sizeof(sunlogo_icon);
+    }
+#ifndef NO_DDP
+    else if (asp) {
+        icon = apple_atalk_icon;
+        iconlen = sizeof(apple_atalk_icon);
+    }
+#endif
+    else {
+        icon = apple_tcp_icon;
+        iconlen = sizeof(apple_tcp_icon);
+    }
+
+    status_icon(status, icon, iconlen, c);
     sigoff = status_signature(status, &c, options);
     /* c now contains the offset where the netaddress offset lives */
 

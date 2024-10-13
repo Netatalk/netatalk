@@ -137,6 +137,7 @@ struct afp_options {
     char *logconfig;
     char *logfile;
     bool log_us_timestamp;
+    char *legacyicon;
     char *mimicmodel;
     char *zeroconfname;
     char *adminauthuser;

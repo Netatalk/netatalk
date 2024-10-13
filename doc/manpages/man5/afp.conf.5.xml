@@ -598,7 +598,8 @@
             system, but to listen for any incoming request.</para>
 
             <note>
-              <para>Do not use at the same time as the <option>afp listen</option> option.</para>
+              <para>Do not use at the same time as the <option>afp
+              listen</option> option.</para>
             </note>
           </listitem>
         </varlistentry>
@@ -619,7 +620,8 @@
             using square brackets [IPv6]:port</para>
 
             <note>
-              <para>Do not use at the same time as the <option>afp interfaces</option> option.</para>
+              <para>Do not use at the same time as the <option>afp
+              interfaces</option> option.</para>
             </note>
           </listitem>
         </varlistentry>
@@ -675,8 +677,7 @@
           <listitem>
             <para>Specifies the AppleTalk zone to register the server in. The
             default is to register the server in the default zone of the last
-            interface configured by the system.
-            </para>
+            interface configured by the system.</para>
           </listitem>
         </varlistentry>
 
@@ -1052,6 +1053,32 @@
             you set the BSD uchg flag in the Terminal, all three attributes
             are used. Thus in order to ignore the Finder lock/BSD uchg flag,
             add set <emphasis>ignored attributes = all</emphasis>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>legacy icon = <replaceable>icon</replaceable>
+          <type>(G)</type></term>
+
+          <listitem>
+            <para>Sets the shared volume icon displayed in the Finder in
+            Classic Mac OS. Default is to display an icon indicating the
+            transport layer used (TCP/IP or AppleTalk). Examples of valid icon
+            styles:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><option>daemon</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>globe</option></para>
+              </listitem>
+
+              <listitem>
+                <para><option>hagar</option></para>
+              </listitem>
+            </itemizedlist>
           </listitem>
         </varlistentry>
 
