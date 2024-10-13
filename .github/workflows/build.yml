@@ -447,7 +447,8 @@ jobs:
             curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
-              -Dwith-appletalk=true
+              -Dwith-appletalk=true \
+              -Dwith-tests=true
             meson compile -C build
             meson install -C build
             /usr/local/sbin/netatalk -V
@@ -490,8 +491,12 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-appletalk=true
+              -Dwith-appletalk=true \
+              -Dwith-tests=true
             meson compile -C build
+            cd build
+            meson test
+            cd ..
             meson install -C build
             /usr/local/sbin/netatalk -V
             /usr/local/sbin/afpd -V
@@ -593,7 +598,8 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-appletalk=true
+              -Dwith-appletalk=true \
+              -Dwith-tests=true
             meson compile -C build
             meson install -C build
             /usr/local/sbin/netatalk -V
@@ -643,8 +649,12 @@ jobs:
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-              -Dwith-ldap-path=/opt/local
+              -Dwith-ldap-path=/opt/local \
+              -Dwith-tests=true
             meson compile -C build
+            cd build
+            meson test
+            cd ..
             meson install -C build
             /usr/local/sbin/netatalk -V
             /usr/local/sbin/afpd -V
