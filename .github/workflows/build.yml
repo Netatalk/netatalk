@@ -565,7 +565,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1.1.2
+        uses: vmactions/openbsd-vm@v1.1.4
         with:
           copyback: false
           prepare: |
@@ -575,14 +575,14 @@ jobs:
               db-4.6.21p7v0 \
               dbus \
               docbook-xsl \
-              gcc-11.2.0p11 \
+              gcc-11.2.0p14 \
               libevent \
               libgcrypt \
               libtalloc \
               libxslt \
               mariadb-client \
               meson \
-              openldap-client-2.6.7v0 \
+              openldap-client-2.6.8v0 \
               openpam \
               p5-Net-DBus \
               pkgconf \
