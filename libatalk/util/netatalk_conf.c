@@ -2127,6 +2127,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->ntdomain       = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt domain",      NULL);
     options->addomain       = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "ad domain",      NULL);
     options->ntseparator    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nt separator",   NULL);
+    options->legacyicon     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "legacy icon",    "");
     options->mimicmodel     = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "mimic model",    NULL);
     options->zeroconfname    = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "zeroconf name",    NULL);
     options->adminauthuser  = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "admin auth user",NULL);
@@ -2372,6 +2373,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.addomain);
     if (obj->options.ntseparator)
         CONFIG_ARG_FREE(obj->options.ntseparator);
+    if (obj->options.legacyicon)
+        CONFIG_ARG_FREE(obj->options.legacyicon);
     if (obj->options.mimicmodel)
         CONFIG_ARG_FREE(obj->options.mimicmodel);
     if (obj->options.zeroconfname)
