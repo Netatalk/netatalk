@@ -87,20 +87,11 @@ int main()
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, ""), 0);
 
-#if 0
-// this doesn't work anymore since cnid sheme = last (which we use in the test)
-// has been changed to force read-only mode for the volume
     TEST_expr(reti = createdir(&obj, vid, DIRDID_ROOT, "dir1"),
               reti == 0 || reti == AFPERR_EXIST);
 
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "dir1"), 0);
-#endif
-/*
-  FIXME: this doesn't work although it should. "//" get translated to \000 \000 at means ".."
-  i.e. this should getfiledirparms for DIRDID_ROOT_PARENT -- at least afair!
-    TEST_int(getfiledirparms(&configs->obj, vid, DIRDID_ROOT, "//"), 0);
-*/
-#if 0
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "\000\000"), 0);
     TEST_int(createfile(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
     TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
     TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1"), 0);
@@ -108,7 +99,6 @@ int main()
     TEST_int(createfile(&obj, vid, DIRDID_ROOT, "file1"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "file1"), 0);
     TEST_int(delete(&obj, vid, DIRDID_ROOT, "file1"), 0);
-#endif
 
     /* test enumerate.c stuff */
     TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0);

@@ -180,13 +180,13 @@ afpdtest = executable(
 test_sh = find_program('test.sh')
 
 test(
-    'test1',
+    'test prep',
     test_sh,
     is_parallel: false,
     priority: 1,
 )
 test(
-    'test2',
+    'test suite',
     afpdtest,
     is_parallel: false,
     priority: 0,
