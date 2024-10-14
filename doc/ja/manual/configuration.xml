@@ -160,7 +160,8 @@ basedir regex = /usr/home</programlisting></para>
     名前を一対一対応させるデータベースである。</para>
 
     <para>CNID データベースはデフォルトで <filename>$prefix/var/netatalk/CNID</filename>
-    に置かれる。コンパイル時に <command>-Dwith-statedir-path=PATH</command> オプションで場所を変えられる。</para>
+    に置かれる。コンパイル時に <command>-Dwith-statedir-path=PATH</command>
+    オプションで場所を変えられる。</para>
 
     <para>CNID データベースの検証・修復・再構築のために用いることができる <command>dbd</command>
     という名のコマンドが用意されていている。</para>
@@ -1341,7 +1342,10 @@ aclmode = passthrough</screen>
 
     <para>バージョン 3.1 から、Netatalk は Spotlight 検索をサポートしている。Netatalk
     はメタデータの保存、インデックス化およびサーチエンジンに GNOME <ulink
-    url="https://projects.gnome.org/tracker/">Tracker</ulink> を用いる。</para>
+    url="https://projects.gnome.org/tracker/">Tracker</ulink> またはそれ以降のバージョンである
+    TinySPARQL/<ulink
+    url="https://gnome.pages.gitlab.gnome.org/localsearch/">LocalSearch
+    </ulink> を用いる。</para>
 
     <sect2>
       <title>設定</title>

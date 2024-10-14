@@ -992,7 +992,8 @@
           (デフォルト: <emphasis>無制限</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>SPARQLクエリを介したTrackerからのクエリ結果の数に制限を課す。</para>
+            <para>SPARQLクエリを介した Tracker もしくは LocalSearch
+            からのクエリ結果の数に制限を課す。</para>
           </listitem>
         </varlistentry>
 
@@ -1031,7 +1032,7 @@
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>Trackerを使うためにdbusインスタンスを開始するかどうか。</para>
+            <para>Tracker もしくは LocalSearch を使うためにdbusインスタンスを開始するかどうか。</para>
           </listitem>
         </varlistentry>
 
@@ -1040,8 +1041,9 @@
           <emphasis>yes</emphasis>) <type>(G)</type></term>
 
           <listitem>
-            <para>"<command>tracker daemon
-            -s</command>"によってTrackerを開始するかどうか。古いTrackerの場合、"<command>tracker-control
+            <para>"<command>tracker daemon -s</command>"、
+            "<command>localsearch daemon -s</command>" によって Tracker もしくは
+            LocalSearch を開始するかどうか。古いTrackerの場合、"<command>tracker-control
             -s</command>"が代わりに使われる。</para>
           </listitem>
         </varlistentry>
