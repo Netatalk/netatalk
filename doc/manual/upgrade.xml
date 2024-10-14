@@ -596,7 +596,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0</entry>
+                <entry>Reinstated in 4.0.0</entry>
               </row>
             </tbody>
           </tgroup>
@@ -1289,7 +1289,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0</entry>
+                <entry>Reinstated in 4.0.0</entry>
               </row>
 
               <row>
@@ -1401,7 +1401,7 @@
 
                 <entry>-</entry>
 
-                <entry>afp.conf only</entry>
+                <entry>extmap.conf only</entry>
               </row>
 
               <row>
@@ -1457,21 +1457,21 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0</entry>
+                <entry>Reinstated in 4.0.0</entry>
               </row>
 
               <row>
                 <entry>-[no]icon</entry>
 
-                <entry>-</entry>
+                <entry>legacy icon</entry>
 
                 <entry>-noicon</entry>
 
-                <entry/>
-
                 <entry>-</entry>
 
-                <entry>obsolete</entry>
+                <entry>(G)</entry>
+
+                <entry>Reinstated in 4.0.2</entry>
               </row>
 
               <row>
@@ -2410,7 +2410,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>Reinstated in 4.0</entry>
+                <entry>Reinstated in 4.0.0</entry>
               </row>
 
               <row>
@@ -2466,7 +2466,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>Reinstated in 4.0</entry>
+                <entry>Reinstated in 4.0.0</entry>
               </row>
 
               <row>
