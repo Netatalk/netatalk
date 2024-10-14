@@ -512,6 +512,10 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
         icon = hagar_icon;
         iconlen = sizeof(hagar_icon);
     }
+    else if (strcmp(options->legacyicon, "sdcard") == 0) {
+        icon = sdcard_icon;
+        iconlen = sizeof(sdcard_icon);
+    }
     else if (strcmp(options->legacyicon, "sunlogo") == 0) {
         icon = sunlogo_icon;
         iconlen = sizeof(sunlogo_icon);
