@@ -577,17 +577,17 @@ jobs:
             pkg_add -I \
               avahi \
               bison \
-              db-4.6.21p7v0 \
+              db \
               dbus \
               docbook-xsl \
-              gcc-11.2.0p14 \
+              gcc \
               libevent \
               libgcrypt \
               libtalloc \
               libxslt \
               mariadb-client \
               meson \
-              openldap-client-2.6.8v0 \
+              openldap-client \
               openpam \
               p5-Net-DBus \
               pkgconf \
