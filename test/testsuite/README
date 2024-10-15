@@ -1,0 +1,144 @@
+
+                 The Netatalk Test-Suite
+                 =======================
+
+This suite contains several small utilities aimed at testing
+a) AFP Server conformance to the AFP Specs, eg. `spectest`
+b) benchmarking AFP Servers, eg. `lantest`
+
+For end users the most useful utility is probably `lantest` which 
+is a CLI counterpart for the famous HELIOS Lan Test.
+
+Tests prg in test directory:
+============================
+
+Spec conformance tests:
+-----------------------
+
+./spectest:
+AFP spec test. Assume exported volumes are only modified with netatalk.
+
+./sleeptest:
+AFP spec tests for sleeping (FPZzz), no included in spectest
+
+./logintest:
+AFP spec tests for DSI and login. Not included in spectest.
+
+./rotest:
+AFP spec tests on a read only volume. Not included in spectest.
+
+./failed_spectest:
+AFP spec tests which fail with current netatalk but pass on a Mac.
+
+./T2_spectest
+AFP spec tests when .AppleDouble is missing or bogus.
+Requires local access to volume (-c option).
+
+
+Benchmarking
+------------
+
+./lantest
+Netatalk implementation of HELIOS Lan Test.
+
+./speedtest
+Bench Read, Write and file copy (either Read/Write or FPCopyFile),
+it can also run the same tests using Posix syscalls and can
+be use for testing afpd speed against local or others protocols.
+
+
+Misc
+----
+
+Helpers and benchmarks:
+./afparg
+The beginning of an AFP CLI client, cf ./afparg -l
+FPResolveID <file CNID>
+FPCopyFile <source> <dest>
+
+./afp_ls
+'minimal' ls using AFP commands. Should be migrated to afparg.
+
+Compilation 
+===========
+
+Setup meson with the `-Dwith-testsuite=true' option.
+
+
+Configuration for running the APF spec tests
+============================================
+
+- 2 users: <user1> <user2> with the same password
+- 3 group: <gp1> <gp2> <common>
+- with gp1:user1, gp2:user2, common:user1, user2
+- clear text UAM
+- an empty volume:
+drwxrwsr-x    5 user1   common         176 avr 27 23:56 test/ 
+- some tests need a small read write volume, I'm using a 2 MBytes loopback
+
+example for 
+afp.conf:
+#<<<<<<
+[Global]
+uam list = uams_clrtxt.so uams_guest.so
+
+# volume mount read only
+# not empty at least 2 files and one folder (empty).
+[cdrom]
+path = /mnt/cdrom
+vol dbpath = /opt/var/afpd/cdrom
+
+[test]
+path = /u/test
+#<<<<<<<<
+
+For testing with a Mac, same config (user1 or user2 are not owner)
+
+make check
+----------
+
+You can also run the complete spectest (one user, two users, local access) with
+`make check`. To do so, run:
+- `make check` once in order to generate a boilerplate config file "spectest.conf"
+- edit "spectest.conf" to suit your need
+- run `make check` again
+
+Return Code
+-----------
+0 PASSED 
+1 FAILED
+2 NOT TESTED the test failed too early
+
+spectest, logintext and rotest shall return the same results whether they are run
+on a Mac server or afpd.
+
+Example:
+--------
+Run all tests on server 192.168.2.123
+spectest  -h 192.168.2.123 -u user1 -d usr2 -s test -w  toto
+Same but on a Mac
+spectest -m -h 192.168.2.64 -u user1 -d usr2 -s test -w  toto
+
+Run FPByteRangeLock tests with AFP 3.0, two different servers are exporting the same volume.
+T2_spectest -f FPByteRangeLock -3  -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /u/test -w toto 
+
+At least on linux, it's possible to compile them with LDFLAGS=-rdynamic
+and the program can run individual test:
+./T2_spectest -4 -u <user> -d <seconduser> -w <passwd> -s <vol> -c <path> -f test235
+
+Tests output
+------------
+
+Test name
+if the test is not executed, reason, ex: SKIPPED (need AFP 3.x)      
+list of AFP calls executed with error code if any
+
+if Mac result and Netatalk differ or if Mac result differ between versions, Mac result
+Ex:
+header.dsi_code       -5000     AFPERR_ACCESS
+MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY
+Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
+
+if Mac and Netatalk now return the same result:
+Warning MAC and Netatalk now same RESULT!   
+

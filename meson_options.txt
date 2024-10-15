@@ -184,6 +184,12 @@ option(
     description: 'Compile tests',
 )
 option(
+    'with-testsuite',
+    type: 'boolean',
+    value: false,
+    description: 'Compile the AFP test suite',
+)
+option(
     'with-webmin',
     type: 'boolean',
     value: false,

@@ -57,6 +57,10 @@ Developers: Version 1.4.99 - 2.0
 Webmin Module:
 	Matthew Keller <kellermg@potsdam.edu>
 
+Test Suite:
+	Didier Gautheron <dgautheron@magic.fr>
+	Rafal Lewczuk <rlewczuk@pronet.pl>
+
 Package Maintainers and Contributors:
 	Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
     Jonas Smedegaard <dr@jones.dk> (Debian GNU systems)
