@@ -2310,13 +2310,10 @@ subdir('etc')
 subdir('contrib')
 subdir('distrib')
 subdir('sys')
+subdir('test')
 
 if get_option('with-manual') != 'none'
     subdir('doc')
-endif
-
-if get_option('with-tests')
-    subdir('test')
 endif
 
 #########################
@@ -2430,6 +2427,7 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
 summary_info = {
+    '  Test suite': get_option('with-testsuite'),
     '  Webmin module': have_webmin,
 }
 summary(summary_info, bool_yn: true, section: '  Add-ons:')
