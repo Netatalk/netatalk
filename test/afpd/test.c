@@ -68,7 +68,7 @@ int main()
     TEST( cnid_init() );
     TEST( load_volumes(&obj, LV_ALL) );
     TEST_int( dircache_init(8192), 0);
-    obj.afp_version = 32;
+    obj.afp_version = 34;
 
     printf("\n");
 
