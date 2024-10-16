@@ -1,5 +1,6 @@
 webmin_files = [
     'config.info',
+    'control.cgi',
     '../../COPYING',
     'delete_atalk.cgi',
     'delete_sections.cgi',
@@ -9,7 +10,6 @@ webmin_files = [
     'edit_vol_section.cgi',
     'index.cgi',
     'README.md',
-    'restart.cgi',
     'save_atalk.cgi',
     'save_global_section.cgi',
     'save_print.cgi',
@@ -17,8 +17,6 @@ webmin_files = [
     'server_status.cgi',
     'show_atalk.cgi',
     'show_users.cgi',
-    'start.cgi',
-    'stop.cgi',
 ]
 
 webmin_build_dir = meson.current_build_dir() / 'netatalk'
