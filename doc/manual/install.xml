@@ -298,7 +298,7 @@ Resolving deltas: 100% (32227/32227), done.
 
       <para>Instructions on how to use the build system to configure and build
       netatalk source code are documented in the <ulink
-      url="https://github.com/Netatalk/netatalk/blob/main/INSTALL">INSTALL</ulink>
+      url="https://github.com/Netatalk/netatalk/blob/main/INSTALL.md">INSTALL.md</ulink>
       file in the Netatalk source tree.</para>
 
       <para>For examples of concrete steps to compile on specific operating
