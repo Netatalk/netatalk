@@ -174,12 +174,12 @@ print "<h3>$text{'index_filesharing_services'}</h3>\n";
 if(&find_byname($config{'netatalk_d'})) {
 	print &ui_buttons_start();
 	print &ui_buttons_row(
-		'restart.cgi',
+		'control.cgi?action=restart&daemon='.basename($config{netatalk_d}),
 		$text{'running_restart'},
 		&text('index_process_control_restart_daemon', basename($config{netatalk_d}))
 	);
 	print &ui_buttons_row(
-		'stop.cgi',
+		'control.cgi?action=stop&daemon='.basename($config{netatalk_d}),
 		$text{'running_stop'},
 		&text('index_process_control_stop_daemon', basename($config{netatalk_d}))
 	);
@@ -188,7 +188,7 @@ if(&find_byname($config{'netatalk_d'})) {
 } else {
 	print &ui_buttons_start();
 	print &ui_buttons_row(
-		'start.cgi',
+		'control.cgi?action=start&daemon='.basename($config{netatalk_d}),
 		$text{'running_start'},
 		&text('index_process_control_start_daemon', basename($config{netatalk_d}))
 	);

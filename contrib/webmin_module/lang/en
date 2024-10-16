@@ -17,9 +17,7 @@ index_title=Netatalk AFP Server
 index_version=Version $1
 index_ever=The $1 program was not found on your system. Either Netatalk is not installed, or your <a href='$2'> module configuration</a> is incorrect.
 
-restart_failed=Restart failed
-start_1=$1 failed
-stop_1=$1 failed
+init_failed=Command "$1" failed
 
 delete_failed=Could not delete file
 not_valid_path=Not Valid Path
