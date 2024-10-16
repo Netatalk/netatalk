@@ -351,7 +351,7 @@ cups_get_printer_status (struct printer *pr)
 	{
 		LOG(log_error, logtype_papd,
 			"Unable to get destination \"%s\": %s", pr->p_printer, cupsLastErrorString());
-		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
+		snprintf(pr->p_status, 254, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
 		return (0);
 	}
 
@@ -371,7 +371,7 @@ cups_get_printer_status (struct printer *pr)
 	{
 		LOG(log_error, logtype_papd,
 			"Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
-		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
+		snprintf(pr->p_status, 254, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
 		cupsFreeDests(1, dest);
 		return (0);
 	}
@@ -417,7 +417,7 @@ cups_get_printer_status (struct printer *pr)
 		/* Printer didn't respond to status request. Don't block print jobs as the scheduler will handle them */
 		LOG(log_error, logtype_papd, "Unable to get printer attribs for %s - %s", pr->p_printer,
 			ippErrorString(cupsLastError()));
-		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
+		snprintf(pr->p_status, 254, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
 		httpClose(http);
 		cupsFreeDests(1, dest);
 		return (1);
@@ -460,11 +460,11 @@ cups_get_printer_status (struct printer *pr)
 	if (!printer_avail && printer_state != 4)
 		status = 0; /* printer is rejecting jobs */
 
-	snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
+	snprintf(pr->p_status, 254, cups_status_msg[status], pr->p_printer);
 
 	/* printer state */
 	if (!strcmp(printer_reason, "none\n"))
-		strncat(pr->p_status, printer_reason, 255 - strlen(pr->p_status));
+		strncat(pr->p_status, printer_reason, 254 - strlen(pr->p_status));
 
 	/*
 	 * Return the print status ...
