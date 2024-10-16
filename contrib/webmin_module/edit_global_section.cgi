@@ -136,8 +136,14 @@ print &ui_table_row($text{'edit_global_section_afpstats'},
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mimic model', \%in);
 print &ui_table_row($text{'edit_global_section_mimic_model'},
-	&ui_textbox('p_mimic model', $values[0], 40)
+	&ui_textbox('p_mimic model', $values[0], 20)
 	.$text{edit_global_section_mimic_model_help}
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'legacy icon', \%in);
+print &ui_table_row($text{'edit_global_section_legacy_icon'},
+	&ui_textbox('p_legacy icon', $values[0], 20)
+	.$text{edit_global_section_legacy_icon_help}
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mac charset', \%in);
