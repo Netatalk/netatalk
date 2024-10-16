@@ -246,6 +246,9 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     EC_ZERO( bfindreplace(newpath, str2e, strdot, 0) );
     EC_ZERO( bfindreplace(newpath, str2f, strcolon, 0) );
 
+    if (bdata(newpath) == NULL)
+        goto EC_CLEANUP;
+
     become_root();
     if (adflags != ADFLAGS_DIR) {
         if ((newadpath = strdup(vol->ad_path(bdata(newpath), 0))) == NULL) {

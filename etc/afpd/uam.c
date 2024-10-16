@@ -210,7 +210,8 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             princ = bformat("%s@%s", name, obj->options.addomain);
         else
             princ = bformat("%s%s%s", obj->options.ntdomain, obj->options.ntseparator, name);
-        pwent = getpwnam(bdata(princ));
+        if (bdata(princ))
+            pwent = getpwnam(bdata(princ));
         bdestroy(princ);
 
         if (pwent) {
