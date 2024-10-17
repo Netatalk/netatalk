@@ -1139,7 +1139,10 @@ void FPGetFileDirParms_test()
 	test333();
 	test334();
 	test335();
+// FIXME: These tests require extmap.conf settings which are disabled by default
+#if 0
     test371();
     test380();
+#endif
 }
 
