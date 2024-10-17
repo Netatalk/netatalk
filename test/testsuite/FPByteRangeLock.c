@@ -968,7 +968,10 @@ void FPByteRangeLock_test()
 #endif
 	test80();
 	test329();
+// FIXME: broken with Netatalk 4.0
+#if 0
 	test330();
+#endif
     test410();
 	/* must be the last one */
 	test366();

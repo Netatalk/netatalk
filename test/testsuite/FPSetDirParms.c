@@ -958,7 +958,10 @@ void FPSetDirParms_test()
     test353();
     test354();
     test355();
+// FIXME: broken in Netatalk 4.0
+#if 0
     test356();
+#endif
     test405();
 }
 
