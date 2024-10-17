@@ -1542,5 +1542,10 @@ void FPOpenFork_test()
     test236();
     test237();
     test238();
+// FIXME: test seems to require manually moving data file to
+// data/resource_fork_conversion_test
+// Disabling for now.
+#if 0
     test431();
+#endif
 }

@@ -223,7 +223,8 @@ T2_spectest = executable(
 spectest_sh = find_program('spectest.sh')
 
 test(
-    'spectest',
+    'AFP specification test suite',
     spectest_sh,
     is_parallel: true,
+    timeout: 90,
 )
