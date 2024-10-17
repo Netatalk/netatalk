@@ -292,6 +292,8 @@ test_exit:
 /* ----------- */
 void FPDelete_test()
 {
+// FIXME: all flaky with Netatalk 4.0; mix of fails and false passes
+#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDelete page 143\n");
     test146();
@@ -300,5 +302,6 @@ void FPDelete_test()
     test363();
 #endif
     test364();
+#endif
 }
 

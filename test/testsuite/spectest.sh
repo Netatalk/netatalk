@@ -14,8 +14,8 @@ check_return() {
 
 echo =====================================
 
-if [ ! -f spectest.conf ] ; then
-    cat > spectest.conf <<EOF
+if [ ! -f ./test/testsuite/spectest.conf ] ; then
+    cat > ./test/testsuite/spectest.conf <<EOF
 # AFPSERVER=127.0.0.1
 # AFPPORT=548
 # USER1=
@@ -36,7 +36,7 @@ EOF
     exit 0
 fi
 
-. ./spectest.conf
+. ./test/testsuite/spectest.conf
 
 # cleanup
 if test ! -z "$LOCALVOL1PATH" ; then
@@ -52,28 +52,28 @@ rm -f spectest.log
 
 ##
 printf "Running spectest with two users..."
-./spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1"  -S "$VOLUME2" >> spectest.log 2>&1
+./test/testsuite/spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1"  -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
 check_return
 
 ##
 printf "Running spectest with local filesystem modifications..."
-./T2_spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> spectest.log 2>&1
+./test/testsuite/T2_spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
 check_return
 
 echo =====================================
 echo Failed tests
-echo ––––––––––––
-grep "summary.*FAIL" spectest.log | sed s/test//g | sort -n | uniq
+echo ------------
+grep "summary.*FAIL" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
 echo =====================================
 
 echo Skipped tests
-echo –––––––––––––
-egrep 'summary.*NOT TESTED|summary.*SKIPPED' spectest.log | sed s/test//g | sort -n | uniq
+echo -------------
+egrep 'summary.*NOT TESTED|summary.*SKIPPED' ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
 echo =====================================
 
-echo Successfull tests
-echo –––––––––––––––––
-grep "summary.*PASSED" spectest.log | sed s/test//g | sort -n | uniq
+echo Successful tests
+echo ----------------
+grep "summary.*PASSED" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
 echo =====================================
 
 # cleanup
