@@ -318,6 +318,7 @@ char *uam = "Cleartxt Passwrd";
 int main( int ac, char **av )
 {
 int cc;
+int ret;
 
     while (( cc = getopt( ac, av, "v1234567ah:H:p:s:S:u:d:w:c:f:Llmxi" )) != EOF ) {
         switch ( cc ) {
@@ -446,10 +447,14 @@ int cc;
 
     /* login */	
     if (Version >= 30) {
-		FPopenLoginExt(Conn, vers, uam, User, Password);
+		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
-		FPopenLogin(Conn, vers, uam, User, Password);
+		ret = FPopenLogin(Conn, vers, uam, User, Password);
+	}
+	if (ret) {
+		printf("Login failed\n");
+		exit(1);
 	}
 	Conn->afp_version = Version;
 	
@@ -479,11 +484,15 @@ int cc;
 		}
     	/* login */	
     	if (Version >= 30) {
-			FPopenLoginExt(Conn2, vers, uam, User2, Password);
+			ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
 		}
     	else {
-			FPopenLogin(Conn2, vers, uam, User2, Password);
+			ret = FPopenLogin(Conn2, vers, uam, User2, Password);
 		}
+	if (ret) {
+		printf("Login failed\n");
+		exit(1);
+	}
 		Conn2->afp_version = Version;
 	}
 	/*********************************
