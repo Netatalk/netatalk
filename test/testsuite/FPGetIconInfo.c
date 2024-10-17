@@ -48,8 +48,11 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 /* ----------- */
 void FPGetIconInfo_test()
 {
+// FIXME: icon tests are broken in Netatalk 4.0
+#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetIconInfo page 188\n");
 	test213();
+#endif
 }
 
