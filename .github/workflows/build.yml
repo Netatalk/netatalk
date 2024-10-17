@@ -29,41 +29,6 @@ on:
       - "Dockerfile"
       - "NEWS"
 
-env:
-  APT_PACKAGES: |
-    bison \
-    cmark-gfm \
-    cracklib-runtime \
-    docbook-xsl \
-    file \
-    flex \
-    libacl1-dev \
-    libavahi-client-dev \
-    libcrack2-dev \
-    libcups2-dev \
-    libdb-dev \
-    libdbus-1-dev \
-    libevent-dev \
-    libgcrypt-dev \
-    libglib2.0-dev \
-    libkrb5-dev \
-    libldap2-dev \
-    libmariadb-dev \
-    libpam0g-dev \
-    libtalloc-dev \
-    libtirpc-dev \
-    libtracker-sparql-3.0-dev \
-    libwrap0-dev \
-    meson \
-    ninja-build \
-    quota \
-    systemtap-sdt-dev \
-    tcpd \
-    tracker \
-    tracker-miner-fs \
-    unicode-data \
-    xsltproc
-
 jobs:
   build-alpine:
     name: Alpine Linux
@@ -121,7 +86,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
@@ -169,7 +134,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
@@ -190,7 +155,39 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+          apt-get install --assume-yes --no-install-recommends \
+            bison \
+            cmark-gfm \
+            cracklib-runtime \
+            docbook-xsl \
+            file \
+            flex \
+            libacl1-dev \
+            libavahi-client-dev \
+            libcrack2-dev \
+            libcups2-dev \
+            libdb-dev \
+            libdbus-1-dev \
+            libevent-dev \
+            libgcrypt-dev \
+            libglib2.0-dev \
+            libkrb5-dev \
+            libldap2-dev \
+            libmariadb-dev \
+            libpam0g-dev \
+            libtalloc-dev \
+            libtirpc-dev \
+            libtracker-sparql-3.0-dev \
+            libwrap0-dev \
+            meson \
+            ninja-build \
+            quota \
+            systemtap-sdt-dev \
+            tcpd \
+            tracker \
+            tracker-miner-fs \
+            unicode-data \
+            xsltproc
       - name: Configure
         run: |
           meson setup build \
@@ -204,7 +201,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
@@ -264,7 +261,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: sudo meson install -C build
@@ -326,7 +323,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: meson install -C build
@@ -345,7 +342,39 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends ${{ env.APT_PACKAGES }}
+          sudo apt-get install --assume-yes --no-install-recommends \
+            bison \
+            cmark-gfm \
+            cracklib-runtime \
+            docbook-xsl \
+            file \
+            flex \
+            libacl1-dev \
+            libavahi-client-dev \
+            libcrack2-dev \
+            libcups2-dev \
+            libdb-dev \
+            libdbus-1-dev \
+            libevent-dev \
+            libgcrypt-dev \
+            libglib2.0-dev \
+            libkrb5-dev \
+            libldap2-dev \
+            libmariadb-dev \
+            libpam0g-dev \
+            libtalloc-dev \
+            libtirpc-dev \
+            libtracker-sparql-3.0-dev \
+            libwrap0-dev \
+            meson \
+            ninja-build \
+            quota \
+            systemtap-sdt-dev \
+            tcpd \
+            tracker \
+            tracker-miner-fs \
+            unicode-data \
+            xsltproc
       - name: Configure
         run: |
           meson setup build \
@@ -398,7 +427,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run tests
+      - name: Run integration tests
         run: cd build && meson test && cd ..
       - name: Install
         run: sudo meson install -C build
