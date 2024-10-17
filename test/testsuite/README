@@ -19,7 +19,7 @@ Spec conformance tests:
 AFP spec test. Assume exported volumes are only modified with netatalk.
 
 ./sleeptest:
-AFP spec tests for sleeping (FPZzz), no included in spectest
+AFP spec tests for sleeping (FPZzz). Not included in spectest.
 
 ./logintest:
 AFP spec tests for DSI and login. Not included in spectest.
@@ -63,6 +63,8 @@ Compilation
 ===========
 
 Setup meson with the `-Dwith-testsuite=true' option.
+Then compile the netatalk package as usual.
+The afptest binaries can be found under build/test/testsuite/
 
 
 Configuration for running the APF spec tests
@@ -94,14 +96,14 @@ path = /u/test
 
 For testing with a Mac, same config (user1 or user2 are not owner)
 
-make check
+meson test
 ----------
 
 You can also run the complete spectest (one user, two users, local access) with
-`make check`. To do so, run:
-- `make check` once in order to generate a boilerplate config file "spectest.conf"
-- edit "spectest.conf" to suit your need
-- run `make check` again
+`meson test`. To do so, run:
+- `cd build && meson test` once in order to generate a boilerplate config file "spectest.conf"
+- edit "build/test/testsuite/spectest.conf" to suit your needs
+- run `meson test` again
 
 Return Code
 -----------
