@@ -562,12 +562,12 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 #ifdef HAVE_CUPS
     if ( pr->p_flags & P_PIPED ) {
 	buf->buf_len = strlen(cannedstatus);
-	snprintf(buf->buf, 254, "%s", cannedstatus);
+	snprintf(buf->buf, 255, "%s", cannedstatus);
 	return (buf->buf_len + 1);
     } else {
 	cups_get_printer_status( pr );
 	buf->buf_len = strlen(pr->p_status);
-	snprintf(buf->buf, 254, "%s", pr->p_status);
+	snprintf(buf->buf, 255, "%s", pr->p_status);
 	return (buf->buf_len + 1);
     }
 #else
@@ -584,7 +584,7 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 
     if ((pr->p_flags & P_PIPED) || (fd == NULL)) {
 	buf->buf_len = strlen(cannedstatus);
-	snprintf(buf->buf, 254, "%s", cannedstatus);
+	snprintf(buf->buf, 255, "%s", cannedstatus);
 	return (buf->buf_len + 1);
     } else {
 	rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
@@ -593,11 +593,11 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 	if (rc > 0) {
 		if (temp != NULL) {
 			temp[strcspn(temp, "\n")] = '\0';
-			snprintf(buf->buf, 254, "%s", temp);
+			snprintf(buf->buf, 255, "%s", temp);
 			buf->buf_len = strlen(buf->buf);
 		}
 	} else {
-		snprintf(buf->buf, 254, "%s", "thisisanemptystring");
+		snprintf(buf->buf, 255, "%s", "thisisanemptystring");
 		buf->buf_len = 0;
 	}
 
