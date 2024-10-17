@@ -646,9 +646,11 @@ void usage( char * av0 )
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
-    fprintf( stdout,"\t-5\tAFP 3.2 version (default)\n");
+    fprintf( stdout,"\t-5\tAFP 3.2 version\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-n\thow often to run (default: 1)\n");
@@ -670,7 +672,7 @@ int main(int ac, char **av)
     int cc, i, t;
     int Debug = 0;
     char *tests = NULL;
-    static char *vers = "AFP3.2";
+    static char *vers = "AFPVersion 2.1";
     static char *uam = "Cleartxt Passwrd";
     struct passwd *pw = getpwuid(getuid());
 
@@ -682,6 +684,14 @@ int main(int ac, char **av)
         case 't':
             tests = strdup(optarg);
             break;
+        case '1':
+			vers = "AFPVersion 2.1";
+			Version = 21;
+			break;
+        case '2':
+			vers = "AFP2.2";
+			Version = 22;
+			break;
         case '3':
             vers = "AFPX03";
             Version = 30;
