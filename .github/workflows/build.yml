@@ -761,8 +761,7 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-style=none \
-            -Dwith-readmes=false \
-            -Dwith-tests=true
+            -Dwith-readmes=false
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
