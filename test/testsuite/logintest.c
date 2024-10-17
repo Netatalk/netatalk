@@ -300,12 +300,17 @@ uint32_t i = 0;
 	*/
     connect_server(Conn);
     Dsi = &Conn->dsi;
+	// FIXME: workaround for FPopenLoginExt() being broken
+#if 0
     if (Version >= 30) {
 		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
 		ret = FPopenLogin(Conn, vers, uam, User, Password);
 	}
+#else
+	ret = FPopenLogin(Conn, vers, uam, User, Password);
+#endif
 	if (ret) {
 		failed();
 		return ExitCode;

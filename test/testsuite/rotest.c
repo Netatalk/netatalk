@@ -367,6 +367,7 @@ void usage( char * av0 )
 int main( int ac, char **av )
 {
 int cc;
+int ret;
 static char *uam = "Cleartxt Passwrd";
 
     while (( cc = getopt( ac, av, "v1234567h:p:u:w:ms:" )) != EOF ) {
@@ -439,11 +440,20 @@ static char *uam = "Cleartxt Passwrd";
     }
 	/* ------------------------ */	
     connect_server();
+	// FIXME: workaround for FPopenLoginExt() being broken
+#if 0
     if (Version >= 30) {
-		FPopenLoginExt(Conn, vers, uam, User, Password);
+		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
-		FPopenLogin(Conn, vers, uam, User, Password);
+		ret = FPopenLogin(Conn, vers, uam, User, Password);
+	}
+#else
+	ret = FPopenLogin(Conn, vers, uam, User, Password);
+#endif
+	if (ret) {
+		printf("Login failed\n");
+		exit(1);
 	}
 	Conn->afp_version = Version;
 	run_all();

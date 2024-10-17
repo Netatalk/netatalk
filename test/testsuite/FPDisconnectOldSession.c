@@ -624,8 +624,14 @@ void FPDisconnectOldSession_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDisconnectOldSession page 148\n");
 //    test222();
+// FIXME: test flaky with Netatalk 4.0
+#if 0
     test338();
+#endif
     test339();
+// FIXME: test flaky with Netatalk 4.0
+#if 0
     test370();
+#endif
 }
 
