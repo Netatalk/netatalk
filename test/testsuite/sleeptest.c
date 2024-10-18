@@ -72,7 +72,7 @@ char *token;
         if (handle) {
 			fn = dlsym(handle, token);
 			if ((error = dlerror()) != NULL)  {
-			    fprintf (stdout, "%s (%X)\n", error, fn);
+			    fprintf (stdout, "%s (%p)\n", error, fn);
 			}
         }
         else {

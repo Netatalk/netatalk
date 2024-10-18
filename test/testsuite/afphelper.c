@@ -38,7 +38,7 @@ ssize_t get_sessiontoken(const char *buf, char **token)
         return -1;
 
     if (!(*token = malloc(len))) {
-        fprintf(stdout, "\tFAILED malloc(%x) %s\n", len, strerror(errno));
+        fprintf(stdout, "\tFAILED malloc(%ld) %s\n", len, strerror(errno));
         return -1;
     }
     memcpy(*token, buf + sizeof(uint32_t), len);
@@ -767,7 +767,7 @@ static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
 /* ------------------------- */
 void test_skipped(int why)
 {
-    char *s;
+    char *s = "";
 	switch(why) {
 	case T_CONN2:
 		s = "second user";
@@ -892,7 +892,7 @@ void enter_test(void)
 /* ------------------------- */
 void exit_test(char *name)
 {
-    char *s;
+    char *s = "";
 
 	switch (CurTestResult) {
 	case 0:
