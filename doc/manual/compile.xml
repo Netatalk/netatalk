@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-10-06</pubdate>
+		<pubdate>2024-10-18</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -71,14 +71,15 @@
   -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -127,14 +128,15 @@
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -158,39 +160,39 @@
 			<para>Install dependencies</para>
 			<para>
 				<screen>apt-get update
-apt-get install --assume-yes --no-install-recommends bison \
-cmark-gfm \
-cracklib-runtime \
-docbook-xsl \
-file \
-flex \
-libacl1-dev \
-libavahi-client-dev \
-libcrack2-dev \
-libcups2-dev \
-libdb-dev \
-libdbus-1-dev \
-libevent-dev \
-libgcrypt-dev \
-libglib2.0-dev \
-libkrb5-dev \
-libldap2-dev \
-libmariadb-dev \
-libpam0g-dev \
-libtalloc-dev \
-libtirpc-dev \
-libtracker-sparql-3.0-dev \
-libwrap0-dev \
-meson \
-ninja-build \
-quota \
-systemtap-sdt-dev \
-tcpd \
-tracker \
-tracker-miner-fs \
-unicode-data \
-xsltproc
-
+apt-get install --assume-yes --no-install-recommends \
+  bison \
+  cmark-gfm \
+  cracklib-runtime \
+  docbook-xsl \
+  file \
+  flex \
+  libacl1-dev \
+  libavahi-client-dev \
+  libcrack2-dev \
+  libcups2-dev \
+  libdb-dev \
+  libdbus-1-dev \
+  libevent-dev \
+  libgcrypt-dev \
+  libglib2.0-dev \
+  libkrb5-dev \
+  libldap2-dev \
+  libmariadb-dev \
+  libpam0g-dev \
+  libtalloc-dev \
+  libtirpc-dev \
+  libtracker-sparql-3.0-dev \
+  libwrap0-dev \
+  meson \
+  ninja-build \
+  quota \
+  systemtap-sdt-dev \
+  tcpd \
+  tracker \
+  tracker-miner-fs \
+  unicode-data \
+  xsltproc
 </screen>
 			</para>
 			<para>Configure</para>
@@ -202,14 +204,15 @@ xsltproc
   -Dwith-init-hooks=false \
   -Dwith-init-style=debian-sysv,systemd \
   -Dwith-pkgconfdir-path=/etc/netatalk \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -270,14 +273,15 @@ xsltproc
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -340,14 +344,15 @@ xsltproc
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -371,39 +376,39 @@ xsltproc
 			<para>Install dependencies</para>
 			<para>
 				<screen>sudo apt-get update
-sudo apt-get install --assume-yes --no-install-recommends bison \
-cmark-gfm \
-cracklib-runtime \
-docbook-xsl \
-file \
-flex \
-libacl1-dev \
-libavahi-client-dev \
-libcrack2-dev \
-libcups2-dev \
-libdb-dev \
-libdbus-1-dev \
-libevent-dev \
-libgcrypt-dev \
-libglib2.0-dev \
-libkrb5-dev \
-libldap2-dev \
-libmariadb-dev \
-libpam0g-dev \
-libtalloc-dev \
-libtirpc-dev \
-libtracker-sparql-3.0-dev \
-libwrap0-dev \
-meson \
-ninja-build \
-quota \
-systemtap-sdt-dev \
-tcpd \
-tracker \
-tracker-miner-fs \
-unicode-data \
-xsltproc
-
+sudo apt-get install --assume-yes --no-install-recommends \
+  bison \
+  cmark-gfm \
+  cracklib-runtime \
+  docbook-xsl \
+  file \
+  flex \
+  libacl1-dev \
+  libavahi-client-dev \
+  libcrack2-dev \
+  libcups2-dev \
+  libdb-dev \
+  libdbus-1-dev \
+  libevent-dev \
+  libgcrypt-dev \
+  libglib2.0-dev \
+  libkrb5-dev \
+  libldap2-dev \
+  libmariadb-dev \
+  libpam0g-dev \
+  libtalloc-dev \
+  libtirpc-dev \
+  libtracker-sparql-3.0-dev \
+  libwrap0-dev \
+  meson \
+  ninja-build \
+  quota \
+  systemtap-sdt-dev \
+  tcpd \
+  tracker \
+  tracker-miner-fs \
+  unicode-data \
+  xsltproc
 </screen>
 			</para>
 			<para>Configure</para>
@@ -414,7 +419,8 @@ xsltproc
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-manual-l10n=ja \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -464,14 +470,15 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 				<screen>meson setup build \
   -Dbuildtype=release \
   -Dwith-appletalk=true \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 </screen>
 			</para>
 			<para>Build</para>
 			<para>
 				<screen>meson compile -C build</screen>
 			</para>
-			<para>Run tests</para>
+			<para>Run integration tests</para>
 			<para>
 				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
 			</para>
@@ -532,7 +539,9 @@ asip-status localhost
 curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 meson setup build \
   -Dbuildtype=release \
-  -Dwith-appletalk=true
+  -Dwith-appletalk=true \
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -571,8 +580,13 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-  -Dwith-appletalk=true
+  -Dwith-appletalk=true \
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
+cd build
+meson test
+cd ..
 meson install -C build
 /usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -597,6 +611,7 @@ ninja -C build uninstall
   flex \
   gcc13 \
   gnome-tracker \
+  heimdal \
   libcups \
   libevent \
   libgcrypt \
@@ -618,7 +633,9 @@ meson setup build \
   -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
   -Dwith-appletalk=true \
   -Dwith-dtrace=false \
-  -Dwith-tests=true
+  -Dwith-krbV-uam=false \
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
@@ -644,14 +661,14 @@ ninja -C build uninstall
   db-4.6.21p7v0 \
   dbus \
   docbook-xsl \
-  gcc-11.2.0p11 \
+  gcc-11.2.0p14 \
   libevent \
   libgcrypt \
   libtalloc \
   libxslt \
   mariadb-client \
   meson \
-  openldap-client-2.6.7v0 \
+  openldap-client-2.6.8v0 \
   openpam \
   p5-Net-DBus \
   pkgconf \
@@ -665,7 +682,9 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/lib/pkgconfig \
-  -Dwith-appletalk=true
+  -Dwith-appletalk=true \
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -711,8 +730,13 @@ meson setup build \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-ldap-path=/opt/local
+  -Dwith-ldap-path=/opt/local \
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
+cd build
+meson test
+cd ..
 meson install -C build
 /usr/local/sbin/netatalk -V
 /usr/local/sbin/afpd -V
@@ -751,7 +775,8 @@ meson setup build \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-  -Dwith-tests=true
+  -Dwith-tests=true \
+  -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
