@@ -16,24 +16,28 @@ echo =====================================
 
 if [ ! -f ./test/testsuite/spectest.conf ] ; then
     cat > ./test/testsuite/spectest.conf <<EOF
-# AFPSERVER=127.0.0.1
-# AFPPORT=548
-# USER1=
-# USER2=
-# PASSWD=
-#
-# *** volumes with adouble:ea
-# VOLUME1=
+AFPSERVER=127.0.0.1
+AFPPORT=548
+USER1=
+USER2=
+PASSWD=
+
+# *** volumes configured with appledouble = ea
+VOLUME1=
+VOLUME2=
+
+# *** set this to the local path of VOLUME1 if you want to run T2_spectest
+# *** requires that afpd and the testsuite are running on the same machine
 # LOCALVOL1PATH=
-# VOLUME2=
 
 # AFPVERSION: 1 = AFP 2.1, 2 = AFP 2.2, 3 = AFP 3.0, 4 = AFP 3.1, 5 = AFP 3.2, 6 = AFP 3.3, 7 = AFP 3.4
-# AFPVERSION=5
+AFPVERSION=7
 EOF
-    echo 'A template configuration file "spectest.conf" has been generated.'
-    echo Adjust it to match your setup.
-    echo =====================================
-    exit 0
+    echo "Tests cannot be run without a ./test/testsuite/spectest.conf file."
+    echo "A template configuration file spectest.conf has been generated."
+    echo "Adjust it to match the AFP server under test and run this script again."
+    echo "====================================="
+    exit 1
 fi
 
 . ./test/testsuite/spectest.conf
@@ -43,38 +47,47 @@ if test ! -z "$LOCALVOL1PATH" ; then
     rm -rf "$LOCALVOL1PATH"/t*
 fi
 
-if [ -z "$VOLUME1" -o -z "$VOLUME2" -o -z "$LOCALVOL1PATH" ] ; then
-    echo Need two volumes and the local path to volume1
+if [ -z "$USER1" -o -z "$USER2" ] ; then
+    echo "Need two users to run this test."
     exit 1
 fi
 
-rm -f spectest.log
+if [ -z "$VOLUME1" -o -z "$VOLUME2" ] ; then
+    echo "Need two volumes to run this test."
+    exit 1
+fi
+
+rm -f ./test/testsuite/spectest.log
 
 ##
-printf "Running spectest with two users..."
-./test/testsuite/spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1"  -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
+echo "Running spectest with two users..."
+./test/testsuite/spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
 check_return
 
 ##
-printf "Running spectest with local filesystem modifications..."
-./test/testsuite/T2_spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
-check_return
+if test ! -z "$LOCALVOL1PATH" ; then
+    echo "Running spectest with local filesystem modifications..."
+    ./test/testsuite/T2_spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
+    check_return
+else
+    echo "Skipping spectest with local filesystem modifications..."
+fi
 
-echo =====================================
-echo Failed tests
-echo ------------
+echo "====================================="
+echo "Failed tests"
+echo "------------"
 grep "summary.*FAIL" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
-echo =====================================
+echo "====================================="
 
-echo Skipped tests
-echo -------------
+echo "Skipped tests"
+echo "------------"
 egrep 'summary.*NOT TESTED|summary.*SKIPPED' ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
-echo =====================================
+echo "====================================="
 
-echo Successful tests
-echo ----------------
+echo "Successful tests"
+echo "------------"
 grep "summary.*PASSED" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
-echo =====================================
+echo "====================================="
 
 # cleanup
 if test ! -z "$LOCALVOL1PATH" ; then

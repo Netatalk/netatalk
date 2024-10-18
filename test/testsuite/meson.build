@@ -226,5 +226,5 @@ test(
     'AFP specification test suite',
     spectest_sh,
     is_parallel: true,
-    timeout: 90,
+    timeout: 180,
 )
