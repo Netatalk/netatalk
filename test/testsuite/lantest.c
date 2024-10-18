@@ -27,10 +27,6 @@
 #define LASTTEST TEST_DIRTREE
 #define NUMTESTS (LASTTEST+1)
 
-extern  int     Throttle;
-
-// int Verbose = 0;
-// int Quirk = 0;
 CONN *Conn;
 int ExitCode = 0;
 char Data[300000] = "";
@@ -670,6 +666,7 @@ int main(int ac, char **av)
     int cc, i, t;
     int Debug = 0;
     char *tests = NULL;
+    // FIXME: this test relies on mismatched Version=21 and AFP3.2 version string
     static char *vers = "AFP3.2";
     static char *uam = "Cleartxt Passwrd";
     struct passwd *pw = getpwuid(getuid());

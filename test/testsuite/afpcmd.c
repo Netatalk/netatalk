@@ -246,12 +246,7 @@ DSI *dsi;
 			return -1;
 		usr = p->pw_name;
 	}
-#if 0
-	fprintf(stdout,"---------------------\n");
-	fprintf(stdout,"Login Version: \"%s\" uam: \"%s\" user: \"%s\"\n\n", vers, uam, usr);
-#else
 	fprintf(stdout,"[%s] Login Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
-#endif
 	ret = AFPopenLogin(conn, vers, uam, usr, pwd);
 	dump_header(dsi);
 	return ret;
@@ -273,12 +268,7 @@ DSI *dsi;
 			return -1;
 		usr = p->pw_name;
 	}
-#if 0
-	fprintf(stdout,"---------------------\n");
-	fprintf(stdout,"LoginExt Version: \"%s\" uam: \"%s\" user: \"%s\"\n\n", vers, uam, usr);
-#else
 	fprintf(stdout,"[%s] LoginExt Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
-#endif
 	ret = AFPopenLoginExt(conn,vers, uam, usr, pwd);
 	dump_header(dsi);
 	return ret;
@@ -291,12 +281,7 @@ int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
-#if 0
-	fprintf(stdout,"---------------------\n");
-	fprintf(stdout,"Logout\n\n");
-#else
 	fprintf(stdout,"[%s] Logout\n", __func__);
-#endif
 	ret = AFPLogOut(conn);
 	dump_header(dsi);
 	return ret;
@@ -310,12 +295,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPzzz enter sleep mode (flag: %i)\n\n", flag);
-#else
 		fprintf(stdout,"[%s] FPzzz enter sleep mode (flag: %i)\n", __func__, flag);
-#endif
 	}
 	ret = AFPzzz(conn, flag);
 	dump_header(dsi);
@@ -330,12 +310,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Session Token type %d\n\n", type);
-#else
 		fprintf(stdout,"[%s] Get Session Token type %d\n", __func__, type);
-#endif
 	}
 	ret = AFPGetSessionToken(conn,type, time, len, token);
 	dump_header(dsi);
@@ -350,12 +325,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Disconnect old session type %d token len %d\n\n", type, len);
-#else
 		fprintf(stdout,"[%s] Disconnect old session type %d token len %d\n", __func__, type, len);
-#endif
 	}
 	ret = AFPDisconnectOldSession(conn, type, len, token);
 	dump_header(dsi);
@@ -370,12 +340,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Map ID fn %d, id %d\n\n", fn, id);
-#else
 		fprintf(stdout,"[%s] Map ID fn %d, id %d\n", __func__, fn, id);
-#endif
 	}
 	ret = AFPMapID(conn,fn,id);
 	dump_header(dsi);
@@ -390,12 +355,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Map Name fn %d, name  <%s>\n\n", fn, name);
-#else
 		fprintf(stdout,"[%s] Map Name fn %d, name  <%s>\n", __func__, fn, name);
-#endif
 	}
 	ret = AFPMapName(conn,fn,name);
 	dump_header(dsi);
@@ -410,12 +370,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Bad packet fn %d, name  <%s>\n\n", fn, name);
-#else
 		fprintf(stdout,"[%s] Bad packet fn %d, name  <%s>\n", __func__, fn, name);
-#endif
 	}
 	ret = AFPBadPacket(conn, fn,name);
 	dump_header(dsi);
@@ -430,14 +385,8 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get %s User Info id %d (get %s ID)\n\n", flag?"Default":"", 
-					    id, (bitmap & 1)?"User":"Group");
-#else
 		fprintf(stdout,"[%s] Get %s User Info id %d (get %s ID)\n", __func__,
 				flag?"Default":"", id, (bitmap & 1)?"User":"Group");
-#endif
 	}
 	ret = AFPGetUserInfo(conn,flag,id, bitmap);
 	dump_header(dsi);
@@ -452,12 +401,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"get Server info\n\n");
-#else
 		fprintf(stdout,"[%s] get Server info\n", __func__);
-#endif
 	}
 	ret = AFPGetSrvrInfo(conn);
 	dump_header(dsi);
@@ -472,12 +416,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"get Server param\n\n");
-#else
 		fprintf(stdout,"[%s] get Server param\n", __func__);
-#endif
 	}
 	ret = AFPGetSrvrParms(conn);
 	dump_header(dsi);
@@ -492,12 +431,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"get Server message type %d bitmap %d\n\n", type, bitmap);
-#else
 		fprintf(stdout,"[%s] get Server message type %d bitmap %d\n", __func__, type, bitmap);
-#endif
 	}
 	ret = AFPGetSrvrMsg(conn, type, bitmap);
 	dump_header(dsi);
@@ -515,12 +449,7 @@ uint16_t  volID = 0;
 DSI *dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Open Vol %s bitmap %x\n\n", vol, bitmap);
-#else
 		fprintf(stdout,"[%s] Open Vol %s bitmap %x\n", __func__, vol, bitmap);
-#endif
 	}
 
 	volID = AFPOpenVol(conn,vol, bitmap);
@@ -542,12 +471,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Close Vol %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Close Vol %d\n", __func__, vol);
-#endif
 	}
 
 	ret  = AFPCloseVol(conn,vol);
@@ -565,12 +489,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Open Desktop Vol %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Open Desktop Vol %d\n", __func__, vol);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -613,12 +532,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Icon Desktop %d creator %s type %s size %d\n\n", dt, creator, type, size);
-#else
 		fprintf(stdout,"[%s] Get Icon Desktop %d creator %s type %s size %d\n", __func__, dt, creator, type, size);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -666,12 +580,7 @@ uint16_t temp;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Add Icon Desktop %d creator %s type %s size %d\n\n", dt, creator, type, size);
-#else
 		fprintf(stdout,"[%s] Add Icon Desktop %d creator %s type %s size %d\n", __func__, dt, creator, type, size);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -722,12 +631,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Icon Desktop %d creator %s itype %d\n\n", dt, creator, itype);
-#else
 		fprintf(stdout,"[%s] Get Icon Desktop %d creator %s itype %d\n", __func__, dt, creator, itype);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -768,12 +672,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Volume Parameters Vol %d  bitmap %x \n\n", vol, bitmap);
-#else
 		fprintf(stdout,"[%s] Get Volume Parameters Vol %d  bitmap %x \n", __func__, vol, bitmap);
-#endif
 	}
 	ret = AFPGetVolParam(conn,vol, bitmap);
 	dump_header(dsi);
@@ -789,12 +688,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set Volume Parameters Vol %d  bitmap %x \n\n", vol, bitmap);
-#else
 		fprintf(stdout,"[%s] Set Volume Parameters Vol %d  bitmap %x \n", __func__, vol, bitmap);
-#endif
 	}
 	ret = AFPSetVolParam(conn,vol, bitmap, parms);
 	dump_header(dsi);
@@ -809,12 +703,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Close Desktop %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Close Desktop %d\n", __func__, vol);
-#endif
 	}
 	ret = AFPCloseDT(conn,vol);
 	dump_header(dsi);
@@ -829,12 +718,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Close Fork %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Close Fork %d\n", __func__, vol);
-#endif
 	}
 	ret = AFPCloseFork(conn,vol);
 	dump_header(dsi);
@@ -849,12 +733,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Flush volume %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Flush volume %d\n", __func__, vol);
-#endif
 	}
 	ret = AFPFlush(conn,vol);
 	dump_header(dsi);
@@ -870,14 +749,8 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Byte lock,fork %d, %s, %s, offset: %d, size: %d\n\n", 
-                fork, end ? "end" : "start", mode ? "unlock" : "lock", offset, size);
-#else
 		fprintf(stdout,"[%s] Byte lock,fork %d, %s, %s, offset: %d, size: %d\n",
 				__func__, fork, end ? "end" : "start", mode ? "unlock" : "lock", offset, size);
-#endif
 	}
 	ret = AFPByteLock(conn,fork, end, mode, offset, size);
 	dump_header(dsi);
@@ -893,14 +766,8 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPByteLock_ext: fork: %d, end: %d, mode: %s, offset: %jd, size: %jd\n\n", 
-                fork, end, mode ? "unlock" : "lock", (intmax_t)offset, (intmax_t)size);
-#else
 		fprintf(stdout,"[%s] FPByteLock_ext: fork: %d, end: %d, mode: %s, offset: %jd, size: %jd\n",
 				__func__, fork, end, mode ? "unlock" : "lock", (intmax_t)offset, (intmax_t)size);
-#endif
 	}
 	ret = AFPByteLock_ext(conn,fork, end, mode, offset, size);
 	dump_header(dsi);
@@ -915,12 +782,7 @@ DSI *dsi;
 
 	dsi = &conn->dsi;
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Flush fork %d\n\n", vol);
-#else
 		fprintf(stdout,"[%s] Flush fork %d\n", __func__, vol);
-#endif
 	}
 	ret = AFPFlushFork(conn,vol);
 	dump_header(dsi);
@@ -937,12 +799,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Close dir vol %d dir 0x%d\n\n", vol, htonl(did));
-#else
 		fprintf(stdout,"[%s] Close dir vol %d dir 0x%d\n", __func__, vol, htonl(did));
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -985,12 +842,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Enumerate Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Enumerate Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1065,12 +917,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Enumerate Vol %d did : 0x%x <%s> sindex: %u reqcnt: %u\n\n", vol, ntohl(did), name, sindex, reqcnt);
-#else
 		fprintf(stdout,"[%s] Enumerate Vol %d did : 0x%x <%s> sindex: %u reqcnt: %u\n", __func__, vol, ntohl(did), name, sindex, reqcnt);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1135,12 +982,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"GetFileDirParams Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] GetFileDirParams Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1188,12 +1030,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Create ID Vol: %d did: 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Create ID Vol: %d did: 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1233,12 +1070,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Delete ID Vol: %d id: 0x%x \n\n", vol, ntohl(did));
-#else
 		fprintf(stdout,"[%s] Delete ID Vol: %d id: 0x%x \n", __func__, vol, ntohl(did));
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1276,12 +1108,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Resolve ID Vol: %d id: 0x%x %x\n\n", vol, ntohl(did), bitmap);
-#else
 		fprintf(stdout,"[%s] Resolve ID Vol: %d id: 0x%x %x\n", __func__, vol, ntohl(did), bitmap);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1326,12 +1153,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Enumerate_ext Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Enumerate_ext Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1407,12 +1229,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Enumerate_ext2 Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Enumerate_ext2 Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1494,14 +1311,8 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Enumerate_ext2_idx: Vol: %d, did: 0x%x, name: \"%s\", sindex: %u, reqcount: %u\n\n",
-                vol, ntohl(did), name, startindex, reqcount);
-#else
 		fprintf(stdout,"[%s] Enumerate_ext2_idx: Vol: %d, did: 0x%x, name: \"%s\", sindex: %u, reqcount: %u\n",
 				__func__, vol, ntohl(did), name, startindex, reqcount);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -1574,12 +1385,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPDelete conn %x Vol %d did : 0x%x <%s>\n\n", conn, vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] FPDelete conn %x Vol %d did : 0x%x <%s>\n", __func__, conn, vol, ntohl(did), name);
-#endif
 	}
 	ret = AFPDelete(conn,vol, did , name);
 
@@ -1597,12 +1403,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Comment Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Get Comment Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	ret = AFPGetComment(conn,vol, did , name);
 
@@ -1620,12 +1421,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Remove Comment Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Remove Comment Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 	ret = AFPRemoveComment(conn,vol, did , name);
 
@@ -1643,12 +1439,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Add Comment Vol %d did : 0x%x <%s> comment <%s>\n\n", vol, ntohl(did), name, cmt);
-#else
 		fprintf(stdout,"[%s] Add Comment Vol %d did : 0x%x <%s> comment <%s>\n", __func__, vol, ntohl(did), name, cmt);
-#endif
 	}
 	ret = AFPAddComment(conn,vol, did , name, cmt);
 
@@ -1668,12 +1459,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Open Directory Vol %d did : 0x%x <%s>\n\n", vol, htonl(did), name);
-#else
 		fprintf(stdout,"[%s] Open Directory Vol %d did : 0x%x <%s>\n", __func__, vol, htonl(did), name);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -1720,12 +1506,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Create Directory Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Create Directory Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
-#endif
 	}
 
 	dir = AFPCreateDir(conn,vol, did , name);
@@ -1745,14 +1526,8 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Open Fork %s Vol %d did : 0x%x <%s> access %x\n\n", (type == OPENFORK_DATA)?"data":"resource", 
-						vol, ntohl(did), name, access);
-#else
 		fprintf(stdout,"[%s] Open Fork %s Vol %d did : 0x%x <%s> access %x\n", __func__, (type == OPENFORK_DATA)?"data":"resource",
 						vol, ntohl(did), name, access);
-#endif
 	}
 	ofork = AFPOpenFork(conn,vol, type, bitmap, did , name, access);
 
@@ -1773,12 +1548,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Create File %s Vol %d did : 0x%x <%s>\n\n", (type )?"HARD":"SOFT", vol, ntohl(did), name);
-#else
 		fprintf(stdout,"[%s] Create File %s Vol %d did : 0x%x <%s>\n", __func__, (type )?"HARD":"SOFT", vol, ntohl(did), name);
-#endif
 	}
 	ret = AFPCreateFile(conn,vol, type, did , name);
 	dump_header(dsi);
@@ -1794,12 +1564,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get Fork param fork %d bitmap 0x%x\n\n", fork, bitmap);
-#else
 		fprintf(stdout,"[%s] Get Fork param fork %d bitmap 0x%x\n", __func__, fork, bitmap);
-#endif
 	}
 	ret = AFPGetForkParam(conn,fork, bitmap);
 	dump_header(dsi);
@@ -1815,12 +1580,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"GetAppl DT %d <%s>\n\n", dt, name);
-#else
 		fprintf(stdout,"[%s] GetAppl DT %d <%s>\n", __func__, dt, name);
-#endif
 	}
 	ret = AFPGetAPPL(conn,dt, name, index, bitmap);
 	dump_header(dsi);
@@ -1836,12 +1596,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"AddAPPL DT %d creator: %s tag %x did: 0x%x <%s>\n\n", dt, creator, tag, htonl(did), name);
-#else
 		fprintf(stdout,"[%s] AddAPPL DT %d creator: %s tag %x did: 0x%x <%s>\n", __func__, dt, creator, tag, htonl(did), name);
-#endif
 	}
 	ret = AFPAddAPPL(conn, dt, did, creator, tag, name);
 	dump_header(dsi);
@@ -1857,12 +1612,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"RemoveAPPL DT %d creator: %s did: 0x%x <%s>\n\n", dt, creator, htonl(did), name);
-#else
 		fprintf(stdout,"[%s] RemoveAPPL DT %d creator: %s did: 0x%x <%s>\n", __func__, dt, creator, htonl(did), name);
-#endif
 	}
 	ret = AFPRemoveAPPL(conn, dt, did, creator, name);
 	dump_header(dsi);
@@ -1878,12 +1628,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set Fork param fork %d bitmap 0x%x size %lld\n\n", fork, bitmap,size);
-#else
 		fprintf(stdout,"[%s] Set Fork param fork %d bitmap 0x%x size %lld\n", __func__, fork, bitmap,size);
-#endif
 	}
 	ret = AFPSetForkParam(conn, fork,  bitmap, size);
 	dump_header(dsi);
@@ -1901,12 +1646,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set DirParam 0x%x %s bitmap 0x%x\n\n", ntohl(did), name, bitmap);
-#else
 		fprintf(stdout,"[%s] Set DirParam 0x%x %s bitmap 0x%x\n", __func__, ntohl(did), name, bitmap);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -1955,12 +1695,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set FilParam 0x%x %s bitmap 0x%x\n\n", ntohl(did), name, bitmap);
-#else
 		fprintf(stdout,"[%s] Set FilParam 0x%x %s bitmap 0x%x\n", __func__, ntohl(did), name, bitmap);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -2008,12 +1743,7 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPSyncDir 0x%x\n\n", ntohl(did));
-#else
 		fprintf(stdout,"[%s] FPSyncDir 0x%x\n\n", __func__, ntohl(did));
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -2051,12 +1781,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPCatSearch vol: %d bitmap 0x%x\n\n", vol, rbitmap);
-#else
 		fprintf(stdout,"[%s] FPCatSearch vol: %d bitmap 0x%x\n", __func__, vol, rbitmap);
-#endif
 	}
 	ret = AFPCatSearch(conn, vol, nbe, pos, f_bitmap, d_bitmap, rbitmap, filedir, filedir2);
 	dump_header(dsi);
@@ -2073,12 +1798,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"FPCatSearchExt vol: %d bitmap 0x%x\n\n", vol, rbitmap);
-#else
 		fprintf(stdout,"[%s] FPCatSearchExt vol: %d bitmap 0x%x\n", __func__, vol, rbitmap);
-#endif
 	}
 	ret = AFPCatSearchExt(conn, vol, nbe, pos, f_bitmap, d_bitmap, rbitmap, filedir, filedir2);
 	dump_header(dsi);
@@ -2096,12 +1816,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set FilDirParam 0x%x <%s> bitmap 0x%x\n\n", ntohl(did), name, bitmap);
-#else
 		fprintf(stdout,"[%s] Set FilDirParam 0x%x <%s> bitmap 0x%x\n", __func__, ntohl(did), name, bitmap);
-#endif
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -2149,12 +1864,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Copy File Vol %d did : %d <%s> ==> %s\n\n", svol, ntohl(sdid), src, dst);
-#else
 		fprintf(stdout,"[%s] Copy File Vol %d did : %d <%s> ==> %s\n", __func__, svol, ntohl(sdid), src, dst);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -2203,14 +1913,8 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Exchange File Vol: %d did: 0x%x \"%s\" ==> 0x%x \"%s\"\n\n", vol, ntohl(sdid), src, 
-				ntohl(ddid), dst);
-#else
 		fprintf(stdout,"[%s] Exchange File Vol: %d did: 0x%x \"%s\" ==> 0x%x \"%s\"\n", __func__, vol, ntohl(sdid), src,
 				ntohl(ddid), dst);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -2254,12 +1958,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Move and rename Vol: %d did: 0x%x <%s> ==> 0x%x <%s>\n\n", svol, ntohl(sdid), src, ntohl(ddid), dst);
-#else
 		fprintf(stdout,"[%s] Move and rename Vol: %d did: 0x%x <%s> ==> 0x%x <%s>\n", __func__, svol, ntohl(sdid), src, ntohl(ddid), dst);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -2304,12 +2003,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Rename  File Vol %d did : %d <%s> ==> %s\n\n", svol, ntohl(sdid), src, dst);
-#else
 		fprintf(stdout,"[%s] Rename  File Vol %d did : %d <%s> ==> %s\n", __func__, svol, ntohl(sdid), src, dst);
-#endif
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;     
@@ -2347,12 +2041,7 @@ unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size, char *d
 int ret;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"send read header fork %d  offset %d size %d\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] send read header fork %d  offset %d size %d\n", __func__, fork , offset, size);
-#endif
 	}
 	ret = AFPReadHeader(dsi,fork, offset, size, data);
 
@@ -2366,12 +2055,7 @@ unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size, char *d
 int ret;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"get read reply fork %d  offset %d size %d\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] get read reply fork %d  offset %d size %d\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPReadFooter(dsi,fork, offset, size, data);
@@ -2389,12 +2073,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"read fork %d  offset %d size %d\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] read fork %d  offset %ll size %d\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPRead(conn,fork, offset, size, data);
@@ -2412,12 +2091,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"read ext fork %d  offset %lld size %lld\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] read ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPRead_ext(conn,fork, offset, size, data);
@@ -2435,12 +2109,7 @@ unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t siz
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"read ext fork %d  offset %lld size %lld\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] read ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPRead_ext_async(conn,fork, offset, size, data);
@@ -2455,12 +2124,7 @@ unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size, char *
 int ret;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"send write header fork %d  offset %d size %d from 0x%x\n\n", fork , offset, size, (unsigned)whence);
-#else
 		fprintf(stdout,"[%s] send write header fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
-#endif
 	}
 
 	ret = AFPWriteHeader(dsi ,fork, offset, size, data, whence);
@@ -2474,12 +2138,7 @@ unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size, char *
 int ret;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"get write footer fork %d  offset %d size %d from 0x%x\n\n", fork , offset, size, (unsigned)whence);
-#else
 		fprintf(stdout,"[%s] get write footer fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
-#endif
 	}
 
 	ret = AFPWriteFooter(dsi ,fork, offset, size, data, whence);
@@ -2496,12 +2155,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"write fork %d  offset %d size %d from 0x%x\n\n", fork , offset, size, (unsigned)whence);
-#else
 		fprintf(stdout,"[%s] write fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
-#endif
 	}
 
 	ret = AFPWrite(conn,fork, offset, size, data, whence);
@@ -2518,12 +2172,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"write_ext fork %d  offset %lld size %lld\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] write_ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPWrite_ext(conn,fork, offset, size, data, whence);
@@ -2540,12 +2189,7 @@ unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset, off_t s
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"write_ext fork %d  offset %lld size %lld\n\n", fork , offset, size);
-#else
 		fprintf(stdout,"[%s] write_ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
-#endif
 	}
 
 	ret = AFPWrite_ext_async(conn,fork, offset, size, data, whence);
@@ -2560,12 +2204,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get ACLs Vol: %d Did: %d <%s> bitmap 0x%x\n\n", vol, ntohl(did), name, bitmap);
-#else
 		fprintf(stdout,"[%s] Get ACLs Vol: %d Did: %d <%s> bitmap 0x%x\n", __func__, vol, ntohl(did), name, bitmap);
-#endif
 	}
 
 	ret = AFPGetACL(conn, vol, did, bitmap, name);
@@ -2581,12 +2220,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s\n\n", vol, ntohl(did), name, bitmap, name, attr);
-#else
 		fprintf(stdout,"[%s] Get extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s\n", __func__, vol, ntohl(did), name, bitmap, name, attr);
-#endif
 	}
 
 	ret = AFPGetExtAttr(conn, vol, did, bitmap, maxsize, name, attr);
@@ -2602,12 +2236,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Get extended attrs list Vol: %d Did: %d <%s> bitmap 0x%x, path: %s\n\n", vol, ntohl(did), name, bitmap, name);
-#else
 		fprintf(stdout,"[%s] Get extended attrs list Vol: %d Did: %d <%s> bitmap 0x%x, path: %s\n", __func__, vol, ntohl(did), name, bitmap, name);
-#endif
 	}
 
 	ret = AFPListExtAttr(conn, vol, did, bitmap, maxsize, name);
@@ -2623,12 +2252,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s, data: %s\n\n", vol, ntohl(did), name, bitmap, name, attr, data);
-#else
 		fprintf(stdout,"[%s] Set extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s, data: %s\n", __func__, vol, ntohl(did), name, bitmap, name, attr, data);
-#endif
 	}
 
 	ret = AFPSetExtAttr(conn, vol, did, bitmap, name, attr, data);
@@ -2645,12 +2269,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-#if 0
-		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Remove extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s\n\n", vol, ntohl(did), name, bitmap, name, attr);
-#else
 		fprintf(stdout,"[%s] Remove extended attr Vol: %d Did: %d <%s> bitmap 0x%x, path: %s, attr: %s\n", __func__, vol, ntohl(did), name, bitmap, name, attr);
-#endif
 	}
 
 	ret = AFPRemoveExtAttr(conn, vol, did, bitmap, name, attr);

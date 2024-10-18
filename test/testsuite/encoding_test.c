@@ -16,7 +16,6 @@ CONN *Conn;
 CONN *Conn2;
 
 int ExitCode = 0;
-int Recurse = 0;
 char *Encoding = "western";
 extern int Convert;
 static char temp[MAXPATHLEN];

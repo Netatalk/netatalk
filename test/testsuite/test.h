@@ -140,3 +140,6 @@ extern int Locking;
 extern int Loglevel;
 extern int Color;
 extern int Interactive;
+extern int Throttle;
+extern int Recurse;
+extern int Twice;
