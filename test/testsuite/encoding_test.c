@@ -47,7 +47,7 @@ DSI *dsi;
 	d_bitmap = (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |  (1 << DIRPBIT_OFFCNT) |
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS);
-		   
+
 	if (Conn->afp_version >= 30) {
 		f_bitmap |= (1<<FILPBIT_PDINFO);
 		d_bitmap |= (1<<FILPBIT_PDINFO);
@@ -67,7 +67,7 @@ DSI *dsi;
 	}
 	stack[cnt] = dir;
 	cnt++;
-	
+
 	while (cnt) {
 	    cnt--;
 	    dir = stack[cnt];
@@ -103,7 +103,7 @@ DSI *dsi;
 	return 0;
 }
 
-/* ------------------ 
+/* ------------------
  * client encoding western 1 byte [1..255]
 */
 static void test_western()
@@ -155,7 +155,7 @@ DSI *dsi;
 	}
 	if (Path) {
 	int fd;
-	
+
 		sprintf(temp,"%s/:test", Path);
 		fd = open(temp, O_RDWR | O_CREAT, 0666);
 		if (fd < 0) {
@@ -309,22 +309,22 @@ static char *uam = "Cleartxt Passwrd";
     if (!Proto) {
 	int sock;
     	Dsi = &Conn->dsi;
-		dsi = Dsi;         
+		dsi = Dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP; 
+     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
 	}
 
-    /* login */	
+    /* login */
 	FPopenLogin(Conn, vers, uam, User, Password);
 	Conn->afp_version = Version;
 
-	
+
 	run_one();
 
    	FPLogOut(Conn);

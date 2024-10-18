@@ -34,9 +34,9 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	memset(Data, 0xff, 0x20000);
-	
+
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL -20, 15000, Data, 0 )) {
 		failed();
 		goto fin;
@@ -54,7 +54,7 @@ DSI *dsi;
 
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test216");
 }
@@ -104,7 +104,7 @@ int i,j;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	memset(Data, 0xff, 0x20000);
 	i = parms.bfree / size;
 	for (j = 0; j < i; j++) {
@@ -138,7 +138,7 @@ int i,j;
 fin:
 
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test226");
 }
@@ -167,15 +167,15 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024)) 
-	
+	}
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
+
 	FAIL (FPWrite(Conn, fork, 1024, 0, Data, 0 ))
 
 fin:
 
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test303");
 }
@@ -189,4 +189,3 @@ void FPWrite_test()
 	test226();
 	test303();
 }
-

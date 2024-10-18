@@ -17,7 +17,7 @@ uint16_t vol = VolID;
 uint16_t vol2;
 DSI *dsi2;
 int dt;
-		
+
 	enter_test();
     fprintf(stdout,"===================\n");
 	fprintf(stdout, "FPRemoveComment:test54: remove comment\n");
@@ -25,7 +25,7 @@ int dt;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name))) {
 		goto test_exit;
@@ -51,20 +51,20 @@ int dt;
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_ACCESS)) {
 		failed();
 	}
-	
+
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name2);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_ACCESS)) {
 		failed();
 	}
 
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai")) 
+	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1))
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
 		failed();
 	}
 
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "essai")) 
+	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3))
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
@@ -77,7 +77,7 @@ int dt;
 		goto fin;
 	}
 
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai")) 
+	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1))
 	FPCloseFork(Conn,fork);
 #if 0
@@ -86,8 +86,8 @@ int dt;
 	}
 #endif
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
 	delete_folder(vol, DIRDID_ROOT, name);
 	if (rdir) {
 		delete_folder(vol, DIRDID_ROOT, name2);
@@ -106,7 +106,7 @@ char *name1 = "t379 file.txt";
 uint16_t vol = VolID;
 int  dt;
 
-		
+
 	enter_test();
     fprintf(stdout,"===================\n");
 	fprintf(stdout, "FPRemoveComment:test379: remove comment\n");
@@ -119,12 +119,12 @@ int  dt;
 		goto fin;
 	}
 	dt = FPOpenDT(Conn,vol);
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai")) 
+	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1))
 	FPCloseFork(Conn,fork);
 	FAIL (FPCloseDT(Conn, dt))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 	exit_test("test379");
 }
 
@@ -137,4 +137,3 @@ void FPRemoveComment_test()
 	test54();
 	test379();
 }
-

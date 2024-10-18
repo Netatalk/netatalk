@@ -19,7 +19,7 @@ int ret;
 		failed();
 	}
 	FAIL (htonl(AFPERR_PARAM) != FPCloseVol(Conn, vol +1))
-	
+
 	vol = VolID = FPOpenVol(Conn, Vol);
 	if (vol == 0xffff) {
 		failed();
@@ -35,4 +35,3 @@ void FPCloseVol_test()
     fprintf(stdout,"FPCloseVol page 130\n");
 	test204();
 }
-

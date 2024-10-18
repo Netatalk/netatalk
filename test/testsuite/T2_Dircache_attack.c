@@ -1,6 +1,6 @@
 #include "specs.h"
 
-/* 
+/*
    Test the following:
 
    test500()
@@ -69,7 +69,7 @@
 
    Check: CNID must not change
    Targets: getfildirparms()
-   
+
 
    test504()
    =========
@@ -142,7 +142,7 @@ STATIC void test500()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -210,7 +210,7 @@ STATIC void test501()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -275,7 +275,7 @@ STATIC void test502()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -345,7 +345,7 @@ STATIC void test503()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -410,7 +410,7 @@ STATIC void test504()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -477,7 +477,7 @@ STATIC void test505()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;
@@ -543,7 +543,7 @@ STATIC void test506()
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         failed();
         goto test_exit;

@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -47,7 +47,7 @@
  */
 #define MAX_EA_SIZE 3802
 
-/* 
+/*
  * Library user must provide a static buffer of size ATTRNAMEBUFSIZ.
  * It's used when listing EAs as intermediate buffer. For afpd it's
  * defined in extattrs.c.

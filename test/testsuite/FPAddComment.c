@@ -26,7 +26,7 @@ int  dt;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, name2) ) ) {
 		goto test_exit;
@@ -81,18 +81,18 @@ int  dt;
 	}
 
 	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "Comment"))
-	FAIL (FPGetComment(Conn, vol,  DIRDID_ROOT , name3)) 
-	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3)) 
+	FAIL (FPGetComment(Conn, vol,  DIRDID_ROOT , name3))
+	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3))
 	FAIL (FPCloseFork(Conn,fork))
 #if 0
 	if (ntohl(AFPERR_ACCESS) != FPAddComment(Conn, vol,  DIRDID_ROOT , "bogus folder","essai")) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-#endif	
+#endif
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
 	if (pdir) {
 		delete_folder(vol, DIRDID_ROOT, name);
 	}
@@ -111,4 +111,3 @@ void FPAddComment_test()
     fprintf(stdout,"FPAddComment page 96\n");
 	test55();
 }
-

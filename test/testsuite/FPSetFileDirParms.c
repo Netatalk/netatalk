@@ -15,7 +15,7 @@ int pdir = 0;
 int rdir = 0;
 int ret;
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) 
+uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 					| (1<<DIRPBIT_UID) | (1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS)
 					| (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE);
 uint16_t vol = VolID;
@@ -29,7 +29,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, ndir))) {
 		goto test_exit;
@@ -37,19 +37,19 @@ DSI *dsi;
 	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, rodir) ) ) {
 		goto fin;
 	}
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, ndir, 0, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, ndir, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 		(1<<DIRPBIT_UID) | (1 << DIRPBIT_GID)| (1 << DIRPBIT_ACCESS))) {
 		failed();
 		goto fin;
 	}
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, rodir, 0, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, rodir, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 		(1<<DIRPBIT_UID) | (1 << DIRPBIT_GID)| (1 << DIRPBIT_ACCESS))) {
 		failed();
 		goto fin;
 	}
-	
+
 	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name)))
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
@@ -67,14 +67,14 @@ DSI *dsi;
         } else {
             if (ret)
                 failed();
-        }    
+        }
  		ret = FPSetFilDirParam(Conn, vol, DIRDID_ROOT , ndir, bitmap, &filedir);
 		if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
 			failed();
 		}
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name1, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name1, bitmap, &filedir))
  		FAIL (ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name1, bitmap, &filedir))
- 		FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
 	}
 
 fin:
@@ -83,7 +83,7 @@ fin:
 		delete_folder(vol, DIRDID_ROOT, rodir);
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test98");
 }
@@ -143,16 +143,16 @@ DSI *dsi;
 		filedir.unix_priv &= ~S_IWUSR;
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 3;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
  		FAIL (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap))
 
 		filedir.unix_priv &= ~(S_IWUSR |S_IWGRP| S_IWOTH);
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 3;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 
  		FAIL (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap))
-		
+
  		if (!FPDelete(Conn, vol,  dir , name)) {
  		    /* FIXME OSX delete it*/
 			if (FPCreateFile(Conn, vol,  0, dir , name)) {
@@ -190,7 +190,7 @@ DSI *dsi;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 		bitmap = (1<< DIRPBIT_UNIXPR);
 		filedir.unix_priv &= ~S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,dir, name,OPENACC_WR | OPENACC_RD);
 		if (fork) {
@@ -202,7 +202,7 @@ DSI *dsi;
 			failed();
 			FPCloseFork(Conn, fork);
 		}
-	
+
 	}
 
 	/* ----------------- */
@@ -216,11 +216,11 @@ DSI *dsi;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 		bitmap = (1<< DIRPBIT_UNIXPR);
 		filedir.unix_priv |= S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	}
-	
+
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test230");
@@ -256,7 +256,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -295,7 +295,7 @@ DSI *dsi;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 		bitmap = (1<< DIRPBIT_UNIXPR);
 		filedir.unix_priv |= S_IWUSR |S_IWGRP| S_IRGRP | S_IWOTH | S_IROTH;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 		if (FPCreateFile(Conn2, vol2,  0, dir , name1)) {
 			nottested();
 		}
@@ -318,9 +318,9 @@ DSI *dsi;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 		bitmap = (1<< DIRPBIT_UNIXPR);
 		filedir.unix_priv &= ~(S_IWUSR |S_IWGRP| S_IWOTH);
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
  		FAIL (FPGetFileDirParams(Conn2, vol2, dir, "", 0, bitmap))
-		
+
  		FAIL (htonl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir , name1))
  		FAIL (htonl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir , name))
 	}
@@ -342,14 +342,14 @@ DSI *dsi;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 		bitmap = (1<< DIRPBIT_UNIXPR);
 		filedir.unix_priv |= S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	}
-	
-	
+
+
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  dir , name))
-	
-fin:	
+
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test231");
@@ -376,7 +376,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -396,7 +396,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	FAIL (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap))
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR);
 
@@ -410,19 +410,19 @@ DSI *dsi;
 		filedir.unix_priv &= ~(S_IWUSR |S_IWGRP| S_IWOTH);
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 3;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
  		if (FPDelete(Conn, vol,  dir , name)) {
  			failed();
 			bitmap = (1<< DIRPBIT_UNIXPR);
 			filedir.unix_priv |= S_IWUSR |S_IWGRP| S_IWOTH;
         	filedir.access[0] = 0;
         	filedir.access[1] = filedir.access[2] = filedir.access[3] = 3;
- 			FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 			FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 			FAIL (FPDelete(Conn, vol,  dir , name))
 		}
 	}
-	
-fin:	
+
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test232");
@@ -466,7 +466,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	FAIL (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap))
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR);
 
@@ -480,8 +480,8 @@ DSI *dsi;
 		filedir.unix_priv = 0;
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
- 		
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
+ 
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0 , dir , name, OPENACC_RD);
 		if (fork) {
 			failed();
@@ -495,7 +495,7 @@ DSI *dsi;
 		}
 
 		filedir.unix_priv = S_IRUSR | S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0 , dir , name, OPENACC_RD);
 		if (!fork) {
@@ -515,7 +515,7 @@ DSI *dsi;
 
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test345");
@@ -558,7 +558,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	FAIL (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap))
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR);
 
@@ -573,15 +573,15 @@ DSI *dsi;
 		filedir.unix_priv = 0;
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
  		if (FPDelete(Conn, vol,  dir , name)) {
  			failed();
 			filedir.unix_priv = S_IRUSR | S_IWUSR;
- 			FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 			FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 			FAIL (FPDelete(Conn, vol,  dir , name))
 		}
 	}
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test346");
@@ -646,9 +646,9 @@ DSI *dsi;
  	if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) {
 	    failed();
 		filedir.unix_priv = S_IRUSR | S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	}
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR);
 
@@ -670,11 +670,11 @@ DSI *dsi;
  	if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) {
 	    failed();
 		filedir.unix_priv = S_IRUSR | S_IWUSR;
- 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 	}
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test347");
@@ -716,14 +716,14 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-		
+
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	bitmap = (1<< DIRPBIT_UNIXPR);
 	filedir.unix_priv = 0;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, dir , name)) {
 		failed();
 		FAIL (FPDelete(Conn, vol,  dir , name))
@@ -735,16 +735,16 @@ DSI *dsi;
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	}
-	
+
 	filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
 		failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  dir , name))
 	}
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test348");
@@ -793,14 +793,14 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-		
+
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs,  0, bitmap);
 	bitmap = (1<< DIRPBIT_UNIXPR);
 	filedir.unix_priv = 0;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir1 , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir1 , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, dir1 , name)) {
 		failed();
 		FAIL (FPDelete(Conn, vol,  dir1 , name))
@@ -812,9 +812,9 @@ DSI *dsi;
 	else {
 		FAIL (FPDelete(Conn, vol,  dir , name))
 	}
-	
+
 	filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir1 , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir1 , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, dir1 , name)) {
 		failed();
 	}
@@ -865,7 +865,7 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-	memset(&filedir, 0, sizeof(filedir));		
+	memset(&filedir, 0, sizeof(filedir));
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs,  0, bitmap);
 	bitmap = (1<< DIRPBIT_UNIXPR);
@@ -879,24 +879,24 @@ DSI *dsi;
 	}
 	if (!ret) {
 		filedir.unix_priv = old_unixpriv;
- 		FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir)) 
-	} 	
+ 		FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
+	} 
 
 	filedir.unix_priv = S_IRUSR | S_IXUSR ;
- 	FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	}
 	filedir.unix_priv = old_unixpriv;
- 	FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	}
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test350");
@@ -928,7 +928,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
@@ -961,7 +961,7 @@ DSI *dsi;
     filedir.access[1] = filedir.access[2] = 0;
     filedir.access[3] = 3; /* only owner */
 	bitmap = (1<< DIRPBIT_ACCESS) | (1<<FILPBIT_ATTR);
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 	FAIL (FPGetFileDirParams(Conn2, vol2, dir, "", bitmap, bitmap))
 
 	bitmap = (1 << FILPBIT_LNAME);
@@ -970,9 +970,9 @@ DSI *dsi;
 
     memcpy(filedir.access, old_access, sizeof(old_access));
 	bitmap = (1<< DIRPBIT_ACCESS);
- 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) 
-	
-fin:	
+ 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
+
+fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , name1);
 	sleep(1);
@@ -1014,7 +1014,7 @@ DSI *dsi;
 		nottested();
 		goto fin;
 	}
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
 
@@ -1025,17 +1025,17 @@ DSI *dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
- 	FAIL (FPSetFileParams(Conn, vol, dir,  name, (1<<FILPBIT_ATTR), &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, dir,  name, (1<<FILPBIT_ATTR), &filedir))
 
-	FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  dir , name)) 
-	
+	FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  dir , name))
+
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 	bitmap = (1<< DIRPBIT_UNIXPR);
 	filedir.unix_priv = 0;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 	bitmap = (1<<FILPBIT_ATTR);
 	if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
@@ -1058,13 +1058,13 @@ DSI *dsi;
 fin2:
 	filedir.unix_priv = S_IRUSR | S_IWUSR;
 	bitmap = (1<< DIRPBIT_UNIXPR);
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 	filedir.attr = ATTRBIT_NODELETE;
- 	FAIL (FPSetFileParams(Conn, vol, dir , name, (1<<FILPBIT_ATTR), &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, dir , name, (1<<FILPBIT_ATTR), &filedir))
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test359");
@@ -1094,7 +1094,7 @@ uint16_t vol2;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -1117,7 +1117,7 @@ uint16_t vol2;
 		nottested();
 		goto fin;
 	}
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO);
 
@@ -1128,17 +1128,17 @@ uint16_t vol2;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
- 	FAIL (FPSetFileParams(Conn, vol, dir,  name, (1<<FILPBIT_ATTR), &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, dir,  name, (1<<FILPBIT_ATTR), &filedir))
 
-	FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  dir , name)) 
-	
+	FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  dir , name))
+
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 	bitmap = (1<< DIRPBIT_UNIXPR);
 	filedir.unix_priv = 0;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 	bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO);
 	if (FPGetFileDirParams(Conn2, vol2, dir, name, bitmap, 0)) {
 	    failed();
@@ -1160,13 +1160,13 @@ uint16_t vol2;
 fin2:
 	filedir.unix_priv = S_IRUSR | S_IWUSR;
 	bitmap = (1<< DIRPBIT_UNIXPR);
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 	filedir.attr = ATTRBIT_NODELETE;
- 	FAIL (FPSetFileParams(Conn, vol, dir , name, (1<<FILPBIT_ATTR), &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, dir , name, (1<<FILPBIT_ATTR), &filedir))
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test361");
@@ -1204,7 +1204,7 @@ DSI *dsi;
 		nottested();
 		goto fin;
 	}
-		
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO);
 
@@ -1219,13 +1219,13 @@ DSI *dsi;
 	filedir.uid = 100000;
 	filedir.gid = 125000;
 	filedir.unix_priv = 0660;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 	FAIL(FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0))
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test400");
@@ -1254,4 +1254,3 @@ void FPSetFileDirParms_test()
     test361();
     test400();
 }
-

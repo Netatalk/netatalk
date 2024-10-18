@@ -6,8 +6,8 @@
 #include "specs.h"
 #include "adoublehelper.h"
 
-static char temp[MAXPATHLEN];   
-static char temp1[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
+static char temp1[MAXPATHLEN];
 
 /* -------------------------- */
 STATIC void test129()
@@ -66,7 +66,7 @@ DSI *dsi = &Conn->dsi;
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 	FPCloseVol(Conn,vol);
 	vol  = FPOpenVol(Conn, Vol);
-	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
 	exit_test("test129");
 }
@@ -108,7 +108,7 @@ int ret;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
 
     if (adouble == AD_V2) {
@@ -166,7 +166,7 @@ DSI *dsi = &Conn->dsi;
 		goto test_exit;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		failed();
@@ -174,7 +174,7 @@ DSI *dsi = &Conn->dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
     if (adouble == AD_V2) {
         sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
@@ -193,10 +193,10 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 
-	FAIL (ntohl(AFPERR_NOOBJ ) != FPDeleteID(Conn, vol, filedir.did)) 
+	FAIL (ntohl(AFPERR_NOOBJ ) != FPDeleteID(Conn, vol, filedir.did))
 	FPCloseVol(Conn,vol);
 	vol  = FPOpenVol(Conn, Vol);
-	FAIL (ntohl(AFPERR_NOID ) != FPDeleteID(Conn, vol, filedir.did)) 
+	FAIL (ntohl(AFPERR_NOID ) != FPDeleteID(Conn, vol, filedir.did))
 test_exit:
 	exit_test("test131");
 }
@@ -230,7 +230,7 @@ DSI *dsi = &Conn->dsi;
 		goto test_exit;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		failed();
@@ -244,7 +244,7 @@ DSI *dsi = &Conn->dsi;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		fid = filedir.did;
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
 	if (!Mac) {
 		sprintf(temp, "%s/%s/%s", Path, name1, name);
@@ -277,10 +277,10 @@ DSI *dsi = &Conn->dsi;
 		if (fid != filedir.did) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			failed_nomsg();
-		
+
 		}
 		else {
-			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
 
@@ -307,16 +307,16 @@ static int get_fs_lock(char *folder, char *file)
 
 	fprintf(stdout," \n---------------------\n");
 	fprintf(stdout, "open(\"%s\", O_RDWR)\n", temp);
-	fd = open(temp, O_RDWR, 0);	
+	fd = open(temp, O_RDWR, 0);
 	if (fd >= 0) {
 		lock.l_start = 0;		/* after meta data */
     	lock.l_type = F_WRLCK;
 	    lock.l_whence = SEEK_SET;
     	lock.l_len = 0;
-         
+
 		fprintf(stdout, "fcntl(1024)\n");
     	if ((ret = fcntl(fd, F_SETLK, &lock)) >= 0 || (errno != EACCES && errno != EAGAIN)) {
-    		if (!ret >= 0) 
+    		if (!ret >= 0)
     	    	errno = 0;
     		perror("fcntl ");
 			fprintf(stdout,"\tFAILED\n");
@@ -362,15 +362,15 @@ DSI *dsi = &Conn->dsi;
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		failed();
 		goto test_exit;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name)) 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name3)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name3))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap , dir, name3, OPENACC_WR |OPENACC_RD|OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
@@ -394,7 +394,7 @@ DSI *dsi = &Conn->dsi;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		fid = filedir.did;
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
 	if (!Mac) {
 		sprintf(temp, "%s/%s/%s", Path, name1, name);
@@ -430,10 +430,10 @@ DSI *dsi = &Conn->dsi;
 		if (fid != filedir.did) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			failed_nomsg();
-		
+
 		}
 		else {
-			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
 	if (!Mac) {
@@ -535,7 +535,7 @@ DSI *dsi = &Conn->dsi;
 		goto fin;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir1, name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir1, name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir1, name, bitmap,0)) {
 		failed();
@@ -545,7 +545,7 @@ DSI *dsi = &Conn->dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid = filedir.did;
-	FAIL (FPResolveID(Conn, vol, fid, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid, bitmap))
 
 	if (!Mac) {
 		sprintf(temp, "%s/%s", Path, ndir1);
@@ -562,7 +562,7 @@ DSI *dsi = &Conn->dsi;
 	}
 	FPResolveID(Conn, vol, fid, bitmap);
 
-	if (FPEnumerate(Conn, vol,  dir2, "", 
+	if (FPEnumerate(Conn, vol,  dir2, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -583,10 +583,10 @@ DSI *dsi = &Conn->dsi;
 		if (fid != filedir.did) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			failed_nomsg();
-		
+
 		}
 		else {
-			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
 
@@ -632,7 +632,7 @@ DSI *dsi = &Conn->dsi;
 		goto fin;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		failed();
@@ -646,7 +646,7 @@ DSI *dsi = &Conn->dsi;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		fid = filedir.did;
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
 	if (!Mac) {
 		sprintf(temp, "%s/%s/%s", Path, name1, name);
@@ -656,7 +656,7 @@ DSI *dsi = &Conn->dsi;
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			failed_nomsg();
 		}
-		
+
         if (adouble == AD_V2) {
             sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name1, name);
             sprintf(temp1,"%s/%s/.AppleDouble/%s", Path, name2, name);
@@ -680,10 +680,10 @@ DSI *dsi = &Conn->dsi;
 		if (fid != filedir.did) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			failed_nomsg();
-		
+
 		}
 		else {
-			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
 
@@ -729,7 +729,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	/* create file1 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name1)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
 		failed();
 		goto fin;
@@ -739,7 +739,7 @@ DSI *dsi = &Conn->dsi;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid1 = filedir.did;
 
-	FAIL (FPResolveID(Conn, vol, fid1, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid1, bitmap))
 	afp_filedir_unpack(&filedir, dsi->data +ofs_res, bitmap, 0);
 	if (fid1 != filedir.did) {
 		fprintf(stdout,"\tFAILED FPGetFileDirParams, FPResolveID id differ %x %x\n", fid1, filedir.did);
@@ -747,7 +747,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	/* create file2 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name2)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name2))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
 		failed();
@@ -757,7 +757,7 @@ DSI *dsi = &Conn->dsi;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid2 = filedir.did;
 
-	FAIL (FPResolveID(Conn, vol, fid2, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid2, bitmap))
 	afp_filedir_unpack(&filedir, dsi->data +ofs_res, bitmap, 0);
 	if (fid2 != filedir.did) {
 		fprintf(stdout,"\tFAILED FPGetFileDirParams, FPResolveID id differ %x %x\n", fid2, filedir.did);
@@ -772,7 +772,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	sprintf(temp, "%s/%s/.AppleDouble/%s", Path, dir1, name1);
 	sprintf(temp1,"%s/%s/.AppleDouble/tmp", Path, dir1);
 	fprintf(stdout,"rename %s %s\n", temp, temp1);
@@ -789,7 +789,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	sprintf(temp, "%s/%s/.AppleDouble/%s", Path, dir1, name2);
 	sprintf(temp1,"%s/%s/.AppleDouble/%s", Path, dir1, name1);
 	fprintf(stdout,"rename %s %s\n", temp, temp1);
@@ -806,7 +806,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp1, temp, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	sprintf(temp, "%s/%s/.AppleDouble/%s", Path, dir1, name2);
 	sprintf(temp1,"%s/%s/.AppleDouble/tmp", Path, dir1);
 	fprintf(stdout,"rename %s %s\n", temp1, temp);
@@ -828,7 +828,7 @@ DSI *dsi = &Conn->dsi;
 		failed_nomsg();
 	}
 
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	afp_filedir_unpack(&filedir, dsi->data +ofs_res, bitmap, 0);
 	if (nfid1 != filedir.did) {
 		fprintf(stdout,"\tFAILED FPGetFileDirParams, FPResolveID id differ %x %x\n", nfid1, filedir.did);
@@ -848,7 +848,7 @@ DSI *dsi = &Conn->dsi;
 		failed_nomsg();
 	}
 
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	afp_filedir_unpack(&filedir, dsi->data +ofs_res, bitmap, 0);
 	if (nfid2 != filedir.did) {
 		fprintf(stdout,"\tFAILED FPGetFileDirParams, FPResolveID id differ %x %x\n", nfid2, filedir.did);
@@ -897,7 +897,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	/* create file1 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name1)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
 		failed();
 		goto fin;
@@ -906,10 +906,10 @@ DSI *dsi = &Conn->dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid1 = filedir.did;
-	FAIL (FPResolveID(Conn, vol, fid1, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid1, bitmap))
 
 	/* create file2 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name2)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name2))
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
 		failed();
 		goto fin;
@@ -918,16 +918,16 @@ DSI *dsi = &Conn->dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid2 = filedir.did;
-	FAIL (FPResolveID(Conn, vol, fid2, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid2, bitmap))
 
 	/* rename name1 --> tmp */
-	FAIL (FPRename(Conn, vol, dir, name1, tp)) 
+	FAIL (FPRename(Conn, vol, dir, name1, tp))
 
 	/* rename file2 to file1 */
-	FAIL (FPRename(Conn, vol, dir, name2, name1)) 
-		
+	FAIL (FPRename(Conn, vol, dir, name2, name1))
+
 	/* rename tmp to file2 */
-	FAIL (FPRename(Conn, vol, dir, tp, name2)) 
+	FAIL (FPRename(Conn, vol, dir, tp, name2))
 
 	/* check name1 has name2 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
@@ -940,7 +940,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid2, filedir.did);
 		failed_nomsg();
 	}
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
 	/* check name2 has name1 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
@@ -953,7 +953,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid1, filedir.did);
 		failed_nomsg();
 	}
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
 fin:
 	FAIL (FPDelete(Conn, vol,  dir, name1))
@@ -993,7 +993,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	/* create file1 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name1)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
 		failed();
 		goto fin;
@@ -1002,10 +1002,10 @@ DSI *dsi = &Conn->dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid1 = filedir.did;
-	FAIL (FPResolveID(Conn, vol, fid1, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid1, bitmap))
 
 	/* create file2 */
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name2)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name2))
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
 		failed();
 		goto fin;
@@ -1014,7 +1014,7 @@ DSI *dsi = &Conn->dsi;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fid2 = filedir.did;
-	FAIL (FPResolveID(Conn, vol, fid2, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, fid2, bitmap))
 
 	/* rename name1 --> tmp */
 	sprintf(temp, "%s/%s/%s", Path, dir1, name1);
@@ -1024,7 +1024,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	/* rename file2 to file1 */
 	sprintf(temp, "%s/%s/%s", Path, dir1, name2);
 	sprintf(temp1,"%s/%s/%s", Path, dir1, name1);
@@ -1033,7 +1033,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	/* rename tmp to file2 */
 	sprintf(temp, "%s/%s/%s", Path, dir1, name2);
 	sprintf(temp1,"%s/%s/tmp", Path, dir1);
@@ -1042,7 +1042,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp1, temp, strerror(errno));
 		failed_nomsg();
 	}
-		
+
 	/* check name1 has name2 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
 		failed();
@@ -1055,7 +1055,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid2, filedir.did);
 		failed_nomsg();
 	}
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
 	/* check name2 has name1 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
@@ -1069,7 +1069,7 @@ DSI *dsi = &Conn->dsi;
 		fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid1, filedir.did);
 		failed_nomsg();
 	}
-	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
 	fprintf(stdout,"file %s old %x  new %x\n", name1, fid1, nfid1);
 	fprintf(stdout,"file %s old %x  new %x\n", name2, fid2, nfid2);
@@ -1100,5 +1100,4 @@ void FPResolveID_test()
 //	test417();
 	test418();
 //	test419();
-}	
-
+}

@@ -36,13 +36,13 @@ static void connect_server(void)
     if (!Proto) {
 	int sock;
     	Dsi = &Conn->dsi;
-		dsi = Dsi;         
+		dsi = Dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
         	nottested();
 	    	exit(ExitCode);
         }
-     	Dsi->protocol = DSI_TCPIP; 
+     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
@@ -107,7 +107,7 @@ unsigned int ret;
 	if (ret) {
 		nottested();
 		goto fin;
-	}	
+	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	dir = strdup(filedir.lname);
@@ -122,7 +122,7 @@ unsigned int ret;
 	if (ret) {
 		nottested();
 		goto fin;
-	}	
+	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	file = strdup(filedir.lname);
@@ -138,7 +138,7 @@ unsigned int ret;
 	if (ret) {
 		nottested();
 		goto fin;
-	}	
+	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	file1 = strdup(filedir.lname);
@@ -166,7 +166,7 @@ unsigned int ret;
  		ret  = FPSetFileParams(Conn, VolID,  DIRDID_ROOT , file, bitmap, &filedir);
  		check_test(ret);
 	}
-	FAIL (ntohl(AFPERR_VLOCK) != FPCopyFile(Conn, VolID, DIRDID_ROOT, VolID, DIRDID_ROOT, file, "", nfile)) 
+	FAIL (ntohl(AFPERR_VLOCK) != FPCopyFile(Conn, VolID, DIRDID_ROOT, VolID, DIRDID_ROOT, file, "", nfile))
 
 	if (!(get_vol_attrib(VolID) & VOLPBIT_ATTR_FILEID) ) {
 		fprintf(stdout,"FileID calls Not supported\n");
@@ -176,26 +176,26 @@ unsigned int ret;
 		 * CreateID, DeleteID don't return VLOCK
 		*/
 		ret = FPCreateID(Conn,VolID, DIRDID_ROOT, file);
-		if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_EXISTID )) { 
-			failed();	
+		if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_EXISTID )) {
+			failed();
 		}
 		fid = get_fid(Conn, VolID, DIRDID_ROOT, file);
 		if (fid) {
 			ret = FPDeleteID(Conn, VolID, filedir.did);
-			if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_NOID )) { 
-				failed();	
+			if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_NOID )) {
+				failed();
 			}
 		}
 	}
 	ret = FPExchangeFile(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, file, file1);
-	if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_ACCESS )) { 
-		failed();	
+	if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_ACCESS )) {
+		failed();
 	}
 
 	/* -- volume.c -- */
 
     bitmap = (1 << VOLPBIT_MDATE );
- 	FAIL (FPGetVolParam(Conn, VolID, bitmap)) 
+ 	FAIL (FPGetVolParam(Conn, VolID, bitmap))
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), bitmap);
 	bitmap = (1 << VOLPBIT_BDATE );
  	parms.bdate = parms.mdate;
@@ -224,8 +224,8 @@ unsigned int ret;
  		check_test(ret);
 	}
 
-	FAIL (htonl(AFPERR_VLOCK) != FPRename(Conn, VolID, DIRDID_ROOT, file, nfile)) 
-	FAIL (htonl(AFPERR_VLOCK) != FPRename(Conn, VolID, DIRDID_ROOT, dir, ndir)) 
+	FAIL (htonl(AFPERR_VLOCK) != FPRename(Conn, VolID, DIRDID_ROOT, file, nfile))
+	FAIL (htonl(AFPERR_VLOCK) != FPRename(Conn, VolID, DIRDID_ROOT, dir, ndir))
 
 	bitmap = (1<<DIRPBIT_OFFCNT);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , dir, 0, bitmap)) {
@@ -244,10 +244,10 @@ unsigned int ret;
 			}
 		}
 	}
-	FAIL (htonl(AFPERR_VLOCK) != FPDelete(Conn, VolID, DIRDID_ROOT, file)) 
+	FAIL (htonl(AFPERR_VLOCK) != FPDelete(Conn, VolID, DIRDID_ROOT, file))
 
-	FAIL (htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, file, nfile)) 
-	FAIL (htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, dir, ndir)) 
+	FAIL (htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, file, nfile))
+	FAIL (htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, dir, ndir))
 
 	/* -- directory.c -- */
 	bitmap = (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE);
@@ -265,14 +265,14 @@ unsigned int ret;
 		FAIL (FPDelete(Conn, VolID,  did , ""))
 		goto test_exit;
 	}
- 	
+ 
  	/* -- fork.c -- */
  	bitmap = 0;
 	fork = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file,OPENACC_RD );
 
     if (!fork) {
 		failed();
-    }        
+    }
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
 		failed();
@@ -290,11 +290,11 @@ unsigned int ret;
 
     if (!fork) {
 		failed();
-    }        
+    }
 	bitmap = (1<<FILPBIT_DFLEN);
 	ret = FPSetForkParam(Conn, fork, bitmap, 0);
  	check_test(ret);
-	
+
 	if (FPGetForkParam(Conn, fork, bitmap)) {
 		failed();
 	}
@@ -310,7 +310,7 @@ unsigned int ret;
 
     if (!fork) {
 		failed();
-    }        
+    }
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
 		failed();
@@ -328,7 +328,7 @@ unsigned int ret;
 
     if (!fork) {
 		failed();
-    }        
+    }
 
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 100);
  	check_test(ret);
@@ -343,13 +343,13 @@ void usage( char * av0 )
 {
     fprintf( stdout,"%s test a read only volume\n", av0);
     fprintf( stdout, "usage:\t%s [-m] [-n] [-t] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
-    
+
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
-    
+
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
@@ -438,7 +438,7 @@ static char *uam = "Cleartxt Passwrd";
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
     	return 1;
     }
-	/* ------------------------ */	
+	/* ------------------------ */
     connect_server();
 	// FIXME: workaround for FPopenLoginExt() being broken
 #if 0

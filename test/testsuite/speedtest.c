@@ -143,7 +143,7 @@ unsigned int local_closevol(CONN *conn, uint16_t vol)
 }
 
 /* ------------- */
-static char temp[MAXPATHLEN +1]; 
+static char temp[MAXPATHLEN +1];
 static int local_chdir(uint16_t vol, int did)
 {
 	if (vol > MAXVOL || did > MAXDIR) {
@@ -168,7 +168,7 @@ unsigned int i;
 		fprintf(stdout,"Create Directory Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
 	}
 	did = ntohl(did);
-	
+
 	if (local_chdir(vol, did) < 0) {
 		return 0;
 	}
@@ -250,7 +250,7 @@ int fd;
 /* ------------------------- */
 #ifndef O_DIRECT
 /* XXX hack */
-#define O_DIRECT 040000 
+#define O_DIRECT 040000
 #endif
 
 uint16_t local_openfork(CONN *conn, uint16_t vol, int type, uint16_t bitmap, int did , char *name, int access)
@@ -260,7 +260,7 @@ int flags = O_RDWR;
 
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Open Fork %s Vol %d did : 0x%x <%s> access %x\n\n", (type == OPENFORK_DATA)?"data":"resource", 
+		fprintf(stdout,"Open Fork %s Vol %d did : 0x%x <%s> access %x\n\n", (type == OPENFORK_DATA)?"data":"resource",
 						vol, ntohl(did), name, access);
 	}
 	if (Direct) {
@@ -433,12 +433,12 @@ static void press_enter(char *s)
 {
     if (!Interactive)
 	return;
-	
-    if (s) 
+
+    if (s)
 	fprintf(stdout, "--> Performing: %s\n", s);
     fprintf(stdout, "Press <ENTER> to continue.\n");
-    
-    while (fgetc(stdin) != '\n') 
+
+    while (fgetc(stdin) != '\n')
 	;
 }
 
@@ -467,10 +467,10 @@ void nottested(void)
 /* --------------------------------- */
 int is_there(CONN *conn, uint16_t vol, int did, char *name)
 {
-	return VFS.getfiledirparams(conn, vol,  did, name, 
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	return VFS.getfiledirparams(conn, vol,  did, name,
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 	         ,
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 		);
 }
 
@@ -482,11 +482,11 @@ unsigned long long s, e;
 	s  = Timer_start.tv_sec;
     s *= 1000000;
     s += Timer_start.tv_usec;
-    
+
 	e  = Timer_end.tv_sec;
     e *= 1000000;
     e += Timer_end.tv_usec;
-    
+
  return e -s;
 }
 
@@ -512,7 +512,7 @@ void Write(void)
 int dir = 0;
 int fork = 0;
 int id = getpid();
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 int vol = VolID;
 off_t  offset;
 off_t  offset_r;
@@ -670,7 +670,7 @@ static int blocking_mode(CONN *conn, int fork, const int mode)
 DSI *dsi;
 int adr = mode;
 int ret;
-    
+
     if (Local) {
     	if (mode) {
     		 adr = O_NONBLOCK;
@@ -695,7 +695,7 @@ int fork2 = 0;
 int fork_fd;
 int fork2_fd;
 int id = getpid();
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 int vol = VolID;
 int vol2 = VolID2;
 off_t  written;
@@ -735,7 +735,7 @@ int cnt = 0;
 		nottested();
 		return;
 	}
-	
+
 	if (!Filename && !(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
 		nottested();
 		goto fin;
@@ -761,7 +761,7 @@ int cnt = 0;
 		failed();
 		goto fin;
 	}
-	
+
 	for (i = 1; i <= Count; i++) {
 		fork = VFS.openfork(Conn, vol, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork) {
@@ -781,9 +781,9 @@ int cnt = 0;
 		}
 		fork_fd = getfd(Conn, fork);
 		fork2_fd = getfd(Conn, fork2);
-		
+
 		fprintf(stdout,"%d\t", i);
-		
+
 		gettimeofday(&Timer_start, NULL);
 		nbe = nbe_r = nbe_w = Quantum;
 		written = written_r = written_w = Size;
@@ -879,7 +879,7 @@ int cnt = 0;
 			if (VFS.delete(Conn, vol2,  dir2, "Destination")) {
 				goto fin;
 			}
-			
+
 			if (!Filename && VFS.createfile(Conn, vol,  0, dir , temp)){
 				failed();
 				goto fin;
@@ -899,7 +899,7 @@ fin1:
 fin:
 	if (!Filename && dir && VFS.delete(Conn, vol,  dir, "")) {failed();}
 	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {failed();}
-    
+
 	return;
 }
 
@@ -910,7 +910,7 @@ int dir = 0;
 int dir2 = 0;
 int fork = 0;
 int id = getpid();
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 int vol = VolID;
 int vol2 = VolID2;
 int i;
@@ -927,7 +927,7 @@ int i;
 		nottested();
 		return;
 	}
-	
+
 	if (!(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
 		nottested();
 		goto fin;
@@ -991,7 +991,7 @@ fin1:
 fin:
 	if (dir && VFS.delete(Conn, vol,  dir, "")) {failed();}
 	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {failed();}
-    
+
 	return;
 }
 
@@ -1001,7 +1001,7 @@ void Read(void)
 int dir = 0;
 int fork = 0;
 int id = getpid();
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 int vol = VolID;
 off_t  written;
 off_t  written_r;
@@ -1018,12 +1018,12 @@ int push;
 
 	if (!Filename) {
 		sprintf(temp,"ReadTest-%d", id);
-	
+
 		if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, temp)) {
 			nottested();
 			return;
 		}
-	
+
 		if (!(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
 			nottested();
 			goto fin;
@@ -1100,7 +1100,7 @@ int push;
 			offset_r += nbe_r;
 		}
 		timer_footer();
-		
+
 		if (VFS.closefork(Conn,fork)) {failed();}
 		fork = 0;
 
@@ -1108,7 +1108,7 @@ int push;
 			if (VFS.delete(Conn, vol,  dir, temp)) {
 				goto fin;
 			}
-			
+
 			if (VFS.createfile(Conn, vol,  0, dir , temp)){
 				failed();
 				goto fin;
@@ -1121,7 +1121,7 @@ fin1:
 	if (!Filename && VFS.delete(Conn, vol,  dir, temp)) {failed();}
 fin:
 	if (!Filename && VFS.delete(Conn, vol,  dir, "")) {failed();}
-    
+
 	return;
 }
 
@@ -1159,7 +1159,7 @@ void (*fn)(void) = NULL;
 #endif
 
     token = strtok(tp, ",");
-    
+
 #ifdef BROKEN_DL
 	fn = test_to_run(token);
 	if (fn == -1) {
@@ -1239,7 +1239,7 @@ void (*fn)(void) = NULL;
 		}
 #else
 	    (*fn)();
-#endif	    
+#endif
 	    token = strtok(NULL, ",");
 #ifdef BROKEN_DL
 		if (token) {
@@ -1255,7 +1255,7 @@ void (*fn)(void) = NULL;
 				fprintf (stdout, "%s\n", error);
 			}
 	    }
-#endif	    
+#endif
 	}
 
 #ifndef BROKEN_DL
@@ -1267,7 +1267,7 @@ void (*fn)(void) = NULL;
 		VFS.closevol(Conn,VolID2);
 	}
 }
-                                                                            
+
 /* =============================== */
 void usage( char * av0 )
 {
@@ -1278,10 +1278,10 @@ void usage( char * av0 )
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
     fprintf( stdout,"\t-S\tsecond volume to mount (default none)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    
+
     fprintf( stdout,"\t-L\tuse posix calls (default AFP calls)\n");
     fprintf( stdout,"\t-D\twith -L use O_DIRECT in open flags (default no)\n");
-    
+
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
@@ -1300,7 +1300,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-e\tsparse file (default no)\n");
     fprintf( stdout,"\t-a\tdon't flush to disk after write (default yes)\n");
     fprintf( stdout,"\t-F\tread from file in volume root folder (default create a temporary file)\n");
-    
+
     fprintf( stdout,"\t-v\tverbose (default no)\n");
     fprintf( stdout,"\t-V\tvery verbose (default no)\n");
 
@@ -1352,7 +1352,7 @@ int cc;
 		case 'F':
             Filename = strdup(optarg);
             break;
-		
+
         case '1':
 			vers = "AFPVersion 2.1";
 			Version = 21;
@@ -1418,12 +1418,12 @@ int cc;
 	case 'i':
 		Interactive = 1;
 		break;
-			
+
         default :
             usage( av[ 0 ] );
         }
     }
-    
+
 	/**************************
 	 Connection */
 
@@ -1436,23 +1436,23 @@ int cc;
 		dsi = Dsi;
 		dsi->server_quantum = 512* KILOBYTE;
 		VFS = local_VFS;
-		
+
     } else {
 	    if (!Proto) {
 		int sock;
     		Dsi = &Conn->dsi;
-			dsi = Dsi;         
+			dsi = Dsi;
 		    sock = OpenClientSocket(Server, Port);
         	if ( sock < 0) {
 	    		return 2;
 	        }
-    	 	Dsi->protocol = DSI_TCPIP; 
+    	 	Dsi->protocol = DSI_TCPIP;
 	    	Dsi->socket = sock;
-	    }	
+	    }
     	else {
 		}
 
-	    /* login */	
+	    /* login */
     	if (Version >= 30) {
 			FPopenLoginExt(Conn, vers, uam, User, Password);
 		}
@@ -1461,13 +1461,13 @@ int cc;
 		}
 	}
 	Conn->afp_version = Version;
-	
+
 	/*********************************
 	*/
-	if (Verbose) 
+	if (Verbose)
 		Quiet = 0;
 	run_one(Test);
-	if (!Local) 
+	if (!Local)
    		FPLogOut(Conn);
 
 	return ExitCode;

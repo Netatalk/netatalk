@@ -22,7 +22,7 @@ int dir;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name)) ) {
 		nottested();
@@ -53,10 +53,10 @@ int dir;
 	if (!ret) {
 		FAIL ( FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttxt", file))
 	}
-	
+
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file))
 	FAIL (FPAddAPPL(Conn , dt, DIRDID_ROOT, "ttxt", 0xafb471c0, file))
-	
+
 	FAIL ( FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttxt", file))
 	delete_folder(vol, DIRDID_ROOT, ndir);
 
@@ -97,7 +97,7 @@ int dir;
 	 	}
 		failed();
 		ret = FPCreateFile(Conn, vol,  0, dir , file);
-	    FPEnumerate(Conn, vol,  dir , "", 
+	    FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) ,
 		     (1<< DIRPBIT_ATTR) |  (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		     | (1<<DIRPBIT_UID) | (1 << DIRPBIT_GID));
@@ -131,10 +131,10 @@ int dir;
 		bitmap =  (1 << DIRPBIT_ACCESS);
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
-    	filedir.access[0] = 0; 
-    	filedir.access[1] = 0; 
-    	filedir.access[2] = 0; 
-    	filedir.access[3] = 7; 
+    	filedir.access[0] = 0;
+    	filedir.access[1] = 0;
+    	filedir.access[2] = 0;
+    	filedir.access[3] = 7;
  		if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
 			nottested();
 			goto fin;
@@ -151,8 +151,7 @@ void FPAddAPPL_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddAPPL page 94\n");
 	test214();
-/*	
+/*
 	test301();
 */
 }
-

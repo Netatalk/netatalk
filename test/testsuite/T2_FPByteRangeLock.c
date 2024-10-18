@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 
 /* ------------------------- */
 static void test_bytelock(uint16_t vol2, char *name, int type)
@@ -40,16 +40,16 @@ uint16_t vol = VolID;
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1) {
 		failed();
-		FPCloseFork(Conn,fork);		
+		FPCloseFork(Conn,fork);
 	}
 
 	strcpy(temp, Path);
     strcat(temp,(type == OPENFORK_RSCS && adouble == AD_V2) ? "/.AppleDouble/" : "/");
     strcat(temp, name);
-	
+
 	fprintf(stdout," \n---------------------\n");
 	fprintf(stdout, "open(\"%s\", O_RDWR)\n", temp);
-	fd = open(temp, O_RDWR, 0);	
+	fd = open(temp, O_RDWR, 0);
 	if (fd >= 0) {
         if (adouble == AD_V2) {
             lock.l_start = 0;
@@ -60,9 +60,9 @@ uint16_t vol = VolID;
         }
         lock.l_type = F_WRLCK;
         lock.l_whence = SEEK_SET;
-         
+
     	if ((ret = fcntl(fd, F_SETLK, &lock)) >= 0 || (errno != EACCES && errno != EAGAIN)) {
-    	    if (!ret >= 0) 
+    	    if (!ret >= 0)
     	    	errno = 0;
     		perror("fcntl ");
 			fprintf(stdout,"\tFAILED\n");
@@ -77,7 +77,7 @@ uint16_t vol = VolID;
 	fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
-		FPCloseFork(Conn2,fork1);		
+		FPCloseFork(Conn2,fork1);
 	}
 
 	FPCloseFork(Conn,fork);
@@ -103,7 +103,7 @@ uint16_t vol2;
     fprintf(stdout,"FPByteRangeLock:test117: test open excl mode\n");
 
 	if (!Path) {
-		test_skipped(T_MAC_PATH);                                                             
+		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
 
@@ -118,7 +118,7 @@ uint16_t vol2;
 		goto test_exit;
 	}
 //	test_bytelock(vol2, name, OPENFORK_DATA);
-	name = "t117 exclusive open RF";	
+	name = "t117 exclusive open RF";
 	test_bytelock(vol2, name, OPENFORK_RSCS);
 
 	FPCloseVol(Conn2,vol2);
@@ -133,4 +133,3 @@ void FPByteRangeLock_test()
     fprintf(stdout,"FPByteRangeLock page 101\n");
     test117();
 }
-

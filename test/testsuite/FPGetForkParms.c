@@ -2,7 +2,7 @@
 */
 #include "specs.h"
 
-/* ------------------------- 
+/* -------------------------
 */
 
 /* ------------- */
@@ -28,7 +28,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	fork = FPOpenFork(Conn, vol, type, bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD); 
+	fork = FPOpenFork(Conn, vol, type, bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		failed();
 		goto fin;
@@ -51,13 +51,13 @@ DSI *dsi;
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
-	
+
 	if (FPGetForkParam(Conn, fork2, bitmap)) {
 		failed();
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
-	
+
 	FAIL (FPFlushFork(Conn, fork))
 
 	if (FPGetForkParam(Conn, fork, bitmap)) {
@@ -87,7 +87,7 @@ char *name = "t21 file";
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetForkParms:test21: setting/reading fork len\n");
 
-    
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -96,12 +96,12 @@ char *name = "t21 file";
     test_21(VolID, name, OPENFORK_DATA);
     test_21(VolID, name, OPENFORK_RSCS);
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test21");
 }
 
-/* -------------------------- 
+/* --------------------------
 FIXME set ressource for size and check
 */
 STATIC void test50()
@@ -179,7 +179,7 @@ DSI *dsi;
 fin:
 	FAIL (fork2 && FPCloseFork(Conn,fork2))
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test50");
 }
@@ -241,7 +241,7 @@ uint16_t vol = VolID;
 
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test192");
 }
@@ -271,9 +271,9 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024)) 
-	
+	}
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
+
 	FAIL (FPWrite(Conn, fork, 2048, 0, Data, 0 ))
 	bitmap = len;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
@@ -281,10 +281,10 @@ DSI *dsi;
 		goto fin;
 	}
 	check_forklen(dsi, OPENFORK_DATA, 1024);
-	
+
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test305");
 }
@@ -300,4 +300,3 @@ void FPGetForkParms_test()
 	test192();
 	test305();
 }
-

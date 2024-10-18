@@ -211,7 +211,7 @@ static uint32_t lease_ip()
 
 
 /*
- * find AT address for an IP address 
+ * find AT address for an IP address
  */
 
 static int arp_lookup(struct sockaddr_at *sat, uint32_t ip)

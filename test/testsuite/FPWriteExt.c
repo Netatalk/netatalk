@@ -21,7 +21,7 @@ DSI *dsi = &Conn->dsi;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPWriteExt:test148: AFP 3.0 FPWriteExt\n");
- 	if (Conn->afp_version < 30) { 
+ 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
  	}
@@ -35,14 +35,14 @@ DSI *dsi = &Conn->dsi;
 	if (!tdir) {
 		failed();
 	}
-	
-	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+
+	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
 		failed();
 	}
-	                        
-	FAIL (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 0, (1 << DIRPBIT_PDINFO ))) 
+
+	FAIL (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 0, (1 << DIRPBIT_PDINFO )))
 
     /* > 2 Gb */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
@@ -66,12 +66,12 @@ DSI *dsi = &Conn->dsi;
 		if (rep) {
 			fprintf(stdout,"\tFAILED size %d\n", rep);
 			failed_nomsg();
-		}	
+		}
 		memcpy(&rep, dsi->commands +sizeof(rep), sizeof(rep));
 		if (ntohl(rep) != 1714) {
 			fprintf(stdout,"\tFAILED size %d\n", ntohl(rep));
 			failed_nomsg();
-		}	
+		}
 	}
 
 	if (FPWrite_ext(Conn, fork1, 0, 1714, w_buf, 0 )) {
@@ -82,26 +82,26 @@ DSI *dsi = &Conn->dsi;
 		if (rep) {
 			fprintf(stdout,"\tFAILED size %d\n", rep);
 			failed_nomsg();
-		}	
+		}
 		memcpy(&rep, dsi->commands +sizeof(rep), sizeof(rep));
 		if (ntohl(rep) != 1714) {
 			fprintf(stdout,"\tFAILED size %d\n", ntohl(rep));
 			failed_nomsg();
-		}	
+		}
 	}
-	
+
 	if (ntohl(AFPERR_EOF) != FPRead_ext(Conn, fork, 0, 2000, Data) ||
 		dsi->header.dsi_len != htonl(1714)
 		) {
 		failed();
 	}
-	
-	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+
+	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
 		failed();
 	}
-	                        
+
 fin:
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPCloseFork(Conn,fork1))
@@ -124,7 +124,7 @@ int i;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPWriteExt:test207: AFP 3.0 read/Write\n");
- 	if (Conn->afp_version < 30) { 
+ 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
  	}
@@ -134,14 +134,14 @@ int i;
 		goto test_exit;
 	}
 
-	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
-		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 
-		                    0)) 
+		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN),
+		                    0))
 	{
 		failed();
 	}
-	                        
+
     /* > 2 Gb */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
@@ -159,12 +159,12 @@ int i;
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
 	memset(w_buf, 'b', BUF_S);
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +20, 2000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 31) +20, 1000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +1000 , 3000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork, 0 , 200, w_buf, 0x80 )) 
-	FAIL (FPWrite_ext(Conn, fork1, 0 , 200, w_buf, 0x80 )) 
-	
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +20, 2000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 31) +20, 1000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +1000 , 3000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork, 0 , 200, w_buf, 0x80 ))
+	FAIL (FPWrite_ext(Conn, fork1, 0 , 200, w_buf, 0x80 ))
+
 	if (Conn2) {
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
@@ -177,7 +177,7 @@ int i;
 			break;
 		}
 	}
-	
+
 	if (FPRead_ext(Conn, fork, ((off_t)1 << 31) +20, 3000, Data)) {
 		failed();
 	}
@@ -188,10 +188,10 @@ int i;
 		}
 	}
 
-	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
-	                        
+
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPCloseFork(Conn,fork1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -202,7 +202,7 @@ int i;
 		failed();
 		goto test_exit;
 	}
-    
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "very big",OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		failed();
@@ -215,14 +215,14 @@ int i;
 		goto fin;
 	}
 
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0 )) 
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0 ))
 
 	if (Conn2) {
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
 
-	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 32) +20, 1000, w_buf, 0 )) 
-	
+	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 32) +20, 1000, w_buf, 0 ))
+
 	if (Conn2) {
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
@@ -247,10 +247,10 @@ int i;
 		}
 	}
 
-	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
-	                        
+
 	FAIL (FPCloseFork(Conn,fork1))
 
 fin:
@@ -273,7 +273,7 @@ DSI *dsi;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPWriteExt:test304: Write 0 byte to data fork\n");
- 	if (Conn->afp_version < 30) { 
+ 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
  	}
@@ -288,16 +288,16 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024)) 
-	
+	}
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
+
 	FAIL (FPWrite_ext(Conn, fork, 1024, 0, Data, 0 ))
-	
+
 
 fin:
 
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test304");
 }
@@ -312,4 +312,3 @@ void FPWriteExt_test()
 	test207();
 	test304();
 }
-

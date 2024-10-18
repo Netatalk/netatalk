@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include <pthread.h> 
+#include <pthread.h>
 #include <sys/socket.h>
 
 #include "afpclient.h"

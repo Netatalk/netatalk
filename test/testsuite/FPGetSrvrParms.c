@@ -15,7 +15,7 @@ int ret;
 		failed();
 	}
 	exit_test("test209");
-	
+
 }
 
 /* ----------------------- */
@@ -67,4 +67,3 @@ void FPGetSrvrParms_test()
 	test209();
 	test316();
 }
-

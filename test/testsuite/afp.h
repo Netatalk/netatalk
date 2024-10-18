@@ -33,8 +33,8 @@ typedef uint16_t AFPUserBytes;
 #define AFPPROTO_DSI           2
 
 /* actual transports. the DSI ones (tcp right now) need to be
- * kept in sync w/ <atalk/dsi.h>. 
- * convention: AFPTRANS_* = (1 << DSI_*) 
+ * kept in sync w/ <atalk/dsi.h>.
+ * convention: AFPTRANS_* = (1 << DSI_*)
  */
 #define AFPTRANS_NONE          0
 #define AFPTRANS_DDP          (1 << 0)
@@ -48,12 +48,12 @@ typedef uint16_t AFPUserBytes;
 #define AFPSRVRINFO_SRVMSGS      (1<<3)  /* supports server messages */
 #define AFPSRVRINFO_SRVSIGNATURE (1<<4)  /* supports server signature */
 #define AFPSRVRINFO_TCPIP        (1<<5)  /* supports tcpip */
-#define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */ 
+#define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */
 
-#define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */ 
-#define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */ 
+#define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */
+#define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */
 
-#define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */ 
+#define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */
 
 #define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
 
@@ -129,7 +129,7 @@ typedef uint16_t AFPUserBytes;
 #define AFPATTN_MESG         (1 << 13)            /* server has message */
 #define AFPATTN_NORECONNECT  (1 << 12)            /* don't reconnect */
 /* server notification */
-#define AFPATTN_NOTIFY       (AFPATTN_MESG | AFPATTN_NORECONNECT) 
+#define AFPATTN_NOTIFY       (AFPATTN_MESG | AFPATTN_NORECONNECT)
 
 /* extended bitmap -- 12 bits. volchanged is only useful w/ a server
  * notification, and time is only useful for shutdown. */

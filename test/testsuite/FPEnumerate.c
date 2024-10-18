@@ -20,19 +20,19 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(rdir = read_only_folder_with_file(vol, DIRDID_ROOT, name, nfile) ) ) {
 		goto test_exit;
 	}
-	
+
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, 0, bitmap)) {
 		failed();
 		goto fin;
 	}
 	memcpy(&did, dsi->data +3 * sizeof( uint16_t ), sizeof(did));
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , name, 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , name,
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE) |
 	         (1<<FILPBIT_DFLEN) | (1<<FILPBIT_RFLEN)
@@ -45,7 +45,7 @@ DSI *dsi;
 		goto fin;
 	}
 
-	if (FPEnumerate(Conn, vol,  did , "", 
+	if (FPEnumerate(Conn, vol,  did , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -63,14 +63,14 @@ DSI *dsi;
 	if (fork) {
 		fprintf(stdout,"\tFAILED\n");
 		goto test_exit;
-	}		
+	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, did, "toto.txt", OPENACC_RD);
 
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		goto test_exit;
-	}		
+	}
 	FPCloseFork(Conn,fork);
 #endif
 fin:
@@ -89,23 +89,23 @@ char *name = "essai permission";
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerate:test34: folder with --rwx-- perm\n");
 
-	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, 
+	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
-	    (1 << DIRPBIT_ACCESS))) 
+	    (1 << DIRPBIT_ACCESS)))
 	{
 		fprintf(stdout,"\tFAILED\n");
 		goto test_exit;
 	}
 
-	FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<< FILPBIT_LNAME) | (1<< FILPBIT_FNUM ),
 		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		);
 
-	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, 
+	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
 	     (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	     (1 << DIRPBIT_ACCESS))
-	   ) 
+	   )
 	{
 		fprintf(stdout,"\tFAILED\n");
 		goto test_exit;
@@ -133,10 +133,10 @@ int  dir;
 		nottested();
 		goto test_exit;
 	}
-	
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name1)) 
 
-	if (FPEnumerate(Conn, vol,  dir , "", 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
+
+	if (FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -152,12 +152,12 @@ int  dir;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 0, 
-			(1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS))) 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 0,
+			(1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)))
 	{
 		failed();
 	}
-	ret = FPEnumerate(Conn, vol,  dir , "", 
+	ret = FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -170,7 +170,7 @@ int  dir;
 	}
 test_exit:
 	exit_test("test40");
-	
+
 }
 
 /* ------------------------- */
@@ -198,7 +198,7 @@ unsigned int ret;
 		goto fin;
 	}
 
-	if (FPEnumerate(Conn, vol,  dir , "", 
+	if (FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -210,21 +210,8 @@ unsigned int ret;
 		nottested();
 		goto fin;
 	}
-	
-	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name2, 
-	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
-	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
-	         ,
-		     (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
-	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
-		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
-		);
 
-	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
-		failed();
-	}
-	
-	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name3, 
+	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name2,
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -237,7 +224,20 @@ unsigned int ret;
 		failed();
 	}
 
-	if (ntohl(AFPERR_PARAM) != FPEnumerate(Conn, vol,  0 , "", 
+	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name3,
+	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
+	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
+	         ,
+		     (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
+	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
+		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
+		);
+
+	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
+		failed();
+	}
+
+	if (ntohl(AFPERR_PARAM) != FPEnumerate(Conn, vol,  0 , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -288,7 +288,7 @@ uint16_t vol = VolID;
 		failed();
 	}
 
-	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name, 
+	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name,
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -301,7 +301,7 @@ uint16_t vol = VolID;
 	}
 	FAIL (htonl( AFPERR_DIRNEMPT) != FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	FAIL (htonl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , name1, 0,0)) 
+	FAIL (htonl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , name1, 0,0))
 
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -345,7 +345,7 @@ int isdir;
 		nottested();
 		goto test_exit;
 	}
-	
+
 	bitmap = (1 << FILPBIT_LNAME);
 	if (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "", bitmap, bitmap)) {
 		nottested();
@@ -382,7 +382,7 @@ int isdir;
 	if (htonl(AFPERR_NOOBJ) == ret) {
 		isdir = 1;
 		ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", 0,bitmap);
-	}	
+	}
 	if (ret) {
 		failed();
 		goto fin;
@@ -399,7 +399,7 @@ int isdir;
 	FAIL (FPEnumerateFull(Conn, vol, 2, 5, 800,  bdir, "", bitmap, bitmap))
 
 fin:
-	FPDelete(Conn, vol,  bdir, name); 
+	FPDelete(Conn, vol,  bdir, name);
 	FPDelete(Conn, vol,  bdir, ndir);
 	FPDelete(Conn, vol,  bdir, ndir1);
 	FAIL (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "", bitmap, bitmap))
@@ -420,4 +420,3 @@ void FPEnumerate_test()
     test93();
     test218();
 }
-

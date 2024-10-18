@@ -35,7 +35,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <netdb.h> 
+#include <netdb.h>
 #if 0
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
@@ -69,16 +69,16 @@
 #ifndef AFP_CLOSEVOL
 #define AFP_CLOSEVOL     2
 #define AFP_ENUMERATE    9
- 
+
 #define AFP_GETSRVINFO  15
 #define AFP_GETSRVPARAM 16
 #define AFP_LOGIN       18
- 
+
 #define AFP_LOGOUT      20
 #define AFP_OPENVOL     24
 #define AFP_OPENDIR     25
 #define AFP_OPENFORK    26
- 
+
 #define AFP_OPENDT      48
 #define AFP_CLOSEDT     49
 #endif
@@ -99,16 +99,16 @@
 #define DIRPBIT_GID     11
 #define DIRPBIT_ACCESS  12
 #define DIRPBIT_PDINFO  13         /* ProDOS Info /UTF8 name */
-#define DIRPBIT_UNIXPR  15 
- 
+#define DIRPBIT_UNIXPR  15
+
 /* directory attribute bits (see file.h for other bits) */
 #define ATTRBIT_EXPFOLDER   (1 << 1) /* shared point */
 #define ATTRBIT_MOUNTED     (1 << 3) /* mounted share point by non-admin */
 #define ATTRBIT_INEXPFOLDER (1 << 4) /* folder in a shared area */
- 
+
 #define FILDIRBIT_ISDIR        (1 << 7) /* is a directory */
 #define FILDIRBIT_ISFILE       (0)      /* is a file */
- 
+
 /* reserved directory id's */
 #define DIRDID_ROOT_PARENT    htonl(1)  /* parent directory of root */
 #define DIRDID_ROOT           htonl(2)  /* root directory */
@@ -129,7 +129,7 @@
 #define FILPBIT_EXTDFLEN 11
 #define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
-#define FILPBIT_UNIXPR   15   
+#define FILPBIT_UNIXPR   15
 
 /* attribute bits. (d) = directory attribute bit as well. */
 #define ATTRBIT_INVISIBLE (1<<0)  /* invisible (d) */
@@ -159,7 +159,7 @@
 #define VOLPBIT_ATTR_NOEXCHANGE   (1 << 9)
 #define VOLPBIT_ATTR_EXTATTRS     (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
- 
+
 #define VOLPBIT_ATTR    0
 #define VOLPBIT_SIG     1
 #define VOLPBIT_CDATE   2
@@ -178,15 +178,15 @@
 /* from etc/afpd/fork.h */
 #define AFPOF_DFORK 0x00
 #define AFPOF_RFORK 0x80
- 
+
 #define OPENFORK_DATA   (0)
 #define OPENFORK_RSCS   (1<<7)
-  
+
 #define OPENACC_RD      (1<<0)
 #define OPENACC_WR      (1<<1)
 #define OPENACC_DRD     (1<<4)
 #define OPENACC_DWR     (1<<5)
-   
+
 #define AFPFORK_OPEN    (1<<0)
 #define AFPFORK_RSRC    (1<<1)
 #define AFPFORK_DATA    (1<<2)
@@ -207,16 +207,16 @@ typedef struct CONN {
 	DSI	dsi;
 #if 0
 	ASP asp;
-#endif	
+#endif
 	int type;
 	int afp_version;
 } CONN;
 
-#define min(a,b)  ((a) < (b) ? (a) : (b)) 
+#define min(a,b)  ((a) < (b) ? (a) : (b))
 
 #define PASSWDLEN 8
 
-#define dsi_clientID(x)   ((x)->clientID++)    
+#define dsi_clientID(x)   ((x)->clientID++)
 
 #define my_dsi_send(x)       do { \
     (x)->header.dsi_len = htonl((x)->cmdlen); \
@@ -270,7 +270,7 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b, uint16_
 void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b, uint16_t rfbitmap, uint16_t rdbitmap);
 int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir, uint16_t rfbitmap, uint16_t rdbitmap);
 
-/* 
+/*
  afpcli.c
 */
 int OpenClientSocket(char* host,int port);

@@ -22,7 +22,7 @@ DSI *dsi = &Conn->dsi;
 		nottested();
 		goto test_exit;
 	}
-	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) 
+	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
 
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
@@ -58,9 +58,9 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 
-	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid))) 
+	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
 	/* --------------------- */
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test208");
 }
@@ -75,4 +75,3 @@ void FPMapID_test()
 	test208();
 #endif
 }
-

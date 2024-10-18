@@ -24,7 +24,7 @@ uint16_t vol = VolID;
 		nottested();
 		goto test_exit;
 	}
-	FPEnumerate_ext2(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate_ext2(Conn, vol,  DIRDID_ROOT , "",
 			 	(1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		        	|(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN),
 	                        (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)
@@ -39,18 +39,18 @@ uint16_t vol = VolID;
 	FAIL (FPGetFileDirParams(Conn, vol,  dir , name1, 0, (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)))
 	FAIL (FPCreateFile(Conn, vol,  0, dir1 , name2))
 	FAIL (FPGetFileDirParams(Conn, vol,  dir , name1, 0, (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)))
-	if (FPEnumerate_ext2(Conn, vol,  dir1 , "", 
+	if (FPEnumerate_ext2(Conn, vol,  dir1 , "",
 			         (1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		        	 |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN),
 	                 (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT))) {
 		failed();
-	}	              
-	if (FPEnumerate_ext2(Conn, vol,  dir , "", 
+	}
+	if (FPEnumerate_ext2(Conn, vol,  dir , "",
 		             (1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		             |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN) | (1 << FILPBIT_LNAME),
 	                 (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT) | (1 << DIRPBIT_LNAME))) {
 		failed();
-	}	                 
+	}
 	FAIL (FPDelete(Conn, vol,  dir1, name2))
 	FAIL (FPDelete(Conn, vol,  dir, name1))
 fin:
@@ -80,34 +80,34 @@ uint16_t vol = VolID;
 	}
 
 	if (Conn->afp_version < 31) {
-		if (ntohl(AFPERR_NOOP) != FPEnumerate_ext2(Conn, vol,  DIRDID_ROOT , "", 
+		if (ntohl(AFPERR_NOOP) != FPEnumerate_ext2(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0xffff)) {
 			failed();
 		}
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
-	}	
+	}
 	FAIL (FPGetSrvrInfo(Conn))
 	dir1 = FPCreateDir(Conn,vol, dir , name1);
 	if (dir1) {
 		FAIL (FPGetFileDirParams(Conn, vol,  dir , name1, 0, (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)))
 		FAIL (FPCreateFile(Conn, vol,  0, dir1 , name2))
 		FAIL (FPGetFileDirParams(Conn, vol,  dir , name1, 0, (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)))
-		if (FPEnumerate_ext2(Conn, vol,  dir1 , "", 
+		if (FPEnumerate_ext2(Conn, vol,  dir1 , "",
 			                (1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		        	            |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN),
 	                        	(1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)
 		                     )) {
 			failed();
 		}
-		if (FPEnumerate_ext2(Conn, vol,  dir , "", 
+		if (FPEnumerate_ext2(Conn, vol,  dir , "",
 		                (1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN) | (1 << FILPBIT_LNAME),
 	                        (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT) | (1 << DIRPBIT_LNAME)
 	                     )) {
 			failed();
-		}	                   
+		}
 		FAIL (FPDelete(Conn, vol,  dir1, name2))
 	}
 	else {
@@ -129,4 +129,3 @@ void FPEnumerateExt2_test()
     test25();
     test211();
 }
-

@@ -24,7 +24,7 @@ int ret;
 		goto test_exit;
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , name2)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , name2)) {
 		nottested();
 		goto test_exit;
 	}
@@ -36,7 +36,7 @@ int ret;
 	/* cname unchdirable */
 	if (Conn2) {
 		int pdir;
-		
+
 		if (!(pdir = no_access_folder(vol, DIRDID_ROOT, "t73 700"))) {
 			FPDelete(Conn, vol,  dir, name);
 			failed_nomsg();
@@ -49,18 +49,18 @@ int ret;
 		delete_folder(vol, DIRDID_ROOT, "t73 700");
 	}
 	/* bad ddid */
-	FAIL (ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	FAIL (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name2)))
 
 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir1, name, ""))
-	
-	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
 
-	FAIL (FPMoveAndRename(Conn, vol, dir1, DIRDID_ROOT, name, "")) 
+	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT, name))
+
+	FAIL (FPMoveAndRename(Conn, vol, dir1, DIRDID_ROOT, name, ""))
 	/* dirty but well */
 	FAIL (ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name1))
 
-	FAIL (ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) 
+	FAIL (ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 
 	FAIL (ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
@@ -71,14 +71,14 @@ int ret;
 	if (fork) {
 		FAIL (ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name1, name))
 		FAIL (FPCloseFork(Conn,fork))
-	}	
+	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 
-	FAIL (!(dir2 = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) 
-	FAIL (!FPCreateDir(Conn,vol, dir2 , name1)) 
+	FAIL (!(dir2 = FPCreateDir(Conn,vol, DIRDID_ROOT , name)))
+	FAIL (!FPCreateDir(Conn,vol, dir2 , name1))
 
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir1,  name, "")) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir1,  name, ""))
 	FAIL (FPDelete(Conn, vol,  dir2, name1))
 	FAIL (FPDelete(Conn, vol,  dir1, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
@@ -86,7 +86,7 @@ test_exit:
 	exit_test("test73");
 }
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
 /* ------------------------- */
@@ -116,7 +116,7 @@ int id,id1;
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	id = get_fid(Conn, vol, dir , name1);     
+	id = get_fid(Conn, vol, dir , name1);
 
 	if (!Mac) {
 		sprintf(temp,"%s/%s/%s", Path, name, name1);
@@ -149,4 +149,3 @@ void FPMoveAndRename_test()
     test73();
     test302();
 }
-

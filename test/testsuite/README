@@ -6,7 +6,7 @@ This suite contains several small utilities aimed at testing
 a) AFP Server conformance to the AFP Specs, eg. `spectest`
 b) benchmarking AFP Servers, eg. `lantest`
 
-For end users the most useful utility is probably `lantest` which 
+For end users the most useful utility is probably `lantest` which
 is a CLI counterpart for the famous HELIOS Lan Test.
 
 Tests prg in test directory:
@@ -59,7 +59,7 @@ FPCopyFile <source> <dest>
 ./afp_ls
 'minimal' ls using AFP commands. Should be migrated to afparg.
 
-Compilation 
+Compilation
 ===========
 
 Setup meson with the `-Dwith-testsuite=true' option.
@@ -75,10 +75,10 @@ Configuration for running the APF spec tests
 - with gp1:user1, gp2:user2, common:user1, user2
 - clear text UAM
 - an empty volume:
-drwxrwsr-x    5 user1   common         176 avr 27 23:56 test/ 
+drwxrwsr-x    5 user1   common         176 avr 27 23:56 test/
 - some tests need a small read write volume, I'm using a 2 MBytes loopback
 
-example for 
+example for
 afp.conf:
 #<<<<<<
 [Global]
@@ -107,7 +107,7 @@ You can also run the complete spectest (one user, two users, local access) with
 
 Return Code
 -----------
-0 PASSED 
+0 PASSED
 1 FAILED
 2 NOT TESTED the test failed too early
 
@@ -122,7 +122,7 @@ Same but on a Mac
 spectest -m -h 192.168.2.64 -u user1 -d usr2 -s test -w  toto
 
 Run FPByteRangeLock tests with AFP 3.0, two different servers are exporting the same volume.
-T2_spectest -f FPByteRangeLock -3  -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /u/test -w toto 
+T2_spectest -f FPByteRangeLock -3  -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /u/test -w toto
 
 At least on linux, it's possible to compile them with LDFLAGS=-rdynamic
 and the program can run individual test:
@@ -132,7 +132,7 @@ Tests output
 ------------
 
 Test name
-if the test is not executed, reason, ex: SKIPPED (need AFP 3.x)      
+if the test is not executed, reason, ex: SKIPPED (need AFP 3.x)
 list of AFP calls executed with error code if any
 
 if Mac result and Netatalk differ or if Mac result differ between versions, Mac result
@@ -142,5 +142,4 @@ MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY
 Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
 
 if Mac and Netatalk now return the same result:
-Warning MAC and Netatalk now same RESULT!   
-
+Warning MAC and Netatalk now same RESULT!

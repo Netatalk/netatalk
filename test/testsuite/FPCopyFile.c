@@ -26,7 +26,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, ndir))) {
 		goto test_exit;
@@ -37,7 +37,7 @@ DSI *dsi;
 		goto test_exit;
 	}
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 
 	/* sdid bad */
 	FAIL (ntohl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, dir, vol, DIRDID_ROOT, name, "", name1))
@@ -45,52 +45,52 @@ DSI *dsi;
 	FPCloseVol(Conn,vol);
 	vol  = FPOpenVol(Conn, Vol);
 	/* cname unchdirable */
-	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, ndir, "", name1)) 
+	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, ndir, "", name1))
 	/* second time once bar is in the cache */
-	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, ndir, "", name1)) 
+	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, ndir, "", name1))
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		failed();
 		goto fin;
 	}
 
-	FAIL (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) 
+	FAIL (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name2)))
 
 	/* source is a dir */
-	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name2, "", name1)) 
+	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name2, "", name1))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (fork) {
 		FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 		FAIL (FPCloseFork(Conn,fork))
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
-	}	
+	}
 	else {
 		failed();
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD | OPENACC_DRD | OPENACC_DWR);
-	if (fork) {	
+	if (fork) {
 		FAIL (ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 		FAIL (FPCloseFork(Conn,fork))
-	}	
+	}
 	else {
 		failed();
 	}
 
 
 	/* dvol bad */
-	FAIL (ntohl(AFPERR_PARAM) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol +1, dir, name, "", name1)) 
+	FAIL (ntohl(AFPERR_PARAM) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol +1, dir, name, "", name1))
 
 	/* ddid bad */
-	FAIL (ntohl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, DIRDID_ROOT , vol, dir,  name, "", name1)) 
+	FAIL (ntohl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, DIRDID_ROOT , vol, dir,  name, "", name1))
 
 	/* ok */
-	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1)) 
+	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
-fin:	
+fin:
 	delete_folder(vol, DIRDID_ROOT, ndir);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
@@ -117,7 +117,7 @@ uint16_t vol = VolID;
 
 	/* sdid bad */
 	FAIL (ntohl(AFPERR_EXIST) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
 	exit_test("test158");
@@ -140,7 +140,7 @@ int fork;
 	    /* assume sparse file for setforkparam, not for copyfile */
 		test_skipped(T_VOL_SMALL);
 		goto test_exit;
-	}		
+	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -151,7 +151,7 @@ int fork;
 	if (!fork) {
 		nottested();
 		goto fin;
-	}		
+	}
 
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 64*1024*1024)) {
 		nottested();
@@ -168,7 +168,7 @@ int fork;
 	if (!fork) {
 		nottested();
 		goto fin;
-	}		
+	}
 
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 129*1024*1024)) {
 		nottested();
@@ -181,7 +181,7 @@ int fork;
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test315");
@@ -194,7 +194,7 @@ uint16_t vol = VolID;
 int tp,tp1;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 char finder_info[32];
 
@@ -215,12 +215,12 @@ char finder_info[32];
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		memcpy(filedir.finder_info, "PDF CARO", 8);
-		
+
 		memcpy(finder_info, filedir.finder_info, 32);
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
 	}
-	
+
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol2, DIRDID_ROOT, name, "", name1))
 
 	if (FPGetFileDirParams(Conn, vol2,  DIRDID_ROOT , name1, bitmap,0)) {
@@ -230,7 +230,7 @@ char finder_info[32];
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (memcmp(finder_info, filedir.finder_info, 32)) {
-	        fprintf(stdout,"\tFAILED finder info differ\n");  
+	        fprintf(stdout,"\tFAILED finder info differ\n");
 	        failed_nomsg();
 	        goto fin;
 		}
@@ -242,12 +242,12 @@ char finder_info[32];
 		goto fin;
 	}
 	if (tp == tp1) {
-	    fprintf(stdout,"\tFAILED both files have same ID\n");  
+	    fprintf(stdout,"\tFAILED both files have same ID\n");
 	    failed_nomsg();
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol2,  DIRDID_ROOT , name1))
 }
 
@@ -275,7 +275,7 @@ uint16_t vol = VolID;
 int tp,tp1;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 uint32_t mdate = 0;
 
@@ -287,7 +287,7 @@ uint32_t mdate = 0;
 		nottested();
 		goto fin;
 	}
-	fprintf(stdout,"sleep(2)\n");  
+	fprintf(stdout,"sleep(2)\n");
 	sleep(2);
 	tp = get_fid(Conn, vol, DIRDID_ROOT, name);
 	if (!tp) {
@@ -303,7 +303,7 @@ uint32_t mdate = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		mdate = filedir.mdate;
 	}
-	
+
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name1, bitmap,0)) {
@@ -313,7 +313,7 @@ uint32_t mdate = 0;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (mdate != filedir.mdate)  {
-	        fprintf(stdout,"\tFAILED modification date differ\n");  
+	        fprintf(stdout,"\tFAILED modification date differ\n");
 	        failed_nomsg();
 	        goto fin;
 		}
@@ -325,12 +325,12 @@ uint32_t mdate = 0;
 		goto fin;
 	}
 	if (tp == tp1) {
-	    fprintf(stdout,"\tFAILED both files have same ID\n");  
+	    fprintf(stdout,"\tFAILED both files have same ID\n");
 	    failed_nomsg();
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
 	exit_test("test332");
@@ -355,7 +355,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (Locking) {
 		test_skipped(T_LOCKING);
@@ -377,7 +377,7 @@ DSI *dsi;
 	if (fork) {
 		FAIL (ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn2, vol2, DIRDID_ROOT, vol2, DIRDID_ROOT, name, "", name1))
 		FAIL (FPCloseFork(Conn,fork))
-	}	
+	}
 	else {
 		failed();
 	}
@@ -434,7 +434,7 @@ uint16_t vol = VolID;
 	FAIL (FPCloseFork(Conn,fork))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
 	exit_test("test375");
@@ -477,7 +477,7 @@ DSI *dsi;
 	filedir.unix_priv = 0770;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
 		nottested();
@@ -495,7 +495,7 @@ DSI *dsi;
 		goto fin;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , 0, dir, name, OPENACC_WR |OPENACC_RD);
 	if (!fork) {
 		nottested();
@@ -507,7 +507,7 @@ DSI *dsi;
 		goto fin;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
 
@@ -522,7 +522,7 @@ DSI *dsi;
 	filedir.unix_priv = 0444;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
@@ -536,7 +536,7 @@ DSI *dsi;
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test401");
@@ -589,7 +589,7 @@ DSI *dsi;
 		goto fin;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , 0, dir, name, OPENACC_WR |OPENACC_RD);
 	if (!fork) {
 		nottested();
@@ -601,7 +601,7 @@ DSI *dsi;
 		goto fin;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
 
@@ -616,7 +616,7 @@ DSI *dsi;
 	filedir.unix_priv = 0222;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
@@ -628,7 +628,7 @@ DSI *dsi;
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test402");
@@ -670,7 +670,7 @@ DSI *dsi;
 	filedir.unix_priv = 0770;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , "", bitmap, &filedir))
 
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
 		nottested();
@@ -691,7 +691,7 @@ DSI *dsi;
 	filedir.unix_priv = 0444;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
- 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
 		(1 << DIRPBIT_UNIXPR) | (1<<FILPBIT_ATTR);
@@ -720,14 +720,14 @@ DSI *dsi;
 
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test403");
 }
 
 
-/* ------------------------- 
+/* -------------------------
  * this one is not run by default
 */
 STATIC void test406()
@@ -793,7 +793,7 @@ char data[20];
 		goto fin1;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	/* put something in the resource fork */
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , 0, dir, name, OPENACC_WR |OPENACC_RD);
 	if (!fork) {
@@ -812,14 +812,14 @@ char data[20];
 		goto fin1;
 	}
 	FPCloseFork(Conn,fork);
-	
+
 	/* *************** */
 
 	FAIL (FPCopyFile(Conn, vol, dir, vol2, dir, name, "", name1))
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) | (1<<FILPBIT_ATTR)
 	  | (1<<FILPBIT_RFLEN) | (1<<FILPBIT_DFLEN);
-	  
+
 	if (FPGetFileDirParams(Conn, vol2, dir, name1, bitmap, 0)){
 	    failed();
 	    goto fin2;
@@ -832,7 +832,7 @@ char data[20];
 		failed_nomsg();
 		goto fin2;
 	}
-	
+
 	/* check data fork */
 	memset(data, 0, sizeof(data));
 	fork = FPOpenFork(Conn, vol2, OPENFORK_DATA , 0 ,DIRDID_ROOT, name1, OPENACC_WR | OPENACC_RD);
@@ -871,7 +871,7 @@ char data[20];
 		failed_nomsg();
 		goto fin2;
 	}
-	
+
 	/* other way */
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPCopyFile(Conn, vol2, dir, vol, dir, name1, "", name))
@@ -887,7 +887,7 @@ char data[20];
 		failed_nomsg();
 		goto fin2;
 	}
-	
+
 
 	/* check data fork */
 	memset(data, 0, sizeof(data));
@@ -927,8 +927,8 @@ char data[20];
 		failed_nomsg();
 		goto fin2;
 	}
-	
-fin2:	
+
+fin2:
 	FAIL (FPDelete(Conn, vol2,  dir , name1))
 fin1:
 	FAIL (FPDelete(Conn, vol,  dir , name))
@@ -1041,7 +1041,7 @@ char *attr_name="test416_attribute";
 	FAIL(FPSetExtAttr(Conn,vol, DIRDID_ROOT, 2, file, attr_name, "test416_data"))
 	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name))
 
-	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, file, "", file1)) 
+	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, file, "", file1))
 
 	FAIL(FPListExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file))
 
@@ -1086,11 +1086,11 @@ uint16_t vol = VolID;
 	}
 
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, name2, name1))
-	FAIL (FPDelete(Conn, vol,  dir , name1)) 
+	FAIL (FPDelete(Conn, vol,  dir , name1))
 
 test_exit:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	exit_test("test414");
 }
@@ -1116,7 +1116,7 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, ndir))) {
 		goto test_exit;
@@ -1133,14 +1133,14 @@ DSI *dsi;
 	/* sdid bad */
 	FAIL (ntohl(AFPERR_ACCESS) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, ndir, name1))
 
-	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) 
+	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2)))
 
 	/* ok */
-	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, name2, name1)) 
+	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, name2, name1))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  dir, name1))
-fin:	
+fin:
 	delete_folder(vol, DIRDID_ROOT, ndir);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
@@ -1170,4 +1170,3 @@ void FPCopyFile_test()
 	test414();
 	test424();
 }
-

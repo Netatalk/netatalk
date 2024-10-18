@@ -5,7 +5,7 @@
  * modified for test-suite
  */
 
-#ifndef _ATALK_DSI_H 
+#ifndef _ATALK_DSI_H
 #define _ATALK_DSI_H
 
 #if HAVE_SYS_CDEFS_H
@@ -33,7 +33,7 @@
  CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
-/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>. 
+/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>.
  * convention: AFPTRANS_* = (1 << DSI_*) */
 typedef enum {
   DSI_MIN = 1,
@@ -70,7 +70,7 @@ typedef struct DSI {
   int asleep; /* client won't reply AFP 0x7a ? */
   /* inited = initialized?, child = a child?, noreply = send reply? */
   char child, inited, noreply;
-  const char *program; 
+  const char *program;
   int socket, serversock;
 
   /* protocol specific open/close, send/receive
@@ -79,7 +79,7 @@ typedef struct DSI {
   pid_t  (*proto_open)(struct DSI *);
   void   (*proto_close)(struct DSI *);
 } DSI;
-  
+
 /* DSI flags */
 #define DSIFL_REQUEST    0x00
 #define DSIFL_REPLY      0x01
@@ -123,7 +123,7 @@ typedef struct DSI {
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
-			  const char * /*program*/, 
+			  const char * /*program*/,
 			  const char * /*host*/, const char * /*address*/,
 			  const int /*port*/, const int /*proxy*/,
 			  const uint32_t /* server quantum */);

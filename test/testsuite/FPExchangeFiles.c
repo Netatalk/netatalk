@@ -33,7 +33,7 @@ uint16_t vol = VolID;
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 
 	/* test remove of no cnid db */
 	if ((temp = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
@@ -90,7 +90,7 @@ int ret;
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		failed();
 		goto fin;
-	}	
+	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir, name1))
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
@@ -98,12 +98,12 @@ int ret;
 
 	write_fork(Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork(Conn, vol, dir , name1, "red");
-	
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		failed();
 		goto fin;
-	}	
+	}
 
 	/* ok */
 	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
@@ -130,13 +130,13 @@ int ret;
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
 		failed();
-	}	
+	}
 
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	if (fork1) FPCloseFork(Conn,fork1);
 
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
-	
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
+
 	if (fork) FPCloseFork(Conn,fork);
 	if ((ret = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
 		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
@@ -147,7 +147,7 @@ int ret;
 		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name1);
 		failed_nomsg();
 	}
-		
+
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -181,7 +181,7 @@ uint16_t vol = VolID;
 	write_fork(Conn,  vol, DIRDID_ROOT , name, "blue");
 	write_fork(Conn,  vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
 	if (strcmp(Data,"red")) {
@@ -214,7 +214,7 @@ uint16_t vol = VolID;
 struct afp_filedir_parms filedir;
 char finder_info[32];
 uint16_t bitmap;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 int  ofs =  3 * sizeof( uint16_t );
 
 	enter_test();
@@ -237,7 +237,7 @@ int  ofs =  3 * sizeof( uint16_t );
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
     memcpy(filedir.finder_info, "TESTTEST", 8);
     memcpy(finder_info, filedir.finder_info, 32);
-    FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+    FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
 	fid_name1 = get_fid(Conn, vol, dir , name1);
@@ -245,7 +245,7 @@ int  ofs =  3 * sizeof( uint16_t );
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 
     /* test whether FinderInfo was preserved */
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
@@ -312,7 +312,7 @@ uint16_t vol = VolID;
 	if (!fork) {
 		failed();
 		goto fin;
-	}	
+	}
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
 
@@ -321,7 +321,7 @@ uint16_t vol = VolID;
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	FAIL (FPCloseFork(Conn,fork))
 
 	/* test remove of no cnid db */
@@ -344,7 +344,7 @@ uint16_t vol = VolID;
 		fprintf(stdout,"\tFAILED should be blue\n");
 		failed_nomsg();
 	}
-	
+
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -380,7 +380,7 @@ uint16_t vol = VolID;
 	if (!fork) {
 		failed();
 		goto fin;
-	}	
+	}
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
 
@@ -389,7 +389,7 @@ uint16_t vol = VolID;
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	FAIL (FPFlushFork(Conn, fork))
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -413,7 +413,7 @@ uint16_t vol = VolID;
 		fprintf(stdout,"\tFAILED should be blue\n");
 		failed_nomsg();
 	}
-	
+
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -449,7 +449,7 @@ uint16_t vol = VolID;
 	if (!fork) {
 		failed();
 		goto fin;
-	}	
+	}
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
 
@@ -458,7 +458,7 @@ uint16_t vol = VolID;
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	FAIL (FPCloseFork(Conn,fork))
 
 	/* test remove of no cnid db */
@@ -481,7 +481,7 @@ uint16_t vol = VolID;
 		fprintf(stdout,"\tFAILED should be blue\n");
 		failed_nomsg();
 	}
-	
+
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -502,4 +502,3 @@ void FPExchangeFiles_test()
 	test390();
 	test391();
 }
-

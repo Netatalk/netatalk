@@ -14,7 +14,7 @@ int ret;
 	if (ret) {
 		failed();
 	}
-	
+
 	exit_test("test1");
 }
 
@@ -25,4 +25,3 @@ void FPGetSrvrInfo_test()
     fprintf(stdout,"FPGetSrvInfo page 194\n");
 	test1();
 }
-

@@ -23,7 +23,7 @@ struct stat st, st1;
 		return;
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -63,7 +63,7 @@ struct stat st, st1;
 		return;
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -77,7 +77,7 @@ struct stat st, st1;
 		return;
 	}
 
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name1, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name1,
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -121,7 +121,7 @@ int f;
 		return;
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -134,13 +134,13 @@ int f;
 	}
     if ((f = open(temp, O_RDONLY)) < 0) {
 		fprintf(stdout,"\tFAILED\n");
-    }    
+    }
 
 	if (unlink(temp)) {
 		fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -163,7 +163,7 @@ int f;
 		fprintf(stdout,"\tNOT TESTED\n");
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,

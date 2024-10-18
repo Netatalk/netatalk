@@ -37,10 +37,10 @@ size_t strlcpy(char *d, const char *s, size_t bufsize)
         size_t len = strlen(s);
         size_t ret = len;
 
-        if (bufsize <= 0) 
+        if (bufsize <= 0)
         	return 0;
 
-        if (len >= bufsize) 
+        if (len >= bufsize)
         	len = bufsize-1;
 
         memcpy(d, s, len);
@@ -48,7 +48,7 @@ size_t strlcpy(char *d, const char *s, size_t bufsize)
         return ret;
 }
 #endif
- 
+
 #ifndef HAVE_STRLCAT
 /* like strncat but does not 0 fill the buffer and always null
    terminates. bufsize is the length of the buffer, which should
@@ -61,7 +61,7 @@ size_t strlcat(char *d, const char *s, size_t bufsize)
 
 	if (len1 >= bufsize) {
 		return 0;
-	} 
+	}
         if (len1+len2 >= bufsize) {
                 len2 = bufsize - (len1+1);
         }
@@ -72,4 +72,3 @@ size_t strlcat(char *d, const char *s, size_t bufsize)
         return ret;
 }
 #endif
-

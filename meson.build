@@ -490,7 +490,7 @@ foreach dir : bdb_dirs
                 continue
             endif
             bdb_major_version = grep_result.stdout().strip().substring(25)
-        
+
             grep_result = run_command(
                 'grep',
                 'DB_VERSION_MINOR',
@@ -502,7 +502,7 @@ foreach dir : bdb_dirs
                 continue
             endif
             bdb_minor_version = grep_result.stdout().strip().substring(25)
-        
+
             bdb_version = bdb_major_version + '.' + bdb_minor_version
 
             if not bdb_version.version_compare('>=4.6')

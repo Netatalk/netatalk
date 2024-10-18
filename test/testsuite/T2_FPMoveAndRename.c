@@ -3,7 +3,7 @@
 #include "specs.h"
 #include "adoublehelper.h"
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
 STATIC void test136()
@@ -45,11 +45,11 @@ unsigned int ret;
 	if (not_valid(ret, AFPERR_MISC, AFPERR_PARAM)) {
 		failed();
 	}
-	
+
 	dir = get_did(Conn, vol, DIRDID_ROOT, ndir);
 
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2)) 
-	
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2))
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
@@ -103,12 +103,12 @@ unsigned int ret;
 	if (not_valid(ret, AFPERR_MISC, AFPERR_PARAM)) {
 		failed();
 	}
-	
+
 	dir = get_did(Conn, vol, DIRDID_ROOT, ndir);
 
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2)) 
-	
-	FAIL (fork && FPCloseFork(Conn,fork)) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2))
+
+	FAIL (fork && FPCloseFork(Conn,fork))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -139,12 +139,12 @@ uint16_t vol = VolID;
 		goto test_exit;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) 
-	
+	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
+
 	if (!Mac) {
 		delete_unix_md(Path,"", name);
 	}
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "")) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
 
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -184,8 +184,8 @@ uint16_t vol = VolID;
 	FAIL (FPCreateFile(Conn, vol,  0, dir , file))
 	FAIL (FPCreateFile(Conn, vol,  0, dir1, file))
     bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM );
-	FAIL (FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0)) 
-	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0)) 
+	FAIL (FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0))
+	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0))
 
 	if (!Mac) {
 		sprintf(temp,"%s/%s/%s", Path, name, file);
@@ -195,15 +195,15 @@ uint16_t vol = VolID;
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			failed_nomsg();
 		}
-		
+
 	}
 	else {
 		FAIL (FPMoveAndRename(Conn, vol, dir, dir1, file, file))
 	}
-	
+
     bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM );
 
-	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0)) 
+	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0))
 
 fin:
 	FAIL (FPDelete(Conn,vol, dir1,file))
@@ -244,7 +244,7 @@ uint16_t vol = VolID;
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir , file))
     bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM );
-	FAIL (FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0)) 
+	FAIL (FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0))
 
 	if (!Mac) {
 		sprintf(temp,"%s/%s/%s", Path, name, file);
@@ -268,10 +268,10 @@ uint16_t vol = VolID;
 	else {
 		FAIL (FPMoveAndRename(Conn, vol, dir, dir1, file, file))
 	}
-	
+
     bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM );
 
-	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0)) 
+	FAIL (FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0))
 
 fin:
 	FAIL (FPDelete(Conn,vol, dir1,file))
@@ -293,4 +293,3 @@ void FPMoveAndRename_test()
     test323();
     test365();
 }
-

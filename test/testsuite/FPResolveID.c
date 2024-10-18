@@ -40,17 +40,17 @@ DSI *dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
-		FAIL (htonl(AFPERR_BITMAP) != FPResolveID(Conn, vol, filedir.did, 0xffff)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
+		FAIL (htonl(AFPERR_BITMAP) != FPResolveID(Conn, vol, filedir.did, 0xffff))
 	}
-		
+
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test76");
 }
 
-/* ------------------------- 
+/* -------------------------
 */
 STATIC void test91()
 {
@@ -102,29 +102,29 @@ DSI *dsi;
 		failed();
 	}
 
-//	FAIL (FPCreateID(Conn,vol, dir, name)) 
+//	FAIL (FPCreateID(Conn,vol, dir, name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		failed();
 	} else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		FAIL (FPDeleteID(Conn, vol, filedir.did)) 
-	}	
+		FAIL (FPDeleteID(Conn, vol, filedir.did))
+	}
 
 	ret = FPCreateID(Conn,vol, dir, name);
 	if (not_valid(ret, /* MAC */AFPERR_EXISTID, 0)) {
 		failed();
 	}
-	
-	FAIL (htonl(AFPERR_EXISTID) != FPCreateID(Conn,vol, dir, name)) 
-	FAIL (FPDelete(Conn, vol,  dir , name)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+
+	FAIL (htonl(AFPERR_EXISTID) != FPCreateID(Conn,vol, dir, name))
+	FAIL (FPDelete(Conn, vol,  dir , name))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test91");
 }
 
-/* ------------------------- 
+/* -------------------------
 */
 STATIC void test310()
 {
@@ -157,18 +157,18 @@ DSI *dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-	}	
+	}
 
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test310");
 }
 
-/* ------------------------- 
+/* -------------------------
 */
 STATIC void test311()
 {
@@ -206,13 +206,13 @@ DSI *dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-	}	
+	}
 
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test311");
 }
@@ -238,7 +238,7 @@ DSI *dsi2;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		test_skipped(T_ID);
@@ -273,7 +273,7 @@ DSI *dsi2;
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 	FPCloseVol(Conn,vol);
 	vol  = FPOpenVol(Conn, Vol);
-	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
 	exit_test("test362");
 }
@@ -290,4 +290,3 @@ void FPResolveID_test()
 	test311();
 	test362();
 }
-

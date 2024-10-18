@@ -36,7 +36,7 @@ int size = 1000;
     f_bitmap = (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)|
 	         (1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN);
-	         
+
 
 	d_bitmap = (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |  (1 << DIRPBIT_OFFCNT) |
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
@@ -54,7 +54,7 @@ int size = 1000;
 	if (!Quiet) {
 		fprintf(stdout,"%lx\n", time(NULL));
 	}
-	
+
 	dir = get_did(Conn, vol, DIRDID_ROOT, Dir);
 	if (!dir) {
 		nottested();
@@ -66,7 +66,7 @@ int size = 1000;
 	}
 	stack[cnt] = dir;
 	cnt++;
-	
+
 	while (cnt) {
 	    cnt--;
 	    dir = stack[cnt];
@@ -104,7 +104,7 @@ int size = 1000;
 	        		    afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
 			        }
 			        if (Quiet) {
-			        	fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did), 
+			        	fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did),
 			        	      (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
 			        	      filedir.isdir?"/":"");
 			        	if (!filedir.isdir) {
@@ -112,7 +112,7 @@ int size = 1000;
 			        			fprintf(stdout, " Can't resolve ID!");
 			        		}
 			        	}
-			        	
+			        
 			        }
 		    	}
 		    }
@@ -278,22 +278,22 @@ static char *uam = "Cleartxt Passwrd";
     if (!Proto) {
 	int sock;
     	Dsi = &Conn->dsi;
-		dsi = Dsi;         
+		dsi = Dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP; 
+     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
 	}
 
-    /* login */	
+    /* login */
 	FPopenLogin(Conn, vers, uam, User, Password);
 	Conn->afp_version = Version;
 
-	
+
 	run_one();
 
    	FPLogOut(Conn);

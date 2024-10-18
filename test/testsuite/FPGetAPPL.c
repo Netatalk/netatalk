@@ -49,4 +49,3 @@ void FPGetAPPL_test()
     fprintf(stdout,"FPGetAPPL page 172\n");
 	test169();
 }
-

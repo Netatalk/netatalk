@@ -29,7 +29,7 @@ char *name = "t186 FPCloseFork";
 	FAIL (FPCloseFork(Conn,fork))
 	/* double close */
 	FAIL (htonl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
-	
+
 	FAIL (htonl(AFPERR_PARAM) != FPCloseFork(Conn, 0))
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
@@ -63,4 +63,3 @@ void FPCloseFork_test()
 	test186();
 	test187();
 }
-

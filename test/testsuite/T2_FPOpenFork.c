@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <fcntl.h>
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 
 /* ------------------------- */
 STATIC void test3()
@@ -29,7 +29,7 @@ STATIC void test3()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
@@ -39,12 +39,12 @@ STATIC void test3()
 		goto fin;
 	}
 	FAIL (FPWrite(Conn, fork1, 0, 2000, Data, 0 ))
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 
 	if ((fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name, OPENACC_RD)) == 0) {
@@ -59,11 +59,11 @@ STATIC void test3()
 	}
 	FAIL (FPCloseFork(Conn, fork2))
 
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test3");
 }
@@ -86,7 +86,7 @@ STATIC void test4()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
@@ -96,12 +96,12 @@ STATIC void test4()
 		goto fin;
 	}
 	FAIL (FPWrite(Conn, fork1, 0, 2000, Data, 0 ))
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 
 	if ((fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name, OPENACC_WR|OPENACC_RD)) == 0) {
@@ -117,12 +117,12 @@ STATIC void test4()
 	FAIL (FPCloseFork(Conn, fork2))
 
 	FAIL (FPWrite(Conn, fork1, 0, 2000, Data, 0 ))
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test4");
 }
@@ -145,7 +145,7 @@ STATIC void test7()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
@@ -156,12 +156,12 @@ STATIC void test7()
 	}
 
 	FAIL (FPWrite(Conn, fork1, 0, 2000, Data, 0 ))
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 
 	if ((fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name, OPENACC_WR|OPENACC_RD)) == 0) {
@@ -175,11 +175,11 @@ STATIC void test7()
 	}
 	FAIL (FPCloseFork(Conn, fork2))
 
-	FAIL (FPRead(Conn, fork1, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test7");
 }
@@ -216,14 +216,14 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , dir, file, OPENACC_WR | OPENACC_RD);
 
 	if (fork1) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -232,7 +232,7 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
 		failed();
@@ -267,7 +267,7 @@ int dir;
 
 	FAIL (FPCloseFork(Conn,fork))
 	fork = 0;
-#if 0	
+#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test47: in a read/write folder\n");
 
@@ -277,14 +277,14 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
 
 	if (fork1) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork))
 	fork = 0;
@@ -301,14 +301,14 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
 
 	if (fork1) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork))
 	fork = 0;
@@ -324,7 +324,7 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
 		failed();
@@ -339,7 +339,7 @@ int dir;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPWrite(Conn, fork1, 0, 10, Data, 0 )) {
 		failed();
 		goto fin1;
@@ -356,7 +356,7 @@ int dir;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (ntohl(AFPERR_PARAM) != FPRead(Conn, fork, 0, 30, Data)) {
 		failed();
 	}
@@ -394,7 +394,7 @@ int dir;
 		nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){ 
+	if (FPCreateFile(Conn, vol,  0, dir , file)){
 		nottested();
 		goto fin;
 	}
@@ -403,7 +403,7 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	if (!Mac) {
 		sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name, file);
 		unlink(temp);
@@ -412,7 +412,7 @@ int dir;
 
 	if (!fork1) {
 		failed();
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPCloseFork(Conn,fork1))
@@ -425,7 +425,7 @@ int dir;
 
 	if (!fork1) {
 		failed();
-	}		
+	}
 	FAIL (FPCloseFork(Conn,fork1))
 
 	if (!unlink(temp)) {
@@ -469,7 +469,7 @@ unsigned int ret;
 		nottested();
 		goto test_exit;
  	}
-	
+
 	dir = get_did(Conn, vol, DIRDID_ROOT, name);
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,dir, file ,OPENACC_RD|OPENACC_WR);
@@ -505,27 +505,27 @@ uint16_t vol = VolID;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	FAIL (FPWrite(Conn, fork, 0, 2000, Data, 0 ))
 
-	FAIL (FPRead(Conn, fork, 0, 2000, Data)) 
+	FAIL (FPRead(Conn, fork, 0, 2000, Data))
 
-	FAIL (FPCloseFork(Conn, fork)) 
+	FAIL (FPCloseFork(Conn, fork))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test153");
 }
@@ -547,13 +547,13 @@ STATIC void test157()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
@@ -561,14 +561,14 @@ STATIC void test157()
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (FPRead(Conn, fork, 0, 2000, Data) != ntohl(AFPERR_EOF))
         failed();
 
-	FAIL (FPCloseFork(Conn, fork)) 
+	FAIL (FPCloseFork(Conn, fork))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test157");
 }
@@ -641,12 +641,12 @@ int fd;
 		test_skipped(T_ADV2);
 		goto test_exit;
 	}
-	
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)){ 
+
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)){
 		nottested();
 		goto test_exit;
 	}
-	
+
 	if (!Mac) {
 		sprintf(temp,"%s/%s", Path, file);
 		if (chmod(temp, 0444) < 0) {
@@ -675,7 +675,7 @@ int fd;
 		failed();
 		goto fin;
 	}
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, file, bitmap, 0 )) {
 		failed();
 		goto fin;
@@ -689,7 +689,7 @@ int fd;
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, file)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, file))
 test_exit:
 	exit_test("test321");
 }
@@ -703,7 +703,7 @@ uint16_t vol = VolID;
 int fork;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
@@ -715,7 +715,7 @@ int fd;
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -732,8 +732,8 @@ int fd;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		memcpy(filedir.finder_info, "TEXTttxt", 8);
-		
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir)) 
+
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
 	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
@@ -745,7 +745,7 @@ int fd;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPRead(Conn, fork, 0, 5, data)) {
 		failed();
 		goto fin1;
@@ -782,7 +782,7 @@ test_exit:
 	exit_test("test372");
 }
 
-/* ------------------------- 
+/* -------------------------
  * for this test you need a volume with options:crlf
  * in AppleVolumes.default
  *
@@ -798,7 +798,7 @@ uint16_t vol = VolID;
 int fork;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
@@ -810,7 +810,7 @@ int fd;
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -827,8 +827,8 @@ int fd;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		memcpy(filedir.finder_info, "TEXTttxt", 8);
-		
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir)) 
+
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
 	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
@@ -840,7 +840,7 @@ int fd;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPRead(Conn, fork, 0, 5, data)) {
 		failed();
 		goto fin1;
@@ -886,7 +886,7 @@ uint16_t vol = VolID;
 int fork;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
@@ -898,7 +898,7 @@ int fd;
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -915,8 +915,8 @@ int fd;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		memcpy(filedir.finder_info, "TEXTttxt", 8);
-		
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir)) 
+
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
 	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
@@ -928,7 +928,7 @@ int fd;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPRead(Conn, fork, 0, 5, data)) {
 		failed();
 		goto fin1;
@@ -974,7 +974,7 @@ uint16_t vol = VolID;
 int fork;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
@@ -986,7 +986,7 @@ int fd;
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -1003,8 +1003,8 @@ int fd;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		memcpy(filedir.finder_info, "PDF CARO", 8);
-		
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir)) 
+
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
 	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
@@ -1016,7 +1016,7 @@ int fd;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPRead(Conn, fork, 0, 5, data)) {
 		failed();
 		goto fin1;
@@ -1076,7 +1076,7 @@ int dir;
 		nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){ 
+	if (FPCreateFile(Conn, vol,  0, dir , file)){
 		nottested();
 		goto fin;
 	}
@@ -1090,7 +1090,7 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -1107,7 +1107,7 @@ test_exit:
 
 }
 
-/* ------------------------- 
+/* -------------------------
    Didn't fail but help when tracing afpd
 */
 STATIC void test415()
@@ -1133,7 +1133,7 @@ int dir;
 		nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){ 
+	if (FPCreateFile(Conn, vol,  0, dir , file)){
 		nottested();
 		goto fin;
 	}
@@ -1151,14 +1151,14 @@ int dir;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,dir, file, OPENACC_WR | OPENACC_RD);
 
 	if (!fork1) {
 		failed();
 		goto fin1;
-	}		
+	}
 
 	FAIL (FPCloseFork(Conn,fork1))
 
@@ -1255,7 +1255,7 @@ STATIC void test236()
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, "")) 
+	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
 	exit_test("test236");
 }
@@ -1321,19 +1321,19 @@ STATIC void test237()
 		failed();
 		goto fin;
 	}
-    
+
     Data[11] = 0;
     fprintf(stdout, "readlink: %s\n", Data);
 
     if (strcmp(Data, name4) != 0) {
 		failed();
 		goto fin;
-    }        
+    }
 
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, "")) 
+	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
 	exit_test("test237");
 }
@@ -1372,7 +1372,7 @@ STATIC void test238()
 		nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol, 0, testdir, verylonglinkname)){ 
+	if (FPCreateFile(Conn, vol, 0, testdir, verylonglinkname)){
 		nottested();
 		goto fin;
 	}
@@ -1402,7 +1402,7 @@ STATIC void test238()
 		failed();
 		goto fin;
 	}
-    
+
 	if (FPRead(Conn, fork, 0, strlen(verylonglinkname), Data)) {
 		failed();
 		goto fin;
@@ -1414,13 +1414,13 @@ STATIC void test238()
     if (strcmp(Data, verylonglinkname) != 0) {
 		failed();
 		goto fin;
-    }        
+    }
 
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, verylonglinkname)) 
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, "")) 
+	FAIL (testdir && FPDelete(Conn, vol,  testdir, verylonglinkname))
+	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
 	exit_test("test238");
 }
@@ -1529,9 +1529,9 @@ void FPOpenFork_test()
     test7();
 #if 0
     test47();
-#endif    
+#endif
     test49();
-	test152();    
+	test152();
 	test153();
 	test156();
 	test157();

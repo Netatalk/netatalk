@@ -19,7 +19,7 @@
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.
- * 
+ *
  *     Permission to use, copy, modify, and distribute this software and
  *     its documentation for any purpose and without fee is hereby granted,
  *     provided that the above copyright notice appears in all copies and

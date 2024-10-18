@@ -59,7 +59,7 @@ unsigned char cmd;
 
 	for (i = 0 ;i < sizeof(afp_cmd_with_vol);i++) {
 		memset(dsi->commands, 0, DSI_CMDSIZ);
-		dsi->header.dsi_flags = DSIFL_REQUEST;     
+		dsi->header.dsi_flags = DSIFL_REQUEST;
 		dsi->header.dsi_command = DSIFUNC_CMD;
 		dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 
@@ -70,15 +70,15 @@ unsigned char cmd;
 
 		memcpy(dsi->commands +ofs, &param, sizeof(param));
 		ofs += sizeof(param);
-		
+
 		dsi->datalen = ofs;
 		dsi->header.dsi_len = htonl(dsi->datalen);
-		dsi->header.dsi_code = 0; 
- 
+		dsi->header.dsi_code = 0;
+
    		my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 		my_dsi_cmd_receive(dsi);
 		ret = dsi->header.dsi_code;
-		
+
     	if (ntohl(AFPERR_PARAM) != ret) {
 			fprintf(stdout,"\tFAILED command %3i %s\t result %d %s\n", cmd, AfpNum2name(cmd),ntohl(ret), afp_error(ret));
 			failed_nomsg();
@@ -122,7 +122,7 @@ unsigned char cmd;
 
 	for (i = 0 ;i < sizeof(afp_cmd_with_vol_did1);i++) {
 		memset(dsi->commands, 0, DSI_CMDSIZ);
-		dsi->header.dsi_flags = DSIFL_REQUEST;     
+		dsi->header.dsi_flags = DSIFL_REQUEST;
 		dsi->header.dsi_command = DSIFUNC_CMD;
 		dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 
@@ -136,11 +136,11 @@ unsigned char cmd;
 
 		memcpy(dsi->commands +ofs, &did, sizeof(did));  /* directory did */
 		ofs += sizeof(did);
-		
+
 		dsi->datalen = ofs;
 		dsi->header.dsi_len = htonl(dsi->datalen);
-		dsi->header.dsi_code = 0; 
- 
+		dsi->header.dsi_code = 0;
+
    		my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 		my_dsi_cmd_receive(dsi);
 		ret = dsi->header.dsi_code;
@@ -150,7 +150,7 @@ unsigned char cmd;
     	}
     }
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	exit_test("test37");
 }
 
@@ -163,4 +163,3 @@ void Error_test()
 	test35();
 	test37();
 }
-

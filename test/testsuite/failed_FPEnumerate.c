@@ -21,7 +21,7 @@ int  dir1;
 
 	/* we need to empty the server cashe */
 	FPCloseVol(Conn, vol);
-	
+
 	vol = VolID = FPOpenVol(Conn, Vol);
 	if (vol == 0xffff) {
 		nottested();
@@ -50,7 +50,7 @@ int  dir1;
 		goto test_exit;
 	}
 
-	if (FPEnumerate(Conn, vol,  dir1 , "", 
+	if (FPEnumerate(Conn, vol,  dir1 , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -59,7 +59,7 @@ int  dir1;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-#ifdef QUIRK	
+#ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED)\n");
 #else
 		failed();
@@ -82,7 +82,7 @@ int  dir1;
 	}
 
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , name2))
-fin:	
+fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
 	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
@@ -96,4 +96,3 @@ void FPEnumerate_test()
     fprintf(stdout,"FPEnumerate page 150\n");
     test28();
 }
-

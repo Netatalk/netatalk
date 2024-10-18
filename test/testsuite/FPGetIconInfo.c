@@ -24,8 +24,8 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 	}
 
 	FAIL (FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1))
-	
-	FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 256 )) 
+
+	FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 256 ))
 
 	if (!Mac) {
 		ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 1 );
@@ -40,7 +40,7 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 2 ))
 		}
 	}
-	
+
 	FPCloseDT(Conn,dt);
 	exit_test("test213");
 }
@@ -55,4 +55,3 @@ void FPGetIconInfo_test()
 	test213();
 #endif
 }
-

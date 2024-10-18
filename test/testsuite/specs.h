@@ -8,7 +8,7 @@
 #include <config.h>
 #endif
 
-#include <signal.h>  
+#include <signal.h>
 
 #include "afpclient.h"
 #include "afphelper.h"
@@ -31,7 +31,7 @@
 #endif
 #define EXPECT_FAIL(a, b) do { int _experr;  _experr = (a); if (htonl(_experr) != (b)) { failed(); } } while(0);
 #define FAILEXIT(a, label) if ((a)) { failed(); goto label;}
-#define STATIC 
+#define STATIC
 
 /* Types */
 enum adouble {

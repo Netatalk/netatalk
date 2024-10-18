@@ -18,24 +18,24 @@ uint16_t vol = VolID;
 		nottested();
 		goto test_exit;
 	}
-	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name2)) 
+	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name2))
 
-	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) 
+	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name)))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 
 	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2)))
 
-	FAIL (htonl(AFPERR_EXIST) != FPRename(Conn, vol, DIRDID_ROOT, name, name2)) 
+	FAIL (htonl(AFPERR_EXIST) != FPRename(Conn, vol, DIRDID_ROOT, name, name2))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 
     /* other sens */
-	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) 
-	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name2, name)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2)))
+	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name2, name))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test69");
 }
@@ -72,7 +72,7 @@ DSI *dsi;
 		goto fin;
 	}
 
-	FAIL (ntohl(AFPERR_NORENAME) != FPRename(Conn, vol, DIRDID_ROOT, "", "volume")) 
+	FAIL (ntohl(AFPERR_NORENAME) != FPRename(Conn, vol, DIRDID_ROOT, "", "volume"))
 
 	bitmap = (1<<DIRPBIT_ATTR);
 	if (FPGetFileDirParams(Conn, vol,  dir1 , "", 0,bitmap )) {
@@ -82,7 +82,7 @@ DSI *dsi;
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 		filedir.attr = ATTRBIT_NORENAME | ATTRBIT_SETCLR ;
- 		FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir)) 
+ 		FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir))
 		ret = FPRename(Conn, vol, DIRDID_ROOT, ndel, "volume");
 		if (ntohl(AFPERR_OLOCK) != ret) {
 			failed();
@@ -91,9 +91,9 @@ DSI *dsi;
 			}
 		}
 		filedir.attr = ATTRBIT_NODELETE;
- 		FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir)) 
+ 		FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir))
 	}
-	
+
 	ret = FPRename(Conn, vol, DIRDID_ROOT, name2, name2);
 	if (not_valid(ret, /* MAC */0, AFPERR_EXIST)) {
 		failed();
@@ -101,13 +101,13 @@ DSI *dsi;
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
-	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name)) 
+	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name))
 
-	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name1)) 
-	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name1))
+	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT, name))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndel)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndel))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
 	exit_test("test72");
@@ -122,7 +122,7 @@ int tdir1 = 0;
 DSI *dsi2;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int tp,tp1;
 
@@ -150,10 +150,10 @@ int tp,tp1;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
  	if ( FPSetDirParms(Conn, vol, tdir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -186,16 +186,16 @@ int tp,tp1;
 	if (tp1 != tdir1) {
 		fprintf(stdout,"Warning DID connection1 0x%x ==> connection2 0x%x\n", tdir1, tp1);
 	}
-	if (FPDelete(Conn2, vol2,  tp1 , "")) { 
+	if (FPDelete(Conn2, vol2,  tp1 , "")) {
 		nottested();
 		FPDelete(Conn, vol, tdir1 , "");
 		tdir1 = 0;
 	}
-	if (FPDelete(Conn2, vol2,  tp , "")) { 
+	if (FPDelete(Conn2, vol2,  tp , "")) {
 		nottested();
 		FPDelete(Conn, vol, tdir , "");
 		tdir1 = 0;
-	}	
+	}
 	FPCloseVol(Conn2,vol2);
 	return tdir1;
 fin:
@@ -212,14 +212,14 @@ char *name1 = "test183.new";
 int tdir;
 uint16_t vol = VolID;
 
-	
+
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRename:test183: did error two users in  folder did=<deleted> name=test183\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	/* ---- directory.c ---- */
 	if (!(tdir = create_double_deleted_folder(vol, tname))) {
@@ -252,10 +252,10 @@ uint16_t vol = VolID;
 		nottested();
 		goto test_exit;
 	}
-	
+
 	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name1))
-	FAIL (FPDelete(Conn, vol, DIRDID_ROOT , name1)) 
-	FAIL (!FPDelete(Conn, vol, DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT , name1))
+	FAIL (!FPDelete(Conn, vol, DIRDID_ROOT , name))
 	FPFlush(Conn, vol);
 test_exit:
 	exit_test("test184");
@@ -296,9 +296,9 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 	}
 
 fin:
-	FAIL (dir2 && FPDelete(Conn, vol,  dir2, "")) 
-	FAIL (dir1 && FPDelete(Conn, vol,  dir1, "")) 
-	FAIL (dir && FPDelete(Conn, vol,  dir, "")) 
+	FAIL (dir2 && FPDelete(Conn, vol,  dir2, ""))
+	FAIL (dir1 && FPDelete(Conn, vol,  dir1, ""))
+	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
 	exit_test("test191");
 }
@@ -319,7 +319,7 @@ DSI	*dsi2 = &Conn2->dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -334,16 +334,16 @@ DSI	*dsi2 = &Conn2->dsi;
 	}
 
 	bitmap = (1 << FILPBIT_LNAME);
-	FAIL (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", bitmap,bitmap)) 
-	FAIL (FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", bitmap,bitmap)) 
-	
+	FAIL (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", bitmap,bitmap))
+	FAIL (FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", bitmap,bitmap))
+
 	if (FPRename(Conn2, vol2, DIRDID_ROOT, name, dest)) {
 		failed();
 	}
-	FAIL (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", bitmap,bitmap)) 
+	FAIL (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", bitmap,bitmap))
 	FAIL (FPCloseVol(Conn2,vol2))
 fin:
-	FAIL (dir && FPDelete(Conn, vol,  dir, "")) 
+	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
 	exit_test("test219");
 }
@@ -368,19 +368,19 @@ uint16_t vol = VolID;
 		failed();
 		goto fin;
 	}
-	
-	FAIL (htonl(AFPERR_EXIST) != FPRename(Conn, vol, DIRDID_ROOT, name, name1)) 
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (htonl(AFPERR_EXIST) != FPRename(Conn, vol, DIRDID_ROOT, name, name1))
+
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
-	
+
 test_exit:
 	exit_test("test376");
 }
 
 
-/* ------------------------- 
+/* -------------------------
 */
 STATIC void test377()
 {
@@ -409,10 +409,10 @@ int ret;
 		FAIL (htonl(AFPERR_EXIST) != FPRename(Conn, vol, DIRDID_ROOT, name, name1))
 	}
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
-	
+
 test_exit:
 	exit_test("test377");
 }
@@ -432,4 +432,3 @@ void FPRename_test()
 	test376();
 	test377();
 }
-

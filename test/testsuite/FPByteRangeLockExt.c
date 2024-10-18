@@ -27,22 +27,22 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 		failed();
 	}
 
-	FAIL (FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100)) 
-	FAIL (htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0, 0 , -1, 75)) 
+	FAIL (FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100))
+	FAIL (htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0, 0 , -1, 75))
 
-	FAIL (htonl(AFPERR_NORANGE) != FPByteLock_ext(Conn, fork, 0, 1 /* clear */ , 0, 75)) 
+	FAIL (htonl(AFPERR_NORANGE) != FPByteLock_ext(Conn, fork, 0, 1 /* clear */ , 0, 75))
 
-	FAIL ( htonl(AFPERR_RANGEOVR) != FPByteLock_ext(Conn, fork, 0, 0 , 80 /* set */, 100)) 
+	FAIL ( htonl(AFPERR_RANGEOVR) != FPByteLock_ext(Conn, fork, 0, 0 , 80 /* set */, 100))
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1)
 		failed();
 	else {
-		FAIL (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0 /* set */ , 20, 60)) 
-		FAIL (FPSetForkParam(Conn, fork, len , 50)) 
-		FAIL (FPSetForkParam(Conn, fork1, len , 60)) 
+		FAIL (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0 /* set */ , 20, 60))
+		FAIL (FPSetForkParam(Conn, fork, len , 50))
+		FAIL (FPSetForkParam(Conn, fork1, len , 60))
 		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data))
-		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn, fork1, 10, 40, Data, 0)) 
+		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn, fork1, 10, 40, Data, 0))
 		FAIL (FPCloseFork(Conn,fork1))
 	}
 
@@ -71,7 +71,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0 /* start */, 0 /* set */, 0, -2))
 
 	FAIL (FPCloseFork(Conn,fork))
-	FAIL (htonl (AFPERR_PARAM ) != FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100)) 
+	FAIL (htonl (AFPERR_PARAM ) != FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100))
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT, name);
 
@@ -145,4 +145,3 @@ void FPByteRangeLockExt_test()
 #endif
     test195();
 }
-

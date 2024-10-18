@@ -2,7 +2,7 @@
 */
 #include "specs.h"
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 
 /* -------------------------- */
 STATIC void test325()
@@ -23,7 +23,7 @@ int ret;
 		goto test_exit;
 	}
 
-	if (adouble == AD_EA) { 
+	if (adouble == AD_EA) {
        test_skipped(T_ADV2);
 		goto test_exit;
 	}
@@ -40,7 +40,7 @@ int ret;
 			failed_nomsg();
 			goto fin;
 		}
-		
+
 		sprintf(temp,"%s/.AppleDouble/%s", Path, name);
 		fprintf(stdout,"chmod 444 resource fork\n");
 		if (chmod(temp, 0444) <0) {
@@ -57,7 +57,7 @@ int ret;
 	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
 		failed();
 	}
-	
+
 	ret = FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	if (not_valid(ret, /* MAC */0, AFPERR_NOOBJ)) {
 		failed();
@@ -79,4 +79,3 @@ void FPCreateFile_test()
     fprintf(stdout,"FPCreateFile page 138\n");
     test325();
 }
-

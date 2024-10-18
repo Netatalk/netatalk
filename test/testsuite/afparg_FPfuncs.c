@@ -7,7 +7,7 @@ void FPCopyFile_arg(char **argv)
     fprintf(stdout,"======================\n");
     fprintf(stdout,"FPCopyFile with args:\n");
 
-    fprintf(stdout,"source: \"%s\" -> dest: \"%s\"\n", argv[0], argv[1]);    
+    fprintf(stdout,"source: \"%s\" -> dest: \"%s\"\n", argv[0], argv[1]);
 
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, argv[0], "", argv[1]))
 
@@ -66,7 +66,7 @@ void FPLockrw_arg(char **argv)
 {
     uint16_t vol = VolID;
     int fork;
-    struct sigaction action;    
+    struct sigaction action;
     int toopen;
 
     if (argv[0][0] == 'd')
@@ -109,7 +109,7 @@ void FPLockw_arg(char **argv)
 {
     uint16_t vol = VolID;
     int fork;
-    struct sigaction action;    
+    struct sigaction action;
     int toopen;
 
     if (argv[0][0] == 'd')
@@ -121,7 +121,7 @@ void FPLockw_arg(char **argv)
     fprintf(stdout,"======================\n");
     fprintf(stdout,"FPOpen with write lock\n");
 
-    fprintf(stdout,"source: \"%s\"\n", argv[1]);    
+    fprintf(stdout,"source: \"%s\"\n", argv[1]);
 
     action.sa_handler = handler;
     sigemptyset(&action.sa_mask);

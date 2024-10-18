@@ -28,7 +28,7 @@ extern unsigned int FPCloseFork(CONN *conn, uint16_t vol);
 extern unsigned int FPFlush(CONN *conn, uint16_t vol);
 extern unsigned int FPFlushFork(CONN *conn, uint16_t vol);
 extern unsigned int FPEnumerate(CONN *conn, uint16_t vol, int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap);
-extern unsigned int FPEnumerateFull(CONN *conn, uint16_t vol, uint16_t sindex, uint16_t reqcnt, uint16_t size, 
+extern unsigned int FPEnumerateFull(CONN *conn, uint16_t vol, uint16_t sindex, uint16_t reqcnt, uint16_t size,
     			int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap);
 
 extern unsigned int FPGetFileDirParams(CONN *conn, uint16_t vol, int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap);
@@ -71,7 +71,7 @@ extern unsigned int FPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap, str
 
 extern unsigned int FPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap);
 
-extern unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap, 
+extern unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap,
                   	struct afp_filedir_parms *dir );
 extern unsigned int FPSetFilDirParam(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap,
                   	struct afp_filedir_parms *fil );
@@ -82,7 +82,7 @@ extern unsigned int FPCreateID(CONN *conn, uint16_t vol, int did , char *name);
 extern unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did );
 extern unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap );
 
-extern unsigned int FPAddIcon(CONN *conn, uint16_t dt, char *creator, char *type, char itype, uint32_t tag, 
+extern unsigned int FPAddIcon(CONN *conn, uint16_t dt, char *creator, char *type, char itype, uint32_t tag,
 					uint16_t size, char *data );
 extern unsigned int FPGetIcon(CONN *conn, uint16_t dt, char *creator, char *type, char itype, uint16_t size );
 extern unsigned int FPGetIconInfo(CONN *conn, uint16_t dt, unsigned char *creator, uint16_t itype );
@@ -114,16 +114,16 @@ const char *AfpNum2name(int num);
 #define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
 
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */  
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */  
-#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */ 
+#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
+#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
+#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */
 #define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit (d) */
 #define ATTRBIT_NODELETE  (1<<8)  /* delete inhibit (d) */
-#define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */     
+#define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */
 
 extern CONN *Conn, *Conn2;
 
-// extern DSI *dsi; 
+// extern DSI *dsi;
 // extern uint16_t vol;
 extern char Data[];
 

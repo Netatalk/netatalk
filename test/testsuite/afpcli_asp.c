@@ -7,24 +7,24 @@ int sock;
 struct sockaddr_in server;
 struct hostent* hp;
 int attr;
- 
+
 	server.sin_family=AF_INET;
 	server.sin_port=htons((unsigned short)port);
- 
+
 	hp=gethostbyname(host);
  	if(!hp) {
     unsigned long int addr=inet_addr(host);
     	if(addr!=-1)
        		hp=gethostbyaddr((char*)addr,sizeof(addr),AF_INET);
- 
+
     	if(!hp) {
        		fprintf(stdout,"Unknown host '%s' for server [%s]\n.",host);
        		return(-1);
       	}
    	}
- 
+
  	memcpy((char*)&server.sin_addr,(char*)hp->h_addr,sizeof(server.sin_addr));
- 
+
  	sock=socket(PF_INET,SOCK_STREAM,0);
  	if(sock==-1) {
     	fprintf(stdout,"Failed to create client sockets.\n");
@@ -32,13 +32,13 @@ int attr;
    	}
     attr = 1;
     setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr));
- 
+
  	if(connect(sock ,(struct sockaddr*)&server,sizeof(server))==-1) {
     	close(sock);
     	sock=-1;
     	fprintf(stdout,"Failed to connect socket.\n");
    	}
- 
+
 	 return(sock);
 }
 /* -------------------------------------------------------*/
@@ -48,13 +48,13 @@ size_t my_asp_stream_read(ASP *asp, void *data, const size_t length)
 {
   size_t stored;
   ssize_t len;
- 
+
   stored = 0;
   while (stored < length) {
     if ((len = read(asp->socket, (uint8_t *) data + stored,
                     length - stored)) == -1 && errno == EINTR)
       continue;
- 
+
     if (len > 0)
       stored += len;
     else {/* eof or error */
@@ -62,7 +62,7 @@ size_t my_asp_stream_read(ASP *asp, void *data, const size_t length)
       break;
     }
   }
- 
+
   asp->read_count += stored;
   return stored;
 }
@@ -75,11 +75,11 @@ int my_asp_stream_receive(ASP *asp, void *buf, const int ilength,
                        int *rlength)
 {
   char block[DSI_BLOCKSIZ];
- 
+
   /* read in the header */
   if (my_asp_stream_read(asp, block, sizeof(block)) != sizeof(block))
     return 0;
- 
+
   asp->header.asp_flags = block[0];
   asp->header.asp_command = block[1];
   memcpy(&asp->header.asp_requestID, block + 2, sizeof(asp->header.asp_requestID));
@@ -87,12 +87,12 @@ int my_asp_stream_receive(ASP *asp, void *buf, const int ilength,
   memcpy(&asp->header.asp_len, block + 8, sizeof(asp->header.asp_len));
   memcpy(&asp->header.asp_reserved, block + 12,sizeof(asp->header.asp_reserved));
   asp->serverID = ntohs(asp->header.asp_requestID);
- 
+
   /* make sure we don't over-write our buffers. */
   *rlength = min(ntohl(asp->header.asp_len), ilength);
   if (my_asp_stream_read(asp, buf, *rlength) != *rlength)
     return 0;
- 
+
   return block[1];
 }
 
@@ -113,7 +113,7 @@ ssize_t len;
       fprintf(stdout, "asp_stream_write: %s\n", strerror(errno));
       break;
     }
-    
+
     written += len;
   }
 
@@ -141,7 +141,7 @@ int my_asp_stream_send(ASP *asp, void *buf, size_t length)
     length = (my_asp_stream_write(asp, block, sizeof(block)) == sizeof(block));
     return length; /* really 0 on failure, 1 on success */
   }
-  
+
   /* write the header then data */
   if ((my_asp_stream_write(asp, block, sizeof(block)) != sizeof(block)) ||
       (my_asp_stream_write(asp, buf, length) != length)) {
@@ -151,7 +151,7 @@ int my_asp_stream_send(ASP *asp, void *buf, size_t length)
   return 1;
 }
 
-/* ------------------------------------- 
+/* -------------------------------------
    OK
 */
 void my_asp_tickle(ASP asp, const uint8_t sid, struct sockaddr_at *sat)
@@ -195,7 +195,7 @@ int ret;
 static void SendInit(ASP *asp)
 {
 	memset(asp->commands, 0, DSI_CMDSIZ);
-	asp->header.asp_flags = DSIFL_REQUEST;     
+	asp->header.asp_flags = DSIFL_REQUEST;
 	asp->header.asp_command = DSIFUNC_CMD;
 	asp->header.asp_requestID = htons(asp_clientID(asp));
 }
@@ -212,7 +212,7 @@ int ofs;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 }
 
@@ -231,23 +231,23 @@ int ofs;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 
 }
 
 /* ==============================================
-	spec violation in netatalk 
+	spec violation in netatalk
 	FPlogout ==> aspclose
 */
 int AFPopenLogin(ASP *asp, char *vers, char *uam, char *usr, char *pwd)
 {
-uint32_t i = 0; 
+uint32_t i = 0;
 uint8_t len;
 int ofs;
 
 	/* DSIOpenSession */
-	asp->header.asp_flags = DSIFL_REQUEST;     
+	asp->header.asp_flags = DSIFL_REQUEST;
 	asp->header.asp_command = DSIFUNC_OPEN;
 	asp->header.asp_requestID = htons(asp_clientID(asp));
 
@@ -255,7 +255,7 @@ int ofs;
 	asp->commands[0] = DSIOPT_ATTNQUANT;
   	asp->commands[1] = sizeof(i);
   	i = htonl(DSI_DEFQUANT);
-  	memcpy(asp->commands + 2, &i, sizeof(i));	    
+  	memcpy(asp->commands + 2, &i, sizeof(i));
 	my_asp_send(asp);
 	/* -------------- */
 	my_asp_receive(asp);
@@ -264,7 +264,7 @@ int ofs;
 	if (asp->header.asp_command == DSIFUNC_OPEN) {
 		dump_open(asp);
 	}
-#endif		
+#endif
 	/* -------------- */
 	SendInit(asp);
 	ofs = 0;
@@ -274,7 +274,7 @@ int ofs;
 	asp->commands[ofs++] = len;
 	strncpy(&asp->commands[ofs], vers, len);
 	ofs += len;
-		
+
 	len = strlen(uam);
 	asp->commands[ofs++] = len;
 	strncpy(&asp->commands[ofs], uam, len);
@@ -297,7 +297,7 @@ int ofs;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -307,7 +307,7 @@ int ofs;
 /* --------------------------- */
 int AFPChangePW(ASP *asp, char *uam, char *usr, char *opwd, char *pwd)
 {
-uint32_t i = 0; 
+uint32_t i = 0;
 uint8_t len;
 int ofs;
 
@@ -346,7 +346,7 @@ int ofs;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -429,7 +429,7 @@ int len;
 	asp->commands[ofs++] = 0;
 
  	bitmap = htons( (1<<VOLPBIT_VID) );
-  	memcpy(asp->commands + ofs, &bitmap, sizeof(bitmap));	    
+  	memcpy(asp->commands + ofs, &bitmap, sizeof(bitmap));
 	ofs += 2;
 
 	len = strlen(vol);
@@ -442,7 +442,7 @@ int len;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -484,7 +484,7 @@ int len;
 	ofs = 0;
 	asp->commands[ofs++] = AFP_CREATEFILE;
 	asp->commands[ofs++] = type;
-	
+
 	memcpy(asp->commands +ofs, &vol, sizeof(vol));	/* volume */
 	ofs += sizeof(vol);
 
@@ -500,7 +500,7 @@ int len;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -518,22 +518,22 @@ int rsize;
 	ofs = 0;
 	asp->commands[ofs++] = AFP_WRITE;
 	asp->commands[ofs++] = whence;			/* 0 SEEK_SET, 0x80 SEEK_END */
-	
+
 	memcpy(asp->commands +ofs, &fork, sizeof(fork));	/* fork num */
 	ofs += sizeof(fork);
 
 	offset = htonl(offset);
-	memcpy(asp->commands +ofs, &offset, sizeof(offset));  
+	memcpy(asp->commands +ofs, &offset, sizeof(offset));
 	ofs += sizeof(offset);
 
 	rsize = htonl(size);
-	memcpy(asp->commands +ofs, &rsize, sizeof(rsize));  
+	memcpy(asp->commands +ofs, &rsize, sizeof(rsize));
 	ofs += sizeof(rsize);
 
 	asp->datalen = ofs;		// 12
 	asp->header.asp_len = htonl(asp->datalen +size);
 	asp->header.asp_code = htonl(ofs); // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, ofs);
 	my_asp_stream_write(asp, data, size);
 	my_asp_receive(asp);
@@ -541,7 +541,7 @@ int rsize;
 }
 
 
-/* ------------------------------- 
+/* -------------------------------
 	type : ressource or data
 */
 uint16_t  AFPOpenFork(ASP *asp, uint16_t vol, char type, uint16_t bitmap, int did , char *name,uint16_t access)
@@ -554,7 +554,7 @@ uint16_t ofork = 0, result;
 	ofs = 0;
 	asp->commands[ofs++] = AFP_OPENFORK;
 	asp->commands[ofs++] = type;
-	
+
 	memcpy(asp->commands +ofs, &vol, sizeof(vol));	/* volume */
 	ofs += sizeof(vol);
 
@@ -568,7 +568,7 @@ uint16_t ofork = 0, result;
 	access =  htons (access  );
 	memcpy(asp->commands +ofs, &access, sizeof(access));  /* access right */
 	ofs += sizeof(access);
-	
+
 	asp->commands[ofs++] = 2;		/* long name */
 	len = strlen(name);
 	asp->commands[ofs++] = len;
@@ -578,7 +578,7 @@ uint16_t ofork = 0, result;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -606,7 +606,7 @@ int len;
 
 	memcpy(asp->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(asp->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
@@ -615,11 +615,11 @@ int len;
 	asp->commands[ofs++] = len;
 	u2mac(&asp->commands[ofs], name, len);
 	ofs += len;
-		
+
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -637,16 +637,16 @@ int rsize;
 	ofs = 0;
 	asp->commands[ofs++] = AFP_READ;
 	asp->commands[ofs++] = 0;
-	
+
 	memcpy(asp->commands +ofs, &fork, sizeof(fork));	/* fork num */
 	ofs += sizeof(fork);
 
 	offset = htonl(offset);
-	memcpy(asp->commands +ofs, &offset, sizeof(offset));  
+	memcpy(asp->commands +ofs, &offset, sizeof(offset));
 	ofs += sizeof(offset);
 
 	size = htonl(size);
-	memcpy(asp->commands +ofs, &size, sizeof(size));  
+	memcpy(asp->commands +ofs, &size, sizeof(size));
 	ofs += sizeof(size);
 	asp->commands[ofs++] = 0;	/* NewLineMask */
 	asp->commands[ofs++] = 0;	/* NewLineChar */
@@ -654,10 +654,10 @@ int rsize;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
-#if 0	
+#if 0
 	my_asp_stream_receive(asp, asp->data, DSI_DATASIZ, &asp->datalen);
 	dump_header(asp);
 	rsize =  ntohl(asp->header.asp_len);
@@ -666,9 +666,9 @@ int rsize;
 	int len = min(rsize, DSI_DATASIZ);
 		if (my_asp_stream_read(asp, asp->data, len) != len) {
 			break;
-		}	
+		}
 		rsize -= len;
-	}	
+	}
 #endif
 	my_asp_receive(asp);
 	memcpy(data, asp->commands, asp->cmdlen);
@@ -692,7 +692,7 @@ int dir = 0;
 
 	memcpy(asp->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(asp->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
@@ -701,11 +701,11 @@ int dir = 0;
 	asp->commands[ofs++] = len;
 	u2mac(&asp->commands[ofs], name, len);
 	ofs += len;
-		
+
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
@@ -739,12 +739,11 @@ uint16_t result;
 	asp->datalen = ofs;
 	asp->header.asp_len = htonl(asp->datalen);
 	asp->header.asp_code = 0; // htonl(err);
- 
+
    	my_asp_stream_send(asp, asp->commands, asp->datalen);
 	/* ------------------ */
 	my_asp_receive(asp);
 	if (!asp->header.asp_code) {
 	}
-	return 0;	
+	return 0;
 }
-

@@ -12,7 +12,7 @@ char ndir[4];
 int dir;
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
-	
+
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"Utf8:test162: illegal UTF8 name\n");
@@ -32,9 +32,9 @@ DSI *dsi = &Conn->dsi;
     ndir[2] = 0;
 	if ((dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		failed();
-		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , ndir)) 
+		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , ndir))
 	}
-	else if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {	
+	else if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		failed();
 	}
 test_exit:
@@ -69,7 +69,7 @@ DSI *dsi = &Conn->dsi;
 	strcpy(nfile, "ee.rtf");
 	nfile[0] = 0xc3;         /* �.rtf precompose */
 	nfile[1] = 0xa9;
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
 		nottested();
 		goto test_exit;
@@ -87,7 +87,7 @@ DSI *dsi = &Conn->dsi;
 		    failed_nomsg();
 	    }
 	}
-	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
 
@@ -127,7 +127,7 @@ DSI *dsi = &Conn->dsi;
 	strcpy(nfile, "laa");
 	nfile[1] = 0xc3;         /* l� */
 	nfile[2] = 0xa0;
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
 		nottested();
 		goto test_exit;
@@ -145,7 +145,7 @@ DSI *dsi = &Conn->dsi;
 		    failed_nomsg();
 	    }
 	}
-	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
 
@@ -197,7 +197,7 @@ int  dir1;
 	FAIL (FPCloseVol(Conn,vol))
 
 	vol = VolID = FPOpenVol(Conn, Vol);
-	if (FPEnumerate(Conn, vol,  dir1 , "", 
+	if (FPEnumerate(Conn, vol,  dir1 , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -208,7 +208,7 @@ int  dir1;
 	) {
 		failed();
 		/* warm the cache */
-		FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+		FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -216,7 +216,7 @@ int  dir1;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		);
-		FPEnumerate(Conn, vol,  dir , "", 
+		FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -226,14 +226,14 @@ int  dir1;
 		);
 	}
 
-	FAIL (FPDelete(Conn, vol,  dir1 , name2)) 
+	FAIL (FPDelete(Conn, vol,  dir1 , name2))
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test181");
 }
 
-/* ------------------------- 
+/* -------------------------
  */
 STATIC void test185()
 {
@@ -259,11 +259,11 @@ uint16_t vol = VolID;
 		nottested();
 		goto test_exit;
 	}
-	
+
 	FAIL (ntohl(AFPERR_PARAM) != FPRename(Conn, vol, DIRDID_ROOT, name, name1))
 
 	FAIL (ntohl(AFPERR_PARAM) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
-	
+
 	FAIL (FPDelete(Conn, vol, DIRDID_ROOT , name))
 
 	FPFlush(Conn, vol);
@@ -421,7 +421,7 @@ uint16_t bitmap = 0;
 		    filedir.isdir = 0;
 		    afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 		    if (strcmp(filedir.utf8_name, name)) {
-				fprintf(stdout,"\tFAILED %s should be %s\n",filedir.utf8_name, name); 		    
+				fprintf(stdout,"\tFAILED %s should be %s\n",filedir.utf8_name, name); 
 		    }
 		}
         sprintf(temp,"t3-#%X.mp3", ntohl(filedir.did));
@@ -513,7 +513,7 @@ test_exit:
 	exit_test("test314");
 }
 
-/* ------------------------- 
+/* -------------------------
  * MAC FAILED
 */
 STATIC void test337()
@@ -566,7 +566,7 @@ uint16_t bitmap = 0;
 		    filedir.isdir = 0;
 		    afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 		    if (strcmp(filedir.utf8_name, name)) {
-				fprintf(stdout,"\tFAILED %s should be %s\n",filedir.utf8_name, name); 		    
+				fprintf(stdout,"\tFAILED %s should be %s\n",filedir.utf8_name, name); 
 		    }
 		}
         sprintf(temp,"t#%X.mp3", ntohl(filedir.did));
@@ -610,7 +610,7 @@ DSI *dsi = &Conn->dsi;
 	strcpy(nfile, "laaa");
 	nfile[2] = 0xcc;         /* l� */
 	nfile[3] = 0x80;
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
 		nottested();
 		goto test_exit;
@@ -665,7 +665,7 @@ DSI *dsi = &Conn->dsi;
 	strcpy(nfile, "laaa");
 	nfile[2] = 0xcc;         /* l� */
 	nfile[3] = 0x80;
-	
+
 	if (!FPCreateDir(Conn, vol, DIRDID_ROOT , nfile)) {
 		nottested();
 		goto test_exit;
@@ -717,7 +717,7 @@ uint16_t vol = VolID;
 	}
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();
 		goto test_exit;
@@ -757,7 +757,7 @@ uint16_t vol = VolID;
 	}
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();
 		goto test_exit;
@@ -797,7 +797,7 @@ uint16_t vol = VolID;
 	}
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();
 		goto test_exit;
@@ -837,13 +837,13 @@ uint16_t vol = VolID;
 	}
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();
 		goto test_exit;
 	}
 	Force_type2 = 1;
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, file2, nfile2)) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, file2, nfile2))
 	Force_type2 = 0;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
@@ -899,4 +899,3 @@ void Utf8_test()
 	test386();
 	test395();
 }
-
