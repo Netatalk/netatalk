@@ -82,8 +82,7 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -130,8 +129,7 @@ jobs:
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -197,8 +195,7 @@ jobs:
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -257,8 +254,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -319,8 +315,7 @@ jobs:
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
             -Dwith-init-hooks=false \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -383,8 +378,7 @@ jobs:
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-manual-l10n=ja \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run distribution tests
@@ -423,8 +417,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
+            -Dwith-tests=true
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
@@ -484,8 +477,7 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dwith-appletalk=true \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             meson install -C build
             /usr/local/sbin/netatalk -V
@@ -529,8 +521,7 @@ jobs:
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-appletalk=true \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             cd build
             meson test
@@ -587,8 +578,7 @@ jobs:
               -Dwith-appletalk=true \
               -Dwith-dtrace=false \
               -Dwith-krbV-uam=false \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             cd build
             meson test
@@ -640,8 +630,7 @@ jobs:
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-appletalk=true \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             meson install -C build
             /usr/local/sbin/netatalk -V
@@ -692,8 +681,7 @@ jobs:
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-ldap-path=/opt/local \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             cd build
             meson test
@@ -740,8 +728,7 @@ jobs:
               -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-              -Dwith-tests=true \
-              -Dwith-testsuite=true
+              -Dwith-tests=true
             meson compile -C build
             cd build
             meson test
@@ -805,7 +792,9 @@ jobs:
           meson setup build \
             -Dwith-appletalk=true \
             -Dwith-init-style=none \
-            -Dwith-readmes=false
+            -Dwith-readmes=false \
+            -Dwith-tests=true \
+            -Dwith-testsuite=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run sonar-scanner
         env:
