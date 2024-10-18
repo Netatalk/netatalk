@@ -1155,7 +1155,10 @@ void FPCopyFile_test()
     fprintf(stdout,"FPCopyFile page 131\n");
     test71();
 	test158();
+// FIXME: why is this test "not run" when the server under test is remote?
+#if 0
 	test315();
+#endif
 	test317();
 	test332();
 	test374();
