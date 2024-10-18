@@ -1,3 +1,22 @@
+Changes in 4.0.2
+================
+* NEW: Bring back Classic Mac OS `legacy icon' option, GitHub #1622
+* UPD: Spotlight: Support TinySPARQL/LocalSearch, GitHub #1078
+* FIX: ad: Fix volume check for the AppleDouble toolsuite, GitHub #1605
+       Check was failing if the `ea = ad' option was set.
+* FIX: meson: Refactor Berkley DB detection for robustness, GitHub #1604
+* UPD: meson: Add localstatedir override option, GitHub #1608
+* UPD: meson: Make the print spool dir FHS compliant, GitHub #1608
+* UPD: docs: Improve Upgrade chapter, GitHub #1609
+* UPD: docker: Use multistage build to optimize image size, GitHub #1620
+* FIX: afpd: Cleanup unused, broken AFP over ASP code #1612
+* FIX: papd: Correct PAPStatus string copy buffer length, GitHub #1576
+* UPD: Make last CNID backend writable when built for tests, GitHub #1623
+       This unblocks the integration tests that concern writing.
+* NEW: Bundle and improve the afptest test suite, GitHub #1633
+       Build with the new `-Dwith-testsuite' option.
+* FIX: webmin: Make AppleTalk service control functional, GitHub #1636
+
 Changes in 4.0.1
 ================
 * UPD: Update license grant to reflect the retroactive rescission
