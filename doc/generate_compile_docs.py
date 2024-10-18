@@ -62,9 +62,6 @@ output_jp = "./ja/manual/compile.xml"
 with open('../.github/workflows/build.yml', 'r') as file:
   workflow = yaml.safe_load(file)
 
-apt_packages_pattern = r'\$\{\{\senv\.APT_PACKAGES\s\}\}'
-apt_packages = workflow["env"]["APT_PACKAGES"]
-
 def generate_docbook(strings, output_file):
   docbook = {
     "appendix": {
@@ -111,9 +108,6 @@ def generate_docbook(strings, output_file):
         # Skip GitHub actions steps irrelevant to documentation
         if "uses" in step and step["uses"].startswith("actions/"):
           continue
-        # Substitute the APT_PACKAGES variable with the actual list of packages
-        if "run" in step and re.search(apt_packages_pattern, step["run"]):
-          step["run"] = re.sub(apt_packages_pattern, apt_packages, step["run"])
 
         # The vmactions jobs have a different structure
         if "uses" in step and step["uses"].startswith("vmactions/"):
