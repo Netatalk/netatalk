@@ -18,16 +18,16 @@ char *tp;
 	/* --------- */
     ret = FPOpenVolFull(Conn, Vol, 0);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_BITMAP)) {
-		failed();    
+		failed();
     }
-	
+
 	if (ret != 0xffff) {
     	FAIL (FPCloseVol(Conn, ret));
 	}
 	/* --------- */
     ret = FPOpenVolFull(Conn, Vol, 0xffff);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_BITMAP)) {
-		failed();    
+		failed();
     }
 	if (ret != 0xffff) {
     	FAIL (FPCloseVol(Conn, ret));
@@ -41,7 +41,7 @@ char *tp;
     ret = FPOpenVol(Conn, tp);
 	free(tp);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_NOOBJ)) {
-		failed();    
+		failed();
     }
 	if (ret != 0xffff) {
     	FAIL (FPCloseVol(Conn, ret));
@@ -55,7 +55,7 @@ char *tp;
 	if (vol != ret) {
 		fprintf(stdout,"\tFAILED double open != volume id\n");
 		failed_nomsg();
-	}	
+	}
     FAIL (FPCloseVol(Conn, ret));
     FAIL (!FPCloseVol(Conn, ret));
 fin:
@@ -108,7 +108,6 @@ void FPOpenVol_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenVol page 235\n");
-    
+
     test205();
 }
-

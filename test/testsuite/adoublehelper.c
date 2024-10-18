@@ -7,7 +7,7 @@
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
-/* -------------------- 
+/* --------------------
    delete metadata
 */
 int delete_unix_md(char *path, char *name, char *file)
@@ -35,7 +35,7 @@ int delete_unix_md(char *path, char *name, char *file)
 	return 0;
 }
 
-/* -------------------- 
+/* --------------------
    delete a resource fork
 */
 int delete_unix_rf(char *path, char *name, char *file)
@@ -76,7 +76,7 @@ int delete_unix_rf(char *path, char *name, char *file)
 	return 0;
 }
 
-/* ---------------------- 
+/* ----------------------
  * delete a file
 */
 int delete_unix_file(char *path, char *name, char *file)
@@ -85,7 +85,7 @@ int delete_unix_file(char *path, char *name, char *file)
 
     if (delete_unix_rf(path, name, file))
 		rc = -1;
-		
+
 	sprintf(temp, "%s/%s/%s", path, name, file);
 	fprintf(stdout,"unlink(%s)\n", temp);
 	if (unlink(temp) <0) {
@@ -208,7 +208,7 @@ int chmod_unix_meta(char *path, char *name, char *file, int mode)
             fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             failed_nomsg();
             return -1;
-        }        
+        }
         return 0;
 #else
         return 0;
@@ -237,7 +237,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
             fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             failed_nomsg();
             return -1;
-        }        
+        }
         return 0;
 #else
         sprintf(temp, "%s/%s/._%s", path, name, file);
@@ -246,7 +246,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
             fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             failed_nomsg();
             return -1;
-        }        
+        }
         return 0;
 #endif
     } else {
@@ -261,7 +261,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
     }
 }
 
-/* -------------------- 
+/* --------------------
 	delete an empty directory
 */
 int delete_unix_dir(char *path, char *name)
@@ -279,7 +279,7 @@ int delete_unix_dir(char *path, char *name)
 	return 0;
 }
 
-/* ---------------------- 
+/* ----------------------
  * create a folder with r-xr-xr-x .AppleDouble
 */
 int folder_with_ro_adouble(uint16_t vol, int did, char *name, char *file)
@@ -337,6 +337,5 @@ int delete_ro_adouble(uint16_t vol, int did, char *file)
 	fprintf(stdout,"\t>>>>>>>> delete folder with ro adouble <<<<<<<<<< \n");
 	FAIL (FPDelete(Conn, vol, did, file))
 	FAIL (FPDelete(Conn, vol, did, ""))
-	return 0;	
+	return 0;
 }
-

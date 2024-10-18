@@ -34,4 +34,3 @@ void FPOpenDT_test()
     fprintf(stdout,"FPOpenDT page 229\n");
 	test200();
 }
-

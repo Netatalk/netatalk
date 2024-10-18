@@ -63,7 +63,7 @@ uint16_t bitmap = 0;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();		
+		failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		return;
 	}
@@ -74,7 +74,7 @@ uint16_t bitmap = 0;
 	param  = fork;
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 
@@ -84,17 +84,17 @@ uint16_t bitmap = 0;
 
 	memcpy(dsi->commands +ofs, &param, sizeof(param));
 	ofs += sizeof(param);
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
 	fprintf(stdout,"---------------------\n");
 	fprintf(stdout,"AFP call  %d\n\n", cmd);
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	my_dsi_cmd_receive(dsi);
 	dump_header(dsi);
-		
+
     if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		fprintf(stdout,"\tFAILED command %i\n", cmd);
 		failed();
@@ -175,7 +175,7 @@ uint16_t bitmap = 0;
 	}
 	if (FPWrite(conn, fork, 0, strlen(txt), txt, 0 )) {
 		failed();
-	}	
+	}
 	FAIL (FPCloseFork(conn,fork))
 }
 
@@ -197,7 +197,7 @@ uint16_t bitmap = 0;
 	FAIL (FPCloseFork(conn,fork))
 }
 
-/* ---------------------- 
+/* ----------------------
  * Use the second user for creating a folder with no access right
  * assume did are the same for != user
 */
@@ -235,7 +235,7 @@ uint32_t uid;
 	}
 	memcpy(&uid, dsi2->commands + sizeof(uint16_t), sizeof(uint32_t));
 	uid = ntohl(uid);
-	
+
 	if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
 		nottested();
 		if (!(dir = get_did(Conn2, vol2, did, name))) {
@@ -250,10 +250,10 @@ uint32_t uid;
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
 
-    bitmap =  (1 << DIRPBIT_ACCESS);    
-    filedir.access[0] = 0; 
-    filedir.access[1] = 0; 
-    filedir.access[2] = 0; 
+    bitmap =  (1 << DIRPBIT_ACCESS);
+    filedir.access[0] = 0;
+    filedir.access[1] = 0;
+    filedir.access[2] = 0;
     filedir.access[3] = 3;  /* was 7 */
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
 		nottested();
@@ -263,32 +263,32 @@ uint32_t uid;
 	/* double check the first user can't create a dir in it */
 	ret = get_did(Conn, vol, did, name);
 	if (!ret) {
-		if (ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {   
+		if (ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {
 			goto fin;
 		}
 		/* 1.6.x fails here, so cheat a little, it doesn't work with did=last though */
 		ret = dir;
 	}
 	if (FPCreateDir(Conn, vol, ret , name)) {
-	    /* Mac OSX here does strange things 
+	    /* Mac OSX here does strange things
 	     * for when things go wrong */
 		nottested();
 
-	    FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", 
+	    FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) ,
 		     (1<< DIRPBIT_ATTR) |  (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		     | (1<<DIRPBIT_UID) | (1 << DIRPBIT_GID));
 
-	    FPEnumerate(Conn, vol,  ret , "", 
+	    FPEnumerate(Conn, vol,  ret , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) ,
 		     (1<< DIRPBIT_ATTR) |  (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		     | (1<<DIRPBIT_UID) | (1 << DIRPBIT_GID));
-		
+
 		FPDelete(Conn, vol,  ret, name);
-    	bitmap =  (1 << DIRPBIT_ACCESS);    
-    	filedir.access[0] = 0; 
-    	filedir.access[1] = 0; 
-    	filedir.access[2] = 0; 
+    	bitmap =  (1 << DIRPBIT_ACCESS);
+    	filedir.access[0] = 0;
+    	filedir.access[1] = 0;
+    	filedir.access[2] = 0;
     	filedir.access[3] = 7;  /* was 7 */
  		FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir);
 		FPDelete(Conn2, vol2,  dir, name); /* dir and ret should be the same */
@@ -338,10 +338,10 @@ DSI *dsi, *dsi2;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 0; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 0; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 0;
+    filedir.access[2] = 7;
+    filedir.access[3] = 0;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -349,7 +349,7 @@ DSI *dsi, *dsi2;
 	/* double check the first user can't create a dir in it */
 	ret = get_did(Conn, vol, did, name);
 	if (!ret) {
-		if (ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {   
+		if (ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {
 			goto fin;
 		}
 		/* 1.6.x fails here, so cheat a little, it doesn't work with did=last though */
@@ -372,7 +372,7 @@ fin:
 	return ret;
 }
 
-/* ---------------------- 
+/* ----------------------
  * Use the second user for creating a folder with read only access right
  * assume did are the same for != user
 */
@@ -407,10 +407,10 @@ DSI *dsi2;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 3; 
-    filedir.access[2] = 3; 
-    filedir.access[3] = 3; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 3;
+    filedir.access[2] = 3;
+    filedir.access[3] = 3;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -434,7 +434,7 @@ fin:
 	return ret;
 }
 
-/* ---------------------- 
+/* ----------------------
  * Use the second user for creating a folder with read only access right
  * assume did are the same for != user
 */
@@ -475,10 +475,10 @@ DSI *dsi2;
 		goto fin;
 	}
 
-    filedir.access[0] = 0; 
-    filedir.access[1] = 3; 
-    filedir.access[2] = 3; 
-    filedir.access[3] = 3; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 3;
+    filedir.access[2] = 3;
+    filedir.access[3] = 3;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -502,7 +502,7 @@ fin:
 	return ret;
 }
 
-/* ------------------------ 
+/* ------------------------
  * We need to set rw perm first for .AppleDouble
 */
 int delete_folder(uint16_t vol, int did, char *name)
@@ -530,10 +530,10 @@ DSI *dsi2;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
  	if (FPSetDirParms(Conn2, vol2, did , name, bitmap, &filedir)) {
 		nottested();
 		FPCloseVol(Conn2,vol2);
@@ -549,7 +549,7 @@ DSI *dsi2;
 	return 1;
 }
 
-/* ------------------------ 
+/* ------------------------
  * We need to set rw perm first for .AppleDouble
 */
 int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
@@ -577,10 +577,10 @@ DSI *dsi2;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
     bitmap =  (1 << DIRPBIT_ACCESS);
  	if (FPSetDirParms(Conn2, vol2, did , name, bitmap, &filedir)) {
 		nottested();
@@ -601,7 +601,7 @@ DSI *dsi2;
 }
 
 /* ---------------------- */
-int get_vol_attrib(uint16_t vol) 
+int get_vol_attrib(uint16_t vol)
 {
 struct afp_volume_parms parms;
 DSI *dsi;
@@ -617,7 +617,7 @@ DSI *dsi;
 }
 
 /* ---------------------- */
-unsigned int get_vol_free(uint16_t vol) 
+unsigned int get_vol_free(uint16_t vol)
 {
 struct afp_volume_parms parms;
 DSI *dsi;
@@ -646,7 +646,7 @@ int not_valid(unsigned int ret, int mac_error, int netatalk_error)
     	    fprintf(stdout,"Warning MAC and Netatalk now same RESULT!\n");
     		return 0;
     	}
-    	else 
+    	else
     		return 1;
 	}
 	else if (!Mac) {
@@ -766,7 +766,7 @@ static char *Why;
 static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
 
 /* ------------------------- */
-void test_skipped(int why) 
+void test_skipped(int why)
 {
     char *s;
 	switch(why) {

@@ -2,7 +2,7 @@
 */
 #include "specs.h"
 
-/* -------------------------- 
+/* --------------------------
 FIXME
 */
 STATIC void test14()
@@ -32,7 +32,7 @@ char *name = "t14 file";
 		nottested();
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap, 0)) {
-	
+
 	}
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap, 0)) {
@@ -45,7 +45,7 @@ test_exit:
 
 }
 
-/* -------------------------- 
+/* --------------------------
  FIXME need to check open attrib
 */
 
@@ -127,7 +127,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test16");
-		
+
 }
 
 /* -------------------------- */
@@ -151,7 +151,7 @@ char *name = "t17 file";
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name, 0);
 	if (!fork) {
 		failed();
-	}	
+	}
 	FAIL (fork && FPCloseFork(Conn,fork))
 
 	/* -------------- */
@@ -170,7 +170,7 @@ char *name = "t17 file";
 	FAIL (fork3 && FPCloseFork(Conn,fork3))
 	fork3 = 0;
 	/* -------------- */
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name, 
+	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 	if (!fork) {
 		failed();
@@ -231,9 +231,9 @@ char *name = "t18 file";
 		goto fin;
 	}
 
-	FAIL (FPGetForkParam(Conn, fork, bitmap)) 
+	FAIL (FPGetForkParam(Conn, fork, bitmap))
 	FAIL (FPCloseFork(Conn,fork))
-	
+
 	/* success */
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
@@ -305,7 +305,7 @@ char *name = "t19 file";
 		goto fin;
 	}
 	fork = 0;
-	
+
 	/* fail */
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,OPENACC_WR);
 	if (fork3) {
@@ -343,14 +343,14 @@ char *name = "t20 file";
     if (!fork) {
 		failed();
 		goto fin;
-    }        
+    }
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_WR );
 
     if (!fork2) {
 		failed();
 		goto fin;
-    }        
+    }
 
 	FAIL (FPWrite(Conn, fork2, 0, 10, Data, 0 /*0x80 */))
 fin:
@@ -398,7 +398,7 @@ int  fork;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	FAIL (FPCloseFork(Conn,fork))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, DIRDID_ROOT, name1, OPENACC_RD);
@@ -406,7 +406,7 @@ int  fork;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 	FAIL (FPCloseFork(Conn,fork))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, DIRDID_ROOT, name2, OPENACC_RD);
@@ -414,7 +414,7 @@ int  fork;
 		failed();
 		FAIL (FPCloseFork(Conn,fork))
 	}
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , nf2))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nf1))
@@ -555,12 +555,12 @@ char *name = "t81 Denymode RF 2users";
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	test_denymode(name, OPENFORK_RSCS);
 
@@ -602,7 +602,7 @@ DSI *dsi;
 	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-			
+
 	filedir.attr = ATTRBIT_NOWRITE | ATTRBIT_SETCLR ;
 	bitmap = (1<<DIRPBIT_ATTR);
  	if (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) {
@@ -652,14 +652,14 @@ uint16_t vol = VolID;
     fprintf(stdout,"===================\n");
 	fprintf(stdout, "FPOpenFork:test145: open RF mode 0\n");
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, 0);
 	if (!fork) {
 		failed();
-	}	
+	}
 	if (FPCloseFork(Conn,fork)) {
 		failed();
 	}
@@ -687,7 +687,7 @@ DSI *dsi;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenFork:test151: too many open files\n");
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){
 		nottested();
 		goto test_exit;
 	}
@@ -786,7 +786,7 @@ DSI *dsi;
 fin:
 	FAIL (fork2 && FPCloseFork(Conn,fork2))
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("test190");
 }
@@ -821,7 +821,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 		return;
 	}
 
-	
+
 	fork = FPOpenFork(Conn, vol, type , bitmap , DIRDID_ROOT, name, OPENACC_RD);
 	if (!fork) {
 		failed();
@@ -858,7 +858,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 			failed();
 		}
 	}
-	
+
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPGetFileDirParams(Conn2,  vol2, DIRDID_ROOT, name, bitmap, 0)) {
 		failed();
@@ -888,7 +888,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 			failed();
 		}
 	}
-	
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 }
 
@@ -904,12 +904,12 @@ char *name = "t341 Attrib open mode RF";
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	test_openmode(name, OPENFORK_RSCS);
 
@@ -982,12 +982,12 @@ char *name = "t367 Denymode RF 2users";
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	test_denymode1(name, OPENFORK_RSCS);
 
@@ -1004,7 +1004,7 @@ void FPOpenFork_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenFork page 230\n");
-    
+
     test14();
     test15();
     test16();
@@ -1022,4 +1022,3 @@ void FPOpenFork_test()
     test341();
     test367();
 }
-

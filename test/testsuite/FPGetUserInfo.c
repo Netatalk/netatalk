@@ -23,12 +23,12 @@ DSI *dsi = &Conn->dsi;
 		nottested();
 		goto test_exit;
 	}
-	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) 
+	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
 
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 
-	FAIL (htonl(AFPERR_PARAM) != FPGetUserInfo(Conn, 0, 0, 1)) 
+	FAIL (htonl(AFPERR_PARAM) != FPGetUserInfo(Conn, 0, 0, 1))
 	FAIL (htonl(AFPERR_BITMAP) != FPGetUserInfo(Conn, 1, 0, 0xff))
 
 	ret = FPGetUserInfo(Conn, 1, 0, 3);
@@ -72,7 +72,7 @@ DSI *dsi = &Conn->dsi;
 		failed_nomsg();
 	}
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test75");
 }
@@ -84,4 +84,3 @@ void FPGetUserInfo_test()
     fprintf(stdout,"FPFPGetUserInfo page 204\n");
 	test75();
 }
-

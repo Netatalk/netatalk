@@ -30,7 +30,7 @@ unsigned int ret;
 	ret = FPCatSearchExt(Conn, vol, 10, pos, 0,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir);
 
 	if (Conn->afp_version < 30) {
-		if (htonl(AFPERR_NOOP) != ret) { 
+		if (htonl(AFPERR_NOOP) != ret) {
 			failed();
 		}
 		else {
@@ -38,7 +38,7 @@ unsigned int ret;
 		}
 		goto test_exit;
 	}
-	if (htonl(AFPERR_BITMAP) != ret) { 
+	if (htonl(AFPERR_BITMAP) != ret) {
 		failed();
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
@@ -60,7 +60,7 @@ unsigned int ret;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	filedir.attr = 0x01a0 | ATTRBIT_SETCLR ;
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 
 	memset(&filedir, 0, sizeof(filedir));
 	/* ------------------- */
@@ -109,7 +109,7 @@ unsigned int ret;
 
 	/* -------------------- */
 	memset(pos, 0, sizeof(pos));
-	filedir.lname = "test"; 
+	filedir.lname = "test";
 	ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  0x42, 0x80000000UL| (1<< FILPBIT_LNAME), &filedir, &filedir2);
 	if (!ret ) {
 		memcpy(pos, dsi->data ,16);
@@ -128,8 +128,8 @@ unsigned int ret;
 	/* -------------------- */
 	memset(&filedir, 0, sizeof(filedir));
 	filedir.attr = 0x01a0;
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test227");
 }
@@ -141,4 +141,3 @@ void FPCatSearchExt_test()
     fprintf(stdout,"FPCatSearchExt page 117\n");
 	test227();
 }
-

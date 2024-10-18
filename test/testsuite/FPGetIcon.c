@@ -24,11 +24,11 @@ char   u_null[] = { 0, 0, 0, 0 };
 	}
 
 	FAIL (FPGetIcon(Conn,  dt, "ttxt", "3DMF", 1, 256))
-	
+
 	if (!Mac) {
 		FAIL (htonl(AFPERR_NOITEM) != FPGetIcon(Conn,  dt, "UNIX", "TEXT",  2 ,512))
 #if 0
-// netatalk 2.0.4 and above don't have a default icon	
+// netatalk 2.0.4 and above don't have a default icon
 		ret = FPGetIcon(Conn,  dt, "UNIX", "TEXT", 1, 256 );
 		if (ret == htonl(AFPERR_NOITEM)) {
 			FAIL(FPGetIcon(Conn,  dt, u_null, u_null, 1, 256 ))
@@ -38,7 +38,7 @@ char   u_null[] = { 0, 0, 0, 0 };
 		}
 #endif
 	}
-	
+
 	FPCloseDT(Conn,dt);
 	exit_test("test115");
 }
@@ -50,4 +50,3 @@ void FPGetIcon_test()
     fprintf(stdout,"FPGetIcon page 186\n");
 	test115();
 }
-

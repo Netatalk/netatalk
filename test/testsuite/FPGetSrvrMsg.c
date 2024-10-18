@@ -21,4 +21,3 @@ void FPGetSrvrMsg_test()
     fprintf(stdout,"FPGetSrvrMsg page 200\n");
 	test210();
 }
-

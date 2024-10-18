@@ -24,13 +24,13 @@ uint16_t vol = VolID;
 	    |(1 << VOLPBIT_XBFREE)
     	|(1 << VOLPBIT_XBTOTAL)
 	    |(1 << VOLPBIT_BSIZE);
-#endif	    
- 	FAIL (FPGetVolParam(Conn, vol, bitmap)) 
- 	FAIL (htonl(AFPERR_PARAM) != FPGetVolParam(Conn, vol +1, bitmap)) 
- 	FAIL (htonl(AFPERR_BITMAP) != FPGetVolParam(Conn, vol , 0xffff)) 
+#endif
+ 	FAIL (FPGetVolParam(Conn, vol, bitmap))
+ 	FAIL (htonl(AFPERR_PARAM) != FPGetVolParam(Conn, vol +1, bitmap))
+ 	FAIL (htonl(AFPERR_BITMAP) != FPGetVolParam(Conn, vol , 0xffff))
 
 	exit_test("test56");
-} 	
+} 
 
 /* ----------- */
 void FPGetVolParms_test()
@@ -39,4 +39,3 @@ void FPGetVolParms_test()
     fprintf(stdout,"FPGetVolParms page 207\n");
 	test56();
 }
-

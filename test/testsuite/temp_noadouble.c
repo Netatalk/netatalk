@@ -13,11 +13,11 @@ int fork = 0, fork1 = 0;
 		return;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
+
 	sprintf(temp, "%s/.AppleDouble/%s", Path, name);
 	if (!unlink(temp)) {
 	    if (Noadouble) {
@@ -28,14 +28,14 @@ int fork = 0, fork1 = 0;
 			}
 		}
 	}
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, 
+	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,
 		OPENACC_WR | OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		goto end;
-	}		
+	}
 
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, 
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,
 		OPENACC_WR | OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 
 	if (!fork1) {
@@ -94,7 +94,7 @@ end:
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	if (Noadouble) {
@@ -121,11 +121,11 @@ int fork = 0, fork1 = 0;
 		return;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
+
 	sprintf(temp, "%s/.AppleDouble/%s", Path, name);
 	if (!unlink(temp)) {
 	    if (Noadouble) {
@@ -140,7 +140,7 @@ int fork = 0, fork1 = 0;
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	if (Noadouble) {
@@ -158,7 +158,7 @@ int  dir;
 char *name = "t168 setfilparam noadouble";
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
     fprintf(stdout,"===================\n");
@@ -203,7 +203,7 @@ uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
  		}
 
 	}
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
@@ -297,8 +297,7 @@ uint16_t bitmap =  (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)
  		}
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 }
-

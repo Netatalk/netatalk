@@ -34,7 +34,7 @@ DSI *dsi;
 		goto fin;
 	}
 	if (!ret) {
-		FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) 
+		FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data))
 	}
 
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), -2);
@@ -43,17 +43,17 @@ DSI *dsi;
 		goto fin;
 	}
 	if (!ret) {
-		FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) 
+		FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data))
 	}
 
-	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, 1<<FILPBIT_ATTR, 0)) 
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 100)) 
-	FAIL (FPRead(Conn, fork, 0, 100, Data)) 
-	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 99, 2, Data)) 
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 0)) 
-	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 1, Data)) 
-	FAIL  (FPByteLock(Conn, fork, 0, 0 , 0 /* set */, 100)) 
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 50)) 
+	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, 1<<FILPBIT_ATTR, 0))
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 100))
+	FAIL (FPRead(Conn, fork, 0, 100, Data))
+	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 99, 2, Data))
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 0))
+	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 1, Data))
+	FAIL  (FPByteLock(Conn, fork, 0, 0 , 0 /* set */, 100))
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 50))
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
@@ -64,15 +64,15 @@ DSI *dsi;
 		failed();
 		FPByteLock(Conn, fork1, 0, 1 , 60 , 100);
 	}
-	FAIL (htonl(AFPERR_LOCK) != FPSetForkParam(Conn, fork1, (1<<FILPBIT_DFLEN), 0)) 
+	FAIL (htonl(AFPERR_LOCK) != FPSetForkParam(Conn, fork1, (1<<FILPBIT_DFLEN), 0))
 	FAIL (FPCloseFork(Conn,fork1))
 	fork1 = 0;
 
     /* Netatalk 2 doesn't drop locks when a fork is closed, 3 does */
     FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 100);
 
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 200)) 
-	FAIL (FPByteLock(Conn, fork, 0, 0 , 0 /* set */, 100)) 
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 200))
+	FAIL (FPByteLock(Conn, fork, 0, 0 , 0 /* set */, 100))
 	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 50))
 	FAIL (FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 100))
 
@@ -110,12 +110,12 @@ DSI *dsi;
 		goto fin;
 	}
 
-	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 0)) 
+	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 0))
 	if (Conn->afp_version < 30) {
-		FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 0)) 
+		FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 0))
 	}
 
-	FAIL (FPCloseFork(Conn, fork)) 
+	FAIL (FPCloseFork(Conn, fork))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
@@ -123,16 +123,16 @@ DSI *dsi;
 		goto fin;
 	}
 
-	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 0)) 
+	FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 0))
 
 	if (Conn->afp_version < 30) {
-		FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTRFLEN), 0)) 
+		FAIL (ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTRFLEN), 0))
 	}
 
-	FAIL (FPCloseFork(Conn, fork)) 
+	FAIL (FPCloseFork(Conn, fork))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test141");
 }
@@ -167,21 +167,21 @@ unsigned int ret;
 		failed();
 		goto fin;
 	}
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 0)) 
-	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 1, 1, Data)) 
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 0))
+	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 1, 1, Data))
 	FAIL (ntohl(AFPERR_PARAM) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 1<<31))
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), (1UL<<31));
 	if (ret) {
 		failed();
 		goto fin;
 	}
-	FAIL (ntohl(AFPERR_PARAM) != FPRead_ext(Conn, fork, (1 << 31) +1, 1, Data)) 
-	FAIL (ntohl(AFPERR_EOF) != FPRead_ext(Conn, fork, (1UL << 31) +1, 1, Data)) 
-	FAIL (FPRead(Conn, fork, (1UL << 31) -1, 1, Data)) 
+	FAIL (ntohl(AFPERR_PARAM) != FPRead_ext(Conn, fork, (1 << 31) +1, 1, Data))
+	FAIL (ntohl(AFPERR_EOF) != FPRead_ext(Conn, fork, (1UL << 31) +1, 1, Data))
+	FAIL (FPRead(Conn, fork, (1UL << 31) -1, 1, Data))
 
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test217");
 }
@@ -211,8 +211,8 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
-	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024)) 
+	}
+	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
 	if (FPRead(Conn, fork, 1020, 4, (char *)&data)) {
 		failed();
 		goto fin;
@@ -231,7 +231,7 @@ DSI *dsi;
 fin:
 
 	FAIL (fork && FPCloseFork(Conn,fork))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test306");
 }
@@ -246,4 +246,3 @@ void FPSetForkParms_test()
     test217();
     test306();
 }
-

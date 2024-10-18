@@ -31,12 +31,12 @@ int i;
 		goto test_exit;
 	}
 
-	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
 		failed();
 	}
-#if 0	                        
+#if 0
 	FAIL (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 0, (1 << DIRPBIT_PDINFO )))
 #endif
     /* > 2 Gb */
@@ -56,12 +56,12 @@ int i;
 	}
 
 	memset(w_buf, 'b', BUF_S);
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +20, 2000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 31) +20, 1000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +1000 , 3000, w_buf, 0 )) 
-	FAIL (FPWrite_ext(Conn, fork, 0 , 200, w_buf, 0x80 )) 
-	FAIL (FPWrite_ext(Conn, fork1, 0 , 200, w_buf, 0x80 )) 
-	
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +20, 2000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 31) +20, 1000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 31) +1000 , 3000, w_buf, 0 ))
+	FAIL (FPWrite_ext(Conn, fork, 0 , 200, w_buf, 0x80 ))
+	FAIL (FPWrite_ext(Conn, fork1, 0 , 200, w_buf, 0x80 ))
+
 	if (Conn2) {
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
@@ -75,7 +75,7 @@ int i;
 			break;
 		}
 	}
-	
+
 	if (FPRead_ext(Conn, fork, ((off_t)1 << 31) +20, 3000, Data)) {
 		failed();
 	}
@@ -86,20 +86,20 @@ int i;
 		}
 	}
 
-	if ( FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	if ( FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
 		failed();
 	}
-fin2g:	                        
+fin2g:
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPCloseFork(Conn,fork1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 
     /* ==========> 4 Gb ============= */
 
-	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , "very big")) 
-    
+	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , "very big"))
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "very big",OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		failed();
@@ -110,14 +110,14 @@ fin2g:
 		failed();
 	}
 
-	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0 )) 
+	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0 ))
 
-	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 32) +20, 1000, w_buf, 0 )) 
+	FAIL (FPWrite_ext(Conn, fork1, ((off_t)1 << 32) +20, 1000, w_buf, 0 ))
 
 	if (Conn2) {
 		FPGetSrvrMsg(Conn2, 0, 0);
 	}
-	
+
 	if (FPRead_ext(Conn, fork, 10, 10000, Data)) {
 		failed();
 	}
@@ -139,15 +139,15 @@ fin2g:
 		}
 	}
 
-	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
 		failed();
-	}		                   
-	                        
+	}
+
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPCloseFork(Conn,fork1))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, "very big")) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, "very big"))
 
 	/* ========= utf 8 name ======= */
 	utf8name[0]  = 'a';
@@ -165,8 +165,8 @@ fin2g:
 	utf8name[12] = 't';
 	utf8name[13] = 0;
 
-	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , utf8name)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, utf8name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , utf8name))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, utf8name))
 test_exit:
 	exit_test("test22");
 }
@@ -178,4 +178,3 @@ void FPReadExt_test()
     fprintf(stdout,"FPReadExt page 241\n");
 	test22();
 }
-

@@ -25,22 +25,22 @@ require 'netatalk-lib.pl';
 
 eval {
 	my $afpconfRef = &read_afpconf();
-	
+
 	&ReadParse();
 
 	my @indices = split(/\0/, $in{'section_index'});
 	delete_sections_in_afpconf_ref_and_write($afpconfRef, @indices);
-	
+
 	redirect("index.cgi");
 };
 if($@) {
 	# in case the block above has been exited through "die": output error message
 	my $msg = $@;
-	
+
 	ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
 	print $msg;
 	ui_print_footer("index.cgi", $text{'edit_return'});
-	
+
 	exit;
 }
 

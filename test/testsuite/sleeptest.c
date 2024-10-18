@@ -32,12 +32,12 @@ static void press_enter(char *s)
 {
     if (!Interactive)
 	return;
-	
-    if (s) 
+
+    if (s)
 	fprintf(stdout, "--> Performing: %s\n", s);
     fprintf(stdout, "Press <ENTER> to continue.\n");
-    
-    while (fgetc(stdin) != '\n') 
+
+    while (fgetc(stdin) != '\n')
 	;
 }
 
@@ -61,7 +61,7 @@ char *error;
 char *token;
 
     token = strtok(name, ",");
-    
+
 	while (Test_list[i].name != NULL) {
 		if (!strcmp(Test_list[i].name, name))
 			break;
@@ -94,7 +94,7 @@ char *token;
 		nottested();
 		return;
 	}
-	
+
 	while (token ) {
 	    press_enter(token);
 	    (*fn)();
@@ -112,7 +112,7 @@ char *token;
 
 	FPCloseVol(Conn,VolID);
 }
-                                                                            
+
 /* ----------- */
 static void run_all()
 {
@@ -171,7 +171,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-d\tsecond user for two connections (same password!)\n");
     fprintf( stdout,"\t-H\tsecond server for two connections (default use only one server)\n");
-    
+
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
@@ -285,7 +285,7 @@ int ret;
 	case 'i':
 		Interactive = 1;
 		break;
-			
+
         default :
             usage( av[ 0 ] );
         }
@@ -307,18 +307,18 @@ int ret;
     if (!Proto) {
 	int sock;
     	Dsi = &Conn->dsi;
-		dsi = Dsi;         
+		dsi = Dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP; 
+     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
 	}
 
-    /* login */	
+    /* login */
 	// FIXME: workaround for FPopenLoginExt() being broken
 #if 0
     if (Version >= 30) {
@@ -335,7 +335,7 @@ int ret;
 		exit(1);
 	}
 	Conn->afp_version = Version;
-	
+
 	/***************************************
 	 *                                     *
 	 * User 2                              *
@@ -350,17 +350,17 @@ int ret;
     	if (!Proto) {
 		int sock;
     		Dsi2 = &Conn2->dsi;
-         
+
 	    	sock = OpenClientSocket(Server2?Server2:Server, Port);
 	        if ( sock < 0) {
 		    	return 1;
         	}
-	     	Dsi2->protocol = DSI_TCPIP; 
+	     	Dsi2->protocol = DSI_TCPIP;
 		    Dsi2->socket = sock;
 	    }
     	else {
 		}
-    	/* login */	
+    	/* login */
 	// FIXME: workaround for FPopenLoginExt() being broken
 #if 0
     	if (Version >= 30) {

@@ -24,7 +24,7 @@ char *usr = NULL;
 		nottested();
 		goto test_exit;
 	}
-	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) 
+	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
 
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
@@ -38,7 +38,7 @@ char *usr = NULL;
 	else {
 		usr = strp2cdup(dsi->commands);
 	}
-	
+
 	ret = FPMapID(Conn, 1, -filedir.uid);  /* user to Mac roman */
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
 		failed();
@@ -57,7 +57,7 @@ char *usr = NULL;
 	else {
 		grp = strp2cdup(dsi->commands);
 	}
-	
+
 	ret = FPMapID(Conn, 3, filedir.uid); /* user to UTF8 */
 	if (Conn->afp_version >= 30 && ret) {
 		failed();
@@ -67,8 +67,8 @@ char *usr = NULL;
 		failed();
 	}
 
-	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid))) 
-	/* --------------------- 
+	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
+	/* ---------------------
 		MapName subfunction
 		1 Unicode to User ID
 		2 Unicode to Group ID
@@ -76,7 +76,7 @@ char *usr = NULL;
 		4 Mac roman to GID
 	*/
 
-	FAIL (htonl(AFPERR_NOITEM) != FPMapName(Conn, 5, "toto")) 
+	FAIL (htonl(AFPERR_NOITEM) != FPMapName(Conn, 5, "toto"))
 
 	if (!Exclude) {
 		/* fail with OSX and new netatalk */
@@ -85,7 +85,7 @@ char *usr = NULL;
 			failed();
 		}
 	}
-	
+
 	ret = FPMapName(Conn, 3, "toto");
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
 		failed();
@@ -116,8 +116,8 @@ char *usr = NULL;
 		if (Conn->afp_version >= 30 && ret) {
 			failed();
 		}
-	
-		FAIL (FPMapName(Conn, 3, usr)) 
+
+		FAIL (FPMapName(Conn, 3, usr))
 		free(usr);
 	}
 
@@ -127,12 +127,12 @@ char *usr = NULL;
 		if (Conn->afp_version >= 30 && ret) {
 			failed();
 		}
-	
-		FAIL (FPMapName(Conn, 4, grp)) 
+
+		FAIL (FPMapName(Conn, 4, grp))
 		free(grp);
 	}
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test180");
 }
@@ -147,4 +147,3 @@ void FPMapName_test()
 	test180();
 #endif
 }
-

@@ -1,7 +1,7 @@
 #include "afpclient.h"
 #include "test.h"
 
-#include <pwd.h> 
+#include <pwd.h>
 #include <stdint.h>
 
 
@@ -113,9 +113,9 @@ const char *AfpNum2name(int num)
     case AFP_SETFORKPARAM  : return "AFP_SETFORKPARAM  ";   /*  31 */
     case AFP_SETVOLPARAM   : return "AFP_SETVOLPARAM   ";   /*  32 */
 	case AFP_WRITE 		   : return "AFP_WRITE         ";	/*  33 */
-	case AFP_GETFLDRPARAM  : return "AFP_GETFLDRPARAM  ";	/*  34 */	
-	case AFP_SETFLDRPARAM  : return "AFP_SETFLDRPARAM  ";	/*  35 */	
-	case AFP_CHANGEPW      : return "AFP_CHANGEPW      ";	/*  36 */	
+	case AFP_GETFLDRPARAM  : return "AFP_GETFLDRPARAM  ";	/*  34 */
+	case AFP_SETFLDRPARAM  : return "AFP_SETFLDRPARAM  ";	/*  35 */
+	case AFP_CHANGEPW      : return "AFP_CHANGEPW      ";	/*  36 */
 
     case AFP_GETSRVRMSG    : return "AFP_GETSRVRMSG    ";   /*  38 */
     case AFP_CREATEID      : return "AFP_CREATEID      ";   /*  39 */
@@ -138,7 +138,7 @@ const char *AfpNum2name(int num)
     case AFP_BYTELOCK_EXT  : return "AFP_BYTELOCK_EXT  ";   /*  59 */
     case AFP_READ_EXT      : return "AFP_READ_EXT      ";   /*  60 */
     case AFP_WRITE_EXT     : return "AFP_WRITE_EXT     ";   /*  61 */
-    case AFP_GETSESSTOKEN  : return "AFP_GETSESSTOKEN  ";   /*  64 */ 
+    case AFP_GETSESSTOKEN  : return "AFP_GETSESSTOKEN  ";   /*  64 */
     case AFP_LOGIN_EXT     : return "AFP_LOGIN_EXT     ";   /*  63 */
     case AFP_DISCTOLDSESS  : return "AFP_DISCTOLDSESS  ";   /*  65 */
     case AFP_ENUMERATE_EXT : return "AFP_ENUMERATE_EXT ";   /*  66 */
@@ -154,10 +154,10 @@ const char *AfpNum2name(int num)
     case AFP_REMOVEEXTATTR : return "AFP_REMOVEEXTATTR ";   /* 70 */
     case AFP_LISTEXTATTRS  : return "AFP_LISTEXTATTRA  ";   /* 72 */
 
-															  
+
 	case AFP_ADDICON       : return "AFP_ADDICON";       	/* 192 */
-	}                    									  
-	return "not yet defined";								  
+	}                    
+	return "not yet defined";
 }
 
 /* --------------------------------------------------- */
@@ -180,7 +180,7 @@ char *s;
     	if (dsi->header.dsi_flags) {
     		s = afp_error(dsi->header.dsi_code);
 		}
-		else 
+		else
 			s = "";
 		fprintf(stdout,"\t%s\n", s);
 	}
@@ -199,7 +199,7 @@ char *s;
 /* --------------------------------------------------- */
 void dump_open(DSI *dsi)
 {
-uint32_t i = 0; 
+uint32_t i = 0;
 
 	/* parse options */
   	while (i < dsi->cmdlen) {
@@ -208,7 +208,7 @@ uint32_t i = 0;
       		memcpy(&dsi->attn_quantum, dsi->commands + i + 1, dsi->commands[i]);
       		dsi->attn_quantum = ntohl(dsi->attn_quantum);
 	  		fprintf(stdout,"\tDSIOPT_ATTNQUANT %x\n", dsi->attn_quantum);
-			break; 
+			break;
     	case DSIOPT_SERVQUANT:
       		memcpy(&dsi->server_quantum, dsi->commands + i + 1, dsi->commands[i]);
       		dsi->server_quantum = ntohl(dsi->server_quantum);
@@ -224,13 +224,13 @@ uint32_t i = 0;
 }
 
 /* -----------------------------
-	spec violation in netatalk 
+	spec violation in netatalk
 	FPlogout ==> dsiclose
 	Page 209
     Specs                C variable
 	string AFPVersion   vers
 	string UAM          uam
-	
+
 */
 unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
 {
@@ -438,10 +438,10 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 	pas bon sur le code d'erreur
 	return -1 if error (O is a valid volume ID).
-	page 235	
+	page 235
 */
 uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t  bitmap)
 {
@@ -493,7 +493,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = dsi_clientID(dsi);
 	ofs = 0;
@@ -504,8 +504,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -536,7 +536,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = dsi_clientID(dsi);
 	ofs = 0;
@@ -548,7 +548,7 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, creator, 4);
 	ofs += 4;
-	
+
 	memcpy(dsi->commands +ofs, type, 4);
 	ofs += 4;
 
@@ -561,8 +561,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -584,7 +584,7 @@ uint16_t temp;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_WRITE;
 	dsi->header.dsi_requestID = dsi_clientID(dsi);
 	ofs = 0;
@@ -596,7 +596,7 @@ uint16_t temp;
 
 	memcpy(dsi->commands +ofs, creator, 4);
 	ofs += 4;
-	
+
 	memcpy(dsi->commands +ofs, type, 4);
 	ofs += 4;
 
@@ -612,8 +612,8 @@ uint16_t temp;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen +size);
-	dsi->header.dsi_code = htonl(ofs);  
- 
+	dsi->header.dsi_code = htonl(ofs);
+
    	my_dsi_stream_send(dsi, dsi->commands, ofs);
 	my_dsi_stream_write(dsi, data, size);
 	/* ------------------ */
@@ -635,7 +635,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = dsi_clientID(dsi);
 	ofs = 0;
@@ -647,15 +647,15 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, creator, 4);
 	ofs += 4;
-	
+
 	itype = htons(itype);
 	memcpy(dsi->commands +ofs, &itype, sizeof(itype));
 	ofs += sizeof(itype);
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -789,7 +789,7 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
 {
@@ -802,7 +802,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Close dir vol %d dir 0x%d\n", __func__, vol, htonl(did));
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = dsi_clientID(dsi);
 	ofs = 0;
@@ -816,8 +816,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -825,7 +825,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPEnumerate(CONN *conn,
                          uint16_t vol,
@@ -845,7 +845,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Enumerate Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -854,14 +854,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -869,7 +869,7 @@ DSI *dsi;
 	bitmap = htons(1024);		/* reqcnt */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(1);		/* sindex  */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -883,11 +883,11 @@ DSI *dsi;
 	dsi->commands[ofs++] = len;
 	u2mac(&dsi->commands[ofs], name, len);
 	ofs += len;
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -897,7 +897,7 @@ DSI *dsi;
 }
 
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPEnumerateFull(CONN *conn,
                              uint16_t vol,
@@ -920,7 +920,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Enumerate Vol %d did : 0x%x <%s> sindex: %u reqcnt: %u\n", __func__, vol, ntohl(did), name, sindex, reqcnt);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -929,14 +929,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -944,7 +944,7 @@ DSI *dsi;
 	bitmap = htons(reqcnt);		/* reqcnt */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(sindex);		/* sindex  */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -958,11 +958,11 @@ DSI *dsi;
 	dsi->commands[ofs++] = len;
 	u2mac(&dsi->commands[ofs], name, len);
 	ofs += len;
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -971,7 +971,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPGetFileDirParams(CONN *conn, uint16_t vol, int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap)
 {
@@ -985,7 +985,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] GetFileDirParams Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -994,24 +994,24 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
 
 	ofs = FPset_name(conn, ofs, name);
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1020,7 +1020,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPCreateID(CONN *conn, uint16_t vol, int did , char *name)
 {
@@ -1033,7 +1033,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Create ID Vol: %d did: 0x%x <%s>\n", __func__, vol, ntohl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1042,16 +1042,16 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	ofs = FPset_name(conn, ofs, name);
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1060,7 +1060,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did )
 {
@@ -1073,7 +1073,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Delete ID Vol: %d id: 0x%x \n", __func__, vol, ntohl(did));
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1082,14 +1082,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1098,7 +1098,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap )
 {
@@ -1111,7 +1111,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Resolve ID Vol: %d id: 0x%x %x\n", __func__, vol, ntohl(did), bitmap);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1120,7 +1120,7 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
@@ -1130,8 +1130,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1139,7 +1139,7 @@ DSI *dsi;
 	dump_header(dsi);
 	return(dsi->header.dsi_code);
 }
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap)
 {
@@ -1156,7 +1156,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Enumerate_ext Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1165,14 +1165,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -1180,7 +1180,7 @@ DSI *dsi;
 	bitmap = htons(1024);		/* reqcnt */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(1);		/* sindex  */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -1201,11 +1201,11 @@ DSI *dsi;
 
 	memcpy(&dsi->commands[ofs], name, len);
 	ofs += len;
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1214,7 +1214,7 @@ DSI *dsi;
 	return(dsi->header.dsi_code);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did , char *name, uint16_t f_bitmap, uint16_t d_bitmap)
 {
@@ -1232,7 +1232,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Enumerate_ext2 Vol %d did : 0x%x <%s>\n", __func__, vol, ntohl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1241,14 +1241,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -1256,7 +1256,7 @@ DSI *dsi;
 	bitmap = htons(1024);		/* reqcnt */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	int32 = htonl(1);		/* sindex  */
 	memcpy(dsi->commands +ofs, &int32, sizeof(int32));
 	ofs += sizeof(int32);
@@ -1277,11 +1277,11 @@ DSI *dsi;
 
 	memcpy(&dsi->commands[ofs], name, len);
 	ofs += len;
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1316,7 +1316,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1325,14 +1325,14 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(f_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(d_bitmap);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -1340,7 +1340,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 	bitmap = htons(reqcount);		/* reqcnt */
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	int32 = htonl(startindex);		/* sindex  */
 	memcpy(dsi->commands +ofs, &int32, sizeof(int32));
 	ofs += sizeof(int32);
@@ -1361,11 +1361,11 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 
 	memcpy(&dsi->commands[ofs], name, len);
 	ofs += len;
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1375,7 +1375,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 }
 
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPDelete(CONN *conn, uint16_t vol, int did , char *name)
 {
@@ -1393,7 +1393,7 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPGetComment(CONN *conn, uint16_t vol, int did , char *name)
 {
@@ -1411,7 +1411,7 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPRemoveComment(CONN *conn, uint16_t vol, int did , char *name)
 {
@@ -1429,7 +1429,7 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 */
 unsigned int FPAddComment(CONN *conn, uint16_t vol, int did , char *name, char *cmt)
 {
@@ -1447,7 +1447,7 @@ DSI *dsi;
 	return ret;
 }
 
-/* ------------------------------- 
+/* -------------------------------
 	depreciate (for variable dir volume)
 */
 unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did , char *name)
@@ -1462,7 +1462,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Open Directory Vol %d did : 0x%x <%s>\n", __func__, vol, htonl(did), name);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1471,16 +1471,16 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
     ofs = FPset_name(conn, ofs, name);
-		
+
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1515,7 +1515,7 @@ DSI *dsi;
 	return(dir);
 }
 
-/* ------------------------------- 
+/* -------------------------------
 	type : resource or data
 */
 uint16_t  FPOpenFork(CONN *conn, uint16_t vol, int type, uint16_t bitmap, int did , char *name, int access)
@@ -1568,7 +1568,7 @@ DSI *dsi;
 	}
 	ret = AFPGetForkParam(conn,fork, bitmap);
 	dump_header(dsi);
-	return ret;	
+	return ret;
 }
 
 /* ------------------------------- */
@@ -1584,7 +1584,7 @@ DSI *dsi;
 	}
 	ret = AFPGetAPPL(conn,dt, name, index, bitmap);
 	dump_header(dsi);
-	return ret;	
+	return ret;
 }
 
 /* ------------------------------- */
@@ -1600,7 +1600,7 @@ DSI *dsi;
 	}
 	ret = AFPAddAPPL(conn, dt, did, creator, tag, name);
 	dump_header(dsi);
-	return ret;	
+	return ret;
 }
 
 /* ------------------------------- */
@@ -1616,7 +1616,7 @@ DSI *dsi;
 	}
 	ret = AFPRemoveAPPL(conn, dt, did, creator, name);
 	dump_header(dsi);
-	return ret;	
+	return ret;
 }
 
 /* ------------------------------- */
@@ -1636,7 +1636,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap, 
+unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap,
                   struct afp_filedir_parms *dir )
 {
 int ofs;
@@ -1650,7 +1650,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1675,8 +1675,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -1685,7 +1685,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap, 
+unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name, uint16_t bitmap,
                   struct afp_filedir_parms *fil )
 {
 int ofs;
@@ -1699,7 +1699,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1724,14 +1724,14 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 	dump_header(dsi);
 	return dsi->header.dsi_code;
-	
+
 }
 
 /* ------------------------------- */
@@ -1747,7 +1747,7 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1762,8 +1762,8 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
@@ -1820,7 +1820,7 @@ DSI *dsi;
 	}
 
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1845,14 +1845,14 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 	dump_header(dsi);
 	return dsi->header.dsi_code;
-	
+
 }
 
 /* ------------------------------- */
@@ -1867,7 +1867,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Copy File Vol %d did : %d <%s> ==> %s\n", __func__, svol, ntohl(sdid), src, dst);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1894,8 +1894,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1917,7 +1917,7 @@ DSI *dsi;
 				ntohl(ddid), dst);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1939,8 +1939,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -1961,7 +1961,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Move and rename Vol: %d did: 0x%x <%s> ==> 0x%x <%s>\n", __func__, svol, ntohl(sdid), src, ntohl(ddid), dst);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -1985,8 +1985,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -2006,7 +2006,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Rename  File Vol %d did : %d <%s> ==> %s\n", __func__, svol, ntohl(sdid), src, dst);
 	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -2025,8 +2025,8 @@ DSI *dsi;
 
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
-	dsi->header.dsi_code = 0; 
- 
+	dsi->header.dsi_code = 0;
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
@@ -2276,7 +2276,3 @@ DSI *dsi;
 	dump_header(dsi);
 	return ret;
 }
-
-
-
-

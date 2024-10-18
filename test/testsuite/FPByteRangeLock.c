@@ -2,7 +2,7 @@
 */
 #include "specs.h"
 
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 
 /* -------------------------- */
 STATIC void test60()
@@ -48,23 +48,23 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	}
 
 	FAIL (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100))
-	
+
 	/* some Mac OS do nothing here */
-	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0, 0 , -1, 75)) 
+	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0, 0 , -1, 75))
 
-	FAIL (htonl(AFPERR_NORANGE) != FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 75)) 
+	FAIL (htonl(AFPERR_NORANGE) != FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 75))
 
-	FAIL ( htonl(AFPERR_RANGEOVR) != FPByteLock(Conn, fork, 0, 0 /* set */, 80 , 100)) 
+	FAIL ( htonl(AFPERR_RANGEOVR) != FPByteLock(Conn, fork, 0, 0 /* set */, 80 , 100))
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1)
 		failed();
 	else {
 		FAIL (htonl(AFPERR_LOCK) != FPByteLock(Conn, fork1, 0, 0 /* set */ , 20, 60))
-		FAIL (FPSetForkParam(Conn, fork, len , 50)) 
-		FAIL (FPSetForkParam(Conn, fork1, len , 60)) 
-		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data)) 
-		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn, fork1, 10, 40, Data, 0)) 
+		FAIL (FPSetForkParam(Conn, fork, len , 50))
+		FAIL (FPSetForkParam(Conn, fork1, len , 60))
+		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data))
+		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn, fork1, 10, 40, Data, 0))
 		FAIL (FPCloseFork(Conn,fork1))
 	}
 
@@ -73,9 +73,9 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
     /* Netatalk 2 doesn't drop locks when a fork is closed, 3 does */
     FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 100);
 
-	FAIL (htonl(AFPERR_NORANGE) != FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 50)) 
+	FAIL (htonl(AFPERR_NORANGE) != FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 50))
 
-	FAIL (FPSetForkParam(Conn, fork, len , 200)) 
+	FAIL (FPSetForkParam(Conn, fork, len , 200))
 
 	if (FPByteLock(Conn, fork, 1 /* end */, 0 /* set */, 0, 100)) {
 		failed();
@@ -91,7 +91,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	else if (FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, -1)) {
 		failed();
 	}
-	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0 /* start */, 0 /* set */, 0, 0)) 
+	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0 /* start */, 0 /* set */, 0, 0))
 
 	/* some Mac OS do nothing here */
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0 /* start */, 0 /* set */, 0, -2))
@@ -99,7 +99,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	if (FPCloseFork(Conn,fork)) {
 		nottested();
 	}
-	FAIL (htonl (AFPERR_PARAM ) != FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100)) 
+	FAIL (htonl (AFPERR_PARAM ) != FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100))
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		nottested();
@@ -168,16 +168,16 @@ DSI *dsi2;
 		failed();
 	}
 	else {
-		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn2, fork1, 0, 40, Data)) 
+		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn2, fork1, 0, 40, Data))
 		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn2, fork1, 10, 40, Data, 0))
 		FAIL (htonl(AFPERR_LOCK) != FPWrite(Conn2, fork1, 55, 40, Data, 0))
-		FAIL (FPSetForkParam(Conn2, fork1, len , 60)) 
-		FAIL (FPWrite(Conn, fork, 55, 40, Data, 0)) 
-		FAIL (htonl(AFPERR_LOCK) != FPSetForkParam(Conn2, fork1, len , 60)) 
+		FAIL (FPSetForkParam(Conn2, fork1, len , 60))
+		FAIL (FPWrite(Conn, fork, 55, 40, Data, 0))
+		FAIL (htonl(AFPERR_LOCK) != FPSetForkParam(Conn2, fork1, len , 60))
 		FAIL (htonl(AFPERR_LOCK) != FPByteLock(Conn2, fork1, 0, 0 /* set */ , 20, 60))
 		FAIL (FPSetForkParam(Conn, fork, len , 200))
 		FAIL (FPSetForkParam(Conn2, fork1, len ,120))
-		
+
 	}
 	FAIL (FPCloseFork(Conn,fork))
 	if (fork1) FPCloseFork(Conn2,fork1);
@@ -195,7 +195,7 @@ char *name = "t65 DF FPByteLock 2 users";
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
-    
+
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -203,7 +203,7 @@ char *name = "t65 DF FPByteLock 2 users";
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
     test_bytelock3(name, OPENFORK_DATA);
 
 	name = "t65 RF FPByteLock 2 users";
@@ -296,7 +296,7 @@ char *name = "t78 FPByteLock RF size -1";
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 	test_bytelock2(name, OPENFORK_RSCS);
 
     fprintf(stdout,"===================\n");
@@ -336,14 +336,14 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 		nottested();
 	}
 
-	FAIL (FPByteLock(Conn, fork, 0, 0, 0, 100)) 
+	FAIL (FPByteLock(Conn, fork, 0, 0, 0, 100))
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
 		failed();
-	} 
+	}
 	else {
-		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data)) 
+		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data))
 		FPCloseFork(Conn,fork1);
 	}
 
@@ -375,11 +375,11 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	}
 	FAIL (FPSetForkParam(Conn, fork, len , 50))
 
-	FAIL (FPByteLock(Conn, fork, 0, 0 , 0 , 100)) 
+	FAIL (FPByteLock(Conn, fork, 0, 0 , 0 , 100))
 	FAIL (FPRead(Conn, fork, 0, 40, Data))
-	FAIL (FPWrite(Conn, fork, 10, 120, Data, 0)) 
+	FAIL (FPWrite(Conn, fork, 10, 120, Data, 0))
 
-	FAIL (FPByteLock(Conn, fork, 0, 1 , 0 , 100)) 
+	FAIL (FPByteLock(Conn, fork, 0, 1 , 0 , 100))
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		nottested();
@@ -420,7 +420,7 @@ int type = OPENFORK_DATA;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test329: FPByteLock 2users DATA FORK\n");
-    
+
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -429,7 +429,7 @@ int type = OPENFORK_DATA;
 		test_skipped(T_LOCKING);
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -454,7 +454,7 @@ int type = OPENFORK_DATA;
 	if (!fork2) {
 		failed();
 	}
-	
+
 	FAIL (FPCloseFork(Conn,fork2))
 
 	dsi2 = &Conn2->dsi;
@@ -473,18 +473,18 @@ int type = OPENFORK_DATA;
 		FPCloseFork(Conn2,fork2);
 		failed();
 	}
-	
+
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
 		failed();
 	}
-	
+
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,/* OPENACC_WR | */OPENACC_RD);
 	if (!fork2) {
 		failed();
 	}
-	
+
 	FAIL (FPCloseFork(Conn,fork))
 	if (fork1) FPCloseFork(Conn,fork1);
 	if (fork2) FPCloseFork(Conn2,fork2);
@@ -512,7 +512,7 @@ STATIC void test410()
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test410: FPByteLock 2users DATA FORK\n");
-    
+
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -527,7 +527,7 @@ STATIC void test410()
 		test_skipped(T_ADEA);
 		goto test_exit;
     }
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -572,7 +572,7 @@ STATIC void test410()
 		FPCloseFork(Conn,fork);
         goto fin2;
 	}
-	
+
 	if (FPByteLock(Conn2, fork1, 0, 0 /* set */, 0, 100)) {
 		failed();
     }
@@ -592,7 +592,7 @@ static int create_trash(CONN *conn, uint16_t vol)
 {
 char *trash = "Network Trash Folder";
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | 
+uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;
@@ -613,10 +613,10 @@ struct afp_filedir_parms filedir;
 	filedir.isdir = 1;
 
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
     if (FPSetDirParms(conn, vol, dir , "", (1 << DIRPBIT_ACCESS),  &filedir)) {
 		FPDelete(conn, vol,  dir, "");
 		return 0;
@@ -662,7 +662,7 @@ int fork;
 static int set_perm(CONN *conn, uint16_t vol, int dir)
 {
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | 
+uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;
@@ -676,10 +676,10 @@ struct afp_filedir_parms filedir;
 	filedir.isdir = 1;
 
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 0; 
-    filedir.access[2] = 0; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 0;
+    filedir.access[2] = 0;
+    filedir.access[3] = 7;
     if (FPSetDirParms(conn, vol, dir , "", (1 << DIRPBIT_ACCESS),  &filedir)) {
 		return 0;
     }
@@ -695,7 +695,7 @@ struct afp_filedir_parms filedir;
 static int write_access(CONN *conn, uint16_t  vol, int dir)
 {
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | 
+uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;
@@ -732,7 +732,7 @@ int indice = 1;
 	ret = FPGetFileDirParams(conn, vol,  DIRDID_ROOT , trash, 0x73f, 0x133f);
 	if (ret == ntohl(AFPERR_NOOBJ)) {
 	    dir = create_trash(conn, vol);
-	    
+
 	    if (!dir) {
 		    nottested();
 		    return 0;
@@ -780,7 +780,7 @@ int indice = 1;
 		       return 0;
 		   }
 		   break;
-		
+
 		}
 		else {
 		    dir2 = get_did(conn, vol, dir , temp);
@@ -791,7 +791,7 @@ int indice = 1;
 		        break;
 		    }
 		}
-		
+
 		if (FPByteLock(conn, fork, 0, 1 /* clear */, indice , 1)) {
 			nottested();
 			return 0;
@@ -822,7 +822,7 @@ int dir, dir2;
 	fork = init_trash(Conn, vol, &dir);
 	if (!fork)
 	    goto fin;
-	
+
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -833,11 +833,11 @@ int dir, dir2;
 	if (!fork2)
 		goto fin;
 	if (dir2 == dir) {
-		fprintf(stdout,"\tFAILED both client are using the same folder for trash\n"); 
+		fprintf(stdout,"\tFAILED both client are using the same folder for trash\n");
 		failed_nomsg();
 	}
 
-	if (fork2) { 
+	if (fork2) {
 	    FAIL (FPCloseFork(Conn2, fork2))
 	    FAIL (FPDelete(Conn2, vol2, dir2, ""))
 	}
@@ -869,7 +869,7 @@ int type = OPENFORK_DATA;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test366: Locks released on exit\n");
-    
+
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -883,7 +883,7 @@ int type = OPENFORK_DATA;
 		fprintf(stdout,"\tSKIPPED (only with -f option)\n");
 		goto test_exit;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -908,7 +908,7 @@ int type = OPENFORK_DATA;
 	if (!fork2) {
 		failed();
 	}
-	
+
 	FAIL (FPCloseFork(Conn,fork2))
 
 	dsi2 = &Conn2->dsi;
@@ -927,18 +927,18 @@ int type = OPENFORK_DATA;
 		FPCloseFork(Conn2,fork2);
 		failed();
 	}
-	
+
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
 		failed();
 	}
-	
+
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,/* OPENACC_WR | */OPENACC_RD);
 	if (!fork2) {
 		failed();
 	}
-	
+
    	FPLogOut(Conn);
 	if (fork2) FPCloseFork(Conn2,fork2);
 
@@ -976,4 +976,3 @@ void FPByteRangeLock_test()
 	/* must be the last one */
 	test366();
 }
-

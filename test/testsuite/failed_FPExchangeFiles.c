@@ -36,24 +36,24 @@ uint16_t vol = VolID;
 	write_fork( Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork( Conn, vol, dir , name1, "red");
 	/* ok */
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 
 	/* test remove of no cnid db */
 	if ((temp = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
-#ifdef QUIRK	
+#ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name);
-#else		
+#else
 		fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 		failed_nomsg();
-#endif		
+#endif
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
-#ifdef QUIRK	
+#ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name1);
 #else
 		fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 		failed_nomsg();
-#endif		
+#endif
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -101,7 +101,7 @@ int ret;
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		failed();
 		goto fin;
-	}	
+	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir, name1))
 
 	fid_name  = get_fid(Conn, vol, DIRDID_ROOT , name);
@@ -109,12 +109,12 @@ int ret;
 
 	write_fork(Conn, vol, DIRDID_ROOT , name, "blue");
 	write_fork(Conn, vol, dir , name1, "red");
-	
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		failed();
 		goto fin;
-	}	
+	}
 
 	/* ok */
 	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
@@ -141,32 +141,32 @@ int ret;
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
 		failed();
-	}	
+	}
 
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
 	if (fork1) FPCloseFork(Conn,fork1);
 
-	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) 
-	
+	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
+
 	if (fork) FPCloseFork(Conn,fork);
 	if ((ret = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
-#ifdef QUIRK	
+#ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name);
 #else
 		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
 		failed_nomsg();
-#endif		
+#endif
 	}
 
 	if ((ret = get_fid(Conn, vol, dir , name1)) != fid_name1) {
-#ifdef QUIRK	
+#ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name1);
 #else
 		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name1);
 		failed_nomsg();
-#endif		
+#endif
 	}
-		
+
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -184,4 +184,3 @@ void FPExchangeFiles_test()
 	test108();
 	test111();
 }
-

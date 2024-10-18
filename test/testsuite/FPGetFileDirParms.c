@@ -63,21 +63,21 @@ uint16_t vol = VolID;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetFileDirParms:test58: folder 1 (DIRDID_ROOT_PARENT)\n");
 
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "", 0, 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "", 0,
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS))
 	) {
 		failed();
 	}
 
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, Vol, 0, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, Vol, 0,
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS) | (1<<DIRPBIT_OFFCNT))
 	) {
 		failed();
 	}
 
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0,
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS) | (1<<DIRPBIT_OFFCNT))
 	) {
@@ -110,7 +110,7 @@ DSI *dsi;
 	fprintf(stdout,"---------------------\n");
 	fprintf(stdout,"GetFileDirParams Vol %d \n\n", vol);
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -119,14 +119,14 @@ DSI *dsi;
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(1 << FILPBIT_LNAME);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(DIRPBIT_LNAME);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -140,7 +140,7 @@ DSI *dsi;
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
 	dsi->header.dsi_code = 0; // htonl(err);
- 
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
@@ -184,7 +184,7 @@ int offcnt;
 	offcnt = filedir.offcnt;
 	fprintf(stdout,"Modif date parent %x offcnt %d\n", filedir.mdate, offcnt);
 	sleep(4);
-	
+
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
 		failed();
 		goto end;
@@ -194,7 +194,7 @@ int offcnt;
 
 	fprintf(stdout,"Modif date dir %x \n", filedir.mdate);
 	sleep(5);
-			
+
 	filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
 	bitmap = (1<<DIRPBIT_ATTR);
  	if (FPSetDirParms(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) {
@@ -221,7 +221,7 @@ int offcnt;
 		fprintf(stdout,"\tFAILED got %d want %d\n",filedir.offcnt, offcnt);
 		failed_nomsg();
 	}
-	
+
 	fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
 end:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -262,19 +262,19 @@ DSI *dsi;
 		goto fin;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, dir2 , name5)) { 
+	if (FPCreateFile(Conn, vol,  0, dir2 , name5)) {
 		nottested();
 		goto fin;
-	}		
+	}
 
 	if (!(dir3 = FPCreateDir(Conn,vol, dir2, name3))) {
 		nottested();
 		goto fin;
-	}	
+	}
 	if (!(dir4 = FPCreateDir(Conn,vol, dir3, name4))) {
 		nottested();
 		goto fin;
-	}	
+	}
 
 
 	if (FPGetFileDirParams(Conn, vol, dir3, "", 0, bitmap)) {
@@ -332,11 +332,11 @@ DSI *dsi;
 		failed_nomsg();
 	}
 fin:
-	FAIL (dir3 && FPDelete(Conn, vol,  dir3 , name4)) 
-	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , name3)) 
-	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , name5)) 
-	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , name2)) 
-	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))    
+	FAIL (dir3 && FPDelete(Conn, vol,  dir3 , name4))
+	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , name3))
+	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , name5))
+	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , name2))
+	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
 	exit_test("test104");
 }
 
@@ -367,7 +367,7 @@ DSI *dsi;
 	}
 
 	FAIL (htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol,  dir , name, 0xffff,0))
-	FAIL (htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol,  dir , "",0, 0xffff)) 
+	FAIL (htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol,  dir , "",0, 0xffff))
 
 	bitmap = (1<< DIRPBIT_ATTR) |  (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
@@ -410,13 +410,13 @@ DSI *dsi;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(dir = no_access_folder(vol, DIRDID_ROOT, name))) {
 		goto test_exit;
 	}
 
-	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, 
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_ACCESS))) {
 	    failed();
@@ -460,21 +460,21 @@ DSI *dsi;
 		goto fin;
 	}
 
-	if (FPGetFileDirParams(Conn, vol, dir, "", 0, 
+	if (FPGetFileDirParams(Conn, vol, dir, "", 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_UNIXPR))) {
 	    failed();
 	}
 
-	if (FPGetFileDirParams(Conn, vol, dir, name,  
+	if (FPGetFileDirParams(Conn, vol, dir, name,
 	    (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) |
-	    (1 << DIRPBIT_UNIXPR), 
+	    (1 << DIRPBIT_UNIXPR),
 	    0)) {
 	    failed();
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir , name))
-fin:	
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test229");
@@ -640,7 +640,7 @@ int id;
 	}
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		nottested();
 	}
@@ -653,18 +653,18 @@ int id;
 			failed();
 		}
 	}
-#endif	
+#endif
 	sprintf(temp1,"#%X.txt",ntohl(id));
 	memset(temp, 0, sizeof(temp));
 	strncpy(temp, name, 31 - strlen(temp1));
 	strcat(temp, temp1);
-	/* for afp3 it was not valid mangled filename 
+	/* for afp3 it was not valid mangled filename
 	 * Updated 2004-07-12
 	 * we changed mangled handling, now it's a valid filename for AFP3.x.
 	*/
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 #ifdef OLD_MANGLING
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -714,7 +714,7 @@ int id;
 	}
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		nottested();
 	}
@@ -727,14 +727,14 @@ int id;
 			failed();
 		}
 	}
-#endif	
+#endif
 	sprintf(temp1,"#%X.txt",ntohl(id));
 	memset(temp, 0, sizeof(temp));
 	strncpy(temp, name, 31 - strlen(temp1));
 	strcat(temp, temp1);
 	/* for afp3 it's not valid mangled filename */
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -776,7 +776,7 @@ int id;
 	}
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		nottested();
 	}
@@ -787,7 +787,7 @@ int id;
 	/* for afp3 it's not valid mangled filename */
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 #ifdef OLD_MANGLING
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -805,7 +805,7 @@ int id;
 	if (!ret) {
 		failed();
 	}
-	
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test333");
@@ -845,7 +845,7 @@ int id;
 
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		nottested();
 	}
@@ -856,7 +856,7 @@ int id;
 	/* for afp3 it's not valid mangled filename */
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 #ifdef OLD_MANGLING
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -874,7 +874,7 @@ int id;
 	if (!ret) {
 		failed();
 	}
-	
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test334");
@@ -922,7 +922,7 @@ int id;
 
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
-	
+
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		nottested();
 	}
@@ -933,7 +933,7 @@ int id;
 	/* for afp3 it's not valid mangled filename */
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 #ifdef OLD_MANGLING
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -948,7 +948,7 @@ int id;
 		failed();
 	}
 	FAIL (FPGetFileDirParams(Conn, vol, dir, temp, bitmap, 0))
-	
+
 	FAIL (FPDelete(Conn, vol,  dir, temp))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 fin:
@@ -957,7 +957,7 @@ test_exit:
 	exit_test("test335");
 }
 
-/* ------------------------- 
+/* -------------------------
  * for this test you need
 .         "????"  "????"
 .pdf      "PDF "  "CARO"
@@ -970,7 +970,7 @@ char *name1  = "t371 new name.pdf";
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 
 	enter_test();
@@ -1010,12 +1010,12 @@ uint16_t bitmap;
 	}
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
 	exit_test("test371");
 }
 
-/* ------------------------- 
+/* -------------------------
  * for this test you need
 .doc      "WDBN"  "MSWD"      Word Document
 in AppleVolume.system
@@ -1026,9 +1026,9 @@ char *name  = "t380 file name.doc";
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
-uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
 	enter_test();
@@ -1054,7 +1054,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 			failed_nomsg();
 		}
 	}
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap1, &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap1, &filedir))
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
 		failed();
 	}
@@ -1067,7 +1067,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 		}
 	}
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	exit_test("test380");
 }
@@ -1109,11 +1109,11 @@ unsigned int dir;
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, d_bitmap);
 	}
-	
+
 	FPCreateID(Conn,vol, dir, "");
 	FPCreateID(Conn,vol, DIRDID_ROOT, "");
 	FPCreateID(Conn,vol, DIRDID_ROOT_PARENT, "");
-	
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test396");
@@ -1126,7 +1126,7 @@ void FPGetFileDirParms_test()
     fprintf(stdout,"FPGetFileDirParms page 179\n");
 	test44();
 	test58();
-	test70();    
+	test70();
 	test94();
 	test104();
 	test132();
@@ -1145,4 +1145,3 @@ void FPGetFileDirParms_test()
     test380();
 #endif
 }
-

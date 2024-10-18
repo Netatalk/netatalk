@@ -16,14 +16,14 @@ uint16_t vol = VolID;
 int ret;
 DSI *dsi;
 
-		
+
 	enter_test();
     fprintf(stdout,"===================\n");
 	fprintf(stdout, "FPOpenDir:test57: OpenDir call\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name))) {
 		goto test_exit;
@@ -75,7 +75,7 @@ DSI *dsi;
 	FAIL (FPCloseDir(Conn, vol, dir))
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name4))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
 	delete_folder(vol, DIRDID_ROOT, name);
 	if (rdir) {
 		delete_folder(vol, DIRDID_ROOT, name2);
@@ -91,4 +91,3 @@ void FPOpenDir_test()
     fprintf(stdout,"FPOpenDir page 227\n");
 	test57();
 }
-

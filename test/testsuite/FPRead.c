@@ -7,10 +7,10 @@ static int is_there(CONN *conn, int did, char *name)
 {
 uint16_t vol = VolID;
 
-	return FPGetFileDirParams(conn, vol,  did, name, 
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	return FPGetFileDirParams(conn, vol,  did, name,
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 	         ,
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 		);
 }
 
@@ -51,7 +51,7 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, size, Data)) {
 		failed();
@@ -88,7 +88,7 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
@@ -110,7 +110,7 @@ DSI *dsi;
 		failed();
 		goto fin2;
 	}
-	
+
 	if (FPWrite(Conn, fork1, 100, 20, Data, 0 )) {
 		failed();
 		goto fin2;
@@ -125,10 +125,10 @@ fin2:
 	FPCloseFork(Conn,fork1);
 
 fin1:
-	FAIL (FPCloseFork(Conn,fork)) 
+	FAIL (FPCloseFork(Conn,fork))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test5");
 }
@@ -165,7 +165,7 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, size, Data)) {
 		failed();
@@ -201,7 +201,7 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
@@ -223,7 +223,7 @@ DSI *dsi;
 		failed();
 		goto fin1;
 	}
-	
+
 	if (FPWrite(Conn, fork1, 100, 20, Data, 0 )) {
 		failed();
 	}
@@ -266,8 +266,8 @@ int ret;
 		goto fin;
 	}
 
-	FAIL (ntohl(AFPERR_PARAM) != FPRead(Conn, fork, ((off_t)1 << 31) +20, 3000, Data)) 
-	FAIL (ntohl(AFPERR_PARAM) != FPWrite(Conn, fork, ((off_t)1 << 31) +20, 3000, Data, 0)) 
+	FAIL (ntohl(AFPERR_PARAM) != FPRead(Conn, fork, ((off_t)1 << 31) +20, 3000, Data))
+	FAIL (ntohl(AFPERR_PARAM) != FPWrite(Conn, fork, ((off_t)1 << 31) +20, 3000, Data, 0))
 	ret = FPWrite(Conn, fork, 0x7fffffff, 30, Data,0);
 	if (not_valid(ret, /* MAC */AFPERR_MISC, AFPERR_DFULL)) {
 		failed();
@@ -311,7 +311,7 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-	FAIL (ntohl(AFPERR_ACCESS) != FPRead(Conn, fork, 0, 30, Data)) 
+	FAIL (ntohl(AFPERR_ACCESS) != FPRead(Conn, fork, 0, 30, Data))
 	FAIL (FPWrite(Conn, fork, 0, 0, Data, 0))
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -320,7 +320,7 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-	FAIL (ntohl(AFPERR_ACCESS) != FPWrite(Conn, fork, 0, 30, Data,0)) 
+	FAIL (ntohl(AFPERR_ACCESS) != FPWrite(Conn, fork, 0, 30, Data,0))
 
 	FAIL (FPRead(Conn, fork, 0, 0, Data))
 	FAIL (FPCloseFork(Conn,fork))
@@ -330,9 +330,9 @@ DSI *dsi;
 		failed();
 		goto fin;
 	}
-	FAIL (FPWrite(Conn, fork, 0, 300, Data, 0)) 
-	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 400, Data)) 
-	FAIL (FPWrite(Conn, fork, 0, size -1000, Data, 0)) 
+	FAIL (FPWrite(Conn, fork, 0, 300, Data, 0))
+	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 400, Data))
+	FAIL (FPWrite(Conn, fork, 0, size -1000, Data, 0))
 	FAIL (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, size, Data) )
 
 	FPCloseFork(Conn,fork);
@@ -346,7 +346,7 @@ extern char *Server;
 extern int  Port;
 extern char *Password;
 extern char *vers;
-extern char *uam; 
+extern char *uam;
 extern int  Proto;
 
 static volatile int sigp = 0;
@@ -373,8 +373,8 @@ DSI *dsi;
 DSI *dsi2;
 int offset;
 int quantum;
-struct sigaction action;    
-struct itimerval    it;     
+struct sigaction action;
+struct itimerval    it;
 CONN *myconn;
 
 	dsi = &Conn->dsi;
@@ -420,7 +420,7 @@ CONN *myconn;
     	nottested();
     	goto fin;
     }
-    dsi2->protocol = DSI_TCPIP; 
+    dsi2->protocol = DSI_TCPIP;
 	dsi2->socket = sock;
 	ret = FPopenLogin(myconn, vers, uam, User, Password);
 	if (ret) {
@@ -446,37 +446,37 @@ CONN *myconn;
 
 	offset = 0;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
 
 	FAIL (FPReadFooter(dsi2, fork, 0, size, Data))
 
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
 
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-	offset += size;	
+	offset += size;
 	FAIL (FPReadHeader(dsi2, fork, offset, size, Data))
-
-	offset = 0;
-	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0)) 
 
 	offset = 0;
+	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteHeader(dsi2, fork1, offset, size, Data, 0))
+
+	offset = 0;
 	offset += size;
 	FAIL (FPReadFooter(dsi2, fork, offset, size, Data))
 	offset += size;
@@ -496,14 +496,14 @@ CONN *myconn;
 	FAIL (FPReadFooter(dsi2, fork, offset, size, Data))
 
 	offset = 0;
-	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0)) 
-	offset += size;	
-	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0)) 
-	
+	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0))
+	offset += size;
+	FAIL (FPWriteFooter(dsi2, fork1, offset, size, Data, 0))
+
 
 fin:
 	if (sigp ) {
@@ -517,7 +517,7 @@ fin:
 	}
 	free(myconn);
 	myconn = NULL;
-	
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
     it.it_interval.tv_usec = 0;
@@ -564,7 +564,7 @@ char *data;
 int nowrite;
 int numread = /*2*/ 469;
 uint16_t vol = VolID;
-static char temp[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
 int	size;
 DSI *dsi;
 
@@ -574,11 +574,11 @@ DSI *dsi;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test328: read speed\n");
 	sprintf(temp,"test328 dir");
-	
+
 	if (get_vol_free(vol) < 17*1024*1024) {
 		test_skipped(T_VOL_SMALL);
 		goto test_exit;
-	}		
+	}
 
 	ndir = strdup(temp);
 	size = min(65536, dsi->server_quantum);
@@ -626,7 +626,7 @@ DSI *dsi;
 		goto fin1;
 	}
 	nowrite = 0;
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 
+	fork = FPOpenFork(Conn, vol, OPENFORK_DATA ,
 			            (1<<FILPBIT_PDID)|(1<< DIRPBIT_LNAME)|(1<<FILPBIT_FNUM)|(1<<FILPBIT_DFLEN)
 			            , dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
@@ -678,7 +678,7 @@ DSI *dsi;
 			goto fin1;
 		}
 	}
-	if (!nowrite) {	
+	if (!nowrite) {
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0x342 , dir, temp,OPENACC_RD| OPENACC_DWR);
 		if (!fork) {
 			failed();
@@ -749,7 +749,7 @@ DSI *dsi;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (FPWrite(Conn, fork, 0, size, Data, 0 )) {
 		failed();
@@ -763,10 +763,10 @@ DSI *dsi;
 	FAIL (FPFlush(Conn, vol))
 
 fin1:
-	FAIL (FPCloseFork(Conn,fork)) 
+	FAIL (FPCloseFork(Conn,fork))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test343");
 }
@@ -795,7 +795,7 @@ int ret;
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -807,7 +807,7 @@ int ret;
 	if (!fork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), size)) {
 		failed();
@@ -863,7 +863,7 @@ STATIC void test8()
 	if (Locking) {
 		test_skipped(T_LOCKING);
 		goto test_exit;
-	}		
+	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name1)) {
 		failed();
@@ -912,13 +912,13 @@ STATIC void test8()
 	if (!rfork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	dfork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap ,DIRDID_ROOT, name2, OPENACC_RD);
 	if (!dfork) {
 		failed();
 		goto fin;
-	}		
+	}
 
 	if (ntohl(AFP_OK) != FPRead(Conn, rfork, 0, rsize, Data)) {
 		failed();

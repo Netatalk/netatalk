@@ -27,7 +27,7 @@ DSI *dsi = &Conn->dsi;
     if (!fork) {
 		failed();
 		goto fin;
-    }        
+    }
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->commands +2 * sizeof(uint16_t), bitmap, 0);
 	mdate = filedir.mdate;
@@ -38,7 +38,7 @@ DSI *dsi = &Conn->dsi;
 		failed();
 		goto fin;
 	}
-	
+
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +sizeof(uint16_t), bitmap, 0);
 	/* is that always true? ie over nfs */
@@ -55,7 +55,7 @@ DSI *dsi = &Conn->dsi;
 		failed();
 		goto fin;
 	}
-	
+
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +sizeof(uint16_t), bitmap, 0);
 	/* is that always true? ie over nfs */
@@ -80,4 +80,3 @@ void FPFlushFork_test()
     fprintf(stdout,"FPFlushFork page 171\n");
 	test203();
 }
-

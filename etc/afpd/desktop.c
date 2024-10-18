@@ -455,7 +455,7 @@ addicon_err:
             return(AFPERR_PARAM);
         }
         break;
-#endif /* no afp/asp */  
+#endif /* no afp/asp */
     case AFPPROTO_DSI:
     {
         DSI* dsi = obj->dsi;

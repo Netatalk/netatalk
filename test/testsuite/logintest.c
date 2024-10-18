@@ -41,7 +41,7 @@ DSI *dsi;
         	nottested();
 	    	exit(ExitCode);
         }
-     	dsi->protocol = DSI_TCPIP; 
+     	dsi->protocol = DSI_TCPIP;
 	    dsi->socket = sock;
     }
     else {
@@ -62,7 +62,7 @@ int ret;
     else {
       	ret = FPopenLogin(Conn, vers, uam, "", "");
 	}
-	if (ret) {      
+	if (ret) {
 		failed();
 		return;
 	}
@@ -74,7 +74,7 @@ int ret;
 	}
 	if (FPLogOut(Conn)) {
 		failed();
-    }   
+    }
 }
 
 /* ------------------------- */
@@ -125,7 +125,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    
+
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
@@ -212,7 +212,7 @@ unsigned int ret;
     	return 1;
     }
     connect_server(Conn);
-	/* dsi with no open session */    
+	/* dsi with no open session */
     Dsi = &Conn->dsi;
 
     fprintf(stdout,"===================\n");
@@ -223,7 +223,7 @@ unsigned int ret;
 	}
 	CloseClientSocket(Dsi->socket);
 
-	/* ------------------------ */	
+	/* ------------------------ */
     connect_server(Conn);
     Dsi = &Conn->dsi;
 
@@ -256,22 +256,22 @@ unsigned int ret;
     Dsi = &Conn->dsi;
 {
 DSI *dsi;
-uint32_t i = 0; 
+uint32_t i = 0;
 
 	dsi = Dsi;
 	/* DSIOpenSession */
 	memset(&dsi->header, 0, sizeof(dsi->header));
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_OPEN;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	dsi->header.dsi_code = 6;
-	
+
 
 	dsi->cmdlen = 2 + sizeof(i);
 	dsi->commands[0] = DSIOPT_ATTNQUANT;
   	dsi->commands[1] = sizeof(i);
   	i = htonl(DSI_DEFQUANT);
-  	memcpy(dsi->commands + 2, &i, sizeof(i));	    
+  	memcpy(dsi->commands + 2, &i, sizeof(i));
 	my_dsi_send(dsi);
 	my_dsi_cmd_receive(dsi);
 
@@ -288,14 +288,14 @@ uint32_t i = 0;
 	}
 	CloseClientSocket(Dsi->socket);
 
-	/* ------------------------ */	
-    /* guest login */	
+	/* ------------------------ */
+    /* guest login */
     connect_server(Conn);
     Dsi = &Conn->dsi;
     test3();
 	CloseClientSocket(Dsi->socket);
-    
-	/* ------------------------ 
+
+	/* ------------------------
 	 * clear text login
 	*/
     connect_server(Conn);
@@ -316,12 +316,12 @@ uint32_t i = 0;
 		return ExitCode;
 	}
 	Conn->afp_version = Version;
-	
+
    	if (FPLogOut(Conn)) {
    		failed();
    	}
 
-	/* ------------------------ 
+	/* ------------------------
 	 * too many login
 	*/
 	test4();

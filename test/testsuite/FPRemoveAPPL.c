@@ -55,4 +55,3 @@ void FPRemoveAPPL_test()
     fprintf(stdout,"FPRemoveAPPL page 245\n");
 	test215();
 }
-

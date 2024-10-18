@@ -489,7 +489,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
     /* returns offset to signature offset */
     c = status_server(status, options->hostname, options);
     status_machine(status);
-    status_versions(status, 
+    status_versions(status,
 #ifndef NO_DDP
                     asp,
 #endif

@@ -36,7 +36,7 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 		goto fin;
 	}
 
-	if (FPGetFileDirParams(Conn, vol,  dir, name1, 
+	if (FPGetFileDirParams(Conn, vol,  dir, name1,
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -47,7 +47,7 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 		failed();
 		goto fin;
 	}
-	if (!FPGetFileDirParams(Conn, vol,  dir1, name1, 
+	if (!FPGetFileDirParams(Conn, vol,  dir1, name1,
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -59,9 +59,9 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 		goto fin;
 	}
 fin:
-	FAIL (dir2 && FPDelete(Conn, vol,  dir2, "")) 
-	FAIL (dir1 && FPDelete(Conn, vol,  dir1, "")) 
-	FAIL (dir && FPDelete(Conn, vol,  dir, "")) 
+	FAIL (dir2 && FPDelete(Conn, vol,  dir2, ""))
+	FAIL (dir1 && FPDelete(Conn, vol,  dir1, ""))
+	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
 	exit_test("test43");
 }
@@ -97,10 +97,10 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "")) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  dir , name))
-	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT , name)) 
+	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT , name))
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
@@ -149,17 +149,17 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	FAIL (ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "")) 
-	FAIL (ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "new")) 
-	FAIL (FPMoveAndRename(Conn, vol, dir2, dir4, "", "")) 
+	FAIL (ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
+	FAIL (ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "new"))
+	FAIL (FPMoveAndRename(Conn, vol, dir2, dir4, "", ""))
 
 fin:
-	FAIL (dir5 && FPDelete(Conn, vol,  dir5 , "")) 
+	FAIL (dir5 && FPDelete(Conn, vol,  dir5 , ""))
 	FAIL (dir3 && FPDelete(Conn, vol,  dir3 , ""))
 	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , ""))
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
 	FAIL (dir4 && FPDelete(Conn, vol,  dir4 , ""))
-	FAIL (dir && FPDelete(Conn, vol,  dir , "")) 
+	FAIL (dir && FPDelete(Conn, vol,  dir , ""))
 	exit_test("test123");
 
 }
@@ -192,8 +192,8 @@ DSI *dsi;
 		goto fin;
 	}
 
-	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "")) 
-	FAIL (FPMoveAndRename(Conn, vol, dir, DIRDID_ROOT, name, "")) 
+	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
+	FAIL (FPMoveAndRename(Conn, vol, dir, DIRDID_ROOT, name, ""))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
 		failed();
@@ -201,17 +201,17 @@ DSI *dsi;
 	else {
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-        filedir.access[0] = 0; 
-        filedir.access[1] = 3; 
-        filedir.access[2] = 3; 
-        filedir.access[3] = 3; 
- 		FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) 
+        filedir.access[0] = 0;
+        filedir.access[1] = 3;
+        filedir.access[2] = 3;
+        filedir.access[3] = 3;
+ 		FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	}
-	FAIL (ntohl(AFPERR_ACCESS) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, "")) 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
- 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) 
+	FAIL (ntohl(AFPERR_ACCESS) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
+ 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 fin:
@@ -220,7 +220,7 @@ test_exit:
 	exit_test("test138");
 }
 
-/* ------------------------- 
+/* -------------------------
 */
 STATIC void test378()
 {
@@ -242,18 +242,18 @@ int ret;
 		failed();
 		goto fin;
 	}
-	
+
 	if (ret == htonl(AFPERR_EXIST)) {
-	 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) 
+	 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	}
 	else {
-	 	FAIL (htonl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) 
+	 	FAIL (htonl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	}
-	
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
+
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
-	
+
 test_exit:
 	exit_test("test378");
 }
@@ -268,4 +268,3 @@ void FPMoveAndRename_test()
     test138();
     test378();
 }
-

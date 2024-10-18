@@ -30,7 +30,7 @@ unsigned int ret;
 	memset(pos, 0, sizeof(pos));
 	memset(&filedir, 0, sizeof(filedir));
 	filedir.attr = 0x01a0;			/* various lock attributes */
-	
+
 	FAIL( htonl(AFPERR_BITMAP) != FPCatSearch(Conn, vol, 10, pos, 0,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir))
 
 	filedir.attr = 0x01a0;			/* various lock attributes */
@@ -48,7 +48,7 @@ unsigned int ret;
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	filedir.attr = 0x01a0 | ATTRBIT_SETCLR ;
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 
 	memset(&filedir, 0, sizeof(filedir));
 	/* ------------------- */
@@ -87,13 +87,13 @@ unsigned int ret;
 		memcpy(pos, dsi->data ,16);
 		ret = FPCatSearch(Conn, vol, 20, pos, 0x42, 0x42, 0x80000000UL| (1<< FILPBIT_LNAME), &filedir, &filedir2);
 	}
-	
+
 	/* -------------------- */
 #endif
 	memset(&filedir, 0, sizeof(filedir));
 	filedir.attr = 0x01a0;
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test225");
 }
@@ -105,4 +105,3 @@ void FPCatSearch_test()
     fprintf(stdout,"FPCatSearch page 110\n");
 	test225();
 }
-

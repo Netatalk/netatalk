@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static char temp[MAXPATHLEN];   
-static char temp1[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
+static char temp1[MAXPATHLEN];
 
 STATIC void test32()
 {
@@ -38,7 +38,7 @@ uint16_t vol = VolID;
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	if (FPEnumerate(Conn, vol,  dir, "", 
+	if (FPEnumerate(Conn, vol,  dir, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -61,10 +61,10 @@ uint16_t vol = VolID;
 		failed();
 		goto fin;
 	}
-	/* our curdir is in the deleted folder so no error! 
+	/* our curdir is in the deleted folder so no error!
 	   or it's a nfs exported volume
 	*/
-	ret = FPGetFileDirParams(Conn, vol,  dir, "", 
+	ret = FPGetFileDirParams(Conn, vol,  dir, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -75,7 +75,7 @@ uint16_t vol = VolID;
 		failed();
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -87,7 +87,7 @@ uint16_t vol = VolID;
 		failed();
 	}
 
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -97,13 +97,13 @@ uint16_t vol = VolID;
 	) {
 		failed();
 	}
-	
+
 	dir1  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir1) {
 		failed();
 		goto fin;
 	}
-	if (FPGetFileDirParams(Conn, vol,  dir1, "", 
+	if (FPGetFileDirParams(Conn, vol,  dir1, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -116,8 +116,8 @@ uint16_t vol = VolID;
 
     /* dir and dir1 should be != but if inode reused they are the same */
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 test_exit:
 	exit_test("test32");
 }
@@ -150,7 +150,7 @@ int ret;
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	if (FPEnumerate(Conn, vol, DIRDID_ROOT, name, 
+	if (FPEnumerate(Conn, vol, DIRDID_ROOT, name,
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -171,7 +171,7 @@ int ret;
 		goto fin;
 	}
 	/* our curdir is in the deleted folder so no error! */
-	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 
+	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name,
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -182,7 +182,7 @@ int ret;
 		failed();
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -194,7 +194,7 @@ int ret;
 		failed();
 	}
 
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name,
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -204,13 +204,13 @@ int ret;
 	) {
 		failed();
 	}
-	
+
 	dir1  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir1) {
 		failed();
 		goto fin;
 	}
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, 
+	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name,
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -223,8 +223,8 @@ int ret;
 
 fin:
     /* dir and dir1 should be != but if inode reused they are the same */
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test33");
 }
@@ -257,7 +257,7 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	if (ntohl(AFPERR_NOOBJ) != FPEnumerate(Conn, vol,  dir, "", 
+	if (ntohl(AFPERR_NOOBJ) != FPEnumerate(Conn, vol,  dir, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -270,8 +270,8 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	if (FPGetFileDirParams(Conn, vol,  dir1, "", 0, 
-			(1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS) | (1<<DIRPBIT_OFFCNT))) 
+	if (FPGetFileDirParams(Conn, vol,  dir1, "", 0,
+			(1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS) | (1<<DIRPBIT_OFFCNT)))
 	{
 		failed();
 	}
@@ -285,7 +285,7 @@ uint16_t vol = VolID;
 	}
 
 	/* our curdir is in the deleted folder so no error! */
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "bar", 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "bar",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -302,8 +302,8 @@ uint16_t vol = VolID;
 	}
 
 fin:
-	FAIL (dir && FPDelete(Conn, vol,  dir, "")) 
-	FAIL (dir1 && FPDelete(Conn, vol,  dir1, "")) 
+	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
+	FAIL (dir1 && FPDelete(Conn, vol,  dir1, ""))
 test_exit:
 	exit_test("test42");
 }
@@ -323,12 +323,12 @@ char name ".t52 invisible";
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "new/.invisible", 
+	if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "new/.invisible",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
 	         0
-		)) 
+		))
 	{
 		failed();
 	}
@@ -371,7 +371,7 @@ uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 		goto fin;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, dir2 , name5)) { 
+	if (FPCreateFile(Conn, vol,  0, dir2 , name5)) {
 		nottested();
 		goto fin;
 	}
@@ -415,7 +415,7 @@ uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 	else if (!(FPCreateDir(Conn,vol, dir2, name6))) {
 		nottested();
 	}
-    
+
     bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME)|(1<< DIRPBIT_OFFCNT);
 	if (FPGetFileDirParams(Conn, vol, dir3, "t104 dir4///t104 dir2_1//", 0, bitmap)) {
 		failed();
@@ -457,7 +457,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir2 , name6))
 
 	FAIL (FPDelete(Conn, vol,  dir1 , name2))
-	FAIL (FPDelete(Conn, vol,  dir1 , ""))   
+	FAIL (FPDelete(Conn, vol,  dir1 , ""))
 test_exit:
 	exit_test("test106");
 }
@@ -488,16 +488,16 @@ uint16_t vol = VolID;
 	if (!(dir1 = FPCreateDir(Conn, vol, dir , name1))) {
 		failed();
 	}
-	
+
 	if (!Mac) {
 		sprintf(temp, "%s/%s", name, name1);
 		delete_unix_dir(Path, temp);
 	}
 	else {
-		FAIL (FPDelete(Conn,vol, dir1,"")) 
+		FAIL (FPDelete(Conn,vol, dir1,""))
 	}
-	
-	
+
+
 	FAIL (FPCloseVol(Conn,vol))
 
 	vol  = VolID = FPOpenVol(Conn, Vol);
@@ -547,10 +547,10 @@ uint16_t vol = VolID;
 		delete_unix_dir(Path, temp);
 	}
 	else {
-		FAIL (FPDelete(Conn,vol, dir1,"")) 
+		FAIL (FPDelete(Conn,vol, dir1,""))
 	}
-	
-	FAIL (FPDelete(Conn,vol, dir,"")) 
+
+	FAIL (FPDelete(Conn,vol, dir,""))
 
 	FAIL (FPCloseVol(Conn,vol))
 	vol  = VolID = FPOpenVol(Conn, Vol);
@@ -559,7 +559,7 @@ uint16_t vol = VolID;
 	}
     bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME)|(1<< DIRPBIT_OFFCNT);
 
-	FAIL (htonl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir1, "", 0, bitmap)) 
+	FAIL (htonl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir1, "", 0, bitmap))
 	FAIL (!FPDelete(Conn,vol, dir,""))
 test_exit:
 	exit_test("test128");
@@ -596,7 +596,7 @@ uint16_t vol = VolID;
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	if (FPEnumerate(Conn, vol,  dir, "", 
+	if (FPEnumerate(Conn, vol,  dir, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -630,7 +630,7 @@ uint16_t vol = VolID;
 		nottested();
 		goto test_exit;
 	}
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -640,7 +640,7 @@ uint16_t vol = VolID;
 	) {
 		failed();
 	}
-	
+
 	dir2  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir2) {
 		failed();
@@ -688,7 +688,7 @@ int fd;
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	id = get_fid(Conn, vol, dir , name1);     
+	id = get_fid(Conn, vol, dir , name1);
 
 	if (!Mac) {
 	    /* so it doesn't reuse the same inode */
@@ -713,7 +713,7 @@ int fd;
 		FAIL (FPDelete(Conn, vol,  dir , name))
 		FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 	}
-	id1 = get_fid(Conn, vol, dir , name1);     
+	id1 = get_fid(Conn, vol, dir , name1);
 	if (id == id1) {
 		fprintf(stdout,"\tFAILED ids are the same: %u/%u\n", ntohl(id), ntohl(id1));
         failed_nomsg();
@@ -788,10 +788,10 @@ struct afp_filedir_parms filedir;
 	strcat(temp, temp1);
 	ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap);
 #if 0
-	/* for afp3 it's not valid mangled filename 
-	 * changed 
+	/* for afp3 it's not valid mangled filename
+	 * changed
 	*/
-	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ)) 
+	if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
 	    || ( Conn->afp_version < 30 && ret)) {
 		failed();
 	}
@@ -800,7 +800,7 @@ struct afp_filedir_parms filedir;
 		failed();
 	}
 
-#endif	
+#endif
 	ret = FPCreateDir(Conn, vol, dir, temp);
 	if (!ret || ret != get_did(Conn, vol, dir, temp)) {
 		failed();
@@ -830,7 +830,7 @@ struct afp_filedir_parms filedir;
 			failed_nomsg();
 		}
 	}
-	
+
 	FAIL (FPDelete(Conn, vol,  dir, temp))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 fin:
@@ -866,7 +866,7 @@ uint16_t vol = VolID;
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 
-	if (FPEnumerate(Conn, vol,  dir, "", 
+	if (FPEnumerate(Conn, vol,  dir, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -889,10 +889,10 @@ uint16_t vol = VolID;
 		failed();
 		goto fin;
 	}
-	/* our curdir is in the deleted folder so no error! 
+	/* our curdir is in the deleted folder so no error!
 	   or it's a nfs exported volume
 	*/
-	ret = FPGetFileDirParams(Conn, vol,  dir, "", 
+	ret = FPGetFileDirParams(Conn, vol,  dir, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -914,7 +914,7 @@ uint16_t vol = VolID;
 		failed();
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT, "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -926,7 +926,7 @@ uint16_t vol = VolID;
 		failed();
 	}
 
-	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 
+	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -936,13 +936,13 @@ uint16_t vol = VolID;
 	) {
 		failed();
 	}
-	
+
 	dir1  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir1) {
 		failed();
 		goto fin;
 	}
-	if (FPGetFileDirParams(Conn, vol,  dir1, "", 
+	if (FPGetFileDirParams(Conn, vol,  dir1, "",
 	         0
 	         ,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
@@ -955,8 +955,8 @@ uint16_t vol = VolID;
 
     /* dir and dir1 should be != but if inode reused they are the same */
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 test_exit:
 	exit_test("test340");
 }
@@ -990,7 +990,7 @@ DSI *dsi = &Conn->dsi;
 		goto test_exit;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  0, dir , name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap , dir, name, OPENACC_WR |OPENACC_RD|OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
@@ -1010,7 +1010,7 @@ DSI *dsi = &Conn->dsi;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		fid = filedir.did;
-		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 	}
 	if (!Mac) {
 		if (rename_unix_file(Path, name1, name, name2) < 0) {
@@ -1030,10 +1030,10 @@ DSI *dsi = &Conn->dsi;
 		if (fid != filedir.did) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			failed_nomsg();
-		
+
 		}
 		else {
-			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap)) 
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
 
@@ -1058,11 +1058,10 @@ void FPGetFileDirParms_test()
 	test42();
 	test106();
 	test127();
-	test128();	
+	test128();
 	test182();
 	test235();
 	test336();
 	test340();
 	test420();
 }
-

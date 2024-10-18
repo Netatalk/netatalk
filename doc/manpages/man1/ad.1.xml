@@ -405,7 +405,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
 
     <para>Set metadata on files.</para>
 
-    <para>The set utility alters metadata on files within an AFP 
+    <para>The set utility alters metadata on files within an AFP
     volume.</para>
 
     <para>The options are as follows:</para>
@@ -440,7 +440,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-f <replaceable>flags</replaceable></term>
 
         <listitem>
-          <para>Change a file's Finder flags. See list below for 
+          <para>Change a file's Finder flags. See list below for
           available flags. Uppercase letter sets the flag,
           lowercase removes the flag.</para>
         </listitem>
@@ -450,7 +450,7 @@ Note: any letter appearing in uppercase means the flag is set but it's a directo
         <term>-a <replaceable>attributes</replaceable></term>
 
         <listitem>
-          <para>Change a file's attributes. See list below for 
+          <para>Change a file's attributes. See list below for
           available attributes. Uppercase letter sets the flag,
           lowercase removes the flag.</para>
         </listitem>

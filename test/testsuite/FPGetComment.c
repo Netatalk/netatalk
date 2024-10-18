@@ -23,7 +23,7 @@ DSI *dsi2;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name))) {
 		goto test_exit;
@@ -66,8 +66,8 @@ DSI *dsi2;
 
 	FAIL (FPCloseFork(Conn,fork))
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
 	FAIL (FPCloseVol(Conn2,vol2))
 fin:
 	delete_folder(vol, DIRDID_ROOT, name);
@@ -100,7 +100,7 @@ uint16_t vol = VolID;
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
 		failed();
 	}
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPCloseDT(Conn, dt))
 
 test_exit:
@@ -115,4 +115,3 @@ void FPGetComment_test()
 	test53();
 	test394();
 }
-

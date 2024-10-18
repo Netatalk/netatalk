@@ -3,8 +3,8 @@
 #include "specs.h"
 #include "adoublehelper.h"
 
-static char temp[MAXPATHLEN];   
-static char temp1[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
+static char temp1[MAXPATHLEN];
 
 /* ------------------------- */
 STATIC void test146()
@@ -30,9 +30,9 @@ int ret;
 		test_skipped(T_CONN2);
 		goto test_exit;
 	}
-	
+
 	if (!Path && !Mac) {
-		test_skipped(T_MAC_PATH);                                                             
+		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
 
@@ -49,21 +49,21 @@ int ret;
 	else {
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-        filedir.access[0] = 0; 
+        filedir.access[0] = 0;
         filedir.access[1] = 3; /* everyone */
         filedir.access[2] = 3; /* group */
         filedir.access[3] = 7; /* owner */
- 		FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) 
+ 		FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	}
 
-	/* ------------------ */	
+	/* ------------------ */
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
 		failed();
 	}
 	FAIL (FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", 0, bitmap))
-	FAIL (ntohl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir , name)) 
+	FAIL (ntohl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir , name))
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,dir , name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
 		failed();
@@ -73,11 +73,11 @@ int ret;
 		failed();
 	}
 
-    filedir.access[1] = 3; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
- 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) 
-	FAIL (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name))  
+    filedir.access[1] = 3;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
+ 	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
+	FAIL (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name))
 	if (!Mac && adouble == AD_V2) {
 		sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name1, name);
 		if (chmod(temp, 0644) <0) {
@@ -85,11 +85,11 @@ int ret;
 			failed_nomsg();
 		}
 	}
-	if (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name)) { 
+	if (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name)) {
 		fprintf(stdout,"\tFIXME FAILED open but deleted\n");
-#if 0		
+#if 0
 		failed_nomsg();
-#endif		
+#endif
 		FAIL (FPCloseFork(Conn,fork))
 		FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,dir , name,OPENACC_WR |OPENACC_RD);
@@ -112,7 +112,7 @@ int ret;
 	}
 	FAIL (ntohl(AFPERR_BUSY) != FPDelete(Conn, vol,  dir , name))
 	FAIL (FPCloseFork(Conn2,fork1))
-	
+
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 	FAIL (FPCloseVol(Conn2,vol2))
@@ -163,7 +163,7 @@ DSI *dsi = &Conn->dsi;
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 	FPCloseVol(Conn,vol);
 	vol  = FPOpenVol(Conn, Vol);
-	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap)) 
+	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
 	exit_test("test507");
 }
@@ -212,7 +212,7 @@ int fork;
 	}
 	if (!Mac) {
 		sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
-		
+
 		if (unlink(temp1) <0) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 			failed_nomsg();
@@ -230,12 +230,12 @@ int fork;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
 		failed();
 	}
-fin:	
+fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , "");
 test_exit:
 	exit_test("test363");
-	
+
 }
 
 /* -------------------------- */
@@ -279,14 +279,14 @@ DSI *dsi = &Conn->dsi;
 	delete_unix_file(Path, name1, name);
 	delete_unix_dir(Path, name1);
 
-	FAIL (ntohl(AFPERR_NOOBJ) != FPDeleteID(Conn, vol, filedir.did)) 
+	FAIL (ntohl(AFPERR_NOOBJ) != FPDeleteID(Conn, vol, filedir.did))
 
 fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , "");
 test_exit:
 	exit_test("test364");
-	
+
 }
 
 /* ----------- */
@@ -298,10 +298,9 @@ void FPDelete_test()
     fprintf(stdout,"FPDelete page 143\n");
     test146();
     test507();
-#if 0    
+#if 0
     test363();
 #endif
     test364();
 #endif
 }
-

@@ -5,9 +5,9 @@
 extern int Noadouble;
 
 uint16_t vol;
-DSI *dsi, *dsi2; 
+DSI *dsi, *dsi2;
 
-#include <signal.h>  
+#include <signal.h>
 
 static void alarm_handler()
 {
@@ -27,21 +27,21 @@ uint16_t vol = VolID;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRead:test12: read/write\n");
 
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_RD | OPENACC_DWR);
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_WR | OPENACC_DWR);
 	if (fork2) {
 		fprintf(stdout,"\tFAILED\n");
 		FPCloseFork(Conn,fork2);
 		goto fin;
 	}
-	
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_RD | OPENACC_DWR);
 	if (!fork1) {
 		fprintf(stdout,"\tFAILED\n");
@@ -49,7 +49,7 @@ uint16_t vol = VolID;
 	}
 	FPCloseFork(Conn,fork1);
 
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_WR | OPENACC_DWR);
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
@@ -57,7 +57,7 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_RD | OPENACC_DRD);
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
@@ -67,14 +67,14 @@ uint16_t vol = VolID;
 
 	FPCloseFork(Conn,fork);
 
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_RD | OPENACC_DRD);
 
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_RD );
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
@@ -82,7 +82,7 @@ uint16_t vol = VolID;
 		goto fin;
 	}
 
-	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, 
+	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT,
 				"Network Trash Folder/Trash Can Usage Map",OPENACC_WR );
 	if (!fork1) {
 		fprintf(stdout,"\tFAILED\n");
@@ -112,11 +112,11 @@ int  dir;
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
+
 	if (FPRename(Conn, vol, DIRDID_ROOT, name, "test1")) {fprintf(stdout,"\tFAILED\n");}
 	if (FPRename(Conn, vol, DIRDID_ROOT, "test1", name)) {fprintf(stdout,"\tFAILED\n");}
 
-	FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -143,8 +143,8 @@ int  dir;
 }
 
 
-static char temp[MAXPATHLEN];   
-static char temp1[MAXPATHLEN];   
+static char temp[MAXPATHLEN];
+static char temp1[MAXPATHLEN];
 
 /* ------------------------- */
 void test47()
@@ -167,7 +167,7 @@ int fork, fork1;
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "new/toto.txt",OPENACC_WR | OPENACC_RD);
 
@@ -176,7 +176,7 @@ int fork, fork1;
 		FPCloseFork(Conn,fork1);
 		FPCloseFork(Conn,fork);
 		return;
-	}		
+	}
 
 	FPCloseFork(Conn,fork);
 
@@ -185,7 +185,7 @@ int fork, fork1;
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
 		fprintf(stdout,"\tFAILED\n");
@@ -224,7 +224,7 @@ int fork, fork1;
 	}
 
 	FPCloseFork(Conn,fork);
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test47: in a read/write folder\n");
 
@@ -234,14 +234,14 @@ int fork, fork1;
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
 
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	FPCloseFork(Conn,fork);
 
@@ -255,14 +255,14 @@ int fork, fork1;
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
 
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	FPCloseFork(Conn,fork);
 
@@ -275,7 +275,7 @@ int fork, fork1;
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
-	}		
+	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
 		fprintf(stdout,"\tFAILED\n");
@@ -291,7 +291,7 @@ int fork, fork1;
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
+
 	if (FPWrite(Conn, fork1, 0, 10, Data, 0 )) {
 		fprintf(stdout,"\tFAILED\n");
 		FPCloseFork(Conn,fork);
@@ -312,7 +312,7 @@ int fork, fork1;
 		FPCloseFork(Conn,fork1);
 		return;
 	}
-	
+
 	if (ntohl(AFPERR_PARAM) != FPRead(Conn, fork, 0, 30, Data)) {
 		fprintf(stdout,"\tFAILED\n");
 		FPCloseFork(Conn,fork1);
@@ -356,7 +356,7 @@ char *name = "new/test.txt\0";
 	fprintf(stdout,"---------------------\n");
 	fprintf(stdout,"GetFileDirParams Vol %d \n\n", vol);
 	memset(dsi->commands, 0, DSI_CMDSIZ);
-	dsi->header.dsi_flags = DSIFL_REQUEST;     
+	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
 	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
 	ofs = 0;
@@ -365,14 +365,14 @@ char *name = "new/test.txt\0";
 
 	memcpy(dsi->commands +ofs, &vol, sizeof(vol));
 	ofs += sizeof(vol);
-	
+
 	memcpy(dsi->commands +ofs, &did, sizeof(did));
 	ofs += sizeof(did);
 
 	bitmap = htons(1 << FILPBIT_LNAME);
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
-	
+
 	bitmap = htons(DIRPBIT_LNAME);;
 	memcpy(dsi->commands +ofs, &bitmap, sizeof(bitmap));
 	ofs += sizeof(bitmap);
@@ -386,7 +386,7 @@ char *name = "new/test.txt\0";
 	dsi->datalen = ofs;
 	dsi->header.dsi_len = htonl(dsi->datalen);
 	dsi->header.dsi_code = 0; // htonl(err);
- 
+
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
@@ -398,7 +398,7 @@ char *name = "new/test.txt\0";
 }
 
 
-/* ------------------------- 
+/* -------------------------
    dirA
      child --> dirB
                 next --> dirB
@@ -409,9 +409,9 @@ char *name = "new/test.txt\0";
                 prev --> dirA1
                            next --> dirB
                            prev --> dirB
-                	       
+                
      child --> dirA2
-                next --> dirA1                	       
+                next --> dirA1                
    dirC
      child --> symX
                  next --> dirA1
@@ -422,13 +422,13 @@ char *name = "new/test.txt\0";
      child --> dirB
                 next --> dirB
                 prev --> dirA1
-                
-     			
+
+     
 */
 void test85()
 {
-struct sigaction action;    
-struct itimerval    it;     
+struct sigaction action;
+struct itimerval    it;
 
     fprintf(stdout,"===================\n");
     fprintf(stdout,"t85: test bogus symlink\n");
@@ -462,7 +462,7 @@ struct itimerval    it;
 		return;
     }
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirA", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirA",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -473,7 +473,7 @@ struct itimerval    it;
     }
 
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -484,7 +484,7 @@ struct itimerval    it;
     }
 
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirA", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirA",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -495,7 +495,7 @@ struct itimerval    it;
     }
 
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -533,7 +533,7 @@ int  ofs =  3 * sizeof( uint16_t );
 	if (!Conn2) {
 		fprintf(stdout,"\tNOT TESTED\n");
 		return;
-		
+
 	}
 
 	if (!Path) {
@@ -572,18 +572,18 @@ int  ofs =  3 * sizeof( uint16_t );
 		FPCloseFork(Conn,fork);
     }
 
-	if (FPDelete(Conn2, vol2,  dir , name1)) { 
+	if (FPDelete(Conn2, vol2,  dir , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 
 	if (FPCreateFile(Conn, vol,  0, dir , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	if (FPDelete(Conn, vol,  dir , name1)) { 
+	if (FPDelete(Conn, vol,  dir , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name)) { 
+	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	FPCloseVol(Conn2,vol2);
@@ -631,11 +631,11 @@ char *name1 = "t87 file without .Appledoube";
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPDelete(Conn, vol,  dir , name1)) { 
+	if (FPDelete(Conn, vol,  dir , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 }
@@ -648,7 +648,7 @@ char *name = "t89 test error setfilparam";
 char *name1 = "t89 error setfilparams dir";
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
 
@@ -678,7 +678,7 @@ uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
  		}
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
@@ -689,8 +689,8 @@ uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 /* -------------------------------------- */
 void test92()
 {
-struct sigaction action;    
-struct itimerval    it;     
+struct sigaction action;
+struct itimerval    it;
 
     fprintf(stdout,"===================\n");
     fprintf(stdout,"t92: test bogus symlink 2\n");
@@ -724,7 +724,7 @@ struct itimerval    it;
 		return;
     }
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirD", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirD",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -735,7 +735,7 @@ struct itimerval    it;
     }
 
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirC",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -746,7 +746,7 @@ struct itimerval    it;
     }
 
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirD", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "dirD",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -780,7 +780,7 @@ int  l = strlen(newv);
 int  vol1;
 
 	newv[1] = newv[1] +1;
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test97: options mswindows\n");
 	vol1  = FPOpenVol(Conn, newv);
@@ -798,7 +798,7 @@ int  vol1;
 		return;
 	}
 
-	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -811,7 +811,7 @@ int  vol1;
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -864,7 +864,7 @@ int  vol1;
 			fprintf(stdout,"\tFAILED\n");
 		}
 		FPCloseFork(Conn,fork);
-	}	
+	}
 	/* dvol bad */
 	if (ntohl(AFPERR_PARAM) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol +1, dir, name, "", name1)) {
 		fprintf(stdout,"\tFAILED\n");
@@ -923,7 +923,7 @@ struct stat st;
 	fid_name1 = get_fid( dir , name1);
 	write_fork( DIRDID_ROOT , name, "blue");
 	write_fork( dir , name1, "red");
-	
+
 #if 0
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {fprintf(stdout,"\tFAILED\n");}
 
@@ -933,7 +933,7 @@ struct stat st;
 			fprintf(stdout,"\tFAILED\n");
 		}
 		FPCloseFork(Conn,fork);
-	}	
+	}
 #endif
 
 	/* ok */
@@ -943,7 +943,7 @@ struct stat st;
 	read_fork( DIRDID_ROOT , name, 3);
 	if (strcmp(Data,"red")) {
 		fprintf(stdout,"\tFAILED should be red\n");
-		
+
 	}
 	read_fork( dir , name1, 4);
 	if (strcmp(Data,"blue")) {
@@ -956,7 +956,7 @@ struct stat st;
 	if ((ret = get_fid(dir , name1)) != fid_name1) {
 		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name1);
 	}
-		
+
 	if (FPDelete(Conn, vol,  dir , name1)) { fprintf(stdout,"\tFAILED\n");}
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { fprintf(stdout,"\tFAILED\n");}
@@ -998,11 +998,11 @@ struct stat st;
 	fid_name1 = get_fid( dir , name1);
 	write_fork( DIRDID_ROOT , name, "blue");
 	write_fork( dir , name1, "red");
-	
+
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
 		fprintf(stdout,"\tFAILED\n");
-	}	
+	}
 
 	if (ntohl(AFPERR_MISC) != FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) {
 		fprintf(stdout,"\tFAILED\n");
@@ -1011,7 +1011,7 @@ struct stat st;
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,dir, name1, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
 		fprintf(stdout,"\tFAILED\n");
-	}	
+	}
 
 	if (ntohl(AFPERR_MISC) != FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) {
 		fprintf(stdout,"\tFAILED\n");
@@ -1021,9 +1021,9 @@ struct stat st;
 	if (ntohl(AFPERR_MISC) != FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (fork1) FPCloseFork(Conn,fork1);
-		
+
 	if (FPDelete(Conn, vol,  dir , name1)) { fprintf(stdout,"\tFAILED\n");}
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { fprintf(stdout,"\tFAILED\n");}
@@ -1088,7 +1088,7 @@ char *odir  = "t113 dir";
 char *ndir  = "folder_symlink/dir";
 int fid_name;
 int fid_name1;
-int ret; 
+int ret;
 struct stat st;
 
     fprintf(stdout,"===================\n");
@@ -1145,19 +1145,19 @@ struct afp_filedir_parms filedir;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test114: Various errors\n");
 
-	if (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		fprintf(stdout,"\tFAILED\n");
 	}
-	if (!FPDelete(Conn, vol,  DIRDID_ROOT, name)) { 
+	if (!FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED create returned an error but the file is there (DF only)\n");
 	}
-	
-	if (ntohl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+
+	if (ntohl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0xffff)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	if (ntohl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (ntohl(AFPERR_BITMAP) != FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 		                    0xffff,
 		        (1<< DIRPBIT_ATTR) |
 				(1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS))
@@ -1175,7 +1175,7 @@ struct afp_filedir_parms filedir;
 			fprintf(stdout,"\tFAILED %d\n",filedir.offcnt);
 		}
 	}
-	if (ntohl(AFPERR_DIRNEMPT) != FPDelete(Conn, vol,  DIRDID_ROOT, "new-rw")) { 
+	if (ntohl(AFPERR_DIRNEMPT) != FPDelete(Conn, vol,  DIRDID_ROOT, "new-rw")) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 }
@@ -1201,7 +1201,7 @@ uint16_t dt;
 	if (FPGetIcon(Conn,  dt, "SITx", "TEXT", 4, 64 )) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (FPGetIcon(Conn,  dt, "SITx", "APPL", 1, 256 )) {
 		fprintf(stdout,"\tFAILED\n");
 	}
@@ -1221,11 +1221,11 @@ uint16_t dt;
 	if (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, "UNIX", 2 )) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (FPGetIcon(Conn,  dt, "UNIX", "TEXT", 1, 256 )) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	FPCloseDT(Conn,dt);
 
 }
@@ -1240,7 +1240,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 struct flock lock;
 int fd;
 int ret;
-  
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
@@ -1260,22 +1260,22 @@ int ret;
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
-		FPCloseFork(Conn,fork);		
+		FPCloseFork(Conn,fork);
 	}
 
 	strcpy(temp, Path);
 	strcat(temp,(type == OPENFORK_RSCS)?"/.AppleDouble/":"/");
 	strcat(temp, name);
 
-	fd = open(temp, O_RDWR, 0);	
+	fd = open(temp, O_RDWR, 0);
 	if (fd >= 0) {
 	  	lock.l_start = 60;
     	lock.l_type = F_WRLCK;
 	    lock.l_whence = SEEK_SET;
     	lock.l_len = 300;
-         
+
     	if ((ret = fcntl(fd, F_SETLK, &lock)) >= 0 || (errno != EACCES && errno != EAGAIN)) {
-    	    if (!ret >= 0) 
+    	    if (!ret >= 0)
     	    	errno = 0;
     		perror("fcntl ");
 			fprintf(stdout,"\tFAILED \n");
@@ -1290,7 +1290,7 @@ int ret;
 	fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1) {
 		fprintf(stdout,"\tFAILED\n");
-		FPCloseFork(Conn2,fork1);		
+		FPCloseFork(Conn2,fork1);
 	}
 
 	FPCloseFork(Conn,fork);
@@ -1299,7 +1299,7 @@ int ret;
 		fprintf(stdout,"\tFAILED\n");
 	}
 	else {
-		FPCloseFork(Conn2,fork1);		
+		FPCloseFork(Conn2,fork1);
 	}
 	FPDelete(Conn, vol,  DIRDID_ROOT, name);
 }
@@ -1327,7 +1327,7 @@ uint16_t vol2;
 
 	test_bytelock_ex(vol2, name, OPENFORK_DATA);
 
-	name = "t117 exclusive open RF";	
+	name = "t117 exclusive open RF";
 	test_bytelock_ex(vol2, name, OPENFORK_RSCS);
 
 	FPCloseVol(Conn2,vol2);
@@ -1359,13 +1359,13 @@ int err;
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {fprintf(stdout,"\tFAILED\n");}
 
 	sprintf(temp, "%s/%s/%s", Path, ndir, name);
-	fd = open(temp, O_RDWR, 0);	
+	fd = open(temp, O_RDWR, 0);
 	if (fd >= 0) {
 	  	lock.l_start = 0;
     	lock.l_type = F_WRLCK;
 	    lock.l_whence = SEEK_SET;
     	lock.l_len = 0;
-         
+
     	if (fcntl(fd, F_SETLK, &lock) < 0) {
     		perror("fcntl ");
 			fprintf(stdout,"\tFAILED \n");
@@ -1375,8 +1375,8 @@ int err;
     	perror("open ");
 		fprintf(stdout,"\tFAILED \n");
 	}
-	
-	if (htonl(AFPERR_BUSY) != (err = FPDelete(Conn, vol,  dir , name))) { 
+
+	if (htonl(AFPERR_BUSY) != (err = FPDelete(Conn, vol,  dir , name))) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	if (fd >= 0) {
@@ -1413,7 +1413,7 @@ struct afp_filedir_parms filedir;
 
 	sprintf(temp, "%s/%s/none", Path, name);
 	sprintf(temp1,"%s/%s/link", Path, name);
-	
+
 	if (symlink(temp, temp1) < 0) {
 		perror("symlink ");
 		fprintf(stdout,"\tFAILED\n");
@@ -1429,7 +1429,7 @@ struct afp_filedir_parms filedir;
 			fprintf(stdout,"\tFAILED %d\n",filedir.offcnt);
 		}
 	}
-	if (htonl(AFPERR_NOOBJ) != FPEnumerate(Conn, vol,  dir , "", 
+	if (htonl(AFPERR_NOOBJ) != FPEnumerate(Conn, vol,  dir , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -1467,14 +1467,14 @@ struct afp_filedir_parms filedir;
 
 		fprintf(stdout,"\tFIXME FAILED\n");
 		return;
-		
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 		 (1<< DIRPBIT_ATTR) |
-		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 		 ,
 		 0
 		)) {
@@ -1517,9 +1517,9 @@ struct afp_filedir_parms filedir;
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 		 (1<< DIRPBIT_ATTR) |
-		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 		 ,
 		 0
 		)) {
@@ -1556,7 +1556,7 @@ int  vol1;
 int  err;
 char *buf = "essai\nsuite\n";
 int  len  = strlen(buf);
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test133: options mswindows crlf\n");
 
@@ -1612,7 +1612,7 @@ int  len  = strlen(buf);
 
 		FPCloseFork(Conn, fork);
 	}
-		
+
 	if (FPDelete(Conn, vol1,  DIRDID_ROOT , name1)) { fprintf(stdout,"\tFAILED\n");}
 
 	if (dir) {
@@ -1654,7 +1654,7 @@ int err;
 		return;
 	}
 	dir = filedir.did;
-	
+
 	if (htonl(AFPERR_ACCESS) != (err = FPCopyFile(Conn, vol, DIRDID_ROOT, vol , dir, name, "", name1))) {
 		fprintf(stdout,"\tFAILED\n");
 	}
@@ -1668,14 +1668,14 @@ int err;
 	if (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  dir, name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (FPCopyFile(Conn, vol, dir, vol , DIRDID_ROOT, "test.pdf", "", name1) ) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	else if (FPDelete(Conn, vol,  DIRDID_ROOT, name1) ) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
@@ -1720,7 +1720,7 @@ struct stat st;
 	}
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { fprintf(stdout,"\tFAILED\n");}
-	if (FPDelete(Conn, vol,  dir, "")) { 
+	if (FPDelete(Conn, vol,  dir, "")) {
 		fprintf(stdout,"\tFAILED\n");
 		FPDelete(Conn, vol,  dir, name);
 		FPDelete(Conn, vol,  dir, "");
@@ -1761,7 +1761,7 @@ int err;
 	if (ntohl(AFPERR_ACCESS) != FPExchangeFile(Conn, vol, DIRDID_ROOT,dir,  name, name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
@@ -1823,7 +1823,7 @@ int err;
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	/* ------------------ */	
+	/* ------------------ */
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	fork = FPOpenFork(Conn2, vol2, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
@@ -1885,16 +1885,16 @@ int err;
 
 
 	FPCloseVol(Conn2,vol2);
-	
+
 }
 
 /* --------------------------------- */
 static int is_there(int did, char *name)
 {
-	return FPGetFileDirParams(Conn, vol,  did, name, 
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	return FPGetFileDirParams(Conn, vol,  did, name,
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 	         ,
-	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) 
+	         (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID)
 		);
 }
 
@@ -1920,7 +1920,7 @@ int dir;
 		if (FPCreateFile(Conn, vol,  0, dir , temp)){
 			fprintf(stdout,"\tFAILED\n");
 		}
-		fork = forkd[i] = FPOpenFork(Conn, vol, OPENFORK_DATA , 
+		fork = forkd[i] = FPOpenFork(Conn, vol, OPENFORK_DATA ,
 			            (1<<FILPBIT_PDID)|(1<< DIRPBIT_LNAME)|(1<<FILPBIT_FNUM)|(1<<FILPBIT_DFLEN)
 			            , dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork) {fprintf(stdout,"\tFAILED\n");}
@@ -1965,7 +1965,7 @@ int  vol1;
 		return;
 	}
 
-	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -1978,7 +1978,7 @@ int  vol1;
 		fprintf(stdout,"\tFAILED\n");
 	}
 #if 0
-	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol1,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -2022,7 +2022,7 @@ struct afp_filedir_parms filedir;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test149: Error when no write access to .AppleDouble\n");
 
-	if (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		fprintf(stdout,"\tFAILED\n");
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_RD);
@@ -2058,7 +2058,7 @@ struct afp_filedir_parms filedir;
 			fprintf(stdout,"\tFAILED\n");
 		}
 
-		if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { 
+		if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 			fprintf(stdout,"\tFAILED\n");
 		}
 	}
@@ -2098,7 +2098,7 @@ struct afp_filedir_parms filedir;
 	if (FPRead(Conn, fork, 0, 2000, Data)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
+
 	if (fork && FPCloseFork(Conn, fork)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
@@ -2133,7 +2133,7 @@ int fork2, fork3;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test155: Word save NOT USED\n");
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){ 
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
@@ -2146,9 +2146,9 @@ int fork2, fork3;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_RD|OPENACC_WR);
 	/* 1280 */
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_RD|OPENACC_WR);
-		
-	
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){ 
+
+
+	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){
 		fprintf(stdout,"\tFAILED\n");
 	}
 
@@ -2157,11 +2157,11 @@ int fork2, fork3;
 
 	/* 2304 */
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
-	
-	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) { 
+
+	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	if (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT, name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 }
@@ -2173,7 +2173,7 @@ void test157()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test157: bad .AppleDouble ressource fork\n");
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -2193,7 +2193,7 @@ uint16_t bitmap;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test159: AppleDouble V1 to V2\n");
     bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
@@ -2221,7 +2221,7 @@ int dir;
 int  ofs =  3 * sizeof( uint16_t );
 int offcnt;
 struct afp_filedir_parms filedir;
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test160: utf8 name with \\r and Mac Code\n");
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
@@ -2235,7 +2235,7 @@ struct afp_filedir_parms filedir;
 	    return;
 	}
 	/* ------------------ */
-	
+
     bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME)|(1<< DIRPBIT_OFFCNT);
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, bitmap)) {
 			fprintf(stdout,"\tFAILED\n");
@@ -2264,7 +2264,7 @@ struct afp_filedir_parms filedir;
 			fprintf(stdout,"\tFAILED is %d want %d\n", filedir.offcnt, offcnt +1);
 		}
 	}
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -2296,13 +2296,13 @@ struct afp_filedir_parms filedir;
 	    }
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , ndir)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , ndir)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	/* ----------------- */
 	strcpy(nfile, "e.rtf");
 	nfile[0] = 0x8e;         /* �.rtf */
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
 		fprintf(stdout,"\tFAILED\n");
 		return;
@@ -2319,7 +2319,7 @@ struct afp_filedir_parms filedir;
 		    fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, nfile);
 	    }
 	}
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , nfile)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , nfile)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 }
@@ -2336,7 +2336,7 @@ int dir;
 int  ofs =  3 * sizeof( uint16_t );
 int offcnt;
 struct afp_filedir_parms filedir;
-	
+
     fprintf(stdout,"===================\n");
     fprintf(stdout,"test161: leading . in name UTF8 and unix\n");
 
@@ -2364,7 +2364,7 @@ struct afp_filedir_parms filedir;
 			fprintf(stdout,"\tFAILED is %d want %d\n", filedir.offcnt, offcnt +1);
 		}
 	}
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -2396,7 +2396,7 @@ struct afp_filedir_parms filedir;
 	    }
 	}
 
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , ndir)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , ndir)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 	/* ----------------- */
@@ -2416,10 +2416,10 @@ struct afp_filedir_parms filedir;
 		    fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, nfile);
 	    }
 	}
-	if (FPDelete(Conn, vol,  DIRDID_ROOT , nfile)) { 
+	if (FPDelete(Conn, vol,  DIRDID_ROOT , nfile)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-}	
+}
 
 /* ------------------------- */
 void test163()
@@ -2436,12 +2436,12 @@ char *name1 = "Un nom long 0123456789 0123456789 0123456789 0123456790.txt";
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -2475,8 +2475,8 @@ struct afp_filedir_parms filedir;
 		fprintf(stdout,"\tFAILED\n");
 		return;
 	}
-	
-	FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+
+	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	     (1<<FILPBIT_CDATE) | (1<< FILPBIT_PDID)
 	      ,
@@ -2500,7 +2500,7 @@ struct afp_filedir_parms filedir;
 			if (FPDelete(Conn, vol, DIRDID_ROOT, name1)) {
 				fprintf(stdout,"\tFAILED mangle\n");
 				FPDelete(Conn, vol,  DIRDID_ROOT , name);
-			}	
+			}
 		}
 	}
 }
@@ -2543,8 +2543,8 @@ uint16_t bitmap;
 	if (FPCreateFile(Conn, vol,  0, dir , name1)) {
 		fprintf(stdout,"\tFAILED\n");
 	}
-	
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , name, 
+
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , name,
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -2556,7 +2556,7 @@ uint16_t bitmap;
 		fprintf(stdout,"\tFAILED\n");
 	}
 
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)
 	         ,
@@ -2650,7 +2650,7 @@ uint16_t vol2;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (FPBadPacket(Conn2, 4, "staff")) {
 		fprintf(stdout,"\tFAILED\n");
-	} 
+	}
 	FPCloseVol(Conn2,vol2);
 }
 
@@ -2669,4 +2669,3 @@ int err;
     fprintf(stdout,"test999: timeout disconnect \n");
     sleep(60*3);
 }
-

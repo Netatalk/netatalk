@@ -26,7 +26,7 @@ int ret;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, rodir) ) ) {
 		goto test_exit;
@@ -44,11 +44,11 @@ int ret;
 		failed();
 	}
 
-	FAIL (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, did , name1)) 
+	FAIL (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, did , name1))
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name2))
 
-	FAIL (ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name2)) 
+	FAIL (ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name2))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name2,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
@@ -67,7 +67,7 @@ int ret;
 	}
 	FAIL (FPCloseFork(Conn,fork))
 
-	FAIL ( ntohl(AFPERR_NOOBJ) != FPCreateFile(Conn, vol,  1, did , "folder/essai")) 
+	FAIL ( ntohl(AFPERR_NOOBJ) != FPCreateFile(Conn, vol,  1, did , "folder/essai"))
 
 	/* ----------- */
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name3))) {
@@ -80,21 +80,21 @@ int ret;
 		goto fin;
 	}
 
-	FAIL (FPCreateFile(Conn, vol,  1, dir , name2)) 
+	FAIL (FPCreateFile(Conn, vol,  1, dir , name2))
 fin:
 	if (rdir) {
 		delete_folder(vol, DIRDID_ROOT, rodir);
 	}
-	FAIL (FPDelete(Conn, vol,  dir , name2)) 
+	FAIL (FPDelete(Conn, vol,  dir , name2))
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
-	
+
 test_exit:
 	exit_test("test51");
 }
 
-/* -------------------------- 
+/* --------------------------
  * test for japanese convertion
 */
 STATIC void test393()
@@ -106,9 +106,9 @@ STATIC void test393()
 SHIFT JIS
 "\226\213   \226\226  \203o     \203b     \203N     _ \203f \201[ \203^  _ \214\251 \217-110713626";
 UCS2
-   U5E55     U672B    U30D0     U30C3      U30AF       U30C7  U30FC U30BF    U898B   
+   U5E55     U672B    U30D0     U30C3      U30AF       U30C7  U30FC U30BF    U898B
 UTF8
-  e5 b9 95, e6 9c ab, e3 83 90, e3 83 83, e3 82 af, 5f,e3 83 87, e3 83 bc, e3 82 bf, 5f, e8 a6 8b, 5f 
+  e5 b9 95, e6 9c ab, e3 83 90, e3 83 83, e3 82 af, 5f,e3 83 87, e3 83 bc, e3 82 bf, 5f, e8 a6 8b, 5f
 30 37 31 33 36 32 36 0a
 */
 char *name  = "\226\213\226\226\203o\203b\203N_\203f\201[\203^_\214\251\217-110713626";
@@ -131,7 +131,7 @@ getchar();
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
-	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 
+	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE) |
 	         (1<<FILPBIT_DFLEN) | (1<<FILPBIT_RFLEN)
@@ -146,7 +146,7 @@ getchar();
 getchar();
 	FAIL( FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL( FPDelete(Conn, vol,  DIRDID_ROOT , name1))
-	
+
 test_exit:
 	exit_test("test393");
 }
@@ -158,4 +158,3 @@ void FPCreateFile_test()
     fprintf(stdout,"FPCreateFile page 138\n");
     test51();
 }
-

@@ -38,7 +38,7 @@ unsigned char *b;
 	}
 	printf("Modify AppleVolumes.default and press enter\n");
 	getchar();
-	
+
 
 	FAIL (FPCloseVol(Conn,vol2))
 
@@ -77,4 +77,3 @@ void FPGetSrvrParms_test()
     fprintf(stdout,"FPGetSrvrParms page 203\n");
 	test320();
 }
-

@@ -10,7 +10,7 @@ char *ndir = "t83 dir";
 int  dir;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 uint16_t vol = VolID;
 DSI *dsi;
@@ -26,7 +26,7 @@ DSI *dsi;
 		goto test_exit;
 	}
 
-	
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -38,13 +38,13 @@ DSI *dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
- 		FAIL (htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, DIRDID_ROOT , name1, bitmap, &filedir)) 
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
+ 		FAIL (htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, DIRDID_ROOT , name1, bitmap, &filedir))
 		FAIL (htonl(AFPERR_BADTYPE) != FPSetFileParams(Conn, vol, DIRDID_ROOT , ndir, bitmap, &filedir))
 	}
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 fin:
-	FAIL (FPDelete(Conn, vol,  dir , "")) 
+	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("test83");
 }
@@ -78,7 +78,7 @@ DSI *dsi;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
 	sleep(4);
-	
+
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name,bitmap, 0 )) {
 		failed();
 		goto end;
@@ -87,10 +87,10 @@ DSI *dsi;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	fprintf(stdout,"Modif date file %x\n", filedir.mdate);
 	sleep(5);
-			
+
 	filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
 	bitmap = (1<<DIRPBIT_ATTR);
- 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+ 	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 
 	bitmap = (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0 )) {
@@ -141,12 +141,12 @@ DSI *dsi;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
-		FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
+		FAIL (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  DIRDID_ROOT , name))
 		filedir.attr = ATTRBIT_NODELETE;
- 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+ 		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 	}
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test118");
 }
@@ -162,7 +162,7 @@ int fork1;
 int ret;
 int type = OPENFORK_RSCS;
 
-uint16_t bitmap =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 uint16_t vol = VolID;
 DSI *dsi;
@@ -229,11 +229,11 @@ DSI *dsi;
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms:t318: set UTF8 name(error)\n");
 
- 	if (Conn->afp_version < 30) { 
+ 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
  	}
- 	
+ 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -244,9 +244,9 @@ DSI *dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		FAIL (htonl(AFPERR_BITMAP) != FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) 
+		FAIL (htonl(AFPERR_BITMAP) != FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 	}
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test318");
 }
@@ -284,7 +284,7 @@ int fork = 0;
 	bitmap = (1<< DIRPBIT_ATTR) |  (1<<FILPBIT_FINFO) |
 	         (1<<DIRPBIT_CDATE) |  (1<<DIRPBIT_MDATE) |
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<<FILPBIT_FNUM );
-    
+
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , newpath, bitmap,0 )) {
 	    return -1;
     }
@@ -293,7 +293,7 @@ int fork = 0;
     afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
     memcpy(filedir.finder_info, "slnkrhap", 8);
 	bitmap = (1<<FILPBIT_FINFO);
-    
+
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT , newpath, bitmap, &filedir))
         return -1;
     return 0;
@@ -316,7 +316,7 @@ int fork = 0;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms:t427: Create a symlink\n");
-    
+
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
 		goto test_exit;
@@ -358,14 +358,14 @@ uint16_t vol2 = 0xffff;
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
 		nottested();
 		goto test_exit;
 	}
-    
+
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
 		goto test_error;
@@ -411,7 +411,7 @@ int id;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms:t429: symlink File ID\n");
-    
+
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
 		goto test_exit;
@@ -471,7 +471,7 @@ STATIC void test430()
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms:t430: set creation date on symlink\n");
-    
+
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
 		goto test_exit;
@@ -506,4 +506,3 @@ void FPSetFileParms_test()
     test429();
     test430();
 }
-

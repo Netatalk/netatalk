@@ -36,7 +36,7 @@ int fork = 0;
 	bitmap = (1<< DIRPBIT_ATTR) |  (1<<FILPBIT_FINFO) |
 	         (1<<DIRPBIT_CDATE) |  (1<<DIRPBIT_MDATE) |
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<<FILPBIT_FNUM );
-    
+
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , newpath, bitmap,0 )) {
 	    return -1;
     }
@@ -45,7 +45,7 @@ int fork = 0;
     afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
     memcpy(filedir.finder_info, "slnkrhap", 8);
 	bitmap = (1<<FILPBIT_FINFO);
-    
+
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT , newpath, bitmap, &filedir))
         return -1;
     return 0;
@@ -59,7 +59,7 @@ char *file = "t89 test error setfilparam";
 char *name = "t89 error setfilparams dir";
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
@@ -109,7 +109,7 @@ STATIC void test120()
 char *name = "t120 test file setfilparam";
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | 
+uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
@@ -156,7 +156,7 @@ STATIC void test426()
     DSI *dsi;
     int fork = 0;
     unsigned int ret;
-    char temp[MAXPATHLEN];   
+    char temp[MAXPATHLEN];
     struct stat st;
 
 	dsi = &Conn->dsi;
@@ -169,7 +169,7 @@ STATIC void test426()
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-    
+
     if (afp_symlink("t426 dest", name)) {
 		nottested();
 		goto test_exit;
@@ -225,4 +225,3 @@ void FPSetFileParms_test()
     test426();
 #endif
 }
-

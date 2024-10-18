@@ -12,7 +12,7 @@ uint16_t vol = VolID;
 int tp,tp1;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-DSI *dsi = &Conn->dsi; 
+DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 uint32_t mdate = 0;
 
@@ -32,10 +32,10 @@ uint32_t mdate = 0;
 
 	if (!Mac && delete_unix_md(Path, "", name)) {
 		nottested();
-		goto fin;	
+		goto fin;
 	}
 
-	fprintf(stdout,"sleep(2)\n");  
+	fprintf(stdout,"sleep(2)\n");
 	sleep(2);
 	tp = get_fid(Conn, vol, DIRDID_ROOT, name);
 	if (!tp) {
@@ -51,7 +51,7 @@ uint32_t mdate = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		mdate = filedir.mdate;
 	}
-	
+
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name1, bitmap,0)) {
@@ -61,7 +61,7 @@ uint32_t mdate = 0;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (mdate != filedir.mdate)  {
-	        fprintf(stdout,"\tFAILED modification date differ\n");  
+	        fprintf(stdout,"\tFAILED modification date differ\n");
 	        failed_nomsg();
 	        goto fin;
 		}
@@ -73,12 +73,12 @@ uint32_t mdate = 0;
 		goto fin;
 	}
 	if (tp == tp1) {
-	    fprintf(stdout,"\tFAILED both files have same ID\n");  
+	    fprintf(stdout,"\tFAILED both files have same ID\n");
 	    failed_nomsg();
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
 test_exit:
@@ -92,4 +92,3 @@ void FPCopyFile_test()
     fprintf(stdout,"FPCopyFile page 131\n");
 	test373();
 }
-

@@ -28,7 +28,7 @@ def process_hex_string(hex_string):
     formatted_pairs = [f"0x{pair.upper()}" for pair in hex_pairs]
 
     lines = [
-        ",  ".join(formatted_pairs[i:i+8]) 
+        ",  ".join(formatted_pairs[i:i+8])
         for i in range(0, len(formatted_pairs), 8)
     ]
 

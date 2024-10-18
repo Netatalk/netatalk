@@ -44,7 +44,7 @@ DSI *dsi;
  		FAIL (htonl(AFPERR_BITMAP) != FPSetDirParms(Conn, vol, DIRDID_ROOT , name, 0xffff, &filedir))
 	}
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test121");
 }
@@ -56,4 +56,3 @@ void FPSetDirParms_test()
     fprintf(stdout,"FPSetDirParms page 255\n");
     test121();
 }
-

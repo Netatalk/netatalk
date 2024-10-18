@@ -6,7 +6,7 @@ extern char *Server;
 extern int  Port;
 extern char *Password;
 extern char *vers;
-extern char *uam; 
+extern char *uam;
 
 static volatile int sigp = 0;
 
@@ -21,7 +21,7 @@ STATIC void test223()
 char *name = "t223 file";
 uint16_t vol = VolID;
 unsigned int ret;
-struct sigaction action;    
+struct sigaction action;
 DSI *dsi;
 int sock;
 uint32_t time= 12345;
@@ -45,7 +45,7 @@ uint32_t time= 12345;
     /* Get session token */
     FAIL( FPGetSessionToken(Conn, 3, time, strlen("test223"), "test223"))
 
-	FAIL (FPzzz(Conn, 0)) 
+	FAIL (FPzzz(Conn, 0))
 
 	fprintf(stdout,"sleep more than 2 mn\n");
 	sleep(60 * 3);
@@ -60,7 +60,7 @@ uint32_t time= 12345;
             nottested();
             goto fin;
         }
-        Conn->dsi.protocol = DSI_TCPIP; 
+        Conn->dsi.protocol = DSI_TCPIP;
         if (Conn->afp_version < 30)
             ret = FPopenLogin(Conn, vers, uam, User, Password);
         else
@@ -79,7 +79,7 @@ uint32_t time= 12345;
             nottested();
             goto fin;
         }
-        FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) 
+        FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
 	} else if (ret) {
 		failed();
@@ -104,7 +104,7 @@ STATIC void test224()
 char *name = "t224 file";
 uint16_t vol = VolID;
 unsigned int ret;
-struct sigaction action;    
+struct sigaction action;
 int sock;
 uint32_t time= 12345;
 
@@ -143,7 +143,7 @@ uint32_t time= 12345;
             nottested();
             goto fin;
         }
-        Conn->dsi.protocol = DSI_TCPIP; 
+        Conn->dsi.protocol = DSI_TCPIP;
         if (Conn->afp_version < 30)
             ret = FPopenLogin(Conn, vers, uam, User, Password);
         else
@@ -162,7 +162,7 @@ uint32_t time= 12345;
             nottested();
             goto fin;
         }
-        FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) 
+        FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
     }
 
 	/* always there ? */
@@ -177,7 +177,7 @@ fin:
     }
 test_exit:
 	exit_test("test224");
-	
+
 }
 
 /* ------------------------- */
@@ -186,7 +186,7 @@ STATIC void test239()
 char *name = "t239 file";
 uint16_t vol = VolID;
 unsigned int ret;
-struct sigaction action;    
+struct sigaction action;
 DSI *dsi;
 int sock;
 
@@ -233,4 +233,3 @@ void FPzzz_test()
     test224();
     test239();
 }
-

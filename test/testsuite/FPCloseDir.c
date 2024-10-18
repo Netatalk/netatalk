@@ -11,14 +11,14 @@ uint16_t vol = VolID;
 int ret;
 DSI *dsi;
 
-		
+
 	enter_test();
     fprintf(stdout,"===================\n");
 	fprintf(stdout, "FPCloseDir:test199: FPCloseDir call\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
-	}		
+	}
 
 	dsi = &Conn->dsi;
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
@@ -37,11 +37,11 @@ DSI *dsi;
 	if (not_valid(ret, /* MAC */AFPERR_PARAM, 0)) {
 		failed();
 	}
-	
+
 	FAIL (FPCloseDir(Conn, vol, dir))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name)) 
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
 	exit_test("test199");
 }
@@ -53,4 +53,3 @@ void FPCloseDir_test()
     fprintf(stdout,"FPCloseDir page 127\n");
 	test199();
 }
-

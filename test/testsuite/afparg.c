@@ -208,7 +208,7 @@ static void run_one(char *name, char **args)
 		nottested();
 		return;
 	}
-	
+
     (*fn)(args);
 
 	FPCloseVol(Conn,VolID);
@@ -222,7 +222,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    
+
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
@@ -320,18 +320,18 @@ int ret;
     if (!Proto) {
 	int sock;
     	Dsi = &Conn->dsi;
-		dsi = Dsi;         
+		dsi = Dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP; 
+     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
 	}
 
-    /* login */	
+    /* login */
 	// FIXME: workaround for FPopenLoginExt() being broken
 #if 0
     if (Version >= 30) {
@@ -348,7 +348,7 @@ int ret;
 		exit(1);
 	}
 	Conn->afp_version = Version;
-	
+
 	/*********************************
 	*/
 	if (Test == NULL) {

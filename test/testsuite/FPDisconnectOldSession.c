@@ -6,7 +6,7 @@ extern char  *Server;
 extern int     Port;
 extern char    *Password;
 extern char *vers;
-extern char *uam; 
+extern char *uam;
 
 static volatile int sigp = 0;
 
@@ -28,7 +28,7 @@ CONN *conn2;
 DSI *dsi3;
 int sock;
 int fork = 0, fork1;
-struct sigaction action;    
+struct sigaction action;
 
 	enter_test();
     fprintf(stdout,"===================\n");
@@ -46,7 +46,7 @@ struct sigaction action;
 	fprintf(stdout,"\tSKIPPED, FIXME need to recheck GetSessionToken 0\n");
 	skipped_nomsg();
 	goto test_exit;
-	
+
 	ret = FPGetSessionToken(Conn, 0, 0, 0, NULL);
 	if (ret) {
 		failed();
@@ -63,7 +63,7 @@ struct sigaction action;
     	nottested();
 		goto test_exit;
     }
-    dsi3->protocol = DSI_TCPIP; 
+    dsi3->protocol = DSI_TCPIP;
 	dsi3->socket = sock;
 	ret = FPopenLoginExt(conn2, vers, uam, User, Password);
 	if (ret) {
@@ -72,7 +72,7 @@ struct sigaction action;
 	}
 	conn2->afp_version = Conn->afp_version;
 
-	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) 
+	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
 	vol2  = FPOpenVol(conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -92,13 +92,13 @@ struct sigaction action;
     	nottested();
 		goto fin;
 	}
-	
+
 	ret = FPGetSessionToken(conn2, 0, 0, 0, NULL);
 	if (ret) {
 		failed();
 		goto fin;
 	}
-	memcpy(&len, dsi3->data, sizeof(uint32_t)); 
+	memcpy(&len, dsi3->data, sizeof(uint32_t));
 	len = ntohl(len);
 	if (!len) {
 		failed();
@@ -141,7 +141,7 @@ struct sigaction action;
 		goto fin;
 	}
 	FAIL (FPCloseFork(Conn,fork1))
-	
+
 fin:
     action.sa_handler =  SIG_DFL;
     sigemptyset(&action.sa_mask);
@@ -152,7 +152,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("test222");
-	    
+
 }
 
 /* ------------------------- */
@@ -177,7 +177,7 @@ uint32_t time= 12345;
 	enter_test();
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDisconnectOldSession :test338: AFP 3.x disconnect old session\n");
-    
+
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
 		goto test_exit;
@@ -266,7 +266,7 @@ uint32_t time= 12345;
     loc_conn2->afp_version = Conn->afp_version;
 
     FAIL (FPDisconnectOldSession(loc_conn2, 0, len, token))
-    
+
     sleep(1);
     ret = FPGetSessionToken(loc_conn2, 4, time, strlen(id1), id1);
     sleep(1);
@@ -369,7 +369,7 @@ struct afp_filedir_parms filedir;
         nottested();
 		goto test_exit;
     }
-    
+
     if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
 		goto test_exit;
@@ -380,10 +380,10 @@ struct afp_filedir_parms filedir;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
  	if (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -538,7 +538,7 @@ struct afp_filedir_parms filedir;
         nottested();
 		goto test_exit;
     }
-    
+
     if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
 		goto test_exit;
@@ -549,10 +549,10 @@ struct afp_filedir_parms filedir;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-    filedir.access[0] = 0; 
-    filedir.access[1] = 7; 
-    filedir.access[2] = 7; 
-    filedir.access[3] = 7; 
+    filedir.access[0] = 0;
+    filedir.access[1] = 7;
+    filedir.access[2] = 7;
+    filedir.access[3] = 7;
  	if (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) {
 		nottested();
 		goto fin;
@@ -634,4 +634,3 @@ void FPDisconnectOldSession_test()
     test370();
 #endif
 }
-

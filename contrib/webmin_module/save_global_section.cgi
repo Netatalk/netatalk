@@ -34,16 +34,16 @@ eval {
 
 	my $afpconfRef = &read_afpconf();
 	modify_afpconf_ref_and_write($afpconfRef, \%in);
-	
+
 	redirect("index.cgi");
 };
 if($@) {
 	my $msg = $@;
-	
+
 	ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
 
 	print "<p>$msg<p>";
-	
+
 	ui_print_footer("index.cgi", $text{'edit_return'});
 	exit;
 }
