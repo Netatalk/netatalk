@@ -80,7 +80,7 @@ size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
     if (len > 0)
       stored += len;
     else {/* eof or error */
-      fprintf(stdout, "dsi_stream_read(%d): %s\n", len, (len < 0)?strerror(errno):"EOF");
+      fprintf(stdout, "dsi_stream_read(%ld): %s\n", len, (len < 0)?strerror(errno):"EOF");
       if (!len)
           dsi->header.dsi_code = 0xffffffff;
       break;
@@ -1969,7 +1969,7 @@ DSI *dsi;
 int AFPBadPacket(CONN *conn, char fn, char *name )
 {
 int ofs;
-uint16_t len,l;
+uint16_t l;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1979,11 +1979,10 @@ DSI *dsi;
 	dsi->commands[ofs++] = AFP_MAPNAME;
 	memcpy(dsi->commands +ofs, &fn, sizeof(fn));
 	ofs++;
-	len = 1300;
 	memcpy(dsi->commands +ofs, &l, sizeof(l));
 	ofs += sizeof(l);
-	memcpy(dsi->commands +ofs, name, len);
-	ofs += len;
+	memcpy(dsi->commands +ofs, name, sizeof(&name));
+	ofs += sizeof(&name);
 
 	SetLen(dsi, ofs);
 
