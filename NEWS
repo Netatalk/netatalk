@@ -13,7 +13,7 @@ Changes in 4.0.1
        a new Add-ons section, GitHub #1586
 * UPD: initscripts: Use launchctl bootstrap and
        enable directives for installing on macOS, GitHub #1583
-* UPD: Remove obsoleted netatalk-config script, GitHub #1587
+* REM: Remove obsoleted netatalk-config script, GitHub #1587
 * FIX: Change u_char data types to the portable uint8_t, GitHub #1590
 * FIX: meson: Detect native Avahi before mDNS, GitHub #1591
 * UPD: initscripts: Remove the redundant systemd Also directive, GitHub #1593
@@ -36,22 +36,22 @@ Changes in 4.0.0
        This means we remove the bundled wolfSSL library.
        A big thanks to the wolfSSL team for all their support!
 * FIX: uams: Remove unhelpful Libgcrypt version check, GitHub #1550
-* UPD: Remove the obsoleted PGP UAM, GitHub #1507
+* REM: Remove the obsoleted PGP UAM, GitHub #1507
 * NEW: Bundle, configure and install the Webmin module, GitHub #518
        Controlled with the new build system option `-Dwith-webmin'.
 * UPD: Migrate afpstats from dbus-glib to GDBus, GitHub #666
        Special thanks to Simon McVittie for his help!
-* UPD: Remove canned troff man pages from distribution, GitHub #460
+* BREAKING: Remove canned troff man pages from distribution, GitHub #460
        The build system now generates them on the fly.
        Introduces a build time dependency on DocBook XSL and xsltproc.
-* UPD: Remove generated Unicode conversion tables, GitHub #1220
+* BREAKING: Remove generated Unicode conversion tables, GitHub #1220
        Introduces a build time dependency on the UnicodeData.txt database.
 * UPD: Detect host OS home dir and configure afp.conf on the fly, GitHub #1274
 * UPD: meson: Autodetect init style for host OS, #1124
 * UPD: meson: Allow building with multiple init styles, GitHub #1291
 * NEW: meson: Introduce `-Dwith-readmes' option for installing additional docs.
        GitHub #1310
-* UPD: Remove the Autotools build system. Meson is now the only choice.
+* REM: Remove the Autotools build system. Meson is now the only choice.
        GitHub #1213
 
 Changes in 3.2.10
@@ -176,12 +176,12 @@ Changes in 3.2.3
 ================
 * UPD: Record note of permission to upgrade CNID code
        to a later GPL, GitHub #1194
-* UPD: Remove long-obsoleted cnid2_create script, GitHub #1203
+* REM: Remove long-obsoleted cnid2_create script, GitHub #1203
 * UPD: docker: Add option to enable ClearText and Guest UAMs, GitHub #1202
 * FIX: docs: Standardize reference entry naming
        for netatalk-config man page, GitHub #1208
 * FIX: meson: Generate afppasswd manual html page, GitHub #1210
-* UPD: meson: Remove obsolete 64 bit library check, GitHub #1207
+* REM: meson: Remove obsolete 64 bit library check, GitHub #1207
 * FIX: meson: Enable rpath for binaries
        only when with-rpath is enabled, GitHub #1214
 * FIX: meson: Require kerberos before enabling krb5 UAM,
@@ -197,7 +197,7 @@ Changes in 3.2.2
        while removing all source files with the SSLeay copyright notice.
 * UPD: meson: Add option to override system WolfSSL
        with embedded WolfSSL: `with-ssl-override', GitHub #1176
-* UPD: Remove obsolete Red Hat Upstart and SuSE SysV init scripts, GitHub #1163
+* REM: Remove obsolete Red Hat Upstart and SuSE SysV init scripts, GitHub #1163
 * FIX: meson: Fix errors in PAM support macro, GitHub #1178
 * FIX: meson: Fix perl shebang substitution in cnid2_create script, GitHub #1183
 * FIX: meson: Fix operation of D-Bus path macros, GitHub #1182
@@ -249,7 +249,7 @@ Changes in 3.2.1
 * UPD: Debian Trixie expects systemd scripts in /usr/lib, GitHub #1135
 * UPD: Add copyright for mac_roman.h, GitHub #1137
 * FIX: Cleanup of copyright headers to make them scanner friendly, GitHub #1142
-* FIX: Remove unused atalk/talloc.h header, GitHub #1154
+* REM: Remove unused atalk/talloc.h header, GitHub #1154
 * FIX: docker: Don't bail out when password is longer than 8 chars, GitHub #1067
 * UPD: docker: Bump to Alpine 3.20 base image, GitHub #1111
 * FIX: docker: Rework AFP user's GROUP and GID settings, GitHub #1116
@@ -261,27 +261,27 @@ Changes in 3.2.1
 
 Changes in 3.2.0
 ================
-* NEW: BREAKING: Introduce the Meson build system, GitHub #707
+* NEW: Introduce the Meson build system, GitHub #707
        GNU Autotools is still supported, but will be removed
        in a future release. See the newly added INSTALL file.
-* NEW: BREAKING: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #358
+* NEW: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #358
        This is enabled by default, controlled by option "-Dwith-embedded-ssl"
        Requires the Meson build system.
        External OpenSSL 1.1 and LibreSSL are still supported.
-* NEW: BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #762
+* BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #762
        afp.conf option "ldap server" has been replaced with "ldap uri"
        and has a new syntax. See the manual for details.
-* UPD: BREAKING: Remove legacy cdb and tdb CNID backends, GitHub #508
-* UPD: BREAKING: Remove Andrew File System (AFS) support, GitHub #554
-* UPD: BREAKING: Remove bundled talloc, GitHub #479
+* REM: Remove legacy cdb and tdb CNID backends, GitHub #508
+* REM: Remove Andrew File System (AFS) support, GitHub #554
+* REM: Remove bundled talloc, GitHub #479
        For Spotlight support, use the talloc library supplied by your OS,
        or get the source code from the Samba project and build it yourself.
-* UPD: BREAKING: Remove generated SPARQL code, GitHub #337
+* BREAKING: Remove generated SPARQL code, GitHub #337
        This introduces a compile time dependency on
        a yacc parser and a lexer to build with Spotlight support.
-* UPD: BREAKING: Rename macOS launchd plist to io.netatalk.*, GitHub #778
+* BREAKING: Rename macOS launchd plist to io.netatalk.*, GitHub #778
        Note: Only the Meson build system will clean up the old plist.
-* UPD: BREAKING: Renamed Gentoo init script to openrc, GitHub #868
+* BREAKING: Renamed Gentoo init script to openrc, GitHub #868
        OpenRC is cross platform; confirmed working on Alpine Linux.
 * NEW: FreeBSD init script, borrowed from FreeBSD ports, GitHub #876
        Special thanks to the author, Joe Marcus Clarke.
@@ -318,7 +318,7 @@ Changes in 3.2.0
 * FIX: Build with PAM support on FreeBSD 14, GitHub #560
 * FIX: Allow libevent2 linking on OpenIndiana, GitHub #512
 * FIX: Control all Spotlight dependencies at compile time, GitHub #571
-* UPD: Remove redundant AUTHORS file, GitHub #538
+* REM: Remove redundant AUTHORS file, GitHub #538
 
 Changes in 3.1.18
 =================
@@ -357,7 +357,7 @@ Changes in 3.1.16
        with mysql_config and dtrace, GitHub#384
 * FIX: build system: Support building quota against libtirpc, GitHub#385
 * FIX: build system: Fix variable substitution in configure summary, GitHub#443
-* UPD: build system: Remove ABI checks and the --enable-developer option, GitHub#262
+* REM: build system: Remove ABI checks and the --enable-developer option, GitHub#262
 * FIX: initscript: Improvements to Debian SysV init script
        - Source init-functions, GitHub#386
        - Add a Description and Short-Description, GitHub#428
@@ -370,8 +370,8 @@ Changes in 3.1.16
        to make naming implementation-agnostic, GitHub#379
 * UPD: Remove redundant uid.c|h files in etc/afpd
 * UPD: Don't build and distribute deprecated cnid2_create tool, GitHub#412
-* UPD: Remove deprecated megatron code and man page, GitHub#456
-* UPD: Remove deprecated uniconv code and man page, GitHub#457
+* REM: Remove deprecated megatron code and man page, GitHub#456
+* REM: Remove deprecated uniconv code and man page, GitHub#457
 * UPD: Improvements to the GitHub CI workflow
 
 Changes in 3.1.15
@@ -403,7 +403,7 @@ Changes in 3.1.15
 * FIX: Fix all function declarations without a prototype
 * FIX: Fix C99 compliance issues
 * FIX: Fix gcc10 compiler warnings
-* UPD: Remove acsiidocs sources and release notes script
+* REM: Remove acsiidocs sources and release notes script
 * FIX: manpages: afp.conf: Parameters are not quoted, SF bug#617
 * FIX: manpages: afp.conf: Document $u in home name, GitHub#123
 * FIX: manpages: afp.conf: Document the usage of guest user, GitHub#298
@@ -457,7 +457,7 @@ Changes in 3.1.13
 * FIX: CVE-2022-23124
 * FIX: CVE-2022-0194
 * FIX: afpd: make a variable declaration a definition
-* UPD: Remove bundled libevent
+* REM: Remove bundled libevent
 
 Changes in 3.1.12
 =================
