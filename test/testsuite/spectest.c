@@ -309,6 +309,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
+    fprintf( stdout,"\t-C\tturn on terminal color output\n");
     exit (1);
 }
 
@@ -409,13 +410,15 @@ int ret;
 	case 'i':
 		Interactive = 1;
 		break;
+	case 'C':
+		Color = 1;
+		break;
 
         default :
             usage( av[ 0 ] );
         }
     }
 	Loglevel = AFP_LOG_INFO;
-	Color = 1;
 
 	if (List) {
 		list_tests();

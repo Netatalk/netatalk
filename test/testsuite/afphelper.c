@@ -19,7 +19,6 @@ AFP_WRITE,
 #endif
 
 int Loglevel = AFP_LOG_INFO;
-int Color = 1;
 
 /*!
  * Helper for FPGetSessionToken, extracts token from reply buffer

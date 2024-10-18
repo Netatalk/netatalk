@@ -10,6 +10,7 @@ int	Quirk = 0;
 int	Verbose = 0;
 int	Recurse = 0;
 int	Twice = 0;
+int	Color = 0;
 
 #define UNICODE(a) (a->afp_version >= 30)
 

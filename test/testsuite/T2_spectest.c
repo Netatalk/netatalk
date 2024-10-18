@@ -290,6 +290,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
+    fprintf( stdout,"\t-C\tturn on terminal color output\n");
     exit (1);
 }
 
@@ -301,7 +302,7 @@ int ret;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "iv1234567ah:H:p:s:u:d:w:c:f:lmMS:L" )) != EOF ) {
+    while (( cc = getopt( ac, av, "iv1234567ah:H:p:s:u:d:w:c:f:lmMS:LC" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -386,6 +387,9 @@ static char *uam = "Cleartxt Passwrd";
 		case 'M':
 			Manuel = 1;
 			break;
+	case 'C':
+		Color = 1;
+		break;
         default :
             usage( av[ 0 ] );
         }
