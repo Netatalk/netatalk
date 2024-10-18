@@ -30,10 +30,6 @@
 #include <sys/socket.h>
 
 #include <sys/ioctl.h>
-#ifdef TRU64
-#include <sys/mbuf.h>
-#include <net/route.h>
-#endif /* TRU64 */
 #include <net/if.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
@@ -54,19 +50,6 @@
 #define SA_ONESHOT SA_RESETHAND
 #endif
 
-
-#ifndef uint16_t
-#define uint16_t uint16_t
-#endif
-#ifndef uint32_t
-#define uint32_t uint32_t
-#endif
-#ifndef uint64_t
-#define uint64_t uint64_t
-#endif
-#ifndef uint8_t
-#define uint8_t uint8_t
-#endif
 
 #ifndef HAVE_BSWAP_64
 #define bswap_64(x) \

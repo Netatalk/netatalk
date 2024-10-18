@@ -1,12 +1,15 @@
 #include "afpclient.h"
 #include "test.h"
 
-int     Throttle;
+// Define the global test settings
+int     Throttle = 0;
 int     Convert = 1;
 int	Interactive = 0;
 int	Quiet = 1;
 int	Quirk = 0;
 int	Verbose = 0;
+int	Recurse = 0;
+int	Twice = 0;
 
 #define UNICODE(a) (a->afp_version >= 30)
 

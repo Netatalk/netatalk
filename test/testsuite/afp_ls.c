@@ -12,8 +12,6 @@ CONN *Conn;
 CONN *Conn2;
 
 int ExitCode = 0;
-int Recurse = 0;
-int Twice = 0;
 
 static uint8_t buffer[DSI_DATASIZ];
 
