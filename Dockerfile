@@ -41,7 +41,7 @@ ARG BUILD_DEPS="\
     tracker-dev \
     unicode-character-database"
 
-FROM alpine:3.20 as build
+FROM alpine:3.20 AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -72,7 +72,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM alpine:3.20 as deploy
+FROM alpine:3.20 AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
