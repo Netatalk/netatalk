@@ -48,6 +48,8 @@ In order to use Zeroconf service discovery as well as the AppleTalk transport la
 
 Additionally, we rely on the host's DBUS for Zeroconf, achieved with a bind mount such as `/var/run/dbus:/var/run/dbus`. The left hand side of the bind mount is the host machine, and the right hand side is the container. The host machine path may have to be changed to match the location of DBUS on the host machine.
 
+On certain host OSes, notably Ubuntu: if the Apparmor security policy restricts D-Bus messages, enable the `unconfined` security option. See the [Docker AppArmor security profiles documentation](https://docs.docker.com/engine/security/apparmor/) for further details.
+
 The container is hard coded to output `afpd` (the Netatalk file server daemon) logs to the container's stdout, with default log level `info`. Logs from the AppleTalk daemons are sent to the syslog.
 
 ## Printing
