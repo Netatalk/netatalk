@@ -128,6 +128,12 @@ else
     TIMEMACHINE="yes"
 fi
 
+if [ -z "${SERVER_NAME}" ]; then
+    ATALK_NAME=$(hostname|cut -d. -f1)
+else
+    ATALK_NAME=${SERVER_NAME}
+fi
+
 if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
     cat <<EOF > /usr/local/etc/afp.conf
@@ -166,6 +172,8 @@ else
 
 	echo "*** Starting AppleTalk services (this will take a minute)"
 	atalkd
+	nbprgstr -p 4 "${ATALK_NAME}:Workstation"
+	nbprgstr -p 4 "${ATALK_NAME}:netatalk"
 	papd
 	timelord -l
 	a2boot
