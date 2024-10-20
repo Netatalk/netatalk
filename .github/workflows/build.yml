@@ -107,19 +107,24 @@ jobs:
         run: |
           pacman -Sy --noconfirm \
             avahi \
+            bison \
             cmark-gfm \
             cracklib \
             cups \
             db \
             docbook-xsl \
+            flex \
             gcc \
             libxslt \
+            localsearch \
             mariadb-clients \
             meson \
             ninja \
             perl \
             pkgconfig \
             rpcsvc-proto \
+            talloc \
+            tinysparql \
             unicode-character-database
       - name: Configure
         run: |
