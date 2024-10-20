@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a software defect or compatibility issue.
 title: ''
 labels: ''
 assignees: ''
