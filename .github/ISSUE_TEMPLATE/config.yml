@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Netatalk Community Support
+    url: https://github.com/Netatalk/netatalk/discussions
+    about: Share your ideas or ask for technical support here.
