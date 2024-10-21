@@ -37,7 +37,7 @@ EOF
     echo "A template configuration file spectest.conf has been generated."
     echo "Adjust it to match the AFP server under test and run this script again."
     echo "====================================="
-    exit 1
+    exit 0
 fi
 
 . ./test/testsuite/spectest.conf
