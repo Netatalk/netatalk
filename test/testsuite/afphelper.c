@@ -824,10 +824,10 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3 and volume with adouble:ea";
+		s = "Netatalk 3 and volume with appledouble = ea";
 		break;
 	case T_ADV2:
-		s = "adouble:v2 volume";
+		s = "appledouble = v2 volume";
 		break;
 	case T_NOSYML:
 		s = "volume without option 'followsymlinks'";
@@ -847,15 +847,19 @@ void failed_nomsg(void)
 /* ------------------------- */
 void skipped_nomsg(void)
 {
+#if 0
 	if (!ExitCode)
 		ExitCode = 3;
+#endif
 	CurTestResult = 3;
 }
 /* ------------------------- */
 void nottested_nomsg(void)
 {
+#if 0
 	if (!ExitCode)
 		ExitCode = 2;
+#endif
 	CurTestResult = 2;
 }
 
@@ -909,11 +913,6 @@ void exit_test(char *name)
 		} else {
 			s = "FAILED";
 		}
-#if 0
-        fprintf(stderr, "%s - summary - ", name);
-        fprintf(stderr, "%s%s (%d)\n", s, Why, CurTestResult);
-        fflush(stderr);
-#endif
         fprintf(stdout, "%s - summary - ", name);
         fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
         fflush(stdout);
@@ -929,6 +928,11 @@ void exit_test(char *name)
 		s = skipped_msg_buf;
 		break;
 	}
+#if 0
+        fprintf(stderr, "%s - summary - ", name);
+        fprintf(stderr, "%s%s (%d)\n", s, Why, CurTestResult);
+        fflush(stderr);
+#endif
 	fprintf(stdout, "%s - summary - ", name);
 	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
     fflush(stdout);
