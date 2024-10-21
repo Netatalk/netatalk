@@ -833,7 +833,11 @@ void test_skipped(int why)
 		s = "volume without option 'followsymlinks'";
 		break;
 	}
-	snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (need %s)", s);
+	if (Color) {
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (need %s)" ANSI_NORMAL, s);
+	} else {
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (need %s)", s);
+	}
 	CurTestResult = 3;
 }
 
