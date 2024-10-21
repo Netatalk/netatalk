@@ -84,14 +84,12 @@ afp.conf:
 [Global]
 uam list = uams_clrtxt.so uams_guest.so
 
-# volume mount read only
 # not empty at least 2 files and one folder (empty).
-[cdrom]
-path = /mnt/cdrom
-vol dbpath = /opt/var/afpd/cdrom
+[test1]
+path = /tmp/afptest1
 
-[test]
-path = /u/test
+[test2]
+path = /tmp/afptest2
 #<<<<<<<<
 
 For testing with a Mac, same config (user1 or user2 are not owner)
@@ -120,12 +118,12 @@ on a Mac server or afpd.
 Example:
 --------
 Run all tests on server 192.168.2.123
-spectest  -h 192.168.2.123 -u user1 -d usr2 -s test -w  toto
+spectest -h 192.168.2.123 -u user1 -d usr2 -s test -w toto
 Same but on a Mac
-spectest -m -h 192.168.2.64 -u user1 -d usr2 -s test -w  toto
+spectest -m -h 192.168.2.64 -u user1 -d usr2 -s test -w toto
 
 Run FPByteRangeLock tests with AFP 3.0, two different servers are exporting the same volume.
-T2_spectest -f FPByteRangeLock -3  -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /u/test -w toto
+T2_spectest -f FPByteRangeLock -3 -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /tmp/afptest1 -w toto
 
 At least on linux, it's possible to compile them with LDFLAGS=-rdynamic
 and the program can run individual test:
