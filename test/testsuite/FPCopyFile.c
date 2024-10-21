@@ -21,8 +21,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test71: Copy file\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -94,7 +92,7 @@ fin:
 	delete_folder(vol, DIRDID_ROOT, ndir);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
-	exit_test("test71");
+	exit_test("FPCopyFile:test71: Copy file");
 }
 
 /* ------------------------- */
@@ -105,8 +103,6 @@ char *name1 = "t158 new file name";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test158: copyFile dest exist\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -120,7 +116,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	exit_test("test158");
+	exit_test("FPCopyFile:test158: copyFile dest exist");
 }
 
 /* ------------------------- */
@@ -133,8 +129,6 @@ uint16_t vol = VolID;
 int fork;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test315: copyFile\n");
 
 	if (get_vol_free(vol) < 130*1024*1024) {
 	    /* assume sparse file for setforkparam, not for copyfile */
@@ -184,7 +178,7 @@ int fork;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test315");
+	exit_test("FPCopyFile:test315: copyFile");
 }
 
 /* ------------------------- */
@@ -259,11 +253,9 @@ char *name  = "t317 old file name";
 char *name1 = "t317 new file name";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test317: copyFile check meta data\n");
     test_meta(name, name1, VolID);
 
-	exit_test("test317");
+	exit_test("FPCopyFile:test317: copyFile check meta data");
 }
 
 /* ------------------------- */
@@ -280,8 +272,6 @@ uint16_t bitmap;
 uint32_t mdate = 0;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test332: copyFile check meta data\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -333,7 +323,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	exit_test("test332");
+	exit_test("FPCopyFile:test332: copyFile check meta data");
 }
 
 /* ----------- */
@@ -350,8 +340,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test374: Copy open file (deny read), two clients\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -388,7 +376,7 @@ fin:
 	FPCloseVol(Conn2,vol2);
 
 test_exit:
-	exit_test("test374");
+	exit_test("FPCopyFile:test374: Copy open file (deny read), two clients");
 }
 
 /* ------------------------- */
@@ -402,8 +390,6 @@ char *name1 = "t375 new file name";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test158: copyFile dest exist and is open\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -437,7 +423,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	exit_test("test375");
+	exit_test("FPCopyFile:test158: copyFile dest exist and is open");
 }
 
 /* ------------------------- */
@@ -458,8 +444,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:t401: unix access privilege, read only file\n");
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -539,7 +523,7 @@ fin1:
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test401");
+	exit_test("FPCopyFile:test401: unix access privilege, read only file");
 }
 
 /* ------------------------- */
@@ -560,8 +544,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:t401: unix access privilege, read only file\n");
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -631,7 +613,7 @@ fin1:
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test402");
+	exit_test("FPCopyFile:test402: unix access privilege");
 }
 
 /* ------------------------- */
@@ -651,8 +633,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:t403: unix access privilege, same priv\n");
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -723,7 +703,7 @@ fin1:
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test403");
+	exit_test("FPCopyFile:test403: unix access privilege, same priv");
 }
 
 
@@ -743,8 +723,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:t406: unix access privilege, read only file\n");
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) | (1<<FILPBIT_ATTR);
 
@@ -755,7 +733,7 @@ DSI *dsi;
 	FPCopyFile(Conn, vol, dir, vol, dir, name, "", name1);
 
 test_exit:
-	exit_test("test406");
+	exit_test("FPCopyFile:test406: unix access privilege, read only file");
 }
 
 /* ------------------------- */
@@ -944,8 +922,6 @@ char *name1= "new t407 file.pdf";
 uint16_t vol2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:t407: copy file between two volumes\n");
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;
@@ -959,7 +935,7 @@ uint16_t vol2;
 	FAIL (FPCloseVol(Conn, vol2))
 
 test_exit:
-	exit_test("test407");
+	exit_test("FPCopyFile:test407: copy file between two volumes");
 }
 
 /* ------------------------- */
@@ -970,8 +946,6 @@ char *name1 = "t408 new file name";
 uint16_t vol2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test408: copyFile check meta data, two volumes\n");
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;
@@ -986,7 +960,7 @@ uint16_t vol2;
 
 	FAIL (FPCloseVol(Conn, vol2))
 test_exit:
-	exit_test("test408");
+	exit_test("FPCopyFile:test408: copyFile check meta data, two volumes");
 }
 
 
@@ -997,12 +971,10 @@ char *name  = "t409 old file name";
 char *name1 = "t409 new file name";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test409: copyFile check meta data, one volume\n");
 
     test_data(name, name1, VolID);
 
-	exit_test("test409");
+	exit_test("FPCopyFile:test409: copyFile check meta data, one volume");
 }
 
 /* ------------------------- */
@@ -1018,8 +990,6 @@ char *attr_name="test416_attribute";
     dsi = &Conn->dsi;
 
 	enter_test();
-	fprintf(stdout,"===================\n");
-	fprintf(stdout,"FPCopyFile:test416: copy xattr\n");
 
     if (Conn->afp_version < 32) {
         test_skipped(T_AFP3);
@@ -1054,7 +1024,7 @@ char *attr_name="test416_attribute";
     FAIL(FPDelete(Conn, vol,  DIRDID_ROOT , file1))
 
 test_exit:
-	exit_test("test416");
+	exit_test("FPCopyFile:test416: copy xattr");
 }
 
 /* ------------------------- */
@@ -1067,8 +1037,6 @@ char *name2 = "t414 dir";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test414: copyFile with bad dest directory\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -1092,7 +1060,7 @@ test_exit:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
-	exit_test("test414");
+	exit_test("FPCopyFile:test414: copyFile with bad dest directory");
 }
 
 /* ------------------------- */
@@ -1111,8 +1079,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile:test424: Copy file with dest directory\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -1144,7 +1110,7 @@ fin:
 	delete_folder(vol, DIRDID_ROOT, ndir);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
-	exit_test("test424");
+	exit_test("FPCopyFile:test424: Copy file with dest directory");
 }
 
 
@@ -1153,12 +1119,10 @@ void FPCopyFile_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCopyFile page 131\n");
+    fprintf(stdout,"===================\n");
     test71();
 	test158();
-// FIXME: why is this test "not run" when the server under test is remote?
-#if 0
 	test315();
-#endif
 	test317();
 	test332();
 	test374();

@@ -13,11 +13,9 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test60: illegal fork\n");
 
 	illegal_fork(dsi, AFP_BYTELOCK, name);
-	exit_test("test60");
+	exit_test("FPByteRangeLock:test60: illegal fork");
 }
 
 /* ------------------------- */
@@ -112,10 +110,8 @@ STATIC void test63()
 char *name = "test63 FPByteLock DF";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test63: FPByteLock Data Fork\n");
 	test_bytelock(VolID, name, OPENFORK_DATA);
-	exit_test("test63");
+	exit_test("FPByteRangeLock:test63: FPByteLock Data Fork");
 }
 
 /* ----------- */
@@ -124,10 +120,8 @@ STATIC void test64()
 char *name = "test64 FPByteLock RF";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test64: FPByteLock Resource Fork\n");
 	test_bytelock(VolID, name, OPENFORK_RSCS);
-	exit_test("test64");
+	exit_test("FPByteRangeLock:test64: FPByteLock Resource Fork");
 }
 
 /* -------------------------- */
@@ -193,7 +187,7 @@ STATIC void test65()
 char *name = "t65 DF FPByteLock 2 users";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
+	if (!Quiet)
     fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
 
 	if (!Conn2) {
@@ -207,11 +201,11 @@ char *name = "t65 DF FPByteLock 2 users";
     test_bytelock3(name, OPENFORK_DATA);
 
 	name = "t65 RF FPByteLock 2 users";
-    fprintf(stdout,"===================\n");
+	if (!Quiet)
     fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users Resource FORK\n");
     test_bytelock3(name, OPENFORK_RSCS);
 test_exit:
-	exit_test("test65");
+	exit_test("FPByteRangeLock:test65: FPByteLock 2users");
 }
 
 /* ---------------------------- */
@@ -291,7 +285,6 @@ void test78()
 char *name = "t78 FPByteLock RF size -1";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test78: test Byte Lock size -1 with no large file support\n");
 	if (Locking) {
 		test_skipped(T_LOCKING);
@@ -299,12 +292,11 @@ char *name = "t78 FPByteLock RF size -1";
 	}
 	test_bytelock2(name, OPENFORK_RSCS);
 
-    fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock:test78: test Byte Lock size -1 with no large file support, DATA fork\n");
 	name = "t78 FPByteLock DF size -1";
 	test_bytelock2(name, OPENFORK_DATA);
 test_exit:
-	exit_test("test78");
+	exit_test("FPByteRangeLock:test78: test Byte Lock size -1");
 }
 
 /* ----------- */
@@ -319,8 +311,6 @@ char *name = "t79 FPByteLock Read";
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test79: test Byte Lock and read conflict\n");
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -352,7 +342,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 		nottested();
 	}
 test_exit:
-	exit_test("test79");
+	exit_test("FPByteRangeLock:test79: test Byte Lock and read conflict");
 }
 
 /* -------------------------- */
@@ -392,16 +382,16 @@ STATIC void test80()
 char *name = "t80 RF FPByteLock Read write";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
+	if (!Quiet)
     fprintf(stdout,"FPByteRangeLock:test80: Resource Fork test Byte Lock and read write same user(file)\n");
 	test_bytelock5(VolID, name, OPENFORK_RSCS);
 
-    fprintf(stdout,"===================\n");
+	if (!Quiet)
     fprintf(stdout,"FPByteRangeLock:test80: Data Fork test Byte Lock and read write same user(file)\n");
 	name = "t80 DF FPByteLock Read write";
 	test_bytelock5(VolID, name, OPENFORK_DATA);
 
-	exit_test("test80");
+	exit_test("FPByteRangeLock:test80: Resource Fork FPByteLock Read write");
 }
 
 /* --------------- */
@@ -418,8 +408,6 @@ DSI *dsi2;
 int type = OPENFORK_DATA;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test329: FPByteLock 2users DATA FORK\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -493,7 +481,7 @@ int type = OPENFORK_DATA;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test329");
+	exit_test("FPByteRangeLock:test329: FPByteLock 2users DATA FORK");
 }
 
 /* --------------- */
@@ -510,8 +498,6 @@ STATIC void test410()
     int type = OPENFORK_DATA;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test410: FPByteLock 2users DATA FORK\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -584,7 +570,7 @@ fin2:
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test410");
+	exit_test("FPByteRangeLock:test410: FPByteLock 2users DATA FORK");
 }
 
 /* ------------------- */
@@ -812,8 +798,6 @@ DSI *dsi2;
 int dir, dir2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test330: pre OSX trash folder\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -849,7 +833,7 @@ fin:
 	        FAIL (FPDelete(Conn, vol, dir, ""))
 	}
 test_exit:
-	exit_test("test330");
+	exit_test("FPByteRangeLock:test330: pre OSX trash folder");
 }
 
 /* --------------- */
@@ -867,8 +851,6 @@ DSI *dsi2;
 int type = OPENFORK_DATA;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test366: Locks released on exit\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -880,7 +862,7 @@ int type = OPENFORK_DATA;
 	}
 	/* hack, it closes a connection */
 	if (!Test) {
-		fprintf(stdout,"\tSKIPPED (only with -f option)\n");
+		test_skipped(T_SINGLE);
 		goto test_exit;
 	}
 
@@ -949,7 +931,7 @@ int type = OPENFORK_DATA;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test366");
+	exit_test("FPByteRangeLock:test366: Locks released on exit");
 }
 
 /* ----------- */
@@ -957,6 +939,7 @@ void FPByteRangeLock_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock page 101\n");
+    fprintf(stdout,"===================\n");
     test60();
 // FIXME: These tests are broken with Netatalk 4.0
 #if 0

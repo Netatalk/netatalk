@@ -22,8 +22,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test129: Resolve ID \n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -68,7 +66,7 @@ DSI *dsi = &Conn->dsi;
 	vol  = FPOpenVol(Conn, Vol);
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
-	exit_test("test129");
+	exit_test("FPResolveID:test129: Resolve ID");
 }
 
 /* -------------------------- */
@@ -85,8 +83,6 @@ DSI *dsi = &Conn->dsi;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test130: Delete ID \n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -137,7 +133,7 @@ int ret;
 	}
 
 test_exit:
-	exit_test("test130");
+	exit_test("FPResolveID:test130: Delete ID");
 }
 
 /* -------------------------- */
@@ -153,8 +149,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test131: Resolve ID \n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -198,7 +192,7 @@ DSI *dsi = &Conn->dsi;
 	vol  = FPOpenVol(Conn, Vol);
 	FAIL (ntohl(AFPERR_NOID ) != FPDeleteID(Conn, vol, filedir.did))
 test_exit:
-	exit_test("test131");
+	exit_test("FPResolveID:test131: Resolve ID");
 }
 
 
@@ -217,8 +211,6 @@ int fid = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test331: Resolve ID file modified with local fs\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -289,7 +281,7 @@ fin:
 	FPDelete(Conn, vol,  dir, name);
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test331");
+	exit_test("FPResolveID:test331: Resolve ID file modified with local fs");
 
 }
 
@@ -351,8 +343,6 @@ int fork = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test360: Resolve ID file modified with local fs and a file is opened\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -449,7 +439,7 @@ fin:
 	FPDelete(Conn, vol,  dir, name);
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test360");
+	exit_test("FPResolveID:test360: Resolve ID file modified with local fs and a file is opened");
 
 }
 
@@ -464,8 +454,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test397: Resolve ID file deleted local fs \n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -499,7 +487,7 @@ DSI *dsi = &Conn->dsi;
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 
 test_exit:
-	exit_test("test397");
+	exit_test("FPResolveID:test397: Resolve ID file deleted local fs");
 }
 
 /* -------------------------- */
@@ -517,8 +505,6 @@ int fid = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test412: Resolve ID file modified with local fs\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -595,7 +581,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir1, ""))
 	FAIL (FPDelete(Conn, vol,  dir2, ""))
 test_exit:
-	exit_test("test412");
+	exit_test("FPResolveID:test412: Resolve ID file modified with local fs");
 
 }
 
@@ -614,8 +600,6 @@ int fid = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test413: Resolve ID file modified with local fs\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -693,7 +677,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 	FAIL (FPDelete(Conn, vol,  dir2, ""))
 test_exit:
-	exit_test("test413");
+	exit_test("FPResolveID:test413: Resolve ID file modified with local fs");
 
 }
 
@@ -715,8 +699,6 @@ int nfid1 = 0, nfid2 = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test417: Resolve ID files swapped by local fs\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -863,7 +845,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, name2))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test417");
+	exit_test("FPResolveID:test417: Resolve ID files swapped by local fs");
 
 }
 
@@ -883,8 +865,6 @@ int fid1 = 0, fid2;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test418: Resolve ID files name swapped with AFP rename\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -960,7 +940,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, name2))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test418");
+	exit_test("FPResolveID:test418: Resolve ID files name swapped with AFP rename");
 }
 
 /* -------------------------- */
@@ -979,8 +959,6 @@ int nfid1 = 0, nfid2 = 0;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test419: Resolve ID files swapped by local fs but not their resource forks\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1079,7 +1057,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, name2))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test419");
+	exit_test("FPResolveID:test419: Resolve ID files swapped by local fs but not their resource forks");
 }
 
 
@@ -1089,6 +1067,7 @@ void FPResolveID_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPResolveID page 252\n");
+    fprintf(stdout,"===================\n");
 	test129();
 	test130();
 	test131();

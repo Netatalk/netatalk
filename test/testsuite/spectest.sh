@@ -77,26 +77,26 @@ echo "====================================="
 echo "Test summary"
 echo "------------"
 echo "Passed tests:"
-grep "summary.*PASS" ./test/testsuite/spectest.log | wc -l
+grep "PASS" ./test/testsuite/spectest.log | wc -l
 echo "Failed tests:"
-grep "summary.*FAIL" ./test/testsuite/spectest.log | wc -l
+grep "FAIL" ./test/testsuite/spectest.log | wc -l
 echo "Skipped tests:"
-egrep "summary.*NOT TESTED|summary.*SKIPPED" ./test/testsuite/spectest.log | wc -l
+egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | wc -l
 echo "====================================="
 
 echo "Failed tests"
 echo "------------"
-grep "summary.*FAIL" ./test/testsuite/spectest.log | sed s/test//g | sed s/summary\ -\ //g | sort -n | uniq
+grep "FAIL" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Skipped tests"
 echo "------------"
-egrep "summary.*NOT TESTED|summary.*SKIPPED" ./test/testsuite/spectest.log | sed s/test//g | sed s/summary\ -\ //g | sort -n | uniq
+egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Successful tests"
 echo "------------"
-grep "summary.*PASSED" ./test/testsuite/spectest.log | sed s/test//g | sed s/summary\ -\ //g | sort -n | uniq
+grep "PASSED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 # cleanup

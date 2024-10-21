@@ -70,7 +70,6 @@ extern void failed_nomsg(void);
 extern void skipped_nomsg(void);
 extern void nottested_nomsg(void);
 extern void failed(void);
-extern void known_failure(char *why);
 extern void enter_test(void);
 extern void exit_test(char *name);
 
@@ -100,6 +99,7 @@ extern void test_skipped(int why);
 #define T_ADV2       19
 #define T_AFP30      20
 #define T_NO_UNIX_PREV 21
+#define T_SINGLE     22
 
 /* ---------------------------------
 */

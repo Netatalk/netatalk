@@ -23,8 +23,6 @@ DSI *dsi2;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPDelete:test146: delete read only open file\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -117,7 +115,7 @@ int ret;
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 	FAIL (FPCloseVol(Conn2,vol2))
 test_exit:
-	exit_test("test146");
+	exit_test("FPDelete:test146: delete read only open file");
 }
 
 /* -------------------------- */
@@ -133,8 +131,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test507: Resolve ID in a deleted folder\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -165,7 +161,7 @@ DSI *dsi = &Conn->dsi;
 	vol  = FPOpenVol(Conn, Vol);
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
-	exit_test("test507");
+	exit_test("FPDelete:test507: Resolve ID in a deleted folder");
 }
 
 /* -------------------------- */
@@ -182,8 +178,6 @@ DSI *dsi = &Conn->dsi;
 int fork;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test363: Get fork param in a deleted folder\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -234,7 +228,7 @@ fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , "");
 test_exit:
-	exit_test("test363");
+	exit_test("FPDelete:test363: Get fork param in a deleted folder");
 
 }
 
@@ -251,8 +245,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test364: Delete ID in a deleted folder\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -285,7 +277,7 @@ fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , "");
 test_exit:
-	exit_test("test364");
+	exit_test("FPDelete:test364: Delete ID in a deleted folder");
 
 }
 
@@ -296,6 +288,7 @@ void FPDelete_test()
 #if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDelete page 143\n");
+    fprintf(stdout,"===================\n");
     test146();
     test507();
 #if 0

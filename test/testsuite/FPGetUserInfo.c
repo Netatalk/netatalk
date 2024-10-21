@@ -16,8 +16,6 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetUserInfo:test75: Get User Info\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -74,7 +72,7 @@ DSI *dsi = &Conn->dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test75");
+	exit_test("FPGetUserInfo:test75: Get User Info");
 }
 
 /* ----------- */
@@ -82,5 +80,6 @@ void FPGetUserInfo_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPFPGetUserInfo page 204\n");
+    fprintf(stdout,"===================\n");
 	test75();
 }

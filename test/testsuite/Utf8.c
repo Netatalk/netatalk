@@ -14,8 +14,6 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test162: illegal UTF8 name\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -38,7 +36,7 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 test_exit:
-	exit_test("test162");
+	exit_test("Utf8:test162: illegal UTF8 name");
 }
 
 /* ------------------------- */
@@ -52,8 +50,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test166: utf8 precompose decompose\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -96,7 +92,7 @@ DSI *dsi = &Conn->dsi;
 	nfile[2] = 0x81;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("test166");
+	exit_test("Utf8:test166: utf8 precompose decompose");
 }
 
 /* ------------------------- */
@@ -110,8 +106,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test167: utf8 precompose decompose\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -154,7 +148,7 @@ DSI *dsi = &Conn->dsi;
 	nfile[3] = 0x80;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("test167");
+	exit_test("Utf8:test167: utf8 precompose decompose");
 }
 
 /* ------------------------- */
@@ -168,8 +162,6 @@ int  dir;
 int  dir1;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test181: test search by ID UTF8\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -230,7 +222,7 @@ int  dir1;
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test181");
+	exit_test("Utf8:test181: test search by ID UTF8");
 }
 
 /* -------------------------
@@ -242,8 +234,6 @@ char *name1 = "t185 donne\314"; /* decomposed donn�es */
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test185: rename utf8 name\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -268,7 +258,7 @@ uint16_t vol = VolID;
 
 	FPFlush(Conn, vol);
 test_exit:
-	exit_test("test185");
+	exit_test("Utf8:test185: rename utf8 name");
 }
 
 /* ------------------------- */
@@ -283,8 +273,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test233: false mangled UTF8 dirname\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -318,7 +306,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test233");
+	exit_test("Utf8:test233: false mangled UTF8 dirname");
 }
 
 /* ------------------------- */
@@ -334,8 +322,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test234: false mangled UTF8 filename\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -368,7 +354,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test234");
+	exit_test("Utf8:test234: false mangled UTF8 filename");
 }
 
 /* ------------------------- */
@@ -384,8 +370,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test312: mangled UTF8 filename\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -431,7 +415,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test312");
+	exit_test("Utf8:test312: mangled UTF8 filename");
 }
 
 /* ------------------------- */
@@ -446,8 +430,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test313: mangled UTF8 dirname\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -474,7 +456,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test313");
+	exit_test("Utf8:test313: mangled UTF8 dirname");
 }
 
 /* ------------------------- */
@@ -488,8 +470,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test314: invalid mangled UTF8 name\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -510,7 +490,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test314");
+	exit_test("Utf8:test314: invalid mangled UTF8 name");
 }
 
 /* -------------------------
@@ -528,8 +508,6 @@ uint16_t bitmap = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test337: mangled UTF8 filename\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -577,7 +555,7 @@ uint16_t bitmap = 0;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test337");
+	exit_test("Utf8:test337: mangled UTF8 filename");
 }
 
 /* ------------------------- */
@@ -593,8 +571,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test381: utf8 use type 2 name with AFP3 connection\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -634,7 +610,7 @@ DSI *dsi = &Conn->dsi;
 
 	FAIL (ntohl(AFPERR_NOOBJ) !=  FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("test381");
+	exit_test("Utf8:test381: utf8 use type 2 name with AFP3 connection");
 }
 
 /* ------------------------- */
@@ -648,8 +624,6 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test382: utf8 use type 2 name with AFP3 connection\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -689,7 +663,7 @@ DSI *dsi = &Conn->dsi;
 
 	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("test382");
+	exit_test("Utf8:test382: utf8 use type 2 name with AFP3 connection");
 }
 
 /* ------------------------- */
@@ -703,8 +677,6 @@ uint16_t bitmap;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test383: utf8 rename type 2 name, AFP3 connection\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -729,7 +701,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 	FPDelete(Conn, vol,  DIRDID_ROOT , file);
 test_exit:
-	exit_test("test383");
+	exit_test("Utf8:test383: utf8 rename type 2 name, AFP3 connection");
 }
 
 /* ------------------------- */
@@ -743,8 +715,6 @@ uint16_t bitmap;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test384: utf8 rename type 2 name, AFP3 connection wrong parameter\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -769,7 +739,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , file))
 	FPDelete(Conn, vol,  DIRDID_ROOT , nfile);
 test_exit:
-	exit_test("test384");
+	exit_test("Utf8:test384: utf8 rename type 2 name, AFP3 connection wrong parameter");
 }
 
 /* ------------------------- */
@@ -783,8 +753,6 @@ uint16_t bitmap;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test385: utf8 copyfile type 2 name, AFP3 connection\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -809,7 +777,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , file));
 test_exit:
-	exit_test("test385");
+	exit_test("Utf8:test385: utf8 copyfile type 2 name, AFP3 connection");
 }
 
 /* ------------------------- */
@@ -823,8 +791,6 @@ uint16_t bitmap;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test386: utf8 moveandrename type 2 name, AFP3 connection\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -849,7 +815,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 	FPDelete(Conn, vol,  DIRDID_ROOT , file);
 test_exit:
-	exit_test("test386");
+	exit_test("Utf8:test386: utf8 moveandrename type 2 name, AFP3 connection");
 }
 
 /* ------------------------- */
@@ -858,8 +824,6 @@ STATIC void test395()
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Utf8:test395: utf8 bit set if AFP < 3.0\n");
 
 	if (Conn->afp_version >= 30) {
 		test_skipped(T_AFP2);
@@ -871,7 +835,7 @@ uint16_t vol = VolID;
 	}
 
 test_exit:
-	exit_test("test395");
+	exit_test("Utf8:test395: utf8 bit set if AFP < 3.0");
 }
 
 
@@ -880,6 +844,7 @@ void Utf8_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"UTF8 tests\n");
+    fprintf(stdout,"===================\n");
     test162();
     test166();
     test167();

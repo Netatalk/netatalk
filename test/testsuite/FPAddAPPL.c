@@ -16,8 +16,6 @@ unsigned int pdir;
 int dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPAddAPPL:test214: test appl\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -65,7 +63,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , file))
 	FAIL (FPCloseDT(Conn,dt))
 test_exit:
-	exit_test("test214");
+	exit_test("FPAddAPPL:test214: test appl");
 }
 
 /* ------------------------- */
@@ -85,8 +83,6 @@ struct afp_filedir_parms filedir;
 int dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPAddAPPL:test301: test appl\n");
     if (!Conn2) {
 	 	dir = get_did(Conn, vol, did, name);
 	 	if (!dir) {
@@ -142,7 +138,7 @@ int dir;
 		FPCloseVol(Conn2,vol2);
 	}
 fin:
- 	exit_test("test301");
+ 	exit_test("FPAddAPPL:test301: test appl");
 }
 
 /* ----------- */
@@ -150,6 +146,7 @@ void FPAddAPPL_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddAPPL page 94\n");
+    fprintf(stdout,"===================\n");
 	test214();
 /*
 	test301();

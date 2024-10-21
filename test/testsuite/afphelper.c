@@ -791,7 +791,7 @@ void test_skipped(int why)
 		s = "-m (Mac server) or the volume path";
 		break;
 	case T_UNIX_PREV:
-		s ="volume with unix privilege";
+		s ="volume with UNIX privilege";
 		break;
 	case T_NO_UNIX_PREV:
 		s ="volume without UNIX privileges";
@@ -824,16 +824,23 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3 and volume with adouble:ea";
+		s = "Netatalk 3+ and volume with 'appledouble = ea'";
 		break;
 	case T_ADV2:
-		s = "adouble:v2 volume";
+		s = "volume with 'appledouble = v2'";
 		break;
 	case T_NOSYML:
-		s = "volume without option 'followsymlinks'";
+		s = "volume without option 'follow symlinks'";
+		break;
+	case T_SINGLE:
+		s = "to run individually with -f";
 		break;
 	}
-	snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (need %s)", s);
+	if (Color) {
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (need %s)" ANSI_NORMAL, s);
+	} else {
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (need %s)", s);
+	}
 	CurTestResult = 3;
 }
 
@@ -847,15 +854,19 @@ void failed_nomsg(void)
 /* ------------------------- */
 void skipped_nomsg(void)
 {
+#if 0
 	if (!ExitCode)
 		ExitCode = 3;
+#endif
 	CurTestResult = 3;
 }
 /* ------------------------- */
 void nottested_nomsg(void)
 {
+#if 0
 	if (!ExitCode)
 		ExitCode = 2;
+#endif
 	CurTestResult = 2;
 }
 
@@ -872,15 +883,6 @@ void nottested(void)
 	fprintf(stdout,"\tNOT TESTED\n");
 	nottested_nomsg();
 }
-
-/* ------------------------- */
-void known_failure(char *why)
-{
-	fprintf(stdout,"\tFAILED (known)\n");
-	CurTestResult = 4;
-	Why = why;
-}
-
 
 /* ------------------------- */
 void enter_test(void)
@@ -902,20 +904,14 @@ void exit_test(char *name)
 			s = "PASSED";
 		}
 		break;
-	case 4:
 	case 1:
 		if (Color) {
 			s = ANSI_BRED "FAILED" ANSI_NORMAL;
 		} else {
 			s = "FAILED";
 		}
-#if 0
-        fprintf(stderr, "%s - summary - ", name);
-        fprintf(stderr, "%s%s (%d)\n", s, Why, CurTestResult);
-        fflush(stderr);
-#endif
-        fprintf(stdout, "%s - summary - ", name);
-        fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+        fprintf(stdout, "%s - ", name);
+        fprintf(stdout, "%s%s\n", s, Why);
         fflush(stdout);
 		return;
 	case 2:
@@ -929,8 +925,8 @@ void exit_test(char *name)
 		s = skipped_msg_buf;
 		break;
 	}
-	fprintf(stdout, "%s - summary - ", name);
-	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+	fprintf(stdout, "%s - ", name);
+	fprintf(stdout, "%s%s\n", s, Why);
     fflush(stdout);
 }
 

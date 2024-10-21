@@ -15,8 +15,6 @@ int temp;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test108: exchange files\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -60,7 +58,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndir))
 test_exit:
-	exit_test("test108");
+	exit_test("FPExchangeFiles:test108: exchange files");
 }
 
 /* ------------------------- */
@@ -79,8 +77,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test111: exchange open files\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -153,7 +149,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndir))
 test_exit:
-	exit_test("test111");
+	exit_test("FPExchangeFiles:test111: exchange open files");
 }
 
 /* ------------------------- */
@@ -166,8 +162,6 @@ char *ndir  = "t197 dir";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test197: exchange files (doesn't check files' ID)\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -198,7 +192,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndir))
 test_exit:
-	exit_test("test197");
+	exit_test("FPExchangeFiles:test197: exchange files (doesn't check files' ID)");
 }
 
 /* ------------------------- */
@@ -218,8 +212,6 @@ DSI *dsi = &Conn->dsi;
 int  ofs =  3 * sizeof( uint16_t );
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test342: exchange files\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -281,7 +273,7 @@ int  ofs =  3 * sizeof( uint16_t );
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test342");
+	exit_test("FPExchangeFiles:test342: exchange files");
 }
 
 /* ------------------------- */
@@ -298,8 +290,6 @@ int fork;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test389: exchange files, source with resource fork open\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -349,7 +339,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test389");
+	exit_test("FPExchangeFiles:test389: exchange files, source with resource fork open");
 }
 
 /* ------------------------- */
@@ -366,8 +356,6 @@ int fork;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test390: exchange files, source with resource fork open\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -418,7 +406,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test390");
+	exit_test("FPExchangeFiles:test390: exchange files, source with resource fork open");
 }
 
 /* ------------------------- */
@@ -435,8 +423,6 @@ int fork;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test391: exchange files, dest with resource fork open\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -486,7 +472,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test391");
+	exit_test("FPExchangeFiles:test391: exchange files, dest with resource fork open");
 }
 
 /* ----------- */
@@ -494,6 +480,7 @@ void FPExchangeFiles_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPExchangeFiles page 166\n");
+    fprintf(stdout,"===================\n");
 	test108();
 	test111();
 	test197();

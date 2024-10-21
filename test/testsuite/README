@@ -105,11 +105,14 @@ You can also run the complete spectest (one user, two users, local access) with
 - edit "build/test/testsuite/spectest.conf" to suit your needs
 - run `meson test` again
 
-Return Code
------------
+Return Codes
+------------
 0 PASSED
 1 FAILED
-2 NOT TESTED the test failed too early
+2 NOT TESTED - a test setup step or precondition check failed
+3 SKIPPED - test environment requirements not satisfied
+
+Note that 2 and 3 are treated as an overall return code 0 for the purpose of test reporting.
 
 spectest, logintext and rotest shall return the same results whether they are run
 on a Mac server or afpd.

@@ -14,8 +14,6 @@ uint32_t mdate;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPFlushFork:test203: flush fork call\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -70,7 +68,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test203");
+	exit_test("FPFlushFork:test203: flush fork call");
 }
 
 /* ----------- */
@@ -78,5 +76,6 @@ void FPFlushFork_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPFlushFork page 171\n");
+    fprintf(stdout,"===================\n");
 	test203();
 }

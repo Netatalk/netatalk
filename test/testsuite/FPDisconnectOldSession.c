@@ -31,8 +31,6 @@ int fork = 0, fork1;
 struct sigaction action;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDisconnectOldSession :test222: AFP 3.x disconnect old session\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -151,7 +149,7 @@ fin:
     }
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test222");
+	exit_test("FPDisconnectOldSession :test222: AFP 3.x disconnect old session");
 
 }
 
@@ -175,8 +173,6 @@ uint32_t time= 12345;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDisconnectOldSession :test338: AFP 3.x disconnect old session\n");
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
@@ -277,7 +273,7 @@ uint32_t time= 12345;
 fin:
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test338");
+	exit_test("FPDisconnectOldSession :test338: AFP 3.x disconnect old session");
 
 }
 
@@ -308,10 +304,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
 struct afp_filedir_parms filedir;
 
-
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDisconnectOldSession :test339: AFP 3.x No auth disconnect old session\n");
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
@@ -441,7 +434,7 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test339");
+	exit_test("FPDisconnectOldSession :test339: AFP 3.x No auth disconnect old session");
 }
 
 /* ------------------------- */
@@ -470,10 +463,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
 struct afp_filedir_parms filedir;
 
-
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDisconnectOldSession :test370: AFP 3.x disconnect different user\n");
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
@@ -614,7 +604,7 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test370");
+	exit_test("FPDisconnectOldSession :test370: AFP 3.x disconnect different user");
 
 }
 
@@ -623,14 +613,9 @@ void FPDisconnectOldSession_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDisconnectOldSession page 148\n");
+    fprintf(stdout,"===================\n");
 //    test222();
-// FIXME: test flaky with Netatalk 4.0
-#if 0
     test338();
-#endif
     test339();
-// FIXME: test flaky with Netatalk 4.0
-#if 0
     test370();
-#endif
 }
