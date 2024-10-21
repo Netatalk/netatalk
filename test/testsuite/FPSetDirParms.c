@@ -550,18 +550,10 @@ DSI *dsi;
 	bitmap = (1<< DIRPBIT_PDINFO) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	         (1<< DIRPBIT_UNIXPR);
 
-#if 0
-	if (htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
-		known_failure(" current version doesn't return an error if for unixpriv");
-		//failed();
-		goto fin1;
-	}
-#else
 	if (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
 		failed();
 		goto fin1;
 	}
-#endif
 
 	bitmap = (1<< DIRPBIT_UNIXPR);
 	filedir.isdir = 1;

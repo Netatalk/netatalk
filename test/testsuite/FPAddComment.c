@@ -29,6 +29,7 @@ int  dt;
 	}
 
 	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, name2) ) ) {
+		nottested();
 		goto test_exit;
 	}
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name))) {

@@ -878,15 +878,6 @@ void nottested(void)
 }
 
 /* ------------------------- */
-void known_failure(char *why)
-{
-	fprintf(stdout,"\tFAILED (known)\n");
-	CurTestResult = 4;
-	Why = why;
-}
-
-
-/* ------------------------- */
 void enter_test(void)
 {
 	CurTestResult = 0;
@@ -906,7 +897,6 @@ void exit_test(char *name)
 			s = "PASSED";
 		}
 		break;
-	case 4:
 	case 1:
 		if (Color) {
 			s = ANSI_BRED "FAILED" ANSI_NORMAL;
@@ -928,11 +918,6 @@ void exit_test(char *name)
 		s = skipped_msg_buf;
 		break;
 	}
-#if 0
-        fprintf(stderr, "%s - summary - ", name);
-        fprintf(stderr, "%s%s (%d)\n", s, Why, CurTestResult);
-        fflush(stderr);
-#endif
 	fprintf(stdout, "%s - summary - ", name);
 	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
     fflush(stdout);

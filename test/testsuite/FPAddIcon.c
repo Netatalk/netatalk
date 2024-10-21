@@ -105,12 +105,10 @@ DSI *dsi = &Conn->dsi;
 /* ----------- */
 void FPAddIcon_test()
 {
+// FIXME: this test is crashing the test suite
+#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddIcon page 99\n");
-// FIXME: these tests are crashing the test suite
-#if 0
 	test212();
-#else
-    fprintf(stdout,"test212 - SKIPPED - crashing test suite\n");
 #endif
 }
