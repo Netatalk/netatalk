@@ -99,6 +99,7 @@ extern void test_skipped(int why);
 #define T_ADV2       19
 #define T_AFP30      20
 #define T_NO_UNIX_PREV 21
+#define T_SINGLE     22
 
 /* ---------------------------------
 */

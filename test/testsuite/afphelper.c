@@ -791,7 +791,7 @@ void test_skipped(int why)
 		s = "-m (Mac server) or the volume path";
 		break;
 	case T_UNIX_PREV:
-		s ="volume with unix privilege";
+		s ="volume with UNIX privilege";
 		break;
 	case T_NO_UNIX_PREV:
 		s ="volume without UNIX privileges";
@@ -824,13 +824,16 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3 and volume with appledouble = ea";
+		s = "Netatalk 3 and volume with 'appledouble = ea'";
 		break;
 	case T_ADV2:
-		s = "appledouble = v2 volume";
+		s = "volume with 'appledouble = v2'";
 		break;
 	case T_NOSYML:
-		s = "volume without option 'followsymlinks'";
+		s = "volume without option 'follow symlinks'";
+		break;
+	case T_SINGLE:
+		s = "has to be run as a singleton with -f";
 		break;
 	}
 	if (Color) {
@@ -908,7 +911,7 @@ void exit_test(char *name)
 			s = "FAILED";
 		}
         fprintf(stdout, "%s - ", name);
-        fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+        fprintf(stdout, "%s%s\n", s, Why);
         fflush(stdout);
 		return;
 	case 2:
@@ -923,7 +926,7 @@ void exit_test(char *name)
 		break;
 	}
 	fprintf(stdout, "%s - ", name);
-	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+	fprintf(stdout, "%s%s\n", s, Why);
     fflush(stdout);
 }
 

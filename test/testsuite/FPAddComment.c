@@ -21,8 +21,6 @@ char *cmt;
 int  dt;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPAddComment:test55: add comment\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -102,7 +100,7 @@ fin:
 	}
 	FAIL (FPCloseDT(Conn, dt))
 test_exit:
-	exit_test("test55");
+	exit_test("FPAddComment:test55: add comment");
 }
 
 /* ----------- */
@@ -110,5 +108,6 @@ void FPAddComment_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddComment page 96\n");
+    fprintf(stdout,"===================\n");
 	test55();
 }

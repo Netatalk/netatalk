@@ -16,8 +16,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test73: Move and rename\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
 		nottested();
@@ -83,7 +81,7 @@ int ret;
 	FAIL (FPDelete(Conn, vol,  dir1, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
-	exit_test("test73");
+	exit_test("FPMoveAndRename:test73: Move and rename");
 }
 
 static char temp[MAXPATHLEN];
@@ -100,8 +98,6 @@ uint16_t vol = VolID;
 int id,id1;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test302: file renamed by someone else, cnid not updated\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -137,7 +133,7 @@ int id,id1;
 	FAIL (FPDelete(Conn, vol,  dir , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test302");
+	exit_test("FPMoveAndRename:test302: file renamed by someone else, cnid not updated");
 }
 
 
@@ -146,6 +142,7 @@ void FPMoveAndRename_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMoveAndRename page 223\n");
+    fprintf(stdout,"===================\n");
     test73();
     test302();
 }
