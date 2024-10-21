@@ -907,7 +907,7 @@ void exit_test(char *name)
 		} else {
 			s = "FAILED";
 		}
-        fprintf(stdout, "%s - summary - ", name);
+        fprintf(stdout, "%s - ", name);
         fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
         fflush(stdout);
 		return;
@@ -922,7 +922,7 @@ void exit_test(char *name)
 		s = skipped_msg_buf;
 		break;
 	}
-	fprintf(stdout, "%s - summary - ", name);
+	fprintf(stdout, "%s - ", name);
 	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
     fflush(stdout);
 }
