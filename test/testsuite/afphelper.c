@@ -824,7 +824,7 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3 and volume with 'appledouble = ea'";
+		s = "Netatalk 3+ and volume with 'appledouble = ea'";
 		break;
 	case T_ADV2:
 		s = "volume with 'appledouble = v2'";
@@ -833,7 +833,7 @@ void test_skipped(int why)
 		s = "volume without option 'follow symlinks'";
 		break;
 	case T_SINGLE:
-		s = "has to be run as a singleton with -f";
+		s = "to run individually with -f";
 		break;
 	}
 	if (Color) {

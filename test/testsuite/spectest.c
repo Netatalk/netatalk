@@ -71,6 +71,7 @@ EXT_FN(FPWriteExt);
 EXT_FN(Error);
 EXT_FN(Utf8);
 EXT_FN(FPGetACL);
+EXT_FN(FPSync);
 
 
 struct test_fn {
@@ -145,6 +146,7 @@ FN_N(FPWriteExt)
 FN_N(Error)
 FN_N(Utf8)
 FN_N(FPGetACL)
+FN_N(FPSync)
 #endif
 
 {NULL, NULL},

@@ -86,17 +86,17 @@ echo "====================================="
 
 echo "Failed tests"
 echo "------------"
-grep "FAIL" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
+grep "FAIL" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Skipped tests"
 echo "------------"
-egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
+egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Successful tests"
 echo "------------"
-grep "PASSED" ./test/testsuite/spectest.log | sed s/test//g | sort -n | uniq
+grep "PASSED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 # cleanup

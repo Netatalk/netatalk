@@ -24,7 +24,7 @@ afparg_sources = [
     'afparg_FPfuncs.c',
 ]
 
-afparg = executable(
+executable(
     'afparg',
     afparg_sources,
     include_directories: root_includes,
@@ -35,7 +35,7 @@ lantest_sources = [
     'lantest.c',
 ]
 
-lantest = executable(
+executable(
     'lantest',
     lantest_sources,
     include_directories: root_includes,
@@ -47,7 +47,7 @@ afp_ls_sources = [
     'afp_ls.c',
 ]
 
-afp_ls = executable(
+executable(
     'afp_ls',
     afp_ls_sources,
     include_directories: root_includes,
@@ -58,7 +58,7 @@ encoding_test_sources = [
     'encoding_test.c',
 ]
 
-encoding_test = executable(
+executable(
     'encoding_test',
     encoding_test_sources,
     include_directories: root_includes,
@@ -69,7 +69,7 @@ login_test_sources = [
     'logintest.c',
 ]
 
-login_test = executable(
+executable(
     'logintest',
     login_test_sources,
     include_directories: root_includes,
@@ -80,7 +80,7 @@ rotest_sources = [
     'rotest.c',
 ]
 
-rotest = executable(
+executable(
     'rotest',
     rotest_sources,
     include_directories: root_includes,
@@ -91,7 +91,7 @@ speedtest_sources = [
     'speedtest.c',
 ]
 
-speedtest = executable(
+executable(
     'speedtest',
     speedtest_sources,
     include_directories: root_includes,
@@ -158,9 +158,10 @@ spectest_sources = [
     'Error.c',
     'Utf8.c',
     'FPGetACL.c',
+    'FPSync.c',
 ]
 
-spectest = executable(
+executable(
     'spectest',
     spectest_sources,
     include_directories: root_includes,
@@ -172,7 +173,7 @@ sleeptest_sources = [
     'FPzzz.c',
 ]
 
-sleeptest = executable(
+executable(
     'sleeptest',
     sleeptest_sources,
     include_directories: root_includes,
@@ -187,7 +188,7 @@ fail_spectest_sources = [
     'failed_Error.c',
 ]
 
-fail_spectest = executable(
+executable(
     'fail_spectest',
     fail_spectest_sources,
     include_directories: root_includes,
@@ -195,7 +196,7 @@ fail_spectest = executable(
     c_args: ['-DQUIRK'],
 )
 
-T2_spectest_sources = [
+t2_spectest_sources = [
     'T2_spectest.c',
     'T2_FPByteRangeLock.c',
     'T2_FPDelete.c',
@@ -213,9 +214,9 @@ T2_spectest_sources = [
     'T2_FPSetForkParms.c',
 ]
 
-T2_spectest = executable(
+executable(
     'T2_spectest',
-    T2_spectest_sources,
+    t2_spectest_sources,
     include_directories: root_includes,
     link_with: libafptest,
 )

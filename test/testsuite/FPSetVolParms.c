@@ -11,8 +11,6 @@ struct afp_volume_parms parms;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPSetVolParms:test206: Set Volume parameters\n");
     bitmap = (1 << VOLPBIT_ATTR  )
 	    |(1 << VOLPBIT_SIG   )
     	|(1 << VOLPBIT_CDATE )
@@ -45,7 +43,7 @@ DSI *dsi = &Conn->dsi;
  	}
  
 test_exit:
-	exit_test("test206");
+	exit_test("FPSetVolParms:test206: Set Volume parameters");
 } 
 
 /* ----------- */
@@ -53,5 +51,6 @@ void FPSetVolParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetVolParms page 268\n");
+    fprintf(stdout,"===================\n");
 	test206();
 }

@@ -19,8 +19,6 @@ int tdir;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPWriteExt:test148: AFP 3.0 FPWriteExt\n");
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -108,7 +106,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, dir))
 test_exit:
-	exit_test("test148");
+	exit_test("FPWriteExt:test148: AFP 3.0 FPWriteExt");
 }
 
 /* --------------------- */
@@ -122,8 +120,6 @@ uint16_t vol = VolID;
 int i;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPWriteExt:test207: AFP 3.0 read/Write\n");
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -257,7 +253,7 @@ fin:
 	FAIL (FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, "very big"))
 test_exit:
-	exit_test("test207");
+	exit_test("FPWriteExt:test207: AFP 3.0 read/Write");
 }
 
 /* ------------------------- */
@@ -271,8 +267,6 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPWriteExt:test304: Write 0 byte to data fork\n");
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -299,7 +293,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test304");
+	exit_test("FPWriteExt:test304: Write 0 byte to data fork");
 }
 
 
@@ -308,6 +302,7 @@ void FPWriteExt_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPWriteExt page 273\n");
+    fprintf(stdout,"===================\n");
     test148();
 	test207();
 	test304();

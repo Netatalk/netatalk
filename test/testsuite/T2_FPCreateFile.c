@@ -15,8 +15,6 @@ int ret;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPCreateFile:test325:  recreate a file with dangling symlink and no right\n");
 
 	if ((!Path && !Mac)) {
         test_skipped(T_MAC_PATH);
@@ -69,7 +67,7 @@ fin:
 		unlink(temp);
 	}
 test_exit:
-	exit_test("test325");
+	exit_test("FPCreateFile:test325: recreate a file with dangling symlink and no right");
 }
 
 /* ----------- */
@@ -77,5 +75,6 @@ void FPCreateFile_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCreateFile page 138\n");
+    fprintf(stdout,"===================\n");
     test325();
 }

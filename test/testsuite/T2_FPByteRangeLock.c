@@ -99,8 +99,6 @@ char *name = "t117 exclusive open DF";
 uint16_t vol2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock:test117: test open excl mode\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -123,7 +121,7 @@ uint16_t vol2;
 
 	FPCloseVol(Conn2,vol2);
 test_exit:
-	exit_test("test117");
+	exit_test("FPByteRangeLock:test117: test open excl mode");
 }
 
 /* ----------- */
@@ -131,5 +129,6 @@ void FPByteRangeLock_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock page 101\n");
+    fprintf(stdout,"===================\n");
     test117();
 }

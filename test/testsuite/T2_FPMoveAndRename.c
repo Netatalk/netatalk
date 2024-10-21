@@ -17,8 +17,6 @@ uint16_t vol = VolID;
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test136: move and rename in a dir without .AppleDouble\n");
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -54,7 +52,7 @@ unsigned int ret;
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test136");
+	exit_test("FPMoveAndRename:test136: move and rename in a dir without .AppleDouble");
 }
 
 /* ----------------------- */
@@ -71,8 +69,6 @@ uint16_t vol = VolID;
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test137: move and rename open file in dir without .AppleDouble\n");
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -114,7 +110,7 @@ unsigned int ret;
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test137");
+	exit_test("FPMoveAndRename:test137: move and rename open file in dir without .AppleDouble");
 }
 
 /* -------------------------- */
@@ -126,8 +122,6 @@ char *name1 = "t139 dir";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test139: Move And Rename \n");
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -150,7 +144,7 @@ uint16_t vol = VolID;
 	FAIL (!FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test139");
+	exit_test("FPMoveAndRename:test139: Move And Rename");
 }
 
 /* ------------------------- */
@@ -165,8 +159,6 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test323: file moved with cnid not updated\n");
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -211,7 +203,7 @@ fin:
 	FAIL (FPDelete(Conn,vol, dir,""))
 	FAIL (FPDelete(Conn,vol, dir1,""))
 test_exit:
-	exit_test("test323");
+	exit_test("FPGetFileDirParms:test323: file moved with cnid not updated");
 }
 
 /* ------------------------- */
@@ -226,8 +218,6 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test365: file moved with cnid not updated\n");
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -279,7 +269,7 @@ fin:
 	FAIL (FPDelete(Conn,vol, dir,""))
 	FAIL (FPDelete(Conn,vol, dir1,""))
 test_exit:
-	exit_test("test365");
+	exit_test("FPGetFileDirParms:test365: file moved with cnid not updated");
 }
 
 /* ----------- */
@@ -287,6 +277,7 @@ void FPMoveAndRename_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMoveAndRename page 223\n");
+    fprintf(stdout,"===================\n");
     test136();
     test137();
     test139();

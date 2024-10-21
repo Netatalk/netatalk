@@ -14,8 +14,6 @@ STATIC void test2()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSyncDir(test2): sync dir\n");
 
  	if (FPSyncDir(Conn, vol, DIRDID_ROOT))
 		failed();
@@ -37,5 +35,16 @@ STATIC void test2()
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test2");
+	exit_test("FPSyncDir:test2: sync dir");
+}
+
+/* ----------- */
+void FPSync_test()
+{
+#if 0
+    fprintf(stdout,"===================\n");
+    fprintf(stdout,"FPSync\n");
+    fprintf(stdout,"===================\n");
+	test2();
+#endif
 }

@@ -452,8 +452,6 @@ DSI *dsi = &Conn->dsi;
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test152: Error when no write access to .AppleDouble\n");
 
 	if ((!Mac && !Path)) {
 		test_skipped(T_MAC_PATH);
@@ -485,7 +483,7 @@ unsigned int ret;
 	}
 	delete_ro_adouble(vol, dir, file);
 test_exit:
-	exit_test("test152");
+	exit_test("FPOpenFork:test152: Error when no write access to .AppleDouble");
 }
 
 /* ------------------------- */
@@ -497,8 +495,6 @@ int fork;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test153: open data fork without ressource fork\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -527,7 +523,7 @@ uint16_t vol = VolID;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test153");
+	exit_test("FPOpenFork:test153: open data fork without ressource fork");
 }
 
 /* ------------------------- */
@@ -539,8 +535,6 @@ STATIC void test157()
     uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test157: open not existing ressource fork read-only\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -570,7 +564,7 @@ STATIC void test157()
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test157");
+	exit_test("FPOpenFork:test157: open not existing ressource fork read-only");
 }
 
 /* ------------------------- */
@@ -584,8 +578,6 @@ char *file  = "t156 test.pdf";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test156: Open data fork with no write access to .AppleDouble\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -616,7 +608,7 @@ uint16_t vol = VolID;
 fin:
 	delete_ro_adouble(vol, dir, file);
 test_exit:
-	exit_test("test156");
+	exit_test("FPOpenFork:test156: Open data fork with no write access to .AppleDouble");
 }
 
 /* ------------------------- */
@@ -629,8 +621,6 @@ uint16_t vol = VolID;
 int fd;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test321: Bogus (empty) resource fork\n");
 
 	if ((!Mac && !Path)) {
 		test_skipped(T_MAC_PATH);
@@ -691,7 +681,7 @@ int fd;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, file))
 test_exit:
-	exit_test("test321");
+	exit_test("FPOpenFork:test321: Bogus (empty) resource fork");
 }
 
 /* --------------------- */
@@ -708,8 +698,6 @@ uint16_t bitmap;
 int fd;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead:test372: no crlf convertion for TEXT file\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -779,7 +767,7 @@ fin1:
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 test_exit:
-	exit_test("test372");
+	exit_test("FPRead:test372: no crlf convertion for TEXT file");
 }
 
 /* -------------------------
@@ -803,8 +791,6 @@ uint16_t bitmap;
 int fd;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead:test387: crlf convertion for TEXT file\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -874,7 +860,7 @@ fin1:
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 test_exit:
-	exit_test("test387");
+	exit_test("FPRead:test387: crlf convertion for TEXT file");
 }
 
 /* --------------------- */
@@ -891,8 +877,6 @@ uint16_t bitmap;
 int fd;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead:test388: crlf convertion for TEXT file (not default type)\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -962,7 +946,7 @@ fin1:
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 test_exit:
-	exit_test("test388");
+	exit_test("FPRead:test388: crlf convertion for TEXT file (not default type)");
 }
 
 /* --------------------- */
@@ -979,8 +963,6 @@ uint16_t bitmap;
 int fd;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead:test392: no crlf convertion for no TEXT file\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1050,7 +1032,7 @@ fin1:
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 test_exit:
-	exit_test("test392");
+	exit_test("FPRead:test392: no crlf convertion for no TEXT file");
 }
 
 /* ------------------------- */
@@ -1064,8 +1046,6 @@ uint16_t vol = VolID;
 int dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test411: open read-only a file without ressource fork\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1103,7 +1083,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , file))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test411");
+	exit_test("FPOpenFork:test411: open read-only a file without ressource fork");
 
 }
 
@@ -1121,8 +1101,6 @@ uint16_t vol = VolID;
 int dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test415: don't set the name again in the resource fork if file open twice\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1169,7 +1147,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , file))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test415");
+	exit_test("FPOpenFork:test415: don't set the name again in the resource fork if file open twice");
 }
 
 /* ------------------------- */
@@ -1187,8 +1165,6 @@ STATIC void test236()
     int  ofs =  3 * sizeof( uint16_t );
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test236: symlink attack: try reading /etc/passwd\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1257,7 +1233,7 @@ fin:
     FAIL (unlink_unix_file(Path, name1, name2))
 	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
-	exit_test("test236");
+	exit_test("FPOpenFork:test236: symlink attack: try reading /etc/passwd");
 }
 
 /* ------------------------- */
@@ -1275,8 +1251,6 @@ STATIC void test237()
     int  ofs =  3 * sizeof( uint16_t );
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test237: symlink reading and attack: try reading /etc/passwd\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1335,7 +1309,7 @@ fin:
     FAIL (unlink_unix_file(Path, name1, name2))
 	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
-	exit_test("test237");
+	exit_test("FPOpenFork:test237: symlink reading and attack: try reading /etc/passwd");
 }
 
 /* ------------------------- */
@@ -1353,8 +1327,6 @@ STATIC void test238()
     int  ofs =  3 * sizeof( uint16_t );
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test238: symlink reading with short reqcount\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1422,7 +1394,7 @@ fin:
 	FAIL (testdir && FPDelete(Conn, vol,  testdir, verylonglinkname))
 	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
 test_exit:
-	exit_test("test238");
+	exit_test("FPOpenFork:test238: symlink reading with short reqcount");
 }
 
 /* ------------------------- */
@@ -1438,8 +1410,6 @@ STATIC void test431()
     DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork:test431: check AppleDouble conversion from v2 to ea\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1515,7 +1485,7 @@ fin:
         FPCloseFork(Conn, fork1);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test431");
+	exit_test("FPOpenFork:test431: check AppleDouble conversion from v2 to ea");
 }
 
 
@@ -1524,6 +1494,7 @@ void FPOpenFork_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenFork page 230\n");
+    fprintf(stdout,"===================\n");
     test3();
     test4();
     test7();
