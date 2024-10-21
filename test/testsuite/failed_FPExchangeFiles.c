@@ -18,8 +18,6 @@ int temp;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test108: exchange files\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -43,7 +41,9 @@ uint16_t vol = VolID;
 #ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name);
 #else
-		fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
+		}
 		failed_nomsg();
 #endif
 	}
@@ -51,19 +51,25 @@ uint16_t vol = VolID;
 #ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name1);
 #else
-		fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
+		}
 		failed_nomsg();
 #endif
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
 	if (strcmp(Data,"red")) {
-		fprintf(stdout,"\tFAILED should be red\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be red\n");
+		}
 		failed_nomsg();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
-		fprintf(stdout,"\tFAILED should be blue\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be blue\n");
+		}
 		failed_nomsg();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
@@ -71,7 +77,7 @@ uint16_t vol = VolID;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndir))
 test_exit:
-	exit_test("test108");
+	exit_test("FPExchangeFiles:test108: exchange files");
 }
 
 /* ------------------------- */
@@ -90,8 +96,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPExchangeFiles:test111: exchange open files\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -121,12 +125,16 @@ int ret;
 
 	read_fork(Conn, vol, DIRDID_ROOT , name, 3);
 	if (strcmp(Data,"red")) {
-		fprintf(stdout,"\tFAILED should be red\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be red\n");
+		}
 		failed_nomsg();
 	}
 	read_fork(Conn, vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
-		fprintf(stdout,"\tFAILED should be blue\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be blue\n");
+		}
 		failed_nomsg();
 	}
 
@@ -153,7 +161,9 @@ int ret;
 #ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name);
 #else
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 		failed_nomsg();
 #endif
 	}
@@ -162,7 +172,9 @@ int ret;
 #ifdef QUIRK
 		fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name1);
 #else
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name1);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 		failed_nomsg();
 #endif
 	}
@@ -172,7 +184,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, ndir))
 test_exit:
-	exit_test("test111");
+	exit_test("FPExchangeFiles:test111: exchange open files");
 }
 
 
@@ -181,6 +193,7 @@ void FPExchangeFiles_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPExchangeFiles page 166\n");
+    fprintf(stdout,"-------------------\n");
 	test108();
 	test111();
 }

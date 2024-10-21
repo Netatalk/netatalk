@@ -16,8 +16,6 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetUserInfo:test75: Get User Info\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -43,7 +41,9 @@ DSI *dsi = &Conn->dsi;
 		FAIL (FPMapID(Conn, 1, uid))
 		FAIL (FPMapID(Conn, 2, gid))
 		if (uid != filedir.uid ) {
-			fprintf(stdout, "\tFAILED uids differ\n");
+			if (!Quiet) {
+				fprintf(stdout, "\tFAILED uids differ\n");
+			}
 			failed_nomsg();
 		}
 	}
@@ -68,13 +68,15 @@ DSI *dsi = &Conn->dsi;
 	FAIL (FPMapID(Conn, 1, uid))
 	FAIL (FPMapID(Conn, 2, gid))
 	if (uid != filedir.uid) {
-		fprintf(stdout, "\tFAILED uid differ\n");
+		if (!Quiet) {
+			fprintf(stdout, "\tFAILED uid differ\n");
+		}
 		failed_nomsg();
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test75");
+	exit_test("FPGetUserInfo:test75: Get User Info");
 }
 
 /* ----------- */
@@ -82,5 +84,6 @@ void FPGetUserInfo_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPFPGetUserInfo page 204\n");
+    fprintf(stdout,"-------------------\n");
 	test75();
 }

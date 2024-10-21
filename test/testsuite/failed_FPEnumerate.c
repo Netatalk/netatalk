@@ -16,8 +16,6 @@ int  dir;
 int  dir1;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test28: test search by ID\n");
 
 	/* we need to empty the server cashe */
 	FPCloseVol(Conn, vol);
@@ -86,7 +84,7 @@ fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
 	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test28");
+	exit_test("FPEnumerate:test28: test search by ID");
 }
 
 /* ----------- */
@@ -94,5 +92,6 @@ void FPEnumerate_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerate page 150\n");
+    fprintf(stdout,"-------------------\n");
     test28();
 }

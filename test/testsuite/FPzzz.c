@@ -27,8 +27,6 @@ int sock;
 uint32_t time= 12345;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPzzz:test223: AFP 3.x enter sleep mode\n");
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
 		goto test_exit;
@@ -95,7 +93,7 @@ fin:
 		nottested();
     }
 test_exit:
-	exit_test("test223");
+	exit_test("FPzzz:test223: AFP 3.x enter sleep mode");
 }
 
 /* ------------------------- */
@@ -109,8 +107,6 @@ int sock;
 uint32_t time= 12345;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPzzz:test224: disconnected after 2 mn\n");
 
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
@@ -176,7 +172,7 @@ fin:
 		nottested();
     }
 test_exit:
-	exit_test("test224");
+	exit_test("FPzzz:test224: disconnected after 2 mn");
 
 }
 
@@ -191,8 +187,6 @@ DSI *dsi;
 int sock;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPzzz:test239: AFP 3.x enter extended sleep\n");
 
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
@@ -221,7 +215,7 @@ fin:
 		nottested();
     }
 test_exit:
-	exit_test("test239");
+	exit_test("FPzzz:test239: AFP 3.x enter extended sleep");
 }
 
 /* ----------- */
@@ -229,6 +223,7 @@ void FPzzz_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPzzz\n");
+    fprintf(stdout,"-------------------\n");
     test223();
     test224();
     test239();

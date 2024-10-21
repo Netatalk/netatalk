@@ -16,8 +16,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test44: access .. folder\n");
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -31,7 +29,9 @@ DSI *dsi;
 	memcpy(&did, dsi->data +3 * sizeof( uint16_t ), sizeof(did));
 
 	if (dir != did) {
-		fprintf(stdout,"\tFAILED DIDs differ\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED DIDs differ\n");
+		}
 		failed_nomsg();
 		goto fin;
 	}
@@ -43,7 +43,9 @@ DSI *dsi;
 	memcpy(&did, dsi->data +3 * sizeof( uint16_t ), sizeof(did));
 
 	if (DIRDID_ROOT != did) {
-		fprintf(stdout,"\tFAILED DID not DIRDID_ROOT\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED DID not DIRDID_ROOT\n");
+		}
 		failed_nomsg();
 		goto fin;
 	}
@@ -51,7 +53,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test44");
+	exit_test("FPGetFileDirParms:test44: access .. folder");
 }
 
 /* -------------------------- */
@@ -60,8 +62,6 @@ STATIC void test58()
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test58: folder 1 (DIRDID_ROOT_PARENT)\n");
 
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "", 0,
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
@@ -83,7 +83,7 @@ uint16_t vol = VolID;
 	) {
 		failed();
 	}
-	exit_test("test58");
+	exit_test("FPGetFileDirParms:test58: folder 1 (DIRDID_ROOT_PARENT)");
 }
 
 /* ----------- */
@@ -100,15 +100,15 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test70: bogus cname (unknow type)\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
 	}
 
-	fprintf(stdout,"---------------------\n");
-	fprintf(stdout,"GetFileDirParams Vol %d \n\n", vol);
+	if (!Quiet) {
+		fprintf(stdout,"---------------------\n");
+		fprintf(stdout,"GetFileDirParams Vol %d \n\n", vol);
+	}
 	memset(dsi->commands, 0, DSI_CMDSIZ);
 	dsi->header.dsi_flags = DSIFL_REQUEST;
 	dsi->header.dsi_command = DSIFUNC_CMD;
@@ -150,7 +150,7 @@ DSI *dsi;
 		failed();
 	}
 test_exit:
-	exit_test("test70");
+	exit_test("FPGetFileDirParms:test70: bogus cname (unknown type)");
 }
 
 /* ------------------------- */
@@ -168,8 +168,6 @@ int offcnt;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test94: test invisible bit attribute\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -182,7 +180,9 @@ int offcnt;
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	offcnt = filedir.offcnt;
-	fprintf(stdout,"Modif date parent %x offcnt %d\n", filedir.mdate, offcnt);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date parent %x offcnt %d\n", filedir.mdate, offcnt);
+	}
 	sleep(4);
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
@@ -192,7 +192,9 @@ int offcnt;
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 
-	fprintf(stdout,"Modif date dir %x \n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date dir %x \n", filedir.mdate);
+	}
 	sleep(5);
 
 	filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
@@ -209,7 +211,9 @@ int offcnt;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-	fprintf(stdout,"Modif date dir %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date dir %x\n", filedir.mdate);
+	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
 		failed();
@@ -218,15 +222,19 @@ int offcnt;
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	if (offcnt != filedir.offcnt) {
-		fprintf(stdout,"\tFAILED got %d want %d\n",filedir.offcnt, offcnt);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED got %d want %d\n",filedir.offcnt, offcnt);
+		}
 		failed_nomsg();
 	}
 
-	fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	}
 end:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test94");
+	exit_test("FPGetFileDirParms:test94: test invisible bit attribute");
 }
 
 /* --------------------- */
@@ -250,8 +258,6 @@ DSI *dsi;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:t104: cname with trailing 0 \n");
 
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -285,12 +291,16 @@ DSI *dsi;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 
 	if (filedir.did != dir3) {
-		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir3 );
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir3 );
+		}
 		failed_nomsg();
 		goto fin;
 	}
 	if (strcmp(filedir.lname, name3)) {
-		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name3);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name3);
+		}
 		failed_nomsg();
 		goto fin;
 	}
@@ -302,17 +312,23 @@ DSI *dsi;
 	}
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	if (filedir.did != dir2) {
-		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir2 );
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir2 );
+		}
 		failed_nomsg();
 		goto fin;
 	}
 	if (strcmp(filedir.lname, name2)) {
-		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name2);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name2);
+		}
 		failed_nomsg();
 		goto fin;
 	}
 	if (filedir.offcnt != 2) {
-		fprintf(stdout,"\tFAILED %d\n",filedir.offcnt);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %d\n",filedir.offcnt);
+		}
 		failed_nomsg();
 		goto fin;
 	}
@@ -323,12 +339,16 @@ DSI *dsi;
 	}
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	if (filedir.did != dir4) {
-		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir4 );
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, dir4 );
+		}
 		failed_nomsg();
 		goto fin;
 	}
 	if (strcmp(filedir.lname, name4)) {
-		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name4);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, name4);
+		}
 		failed_nomsg();
 	}
 fin:
@@ -337,7 +357,7 @@ fin:
 	FAIL (dir2 && FPDelete(Conn, vol,  dir2 , name5))
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , name2))
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
-	exit_test("test104");
+	exit_test("FPGetFileDirParms:test104: cname with trailing 0");
 }
 
 /* -------------------------- */
@@ -353,8 +373,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test132: GetFilDirParams errors\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -374,7 +392,9 @@ DSI *dsi;
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS);
 
 	if (!strcmp("disk1", Vol)) {
-		fprintf(stdout, "Volume is disk1 choose other name!\n");
+		if (!Quiet) {
+			fprintf(stdout, "Volume is disk1 choose other name!\n");
+		}
 		nottested();
 		goto fin;
 	}
@@ -391,7 +411,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test132");
+	exit_test("FPGetFileDirParms:test132: GetFilDirParams errors");
 }
 
 /* ------------------------- */
@@ -405,8 +425,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test194: dir without access\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -423,7 +441,7 @@ DSI *dsi;
 	}
 	delete_folder(vol, DIRDID_ROOT, name);
 test_exit:
-	exit_test("test194");
+	exit_test("FPGetFileDirParms:test194: dir without access");
 }
 
 /* ------------------------- */
@@ -438,8 +456,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test229: unix access privilege\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -477,7 +493,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test229");
+	exit_test("FPGetFileDirParms:test229: unix access privilege");
 }
 
 /* ------------------------- */
@@ -495,8 +511,6 @@ char *result;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test307: mangled dirname\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		failed();
@@ -527,7 +541,7 @@ char *result;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test307");
+	exit_test("FPGetFileDirParms:test307: mangled dirname");
 }
 
 /* ------------------------- */
@@ -545,8 +559,6 @@ char *result;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test308: mangled dirname\n");
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -584,7 +596,7 @@ char *result;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test308");
+	exit_test("FPGetFileDirParms:test308: mangled dirname");
 }
 
 /* ------------------------- */
@@ -593,13 +605,11 @@ STATIC void test319()
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test319: get volume access right\n");
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, "", 0,(1 << DIRPBIT_ACCESS) )) {
 		failed();
 	}
-	exit_test("test319");
+	exit_test("FPGetFileDirParms:test319: get volume access right");
 }
 
 /* ------------------------- */
@@ -619,8 +629,6 @@ int id;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test324: long file name >31 bytes\n");
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -676,30 +684,20 @@ int id;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test324");
+	exit_test("FPGetFileDirParms:test324: long file name >31 bytes");
 }
 
 
 /* ------------------------- */
 STATIC void test326()
 {
-#if 0
 char *name = "t326 long filename and extension .longtxt";
 uint16_t vol = VolID;
-DSI *dsi;
-int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
 uint16_t bitmap = 0;
-unsigned int dir;
-char *result;
 int ret;
 int id;
 
-	dsi = &Conn->dsi;
-
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test326: long file name >31 bytes\n");
 
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name);
 	if (ret) {
@@ -739,8 +737,8 @@ int id;
 		failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
-#endif
-	exit_test("test326");
+test_exit:
+	exit_test("FPGetFileDirParms:test326: long file name >31 bytes");
 }
 
 /* ------------------------- */
@@ -756,8 +754,6 @@ int id;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test333: long file name >31 bytes\n");
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -808,7 +804,7 @@ int id;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test333");
+	exit_test("FPGetFileDirParms:test333: long file name >31 bytes");
 }
 
 /* ------------------------- */
@@ -824,8 +820,6 @@ int id;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test334: long file name >31 bytes (no ext)\n");
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -877,7 +871,7 @@ int id;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test334");
+	exit_test("FPGetFileDirParms:test334: long file name >31 bytes (no ext)");
 }
 
 /* ------------------------- */
@@ -895,8 +889,6 @@ int id;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test335: long file name >31 bytes\n");
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -954,7 +946,7 @@ int id;
 fin:
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test335");
+	exit_test("FPGetFileDirParms:test335: long file name >31 bytes");
 }
 
 /* -------------------------
@@ -974,8 +966,6 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test371: check default type\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -992,7 +982,9 @@ uint16_t bitmap;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (memcmp(filedir.finder_info, "????????", 8)) {
-			fprintf(stdout,"FAILED not default type\n");
+			if (!Quiet) {
+				fprintf(stdout,"FAILED not default type\n");
+			}
 			failed_nomsg();
 		}
 	}
@@ -1004,7 +996,9 @@ uint16_t bitmap;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (memcmp(filedir.finder_info, "PDF CARO", 8)) {
-			fprintf(stdout,"FAILED not PDF\n");
+			if (!Quiet) {
+				fprintf(stdout,"FAILED not PDF\n");
+			}
 			failed_nomsg();
 		}
 	}
@@ -1012,7 +1006,7 @@ fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	exit_test("test371");
+	exit_test("FPGetFileDirParms:test371: check default type");
 }
 
 /* -------------------------
@@ -1032,8 +1026,6 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms:test380: check type mapping\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -1050,7 +1042,9 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (memcmp(filedir.finder_info, "WDBNMSWD", 8)) {
-			fprintf(stdout,"FAILED not default type\n");
+			if (!Quiet) {
+				fprintf(stdout,"FAILED not default type\n");
+			}
 			failed_nomsg();
 		}
 	}
@@ -1062,14 +1056,16 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (memcmp(filedir.finder_info, "WDBNMSWD", 8)) {
-			fprintf(stdout,"FAILED not WDBNMSWD\n");
+			if (!Quiet) {
+				fprintf(stdout,"FAILED not WDBNMSWD\n");
+			}
 			failed_nomsg();
 		}
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
-	exit_test("test380");
+	exit_test("FPGetFileDirParms:test380: check type mapping");
 }
 
 /* ------------------------- */
@@ -1087,8 +1083,6 @@ unsigned int dir;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms::test396: dir root attribute\n");
 
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
@@ -1116,7 +1110,7 @@ unsigned int dir;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test396");
+	exit_test("FPGetFileDirParms:test396: dir root attribute");
 }
 
 /* ----------- */
@@ -1124,6 +1118,7 @@ void FPGetFileDirParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetFileDirParms page 179\n");
+    fprintf(stdout,"-------------------\n");
 	test44();
 	test58();
 	test70();
@@ -1136,6 +1131,10 @@ void FPGetFileDirParms_test()
 	test308();
 	test319();
 	test324();
+// FIXME: Broken for AFP 2.x
+#if 0
+	test326();
+#endif
 	test333();
 	test334();
 	test335();

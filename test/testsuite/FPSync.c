@@ -4,7 +4,6 @@
 /* ------------------------- */
 STATIC void test2()
 {
-    int  dir;
     uint16_t vol = VolID;
     DSI *dsi;
     char *name = "t2 sync dir";
@@ -14,13 +13,12 @@ STATIC void test2()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSyncDir(test2): sync dir\n");
 
- 	if (FPSyncDir(Conn, vol, DIRDID_ROOT))
+ 	if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {
 		failed();
+	}
 
-	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
+	if (!(FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
 		goto test_exit;
 	}
@@ -31,11 +29,23 @@ STATIC void test2()
 
     filedir.isdir = 1;
     afp_filedir_unpack(&filedir, dsi->data +ofs, 0, (1 << DIRPBIT_DID));
- 	if (FPSyncDir(Conn, vol, filedir.did))
+ 	if (FPSyncDir(Conn, vol, filedir.did)) {
 		failed();
+	}
 
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test2");
+	exit_test("FPSyncDir:test2: sync dir");
+}
+
+/* ----------- */
+void FPSync_test()
+{
+#if 0
+    fprintf(stdout,"===================\n");
+    fprintf(stdout,"FPSync\n");
+    fprintf(stdout,"-------------------\n");
+	test2();
+#endif
 }

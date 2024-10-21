@@ -83,15 +83,13 @@ STATIC void test66()
 char *name = "t66 FPByteLock_ext DF";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLockExt:test66: FPByteLock Data Fork\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
 	}
 	test_bytelock_ext(VolID, name, OPENFORK_DATA);
 test_exit:
-	exit_test("test66");
+	exit_test("FPByteRangeLockExt:test66: FPByteLock Data Fork");
 }
 
 /* ----------- */
@@ -100,15 +98,13 @@ STATIC void test67()
 char *name = "t67 FPByteLock_ext RF";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLockExt:test67: FPByteLock Ressource Fork\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
 	}
 	test_bytelock_ext(VolID, name, OPENFORK_RSCS);
 test_exit:
-	exit_test("test67");
+	exit_test("FPByteRangeLockExt:test67: FPByteLock Ressource Fork");
 }
 
 
@@ -121,8 +117,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLockExt:test195: illegal fork\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -130,7 +124,7 @@ DSI *dsi;
 
 	illegal_fork(dsi, AFP_BYTELOCK_EXT, name);
 test_exit:
-	exit_test("test195");
+	exit_test("FPByteRangeLockExt:test195: illegal fork");
 }
 
 /* ----------- */
@@ -138,6 +132,7 @@ void FPByteRangeLockExt_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLockExt page 105\n");
+    fprintf(stdout,"-------------------\n");
     // FIXME: tests fail with Netatalk 4.0
 #if 0
     test66();

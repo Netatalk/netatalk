@@ -10,8 +10,6 @@ char *name = "test6 dir";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test6: create dir\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		failed();
@@ -27,7 +25,7 @@ uint16_t vol = VolID;
 
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test6");
+	exit_test("FPCreateDir:test6: create dir");
 }
 
 /* ------------------------- */
@@ -38,8 +36,6 @@ int pdir;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test26: folder without right access\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -71,7 +67,7 @@ uint16_t vol = VolID;
 fin:
 	delete_folder(vol, DIRDID_ROOT, name);
 test_exit:
-	exit_test("test26");
+	exit_test("FPCreateDir:test26: folder without right access");
 }
 
 /* ------------------------- */
@@ -89,8 +85,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test45: Folder Creation\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -133,7 +127,7 @@ fin:
 		delete_folder(vol, DIRDID_ROOT, rodir);
 	}
 test_exit:
-	exit_test("test45");
+	exit_test("FPCreateDir:test45: Folder Creation");
 }
 
 /* -------------------------- */
@@ -178,8 +172,6 @@ unsigned int ret;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test175: did error two users in  folder did=<deleted> name=test175\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -234,7 +226,7 @@ unsigned int ret;
 	    FPDelete(Conn, vol, dir , "");
 	}
 test_exit:
-	exit_test("test175");
+	exit_test("FPCreateDir:test175: did error two users in  folder did=<deleted> name=test175");
 }
 
 /* ----------- */
@@ -252,8 +244,6 @@ DSI *dsi2;
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test198: second user delete folder\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -297,7 +287,7 @@ fin:
 	FAIL (tdir && FPDelete(Conn, vol, tdir , ""))
 	FAIL (tdir1 && FPDelete(Conn, vol, tdir1 , ""))
 test_exit:
-	exit_test("test198");
+	exit_test("FPCreateDir:test198: second user delete folder");
 }
 
 /* ----------- */
@@ -318,8 +308,6 @@ DSI *dsi2;
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir:test357: admin user \n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -366,7 +354,7 @@ unsigned int ret;
 		FAIL (FPDelete(Conn, vol, tdir , ""))
 	}
 test_exit:
-	exit_test("test357");
+	exit_test("FPCreateDir:test357: admin user");
 }
 
 /* ----------- */
@@ -374,6 +362,7 @@ void FPCreateDir_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCreateDir page 136\n");
+    fprintf(stdout,"-------------------\n");
 	test6();
 	test26();
 	test45();

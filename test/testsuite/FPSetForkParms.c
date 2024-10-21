@@ -16,8 +16,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms:test62: SetForkParams errors\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -81,7 +79,7 @@ fin:
 	FAIL (fork1 && FPCloseFork(Conn,fork1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test62");
+	exit_test("FPSetForkParms:test62: SetForkParams errors");
 }
 
 /* ------------------------- */
@@ -96,8 +94,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms:test141: Setforkmode error\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -134,7 +130,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test141");
+	exit_test("FPSetForkParms:test141: Setforkmode error");
 }
 
 
@@ -151,8 +147,6 @@ unsigned int ret;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms:test217: Setfork size 64 bits\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -183,7 +177,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test217");
+	exit_test("FPSetForkParms:test217: Setfork size 64 bits");
 }
 
 /* ------------------------- */
@@ -198,8 +192,6 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms:test306: set fork size, new size > old size\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -218,11 +210,13 @@ DSI *dsi;
 		goto fin;
 	}
 	if (data != 0) {
-		if (Mac) {
+		if (Mac && !Quiet) {
 			fprintf(stdout,"\tMac result 0x%x but 0 expected\n", data);
 		}
 		else {
-			fprintf(stdout,"\tFAILED got 0x%x but 0 expected\n", data);
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED got 0x%x but 0 expected\n", data);
+			}
 			failed_nomsg();
 			goto fin;
 		}
@@ -233,7 +227,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test306");
+	exit_test("FPSetForkParms:test306: set fork size, new size > old size");
 }
 
 /* ----------- */
@@ -241,6 +235,7 @@ void FPSetForkParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetForkParms page 266\n");
+    fprintf(stdout,"-------------------\n");
     test62();
     test141();
     test217();

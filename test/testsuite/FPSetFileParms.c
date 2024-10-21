@@ -18,8 +18,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"t83: test set file setfilparam\n");
 
 	if (!(dir =FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
@@ -46,7 +44,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test83");
+	exit_test("FPSetFileParms:test83: test set file setfilparam");
 }
 
 /* ------------------------- */
@@ -62,8 +60,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t96: test file's invisible bit\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -76,7 +72,9 @@ DSI *dsi;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-	fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	}
 	sleep(4);
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name,bitmap, 0 )) {
@@ -85,7 +83,9 @@ DSI *dsi;
 	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-	fprintf(stdout,"Modif date file %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date file %x\n", filedir.mdate);
+	}
 	sleep(5);
 
 	filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
@@ -99,7 +99,9 @@ DSI *dsi;
 	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-	fprintf(stdout,"Modif date file %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date file %x\n", filedir.mdate);
+	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
 		failed();
@@ -107,11 +109,13 @@ DSI *dsi;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-	fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	if (!Quiet) {
+		fprintf(stdout,"Modif date parent %x\n", filedir.mdate);
+	}
 end:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test96");
+	exit_test("FPSetFileParms:test96: test file's invisible bit");
 }
 
 /* ------------------------- */
@@ -127,8 +131,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t118: test file no delete attribute\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -148,7 +150,7 @@ DSI *dsi;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test118");
+	exit_test("FPSetFileParms:test118: test file no delete attribute");
 }
 
 /* ------------------------- */
@@ -170,8 +172,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"t122: test setfilparam open fork\n");
 
 	memset(&filedir, 0, sizeof(filedir));
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
@@ -210,7 +210,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test122");
+	exit_test("FPSetFileParms:test122: test setfilparam open fork");
 }
 
 /* ------------------------- */
@@ -226,8 +226,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t318: set UTF8 name(error)\n");
 
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -248,7 +246,7 @@ DSI *dsi;
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test318");
+	exit_test("FPSetFileParms:test318: set UTF8 name(error)");
 }
 
 /* ------------------------ */
@@ -314,8 +312,6 @@ int fork = 0;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t427: Create a symlink\n");
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
@@ -339,7 +335,7 @@ test_exit:
     }
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , dest))
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
-	exit_test("test427");
+	exit_test("FPSetFileParms:test427: Create a symlink");
 }
 
 /* ------------------------- */
@@ -352,8 +348,6 @@ uint16_t vol = VolID;
 uint16_t vol2 = 0xffff;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t428: Delete symlinks, two users\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -390,7 +384,7 @@ test_error:
     FPDelete(Conn, vol,  DIRDID_ROOT , name2);
 
 test_exit:
-	exit_test("test428");
+	exit_test("FPSetFileParms:test428: Delete symlinks, two users");
 }
 
 /* ------------------------- */
@@ -409,8 +403,6 @@ int id;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t429: symlink File ID\n");
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
@@ -439,7 +431,9 @@ int id;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (!filedir.did || filedir.did != id) {
-		    fprintf(stdout,"\tFAILED cnids are not the same %x %x\n", filedir.did, id);
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED cnids are not the same %x %x\n", filedir.did, id);
+			}
 			failed_nomsg();
 		}
 	}
@@ -450,7 +444,7 @@ test_exit:
     }
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , dest))
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
-	exit_test("test429");
+	exit_test("FPSetFileParms:test429: symlink File ID");
 }
 
 /* ------------------------- */
@@ -469,8 +463,6 @@ STATIC void test430()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t430: set creation date on symlink\n");
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
@@ -487,7 +479,7 @@ STATIC void test430()
 test_exit:
     FAIL (FPDelete(Conn, vol, DIRDID_ROOT, dest))
     FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
-	exit_test("test430");
+	exit_test("FPSetFileParms:test430: set creation date on symlink");
 }
 
 
@@ -496,6 +488,7 @@ void FPSetFileParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms page 262\n");
+    fprintf(stdout,"-------------------\n");
     test83();
     test96();
     test118();

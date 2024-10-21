@@ -103,7 +103,7 @@ int size = 1000;
 	    		    	filedir.isdir = 0;
 	        		    afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
 			        }
-			        if (Quiet) {
+			        if (!Quiet) {
 			        	fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did),
 			        	      (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
 			        	      filedir.isdir?"/":"");

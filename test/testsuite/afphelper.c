@@ -88,14 +88,18 @@ uint16_t bitmap = 0;
 	dsi->header.dsi_len = htonl(dsi->datalen);
 	dsi->header.dsi_code = 0;
 
-	fprintf(stdout,"---------------------\n");
-	fprintf(stdout,"AFP call  %d\n\n", cmd);
+	if (!Quiet) {
+		fprintf(stdout,"---------------------\n");
+		fprintf(stdout,"AFP call  %d\n\n", cmd);
+	}
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	my_dsi_cmd_receive(dsi);
 	dump_header(dsi);
 
     if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
+	if (!Quiet) {
 		fprintf(stdout,"\tFAILED command %i\n", cmd);
+	}
 		failed();
     }
 }
@@ -214,7 +218,11 @@ uint32_t uid;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Create no access folder <<<<<<<<<< \n");
+
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Create no access folder <<<<<<<<<< \n");
+	}
+
 	dsi2 = &Conn2->dsi;
 	dsi = &Conn->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
@@ -300,7 +308,9 @@ fin:
 		}
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
 	return ret;
 }
 
@@ -318,7 +328,9 @@ DSI *dsi, *dsi2;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Create ---rwx--- folder <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Create ---rwx--- folder <<<<<<<<<< \n");
+	}
 	dsi2 = &Conn2->dsi;
 	dsi = &Conn->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
@@ -367,7 +379,9 @@ fin:
 		}
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
 	return ret;
 }
 
@@ -388,7 +402,9 @@ DSI *dsi2;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Create read only folder <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Create read only folder <<<<<<<<<< \n");
+	}
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -429,7 +445,9 @@ fin:
 		}
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
 	return ret;
 }
 
@@ -450,7 +468,9 @@ DSI *dsi2;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Create folder <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Create folder <<<<<<<<<< \n");
+	}
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -497,7 +517,9 @@ fin:
 		}
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
 	return ret;
 }
 
@@ -515,7 +537,11 @@ DSI *dsi2;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Delete folder <<<<<<<<<< \n");
+
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Delete folder <<<<<<<<<< \n");
+	}
+
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -544,7 +570,11 @@ DSI *dsi2;
 		return 0;
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
+
 	return 1;
 }
 
@@ -562,7 +592,9 @@ DSI *dsi2;
     if (!Conn2) {
     	return 0;
     }
-	fprintf(stdout,"\t>>>>>>>> Delete folder <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> Delete folder <<<<<<<<<< \n");
+	}
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
@@ -595,7 +627,9 @@ DSI *dsi2;
 		return 0;
 	}
 	FPCloseVol(Conn2,vol2);
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	if (!Quiet) {
+		fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+	}
 	return 1;
 }
 
@@ -636,20 +670,24 @@ int not_valid(unsigned int ret, int mac_error, int netatalk_error)
 {
 	if (htonl(mac_error) != ret) {
 		if (!Mac) {
-    		fprintf(stdout,"MAC RESULT: %d %s\n", mac_error, afp_error(htonl(mac_error)));
+			if (!Quiet) {
+				fprintf(stdout,"MAC RESULT: %d %s\n", mac_error, afp_error(htonl(mac_error)));
+			}
 			if (htonl(netatalk_error) != ret) {
 				return 1;
 			}
     	}
     	else if (htonl(netatalk_error) == ret) {
-    	    fprintf(stdout,"Warning MAC and Netatalk now same RESULT!\n");
+		if (!Quiet) {
+			fprintf(stdout,"Warning MAC and Netatalk now same RESULT!\n");
+		}
     		return 0;
     	}
     	else
     		return 1;
 	}
-	else if (!Mac) {
-    	fprintf(stdout,"Warning MAC and Netatalk now same RESULT!\n");
+	else if (!Mac && !Quiet) {
+		fprintf(stdout,"Warning MAC and Netatalk now same RESULT!\n");
 	}
 	return 0;
 }
@@ -747,9 +785,9 @@ static char temp1[4096];
 /* ---------------------- */
 int not_valid_bitmap(unsigned int ret, unsigned int bitmap, int netatalk_error)
 {
-	if (!Mac) {
-    	fprintf(stdout,"MAC RESULT: %s\n", bitmap2text(bitmap));
-    }
+	if (!Mac && !Quiet) {
+		fprintf(stdout,"MAC RESULT: %s\n", bitmap2text(bitmap));
+	}
 	if (!error_in_list(bitmap,ret)) {
 		if (htonl(netatalk_error) == ret) {
 		    return 0;
@@ -791,7 +829,7 @@ void test_skipped(int why)
 		s = "-m (Mac server) or the volume path";
 		break;
 	case T_UNIX_PREV:
-		s ="volume with unix privilege";
+		s ="volume with UNIX privilege";
 		break;
 	case T_NO_UNIX_PREV:
 		s ="volume without UNIX privileges";
@@ -824,13 +862,19 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3 and volume with appledouble = ea";
+		s = "Netatalk 3+ and volume with 'appledouble = ea'";
 		break;
 	case T_ADV2:
-		s = "appledouble = v2 volume";
+		s = "volume with 'appledouble = v2'";
 		break;
 	case T_NOSYML:
-		s = "volume without option 'followsymlinks'";
+		s = "volume without option 'follow symlinks'";
+		break;
+	case T_SINGLE:
+		s = "to run individually with -f";
+		break;
+	case T_VOL_BIG:
+		s = "a smaller volume";
 		break;
 	}
 	if (Color) {
@@ -870,25 +914,20 @@ void nottested_nomsg(void)
 /* ------------------------- */
 void failed(void)
 {
-	fprintf(stdout,"\tFAILED\n");
+	if (!Quiet) {
+		fprintf(stdout,"\tFAILED\n");
+	}
 	failed_nomsg();
 }
 
 /* ------------------------- */
 void nottested(void)
 {
-	fprintf(stdout,"\tNOT TESTED\n");
+	if (!Quiet) {
+		fprintf(stdout,"\tNOT TESTED\n");
+	}
 	nottested_nomsg();
 }
-
-/* ------------------------- */
-void known_failure(char *why)
-{
-	fprintf(stdout,"\tFAILED (known)\n");
-	CurTestResult = 4;
-	Why = why;
-}
-
 
 /* ------------------------- */
 void enter_test(void)
@@ -910,15 +949,14 @@ void exit_test(char *name)
 			s = "PASSED";
 		}
 		break;
-	case 4:
 	case 1:
 		if (Color) {
 			s = ANSI_BRED "FAILED" ANSI_NORMAL;
 		} else {
 			s = "FAILED";
 		}
-        fprintf(stdout, "%s - summary - ", name);
-        fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+        fprintf(stdout, "%s - ", name);
+        fprintf(stdout, "%s%s\n", s, Why);
         fflush(stdout);
 		return;
 	case 2:
@@ -932,13 +970,8 @@ void exit_test(char *name)
 		s = skipped_msg_buf;
 		break;
 	}
-#if 0
-        fprintf(stderr, "%s - summary - ", name);
-        fprintf(stderr, "%s%s (%d)\n", s, Why, CurTestResult);
-        fflush(stderr);
-#endif
-	fprintf(stdout, "%s - summary - ", name);
-	fprintf(stdout, "%s%s (%d)\n", s, Why, CurTestResult);
+	fprintf(stdout, "%s - ", name);
+	fprintf(stdout, "%s%s\n", s, Why);
     fflush(stdout);
 }
 

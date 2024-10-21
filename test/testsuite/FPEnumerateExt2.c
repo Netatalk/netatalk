@@ -12,8 +12,6 @@ int  dir,dir1;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerateExt2:test25: FPEnumerate ext2\n");
 	if (Conn->afp_version < 31) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -56,7 +54,7 @@ uint16_t vol = VolID;
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT, name);
 test_exit:
-	exit_test("test25");
+	exit_test("FPEnumerateExt2:test25: FPEnumerate ext2");
 }
 
 /* ------------------------- */
@@ -70,8 +68,6 @@ uint16_t vol = VolID;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerateExt2:test211: AFP 3.1 FPEnumerate ext2\n");
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -118,7 +114,7 @@ uint16_t vol = VolID;
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	}
 test_exit:
-	exit_test("test211");
+	exit_test("FPEnumerateExt2:test211: AFP 3.1 FPEnumerate ext2");
 }
 
 /* ----------- */
@@ -126,6 +122,7 @@ void FPEnumerateExt2_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerateExt2 page 155\n");
+    fprintf(stdout,"-------------------\n");
     test25();
     test211();
 }

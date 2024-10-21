@@ -25,8 +25,6 @@ int  dir,dir1;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSessionToken:test220: AFP 3.0 get session token\n");
 	if (Conn->afp_version != 30) {
 		test_skipped(T_AFP30);
 		goto test_exit;
@@ -78,15 +76,13 @@ uint16_t vol = VolID;
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	}
 test_exit:
-	exit_test("test220");
+	exit_test("FPGetSessionToken:test220: AFP 3.0 get session token");
 }
 
 /* ------------------------- */
 STATIC void test221()
 {
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSessionToken:test221: AFP 3.1 get session token\n");
 	if (Conn->afp_version <= 31) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -95,7 +91,7 @@ STATIC void test221()
 	FAIL (FPGetSessionToken(Conn, 3, 0, 5, "token"))
         FAIL (FPzzz(Conn, 0))
 test_exit:
-	exit_test("test221");
+	exit_test("FPGetSessionToken:test221: AFP 3.1 get session token");
 }
 
 /* ----------- */
@@ -103,6 +99,7 @@ void FPGetSessionToken_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetSessionToken page 191\n");
+    fprintf(stdout,"-------------------\n");
     test220();
     test221();
 }

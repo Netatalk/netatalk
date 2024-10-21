@@ -942,19 +942,27 @@ struct stat st;
 	}
 	read_fork( DIRDID_ROOT , name, 3);
 	if (strcmp(Data,"red")) {
-		fprintf(stdout,"\tFAILED should be red\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be red\n");
+		}
 
 	}
 	read_fork( dir , name1, 4);
 	if (strcmp(Data,"blue")) {
-		fprintf(stdout,"\tFAILED should be blue\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED should be blue\n");
+		}
 	}
 	if ((ret = get_fid(DIRDID_ROOT , name)) != fid_name) {
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 	}
 
 	if ((ret = get_fid(dir , name1)) != fid_name1) {
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name1);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 	}
 
 	if (FPDelete(Conn, vol,  dir , name1)) { fprintf(stdout,"\tFAILED\n");}
@@ -1066,7 +1074,9 @@ struct stat st;
 	}
 
 	if ((ret = get_fid(dir , name1)) != fid_name) {
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 	}
 
 	if (FPDelete(Conn, vol,  dir , name1)) { fprintf(stdout,"\tFAILED\n");}
@@ -1115,7 +1125,9 @@ struct stat st;
 	}
 
 	if ((ret = get_fid(dir , name)) != fid_name) {
-		fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		}
 	}
 
 	if (FPDelete(Conn, vol,  dir , name)) { fprintf(stdout,"\tFAILED\n");}

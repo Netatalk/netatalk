@@ -11,8 +11,6 @@ char *name2 = "t69 new name";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test69: rename a folder with Unix name != Mac name\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -37,7 +35,7 @@ uint16_t vol = VolID;
 	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name2, name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test69");
+	exit_test("FPRename:test69: rename a folder with Unix name != Mac name");
 }
 
 /* ------------------------- */
@@ -59,8 +57,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test72: check input parameter\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
 		nottested();
@@ -110,7 +106,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
-	exit_test("test72");
+	exit_test("FPRename:test72: check input parameter");
 }
 
 /* -------------------------- */
@@ -175,7 +171,7 @@ int tp,tp1;
 		nottested();
 		goto fin;
 	}
-	if (tp != tdir) {
+	if (tp != tdir && !Quiet) {
 		fprintf(stdout,"Warning DID connection1 0x%x ==> connection2 0x%x\n", tdir, tp);
 	}
 	tp1 = get_did(Conn2, vol2, tp, name);
@@ -183,7 +179,7 @@ int tp,tp1;
 		nottested();
 		goto fin;
 	}
-	if (tp1 != tdir1) {
+	if (tp1 != tdir1 && !Quiet) {
 		fprintf(stdout,"Warning DID connection1 0x%x ==> connection2 0x%x\n", tdir1, tp1);
 	}
 	if (FPDelete(Conn2, vol2,  tp1 , "")) {
@@ -214,8 +210,6 @@ uint16_t vol = VolID;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test183: did error two users in  folder did=<deleted> name=test183\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -234,7 +228,7 @@ uint16_t vol = VolID;
 	}
 	FAIL (ntohl(AFPERR_NOOBJ) != FPRename(Conn, vol, tdir, "", name1))
 test_exit:
-	exit_test("test183");
+	exit_test("FPRename:test183: did error two users in  folder did=<deleted> name=test183");
 }
 
 /* ------------------------- */
@@ -245,8 +239,6 @@ char *name1 = "t184new.txt";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test184: rename\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -258,7 +250,7 @@ uint16_t vol = VolID;
 	FAIL (!FPDelete(Conn, vol, DIRDID_ROOT , name))
 	FPFlush(Conn, vol);
 test_exit:
-	exit_test("test184");
+	exit_test("FPRename:test184: rename");
 }
 
 /* ------------------------- */
@@ -271,8 +263,6 @@ uint16_t vol = VolID;
 int  dir = 0,dir1 = 0,dir2 = 0;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test191: rename folders\n");
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -300,7 +290,7 @@ fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1, ""))
 	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test191");
+	exit_test("FPRename:test191: rename folders");
 }
 
 /* ------------------------- */
@@ -314,8 +304,6 @@ int  dir = 0;
 DSI	*dsi2 = &Conn2->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test219: rename folders two users\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -345,7 +333,7 @@ DSI	*dsi2 = &Conn2->dsi;
 fin:
 	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test219");
+	exit_test("FPRename:test219: rename folders two users");
 }
 
 /* ------------------------- */
@@ -356,8 +344,6 @@ char *name1 = "t376 new name";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test376: dest file exist\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
@@ -376,7 +362,7 @@ fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 
 test_exit:
-	exit_test("test376");
+	exit_test("FPRename:test376: dest file exist");
 }
 
 
@@ -390,8 +376,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename:test377: dest file exist but diff only by case, is this one OK \n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
@@ -414,7 +398,7 @@ fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 
 test_exit:
-	exit_test("test377");
+	exit_test("FPRename:test377: dest file exist but diff only by case, is this one OK");
 }
 
 
@@ -423,6 +407,7 @@ void FPRename_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRename page 250\n");
+    fprintf(stdout,"-------------------\n");
 	test69();
 	test72();
 	test183();

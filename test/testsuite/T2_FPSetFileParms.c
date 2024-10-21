@@ -66,8 +66,6 @@ DSI *dsi = &Conn->dsi;
 unsigned ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:test89: test set file setfilparam\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -100,7 +98,7 @@ unsigned ret;
 	}
 	delete_ro_adouble(vol, dir, file);
 test_exit:
-	exit_test("test89");
+	exit_test("FPSetFileParms:test89: test set file setfilparam");
 }
 
 /* ------------------------- */
@@ -115,8 +113,6 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t120: test set file setfilparam (create .AppleDouble)\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -142,7 +138,7 @@ DSI *dsi = &Conn->dsi;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test120");
+	exit_test("FPSetFileParms:test120: test set file setfilparam (create .AppleDouble)");
 }
 
 /* ------------------------- */
@@ -162,8 +158,6 @@ STATIC void test426()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms:t426: Create a dangling symlink\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -178,7 +172,9 @@ STATIC void test426()
     /* Check if volume uses option 'followsymlinks' */
     sprintf(temp, "%s/%s", Path, name);
     if (lstat(temp, &st)) {
-        fprintf(stdout,"\tFAILED stat( %s ) %s\n", temp, strerror(errno));
+	if (!Quiet) {
+		fprintf(stdout,"\tFAILED stat( %s ) %s\n", temp, strerror(errno));
+	}
         failed_nomsg();
     }
     if (!S_ISLNK(st.st_mode)) {
@@ -210,7 +206,7 @@ test_exit:
 	    FPCloseFork(Conn,fork);
     }
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
-	exit_test("test426");
+	exit_test("FPSetFileParms:test426: Create a dangling symlink");
 }
 
 /* ----------- */
@@ -218,6 +214,7 @@ void FPSetFileParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetFileParms page 262\n");
+    fprintf(stdout,"-------------------\n");
     test89();
     test120();
 // FIXME: test stalls indefinitely

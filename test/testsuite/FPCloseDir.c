@@ -13,8 +13,6 @@ DSI *dsi;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPCloseDir:test199: FPCloseDir call\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -43,7 +41,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test199");
+	exit_test("FPCloseDir:test199: FPCloseDir call");
 }
 
 /* ----------- */
@@ -51,5 +49,6 @@ void FPCloseDir_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCloseDir page 127\n");
+    fprintf(stdout,"-------------------\n");
 	test199();
 }

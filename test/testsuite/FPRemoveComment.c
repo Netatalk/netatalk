@@ -19,8 +19,6 @@ DSI *dsi2;
 int dt;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPRemoveComment:test54: remove comment\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -94,7 +92,7 @@ fin:
 	}
 	FAIL (FPCloseDT(Conn, dt))
 test_exit:
-	exit_test("test54");
+	exit_test("FPRemoveComment:test54: remove comment");
 }
 
 
@@ -106,10 +104,7 @@ char *name1 = "t379 file.txt";
 uint16_t vol = VolID;
 int  dt;
 
-
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPRemoveComment:test379: remove comment\n");
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 
@@ -125,7 +120,7 @@ int  dt;
 	FAIL (FPCloseDT(Conn, dt))
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
-	exit_test("test379");
+	exit_test("FPRemoveComment:test379: remove comment");
 }
 
 
@@ -134,6 +129,7 @@ void FPRemoveComment_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRemoveComment page 247\n");
+    fprintf(stdout,"-------------------\n");
 	test54();
 	test379();
 }

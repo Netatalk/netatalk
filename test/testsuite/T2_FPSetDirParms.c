@@ -15,8 +15,6 @@ uint16_t vol = VolID;
 DSI *dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetDirParms:t121: test set dir setfilparam (create .AppleDouble)\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -46,7 +44,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test121");
+	exit_test("FPSetDirParms:test121: test set dir setfilparam (create .AppleDouble)");
 }
 
 /* ----------- */
@@ -54,5 +52,6 @@ void FPSetDirParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetDirParms page 255\n");
+    fprintf(stdout,"-------------------\n");
     test121();
 }

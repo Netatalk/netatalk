@@ -15,8 +15,6 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMapID:test208: test Map ID call\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -62,7 +60,7 @@ DSI *dsi = &Conn->dsi;
 	/* --------------------- */
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test208");
+	exit_test("FPMapID:test208: test Map ID call");
 }
 
 /* ----------- */
@@ -72,6 +70,7 @@ void FPMapID_test()
 #if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMapID page 220\n");
+    fprintf(stdout,"-------------------\n");
 	test208();
 #endif
 }

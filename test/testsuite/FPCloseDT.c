@@ -10,8 +10,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPCloseDT:test201: FPCloseDT call\n");
 
 	if (0xffff == (dir = FPOpenDT(Conn,vol))) {
 		nottested();
@@ -23,7 +21,7 @@ int ret;
 	}
 	FAIL (FPCloseDT(Conn, dir))
 test_exit:
-	exit_test("test201");
+	exit_test("FPCloseDT:test201: FPCloseDT call");
 }
 
 /* ----------- */
@@ -31,5 +29,6 @@ void FPCloseDT_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCloseDT page 128\n");
+    fprintf(stdout,"-------------------\n");
 	test201();
 }

@@ -15,8 +15,6 @@ STATIC void test9()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms:test9: name encoding\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -41,7 +39,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("test9");
+	exit_test("FPSetForkParms:test9: name encoding");
 }
 
 /* ----------- */
@@ -49,5 +47,6 @@ void FPSetForkParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetForkParms\n");
+    fprintf(stdout,"-------------------\n");
 	test9();
 }
