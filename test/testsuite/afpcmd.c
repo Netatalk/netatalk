@@ -246,7 +246,9 @@ DSI *dsi;
 			return -1;
 		usr = p->pw_name;
 	}
-	fprintf(stdout,"[%s] Login Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
+	if (!Quiet) {
+		fprintf(stdout,"[%s] Login Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
+	}
 	ret = AFPopenLogin(conn, vers, uam, usr, pwd);
 	dump_header(dsi);
 	return ret;
@@ -268,7 +270,9 @@ DSI *dsi;
 			return -1;
 		usr = p->pw_name;
 	}
-	fprintf(stdout,"[%s] LoginExt Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
+	if (!Quiet) {
+		fprintf(stdout,"[%s] LoginExt Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
+	}
 	ret = AFPopenLoginExt(conn,vers, uam, usr, pwd);
 	dump_header(dsi);
 	return ret;
@@ -281,7 +285,9 @@ int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
-	fprintf(stdout,"[%s] Logout\n", __func__);
+	if (!Quiet) {
+		fprintf(stdout,"[%s] Logout\n", __func__);
+	}
 	ret = AFPLogOut(conn);
 	dump_header(dsi);
 	return ret;

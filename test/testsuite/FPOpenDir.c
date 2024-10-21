@@ -18,8 +18,6 @@ DSI *dsi;
 
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPOpenDir:test57: OpenDir call\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -81,7 +79,7 @@ fin:
 		delete_folder(vol, DIRDID_ROOT, name2);
 	}
 test_exit:
-	exit_test("test57");
+	exit_test("FPOpenDir:test57: OpenDir call");
 }
 
 /* ----------- */
@@ -89,5 +87,6 @@ void FPOpenDir_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenDir page 227\n");
+    fprintf(stdout,"-------------------\n");
 	test57();
 }

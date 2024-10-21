@@ -12,8 +12,6 @@ int ret = 0;
 int fork;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"test13: delete open file same connection\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -37,7 +35,7 @@ int fork;
 fin:
 	FAIL (ret && FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test13");
+	exit_test("FPDelete:test13: delete open file same connection");
 }
 
 /* ------------------------- */
@@ -49,8 +47,6 @@ uint16_t vol = VolID;
 int  dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test27: delete not empty dir\n");
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
@@ -67,7 +63,7 @@ int  dir;
 	FAIL (FPDelete(Conn, vol,  dir , name));
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
-	exit_test("test27");
+	exit_test("FPDelete:test27: delete not empty dir");
 }
 
 /* -------------------------- */
@@ -83,8 +79,6 @@ uint16_t vol = VolID;
 DSI *dsi2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test74: Delete File 2 users\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -118,7 +112,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	FAIL (FPCloseVol(Conn2,vol2))
 test_exit:
-	exit_test("test74");
+	exit_test("FPDelete:test74: Delete File 2 users");
 }
 
 /* ------------------------- */
@@ -132,8 +126,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test90: delete a dir without access\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -145,7 +137,7 @@ DSI *dsi;
 	FAIL (ntohl(AFPERR_ACCESS) != FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	delete_folder(vol, DIRDID_ROOT, name);
 test_exit:
-	exit_test("test90");
+	exit_test("FPDelete:test90: delete a dir without access");
 }
 
 /* -------------------------- */
@@ -168,8 +160,6 @@ int dt;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test172: did error did=<deleted> name=test172 name\n");
 
 	memset(&filedir, 0, sizeof(filedir));
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, tname);
@@ -230,8 +220,12 @@ int dt;
 
 	ret = FPExchangeFile(Conn, vol, tdir,dir, tname, name1);
 	if (ntohl(AFPERR_NOOBJ) != ret) {
-		if (Quirk && ret == htonl(AFPERR_PARAM))
-			fprintf(stdout,"\tFAILED (IGNORED) not always the same error code!\n");
+		if (Quirk && ret == htonl(AFPERR_PARAM)) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED (IGNORED) not always the same error code!\n");
+			}
+			skipped_nomsg();
+		}
 		else {
 			failed();
 		}
@@ -303,7 +297,7 @@ int dt;
 	FAIL (FPCloseDT(Conn, dt))
 
 test_exit:
-	exit_test("test172");
+	exit_test("FPDelete:test172: did error did=<deleted> name=test172 name");
 }
 
 /* -------------------------- */
@@ -323,15 +317,15 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test196: delete a folder in a deleted folder\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
 	}
 
 	if (Exclude) {
-		fprintf(stdout, "\tFAILED (not run kill 1.6.x servers)\n");
+		if (!Quiet) {
+			fprintf(stdout, "\tFAILED (not run kill 1.6.x servers)\n");
+		}
 		failed_nomsg();
 		goto test_exit;
 	}
@@ -386,7 +380,7 @@ fin:
 	FAIL (tdir1 && FPDelete(Conn, vol, tdir1 , ""))
 	FAIL (tdir && FPDelete(Conn, vol, tdir , ""))
 test_exit:
-	exit_test("test196");
+	exit_test("FPDelete:test196: delete a folder in a deleted folder");
 }
 
 /* -------------------------- */
@@ -405,8 +399,6 @@ DSI *dsi2;
 int  dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test368: Delete File 2 users after it has been moved\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -448,7 +440,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 	FAIL (FPCloseVol(Conn2,vol2))
 test_exit:
-	exit_test("test368");
+	exit_test("FPDelete:test368: Delete File 2 users after it has been moved");
 }
 
 /* -------------------------- */
@@ -466,8 +458,6 @@ DSI *dsi2;
 int  dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test369: Delete File 2 users after it has been moved\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -508,7 +498,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 	FAIL (FPCloseVol(Conn2,vol2))
 test_exit:
-	exit_test("test369");
+	exit_test("FPDelete:test369: Delete File 2 users after it has been moved");
 }
 
 /* -------------------------- */
@@ -525,8 +515,6 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete:test421: delete an already deleted curdir folder\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -567,7 +555,7 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 fin:
 	FAIL (tdir && FPDelete(Conn, vol, tdir , ""))
 test_exit:
-	exit_test("test421");
+	exit_test("FPDelete:test421: delete an already deleted curdir folder");
 }
 
 /* ------------------------- */
@@ -580,8 +568,6 @@ char *name = "t422 file";
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"test422: Server notification on volume date change if AFP < 3.2\n");
 
 	if (Mac) {
 		test_skipped(T_MAC);
@@ -602,7 +588,9 @@ int ret;
 	}
     if (Conn->afp_version < 32) {
     	if (!Attention_received) {
+		if (!Quiet) {
 			fprintf(stdout, "\tFAILED no attention received\n");
+		}
 			failed_nomsg();
 		}
     }
@@ -612,7 +600,7 @@ int ret;
     }
 
 test_exit:
-	exit_test("test422");
+	exit_test("FPDelete:test422: Server notification on volume date change if AFP < 3.2");
 }
 
 
@@ -621,6 +609,7 @@ void FPDelete_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDelete page 143\n");
+    fprintf(stdout,"-------------------\n");
     test13();
 	test27();
 	test74();

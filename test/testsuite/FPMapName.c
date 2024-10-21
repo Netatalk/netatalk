@@ -17,8 +17,6 @@ char *grp = NULL;
 char *usr = NULL;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMapName:test180: test Map Name\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -134,7 +132,7 @@ char *usr = NULL;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test180");
+	exit_test("FPMapName:test180: test Map Name");
 }
 
 /* ----------- */
@@ -144,6 +142,7 @@ void FPMapName_test()
 #if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMapName page 222\n");
+    fprintf(stdout,"-------------------\n");
 	test180();
 #endif
 }

@@ -16,8 +16,6 @@ STATIC void test109()
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPread:test109: read resource fork that is ro (0400), inaccessible (0000) or without metadata EA\n");
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -113,7 +111,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 test_exit:
-	exit_test("test109");
+	exit_test("FPread:test109: read resource fork that is ro (0400), inaccessible (0000) or without metadata EA");
 }
 
 /* ----------- */
@@ -121,5 +119,6 @@ void FPRead_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRead\n");
+    fprintf(stdout,"-------------------\n");
 	test109();
 }

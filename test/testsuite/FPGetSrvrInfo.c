@@ -7,15 +7,13 @@ STATIC void test1(void)
 {
 int ret;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrInfo:test1: GetSrvInfo\n");
 
 	ret = FPGetSrvrInfo(Conn);
 	if (ret) {
 		failed();
 	}
 
-	exit_test("test1");
+	exit_test("FPGetSrvrInfo:test1: GetSrvInfo");
 }
 
 /* ----------- */
@@ -23,5 +21,6 @@ void FPGetSrvrInfo_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetSrvInfo page 194\n");
+    fprintf(stdout,"-------------------\n");
 	test1();
 }

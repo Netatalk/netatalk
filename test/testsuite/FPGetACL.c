@@ -13,8 +13,6 @@ char *file="test398_file";
     dsi = &Conn->dsi;
 
     enter_test();
-	fprintf(stdout,"===================\n");
-	fprintf(stdout,"FPGetACL:test398: check ACL support\n");
     if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
         goto test_exit;
@@ -41,7 +39,7 @@ char *file="test398_file";
 */
     FPDelete(Conn, vol,  DIRDID_ROOT , file);
 test_exit:
-	exit_test("test398");
+	exit_test("FPGetACL:test398: check ACL support");
 }
 
 
@@ -57,8 +55,6 @@ char *attr_name="test399_attribute";
     dsi = &Conn->dsi;
 
 	enter_test();
-	fprintf(stdout,"===================\n");
-	fprintf(stdout,"FPGetExtAttr:test399: check Extended Attributes Support\n");
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         goto test_exit;
@@ -97,7 +93,7 @@ char *attr_name="test399_attribute";
     FPDelete(Conn, vol,  DIRDID_ROOT , file);
 
 test_exit:
-	exit_test("test399");
+	exit_test("FPGetExtAttr:test399: check Extended Attributes Support");
 }
 
 STATIC void test432()
@@ -114,8 +110,6 @@ STATIC void test432()
 	dsi = &Conn->dsi;
 
 	enter_test();
-	fprintf(stdout,"===================\n");
-	fprintf(stdout,"FPGetExtAttr:test399: check Extended Attributes Support\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -162,7 +156,7 @@ STATIC void test432()
 	FPDelete(Conn, vol,  DIRDID_ROOT , file);
 
 test_exit:
-	exit_test("test432");
+	exit_test("FPGetExtAttr:test432: set and get Extended Attributes");
 }
 
 /* ----------- */
@@ -170,6 +164,7 @@ void FPGetACL_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetACL\n");
+    fprintf(stdout,"-------------------\n");
 
     test398();
 // FIXME: broken in Netatalk 4.0

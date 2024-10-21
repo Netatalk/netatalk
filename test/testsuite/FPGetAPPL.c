@@ -11,8 +11,6 @@ char *file = "t169 file";
 int dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetAPPL:t169: test appl\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();
@@ -39,7 +37,7 @@ int dir;
 	FAIL ( FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttxt", file))
 	FAIL (FPCloseDT(Conn,dt))
 test_exit:
-	exit_test("test169");
+	exit_test("FPGetAPPL:test169: test appl");
 }
 
 /* ----------- */
@@ -47,5 +45,6 @@ void FPGetAPPL_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetAPPL page 172\n");
+    fprintf(stdout,"-------------------\n");
 	test169();
 }

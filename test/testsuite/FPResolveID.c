@@ -17,8 +17,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test76: Resolve ID\n");
 
 	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		test_skipped(T_ID);
@@ -47,7 +45,7 @@ DSI *dsi;
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test76");
+	exit_test("FPResolveID:test76: Resolve ID");
 }
 
 /* -------------------------
@@ -68,8 +66,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test91: Resolve ID errors\n");
 
 	if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		test_skipped(T_ID);
@@ -121,7 +117,7 @@ DSI *dsi;
 	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test91");
+	exit_test("FPResolveID:test91: Resolve ID errors");
 }
 
 /* -------------------------
@@ -140,8 +136,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test310: Resolve ID after rename\n");
 
 	if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		test_skipped(T_ID);
@@ -165,7 +159,7 @@ DSI *dsi;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test310");
+	exit_test("FPResolveID:test310: Resolve ID after rename");
 }
 
 /* -------------------------
@@ -184,8 +178,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test311: Resolve ID after rename\n");
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -214,7 +206,7 @@ DSI *dsi;
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test311");
+	exit_test("FPResolveID:test311: Resolve ID after rename");
 }
 
 /* -------------------------- */
@@ -232,8 +224,6 @@ uint16_t vol2;
 DSI *dsi2;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID:test362: Resolve ID two users interactions\n");
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -275,7 +265,7 @@ DSI *dsi2;
 	vol  = FPOpenVol(Conn, Vol);
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 test_exit:
-	exit_test("test362");
+	exit_test("FPResolveID:test362: Resolve ID two users interactions");
 }
 
 
@@ -284,6 +274,7 @@ void FPResolveID_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPResolveID page 252\n");
+    fprintf(stdout,"-------------------\n");
 	test76();
 	test91();
 	test310();

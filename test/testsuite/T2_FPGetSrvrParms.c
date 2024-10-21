@@ -19,8 +19,6 @@ uint16_t vol2;
 unsigned char *b;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrParms:test320: GetSrvrParms after volume config file has been modified\n");
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -67,7 +65,7 @@ unsigned char *b;
 	}
 	FAIL (FPCloseVol(Conn,vol2))
 test_exit:
-	exit_test("test320");
+	exit_test("FPGetSrvrParms:test320: GetSrvrParms after volume config file has been modified");
 }
 
 /* ----------- */
@@ -75,5 +73,6 @@ void FPGetSrvrParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetSrvrParms page 203\n");
+    fprintf(stdout,"-------------------\n");
 	test320();
 }

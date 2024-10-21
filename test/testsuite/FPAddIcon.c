@@ -57,8 +57,6 @@ int ret;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPAddIcon:test212: Add Icon call\n");
 
 	dt = FPOpenDT(Conn,vol);
 	FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
@@ -69,7 +67,9 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 	else if (memcmp(dsi->commands, icon0_256, 256)) {
-		fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		}
 		failed_nomsg();
 	}
 
@@ -80,7 +80,9 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 	else if (memcmp(dsi->commands, icon0_256, 256)) {
-		fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		}
 		failed_nomsg();
 	}
 
@@ -92,25 +94,26 @@ DSI *dsi = &Conn->dsi;
 		failed();
 	}
 	else if (memcmp(dsi->commands, icon0_64, 64)) {
-		fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
+		}
 		failed_nomsg();
 	}
 
 	FAIL (htonl(AFPERR_ITYPE) != FPAddIcon(Conn,  dt, "ttxt", "3DMF", 4, 0, 256, icon0_256))
 
 	FPCloseDT(Conn,dt);
-	exit_test("test212");
+	exit_test("FPAddIcon:test212: Add Icon call");
 }
 
 /* ----------- */
 void FPAddIcon_test()
 {
+// FIXME: afpd crash in afp_addicon()
+#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddIcon page 99\n");
-// FIXME: these tests are crashing the test suite
-#if 0
+    fprintf(stdout,"-------------------\n");
 	test212();
-#else
-    fprintf(stdout,"test212 - SKIPPED - crashing test suite\n");
 #endif
 }

@@ -19,15 +19,21 @@ int delete_unix_md(char *path, char *name, char *file)
         else {
             sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
         }
-        fprintf(stdout,"unlink(%s)\n", temp);
+        if (!Quiet) {
+            fprintf(stdout,"unlink(%s)\n", temp);
+        }
         if (unlink(temp) <0) {
-            fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+			if (!Quiet) {
+                fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+            }
             return -1;
         }
     } else {
         sprintf(temp, "%s/%s/%s", path, name, file);
         if (sys_lremovexattr(temp, AD_EA_META) != 0) {
-            fprintf(stdout,"\tFAILED sys_lremovexattr(%s, %s) %s\n", temp, AD_EA_META, strerror(errno));
+			if (!Quiet) {
+                fprintf(stdout,"\tFAILED sys_lremovexattr(%s, %s) %s\n", temp, AD_EA_META, strerror(errno));
+            }
             return -1;
         }
     }
@@ -47,9 +53,13 @@ int delete_unix_rf(char *path, char *name, char *file)
         else {
             sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
         }
-        fprintf(stdout,"unlink(%s)\n", temp);
+        if (!Quiet) {
+            fprintf(stdout,"unlink(%s)\n", temp);
+        }
         if (unlink(temp) <0) {
-            fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+			if (!Quiet) {
+                fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+            }
             return -1;
         }
     } else {
@@ -57,16 +67,22 @@ int delete_unix_rf(char *path, char *name, char *file)
         if (file) {
             sprintf(temp, "%s/%s/%s", path, name, file);
             if (sys_lremovexattr(temp, AD_EA_RESO) != 0) {
-                fprintf(stdout,"\tFAILED sys_lremovexattr(%s, %s) %s\n", temp, AD_EA_RESO, strerror(errno));
+                if (!Quiet) {
+                    fprintf(stdout,"\tFAILED sys_lremovexattr(%s, %s) %s\n", temp, AD_EA_RESO, strerror(errno));
+                }
                 return -1;
             }
         }
 #else
         if (file) {
             sprintf(temp, "%s/%s/._%s", path, name, file);
-            fprintf(stdout,"unlink(%s)\n", temp);
+			if (!Quiet) {
+                fprintf(stdout,"unlink(%s)\n", temp);
+            }
             if (unlink(temp) <0) {
-                fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+                if (!Quiet) {
+                    fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+                }
                 return -1;
             }
         }
@@ -86,10 +102,14 @@ int delete_unix_file(char *path, char *name, char *file)
     if (delete_unix_rf(path, name, file))
 		rc = -1;
 
-	sprintf(temp, "%s/%s/%s", path, name, file);
-	fprintf(stdout,"unlink(%s)\n", temp);
+    sprintf(temp, "%s/%s/%s", path, name, file);
+    if (!Quiet) {
+        fprintf(stdout,"unlink(%s)\n", temp);
+    }
 	if (unlink(temp) <0) {
-		fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+        }
         rc = -1;
 	}
 	return rc;
@@ -100,9 +120,13 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
     sprintf(temp, "%s/%s/%s", Path, dir, src);
     sprintf(temp1, "%s/%s/%s", Path, dir, dst);
-    fprintf(stdout,"rename %s %s\n", temp, temp1);
+    if (!Quiet) {
+        fprintf(stdout,"rename %s %s\n", temp, temp1);
+    }
     if (rename(temp, temp1) < 0) {
-        fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+        }
         failed_nomsg();
         return -1;
     }
@@ -110,18 +134,26 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
     if (adouble == AD_V2) {
         sprintf(temp, "%s/%s/.AppleDouble/%s", Path, dir, src);
         sprintf(temp1,"%s/%s/.AppleDouble/%s", Path, dir, dst);
-        fprintf(stdout,"rename %s %s\n", temp, temp1);
+        if (!Quiet) {
+            fprintf(stdout,"rename %s %s\n", temp, temp1);
+        }
         if (rename(temp, temp1) < 0) {
-            fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+            }
             failed_nomsg();
         }
     } else {
 #ifndef HAVE_EAFD
         sprintf(temp, "%s/%s/._%s", Path, dir, src);
         sprintf(temp1,"%s/%s/._%s", Path, dir, dst);
-        fprintf(stdout,"rename %s %s\n", temp, temp1);
+        if (!Quiet) {
+            fprintf(stdout,"rename %s %s\n", temp, temp1);
+        }
         if (rename(temp, temp1) < 0) {
-            fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+            }
             failed_nomsg();
         }
 
@@ -133,9 +165,13 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
 int unlink_unix_file(char *path, char *name, char *file)
 {
 	sprintf(temp, "%s/%s/%s", path, name, file);
-	fprintf(stdout,"unlink(%s)\n", temp);
+    if (!Quiet) {
+        fprintf(stdout,"unlink(%s)\n", temp);
+    }
 	if (unlink(temp) <0) {
-		fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+        }
 		failed_nomsg();
 		return -1;
 	}
@@ -146,9 +182,13 @@ int unlink_unix_file(char *path, char *name, char *file)
 int symlink_unix_file(char *target, char *path, char *source)
 {
 	sprintf(temp, "%s/%s", path, source);
-	fprintf(stdout,"symlink(%s -> %s)\n", temp, target);
+    if (!Quiet) {
+        fprintf(stdout,"symlink(%s -> %s)\n", temp, target);
+    }
 	if (symlink(target, temp) <0) {
-		fprintf(stdout,"\tFAILED symlink(%s -> %s) %s\n", temp, target, strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED symlink(%s -> %s) %s\n", temp, target, strerror(errno));
+        }
 		failed_nomsg();
 		return -1;
 	}
@@ -163,16 +203,22 @@ int delete_unix_adouble(char *path, char *name)
         sys_lremovexattr(temp, AD_EA_META);
         sys_lremovexattr(temp, AD_EA_RESO);
     } else {
-        fprintf(stdout,"rmdir(%s/.AppleDouble) \n", name);
+        if (!Quiet) {
+            fprintf(stdout,"rmdir(%s/.AppleDouble) \n", name);
+        }
         sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
         if (unlink(temp) <0) {
-            fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
         sprintf(temp, "%s/%s/.AppleDouble", path, name);
         if (rmdir(temp) <0) {
-            fprintf(stdout,"\tFAILED rmdir(%s) %s\n", temp, strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED rmdir(%s) %s\n", temp, strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
@@ -187,9 +233,13 @@ static int chmod_unix_adouble(char *path,char *name, int mode)
         return 0;
 
 	sprintf(temp, "%s/%s/.AppleDouble", path, name);
-	fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+    if (!Quiet) {
+        fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+    }
 	if (chmod(temp, mode)) {
-		fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+        }
 		failed_nomsg();
 		return -1;
 	}
@@ -203,9 +253,13 @@ int chmod_unix_meta(char *path, char *name, char *file, int mode)
     if (adouble == AD_EA) {
 #ifdef HAVE_EAFD
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode, AD_EA_META);
-        fprintf(stdout, "%s\n", temp);
+        if (!Quiet) {
+            fprintf(stdout, "%s\n", temp);
+        }
         if (system(temp) != 0) {
-            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
@@ -215,9 +269,13 @@ int chmod_unix_meta(char *path, char *name, char *file, int mode)
 #endif
     } else {
         sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
-        fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+        if (!Quiet) {
+            fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+        }
         if (chmod(temp, mode)) {
-            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
@@ -232,18 +290,26 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
     if (adouble == AD_EA) {
 #ifdef HAVE_EAFD
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode, AD_EA_RESO);
-        fprintf(stdout, "%s\n", temp);
+        if (!Quiet) {
+            fprintf(stdout, "%s\n", temp);
+        }
         if (system(temp) != 0) {
-            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
         return 0;
 #else
         sprintf(temp, "%s/%s/._%s", path, name, file);
-        fprintf(stdout, "chmod(%s, %d)\n", temp, mode);
+        if (!Quiet) {
+            fprintf(stdout, "chmod(%s, %d)\n", temp, mode);
+        }
         if (chmod(temp, mode)) {
-            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
@@ -251,9 +317,13 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
 #endif
     } else {
         sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
-        fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+        if (!Quiet) {
+            fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+        }
         if (chmod(temp, mode)) {
-            fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            if (!Quiet) {
+                fprintf(stdout,"\tFAILED %s\n", strerror(errno));
+            }
             failed_nomsg();
             return -1;
         }
@@ -266,14 +336,18 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
 */
 int delete_unix_dir(char *path, char *name)
 {
-	fprintf(stdout,"rmdir(%s)\n", name);
+    if (!Quiet) {
+        fprintf(stdout,"rmdir(%s)\n", name);
+    }
 
     if (adouble == AD_V2)
         if (delete_unix_adouble(path, name))
             return -1;
 	sprintf(temp, "%s/%s", path, name);
 	if (rmdir(temp) <0) {
-		fprintf(stdout,"\tFAILED rmdir %s %s\n", temp, strerror(errno));
+        if (!Quiet) {
+            fprintf(stdout,"\tFAILED rmdir %s %s\n", temp, strerror(errno));
+        }
 		return -1;
 	}
 	return 0;
@@ -288,7 +362,9 @@ int ret = 0;
 int dir = 0;
 uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
 
-	fprintf(stdout,"\t>>>>>>>> Create folder with ro adouble <<<<<<<<<< \n");
+    if (!Quiet) {
+        fprintf(stdout,"\t>>>>>>>> Create folder with ro adouble <<<<<<<<<< \n");
+    }
 
 	if (!(dir = FPCreateDir(Conn,vol, did , name))) {
 		nottested();
@@ -326,15 +402,18 @@ fin:
 			nottested();
 		}
 	}
-	fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+    if (!Quiet) {
+        fprintf(stdout,"\t>>>>>>>> done <<<<<<<<<< \n");
+    }
 	return ret;
 }
 
 /* -------------------------------- */
 int delete_ro_adouble(uint16_t vol, int did, char *file)
 {
-
-	fprintf(stdout,"\t>>>>>>>> delete folder with ro adouble <<<<<<<<<< \n");
+    if (!Quiet) {
+        fprintf(stdout,"\t>>>>>>>> delete folder with ro adouble <<<<<<<<<< \n");
+    }
 	FAIL (FPDelete(Conn, vol, did, file))
 	FAIL (FPDelete(Conn, vol, did, ""))
 	return 0;

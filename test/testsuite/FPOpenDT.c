@@ -10,8 +10,6 @@ uint16_t vol = VolID;
 DSI *dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPOpenDT:test200: OpenDT call\n");
 
 	dsi = &Conn->dsi;
 
@@ -24,7 +22,7 @@ DSI *dsi;
     if (dir != 0xffff || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		failed();
 	}
-	exit_test("test200");
+	exit_test("FPOpenDT:test200: OpenDT call");
 }
 
 /* ----------- */
@@ -32,5 +30,6 @@ void FPOpenDT_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenDT page 229\n");
+    fprintf(stdout,"-------------------\n");
 	test200();
 }

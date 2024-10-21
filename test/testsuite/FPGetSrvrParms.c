@@ -7,14 +7,12 @@ STATIC void test209(void)
 {
 int ret;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrParms:test209: GetSrvrParms call\n");
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
 		failed();
 	}
-	exit_test("test209");
+	exit_test("FPGetSrvrParms:test209: GetSrvrParms call");
 
 }
 
@@ -29,8 +27,6 @@ unsigned char len;
 unsigned char *b;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrParms:test316: GetSrvrParms for a volume with option nostat set\n");
 
 	FPCloseVol(Conn,VolID);
 
@@ -56,7 +52,7 @@ unsigned char *b;
 	if (VolID == 0xffff) {
 		nottested();
 	}
-	exit_test("test316");
+	exit_test("FPGetSrvrParms:test316: GetSrvrParms for a volume with option nostat set");
 }
 
 /* ----------- */
@@ -64,6 +60,7 @@ void FPGetSrvrParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetSrvrParms page 203\n");
+    fprintf(stdout,"-------------------\n");
 	test209();
 	test316();
 }

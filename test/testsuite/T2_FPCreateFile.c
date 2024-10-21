@@ -15,8 +15,6 @@ int ret;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPCreateFile:test325:  recreate a file with dangling symlink and no right\n");
 
 	if ((!Path && !Mac)) {
         test_skipped(T_MAC_PATH);
@@ -34,17 +32,25 @@ int ret;
 	}
 	if (!Mac) {
 		sprintf(temp,"%s/%s", Path, name);
-		fprintf(stdout,"unlink data fork\n");
+		if (!Quiet) {
+			fprintf(stdout,"unlink data fork\n");
+		}
 		if (unlink(temp) <0) {
-			fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+			}
 			failed_nomsg();
 			goto fin;
 		}
 
 		sprintf(temp,"%s/.AppleDouble/%s", Path, name);
-		fprintf(stdout,"chmod 444 resource fork\n");
+		if (!Quiet) {
+			fprintf(stdout,"chmod 444 resource fork\n");
+		}
 		if (chmod(temp, 0444) <0) {
-			fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
+			}
 			failed_nomsg();
 			goto fin;
 		}
@@ -69,7 +75,7 @@ fin:
 		unlink(temp);
 	}
 test_exit:
-	exit_test("test325");
+	exit_test("FPCreateFile:test325: recreate a file with dangling symlink and no right");
 }
 
 /* ----------- */
@@ -77,5 +83,6 @@ void FPCreateFile_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCreateFile page 138\n");
+    fprintf(stdout,"-------------------\n");
     test325();
 }

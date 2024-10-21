@@ -11,7 +11,9 @@ static void check_forklen(DSI *dsi, int type, uint32_t  len)
 uint32_t flen;
 	flen = get_forklen(dsi, type);
 	if (flen != len) {
-		fprintf(stdout,"\tFAILED got %d but %d expected\n", flen, len);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED got %d but %d expected\n", flen, len);
+		}
 		failed_nomsg();
 	}
 }
@@ -84,9 +86,6 @@ uint16_t vol = VolID;
 char *name = "t21 file";
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetForkParms:test21: setting/reading fork len\n");
-
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -98,7 +97,7 @@ char *name = "t21 file";
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test21");
+	exit_test("FPGetForkParms:test21: setting/reading fork len");
 }
 
 /* --------------------------
@@ -117,8 +116,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPGetForkParms:test50: deny mode & move file\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -181,7 +178,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test50");
+	exit_test("FPGetForkParms:test50: deny mode & move file");
 }
 
 /* -------------------------- */
@@ -193,11 +190,9 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetForkParms:test188: illegal fork\n");
 
 	illegal_fork(dsi, AFP_GETFORKPARAM, name);
-	exit_test("test188");
+	exit_test("FPGetForkParms:test188: illegal fork");
 }
 
 /* -------------------------- */
@@ -210,8 +205,6 @@ int ret;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPGetForkParms:test192: open write only\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -243,7 +236,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test192");
+	exit_test("FPGetForkParms:test192: open write only");
 }
 
 /* ------------------------- */
@@ -258,8 +251,6 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetForkParms:test305: fork len after a 0 byte write\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -286,7 +277,7 @@ fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test305");
+	exit_test("FPGetForkParms:test305: fork len after a 0 byte write");
 }
 
 /* ----------- */
@@ -294,6 +285,7 @@ void FPGetForkParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetForkParms page 184\n");
+    fprintf(stdout,"-------------------\n");
     test21();
     test50();
 	test188();

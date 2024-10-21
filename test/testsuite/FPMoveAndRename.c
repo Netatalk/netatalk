@@ -11,8 +11,6 @@ uint16_t vol = VolID;
 int  dir = 0,dir1 = 0,dir2 = 0;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test43: move and rename folders\n");
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -63,7 +61,7 @@ fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1, ""))
 	FAIL (dir && FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test43");
+	exit_test("FPMoveAndRename:test43: move and rename folders");
 }
 
 /* -------------------------- */
@@ -76,8 +74,6 @@ char *name1 = "t77 dir";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPMoveAndRename:t77: Move an open fork in a different folder\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -104,7 +100,7 @@ uint16_t vol = VolID;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test77");
+	exit_test("FPMoveAndRename:test77: Move an open fork in a different folder");
 }
 
 /* ------------------------------ */
@@ -121,8 +117,6 @@ char *dest1  = "t123 dest_1";
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test123: Move And Rename dir with sibling\n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -160,7 +154,7 @@ fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir1 , ""))
 	FAIL (dir4 && FPDelete(Conn, vol,  dir4 , ""))
 	FAIL (dir && FPDelete(Conn, vol,  dir , ""))
-	exit_test("test123");
+	exit_test("FPMoveAndRename:test123: Move And Rename dir with sibling");
 
 }
 
@@ -179,8 +173,6 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test138: Move And Rename \n");
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -217,7 +209,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("test138");
+	exit_test("FPMoveAndRename:test138: Move And Rename");
 }
 
 /* -------------------------
@@ -230,8 +222,6 @@ uint16_t vol = VolID;
 int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename:test378: dest file exist but diff only by case, is this one OK \n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
@@ -255,7 +245,7 @@ fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 
 test_exit:
-	exit_test("test378");
+	exit_test("FPMoveAndRename:test378: dest file exist but diff only by case, is this one OK");
 }
 
 /* ----------- */
@@ -263,6 +253,7 @@ void FPMoveAndRename_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMoveAndRename page 223\n");
+    fprintf(stdout,"-------------------\n");
     test43();
     test77();
     test138();

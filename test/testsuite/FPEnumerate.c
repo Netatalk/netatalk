@@ -15,8 +15,6 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test38: enumerate folder with no write access\n");
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -76,7 +74,7 @@ DSI *dsi;
 fin:
 	delete_folder_with_file(vol, DIRDID_ROOT, name, nfile);
 test_exit:
-	exit_test("test38");
+	exit_test("FPEnumerate:test38: enumerate folder with no write access");
 }
 
 /* ------------------------- */
@@ -125,8 +123,6 @@ unsigned int ret;
 int  dir;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test40: enumerate deleted folder\n");
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -169,7 +165,7 @@ int  dir;
 		failed();
 	}
 test_exit:
-	exit_test("test40");
+	exit_test("FPEnumerate:test40: enumerate deleted folder");
 
 }
 
@@ -185,8 +181,6 @@ char *name3 = "t41 dir/sub dir";
 unsigned int ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test41: enumerate folder not there\n");
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -252,7 +246,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("test41");
+	exit_test("FPEnumerate:test41: enumerate folder not there");
 
 }
 
@@ -267,8 +261,6 @@ int ret;
 uint16_t vol = VolID;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test93: enumerate error\n");
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -309,7 +301,7 @@ fin:
 	FAIL (dir1 && FPDelete(Conn, vol,  dir , name1))
 	FAIL (dir && FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
-	exit_test("test93");
+	exit_test("FPEnumerate:test93: enumerate error");
 }
 
 /* ------------------------- */
@@ -333,8 +325,6 @@ int isdir;
 	dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test218: enumerate arguments\n");
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -405,7 +395,7 @@ fin:
 	FAIL (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "", bitmap, bitmap))
 	FPDelete(Conn, vol,  DIRDID_ROOT, base);
 test_exit:
-	exit_test("test218");
+	exit_test("FPEnumerate:test218: enumerate arguments");
 }
 
 /* ----------- */
@@ -413,6 +403,7 @@ void FPEnumerate_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerate page 150\n");
+    fprintf(stdout,"-------------------\n");
 
     test38();
     test40();

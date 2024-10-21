@@ -20,8 +20,6 @@ unsigned int ret;
 
 	enter_test();
 	dsi = &Conn->dsi;
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCatSearchExt:test227: Catalog search\n");
 
 	memset(pos, 0, sizeof(pos));
 	memset(&filedir, 0, sizeof(filedir));
@@ -53,7 +51,9 @@ unsigned int ret;
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
 	if (temp) {
-		fprintf(stdout,"\tFAILED want 0 get %d\n", temp);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED want 0 get %d\n", temp);
+		}
 		failed_nomsg();
 	}
 
@@ -72,7 +72,9 @@ unsigned int ret;
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
 	if (temp != 1) {
-		fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
+		}
 		failed_nomsg();
 	}
 
@@ -85,7 +87,9 @@ unsigned int ret;
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
 	if (temp != 1) {
-		fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
+		}
 		failed_nomsg();
 	}
 #if 1
@@ -131,7 +135,7 @@ unsigned int ret;
  	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("test227");
+	exit_test("FPCatSearchExt:test227: Catalog search");
 }
 
 /* ----------- */
@@ -139,5 +143,6 @@ void FPCatSearchExt_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCatSearchExt page 117\n");
+    fprintf(stdout,"-------------------\n");
 	test227();
 }

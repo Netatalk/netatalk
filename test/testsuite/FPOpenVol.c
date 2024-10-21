@@ -11,8 +11,6 @@ uint16_t ret;
 char *tp;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenVol:t205: Open Volume call\n");
 
     FAIL (FPCloseVol(Conn, vol));
 	/* --------- */
@@ -53,7 +51,9 @@ char *tp;
 	}
 	vol = FPOpenVol(Conn, Vol);
 	if (vol != ret) {
-		fprintf(stdout,"\tFAILED double open != volume id\n");
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED double open != volume id\n");
+		}
 		failed_nomsg();
 	}
     FAIL (FPCloseVol(Conn, ret));
@@ -63,7 +63,7 @@ fin:
 	if (ret == 0xffff) {
 		failed();
 	}
-	exit_test("test205");
+	exit_test("FPOpenVol:test205: Open Volume call");
 }
 
 /* -------------------------------- */
@@ -74,8 +74,6 @@ DSI *dsi = &Conn->dsi;
 uint16_t ret;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenVol:t404: lazy init of dbd cnid\n");
 
     FAIL (FPCloseVol(Conn, vol));
 
@@ -100,7 +98,7 @@ fin:
 	if (ret == 0xffff) {
 		failed();
 	}
-	exit_test("test404");
+	exit_test("FPOpenVol:test404: lazy init of dbd cnid");
 }
 
 /* ----------- */
@@ -108,6 +106,8 @@ void FPOpenVol_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenVol page 235\n");
+    fprintf(stdout,"-------------------\n");
 
     test205();
+    test404();
 }

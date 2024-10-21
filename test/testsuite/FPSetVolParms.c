@@ -11,8 +11,6 @@ struct afp_volume_parms parms;
 DSI *dsi = &Conn->dsi;
 
 	enter_test();
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "FPSetVolParms:test206: Set Volume parameters\n");
     bitmap = (1 << VOLPBIT_ATTR  )
 	    |(1 << VOLPBIT_SIG   )
     	|(1 << VOLPBIT_CDATE )
@@ -25,7 +23,9 @@ DSI *dsi = &Conn->dsi;
 
  	FAIL (FPGetVolParam(Conn, vol, bitmap))
  	if (parms.bdate == parms.mdate) {
- 		fprintf(stdout,"Backup and modification date are the same!\n");
+		if (!Quiet) {
+	 		fprintf(stdout,"Backup and modification date are the same!\n");
+		}
  		nottested();
 		goto test_exit;
  	}
@@ -40,12 +40,14 @@ DSI *dsi = &Conn->dsi;
  	FAIL (FPGetVolParam(Conn, vol, bitmap))
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), bitmap);
  	if (parms.bdate != parms.mdate) {
- 		fprintf(stdout,"\tFAILED Backup %x and modification %x date are not the same!\n",parms.bdate, parms.mdate );
+		if (!Quiet) {
+	 		fprintf(stdout,"\tFAILED Backup %x and modification %x date are not the same!\n",parms.bdate, parms.mdate );
+		}
  		failed_nomsg();
  	}
  
 test_exit:
-	exit_test("test206");
+	exit_test("FPSetVolParms:test206: Set Volume parameters");
 } 
 
 /* ----------- */
@@ -53,5 +55,6 @@ void FPSetVolParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetVolParms page 268\n");
+    fprintf(stdout,"-------------------\n");
 	test206();
 }
