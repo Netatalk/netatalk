@@ -22,6 +22,11 @@ STATIC void test109()
 		goto test_exit;
 	}
 
+	if (adouble == AD_EA) {
+		test_skipped(T_ADV2);
+		goto test_exit;
+	}
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -45,7 +50,6 @@ STATIC void test109()
     /* ----------------- */
     if (chmod_unix_rfork(Path, "", name, 0400) != 0) {
         failed();
-        exit(1);
         goto fin;
     }
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_RD);

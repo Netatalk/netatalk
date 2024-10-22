@@ -607,7 +607,7 @@ void Dircache_attack_test()
 {
     fprintf(stdout, "===================\n");
     fprintf(stdout, "Dircache attack\n");
-    fprintf(stdout, "===================\n");
+    fprintf(stdout, "-------------------\n");
     test500();
     test501();
     test502();

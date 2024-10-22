@@ -979,7 +979,10 @@ void FPByteRangeLock_test()
 	test63();
 	test64();
 	test65();
-//	test78(); /* badly broken, didn't bother fixing for appledouble = ea */
+/* badly broken, didn't bother fixing for appledouble = ea */
+#if 0
+	test78();
+#endif
 	test79();
 	test80();
 	test329();
