@@ -278,7 +278,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
 
-    fprintf( stdout,"\t-x\tdon't run tests known to kill some afpd versions\n");
+    fprintf( stdout,"\t-x\tdon't run tests known to kill very old afpd versions\n");
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     exit (1);

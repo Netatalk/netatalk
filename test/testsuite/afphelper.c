@@ -876,6 +876,9 @@ void test_skipped(int why)
 	case T_VOL_BIG:
 		s = "a smaller volume";
 		break;
+	case T_EXCLUDE:
+		s = "a newer Netatalk";
+		break;
 	}
 	if (Color) {
 		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (need %s)" ANSI_NORMAL, s);

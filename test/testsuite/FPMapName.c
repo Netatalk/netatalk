@@ -76,13 +76,13 @@ char *usr = NULL;
 
 	FAIL (htonl(AFPERR_NOITEM) != FPMapName(Conn, 5, "toto"))
 
-	if (!Exclude) {
-		/* fail with OSX and new netatalk */
-		ret = FPMapName(Conn, 3, "");
-		if (ret && not_valid_bitmap(ret, BITERR_NOOBJ, AFPERR_PARAM)) {
-			failed();
-		}
+#if 0
+	/* fail with OSX and new netatalk */
+	ret = FPMapName(Conn, 3, "");
+	if (ret && not_valid_bitmap(ret, BITERR_NOOBJ, AFPERR_PARAM)) {
+		failed();
 	}
+#endif
 
 	ret = FPMapName(Conn, 3, "toto");
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {

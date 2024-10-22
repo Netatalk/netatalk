@@ -955,7 +955,7 @@ void FPByteRangeLock_test()
 	test63();
 	test64();
 	test65();
-//	test78(); /* badly broken, didn't bother fixing for adouble:ea */
+//	test78(); /* badly broken, didn't bother fixing for appledouble = ea */
 	test79();
 #endif
 	test80();

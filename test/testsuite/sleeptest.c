@@ -160,7 +160,7 @@ enum adouble adouble = AD_EA;
 void usage( char * av0 )
 {
     fprintf( stdout, "usage:\t%s [-aLmn] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
-    fprintf( stdout,"\t-a\tvolume is adouble:v2 instead of default adouble:ea\n");
+    fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
@@ -182,7 +182,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
 
-    fprintf( stdout,"\t-x\tdon't run tests known to kill some afpd versions\n");
+    fprintf( stdout,"\t-x\tdon't run tests known to kill very old afpd versions\n");
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
