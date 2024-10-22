@@ -159,7 +159,7 @@ STATIC void test426()
 
 	ENTER_TEST
 
-	// FIXME: test stalls indefinitely with Netatalk 4.0
+	// FIXME: unexpected failure with Netatalk 4.0
 	if (Exclude) {
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
@@ -206,11 +206,12 @@ STATIC void test426()
 		failed();
 	}
 
-test_exit:
     if (fork) {
 	    FPCloseFork(Conn,fork);
     }
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
+
+test_exit:
 	exit_test("FPSetFileParms:test426: Create a dangling symlink");
 }
 

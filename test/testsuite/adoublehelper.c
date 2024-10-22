@@ -248,7 +248,7 @@ static int chmod_unix_adouble(char *path,char *name, int mode)
 
 /* --------------------
 */
-int chmod_unix_meta(char *path, char *name, char *file, int mode)
+int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #ifdef HAVE_EAFD
@@ -270,7 +270,7 @@ int chmod_unix_meta(char *path, char *name, char *file, int mode)
     } else {
         sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
         if (!Quiet) {
-            fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+            fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
         }
         if (chmod(temp, mode)) {
             if (!Quiet) {
@@ -285,7 +285,7 @@ int chmod_unix_meta(char *path, char *name, char *file, int mode)
 
 /* --------------------
 */
-int chmod_unix_rfork(char *path, char *name, char *file, int mode)
+int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #ifdef HAVE_EAFD
@@ -304,7 +304,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
 #else
         sprintf(temp, "%s/%s/._%s", path, name, file);
         if (!Quiet) {
-            fprintf(stdout, "chmod(%s, %d)\n", temp, mode);
+            fprintf(stdout, "chmod(%s, 0%o)\n", temp, mode);
         }
         if (chmod(temp, mode)) {
             if (!Quiet) {
@@ -318,7 +318,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, int mode)
     } else {
         sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
         if (!Quiet) {
-            fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
+            fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
         }
         if (chmod(temp, mode)) {
             if (!Quiet) {
