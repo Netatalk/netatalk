@@ -359,6 +359,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
+    fprintf( stdout,"\t-V\tvery verbose\n");
 
     exit (1);
 }
@@ -370,7 +371,7 @@ int cc;
 int ret;
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "v1234567h:p:u:w:ms:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "vV1234567h:p:u:w:ms:" )) != EOF ) {
         switch ( cc ) {
         case 's':
             Vol = strdup(optarg);
@@ -421,10 +422,13 @@ static char *uam = "Cleartxt Passwrd";
                 fprintf(stdout, "Bad port.\n");
                 exit(1);
             }
-            break;
-		case 'v':
-			Verbose = 1;
-			break;
+	case 'v':
+		Quiet = 0;
+		break;
+	case 'V':
+		Quiet = 0;
+		Verbose = 1;
+		break;
         default :
             usage( av[ 0 ] );
         }

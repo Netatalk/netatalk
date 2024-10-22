@@ -185,6 +185,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
+    fprintf( stdout,"\t-V\tvery verbose\n");
     fprintf( stdout,"\t-t\trun it twice (ie one with the cache warm)\n");
 
     exit (1);
@@ -198,7 +199,7 @@ int cc;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "Rimlv34567th:p:s:u:w:d:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "RimlvV34567th:p:s:u:w:d:" )) != EOF ) {
         switch ( cc ) {
         case 'i':
             Quiet = 1;
@@ -254,12 +255,16 @@ static char *uam = "Cleartxt Passwrd";
                 exit(1);
             }
             break;
-		case 'v':
-			Verbose = 1;
-			break;
-		case 't':
-			Twice = 1;
-			break;
+	case 'v':
+		Quiet = 0;
+		break;
+	case 'V':
+		Quiet = 0;
+		Verbose = 1;
+		break;
+	case 't':
+		Twice = 1;
+		break;
         default :
             usage( av[ 0 ] );
         }

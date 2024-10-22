@@ -277,6 +277,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
+    fprintf( stdout,"\t-V\tvery verbose\n");
 
     fprintf( stdout,"\t-x\tdon't run tests known to kill very old afpd versions\n");
     fprintf( stdout,"\t-f\ttest to run\n");
@@ -292,7 +293,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "v1234567h:H:p:s:u:d:w:c:f:lmx" )) != EOF ) {
+    while (( cc = getopt( ac, av, "vV1234567h:H:p:s:u:d:w:c:f:lmx" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -365,9 +366,13 @@ int ret;
                 exit(1);
             }
             break;
-		case 'v':
-			Verbose = 1;
-			break;
+	case 'v':
+		Quiet = 0;
+		break;
+	case 'V':
+		Quiet = 0;
+		Verbose = 1;
+		break;
         default :
             usage( av[ 0 ] );
         }
