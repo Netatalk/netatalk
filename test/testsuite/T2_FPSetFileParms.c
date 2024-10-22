@@ -65,7 +65,7 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 unsigned ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -112,7 +112,7 @@ uint16_t bitmap = (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -157,7 +157,7 @@ STATIC void test426()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);

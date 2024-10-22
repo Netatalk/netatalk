@@ -18,7 +18,7 @@ uint16_t vol = VolID;
 int tdir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -127,7 +127,7 @@ char *name = "t207 file";
 uint16_t vol = VolID;
 int i;
 
-	enter_test();
+	ENTER_TEST
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -276,7 +276,7 @@ uint16_t vol = VolID;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;

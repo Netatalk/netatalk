@@ -21,7 +21,7 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -86,7 +86,7 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -156,7 +156,7 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -222,7 +222,7 @@ struct afp_filedir_parms filedir;
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -372,7 +372,7 @@ int fid = 0;
 int fork = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -493,7 +493,7 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -548,7 +548,7 @@ struct afp_filedir_parms filedir;
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -649,7 +649,7 @@ struct afp_filedir_parms filedir;
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -757,7 +757,7 @@ int fid1 = 0, fid2 = 0;
 int nfid1 = 0, nfid2 = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -961,7 +961,7 @@ struct afp_filedir_parms filedir;
 int fid1 = 0, fid2;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1059,7 +1059,7 @@ int fid1 = 0, fid2;
 int nfid1 = 0, nfid2 = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

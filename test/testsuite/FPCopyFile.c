@@ -20,7 +20,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -102,7 +102,7 @@ char *name  = "t158 old file name";
 char *name1 = "t158 new file name";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -128,7 +128,7 @@ char *name1 = "t315 new file name";
 uint16_t vol = VolID;
 int fork;
 
-	enter_test();
+	ENTER_TEST
 
 	if (get_vol_free(vol) < 130*1024*1024) {
 	    /* assume sparse file for setforkparam, not for copyfile */
@@ -256,7 +256,7 @@ STATIC void test317()
 char *name  = "t317 old file name";
 char *name1 = "t317 new file name";
 
-	enter_test();
+	ENTER_TEST
     test_meta(name, name1, VolID);
 
 	exit_test("FPCopyFile:test317: copyFile check meta data");
@@ -275,7 +275,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 uint32_t mdate = 0;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -349,7 +349,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -399,7 +399,7 @@ char *name  = "t375 old file name";
 char *name1 = "t375 new file name";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -453,7 +453,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -553,7 +553,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -642,7 +642,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
 		test_skipped(T_UNIX_PREV);
@@ -734,7 +734,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) | (1<<FILPBIT_ATTR);
 
@@ -945,7 +945,7 @@ char *name = "t407 file.pdf";
 char *name1= "new t407 file.pdf";
 uint16_t vol2;
 
-	enter_test();
+	ENTER_TEST
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;
@@ -969,7 +969,7 @@ char *name  = "t408 old file name";
 char *name1 = "t408 new file name";
 uint16_t vol2;
 
-	enter_test();
+	ENTER_TEST
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;
@@ -994,7 +994,7 @@ STATIC void test409()
 char *name  = "t409 old file name";
 char *name1 = "t409 new file name";
 
-	enter_test();
+	ENTER_TEST
 
     test_data(name, name1, VolID);
 
@@ -1013,7 +1013,7 @@ char *attr_name="test416_attribute";
 
     dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     if (Conn->afp_version < 32) {
         test_skipped(T_AFP3);
@@ -1060,7 +1060,7 @@ char *name1 = "t414 new file name";
 char *name2 = "t414 dir";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -1102,7 +1102,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

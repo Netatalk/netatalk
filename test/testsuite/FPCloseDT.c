@@ -9,7 +9,7 @@ uint16_t  dir;
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (0xffff == (dir = FPOpenDT(Conn,vol))) {
 		nottested();

@@ -11,7 +11,7 @@ char *file = "t215 file";
 char *file1 = "t215 file1";
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();

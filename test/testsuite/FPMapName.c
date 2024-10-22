@@ -16,7 +16,7 @@ DSI *dsi = &Conn->dsi;
 char *grp = NULL;
 char *usr = NULL;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();

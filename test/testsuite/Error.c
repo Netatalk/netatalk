@@ -36,7 +36,8 @@ unsigned int ret;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
+
 	memset(dsi->commands, 0, sizeof(dsi->commands));
 	did  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!did) {
@@ -181,7 +182,7 @@ int pdir;
 int ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -266,7 +267,7 @@ int  dir = 0;
 char *name = "t99 dir no access";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -300,7 +301,7 @@ int dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	dt = FPOpenDT(Conn,vol);
 	FAIL (ntohl(AFPERR_NOOBJ) != FPAddComment(Conn, vol,  DIRDID_ROOT , name1,"essai"))
@@ -378,7 +379,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -485,7 +486,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -587,7 +588,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -691,7 +692,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     dir = 0;
     err = ntohl(AFPERR_PARAM);
@@ -765,7 +766,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT_PARENT, "",OPENACC_WR | OPENACC_RD);
@@ -905,7 +906,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1033,7 +1034,7 @@ int  dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1165,7 +1166,7 @@ DSI *dsi = &Conn->dsi;
 DSI *dsi2;
 int  dt;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

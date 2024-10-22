@@ -24,7 +24,7 @@ char *name2 = "t23 file";
 int  dir,dir1;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version != 30) {
 		test_skipped(T_AFP30);
 		goto test_exit;
@@ -82,7 +82,7 @@ test_exit:
 /* ------------------------- */
 STATIC void test221()
 {
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version <= 31) {
 		test_skipped(T_AFP3);
 		goto test_exit;

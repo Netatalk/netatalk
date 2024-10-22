@@ -10,7 +10,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t ret;
 char *tp;
 
-	enter_test();
+	ENTER_TEST
 
     FAIL (FPCloseVol(Conn, vol));
 	/* --------- */
@@ -73,7 +73,7 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 uint16_t ret;
 
-	enter_test();
+	ENTER_TEST
 
     FAIL (FPCloseVol(Conn, vol));
 

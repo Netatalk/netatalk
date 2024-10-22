@@ -9,7 +9,7 @@ int  dir;
 char *name = "test6 dir";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		failed();
@@ -35,7 +35,7 @@ char *name = "test26 dir";
 int pdir;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -84,7 +84,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -171,7 +171,7 @@ DSI *dsi;
 unsigned int ret;
 
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -243,7 +243,7 @@ uint16_t vol2;
 DSI *dsi2;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -307,7 +307,7 @@ DSI *dsi;
 DSI *dsi2;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

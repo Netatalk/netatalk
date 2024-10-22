@@ -13,7 +13,7 @@ int dir;
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -49,7 +49,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -107,7 +107,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -165,7 +165,7 @@ uint16_t vol = VolID;
 int  dir;
 int  dir1;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -237,7 +237,7 @@ char *name = "t185.txt";
 char *name1 = "t185 donne\314"; /* decomposed donn�es */
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -276,7 +276,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -325,7 +325,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -373,7 +373,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -433,7 +433,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -473,7 +473,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -511,7 +511,7 @@ uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -574,7 +574,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -629,7 +629,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -684,7 +684,7 @@ char *nfile = "test 383 new name la\xcc\x80";/* l� */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -722,7 +722,7 @@ char *nfile = "test 384 new name la\xcc\x80";/* l� */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -760,7 +760,7 @@ char *nfile = "test 385 new name la\xcc\x80";/* l� */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -798,7 +798,7 @@ char *nfile = "test 386 new name la\xcc\x80";/* l� */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -831,7 +831,7 @@ STATIC void test395()
 {
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		test_skipped(T_AFP2);

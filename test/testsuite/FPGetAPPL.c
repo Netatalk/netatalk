@@ -10,7 +10,7 @@ uint16_t dt;
 char *file = "t169 file";
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		nottested();

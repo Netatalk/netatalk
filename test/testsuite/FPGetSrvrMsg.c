@@ -5,7 +5,7 @@
 /* ----------------------- */
 STATIC void test210(void)
 {
-	enter_test();
+	ENTER_TEST
 
 	FAIL (FPGetSrvrMsg(Conn, 0, 0))
 	FAIL (FPGetSrvrMsg(Conn, 1, 0))

@@ -17,7 +17,7 @@ int ret;
 DSI *dsi;
 
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

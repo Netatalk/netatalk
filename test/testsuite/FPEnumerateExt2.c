@@ -11,7 +11,7 @@ char *name2 = "t25 file";
 int  dir,dir1;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 31) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -67,7 +67,7 @@ int  dir,dir1;
 uint16_t vol = VolID;
 
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {

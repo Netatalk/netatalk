@@ -12,7 +12,7 @@ int  dir,dir1;
 uint16_t vol = VolID;
 
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {

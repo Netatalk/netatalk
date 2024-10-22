@@ -30,7 +30,7 @@ int sock;
 int fork = 0, fork1;
 struct sigaction action;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -176,7 +176,7 @@ char *id1="testsuite-test338-1";
 uint32_t time= 12345;
 
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
@@ -310,7 +310,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
 struct afp_filedir_parms filedir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
@@ -471,7 +471,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
 struct afp_filedir_parms filedir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);

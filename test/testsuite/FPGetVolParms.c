@@ -8,7 +8,7 @@ STATIC void test56()
 uint16_t bitmap;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
     bitmap = (1 << VOLPBIT_ATTR  )
 	    |(1 << VOLPBIT_SIG   )
     	|(1 << VOLPBIT_CDATE )

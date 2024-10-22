@@ -11,7 +11,7 @@ char *name = "t13 file";
 int ret = 0;
 int fork;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -46,7 +46,7 @@ char *name2 = "t27 dir";
 uint16_t vol = VolID;
 int  dir;
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
@@ -78,7 +78,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 uint16_t vol = VolID;
 DSI *dsi2;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -125,7 +125,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -159,7 +159,7 @@ int dt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	memset(&filedir, 0, sizeof(filedir));
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, tname);
@@ -316,7 +316,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -398,7 +398,7 @@ uint16_t vol = VolID;
 DSI *dsi2;
 int  dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -457,7 +457,7 @@ uint16_t vol = VolID;
 DSI *dsi2;
 int  dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -514,7 +514,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -567,7 +567,7 @@ uint16_t vol = VolID;
 char *name = "t422 file";
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Mac) {
 		test_skipped(T_MAC);

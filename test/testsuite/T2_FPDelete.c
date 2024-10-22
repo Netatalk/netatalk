@@ -22,7 +22,7 @@ DSI *dsi = &Conn->dsi;
 DSI *dsi2;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -136,7 +136,7 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -183,7 +183,7 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 int fork;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -254,7 +254,7 @@ uint16_t bitmap = (1<<FILPBIT_FNUM );
 struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

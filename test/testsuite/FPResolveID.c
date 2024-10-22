@@ -16,7 +16,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		test_skipped(T_ID);
@@ -65,7 +65,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		test_skipped(T_ID);
@@ -135,7 +135,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		test_skipped(T_ID);
@@ -177,7 +177,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -223,7 +223,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t vol2;
 DSI *dsi2;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);

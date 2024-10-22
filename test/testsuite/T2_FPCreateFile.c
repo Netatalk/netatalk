@@ -14,7 +14,7 @@ int ret;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if ((!Path && !Mac)) {
         test_skipped(T_MAC_PATH);

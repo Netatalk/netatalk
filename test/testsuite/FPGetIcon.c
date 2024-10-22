@@ -12,7 +12,7 @@ uint16_t dt;
 unsigned int ret;
 char   u_null[] = { 0, 0, 0, 0 };
 
-	enter_test();
+	ENTER_TEST
 
 	dt = FPOpenDT(Conn,vol);
 

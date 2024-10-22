@@ -17,7 +17,7 @@ struct afp_filedir_parms filedir;
 struct afp_filedir_parms filedir2;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 	dsi = &Conn->dsi;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {

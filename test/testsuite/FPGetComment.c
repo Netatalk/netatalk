@@ -17,7 +17,7 @@ uint16_t vol = VolID;
 uint16_t vol2;
 DSI *dsi2;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -84,7 +84,7 @@ int dir;
 int ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();

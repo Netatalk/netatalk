@@ -53,7 +53,7 @@ unsigned char cmd;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	for (i = 0 ;i < sizeof(afp_cmd_with_vol);i++) {
 		memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -109,7 +109,7 @@ unsigned char cmd;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {

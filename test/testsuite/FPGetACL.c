@@ -12,7 +12,7 @@ char *file="test398_file";
 
     dsi = &Conn->dsi;
 
-    enter_test();
+    ENTER_TEST
     if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
         goto test_exit;
@@ -54,7 +54,7 @@ char *attr_name="test399_attribute";
 
     dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         goto test_exit;
@@ -109,7 +109,7 @@ STATIC void test432()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;

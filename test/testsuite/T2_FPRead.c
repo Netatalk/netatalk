@@ -15,7 +15,7 @@ STATIC void test109()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);

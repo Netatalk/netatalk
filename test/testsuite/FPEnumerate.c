@@ -14,7 +14,7 @@ char *nfile = "t38 read write file";
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -83,7 +83,7 @@ STATIC void test34()
 {
 char *name = "essai permission";
 
-	enter_test();
+	ENTER_TEST
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerate:test34: folder with --rwx-- perm\n");
 
@@ -122,7 +122,7 @@ uint16_t vol = VolID;
 unsigned int ret;
 int  dir;
 
-	enter_test();
+	ENTER_TEST
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -180,7 +180,7 @@ char *name2 = "t41 dir/sub dir/foo";
 char *name3 = "t41 dir/sub dir";
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -260,7 +260,7 @@ int dir1 = 0;
 int ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -324,7 +324,7 @@ int isdir;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;

@@ -16,7 +16,7 @@ char *ndir  = "t136 dir";
 uint16_t vol = VolID;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -72,7 +72,7 @@ char *ndir  = "t137 dir";
 uint16_t vol = VolID;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -129,7 +129,7 @@ char *name = "t139 file";
 char *name1 = "t139 dir";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -166,7 +166,7 @@ int  dir1,dir;
 uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -229,7 +229,7 @@ int  dir1,dir;
 uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
