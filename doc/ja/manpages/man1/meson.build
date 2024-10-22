@@ -14,7 +14,7 @@ manfiles = [
 ]
 
 foreach man : manfiles
-    man_xmlfile = configure_file(
+    configure_file(
         input: man + '.xml',
         output: man + '.xml',
         configuration: cdata,

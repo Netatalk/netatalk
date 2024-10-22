@@ -1,6 +1,6 @@
 manfile = 'atalk.4'
 
-man_xmlfile = configure_file(
+configure_file(
     input: manfile + '.xml',
     output: manfile + '.xml',
     configuration: cdata,
