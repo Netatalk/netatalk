@@ -58,15 +58,9 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	// FIXME: afpd crash in afp_addicon()
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
-
 	dt = FPOpenDT(Conn,vol);
 	FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
-	// FIXME: This line hangs the execution
+	// FIXME: afpd crash in afp_addicon() that hangs the execution
 #if 0
 	FAIL (htonl(AFPERR_PARAM) != FPAddIcon(Conn,  dt+1, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
 #endif
