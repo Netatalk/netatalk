@@ -1195,6 +1195,7 @@ void FPResolveID_test()
 	test397();
 	test412();
 	test413();
+// remove test417 and 419, should be moved in fail_spectest
 //	test417();
 	test418();
 //	test419();

@@ -970,6 +970,11 @@ uint16_t bitmap;
 
 	ENTER_TEST
 
+	// FIXME: may or may not be testable with the right extmap.conf settings
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -1008,7 +1013,7 @@ uint16_t bitmap;
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
-
+test_exit:
 	exit_test("FPGetFileDirParms:test371: check default type");
 }
 
@@ -1030,6 +1035,11 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	ENTER_TEST
 
+	// FIXME: may or may not be testable with the right extmap.conf settings
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto fin;
@@ -1067,7 +1077,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
-
+test_exit:
 	exit_test("FPGetFileDirParms:test380: check type mapping");
 }
 
@@ -1138,9 +1148,7 @@ void FPGetFileDirParms_test()
 	test333();
 	test334();
 	test335();
-// FIXME: These tests require extmap.conf settings which are disabled by default
-#if 0
     test371();
     test380();
-#endif
+	test396();
 }

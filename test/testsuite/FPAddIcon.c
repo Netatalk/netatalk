@@ -58,6 +58,12 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	// FIXME: afpd crash in afp_addicon()
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	dt = FPOpenDT(Conn,vol);
 	FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
 	FAIL (htonl(AFPERR_PARAM) != FPAddIcon(Conn,  dt+1, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
@@ -103,17 +109,16 @@ DSI *dsi = &Conn->dsi;
 	FAIL (htonl(AFPERR_ITYPE) != FPAddIcon(Conn,  dt, "ttxt", "3DMF", 4, 0, 256, icon0_256))
 
 	FPCloseDT(Conn,dt);
+
+test_exit:
 	exit_test("FPAddIcon:test212: Add Icon call");
 }
 
 /* ----------- */
 void FPAddIcon_test()
 {
-// FIXME: afpd crash in afp_addicon()
-#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPAddIcon page 99\n");
     fprintf(stdout,"-------------------\n");
 	test212();
-#endif
 }

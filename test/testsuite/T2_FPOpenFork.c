@@ -1450,6 +1450,12 @@ STATIC void test431()
 
 	ENTER_TEST
 
+	// FIXME: failing; might require manually moving data file to
+	// data/resource_fork_conversion_test
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -1562,10 +1568,5 @@ void FPOpenFork_test()
     test236();
     test237();
     test238();
-// FIXME: test seems to require manually moving data file to
-// data/resource_fork_conversion_test
-// Disabling for now.
-#if 0
     test431();
-#endif
 }

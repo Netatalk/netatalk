@@ -152,7 +152,6 @@ int     Version = 21;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
-int     Exclude = 0;
 int		Locking;
 enum adouble adouble = AD_EA;
 
@@ -183,7 +182,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
 
-    fprintf( stdout,"\t-x\tdon't run tests known to kill very old afpd versions\n");
+    fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");

@@ -159,6 +159,11 @@ STATIC void test426()
 
 	ENTER_TEST
 
+	// FIXME: test stalls indefinitely with Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -217,8 +222,5 @@ void FPSetFileParms_test()
     fprintf(stdout,"-------------------\n");
     test89();
     test120();
-// FIXME: test stalls indefinitely
-#if 0
     test426();
-#endif
 }

@@ -16,6 +16,12 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	// FIXME: encoding tests are broken in Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
 		goto test_exit;
@@ -66,11 +72,8 @@ test_exit:
 /* ----------- */
 void FPMapID_test()
 {
-// FIXME: encoding tests are broken in Netatalk 4.0
-#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMapID page 220\n");
     fprintf(stdout,"-------------------\n");
 	test208();
-#endif
 }

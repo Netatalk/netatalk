@@ -301,6 +301,7 @@ test_exit:
 }
 
 /* -------------------------- */
+// Known to kill afpd 1.6.x servers
 STATIC void test196()
 {
 char *name = "test196";
@@ -319,14 +320,6 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-
-	if (Exclude) {
-		if (!Quiet) {
-			fprintf(stdout, "\tFAILED (not run kill 1.6.x servers)\n");
-		}
-		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
 

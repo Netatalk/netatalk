@@ -14,6 +14,12 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 
 	ENTER_TEST
 
+	// FIXME: icon tests are broken in Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	dt = FPOpenDT(Conn,vol);
 
 	ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1);
@@ -40,17 +46,16 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 	}
 
 	FPCloseDT(Conn,dt);
+
+test_exit:
 	exit_test("FPGetIconInfo:test213: get Icon Info call");
 }
 
 /* ----------- */
 void FPGetIconInfo_test()
 {
-// FIXME: icon tests are broken in Netatalk 4.0
-#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetIconInfo page 188\n");
     fprintf(stdout,"-------------------\n");
 	test213();
-#endif
 }

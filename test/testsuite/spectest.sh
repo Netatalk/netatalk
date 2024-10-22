@@ -61,13 +61,13 @@ rm -f ./test/testsuite/spectest.log
 
 ##
 echo "Running spectest with two users..."
-./test/testsuite/spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
+./test/testsuite/spectest -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
 check_return
 
 ##
 if test ! -z "$LOCALVOL1PATH" ; then
     echo "Running spectest with local filesystem modifications..."
-    ./test/testsuite/T2_spectest -"$AFPVERSION" -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
+    ./test/testsuite/T2_spectest -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
     check_return
 else
     echo "Skipping spectest with local filesystem modifications..."

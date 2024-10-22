@@ -183,6 +183,11 @@ int ret;
 uint16_t vol = VolID;
 
 	ENTER_TEST
+	// FIXME: afpd crash in dircache_search_by_did()
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -767,6 +772,11 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
+	// FIXME: afpd crash in dircache_search_by_did()
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT_PARENT, "",OPENACC_WR | OPENACC_RD);
@@ -884,6 +894,8 @@ int  dt;
 	FAIL (ntohl(AFPERR_NOOBJ) != FPGetComment(Conn, vol,  DIRDID_ROOT_PARENT , ""))
 	FAIL (ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol,  DIRDID_ROOT_PARENT , ""))
 	FAIL (FPCloseDT(Conn, dt))
+
+test_exit:
 	exit_test("Error:test170: cname error did=1 name=\"\"");
 }
 
@@ -907,6 +919,11 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
+	// FIXME: afpd crash in dircache_search_by_did()
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1012,6 +1029,8 @@ int  dt;
 	FAIL (ntohl(AFPERR_NOOBJ) != FPGetComment(Conn, vol, tdir, tname))
 	FAIL (ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, tdir, tname))
 	FAIL (FPCloseDT(Conn, dt))
+
+test_exit:
 	exit_test("Error:test171: cname error did=1 name=bad name");
 }
 
@@ -1035,6 +1054,11 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
+	// FIXME: afpd crash in dircache_search_by_did()
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1144,6 +1168,7 @@ int  dt;
 	FAIL (FPCloseDT(Conn, dt))
 
 	/* ---- appl.c ---- */
+test_exit:
 	exit_test("Error:test173: did error did=0 name=test173 name");
 }
 
@@ -1322,21 +1347,14 @@ void Error_test()
     fprintf(stdout,"Various errors\n");
     fprintf(stdout,"-------------------\n");
 	test36();
-// FIXME: afpd crash in dircache_search_by_did()
-#if 0
-	test95();
-#endif
 	test99();
 	test100();
 	test101();
 	test102();
 	test103();
 	test105();
-// FIXME: afpd crash in dircache_search_by_did()
-#if 0
 	test170();
 	test171();
 	test173();
-#endif
 	test174();
 }
