@@ -101,7 +101,7 @@ test_exit:
 }
 
 /* --------------------------
-FIXME set ressource for size and check
+FIXME set resource for size and check
 */
 STATIC void test50()
 {

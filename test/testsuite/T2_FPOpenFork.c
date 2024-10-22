@@ -289,7 +289,7 @@ int dir;
 	strcpy(temp, Path);
 	strcat(temp,"/test folder/.AppleDouble/toto.txt");
 	if (unlink(temp)) {
-		fprintf(stdout,"\tFAILED Ressource fork not there\n");
+		fprintf(stdout,"\tFAILED Resource fork not there\n");
 		failed_nomsg();
 	}
 
@@ -312,7 +312,7 @@ int dir;
 
 	strcpy(temp, Path);strcat(temp,"/test folder/.AppleDouble/toto.txt");
 	if (unlink(temp)) {
-		fprintf(stdout,"\tFAILED Ressource fork not there\n");
+		fprintf(stdout,"\tFAILED Resource fork not there\n");
 		failed_nomsg();
 		goto fin1;
 	}
@@ -329,7 +329,7 @@ int dir;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
-    /* bad, but we are able to open read-write the ressource for of a read-only file (data fork)
+    /* bad, but we are able to open read-write the resource for of a read-only file (data fork)
      * difficult to fix.
      */
 	if (!fork1) {
@@ -516,7 +516,7 @@ uint16_t vol = VolID;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPOpenFork:test153: open data fork without ressource fork");
+	exit_test("FPOpenFork:test153: open data fork without resource fork");
 }
 
 /* ------------------------- */
@@ -557,7 +557,7 @@ STATIC void test157()
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPOpenFork:test157: open not existing ressource fork read-only");
+	exit_test("FPOpenFork:test157: open not existing resource fork read-only");
 }
 
 /* ------------------------- */
@@ -1109,7 +1109,7 @@ int dir;
 
     if (!Mac && (delete_unix_md(Path, name, file) == 0)) {
 		if (!Quiet) {
-			fprintf(stdout,"\tFAILED Ressource fork there!\n");
+			fprintf(stdout,"\tFAILED Resource fork there!\n");
 		}
 		failed_nomsg();
 	}
@@ -1118,7 +1118,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  dir , file))
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
-	exit_test("FPOpenFork:test411: open read-only a file without ressource fork");
+	exit_test("FPOpenFork:test411: open read-only a file without resource fork");
 
 }
 

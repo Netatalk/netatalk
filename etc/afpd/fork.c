@@ -357,7 +357,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     ret = AFPERR_NOOBJ;
 
-    /* First ad_open(), opens data or ressource fork */
+    /* First ad_open(), opens data or resource fork */
     if (ad_open(ofork->of_ad, upath, adflags, 0666) < 0) {
         switch (errno) {
         case EROFS:
@@ -439,7 +439,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     memcpy(rbuf, &bitmap, sizeof( uint16_t ));
     rbuf += sizeof( uint16_t );
 
-    /* check  WriteInhibit bit if we have a ressource fork
+    /* check  WriteInhibit bit if we have a resource fork
      * the test is done here, after some Mac trafic capture
      */
     if (ad_meta_fileno(ofork->of_ad) != -1) {   /* META */
@@ -485,7 +485,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         if ((access & OPENACC_WR))
             ofork->of_flags |= AFPFORK_ACCWR;
     }
-    /* the file may be open read only without ressource fork */
+    /* the file may be open read only without resource fork */
     if ((access & OPENACC_RD))
         ofork->of_flags |= AFPFORK_ACCRD;
 
@@ -742,7 +742,7 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t
  * Read *rbuflen bytes from fork at offset
  *
  * @param ofork    (r)  fork handle
- * @param eid      (r)  data fork or ressource fork entry id
+ * @param eid      (r)  data fork or resource fork entry id
  * @param offset   (r)  offset
  * @param rbuf     (r)  data buffer
  * @param rbuflen  (rw) in: number of bytes to read, out: bytes read

@@ -251,7 +251,7 @@ uint32_t get_id(struct vol *vol,
             }
         }
         else if (adp && adcnid && (adcnid != dbcnid)) { /* (3) */
-            /* Update the ressource fork. For a folder adp is always null */
+            /* Update the resource fork. For a folder adp is always null */
             LOG(log_debug, logtype_afpd, "get_id(%s/%s): calling ad_setid(old: %u, new: %u)",
                 getcwdpath(), upath, htonl(adcnid), htonl(dbcnid));
             if (ad_setid(adp, st->st_dev, st->st_ino, dbcnid, did, vol->v_stamp)) {
@@ -1190,7 +1190,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *
         }
     }
 
-    /* don't care if we can't open the newly renamed ressource fork */
+    /* don't care if we can't open the newly renamed resource fork */
     if (ad_open(adp, dst, ADFLAGS_HF | ADFLAGS_RDWR) == 0) {
         ad_setname(adp, newname);
         ad_flush( adp );
@@ -1620,10 +1620,10 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     if ( adp && AD_RSRC_OPEN(adp) ) { /* there's a resource fork */
         adflags |= ADFLAGS_RF;
         /* FIXME we have a pb here because we want to know if a file is open
-         * there's a 'priority inversion' if you can't open the ressource fork RW
+         * there's a 'priority inversion' if you can't open the resource fork RW
          * you can delete it if it's open because you can't get a write lock.
          *
-         * ADLOCK_FILELOCK means the whole ressource fork, not only after the
+         * ADLOCK_FILELOCK means the whole resource fork, not only after the
          * metadatas
          *
          * FIXME it doesn't work for RFORK open read only and fork open without deny mode
@@ -2268,7 +2268,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
             ad_close(addp, ADFLAGS_HF);
     }
 
-    /* FIXME: we should switch ressource fork too */
+    /* FIXME: we should switch resource fork too */
 
     /* here we need to reopen if crossdev */
     if (sid && ad_setid(addp, destst.st_dev, destst.st_ino,  sid, sdir->d_did, vol->v_stamp))

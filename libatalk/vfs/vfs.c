@@ -271,7 +271,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
         if (errno == ENOENT) {
 	        struct adouble    ad;
 
-            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no ressource fork, */
+            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no resource fork, */
                 return 0;
 
             /* We are here  because :
@@ -377,7 +377,7 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
         return AFPERR_MISC;
     }
     if (!S_ISDIR(st.st_mode)) {
-        /* set ACL on ressource fork */
+        /* set ACL on resource fork */
         if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
             return AFPERR_MISC;
     }
@@ -393,7 +393,7 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
     if (dir)
         return AFP_OK;
 
-    /* remove ACL from ressource fork */
+    /* remove ACL from resource fork */
     if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK) {
         if (errno == ENOENT)
             return AFP_OK;
@@ -414,7 +414,7 @@ static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
         EC_FAIL;
 
     if (!S_ISDIR(st.st_mode)) {
-        /* set ACL on ressource fork */
+        /* set ACL on resource fork */
         EC_ZERO_ERR( acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl), AFPERR_MISC );
     }
 
@@ -431,7 +431,7 @@ static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
     if (dir)
         EC_EXIT_STATUS(AFP_OK);
 
-    /* remove ACL from ressource fork */
+    /* remove ACL from resource fork */
     EC_ZERO_ERR( remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC );
 
 EC_CLEANUP:
@@ -623,7 +623,7 @@ static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
         struct stat st;
 
         err = errno;
-        if (errno == ENOENT && ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no ressource fork, */
+        if (errno == ENOENT && ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no resource fork, */
             return 0;
         errno = err;
         return -1;

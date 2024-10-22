@@ -938,7 +938,7 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
  *
  * We're called because opening ADFLAGS_HF caused an error.
  * 1. In case ad_open is called with ADFLAGS_NOHF the error is suppressed.
- * 2. Open non-existent ressource fork, this will just result in first read return EOF
+ * 2. Open non-existent resource fork, this will just result in first read return EOF
  * 3. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
  *    ought to close it before returning with an error condition.
  */
@@ -1533,7 +1533,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Open ressource fork
+ * Open resource fork
  */
 static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
 {
@@ -1922,7 +1922,7 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
 }
 
 /*!
- * Open data-, metadata(header)- or ressource fork
+ * Open data-, metadata(header)- or resource fork
  *
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags)
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags, mode_t mode)
@@ -1933,13 +1933,13 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
  *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
  * @endcode
  *
- * Open a files data fork, metadata fork or ressource fork.
+ * Open a files data fork, metadata fork or resource fork.
  *
  * @param ad        (rw) pointer to struct adouble
  * @param path      (r)  Path to file or directory
  * @param adflags   (r)  Flags specifying which fork to open, can be or'd:
  *                         ADFLAGS_DF:        open data fork
- *                         ADFLAGS_RF:        open ressource fork
+ *                         ADFLAGS_RF:        open resource fork
  *                         ADFLAGS_HF:        open header (metadata) file
  *                         ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
  *                         ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened

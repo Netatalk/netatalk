@@ -586,7 +586,7 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
  * Test for a share mode lock
  *
  * @param ad      (rw) handle
- * @param eid     (r)  datafork or ressource fork
+ * @param eid     (r)  datafork or resource fork
  * @param off     (r)  sharemode lock to test
  *
  * @returns           1 if there's an existing lock, 0 if there's no lock,

@@ -1552,7 +1552,7 @@ void volume_unlink(struct vol *volume)
  * Free all resources allocated in a struct vol in load_volumes()
  *
  * Actually opening a volume (afp_openvol()) will allocate additional
- * ressources which are freed in closevol()
+ * resources which are freed in closevol()
  */
 void volume_free(struct vol *vol)
 {

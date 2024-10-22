@@ -90,7 +90,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         if ( ad->ad_rlen < off + cc )
             ad->ad_rlen = off + cc;
     } else {
-        return -1; /* we don't know how to write if it's not a ressource or data fork */
+        return -1; /* we don't know how to write if it's not a resource or data fork */
     }
 
     if (ret != 0)

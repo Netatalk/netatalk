@@ -103,7 +103,7 @@ static void dsi_init_buffer(DSI *dsi)
 }
 
 /*!
- * Free any allocated ressources of the master afpd DSI objects and close server socket
+ * Free any allocated resources of the master afpd DSI objects and close server socket
  */
 void dsi_free(DSI *dsi)
 {

@@ -114,7 +114,7 @@ char *name = "t67 FPByteLock_ext RF";
 	}
 	test_bytelock_ext(VolID, name, OPENFORK_RSCS);
 test_exit:
-	exit_test("FPByteRangeLockExt:test67: FPByteLock Ressource Fork");
+	exit_test("FPByteRangeLockExt:test67: FPByteLock Resource Fork");
 }
 
 

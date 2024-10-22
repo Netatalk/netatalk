@@ -996,12 +996,12 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 	    	c2.offcnt = ntohs(c2.offcnt);
 		}
 		else if (c1.dbitmap == 0) {
-			/* ressource fork length */
+			/* resource fork length */
 		}
 		else {
 	    	return AFPERR_BITMAP;  /* error */
 		}
-    } /* Offspring count/ressource fork length */
+    } /* Offspring count/resource fork length */
 
     /* Long name */
     if (c1.rbitmap & (1U << FILPBIT_LNAME)) {
