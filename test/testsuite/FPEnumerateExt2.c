@@ -13,7 +13,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 	if (Conn->afp_version < 31) {
-		test_skipped(T_AFP3);
+		test_skipped(T_AFP31);
 		goto test_exit;
 	}
 

@@ -1016,7 +1016,7 @@ char *attr_name="test416_attribute";
 	ENTER_TEST
 
     if (Conn->afp_version < 32) {
-        test_skipped(T_AFP3);
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
