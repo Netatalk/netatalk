@@ -708,7 +708,10 @@ int id;
 		bitmap = (1<<FILPBIT_PDINFO);
 	}
 	else {
+		// FIXME: fails with afp 2.x despite the comment below
 		bitmap = (1<<DIRPBIT_LNAME);
+		test_skipped(T_AFP3);
+		goto test_exit;
 	}
 	/* hack if filename < 255 it works with afp 2.x too */
 	id = get_fid(Conn, vol, DIRDID_ROOT , name);
@@ -1131,10 +1134,7 @@ void FPGetFileDirParms_test()
 	test308();
 	test319();
 	test324();
-// FIXME: Broken for AFP 2.x
-#if 0
 	test326();
-#endif
 	test333();
 	test334();
 	test335();
