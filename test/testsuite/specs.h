@@ -107,6 +107,8 @@ extern void test_skipped(int why);
 #define T_VOL_BIG    23
 #define T_EXCLUDE    24
 #define T_MANUAL     25
+#define T_AFP31      26
+#define T_AFP32      27
 
 /* ---------------------------------
 */

@@ -825,6 +825,12 @@ void test_skipped(int why)
 	case T_AFP3_CONN2:
 		s = "AFP 3.x and no second user";
 		break;
+	case T_AFP31:
+		s = "AFP 3.1 or higher";
+		break;
+	case T_AFP32:
+		s = "AFP 3.2 or higher";
+		break;
 	case T_MAC_PATH:
 		s = "-m (Mac server) or the volume path";
 		break;
