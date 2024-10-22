@@ -115,7 +115,7 @@ int delete_unix_file(char *path, char *name, char *file)
 	return rc;
 }
 
-/* Rename a file and it's ressource fork */
+/* Rename a file and it's resource fork */
 int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
     sprintf(temp, "%s/%s/%s", Path, dir, src);

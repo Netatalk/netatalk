@@ -216,7 +216,7 @@ struct adouble {
     int                 ad_data_refcount;
     int                 ad_meta_refcount;
     int                 ad_reso_refcount;
-    off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
+    off_t               ad_rlen;           /* resource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
     char                *ad_name;          /* mac name (maccharset or UTF8-MAC)       */
     struct adouble_fops *ad_ops;
@@ -230,7 +230,7 @@ struct adouble {
 #define ADFLAGS_HF        (1<<2)
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no metadata fork */
-#define ADFLAGS_NORF      (1<<5)  /* not an error if no ressource fork */
+#define ADFLAGS_NORF      (1<<5)  /* not an error if no resource fork */
 #define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
 #define ADFLAGS_SETSHRMD  (1<<7)  /* setting share mode must be done with excl fcnt lock,
                                      which implies that the file must be openend rw.

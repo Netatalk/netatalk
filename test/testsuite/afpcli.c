@@ -1702,7 +1702,7 @@ int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t size, char
 }
 
 /* -------------------------------
-	type : ressource or data
+	type : resource or data
 */
 uint16_t  AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap, int did , char *name,uint16_t access)
 {

@@ -542,7 +542,7 @@ int rsize;
 
 
 /* -------------------------------
-	type : ressource or data
+	type : resource or data
 */
 uint16_t  AFPOpenFork(ASP *asp, uint16_t vol, char type, uint16_t bitmap, int did , char *name,uint16_t access)
 {

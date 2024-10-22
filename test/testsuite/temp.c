@@ -247,7 +247,7 @@ int fork, fork1;
 
 	strcpy(temp, Path);strcat(temp,"/test folder/.AppleDouble/toto.txt");
 	if (unlink(temp)) {
-		fprintf(stdout,"\tRessource fork not there\n");
+		fprintf(stdout,"\tResource fork not there\n");
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "test folder/toto.txt", OPENACC_RD);
@@ -268,7 +268,7 @@ int fork, fork1;
 
 	strcpy(temp, Path);strcat(temp,"/test folder/.AppleDouble/toto.txt");
 	if (unlink(temp)) {
-		fprintf(stdout,"\tRessource fork not there\n");
+		fprintf(stdout,"\tResource fork not there\n");
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, "test folder/toto.txt", OPENACC_RD);
@@ -284,7 +284,7 @@ int fork, fork1;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, "test folder/toto.txt",OPENACC_WR | OPENACC_RD);
-    /* bad, but we are able to open read-write the ressource for of a read-only file (data fork)
+    /* bad, but we are able to open read-write the resource for of a read-only file (data fork)
      * difficult to fix.
      */
 	if (!fork1) {
@@ -2183,7 +2183,7 @@ int fork2, fork3;
 void test157()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"test157: bad .AppleDouble ressource fork\n");
+    fprintf(stdout,"test157: bad .AppleDouble resource fork\n");
 
 	if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	     (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|

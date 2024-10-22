@@ -1106,7 +1106,7 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
     int ret = AFP_OK;
 
 #if (defined HAVE_NFSV4_ACLS || defined HAVE_POSIX_ACLS)
-    /* Ressource etc. first */
+    /* Resource etc. first */
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
         return ret;
     /* now the data fork or dir */
@@ -1195,7 +1195,7 @@ static int set_acl(const struct vol *vol,
     }
     LOG(log_debug7, logtype_afpd, "set_acl: copied %d trivial ACEs", trivial_ace_count);
 
-    /* Ressourcefork first */
+    /* Resourcefork first */
     if ((ret = (vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
         LOG(log_debug, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         switch (errno) {
