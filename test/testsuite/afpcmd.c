@@ -2079,7 +2079,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] read fork %d  offset %ll size %d\n", __func__, fork , offset, size);
+		fprintf(stdout,"[%s] read fork %d  offset %lld size %d\n", __func__, fork , offset, size);
 	}
 
 	ret = AFPRead(conn,fork, offset, size, data);
