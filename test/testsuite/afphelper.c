@@ -814,16 +814,16 @@ void test_skipped(int why)
 		s = "volume path";
 		break;
 	case T_AFP2:
-		s = "< AFP 3.0";
-		break;
-	case T_AFP30:
-		s = "AFP 3.0";
+		s = "AFP 2.x";
 		break;
 	case T_AFP3:
 		s = "AFP 3.x";
 		break;
 	case T_AFP3_CONN2:
 		s = "AFP 3.x and no second user";
+		break;
+	case T_AFP30:
+		s = "AFP 3.0 only";
 		break;
 	case T_AFP31:
 		s = "AFP 3.1 or higher";
@@ -835,7 +835,7 @@ void test_skipped(int why)
 		s = "-m (Mac server) or the volume path";
 		break;
 	case T_UNIX_PREV:
-		s ="volume with UNIX privilege";
+		s ="volume with UNIX privileges";
 		break;
 	case T_NO_UNIX_PREV:
 		s ="volume without UNIX privileges";
@@ -850,7 +850,7 @@ void test_skipped(int why)
 		s = "a second volume";
 		break;
 	case T_LOCKING:
-		s = "a working fcntl locking";
+		s = "working fcntl locking";
 		break;
 	case T_VOL_SMALL:
 		s = "a bigger volume";
@@ -859,7 +859,7 @@ void test_skipped(int why)
 		s = "AFP FileID calls";
 		break;
 	case T_MAC:
-		s = "a server which is not a Mac";
+		s = "server which is not a Mac";
 		break;
 	case T_ACL:
 		s = "volume with ACL support";
@@ -877,22 +877,22 @@ void test_skipped(int why)
 		s = "volume without option 'follow symlinks'";
 		break;
 	case T_SINGLE:
-		s = "to run individually with -f";
+		s = "run individually with -f";
 		break;
 	case T_VOL_BIG:
 		s = "a smaller volume";
 		break;
 	case T_EXCLUDE:
-		s = "a newer Netatalk";
+		s = "in the Exclude bucket";
 		break;
 	case T_MANUAL:
 		s = "Interactive mode";
 		break;
 	}
 	if (Color) {
-		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (need %s)" ANSI_NORMAL, s);
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (%s)" ANSI_NORMAL, s);
 	} else {
-		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (need %s)", s);
+		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (%s)", s);
 	}
 	CurTestResult = 3;
 }

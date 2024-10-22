@@ -110,7 +110,14 @@ STATIC void test63()
 char *name = "test63 FPByteLock DF";
 
 	ENTER_TEST
+	// FIXME: broken with Netatalk 4.0 - could not locate fork
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	test_bytelock(VolID, name, OPENFORK_DATA);
+
+test_exit:
 	exit_test("FPByteRangeLock:test63: FPByteLock Data Fork");
 }
 
@@ -120,7 +127,14 @@ STATIC void test64()
 char *name = "test64 FPByteLock RF";
 
 	ENTER_TEST
+	// FIXME: broken with Netatalk 4.0 - could not locate fork
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	test_bytelock(VolID, name, OPENFORK_RSCS);
+
+test_exit:
 	exit_test("FPByteRangeLock:test64: FPByteLock Resource Fork");
 }
 
@@ -187,6 +201,12 @@ STATIC void test65()
 char *name = "t65 DF FPByteLock 2 users";
 
 	ENTER_TEST
+
+	// FIXME: broken with Netatalk 4.0 - could not locate fork
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Quiet) {
 		fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
 	}
@@ -316,6 +336,12 @@ char *name = "t79 FPByteLock Read";
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	ENTER_TEST
+
+	// FIXME: broken with Netatalk 4.0 - could not locate fork
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -950,14 +976,11 @@ void FPByteRangeLock_test()
     fprintf(stdout,"FPByteRangeLock page 101\n");
     fprintf(stdout,"-------------------\n");
     test60();
-// FIXME: broken with Netatalk 4.0 - could not locate fork
-#if 0
 	test63();
 	test64();
 	test65();
 //	test78(); /* badly broken, didn't bother fixing for appledouble = ea */
 	test79();
-#endif
 	test80();
 	test329();
 	test330();

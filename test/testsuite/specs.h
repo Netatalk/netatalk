@@ -47,7 +47,6 @@ enum adouble {
 extern uint16_t VolID;
 extern int Mac;
 extern int ExitCode;
-extern int Exclude;
 extern enum adouble adouble;
 
 /* Functions */

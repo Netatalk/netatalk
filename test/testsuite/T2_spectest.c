@@ -264,7 +264,7 @@ enum adouble adouble = AD_EA;
 void usage( char * av0 )
 {
     fprintf( stdout, "usage:\t%s [-aLmn] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
-    fprintf( stdout,"\t-a\t\volume is appledouble = v2 instead of default appledouble = ea\n");
+    fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
@@ -287,6 +287,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
 
+    fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
@@ -302,7 +303,7 @@ int ret;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "ivV1234567ah:H:p:s:u:d:w:c:f:lmMS:LC" )) != EOF ) {
+    while (( cc = getopt( ac, av, "ivV1234567ah:H:p:s:u:d:w:c:f:lmMS:LCx" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -391,6 +392,9 @@ static char *uam = "Cleartxt Passwrd";
 	case 'C':
 		Color = 1;
 		break;
+        case 'x':
+        	Exclude = 1;
+        	break;
         default :
             usage( av[ 0 ] );
         }

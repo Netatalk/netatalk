@@ -996,6 +996,7 @@ void FPOpenFork_test()
     test81();
     test116();
     test145();
+// Disable test for too many open forks, it was skipped anyway
 //    test151();
     test190();
     test341();

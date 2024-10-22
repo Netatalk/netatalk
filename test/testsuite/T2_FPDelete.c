@@ -24,6 +24,11 @@ int ret;
 
 	ENTER_TEST
 
+	// FIXME: broken in Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -138,6 +143,11 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	// FIXME: broken in Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -256,6 +266,11 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	// FIXME: broken in Netatalk 4.0
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -294,8 +309,6 @@ test_exit:
 /* ----------- */
 void FPDelete_test()
 {
-// FIXME: all flaky with Netatalk 4.0; mix of fails and false passes
-#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDelete page 143\n");
     fprintf(stdout,"-------------------\n");
@@ -305,5 +318,4 @@ void FPDelete_test()
     test363();
 #endif
     test364();
-#endif
 }
