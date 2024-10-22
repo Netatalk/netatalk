@@ -100,6 +100,7 @@ extern void test_skipped(int why);
 #define T_SINGLE     22
 #define T_VOL_BIG    23
 #define T_EXCLUDE    24
+#define T_MANUAL     25
 
 /* ---------------------------------
 */

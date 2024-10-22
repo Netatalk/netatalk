@@ -1413,6 +1413,7 @@ int cc;
 		Quiet = 0;
 		break;
 	case 'V':
+		Quiet = 0;
 		Verbose = 1;
 		break;
 	case 'i':

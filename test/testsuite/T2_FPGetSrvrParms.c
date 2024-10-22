@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include "specs.h"
 extern char *Vol2;
-extern int Manuel;
 
 /* ----------------------- */
 STATIC void test320(void)
@@ -24,8 +23,12 @@ unsigned char *b;
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
-	if (!Manuel || *Vol2 == 0) {
+	if (*Vol2 == 0) {
 		test_skipped(T_VOL2);
+		goto test_exit;
+	}
+	if (!Interactive) {
+		test_skipped(T_MANUAL);
 		goto test_exit;
 	}
 
@@ -34,7 +37,7 @@ unsigned char *b;
 		nottested();
 		goto test_exit;
 	}
-	printf("Modify AppleVolumes.default and press enter\n");
+	printf("Modify afp.conf and press enter\n");
 	getchar();
 
 

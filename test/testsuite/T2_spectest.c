@@ -258,7 +258,6 @@ int     Version = 21;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
-int     Manuel = 0;
 enum adouble adouble = AD_EA;
 
 /* =============================== */
@@ -286,7 +285,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
-    fprintf( stdout,"\t-Q\tnon-quiet\n");
+    fprintf( stdout,"\t-V\tvery verbose\n");
 
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
@@ -303,7 +302,7 @@ int ret;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "iv1234567ah:H:p:s:u:d:w:c:f:lmMS:LCQ" )) != EOF ) {
+    while (( cc = getopt( ac, av, "ivV1234567ah:H:p:s:u:d:w:c:f:lmMS:LC" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -382,15 +381,13 @@ static char *uam = "Cleartxt Passwrd";
                 exit(1);
             }
             break;
-		case 'v':
-			Verbose = 1;
-			break;
-	case 'Q':
+	case 'v':
 		Quiet = 0;
 		break;
-		case 'M':
-			Manuel = 1;
-			break;
+	case 'V':
+		Quiet = 0;
+		Verbose = 1;
+		break;
 	case 'C':
 		Color = 1;
 		break;
