@@ -20,7 +20,7 @@ int ret;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -119,7 +119,7 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 getchar();
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version >= 30) {
 		test_skipped(T_AFP2);
 		goto test_exit;

@@ -15,7 +15,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -93,7 +93,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -146,7 +146,7 @@ unsigned int ret;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -191,7 +191,7 @@ uint32_t data = (unsigned)-1;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();

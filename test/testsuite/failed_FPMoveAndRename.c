@@ -15,7 +15,7 @@ char *name2 = "t73 dir";
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
 		nottested();
@@ -97,7 +97,7 @@ int  dir;
 uint16_t vol = VolID;
 int id,id1;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

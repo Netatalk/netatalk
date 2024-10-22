@@ -18,7 +18,7 @@ uint16_t vol2;
 DSI *dsi2;
 int dt;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -104,7 +104,7 @@ char *name1 = "t379 file.txt";
 uint16_t vol = VolID;
 int  dt;
 
-	enter_test();
+	ENTER_TEST
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 

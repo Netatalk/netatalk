@@ -14,7 +14,7 @@ int fid_name1;
 int temp;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -87,7 +87,7 @@ int fid_name1;
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -182,7 +182,7 @@ char *name1 = "t197 new file name";
 char *ndir  = "t197 dir";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -236,7 +236,7 @@ uint16_t bitmap;
 DSI *dsi = &Conn->dsi;
 int  ofs =  3 * sizeof( uint16_t );
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -324,7 +324,7 @@ int temp;
 int fork;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -398,7 +398,7 @@ int temp;
 int fork;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -473,7 +473,7 @@ int temp;
 int fork;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();

@@ -12,7 +12,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	illegal_fork(dsi, AFP_BYTELOCK, name);
 	exit_test("FPByteRangeLock:test60: illegal fork");
@@ -109,7 +109,7 @@ STATIC void test63()
 {
 char *name = "test63 FPByteLock DF";
 
-	enter_test();
+	ENTER_TEST
 	test_bytelock(VolID, name, OPENFORK_DATA);
 	exit_test("FPByteRangeLock:test63: FPByteLock Data Fork");
 }
@@ -119,7 +119,7 @@ STATIC void test64()
 {
 char *name = "test64 FPByteLock RF";
 
-	enter_test();
+	ENTER_TEST
 	test_bytelock(VolID, name, OPENFORK_RSCS);
 	exit_test("FPByteRangeLock:test64: FPByteLock Resource Fork");
 }
@@ -186,7 +186,7 @@ STATIC void test65()
 {
 char *name = "t65 DF FPByteLock 2 users";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
 	}
@@ -285,7 +285,7 @@ void test78()
 {
 char *name = "t78 FPByteLock RF size -1";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPByteRangeLock:test78: test Byte Lock size -1 with no large file support\n");
 	}
@@ -315,7 +315,7 @@ int type = OPENFORK_DATA;
 char *name = "t79 FPByteLock Read";
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
-	enter_test();
+	ENTER_TEST
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
 		goto test_exit;
@@ -386,7 +386,7 @@ STATIC void test80()
 {
 char *name = "t80 RF FPByteLock Read write";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPByteRangeLock:test80: Resource Fork test Byte Lock and read write same user(file)\n");
 	}
@@ -414,7 +414,7 @@ uint16_t vol2;
 DSI *dsi2;
 int type = OPENFORK_DATA;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -504,7 +504,7 @@ STATIC void test410()
     DSI *dsi2;
     int type = OPENFORK_DATA;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -804,7 +804,7 @@ int fork2 = 0;
 DSI *dsi2;
 int dir, dir2;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -859,7 +859,7 @@ uint16_t vol2;
 DSI *dsi2;
 int type = OPENFORK_DATA;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);

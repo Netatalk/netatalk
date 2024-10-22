@@ -106,7 +106,7 @@ void test117()
 char *name = "t117 exclusive open DF";
 uint16_t vol2;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);

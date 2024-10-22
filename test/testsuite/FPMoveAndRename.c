@@ -10,7 +10,7 @@ char *name1= "t43 subdir";
 uint16_t vol = VolID;
 int  dir = 0,dir1 = 0,dir2 = 0;
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -73,7 +73,7 @@ char *name = "t77 Move open fork other dir";
 char *name1 = "t77 dir";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -116,7 +116,7 @@ char *dest  = "t123 dest";
 char *dest1  = "t123 dest_1";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -172,7 +172,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -221,7 +221,7 @@ char *name1 = "t378 Name";
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();

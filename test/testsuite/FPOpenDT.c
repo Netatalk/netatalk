@@ -9,7 +9,7 @@ uint16_t  dir;
 uint16_t vol = VolID;
 DSI *dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	dsi = &Conn->dsi;
 

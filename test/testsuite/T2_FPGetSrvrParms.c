@@ -17,7 +17,7 @@ unsigned char len;
 uint16_t vol2;
 unsigned char *b;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

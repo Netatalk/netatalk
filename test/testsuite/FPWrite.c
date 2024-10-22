@@ -14,7 +14,7 @@ int size;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 	size = min(0x20000, dsi->server_quantum);
 	if (size < 0x20000) {
 		if (!Quiet) {
@@ -72,7 +72,7 @@ DSI *dsi;
 int i,j;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 	size = min(0x20000, dsi->server_quantum); /* 128 k */
 	if (size < 0x20000) {
 		if (!Quiet) {
@@ -153,7 +153,7 @@ uint16_t vol = VolID;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();

@@ -6,7 +6,7 @@
 STATIC void test209(void)
 {
 int ret;
-	enter_test();
+	ENTER_TEST
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
@@ -26,7 +26,7 @@ int found = 0;
 unsigned char len;
 unsigned char *b;
 
-	enter_test();
+	ENTER_TEST
 
 	FPCloseVol(Conn,VolID);
 

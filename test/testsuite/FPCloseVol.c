@@ -8,7 +8,7 @@ STATIC void test204()
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	FAIL (FPCloseVol(Conn,vol))
 	/* double close */

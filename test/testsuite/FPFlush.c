@@ -7,7 +7,7 @@ STATIC void test202()
 {
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	FAIL (FPFlush(Conn, vol))
 

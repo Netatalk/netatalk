@@ -135,7 +135,7 @@ STATIC void test500()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -205,7 +205,7 @@ STATIC void test501()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -272,7 +272,7 @@ STATIC void test502()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -344,7 +344,7 @@ STATIC void test503()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -411,7 +411,7 @@ STATIC void test504()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -478,7 +478,7 @@ STATIC void test505()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -546,7 +546,7 @@ STATIC void test506()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);

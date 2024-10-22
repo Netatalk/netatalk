@@ -6,7 +6,7 @@
 STATIC void test1(void)
 {
 int ret;
-	enter_test();
+	ENTER_TEST
 
 	ret = FPGetSrvrInfo(Conn);
 	if (ret) {

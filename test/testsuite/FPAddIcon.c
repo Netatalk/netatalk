@@ -56,7 +56,7 @@ uint16_t dt;
 int ret;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	dt = FPOpenDT(Conn,vol);
 	FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))

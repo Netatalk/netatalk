@@ -31,6 +31,12 @@
 #define FAILEXIT(a, label) if ((a)) { failed(); goto label;}
 #define STATIC
 
+#define ENTER_TEST \
+    if (!Quiet) { \
+            fprintf(stdout, "############## entering %s ##############\n", __func__); \
+        } \
+    enter_test(); \
+
 /* Types */
 enum adouble {
     AD_EA = 1,

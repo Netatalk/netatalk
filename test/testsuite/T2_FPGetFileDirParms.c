@@ -19,7 +19,7 @@ int  dir,dir1;
 int  ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -129,7 +129,7 @@ int  dir,dir1;
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -233,7 +233,7 @@ char *name1 = "t42 dir1";
 int  dir,dir1;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -308,7 +308,7 @@ STATIC void test52()
 {
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -343,7 +343,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -478,7 +478,7 @@ int  dir1,dir;
 uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -529,7 +529,7 @@ int  dir1,dir;
 uint16_t bitmap = (1<<FILPBIT_FNUM );
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
@@ -576,7 +576,7 @@ int  dir,dir1;
 int  dir2;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -671,7 +671,7 @@ uint16_t vol = VolID;
 uint32_t id,id1;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -747,7 +747,7 @@ struct afp_filedir_parms filedir;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -854,7 +854,7 @@ int  dir,dir1;
 int  ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -980,7 +980,7 @@ int fid = 0;
 int fork = 0;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

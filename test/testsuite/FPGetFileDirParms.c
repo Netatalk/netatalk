@@ -15,7 +15,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -61,7 +61,7 @@ STATIC void test58()
 {
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "", 0,
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
@@ -99,7 +99,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -167,7 +167,7 @@ int offcnt;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -257,7 +257,7 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -372,7 +372,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
 		nottested();
@@ -424,7 +424,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -455,7 +455,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -510,7 +510,7 @@ char *result;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		failed();
@@ -558,7 +558,7 @@ char *result;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -604,7 +604,7 @@ STATIC void test319()
 {
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, "", 0,(1 << DIRPBIT_ACCESS) )) {
 		failed();
@@ -628,7 +628,7 @@ int id;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -697,7 +697,7 @@ uint16_t bitmap = 0;
 int ret;
 int id;
 
-	enter_test();
+	ENTER_TEST
 
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name);
 	if (ret) {
@@ -756,7 +756,7 @@ int id;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -822,7 +822,7 @@ int id;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -891,7 +891,7 @@ int id;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version >= 30) {
 		bitmap = (1<<FILPBIT_PDINFO);
@@ -968,7 +968,7 @@ struct afp_filedir_parms filedir;
 DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -1028,7 +1028,7 @@ uint16_t bitmap;
 uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 					(1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -1085,7 +1085,7 @@ unsigned int dir;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {

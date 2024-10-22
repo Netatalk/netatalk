@@ -11,7 +11,7 @@ uint16_t vol = VolID;
 int type = OPENFORK_DATA;
 char *name = "t186 FPCloseFork";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -45,7 +45,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	illegal_fork(dsi, AFP_CLOSEFORK, name);
 	exit_test("FPCloseFork:test187: illegal fork");

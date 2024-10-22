@@ -31,7 +31,7 @@ int size;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 	size = min(10000, dsi->server_quantum);
 	if (size < 2000) {
 		if (!Quiet) {
@@ -145,7 +145,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	size = min(10000, dsi->server_quantum);
 	if (size < 2000) {
 		if (!Quiet) {
@@ -250,7 +250,7 @@ char *name = "test59 FPRead,FPWrite 2GB lim";
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -290,7 +290,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	size = min(10000, dsi->server_quantum);
 	if (size < 2000) {
 		if (!Quiet) {
@@ -538,7 +538,7 @@ fin:
 /* -------------------------- */
 STATIC void test309()
 {
-	enter_test();
+	ENTER_TEST
     write_test(1024);
 	exit_test("FPRread:test309: FPRead, FPWrite deadlock");
 }
@@ -546,7 +546,7 @@ STATIC void test309()
 /* -------------------------- */
 STATIC void test327()
 {
-	enter_test();
+	ENTER_TEST
     write_test(	128*1024);
 	exit_test("FPRread:test327: FPRead, FPWrite deadlock");
 }
@@ -568,7 +568,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	sprintf(temp,"test328 dir");
 
 	if (get_vol_free(vol) < 17*1024*1024) {
@@ -726,7 +726,7 @@ int size;
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 	size = min(4096, dsi->server_quantum);
 	if (size < 2000) {
 		if (!Quiet) {
@@ -782,7 +782,7 @@ int ret;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 	size = 100;
 	offset = 128;
 
@@ -850,7 +850,7 @@ STATIC void test8()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Locking) {
 		test_skipped(T_LOCKING);

@@ -16,7 +16,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 uint32_t mdate = 0;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

@@ -18,7 +18,7 @@ uint16_t vol = VolID;
 char utf8name[20];
 int i;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;

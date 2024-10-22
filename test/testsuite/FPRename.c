@@ -10,7 +10,7 @@ char *name = "t69 rename file!name";
 char *name2 = "t69 new name";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();
@@ -56,7 +56,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
 		nottested();
@@ -209,7 +209,7 @@ int tdir;
 uint16_t vol = VolID;
 
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -238,7 +238,7 @@ char *name  = "t184.txt";
 char *name1 = "t184new.txt";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -262,7 +262,7 @@ char *dest = "t191 newname";
 uint16_t vol = VolID;
 int  dir = 0,dir1 = 0,dir2 = 0;
 
-	enter_test();
+	ENTER_TEST
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
@@ -303,7 +303,7 @@ uint16_t vol2, bitmap;
 int  dir = 0;
 DSI	*dsi2 = &Conn2->dsi;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -343,7 +343,7 @@ char *name = "t376 name";
 char *name1 = "t376 new name";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();
@@ -375,7 +375,7 @@ char *name1 = "t377 Name";
 uint16_t vol = VolID;
 int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		failed();

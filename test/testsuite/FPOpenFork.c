@@ -12,7 +12,7 @@ int fork;
 uint16_t vol = VolID;
 char *name = "t14 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -54,7 +54,7 @@ uint16_t vol = VolID;
 int fork;
 char *name = "t15 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -89,7 +89,7 @@ int fork = 0;
 int fork2 = 0;
 char *name = "t16 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -134,7 +134,7 @@ int fork2 = 0;
 int fork3 = 0;
 char *name = "t17 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -201,7 +201,7 @@ int fork2 = 0;
 int fork3 = 0;
 char *name = "t18 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -249,7 +249,7 @@ int fork2 = 0;
 int fork3 = 0;
 char *name = "t19 file";
 
-	enter_test();
+	ENTER_TEST
 
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
@@ -317,7 +317,7 @@ int fork = 0;
 int fork2 = 0;
 char *name = "t20 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -361,7 +361,7 @@ char *name1 = "t39 dir//t39 file.txt";
 char *name2 = "t39 dir///t39 file.txt";
 int  fork;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
@@ -418,7 +418,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
@@ -531,7 +531,7 @@ STATIC void test81()
 {
 char *name = "t81 Denymode RF 2users";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test81: Deny mode 2 users RF\n");
 	}
@@ -570,7 +570,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -629,7 +629,7 @@ int fork;
 char *name = "t145 file.txt";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
 		nottested();
@@ -662,7 +662,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){
 		nottested();
@@ -722,7 +722,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -872,7 +872,7 @@ STATIC void test341()
 {
 char *name = "t341 Attrib open mode RF";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test341: Attrib open mode 2 users RF\n");
 	}
@@ -952,7 +952,7 @@ STATIC void test367()
 {
 char *name = "t367 Denymode RF 2users";
 
-	enter_test();
+	ENTER_TEST
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test367: Deny mode 2 users RF\n");
 	}

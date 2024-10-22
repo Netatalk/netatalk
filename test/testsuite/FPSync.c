@@ -12,7 +12,7 @@ STATIC void test2()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
  	if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {
 		failed();

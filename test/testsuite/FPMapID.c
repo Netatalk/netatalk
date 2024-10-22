@@ -14,7 +14,7 @@ unsigned int ret;
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		nottested();

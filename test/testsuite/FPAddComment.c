@@ -20,7 +20,7 @@ DSI *dsi = &Conn->dsi;
 char *cmt;
 int  dt;
 
-	enter_test();
+	ENTER_TEST
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

@@ -19,7 +19,7 @@ STATIC void test3()
     int fork1, fork2;
     uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test3: Checks data fork / adouble metadata refcounting\n");
@@ -76,7 +76,7 @@ STATIC void test4()
     int fork1, fork2;
     uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test4: Checks reso fork / adouble metadata refcounting\n");
@@ -135,7 +135,7 @@ STATIC void test7()
     int fork1, fork2;
     uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test7: Checks fork / adouble metadata refcounting\n");
@@ -194,7 +194,7 @@ uint16_t bitmap = 0;
 int fork = 0, fork1 = 0;
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -377,7 +377,7 @@ int fork, fork1;
 uint16_t vol = VolID;
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -444,7 +444,7 @@ uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
 
 	if ((!Mac && !Path)) {
 		test_skipped(T_MAC_PATH);
@@ -487,7 +487,7 @@ uint16_t bitmap = 0;
 int fork;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -527,7 +527,7 @@ STATIC void test157()
     int fork;
     uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -570,7 +570,7 @@ char *name  = "t156 ro AppleDouble";
 char *file  = "t156 test.pdf";
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -613,7 +613,7 @@ char *file  = "t321 test.txt";
 uint16_t vol = VolID;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if ((!Mac && !Path)) {
 		test_skipped(T_MAC_PATH);
@@ -698,7 +698,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -799,7 +799,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -893,7 +893,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -987,7 +987,7 @@ DSI *dsi = &Conn->dsi;
 uint16_t bitmap;
 int fd;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1078,7 +1078,7 @@ int fork;
 uint16_t vol = VolID;
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1135,7 +1135,7 @@ int fork1;
 uint16_t vol = VolID;
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);
@@ -1199,7 +1199,7 @@ STATIC void test236()
     DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof( uint16_t );
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1285,7 +1285,7 @@ STATIC void test237()
     DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof( uint16_t );
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1363,7 +1363,7 @@ STATIC void test238()
     DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof( uint16_t );
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Path) {
 		test_skipped(T_MAC_PATH);
@@ -1448,7 +1448,7 @@ STATIC void test431()
     struct afp_filedir_parms filedir = { 0 };
     DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Mac && !Path) {
 		test_skipped(T_MAC_PATH);

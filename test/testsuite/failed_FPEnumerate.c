@@ -15,7 +15,7 @@ char *name2 = "t28 file";
 int  dir;
 int  dir1;
 
-	enter_test();
+	ENTER_TEST
 
 	/* we need to empty the server cashe */
 	FPCloseVol(Conn, vol);

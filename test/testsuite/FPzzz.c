@@ -26,7 +26,7 @@ DSI *dsi;
 int sock;
 uint32_t time= 12345;
 
-	enter_test();
+	ENTER_TEST
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
 		goto test_exit;
@@ -106,7 +106,7 @@ struct sigaction action;
 int sock;
 uint32_t time= 12345;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
@@ -186,7 +186,7 @@ struct sigaction action;
 DSI *dsi;
 int sock;
 
-	enter_test();
+	ENTER_TEST
 
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);

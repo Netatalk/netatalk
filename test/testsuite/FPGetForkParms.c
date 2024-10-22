@@ -85,7 +85,7 @@ STATIC void test21()
 uint16_t vol = VolID;
 char *name = "t21 file";
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -115,7 +115,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -189,7 +189,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	illegal_fork(dsi, AFP_GETFORKPARAM, name);
 	exit_test("FPGetForkParms:test188: illegal fork");
@@ -204,7 +204,7 @@ char *name = "t192 file";
 int ret;
 uint16_t vol = VolID;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -250,7 +250,7 @@ int len = (1<<FILPBIT_DFLEN);
 DSI *dsi;
 
 	dsi = &Conn->dsi;
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();

@@ -90,7 +90,7 @@ DSI *dsi = &Conn->dsi;
 uint32_t flen;
 unsigned int ret;
 
-	enter_test();
+	ENTER_TEST
     fprintf(stdout,"===================\n");
     fprintf(stdout,"Read only volume\n");
 	VolID = FPOpenVol(Conn, Vol);

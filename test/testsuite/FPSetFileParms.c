@@ -17,7 +17,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!(dir =FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
 		nottested();
@@ -59,7 +59,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -130,7 +130,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		nottested();
@@ -171,7 +171,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
 	memset(&filedir, 0, sizeof(filedir));
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
@@ -225,7 +225,7 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
  	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
@@ -311,7 +311,7 @@ int fork = 0;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
@@ -347,7 +347,7 @@ char *dest = "t428 dest";
 uint16_t vol = VolID;
 uint16_t vol2 = 0xffff;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -402,7 +402,7 @@ int id;
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();
@@ -462,7 +462,7 @@ STATIC void test430()
 
 	dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
 		nottested();

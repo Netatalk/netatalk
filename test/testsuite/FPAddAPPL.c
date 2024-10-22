@@ -15,7 +15,7 @@ unsigned int pdir;
 
 int dir;
 
-	enter_test();
+	ENTER_TEST
 
 	if (!Conn2) {
 		test_skipped(T_CONN2);
@@ -82,7 +82,7 @@ uint16_t fork;
 struct afp_filedir_parms filedir;
 int dir;
 
-	enter_test();
+	ENTER_TEST
     if (!Conn2) {
 	 	dir = get_did(Conn, vol, did, name);
 	 	if (!dir) {

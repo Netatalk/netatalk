@@ -10,7 +10,7 @@ uint16_t vol = VolID;
 struct afp_volume_parms parms;
 DSI *dsi = &Conn->dsi;
 
-	enter_test();
+	ENTER_TEST
     bitmap = (1 << VOLPBIT_ATTR  )
 	    |(1 << VOLPBIT_SIG   )
     	|(1 << VOLPBIT_CDATE )
