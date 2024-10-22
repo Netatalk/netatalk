@@ -326,7 +326,7 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 		if (!Quiet) {
 			fprintf(stdout, "\tFAILED (not run kill 1.6.x servers)\n");
 		}
-		failed_nomsg();
+		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
 
