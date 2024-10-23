@@ -418,7 +418,7 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf, siz
 
     /* Packet size should be: Session ID + Ma + Encrypted client nonce */
     if (ibuflen != 2 + PRIMEBITS/8 + 16) {
-        LOG(log_error, logtype_uams, "DHX2: Paket length not correct");
+        LOG(log_error, logtype_uams, "DHX2: Packet length not correct");
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
@@ -584,7 +584,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs) */
     if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
-        LOG(log_error, logtype_uams, "DHX2: Paket length not correct: %u. Should be 274 or 284.", ibuflen);
+        LOG(log_error, logtype_uams, "DHX2: Packet length not correct: %u. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
@@ -788,7 +788,7 @@ static int changepw_3(void *obj _U_,
 
     /* Packet size should be: Session ID + ServerNonce + 2*Passwd buffer */
     if (ibuflen != 2 + 16 + 2*256) {
-        LOG(log_error, logtype_uams, "DHX2: Paket length not correct");
+        LOG(log_error, logtype_uams, "DHX2: Packet length not correct");
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
