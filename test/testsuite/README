@@ -144,3 +144,11 @@ Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
 
 - if Mac and Netatalk now return the same result:
 Warning MAC and Netatalk now same RESULT!
+
+List tests
+----------
+
+One way to get a list of tests that are actually implemented,
+is to grep for symbols in the compiled binaries.
+
+nm afp_encoding_test afp_spectest_fail afp_speedtest afp_spectest afp_spectest_t2 afp_logintest afp_rotest | cut -d " " -f 3 | egrep "^test[[:digit:]]+" | sort -n -k 1.5
