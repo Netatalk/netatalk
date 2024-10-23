@@ -835,24 +835,30 @@ else
 
         # Check for indexer
 
+        if tracker_prefix != ''
+            indexer_dirs = [tracker_prefix + '/bin']
+        else
+            indexer_dirs = []
+        endif
+
         tracker = find_program(
             'tracker',
-            dirs: tracker_prefix + '/bin',
+            dirs: indexer_dirs,
             required: false,
         )
         tracker3 = find_program(
             'tracker3',
-            dirs: tracker_prefix + '/bin',
+            dirs: indexer_dirs,
             required: false,
         )
         tracker_control = find_program(
             'tracker-control',
-            dirs: tracker_prefix + '/bin',
+            dirs: indexer_dirs,
             required: false,
         )
         localsearch = find_program(
             'localsearch',
-            dirs: tracker_prefix + '/bin',
+            dirs: indexer_dirs,
             required: false,
         )
 
