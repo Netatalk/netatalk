@@ -148,15 +148,11 @@ zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 path = /mnt/afpshare
 valid users = ${AFP_USER} ${AFP_USER2}
 rwlist = ${AFP_USER} ${AFP_USER2}
-file perm = 0660
-directory perm = 0770
 [${SHARE2_NAME:-Time Machine}]
 path = /mnt/afpbackup
 time machine = ${TIMEMACHINE}
 valid users = ${AFP_USER} ${AFP_USER2}
 rwlist = ${AFP_USER} ${AFP_USER2}
-file perm = 0660
-directory perm = 0770
 EOF
 fi
 
