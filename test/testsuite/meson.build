@@ -36,11 +36,12 @@ lantest_sources = [
 ]
 
 executable(
-    'lantest',
+    'afp_lantest',
     lantest_sources,
     include_directories: root_includes,
     dependencies: afptest_external_deps,
     link_with: libafptest,
+    install: true,
 )
 
 afp_ls_sources = [
@@ -59,7 +60,7 @@ encoding_test_sources = [
 ]
 
 executable(
-    'encoding_test',
+    'afp_encoding_test',
     encoding_test_sources,
     include_directories: root_includes,
     link_with: libafptest,
@@ -70,7 +71,7 @@ login_test_sources = [
 ]
 
 executable(
-    'logintest',
+    'afp_logintest',
     login_test_sources,
     include_directories: root_includes,
     link_with: libafptest,
@@ -81,7 +82,7 @@ rotest_sources = [
 ]
 
 executable(
-    'rotest',
+    'afp_rotest',
     rotest_sources,
     include_directories: root_includes,
     link_with: libafptest,
@@ -92,10 +93,11 @@ speedtest_sources = [
 ]
 
 executable(
-    'speedtest',
+    'afp_speedtest',
     speedtest_sources,
     include_directories: root_includes,
     link_with: libafptest,
+    install: true,
 )
 
 spectest_sources = [
@@ -162,10 +164,11 @@ spectest_sources = [
 ]
 
 executable(
-    'spectest',
+    'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
     link_with: libafptest,
+    install: true,
 )
 
 sleeptest_sources = [
@@ -174,7 +177,7 @@ sleeptest_sources = [
 ]
 
 executable(
-    'sleeptest',
+    'afp_sleeptest',
     sleeptest_sources,
     include_directories: root_includes,
     link_with: libafptest,
@@ -182,14 +185,15 @@ executable(
 
 fail_spectest_sources = [
     'fail_spectest.c',
+    'failed_Error.c',
     'failed_FPEnumerate.c',
     'failed_FPExchangeFiles.c',
 	'failed_FPMoveAndRename.c',
-    'failed_Error.c',
+    'failed_T2_FPResolveID.c',
 ]
 
 executable(
-    'fail_spectest',
+    'afp_spectest_fail',
     fail_spectest_sources,
     include_directories: root_includes,
     link_with: libafptest,
@@ -215,10 +219,11 @@ t2_spectest_sources = [
 ]
 
 executable(
-    'T2_spectest',
+    'afp_spectest_t2',
     t2_spectest_sources,
     include_directories: root_includes,
     link_with: libafptest,
+    install: true,
 )
 
 spectest_sh = find_program('spectest.sh')
