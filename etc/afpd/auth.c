@@ -75,7 +75,7 @@ void status_versions( char *data,
 #ifndef NO_DDP
         if (!asp && (afp_versions[i].av_number <= 21)) continue;
 #endif /* ! NO_DDP */
-        if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
+        if ( !dsi && (afp_versions[ i ].av_number > 22)) continue;
         count++;
     }
     data += ntohs( status );
@@ -85,7 +85,7 @@ void status_versions( char *data,
 #ifndef NO_DDP
         if (!asp && (afp_versions[i].av_number <= 21)) continue;
 #endif /* ! NO_DDP */
-        if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
+        if ( !dsi && (afp_versions[ i ].av_number > 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;
         memcpy( data, afp_versions[ i ].av_name , len );

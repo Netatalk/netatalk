@@ -161,6 +161,8 @@ typedef struct AFPObj {
     void* handle;
     #ifndef NO_DDP
     int fd;
+    int statuslen;
+    char aspstatus[1400];
     #endif /* NO_DDP */
     struct afp_options options;
     char *Obj, *Type, *Zone;

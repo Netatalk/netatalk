@@ -374,25 +374,33 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     data += offset;
 
     LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
+    if (dsi) {
+        if ((len = convert_string(options->unixcharset,
+            CH_UTF8_MAC,
+            options->hostname,
+            -1,
+            data + sizeof(namelen),
+            maxstatuslen - offset)) == (size_t)-1) {
+            LOG(log_error, logtype_afpd, "Could not set utf8 servername");
 
-    if ((len = convert_string(options->unixcharset,
-                              CH_UTF8_MAC,
-                              options->hostname,
-                              -1,
-                              data + sizeof(namelen),
-                              maxstatuslen-offset)) == (size_t)-1) {
-        LOG(log_error, logtype_afpd, "Could not set utf8 servername");
-
-        /* set offset to 0 */
+            /* set offset to 0 */
+            memset(begin + *nameoffset, 0, sizeof(offset));
+            data = begin + offset;
+        }
+        else {
+            namelen = htons(len);
+            memcpy(data, &namelen, sizeof(namelen));
+            data += sizeof(namelen);
+            data += len;
+            offset = htons(offset);
+            memcpy(begin + *nameoffset, &offset, sizeof(uint16_t));
+        }
+    }
+    else
+    {
+        /* asp connection: set offset to 0 */
         memset(begin + *nameoffset, 0, sizeof(offset));
         data = begin + offset;
-    } else {
-    	namelen = htons(len);
-    	memcpy( data, &namelen, sizeof(namelen));
-    	data += sizeof(namelen);
-    	data += len;
-    	offset = htons(offset);
-    	memcpy(begin + *nameoffset, &offset, sizeof(uint16_t));
     }
 
     /* return length of buffer */
@@ -520,12 +528,6 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
         icon = sunlogo_icon;
         iconlen = sizeof(sunlogo_icon);
     }
-#ifndef NO_DDP
-    else if (asp) {
-        icon = apple_atalk_icon;
-        iconlen = sizeof(apple_atalk_icon);
-    }
-#endif
     else {
         icon = apple_tcp_icon;
         iconlen = sizeof(apple_tcp_icon);
@@ -548,16 +550,57 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
     if ( statuslen < maxstatuslen)
         statuslen = status_utf8servername(status, &c, dsi, options);
 
+    /* set dsi status response */
+    dsi->signature = status + sigoff;
+    dsi->statuslen = statuslen;
+
+    /* end dsi status response */
+
 #ifndef NO_DDP
+    /* begin asp status response */
     if (asp_obj->handle) {
-        asp_setstatus(asp, status, statuslen);
-        asp_obj->signature = status + sigoff;
-        //asp_obj->statuslen = statuslen;
+        char *aspstatus = asp_obj->aspstatus;
+    
+        c = 0; statuslen = 0;
+        status_flags(aspstatus,
+            options->flags& OPTION_SERVERNOTIF,
+            (options->fqdn || ipok),
+            options->passwdbits,
+            0,
+            options->flags);
+        /* returns offset to signature offset */
+        c = status_server(aspstatus, options->hostname, options);
+        status_machine(aspstatus);
+        status_versions(aspstatus,
+            asp,
+            NULL);
+        status_uams(aspstatus, options->uamlist);
+
+        if (options->legacyicon[0] == '\0') {
+            /* if no custom icon set, don't send default icon for asp connections to conserve space if needed */
+            icon = NULL;
+            iconlen = 0;
+        }
+
+        status_icon(aspstatus, icon, iconlen, c);
+        sigoff = status_signature(aspstatus, &c, options);
+        /* c now contains the offset where the netaddress offset lives */
+
+        status_netaddress(aspstatus, &c,
+            asp,
+            dsi, options);
+        /* c now contains the offset where the UTF-8 ServerName offset lives */
+
+        if (statuslen < maxstatuslen)
+            statuslen = status_utf8servername(aspstatus, &c, NULL, options);
+
+        /* set asp status response */
+        asp_setstatus(asp, aspstatus, statuslen);
+        asp_obj->signature = aspstatus + sigoff;
+        asp_obj->statuslen = statuslen;
     }
 #endif /* ! NO_DDP */
 
-    dsi->signature = status + sigoff;
-    dsi->statuslen = statuslen;
 }
 
 /* set_signature()                                                    */
@@ -725,8 +768,19 @@ server_signature_done:
 /* this is the same as asp/dsi_getstatus */
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    memcpy(rbuf, obj->dsi->status, obj->dsi->statuslen);
-    *rbuflen = obj->dsi->statuslen;
-
+    #ifndef NO_DDP
+    if (obj->proto == AFPPROTO_DSI)
+    {
+    #endif
+        memcpy(rbuf, obj->dsi->status, obj->dsi->statuslen);
+        *rbuflen = obj->dsi->statuslen;
+    #ifndef NO_DDP
+    }
+    else
+    {
+        memcpy(rbuf, obj->aspstatus, obj->statuslen);
+        *rbuflen = obj->statuslen;
+    }
+    #endif
     return AFP_OK;
 }
