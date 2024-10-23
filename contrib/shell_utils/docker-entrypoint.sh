@@ -134,6 +134,10 @@ else
     ATALK_NAME=${SERVER_NAME}
 fi
 
+if [ ! -z "${VERBOSE}" ]; then
+    TEST_FLAGS=-v
+fi
+
 if [ -z "${MANUAL_CONFIG}" ]; then
     echo "*** Configuring Netatalk"
     cat <<EOF > /usr/local/etc/afp.conf
@@ -145,10 +149,12 @@ spotlight = yes
 uam list = ${UAMS}
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
+appledouble = ea
 path = /mnt/afpshare
 valid users = ${AFP_USER} ${AFP_USER2}
 rwlist = ${AFP_USER} ${AFP_USER2}
 [${SHARE2_NAME:-Time Machine}]
+appledouble = ea
 path = /mnt/afpbackup
 time machine = ${TIMEMACHINE}
 valid users = ${AFP_USER} ${AFP_USER2}
@@ -177,5 +183,17 @@ fi
 
 echo "*** Starting AFP server"
 
-# Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
-netatalk -d
+if [ -z "$TESTSUITE" ]; then
+    # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
+    netatalk -d
+elif [ "$TESTSUITE" == "spectest" ]; then
+    netatalk
+    sleep 2
+    afp_spectest -7 -C -x "${TEST_FLAGS}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
+elif [ "$TESTSUITE" == "spectest_t2" ]; then
+    netatalk
+    sleep 2
+    afp_spectest_t2 -7 -C -x "${TEST_FLAGS}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
+else
+    echo "Unknown testsuite: ${TESTSUITE}"
+fi
