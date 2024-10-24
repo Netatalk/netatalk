@@ -499,7 +499,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
       } else { /* eof or error */
           /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
           if (len || stored || dsi->read_count) {
-              if (! (dsi->flags & DSI_DISCONNECTED)) {
+              if (!(dsi->flags & DSI_DISCONNECTED || dsi->flags & DSI_AFP_LOGGED_OUT)) {
                   LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",
                       len, (len < 0) ? strerror(errno) : "unexpected EOF");
               }
