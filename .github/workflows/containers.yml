@@ -1,0 +1,128 @@
+name: Containers
+
+on:
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
+    workflow_dispatch:
+
+env:
+    REGISTRY: ghcr.io
+    REPO: ${{ github.repository }}
+
+jobs:
+    build-container:
+        name: Netatalk container
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+            - name: Create image name
+              run: |
+                echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
+            - name: Login to container registry
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Extract metadata
+              id: metadata
+              uses: docker/metadata-action@v5
+              with:
+                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                tags: |
+                  type=ref,event=branch
+                  type=ref,event=tag
+                  type=raw,value=latest
+                  type=sha
+            - name: Build and push container image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: Dockerfile
+                push: true
+                labels: ${{ steps.metadata.outputs.labels }}
+                tags: ${{ steps.metadata.outputs.tags }}
+
+
+    build-container-testsuite:
+        name: Netatalk testsuite container
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+            - name: Create image name
+              run: |
+                echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
+            - name: Login to container registry
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Extract metadata
+              id: metadata
+              uses: docker/metadata-action@v5
+              with:
+                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                tags: |
+                  type=ref,event=branch
+                  type=ref,event=tag
+                  type=raw,value=latest
+                  type=sha
+            - name: Build and push container image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: Dockerfile.testsuite
+                push: true
+                labels: ${{ steps.metadata.outputs.labels }}
+                tags: ${{ steps.metadata.outputs.tags }}
+
+
+    afp-spectest:
+        name: AFP spectest
+        needs: build-container-testsuite
+        runs-on: ubuntu-latest
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: afpafp
+            AFP_PASS2: afpafp
+            AFP_GROUP: afpusers
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-spectest_t2:
+        name: AFP spectest tier 2
+        needs: build-container-testsuite
+        runs-on: ubuntu-latest
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: afpafp
+            AFP_PASS2: afpafp
+            AFP_GROUP: afpusers
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest_t2
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
