@@ -504,7 +504,11 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
                     dsi);
     status_uams(status, options->uamlist);
 
-    if (strcmp(options->legacyicon, "daemon") == 0) {
+    if (strcmp(options->legacyicon, "appletalk") == 0) {
+        icon = apple_atalk_icon;
+        iconlen = sizeof(apple_atalk_icon);
+    }
+    else if (strcmp(options->legacyicon, "daemon") == 0) {
         icon = daemon_icon;
         iconlen = sizeof(daemon_icon);
     }

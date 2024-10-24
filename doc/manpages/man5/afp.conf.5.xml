@@ -1062,11 +1062,13 @@
 
           <listitem>
             <para>Sets the shared volume icon displayed in the Finder in
-            Classic Mac OS. Default is to display an icon indicating the
-            transport layer used (TCP/IP or AppleTalk). Examples of valid icon
-            styles:</para>
+            Classic Mac OS. Examples of valid icon styles:</para>
 
             <itemizedlist>
+              <listitem>
+                <para><option>appletalk</option></para>
+              </listitem>
+
               <listitem>
                 <para><option>daemon</option></para>
               </listitem>
