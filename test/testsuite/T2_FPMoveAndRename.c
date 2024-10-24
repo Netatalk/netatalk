@@ -18,6 +18,11 @@ unsigned int ret;
 
 	ENTER_TEST
 
+	// FIXME: https://github.com/Netatalk/netatalk/issues/1682
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -74,6 +79,11 @@ unsigned int ret;
 
 	ENTER_TEST
 
+	// FIXME: https://github.com/Netatalk/netatalk/issues/1682
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Path && !Mac) {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
