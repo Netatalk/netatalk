@@ -872,7 +872,6 @@ test_exit:
 }
 
 /* --------------- */
-extern char *Test;
 STATIC void test366()
 {
 char *name = "t366 FPByteLock 2 users";

@@ -39,7 +39,7 @@ char    *Vol = "";
 char    *Vol2 = "";
 char    *User;
 int     Version = 21;
-static char    *Test = "Write";
+char    *Test = "Write";
 static char    *Filename;
 
 static int Count = 1;
