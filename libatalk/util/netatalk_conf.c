@@ -208,6 +208,9 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
                 return strdup(uuid);
             }
         }
+        /* entry not found. reopen the file in read-write mode */
+        fclose(fp);
+        fp = fopen(obj->options.uuidconf, "r+");
     }
 
     if (fp == NULL) {
