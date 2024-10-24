@@ -147,7 +147,7 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
     lock.l_len = 0;
     lock.l_whence = SEEK_SET;
 
-    fp = fopen(obj->options.uuidconf, "r+");
+    fp = fopen(obj->options.uuidconf, "r");
     if (fp != NULL) {
         /* Lock the file */
         lock.l_type = F_RDLCK;
