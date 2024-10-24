@@ -1594,6 +1594,7 @@ pam_path = get_option('with-pam-path')
 pam_conf_path = get_option('with-pam-config-path')
 
 pam_dir = ''
+pam_d_dir = ''
 pam_confdir = ''
 pam_includes = []
 pam_link_args = []
@@ -1611,9 +1612,10 @@ else
 
         foreach path : pam_paths
             if fs.is_dir(path / 'etc/pam.d')
-                pam_dir += path
+                pam_dir = path
+                pam_d_dir = pam_dir / 'etc/pam.d'
+                break
             endif
-            break
         endforeach
     else
         warning(
@@ -1639,43 +1641,42 @@ else
 
     if have_pam
         uams_options += 'PAM '
-        pampath = pam_dir / 'etc/pam.d'
         # Debian/SuSE
-        if fs.exists(pampath / 'common-auth')
+        if fs.exists(pam_d_dir / 'common-auth')
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'common-auth')
             cdata.set('PAM_ACCOUNT', 'common-account')
             cdata.set('PAM_PASSWORD', 'common-password')
-            if fs.exists(pampath / 'common-session-noninteractive')
+            if fs.exists(pam_d_dir / 'common-session-noninteractive')
                 cdata.set('PAM_SESSION', 'common-session-noninteractive')
-            elif fs.exists(pampath / 'common-session-nonlogin')
+            elif fs.exists(pam_d_dir / 'common-session-nonlogin')
                 cdata.set('PAM_SESSION', 'common-session-nonlogin')
             else
                 cdata.set('PAM_SESSION', 'common-session')
             endif
             # RHEL/FC
-        elif fs.exists(pampath / 'system-auth')
+        elif fs.exists(pam_d_dir / 'system-auth')
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'system-auth')
             cdata.set('PAM_ACCOUNT', 'system-auth')
             cdata.set('PAM_PASSWORD', 'system-auth')
             cdata.set('PAM_SESSION', 'system-auth')
             # FreeBSD
-        elif fs.exists(pampath / 'system')
+        elif fs.exists(pam_d_dir / 'system')
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'system')
             cdata.set('PAM_ACCOUNT', 'system')
             cdata.set('PAM_PASSWORD', 'system')
             cdata.set('PAM_SESSION', 'system')
             # macOS
-        elif fs.exists(pampath / 'chkpasswd')
+        elif fs.exists(pam_d_dir / 'chkpasswd')
             cdata.set('PAM_DIRECTIVE', 'required')
             cdata.set('PAM_AUTH', 'pam_opendirectory.so')
             cdata.set('PAM_ACCOUNT', 'pam_opendirectory.so')
             cdata.set('PAM_PASSWORD', 'pam_permit.so')
             cdata.set('PAM_SESSION', 'pam_permit.so')
             # Solaris 11+
-        elif fs.exists(pampath / 'other')
+        elif fs.exists(pam_d_dir / 'other')
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', pam_dir / 'etc/pam.d/other')
             cdata.set('PAM_ACCOUNT', pam_dir / 'etc/pam.d/other')
@@ -1690,6 +1691,12 @@ else
             cdata.set('PAM_SESSION', 'pam_unix.so')
         endif
 
+        if pam_conf_path != ''
+            pam_confdir += pam_conf_path
+        else
+            pam_confdir += pam_d_dir
+        endif
+
         if pam_dir == ''
             warning(
                 'PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Please install this file manually. If you are running a Solaris-based host which still relies on /etc/pam.conf you will have to edit this file to get PAM working',
@@ -1699,12 +1706,6 @@ else
         have_pam = false
         warning('PAM support requested but required library not found')
     endif
-endif
-
-if pam_conf_path != ''
-    pam_confdir += pam_conf_path
-else
-    pam_confdir += prefix / 'etc/pam.d'
 endif
 
 #
