@@ -129,9 +129,10 @@ extern char Data[];
 
 extern char *Vol;
 extern char *Vol2;
-
 extern char *Path;
 extern char *User;
+extern char *Test;
+
 extern int Version;
 extern int Quirk;
 extern int Verbose;

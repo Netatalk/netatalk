@@ -664,6 +664,11 @@ DSI *dsi;
 
 	ENTER_TEST
 
+// Opens too many forks to be run with other tests
+	if (!Test) {
+		test_skipped(T_SINGLE);
+		goto test_exit;
+	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){
 		nottested();
 		goto test_exit;
@@ -996,8 +1001,7 @@ void FPOpenFork_test()
     test81();
     test116();
     test145();
-// Disable test for too many open forks, it was skipped anyway
-//    test151();
+    test151();
     test190();
     test341();
     test367();
