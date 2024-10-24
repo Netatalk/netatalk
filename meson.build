@@ -866,14 +866,14 @@ else
 
         if localsearch.found()
             cdata.set('HAVE_TRACKER3', 1)
-            indexer_command = '"' + localsearch.full_path() + ' daemon"'
+            indexer_command = localsearch.full_path() + ' daemon'
         elif tracker3.found()
             cdata.set('HAVE_TRACKER3', 1)
-            indexer_command = '"' + tracker3.full_path() + ' daemon"'
+            indexer_command = tracker3.full_path() + ' daemon'
         elif tracker.found()
-            indexer_command = '"' + tracker.full_path() + ' daemon"'
+            indexer_command = tracker.full_path() + ' daemon'
         elif tracker_control.found()
-            indexer_command = '"' + tracker_control.full_path() + '"'
+            indexer_command = tracker_control.full_path()
         endif
         indexer_found = (
             tracker.found()
@@ -884,7 +884,7 @@ else
         if not indexer_found
             warning('Tracker or LocalSearch not found (required for Spotlight support)')
         else
-            cdata.set('INDEXER_COMMAND', indexer_command)
+            cdata.set('INDEXER_COMMAND', '"' + indexer_command + '"')
 
             # Check for talloc
 
