@@ -910,7 +910,7 @@
 
           <listitem>
             <para>Classic Mac OS の Finder に表示される共有ボリューム アイコンを設定する。
-            デフォルトでは、使用されているトランスポート層 (TCP/IP または AppleTalk) を示すアイコンが表示される。
+            参考に、ある Classic Mac OS バージョンでは、このアイコン設定が無視される。
             有効なアイコン名の例は以下になる。</para>
 
             <itemizedlist>
