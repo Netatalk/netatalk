@@ -299,8 +299,8 @@ jobs:
             libmariadb-devel \
             libtalloc-devel \
             libtdb-devel \
-            libtracker-sparql-3_0-0 \
             libxslt-tools \
+            localsearch \
             meson \
             ninja \
             openldap2-devel \
@@ -310,7 +310,6 @@ jobs:
             systemd \
             systemtap-sdt-devel \
             tcpd-devel \
-            tracker \
             unicode-ucd
       - name: Configure
         run: |
