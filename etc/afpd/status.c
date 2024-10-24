@@ -529,8 +529,8 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
         iconlen = sizeof(sunlogo_icon);
     }
     else {
-        icon = apple_tcp_icon;
-        iconlen = sizeof(apple_tcp_icon);
+        icon = tcp_icon;
+        iconlen = sizeof(tcp_icon);
     }
 
     status_icon(status, icon, iconlen, c);
