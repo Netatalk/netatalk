@@ -1,54 +1,5 @@
 #include "specs.h"
 
-#include <getopt.h>
-
-uint16_t VolID;
-static DSI *dsi;
-CONN *Conn;
-CONN *Conn2;
-
-int ExitCode = 0;
-
-DSI *Dsi;
-
-char Data[300000] = "";
-/* ------------------------------- */
-char    *Server = "localhost";
-char    *Server2;
-int     Proto = 0;
-int     Port = 548;
-char    *Password = "";
-char    *Vol = "";
-char    *User;
-char    *User2;
-char    *Path;
-int     Version = 21;
-int     List = 0;
-int     Mac = 0;
-char    *Test;
-static char  *vers = "AFPVersion 2.1";
-
-
-/* ------------------------------- */
-static void connect_server(void)
-{
-    Conn->type = Proto;
-    if (!Proto) {
-	int sock;
-    	Dsi = &Conn->dsi;
-		dsi = Dsi;
-	    sock = OpenClientSocket(Server, Port);
-        if ( sock < 0) {
-        	nottested();
-	    	exit(ExitCode);
-        }
-     	Dsi->protocol = DSI_TCPIP;
-	    Dsi->socket = sock;
-    }
-    else {
-	}
-}
-
 /* -------------------------------- */
 static int really_ro()
 {
@@ -72,7 +23,7 @@ static void check_test(unsigned int err)
 }
 
 /* ----------------- */
-static void run_all()
+STATIC void test510()
 {
 char *ndir = "read only dir";
 char *nfile = "read only file";
@@ -91,8 +42,11 @@ uint32_t flen;
 unsigned int ret;
 
 	ENTER_TEST
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Read only volume\n");
+
+	if (!Quiet) {
+		fprintf(stdout, "Has to be tested with a read only volume, two files and one dir\n");
+	}
+
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
 		nottested();
@@ -115,7 +69,9 @@ unsigned int ret;
 		nottested();
 		goto fin;
 	}
-	fprintf(stdout,"Directory %s\n", dir);
+	if (!Quiet) {
+		fprintf(stdout,"Directory %s\n", dir);
+	}
 	/* get a file */
 	bitmap = (1 << FILPBIT_LNAME);
 	ret = FPEnumerateFull(Conn, VolID, 1, 1, 800,  DIRDID_ROOT, "", bitmap, 0);
@@ -130,7 +86,9 @@ unsigned int ret;
 		nottested();
 		goto fin;
 	}
-	fprintf(stdout,"File %s\n", file);
+	if (!Quiet) {
+		fprintf(stdout,"File %s\n", file);
+	}
 
 	/* get a second file */
 	bitmap = (1 << FILPBIT_LNAME);
@@ -146,7 +104,9 @@ unsigned int ret;
 		nottested();
 		goto fin;
 	}
-	fprintf(stdout,"Second file %s\n", file1);
+	if (!Quiet) {
+		fprintf(stdout,"Second file %s\n", file1);
+	}
 
 	/* TESTS */
 	/* -- file.c -- */
@@ -168,11 +128,11 @@ unsigned int ret;
 	}
 	FAIL (ntohl(AFPERR_VLOCK) != FPCopyFile(Conn, VolID, DIRDID_ROOT, VolID, DIRDID_ROOT, file, "", nfile))
 
-	if (!(get_vol_attrib(VolID) & VOLPBIT_ATTR_FILEID) ) {
+	if (!(get_vol_attrib(VolID) & VOLPBIT_ATTR_FILEID) && !Quiet) {
 		fprintf(stdout,"FileID calls Not supported\n");
 	}
 	else {
-		/* with cnid db, if the volume isn't define as readonly in AppleVolumes.default
+		/* with cnid db, if the volume isn't defined as read only in afp.conf
 		 * CreateID, DeleteID don't return VLOCK
 		*/
 		ret = FPCreateID(Conn,VolID, DIRDID_ROOT, file);
@@ -239,7 +199,7 @@ unsigned int ret;
 			if (!filedir.offcnt) {
 				failed();
 			}
-			else {
+			else if (!Quiet) {
 				fprintf(stdout,"\tWARNING \"%s\", not empty FPDelete skipped\n", dir);
 			}
 		}
@@ -335,133 +295,13 @@ unsigned int ret;
 fin:
 	FAIL (FPCloseVol(Conn,VolID))
 test_exit:
-	exit_test("rotest");
+	exit_test("Rotest:test510: Access files and directories on a read only volume");
 }
 
-/* =============================== */
-void usage( char * av0 )
+void rotest_test()
 {
-    fprintf( stdout,"%s test a read only volume\n", av0);
-    fprintf( stdout, "usage:\t%s [-m] [-n] [-t] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
-
-    fprintf( stdout,"\t-m\tserver is a Mac\n");
-    fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
-    fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
-
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
-    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
-    fprintf( stdout,"\t-2\tAFP 2.2 version\n");
-    fprintf( stdout,"\t-3\tAFP 3.0 version\n");
-    fprintf( stdout,"\t-4\tAFP 3.1 version\n");
-    fprintf( stdout,"\t-5\tAFP 3.2 version\n");
-    fprintf( stdout,"\t-6\tAFP 3.3 version\n");
-    fprintf( stdout,"\t-7\tAFP 3.4 version\n");
-    fprintf( stdout,"\t-v\tverbose\n");
-    fprintf( stdout,"\t-V\tvery verbose\n");
-
-    exit (1);
-}
-
-/* ------------------------------- */
-int main( int ac, char **av )
-{
-int cc;
-int ret;
-static char *uam = "Cleartxt Passwrd";
-
-    while (( cc = getopt( ac, av, "vV1234567h:p:u:w:ms:" )) != EOF ) {
-        switch ( cc ) {
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case '1':
-			vers = "AFPVersion 2.1";
-			Version = 21;
-			break;
-        case '2':
-			vers = "AFP2.2";
-			Version = 22;
-			break;
-        case '3':
-			vers = "AFPX03";
-			Version = 30;
-			break;
-        case '4':
-			vers = "AFP3.1";
-			Version = 31;
-			break;
-        case '5':
-			vers = "AFP3.2";
-			Version = 32;
-			break;
-        case '6':
-			vers = "AFP3.3";
-			Version = 33;
-			break;
-        case '7':
-			vers = "AFP3.4";
-			Version = 34;
-			break;
-		case 'm':
-			Mac = 1;
-			break;
-        case 'h':
-            Server = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
-        case 'p' :
-            Port = atoi( optarg );
-            if (Port <= 0) {
-                fprintf(stdout, "Bad port.\n");
-                exit(1);
-            }
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
-        default :
-            usage( av[ 0 ] );
-        }
-    }
-	/************************************
-	 *                                  *
-	 * Connection user 1                *
-	 *                                  *
-	 ************************************/
-
-    if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-    	return 1;
-    }
-	/* ------------------------ */
-    connect_server();
-	// FIXME: workaround for FPopenLoginExt() being broken
-#if 0
-    if (Version >= 30) {
-		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-	}
-	else {
-		ret = FPopenLogin(Conn, vers, uam, User, Password);
-	}
-#else
-	ret = FPopenLogin(Conn, vers, uam, User, Password);
-#endif
-	if (ret) {
-		printf("Login failed\n");
-		exit(1);
-	}
-	Conn->afp_version = Version;
-	run_all();
-   	FPLogOut(Conn);
-
-	return ExitCode;
+    fprintf(stdout, "===================\n");
+    fprintf(stdout, "Read only volume\n");
+    fprintf(stdout, "-------------------\n");
+    test510();
 }

@@ -1,4 +1,6 @@
 #include "specs.h"
+#include "afpclient.h"
+#include "test.h"
 
 #include <dlfcn.h>
 #include <getopt.h>
@@ -73,6 +75,24 @@ EXT_FN(Utf8);
 EXT_FN(FPGetACL);
 EXT_FN(FPSync);
 
+EXT_FN(T2FPByteRangeLock);
+EXT_FN(T2FPCopyFile);
+EXT_FN(T2FPCreateFile);
+EXT_FN(T2FPDelete);
+EXT_FN(T2FPGetFileDirParms);
+EXT_FN(T2FPGetSrvrParms);
+EXT_FN(T2FPMoveAndRename);
+EXT_FN(T2FPOpenFork);
+EXT_FN(T2FPSetDirParms);
+EXT_FN(T2FPSetFileParms);
+EXT_FN(T2FPResolveID);
+EXT_FN(T2FPRead);
+EXT_FN(T2FPSetForkParms);
+EXT_FN(Dircache_attack);
+
+EXT_FN(rotest);
+
+EXT_FN(FPzzz);
 
 struct test_fn {
 char *name;
@@ -81,14 +101,10 @@ void (*fn)(void);
 };
 #define FN_N(a) { # a , FN(a) },
 
-static struct test_fn Test_list[] =
+static struct test_fn *Test_list;
+
+static struct test_fn Test_list_T1[] =
 {
-#ifdef QUIRK
-FN_N(FPEnumerate)
-FN_N(FPExchangeFiles)
-FN_N(FPMoveAndRename)
-FN_N(Error)
-#else
 FN_N(FPAddAPPL)
 FN_N(FPAddComment)
 FN_N(FPAddIcon)
@@ -147,10 +163,43 @@ FN_N(Error)
 FN_N(Utf8)
 FN_N(FPGetACL)
 FN_N(FPSync)
-#endif
 
 {NULL, NULL},
 };
+
+
+static struct test_fn Test_list_T2[] =
+{
+FN_N(T2FPByteRangeLock)
+FN_N(T2FPCreateFile)
+FN_N(T2FPCopyFile)
+FN_N(T2FPDelete)
+FN_N(T2FPGetFileDirParms)
+FN_N(T2FPGetSrvrParms)
+FN_N(T2FPMoveAndRename)
+FN_N(T2FPOpenFork)
+FN_N(T2FPSetDirParms)
+FN_N(T2FPSetFileParms)
+FN_N(T2FPResolveID)
+FN_N(T2FPRead)
+FN_N(T2FPSetForkParms)
+FN_N(Dircache_attack)
+
+{NULL, NULL},
+};
+
+static struct test_fn Test_list_ro[] =
+{
+FN_N(rotest)
+{NULL, NULL},
+};
+
+static struct test_fn Test_list_sleep[] =
+{
+FN_N(FPzzz)
+{NULL, NULL},
+};
+
 
 /* =============================== */
 static void press_enter(char *s)
@@ -277,13 +326,14 @@ int     Version = 21;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
+char    *Suite = "tier1";
 int		Locking;
 enum adouble adouble = AD_EA;
 
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-aLmn] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-aCiLlmnvVx1234567] [-h host] [-p port] [-s vol] [-u user] [-w password] [-F testsuite] [-f test]\n", av0 );
     fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
@@ -308,6 +358,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-V\tvery verbose\n");
 
     fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
+    fprintf( stdout,"\t-F\ttestsuite to run (default tier1)\n");
     fprintf( stdout,"\t-f\ttest to run\n");
     fprintf( stdout,"\t-l\tlist tests\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
@@ -323,7 +374,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "vV1234567ah:H:p:s:S:u:d:w:c:f:LlmxiC" )) != EOF ) {
+    while (( cc = getopt( ac, av, "vV1234567ah:H:p:s:S:u:d:w:c:f:F:LlmxiC" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -395,6 +446,9 @@ int ret;
         case 'f' :
             Test = strdup(optarg);
             break;
+        case 'F' :
+            Suite = strdup(optarg);
+            break;
         case 'x':
         	Exclude = 1;
         	break;
@@ -405,25 +459,38 @@ int ret;
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
-	case 'i':
-		Interactive = 1;
-		break;
-	case 'C':
-		Color = 1;
-		break;
+		case 'v':
+			Quiet = 0;
+			break;
+		case 'V':
+			Quiet = 0;
+			Verbose = 1;
+			break;
+		case 'i':
+			Interactive = 1;
+			break;
+		case 'C':
+			Color = 1;
+			break;
 
         default :
             usage( av[ 0 ] );
         }
     }
 	Loglevel = AFP_LOG_INFO;
+
+	if (strcmp(Suite, "tier1") == 0) {
+		Test_list = Test_list_T1;
+	}
+	else if (strcmp(Suite, "tier2") == 0) {
+		Test_list = Test_list_T2;
+	}
+	else if (strcmp(Suite, "readonly") == 0) {
+		Test_list = Test_list_ro;
+	}
+	else if (strcmp(Suite, "sleep") == 0) {
+		Test_list = Test_list_sleep;
+	}
 
 	if (List) {
 		list_tests();

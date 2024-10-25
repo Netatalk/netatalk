@@ -3,8 +3,8 @@
                  =======================
 
 This suite contains several small utilities aimed at testing
-a) AFP Server conformance to the AFP Specs, eg. `afp_spectest`
-b) benchmarking AFP Servers, eg. `afp_lantest`
+a) AFP Server conformance to the AFP Specs, e.g. `afp_spectest`
+b) benchmarking AFP Servers, e.g. `afp_lantest` and `afp_speedtest`
 
 For end users the most useful utility is probably `afp_lantest` which
 is a CLI counterpart for the famous HELIOS Lan Test.
@@ -12,27 +12,35 @@ is a CLI counterpart for the famous HELIOS Lan Test.
 Tests prg in test directory:
 ============================
 
-Spec conformance tests:
------------------------
+Spec conformance tests
+----------------------
 
 ./afp_spectest:
 AFP spec test. Assume exported volumes are only modified with netatalk.
+Contains multiple test suites, activated with the -F option.
 
-./afp_sleeptest:
-AFP spec tests for sleeping (FPZzz). Not included in spectest.
+List of available spec test suites:
+
+- tier1
+Baseline AFP specification tests.
+This is the default without the -F option.
+
+- tier2
+AFP spec tests when .AppleDouble is missing or bogus.
+Requires local access to volume (-c option).
+
+- readonly
+AFP spec tests on a read only volume.
+Requires read only volume with at least 2 files and 1 folder (empty).
+
+- sleep
+AFP spec tests for sleeping (FPZzz).
 
 ./afp_logintest:
 AFP spec tests for DSI and login. Not included in spectest.
 
-./afp_rotest:
-AFP spec tests on a read only volume. Not included in spectest.
-
-./afp_spectest_fail:
-AFP spec tests which fail with current netatalk but pass on a Mac.
-
-./afp_spectest_t2
-AFP tier 2 spec tests when .AppleDouble is missing or bogus.
-Requires local access to volume (-c option).
+./afp_encodingtest:
+AFP spec tests for encoding. Not included in spectest.
 
 
 Benchmarking
@@ -47,10 +55,9 @@ it can also run the same tests using Posix syscalls and can
 be use for testing afpd speed against local or others protocols.
 
 
-Misc
-----
+Helpers
+-------
 
-Helpers and benchmarks:
 ./afparg
 The beginning of an AFP CLI client, cf ./afparg -l
 FPResolveID <file CNID>
@@ -84,7 +91,6 @@ afp.conf:
 [Global]
 uam list = uams_clrtxt.so uams_guest.so
 
-# not empty at least 2 files and one folder (empty).
 [test1]
 path = /tmp/afptest1
 
@@ -117,17 +123,17 @@ on a Mac server or afpd.
 
 Example:
 --------
-Run all tests on server 192.168.2.123
-afp_spectest -h 192.168.2.123 -u user1 -d usr2 -s test -w toto
+Run all tier 1 spec tests on server 192.168.2.123
+afp_spectest -F tier1 -h 192.168.2.123 -u user1 -d usr2 -s test -w toto
 Same but on a Mac
-afp_spectest -m -h 192.168.2.64 -u user1 -d usr2 -s test -w toto
+afp_spectest -F tier1 -m -h 192.168.2.64 -u user1 -d usr2 -s test -w toto
 
 Run FPByteRangeLock tests with AFP 3.0, two different servers are exporting the same volume.
-afp_spectest_t2 -f FPByteRangeLock -3 -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /tmp/afptest1 -w toto
+afp_spectest -f FPByteRangeLock -3 -h 192.168.2.123 -H 192.168.2.124 -u user1 -d usr2 -s test -c /tmp/afptest1 -w toto
 
 At least on linux, it's possible to compile them with LDFLAGS=-rdynamic
 and the program can run individual test:
-afp_spectest_t2 -4 -u <user> -d <seconduser> -w <passwd> -s <vol> -c <path> -f test235
+afp_spectest -4 -u <user> -d <seconduser> -w <passwd> -s <vol> -c <path> -f test235
 
 Tests output
 ------------

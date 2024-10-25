@@ -859,7 +859,7 @@ void test_skipped(int why)
 		s = "AFP FileID calls";
 		break;
 	case T_MAC:
-		s = "server which is not a Mac";
+		s = "needs Mac OS AFP server";
 		break;
 	case T_ACL:
 		s = "volume with ACL support";

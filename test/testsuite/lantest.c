@@ -636,7 +636,7 @@ fin:
 void usage( char * av0 )
 {
     int i=0;
-    fprintf( stdout, "usage:\t%s -h host [-vVgG] [-3|-4|-5] [-p port] [-s vol] [-u user] [-w password] [-n iterations] [-t tests to run] [-F bigfile]\n", av0 );
+    fprintf( stdout, "usage:\t%s -h host [-vVgG34567] [-p port] [-s vol] [-u user] [-w password] [-n iterations] [-t tests to run] [-F bigfile]\n", av0 );
     fprintf( stdout,"\t-h\tserver host name\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
@@ -647,7 +647,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-5\tAFP 3.2 version (default)\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
-    fprintf( stdout,"\t-n\thow often to run (default: 1)\n");
+    fprintf( stdout,"\t-n\thow many iterations to run (default: 1)\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
     fprintf( stdout,"\t-g\tfast network (Gbit, file testsize 1 GB)\n");

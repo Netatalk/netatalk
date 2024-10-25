@@ -1272,7 +1272,7 @@ void (*fn)(void) = NULL;
 void usage( char * av0 )
 {
     fprintf( stdout, "usage:\t%s [-h host] [-p port] [-s vol] [-S Vol2] [-u user] [-w password] [-f test] [-c count] "
-    "[-d size] [-q quantum] [-F file] [-234LvViyea] \n", av0 );
+    "[-d size] [-q quantum] [-F file] [-1234567LvViyea] \n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");

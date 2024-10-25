@@ -1054,7 +1054,7 @@ test_exit:
 
 
 /* ----------- */
-void FPGetFileDirParms_test()
+void T2FPGetFileDirParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetFileDirParms page 179\n");

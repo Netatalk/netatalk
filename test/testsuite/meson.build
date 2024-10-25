@@ -30,6 +30,7 @@ executable(
     include_directories: root_includes,
     link_args: ['-rdynamic'],
     link_with: libafptest,
+    install: true,
 )
 
 lantest_sources = [
@@ -54,6 +55,7 @@ executable(
     afp_ls_sources,
     include_directories: root_includes,
     link_with: libafptest,
+    install: true,
 )
 
 encoding_test_sources = [
@@ -61,10 +63,11 @@ encoding_test_sources = [
 ]
 
 executable(
-    'afp_encoding_test',
+    'afp_encodingtest',
     encoding_test_sources,
     include_directories: root_includes,
     link_with: libafptest,
+    install: true,
 )
 
 login_test_sources = [
@@ -77,17 +80,7 @@ executable(
     include_directories: root_includes,
     link_args: ['-rdynamic'],
     link_with: libafptest,
-)
-
-rotest_sources = [
-    'rotest.c',
-]
-
-executable(
-    'afp_rotest',
-    rotest_sources,
-    include_directories: root_includes,
-    link_with: libafptest,
+    install: true,
 )
 
 speedtest_sources = [
@@ -164,53 +157,12 @@ spectest_sources = [
     'Utf8.c',
     'FPGetACL.c',
     'FPSync.c',
-]
-
-executable(
-    'afp_spectest',
-    spectest_sources,
-    include_directories: root_includes,
-    link_args: ['-rdynamic'],
-    link_with: libafptest,
-    install: true,
-)
-
-sleeptest_sources = [
-    'sleeptest.c',
     'FPzzz.c',
-]
-
-executable(
-    'afp_sleeptest',
-    sleeptest_sources,
-    include_directories: root_includes,
-    link_args: ['-rdynamic'],
-    link_with: libafptest,
-)
-
-fail_spectest_sources = [
-    'fail_spectest.c',
-    'failed_Error.c',
-    'failed_FPEnumerate.c',
-    'failed_FPExchangeFiles.c',
-	'failed_FPMoveAndRename.c',
-    'failed_T2_FPResolveID.c',
-]
-
-executable(
-    'afp_spectest_fail',
-    fail_spectest_sources,
-    include_directories: root_includes,
-    link_args: ['-rdynamic'],
-    link_with: libafptest,
-    c_args: ['-DQUIRK'],
-)
-
-t2_spectest_sources = [
-    'T2_spectest.c',
+    'rotest.c',
     'T2_FPByteRangeLock.c',
     'T2_FPDelete.c',
     'T2_FPGetFileDirParms.c',
+    'T2_FPGetSrvrParms.c',
     'T2_FPOpenFork.c',
     'T2_FPSetDirParms.c',
     'T2_FPSetFileParms.c',
@@ -225,8 +177,8 @@ t2_spectest_sources = [
 ]
 
 executable(
-    'afp_spectest_t2',
-    t2_spectest_sources,
+    'afp_spectest',
+    spectest_sources,
     include_directories: root_includes,
     link_args: ['-rdynamic'],
     link_with: libafptest,

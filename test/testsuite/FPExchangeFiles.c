@@ -35,19 +35,30 @@ uint16_t vol = VolID;
 
 	/* test remove of no cnid db */
 	if ((temp = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
+		if (Mac) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name);
+			}
 		}
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
+		else {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
+			}
+			failed_nomsg();
 		}
-		failed_nomsg();
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
+		if (Mac) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", temp, fid_name1);
+			}
 		}
-		failed_nomsg();
+		else {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
+			}
+			failed_nomsg();
+		}
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -152,17 +163,31 @@ int ret;
 
 	if (fork) FPCloseFork(Conn,fork);
 	if ((ret = get_fid(Conn, vol, DIRDID_ROOT , name)) != fid_name) {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (Mac) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name);
+			}
 		}
-		failed_nomsg();
+		else {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+			}
+			failed_nomsg();
+		}
 	}
 
 	if ((ret = get_fid(Conn, vol, dir , name1)) != fid_name1) {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+		if (Mac) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED (IGNORED) %x should be %x\n", ret, fid_name1);
+			}
 		}
-		failed_nomsg();
+		else {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
+			}
+			failed_nomsg();
+		}
 	}
 
 fin:

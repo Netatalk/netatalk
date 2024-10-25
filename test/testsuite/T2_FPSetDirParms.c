@@ -48,7 +48,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetDirParms_test()
+void T2FPSetDirParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetDirParms page 255\n");
