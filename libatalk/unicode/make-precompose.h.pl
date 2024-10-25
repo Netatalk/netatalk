@@ -25,11 +25,11 @@
 
 # temp files for binary search (compose.TEMP, compose_sp.TEMP) -------------
 
-open(UNICODEDATA, "<$ARGV[0]");
-open(CHEADER, ">$ARGV[1]");
+open(UNICODEDATA, "<$ARGV[0]") or die "$0: open $ARGV[0]: $!";
+open(CHEADER, ">$ARGV[1]") or die "$0: open $ARGV[1]: $!";
 
-open(COMPOSE_TEMP, ">compose.TEMP");
-open(COMPOSE_SP_TEMP, ">compose_sp.TEMP");
+open(COMPOSE_TEMP, ">compose.TEMP") or die "$0: open compose.TEMP: $!";
+open(COMPOSE_SP_TEMP, ">compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 
 while (<UNICODEDATA>) {
     chop;
@@ -95,7 +95,7 @@ close(COMPOSE_SP_TEMP);
 
 # macros for BMP (PRECOMP_COUNT, DECOMP_COUNT, MAXCOMBLEN) ----------------
 
-open(COMPOSE_TEMP, "<compose.TEMP");
+open(COMPOSE_TEMP, "<compose.TEMP") or die "$0: open compose.TEMP: $!";
 
 @comp_table = ();
 $comp_count = 0;
@@ -132,7 +132,7 @@ close(COMPOSE_TEMP);
 
 # macros for SP (PRECOMP_SP_COUNT,DECOMP_SP_COUNT, MAXCOMBSPLEN) -----------
 
-open(COMPOSE_SP_TEMP, "<compose_sp.TEMP");
+open(COMPOSE_SP_TEMP, "<compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 
 @comp_sp_table = ();
 $comp_sp_count = 0;
