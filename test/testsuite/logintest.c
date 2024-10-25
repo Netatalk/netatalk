@@ -120,7 +120,7 @@ int  ret;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-m] [-n] [-t] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-mvV1234567] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f test]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
@@ -147,7 +147,7 @@ int cc;
 static char *uam = "Cleartxt Passwrd";
 unsigned int ret;
 
-    while (( cc = getopt( ac, av, "vV1234567h:p:u:w:m" )) != EOF ) {
+    while (( cc = getopt( ac, av, "mvV1234567h:p:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";

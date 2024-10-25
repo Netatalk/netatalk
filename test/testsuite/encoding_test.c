@@ -119,6 +119,8 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
+	ENTER_TEST
+
     for (i = 1; i < 8; i++) {
     	name[i -1] = i;
     }
@@ -133,18 +135,18 @@ DSI *dsi;
         j++;
 		if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 			nottested();
-			return;
+			goto test_exit;
 		}
 		if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, f_bitmap, 0)) {
 			nottested();
-			return;
+			goto test_exit;
 		}
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, f_bitmap, 0);
 		result = (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname;
 		if (strcmp(result, name)) {
 			failed();
-			return;
+			goto test_exit;
 		}
 
 		/* don't use ':' char */
@@ -161,11 +163,14 @@ DSI *dsi;
 		if (fd < 0) {
 			fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
 			failed_nomsg();
+			goto test_exit;
 		}
 		else {
 			close(fd);
 		}
 	}
+test_exit:
+	exit_test("Encoding:western");
 }
 
 /* ------------------ */
@@ -179,12 +184,16 @@ static void run_one()
 		return;
 	}
 	if (empty_volume() < 0) {
+		nottested();
 	    return;
 	}
-	if (!strcasecmp(Encoding, "western")) {
+	if (strcmp(Encoding, "western") == 0) {
+		fprintf(stdout, "Testing encoding: %s\n", Encoding);
 	    test_western();
 	}
 	else {
+		fprintf(stdout, "Unknown encoding: %s\n", Encoding);
+		ExitCode = 1;
 	}
 }
 
@@ -208,7 +217,7 @@ void usage( char * av0 )
 {
     fprintf( stdout, "usage:\t%s [-m] [-e encoding] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
-    fprintf( stdout,"\t-e\tclient encoding western|utf8|hebrew|\n");
+    fprintf( stdout,"\t-e\tclient encoding (default western)\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
@@ -233,7 +242,7 @@ int cc;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "RmlvV34567h:p:s:u:w:d:c:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "RmlvV34567h:p:s:u:w:d:c:e:" )) != EOF ) {
         switch ( cc ) {
         case '3':
 			vers = "AFPX03";
@@ -289,13 +298,13 @@ static char *uam = "Cleartxt Passwrd";
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
+		case 'v':
+			Quiet = 0;
+			break;
+		case 'V':
+			Quiet = 0;
+			Verbose = 1;
+			break;
         default :
             usage( av[ 0 ] );
         }

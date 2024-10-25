@@ -134,6 +134,12 @@ else
     ATALK_NAME=${SERVER_NAME}
 fi
 
+if [ ! -z "${AFP_READONLY}" ]; then
+    AFP_RWRO="rolist"
+else
+    AFP_RWRO="rwlist"
+fi
+
 if [ ! -z "${VERBOSE}" ]; then
     TEST_FLAGS=-v
 fi
@@ -152,13 +158,13 @@ zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 appledouble = ea
 path = /mnt/afpshare
 valid users = ${AFP_USER} ${AFP_USER2}
-rwlist = ${AFP_USER} ${AFP_USER2}
+${AFP_RWRO} = ${AFP_USER} ${AFP_USER2}
 [${SHARE2_NAME:-Time Machine}]
 appledouble = ea
 path = /mnt/afpbackup
 time machine = ${TIMEMACHINE}
 valid users = ${AFP_USER} ${AFP_USER2}
-rwlist = ${AFP_USER} ${AFP_USER2}
+${AFP_RWRO} = ${AFP_USER} ${AFP_USER2}
 EOF
 fi
 
@@ -186,14 +192,22 @@ echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
     # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
     netatalk -d
-elif [ "$TESTSUITE" == "spectest" ]; then
-    netatalk
-    sleep 2
-    afp_spectest -7 -C -x "${TEST_FLAGS}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
-elif [ "$TESTSUITE" == "spectest_t2" ]; then
-    netatalk
-    sleep 2
-    afp_spectest_t2 -7 -C -x "${TEST_FLAGS}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
 else
-    echo "Unknown testsuite: ${TESTSUITE}"
+    netatalk
+    sleep 2
+    if [ "$TESTSUITE" == "tier1" ]; then
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
+    elif [ "$TESTSUITE" == "tier2" ]; then
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
+    elif [ "$TESTSUITE" == "readonly" ]; then
+        echo "testfile uno" > /mnt/afpshare/first.txt
+        echo "testfile dos" > /mnt/afpshare/second.txt
+        mkdir /mnt/afpshare/third
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
+    elif [ "$TESTSUITE" == "login" ]; then
+        afp_logintest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"
+    else
+        echo "Unknown testsuite: ${TESTSUITE}"
+        exit 1
+    fi
 fi

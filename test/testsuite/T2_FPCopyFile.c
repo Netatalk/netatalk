@@ -90,7 +90,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCopyFile_test()
+void T2FPCopyFile_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCopyFile page 131\n");

@@ -119,7 +119,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPRead_test()
+void T2FPRead_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPRead\n");

@@ -133,7 +133,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPByteRangeLock_test()
+void T2FPByteRangeLock_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPByteRangeLock page 101\n");

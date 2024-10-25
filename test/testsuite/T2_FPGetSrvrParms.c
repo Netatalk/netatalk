@@ -72,7 +72,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetSrvrParms_test()
+void T2FPGetSrvrParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPGetSrvrParms page 203\n");

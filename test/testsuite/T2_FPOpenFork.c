@@ -1545,7 +1545,7 @@ test_exit:
 
 
 /* ----------- */
-void FPOpenFork_test()
+void T2FPOpenFork_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPOpenFork page 230\n");

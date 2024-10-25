@@ -307,7 +307,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPDelete_test()
+void T2FPDelete_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPDelete page 143\n");

@@ -26,7 +26,7 @@ PASSWD=
 VOLUME1=
 VOLUME2=
 
-# *** set this to the local path of VOLUME1 if you want to run T2_spectest
+# *** set this to the local path of VOLUME1 if you want to run tier 2 spectest
 # *** requires that afpd and the testsuite are running on the same machine
 # LOCALVOL1PATH=
 
@@ -60,17 +60,17 @@ fi
 rm -f ./test/testsuite/spectest.log
 
 ##
-echo "Running spectest with two users..."
-./test/testsuite/spectest -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
+echo "Running tier 1 spectest with two users..."
+./test/testsuite/afp_spectest -F tier1 -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
 check_return
 
 ##
 if test ! -z "$LOCALVOL1PATH" ; then
-    echo "Running spectest with local filesystem modifications..."
-    ./test/testsuite/T2_spectest -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
+    echo "Running tier 2 spectest with local filesystem modifications..."
+    ./test/testsuite/afp_spectest -F tier2 -"$AFPVERSION" -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
     check_return
 else
-    echo "Skipping spectest with local filesystem modifications..."
+    echo "Skipping tier 2 spectest with local filesystem modifications..."
 fi
 
 echo "====================================="

@@ -79,7 +79,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCreateFile_test()
+void T2FPCreateFile_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPCreateFile page 138\n");

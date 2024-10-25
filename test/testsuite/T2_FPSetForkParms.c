@@ -43,7 +43,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetForkParms_test()
+void T2FPSetForkParms_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPSetForkParms\n");

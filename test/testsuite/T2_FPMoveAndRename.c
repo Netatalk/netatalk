@@ -303,7 +303,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPMoveAndRename_test()
+void T2FPMoveAndRename_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPMoveAndRename page 223\n");

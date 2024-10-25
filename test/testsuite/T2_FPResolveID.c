@@ -840,7 +840,7 @@ test_exit:
 
 
 /* ----------- */
-void FPResolveID_test()
+void T2FPResolveID_test()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPResolveID page 252\n");

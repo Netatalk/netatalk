@@ -101,8 +101,6 @@ fin:
 test_exit:
     action.sa_handler = SIG_DFL;
     (void)sigaction(SIGINT, &action, NULL);
-
-	exit_test("test14");
 }
 
 void FPLockw_arg(char **argv)
@@ -145,6 +143,4 @@ fin:
 test_exit:
     action.sa_handler = SIG_DFL;
     (void)sigaction(SIGINT, &action, NULL);
-
-	exit_test("test14");
 }

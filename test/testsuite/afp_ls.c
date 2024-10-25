@@ -135,6 +135,7 @@ void test300()
 {
     fprintf(stdout,"===================\n");
     fprintf(stdout,"FPEnumerate:test300: enumerate recursively a folder\n");
+    fprintf(stdout,"-------------------\n");
     test300_enumerate();
     if (Twice)
         test300_enumerate();
