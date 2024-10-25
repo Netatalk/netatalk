@@ -81,8 +81,8 @@ our $block_end;
 our $char_start;
 our $char_end;
 
-open(CHEADER, ">$ARGV[1]");
-open(CSOURCE, ">$ARGV[2]");
+open(CHEADER, ">$ARGV[1]") or die "$0: open $ARGV[1]: $!";
+open(CSOURCE, ">$ARGV[2]") or die "$0: open $ARGV[2]: $!";
 
 print (CHEADER "\/\*\n");
 print (CHEADER "  DO NOT EDIT BY HAND\!\!\!\n");
@@ -155,7 +155,7 @@ sub make_array{
 
     # write data to table --------------------------------------------
 
-    open(UNICODEDATA, "<$ARGV[0]");
+    open(UNICODEDATA, "<$ARGV[0]") or die "$0: open $ARGV[0]: $!";
 
     while (<UNICODEDATA>) {
         chop;
