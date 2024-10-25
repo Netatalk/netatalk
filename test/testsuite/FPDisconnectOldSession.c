@@ -153,7 +153,7 @@ fin:
     }
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPDisconnectOldSession :test222: AFP 3.x disconnect old session");
+	exit_test("FPDisconnectOldSession:test222: AFP 3.x disconnect old session");
 
 }
 
@@ -279,7 +279,7 @@ uint32_t time= 12345;
 fin:
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPDisconnectOldSession :test338: AFP 3.x disconnect old session");
+	exit_test("FPDisconnectOldSession:test338: AFP 3.x disconnect old session");
 
 }
 
@@ -442,7 +442,7 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("FPDisconnectOldSession :test339: AFP 3.x No auth disconnect old session");
+	exit_test("FPDisconnectOldSession:test339: AFP 3.x No auth disconnect old session");
 }
 
 /* ------------------------- */
@@ -608,7 +608,7 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
-	exit_test("FPDisconnectOldSession :test370: AFP 3.x disconnect different user");
+	exit_test("FPDisconnectOldSession:test370: AFP 3.x disconnect different user");
 
 }
 
