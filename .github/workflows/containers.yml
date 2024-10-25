@@ -15,6 +15,7 @@ jobs:
     build-container:
         name: Netatalk container
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
@@ -54,6 +55,7 @@ jobs:
     build-container-testsuite:
         name: Netatalk testsuite container
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
@@ -94,6 +96,7 @@ jobs:
         name: AFP spectest
         needs: build-container-testsuite
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
@@ -114,6 +117,7 @@ jobs:
         name: AFP spectest tier 2
         needs: build-container-testsuite
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
