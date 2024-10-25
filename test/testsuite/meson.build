@@ -28,6 +28,7 @@ executable(
     'afparg',
     afparg_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
 )
 
@@ -74,6 +75,7 @@ executable(
     'afp_logintest',
     login_test_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
 )
 
@@ -96,6 +98,7 @@ executable(
     'afp_speedtest',
     speedtest_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
 )
@@ -167,6 +170,7 @@ executable(
     'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
 )
@@ -180,6 +184,7 @@ executable(
     'afp_sleeptest',
     sleeptest_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
 )
 
@@ -196,6 +201,7 @@ executable(
     'afp_spectest_fail',
     fail_spectest_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
     c_args: ['-DQUIRK'],
 )
@@ -222,6 +228,7 @@ executable(
     'afp_spectest_t2',
     t2_spectest_sources,
     include_directories: root_includes,
+    link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
 )
