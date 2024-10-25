@@ -15,6 +15,7 @@ jobs:
     build-container:
         name: Netatalk container
         runs-on: ubuntu-latest
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -53,6 +54,7 @@ jobs:
     build-container-testsuite:
         name: Netatalk testsuite container
         runs-on: ubuntu-latest
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
