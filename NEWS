@@ -1,3 +1,36 @@
+Changes in 4.0.3
+================
+* FIX: afpd: Limit FPGetSrvrInfo packet for AppleTalk clients, GitHub #1661
+       This prevents errors with very old clients
+       when many AFP options are enabled.
+* FIX: Fix EOF error reporting in dsi_stream_read(), GitHub #1631
+       This should prevent warnings such as:
+       `dsi_stream_read: len:0, unexpected EOF'
+* FIX: Fix regression when accessing the afpd UUID, GitHub #1679
+       Resolves an error when running the `ad' utilities.
+* FIX: meson: Fix indexer path detection on meson 1.6, GitHub #1672
+* FIX: meson: Fix PAM config directory detection, GitHub #1678
+* FIX: meson: Shore up Unicode char table script error handling and detection,
+       GitHub #1692
+* FIX: initscripts: Remove redundant nbpunrgstr cleanup
+       in atalkd systemd config, GitHub #1660
+* NEW: docker: Containerized testsuite, GitHub #1649
+* UPD: docker: Register the conventional NBP entities when starting up,
+       GitHub #1653
+* UPD: docker: Remove file/dir perm settings that were causing problems
+* FIX: testsuite: Treat NOT TESTED spectest result as non-failure,
+       GitHub #1663
+* FIX: testsuite: Don't treat initial spectest.sh run as a failure,
+       GitHub #1664
+* UPD: testsuite: Reduce default log verbosity for better test reports,
+       introducing two verbosity levels (-v, -V), GitHub #1665
+* UPD: testsuite: Reposition the Exclude option (-x)
+       to flag known failures with Netatalk 4.0
+* UPD: testsuite: Install all test runners and utils, GitHub #1675
+* FIX: testsuite: Link test executables with -rdynamic
+       to allow sole test case runs with -f, GitHub #1690
+* UPD: testsuite: Consolidate spectest into a single binary, GitHub #1693
+
 Changes in 4.0.2
 ================
 * NEW: Bring back Classic Mac OS `legacy icon' option, GitHub #1622
