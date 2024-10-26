@@ -157,4 +157,4 @@ List tests
 One way to get a list of tests that are actually implemented,
 is to grep for symbols in the compiled binaries.
 
-nm afp_encoding_test afp_spectest_fail afp_speedtest afp_spectest afp_spectest_t2 afp_logintest afp_rotest | cut -d " " -f 3 | egrep "^test[[:digit:]]+" | sort -n -k 1.5
+nm afp_logintest afp_ls afp_spectest | cut -d " " -f 3 | egrep "^test[[:digit:]]+" | sort -n -k 1.5
