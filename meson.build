@@ -2439,4 +2439,4 @@ summary_info = {
     '  Test suite': get_option('with-testsuite'),
     '  Webmin module': have_webmin,
 }
-summary(summary_info, bool_yn: true, section: '  Add-ons:')
+summary(summary_info, bool_yn: true, section: '  Extras:')
