@@ -376,6 +376,10 @@ foreach f : at_functions
     endif
 endforeach
 
+if cc.has_function('rresvport')
+    cdata.set('HAVE_RRESVPORT', 1)
+endif
+
 ##########################
 # Type and member checks #
 ##########################

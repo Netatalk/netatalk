@@ -400,6 +400,9 @@
 /* Define to 1 if the <rpcsvc/rquota.h> header file has a qr_status member. */
 #mesondefine HAVE_RQUOTA_H_QR_STATUS
 
+/* Define to 1 if you have the `rresvport' function. */
+#mesondefine HAVE_RRESVPORT
+
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 #mesondefine HAVE_SECURITY_PAM_APPL_H
 
