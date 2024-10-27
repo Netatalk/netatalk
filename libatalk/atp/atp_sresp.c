@@ -113,7 +113,7 @@ if (( random() % 3 ) != 2 ) {
 #ifdef EBUG
 printf( "<%d> sending packet tid=%hu serial no.=%d\n", getpid(),
   ah->atph_rtid, i );
-bprint( resp_buf->atpbuf_info.atpbuf_data, resp_buf->atpbuf_dlen );
+bprint( resp_buf->atpbuf_info.atpbuf_data, (int) resp_buf->atpbuf_dlen );
 #endif /* EBUG */
 	if ( netddp_sendto( ah->atph_socket, resp_buf->atpbuf_info.atpbuf_data,
 	  resp_buf->atpbuf_dlen, 0, (struct sockaddr *) atpb->atp_saddr,
