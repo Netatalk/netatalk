@@ -1495,7 +1495,6 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         /* This is a new adouble header file, create it */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork, initializing: \"%s\"",
             path, rfpath);
-        EC_NEG1_LOG( new_ad_header(ad, path, NULL, adflags) );
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
