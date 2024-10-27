@@ -28,7 +28,7 @@ int atp_close(ATP ah)
     /* remove from list of open atp sockets & discard queued data
     */
 #ifdef EBUG
-    print_bufuse( ah, "atp_close");
+    atp_print_bufuse( ah, "atp_close");
 #endif /* EBUG */
 
     while ( ah->atph_queue != NULL ) {
@@ -61,7 +61,7 @@ int atp_close(ATP ah)
     }
 
 #ifdef EBUG
-    print_bufuse( ah, "atp_close end");
+    atp_print_bufuse( ah, "atp_close end");
 #endif /* EBUG */
 
     i = ah->atph_socket;
