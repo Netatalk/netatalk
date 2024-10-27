@@ -428,7 +428,6 @@ jobs:
         run: |
           meson setup build \
             -Dbuildtype=release \
-            -Dwith-appletalk=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -534,7 +533,6 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-              -Dwith-appletalk=true \
               -Dwith-tests=true
             meson compile -C build
             cd build
@@ -645,7 +643,6 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
-              -Dwith-appletalk=true \
               -Dwith-tests=true
             meson compile -C build
             meson install -C build
@@ -695,7 +692,6 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-ldap-path=/opt/local \
               -Dwith-tests=true
@@ -743,7 +739,6 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-              -Dwith-appletalk=true \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
               -Dwith-tests=true
