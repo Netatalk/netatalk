@@ -103,7 +103,7 @@
 #include  "print_cups.h"
 #endif
 
-#ifdef MUSL
+#ifndef HAVE_RRESVPORT
 int
 rresvport (int *alport)
 {
