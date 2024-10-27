@@ -560,7 +560,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/netbsd-vm@v1.1.4
         with:
-          release: "9.4"
+          release: "10.0"
           copyback: false
           prepare: |
             pkg_add \
@@ -590,7 +590,6 @@ jobs:
               -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dtrace=false \
-              -Dwith-krbV-uam=false \
               -Dwith-tests=true
             meson compile -C build
             cd build
