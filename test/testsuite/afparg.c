@@ -6,69 +6,10 @@
 #define EXT_FN(a) extern void FN(a) (char **argv)
 
 EXT_FN(FPResolveID);
+EXT_FN(FPEnumerate);
 EXT_FN(FPCopyFile);
 EXT_FN(FPLockrw);
 EXT_FN(FPLockw);
-#if 0
-EXT_FN(FPAddAPPL);
-EXT_FN(FPAddComment);
-EXT_FN(FPAddIcon);
-EXT_FN(FPByteRangeLock);
-EXT_FN(FPByteRangeLockExt);
-EXT_FN(FPCatSearch);
-EXT_FN(FPCatSearchExt);
-EXT_FN(FPCloseDir);
-EXT_FN(FPCloseDT);
-EXT_FN(FPCloseFork);
-EXT_FN(FPCloseVol);
-EXT_FN(FPCopyFile);
-EXT_FN(FPCreateDir);
-EXT_FN(FPCreateFile);
-EXT_FN(FPDelete);
-EXT_FN(FPDisconnectOldSession);
-EXT_FN(FPEnumerate);
-EXT_FN(FPEnumerateExt);
-EXT_FN(FPEnumerateExt2);
-EXT_FN(FPExchangeFiles);
-EXT_FN(FPFlush);
-EXT_FN(FPFlushFork);
-EXT_FN(FPGetAPPL);
-EXT_FN(FPGetComment);
-EXT_FN(FPGetFileDirParms);
-EXT_FN(FPGetSessionToken);
-EXT_FN(FPGetSrvrInfo);
-EXT_FN(FPGetSrvrMsg);
-EXT_FN(FPGetSrvrParms);
-EXT_FN(FPGetForkParms);
-EXT_FN(FPGetIcon);
-EXT_FN(FPGetIconInfo);
-EXT_FN(FPGetUserInfo);
-EXT_FN(FPGetVolParms);
-EXT_FN(FPGetUserInfo);
-EXT_FN(FPMapID);
-EXT_FN(FPMapName);
-EXT_FN(FPMoveAndRename);
-EXT_FN(FPOpenDir);
-EXT_FN(FPOpenDT);
-EXT_FN(FPOpenFork);
-EXT_FN(FPOpenVol);
-EXT_FN(FPRead);
-EXT_FN(FPReadExt);
-EXT_FN(FPRemoveAPPL);
-EXT_FN(FPRemoveComment);
-EXT_FN(FPRename);
-EXT_FN(FPSetDirParms);
-EXT_FN(FPSetFileDirParms);
-EXT_FN(FPSetFileParms);
-EXT_FN(FPSetForkParms);
-EXT_FN(FPSetVolParms);
-EXT_FN(FPWrite);
-EXT_FN(FPWriteExt);
-EXT_FN(FPzzz);
-EXT_FN(Error);
-EXT_FN(Utf8);
-EXT_FN(FPGetACL);
-#endif
 
 struct test_fn {
 char *name;
@@ -80,74 +21,15 @@ char *helptext;
 static struct test_fn Test_list[] =
 {
 FN_N(FPResolveID, <file CNID>)
+FN_N(FPEnumerate, <dir>)
 FN_N(FPCopyFile, <source> <dest>)
 FN_N(FPLockrw, d|r <file>)
 FN_N(FPLockw, d|r <file>)
-
-#if 0
-FN_N(FPAddAPPL)
-FN_N(FPAddComment)
-FN_N(FPAddIcon)
-FN_N(FPByteRangeLock)
-FN_N(FPByteRangeLockExt)
-FN_N(FPCatSearch)
-FN_N(FPCatSearchExt)
-FN_N(FPCloseDir)
-FN_N(FPCloseDT)
-FN_N(FPCloseFork)
-FN_N(FPCloseVol)
-FN_N(FPCreateDir)
-FN_N(FPCreateFile)
-FN_N(FPDelete)
-FN_N(FPDisconnectOldSession)
-FN_N(FPEnumerate)
-FN_N(FPEnumerateExt)
-FN_N(FPEnumerateExt2)
-FN_N(FPExchangeFiles)
-FN_N(FPFlush)
-FN_N(FPFlushFork)
-FN_N(FPGetAPPL)
-FN_N(FPGetComment)
-FN_N(FPGetFileDirParms)
-FN_N(FPGetForkParms)
-FN_N(FPGetIcon)
-FN_N(FPGetIconInfo)
-FN_N(FPGetSessionToken)
-FN_N(FPGetSrvrInfo)
-FN_N(FPGetSrvrMsg)
-FN_N(FPGetSrvrParms)
-FN_N(FPGetUserInfo)
-FN_N(FPGetVolParms)
-FN_N(FPMapID)
-FN_N(FPMapName)
-FN_N(FPMoveAndRename)
-FN_N(FPOpenDir)
-FN_N(FPOpenDT)
-FN_N(FPOpenFork)
-FN_N(FPOpenVol)
-FN_N(FPRead)
-FN_N(FPReadExt)
-FN_N(FPRemoveAPPL)
-FN_N(FPRemoveComment)
-FN_N(FPRename)
-FN_N(FPSetDirParms)
-FN_N(FPSetFileDirParms)
-FN_N(FPSetFileParms)
-FN_N(FPSetForkParms)
-FN_N(FPSetVolParms)
-FN_N(FPWrite)
-FN_N(FPWriteExt)
-FN_N(FPzzz)
-FN_N(Error)
-FN_N(Utf8)
-FN_N(FPGetACL)
-#endif
 
 {NULL, NULL},
 };
 
 /* Some globals */
-// int        Verbose = 0;
 int        ExitCode = 0;
 uint16_t   VolID;
 static DSI *dsi;
@@ -217,7 +99,7 @@ static void run_one(char *name, char **args)
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call] [optional args for requested AFP call]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
@@ -357,7 +239,8 @@ int ret;
 	/*********************************
 	*/
 	if (Test == NULL) {
-        fprintf( stdout, "no test specified");
+        fprintf( stdout, "no test specified; choose one from:\n");
+        list_tests();
         exit(1);
     }
 

@@ -1,4 +1,5 @@
 #include "specs.h"
+#include <time.h>
 
 void FPCopyFile_arg(char **argv)
 {
@@ -143,4 +144,124 @@ fin:
 test_exit:
     action.sa_handler = SIG_DFL;
     (void)sigaction(SIGINT, &action, NULL);
+}
+
+void FPEnumerate_arg(char **argv)
+{
+    uint8_t buffer[DSI_DATASIZ];
+    uint16_t vol = VolID;
+    uint16_t d_bitmap;
+    uint16_t f_bitmap;
+    unsigned int ret;
+    int dir;
+    uint16_t tp;
+    uint16_t i;
+    const DSI *dsi;
+    unsigned char *b;
+    struct afp_filedir_parms filedir;
+    int *stack = NULL;
+    int cnt = 0;
+    int size = 1000;
+
+	dsi = &Conn->dsi;
+
+    f_bitmap = (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
+	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)|
+	         (1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN);
+
+	d_bitmap = (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |  (1 << DIRPBIT_OFFCNT) |
+	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
+		    (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS);
+
+	if (Conn->afp_version >= 30) {
+		f_bitmap |= (1<<FILPBIT_PDINFO) | (1<<FILPBIT_LNAME);
+		d_bitmap |= (1<<FILPBIT_PDINFO) | (1<<FILPBIT_LNAME);
+	}
+	else {
+		f_bitmap |= (1<<FILPBIT_LNAME);
+		d_bitmap |= (1<<FILPBIT_LNAME);
+	}
+
+	if (!Quiet) {
+		fprintf(stdout,"start time %ld\n", time(NULL));
+	}
+
+    if (argv[0] == NULL) {
+        dir = get_did(Conn, vol, DIRDID_ROOT, "");
+    }
+    else {
+    	dir = get_did(Conn, vol, DIRDID_ROOT, argv[0]);
+    }
+	if (!dir) {
+		nottested();
+        goto fin;
+	}
+	if (!(stack = calloc(size, sizeof(int)) )) {
+		nottested();
+        goto fin;
+	}
+	stack[cnt] = dir;
+	cnt++;
+
+	while (cnt) {
+	    cnt--;
+	    dir = stack[cnt];
+		i = 1;
+		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
+			nottested();
+			goto fin;
+		}
+		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
+			/* FPResolveID will trash dsi->data */
+			memcpy(buffer, dsi->data, sizeof(buffer));
+			memcpy(&tp, buffer +4, sizeof(tp));
+			tp = ntohs(tp);
+		    i += tp;
+			b = buffer +6;
+			for (int j = 1; j <= tp; j++, b += b[0]) {
+				if (b[1]) {
+					filedir.isdir = 1;
+					afp_filedir_unpack(&filedir, b + 2, 0, d_bitmap);
+					if (cnt > size) {
+						size += 1000;
+						if (!(stack = realloc(stack, size* sizeof(int)))) {
+							nottested();
+                            goto fin;
+						}
+					}
+					stack[cnt] = filedir.did;
+					cnt++;
+				}
+				else {
+					filedir.isdir = 0;
+					afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
+				}
+				if (!Quiet) {
+					fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did),
+							(Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
+							filedir.isdir?"/":"");
+				}
+				else {
+					fprintf(stdout, "%s%s\n",
+							(Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
+							filedir.isdir?"/":"");
+				}
+				if (!filedir.isdir && FPResolveID(Conn, vol, filedir.did, f_bitmap) && !Quiet) {
+					fprintf(stdout, " Can't resolve ID!");
+				}
+			}
+	    }
+	    if (ret != ntohl(AFPERR_NOOBJ)) {
+			nottested();
+			goto fin;
+	    }
+	}
+
+	if (!Quiet) {
+		fprintf(stdout,"end time %ld\n", time(NULL));
+	}
+	FPEnumerateFull(Conn, vol, 1, 150, 8000,  DIRDID_ROOT , "", f_bitmap, d_bitmap);
+
+fin:
+    free(stack);
 }

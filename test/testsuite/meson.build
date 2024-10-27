@@ -46,18 +46,6 @@ executable(
     install: true,
 )
 
-afp_ls_sources = [
-    'afp_ls.c',
-]
-
-executable(
-    'afp_ls',
-    afp_ls_sources,
-    include_directories: root_includes,
-    link_with: libafptest,
-    install: true,
-)
-
 encoding_test_sources = [
     'encoding_test.c',
 ]
