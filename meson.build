@@ -28,6 +28,7 @@ netatalk_version = meson.project_version()
 cpu = host_machine.cpu_family()
 host_os = host_machine.system()
 target_os = target_machine.system()
+build_type = get_option('buildtype')
 
 linux_distro = ''
 
@@ -119,7 +120,7 @@ if host_os == 'linux'
     netatalk_common_flags += '-D_GNU_SOURCE'
 endif
 
-if get_option('buildtype') == 'debug'
+if build_type == 'debug'
     netatalk_common_flags += '-DEBUG'
 endif
 
@@ -2362,6 +2363,7 @@ summary_info = {
     'host CPU': cpu,
     'host endianness': build_machine.endian(),
     'C compiler': cc.get_id(),
+    'build stype': build_type,
     'Shared or static libraries': get_option('default_library'),
 }
 summary(summary_info, bool_yn: true, section: 'Compilation:')
