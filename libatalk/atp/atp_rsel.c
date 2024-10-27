@@ -24,6 +24,10 @@
 
 #include "atp_internals.h"
 
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
+
 #ifdef DROP_ATPTREL
 static int	release_count = 0;
 #endif /* DROP_ATPTREL */

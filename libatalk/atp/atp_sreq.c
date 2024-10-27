@@ -43,6 +43,10 @@
 
 #include "atp_internals.h"
 
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
+
 /*
  * ah:        open atp handle
  * atpb:      parameter block
