@@ -44,8 +44,6 @@ DSI *dsi;
      	dsi->protocol = DSI_TCPIP;
 	    dsi->socket = sock;
     }
-    else {
-	}
 }
 
 /* ------------------------- */
@@ -53,8 +51,8 @@ static void test3(void)
 {
 static char *uam = "No User Authent";
 int ret;
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"test3: Guest login\n");
+
+	ENTER_TEST
 
     if (Version >= 30) {
       	ret = FPopenLoginExt(Conn, vers, uam, "", "");
@@ -64,17 +62,22 @@ int ret;
 	}
 	if (ret) {
 		failed();
-		return;
+		goto test_exit;
 	}
     if (Mac) {
 		fprintf(stdout,"DSIGetStatus\n");
 		if (DSIGetStatus(Conn)) {
 			failed();
+			goto test_exit;
 		}
 	}
 	if (FPLogOut(Conn)) {
 		failed();
+		goto test_exit;
     }
+
+test_exit:
+	exit_test("Logintest:test3: Guest login");
 }
 
 /* ------------------------- */
@@ -85,42 +88,52 @@ int  i;
 int  cnt = 0;
 int  ret;
 
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"test4: too many connections\n");
+	ENTER_TEST
+
     for (i = 0; i < 50; i++) {
     	connect_server(&conn[i]);
         Dsi = &conn[i].dsi;
 
-        fprintf(stdout,"===================\n");
-
-     	fprintf(stdout,"DSIOpenSession number %d\n", i);
+		if (!Quiet) {
+	     	fprintf(stdout,"DSIOpenSession number %d\n", i);
+		}
+		// FIXME: Broken assumption here. All 50 connections succeed.
 	    if ((ret = DSIOpenSession(&conn[i]))) {
 	    	if (ret != DSIERR_TOOMANY) {
 				failed();
-				return ;
+				goto test_exit;
 	    	}
 	    	cnt = i;
 	    	break;
 	    }
+		if (!Quiet) {
+	     	fprintf(stdout,"DSIOpenSession return code %04x\n", ret);
+		}
 	}
 	if (!cnt) {
+		if (!Quiet) {
+			fprintf(stdout,"All connections succeeded\n");
+		}
 		nottested();
-		return ;
+		goto test_exit;
 	}
 	for (i = 0; i < cnt; i++) {
         Dsi = &conn[i].dsi;
 		if (DSICloseSession(&conn[i])) {
 			failed();
-			return;
+			goto test_exit;
 		}
 		CloseClientSocket(Dsi->socket);
 	}
+
+test_exit:
+	exit_test("Logintest:test4: too many connections");
 }
 
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-mvV1234567] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f test]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567mVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
@@ -147,7 +160,7 @@ int cc;
 static char *uam = "Cleartxt Passwrd";
 unsigned int ret;
 
-    while (( cc = getopt( ac, av, "mvV1234567h:p:u:w:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567CmVvh:p:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -177,18 +190,15 @@ unsigned int ret;
 			vers = "AFP3.4";
 			Version = 34;
 			break;
-		case 'm':
-			Mac = 1;
+		case 'C':
+			Color = 1;
 			break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
+		case 'm':
+			Mac = 1;
+			break;
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -196,13 +206,19 @@ unsigned int ret;
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
+        case 'u':
+            User = strdup(optarg);
+            break;
+		case 'v':
+			Quiet = 0;
+			break;
+		case 'V':
+			Quiet = 0;
+			Verbose = 1;
+			break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
         default :
             usage( av[ 0 ] );
         }
@@ -220,8 +236,9 @@ unsigned int ret;
 	/* dsi with no open session */
     Dsi = &Conn->dsi;
 
-    fprintf(stdout,"===================\n");
-	fprintf(stdout, "DSIGetStatus\n");
+	if (!Quiet) {
+		fprintf(stdout, "DSIGetStatus\n");
+	}
 	if (DSIGetStatus(Conn)) {
 		failed();
 		return ExitCode;
@@ -232,21 +249,25 @@ unsigned int ret;
     connect_server(Conn);
     Dsi = &Conn->dsi;
 
-    fprintf(stdout,"===================\n");
-
-	fprintf(stdout,"DSIOpenSession\n");
+	if (!Quiet) {
+		fprintf(stdout,"DSIOpenSession\n");
+	}
 	if (DSIOpenSession(Conn)) {
 		failed();
 		return ExitCode;
 	}
 	if (Mac) {
-		fprintf(stdout,"DSIGetStatus\n");
+		if (!Quiet) {
+			fprintf(stdout,"DSIGetStatus\n");
+		}
 		if (DSIGetStatus(Conn)) {
 			failed();
 			return ExitCode;
 		}
 	}
-	fprintf(stdout,"DSICloseSession\n");
+	if (!Quiet) {
+		fprintf(stdout,"DSICloseSession\n");
+	}
 	if (DSICloseSession(Conn)) {
 		failed();
 		return ExitCode;
@@ -254,8 +275,9 @@ unsigned int ret;
 	CloseClientSocket(Dsi->socket);
 	/* -------------------------- */
 
-    fprintf(stdout,"===================\n");
-	fprintf(stdout,"DSIOpenSession non zero parameter should be ignored by the server\n");
+	if (!Quiet) {
+		fprintf(stdout,"DSIOpenSession non zero parameter should be ignored by the server\n");
+	}
 
     connect_server(Conn);
     Dsi = &Conn->dsi;
@@ -286,7 +308,9 @@ uint32_t i = 0;
 	}
 }
 
-	fprintf(stdout,"DSICloseSession\n");
+	if (!Quiet) {
+		fprintf(stdout,"DSICloseSession\n");
+	}
 	if (DSICloseSession(Conn)) {
 		failed();
 		return ExitCode;

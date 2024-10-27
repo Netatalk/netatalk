@@ -33,7 +33,7 @@ char Data[300000] = "";
 char    *Vol = "";
 char    *User = "";
 char    *Path;
-int     Version = 21;
+int     Version = 34;
 int     Mac = 0;
 
 /* Configure the tests */
@@ -45,7 +45,7 @@ static int create_enum_files = 2000;              /* 2000 files */
 
 static uint16_t vol;
 static DSI *dsi;
-static char    *Server = NULL;
+static char    *Server = "localhost";
 static int     Proto = 0;
 static int     Port = 548;
 static char    *Password = "";
@@ -636,20 +636,21 @@ fin:
 void usage( char * av0 )
 {
     int i=0;
-    fprintf( stdout, "usage:\t%s -h host [-vVgG34567] [-p port] [-s vol] [-u user] [-w password] [-n iterations] [-t tests to run] [-F bigfile]\n", av0 );
-    fprintf( stdout,"\t-h\tserver host name\n");
+    fprintf( stdout, "usage:\t%s [-34567VvGg] [-h host] [-p port] [-s vol] [-u user] [-w password] [-n iterations] [-t tests to run] [-F bigfile]\n", av0 );
+    fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
-    fprintf( stdout,"\t-5\tAFP 3.2 version (default)\n");
+    fprintf( stdout,"\t-5\tAFP 3.2 version\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
-    fprintf( stdout,"\t-7\tAFP 3.4 version\n");
+    fprintf( stdout,"\t-7\tAFP 3.4 version (default)\n");
     fprintf( stdout,"\t-n\thow many iterations to run (default: 1)\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
+    fprintf( stdout,"\t-b\tdebug mode\n");
     fprintf( stdout,"\t-g\tfast network (Gbit, file testsize 1 GB)\n");
     fprintf( stdout,"\t-G\tridiculously fast network (10 Gbit, file testsize 10 GB)\n");
     fprintf( stdout,"\t-t\ttests to run, eg 134 for tests 1, 3 and 4\n");
@@ -666,19 +667,15 @@ int main(int ac, char **av)
     int cc, i, t;
     int Debug = 0;
     char *tests = NULL;
-    // FIXME: this test relies on mismatched Version=21 and AFP3.2 version string
-    static char *vers = "AFP3.2";
+    static char *vers = "AFP3.4";
     static char *uam = "Cleartxt Passwrd";
     struct passwd *pw = getpwuid(getuid());
 
     if (pw)
         User = strdup(pw->pw_name);
 
-    while (( cc = getopt( ac, av, "t:vVgG34567h:n:p:s:u:w:c:F:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567bGgVvF:h:n:p:s:t:u:w:" )) != EOF ) {
         switch ( cc ) {
-        case 't':
-            tests = strdup(optarg);
-            break;
         case '3':
             vers = "AFPX03";
             Version = 30;
@@ -699,22 +696,23 @@ int main(int ac, char **av)
 			vers = "AFP3.4";
 			Version = 34;
 			break;
-        case 'n':
-            Iterations = atoi(optarg);
+        case 'b':
+            Debug = 1;
+            break;
+        case 'F':
+            bigfilename = strdup(optarg);
+            break;
+        case 'G':
+            rwsize *= 100;
+            break;
+        case 'g':
+            rwsize *= 10;
             break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'u':
-            if (User)
-                free(User);
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
+        case 'n':
+            Iterations = atoi(optarg);
             break;
         case 'p' :
             Port = atoi( optarg );
@@ -723,31 +721,33 @@ int main(int ac, char **av)
                 exit(1);
             }
             break;
-        case 'v':
-            Debug = 1;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+        case 't':
+            tests = strdup(optarg);
+            break;
+        case 'u':
+            if (User)
+                free(User);
+            User = strdup(optarg);
             break;
         case 'V':
+            Quiet = 0;
             Verbose = 1;
             break;
-        case 'g':
-            rwsize *= 10;
+        case 'v':
+            Quiet = 0;
             break;
-        case 'G':
-            rwsize *= 100;
-            break;
-        case 'F':
-            bigfilename = strdup(optarg);
+        case 'w':
+            Password = strdup(optarg);
             break;
         default :
             usage( av[ 0 ] );
         }
     }
 
-    if (! Server)
-        usage( av[ 0 ] );
-
     if (! Debug) {
-        Verbose = 0;
         freopen("/dev/null", "w", stdout);
     }
 
@@ -789,9 +789,12 @@ int main(int ac, char **av)
     Conn->afp_version = Version;
 
     /* login */
+	// FIXME: workaround for FPopenLoginExt() being broken
+#if 0
     if (Version >= 30)
       	ExitCode = ntohs(FPopenLoginExt(Conn, vers, uam, User, Password));
     else
+#endif
       	ExitCode = ntohs(FPopenLogin(Conn, vers, uam, User, Password));
 
     vol  = FPOpenVol(Conn, Vol);

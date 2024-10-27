@@ -1271,8 +1271,8 @@ void (*fn)(void) = NULL;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-h host] [-p port] [-s vol] [-S Vol2] [-u user] [-w password] [-f test] [-c count] "
-    "[-d size] [-q quantum] [-F file] [-1234567LvViyea] \n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567aeiLnVvy] [-h host] [-p port] [-s vol] [-S vol2] [-u user] [-w password] [-f test] [-c count] "
+    "[-d size] [-q quantum] [-F file] \n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
@@ -1317,42 +1317,8 @@ int main( int ac, char **av )
 int cc;
 
 	Quiet = 1;
-    while (( cc = getopt( ac, av, "Vv1234567h:p:s:S:u:d:w:f:ic:""o:q:r:yeLDaF:R:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567aeDiLnVvyc:d:F:f:h:o:p:q:R:r:S:s:u:w:" )) != EOF ) {
         switch ( cc ) {
-		case 'd':
-			Size = atoi(optarg) * MEGABYTE;
-			break;
-		case 'q':
-			Quantum = atoi(optarg) *KILOBYTE;
-			break;
-		case 'r':
-			Request = atoi(optarg);
-			break;
-		case 'R':
-			Req = atoi(optarg);
-			break;
-		case 'y':
-			Delete = 1;
-			break;
-		case 'e':
-			Sparse = 1;
-			break;
-		case 'L':
-			Local = 1;
-			break;
-		case 'D':
-			Direct = 1;
-			break;
-		case 'a':
-			Flush = 0;
-			break;
-		case 'c':
-			Count = atoi(optarg);
-			break;
-		case 'F':
-            Filename = strdup(optarg);
-            break;
-
         case '1':
 			vers = "AFPVersion 2.1";
 			Version = 21;
@@ -1381,26 +1347,38 @@ int cc;
 			vers = "AFP3.4";
 			Version = 34;
 			break;
-        case 'n':
-            Proto = 1;
+		case 'a':
+			Flush = 0;
+			break;
+		case 'c':
+			Count = atoi(optarg);
+			break;
+		case 'D':
+			Direct = 1;
+			break;
+		case 'd':
+			Size = atoi(optarg) * MEGABYTE;
+			break;
+		case 'e':
+			Sparse = 1;
+			break;
+		case 'F':
+            Filename = strdup(optarg);
+            break;
+        case 'f' :
+            Test = strdup(optarg);
             break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'S':
-            Vol2 = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
-        case 'f' :
-            Test = strdup(optarg);
+		case 'i':
+			Interactive = 1;
+			break;
+		case 'L':
+			Local = 1;
+			break;
+        case 'n':
+            Proto = 1;
             break;
         case 'p' :
             Port = atoi( optarg );
@@ -1409,17 +1387,37 @@ int cc;
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
-	case 'i':
-		Interactive = 1;
-		break;
-
+		case 'q':
+			Quantum = atoi(optarg) *KILOBYTE;
+			break;
+		case 'R':
+			Req = atoi(optarg);
+			break;
+		case 'r':
+			Request = atoi(optarg);
+			break;
+        case 'S':
+            Vol2 = strdup(optarg);
+            break;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+        case 'u':
+            User = strdup(optarg);
+            break;
+		case 'V':
+			Quiet = 0;
+			Verbose = 1;
+			break;
+		case 'v':
+			Quiet = 0;
+			break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
+		case 'y':
+			Delete = 1;
+			break;
         default :
             usage( av[ 0 ] );
         }
@@ -1454,12 +1452,17 @@ int cc;
 		}
 
 	    /* login */
+		// FIXME: workaround for FPopenLoginExt() being broken
+#if 0
     	if (Version >= 30) {
 			FPopenLoginExt(Conn, vers, uam, User, Password);
 		}
 		else {
+#endif
 			FPopenLogin(Conn, vers, uam, User, Password);
+#if 0
 		}
+#endif
 	}
 	Conn->afp_version = Version;
 

@@ -217,7 +217,7 @@ static void run_one(char *name, char **args)
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-v] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call] [optional args for requested AFP call]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] -f [call] [optional args for requested AFP call]\n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
@@ -247,7 +247,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "vV1234567h:p:s:u:w:f:l" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567lVvf:h:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -277,23 +277,14 @@ int ret;
 			vers = "AFP3.4";
 			Version = 34;
 			break;
+        case 'f' :
+            Test = strdup(optarg);
+            break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
         case 'l' :
             List = 1;
-            break;
-        case 'f' :
-            Test = strdup(optarg);
             break;
         case 'p' :
             Port = atoi( optarg );
@@ -302,13 +293,22 @@ int ret;
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+        case 'u':
+            User = strdup(optarg);
+            break;
+        case 'V':
+            Quiet = 0;
+            Verbose = 1;
+            break;
+        case 'v':
+            Quiet = 0;
+            break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
         default :
             usage( av[ 0 ] );
         }

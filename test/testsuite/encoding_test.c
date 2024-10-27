@@ -39,8 +39,10 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"Delete all files\n");
+    if (!Quiet) {
+		fprintf(stdout,"Delete all files\n");
+	}
+
     f_bitmap = (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 
@@ -161,7 +163,9 @@ DSI *dsi;
 		sprintf(temp,"%s/:test", Path);
 		fd = open(temp, O_RDWR | O_CREAT, 0666);
 		if (fd < 0) {
-			fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
+			}
 			failed_nomsg();
 			goto test_exit;
 		}
@@ -188,7 +192,9 @@ static void run_one()
 	    return;
 	}
 	if (strcmp(Encoding, "western") == 0) {
-		fprintf(stdout, "Testing encoding: %s\n", Encoding);
+		if (!Quiet) {
+			fprintf(stdout, "Testing encoding: %s\n", Encoding);
+		}
 	    test_western();
 	}
 	else {
@@ -215,14 +221,18 @@ int     Mac = 0;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-m] [-e encoding] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567CdmVv] [-e encoding] [-h host] [-p port] [-s vol] [-c vol path] [-d dir] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-e\tclient encoding (default western)\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
+    fprintf( stdout,"\t-c\tvolume path on the server\n");
+    fprintf( stdout,"\t-d\tdirectory to enumerate\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
@@ -230,6 +240,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
+    fprintf( stdout,"\t-C\tturn on terminal color output\n");
 
     exit (1);
 }
@@ -238,12 +249,19 @@ void usage( char * av0 )
 int main( int ac, char **av )
 {
 int cc;
-//	static char *vers = "AFP2.2";
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "RmlvV34567h:p:s:u:w:d:c:e:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567ClmRvVc:d:e:h:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
+        case '1':
+			vers = "AFPVersion 2.1";
+			Version = 21;
+			break;
+        case '2':
+			vers = "AFP2.2";
+			Version = 22;
+			break;
         case '3':
 			vers = "AFPX03";
 			Version = 30;
@@ -264,14 +282,8 @@ static char *uam = "Cleartxt Passwrd";
 			vers = "AFP3.4";
 			Version = 34;
 			break;
-		case 'R':
-			Recurse = 1;
-			break;
-		case 'm':
-			Mac = 1;
-			break;
-		case 'e':
-			Encoding = strdup(optarg);
+		case 'C':
+			Color = 1;
 			break;
 		case 'c':
 			Path = strdup(optarg);
@@ -279,18 +291,15 @@ static char *uam = "Cleartxt Passwrd";
         case 'd':
             Dir = strdup(optarg);
             break;
+		case 'e':
+			Encoding = strdup(optarg);
+			break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
+		case 'm':
+			Mac = 1;
+			break;
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -298,13 +307,22 @@ static char *uam = "Cleartxt Passwrd";
                 exit(1);
             }
             break;
-		case 'v':
-			Quiet = 0;
-			break;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+        case 'u':
+            User = strdup(optarg);
+            break;
 		case 'V':
 			Quiet = 0;
 			Verbose = 1;
 			break;
+		case 'v':
+			Quiet = 0;
+			break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
         default :
             usage( av[ 0 ] );
         }

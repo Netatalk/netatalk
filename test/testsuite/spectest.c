@@ -333,7 +333,7 @@ enum adouble adouble = AD_EA;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-aCiLlmnvVx1234567] [-h host] [-p port] [-s vol] [-u user] [-w password] [-F testsuite] [-f test]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] [-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0 );
     fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
@@ -407,51 +407,39 @@ int ret;
 		case 'a':
             adouble = AD_V2;
 			break;
+		case 'C':
+			Color = 1;
+			break;
 		case 'c':
 			Path = strdup(optarg);
 			break;
-		case 'L':
-			Locking = 1;
+        case 'd':
+            User2 = strdup(optarg);
+            break;
+        case 'F' :
+            Suite = strdup(optarg);
+            break;
+        case 'f' :
+            Test = strdup(optarg);
+            break;
+        case 'H':
+            Server2 = strdup(optarg);
+            break;
+        case 'h':
+            Server = strdup(optarg);
+            break;
+		case 'i':
+			Interactive = 1;
 			break;
+        case 'l' :
+            List = 1;
+            break;
 		case 'm':
 			Mac = 1;
 			break;
         case 'n':
             Proto = 1;
             break;
-        case 'h':
-            Server = strdup(optarg);
-            break;
-        case 'H':
-            Server2 = strdup(optarg);
-            break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'S':
-            Vol2 = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'd':
-            User2 = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
-            break;
-        case 'l' :
-            List = 1;
-            break;
-        case 'f' :
-            Test = strdup(optarg);
-            break;
-        case 'F' :
-            Suite = strdup(optarg);
-            break;
-        case 'x':
-        	Exclude = 1;
-        	break;
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -459,19 +447,28 @@ int ret;
                 exit(1);
             }
             break;
-		case 'v':
-			Quiet = 0;
-			break;
+        case 'S':
+            Vol2 = strdup(optarg);
+            break;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+        case 'u':
+            User = strdup(optarg);
+            break;
 		case 'V':
 			Quiet = 0;
 			Verbose = 1;
 			break;
-		case 'i':
-			Interactive = 1;
+		case 'v':
+			Quiet = 0;
 			break;
-		case 'C':
-			Color = 1;
-			break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
+        case 'x':
+        	Exclude = 1;
+        	break;
 
         default :
             usage( av[ 0 ] );
