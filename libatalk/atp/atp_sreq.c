@@ -101,7 +101,7 @@ atp_sreq( ATP ah, struct atp_block *atpb, int respcount, uint8_t flags )
 	    req_buf->atpbuf_dlen );
     atp_print_addr( " to", atpb->atp_saddr );
     putchar( '\n' );
-    bprint( req_buf->atpbuf_info.atpbuf_data, req_buf->atpbuf_dlen );
+    bprint( req_buf->atpbuf_info.atpbuf_data, (int) req_buf->atpbuf_dlen );
 #endif /* EBUG */
 
     gettimeofday( &ah->atph_reqtv, (struct timezone *)0 );
