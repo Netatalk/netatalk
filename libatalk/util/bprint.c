@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef DEBUG
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,4 +48,3 @@ void bprint( data, len )
 
     printf("(end)\n");
 }
-#endif

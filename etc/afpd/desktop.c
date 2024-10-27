@@ -776,9 +776,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 	    return NULL;
     }
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
-#endif /* DEBUG */
     return( upath );
 }
 
@@ -812,9 +810,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 
     m = mangle(vol, mpath, outlen, upath, id, flags);
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m, ntohl(id));
-#endif /* DEBUG */
     return(m);
 
 utompath_error:
