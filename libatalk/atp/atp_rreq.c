@@ -38,6 +38,10 @@
 
 #include "atp_internals.h"
 
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
+
 
 /* wait for a tranasaction service request
 */

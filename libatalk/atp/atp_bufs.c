@@ -41,6 +41,10 @@
 #include <atalk/atp.h>
 #include "atp_internals.h"
 
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
+
 #define			N_MORE_BUFS		10
 
 static struct atpbuf 	*free_list = NULL;	/* free buffers */

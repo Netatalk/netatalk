@@ -42,6 +42,10 @@
 
 #include "atp_internals.h"
 
+#ifdef EBUG
+#include <stdio.h>
+#endif /* EBUG */
+
 /* send a transaction response
 */
 int atp_sresp(
