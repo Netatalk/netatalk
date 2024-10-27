@@ -33,6 +33,8 @@ int cnt = 0;
 int size = 1000;
 	dsi = &Conn->dsi;
 
+	ENTER_TEST
+
     f_bitmap = (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
 	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)|
 	         (1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN);
@@ -58,11 +60,11 @@ int size = 1000;
 	dir = get_did(Conn, vol, DIRDID_ROOT, Dir);
 	if (!dir) {
 		nottested();
-	    return;
+		goto test_exit;
 	}
 	if (!(stack = calloc(size, sizeof(int)) )) {
 		nottested();
-	    return;
+		goto test_exit;
 	}
 	stack[cnt] = dir;
 	cnt++;
@@ -73,7 +75,7 @@ int size = 1000;
 		i = 1;
 		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
 			nottested();
-			return;
+			goto test_exit;
 		}
 		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
 			/* FPResolveID will trash dsi->data */
@@ -81,23 +83,21 @@ int size = 1000;
 			memcpy(&tp, buffer +4, sizeof(tp));
 			tp = ntohs(tp);
 		    i += tp;
-		    if (Recurse || Quiet) {
+		    if (Recurse) {
 		    	b = buffer +6;
 			    for (j = 1; j <= tp; j++, b += b[0]) {
 			        if (b[1]) {
 	    		    	filedir.isdir = 1;
 	        		    afp_filedir_unpack(&filedir, b + 2, 0, d_bitmap);
-	        		    if (Recurse) {
-	        	    		if (cnt > size) {
-	        	    			size += 1000;
-		        	    		if (!(stack = realloc(stack, size* sizeof(int)))) {
-		        	    			nottested();
-	    	    	    			return;
-	        		    		}
-	        		    	}
-	        	    		stack[cnt] = filedir.did;
-		        	    	cnt++;
-		        	    }
+						if (cnt > size) {
+							size += 1000;
+							if (!(stack = realloc(stack, size* sizeof(int)))) {
+								nottested();
+								return;
+							}
+						}
+						stack[cnt] = filedir.did;
+						cnt++;
 			        }
 			        else {
 	    		    	filedir.isdir = 0;
@@ -107,19 +107,21 @@ int size = 1000;
 			        	fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did),
 			        	      (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
 			        	      filedir.isdir?"/":"");
-			        	if (!filedir.isdir) {
-			        		if (FPResolveID(Conn, vol, filedir.did, f_bitmap)) {
-			        			fprintf(stdout, " Can't resolve ID!");
-			        		}
-			        	}
-			        
-			        }
+					}
+					else {
+			        	fprintf(stdout, "%s%s\n",
+			        	      (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
+			        	      filedir.isdir?"/":"");
+					}
+					if (!filedir.isdir && FPResolveID(Conn, vol, filedir.did, f_bitmap) && Quiet) {
+						fprintf(stdout, " Can't resolve ID!");
+					}
 		    	}
 		    }
 	    }
 	    if (ret != ntohl(AFPERR_NOOBJ)) {
 			nottested();
-			return;
+			goto test_exit;
 	    }
 	}
 
@@ -127,6 +129,9 @@ int size = 1000;
 		fprintf(stdout,"%lx\n", time(NULL));
 	}
 	FPEnumerateFull(Conn, vol, 1, 150, 8000,  DIRDID_ROOT , "", f_bitmap, d_bitmap);
+
+test_exit:
+	exit_test("FPEnumerate:test300: enumerate recursively a folder");
 }
 
 
@@ -134,7 +139,7 @@ int size = 1000;
 void test300()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test300: enumerate recursively a folder\n");
+    fprintf(stdout,"FPEnumerate page 150\n");
     fprintf(stdout,"-------------------\n");
     test300_enumerate();
     if (Twice)
@@ -171,15 +176,16 @@ int     Mac = 0;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-m] [-n] [-t] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-CmnRtVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
-    fprintf( stdout,"\t-d\tdiretory to enumerate\n");
+    fprintf( stdout,"\t-d\tdirectory to enumerate\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword (default none)\n");
-    fprintf( stdout,"\t-i\tprint ID and name\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
@@ -187,7 +193,9 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
+    fprintf( stdout,"\t-R\trun it recursively\n");
     fprintf( stdout,"\t-t\trun it twice (ie one with the cache warm)\n");
+    fprintf( stdout,"\t-C\tturn on terminal color output\n");
 
     exit (1);
 }
@@ -200,11 +208,16 @@ int cc;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "RimlvV34567th:p:s:u:w:d:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567ClmnRtVvd:h:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
-        case 'i':
-            Quiet = 1;
-            break;
+        case '1':
+			vers = "AFPVersion 2.1";
+			Version = 21;
+			break;
+        case '2':
+			vers = "AFP2.2";
+			Version = 22;
+			break;
         case '3':
 			vers = "AFPX03";
 			Version = 30;
@@ -225,29 +238,20 @@ static char *uam = "Cleartxt Passwrd";
 			vers = "AFP3.4";
 			Version = 34;
 			break;
-		case 'R':
-			Recurse = 1;
+		case 'C':
+			Color = 1;
 			break;
-		case 'm':
-			Mac = 1;
-			break;
-        case 'n':
-            Proto = 1;
-            break;
         case 'd':
             Dir = strdup(optarg);
             break;
         case 'h':
             Server = strdup(optarg);
             break;
-        case 's':
-            Vol = strdup(optarg);
-            break;
-        case 'u':
-            User = strdup(optarg);
-            break;
-        case 'w':
-            Password = strdup(optarg);
+		case 'm':
+			Mac = 1;
+			break;
+        case 'n':
+            Proto = 1;
             break;
         case 'p' :
             Port = atoi( optarg );
@@ -256,16 +260,28 @@ static char *uam = "Cleartxt Passwrd";
                 exit(1);
             }
             break;
-	case 'v':
-		Quiet = 0;
-		break;
-	case 'V':
-		Quiet = 0;
-		Verbose = 1;
-		break;
-	case 't':
-		Twice = 1;
-		break;
+		case 'R':
+			Recurse = 1;
+			break;
+        case 's':
+            Vol = strdup(optarg);
+            break;
+		case 't':
+			Twice = 1;
+			break;
+        case 'u':
+            User = strdup(optarg);
+            break;
+		case 'V':
+			Quiet = 0;
+			Verbose = 1;
+			break;
+		case 'v':
+			Quiet = 0;
+			break;
+        case 'w':
+            Password = strdup(optarg);
+            break;
         default :
             usage( av[ 0 ] );
         }
