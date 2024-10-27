@@ -14,9 +14,7 @@ static const char	hexdig[] = "0123456789ABCDEF";
 #define BPXLEN	50
 #define BPALEN	18
 
-void bprint( data, len )
-    char	*data;
-    int		len;
+void bprint( char *data, int len )
 {
     char	xout[ BPXLEN ], aout[ BPALEN ];
     int         i;

@@ -47,7 +47,7 @@ resend_request(ATP ah)
     atp_print_addr( " to", &ah->atph_reqpkt->atpbuf_addr );
     putchar( '\n' );
     bprint( ah->atph_reqpkt->atpbuf_info.atpbuf_data,
-	    ah->atph_reqpkt->atpbuf_dlen );
+	    (int) ah->atph_reqpkt->atpbuf_dlen );
 #endif /* EBUG */
 
     memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1,
@@ -332,7 +332,7 @@ timeout :
 #ifdef EBUG
 	printf( "<%d> sending TREL", getpid() );
 	bprint( ah->atph_reqpkt->atpbuf_info.atpbuf_data,
-		ah->atph_reqpkt->atpbuf_dlen );
+		(int) ah->atph_reqpkt->atpbuf_dlen );
 #endif /* EBUG */
 #ifdef DROP_ATPTREL
 	if (( ++release_count % 10 ) != 0 ) {

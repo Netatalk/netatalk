@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -84,8 +85,11 @@ static int more_bufs(void)
 #ifdef EBUG
 void atp_print_bufuse(ATP ah, char *s)
 {
-    struct atpbuf	*bp;
-    int			i, sentcount, incount, respcount;
+    struct atpbuf *bp;
+    int i;
+    int sentcount;
+    int incount;
+    int respcount;
 
     sentcount = 0;
     for ( bp = ah->atph_sent; bp != NULL; bp = bp->atpbuf_next ) {
