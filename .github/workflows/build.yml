@@ -808,6 +808,7 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
+            -Dbuildtype=debug \
             -Dwith-appletalk=true \
             -Dwith-init-style=none \
             -Dwith-readmes=false \
