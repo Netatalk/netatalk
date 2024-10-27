@@ -851,9 +851,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     ssize_t len;
     char symbuf[MAXPATHLEN+1];
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
-#endif /* DEBUG */
 
     adp = of_ad(vol, path, &ad);
     upath = path->u_name;
@@ -1113,9 +1111,7 @@ setfilparam_done:
         setdirparams(vol, &Cur_Path, bitmap, (char *)&newdate);
     }
 
-#ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "end setfilparams:");
-#endif /* DEBUG */
     return err;
 }
 
