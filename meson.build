@@ -119,6 +119,10 @@ if host_os == 'linux'
     netatalk_common_flags += '-D_GNU_SOURCE'
 endif
 
+if get_option('buildtype') == 'debug'
+    netatalk_common_flags += '-DEBUG'
+endif
+
 add_global_arguments(netatalk_common_flags, language: 'c')
 
 netatalk_common_link_args = []
