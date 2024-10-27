@@ -40,6 +40,8 @@ custom_target(
         'afpd.8.html',
         'afpldaptest.1.html',
         'afppasswd.1.html',
+        'afpstats.1.html',
+        'afptest.1.html',
         'apple_dump.1.html',
         'appletalk.html',
         'asip-status.1.html',
