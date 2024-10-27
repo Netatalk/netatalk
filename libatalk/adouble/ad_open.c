@@ -377,9 +377,6 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         LOG(log_debug, logtype_ad, "new_ad_header(\"%s\"): invalid FinderInfo", path);
         return -1;
     }
-    /* set default creator/type fields */
-    memcpy(adp + FINDERINFO_FRTYPEOFF,"\0\0\0\0", 4);
-    memcpy(adp + FINDERINFO_FRCREATOFF,"\0\0\0\0", 4);
 
     /* make things invisible */
     if ((ad->ad_options & ADVOL_INVDOTS)
@@ -1495,6 +1492,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         /* This is a new adouble header file, create it */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork, initializing: \"%s\"",
             path, rfpath);
+        EC_NEG1_LOG( new_ad_header(ad, path, NULL, adflags) );
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
