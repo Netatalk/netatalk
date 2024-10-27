@@ -8,8 +8,6 @@ int	Interactive = 0;
 int	Quiet = 1;
 int	Quirk = 0;
 int	Verbose = 0;
-int	Recurse = 0;
-int	Twice = 0;
 int	Color = 0;
 int	Exclude = 0;
 

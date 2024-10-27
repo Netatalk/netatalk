@@ -143,6 +143,4 @@ extern int Loglevel;
 extern int Color;
 extern int Interactive;
 extern int Throttle;
-extern int Recurse;
-extern int Twice;
 extern int Exclude;

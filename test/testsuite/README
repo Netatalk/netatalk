@@ -63,9 +63,6 @@ The beginning of an AFP CLI client, cf ./afparg -l
 FPResolveID <file CNID>
 FPCopyFile <source> <dest>
 
-./afp_ls
-'minimal' ls using AFP commands. Should be migrated to afparg.
-
 Compilation
 ===========
 

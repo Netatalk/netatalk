@@ -163,20 +163,18 @@ test_exit:
 }
 
 /* ------------------------- */
-#if 0
 STATIC void test34()
 {
+uint16_t vol = VolID;
 char *name = "essai permission";
 
 	ENTER_TEST
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate:test34: folder with --rwx-- perm\n");
 
 	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_ACCESS)))
 	{
-		fprintf(stdout,"\tFAILED\n");
+		failed();
 		goto test_exit;
 	}
 
@@ -190,14 +188,14 @@ char *name = "essai permission";
 	     (1 << DIRPBIT_ACCESS))
 	   )
 	{
-		fprintf(stdout,"\tFAILED\n");
+		failed();
 		goto test_exit;
 	}
-fin:
+
 test_exit:
-	exit_test("test34");
+	exit_test("FPEnumerate:test34: folder with --rwx-- perm");
 }
-#endif
+
 /* ------------------------- */
 STATIC void test40()
 {
@@ -483,6 +481,113 @@ test_exit:
 	exit_test("FPEnumerate:test218: enumerate arguments");
 }
 
+/* ------------------------- */
+static void test300(void)
+{
+uint8_t buffer[DSI_DATASIZ];
+uint16_t vol = VolID;
+uint16_t d_bitmap;
+uint16_t f_bitmap;
+unsigned int ret;
+int dir;
+uint16_t tp;
+uint16_t i;
+const DSI *dsi;
+unsigned char *b;
+struct afp_filedir_parms filedir;
+int *stack = NULL;
+int cnt = 0;
+int size = 1000;
+
+	dsi = &Conn->dsi;
+
+	ENTER_TEST
+
+    f_bitmap = (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
+	         (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE)|
+	         (1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN);
+
+	d_bitmap = (1<< DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |  (1 << DIRPBIT_OFFCNT) |
+	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
+		    (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS);
+
+	if (Conn->afp_version >= 30) {
+		f_bitmap |= (1<<FILPBIT_PDINFO) | (1<<FILPBIT_LNAME);
+		d_bitmap |= (1<<FILPBIT_PDINFO) | (1<<FILPBIT_LNAME);
+	}
+	else {
+		f_bitmap |= (1<<FILPBIT_LNAME);
+		d_bitmap |= (1<<FILPBIT_LNAME);
+	}
+
+	dir = get_did(Conn, vol, DIRDID_ROOT, "");
+	if (!dir) {
+		nottested();
+		goto test_exit;
+	}
+	if (!(stack = calloc(size, sizeof(int)) )) {
+		nottested();
+		goto test_exit;
+	}
+	stack[cnt] = dir;
+	cnt++;
+
+	while (cnt) {
+	    cnt--;
+	    dir = stack[cnt];
+		i = 1;
+		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
+			nottested();
+			goto test_exit;
+		}
+		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
+			/* FPResolveID will trash dsi->data */
+			memcpy(buffer, dsi->data, sizeof(buffer));
+			memcpy(&tp, buffer +4, sizeof(tp));
+			tp = ntohs(tp);
+		    i += tp;
+			b = buffer +6;
+			for (int j = 1; j <= tp; j++, b += b[0]) {
+				if (b[1]) {
+					filedir.isdir = 1;
+					afp_filedir_unpack(&filedir, b + 2, 0, d_bitmap);
+					if (cnt > size) {
+						size += 1000;
+						if (!(stack = realloc(stack, size* sizeof(int)))) {
+							nottested();
+							return;
+						}
+					}
+					stack[cnt] = filedir.did;
+					cnt++;
+				}
+				else {
+					filedir.isdir = 0;
+					afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
+				}
+				if (!Quiet) {
+					fprintf(stdout, "0x%08x %s%s\n", ntohl(filedir.did),
+							(Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname,
+							filedir.isdir?"/":"");
+				}
+				if (!filedir.isdir && FPResolveID(Conn, vol, filedir.did, f_bitmap) && !Quiet) {
+					fprintf(stdout, " Can't resolve ID!");
+				}
+			}
+	    }
+	    if (ret != ntohl(AFPERR_NOOBJ)) {
+			nottested();
+			goto test_exit;
+	    }
+	}
+
+	FPEnumerateFull(Conn, vol, 1, 150, 8000,  DIRDID_ROOT , "", f_bitmap, d_bitmap);
+
+test_exit:
+    free(stack);
+	exit_test("FPEnumerate:test300: enumerate recursively a folder");
+}
+
 /* ----------- */
 void FPEnumerate_test()
 {
@@ -491,9 +596,13 @@ void FPEnumerate_test()
     fprintf(stdout,"-------------------\n");
 
     test28();
+#if 0
+    test34();
+#endif
     test38();
     test40();
     test41();
     test93();
     test218();
+	test300();
 }

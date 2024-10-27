@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-char    *Dir = "";
 char    *Path;
 
 uint16_t VolID;
@@ -58,7 +57,7 @@ DSI *dsi;
 		f_bitmap |= (1<<FILPBIT_LNAME);
 		d_bitmap |= (1<<FILPBIT_LNAME);
 	}
-	dir = get_did(Conn, vol, DIRDID_ROOT, Dir);
+	dir = get_did(Conn, vol, DIRDID_ROOT, "");
 	if (!dir) {
 		nottested();
 	    return -1;
@@ -221,14 +220,13 @@ int     Mac = 0;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567CdmVv] [-e encoding] [-h host] [-p port] [-s vol] [-c vol path] [-d dir] [-u user] [-w password]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567CdmVv] [-e encoding] [-h host] [-p port] [-s vol] [-c vol path] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-e\tclient encoding (default western)\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
     fprintf( stdout,"\t-c\tvolume path on the server\n");
-    fprintf( stdout,"\t-d\tdirectory to enumerate\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
@@ -252,7 +250,7 @@ int cc;
 static char *vers = "AFPVersion 2.1";
 static char *uam = "Cleartxt Passwrd";
 
-    while (( cc = getopt( ac, av, "1234567ClmRvVc:d:e:h:p:s:u:w:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567ClmRvVc:e:h:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -288,9 +286,6 @@ static char *uam = "Cleartxt Passwrd";
 		case 'c':
 			Path = strdup(optarg);
 			break;
-        case 'd':
-            Dir = strdup(optarg);
-            break;
 		case 'e':
 			Encoding = strdup(optarg);
 			break;
