@@ -898,10 +898,6 @@ void test_skipped(int why)
 		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (%s)", s);
 	}
 
-#if 0
-	if (!ExitCode)
-		ExitCode = 3;
-#endif
 	CurTestResult = 3;
 }
 
@@ -921,10 +917,9 @@ void test_nottested(void)
 	if (!Quiet) {
 		fprintf(stdout,"\tNOT TESTED\n");
 	}
-#if 0
-	if (!ExitCode)
+	if (!ExitCode) {
 		ExitCode = 2;
-#endif
+	}
 	CurTestResult = 2;
 	NotTestedCount += 1;
 }
