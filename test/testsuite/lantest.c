@@ -789,6 +789,10 @@ int main(int ac, char **av)
             teststorun[TEST_CREATE2000FILES] = 1;
     }
 
+    if (tests) {
+        free(tests);
+    }
+
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL)
         return 1;
 

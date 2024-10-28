@@ -23,7 +23,7 @@ unsigned int ret;
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -84,7 +84,7 @@ unsigned int ret;
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -141,7 +141,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -166,6 +166,59 @@ test_exit:
 }
 
 /* ------------------------- */
+STATIC void test302()
+{
+char *name = "t302 dir";
+char *name1 = "t302 file";
+char *name2 = "t302 file1";
+int dir;
+uint16_t vol = VolID;
+int id;
+int id1;
+
+	ENTER_TEST
+
+	if (!Mac && Path[0] == '\0') {
+		test_skipped(T_MAC_PATH);
+		goto test_exit;
+	}
+
+	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
+		nottested();
+		goto test_exit;
+	}
+
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
+
+	id = get_fid(Conn, vol, dir , name1);
+
+	if (!Mac) {
+		sprintf(temp,"%s/%s/%s", Path, name, name1);
+		sprintf(temp1,"%s/%s/%s", Path, name, name2);
+		if (rename(temp, temp1) < 0) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+			}
+			failed_nomsg();
+		}
+	}
+	else {
+		FAIL (FPMoveAndRename(Conn, vol, dir, dir, name1, name2))
+	}
+	id1 = get_fid(Conn, vol, dir , name2);
+	if (id != id1) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED id are not the same %d %d\n", ntohl(id), ntohl(id1));
+		}
+		failed_nomsg();
+	}
+	FAIL (FPDelete(Conn, vol,  dir , name2))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+test_exit:
+	exit_test("FPMoveAndRename:test302: file renamed by someone else, cnid not updated");
+}
+
+/* ------------------------- */
 STATIC void test323()
 {
 char *name  = "t323 dir";
@@ -178,7 +231,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -241,7 +294,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -311,6 +364,7 @@ void T2FPMoveAndRename_test()
     test136();
     test137();
     test139();
+    test302();
     test323();
     test365();
 }

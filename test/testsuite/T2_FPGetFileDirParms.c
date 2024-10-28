@@ -21,7 +21,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -131,7 +131,7 @@ int ret;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -235,7 +235,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -310,7 +310,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -345,7 +345,7 @@ uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -480,7 +480,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -531,7 +531,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Path && !Mac) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -578,7 +578,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -673,7 +673,7 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -753,7 +753,7 @@ struct afp_filedir_parms filedir;
 		test_skipped(T_CONN2);
 		goto test_exit;
 	}
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -856,7 +856,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -982,7 +982,7 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}

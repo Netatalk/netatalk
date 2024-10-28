@@ -108,8 +108,8 @@ uint16_t vol2;
 
 	ENTER_TEST
 
-	if (!Path) {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
