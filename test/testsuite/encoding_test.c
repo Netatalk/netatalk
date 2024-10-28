@@ -237,7 +237,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
-    fprintf( stdout,"\t-C\tturn on terminal color output\n");
+    fprintf( stdout,"\t-C\tturn off terminal color output\n");
 
     exit (1);
 }
@@ -280,7 +280,7 @@ static char *uam = "Cleartxt Passwrd";
 			Version = 34;
 			break;
 		case 'C':
-			Color = 1;
+			Color = 0;
 			break;
 		case 'c':
 			Path = strdup(optarg);
