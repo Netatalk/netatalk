@@ -197,18 +197,18 @@ else
     netatalk
     sleep 2
     if [ "$TESTSUITE" == "tier1" ]; then
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
     elif [ "$TESTSUITE" == "tier2" ]; then
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
     elif [ "$TESTSUITE" == "readonly" ]; then
         echo "testfile uno" > /mnt/afpshare/first.txt
         echo "testfile dos" > /mnt/afpshare/second.txt
         mkdir /mnt/afpshare/third
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
     elif [ "$TESTSUITE" == "login" ]; then
-        afp_logintest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"
+        afp_logintest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"
     elif [ "$TESTSUITE" == "encoding" ]; then
-        afp_encodingtest "${TEST_FLAGS}" -"${AFP_VERSION}" -C -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"  -s "${SHARE_NAME}" -c /mnt/afpshare
+        afp_encodingtest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"  -s "${SHARE_NAME}" -c /mnt/afpshare
     else
         echo "Unknown testsuite: ${TESTSUITE}"
         exit 1

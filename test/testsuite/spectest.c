@@ -363,7 +363,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-f\ttest or testset to run\n");
     fprintf( stdout,"\t-l\tlist testsets\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
-    fprintf( stdout,"\t-C\tturn on terminal color output\n");
+    fprintf( stdout,"\t-C\tturn off terminal color output\n");
     exit (1);
 }
 
@@ -409,7 +409,7 @@ int ret;
             adouble = AD_V2;
 			break;
 		case 'C':
-			Color = 1;
+			Color = 0;
 			break;
 		case 'c':
 			Path = strdup(optarg);
