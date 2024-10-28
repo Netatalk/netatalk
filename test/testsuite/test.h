@@ -143,3 +143,8 @@ extern int Color;
 extern int Interactive;
 extern int Throttle;
 extern int Exclude;
+
+extern int PassCount;
+extern int FailCount;
+extern int SkipCount;
+extern int NotTestedCount;

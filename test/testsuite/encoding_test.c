@@ -17,6 +17,11 @@ char *Encoding = "western";
 extern int Convert;
 static char temp[MAXPATHLEN];
 
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
+
 /* ------------------------- */
 int empty_volume()
 {

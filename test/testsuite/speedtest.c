@@ -56,6 +56,10 @@ static int Direct = 0;
 /* not used */
 CONN *Conn2;
 int  Mac = 0;
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 
 struct vfs {
 	unsigned int (*getfiledirparams)(CONN *, uint16_t , int , char *, uint16_t, uint16_t);

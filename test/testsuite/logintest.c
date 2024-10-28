@@ -8,6 +8,10 @@ CONN *Conn;
 CONN *Conn2;
 
 int ExitCode = 0;
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 
 DSI *Dsi;
 
