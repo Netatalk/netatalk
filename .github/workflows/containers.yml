@@ -172,8 +172,8 @@ jobs:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
-    afp-encodingtest-afp34:
-      name: AFP encoding test - AFP 3.4
+    afp-encodingtest-afp22:
+      name: AFP encoding test - AFP 2.2
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -185,7 +185,7 @@ jobs:
           INSECURE_AUTH: 1
           VERBOSE: 1
           TESTSUITE: encoding
-          AFP_VERSION: 7
+          AFP_VERSION: 2
       steps:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
