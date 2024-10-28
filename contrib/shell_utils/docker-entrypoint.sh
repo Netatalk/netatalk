@@ -179,6 +179,7 @@ else
     echo "cupsautoadd:op=root:" > /usr/local/etc/papd.conf
 
 	echo "*** Starting AppleTalk services (this will take a minute)"
+ 	cupsd
 	atalkd
 	nbprgstr -p 4 "${ATALK_NAME}:Workstation"
 	nbprgstr -p 4 "${ATALK_NAME}:netatalk"
