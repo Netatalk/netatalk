@@ -636,12 +636,13 @@ fin:
 void usage( char * av0 )
 {
     int i=0;
-    fprintf( stdout, "usage:\t%s [-34567VvGg] [-h host] [-p port] [-s vol] [-u user] [-w password] [-n iterations] [-t tests to run] [-F bigfile]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-34567GgVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
+    "[-n iterations] [-f tests] [-F bigfile]\n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
+    fprintf( stdout,"\t-s\tvolume to mount\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
@@ -653,7 +654,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-b\tdebug mode\n");
     fprintf( stdout,"\t-g\tfast network (Gbit, file testsize 1 GB)\n");
     fprintf( stdout,"\t-G\tridiculously fast network (10 Gbit, file testsize 10 GB)\n");
-    fprintf( stdout,"\t-t\ttests to run, eg 134 for tests 1, 3 and 4\n");
+    fprintf( stdout,"\t-f\ttests to run, eg 134 for tests 1, 3 and 4\n");
     fprintf( stdout,"\t-F\tuse this file located in the volume root for the read test (size must match -g and -G options)\n");
     fprintf( stdout,"\tAvailable tests:\n");
     for (i = 0; i < NUMTESTS; i++)
@@ -674,7 +675,7 @@ int main(int ac, char **av)
     if (pw)
         User = strdup(pw->pw_name);
 
-    while (( cc = getopt( ac, av, "1234567bGgVvF:h:n:p:s:t:u:w:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567bGgVvF:f:h:n:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '3':
             vers = "AFPX03";
@@ -702,6 +703,9 @@ int main(int ac, char **av)
         case 'F':
             bigfilename = strdup(optarg);
             break;
+        case 'f':
+            tests = strdup(optarg);
+            break;
         case 'G':
             rwsize *= 100;
             break;
@@ -724,9 +728,6 @@ int main(int ac, char **av)
         case 's':
             Vol = strdup(optarg);
             break;
-        case 't':
-            tests = strdup(optarg);
-            break;
         case 'u':
             if (User)
                 free(User);
@@ -747,12 +748,28 @@ int main(int ac, char **av)
         }
     }
 
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout, "Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout, "Error: Define a password with -w\n");
+	}
+	if (Vol != NULL && Vol[0] == '\0') {
+        fprintf(stdout, "Error: Define a volume with -s\n");
+	}
+
     if (! Debug) {
         freopen("/dev/null", "w", stdout);
     }
 
+// FIXME: guest auth leads to broken DSI request
+#if 0
     if ((User[0] == 0) || (Password[0] == 0))
         uam = "No User Authent";
+#endif
 
     Iterations_save = Iterations;
     results = calloc(Iterations * NUMTESTS, sizeof(unsigned long));

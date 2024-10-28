@@ -220,7 +220,7 @@ static void list_tests(void)
 {
 int i = 0;
 	while (Test_list[i].name != NULL) {
-		fprintf(stdout, "%s\n", Test_list[i].name);
+		fprintf(stdout, "%s_test\n", Test_list[i].name);
 		i++;
 	}
 }
@@ -321,7 +321,7 @@ char    *Vol = "";
 char    *Vol2 = "";
 char    *User;
 char    *User2;
-char    *Path;
+char    *Path = "";
 int     Version = 21;
 int     List = 0;
 int     Mac = 0;
@@ -333,20 +333,21 @@ enum adouble adouble = AD_EA;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] [-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+	"[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0 );
     fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
-    fprintf( stdout,"\t-S\tsecond volume to mount (default none)\n");
+    fprintf( stdout,"\t-s\tvolume to mount\n");
+    fprintf( stdout,"\t-S\tsecond volume to mount\n");
     fprintf( stdout,"\t-c\tvolume path on the server\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
     fprintf( stdout,"\t-d\tsecond user for two connections (same password!)\n");
-    fprintf( stdout,"\t-H\tsecond server for two connections (default use only one server)\n");
+    fprintf( stdout,"\t-H\tsecond server for two connections\n");
 
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
@@ -358,9 +359,9 @@ void usage( char * av0 )
     fprintf( stdout,"\t-V\tvery verbose\n");
 
     fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
-    fprintf( stdout,"\t-F\ttestsuite to run (default tier1)\n");
-    fprintf( stdout,"\t-f\ttest to run\n");
-    fprintf( stdout,"\t-l\tlist tests\n");
+    fprintf( stdout,"\t-F\ttestsuite to run (tier1 (default), tier2, readonly, sleep)\n");
+    fprintf( stdout,"\t-f\ttest or testset to run\n");
+    fprintf( stdout,"\t-l\tlist testsets\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     fprintf( stdout,"\t-C\tturn on terminal color output\n");
     exit (1);
@@ -437,9 +438,11 @@ int ret;
 		case 'm':
 			Mac = 1;
 			break;
+#if 0
         case 'n':
             Proto = 1;
             break;
+#endif
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -474,6 +477,7 @@ int ret;
             usage( av[ 0 ] );
         }
     }
+
 	Loglevel = AFP_LOG_INFO;
 
 	if (strcmp(Suite, "tier1") == 0) {
@@ -493,6 +497,23 @@ int ret;
 		list_tests();
 		exit (2);
 	}
+
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout, "Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout, "Error: Define a password with -w\n");
+	}
+	if (Vol != NULL && Vol[0] == '\0') {
+        fprintf(stdout, "Error: Define a volume with -s\n");
+	}
+	if (Path != NULL && Path[0] == '\0' && strcmp(Suite, "tier2") == 0) {
+        fprintf(stdout, "Error: Define the local path to the volume with -c\n");
+	}
+
 	/************************************
 	 *                                  *
 	 * Connection user 1                *
@@ -524,10 +545,10 @@ int ret;
 		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
+#endif
 		ret = FPopenLogin(Conn, vers, uam, User, Password);
+#if 0
 	}
-#else
-	ret = FPopenLogin(Conn, vers, uam, User, Password);
 #endif
 	if (ret) {
 		printf("Login failed\n");
@@ -566,10 +587,10 @@ int ret;
 			ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
 		}
     	else {
+#endif
 			ret = FPopenLogin(Conn2, vers, uam, User2, Password);
+#if 0
 		}
-#else
-	ret = FPopenLogin(Conn2, vers, uam, User2, Password);
 #endif
 	if (ret) {
 		printf("Login failed\n");

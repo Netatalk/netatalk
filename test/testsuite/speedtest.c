@@ -1271,18 +1271,18 @@ void (*fn)(void) = NULL;
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567aeiLnVvy] [-h host] [-p port] [-s vol] [-S vol2] [-u user] [-w password] [-f test] [-c count] "
-    "[-d size] [-q quantum] [-F file] \n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567aeLnVvy] [-h host] [-p port] [-s vol] [-S vol2] [-u user] [-w password] [-n iterations] "
+    "[-d size] [-q quantum] [-f test] [-F file] \n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
-    fprintf( stdout,"\t-S\tsecond volume to mount (default none)\n");
+    fprintf( stdout,"\t-s\tvolume to mount\n");
+    fprintf( stdout,"\t-S\tsecond volume to mount\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
 
     fprintf( stdout,"\t-L\tuse posix calls (default AFP calls)\n");
     fprintf( stdout,"\t-D\twith -L use O_DIRECT in open flags (default no)\n");
 
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
@@ -1291,7 +1291,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
     fprintf( stdout,"\t-7\tAFP 3.4 version\n");
 
-    fprintf( stdout,"\t-c\trun test count times\n");
+    fprintf( stdout,"\t-n\thow many iterations to run (default: 1)\n");
     fprintf( stdout,"\t-d\tfile size (Mbytes, default 64)\n");
     fprintf( stdout,"\t-q\tpacket size (Kbytes, default server quantum)\n");
     fprintf( stdout,"\t-r\tnumber of outstanding requests (default 1)\n");
@@ -1316,7 +1316,6 @@ int main( int ac, char **av )
 {
 int cc;
 
-	Quiet = 1;
     while (( cc = getopt( ac, av, "1234567aeDiLnVvyc:d:F:f:h:o:p:q:R:r:S:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
@@ -1350,9 +1349,6 @@ int cc;
 		case 'a':
 			Flush = 0;
 			break;
-		case 'c':
-			Count = atoi(optarg);
-			break;
 		case 'D':
 			Direct = 1;
 			break;
@@ -1377,9 +1373,14 @@ int cc;
 		case 'L':
 			Local = 1;
 			break;
+		case 'n':
+			Count = atoi(optarg);
+			break;
+#if 0
         case 'n':
             Proto = 1;
             break;
+#endif
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -1423,6 +1424,19 @@ int cc;
         }
     }
 
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout,"Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout,"Error: Define a password with -w\n");
+	}
+	if (Vol != NULL && Vol[0] == '\0') {
+        fprintf(stdout,"Error: Define a volume with -s\n");
+	}
+
 	/**************************
 	 Connection */
 
@@ -1448,8 +1462,6 @@ int cc;
     	 	Dsi->protocol = DSI_TCPIP;
 	    	Dsi->socket = sock;
 	    }
-    	else {
-		}
 
 	    /* login */
 		// FIXME: workaround for FPopenLoginExt() being broken
@@ -1468,8 +1480,6 @@ int cc;
 
 	/*********************************
 	*/
-	if (Verbose)
-		Quiet = 0;
 	run_one(Test);
 	if (!Local)
    		FPLogOut(Conn);

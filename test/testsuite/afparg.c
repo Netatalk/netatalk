@@ -45,7 +45,7 @@ char    *Vol = "";
 char    *User;
 int     Version = 21;
 int     List = 0;
-char    *Test;
+char    *Test = "";
 
 /* Unused but required in afphelper.c. Argh. */
 CONN       *Conn2;
@@ -102,10 +102,9 @@ void usage( char * av0 )
     fprintf( stdout, "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n", av0 );
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
+    fprintf( stdout,"\t-s\tvolume to mount\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
@@ -200,6 +199,25 @@ int ret;
 		exit (2);
 	}
 
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout, "Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout, "Error: Define a password with -w\n");
+	}
+	if (Vol != NULL && Vol[0] == '\0') {
+        fprintf(stdout, "Error: Define a volume with -s\n");
+	}
+	if (Test != NULL && Test[0] == '\0') {
+        fprintf(stdout, "Error: Define an AFP command with -f\n");
+        fprintf(stdout, "Available commands:\n");
+        list_tests();
+        exit(1);
+	}
+
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
     	return 1;
     }
@@ -225,24 +243,16 @@ int ret;
 		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
+#endif
 		ret = FPopenLogin(Conn, vers, uam, User, Password);
+#if 0
 	}
-#else
-	ret = FPopenLogin(Conn, vers, uam, User, Password);
 #endif
 	if (ret) {
 		printf("Login failed\n");
 		exit(1);
 	}
 	Conn->afp_version = Version;
-
-	/*********************************
-	*/
-	if (Test == NULL) {
-        fprintf( stdout, "no test specified; choose one from:\n");
-        list_tests();
-        exit(1);
-    }
 
     run_one(Test, &av[optind]);
 
