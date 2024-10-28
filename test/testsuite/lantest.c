@@ -28,8 +28,6 @@
 #define NUMTESTS (LASTTEST+1)
 
 CONN *Conn;
-CONN *Conn2;
-uint16_t VolID;
 int ExitCode = 0;
 char Data[300000] = "";
 char    *Vol = "";
@@ -37,6 +35,14 @@ char    *User = "";
 char    *Path;
 int     Version = 34;
 int     Mac = 0;
+
+/* Unused */
+CONN *Conn2;
+uint16_t VolID;
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 
 /* Configure the tests */
 #define DIRNUM 10                                 /* 10^3 nested dirs */

@@ -11,6 +11,10 @@ CONN *Conn;
 CONN *Conn2;
 
 int ExitCode = 0;
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 
 
 #define FN(a) a ## _test
@@ -613,5 +617,14 @@ int ret;
 	if (User2) {
 		FPLogOut(Conn2);
 	}
+
+    fprintf(stdout,"===================\n");
+    fprintf(stdout,"TEST RESULT SUMMARY\n");
+    fprintf(stdout,"-------------------\n");
+	fprintf(stdout, "  Passed:     %d\n", PassCount);
+	fprintf(stdout, "  Failed:     %d\n", FailCount);
+	fprintf(stdout, "  Skipped:    %d\n", SkipCount);
+	fprintf(stdout, "  Not tested: %d\n", NotTestedCount);
+
 	return ExitCode;
 }

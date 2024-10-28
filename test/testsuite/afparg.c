@@ -51,6 +51,10 @@ char    *Test = "";
 CONN       *Conn2;
 int        Mac = 0;
 char       Data[1] = "";
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 
 /* =============================== */
 static void list_tests(void)
