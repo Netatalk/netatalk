@@ -13,7 +13,7 @@ int dir;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dt = FPOpenDT(Conn,vol);
@@ -28,7 +28,7 @@ int dir;
 	FAIL (htonl(AFPERR_NOITEM) != FPGetAppl(Conn,  dt, "ttxt", 1, 0x42 ))
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , file)) ) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 

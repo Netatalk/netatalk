@@ -442,28 +442,6 @@ static void press_enter(char *s)
 	;
 }
 
-/* ------------------------- */
-void failed(void)
-{
-	fprintf(stdout,"\tFAILED\n");
-	if (!ExitCode)
-		ExitCode = 1;
-}
-
-/* ------------------------- */
-void fatal_failed(void)
-{
-	fprintf(stdout,"\tFAILED\n");
-	exit(1);
-}
-/* ------------------------- */
-void nottested(void)
-{
-	fprintf(stdout,"\tNOT TESTED\n");
-	if (!ExitCode)
-		ExitCode = 2;
-}
-
 /* --------------------------------- */
 int is_there(CONN *conn, uint16_t vol, int did, char *name)
 {
@@ -530,15 +508,15 @@ DSI *dsi;
 	sprintf(temp,"WriteTest-%d", id);
 
 	if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, temp)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 	if (!(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (VFS.createfile(Conn, vol,  0, dir , "File")){
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -546,7 +524,7 @@ DSI *dsi;
 	for (i = 1; i <= Count; i++) {
 		fork = VFS.openfork(Conn, vol, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir, "File", OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		fprintf(stdout,"%d\t", i);
@@ -560,7 +538,7 @@ DSI *dsi;
 	    	    nbe = written;
 		    }
 		    if (push < Request && VFS.writeheader(dsi, fork, offset, nbe, Buffer, 0)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 			written -= nbe;
@@ -571,7 +549,7 @@ DSI *dsi;
 	    	    	nbe_r = written_r;
 		    	}
 				if (VFS.writefooter(dsi, fork, offset_r, nbe_r, Buffer, 0)) {
-		    		failed();
+		    		test_failed();
 		    		goto fin1;
 				}
 				push--;
@@ -584,7 +562,7 @@ DSI *dsi;
 	    		nbe_r = written_r;
 		    }
 			if (VFS.writefooter(dsi, fork, offset_r, nbe_r, Buffer, 0)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 			}
 			push--;
@@ -592,29 +570,29 @@ DSI *dsi;
 			offset_r += nbe_r;
 		}
 		if (Flush && VFS.flushfork(Conn, fork)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		timer_footer();
 		if (VFS.closefork(Conn,fork)) {
-			failed();
+			test_failed();
 			goto fin;
 		}
 		fork = 0;
 
 		if (Delete) {
 			if (VFS.delete(Conn, vol,  dir, "File") || VFS.createfile(Conn, vol,  0, dir , "File")){
-				failed();
+				test_failed();
 				goto fin;
 			}
 		}
 	}
 
 fin1:
-	if (fork && VFS.closefork(Conn,fork)) {failed();}
-	if (VFS.delete(Conn, vol,  dir, "File")) {failed();}
+	if (fork && VFS.closefork(Conn,fork)) {test_failed();}
+	if (VFS.delete(Conn, vol,  dir, "File")) {test_failed();}
 fin:
-	if (VFS.delete(Conn, vol,  dir, "")) {failed();}
+	if (VFS.delete(Conn, vol,  dir, "")) {test_failed();}
     fprintf(stdout, "\n");
 	return;
 }
@@ -720,37 +698,37 @@ int cnt = 0;
 	sprintf(temp,"CopyTest-%d", id);
 	if (!Filename) {
 		if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, temp)) {
-			nottested();
+			test_nottested();
 			return;
 		}
 	}
 	else {
 		dir = DIRDID_ROOT;
 		if (ntohl(AFP_OK) != is_there(Conn, VolID, dir, Filename)) {
-			nottested();
+			test_nottested();
 			return;
 		}
 	}
 	if (VolID != VolID2 && ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID2, DIRDID_ROOT, temp)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	if (!Filename && !(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (VolID == VolID2) {
 		dir2 = dir;
 	}
 	else if (!(dir2 = VFS.createdir(Conn, vol2, DIRDID_ROOT , temp))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!Filename) {
 		strcpy(temp, "Source");
 		if (VFS.createfile(Conn, vol,  0, dir , temp)){
-			failed();
+			test_failed();
 			goto fin;
 		}
 	}
@@ -758,24 +736,24 @@ int cnt = 0;
 		strcpy(temp, Filename);
 	}
 	if (VFS.createfile(Conn, vol2,  0, dir2 , "Destination")){
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	for (i = 1; i <= Count; i++) {
 		fork = VFS.openfork(Conn, vol, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		fork2 = VFS.openfork(Conn, vol2, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir2, "Destination", OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork2) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		if (!Filename && (i == 1 || Delete)) {
 			if (init_fork(fork)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 		}
@@ -796,7 +774,7 @@ int cnt = 0;
 		    }
 		    cnt++;
 		    if (push < max && VFS.readheader(dsi, fork, offset, nbe, Buffer)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 		    }
 			written -= nbe;
@@ -807,16 +785,16 @@ int cnt = 0;
 	    	    	nbe_r = written_r;
 		    	}
 				if (VFS.readfooter(dsi, fork, offset_r, nbe_r, Buffer)) {
-		    		failed();
+		    		test_failed();
 		    		goto fin1;
 				}
 		    	if (VFS.writeheader(dsi, fork2, offset_r, nbe_r, Buffer, 0)) {
-					failed();
+					test_failed();
 					goto fin1;
 				}
 				if (cnt >= max*2 -1 ) {
 					if (VFS.writefooter(dsi, fork2, offset_w, nbe_w, Buffer, 0)) {
-		    			failed();
+		    			test_failed();
 		    			goto fin1;
 		    		}
 					written_w -= nbe_w;
@@ -832,15 +810,15 @@ int cnt = 0;
 	    		nbe_r = written_r;
 		    }
 			if (VFS.readfooter(dsi, fork, offset_r, nbe_r, Buffer)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 			}
 			if (VFS.writeheader(dsi, fork2, offset_r, nbe_r, Buffer, 0)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 			if (VFS.writefooter(dsi, fork2, offset_w, nbe_w, Buffer, 0)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 			}
 			push--;
@@ -854,7 +832,7 @@ int cnt = 0;
 	    		nbe_w = written_w;
 		    }
 			if (VFS.writefooter(dsi, fork2, offset_w, nbe_w, Buffer, 0)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 			}
 			written_w -= nbe_w;
@@ -862,12 +840,12 @@ int cnt = 0;
 		}
 		timer_footer();
 		if (VFS.closefork(Conn,fork)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		fork = 0;
 		if (VFS.closefork(Conn,fork2)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		fork2 = 0;
@@ -881,24 +859,24 @@ int cnt = 0;
 			}
 
 			if (!Filename && VFS.createfile(Conn, vol,  0, dir , temp)){
-				failed();
+				test_failed();
 				goto fin;
 			}
 			if (VFS.createfile(Conn, vol2,  0, dir2 , "Destination")){
-				failed();
+				test_failed();
 				goto fin;
 			}
 		}
 	}
 
 fin1:
-	if (fork && VFS.closefork(Conn,fork)) {failed();}
-	if (fork2 && VFS.closefork(Conn,fork2)) {failed();}
-	if (!Filename && VFS.delete(Conn, vol,  dir, temp)) {failed();}
-	if (VFS.delete(Conn, vol2,  dir2, "Destination")) {failed();}
+	if (fork && VFS.closefork(Conn,fork)) {test_failed();}
+	if (fork2 && VFS.closefork(Conn,fork2)) {test_failed();}
+	if (!Filename && VFS.delete(Conn, vol,  dir, temp)) {test_failed();}
+	if (VFS.delete(Conn, vol2,  dir2, "Destination")) {test_failed();}
 fin:
-	if (!Filename && dir && VFS.delete(Conn, vol,  dir, "")) {failed();}
-	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {failed();}
+	if (!Filename && dir && VFS.delete(Conn, vol,  dir, "")) {test_failed();}
+	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {test_failed();}
 
 	return;
 }
@@ -920,77 +898,77 @@ int i;
 
 	sprintf(temp,"ServerCopyTest-%d", id);
 	if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, temp)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 	if (VolID != VolID2 && ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID2, DIRDID_ROOT, temp)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	if (!(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (VolID == VolID2) {
 		dir2 = dir;
 	}
 	else if (!(dir2 = VFS.createdir(Conn, vol2, DIRDID_ROOT , temp))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (VFS.createfile(Conn, vol,  0, dir , "Source")){
-		failed();
+		test_failed();
 		goto fin;
 	}
 	for (i = 1; i <= Count; i++) {
 		fork = VFS.openfork(Conn, vol, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir, "Source", OPENACC_WR |OPENACC_RD );
 		if (!fork) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		if (i == 1 || Delete) {
 			if (init_fork(fork)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 		}
 		if (VFS.closefork(Conn,fork)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		fork = 0;
 		fprintf(stdout,"%d\t", i);
 		gettimeofday(&Timer_start, NULL);
 		if (VFS.copyfile(Conn, vol, dir, vol2, dir2, "Source", "", "Destination")) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		timer_footer();
 		if (Delete) {
 			if (VFS.delete(Conn, vol,  dir, "Source")) {
-				failed();
+				test_failed();
 				goto fin;
 			}
 			if (VFS.createfile(Conn, vol,  0, dir , "Source")){
-				failed();
+				test_failed();
 				goto fin;
 			}
 		}
 		if (VFS.delete(Conn, vol2,  dir2, "Destination")) {
-			failed();
+			test_failed();
 			goto fin;
 		}
 	}
 
 fin1:
-	if (fork && VFS.closefork(Conn,fork)) {failed();}
-	if (VFS.delete(Conn, vol,  dir, "Source")) {failed();}
+	if (fork && VFS.closefork(Conn,fork)) {test_failed();}
+	if (VFS.delete(Conn, vol,  dir, "Source")) {test_failed();}
 	VFS.delete(Conn, vol2,  dir2, "Destination");
 fin:
-	if (dir && VFS.delete(Conn, vol,  dir, "")) {failed();}
-	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {failed();}
+	if (dir && VFS.delete(Conn, vol,  dir, "")) {test_failed();}
+	if (dir2 && dir2 != dir && VFS.delete(Conn, vol2,  dir2, "")) {test_failed();}
 
 	return;
 }
@@ -1020,16 +998,16 @@ int push;
 		sprintf(temp,"ReadTest-%d", id);
 
 		if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, temp)) {
-			nottested();
+			test_nottested();
 			return;
 		}
 
 		if (!(dir = VFS.createdir(Conn,vol, DIRDID_ROOT , temp))) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 		if (VFS.createfile(Conn, vol,  0, dir , "File")){
-			failed();
+			test_failed();
 			goto fin;
 		}
 		strcpy(temp, "File");
@@ -1038,7 +1016,7 @@ int push;
 		dir = DIRDID_ROOT;
 		strcpy(temp, Filename);
 		if (ntohl(AFP_OK) != is_there(Conn, VolID, dir, temp)) {
-			nottested();
+			test_nottested();
 			return;
 		}
 	}
@@ -1046,12 +1024,12 @@ int push;
 	for (i = 1; i <= Count; i++) {
 		fork = VFS.openfork(Conn, vol, OPENFORK_DATA , (1<<FILPBIT_FNUM), dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 		if (!fork) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		if (!Filename && (i == 1 || Delete)) {
 			if (init_fork(fork)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 		}
@@ -1068,7 +1046,7 @@ int push;
 	    	    nbe = written;
 		    }
 		    if (push < Request && VFS.readheader(dsi, fork, offset, nbe, Buffer)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 		    }
 			written -= nbe;
@@ -1079,7 +1057,7 @@ int push;
 	    	    	nbe_r = written_r;
 		    	}
 				if (VFS.readfooter(dsi, fork, offset_r, nbe_r, Buffer)) {
-		    		failed();
+		    		test_failed();
 		    		goto fin1;
 				}
 				push--;
@@ -1092,7 +1070,7 @@ int push;
 	    		nbe_r = written_r;
 		    }
 			if (VFS.readfooter(dsi, fork, offset_r, nbe_r, Buffer)) {
-		    	failed();
+		    	test_failed();
 		    	goto fin1;
 			}
 			push--;
@@ -1101,7 +1079,7 @@ int push;
 		}
 		timer_footer();
 
-		if (VFS.closefork(Conn,fork)) {failed();}
+		if (VFS.closefork(Conn,fork)) {test_failed();}
 		fork = 0;
 
 		if (!Filename && Delete) {
@@ -1110,17 +1088,17 @@ int push;
 			}
 
 			if (VFS.createfile(Conn, vol,  0, dir , temp)){
-				failed();
+				test_failed();
 				goto fin;
 			}
 		}
 	}
 
 fin1:
-	if (fork && VFS.closefork(Conn,fork)) {failed();}
-	if (!Filename && VFS.delete(Conn, vol,  dir, temp)) {failed();}
+	if (fork && VFS.closefork(Conn,fork)) {test_failed();}
+	if (!Filename && VFS.delete(Conn, vol,  dir, temp)) {test_failed();}
 fin:
-	if (!Filename && VFS.delete(Conn, vol,  dir, "")) {failed();}
+	if (!Filename && VFS.delete(Conn, vol,  dir, "")) {test_failed();}
 
 	return;
 }
@@ -1163,7 +1141,7 @@ void (*fn)(void) = NULL;
 #ifdef BROKEN_DL
 	fn = test_to_run(token);
 	if (fn == -1) {
-	    nottested();
+	    test_nottested();
 	    return;
 	}
 #else
@@ -1178,7 +1156,7 @@ void (*fn)(void) = NULL;
         fprintf (stdout, "%s\n", dlerror());
     }
     if (!handle || !fn) {
-	    nottested();
+	    test_nottested();
 	    return;
 	}
 #endif
@@ -1186,13 +1164,13 @@ void (*fn)(void) = NULL;
 	press_enter("Opening volume.");
 	VolID = VFS.openvol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 	if (*Vol2) {
 		VolID2 = VFS.openvol(Conn, Vol2);
 		if (VolID2 == 0xffff) {
-			nottested();
+			test_nottested();
 			return;
 		}
 	}

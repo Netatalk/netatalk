@@ -27,7 +27,7 @@ int ret;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!Mac) {
@@ -39,7 +39,7 @@ int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 			goto fin;
 		}
 
@@ -51,7 +51,7 @@ int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 			goto fin;
 		}
 	}
@@ -61,12 +61,12 @@ int ret;
 
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name);
 	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	if (not_valid(ret, /* MAC */0, AFPERR_NOOBJ)) {
-		failed();
+		test_failed();
 	}
 
 fin:

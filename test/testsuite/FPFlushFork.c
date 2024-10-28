@@ -16,14 +16,14 @@ DSI *dsi = &Conn->dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD | OPENACC_WR);
 
     if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
     }
 	filedir.isdir = 0;
@@ -33,7 +33,7 @@ DSI *dsi = &Conn->dsi;
 	sleep(2);
 	FAIL (FPFlushFork(Conn, fork))
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -44,7 +44,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED dates differ\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	mdate = filedir.mdate;
@@ -52,7 +52,7 @@ DSI *dsi = &Conn->dsi;
 	sleep(2);
 	FAIL (FPFlushFork(Conn, fork))
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -63,7 +63,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED dates equal\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	FAIL (htonl(AFPERR_PARAM) != FPFlushFork(Conn, fork +1))

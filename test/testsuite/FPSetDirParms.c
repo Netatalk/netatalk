@@ -19,30 +19,30 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
     filedir.access[0] = 0;
  	if (FPSetDirParms(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) {
-		failed();
+		test_failed();
 		goto fin;
  	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
     filedir.access[0] = 0;
  	if (FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -70,11 +70,11 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -82,7 +82,7 @@ DSI *dsi;
 		filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
  		FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 		if (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  DIRDID_ROOT , name)) {
-			failed();
+			test_failed();
 			goto test_exit;
 		}
 		filedir.attr = ATTRBIT_NODELETE;
@@ -131,20 +131,20 @@ unsigned int ret;
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, ndir, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_ACCESS))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPCreateFile(Conn, vol,  0, dir , name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -154,12 +154,12 @@ unsigned int ret;
 		filedir.attr = ATTRBIT_INVISIBLE| ATTRBIT_SETCLR ;
         ret = FPSetDirParms(Conn, vol, DIRDID_ROOT , rodir, bitmap, &filedir);
 		if (not_valid(ret, AFPERR_ACCESS, 0)) {
-			failed();
+			test_failed();
 		}
  		bitmap = (1<<DIRPBIT_CDATE) |  (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE);
  		ret = FPSetDirParms(Conn, vol, DIRDID_ROOT , rodir, bitmap, &filedir);
 		if (not_valid(ret, AFPERR_ACCESS, 0)) {
-			failed();
+			test_failed();
 		}
 
  		bitmap = (1<<DIRPBIT_UID) | (1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
@@ -216,15 +216,15 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -233,7 +233,7 @@ DSI *dsi2;
     uid = filedir.uid;
 
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , name, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -245,7 +245,7 @@ DSI *dsi2;
 	}
 
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , ndir, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -256,7 +256,7 @@ DSI *dsi2;
 		FAIL (FPSetDirParms(Conn2, vol2, DIRDID_ROOT , ndir, bitmap2, &filedir))
 	}
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , "", 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -265,7 +265,7 @@ DSI *dsi2;
         filedir.uid = uid;
  		ret = FPSetDirParms(Conn2, vol2, DIRDID_ROOT , "", bitmap2, &filedir);
 		if (not_valid(ret, /* MAC */AFPERR_ACCESS, 0)) {
-			failed();
+			test_failed();
 		}
         filedir.access[0] = 0;
         filedir.access[1] = 7;
@@ -273,7 +273,7 @@ DSI *dsi2;
         filedir.access[3] = 7;
  		ret = FPSetDirParms(Conn2, vol2, DIRDID_ROOT , "", bitmap2, &filedir);
 		if (not_valid(ret, /* MAC */AFPERR_ACCESS, 0)) {
-			failed();
+			test_failed();
 		}
 	}
 
@@ -305,16 +305,16 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, dir , name1)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -347,18 +347,18 @@ int ret;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
  		ret = FPSetDirParms(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir);
 		if (not_valid(ret, /* MAC */AFPERR_PARAM, 0)) {
-			failed();
+			test_failed();
 		}
 
     	filedir.access[0] = 0;
@@ -388,14 +388,14 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	bitmap = (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<< DIRPBIT_ACCESS);
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memset(&filedir, 0, sizeof(filedir));
@@ -407,7 +407,7 @@ DSI *dsi;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	ret = FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir);
     if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-        failed();
+        test_failed();
 	}
 	if (!ret) {
         memcpy(filedir.access, old_access, sizeof(old_access));
@@ -417,14 +417,14 @@ DSI *dsi;
     filedir.access[3] = 3; /* only owner */
  	FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	}
 
     memcpy(filedir.access, old_access, sizeof(old_access));
  	FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -453,14 +453,14 @@ DSI *dsi;
 
 	ENTER_TEST
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	bitmap = (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<< DIRPBIT_ACCESS);
 
 	if (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -474,12 +474,12 @@ DSI *dsi;
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 
 	if (!FPCreateFile(Conn, vol,  0, dir , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  dir , name))
 	}
 	/* double check with didn't screw the parent !*/
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -488,7 +488,7 @@ DSI *dsi;
     memcpy(filedir.access, old_access, sizeof(old_access));
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  dir , name))
@@ -521,19 +521,19 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = (1<< DIRPBIT_PDINFO) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	         (1<< DIRPBIT_UNIXPR);
 
 	if (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
@@ -545,7 +545,7 @@ DSI *dsi;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	if (htonl(AFPERR_BITMAP) != FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) {
-	    failed();
+	    test_failed();
 		filedir.unix_priv = S_IRUSR | S_IWUSR;
  		FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	}
@@ -554,12 +554,12 @@ DSI *dsi;
 		(1 << DIRPBIT_UNIXPR);
 
 	if (/* htonl(AFPERR_BITMAP) != */ FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
-	    failed();
+	    test_failed();
 	    goto fin1;
 	}
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM);
 	if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
-	    failed();
+	    test_failed();
 	    goto fin1;
 	}
 	filedir.isdir = 0;
@@ -569,7 +569,7 @@ DSI *dsi;
     filedir.access[0] = 0;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir)) {
-	    failed();
+	    test_failed();
 		filedir.unix_priv = S_IRUSR | S_IWUSR;
  		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
 	}
@@ -604,7 +604,7 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -612,7 +612,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	if (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -624,12 +624,12 @@ DSI *dsi;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, dir , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  dir , name))
 	}
 	/* double check with didn't screw the parent !*/
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -638,7 +638,7 @@ DSI *dsi;
 	filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  dir , name))
@@ -674,12 +674,12 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (!(dir1 = FPCreateDir(Conn,vol, dir , ndir1))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -687,7 +687,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	if (FPGetFileDirParams(Conn, vol, dir1, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -699,12 +699,12 @@ DSI *dsi;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, dir1 , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  dir1 , name))
 	}
 	/* double check with didn't screw the parent !*/
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  dir , name))
@@ -713,7 +713,7 @@ DSI *dsi;
 	filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
  	FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, dir1 , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  dir1 , name))
@@ -749,7 +749,7 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -757,7 +757,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memset(&filedir, 0, sizeof(filedir));
@@ -770,7 +770,7 @@ DSI *dsi;
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  	ret = FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir);
     if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-        failed();
+        test_failed();
 	}
 	if (!ret) {
 		filedir.unix_priv = old_unixpriv;
@@ -780,13 +780,13 @@ DSI *dsi;
 	filedir.unix_priv = S_IRUSR | S_IXUSR ;
  	FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (!FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	}
 	filedir.unix_priv = old_unixpriv;
  	FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -872,7 +872,7 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -880,7 +880,7 @@ DSI *dsi;
 	         (1<< DIRPBIT_UNIXPR);
 
 	if (FPGetFileDirParams(Conn, vol, dir, "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 

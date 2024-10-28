@@ -25,14 +25,14 @@ int i;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 	}
 #if 0
 	FAIL (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "", 0, (1 << DIRPBIT_PDINFO )))
@@ -40,13 +40,13 @@ int i;
     /* > 2 Gb */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin2g;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin2g;
 	}
 	if (Conn2) {
@@ -65,21 +65,21 @@ int i;
 	}
 
 	if (FPRead_ext(Conn, fork, 10, 10000, Data)) {
-		failed();
+		test_failed();
 	}
 	else for (i = 0; i < 10000; i++) {
 		if (Data[i] != 0) {
-			failed();
+			test_failed();
 			break;
 		}
 	}
 
 	if (FPRead_ext(Conn, fork, ((off_t)1 << 31) +20, 3000, Data)) {
-		failed();
+		test_failed();
 	}
 	else for (i = 0; i < 3000; i++) {
 		if (Data[i] == 0) {
-			failed();
+			test_failed();
 			break;
 		}
 	}
@@ -87,7 +87,7 @@ int i;
 	if ( FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 	}
 fin2g:
 	FAIL (FPCloseFork(Conn,fork))
@@ -100,12 +100,12 @@ fin2g:
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, "very big",OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, "very big",OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0 ))
@@ -117,24 +117,24 @@ fin2g:
 	}
 
 	if (FPRead_ext(Conn, fork, 10, 10000, Data)) {
-		failed();
+		test_failed();
 	}
 	else for (i = 0; i < 10000; i++) {
 		if (Data[i] != 0) {
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED Data != 0\n");
 			}
-			failed_nomsg();
+			test_failed();
 			break;
 		}
 	}
 
 	if (FPRead_ext(Conn, fork, ((off_t)1 << 32) +20, 1500, Data)) {
-		failed();
+		test_failed();
 	}
 	else for (i = 0; i < 1500; i++) {
 		if (Data[i] == 0) {
-			failed();
+			test_failed();
 			break;
 		}
 	}
@@ -142,7 +142,7 @@ fin2g:
 	if (FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork))

@@ -23,12 +23,12 @@ int ret;
 uint16_t vol = VolID;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		return;
 	}
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
-		failed();
+		test_failed();
 		FPDelete(Conn, vol,  DIRDID_ROOT, name);
 		return;
 	}
@@ -39,7 +39,7 @@ uint16_t vol = VolID;
 	if (!Quiet && FPWrite(Conn, fork, 10, 40, Data, 0)) {fprintf(stdout,"\tFAILED\n");}
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1) {
-		failed();
+		test_failed();
 		FPCloseFork(Conn,fork);
 	}
 
@@ -89,7 +89,7 @@ uint16_t vol = VolID;
 	FPCloseFork(Conn,fork);
 	fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED\n");
 		}
@@ -120,7 +120,7 @@ uint16_t vol2;
 
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 //	test_bytelock(vol2, name, OPENFORK_DATA);

@@ -41,33 +41,27 @@ struct sigaction action;
 		goto test_exit;
 	}
 
-    if (!Quiet) {
-    	fprintf(stdout,"\tSKIPPED, FIXME need to recheck GetSessionToken 0\n");
-    }
-	skipped_nomsg();
-	goto test_exit;
-
 	ret = FPGetSessionToken(Conn, 0, 0, 0, NULL);
 	if (ret) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
     if ((conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-    	nottested();
+    	test_nottested();
 		goto test_exit;
     }
     conn2->type = 0;
     dsi3 = &conn2->dsi;
 	sock = OpenClientSocket(Server, Port);
     if ( sock < 0) {
-    	nottested();
+    	test_nottested();
 		goto test_exit;
     }
     dsi3->protocol = DSI_TCPIP;
 	dsi3->socket = sock;
 	ret = FPopenLoginExt(conn2, vers, uam, User, Password);
 	if (ret) {
-    	nottested();
+    	test_nottested();
 		goto test_exit;
 	}
 	conn2->afp_version = Conn->afp_version;
@@ -76,39 +70,39 @@ struct sigaction action;
 
 	vol2  = FPOpenVol(conn2, Vol);
 	if (vol2 == 0xffff) {
-    	nottested();
+    	test_nottested();
 		goto fin;
 	}
 	fork = FPOpenFork(conn2, vol2, OPENFORK_RSCS , 0 ,DIRDID_ROOT, name, /* OPENACC_WR |OPENACC_RD |*/
 	OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
-    	nottested();
+    	test_nottested();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , 0 ,DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (fork1) {
 		FAIL (FPCloseFork(Conn,fork1))
-    	nottested();
+    	test_nottested();
 		goto fin;
 	}
 
 	ret = FPGetSessionToken(conn2, 0, 0, 0, NULL);
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memcpy(&len, dsi3->data, sizeof(uint32_t));
 	len = ntohl(len);
 	if (!len) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (!(token = malloc(len +4))) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED malloc(%x) %s\n", len, strerror(errno));
         }
-		failed_nomsg();
+		test_failed();
 		goto fin;
 	}
 
@@ -116,7 +110,7 @@ struct sigaction action;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART | SA_ONESHOT;
     if (sigaction(SIGPIPE, &action, NULL) < 0) {
-    	failed();
+    	test_failed();
     	goto fin;
     }
 
@@ -124,13 +118,13 @@ struct sigaction action;
 	/* wrong token */
 	ret =  FPDisconnectOldSession(Conn, 0, len +4, token);
 	if (ret != htonl(AFPERR_MISC)) {
-		failed();
+		test_failed();
 	}
 
 	ret =  FPDisconnectOldSession(Conn, 0, len, token);
 
 	if (ret != htonl(AFPERR_SESSCLOS)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	sleep(2);
@@ -138,7 +132,7 @@ struct sigaction action;
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , 0 ,DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork1) {
 	    /* arg we are there */
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(conn2,fork))
 		goto fin;
 	}
@@ -149,7 +143,7 @@ fin:
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
     if (sigaction(SIGPIPE, &action, NULL) < 0) {
-    	failed();
+    	test_failed();
     }
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -191,21 +185,21 @@ uint32_t time= 12345;
 
     /* connection 1 */
     if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn1->type = 0;
     loc_dsi1 = &loc_conn1->dsi;
     sock1 = OpenClientSocket(Server, Port);
     if ( sock1 < 0) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_dsi1->protocol = DSI_TCPIP;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn1->afp_version = Conn->afp_version;
@@ -213,40 +207,40 @@ uint32_t time= 12345;
 
     ret = FPGetSessionToken(loc_conn1, 3, time, strlen(id0), id0);
     if (ret) {
-        failed();
+        test_failed();
         goto fin;
     }
 
     memcpy(&len, loc_dsi1->data, sizeof(uint32_t));
     len = ntohl(len);
     if (!len) {
-        failed();
+        test_failed();
         goto fin;
     }
     if (!(token = malloc(len + 4))) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED malloc(%x) %s\n", len, strerror(errno));
         }
-        failed_nomsg();
+        test_failed();
         goto fin;
     }
     memcpy(token, loc_dsi1->data + sizeof(uint32_t), len);
 
     if (0xffff == (vol = FPOpenVol(loc_conn1, Vol))) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     FAIL(FPCreateFile(loc_conn1, vol,  0, DIRDID_ROOT , name));
     fork = FPOpenFork(loc_conn1, vol, OPENFORK_DATA , 0, DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD);
     if (!fork)
-        failed();
+        test_failed();
 
     /* done connection 1 */
 
     /* --------------------------------- */
     /* connection 2 */
     if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -254,7 +248,7 @@ uint32_t time= 12345;
     loc_dsi2 = &loc_conn2->dsi;
     sock2 = OpenClientSocket(Server, Port);
     if ( sock2 < 0) {
-        nottested();
+        test_nottested();
         goto fin;
     }
 
@@ -262,7 +256,7 @@ uint32_t time= 12345;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, uam, User, Password);
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn2->afp_version = Conn->afp_version;
@@ -323,7 +317,7 @@ struct afp_filedir_parms filedir;
     /* setup 2 new connections for testing */
 
     if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -331,7 +325,7 @@ struct afp_filedir_parms filedir;
     loc_dsi1 = &loc_conn1->dsi;
     sock1 = OpenClientSocket(Server, Port);
     if ( sock1 < 0) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -339,14 +333,14 @@ struct afp_filedir_parms filedir;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, no_user_uam, "", "");
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn1->afp_version = Conn->afp_version;
 
     ret = FPGetSessionToken(loc_conn1, 3, time, strlen(id0), id0);
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -354,29 +348,29 @@ struct afp_filedir_parms filedir;
     memcpy(&len, loc_dsi1->data, sizeof(uint32_t));
     len = ntohl(len);
     if (!len) {
-        failed();
+        test_failed();
 		goto test_exit;
     }
     if (!(token = malloc(len +4))) {
         if (!Quiet) {
             fprintf(stdout, "\tNOT TESTED malloc(%x) %s\n", len, strerror(errno));
         }
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     memcpy(token, loc_dsi1->data + sizeof(uint32_t), len);
 
     if (0xffff == (vol1 = FPOpenVol(loc_conn1, Vol))) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
     if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -386,14 +380,14 @@ struct afp_filedir_parms filedir;
     filedir.access[2] = 7;
     filedir.access[3] = 7;
  	if (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
     FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name));
 
     /* --------------------------------- */
     if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -401,7 +395,7 @@ struct afp_filedir_parms filedir;
     loc_dsi2 = &loc_conn2->dsi;
     sock2 = OpenClientSocket(Server, Port);
     if ( sock2 < 0) {
-        nottested();
+        test_nottested();
         goto fin;
     }
 
@@ -409,7 +403,7 @@ struct afp_filedir_parms filedir;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn2->afp_version = Conn->afp_version;
@@ -418,7 +412,7 @@ struct afp_filedir_parms filedir;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto fin;
     }
 
@@ -427,7 +421,7 @@ struct afp_filedir_parms filedir;
         sleep(1);
         FAIL( FPGetSessionToken(loc_conn2, 4, time, strlen(id1), id1) );
     } else {
-        failed();
+        test_failed();
         FAIL (FPLogOut(loc_conn1))
     }
 
@@ -436,7 +430,7 @@ struct afp_filedir_parms filedir;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
@@ -485,7 +479,7 @@ struct afp_filedir_parms filedir;
     /* setup 2 new connections for testing */
 
     if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -493,7 +487,7 @@ struct afp_filedir_parms filedir;
     loc_dsi1 = &loc_conn1->dsi;
     sock1 = OpenClientSocket(Server, Port);
     if ( sock1 < 0) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -501,14 +495,14 @@ struct afp_filedir_parms filedir;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn1->afp_version = Conn->afp_version;
 
     ret = FPGetSessionToken(loc_conn1, 3, time, strlen(id0), id0);
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -516,29 +510,29 @@ struct afp_filedir_parms filedir;
     memcpy(&len, loc_dsi1->data, sizeof(uint32_t));
     len = ntohl(len);
     if (!len) {
-        failed();
+        test_failed();
 		goto test_exit;
     }
     if (!(token = malloc(len +4))) {
         if (!Quiet) {
             fprintf(stdout, "\tNOT TESTED malloc(%x) %s\n", len, strerror(errno));
         }
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     memcpy(token, loc_dsi1->data + sizeof(uint32_t), len);
 
     if (0xffff == (vol1 = FPOpenVol(loc_conn1, Vol))) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
     if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -548,14 +542,14 @@ struct afp_filedir_parms filedir;
     filedir.access[2] = 7;
     filedir.access[3] = 7;
  	if (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
     FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name));
 
     /* --------------------------------- */
     if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
 
@@ -563,7 +557,7 @@ struct afp_filedir_parms filedir;
     loc_dsi2 = &loc_conn2->dsi;
     sock2 = OpenClientSocket(Server, Port);
     if ( sock2 < 0) {
-        nottested();
+        test_nottested();
         goto fin;
     }
 
@@ -571,7 +565,7 @@ struct afp_filedir_parms filedir;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
     if (ret) {
-        nottested();
+        test_nottested();
 		goto test_exit;
     }
     loc_conn2->afp_version = Conn->afp_version;
@@ -580,7 +574,7 @@ struct afp_filedir_parms filedir;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto fin;
     }
 
@@ -590,7 +584,7 @@ struct afp_filedir_parms filedir;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 
     sleep(1);
@@ -599,7 +593,7 @@ struct afp_filedir_parms filedir;
 
 	fork = FPOpenFork(loc_conn1, vol1, OPENFORK_RSCS , 0 , dir, name, OPENACC_WR |OPENACC_RD |OPENACC_DWR| OPENACC_DRD);
     if ( !fork )
-    	failed();
+    	test_failed();
 
 	FAIL (FPCloseFork(loc_conn1, fork))
 
@@ -618,7 +612,10 @@ void FPDisconnectOldSession_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
+// FIXME: need to recheck GetSessionToken 0
+#if 0
     test222();
+#endif
     test338();
     test339();
     test370();

@@ -24,7 +24,7 @@ char *file="test398_file";
     }
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-    	nottested();
+    	test_nottested();
         goto test_exit;
     }
 
@@ -74,7 +74,7 @@ char *attr_name="test399_attribute";
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-    	nottested();
+    	test_nottested();
         goto test_exit;
     }
 
@@ -83,7 +83,7 @@ char *attr_name="test399_attribute";
 
 	/* check create flag */
 	if (ntohl(AFPERR_EXIST) != FPSetExtAttr(Conn, vol, DIRDID_ROOT, 2, file, attr_name, "test399_newdata"))
-		failed();
+		test_failed();
 
 	FAIL(FPListExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file))
 
@@ -91,10 +91,10 @@ char *attr_name="test399_attribute";
 	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name))
 	FAIL(FPRemoveExtAttr(Conn,vol, DIRDID_ROOT , 0, file, attr_name))
 	if (ntohl(AFPERR_MISC) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name)) {
-		failed();
+		test_failed();
 	}
 	if (ntohl(AFPERR_MISC) != FPRemoveExtAttr(Conn,vol, DIRDID_ROOT , 0, file, attr_name))
-		failed();
+		test_failed();
 
     FPDelete(Conn, vol,  DIRDID_ROOT , file);
 
@@ -129,7 +129,7 @@ STATIC void test432()
 	bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -156,7 +156,7 @@ STATIC void test432()
 	memcpy(&attrlen, dsi->data + 2, 4);
 	attrlen = ntohl(attrlen);
 	if (attrlen != strlen(attrdata)) {
-		failed;
+		test_failed();
 	}
 
 	FPDelete(Conn, vol,  DIRDID_ROOT , file);

@@ -20,18 +20,18 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir =FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -62,12 +62,12 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
-		failed();
+		test_failed();
 		goto end;
 	}
 	filedir.isdir = 1;
@@ -78,7 +78,7 @@ DSI *dsi;
 	sleep(4);
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name,bitmap, 0 )) {
-		failed();
+		test_failed();
 		goto end;
 	}
 	filedir.isdir = 0;
@@ -94,7 +94,7 @@ DSI *dsi;
 
 	bitmap = (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0 )) {
-		failed();
+		test_failed();
 		goto end;
 	}
 	filedir.isdir = 0;
@@ -104,7 +104,7 @@ DSI *dsi;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
-		failed();
+		test_failed();
 		goto end;
 	}
 	filedir.isdir = 1;
@@ -133,11 +133,11 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0 )) {
-		nottested();
+		test_nottested();
 	}
 	else {
 		filedir.isdir = 0;
@@ -175,17 +175,17 @@ DSI *dsi;
 
 	memset(&filedir, 0, sizeof(filedir));
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, type , 0 ,DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -193,7 +193,7 @@ DSI *dsi;
 		/* wrong attrib (open fork set ) */
  		ret = FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir);
 		if (not_valid(ret, /* MAC */AFPERR_PARAM, 0)) {
-			failed();
+			test_failed();
 		}
 		bitmap =  (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
  		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
@@ -203,7 +203,7 @@ DSI *dsi;
 	fork1 = FPOpenFork(Conn, vol, type , 0 ,DIRDID_ROOT, name, OPENACC_RD);
 	if (fork1) {
 		FAIL (FPCloseFork(Conn,fork1))
-		failed();
+		test_failed();
 	}
 
 	FPCloseFork(Conn,fork);
@@ -233,11 +233,11 @@ DSI *dsi;
  	}
  
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0 )) {
-		nottested();
+		test_nottested();
 	}
 	else {
 		filedir.isdir = 0;
@@ -314,19 +314,19 @@ int fork = 0;
 	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
     if (afp_symlink(dest, name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,DIRDID_ROOT, name , OPENACC_RD);
 	if (!fork) {
 	    /* Trying to open the linked file? */
-		failed();
+		test_failed();
 	}
 
 test_exit:
@@ -356,21 +356,21 @@ uint16_t vol2 = 0xffff;
 
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
-		nottested();
+		test_nottested();
 		goto test_error;
 	}
 
     if (afp_symlink(dest, name)) {
-		nottested();
+		test_nottested();
 		goto test_error;
 	}
     if (afp_symlink(dest, name2)) {
-		nottested();
+		test_nottested();
 		goto test_error;
 	}
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -405,12 +405,12 @@ int id;
 	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
     if (afp_symlink(dest, name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -419,13 +419,13 @@ int id;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,DIRDID_ROOT, name , OPENACC_RD);
 	if (!fork) {
 	    /* Trying to open the linked file? */
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	filedir.did = 0;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -434,7 +434,7 @@ int id;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED cnids are not the same %x %x\n", filedir.did, id);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 
@@ -465,12 +465,12 @@ STATIC void test430()
 	ENTER_TEST
 
     if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , dest)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
     if (afp_symlink(dest, name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 

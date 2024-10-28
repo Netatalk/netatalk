@@ -36,7 +36,7 @@ uint32_t time= 12345;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
     }
 
@@ -51,11 +51,11 @@ uint32_t time= 12345;
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name);
 	if (sigp || ret == (unsigned)-1) {
 		fprintf(stdout,"\tFAILED disconnected %d\n", sigp);
-		failed_nomsg();
+		test_failed();
         /* try to reconnect */
         Conn->dsi.socket = OpenClientSocket(Server, Port);
         if (Conn->dsi.socket < 0) {
-            nottested();
+            test_nottested();
             goto fin;
         }
         Conn->dsi.protocol = DSI_TCPIP;
@@ -65,7 +65,7 @@ uint32_t time= 12345;
             ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 
         if (ret) {
-            nottested();
+            test_nottested();
             goto fin;
         }
 
@@ -74,13 +74,13 @@ uint32_t time= 12345;
 
         vol = VolID  = FPOpenVol(Conn, Vol);
         if (vol == 0xffff) {
-            nottested();
+            test_nottested();
             goto fin;
         }
         FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
 	} else if (ret) {
-		failed();
+		test_failed();
 	}
 
 	/* always there ? */
@@ -90,7 +90,7 @@ fin:
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 test_exit:
 	exit_test("FPzzz:test223: AFP 3.x enter sleep mode");
@@ -118,7 +118,7 @@ uint32_t time= 12345;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
     }
 
@@ -131,12 +131,12 @@ uint32_t time= 12345;
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name);
 	if (!sigp && ret != (unsigned)-1) {
 		fprintf(stdout,"\tFAILED not disconnected \n");
-		failed_nomsg();
+		test_failed();
 	} else {
         /* try to reconnect */
         Conn->dsi.socket = OpenClientSocket(Server, Port);
         if (Conn->dsi.socket < 0) {
-            nottested();
+            test_nottested();
             goto fin;
         }
         Conn->dsi.protocol = DSI_TCPIP;
@@ -146,7 +146,7 @@ uint32_t time= 12345;
             ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 
         if (ret) {
-            nottested();
+            test_nottested();
             goto fin;
         }
 
@@ -155,7 +155,7 @@ uint32_t time= 12345;
 
         vol = VolID  = FPOpenVol(Conn, Vol);
         if (vol == 0xffff) {
-            nottested();
+            test_nottested();
             goto fin;
         }
         FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
@@ -169,7 +169,7 @@ fin:
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 test_exit:
 	exit_test("FPzzz:test224: disconnected after 2 mn");
@@ -197,7 +197,7 @@ int sock;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
     }
 	FAIL (FPzzz(Conn, 1))
@@ -212,7 +212,7 @@ fin:
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 test_exit:
 	exit_test("FPzzz:test239: AFP 3.x enter extended sleep");

@@ -142,17 +142,17 @@ STATIC void test500()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
@@ -170,13 +170,13 @@ STATIC void test500()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, renamedsubdir1)) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
         }
-        failed();
+        test_failed();
 	}
 
 
@@ -212,17 +212,17 @@ STATIC void test501()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
@@ -237,13 +237,13 @@ STATIC void test501()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, renamedsubdir1)) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
         }
-        failed();
+        test_failed();
 	}
 
 
@@ -279,18 +279,18 @@ STATIC void test502()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     FAIL (FPCreateFile(Conn, vol1,  0, subdir1_id, "file1"))
     if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
@@ -308,13 +308,13 @@ STATIC void test502()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, renamedsubdir1)) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
         }
-        failed();
+        test_failed();
 	}
 
 
@@ -351,17 +351,17 @@ STATIC void test503()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
@@ -376,13 +376,13 @@ STATIC void test503()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, renamedsubdir1)) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
         }
-        failed();
+        test_failed();
 	}
 
 
@@ -418,17 +418,17 @@ STATIC void test504()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Create file and get CNID */
     FAIL( FPCreateFile(Conn, vol1,  0, subdir2_id, "file1") );
@@ -449,7 +449,7 @@ STATIC void test504()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
         }
-        failed();
+        test_failed();
 	}
 
 fin:
@@ -485,17 +485,17 @@ STATIC void test505()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1) );
@@ -510,14 +510,14 @@ STATIC void test505()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir2_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, subdir2
 )) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, subdir2);
         }
-        failed();
+        test_failed();
 	}
 
 
@@ -553,23 +553,23 @@ STATIC void test506()
 		goto test_exit;
 	}
 	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
-        failed();
+        test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
     if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
-        failed();
+        test_failed();
     if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
     if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
-        failed();
+        test_failed();
 
     /* Move and rename dir with second connection */
     FAIL( FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1) );
     /* Re-create renamed directory */
     if ((poisondir_id = FPCreateDir(Conn2, vol2, dir_id, subdir1)) == 0)
-        failed();
+        test_failed();
 
     /* Manually check name and CNID */
 	FAIL( FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap) );
@@ -581,14 +581,14 @@ STATIC void test506()
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir2_id);
         }
-        failed();
+        test_failed();
 	}
 	if (strcmp(filedir.lname, subdir2
 )) {
         if (!Quiet) {
     		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, subdir2);
         }
-        failed();
+        test_failed();
 	}
 
 

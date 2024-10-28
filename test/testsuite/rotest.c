@@ -7,7 +7,7 @@ int dir;
 char *ndir = "read only dir";
 
 	if ((dir = FPCreateDir(Conn,VolID, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, VolID,  dir , ""))
 		return 0;
 	}
@@ -18,7 +18,7 @@ char *ndir = "read only dir";
 static void check_test(unsigned int err)
 {
 	if (err != ntohl(AFPERR_VLOCK) && err != ntohl(AFPERR_ACCESS) ) {
-		failed();
+		test_failed();
 	}
 }
 
@@ -49,7 +49,7 @@ unsigned int ret;
 
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!really_ro())
@@ -59,14 +59,14 @@ unsigned int ret;
 	bitmap = (1 << DIRPBIT_LNAME);
 	ret = FPEnumerateFull(Conn, VolID, 1, 1, 800,  DIRDID_ROOT, "", 0 , bitmap);
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	dir = strdup(filedir.lname);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!Quiet) {
@@ -76,14 +76,14 @@ unsigned int ret;
 	bitmap = (1 << FILPBIT_LNAME);
 	ret = FPEnumerateFull(Conn, VolID, 1, 1, 800,  DIRDID_ROOT, "", bitmap, 0);
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	file = strdup(filedir.lname);
 	if (!file) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!Quiet) {
@@ -94,14 +94,14 @@ unsigned int ret;
 	bitmap = (1 << FILPBIT_LNAME);
 	ret = FPEnumerateFull(Conn, VolID, 2, 1, 800,  DIRDID_ROOT, "", bitmap, 0);
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 0;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	file1 = strdup(filedir.lname);
 	if (!file1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!Quiet) {
@@ -118,7 +118,7 @@ unsigned int ret;
 
 	bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , file, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -137,19 +137,19 @@ unsigned int ret;
 		*/
 		ret = FPCreateID(Conn,VolID, DIRDID_ROOT, file);
 		if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_EXISTID )) {
-			failed();
+			test_failed();
 		}
 		fid = get_fid(Conn, VolID, DIRDID_ROOT, file);
 		if (fid) {
 			ret = FPDeleteID(Conn, VolID, filedir.did);
 			if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_NOID )) {
-				failed();
+				test_failed();
 			}
 		}
 	}
 	ret = FPExchangeFile(Conn, VolID, DIRDID_ROOT, DIRDID_ROOT, file, file1);
 	if (not_valid(ret, /* MAC */AFPERR_VLOCK, AFPERR_ACCESS )) {
-		failed();
+		test_failed();
 	}
 
 	/* -- volume.c -- */
@@ -165,7 +165,7 @@ unsigned int ret;
 	/* -- filedir.c -- */
 	bitmap = (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) | (1<<FILPBIT_BDATE) | (1<<FILPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , file, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -175,7 +175,7 @@ unsigned int ret;
 	}
 	bitmap = (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , dir, 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -189,7 +189,7 @@ unsigned int ret;
 
 	bitmap = (1<<DIRPBIT_OFFCNT);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , dir, 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -197,7 +197,7 @@ unsigned int ret;
 		ret = FPDelete(Conn, VolID, DIRDID_ROOT, dir);
 		if (ret != htonl(AFPERR_VLOCK) ) {
 			if (!filedir.offcnt) {
-				failed();
+				test_failed();
 			}
 			else if (!Quiet) {
 				fprintf(stdout,"\tWARNING \"%s\", not empty FPDelete skipped\n", dir);
@@ -212,7 +212,7 @@ unsigned int ret;
 	/* -- directory.c -- */
 	bitmap = (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, VolID,  DIRDID_ROOT , dir, 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -221,7 +221,7 @@ unsigned int ret;
  		check_test(ret);
  	}
 	if ((did = FPCreateDir(Conn,VolID, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, VolID,  did , ""))
 		goto test_exit;
 	}
@@ -231,17 +231,17 @@ unsigned int ret;
 	fork = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file,OPENACC_RD );
 
     if (!fork) {
-		failed();
+		test_failed();
     }
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn, fork1))
     }
     FAIL (FPCloseFork(Conn, fork))
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn, fork1))
     }
 
@@ -249,14 +249,14 @@ unsigned int ret;
 	fork = FPOpenFork(Conn, VolID, OPENFORK_DATA , bitmap ,DIRDID_ROOT, file,OPENACC_RD );
 
     if (!fork) {
-		failed();
+		test_failed();
     }
 	bitmap = (1<<FILPBIT_DFLEN);
 	ret = FPSetForkParam(Conn, fork, bitmap, 0);
  	check_test(ret);
 
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else if ((flen = get_forklen(dsi, OPENFORK_DATA))) {
 		FAIL (FPRead(Conn, fork, 0, min(100, flen), Data))
@@ -269,17 +269,17 @@ unsigned int ret;
 	fork = FPOpenFork(Conn, VolID, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, file,OPENACC_RD );
 
     if (!fork) {
-		failed();
+		test_failed();
     }
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn, fork1))
     }
     FAIL (FPCloseFork(Conn, fork))
 	fork1 = FPOpenFork(Conn, VolID, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, file, OPENACC_WR );
     if (fork1) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn, fork1))
     }
 
@@ -287,7 +287,7 @@ unsigned int ret;
 	fork = FPOpenFork(Conn, VolID, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, file,OPENACC_RD );
 
     if (!fork) {
-		failed();
+		test_failed();
     }
 
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 100);

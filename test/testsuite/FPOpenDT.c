@@ -15,12 +15,12 @@ DSI *dsi;
 
 	dir = FPOpenDT(Conn,vol);
 	if (dir == 0xffff) {
-		failed();
+		test_failed();
 	}
 
 	dir = FPOpenDT(Conn,vol +1);
     if (dir != 0xffff || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 	exit_test("FPOpenDT:test200: OpenDT call");
 }

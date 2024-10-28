@@ -45,30 +45,30 @@ extern void assert_true(int real, char *file, int line, void (*fn)(), int log_le
 extern void assert_false(int real, char *file, int line, void (*fn)(), int log_level);
 
 #define ASSERT_TRUE(a) \
-    assert_true(a, __FILE__, __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_true(a, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
 #define ASSERT_FALSE(a) \
-    assert_false(a, __FILE__, __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_false(a, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
 
 /* ASSERT EQUAL */
 #define ASSERT_EQ(a, b) \
-    assert_equal(a, b, __FILE__,  __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_equal(a, b, __FILE__,  __LINE__, test_failed, AFP_LOG_ERROR)
 #define ASSERT_EQ_U(a, b) \
-    assert_equal_u(a, b, __FILE__, __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_equal_u(a, b, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
 #define ASSERT_EQ_NOTTEST(a, b) \
-    assert_not_equal(a, b, __FILE__,  __LINE__, nottested_nomsg, AFP_LOG_WARNING)
+    assert_not_equal(a, b, __FILE__,  __LINE__, test_nottested, AFP_LOG_WARNING)
 #define ASSERT_EQ_U_NOTTEST(a, b) \
-    assert_not_equal_u(a, b, __FILE__,  __LINE__, nottested_nomsg, AFP_LOG_WARNING)
+    assert_not_equal_u(a, b, __FILE__,  __LINE__, test_nottested, AFP_LOG_WARNING)
 
 
 /* ASSERT NOT EQUAL */
 #define ASSERT_NE(a, b) \
-    assert_not_equal(a, b, __FILE__, __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_not_equal(a, b, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
 #define ASSERT_NE_U(a, b) \
-    assert_not_equal_u(a, b, __FILE__, __LINE__, failed_nomsg, AFP_LOG_ERROR)
+    assert_not_equal_u(a, b, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
 #define ASSERT_NE_NOTTEST(a, b) \
-    assert_equal(a, b, __FILE__,  __LINE__, nottested_nomsg, AFP_LOG_WARNING)
+    assert_equal(a, b, __FILE__,  __LINE__, test_nottested, AFP_LOG_WARNING)
 #define ASSERT_NE_U_NOTTEST(a, b) \
-    assert_equal_u(a, b, __FILE__,  __LINE__, nottested_nomsg, AFP_LOG_WARNING)
+    assert_equal_u(a, b, __FILE__,  __LINE__, test_nottested, AFP_LOG_WARNING)
 
 
 #define ASSERT_LT(a, b)     /* a < b  */

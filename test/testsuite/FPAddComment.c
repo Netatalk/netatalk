@@ -27,7 +27,7 @@ int  dt;
 	}
 
 	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, name2) ) ) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name)) && !Quiet) {
@@ -36,11 +36,11 @@ int  dt;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, DIRDID_ROOT , name3))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -50,32 +50,32 @@ int  dt;
 	cmt = "essai";
 	ret = FPAddComment(Conn, vol,  DIRDID_ROOT , name, cmt);
 	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPAddComment(Conn, vol,  DIRDID_ROOT , name2, cmt);
 	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 	if (!ret) {
 		ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name2);
 		if (ret || memcmp(cmt, dsi->commands +1, strlen(cmt))) {
-			failed();
+			test_failed();
 		}
 	}
 
 	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "Comment for toto.txt"))
 
 	if (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "Comment for test folder")) {
-		failed();
+		test_failed();
 	}
 	if (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3)) {
-		failed();
+		test_failed();
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name1,OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 

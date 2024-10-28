@@ -16,7 +16,7 @@ char *tp;
 	/* --------- */
     ret = FPOpenVolFull(Conn, Vol, 0);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_BITMAP)) {
-		failed();
+		test_failed();
     }
 
 	if (ret != 0xffff) {
@@ -25,7 +25,7 @@ char *tp;
 	/* --------- */
     ret = FPOpenVolFull(Conn, Vol, 0xffff);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_BITMAP)) {
-		failed();
+		test_failed();
     }
 	if (ret != 0xffff) {
     	FAIL (FPCloseVol(Conn, ret));
@@ -39,7 +39,7 @@ char *tp;
     ret = FPOpenVol(Conn, tp);
 	free(tp);
     if (ret != 0xffff || dsi->header.dsi_code != htonl(AFPERR_NOOBJ)) {
-		failed();
+		test_failed();
     }
 	if (ret != 0xffff) {
     	FAIL (FPCloseVol(Conn, ret));
@@ -47,21 +47,21 @@ char *tp;
 	/* -------------- */
 	ret = FPOpenVol(Conn, Vol);
 	if (ret == 0xffff) {
-		failed();
+		test_failed();
 	}
 	vol = FPOpenVol(Conn, Vol);
 	if (vol != ret) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED double open != volume id\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
     FAIL (FPCloseVol(Conn, ret));
     FAIL (!FPCloseVol(Conn, ret));
 fin:
 	ret = VolID = FPOpenVol(Conn, Vol);
 	if (ret == 0xffff) {
-		failed();
+		test_failed();
 	}
 	exit_test("FPOpenVol:test205: Open Volume call");
 }
@@ -79,14 +79,14 @@ uint16_t ret;
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	/* --------- */
     ret = FPOpenVolFull(Conn, Vol, 1<<VOLPBIT_VID);
 	if (ret == 0xffff) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, 1 << DIRPBIT_ACCESS));
@@ -96,7 +96,7 @@ uint16_t ret;
 fin:
 	ret = VolID = FPOpenVol(Conn, Vol);
 	if (ret == 0xffff) {
-		failed();
+		test_failed();
 	}
 	exit_test("FPOpenVol:test404: lazy init of dbd cnid");
 }

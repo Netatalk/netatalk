@@ -11,20 +11,20 @@ uint16_t bitmap = 0;
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock_ext(Conn, fork, 0, 1 /* clear */ , 0, 100)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100))
@@ -36,7 +36,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1)
-		failed();
+		test_failed();
 	else {
 		FAIL (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0 /* set */ , 20, 60))
 		FAIL (FPSetForkParam(Conn, fork, len , 50))
@@ -55,17 +55,17 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	FAIL (FPSetForkParam(Conn, fork, len , 200))
 
 	if (FPByteLock_ext(Conn, fork, 1 /* end */, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock_ext(Conn, fork, 0, 1 /* clear */ , 200, 100)) {
-		failed();
+		test_failed();
 	}
 
 	if (FPByteLock_ext(Conn, fork, 0 /* end */, 0 /* set */, 0, -1)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock_ext(Conn, fork, 0, 1 /* clear */ , 0, -1)) {
-		failed();
+		test_failed();
 	}
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0 /* start */, 0 /* set */, 0, 0))
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0 /* start */, 0 /* set */, 0, -2))

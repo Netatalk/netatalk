@@ -13,7 +13,7 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name2))
@@ -59,12 +59,12 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , ndel))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -72,7 +72,7 @@ DSI *dsi;
 
 	bitmap = (1<<DIRPBIT_ATTR);
 	if (FPGetFileDirParams(Conn, vol,  dir1 , "", 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -81,7 +81,7 @@ DSI *dsi;
  		FAIL (FPSetDirParms(Conn, vol, dir1 , "", bitmap, &filedir))
 		ret = FPRename(Conn, vol, DIRDID_ROOT, ndel, "volume");
 		if (ntohl(AFPERR_OLOCK) != ret) {
-			failed();
+			test_failed();
 			if (!ret) {
 				FPRename(Conn, vol, DIRDID_ROOT, "volume", ndel);
 			}
@@ -92,7 +92,7 @@ DSI *dsi;
 
 	ret = FPRename(Conn, vol, DIRDID_ROOT, name2, name2);
 	if (not_valid(ret, /* MAC */0, AFPERR_EXIST)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
@@ -124,24 +124,24 @@ int tp,tp1;
 
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 
 	tdir1  = FPCreateDir(Conn,vol,tdir, name);
 	if (!tdir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  tdir1 , "", 0, (1 << DIRPBIT_OFFCNT))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	bitmap = (1 << DIRPBIT_ACCESS);
 	if (FPGetFileDirParams(Conn, vol,  tdir , "", 0, bitmap)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -151,24 +151,24 @@ int tp,tp1;
     filedir.access[2] = 7;
     filedir.access[3] = 7;
  	if ( FPSetDirParms(Conn, vol, tdir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
  	}
 
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = (1 << DIRPBIT_ACCESS)| (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID);
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , name, 0, bitmap)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	tp = get_did(Conn2, vol2, DIRDID_ROOT, name);
 	if (!tp) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (tp != tdir && !Quiet) {
@@ -176,19 +176,19 @@ int tp,tp1;
 	}
 	tp1 = get_did(Conn2, vol2, tp, name);
 	if (!tp1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (tp1 != tdir1 && !Quiet) {
 		fprintf(stdout,"Warning DID connection1 0x%x ==> connection2 0x%x\n", tdir1, tp1);
 	}
 	if (FPDelete(Conn2, vol2,  tp1 , "")) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol, tdir1 , "");
 		tdir1 = 0;
 	}
 	if (FPDelete(Conn2, vol2,  tp , "")) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol, tdir , "");
 		tdir1 = 0;
 	}
@@ -241,7 +241,7 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -266,23 +266,23 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir1  = FPCreateDir(Conn,vol, DIRDID_ROOT , name1);
 	if (!dir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	dir2  = FPCreateDir(Conn,vol, dir1 , name1);
 	if (!dir2) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPRename(Conn, vol, DIRDID_ROOT, name, dest)) {
-		failed();
+		test_failed();
 	}
 
 fin:
@@ -311,13 +311,13 @@ DSI	*dsi2 = &Conn2->dsi;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -326,7 +326,7 @@ DSI	*dsi2 = &Conn2->dsi;
 	FAIL (FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", bitmap,bitmap))
 
 	if (FPRename(Conn2, vol2, DIRDID_ROOT, name, dest)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", bitmap,bitmap))
 	FAIL (FPCloseVol(Conn2,vol2))
@@ -346,12 +346,12 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -378,12 +378,12 @@ int ret;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	if ((ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) && ret != htonl(AFPERR_EXIST) ) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (ret == htonl(AFPERR_EXIST)) {

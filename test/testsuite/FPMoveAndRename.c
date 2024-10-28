@@ -14,23 +14,23 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir1  = FPCreateDir(Conn,vol, DIRDID_ROOT , name1);
 	if (!dir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	dir2  = FPCreateDir(Conn,vol, dir1 , name1);
 	if (!dir2) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPMoveAndRename(Conn, vol, dir1, dir, name1, name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -42,7 +42,7 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (!FPGetFileDirParams(Conn, vol,  dir1, name1,
@@ -53,7 +53,7 @@ int  dir = 0,dir1 = 0,dir2 = 0;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 fin:
@@ -85,16 +85,16 @@ int ret;
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT , name2)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -102,12 +102,12 @@ int ret;
 	if (Conn2) {
 		if (!(no_access_folder(vol, DIRDID_ROOT, "t73 700"))) {
 			FPDelete(Conn, vol,  dir, name);
-			failed_nomsg();
+			test_failed();
 			goto test_exit;
 		}
 		ret = FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, "t73 700/essay", name1);
 		if (not_valid(ret, /* MAC */AFPERR_NOOBJ, AFPERR_ACCESS)) {
-			failed();
+			test_failed();
 		}
 		delete_folder(vol, DIRDID_ROOT, "t73 700");
 	}
@@ -129,7 +129,7 @@ int ret;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	if (fork) {
 		FAIL (ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name1, name))
@@ -161,12 +161,12 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -174,7 +174,7 @@ uint16_t vol = VolID;
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -204,27 +204,27 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir1 = FPCreateDir(Conn,vol, dir , name1))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir2 = FPCreateDir(Conn,vol, dir , name2))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir3 = FPCreateDir(Conn,vol, dir , name3))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir4 = FPCreateDir(Conn,vol, DIRDID_ROOT, dest))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir5 = FPCreateDir(Conn,vol, dir4 , dest1))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -260,12 +260,12 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -273,7 +273,7 @@ DSI *dsi;
 	FAIL (FPMoveAndRename(Conn, vol, dir, DIRDID_ROOT, name, ""))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -309,12 +309,12 @@ int ret;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	if ((ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) && ret != htonl(AFPERR_EXIST)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 

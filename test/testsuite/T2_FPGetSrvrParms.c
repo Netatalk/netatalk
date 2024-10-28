@@ -34,7 +34,7 @@ unsigned char *b;
 
 	vol2 = FPOpenVol(Conn, Vol2);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	printf("Modify afp.conf and press enter\n");
@@ -45,7 +45,7 @@ unsigned char *b;
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
-		failed();
+		test_failed();
 	}
 	nbe = *(dsi->data +4);
 	b = dsi->data+5;
@@ -58,12 +58,12 @@ unsigned char *b;
 	    b += len;
 	}
 	if (!found) {
-		failed();
+		test_failed();
 	}
 
 	vol2 = FPOpenVol(Conn, Vol2);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	FAIL (FPCloseVol(Conn,vol2))

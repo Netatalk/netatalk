@@ -20,35 +20,35 @@ DSI *dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memset(Data, 0xff, 0x20000);
 
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL -20, 15000, Data, 0 )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL -12000, 15000, Data, 0 )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7ffe0000L, size, Data, 0 )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -78,12 +78,12 @@ int i,j;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
  	if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_BFREE ))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
  	}
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), (1 << VOLPBIT_BFREE));
@@ -95,44 +95,44 @@ int i,j;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memset(Data, 0xff, 0x20000);
 	i = parms.bfree / size;
 	for (j = 0; j < i; j++) {
 		if (FPWrite(Conn, fork, 0, size, Data, 0x80)) {
-			failed();
+			test_failed();
 			goto fin;
 		}
 	}
 
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0, size, Data, 0x80 )) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
  	if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_BFREE ))) {
-		nottested();
+		test_nottested();
 		goto fin;
  	}
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), (1 << VOLPBIT_BFREE));
 
 	if (parms.bfree > 7000) {
 		if (FPWrite(Conn, fork, 0, parms.bfree - 7000, Data, 0x80)) {
-			failed();
+			test_failed();
 			goto fin;
 		}
 	}
 	if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0, 8000, Data, 0x80 )) {
-		failed();
+		test_failed();
 	}
 
 fin:
@@ -156,14 +156,14 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))

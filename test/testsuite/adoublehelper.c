@@ -127,7 +127,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
         if (!Quiet) {
             fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
         }
-        failed_nomsg();
+        test_failed();
         return -1;
     }
 
@@ -141,7 +141,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
         }
     } else {
 #ifndef HAVE_EAFD
@@ -154,7 +154,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
         }
 
 #endif
@@ -172,7 +172,7 @@ int unlink_unix_file(char *path, char *name, char *file)
         if (!Quiet) {
             fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
         }
-		failed_nomsg();
+		test_failed();
 		return -1;
 	}
 	return 0;
@@ -189,7 +189,7 @@ int symlink_unix_file(char *target, char *path, char *source)
         if (!Quiet) {
             fprintf(stdout,"\tFAILED symlink(%s -> %s) %s\n", temp, target, strerror(errno));
         }
-		failed_nomsg();
+		test_failed();
 		return -1;
 	}
 	return 0;
@@ -211,7 +211,7 @@ int delete_unix_adouble(char *path, char *name)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         sprintf(temp, "%s/%s/.AppleDouble", path, name);
@@ -219,7 +219,7 @@ int delete_unix_adouble(char *path, char *name)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED rmdir(%s) %s\n", temp, strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
     }
@@ -240,7 +240,7 @@ static int chmod_unix_adouble(char *path,char *name, int mode)
         if (!Quiet) {
             fprintf(stdout,"\tFAILED %s\n", strerror(errno));
         }
-		failed_nomsg();
+		test_failed();
 		return -1;
 	}
 	return 0;
@@ -260,7 +260,7 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         return 0;
@@ -276,7 +276,7 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         return 0;
@@ -297,7 +297,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         return 0;
@@ -310,7 +310,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         return 0;
@@ -324,7 +324,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
             if (!Quiet) {
                 fprintf(stdout,"\tFAILED %s\n", strerror(errno));
             }
-            failed_nomsg();
+            test_failed();
             return -1;
         }
         return 0;
@@ -367,28 +367,28 @@ uint16_t bitmap =  (1 << DIRPBIT_ACCESS);
     }
 
 	if (!(dir = FPCreateDir(Conn,vol, did , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, dir , file)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!Mac && adouble == AD_V2) {
 		if (delete_unix_rf(Path, name, "")) {
-			nottested();
+			test_nottested();
 		}
 		else if (delete_unix_rf(Path, name, file)) {
-			nottested();
+			test_nottested();
 		}
 		else if (chmod_unix_adouble(Path,name,0555)) {
-			nottested();
+			test_nottested();
 		}
 		ret = dir;
 	}
@@ -399,7 +399,7 @@ fin:
 	if (!ret && dir) {
 		FPDelete(Conn, vol,  dir, file);
 		if (FPDelete(Conn, vol,  did, name)) {
-			nottested();
+			test_nottested();
 		}
 	}
     if (!Quiet) {

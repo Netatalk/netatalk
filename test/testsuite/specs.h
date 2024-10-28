@@ -24,11 +24,11 @@
                 fprintf(stdout, "[%s:%d] " #a "\n", __FILE__, __LINE__); \
             } \
         } \
-        failed_nomsg(); \
+        test_failed(); \
     }
 
-#define EXPECT_FAIL(a, b) do { int _experr;  _experr = (a); if (htonl(_experr) != (b)) { failed(); } } while(0);
-#define FAILEXIT(a, label) if ((a)) { failed(); goto label;}
+#define EXPECT_FAIL(a, b) do { int _experr;  _experr = (a); if (htonl(_experr) != (b)) { test_failed(); } } while(0);
+#define FAILEXIT(a, label) if ((a)) { test_failed(); goto label;}
 #define STATIC
 
 #define ENTER_TEST \
@@ -69,17 +69,14 @@ extern int group_folder(uint16_t vol, int did, char *name);
 extern unsigned int get_vol_free(uint16_t vol) ;
 extern ssize_t get_sessiontoken(const char *buf, char **token);
 
-extern void failed_nomsg(void);
-extern void skipped_nomsg(void);
-extern void nottested_nomsg(void);
-extern void failed(void);
+extern void test_failed(void);
+extern void test_skipped(int why);
+extern void test_nottested(void);
 extern void enter_test(void);
 extern void exit_test(char *name);
 
-extern void nottested(void);
 extern int not_valid(unsigned int ret, int mac_error, int afpd_error);
 extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap, int afpd_error);
-extern void test_skipped(int why);
 
 #define T_CONN2      1
 #define T_PATH       2
@@ -108,6 +105,7 @@ extern void test_skipped(int why);
 #define T_MANUAL     25
 #define T_AFP31      26
 #define T_AFP32      27
+#define T_NONDETERM  28
 
 /* ---------------------------------
 */

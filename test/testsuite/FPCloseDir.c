@@ -20,20 +20,20 @@ DSI *dsi;
 
 	dsi = &Conn->dsi;
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	FAIL (FPCloseDir(Conn, vol, DIRDID_ROOT_PARENT))
 	FAIL (FPCloseDir(Conn, vol, DIRDID_ROOT))
 	ret = FPCloseDir(Conn, vol +1, dir);
 	if (not_valid(ret, /* MAC */AFPERR_PARAM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseDir(Conn, vol, dir))

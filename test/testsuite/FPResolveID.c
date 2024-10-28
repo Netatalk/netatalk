@@ -24,7 +24,7 @@ DSI *dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -33,7 +33,7 @@ DSI *dsi;
 	FAIL (FPCreateID(Conn,vol, dir, name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -73,7 +73,7 @@ DSI *dsi;
 	}
 
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -81,11 +81,11 @@ DSI *dsi;
 
 	ret = FPDeleteID(Conn, vol,  dir1);
 	if (htonl(AFPERR_NOID) != ret) {
-		failed();
+		test_failed();
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -95,13 +95,13 @@ DSI *dsi;
 
 	ret = FPResolveID(Conn, vol, dir, bitmap);
 	if (not_valid_bitmap(ret, BITERR_BADTYPE | BITERR_NOID, AFPERR_BADTYPE)) {
-		failed();
+		test_failed();
 	}
 
 //	FAIL (FPCreateID(Conn,vol, dir, name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	} else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
@@ -110,7 +110,7 @@ DSI *dsi;
 
 	ret = FPCreateID(Conn,vol, dir, name);
 	if (not_valid(ret, /* MAC */AFPERR_EXISTID, 0)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (htonl(AFPERR_EXISTID) != FPCreateID(Conn,vol, dir, name))
@@ -146,7 +146,7 @@ DSI *dsi;
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -193,7 +193,7 @@ DSI *dsi;
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -238,19 +238,19 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;

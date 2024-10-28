@@ -19,19 +19,19 @@ int  dir1;
 
 	vol = VolID = FPOpenVol(Conn, Vol);
 	if (vol == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	dir1  = FPCreateDir(Conn,vol, dir , name1);
 	if (!dir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -41,7 +41,7 @@ int  dir1;
 
 	vol = VolID = FPOpenVol(Conn, Vol);
 	if (vol == 0xffff) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -60,7 +60,7 @@ int  dir1;
 			}
 		}
 		else {
-			failed();
+			test_failed();
 		}
 		/* warm the cache */
 		if (FPEnumerate(Conn, vol,  DIRDID_ROOT , "", 0,
@@ -68,14 +68,14 @@ int  dir1;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
-			failed();
+			test_failed();
 		}
 		else if (FPEnumerate(Conn, vol,  dir, "", 0,
 		     (1<<DIRPBIT_ATTR) | (1<<DIRPBIT_FINFO) |
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
-			failed();
+			test_failed();
 		}
 	}
 
@@ -110,7 +110,7 @@ DSI *dsi;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memcpy(&did, dsi->data +3 * sizeof( uint16_t ), sizeof(did));
@@ -124,7 +124,7 @@ DSI *dsi;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -136,7 +136,7 @@ DSI *dsi;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 #if 0
@@ -174,7 +174,7 @@ char *name = "essai permission";
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_ACCESS)))
 	{
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -188,7 +188,7 @@ char *name = "essai permission";
 	     (1 << DIRPBIT_ACCESS))
 	   )
 	{
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -209,7 +209,7 @@ int  dir;
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -224,7 +224,7 @@ int  dir;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir, name1))
@@ -234,7 +234,7 @@ int  dir;
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  dir, "", 0,
 			(1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)))
 	{
-		failed();
+		test_failed();
 	}
 	ret = FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
@@ -245,7 +245,7 @@ int  dir;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		);
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
-		failed();
+		test_failed();
 	}
 test_exit:
 	exit_test("FPEnumerate:test40: enumerate deleted folder");
@@ -267,11 +267,11 @@ unsigned int ret;
 
 	dir   = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -284,7 +284,7 @@ unsigned int ret;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -298,7 +298,7 @@ unsigned int ret;
 		);
 
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name3,
@@ -311,7 +311,7 @@ unsigned int ret;
 		);
 
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
-		failed();
+		test_failed();
 	}
 
 	if (ntohl(AFPERR_PARAM) != FPEnumerate(Conn, vol,  0 , "",
@@ -323,7 +323,7 @@ unsigned int ret;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
@@ -346,21 +346,21 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir1 = FPCreateDir(Conn,vol, dir , name1))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	ret = FPDelete(Conn, vol,  DIRDID_ROOT , "");
 	if (not_valid_bitmap(ret, BITERR_PARAM | BITERR_BUSY, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPEnumerate(Conn, vol,  DIRDID_ROOT , name,
@@ -372,7 +372,7 @@ uint16_t vol = VolID;
 		);
 
 	if (not_valid_bitmap(ret, BITERR_BADTYPE | BITERR_NODIR, AFPERR_BADTYPE)) {
-		failed();
+		test_failed();
 	}
 	FAIL (htonl( AFPERR_DIRNEMPT) != FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
@@ -415,28 +415,28 @@ int isdir;
 
 	bdir  = FPCreateDir(Conn,vol, DIRDID_ROOT , base);
 	if (!bdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	bitmap = (1 << FILPBIT_LNAME);
 	if (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "", bitmap, bitmap)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPCreateFile(Conn, vol,  0, bdir , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	dir  = FPCreateDir(Conn,vol, bdir , ndir);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	dir1  = FPCreateDir(Conn,vol, bdir , ndir1);
 	if (!dir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -457,7 +457,7 @@ int isdir;
 		ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", 0,bitmap);
 	}
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	filedir.isdir = isdir;
@@ -522,11 +522,11 @@ int size = 1000;
 
 	dir = get_did(Conn, vol, DIRDID_ROOT, "");
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(stack = calloc(size, sizeof(int)) )) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	stack[cnt] = dir;
@@ -537,7 +537,7 @@ int size = 1000;
 	    dir = stack[cnt];
 		i = 1;
 		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
-			nottested();
+			test_nottested();
 			goto test_exit;
 		}
 		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
@@ -554,7 +554,7 @@ int size = 1000;
 					if (cnt > size) {
 						size += 1000;
 						if (!(stack = realloc(stack, size* sizeof(int)))) {
-							nottested();
+							test_nottested();
 							return;
 						}
 					}
@@ -576,7 +576,7 @@ int size = 1000;
 			}
 	    }
 	    if (ret != ntohl(AFPERR_NOOBJ)) {
-			nottested();
+			test_nottested();
 			goto test_exit;
 	    }
 	}

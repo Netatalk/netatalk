@@ -12,12 +12,12 @@ int ret;
 	ENTER_TEST
 
 	if (0xffff == (dir = FPOpenDT(Conn,vol))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	ret = FPCloseDT(Conn, dir +1);
 	if (not_valid(ret, AFPERR_PARAM, 0)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseDT(Conn, dir))
 test_exit:

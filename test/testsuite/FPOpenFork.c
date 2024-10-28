@@ -15,19 +15,19 @@ char *name = "t14 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name, OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	bitmap = (1 <<  FILPBIT_ATTR);
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		nottested();
+		test_nottested();
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap, 0)) {
 
@@ -57,18 +57,18 @@ char *name = "t15 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, name,OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = 1;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		nottested();
+		test_nottested();
 	}
 	FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap, 0);
 	FPCloseFork(Conn,fork);
@@ -92,20 +92,20 @@ char *name = "t16 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, name,OPENACC_RD);
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -137,25 +137,25 @@ char *name = "t17 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name, 0);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	FAIL (fork && FPCloseFork(Conn,fork))
 
 	/* -------------- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,  OPENACC_WR );
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 	if (fork3) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (fork && FPCloseFork(Conn,fork))
@@ -165,13 +165,13 @@ char *name = "t17 file";
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS  , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	bitmap = 1;
@@ -180,7 +180,7 @@ char *name = "t17 file";
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 	if (fork3) {
-		failed();
+		test_failed();
 	}
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
@@ -204,20 +204,20 @@ char *name = "t18 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	/* success */
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,OPENACC_RD);
 	bitmap = 1;
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -229,7 +229,7 @@ char *name = "t18 file";
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork3) {
-		failed();
+		test_failed();
 	}
 fin:
 	FAIL (fork2 && FPCloseFork(Conn,fork2))
@@ -253,14 +253,14 @@ char *name = "t19 file";
 
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	/* success */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_DWR );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -268,28 +268,28 @@ char *name = "t19 file";
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD| OPENACC_DWR );
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	/* fail */
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,OPENACC_WR);
 	if (fork3) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	bitmap = 1;
 	/* success */
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	/* success */
 	if (FPCloseFork(Conn,fork)) {
 		fork = 0;
-		failed();
+		test_failed();
 		goto fin;
 	}
 	fork = 0;
@@ -297,7 +297,7 @@ char *name = "t19 file";
 	/* fail */
 	fork3 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,OPENACC_WR);
 	if (fork3) {
-		failed();
+		test_failed();
 	}
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
@@ -320,21 +320,21 @@ char *name = "t20 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_RD );
 
     if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
     }
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA  , bitmap ,DIRDID_ROOT, name,
 		OPENACC_WR );
 
     if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
     }
 
@@ -364,23 +364,23 @@ int  fork;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nf1)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPCreateFile(Conn, vol,  0, dir , nf2)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, DIRDID_ROOT, name, OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCloseFork(Conn,fork))
@@ -388,14 +388,14 @@ int  fork;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, DIRDID_ROOT, name1, OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCloseFork(Conn,fork))
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, DIRDID_ROOT, name2, OPENACC_RD);
 	if (fork) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn,fork))
 	}
 fin:
@@ -421,17 +421,17 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, ndir, OPENACC_RD);
 
 	if (fork) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn,fork))
 	}
     else if (ntohl(AFPERR_BADTYPE) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir , ""))
@@ -454,28 +454,28 @@ DSI *dsi2;
 	dsi = &Conn->dsi;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD | OPENACC_DWR);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 
 	fork2 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD | OPENACC_DWR);
 	if (!fork2) {
-		failed();
+		test_failed();
 	}
 
 	fork3 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD | OPENACC_DWR);
 	if (!fork3) {
-		failed();
+		test_failed();
 	}
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1 || dsi->header.dsi_code != ntohl(AFPERR_DENYCONF)) {
-		failed();
+		test_failed();
 		if (fork1) {
 			FAIL (FPCloseFork(Conn,fork1))
 		}
@@ -491,32 +491,32 @@ DSI *dsi2;
 		dsi2 = &Conn2->dsi;
 		vol2  = FPOpenVol(Conn2, Vol);
 		if (vol2 == 0xffff) {
-			nottested();
+			test_nottested();
 		}
 
 		fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 		if (fork1 || dsi2->header.dsi_code != ntohl(AFPERR_DENYCONF)) {
-			failed();
+			test_failed();
 			if (fork1) FPCloseFork(Conn2,fork1);
 		}
 
 		fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD);
 		if (!fork1) {
-			failed();
+			test_failed();
 		}
 		else {
 			FAIL (FPCloseFork(Conn2,fork1))
 		}
 		fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD| OPENACC_DWR);
 		if (!fork1) {
-			failed();
+			test_failed();
 		}
 		else {
 			FAIL (FPCloseFork(Conn2,fork1))
 		}
 		fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 		if (fork1 || dsi2->header.dsi_code != ntohl(AFPERR_DENYCONF)) {
-			failed();
+			test_failed();
 			if (fork1) FPCloseFork(Conn2,fork1);
 		}
 		FAIL (FPCloseVol(Conn2,vol2))
@@ -573,12 +573,12 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name,bitmap, 0 )) {
-		nottested();
+		test_nottested();
 		goto end;
 	}
 	filedir.isdir = 0;
@@ -587,14 +587,14 @@ DSI *dsi;
 	filedir.attr = ATTRBIT_NOWRITE | ATTRBIT_SETCLR ;
 	bitmap = (1<<DIRPBIT_ATTR);
  	if (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir)) {
-		failed();
+		test_failed();
 		goto end;
  	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (fork || dsi->header.dsi_code != ntohl(AFPERR_OLOCK)) {
-		failed();
+		test_failed();
 	}
 	if (fork) {
 		FPCloseFork(Conn,fork);
@@ -602,7 +602,7 @@ DSI *dsi;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPCloseFork(Conn,fork))
@@ -632,15 +632,15 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, 0);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	if (FPCloseFork(Conn,fork)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -670,7 +670,7 @@ DSI *dsi;
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -681,18 +681,18 @@ DSI *dsi;
 			maxf = i;
 			ok = 1;
 			if (not_valid_bitmap(dsi->header.dsi_code, BITERR_NFILE | BITERR_DENYCONF, AFPERR_NFILE)) {
-				failed();
+				test_failed();
 			}
 			break;
 		}
 	}
 	if (!ok) {
-		nottested();
+		test_nottested();
 		maxf = 2048;
 	}
 	for (i = 0; i < maxf; i++) {
 		if (forkt[i] && FPCloseFork(Conn, forkt[i])) {
-			failed();
+			test_failed();
 		}
 	}
 	if (!ok) {
@@ -701,11 +701,11 @@ DSI *dsi;
 	for (i = 0; i < maxf; i++) {
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name1 ,OPENACC_RD|OPENACC_WR);
 		if (!fork) {
-			failed();
+			test_failed();
 			break;
 		}
 		if (fork && FPCloseFork(Conn, fork)) {
-			failed();
+			test_failed();
 			break;
 		}
 	}
@@ -730,7 +730,7 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -738,29 +738,29 @@ DSI *dsi;
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_DATA, 0 ,DIRDID_ROOT, name1, OPENACC_WR);
 	if (fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
     if (ntohl(AFPERR_DENYCONF) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS, 0 ,DIRDID_ROOT, name1, OPENACC_WR);
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 fin:
@@ -792,80 +792,80 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 
 	fork = FPOpenFork(Conn, vol, type , bitmap , DIRDID_ROOT, name, OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 
 	if (FPGetFileDirParams(Conn2,  vol2, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, bitmap, 0);
 		if (!(filedir.attr & what)) {
-			failed();
+			test_failed();
 		}
 		if ((filedir.attr & nowhat)) {
-			failed();
+			test_failed();
 		}
 	}
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 	if (FPGetFileDirParams(Conn2,  vol2, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, bitmap, 0);
 		if (!(filedir.attr & what)) {
-			failed();
+			test_failed();
 		}
 		if ((filedir.attr & nowhat)) {
-			failed();
+			test_failed();
 		}
 	}
 
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPGetFileDirParams(Conn2,  vol2, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, bitmap, 0);
 		if (!(filedir.attr & what)) {
-			failed();
+			test_failed();
 		}
 		if ((filedir.attr & nowhat)) {
-			failed();
+			test_failed();
 		}
 	}
 
 	FAIL (FPCloseFork(Conn,fork1))
 	if (FPGetFileDirParams(Conn2,  vol2, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, bitmap, 0);
 		if ((filedir.attr & what)) {
-			failed();
+			test_failed();
 		}
 		if ((filedir.attr & nowhat)) {
-			failed();
+			test_failed();
 		}
 	}
 
@@ -915,19 +915,19 @@ DSI *dsi2;
 	dsi = &Conn->dsi;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type, bitmap ,DIRDID_ROOT, name, OPENACC_RD| OPENACC_WR| OPENACC_DRD| OPENACC_DWR );
 
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (fork1 || dsi->header.dsi_code != ntohl(AFPERR_DENYCONF)) {
-		failed();
+		test_failed();
 		if (fork1) {
 			FAIL (FPCloseFork(Conn,fork1))
 		}
@@ -938,12 +938,12 @@ DSI *dsi2;
 		dsi2 = &Conn2->dsi;
 		vol2  = FPOpenVol(Conn2, Vol);
 		if (vol2 == 0xffff) {
-			nottested();
+			test_nottested();
 		}
 
 		fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_RD| OPENACC_WR| OPENACC_DRD| OPENACC_DWR);
 		if (fork1 || dsi2->header.dsi_code != ntohl(AFPERR_DENYCONF)) {
-			failed();
+			test_failed();
 			if (fork1) FPCloseFork(Conn2,fork1);
 		}
 		FAIL (FPCloseVol(Conn2,vol2))

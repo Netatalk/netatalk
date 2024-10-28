@@ -29,11 +29,11 @@ DSI *dsi = &Conn->dsi;
     ndir[1] = 0xc3;
     ndir[2] = 0;
 	if ((dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , ndir))
 	}
 	else if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 test_exit:
 	exit_test("Utf8:test162: illegal UTF8 name");
@@ -67,13 +67,13 @@ DSI *dsi = &Conn->dsi;
 	nfile[1] = 0xa9;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
     bitmap = (1<< FILPBIT_PDID)|(1<< FILPBIT_LNAME)|(1 << FILPBIT_PDINFO );
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, nfile, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -82,7 +82,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %s should be \\216.rtf\n",filedir.lname);
 		}
-		    failed_nomsg();
+		    test_failed();
 	    }
 	}
 	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
@@ -125,13 +125,13 @@ DSI *dsi = &Conn->dsi;
 	nfile[2] = 0xa0;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
     bitmap = (1<< FILPBIT_PDID)|(1<< FILPBIT_LNAME)|(1 << FILPBIT_PDINFO );
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, nfile, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -140,7 +140,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %s should be l\\210\n",filedir.lname);
 		}
-		    failed_nomsg();
+		    test_failed();
 	    }
 	}
 	FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
@@ -178,12 +178,12 @@ int  dir1;
 	}
 	dir   = FPCreateDir(Conn, vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 	}
 
 	dir1  = FPCreateDir(Conn,vol, dir , name1);
 	if (!dir1) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
 	}
@@ -202,7 +202,7 @@ int  dir1;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 		/* warm the cache */
 		FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)|
@@ -250,7 +250,7 @@ uint16_t vol = VolID;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -289,24 +289,24 @@ uint16_t bitmap = 0;
 	}
 	dir   = FPCreateDir(Conn, vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap =(1<< DIRPBIT_DID) | (1<< DIRPBIT_PDID)  | (1<< DIRPBIT_PDINFO) |(1<<DIRPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	sprintf(temp,"t23#%X", ntohl(dir));
 
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, 0, bitmap)) {
 	    /* MAC OK */
-		failed();
+		test_failed();
 	}
 	sprintf(temp,"t233 dire#%X", ntohl(dir));
 
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, 0,bitmap )) {
 	    /* MAC OK */
-		failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -337,23 +337,23 @@ uint16_t bitmap = 0;
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM)|(1<<FILPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap,0 )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap,0);
 		sprintf(temp,"t23#%X", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 		sprintf(temp,"t234 file#%X", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -385,12 +385,12 @@ uint16_t bitmap = 0;
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) | (1<<FILPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap,0 )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -398,12 +398,12 @@ uint16_t bitmap = 0;
 
         sprintf(temp,"t312-#%X", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 
         sprintf(temp,"t312-#%X.mp3", ntohl(filedir.did));
 		if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 		else {
 		    filedir.isdir = 0;
@@ -414,7 +414,7 @@ uint16_t bitmap = 0;
 		}
         sprintf(temp,"t3-#%X.mp3", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -446,17 +446,17 @@ uint16_t bitmap = 0;
 	}
 	dir   = FPCreateDir(Conn, vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap = (1<< DIRPBIT_DID) | (1<< DIRPBIT_PDID)  | (1<< DIRPBIT_PDINFO) | (1<<DIRPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, 0, bitmap )) {
-		failed();
+		test_failed();
 	}
 	sprintf(temp,"t313-#%X", ntohl(dir));
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, 0, bitmap )) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -485,12 +485,12 @@ uint16_t bitmap = 0;
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap = (1<< FILPBIT_PDINFO) | (1<<FILPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap, 0 )) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -523,12 +523,12 @@ uint16_t bitmap = 0;
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	bitmap = (1 <<  FILPBIT_PDINFO) | (1<< FILPBIT_PDID) | (1<< FILPBIT_FNUM) | (1<<FILPBIT_LNAME);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, name, bitmap,0 )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -537,12 +537,12 @@ uint16_t bitmap = 0;
         sprintf(temp,"???#%X", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
 	    	/* MAC OK */
-			failed();
+			test_failed();
 		}
 
         sprintf(temp,"???#%X.mp3", ntohl(filedir.did));
 		if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
-			failed();
+			test_failed();
 		}
 		else {
 		    filedir.isdir = 0;
@@ -554,7 +554,7 @@ uint16_t bitmap = 0;
         sprintf(temp,"t#%X.mp3", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
 	    	/* MAC OK */
-			failed();
+			test_failed();
 		}
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -592,13 +592,13 @@ DSI *dsi = &Conn->dsi;
 	nfile[3] = 0x80;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
     bitmap = (1<< FILPBIT_PDID)|(1<< FILPBIT_LNAME)|(1 << FILPBIT_PDINFO );
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, nfile, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -607,7 +607,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %s should be l\\210\n",filedir.lname);
 		}
-		    failed_nomsg();
+		    test_failed();
 	    }
 	}
 	Force_type2 = 1;
@@ -647,13 +647,13 @@ DSI *dsi = &Conn->dsi;
 	nfile[3] = 0x80;
 
 	if (!FPCreateDir(Conn, vol, DIRDID_ROOT , nfile)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
     bitmap = (1<< FILPBIT_PDID)|(1<< FILPBIT_LNAME)|(1 << FILPBIT_PDINFO );
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, nfile, 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -662,7 +662,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %s should be l\\210\n",filedir.lname);
 		}
-		    failed_nomsg();
+		    test_failed();
 	    }
 	}
 	Force_type2 = 1;
@@ -699,7 +699,7 @@ uint16_t vol = VolID;
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	Force_type2 = 1;
@@ -737,7 +737,7 @@ uint16_t vol = VolID;
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	Force_type2 = 1;
@@ -775,7 +775,7 @@ uint16_t vol = VolID;
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	Force_type2 = 1;
@@ -813,7 +813,7 @@ uint16_t vol = VolID;
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	Force_type2 = 1;
@@ -839,7 +839,7 @@ uint16_t vol = VolID;
 	}
 
 	if ( (get_vol_attrib(vol) & VOLPBIT_ATTR_UTF8)) {
-		failed();
+		test_failed();
 	}
 
 test_exit:
