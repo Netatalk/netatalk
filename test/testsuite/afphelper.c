@@ -921,7 +921,6 @@ void test_nottested(void)
 		ExitCode = 2;
 	}
 	CurTestResult = 2;
-	NotTestedCount += 1;
 }
 
 /* ------------------------- */
