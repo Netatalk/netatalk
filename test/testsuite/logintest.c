@@ -133,13 +133,12 @@ test_exit:
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567mVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
+    fprintf( stdout, "usage:\t%s [-1234567CmVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n", av0 );
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
@@ -223,6 +222,17 @@ unsigned int ret;
             usage( av[ 0 ] );
         }
     }
+
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout, "Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout, "Error: Define a password with -w\n");
+	}
+
 	/************************************
 	 *                                  *
 	 * Connection user 1                *
@@ -335,10 +345,10 @@ uint32_t i = 0;
 		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
+#endif
 		ret = FPopenLogin(Conn, vers, uam, User, Password);
+#if 0
 	}
-#else
-	ret = FPopenLogin(Conn, vers, uam, User, Password);
 #endif
 	if (ret) {
 		failed();

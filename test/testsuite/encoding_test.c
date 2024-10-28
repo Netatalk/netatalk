@@ -7,8 +7,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-char    *Path;
-
 uint16_t VolID;
 static DSI *dsi;
 CONN *Conn;
@@ -214,21 +212,22 @@ int     Port = 548;
 char    *Password = "";
 char    *Vol = "";
 char    *User;
+char    *Path = "";
 int     Version = 21;
 int     Mac = 0;
 
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567CdmVv] [-e encoding] [-h host] [-p port] [-s vol] [-c vol path] [-u user] [-w password]\n", av0 );
-    fprintf( stdout,"\t-m\tserver is a Mac\n");
+    fprintf( stdout, "usage:\t%s [-1234567CdVv] [-h host] [-p port] [-s vol] [-c vol path] "
+	"[-u user] [-w password] [-e encoding]\n", av0 );
     fprintf( stdout,"\t-e\tclient encoding (default western)\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
-    fprintf( stdout,"\t-s\tvolume to mount (default home)\n");
+    fprintf( stdout,"\t-s\tvolume to mount\n");
     fprintf( stdout,"\t-c\tvolume path on the server\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
-    fprintf( stdout,"\t-w\tpassword (default none)\n");
+    fprintf( stdout,"\t-w\tpassword\n");
     fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
@@ -292,9 +291,6 @@ static char *uam = "Cleartxt Passwrd";
         case 'h':
             Server = strdup(optarg);
             break;
-		case 'm':
-			Mac = 1;
-			break;
         case 'p' :
             Port = atoi( optarg );
             if (Port <= 0) {
@@ -323,6 +319,22 @@ static char *uam = "Cleartxt Passwrd";
         }
     }
 
+    if (!Quiet) {
+        fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
+    }
+	if (User != NULL && User[0] == '\0') {
+        fprintf(stdout, "Error: Define a user with -u\n");
+	}
+	if (Password != NULL && Password[0] == '\0') {
+        fprintf(stdout, "Error: Define a password with -w\n");
+	}
+	if (Vol != NULL && Vol[0] == '\0') {
+        fprintf(stdout, "Error: Define a volume with -s\n");
+	}
+	if (Path != NULL && Path[0] == '\0') {
+        fprintf(stdout, "Error: Define the local path to the volume with -c\n");
+	}
+
 	/************************************
 	 *                                  *
 	 * Connection user 1                *
@@ -350,7 +362,6 @@ static char *uam = "Cleartxt Passwrd";
     /* login */
 	FPopenLogin(Conn, vers, uam, User, Password);
 	Conn->afp_version = Version;
-
 
 	run_one();
 
