@@ -15,22 +15,22 @@ STATIC void test2()
 	ENTER_TEST
 
  	if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {
-		failed();
+		test_failed();
 	}
 
 	if (!(FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0, (1 << DIRPBIT_DID) )) {
-		failed();
+		test_failed();
         goto fin;
 	}
 
     filedir.isdir = 1;
     afp_filedir_unpack(&filedir, dsi->data +ofs, 0, (1 << DIRPBIT_DID));
  	if (FPSyncDir(Conn, vol, filedir.did)) {
-		failed();
+		test_failed();
 	}
 
 fin:

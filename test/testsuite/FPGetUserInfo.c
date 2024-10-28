@@ -18,7 +18,7 @@ DSI *dsi = &Conn->dsi;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
@@ -31,7 +31,7 @@ DSI *dsi = &Conn->dsi;
 
 	ret = FPGetUserInfo(Conn, 1, 0, 3);
 	if (ret ) {
-		failed();
+		test_failed();
 	}
 	else {
 		memcpy(&uid, dsi->commands + sizeof(uint16_t), sizeof(uint32_t));
@@ -44,14 +44,14 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout, "\tFAILED uids differ\n");
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 
 	/* user id */
 	ret = FPGetUserInfo(Conn, 1, 0, 1);
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memcpy(&uid, dsi->commands + sizeof(uint16_t), sizeof(uint32_t));
@@ -60,7 +60,7 @@ DSI *dsi = &Conn->dsi;
 	/* primary group */
 	ret = FPGetUserInfo(Conn, 1, 0, 2);
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memcpy(&gid, dsi->commands + sizeof(uint16_t), sizeof(uint32_t));
@@ -71,7 +71,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout, "\tFAILED uid differ\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))

@@ -32,7 +32,7 @@ char   u_null[] = { 0, 0, 0, 0 };
 			FAIL(FPGetIcon(Conn,  dt, u_null, u_null, 1, 256 ))
 		}
 		else if (ret) {
-			failed();
+			test_failed();
 		}
 #endif
 	}

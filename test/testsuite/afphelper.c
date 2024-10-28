@@ -55,14 +55,14 @@ uint16_t param;
 uint16_t bitmap = 0;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		return;
 	}
 	/* get an illegal fork descriptor */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		return;
 	}
@@ -100,7 +100,7 @@ uint16_t bitmap = 0;
 	if (!Quiet) {
 		fprintf(stdout,"\tFAILED command %i\n", cmd);
 	}
-		failed();
+		test_failed();
     }
 }
 
@@ -116,13 +116,13 @@ DSI *dsi;
 
 	filedir.did = 0;
 	if (FPGetFileDirParams(conn, vol,  dir , name, 0, bitmap)) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
 	if (!filedir.did) {
-		nottested();
+		test_nottested();
 	}
 	return filedir.did;
 }
@@ -137,13 +137,13 @@ DSI *dsi = &conn->dsi;
 
 	filedir.did = 0;
 	if (FPGetFileDirParams(conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (!filedir.did) {
-			failed();
+			test_failed();
 		}
 	}
 	return filedir.did;
@@ -173,11 +173,11 @@ uint16_t bitmap = 0;
 
 	fork = FPOpenFork(conn, vol, OPENFORK_DATA , bitmap ,dir, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		return;
 	}
 	if (FPWrite(conn, fork, 0, strlen(txt), txt, 0 )) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseFork(conn,fork))
 }
@@ -190,12 +190,12 @@ uint16_t bitmap = 0;
 
 	fork = FPOpenFork(conn, vol, OPENFORK_DATA , bitmap ,dir, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		return;
 	}
 	memset(Data, 0, len +1);
 	if (FPRead(conn, fork, 0, len, Data)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseFork(conn,fork))
 }
@@ -227,31 +227,31 @@ uint32_t uid;
 	dsi = &Conn->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	ret = FPGetUserInfo(Conn, 1, 0, 1); /* who I am */
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	ret = FPGetUserInfo(Conn2, 1, 0, 1); /* who I am */
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	memcpy(&uid, dsi2->commands + sizeof(uint16_t), sizeof(uint32_t));
 	uid = ntohl(uid);
 
 	if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
-		nottested();
+		test_nottested();
 		if (!(dir = get_did(Conn2, vol2, did, name))) {
 			goto fin;
 		}
 	}
 
 	if (FPGetFileDirParams(Conn2, vol2,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -263,7 +263,7 @@ uint32_t uid;
     filedir.access[2] = 0;
     filedir.access[3] = 3;  /* was 7 */
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	sleep(1);
@@ -279,7 +279,7 @@ uint32_t uid;
 	if (FPCreateDir(Conn, vol, ret , name)) {
 	    /* Mac OSX here does strange things
 	     * for when things go wrong */
-		nottested();
+		test_nottested();
 
 	    FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) ,
@@ -304,7 +304,7 @@ uint32_t uid;
 fin:
 	if (!ret && dir) {
 		if (FPDelete(Conn2, vol2,  did, name)) {
-			nottested();
+			test_nottested();
 		}
 	}
 	FPCloseVol(Conn2,vol2);
@@ -335,16 +335,16 @@ DSI *dsi, *dsi2;
 	dsi = &Conn->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn2, vol2,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -354,7 +354,7 @@ DSI *dsi, *dsi2;
     filedir.access[2] = 7;
     filedir.access[3] = 0;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	/* double check the first user can't create a dir in it */
@@ -367,7 +367,7 @@ DSI *dsi, *dsi2;
 		ret = dir;
 	}
 	if (FPCreateDir(Conn, vol, ret , name)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol,  ret, name);
 		FPDelete(Conn, vol,  did, name);
 		ret = 0;
@@ -375,7 +375,7 @@ DSI *dsi, *dsi2;
 fin:
 	if (!ret && dir) {
 		if (FPDelete(Conn2, vol2,  did, name)) {
-			nottested();
+			test_nottested();
 		}
 	}
 	FPCloseVol(Conn2,vol2);
@@ -408,16 +408,16 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn2, vol2,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
@@ -427,13 +427,13 @@ DSI *dsi2;
     filedir.access[2] = 3;
     filedir.access[3] = 3;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	/* double check the first user can't create a dir in it */
 	ret = get_did(Conn, vol, did, name);
 	if (FPCreateDir(Conn, vol, ret , name)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn2, vol2,  ret, name);
 		FPDelete(Conn2, vol2,  did, name);
 		ret = 0;
@@ -441,7 +441,7 @@ DSI *dsi2;
 fin:
 	if (!ret && dir) {
 		if (FPDelete(Conn2, vol2,  did, name)) {
-			nottested();
+			test_nottested();
 		}
 	}
 	FPCloseVol(Conn2,vol2);
@@ -474,23 +474,23 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn2, vol2,  dir , "", 0,bitmap )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	filedir.isdir = 1;
 	afp_filedir_unpack(&filedir, dsi2->data +ofs, 0, bitmap);
 
 	if (FPCreateFile(Conn2, vol2,  0, dir , file)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -499,13 +499,13 @@ DSI *dsi2;
     filedir.access[2] = 3;
     filedir.access[3] = 3;
  	if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	/* double check the first user can't create a dir in it */
 	ret = get_did(Conn, vol, did, name);
 	if (FPCreateDir(Conn, vol, ret , name)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol,  ret, name);
 		FPDelete(Conn, vol,  did, name);
 		ret = 0;
@@ -513,7 +513,7 @@ DSI *dsi2;
 fin:
 	if (!ret && dir) {
 		if (FPDelete(Conn2, vol2,  did, name)) {
-			nottested();
+			test_nottested();
 		}
 	}
 	FPCloseVol(Conn2,vol2);
@@ -545,11 +545,11 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	if (FPGetFileDirParams(Conn2, vol2,  did , name, 0,bitmap )) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
@@ -560,12 +560,12 @@ DSI *dsi2;
     filedir.access[2] = 7;
     filedir.access[3] = 7;
  	if (FPSetDirParms(Conn2, vol2, did , name, bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
 	if (FPDelete(Conn2, vol2,  did, name)) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
@@ -598,11 +598,11 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 	if (FPGetFileDirParams(Conn2, vol2,  did , name, 0,bitmap )) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
@@ -614,15 +614,15 @@ DSI *dsi2;
     filedir.access[3] = 7;
     bitmap =  (1 << DIRPBIT_ACCESS);
  	if (FPSetDirParms(Conn2, vol2, did , name, bitmap, &filedir)) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
 	if (FPDelete(Conn2, vol2, filedir.did, file)) {
-		nottested();
+		test_nottested();
 	}
 	if (FPDelete(Conn2, vol2,  did, name)) {
-		nottested();
+		test_nottested();
 		FPCloseVol(Conn2,vol2);
 		return 0;
 	}
@@ -642,7 +642,7 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
  	if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_ATTR))) {
-		nottested();
+		test_nottested();
 		return 0;
  	}
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), (1 << VOLPBIT_ATTR));
@@ -658,7 +658,7 @@ DSI *dsi;
 	dsi = &Conn->dsi;
 
  	if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_BFREE))) {
-		nottested();
+		test_nottested();
 		return 0;
  	}
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), (1 << VOLPBIT_BFREE));
@@ -888,57 +888,44 @@ void test_skipped(int why)
 	case T_MANUAL:
 		s = "Interactive mode";
 		break;
+	case T_NONDETERM:
+		s = "nondeterministic behavior";
+		break;
 	}
 	if (Color) {
 		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (%s)" ANSI_NORMAL, s);
 	} else {
 		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (%s)", s);
 	}
-	CurTestResult = 3;
-}
 
-/* ------------------------- */
-void failed_nomsg(void)
-{
-    ExitCode = 1;
-	CurTestResult = 1;
-}
-
-/* ------------------------- */
-void skipped_nomsg(void)
-{
 #if 0
 	if (!ExitCode)
 		ExitCode = 3;
 #endif
 	CurTestResult = 3;
 }
+
 /* ------------------------- */
-void nottested_nomsg(void)
+void test_failed(void)
 {
+	if (!Quiet) {
+		fprintf(stdout,"\tFAILED\n");
+	}
+    ExitCode = 1;
+	CurTestResult = 1;
+}
+
+/* ------------------------- */
+void test_nottested(void)
+{
+	if (!Quiet) {
+		fprintf(stdout,"\tNOT TESTED\n");
+	}
 #if 0
 	if (!ExitCode)
 		ExitCode = 2;
 #endif
 	CurTestResult = 2;
-}
-
-/* ------------------------- */
-void failed(void)
-{
-	if (!Quiet) {
-		fprintf(stdout,"\tFAILED\n");
-	}
-	failed_nomsg();
-}
-
-/* ------------------------- */
-void nottested(void)
-{
-	if (!Quiet) {
-		fprintf(stdout,"\tNOT TESTED\n");
-	}
-	nottested_nomsg();
 }
 
 /* ------------------------- */

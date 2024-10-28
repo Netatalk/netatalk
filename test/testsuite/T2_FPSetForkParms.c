@@ -17,21 +17,21 @@ STATIC void test9()
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 10)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 

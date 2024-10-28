@@ -29,7 +29,7 @@ unsigned int ret;
 
 	if (Conn->afp_version < 30) {
 		if (htonl(AFPERR_NOOP) != ret) {
-			failed();
+			test_failed();
 		}
 		else {
 			test_skipped(T_AFP3);
@@ -37,16 +37,16 @@ unsigned int ret;
 		goto test_exit;
 	}
 	if (htonl(AFPERR_BITMAP) != ret) {
-		failed();
+		test_failed();
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	ret = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir);
 	if (ret != htonl(AFPERR_EOF)) {
-		failed();
+		test_failed();
 	}
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
@@ -54,7 +54,7 @@ unsigned int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED want 0 get %d\n", temp);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	filedir.isdir = 0;
@@ -67,7 +67,7 @@ unsigned int ret;
 	filedir.attr = 0x01a0;			/* lock attributes */
 	ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir);
 	if (ret != htonl(AFPERR_EOF)) {
-		failed();
+		test_failed();
 	}
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
@@ -75,14 +75,14 @@ unsigned int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	/* ------------------- */
 	filedir.attr = 0x0100;			/* lock attributes */
 	ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir);
 	if (ret != htonl(AFPERR_EOF)) {
-		failed();
+		test_failed();
 	}
 	memcpy(&temp, dsi->data + 20, sizeof(temp));
 	temp = ntohl(temp);
@@ -90,7 +90,7 @@ unsigned int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED want 1 get %d\n", temp);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 #if 1
 	/* -------------------- */

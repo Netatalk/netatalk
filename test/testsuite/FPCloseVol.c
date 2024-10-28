@@ -14,13 +14,13 @@ int ret;
 	/* double close */
 	ret = FPCloseVol(Conn, vol);
 	if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_PARAM, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 	FAIL (htonl(AFPERR_PARAM) != FPCloseVol(Conn, vol +1))
 
 	vol = VolID = FPOpenVol(Conn, Vol);
 	if (vol == 0xffff) {
-		failed();
+		test_failed();
 	}
 	exit_test("FPCloseVol:test204: Close Volume call");
 

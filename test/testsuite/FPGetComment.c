@@ -29,37 +29,37 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, DIRDID_ROOT , name3))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	dt = FPOpenDT(Conn,vol);
 	if (ntohl(AFPERR_NOITEM) != FPGetComment(Conn, vol,  DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 	ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name1);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name3);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name1, OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name1);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork))
@@ -87,14 +87,14 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dt = FPOpenDT(Conn,vol);
 
 	ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPCloseDT(Conn, dt))

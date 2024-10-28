@@ -24,7 +24,7 @@ char *usr = NULL;
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
@@ -36,7 +36,7 @@ char *usr = NULL;
 
 	ret = FPMapID(Conn, 1, filedir.uid);  /* user to Mac roman */
 	if (ret) {
-		failed();
+		test_failed();
 	}
 	else {
 		usr = strp2cdup(dsi->commands);
@@ -44,18 +44,18 @@ char *usr = NULL;
 
 	ret = FPMapID(Conn, 1, -filedir.uid);  /* user to Mac roman */
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPMapID(Conn, 2, -filedir.gid);  /* group to Mac roman */
 	/* sometime -filedir.gid is there */
 	if (ret && not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPMapID(Conn, 2, filedir.gid);  /* group to Mac roman */
 	if (ret) {
-		failed();
+		test_failed();
 	}
 	else {
 		grp = strp2cdup(dsi->commands);
@@ -63,11 +63,11 @@ char *usr = NULL;
 
 	ret = FPMapID(Conn, 3, filedir.uid); /* user to UTF8 */
 	if (Conn->afp_version >= 30 && ret) {
-		failed();
+		test_failed();
 	}
 	ret = FPMapID(Conn, 4, filedir.gid); /* group to UTF8 */
 	if (Conn->afp_version >= 30 && ret) {
-		failed();
+		test_failed();
 	}
 
 	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
@@ -85,39 +85,39 @@ char *usr = NULL;
 	/* fail with OSX and new netatalk */
 	ret = FPMapName(Conn, 3, "");
 	if (ret && not_valid_bitmap(ret, BITERR_NOOBJ, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 #endif
 
 	ret = FPMapName(Conn, 3, "toto");
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 	ret = FPMapName(Conn, 4, "toto");
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 
 	ret =  FPMapName(Conn, 1, "toto");
 	if (Conn->afp_version >= 30 && not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 	else if (Conn->afp_version < 30 && ret != htonl(AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 	/* ------------------ */
 	ret = FPMapName(Conn, 2, "toto");
 	if (Conn->afp_version >= 30 && not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 	else if (Conn->afp_version < 30 && ret != htonl(AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 	/* usr */
 	if (usr) {
 		ret = FPMapName(Conn, 1, usr);
 		if (Conn->afp_version >= 30 && ret) {
-			failed();
+			test_failed();
 		}
 
 		FAIL (FPMapName(Conn, 3, usr))
@@ -128,7 +128,7 @@ char *usr = NULL;
 	if (grp) {
 		ret = FPMapName(Conn, 2, grp);
 		if (Conn->afp_version >= 30 && ret) {
-			failed();
+			test_failed();
 		}
 
 		FAIL (FPMapName(Conn, 4, grp))

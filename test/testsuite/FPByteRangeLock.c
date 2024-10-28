@@ -27,22 +27,22 @@ uint16_t bitmap = 0;
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol,  DIRDID_ROOT, name);
 		return;
 	}
 
 	if (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, 100)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100))
@@ -56,7 +56,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1)
-		failed();
+		test_failed();
 	else {
 		FAIL (htonl(AFPERR_LOCK) != FPByteLock(Conn, fork1, 0, 0 /* set */ , 20, 60))
 		FAIL (FPSetForkParam(Conn, fork, len , 50))
@@ -76,18 +76,18 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	FAIL (FPSetForkParam(Conn, fork, len , 200))
 
 	if (FPByteLock(Conn, fork, 1 /* end */, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock(Conn, fork, 0, 1 /* clear */ , 200, 100)) {
-		failed();
+		test_failed();
 	}
 
     /* RANGEOVR */
 	if (FPByteLock(Conn, fork, 0 /* end */, 0 /* set */, 0, -1)) {
-		failed();
+		test_failed();
 	}
 	else if (FPByteLock(Conn, fork, 0, 1 /* clear */ , 0, -1)) {
-		failed();
+		test_failed();
 	}
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0 /* start */, 0 /* set */, 0, 0))
 
@@ -95,12 +95,12 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	FAIL (htonl(AFPERR_PARAM) != FPByteLock(Conn, fork, 0 /* start */, 0 /* set */, 0, -2))
 
 	if (FPCloseFork(Conn,fork)) {
-		nottested();
+		test_nottested();
 	}
 	FAIL (htonl (AFPERR_PARAM ) != FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100))
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
-		nottested();
+		test_nottested();
 	}
 
 }
@@ -150,13 +150,13 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 DSI *dsi2;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		return;
 	}
@@ -167,13 +167,13 @@ DSI *dsi2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn2, fork1, 0, 40, Data))
@@ -239,29 +239,29 @@ uint16_t vol = VolID;
 DSI *dsi2;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	/* fin */
 	if (FPByteLock(Conn, fork, 0 /* end */, 0 /* set */, 0, -1)) {
-		failed();
+		test_failed();
         goto fin;
 	}
     if (Conn->afp_version >= 30) {
         fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
         if (!fork1) {
-            failed();
+            test_failed();
             goto fin;
         }
         FAIL (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0, 20, 60));
         if (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0, ((off_t)1<<32)+2, 60)) {
-            failed();
+            test_failed();
             FAIL (FPByteLock_ext(Conn, fork1, 0, 1, ((off_t)1<<32)+2, 60));
         }
         FPCloseFork(Conn,fork1);
@@ -275,17 +275,17 @@ DSI *dsi2;
         dsi2 = &Conn2->dsi;
         vol2  = FPOpenVol(Conn2, Vol);
         if (vol2 == 0xffff) {
-            nottested();
+            test_nottested();
             goto fin;
         }
         fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
         if (!fork1) {
-            failed();
+            test_failed();
             goto fin2;
         }
 #if 0
         if (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn2, fork1, 0, 0, ((off_t)1<<32)+2, 60)) {
-            failed();
+            test_failed();
             FPByteLock_ext(Conn2, fork1, 0, 1, ((off_t)1<<32)+2, 60);
         }
 #endif
@@ -343,25 +343,25 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol,  DIRDID_ROOT, name);
 		goto test_exit;
 	}
 	if (FPSetForkParam(Conn, fork, len , 60)) {
-		nottested();
+		test_nottested();
 	}
 
 	FAIL (FPByteLock(Conn, fork, 0, 0, 0, 100))
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 	else {
 		FAIL (htonl(AFPERR_LOCK) != FPRead(Conn, fork1, 0, 40, Data))
@@ -370,7 +370,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
-		nottested();
+		test_nottested();
 	}
 test_exit:
 	exit_test("FPByteRangeLock:test79: test Byte Lock and read conflict");
@@ -384,13 +384,13 @@ uint16_t bitmap = 0;
 int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		FPDelete(Conn, vol,  DIRDID_ROOT, name);
 		return;
 	}
@@ -403,7 +403,7 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 	FAIL (FPByteLock(Conn, fork, 0, 1 , 0 , 100))
 	FAIL (FPCloseFork(Conn,fork))
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
-		nottested();
+		test_nottested();
 	}
 }
 
@@ -452,20 +452,20 @@ int type = OPENFORK_DATA;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		nottested();
+		test_nottested();
 		FAIL (FPCloseFork(Conn,fork))
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
@@ -473,7 +473,7 @@ int type = OPENFORK_DATA;
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,0x33);
 	if (!fork2) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork2))
@@ -481,29 +481,29 @@ int type = OPENFORK_DATA;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , name, (1<<FILPBIT_ATTR), 0 )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
-		failed();
+		test_failed();
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
-		failed();
+		test_failed();
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,/* OPENACC_WR | */OPENACC_RD);
 	if (!fork2) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork))
@@ -548,31 +548,31 @@ STATIC void test410()
     }
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
         FAIL (FPCloseFork(Conn,fork))
         goto fin;
     }
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		FPCloseFork(Conn,fork);
 		goto fin;
 	}
 
 	if (FPCloseFork(Conn,fork1)) { /* this should drop the byterange lock! */
-		failed();
+		test_failed();
 		FPCloseFork(Conn,fork);
 		goto fin;
     }
@@ -580,20 +580,20 @@ STATIC void test410()
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		FPCloseFork(Conn,fork);
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		FPCloseFork(Conn,fork);
         goto fin2;
 	}
 
 	if (FPByteLock(Conn2, fork1, 0, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
     }
 
 	FAIL (FPCloseFork(Conn,fork))
@@ -753,36 +753,36 @@ int indice = 1;
 	    dir = create_trash(conn, vol);
 
 	    if (!dir) {
-		    nottested();
+		    test_nottested();
 		    return 0;
 	    }
 	}
 	else if (ret) {
-	    nottested();
+	    test_nottested();
 	    return 0;
 	}
 	dir = get_did(conn, vol, DIRDID_ROOT , trash);
 	if (!dir) {
-	    nottested();
+	    test_nottested();
 	    return 0;
 	}
 
 	/* --------- check/create 'Trash Can Usage Map' -------- */
 	fork = FPOpenFork(conn, vol, OPENFORK_DATA , 0x342 , dir, map, OPENACC_DWR |OPENACC_RD);
 	if (!fork && ntohl(AFPERR_NOOBJ) != dsi->header.dsi_code) {
-	    nottested();
+	    test_nottested();
 	    return 0;
 	}
 	if (!fork) {
 		fork = create_map(conn, vol, dir, map);
 	}
 	if (!fork) {
-	    nottested();
+	    test_nottested();
 	    return 0;
 	}
 
 	if (FPGetForkParam(conn, fork, 0x242)) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 
@@ -795,7 +795,7 @@ int indice = 1;
 		dir2 = FPCreateDir(conn, vol, dir, temp);
 		if (dir2) {
 		   if (!set_perm(conn, vol, dir2)) {
-		       nottested();
+		       test_nottested();
 		       return 0;
 		   }
 		   break;
@@ -812,7 +812,7 @@ int indice = 1;
 		}
 
 		if (FPByteLock(conn, fork, 0, 1 /* clear */, indice , 1)) {
-			nottested();
+			test_nottested();
 			return 0;
 		}
 	}
@@ -843,7 +843,7 @@ int dir, dir2;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	fork2 = init_trash(Conn2, vol2, &dir2);
@@ -853,7 +853,7 @@ int dir, dir2;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED both client are using the same folder for trash\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	if (fork2) {
@@ -901,20 +901,20 @@ int type = OPENFORK_DATA;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		nottested();
+		test_nottested();
 		FAIL (FPCloseFork(Conn,fork))
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
@@ -922,7 +922,7 @@ int type = OPENFORK_DATA;
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,0x33);
 	if (!fork2) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork2))
@@ -930,29 +930,29 @@ int type = OPENFORK_DATA;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPGetFileDirParams(Conn2, vol2,  DIRDID_ROOT , name, (1<<FILPBIT_ATTR), 0 )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
-		failed();
+		test_failed();
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,OPENACC_DWR |OPENACC_RD);
 	if (fork2) {
 		FPCloseFork(Conn2,fork2);
-		failed();
+		test_failed();
 	}
 
 	fork2 = FPOpenFork(Conn2, vol2, type , bitmap ,DIRDID_ROOT, name,/* OPENACC_WR | */OPENACC_RD);
 	if (!fork2) {
-		failed();
+		test_failed();
 	}
 
    	FPLogOut(Conn);

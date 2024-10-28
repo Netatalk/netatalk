@@ -14,13 +14,13 @@ char *name = "t186 FPCloseFork";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol,  DIRDID_ROOT, name);
 		goto test_exit;
 	}
@@ -31,7 +31,7 @@ char *name = "t186 FPCloseFork";
 	FAIL (htonl(AFPERR_PARAM) != FPCloseFork(Conn, 0))
 
 	if (FPDelete(Conn, vol,  DIRDID_ROOT, name)) {
-		nottested();
+		test_nottested();
 	}
 test_exit:
 	exit_test("FPCloseFork:test186: FPCloseFork");

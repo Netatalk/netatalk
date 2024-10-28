@@ -67,14 +67,14 @@ DSI *dsi = &Conn->dsi;
 
 	ret = FPGetIcon(Conn,  dt, "ttxt", "3DMF", 1, 256);
 	if (ret) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 	else if (memcmp(dsi->commands, icon0_256, 256)) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
 		}
-		failed_nomsg();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -82,14 +82,14 @@ DSI *dsi = &Conn->dsi;
 
 	ret = FPGetIcon(Conn,  dt, "ttxt", "3DMF", 1, 256);
 	if (ret) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 	else if (memcmp(dsi->commands, icon0_256, 256)) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
 		}
-		failed_nomsg();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -98,14 +98,14 @@ DSI *dsi = &Conn->dsi;
 
 	ret = FPGetIcon(Conn,  dt, "ttxt", "3DMF", 4, 64);
 	if (ret) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 	else if (memcmp(dsi->commands, icon0_64, 64)) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED AddIcon and GetIcon data differ\n");
 		}
-		failed_nomsg();
+		test_failed();
 		goto test_exit;
 	}
 

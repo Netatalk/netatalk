@@ -33,7 +33,7 @@ uint16_t vol = VolID;
 	FAIL (FPGetSessionToken(Conn,0 ,0 ,0 ,NULL))
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -41,7 +41,7 @@ uint16_t vol = VolID;
 		if (ntohl(AFPERR_NOOP) != FPEnumerate_ext(Conn, vol,  DIRDID_ROOT , "",
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0xffff)) {
-			failed();
+			test_failed();
 		}
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 		goto test_exit;
@@ -57,19 +57,19 @@ uint16_t vol = VolID;
 		        	            |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN),
 	                        	(1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT)
 		                     )) {
-			failed();
+			test_failed();
 		}
 		if (FPEnumerate_ext(Conn, vol,  dir , "",
 		                (1 << FILPBIT_PDINFO )| (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN) | (1 << FILPBIT_LNAME),
 	                        (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT) | (1 << DIRPBIT_LNAME)
 	                     )) {
-			failed();
+			test_failed();
 		}
 		FAIL (FPDelete(Conn, vol,  dir1, name2))
 	}
 	else {
-		failed();
+		test_failed();
 	}
 	if (dir) {
 		FAIL (FPDelete(Conn, vol,  dir, name1))

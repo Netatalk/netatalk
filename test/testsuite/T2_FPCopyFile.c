@@ -24,12 +24,12 @@ uint32_t mdate = 0;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (!Mac && delete_unix_md(Path, "", name)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -39,12 +39,12 @@ uint32_t mdate = 0;
 	sleep(2);
 	tp = get_fid(Conn, vol, DIRDID_ROOT, name);
 	if (!tp) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = (1<<DIRPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -55,7 +55,7 @@ uint32_t mdate = 0;
 	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name1, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -64,21 +64,21 @@ uint32_t mdate = 0;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED modification date differ\n");
 		}
-	        failed_nomsg();
+	        test_failed();
 	        goto fin;
 		}
 	}
 
 	tp1 = get_fid(Conn, vol, DIRDID_ROOT, name1);
 	if (!tp1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (tp == tp1) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED both files have same ID\n");
 		}
-	    failed_nomsg();
+	    test_failed();
 	}
 
 fin:

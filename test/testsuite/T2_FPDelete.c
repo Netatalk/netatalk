@@ -40,14 +40,14 @@ int ret;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , "", 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -63,17 +63,17 @@ int ret;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPEnumerate(Conn2, vol2,  DIRDID_ROOT , "", 0, bitmap))
 	FAIL (ntohl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir , name))
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,dir , name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	ret = FPDelete(Conn2, vol2,  dir , name);
 	if (not_valid(ret, /* MAC */AFPERR_ACCESS, AFPERR_BUSY)) {
-		failed();
+		test_failed();
 	}
 
     filedir.access[1] = 3;
@@ -87,7 +87,7 @@ int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	if (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name)) {
@@ -95,13 +95,13 @@ int ret;
 			fprintf(stdout,"\tFIXME FAILED open but deleted\n");
 		}
 #if 0
-		failed_nomsg();
+		test_failed();
 #endif
 		FAIL (FPCloseFork(Conn,fork))
 		FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,dir , name,OPENACC_WR |OPENACC_RD);
 		if (!fork) {
-			failed();
+			test_failed();
 		}
 	} else {
         if (!Mac && adouble == AD_V2) {
@@ -109,7 +109,7 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
 		}
-                failed_nomsg();
+                test_failed();
             }
         }
     }
@@ -117,7 +117,7 @@ int ret;
 	FAIL (FPCloseFork(Conn,fork))
 	fork1 = FPOpenFork(Conn2, vol2, OPENFORK_DATA , 0 ,dir , name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 	FAIL (ntohl(AFPERR_BUSY) != FPDelete(Conn, vol,  dir , name))
 	FAIL (FPCloseFork(Conn2,fork1))
@@ -154,14 +154,14 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -201,7 +201,7 @@ int fork;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -209,12 +209,12 @@ int fork;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS  , bitmap ,dir, name,OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -227,22 +227,22 @@ int fork;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 		sprintf(temp1, "%s/%s/%s", Path, name1, name);
 		if (unlink(temp1) <0) {
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 		if (delete_unix_dir(Path, name1)) {
-			failed();
+			test_failed();
 		}
 		getchar();
 	}
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 	}
 fin:
 	FPDelete(Conn, vol,  dir , name);
@@ -277,14 +277,14 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	else {

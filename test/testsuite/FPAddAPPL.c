@@ -23,7 +23,7 @@ int dir;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name)) ) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -46,7 +46,7 @@ int dir;
 	/*"SimpleText"*/
 	ret = FPAddAPPL(Conn , dt, DIRDID_ROOT, "ttxt", 0xafb471c0, file);
 	if (not_valid(ret, /* MAC */AFPERR_NOOBJ, 0)) {
-		failed();
+		test_failed();
 	}
 	if (!ret) {
 		FAIL ( FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttxt", file))
@@ -86,12 +86,12 @@ int dir;
     if (!Conn2) {
 	 	dir = get_did(Conn, vol, did, name);
 	 	if (!dir) {
-	 		failed();
+	 		test_failed();
 	 	}
 		else if (!FPCreateDir(Conn, vol, dir , name)) {
 			goto fin;
 	 	}
-		failed();
+		test_failed();
 		ret = FPCreateFile(Conn, vol,  0, dir , file);
 	    FPEnumerate(Conn, vol,  dir , "",
 	         (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_ATTR) ,
@@ -116,16 +116,16 @@ int dir;
 		dsi = &Conn->dsi;
 		vol2  = FPOpenVol(Conn2, Vol);
 		if (vol2 == 0xffff) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 		if (!(dir = FPCreateDir(Conn2,vol2, did , name))) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 
 		if (FPGetFileDirParams(Conn2, vol2,  dir , "", 0,bitmap )) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 		bitmap =  (1 << DIRPBIT_ACCESS);
@@ -136,7 +136,7 @@ int dir;
     	filedir.access[2] = 0;
     	filedir.access[3] = 7;
  		if (FPSetDirParms(Conn2, vol2, dir , "", bitmap, &filedir)) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 		FPCloseVol(Conn2,vol2);

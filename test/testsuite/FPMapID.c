@@ -23,7 +23,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0,bitmap ))
@@ -37,29 +37,29 @@ DSI *dsi = &Conn->dsi;
 
 	ret = FPMapID(Conn, 1, -filedir.uid);  /* user to Mac roman */
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPMapID(Conn, 2, -filedir.gid);  /* group to Mac roman */
 	/* sometime -filedir.gid is there */
 	if (ret && not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPMapID(Conn, 2, filedir.gid))  /* group to Mac roman */
 	ret = FPMapID(Conn, 3, filedir.uid); /* user to UTF8 */
 	if (Conn->afp_version >= 30 && ret) {
-		failed();
+		test_failed();
 	}
 	else if (Conn->afp_version < 30 && ret != htonl(AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 	ret = FPMapID(Conn, 4, filedir.gid); /* group to UTF8 */
 	if (Conn->afp_version >= 30 && ret) {
-		failed();
+		test_failed();
 	}
 	else if (Conn->afp_version < 30 && ret != htonl(AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))

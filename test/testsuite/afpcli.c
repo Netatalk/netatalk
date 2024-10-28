@@ -6,7 +6,6 @@ int     Throttle = 0;
 int     Convert = 1;
 int	Interactive = 0;
 int	Quiet = 1;
-int	Quirk = 0;
 int	Verbose = 0;
 int	Color = 1;
 int	Exclude = 0;

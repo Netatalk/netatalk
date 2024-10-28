@@ -12,14 +12,14 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -49,7 +49,7 @@ uint16_t vol = VolID;
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
 	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	    (1 << DIRPBIT_ACCESS))) {
-	    failed();
+	    test_failed();
 	    goto fin;
 	}
 
@@ -62,7 +62,7 @@ uint16_t vol = VolID;
 	     (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
 	     (1 << DIRPBIT_ACCESS))
 	   ) {
-		failed();
+		test_failed();
 	}
 fin:
 	delete_folder(vol, DIRDID_ROOT, name);
@@ -98,7 +98,7 @@ DSI *dsi;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , "t45 no access/file");
 	if (dir || dsi->header.dsi_code != ntohl(AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (dir) {
@@ -108,7 +108,7 @@ DSI *dsi;
 
 	dir  = FPCreateDir(Conn,vol, pdir , "t45 file");
 	if (dir || dsi->header.dsi_code != ntohl(AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (dir) {
@@ -118,7 +118,7 @@ DSI *dsi;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , rodir);
 	if (dir || dsi->header.dsi_code != htonl(AFPERR_EXIST)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 fin:
@@ -139,19 +139,19 @@ DSI *dsi2;
 
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  tdir , "", 0, (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT))) {
-		nottested();
+		test_nottested();
 		return 0;
 	}
 
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (FPDelete(Conn2, vol2, DIRDID_ROOT, name)) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, vol,  tdir , ""))
 		FAIL (FPCloseVol(Conn2,vol2))
 		return 0;
@@ -186,7 +186,7 @@ unsigned int ret;
 	ret = FPCreateFile(Conn, vol,  0, tdir, tname);
 	/* FIXME ? */
 	if (not_valid(ret, /* MAC */AFPERR_NOOBJ, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 	/* ---- directory.c ---- */
 	if (!(tdir = create_deleted_folder(vol, tname))) {
@@ -196,7 +196,7 @@ unsigned int ret;
 	dir  = FPCreateDir(Conn,vol, tdir, tname);
 	ret = dsi->header.dsi_code;
 	if (dir || not_valid(ret, AFPERR_NOOBJ, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 		if (dir) { FPDelete(Conn, vol, dir , "");}
 	}
 	/* ----------- */
@@ -208,7 +208,7 @@ unsigned int ret;
 	dir  = FPCreateDir(Conn,vol, tdir, tname);
 	ret = dsi->header.dsi_code;
 	if (dir || not_valid(ret, AFPERR_NOOBJ, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 		if (dir) { FPDelete(Conn, vol, dir , "");}
 	}
 
@@ -220,7 +220,7 @@ unsigned int ret;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT, tname);
 	if (!dir) {
-		failed();
+		test_failed();
 	}
 	else {
 	    FPDelete(Conn, vol, dir , "");
@@ -251,13 +251,13 @@ unsigned int ret;
 
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	tdir1  = FPCreateDir(Conn,vol,tdir, name1);
 	if (!tdir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	FAIL (FPGetFileDirParams(Conn, vol,  tdir , "", 0, bitmap))
@@ -266,20 +266,20 @@ unsigned int ret;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	ret = FPDelete(Conn2, vol2,  DIRDID_ROOT , name2);
 	if (not_valid(ret, AFPERR_ACCESS, 0)) {
-		failed();
+		test_failed();
 	}
 	if (ret) {
 		FAIL (FPDelete(Conn, vol, tdir1 , ""))
 	}
 	tdir1 = 0;
 	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol, tdir , ""))
 	}
 	tdir = 0;
@@ -316,7 +316,7 @@ unsigned int ret;
 	dsi = &Conn->dsi;
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -333,7 +333,7 @@ unsigned int ret;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		FAIL (FPDelete(Conn, vol, tdir , ""))
 		goto test_exit;
 	}
@@ -343,14 +343,14 @@ unsigned int ret;
 	filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
  	FAIL (FPSetDirParms(Conn2, vol2, DIRDID_ROOT , name, bitmap, &filedir))
 	if (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol,  DIRDID_ROOT , name)) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 	filedir.attr = ATTRBIT_NODELETE;
  	FAIL (FPSetDirParms(Conn2, vol2, DIRDID_ROOT , name, bitmap, &filedir))
 	ret = FPDelete(Conn2, vol2,  DIRDID_ROOT , name);
 	if (ret) {
-		failed();
+		test_failed();
 		FAIL (FPDelete(Conn, vol, tdir , ""))
 	}
 test_exit:

@@ -38,19 +38,19 @@ unsigned int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	else {
 		dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir);
 		if (!dir) {
-			failed();
+			test_failed();
 		}
 	}
 
 	ret = FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1);
 	if (not_valid(ret, AFPERR_MISC, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 
 	dir = get_did(Conn, vol, DIRDID_ROOT, ndir);
@@ -99,23 +99,23 @@ unsigned int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	else {
 		dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir);
 		if (!dir) {
-			failed();
+			test_failed();
 		}
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	ret = FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1);
 	if (not_valid(ret, AFPERR_MISC, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 
 	dir = get_did(Conn, vol, DIRDID_ROOT, ndir);
@@ -147,7 +147,7 @@ uint16_t vol = VolID;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -184,7 +184,7 @@ int id1;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -199,7 +199,7 @@ int id1;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	else {
@@ -210,7 +210,7 @@ int id1;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED id are not the same %d %d\n", ntohl(id), ntohl(id1));
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -237,11 +237,11 @@ uint16_t vol = VolID;
 	}
 
 	if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir , file))
@@ -260,7 +260,7 @@ uint16_t vol = VolID;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 
 	}
@@ -300,11 +300,11 @@ uint16_t vol = VolID;
 	}
 
 	if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir , file))
@@ -321,7 +321,7 @@ uint16_t vol = VolID;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 
         if (adouble == AD_V2) {
@@ -334,7 +334,7 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		}
-		failed_nomsg();
+		test_failed();
             }
         }
 	}

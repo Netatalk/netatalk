@@ -57,11 +57,11 @@ DSI *dsi;
 	}
 	dir = get_did(Conn, vol, DIRDID_ROOT, "");
 	if (!dir) {
-		nottested();
+		test_nottested();
 	    return -1;
 	}
 	if (!(stack = calloc(size, sizeof(int)) )) {
-		nottested();
+		test_nottested();
 	    return -1;
 	}
 	stack[cnt] = dir;
@@ -72,7 +72,7 @@ DSI *dsi;
 	    dir = stack[cnt];
 		i = 1;
 		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
-			nottested();
+			test_nottested();
 			return -1;
 		}
 		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
@@ -89,13 +89,13 @@ DSI *dsi;
 	    		}
 	    		afp_filedir_unpack(&filedir, b + 2, f_bitmap, d_bitmap);
 	    		if (FPDelete(Conn, vol,  DIRDID_ROOT , (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname)) {
-	    		    nottested();
+	    		    test_nottested();
 	    		    return -1;
 	    		}
 	    	}
 	    }
 	    if (ret != ntohl(AFPERR_NOOBJ)) {
-			nottested();
+			test_nottested();
 			return -1;
 	    }
 	}
@@ -133,18 +133,18 @@ DSI *dsi;
     while (j < 32) {
         j++;
 		if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-			nottested();
+			test_nottested();
 			goto test_exit;
 		}
 		if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, f_bitmap, 0)) {
-			nottested();
+			test_nottested();
 			goto test_exit;
 		}
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, f_bitmap, 0);
 		result = (Conn->afp_version >= 30)?filedir.utf8_name:filedir.lname;
 		if (strcmp(result, name)) {
-			failed();
+			test_failed();
 			goto test_exit;
 		}
 
@@ -163,7 +163,7 @@ DSI *dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 			goto test_exit;
 		}
 		else {
@@ -181,11 +181,11 @@ static void run_one()
 	dsi = &Conn->dsi;
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 	if (empty_volume() < 0) {
-		nottested();
+		test_nottested();
 	    return;
 	}
 	if (strcmp(Encoding, "western") == 0) {

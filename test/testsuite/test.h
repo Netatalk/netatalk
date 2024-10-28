@@ -135,7 +135,6 @@ extern char *Test;
 extern char *Suite;
 
 extern int Version;
-extern int Quirk;
 extern int Verbose;
 extern int Quiet;
 extern int Locking;

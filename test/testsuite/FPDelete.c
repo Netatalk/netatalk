@@ -14,12 +14,12 @@ int fork;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -28,7 +28,7 @@ int fork;
 	ret = FPDelete(Conn, vol,  DIRDID_ROOT , name);
 
 	if (!ret) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -50,12 +50,12 @@ int  dir;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, dir , name)) {
-		nottested();
+		test_nottested();
 	}
 
 	FAIL (htonl( AFPERR_DIRNEMPT) !=FPDelete(Conn, vol,  DIRDID_ROOT , name2))
@@ -91,7 +91,7 @@ DSI *dsi2;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -100,7 +100,7 @@ DSI *dsi2;
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -164,11 +164,11 @@ int dt;
 	memset(&filedir, 0, sizeof(filedir));
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, tname);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (FPDelete(Conn, vol,  tdir , "")) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -176,7 +176,7 @@ int dt;
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
 	if (fork || htonl(AFPERR_NOOBJ) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 		if (fork) FPCloseFork(Conn,fork);
 	}
 
@@ -186,7 +186,7 @@ int dt;
 	bitmap = (1<<FILPBIT_MDATE);
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -198,7 +198,7 @@ int dt;
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
 	if (htonl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, tdir , vol, DIRDID_ROOT, tname, "", name1)) {
-		failed();
+		test_failed();
 		FPDelete(Conn, vol,  DIRDID_ROOT , name1);
 	}
 
@@ -210,7 +210,7 @@ int dt;
 	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		if (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret ) {
-			failed();
+			test_failed();
 		}
 	}
 	/* -------------------- */
@@ -220,14 +220,14 @@ int dt;
 
 	ret = FPExchangeFile(Conn, vol, tdir,dir, tname, name1);
 	if (ntohl(AFPERR_NOOBJ) != ret) {
-		if (Quirk && ret == htonl(AFPERR_PARAM)) {
+		if (ret == htonl(AFPERR_PARAM)) {
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED (IGNORED) not always the same error code!\n");
 			}
-			skipped_nomsg();
+			test_skipped(T_NONDETERM);
 		}
 		else {
-			failed();
+			test_failed();
 		}
 	}
 	FAIL (ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name, tname))
@@ -241,13 +241,13 @@ int dt;
  	/* ---------------- */
 	dir  = FPCreateDir(Conn,vol, tdir, tname);
 	if (dir || ntohl(AFPERR_NOOBJ) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 
  	/* ---------------- */
 	dir = FPOpenDir(Conn,vol, tdir, tname);
     if (dir || ntohl(AFPERR_NOOBJ) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
  	/* ---- filedir.c ---- */
 
@@ -255,12 +255,12 @@ int dt;
 	        (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) | (1<<DIRPBIT_UID) |
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS))
 	) {
-		failed();
+		test_failed();
 	}
 
  	/* ---------------- */
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;
@@ -288,7 +288,7 @@ int dt;
 		);
 
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NODIR, AFPERR_NODIR)) {
-		failed();
+		test_failed();
 	}
 	/* ---- desktop.c ---- */
 	FAIL (ntohl(AFPERR_NOOBJ) != FPAddComment(Conn, vol, tdir, tname, "Comment"))
@@ -325,17 +325,17 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	tdir1  = FPCreateDir(Conn,vol,tdir, name2);
 	if (!tdir1) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPGetFileDirParams(Conn, vol,  tdir1 , "", 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	bitmap = (1 << DIRPBIT_ACCESS);
@@ -350,16 +350,16 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name1)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol, tdir1 , "");
 		tdir1 = 0;
 	}
 	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol, tdir , "");
 		tdir = 0;
 	}
@@ -405,7 +405,7 @@ int  dir;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -418,7 +418,7 @@ int  dir;
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD| OPENACC_DRD| OPENACC_DWR);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name3))
@@ -464,7 +464,7 @@ int  dir;
 
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -476,7 +476,7 @@ int  dir;
 
 	fork = FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD| OPENACC_DRD| OPENACC_DWR);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, ""))
@@ -515,7 +515,7 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 
 	tdir  = FPCreateDir(Conn,vol, DIRDID_ROOT, name);
 	if (!tdir) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -533,11 +533,11 @@ uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)
 
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (FPDelete(Conn2, vol2,  DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		FPDelete(Conn, vol, tdir , "");
 	}
 	FPCloseVol(Conn2,vol2);
@@ -568,7 +568,7 @@ int ret;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -576,7 +576,7 @@ int ret;
 	ret = FPDelete(Conn, vol,  DIRDID_ROOT , name);
 
 	if (ret) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
     if (Conn->afp_version < 32) {
@@ -584,12 +584,12 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout, "\tFAILED no attention received\n");
 		}
-			failed_nomsg();
+			test_failed();
 		}
     }
     else if (Attention_received) {
 		fprintf(stdout, "\tFAILED attention received\n");
-		failed_nomsg();
+		test_failed();
     }
 
 test_exit:

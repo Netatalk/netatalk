@@ -32,14 +32,14 @@ int ret;
 
 	bitmap = (1<< DIRPBIT_DID);
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, rodir, 0, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	memcpy(&did, dsi->data +3 * sizeof( uint16_t ), sizeof(did));
 
 	ret = FPCreateFile(Conn, vol,  0, DIRDID_ROOT , rodir);
 	if (not_valid(ret, /* MAC */AFPERR_EXIST, AFPERR_BADTYPE)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (ntohl(AFPERR_ACCESS) != FPCreateFile(Conn, vol,  0, did , name1))
@@ -52,16 +52,16 @@ int ret;
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name2)) {
-		failed();
+		test_failed();
 		FAIL (FPCloseFork(Conn,fork))
 	}
 	if (ntohl(AFPERR_BUSY) != FPCreateFile(Conn, vol,  1, DIRDID_ROOT , name2)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseFork(Conn,fork))
 
@@ -69,12 +69,12 @@ int ret;
 
 	/* ----------- */
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name3))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPCreateFile(Conn, vol,  1, dir , name2)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -136,7 +136,7 @@ getchar();
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
-		failed();
+		test_failed();
 	}
 
 getchar();

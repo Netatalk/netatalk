@@ -18,17 +18,17 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), (1<< 31));
 	if (not_valid(ret, /* MAC */0, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (!ret) {
@@ -37,7 +37,7 @@ DSI *dsi;
 
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), -2);
 	if (not_valid(ret, /* MAC */0, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (!ret) {
@@ -55,11 +55,11 @@ DSI *dsi;
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (!FPByteLock(Conn, fork1, 0, 0 , 60 , 100)) {
-		failed();
+		test_failed();
 		FPByteLock(Conn, fork1, 0, 1 , 60 , 100);
 	}
 	FAIL (htonl(AFPERR_LOCK) != FPSetForkParam(Conn, fork1, (1<<FILPBIT_DFLEN), 0))
@@ -96,13 +96,13 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -115,7 +115,7 @@ DSI *dsi;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -153,12 +153,12 @@ unsigned int ret;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR |OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 0))
@@ -166,7 +166,7 @@ unsigned int ret;
 	FAIL (ntohl(AFPERR_PARAM) != FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), 1<<31))
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_EXTDFLEN), (1UL<<31));
 	if (ret) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (ntohl(AFPERR_PARAM) != FPRead_ext(Conn, fork, (1 << 31) +1, 1, Data))
@@ -194,19 +194,19 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
 	if (FPRead(Conn, fork, 1020, 4, (char *)&data)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (data != 0) {
@@ -217,7 +217,7 @@ DSI *dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED got 0x%x but 0 expected\n", data);
 			}
-			failed_nomsg();
+			test_failed();
 			goto fin;
 		}
 	}

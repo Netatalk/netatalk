@@ -49,7 +49,7 @@ void FPResolveID_arg(char **argv)
 	}
 
 	if ( FPResolveID(Conn, VolID, htonl(id), bitmap) ) {
-        failed();
+        test_failed();
         return;
     }
 	filedir.isdir = 0;
@@ -83,14 +83,14 @@ void FPLockrw_arg(char **argv)
     action.sa_handler = handler;
     sigemptyset(&action.sa_mask);
     if ((sigaction(SIGINT, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
     }
 
 	fork = FPOpenFork(Conn, vol, toopen, 0, DIRDID_ROOT, argv[1],
                       OPENACC_RD | OPENACC_WR | OPENACC_DRD | OPENACC_DWR);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -125,14 +125,14 @@ void FPLockw_arg(char **argv)
     action.sa_handler = handler;
     sigemptyset(&action.sa_mask);
     if ((sigaction(SIGINT, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
     }
 
 	fork = FPOpenFork(Conn, vol, toopen, 0, DIRDID_ROOT, argv[1],
                       OPENACC_RD | OPENACC_DWR);
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
@@ -193,11 +193,11 @@ void FPEnumerate_arg(char **argv)
     	dir = get_did(Conn, vol, DIRDID_ROOT, argv[0]);
     }
 	if (!dir) {
-		nottested();
+		test_nottested();
         goto fin;
 	}
 	if (!(stack = calloc(size, sizeof(int)) )) {
-		nottested();
+		test_nottested();
         goto fin;
 	}
 	stack[cnt] = dir;
@@ -208,7 +208,7 @@ void FPEnumerate_arg(char **argv)
 	    dir = stack[cnt];
 		i = 1;
 		if (FPGetFileDirParams(Conn, vol,  dir , "", 0, d_bitmap)) {
-			nottested();
+			test_nottested();
 			goto fin;
 		}
 		while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir , "", f_bitmap, d_bitmap))) {
@@ -225,7 +225,7 @@ void FPEnumerate_arg(char **argv)
 					if (cnt > size) {
 						size += 1000;
 						if (!(stack = realloc(stack, size* sizeof(int)))) {
-							nottested();
+							test_nottested();
                             goto fin;
 						}
 					}
@@ -252,7 +252,7 @@ void FPEnumerate_arg(char **argv)
 			}
 	    }
 	    if (ret != ntohl(AFPERR_NOOBJ)) {
-			nottested();
+			test_nottested();
 			goto fin;
 	    }
 	}

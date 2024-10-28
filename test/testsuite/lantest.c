@@ -28,6 +28,8 @@
 #define NUMTESTS (LASTTEST+1)
 
 CONN *Conn;
+CONN *Conn2;
+uint16_t VolID;
 int ExitCode = 0;
 char Data[300000] = "";
 char    *Vol = "";
@@ -156,25 +158,10 @@ static void displayresults(void)
 }
 
 /* ------------------------- */
-void failed(void)
-{
-    fprintf(stdout,"\tFAILED\n");
-    if (!ExitCode)
-        ExitCode = 1;
-}
-
-/* ------------------------- */
 void fatal_failed(void)
 {
-    fprintf(stdout,"\tFAILED\n");
+    fprintf(stdout,"\tFATAL ERROR\n");
     exit(1);
-}
-/* ------------------------- */
-void nottested(void)
-{
-    fprintf(stdout,"\tNOT TESTED\n");
-    if (!ExitCode)
-        ExitCode = 2;
 }
 
 /* --------------------------------- */
@@ -355,7 +342,7 @@ void run_test(const int dir)
     if (teststorun[TEST_WRITE100MB]) {
         strcpy(temp, "File.big");
         if (FPCreateFile(Conn, vol,  0, dir , temp)){
-            failed();
+            test_failed();
             goto fin1;
         }
 
@@ -820,7 +807,7 @@ int main(int ac, char **av)
 
     vol  = FPOpenVol(Conn, Vol);
     if (vol == 0xffff) {
-        nottested();
+        test_nottested();
     }
 
     int dir;

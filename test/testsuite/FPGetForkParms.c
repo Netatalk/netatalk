@@ -14,7 +14,7 @@ uint32_t flen;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED got %d but %d expected\n", flen, len);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 }
 
@@ -32,30 +32,30 @@ DSI *dsi;
 
 	fork = FPOpenFork(Conn, vol, type, bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2= FPOpenFork(Conn, vol, type , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPWrite(Conn, fork, 0, 100, Data, 0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	bitmap = len;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
 
 	if (FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
@@ -63,13 +63,13 @@ DSI *dsi;
 	FAIL (FPFlushFork(Conn, fork))
 
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
 
 	if (FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	check_forklen(dsi, type, 100);
@@ -88,7 +88,7 @@ char *name = "t21 file";
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -118,7 +118,7 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -126,38 +126,38 @@ DSI *dsi;
 		OPENACC_RD| OPENACC_WR|  OPENACC_DWR );
 
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = (1 << FILPBIT_DFLEN);
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	bitmap = (1 << FILPBIT_RFLEN);
 	if (ntohl(AFPERR_BITMAP) != FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS, 0 ,DIRDID_ROOT, name1, OPENACC_RD| OPENACC_WR);
 	if (!fork2) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	bitmap = (1 << FILPBIT_DFLEN)| (1<< FILPBIT_MDATE);
 	if (ntohl(AFPERR_BITMAP) != FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 	}
 
 	bitmap = (1 << FILPBIT_RFLEN)| (1<< FILPBIT_MDATE);
 	if (FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork))
@@ -165,12 +165,12 @@ DSI *dsi;
 
 	bitmap = (1 << FILPBIT_DFLEN)| (1<< FILPBIT_MDATE);
 	if (ntohl(AFPERR_BITMAP) != FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 	}
 
 	bitmap = (1 << FILPBIT_RFLEN)| (1<< FILPBIT_MDATE);
 	if (FPGetForkParam(Conn, fork2, bitmap)) {
-		failed();
+		test_failed();
 	}
 
 fin:
@@ -207,19 +207,19 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name,OPENACC_WR );
 
 	if (!fork) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	bitmap = (1 << FILPBIT_DFLEN);
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -227,7 +227,7 @@ uint16_t vol = VolID;
 	ret = FPGetForkParam(Conn, fork, bitmap);
 
 	if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_BITMAP, AFPERR_BITMAP)) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCloseFork(Conn,fork))
 	fork = 0;
@@ -253,14 +253,14 @@ DSI *dsi;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 1024))
@@ -268,7 +268,7 @@ DSI *dsi;
 	FAIL (FPWrite(Conn, fork, 2048, 0, Data, 0 ))
 	bitmap = len;
 	if (FPGetForkParam(Conn, fork, bitmap)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	check_forklen(dsi, OPENFORK_DATA, 1024);

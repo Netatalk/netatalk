@@ -12,6 +12,7 @@ CONN *Conn2;
 
 int ExitCode = 0;
 
+
 #define FN(a) a ## _test
 #define EXT_FN(a) extern void FN(a) (void)
 
@@ -253,7 +254,7 @@ char *token;
         	fprintf (stdout, "%s\n", dlerror());
         }
         if (!handle || !fn) {
-			nottested();
+			test_nottested();
 			return;
 		}
 	}
@@ -265,7 +266,7 @@ char *token;
 	press_enter("Opening volume.");
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 
@@ -296,7 +297,7 @@ int i = 0;
 	press_enter("Opening volume.");
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 	while (Test_list[i].name != NULL) {

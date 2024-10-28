@@ -15,12 +15,6 @@ uint16_t vol = VolID;
 }
 
 /* ------------------------- */
-static void fatal_failed(void)
-{
-	failed();
-}
-
-/* ------------------------- */
 STATIC void test5()
 {
 uint16_t bitmap = 0;
@@ -37,46 +31,46 @@ DSI *dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, size, Data)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	if (FPWrite(Conn, fork1, size -2000, 2048, Data, 0 /*0x80 */)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 	FAIL (FPFlushFork(Conn, fork1))
 
 	if (FPRead(Conn, fork, 0, size, Data)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (FPWrite(Conn, fork1, 0, 100, Data, 0x80 )) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 	FAIL (FPFlush(Conn, vol))
@@ -86,38 +80,38 @@ DSI *dsi;
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (ntohl(AFPERR_ACCESS) != FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), 0)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (FPSetForkParam(Conn, fork1, (1<<FILPBIT_DFLEN), 0)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 10, size, Data)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (FPWrite(Conn, fork1, 100, 20, Data, 0 )) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
 	if (FPRead(Conn, fork, 110, 10, Data)) {
-		failed();
+		test_failed();
 		goto fin2;
 	}
 
@@ -151,46 +145,46 @@ DSI *dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, size, Data)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPWrite(Conn, fork1, size -2000, 2048, Data, 0 /*0x80 */)) {
-		failed();
+		test_failed();
 		FPCloseFork(Conn,fork1);
 		goto fin1;
 	}
 	FPFlushFork(Conn, fork1);
 
 	if (FPRead(Conn, fork, 0, size, Data)) {
-		failed();
+		test_failed();
 	}
 
 	if (FPWrite(Conn, fork1, 0, 100, Data, 0x80 )) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	FPCloseFork(Conn,fork1);
@@ -199,36 +193,36 @@ DSI *dsi;
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_ACCESS) != FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	if (FPSetForkParam(Conn, fork1, (1<<FILPBIT_RFLEN), 0)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 10, size, Data)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	if (FPWrite(Conn, fork1, 100, 20, Data, 0 )) {
-		failed();
+		test_failed();
 	}
 	else if (FPRead(Conn, fork, 110, 10, Data)) {
-		failed();
+		test_failed();
 	}
 
 fin1:
@@ -253,14 +247,14 @@ int ret;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
     /* > 2 Gb */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name ,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -268,7 +262,7 @@ int ret;
 	FAIL (ntohl(AFPERR_PARAM) != FPWrite(Conn, fork, ((off_t)1 << 31) +20, 3000, Data, 0))
 	ret = FPWrite(Conn, fork, 0x7fffffff, 30, Data,0);
 	if (not_valid(ret, /* MAC */AFPERR_MISC, AFPERR_DFULL)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPCloseFork(Conn,fork))
@@ -296,17 +290,17 @@ DSI *dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (ntohl(AFPERR_ACCESS) != FPRead(Conn, fork, 0, 30, Data))
@@ -315,7 +309,7 @@ DSI *dsi;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (ntohl(AFPERR_ACCESS) != FPWrite(Conn, fork, 0, 30, Data,0))
@@ -325,7 +319,7 @@ DSI *dsi;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR|OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPWrite(Conn, fork, 0, 300, Data, 0))
@@ -384,7 +378,7 @@ CONN *myconn;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", quantum);
 		}
-		nottested();
+		test_nottested();
 		return;
 	}
 
@@ -398,48 +392,48 @@ CONN *myconn;
     action.sa_flags = SA_RESTART | SA_ONESHOT;
     if ((sigaction(SIGALRM, &action, NULL) < 0) ||
             (setitimer(ITIMER_REAL, &it, NULL) < 0)) {
-		nottested();
+		test_nottested();
 		return;
     }
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
     if ((myconn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-    	nottested();
+    	test_nottested();
     	goto fin;
 	}
 	myconn->type = Proto;
     dsi2 = &myconn->dsi;
 	sock = OpenClientSocket(Server, Port);
     if ( sock < 0) {
-    	nottested();
+    	test_nottested();
     	goto fin;
     }
     dsi2->protocol = DSI_TCPIP;
 	dsi2->socket = sock;
 	ret = FPopenLogin(myconn, vers, uam, User, Password);
 	if (ret) {
-    	nottested();
+    	test_nottested();
     	goto fin;
 	}
 	vol2 = VolID  = FPOpenVol(myconn, Vol);
 	if (vol2 == 0xffff) {
-    	nottested();
+    	test_nottested();
 	    goto fin;
 	}
 	fork = FPOpenFork(myconn, vol2, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR|OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	fork1 = FPOpenFork(myconn, vol2, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name1,OPENACC_WR|OPENACC_RD );
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin;
 	}
  	FAIL (FPSetForkParam(myconn, fork, (1<<FILPBIT_DFLEN), 10*128*1024))
@@ -510,7 +504,7 @@ fin:
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED deadlock\n");
 		}
-		failed_nomsg();
+		test_failed();
 		sleep(5);
 	}
 	else {
@@ -530,7 +524,7 @@ fin:
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
     if ((sigaction(SIGALRM, &action, NULL) < 0)) {
-		nottested();
+		test_nottested();
     }
 	sleep(1);
 }
@@ -580,45 +574,45 @@ DSI *dsi;
 	size = min(65536, dsi->server_quantum);
 	data = calloc(1, size);
 	if (ntohl(AFPERR_NOOBJ) != is_there(Conn, DIRDID_ROOT, ndir)) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, "", 0
 	         , (1<< DIRPBIT_DID) )) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_NOOBJ) != is_there(Conn, dir, "File.big")) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir, "", 0
 	         , (1<< DIRPBIT_DID) )) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	if (FPCreateFile(Conn, vol,  0, dir , "File.big")){
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	/* --------------- */
 	strcpy(temp, "File.big");
 	if (is_there(Conn, dir, temp)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x72d,0)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x73f, 0x133f )) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	nowrite = 0;
@@ -626,87 +620,87 @@ DSI *dsi;
 			            (1<<FILPBIT_PDID)|(1<< DIRPBIT_LNAME)|(1<<FILPBIT_FNUM)|(1<<FILPBIT_DFLEN)
 			            , dir, temp, OPENACC_WR |OPENACC_RD| OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	else {
 		if (FPGetForkParam(Conn, fork, (1<<FILPBIT_PDID)|(1<< DIRPBIT_LNAME)|(1<<FILPBIT_DFLEN))) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		for (i=0; i <= numread ; i++) {
 			if (FPWrite(Conn, fork, i*size, size, data, 0 )) {
-				nottested();
+				test_nottested();
 				nowrite = 1;
 				break;
 			}
 		}
 		if (FPCloseFork(Conn,fork)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 	}
 
-	if (is_there(Conn, dir, temp)) {fatal_failed();}
-	if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x72d, 0)) {fatal_failed();}
+	if (is_there(Conn, dir, temp)) {test_failed();}
+	if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x72d, 0)) {test_failed();}
 	if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x73f, 0x133f )) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0x342 , dir, temp,OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	else {
 		if (FPGetForkParam(Conn, fork, (1<<FILPBIT_DFLEN))) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		if (FPRead(Conn, fork, 0, 512, data)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		if (FPCloseFork(Conn,fork)) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 	}
 	if (!nowrite) {
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0x342 , dir, temp,OPENACC_RD| OPENACC_DWR);
 		if (!fork) {
-			failed();
+			test_failed();
 			goto fin1;
 		}
 		else {
 			if (FPGetForkParam(Conn, fork, 0x242)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 			if (FPGetFileDirParams(Conn, vol,  dir, temp, 0x72d,0)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 			for (i=0; i <= numread ; i++) {
 				if (FPRead(Conn, fork, i*size, size, data)) {
-					failed();
+					test_failed();
 					goto fin1;
 				}
 			}
 			if (FPCloseFork(Conn,fork)) {
-				failed();
+				test_failed();
 				goto fin1;
 			}
 		}
 	}
 fin1:
 	if (FPDelete(Conn, vol,  dir, "File.big")) {
-		failed();
+		test_failed();
 	}
 	if (FPDelete(Conn, vol,  dir, "")) {
-		failed();
+		test_failed();
 	}
 fin:
 	free(ndir);
@@ -732,28 +726,28 @@ DSI *dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\t server quantum (%d) too small\n", size);
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPWrite(Conn, fork, 0, size, Data, 0 )) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 
 	if (FPRead(Conn, fork, 0, size, Data)) {
-		failed();
+		test_failed();
 		goto fin1;
 	}
 	FAIL (FPFlush(Conn, vol))
@@ -792,39 +786,39 @@ int ret;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPSetForkParam(Conn, fork, (1<<FILPBIT_DFLEN), size)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, offset, 10, Data)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 200)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	ret= FPRead(Conn, fork1, offset, 10, Data);
 	if (not_valid(ret, /* Mac */ AFPERR_EOF, AFPERR_LOCK)) {
-		failed();
+		test_failed();
 	}
 
 	FPCloseFork(Conn,fork1);
@@ -858,11 +852,11 @@ STATIC void test8()
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name1)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT, name2)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -870,15 +864,15 @@ STATIC void test8()
 
 	rfork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap ,DIRDID_ROOT, name1, OPENACC_RD|OPENACC_WR);
 	if (!rfork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPSetForkParam(Conn, rfork, (1<<FILPBIT_RFLEN), rsize)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
     if (FPCloseFork(Conn, rfork)) {
-		failed();
+		test_failed();
 		goto fin;
     }
 
@@ -886,15 +880,15 @@ STATIC void test8()
 
 	dfork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap ,DIRDID_ROOT, name2, OPENACC_RD|OPENACC_WR);
 	if (!dfork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPSetForkParam(Conn, dfork, (1<<FILPBIT_DFLEN), dsize)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
     if (FPCloseFork(Conn, dfork)) {
-		failed();
+		test_failed();
 		goto fin;
     }
 
@@ -902,23 +896,23 @@ STATIC void test8()
 
 	rfork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap ,DIRDID_ROOT, name1, OPENACC_RD);
 	if (!rfork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	dfork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap ,DIRDID_ROOT, name2, OPENACC_RD);
 	if (!dfork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFP_OK) != FPRead(Conn, rfork, 0, rsize, Data)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (ntohl(AFP_OK) != FPRead(Conn, dfork, 0, dsize, Data)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 

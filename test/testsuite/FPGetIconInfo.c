@@ -38,7 +38,7 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, u_null, 2 ))
 		}
 		else if (ret) {
-			failed();
+			test_failed();
 		}
 		else {
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 2 ))

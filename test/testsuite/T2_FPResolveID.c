@@ -29,14 +29,14 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -50,7 +50,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-            failed_nomsg();
+            test_failed();
         }
     }
 	sprintf(temp1, "%s/%s/%s", Path, name1, name);
@@ -58,11 +58,11 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	if (delete_unix_dir(Path, name1)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
@@ -94,7 +94,7 @@ int ret;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -103,7 +103,7 @@ int ret;
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -117,7 +117,7 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-            failed_nomsg();
+            test_failed();
         }
     }
 	sprintf(temp1, "%s/%s/%s", Path, name1, name);
@@ -125,11 +125,11 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	if (delete_unix_dir(Path, name1)) {
-		failed();
+		test_failed();
 	}
 
 	FPCloseVol(Conn,vol);
@@ -137,7 +137,7 @@ int ret;
 
     ret = FPDeleteID(Conn, vol, filedir.did);
 	if (not_valid_bitmap(ret, BITERR_PARAM | BITERR_NOOBJ, AFPERR_PARAM)) {
-		failed();
+		test_failed();
 	}
 
 test_exit:
@@ -164,14 +164,14 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -184,7 +184,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-            failed_nomsg();
+            test_failed();
         }
     }
 	sprintf(temp1, "%s/%s/%s", Path, name1, name);
@@ -192,11 +192,11 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	if (delete_unix_dir(Path, name1)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (ntohl(AFPERR_NOOBJ ) != FPDeleteID(Conn, vol, filedir.did))
@@ -230,19 +230,19 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -260,7 +260,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 
         if (adouble == AD_V2) {
@@ -273,7 +273,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		}
-                failed_nomsg();
+                test_failed();
             }
         }
 	}
@@ -281,7 +281,7 @@ DSI *dsi = &Conn->dsi;
 		FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2))
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -290,7 +290,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			failed_nomsg();
+			test_failed();
 
 		}
 		else {
@@ -340,7 +340,7 @@ static int get_fs_lock(char *folder, char *file)
 			perror("fcntl ");
 			fprintf(stdout,"\tFAILED\n");
 		}
-			failed_nomsg();
+			test_failed();
     	}
     	fcntl(fd, F_UNLCK, &lock);
     	close(fd);
@@ -351,7 +351,7 @@ static int get_fs_lock(char *folder, char *file)
 		perror("open ");
 		fprintf(stdout,"\tFAILED\n");
 	}
-		failed_nomsg();
+		test_failed();
     }
     return -1;
 }
@@ -385,7 +385,7 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
@@ -394,21 +394,21 @@ DSI *dsi = &Conn->dsi;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap , dir, name3, OPENACC_WR |OPENACC_RD|OPENACC_DWR| OPENACC_DRD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	if (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -426,7 +426,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 
         if (adouble == AD_V2) {
@@ -439,7 +439,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		}
-                failed_nomsg();
+                test_failed();
             }
             if (get_fs_lock(name1, name3) < 0) {
                 goto fin;
@@ -450,7 +450,7 @@ DSI *dsi = &Conn->dsi;
 		FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2))
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -459,7 +459,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			failed_nomsg();
+			test_failed();
 
 		}
 		else {
@@ -503,7 +503,7 @@ DSI *dsi = &Conn->dsi;
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name))
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -517,7 +517,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-            failed_nomsg();
+            test_failed();
         }
     }
 	sprintf(temp1, "%s/%s", Path, name);
@@ -525,7 +525,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
 	FAIL (ntohl(AFPERR_NOID ) != FPResolveID(Conn, vol, filedir.did, bitmap))
@@ -556,19 +556,19 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir1 = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir1))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (!(dir2 = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir2))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir1, name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir1, name, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -587,7 +587,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	else {
@@ -605,11 +605,11 @@ DSI *dsi = &Conn->dsi;
 		    (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)
 	) {
-		failed();
+		test_failed();
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir1 , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -618,7 +618,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			failed_nomsg();
+			test_failed();
 
 		}
 		else {
@@ -657,24 +657,24 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	if (!(dir2 = FPCreateDir(Conn,vol, DIRDID_ROOT , name2))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -692,7 +692,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 			}
-			failed_nomsg();
+			test_failed();
 		}
 
         if (adouble == AD_V2) {
@@ -705,7 +705,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		}
-                failed_nomsg();
+                test_failed();
             }
         }
 	}
@@ -714,7 +714,7 @@ DSI *dsi = &Conn->dsi;
 		FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name, name2))
 	}
 	if (FPGetFileDirParams(Conn, vol,  dir2 , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -723,7 +723,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 		else {
 			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
@@ -763,14 +763,14 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , dir1))) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
 
 	/* create file1 */
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -782,7 +782,7 @@ DSI *dsi = &Conn->dsi;
 	/* create file2 */
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name2))
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -802,7 +802,7 @@ DSI *dsi = &Conn->dsi;
 
 	/* check name1 has name2 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name1, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	filedir.isdir = 0;
@@ -811,13 +811,13 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid2, filedir.did);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
 	/* check name2 has name1 id */
 	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	filedir.isdir = 0;
@@ -826,7 +826,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid1, filedir.did);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 

@@ -10,7 +10,7 @@ int ret;
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
-		failed();
+		test_failed();
 	}
 	exit_test("FPGetSrvrParms:test209: GetSrvrParms call");
 
@@ -32,7 +32,7 @@ unsigned char *b;
 
 	ret = FPGetSrvrParms(Conn);
 	if (ret) {
-		failed();
+		test_failed();
 	}
 	nbe = *(dsi->data +4);
 	b = dsi->data+5;
@@ -45,12 +45,12 @@ unsigned char *b;
 	    b += len;
 	}
 	if (!found) {
-		failed();
+		test_failed();
 	}
 
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 	}
 	exit_test("FPGetSrvrParms:test316: GetSrvrParms for a volume with option nostat set");
 }

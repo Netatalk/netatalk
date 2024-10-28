@@ -78,7 +78,7 @@ static void run_one(char *name, char **args)
 	}
 
 	if (Test_list[i].name == NULL) {
-        nottested();
+        test_nottested();
         return;
 	}
     fn = Test_list[i].fn;
@@ -87,7 +87,7 @@ static void run_one(char *name, char **args)
 
 	VolID = FPOpenVol(Conn, Vol);
 	if (VolID == 0xffff) {
-		nottested();
+		test_nottested();
 		return;
 	}
 

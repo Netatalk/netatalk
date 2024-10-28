@@ -72,24 +72,24 @@ unsigned ret;
 		goto test_exit;
 	}
  	if (!(dir = folder_with_ro_adouble(vol, DIRDID_ROOT, name, file))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
  	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir , file, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		ret = FPSetFileParams(Conn, vol, dir , file, bitmap, &filedir);
 		if (not_valid(ret, 0, AFPERR_ACCESS)) {
-			failed();
+			test_failed();
 		}
 	}
 	bitmap = (1<<FILPBIT_MDATE);
 	if (FPGetFileDirParams(Conn, vol,  dir, file, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -120,12 +120,12 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 0;
@@ -170,7 +170,7 @@ STATIC void test426()
 	}
 
     if (afp_symlink("t426 dest", name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
@@ -180,7 +180,7 @@ STATIC void test426()
 	if (!Quiet) {
 		fprintf(stdout,"\tFAILED stat( %s ) %s\n", temp, strerror(errno));
 	}
-        failed_nomsg();
+        test_failed();
     }
     if (!S_ISLNK(st.st_mode)) {
 		test_skipped(T_NOSYML);
@@ -189,21 +189,21 @@ STATIC void test426()
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,DIRDID_ROOT, name , OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 	}
 	else {
         char *ln2 = "t426 dest 2";
         ret = FPWrite_ext(Conn, fork, 0, strlen(ln2), ln2, 0);
 
         if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_MISC, AFPERR_MISC))
-            failed();
+            test_failed();
 	    FPCloseFork(Conn,fork);
     }
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , 0 ,DIRDID_ROOT, name , OPENACC_RD);
 	if (!fork) {
 	    /* Trying to open the linked file? */
-		failed();
+		test_failed();
 	}
 
     if (fork) {

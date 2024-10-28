@@ -17,11 +17,11 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir, name1))
 
@@ -44,7 +44,7 @@ uint16_t vol = VolID;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
@@ -57,7 +57,7 @@ uint16_t vol = VolID;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 
@@ -66,14 +66,14 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 
@@ -101,12 +101,12 @@ int ret;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir, name1))
@@ -119,7 +119,7 @@ int ret;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -131,14 +131,14 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn, vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	FAIL (FPWrite(Conn, fork, 0, 3, "new", 0 ))
@@ -148,12 +148,12 @@ int ret;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be new\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork1) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name, name1))
@@ -172,7 +172,7 @@ int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 
@@ -186,7 +186,7 @@ int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED %x should be %x\n", ret, fid_name);
 			}
-			failed_nomsg();
+			test_failed();
 		}
 	}
 
@@ -210,11 +210,11 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , ndir))) {
-		failed();
+		test_failed();
 	}
 	FAIL (FPCreateFile(Conn, vol,  0, dir, name1))
 
@@ -228,14 +228,14 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 
@@ -264,7 +264,7 @@ int  ofs =  3 * sizeof( uint16_t );
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir = DIRDID_ROOT;
@@ -273,7 +273,7 @@ int  ofs =  3 * sizeof( uint16_t );
     /* set some metadata, MUST NOT be exchanged */
 	bitmap = (1 << FILPBIT_FINFO);
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
@@ -291,7 +291,7 @@ int  ofs =  3 * sizeof( uint16_t );
 
     /* test whether FinderInfo was preserved */
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
-		failed();
+		test_failed();
 	}
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
@@ -299,7 +299,7 @@ int  ofs =  3 * sizeof( uint16_t );
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED: metadata wasn't preserved\n");
 		}
-		failed_nomsg();
+		test_failed();
     }
 
 	/* test remove of no cnid db */
@@ -307,13 +307,13 @@ int  ofs =  3 * sizeof( uint16_t );
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -321,14 +321,14 @@ int  ofs =  3 * sizeof( uint16_t );
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
@@ -352,7 +352,7 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir = DIRDID_ROOT;
@@ -360,7 +360,7 @@ uint16_t vol = VolID;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -379,13 +379,13 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -393,14 +393,14 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 fin:
@@ -426,7 +426,7 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir = DIRDID_ROOT;
@@ -434,7 +434,7 @@ uint16_t vol = VolID;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -454,13 +454,13 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -468,14 +468,14 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 fin:
@@ -501,7 +501,7 @@ uint16_t vol = VolID;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dir = DIRDID_ROOT;
@@ -509,7 +509,7 @@ uint16_t vol = VolID;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name1, OPENACC_WR | OPENACC_RD);
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -528,13 +528,13 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	if ((temp = get_fid(Conn, vol, dir , name1)) != fid_name1) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED %x should be %x\n", temp, fid_name1);
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 	read_fork(Conn, vol,  DIRDID_ROOT , name, 3);
@@ -542,14 +542,14 @@ uint16_t vol = VolID;
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be red\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 	read_fork(Conn,  vol, dir , name1, 4);
 	if (strcmp(Data,"blue")) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED should be blue\n");
 		}
-		failed_nomsg();
+		test_failed();
 	}
 
 fin:

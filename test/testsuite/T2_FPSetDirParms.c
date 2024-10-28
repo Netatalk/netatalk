@@ -22,13 +22,13 @@ DSI *dsi;
 	}
 	dsi = &Conn->dsi;
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 
 	memset(&filedir, 0, sizeof(filedir));
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, 0, bitmap)) {
-		failed();
+		test_failed();
 	}
 	else {
 		filedir.isdir = 1;

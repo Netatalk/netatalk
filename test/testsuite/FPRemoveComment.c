@@ -36,42 +36,42 @@ int dt;
 	dsi2 = &Conn2->dsi;
 	vol2  = FPOpenVol(Conn2, Vol);
 	if (vol2 == 0xffff) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 	if (!(dir = FPCreateDir(Conn2,vol2, DIRDID_ROOT , name3))) {
-		nottested();
+		test_nottested();
 		goto fin;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name2);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1))
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name1);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "essai"))
 	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3))
 	ret = FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, 0)) {
-		failed();
+		test_failed();
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name1,OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 
@@ -110,7 +110,7 @@ int  dt;
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name1,OPENACC_RD );
 	if (!fork) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	dt = FPOpenDT(Conn,vol);

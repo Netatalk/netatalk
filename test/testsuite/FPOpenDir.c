@@ -30,7 +30,7 @@ DSI *dsi;
 		goto fin;
 	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name4))) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	dsi = &Conn->dsi;
@@ -39,35 +39,35 @@ DSI *dsi;
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT , name);
 	ret = dsi->header.dsi_code;
 	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		failed();
+		test_failed();
 	}
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT , name2);
 	if (!dir) {
-		failed();
+		test_failed();
 	}
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT , name3);
     if (dir || ntohl(AFPERR_BADTYPE) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT_PARENT , "");
     if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT_PARENT , Vol);
     if (dir != DIRDID_ROOT) {
-		failed();
+		test_failed();
 	}
 
 	dir = FPOpenDir(Conn,vol +1, DIRDID_ROOT_PARENT , "");
     if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
-		failed();
+		test_failed();
 	}
 
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT , name4);
     if (!dir) {
-		failed();
+		test_failed();
 		goto fin;
 	}
 	FAIL (FPCloseDir(Conn, vol, dir))

@@ -14,7 +14,7 @@ unsigned int ret;
 	ENTER_TEST
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	dt = FPOpenDT(Conn,vol);
@@ -24,17 +24,17 @@ unsigned int ret;
 
 	ret = FPRemoveAPPL(Conn , dt, DIRDID_ROOT_PARENT, "ttxt", file1);
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOOBJ)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttut", file1);
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_NOOBJ)) {
-		failed();
+		test_failed();
 	}
 
 	ret = FPRemoveAPPL(Conn , dt, DIRDID_ROOT, "ttxt", "");
 	if (not_valid(ret, /* MAC */AFPERR_NOITEM, AFPERR_BADTYPE)) {
-		failed();
+		test_failed();
 	}
 
 	FAIL (htonl(AFPERR_PARAM) != FPRemoveAPPL(Conn , dt, 0, "ttxt", file))

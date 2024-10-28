@@ -26,7 +26,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 	 		fprintf(stdout,"Backup and modification date are the same!\n");
 		}
- 		nottested();
+ 		test_nottested();
 		goto test_exit;
  	}
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), bitmap);
@@ -43,7 +43,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 	 		fprintf(stdout,"\tFAILED Backup %x and modification %x date are not the same!\n",parms.bdate, parms.mdate );
 		}
- 		failed_nomsg();
+ 		test_failed();
  	}
  
 test_exit:

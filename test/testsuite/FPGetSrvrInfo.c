@@ -10,7 +10,7 @@ int ret;
 
 	ret = FPGetSrvrInfo(Conn);
 	if (ret) {
-		failed();
+		test_failed();
 	}
 
 	exit_test("FPGetSrvrInfo:test1: GetSrvInfo");

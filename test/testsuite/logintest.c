@@ -38,7 +38,7 @@ DSI *dsi;
     	dsi = &conn->dsi;
 	    sock = OpenClientSocket(Server, Port);
         if ( sock < 0) {
-        	nottested();
+        	test_nottested();
 	    	exit(ExitCode);
         }
      	dsi->protocol = DSI_TCPIP;
@@ -61,18 +61,18 @@ int ret;
       	ret = FPopenLogin(Conn, vers, uam, "", "");
 	}
 	if (ret) {
-		failed();
+		test_failed();
 		goto test_exit;
 	}
     if (Mac) {
 		fprintf(stdout,"DSIGetStatus\n");
 		if (DSIGetStatus(Conn)) {
-			failed();
+			test_failed();
 			goto test_exit;
 		}
 	}
 	if (FPLogOut(Conn)) {
-		failed();
+		test_failed();
 		goto test_exit;
     }
 
@@ -100,7 +100,7 @@ int  ret;
 		// FIXME: Broken assumption here. All 50 connections succeed.
 	    if ((ret = DSIOpenSession(&conn[i]))) {
 	    	if (ret != DSIERR_TOOMANY) {
-				failed();
+				test_failed();
 				goto test_exit;
 	    	}
 	    	cnt = i;
@@ -114,13 +114,13 @@ int  ret;
 		if (!Quiet) {
 			fprintf(stdout,"All connections succeeded\n");
 		}
-		nottested();
+		test_nottested();
 		goto test_exit;
 	}
 	for (i = 0; i < cnt; i++) {
         Dsi = &conn[i].dsi;
 		if (DSICloseSession(&conn[i])) {
-			failed();
+			test_failed();
 			goto test_exit;
 		}
 		CloseClientSocket(Dsi->socket);
@@ -251,7 +251,7 @@ unsigned int ret;
 		fprintf(stdout, "DSIGetStatus\n");
 	}
 	if (DSIGetStatus(Conn)) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 	CloseClientSocket(Dsi->socket);
@@ -264,7 +264,7 @@ unsigned int ret;
 		fprintf(stdout,"DSIOpenSession\n");
 	}
 	if (DSIOpenSession(Conn)) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 	if (Mac) {
@@ -272,7 +272,7 @@ unsigned int ret;
 			fprintf(stdout,"DSIGetStatus\n");
 		}
 		if (DSIGetStatus(Conn)) {
-			failed();
+			test_failed();
 			return ExitCode;
 		}
 	}
@@ -280,7 +280,7 @@ unsigned int ret;
 		fprintf(stdout,"DSICloseSession\n");
 	}
 	if (DSICloseSession(Conn)) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 	CloseClientSocket(Dsi->socket);
@@ -314,7 +314,7 @@ uint32_t i = 0;
 	my_dsi_cmd_receive(dsi);
 
 	if (dsi->header.dsi_code) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 }
@@ -323,7 +323,7 @@ uint32_t i = 0;
 		fprintf(stdout,"DSICloseSession\n");
 	}
 	if (DSICloseSession(Conn)) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 	CloseClientSocket(Dsi->socket);
@@ -352,13 +352,13 @@ uint32_t i = 0;
 	}
 #endif
 	if (ret) {
-		failed();
+		test_failed();
 		return ExitCode;
 	}
 	Conn->afp_version = Version;
 
    	if (FPLogOut(Conn)) {
-   		failed();
+   		test_failed();
    	}
 
 	/* ------------------------
