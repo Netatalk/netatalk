@@ -136,7 +136,7 @@ test_exit:
 void T2FPByteRangeLock_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLock page 101\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test117();
 }

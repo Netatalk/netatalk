@@ -937,7 +937,7 @@ test_exit:
 void FPRead_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead page 238\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test5();
 	test8();

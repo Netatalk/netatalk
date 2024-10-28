@@ -79,7 +79,7 @@ test_exit:
 void FPFlushFork_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPFlushFork page 171\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test203();
 }

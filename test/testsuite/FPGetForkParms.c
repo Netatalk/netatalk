@@ -284,7 +284,7 @@ test_exit:
 void FPGetForkParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetForkParms page 184\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test21();
     test50();

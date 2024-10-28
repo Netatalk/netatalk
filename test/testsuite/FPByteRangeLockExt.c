@@ -141,7 +141,7 @@ test_exit:
 void FPByteRangeLockExt_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPByteRangeLockExt page 105\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test66();
     test67();

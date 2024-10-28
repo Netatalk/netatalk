@@ -86,7 +86,7 @@ test_exit:
 void FPOpenDir_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenDir page 227\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test57();
 }

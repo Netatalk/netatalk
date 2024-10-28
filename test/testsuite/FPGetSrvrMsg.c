@@ -16,7 +16,7 @@ STATIC void test210(void)
 void FPGetSrvrMsg_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrMsg page 200\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test210();
 }

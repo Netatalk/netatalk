@@ -616,7 +616,7 @@ test_exit:
 void FPDisconnectOldSession_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDisconnectOldSession page 148\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test222();
     test338();

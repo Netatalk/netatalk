@@ -361,7 +361,7 @@ test_exit:
 void FPCreateDir_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateDir page 136\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test6();
 	test26();

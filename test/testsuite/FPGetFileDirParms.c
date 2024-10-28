@@ -1130,7 +1130,7 @@ test_exit:
 void FPGetFileDirParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms page 179\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test44();
 	test58();

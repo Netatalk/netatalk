@@ -851,7 +851,7 @@ test_exit:
 void Utf8_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"UTF8 tests\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test162();
     test166();

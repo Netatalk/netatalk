@@ -406,7 +406,7 @@ test_exit:
 void FPRename_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRename page 250\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test69();
 	test72();

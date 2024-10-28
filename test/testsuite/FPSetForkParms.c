@@ -234,7 +234,7 @@ test_exit:
 void FPSetForkParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetForkParms page 266\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test62();
     test141();

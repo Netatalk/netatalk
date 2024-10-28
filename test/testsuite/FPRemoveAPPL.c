@@ -50,7 +50,7 @@ test_exit:
 void FPRemoveAPPL_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRemoveAPPL page 245\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test215();
 }

@@ -222,7 +222,7 @@ test_exit:
 void FPzzz_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPzzz\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test223();
     test224();

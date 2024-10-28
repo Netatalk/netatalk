@@ -55,7 +55,7 @@ test_exit:
 void FPGetIconInfo_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetIconInfo page 188\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test213();
 }

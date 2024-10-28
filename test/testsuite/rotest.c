@@ -298,10 +298,10 @@ test_exit:
 	exit_test("Rotest:test510: Access files and directories on a read only volume");
 }
 
-void rotest_test()
+void Readonly_test()
 {
     fprintf(stdout, "===================\n");
-    fprintf(stdout, "Read only volume\n");
+    fprintf(stdout, "%s: Read only volume\n", __func__);
     fprintf(stdout, "-------------------\n");
     test510();
 }

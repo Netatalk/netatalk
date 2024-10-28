@@ -122,7 +122,7 @@ test_exit:
 void T2FPRead_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRead\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test109();
 }

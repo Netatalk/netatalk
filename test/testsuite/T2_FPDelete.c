@@ -310,7 +310,7 @@ test_exit:
 void T2FPDelete_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete page 143\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test146();
     test507();

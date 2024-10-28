@@ -311,7 +311,7 @@ test_exit:
 void FPWriteExt_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPWriteExt page 273\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test148();
 	test207();

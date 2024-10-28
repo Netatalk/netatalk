@@ -359,7 +359,7 @@ test_exit:
 void T2FPMoveAndRename_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMoveAndRename page 223\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test136();
     test137();

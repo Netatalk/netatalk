@@ -1057,7 +1057,7 @@ test_exit:
 void T2FPGetFileDirParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetFileDirParms page 179\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test32();
 	test33();

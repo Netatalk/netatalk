@@ -93,7 +93,7 @@ test_exit:
 void T2FPCopyFile_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCopyFile page 131\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test373();
 }

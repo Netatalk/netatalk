@@ -19,7 +19,7 @@ uint16_t vol = VolID;
 void FPFlush_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPFlush page 169\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test202();
 }

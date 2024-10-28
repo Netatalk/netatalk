@@ -124,7 +124,7 @@ test_exit:
 void FPAddIcon_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPAddIcon page 99\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test212();
 }

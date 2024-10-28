@@ -30,7 +30,7 @@ int ret;
 void FPCloseVol_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCloseVol page 130\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test204();
 }

@@ -1204,7 +1204,7 @@ test_exit:
 void FPSetFileDirParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileDirParms page 258\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test98();
     test230();
