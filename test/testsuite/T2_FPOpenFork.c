@@ -24,7 +24,7 @@ STATIC void test3()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test3: Checks data fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -81,7 +81,7 @@ STATIC void test4()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test4: Checks reso fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -140,7 +140,7 @@ STATIC void test7()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test7: Checks fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -196,7 +196,7 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -379,7 +379,7 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -446,7 +446,7 @@ unsigned int ret;
 
 	ENTER_TEST
 
-	if ((!Mac && !Path)) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -489,7 +489,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -529,7 +529,7 @@ STATIC void test157()
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -572,7 +572,7 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -615,7 +615,7 @@ int fd;
 
 	ENTER_TEST
 
-	if ((!Mac && !Path)) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -700,7 +700,7 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -801,7 +801,7 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -895,7 +895,7 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -989,7 +989,7 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -1080,7 +1080,7 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -1137,7 +1137,7 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -1201,8 +1201,8 @@ STATIC void test236()
 
 	ENTER_TEST
 
-	if (!Path) {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -1287,8 +1287,8 @@ STATIC void test237()
 
 	ENTER_TEST
 
-	if (!Path) {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -1365,8 +1365,8 @@ STATIC void test238()
 
 	ENTER_TEST
 
-	if (!Path) {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -1456,7 +1456,7 @@ STATIC void test431()
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}

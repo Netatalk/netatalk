@@ -16,7 +16,7 @@ DSI *dsi;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}

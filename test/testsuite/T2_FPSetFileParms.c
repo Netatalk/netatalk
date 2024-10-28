@@ -67,7 +67,7 @@ unsigned ret;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -114,7 +114,7 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && !Path) {
+	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
 	}
@@ -164,8 +164,8 @@ STATIC void test426()
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
 	}
-	if (!Path) {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
