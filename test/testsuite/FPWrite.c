@@ -182,7 +182,7 @@ test_exit:
 void FPWrite_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPWrite page 270\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test216();
 	test226();

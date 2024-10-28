@@ -55,7 +55,7 @@ DSI *dsi;
 void FPCloseFork_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCloseFork page 129\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test186();
 	test187();

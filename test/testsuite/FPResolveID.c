@@ -273,7 +273,7 @@ test_exit:
 void FPResolveID_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPResolveID page 252\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test76();
 	test91();

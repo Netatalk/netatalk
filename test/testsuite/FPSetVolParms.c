@@ -54,7 +54,7 @@ test_exit:
 void FPSetVolParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetVolParms page 268\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test206();
 }

@@ -44,7 +44,7 @@ void FPSync_test()
 {
 #if 0
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSync\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test2();
 #endif

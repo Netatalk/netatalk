@@ -48,7 +48,7 @@ test_exit:
 void FPCloseDir_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCloseDir page 127\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test199();
 }

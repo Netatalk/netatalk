@@ -51,7 +51,7 @@ test_exit:
 void T2FPSetDirParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetDirParms page 255\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test121();
 }

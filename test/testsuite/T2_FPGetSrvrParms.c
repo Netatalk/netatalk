@@ -75,7 +75,7 @@ test_exit:
 void T2FPGetSrvrParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvrParms page 203\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test320();
 }

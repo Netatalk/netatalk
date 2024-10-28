@@ -1548,7 +1548,7 @@ test_exit:
 void T2FPOpenFork_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenFork page 230\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test3();
     test4();

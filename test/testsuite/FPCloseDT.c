@@ -28,7 +28,7 @@ test_exit:
 void FPCloseDT_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCloseDT page 128\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test201();
 }

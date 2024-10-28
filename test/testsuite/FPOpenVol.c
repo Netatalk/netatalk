@@ -105,7 +105,7 @@ fin:
 void FPOpenVol_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenVol page 235\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 
     test205();

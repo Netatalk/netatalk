@@ -98,7 +98,7 @@ test_exit:
 void FPGetSessionToken_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSessionToken page 191\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test220();
     test221();

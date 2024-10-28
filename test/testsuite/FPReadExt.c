@@ -175,7 +175,7 @@ test_exit:
 void FPReadExt_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPReadExt page 241\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test22();
 }

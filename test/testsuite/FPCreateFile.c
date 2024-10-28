@@ -151,7 +151,7 @@ test_exit:
 void FPCreateFile_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCreateFile page 138\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test51();
 }

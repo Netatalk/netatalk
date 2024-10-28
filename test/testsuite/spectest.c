@@ -90,7 +90,7 @@ EXT_FN(T2FPRead);
 EXT_FN(T2FPSetForkParms);
 EXT_FN(Dircache_attack);
 
-EXT_FN(rotest);
+EXT_FN(Readonly);
 
 EXT_FN(FPzzz);
 
@@ -190,7 +190,7 @@ FN_N(Dircache_attack)
 
 static struct test_fn Test_list_ro[] =
 {
-FN_N(rotest)
+FN_N(Readonly)
 {NULL, NULL},
 };
 

@@ -128,7 +128,7 @@ fin:
 void FPRemoveComment_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPRemoveComment page 247\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test54();
 	test379();

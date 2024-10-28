@@ -107,7 +107,7 @@ test_exit:
 void FPAddComment_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPAddComment page 96\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test55();
 }

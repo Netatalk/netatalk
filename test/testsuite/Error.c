@@ -244,7 +244,7 @@ unsigned char cmd;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("Errror:test37: no folder error ==> ERR_NOOBJ");
+	exit_test("Error:test37: no folder error ==> ERR_NOOBJ");
 }
 
 /* ----------------------
@@ -1507,7 +1507,7 @@ test_exit:
 void Error_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"Various errors\n");
+    fprintf(stdout,"%s: Various errors\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test35();
 	test36();

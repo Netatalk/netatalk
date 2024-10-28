@@ -29,7 +29,7 @@ DSI *dsi;
 void FPOpenDT_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPOpenDT page 229\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test200();
 }

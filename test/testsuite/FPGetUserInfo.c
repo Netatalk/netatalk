@@ -83,7 +83,7 @@ test_exit:
 void FPGetUserInfo_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPFPGetUserInfo page 204\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test75();
 }

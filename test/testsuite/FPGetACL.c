@@ -169,7 +169,7 @@ test_exit:
 void FPGetACL_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetACL\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 
     test398();

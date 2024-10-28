@@ -121,7 +121,7 @@ test_exit:
 void FPEnumerateExt2_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerateExt2 page 155\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test25();
     test211();

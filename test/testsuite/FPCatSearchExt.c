@@ -142,7 +142,7 @@ test_exit:
 void FPCatSearchExt_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPCatSearchExt page 117\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test227();
 }

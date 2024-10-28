@@ -606,7 +606,7 @@ test_exit:
 void Dircache_attack_test()
 {
     fprintf(stdout, "===================\n");
-    fprintf(stdout, "Dircache attack\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout, "-------------------\n");
     test500();
     test501();

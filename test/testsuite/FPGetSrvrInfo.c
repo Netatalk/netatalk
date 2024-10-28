@@ -20,7 +20,7 @@ int ret;
 void FPGetSrvrInfo_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetSrvInfo page 194\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test1();
 }

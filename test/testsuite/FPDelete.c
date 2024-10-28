@@ -601,7 +601,7 @@ test_exit:
 void FPDelete_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPDelete page 143\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test13();
 	test27();

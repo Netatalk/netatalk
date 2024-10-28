@@ -144,7 +144,7 @@ test_exit:
 void FPMapName_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPMapName page 222\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test180();
 }

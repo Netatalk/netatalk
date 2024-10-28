@@ -219,7 +219,7 @@ test_exit:
 void T2FPSetFileParms_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPSetFileParms page 262\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test89();
     test120();

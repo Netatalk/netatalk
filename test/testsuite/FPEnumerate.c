@@ -592,7 +592,7 @@ test_exit:
 void FPEnumerate_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPEnumerate page 150\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 
     test28();

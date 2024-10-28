@@ -44,7 +44,7 @@ test_exit:
 void FPGetAPPL_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"FPGetAPPL page 172\n");
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test169();
 }
