@@ -803,12 +803,9 @@ int main(int ac, char **av)
     Conn->afp_version = Version;
 
     /* login */
-	// FIXME: workaround for FPopenLoginExt() being broken
-#if 0
     if (Version >= 30)
       	ExitCode = ntohs(FPopenLoginExt(Conn, vers, uam, User, Password));
     else
-#endif
       	ExitCode = ntohs(FPopenLogin(Conn, vers, uam, User, Password));
 
     vol  = FPOpenVol(Conn, Vol);

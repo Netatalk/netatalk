@@ -544,17 +544,12 @@ int ret;
 	}
 
     /* login */
-	// FIXME: workaround for FPopenLoginExt() being broken
-#if 0
     if (Version >= 30) {
 		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
 	}
 	else {
-#endif
 		ret = FPopenLogin(Conn, vers, uam, User, Password);
-#if 0
 	}
-#endif
 	if (ret) {
 		printf("Login failed\n");
 		exit(1);
@@ -586,17 +581,12 @@ int ret;
     	else {
 		}
     	/* login */
-	// FIXME: workaround for FPopenLoginExt() being broken
-#if 0
     	if (Version >= 30) {
 			ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
 		}
     	else {
-#endif
 			ret = FPopenLogin(Conn2, vers, uam, User2, Password);
-#if 0
 		}
-#endif
 	if (ret) {
 		printf("Login failed\n");
 		exit(1);
