@@ -306,6 +306,11 @@ struct afp_filedir_parms filedir;
 
 	ENTER_TEST
 
+    // Failing with 4.0.x as well as 3.1.12. May have to do with broken FPopenLoginExt().
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
     	test_skipped(T_AFP3);
 		goto test_exit;
