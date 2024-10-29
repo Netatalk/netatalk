@@ -16,6 +16,7 @@ STATIC void test2()
 
  	if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {
 		test_failed();
+		goto test_exit;
 	}
 
 	if (!(FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
@@ -42,10 +43,10 @@ test_exit:
 /* ----------- */
 void FPSync_test()
 {
-#if 0
     fprintf(stdout,"===================\n");
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
+#if 0
 	test2();
 #endif
 }

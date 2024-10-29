@@ -17,6 +17,7 @@ static void pipe_handler()
 
 
 /* ------------------------- */
+// FIXME: need to recheck GetSessionToken 0
 STATIC void test222()
 {
 char *name = "t222 file";
@@ -230,7 +231,7 @@ uint32_t time= 12345;
         test_nottested();
 		goto test_exit;
     }
-    FAIL(FPCreateFile(loc_conn1, vol,  0, DIRDID_ROOT , name));
+    FAIL(FPCreateFile(loc_conn1, vol,  0, DIRDID_ROOT , name))
     fork = FPOpenFork(loc_conn1, vol, OPENFORK_DATA , 0, DIRDID_ROOT, name, OPENACC_WR |OPENACC_RD);
     if (!fork)
         test_failed();
@@ -388,7 +389,7 @@ struct afp_filedir_parms filedir;
 		test_nottested();
 		goto fin;
 	}
-    FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name));
+    FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name))
 
     /* --------------------------------- */
     if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
@@ -550,7 +551,7 @@ struct afp_filedir_parms filedir;
 		test_nottested();
 		goto fin;
 	}
-    FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name));
+    FAIL(FPCreateFile(loc_conn1, vol1,  0, dir , name))
 
     /* --------------------------------- */
     if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
@@ -617,7 +618,6 @@ void FPDisconnectOldSession_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
-// FIXME: need to recheck GetSessionToken 0
 #if 0
     test222();
 #endif

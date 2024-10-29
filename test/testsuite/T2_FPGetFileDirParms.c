@@ -303,12 +303,17 @@ test_exit:
 }
 
 /* -------------------------- */
-// FIXME
+// FIXME - passes in 3.1.12 but not 4.0.3
 STATIC void test52()
 {
 uint16_t vol = VolID;
 
 	ENTER_TEST
+
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
@@ -1062,9 +1067,7 @@ void T2FPGetFileDirParms_test()
 	test32();
 	test33();
 	test42();
-#if 0
 	test52();
-#endif
 	test106();
 	test127();
 	test128();

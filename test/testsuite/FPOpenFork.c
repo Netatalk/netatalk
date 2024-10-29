@@ -664,8 +664,10 @@ DSI *dsi;
 
 	ENTER_TEST
 
-// Opens too many forks to be run with other tests
 	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Opens too many forks to be run with other tests.\n");
+		}
 		test_skipped(T_SINGLE);
 		goto test_exit;
 	}

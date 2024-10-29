@@ -956,7 +956,7 @@ test_exit:
  * for this test you need
 .         "????"  "????"
 .pdf      "PDF "  "CARO"
- * in AppleVolume.system
+ * in extmap.conf
  */
 STATIC void test371()
 {
@@ -970,7 +970,6 @@ uint16_t bitmap;
 
 	ENTER_TEST
 
-	// FIXME: may or may not be testable with the right extmap.conf settings
 	if (Exclude) {
 		test_skipped(T_EXCLUDE);
 		goto test_exit;
@@ -1020,7 +1019,7 @@ test_exit:
 /* -------------------------
  * for this test you need
 .doc      "WDBN"  "MSWD"      Word Document
-in AppleVolume.system
+in extmap.conf
 */
 STATIC void test380()
 {
@@ -1035,7 +1034,6 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	ENTER_TEST
 
-	// FIXME: may or may not be testable with the right extmap.conf settings
 	if (Exclude) {
 		test_skipped(T_EXCLUDE);
 		goto test_exit;

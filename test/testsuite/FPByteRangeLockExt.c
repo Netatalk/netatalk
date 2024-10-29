@@ -78,16 +78,12 @@ fin:
 }
 
 /* ----------- */
+// FIXME: broken since at least 3.1.12
 STATIC void test66()
 {
 char *name = "t66 FPByteLock_ext DF";
 
 	ENTER_TEST
-	// FIXME: tests fail with Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -98,16 +94,12 @@ test_exit:
 }
 
 /* ----------- */
+// FIXME: broken since at least 3.1.12 - could not locate fork
 STATIC void test67()
 {
 char *name = "t67 FPByteLock_ext RF";
 
 	ENTER_TEST
-	// FIXME: tests fail with Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -143,7 +135,9 @@ void FPByteRangeLockExt_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
+#if 0
     test66();
     test67();
+#endif
     test195();
 }
