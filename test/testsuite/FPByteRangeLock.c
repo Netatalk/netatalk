@@ -105,36 +105,26 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 }
 /* ----------- */
+// FIXME: broken since at least 3.1.12 - could not locate fork
 STATIC void test63()
 {
 char *name = "test63 FPByteLock DF";
 
 	ENTER_TEST
-	// FIXME: broken with Netatalk 4.0 - could not locate fork
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	test_bytelock(VolID, name, OPENFORK_DATA);
 
-test_exit:
 	exit_test("FPByteRangeLock:test63: FPByteLock Data Fork");
 }
 
 /* ----------- */
+// FIXME: broken since at least 3.1.12 - could not locate fork
 STATIC void test64()
 {
 char *name = "test64 FPByteLock RF";
 
 	ENTER_TEST
-	// FIXME: broken with Netatalk 4.0 - could not locate fork
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	test_bytelock(VolID, name, OPENFORK_RSCS);
 
-test_exit:
 	exit_test("FPByteRangeLock:test64: FPByteLock Resource Fork");
 }
 
@@ -196,17 +186,13 @@ fin:
 }
 
 /* --------------- */
+// FIXME: broken since at least 3.1.12 - could not locate fork
 STATIC void test65()
 {
 char *name = "t65 DF FPByteLock 2 users";
 
 	ENTER_TEST
 
-	// FIXME: broken with Netatalk 4.0 - could not locate fork
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Quiet) {
 		fprintf(stdout,"FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
 	}
@@ -301,6 +287,7 @@ fin:
 }
 
 /* -------------------------- */
+/* badly broken, didn't bother fixing for appledouble = ea */
 void test78()
 {
 char *name = "t78 FPByteLock RF size -1";
@@ -325,6 +312,7 @@ test_exit:
 }
 
 /* ----------- */
+// FIXME: broken since at least 3.1.12 - could not locate fork
 STATIC void test79()
 {
 int fork;
@@ -337,11 +325,6 @@ int len = (type == OPENFORK_RSCS)?(1<<FILPBIT_RFLEN):(1<<FILPBIT_DFLEN);
 
 	ENTER_TEST
 
-	// FIXME: broken with Netatalk 4.0 - could not locate fork
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto test_exit;
@@ -894,8 +877,10 @@ int type = OPENFORK_DATA;
 		test_skipped(T_LOCKING);
 		goto test_exit;
 	}
-	/* hack, it closes a connection */
 	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Must be run by itself because it closes the connection.\n");
+		}
 		test_skipped(T_SINGLE);
 		goto test_exit;
 	}
@@ -975,14 +960,13 @@ void FPByteRangeLock_test()
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
     test60();
+#if 0
 	test63();
 	test64();
 	test65();
-/* badly broken, didn't bother fixing for appledouble = ea */
-#if 0
 	test78();
-#endif
 	test79();
+#endif
 	test80();
 	test329();
 	test330();

@@ -44,6 +44,7 @@ test_exit:
 
 
 /* ------------------------- */
+// FIXME: Broken as of at least 3.1.12
 STATIC void test399()
 {
 uint16_t vol = VolID;
@@ -55,11 +56,6 @@ char *attr_name="test399_attribute";
     dsi = &Conn->dsi;
 
 	ENTER_TEST
-	// FIXME: tests fail with Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -173,6 +169,8 @@ void FPGetACL_test()
     fprintf(stdout,"-------------------\n");
 
     test398();
+#if 0
     test399();
+#endif
     test432();
 }

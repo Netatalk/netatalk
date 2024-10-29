@@ -60,7 +60,7 @@ int  dir;
 
 	FAIL (htonl( AFPERR_DIRNEMPT) !=FPDelete(Conn, vol,  DIRDID_ROOT , name2))
 
-	FAIL (FPDelete(Conn, vol,  dir , name));
+	FAIL (FPDelete(Conn, vol,  dir , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name2))
 test_exit:
 	exit_test("FPDelete:test27: delete not empty dir");

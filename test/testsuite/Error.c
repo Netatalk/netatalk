@@ -946,6 +946,7 @@ int  dt;
 	if (fork || htonl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
 		if (fork) FPCloseFork(Conn,fork);
+		goto test_exit;
 	}
 
     /* ---- file.c ---- */
@@ -955,6 +956,7 @@ int  dt;
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0, bitmap)) {
 		test_failed();
+		goto test_exit;
 	}
 	else {
 		filedir.isdir = 1;
@@ -968,6 +970,7 @@ int  dt;
 	if (htonl(AFPERR_PARAM) != FPCopyFile(Conn, vol, DIRDID_ROOT_PARENT, vol, DIRDID_ROOT, "", "", name1)) {
 		test_failed();
 		FPDelete(Conn, vol,  DIRDID_ROOT , name1);
+		goto test_exit;
 	}
 
 	FAIL (htonl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT_PARENT, name, "", ""))
@@ -987,11 +990,13 @@ int  dt;
 	ret = FPExchangeFile(Conn, vol, DIRDID_ROOT_PARENT,dir, "", name1);
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_BADTYPE, AFPERR_NOOBJ)) {
 		test_failed();
+		goto fin;
 	}
 
 	ret = FPExchangeFile(Conn, vol, DIRDID_ROOT, DIRDID_ROOT_PARENT, name, "");
 	if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_BADTYPE, AFPERR_NOOBJ)) {
 		test_failed();
+		goto fin;
 	}
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -1004,12 +1009,14 @@ int  dt;
 	dir  = FPCreateDir(Conn,vol, DIRDID_ROOT_PARENT , "");
 	if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
+		goto test_exit;
 	}
 
  	/* ---------------- */
 	dir = FPOpenDir(Conn,vol, DIRDID_ROOT_PARENT , "");
     if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
+		goto test_exit;
 	}
  	/* ---- filedir.c ---- */
 
@@ -1018,17 +1025,20 @@ int  dt;
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS))
 	) {
 		test_failed();
+		goto test_exit;
 	}
 
  	/* ---------------- */
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
 		test_failed();
+		goto test_exit;
 	}
 	else {
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
  		if (ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT_PARENT , "", bitmap, &filedir)) {
 			test_failed();
+			goto test_exit;
  		}
  	}
  	/* ---------------- */
@@ -1050,6 +1060,7 @@ int  dt;
 		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
 		test_failed();
+		goto test_exit;
 	}
 	/* ---- desktop.c ---- */
 	dt = FPOpenDT(Conn,vol);
@@ -1058,6 +1069,9 @@ int  dt;
 	FAIL (ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol,  DIRDID_ROOT_PARENT , ""))
 	FAIL (FPCloseDT(Conn, dt))
 
+fin:
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name1))
 test_exit:
 	exit_test("Error:test170: cname error did=1 name=\"\"");
 }
@@ -1093,6 +1107,7 @@ int  dt;
 	if (fork || htonl(AFPERR_NOOBJ) != dsi->header.dsi_code) {
 		test_failed();
 		if (fork) FPCloseFork(Conn,fork);
+		goto test_exit;
 	}
 
     /* ---- file.c ---- */
@@ -1102,6 +1117,7 @@ int  dt;
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0, bitmap)) {
 		test_failed();
+		goto test_exit;
 	}
 	else {
 		filedir.isdir = 1;
@@ -1114,6 +1130,7 @@ int  dt;
 	if (htonl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, tdir , vol, DIRDID_ROOT, tname, "", name1)) {
 		test_failed();
 		FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
+		goto fin;
 	}
 
 	FAIL (htonl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, tdir, name, "", tname))
@@ -1124,6 +1141,7 @@ int  dt;
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		if (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret ) {
 			test_failed();
+			goto fin;
 		}
 	}
 
@@ -1193,6 +1211,9 @@ int  dt;
 	FAIL (ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, tdir, tname))
 	FAIL (FPCloseDT(Conn, dt))
 
+fin:
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name1))
 test_exit:
 	exit_test("Error:test171: cname error did=1 name=bad name");
 }
@@ -1228,6 +1249,7 @@ int  dt;
 	if (fork || htonl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
 		if (fork) FPCloseFork(Conn,fork);
+		goto test_exit;
 	}
 
     /* ---- file.c ---- */
@@ -1237,6 +1259,7 @@ int  dt;
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0, bitmap)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 1;
@@ -1249,7 +1272,7 @@ int  dt;
 
 	if (htonl(AFPERR_PARAM) != FPCopyFile(Conn, vol, tdir , vol, DIRDID_ROOT, tname, "", name1)) {
 		test_failed();
-		FPDelete(Conn, vol,  DIRDID_ROOT , name1);
+		goto fin;
 	}
 
 	FAIL (htonl(AFPERR_PARAM) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, tdir, name, "", tname))
@@ -1267,6 +1290,7 @@ int  dt;
 	ret = FPExchangeFile(Conn, vol, tdir,dir, tname, name1);
 	if (htonl(AFPERR_PARAM) != ret && not_valid(ret, /* MAC */AFPERR_NOOBJ, AFPERR_PARAM)) {
 		test_failed();
+		goto fin;
 	}
 	FAIL (ntohl(AFPERR_PARAM) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name, tname))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
@@ -1279,12 +1303,14 @@ int  dt;
 	dir  = FPCreateDir(Conn,vol, tdir, tname);
 	if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
+		goto test_exit;
 	}
 
  	/* ---------------- */
 	dir = FPOpenDir(Conn,vol, tdir, tname);
     if (dir || ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
 		test_failed();
+		goto test_exit;
 	}
  	/* ---- filedir.c ---- */
 
@@ -1293,11 +1319,13 @@ int  dt;
 	    	(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS))
 	) {
 		test_failed();
+		goto test_exit;
 	}
 
  	/* ---------------- */
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , "", 0,bitmap )) {
 		test_failed();
+		goto test_exit;
 	}
 	else {
 		filedir.isdir = 1;
@@ -1322,6 +1350,7 @@ int  dt;
 		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
 		)) {
 		test_failed();
+		goto test_exit;
 	}
 	/* ---- desktop.c ---- */
 	dt = FPOpenDT(Conn,vol);
@@ -1331,6 +1360,9 @@ int  dt;
 	FAIL (FPCloseDT(Conn, dt))
 
 	/* ---- appl.c ---- */
+fin:
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name1))
 test_exit:
 	exit_test("Error:test173: did error did=0 name=test173 name");
 }
@@ -1523,11 +1555,8 @@ void Error_test()
 	test102();
 	test103();
 	test105();
-// FIXME: crashing the test suite
-#if 0
 	test170();
 	test171();
 	test173();
 	test174();
-#endif
 }

@@ -1439,7 +1439,7 @@ test_exit:
 /* ------------------------- */
 STATIC void test431()
 {
-    char *name  = "resource_fork_conversion_test";
+    char *name  = "t431";
     int fork1 = 0;
     uint16_t vol = VolID;
     char cmd[8192];
@@ -1450,10 +1450,11 @@ STATIC void test431()
 
 	ENTER_TEST
 
-	// FIXME: failing; might require manually moving data file to
-	// data/resource_fork_conversion_test
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
+	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "test431_data must be present in volume.\n");
+		}
+		test_skipped(T_SINGLE);
 		goto test_exit;
 	}
 	if (!Mac && Path[0] == '\0') {
@@ -1462,7 +1463,7 @@ STATIC void test431()
 	}
 
     /* touch resource_fork_conversion_test base file */
-    if (snprintf(cmd, sizeof(cmd), "touch %s/resource_fork_conversion_test", Path) > sizeof(cmd)) {
+    if (snprintf(cmd, sizeof(cmd), "touch %s/%s", Path, name) > sizeof(cmd)) {
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test431: path too long\n");
 	}
@@ -1488,7 +1489,7 @@ STATIC void test431()
     }
 
     /* Copy resource fork */
-    if (snprintf(cmd, sizeof(cmd), "cp data/resource_fork_conversion_test %s/.AppleDouble/", Path) > sizeof(cmd)) {
+    if (snprintf(cmd, sizeof(cmd), "mv %s/test431_data %s/.AppleDouble/%s", Path, Path, name) > sizeof(cmd)) {
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test431: path too long\n");
 	}
@@ -1536,9 +1537,12 @@ STATIC void test431()
     }
 
 fin:
-    if (fork1)
+    if (fork1) {
         FPCloseFork(Conn, fork1);
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	}
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, ".AppleDouble"))
+
 test_exit:
 	exit_test("FPOpenFork:test431: check AppleDouble conversion from v2 to ea");
 }

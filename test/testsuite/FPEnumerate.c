@@ -87,6 +87,40 @@ test_exit:
 	exit_test("FPEnumerate:test28: test search by ID");
 }
 
+/* ------------------------- */
+STATIC void test34()
+{
+uint16_t vol = VolID;
+char *name = "essai permission";
+
+	ENTER_TEST
+
+	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
+	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
+	    (1 << DIRPBIT_ACCESS)))
+	{
+		test_failed();
+		goto test_exit;
+	}
+
+	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
+	     (1<< FILPBIT_LNAME) | (1<< FILPBIT_FNUM ),
+		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
+		);
+
+	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
+	     (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
+	     (1 << DIRPBIT_ACCESS))
+	   )
+	{
+		test_failed();
+		goto test_exit;
+	}
+
+test_exit:
+	exit_test("FPEnumerate:test34: folder with --rwx-- perm");
+}
+
 /* ----------------------- */
 STATIC void test38()
 {
@@ -160,40 +194,6 @@ fin:
 	delete_folder_with_file(vol, DIRDID_ROOT, name, nfile);
 test_exit:
 	exit_test("FPEnumerate:test38: enumerate folder with no write access");
-}
-
-/* ------------------------- */
-STATIC void test34()
-{
-uint16_t vol = VolID;
-char *name = "essai permission";
-
-	ENTER_TEST
-
-	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
-	    (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
-	    (1 << DIRPBIT_ACCESS)))
-	{
-		test_failed();
-		goto test_exit;
-	}
-
-	FPEnumerate(Conn, vol,  DIRDID_ROOT , "",
-	     (1<< FILPBIT_LNAME) | (1<< FILPBIT_FNUM ),
-		 (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID)|(1<< DIRPBIT_ACCESS)
-		);
-
-	if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
-	     (1 <<  DIRPBIT_LNAME) | (1<< DIRPBIT_PDID) | (1<< DIRPBIT_DID) |
-	     (1 << DIRPBIT_ACCESS))
-	   )
-	{
-		test_failed();
-		goto test_exit;
-	}
-
-test_exit:
-	exit_test("FPEnumerate:test34: folder with --rwx-- perm");
 }
 
 /* ------------------------- */

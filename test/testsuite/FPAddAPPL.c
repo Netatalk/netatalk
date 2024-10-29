@@ -71,8 +71,8 @@ STATIC void test301()
 {
 uint16_t vol = VolID;
 unsigned int ret;
-char *file = "t300 file";
-char *name = "t300 dir";
+char *file = "t301 file";
+char *name = "t301 dir";
 DSI *dsi, *dsi2;
 uint16_t vol2;
 uint32_t  did = DIRDID_ROOT;
@@ -142,7 +142,8 @@ int dir;
 		FPCloseVol(Conn2,vol2);
 	}
 fin:
- 	exit_test("FPAddAPPL:test301: test appl");
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
+ 	exit_test("FPAddAPPL:test301: test appl 2");
 }
 
 /* ----------- */
@@ -152,7 +153,5 @@ void FPAddAPPL_test()
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test214();
-/*
 	test301();
-*/
 }
