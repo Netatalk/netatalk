@@ -331,7 +331,7 @@ DSI *dsi;
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPRread:test61: FPRead, FPWrite errors");
+	exit_test("FPRead:test61: FPRead, FPWrite errors");
 }
 
 extern char *Server;
@@ -534,7 +534,7 @@ STATIC void test309()
 {
 	ENTER_TEST
     write_test(1024);
-	exit_test("FPRread:test309: FPRead, FPWrite deadlock");
+	exit_test("FPRead:test309: FPRead, FPWrite deadlock");
 }
 
 /* -------------------------- */
@@ -542,7 +542,7 @@ STATIC void test327()
 {
 	ENTER_TEST
     write_test(	128*1024);
-	exit_test("FPRread:test327: FPRead, FPWrite deadlock");
+	exit_test("FPRead:test327: FPRead, FPWrite deadlock");
 }
 
 /* ------------------------- */
@@ -706,7 +706,7 @@ fin:
 	free(ndir);
 	free(data);
 test_exit:
-	exit_test("FPRread:test328: read speed");
+	exit_test("FPRead:test328: read speed");
 }
 
 /* ------------------------- */

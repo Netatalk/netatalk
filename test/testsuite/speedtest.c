@@ -1446,17 +1446,12 @@ int cc;
 	    }
 
 	    /* login */
-		// FIXME: workaround for FPopenLoginExt() being broken
-#if 0
     	if (Version >= 30) {
 			FPopenLoginExt(Conn, vers, uam, User, Password);
 		}
 		else {
-#endif
 			FPopenLogin(Conn, vers, uam, User, Password);
-#if 0
 		}
-#endif
 	}
 	Conn->afp_version = Version;
 

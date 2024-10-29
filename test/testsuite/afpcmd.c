@@ -273,7 +273,12 @@ DSI *dsi;
 	if (!Quiet) {
 		fprintf(stdout,"[%s] LoginExt Version: \"%s\" uam: \"%s\" user: \"%s\"\n", __func__, vers, uam, usr);
 	}
+	// FIXME: Workaround for AFPopenLoginExt() being broken
+#if 0
 	ret = AFPopenLoginExt(conn,vers, uam, usr, pwd);
+#else
+	ret = AFPopenLogin(conn, vers, uam, usr, pwd);
+#endif
 	dump_header(dsi);
 	return ret;
 }
