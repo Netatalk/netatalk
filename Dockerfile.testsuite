@@ -79,6 +79,7 @@ ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
 
 COPY --from=build /staging/ /
+COPY --from=build /netatalk-code/test/testsuite/data/test431_data /tmp/
 
 RUN apk update \
 &&  apk add --no-cache $RUN_DEPS
