@@ -16,12 +16,6 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	// FIXME: encoding tests are broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
-
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		test_nottested();
 		goto test_exit;
@@ -62,7 +56,10 @@ DSI *dsi = &Conn->dsi;
 		test_failed();
 	}
 
-	FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
+	// Older AFP versions only have 4 subfunctions
+	if (Conn->afp_version > 31) {
+		FAIL ((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
+	}
 	/* --------------------- */
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
