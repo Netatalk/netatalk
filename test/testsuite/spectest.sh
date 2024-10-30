@@ -60,17 +60,14 @@ fi
 rm -f ./test/testsuite/spectest.log
 
 ##
-echo "Running tier 1 spectest with two users..."
-./test/testsuite/afp_spectest -F tier1 -"$AFPVERSION" -C -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
-check_return
-
-##
-if test ! -z "$LOCALVOL1PATH" ; then
-    echo "Running tier 2 spectest with local filesystem modifications..."
-    ./test/testsuite/afp_spectest -F tier2 -"$AFPVERSION" -C -x -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
+if test -z "$LOCALVOL1PATH" ; then
+    echo "Running tier 1 spectest with two users..."
+    ./test/testsuite/afp_spectest -"$AFPVERSION" -C -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" >> ./test/testsuite/spectest.log 2>&1
     check_return
 else
-    echo "Skipping tier 2 spectest with local filesystem modifications..."
+    echo "Running full spectest with local filesystem modifications..."
+    ./test/testsuite/afp_spectest -"$AFPVERSION" -C -h "$AFPSERVER" -p "$AFPPORT" -u "$USER1" -d "$USER2" -w "$PASSWD" -s "$VOLUME1" -S "$VOLUME2" -c "$LOCALVOL1PATH" >> ./test/testsuite/spectest.log 2>&1
+    check_return
 fi
 
 echo "====================================="
@@ -79,19 +76,19 @@ echo "------------"
 echo "Passed tests:"
 grep "PASS" ./test/testsuite/spectest.log | wc -l
 echo "Failed tests:"
-grep "FAIL" ./test/testsuite/spectest.log | wc -l
+egrep "FAIL|NOT TESTED" ./test/testsuite/spectest.log | wc -l
 echo "Skipped tests:"
-egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | wc -l
+grep "SKIPPED" ./test/testsuite/spectest.log | wc -l
 echo "====================================="
 
 echo "Failed tests"
 echo "------------"
-grep "FAIL" ./test/testsuite/spectest.log | sort -n | uniq
+egrep "FAIL|NOT TESTED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Skipped tests"
 echo "------------"
-egrep "NOT TESTED|SKIPPED" ./test/testsuite/spectest.log | sort -n | uniq
+grep "SKIPPED" ./test/testsuite/spectest.log | sort -n | uniq
 echo "====================================="
 
 echo "Successful tests"
