@@ -18,11 +18,6 @@ unsigned int ret;
 
 	ENTER_TEST
 
-	// FIXME: https://github.com/Netatalk/netatalk/issues/1682
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -38,6 +33,10 @@ unsigned int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
 			}
+			test_failed();
+		}
+		// Workaround for musl mkdir() not setting the right permissions
+		if (chmod(temp, 0777)) {
 			test_failed();
 		}
 	}
@@ -79,11 +78,6 @@ unsigned int ret;
 
 	ENTER_TEST
 
-	// FIXME: https://github.com/Netatalk/netatalk/issues/1682
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -99,6 +93,10 @@ unsigned int ret;
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
 			}
+			test_failed();
+		}
+		// Workaround for musl mkdir() not setting the right permissions
+		if (chmod(temp, 0777)) {
 			test_failed();
 		}
 	}
