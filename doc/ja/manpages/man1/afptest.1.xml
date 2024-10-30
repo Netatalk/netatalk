@@ -122,8 +122,6 @@
 
       <arg>-w <replaceable>パスワード</replaceable></arg>
 
-      <arg>-F <replaceable>テストスイート</replaceable></arg>
-
       <arg>-f <replaceable>テスト</replaceable></arg>
     </cmdsynopsis>
 
@@ -189,12 +187,10 @@
     セクションは、<option>-f</option> オプションで実行できます。使用可能なテストは、<option>-l</option>
     オプションで一覧表示できます。</para>
 
-    <para><command>afp_spectest</command> は、300 を超えるテスト ケースを含む AFP 仕様テスト
-    スイートの中核を構成します。テストケースは、実行の前提条件によって分割され、内部的に複数のテストスイートに編成されています。現在使用可能なスイートは、<emphasis
-    remap="I">tier1</emphasis>、<emphasis remap="I">tier2</emphasis>
-    (<option>-c</option> オプションを使用してローカルで実行する必要があります)、<emphasis
-    remap="I">readonly</emphasis> (ファイルが読み込まれた読み取り専用ボリュームが必要です)、および <emphasis
-    remap="I">sleep</emphasis> です。</para>
+    <para><command>afp_spectest</command> は、300 を超えるテスト ケースを含む AFP 仕様テスト スイートの中核を
+    構成します。これは、テストする AFP コマンド別、またはテストの前提条件別に分けられたテストセットに編成されています。
+    たとえば、Tier 2 (T2) テストは、共有ボリュームへのパスを示す <option>-c</option> オプションを使用してホスト上で
+    実行する必要があります。また、読み取り専用テストとスリープ テストも別々に実行する必要があります。</para>
 
     <para><command>afp_encodingtest</command> および
     <command>afp_logintest</command> は、独自のランナーを持つ特定の AFP

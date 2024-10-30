@@ -232,7 +232,7 @@ fin:
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 test_exit:
-	exit_test("FPread:test46: read/write resource fork");
+	exit_test("FPRead:test46: read/write resource fork");
 }
 
 /* -------------------------- */

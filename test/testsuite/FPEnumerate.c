@@ -482,7 +482,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test300(void)
+STATIC void test300(void)
 {
 uint8_t buffer[DSI_DATASIZ];
 uint16_t vol = VolID;

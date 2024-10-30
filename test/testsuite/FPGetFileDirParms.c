@@ -718,6 +718,7 @@ int id;
 
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
 		test_nottested();
+		goto test_exit;
 	}
 #if 0
 	else {
@@ -739,8 +740,8 @@ int id;
 	    || ( Conn->afp_version < 30 && ret)) {
 		test_failed();
 	}
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 	exit_test("FPGetFileDirParms:test326: long file name >31 bytes");
 }
 
@@ -970,10 +971,6 @@ uint16_t bitmap;
 
 	ENTER_TEST
 
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
@@ -984,6 +981,7 @@ uint16_t bitmap;
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -993,11 +991,13 @@ uint16_t bitmap;
 				fprintf(stdout,"FAILED not default type\n");
 			}
 			test_failed();
+			goto fin;
 		}
 	}
 	FAIL (FPRename(Conn, vol, DIRDID_ROOT, name, name1))
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name1, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -1012,7 +1012,6 @@ uint16_t bitmap;
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
-test_exit:
 	exit_test("FPGetFileDirParms:test371: check default type");
 }
 
@@ -1034,10 +1033,6 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	ENTER_TEST
 
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
@@ -1048,6 +1043,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -1057,11 +1053,13 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 				fprintf(stdout,"FAILED not default type\n");
 			}
 			test_failed();
+			goto fin;
 		}
 	}
  	FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap1, &filedir))
 	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -1075,7 +1073,6 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
-test_exit:
 	exit_test("FPGetFileDirParms:test380: check type mapping");
 }
 
@@ -1094,7 +1091,6 @@ unsigned int dir;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
-
 
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		test_failed();
@@ -1127,9 +1123,7 @@ test_exit:
 /* ----------- */
 void FPGetFileDirParms_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test44();
 	test58();
 	test70();

@@ -24,11 +24,6 @@ int ret;
 
 	ENTER_TEST
 
-	// FIXME: broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -143,11 +138,6 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	// FIXME: broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -266,11 +256,6 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	// FIXME: broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;

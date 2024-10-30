@@ -848,7 +848,10 @@ int dir, dir2;
 fin:
 	if (fork) {
 		FAIL (FPCloseFork(Conn, fork))
-	        FAIL (FPDelete(Conn, vol, dir, ""))
+		FAIL (FPDelete(Conn, vol, dir, ""))
+		dir = get_did(Conn, vol, DIRDID_ROOT , "Network Trash Folder");
+		FAIL (FPDelete(Conn, vol, dir, "Trash Can Usage Map"))
+		FAIL (FPDelete(Conn, vol, DIRDID_ROOT, "Network Trash Folder"))
 	}
 test_exit:
 	exit_test("FPByteRangeLock:test330: pre OSX trash folder");

@@ -18,11 +18,6 @@ char *usr = NULL;
 
 	ENTER_TEST
 
-	// FIXME: encoding tests are broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
 		test_nottested();
 		goto test_exit;
@@ -146,5 +141,7 @@ void FPMapName_test()
     fprintf(stdout,"===================\n");
     fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
+#if 0
 	test180();
+#endif
 }

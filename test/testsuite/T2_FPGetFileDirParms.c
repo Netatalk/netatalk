@@ -303,17 +303,11 @@ test_exit:
 }
 
 /* -------------------------- */
-// FIXME - passes in 3.1.12 but not 4.0.3
 STATIC void test52()
 {
 uint16_t vol = VolID;
 
 	ENTER_TEST
-
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);

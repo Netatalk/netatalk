@@ -27,6 +27,15 @@ int sock;
 uint32_t time= 12345;
 
 	ENTER_TEST
+
+	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+		}
+		test_skipped(T_SINGLE);
+		goto test_exit;
+	}
+
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
 		goto test_exit;
@@ -108,6 +117,14 @@ uint32_t time= 12345;
 
 	ENTER_TEST
 
+	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+		}
+		test_skipped(T_SINGLE);
+		goto test_exit;
+	}
+
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);
 		goto test_exit;
@@ -187,6 +204,14 @@ DSI *dsi;
 int sock;
 
 	ENTER_TEST
+
+	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+		}
+		test_skipped(T_SINGLE);
+		goto test_exit;
+	}
 
 	if (Conn->afp_version < 30 || Conn2) {
 		test_skipped(T_AFP3_CONN2);

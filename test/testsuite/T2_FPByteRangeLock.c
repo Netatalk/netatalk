@@ -112,7 +112,6 @@ uint16_t vol2;
 		test_skipped(T_PATH);
 		goto test_exit;
 	}
-
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
