@@ -43,8 +43,12 @@ unsigned int ret;
 
 	ENTER_TEST
 
-	if (!Quiet) {
-		fprintf(stdout, "Has to be tested with a read only volume, two files and one dir\n");
+	if (!Test) {
+		if (!Quiet) {
+			fprintf(stdout, "Has to be tested with a read only volume, two files and one dir.\n");
+		}
+		test_skipped(T_SINGLE);
+		goto test_exit;
 	}
 
 	VolID = FPOpenVol(Conn, Vol);
@@ -295,13 +299,13 @@ unsigned int ret;
 fin:
 	FAIL (FPCloseVol(Conn,VolID))
 test_exit:
-	exit_test("Rotest:test510: Access files and directories on a read only volume");
+	exit_test("Readonly:test510: Access files and directories on a read only volume");
 }
 
 void Readonly_test()
 {
     fprintf(stdout, "===================\n");
-    fprintf(stdout, "%s: Read only volume\n", __func__);
+    fprintf(stdout, "%s\n", __func__);
     fprintf(stdout, "-------------------\n");
     test510();
 }

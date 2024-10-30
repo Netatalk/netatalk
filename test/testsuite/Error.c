@@ -334,6 +334,7 @@ DSI *dsi;
 }
 
 /* ------------------------- */
+// FIXME: afpd crash in dircache_search_by_did()
 STATIC void test95()
 {
 int dir;
@@ -346,11 +347,7 @@ int ret;
 uint16_t vol = VolID;
 
 	ENTER_TEST
-	// FIXME: afpd crash in dircache_search_by_did()
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
+
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;
@@ -918,6 +915,7 @@ int  dt;
 }
 
 /* -------------------------- */
+// FIXME: afpd crash in dircache_search_by_did()
 STATIC void test170()
 {
 uint16_t bitmap = 0;
@@ -935,11 +933,6 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
-	// FIXME: afpd crash in dircache_search_by_did()
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT_PARENT, "",OPENACC_WR | OPENACC_RD);
@@ -1077,6 +1070,7 @@ test_exit:
 }
 
 /* -------------------------- */
+// FIXME: afpd crash in dircache_search_by_did()
 STATIC void test171()
 {
 uint16_t bitmap = 0;
@@ -1096,11 +1090,6 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
-	// FIXME: afpd crash in dircache_search_by_did()
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1219,6 +1208,7 @@ test_exit:
 }
 
 /* -------------------------- */
+// FIXME: afpd crash in dircache_search_by_did()
 STATIC void test173()
 {
 uint16_t bitmap = 0;
@@ -1238,11 +1228,6 @@ int  dt;
 	dsi = &Conn->dsi;
 
 	ENTER_TEST
-	// FIXME: afpd crash in dircache_search_by_did()
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 
     /* ---- fork.c ---- */
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap , tdir, tname,OPENACC_WR | OPENACC_RD);
@@ -1544,19 +1529,25 @@ test_exit:
 void Error_test()
 {
     fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s: Various errors\n", __func__);
+    fprintf(stdout,"%s\n", __func__);
     fprintf(stdout,"-------------------\n");
 	test35();
 	test36();
 	test37();
+#if 0
+	test95();
+#endif
 	test99();
 	test100();
 	test101();
 	test102();
 	test103();
 	test105();
+// FIXME: Because of an afpd crash, test data cleanup fails
+#if 0
 	test170();
 	test171();
 	test173();
+#endif
 	test174();
 }

@@ -122,8 +122,6 @@
 
       <arg>-w <replaceable>password</replaceable></arg>
 
-      <arg>-F <replaceable>testsuite</replaceable></arg>
-
       <arg>-f <replaceable>test</replaceable></arg>
     </cmdsynopsis>
 
@@ -192,13 +190,12 @@
     tests can be listed with the <option>-l</option> option.</para>
 
     <para><command>afp_spectest</command> makes up the core of the AFP
-    specification test suite, with just over 300 test cases. The test cases
-    are organized into multiple test suites internally, split by preconditions
-    for execution. The available suites are currently: <emphasis
-    remap="I">tier1</emphasis>, <emphasis remap="I">tier2</emphasis> (needs to
-    run locally with the <option>-c</option> option), <emphasis
-    remap="I">readonly</emphasis> (needs a read only volume populated with
-    files), and <emphasis remap="I">sleep</emphasis>.</para>
+    specification test suite, with just over 300 test cases. It is organized
+    into testsets, divided by AFP commands tested, or by preconditions for
+    testing. For instance, the tier 2 (T2) tests need to be run on the host
+    with the <option>-c</option> option indicating the path to the shared
+    volume. There are also read-only and sleep tests that need to be run
+    separately.</para>
 
     <para><command>afp_encodingtest</command> and
     <command>afp_logintest</command> are specific AFP specification test

@@ -42,6 +42,7 @@ EXT_FN(FPEnumerateExt2);
 EXT_FN(FPExchangeFiles);
 EXT_FN(FPFlush);
 EXT_FN(FPFlushFork);
+EXT_FN(FPGetACL);
 EXT_FN(FPGetAPPL);
 EXT_FN(FPGetComment);
 EXT_FN(FPGetFileDirParms);
@@ -73,12 +74,10 @@ EXT_FN(FPSetFileDirParms);
 EXT_FN(FPSetFileParms);
 EXT_FN(FPSetForkParms);
 EXT_FN(FPSetVolParms);
+EXT_FN(FPSync);
 EXT_FN(FPWrite);
 EXT_FN(FPWriteExt);
-EXT_FN(Error);
-EXT_FN(Utf8);
-EXT_FN(FPGetACL);
-EXT_FN(FPSync);
+EXT_FN(FPzzz);
 
 EXT_FN(T2FPByteRangeLock);
 EXT_FN(T2FPCopyFile);
@@ -93,11 +92,11 @@ EXT_FN(T2FPSetFileParms);
 EXT_FN(T2FPResolveID);
 EXT_FN(T2FPRead);
 EXT_FN(T2FPSetForkParms);
+
 EXT_FN(Dircache_attack);
-
+EXT_FN(Error);
 EXT_FN(Readonly);
-
-EXT_FN(FPzzz);
+EXT_FN(Utf8);
 
 struct test_fn {
 char *name;
@@ -106,9 +105,7 @@ void (*fn)(void);
 };
 #define FN_N(a) { # a , FN(a) },
 
-static struct test_fn *Test_list;
-
-static struct test_fn Test_list_T1[] =
+static struct test_fn Test_list[] =
 {
 FN_N(FPAddAPPL)
 FN_N(FPAddComment)
@@ -132,6 +129,7 @@ FN_N(FPEnumerateExt2)
 FN_N(FPExchangeFiles)
 FN_N(FPFlush)
 FN_N(FPFlushFork)
+FN_N(FPGetACL)
 FN_N(FPGetAPPL)
 FN_N(FPGetComment)
 FN_N(FPGetFileDirParms)
@@ -162,19 +160,11 @@ FN_N(FPSetFileDirParms)
 FN_N(FPSetFileParms)
 FN_N(FPSetForkParms)
 FN_N(FPSetVolParms)
+FN_N(FPSync)
 FN_N(FPWrite)
 FN_N(FPWriteExt)
-FN_N(Error)
-FN_N(Utf8)
-FN_N(FPGetACL)
-FN_N(FPSync)
+FN_N(FPzzz)
 
-{NULL, NULL},
-};
-
-
-static struct test_fn Test_list_T2[] =
-{
 FN_N(T2FPByteRangeLock)
 FN_N(T2FPCreateFile)
 FN_N(T2FPCopyFile)
@@ -188,20 +178,12 @@ FN_N(T2FPSetFileParms)
 FN_N(T2FPResolveID)
 FN_N(T2FPRead)
 FN_N(T2FPSetForkParms)
+
 FN_N(Dircache_attack)
-
-{NULL, NULL},
-};
-
-static struct test_fn Test_list_ro[] =
-{
+FN_N(Error)
 FN_N(Readonly)
-{NULL, NULL},
-};
+FN_N(Utf8)
 
-static struct test_fn Test_list_sleep[] =
-{
-FN_N(FPzzz)
 {NULL, NULL},
 };
 
@@ -223,9 +205,10 @@ static void press_enter(char *s)
 /* =============================== */
 static void list_tests(void)
 {
-int i = 0;
+	int i = 0;
+	fprintf(stdout, "Available testsets. Run individually with the -f option.\n");
 	while (Test_list[i].name != NULL) {
-		fprintf(stdout, "%s_test\n", Test_list[i].name);
+		fprintf(stdout, "%s\n", Test_list[i].name);
 		i++;
 	}
 }
@@ -331,7 +314,6 @@ int     Version = 21;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
-char    *Suite = "tier1";
 int		Locking;
 enum adouble adouble = AD_EA;
 
@@ -364,7 +346,6 @@ void usage( char * av0 )
     fprintf( stdout,"\t-V\tvery verbose\n");
 
     fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
-    fprintf( stdout,"\t-F\ttestsuite to run (tier1 (default), tier2, readonly, sleep)\n");
     fprintf( stdout,"\t-f\ttest or testset to run\n");
     fprintf( stdout,"\t-l\tlist testsets\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
@@ -380,7 +361,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "vV1234567ah:H:p:s:S:u:d:w:c:f:F:LlmxiC" )) != EOF ) {
+    while (( cc = getopt( ac, av, "vV1234567ah:H:p:s:S:u:d:w:c:f:LlmxiC" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -421,9 +402,6 @@ int ret;
 			break;
         case 'd':
             User2 = strdup(optarg);
-            break;
-        case 'F' :
-            Suite = strdup(optarg);
             break;
         case 'f' :
             Test = strdup(optarg);
@@ -485,19 +463,6 @@ int ret;
 
 	Loglevel = AFP_LOG_INFO;
 
-	if (strcmp(Suite, "tier1") == 0) {
-		Test_list = Test_list_T1;
-	}
-	else if (strcmp(Suite, "tier2") == 0) {
-		Test_list = Test_list_T2;
-	}
-	else if (strcmp(Suite, "readonly") == 0) {
-		Test_list = Test_list_ro;
-	}
-	else if (strcmp(Suite, "sleep") == 0) {
-		Test_list = Test_list_sleep;
-	}
-
 	if (List) {
 		list_tests();
 		exit (2);
@@ -514,9 +479,6 @@ int ret;
 	}
 	if (Vol != NULL && Vol[0] == '\0') {
         fprintf(stdout, "Error: Define a volume with -s\n");
-	}
-	if (Path != NULL && Path[0] == '\0' && strcmp(Suite, "tier2") == 0) {
-        fprintf(stdout, "Error: Define the local path to the volume with -c\n");
 	}
 
 	/************************************

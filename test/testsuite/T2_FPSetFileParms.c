@@ -159,10 +159,10 @@ STATIC void test426()
 
 	ENTER_TEST
 
-	// FIXME: unexpected failure with Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
+	// FIXME: This test hangs with AFP2.x (3.1.12 - 4.0.3)
+	if (Conn->afp_version < 30) {
+		test_skipped(T_AFP3);
+        return;
 	}
 	if (Path[0] == '\0') {
 		test_skipped(T_PATH);

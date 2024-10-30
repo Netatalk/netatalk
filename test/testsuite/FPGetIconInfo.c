@@ -14,17 +14,12 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 
 	ENTER_TEST
 
-	// FIXME: icon tests are broken in Netatalk 4.0
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
-
 	dt = FPOpenDT(Conn,vol);
 
 	ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1);
 	if (ret == htonl(AFPERR_NOITEM)) {
 		FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
+		goto test_exit;
 	}
 
 	FAIL (FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1))
@@ -36,18 +31,19 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 		if (ret == htonl(AFPERR_NOITEM)) {
 			FAIL (FPGetIconInfo(Conn,  dt, u_null, 1 ))
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, u_null, 2 ))
+			goto test_exit;
 		}
 		else if (ret) {
 			test_failed();
+			goto test_exit;
 		}
 		else {
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 2 ))
 		}
 	}
 
-	FPCloseDT(Conn,dt);
-
 test_exit:
+	FPCloseDT(Conn,dt);
 	exit_test("FPGetIconInfo:test213: get Icon Info call");
 }
 

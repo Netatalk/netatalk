@@ -132,7 +132,6 @@ extern char *Vol2;
 extern char *Path;
 extern char *User;
 extern char *Test;
-extern char *Suite;
 
 extern int Version;
 extern int Verbose;

@@ -194,17 +194,22 @@ if [ -z "$TESTSUITE" ]; then
     # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
     netatalk -d
 else
+    if [ "$TESTSUITE" == "spectest" ]; then
+        cat <<EXT > /usr/local/etc/extmap.conf
+.         "????"  "????"      Unix Binary                    Unix                      application/octet-stream
+.doc      "WDBN"  "MSWD"      Word Document                  Microsoft Word            application/msword
+.pdf      "PDF "  "CARO"      Portable Document Format       Acrobat Reader            application/pdf
+EXT
+    fi
     netatalk
     sleep 2
-    if [ "$TESTSUITE" == "tier1" ]; then
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}"
-    elif [ "$TESTSUITE" == "tier2" ]; then
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
+    if [ "$TESTSUITE" == "spectest" ]; then
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
     elif [ "$TESTSUITE" == "readonly" ]; then
         echo "testfile uno" > /mnt/afpshare/first.txt
         echo "testfile dos" > /mnt/afpshare/second.txt
         mkdir /mnt/afpshare/third
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -F "$TESTSUITE" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -f Readonly_test -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
     elif [ "$TESTSUITE" == "login" ]; then
         afp_logintest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"
     elif [ "$TESTSUITE" == "encoding" ]; then
