@@ -850,9 +850,7 @@ test_exit:
 /* ----------- */
 void Utf8_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test162();
     test166();
     test167();

@@ -246,9 +246,7 @@ test_exit:
 /* ----------- */
 void FPzzz_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test223();
     test224();
     test239();

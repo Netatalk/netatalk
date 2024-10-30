@@ -959,9 +959,7 @@ test_exit:
 /* ----------- */
 void FPByteRangeLock_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test60();
 #if 0
 	test63();

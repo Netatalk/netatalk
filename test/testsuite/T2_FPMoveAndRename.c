@@ -358,9 +358,7 @@ test_exit:
 /* ----------- */
 void T2FPMoveAndRename_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test136();
     test137();
     test139();

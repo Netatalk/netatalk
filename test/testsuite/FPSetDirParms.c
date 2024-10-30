@@ -905,9 +905,7 @@ test_exit:
 /* ----------- */
 void FPSetDirParms_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test82();
     test84();
     test88();

@@ -18,8 +18,6 @@ uint16_t vol = VolID;
 /* ----------- */
 void FPFlush_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test202();
 }

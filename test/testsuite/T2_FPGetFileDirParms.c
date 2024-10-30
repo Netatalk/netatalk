@@ -1055,9 +1055,7 @@ test_exit:
 /* ----------- */
 void T2FPGetFileDirParms_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test32();
 	test33();
 	test42();

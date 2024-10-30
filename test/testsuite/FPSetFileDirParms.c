@@ -1203,9 +1203,7 @@ test_exit:
 /* ----------- */
 void FPSetFileDirParms_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test98();
     test230();
     test231();

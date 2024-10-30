@@ -72,8 +72,6 @@ test_exit:
 /* ----------- */
 void FPMapID_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test208();
 }

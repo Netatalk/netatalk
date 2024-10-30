@@ -283,9 +283,7 @@ test_exit:
 /* ----------- */
 void FPGetForkParms_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test21();
     test50();
 	test188();

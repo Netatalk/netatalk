@@ -138,9 +138,7 @@ test_exit:
 /* ----------- */
 void FPMapName_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 #if 0
 	test180();
 #endif

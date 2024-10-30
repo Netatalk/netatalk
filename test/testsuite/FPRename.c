@@ -405,9 +405,7 @@ test_exit:
 /* ----------- */
 void FPRename_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test69();
 	test72();
 	test183();
