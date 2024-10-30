@@ -1348,11 +1348,6 @@ STATIC void test431()
 
 	ENTER_TEST
 
-	// FIXME: Fails specifically on Alpine Linux
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (!Mac && Path[0] == '\0') {
 		test_skipped(T_MAC_PATH);
 		goto test_exit;
@@ -1371,6 +1366,17 @@ STATIC void test431()
 		goto fin;
     }
     if (system(cmd) != 0) {
+		test_failed();
+		goto fin;
+    }
+    if (snprintf(cmd, sizeof(cmd), "%s/%s", Path, name) > sizeof(cmd)) {
+	if (!Quiet) {
+		fprintf(stdout,"FPOpenFork:test431: path too long\n");
+	}
+		test_failed();
+		goto fin;
+    }
+    if (chmod(cmd, 0666) != 0) {
 		test_failed();
 		goto fin;
     }
