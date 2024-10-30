@@ -204,7 +204,7 @@ EXT
     netatalk
     sleep 2
     if [ "$TESTSUITE" == "spectest" ]; then
-        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -x -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
+        afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -d "${AFP_USER2}" -w "${AFP_PASS}" -s "${SHARE_NAME}" -S "${SHARE2_NAME}" -c /mnt/afpshare
     elif [ "$TESTSUITE" == "readonly" ]; then
         echo "testfile uno" > /mnt/afpshare/first.txt
         echo "testfile dos" > /mnt/afpshare/second.txt
