@@ -265,7 +265,6 @@ int dir;
 	FAIL (FPCloseFork(Conn,fork))
 	fork = 0;
 #if 0
-    fprintf(stdout,"===================\n");
     fprintf(stdout,"test47: in a read/write folder\n");
 
 
@@ -1452,9 +1451,7 @@ test_exit:
 /* ----------- */
 void T2FPOpenFork_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test3();
     test4();
     test7();

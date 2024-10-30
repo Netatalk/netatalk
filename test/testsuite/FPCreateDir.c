@@ -360,9 +360,7 @@ test_exit:
 /* ----------- */
 void FPCreateDir_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test6();
 	test26();
 	test45();

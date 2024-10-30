@@ -611,9 +611,7 @@ test_exit:
 /* ----------- */
 void FPDisconnectOldSession_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 #if 0
     test222();
 #endif

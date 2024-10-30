@@ -44,8 +44,6 @@ char   u_null[] = { 0, 0, 0, 0 };
 /* ----------- */
 void FPGetIcon_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test115();
 }

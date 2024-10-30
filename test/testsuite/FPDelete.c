@@ -600,9 +600,7 @@ test_exit:
 /* ----------- */
 void FPDelete_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
     test13();
 	test27();
 	test74();

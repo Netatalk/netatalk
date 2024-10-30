@@ -562,9 +562,7 @@ test_exit:
 /* ----------- */
 void FPExchangeFiles_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test108();
 	test111();
 	test197();

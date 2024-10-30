@@ -29,8 +29,6 @@ int ret;
 /* ----------- */
 void FPCloseVol_test()
 {
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"%s\n", __func__);
-    fprintf(stdout,"-------------------\n");
+    ENTER_TESTSET
 	test204();
 }

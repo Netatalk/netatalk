@@ -31,6 +31,10 @@
 #define FAILEXIT(a, label) if ((a)) { test_failed(); goto label;}
 #define STATIC
 
+#define ENTER_TESTSET \
+    fprintf(stdout,"===================\n"); \
+    fprintf(stdout,"Executing testset: %s\n", __func__); \
+
 #define ENTER_TEST \
     if (!Quiet) { \
             fprintf(stdout, "############## entering %s ##############\n", __func__); \
