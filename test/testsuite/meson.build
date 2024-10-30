@@ -1,3 +1,11 @@
+subdir('data')
+
+t2_fpopenfork_c = configure_file(
+    input: 'T2_FPOpenFork.c.in',
+    output: 'T2_FPOpenFork.c',
+    configuration: cdata,
+)
+
 afptest_external_deps = []
 
 if threads.found()
@@ -151,7 +159,6 @@ spectest_sources = [
     'T2_FPDelete.c',
     'T2_FPGetFileDirParms.c',
     'T2_FPGetSrvrParms.c',
-    'T2_FPOpenFork.c',
     'T2_FPSetDirParms.c',
     'T2_FPSetFileParms.c',
 	'T2_FPMoveAndRename.c',
@@ -162,6 +169,7 @@ spectest_sources = [
     'T2_Dircache_attack.c',
     'T2_FPRead.c',
     'T2_FPSetForkParms.c',
+    t2_fpopenfork_c,
 ]
 
 executable(

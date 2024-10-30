@@ -2129,6 +2129,7 @@ endif
 cdata.set('bindir', bindir)
 cdata.set('etcdir', pkgconfdir)
 cdata.set('exec_prefix', exec_prefix)
+cdata.set('datadir', datadir)
 cdata.set('homedir', homedir)
 cdata.set('libdir', libdir)
 cdata.set('includedir', includedir)
