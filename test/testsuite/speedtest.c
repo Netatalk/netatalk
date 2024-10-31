@@ -38,9 +38,12 @@ static char    *Password = "";
 char    *Vol = "";
 char    *Vol2 = "";
 char    *User;
-int     Version = 21;
+int     Version = 34;
 char    *Test = "Write";
 static char    *Filename;
+
+char *vers = "AFP3.4";
+char *uam = "Cleartxt Passwrd";
 
 static int Count = 1;
 static off_t Size = 64* MEGABYTE;
@@ -1265,13 +1268,13 @@ void usage( char * av0 )
     fprintf( stdout,"\t-L\tuse posix calls (default AFP calls)\n");
     fprintf( stdout,"\t-D\twith -L use O_DIRECT in open flags (default no)\n");
 
-    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
-    fprintf( stdout,"\t-7\tAFP 3.4 version\n");
+    fprintf( stdout,"\t-7\tAFP 3.4 version (default)\n");
 
     fprintf( stdout,"\t-n\thow many iterations to run (default: 1)\n");
     fprintf( stdout,"\t-d\tfile size (Mbytes, default 64)\n");
@@ -1291,8 +1294,6 @@ void usage( char * av0 )
     exit (1);
 }
 
-char *vers = "AFPVersion 2.1";
-char *uam = "Cleartxt Passwrd";
 /* ------------------------------- */
 int main( int ac, char **av )
 {
