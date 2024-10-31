@@ -22,6 +22,13 @@ DSI *dsi = &Conn->dsi;
     	|(1 << VOLPBIT_NAME);
 
  	FAIL (FPGetVolParam(Conn, vol, bitmap))
+
+	/* FIXME: I don't understand why this is checking mdate before
+	   carrying out any modifications? Seems like a spurious test.
+	   Anyhow, disabling because it's causing a false positive
+	   when running the entire spectest suite on Debian Testing.
+	*/
+#if 0
  	if (parms.bdate == parms.mdate) {
 		if (!Quiet) {
 	 		fprintf(stdout,"Backup and modification date are the same!\n");
@@ -29,6 +36,7 @@ DSI *dsi = &Conn->dsi;
  		test_nottested();
 		goto test_exit;
  	}
+#endif
 	afp_volume_unpack(&parms, dsi->commands +sizeof( uint16_t ), bitmap);
 	bitmap = (1 << VOLPBIT_BDATE );
  	FAIL (htonl(AFPERR_PARAM) != FPSetVolParam(Conn, vol +1, bitmap, &parms))
