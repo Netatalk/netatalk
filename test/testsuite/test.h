@@ -123,8 +123,6 @@ const char *AfpNum2name(int num);
 
 extern CONN *Conn, *Conn2;
 
-// extern DSI *dsi;
-// extern uint16_t vol;
 extern char Data[];
 
 extern char *Vol;
@@ -141,7 +139,9 @@ extern int Loglevel;
 extern int Color;
 extern int Interactive;
 extern int Throttle;
+#if 0
 extern int Exclude;
+#endif
 
 extern int PassCount;
 extern int FailCount;

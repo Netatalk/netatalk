@@ -349,8 +349,9 @@ void usage( char * av0 )
     fprintf( stdout,"\t-7\tAFP 3.4 version (default)\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
-
+#if 0
     fprintf( stdout,"\t-x\tdon't run tests with known bugs\n");
+#endif
     fprintf( stdout,"\t-f\ttest or testset to run\n");
     fprintf( stdout,"\t-l\tlist testsets\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
@@ -363,7 +364,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "vV1234567ah:H:p:s:S:u:d:w:c:f:LlmxiC" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567aCiLlmVvc:d:f:H:h:p:S:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -454,9 +455,11 @@ int ret;
         case 'w':
             Password = strdup(optarg);
             break;
+#if 0
         case 'x':
         	Exclude = 1;
         	break;
+#endif
 
         default :
             usage( av[ 0 ] );
