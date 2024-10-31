@@ -319,6 +319,9 @@ char    *Test;
 int		Locking;
 enum adouble adouble = AD_EA;
 
+char *vers = "AFPVersion 3.4";
+char *uam = "Cleartxt Passwrd";
+
 /* =============================== */
 void usage( char * av0 )
 {
@@ -337,13 +340,13 @@ void usage( char * av0 )
     fprintf( stdout,"\t-d\tsecond user for two connections (same password!)\n");
     fprintf( stdout,"\t-H\tsecond server for two connections\n");
 
-    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
-    fprintf( stdout,"\t-7\tAFP 3.4 version\n");
+    fprintf( stdout,"\t-7\tAFP 3.4 version (default)\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
 
@@ -354,9 +357,6 @@ void usage( char * av0 )
     fprintf( stdout,"\t-C\tturn off terminal color output\n");
     exit (1);
 }
-
-char *vers = "AFPVersion 2.1";
-char *uam = "Cleartxt Passwrd";
 /* ------------------------------- */
 int main( int ac, char **av )
 {

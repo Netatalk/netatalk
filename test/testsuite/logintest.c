@@ -26,11 +26,11 @@ char    *Vol = "";
 char    *User;
 char    *User2;
 char    *Path;
-int     Version = 21;
+int     Version = 34;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
-static char  *vers = "AFPVersion 2.1";
+static char  *vers = "AFP3.4";
 
 static void connect_server(CONN *conn)
 {
@@ -279,13 +279,13 @@ void usage( char * av0 )
     fprintf( stdout,"\t-p\tserver port (default 548)\n");
     fprintf( stdout,"\t-u\tuser name (default uid)\n");
     fprintf( stdout,"\t-w\tpassword\n");
-    fprintf( stdout,"\t-1\tAFP 2.1 version (default)\n");
+    fprintf( stdout,"\t-1\tAFP 2.1 version\n");
     fprintf( stdout,"\t-2\tAFP 2.2 version\n");
     fprintf( stdout,"\t-3\tAFP 3.0 version\n");
     fprintf( stdout,"\t-4\tAFP 3.1 version\n");
     fprintf( stdout,"\t-5\tAFP 3.2 version\n");
     fprintf( stdout,"\t-6\tAFP 3.3 version\n");
-    fprintf( stdout,"\t-7\tAFP 3.4 version\n");
+    fprintf( stdout,"\t-7\tAFP 3.4 version (default)\n");
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
     fprintf( stdout,"\t-C\tturn off terminal color output\n");
