@@ -17,8 +17,6 @@
   <refnamediv>
     <refname>afptest</refname>
 
-    <refname>afp_encodingtest</refname>
-
     <refname>afp_lantest</refname>
 
     <refname>afp_logintest</refname>
@@ -33,28 +31,6 @@
   </refnamediv>
 
   <refsynopsisdiv>
-    <cmdsynopsis>
-      <command>afp_encodingtest<indexterm>
-          <primary>afptest</primary>
-        </indexterm></command>
-
-      <arg>-1234567CdVv</arg>
-
-      <arg>-h <replaceable>host</replaceable></arg>
-
-      <arg>-p <replaceable>port</replaceable></arg>
-
-      <arg>-s <replaceable>volume</replaceable></arg>
-
-      <arg>-c <replaceable>path to volume</replaceable></arg>
-
-      <arg>-u <replaceable>user</replaceable></arg>
-
-      <arg>-w <replaceable>password</replaceable></arg>
-
-      <arg>-e <replaceable>encoding</replaceable></arg>
-    </cmdsynopsis>
-
     <cmdsynopsis>
       <command>afp_lantest<indexterm>
           <primary>afptest</primary>
@@ -197,10 +173,8 @@
     volume. There are also read-only and sleep tests that need to be run
     separately.</para>
 
-    <para><command>afp_encodingtest</command> and
-    <command>afp_logintest</command> are specific AFP specification test
-    suites that have their own runners. The former must run locally with the
-    <option>-c</option> option.</para>
+    <para><command>afp_logintest</command> is an AFP login authentication test
+    suite that has its own runners.</para>
 
     <para><command>afp_lantest</command> and <command>afp_speedtest</command>
     are file transfer benchmarks for AFP servers. The former is inspired by

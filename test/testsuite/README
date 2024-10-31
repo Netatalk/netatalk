@@ -22,9 +22,6 @@ Tier 2 testsets can only be run locally, activated with the -c option.
 ./afp_logintest:
 AFP spec tests for DSI and login. Not included in spectest.
 
-./afp_encodingtest:
-AFP spec tests for encoding. Not included in spectest.
-
 
 Benchmarking
 ------------

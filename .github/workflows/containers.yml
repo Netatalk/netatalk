@@ -265,23 +265,6 @@ jobs:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
-    afp-logintest-afp34:
-      name: AFP login test - AFP 3.4
-      needs: build-container-testsuite
-      runs-on: ubuntu-latest
-      timeout-minutes: 5
-      env:
-          AFP_USER: atalk1
-          AFP_PASS: afpafp
-          AFP_GROUP: afpusers
-          INSECURE_AUTH: 1
-          VERBOSE: 1
-          TESTSUITE: login
-          AFP_VERSION: 7
-      steps:
-          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
-
     afp-rotest-afp21:
       name: AFP spec test (Readonly) - AFP 2.1
       needs: build-container-testsuite
@@ -301,6 +284,23 @@ jobs:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
+    afp-logintest-afp34:
+      name: AFP login test - AFP 3.4
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_PASS: afpafp
+          AFP_GROUP: afpusers
+          INSECURE_AUTH: 1
+          VERBOSE: 1
+          TESTSUITE: login
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
     afp-logintest-afp21:
       name: AFP login test - AFP 2.1
       needs: build-container-testsuite
@@ -313,24 +313,6 @@ jobs:
           INSECURE_AUTH: 1
           VERBOSE: 1
           TESTSUITE: login
-          AFP_VERSION: 1
-      steps:
-          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
-
-    afp-encodingtest-afp21:
-      name: AFP encoding test - AFP 2.1
-      needs: build-container-testsuite
-      runs-on: ubuntu-latest
-      timeout-minutes: 5
-      env:
-          AFP_USER: atalk1
-          AFP_PASS: afpafp
-          AFP_GROUP: afpusers
-          SHARE_NAME: test1
-          INSECURE_AUTH: 1
-          VERBOSE: 1
-          TESTSUITE: encoding
           AFP_VERSION: 1
       steps:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
