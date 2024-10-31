@@ -28,6 +28,10 @@ Netatalk supports the [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) famil
 
 All versions of Netatalk except the 3.x release series can speak AppleTalk.
 
+# Website
+
+The Netatalk website [netatalk.io](https://netatalk.io) is where project updates and resources are published, including documentation, release notes, security advisories, links to related projects, and more.
+
 # Community
 
 Netatalk developers and users can be found in online communal spaces like [TinkerDifferent](https://tinkerdifferent.com/) or [68kmla](https://68kmla.org/).
@@ -75,14 +79,11 @@ Additionally, each Netatalk program and configuration file also has a _troff_ ma
 
 # Wiki
 
-Collaborative articles can be found on the [Netatalk wiki](https://github.com/Netatalk/netatalk/wiki) hosted on GitHub.
+Collaborative articles can be found on the [Netatalk wiki](https://github.com/Netatalk/netatalk/wiki).
+The [Netatalk website](https://netatalk.io/docs) also serves a static mirror of all wiki pages.
 
 Editing is open to all registered GitHub users.
-We welcome improvements to existing material, as well as brand new articles on topics concerning Netatalk or Mac networking in general.
-
-# Website
-
-The Netatalk website [netatalk.io](https://netatalk.io) is where project updates and resources are published, including documentation, release notes, security advisories, links to related projects, and more.
+We are looking forward to your additions to existing material, or brand new articles on topics concerning Netatalk and Mac networking.
 
 # We're Using GitHub Under Protest
 
