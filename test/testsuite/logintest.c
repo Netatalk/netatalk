@@ -51,12 +51,71 @@ DSI *dsi;
 }
 
 /* ------------------------- */
+static void test1(void)
+{
+	ENTER_TEST
+
+    connect_server(Conn);
+    Dsi = &Conn->dsi;
+
+	if (!Quiet) {
+		fprintf(stdout, "DSIGetStatus\n");
+	}
+	if (DSIGetStatus(Conn)) {
+		test_failed();
+	}
+	CloseClientSocket(Dsi->socket);
+
+	exit_test("Logintest:test1: DSI with no open session");
+}
+
+/* ------------------------- */
+static void test2(void)
+{
+	ENTER_TEST
+
+    connect_server(Conn);
+    Dsi = &Conn->dsi;
+
+	if (!Quiet) {
+		fprintf(stdout,"DSIOpenSession\n");
+	}
+	if (DSIOpenSession(Conn)) {
+		test_failed();
+		goto test_exit;
+	}
+	if (Mac) {
+		if (!Quiet) {
+			fprintf(stdout,"DSIGetStatus\n");
+		}
+		if (DSIGetStatus(Conn)) {
+			test_failed();
+			goto test_exit;
+		}
+	}
+	if (!Quiet) {
+		fprintf(stdout,"DSICloseSession\n");
+	}
+	if (DSICloseSession(Conn)) {
+		test_failed();
+		goto test_exit;
+	}
+	CloseClientSocket(Dsi->socket);
+
+test_exit:
+	exit_test("Logintest:test2: DSI with open session");
+}
+
+/* ------------------------- */
 static void test3(void)
 {
 static char *uam = "No User Authent";
 int ret;
 
 	ENTER_TEST
+
+    connect_server(Conn);
+    Dsi = &Conn->dsi;
 
     if (Version >= 30) {
       	ret = FPopenLoginExt(Conn, vers, uam, "", "");
@@ -81,10 +140,13 @@ int ret;
     }
 
 test_exit:
+	CloseClientSocket(Dsi->socket);
 	exit_test("Logintest:test3: Guest login");
 }
 
 /* ------------------------- */
+// FIXME: when max connections is exceeded the server still returns
+// code DSIERR_OK and not DSIERR_TOOMANY (Netatalk 4.0.3, 3.1.12)
 static void test4(void)
 {
 CONN conn[50];
@@ -126,11 +188,86 @@ int  ret;
 			test_failed();
 			goto test_exit;
 		}
-		CloseClientSocket(Dsi->socket);
 	}
 
 test_exit:
+	CloseClientSocket(Dsi->socket);
 	exit_test("Logintest:test4: too many connections");
+}
+
+/* ------------------------- */
+static void test5(void)
+{
+static char *uam = "Cleartxt Passwrd";
+int ret;
+
+	ENTER_TEST
+
+    connect_server(Conn);
+    Dsi = &Conn->dsi;
+    if (Version >= 30) {
+		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
+	}
+	else {
+		ret = FPopenLogin(Conn, vers, uam, User, Password);
+	}
+	if (ret) {
+		test_failed();
+		goto test_exit;
+	}
+	Conn->afp_version = Version;
+
+   	if (FPLogOut(Conn)) {
+   		test_failed();
+   	}
+
+test_exit:
+	CloseClientSocket(Dsi->socket);
+	exit_test("Logintest:test5: Clear text login");
+}
+
+/* ------------------------- */
+static void test6(void)
+{
+DSI *dsi;
+uint32_t i = 0;
+
+    connect_server(Conn);
+    Dsi = &Conn->dsi;
+
+	dsi = Dsi;
+	/* DSIOpenSession */
+	memset(&dsi->header, 0, sizeof(dsi->header));
+	dsi->header.dsi_flags = DSIFL_REQUEST;
+	dsi->header.dsi_command = DSIFUNC_OPEN;
+	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
+	dsi->header.dsi_code = 6;
+
+
+	dsi->cmdlen = 2 + sizeof(i);
+	dsi->commands[0] = DSIOPT_ATTNQUANT;
+  	dsi->commands[1] = sizeof(i);
+  	i = htonl(DSI_DEFQUANT);
+  	memcpy(dsi->commands + 2, &i, sizeof(i));
+	my_dsi_send(dsi);
+	my_dsi_cmd_receive(dsi);
+
+	if (dsi->header.dsi_code) {
+		test_failed();
+		goto test_exit;
+	}
+
+	if (!Quiet) {
+		fprintf(stdout,"DSICloseSession\n");
+	}
+	if (DSICloseSession(Conn)) {
+		test_failed();
+		goto test_exit;
+	}
+
+test_exit:
+	CloseClientSocket(Dsi->socket);
+	exit_test("Logintest:test6: DSIOpenSession non zero parameter should be ignored by the server");
 }
 
 /* =============================== */
@@ -160,8 +297,6 @@ void usage( char * av0 )
 int main( int ac, char **av )
 {
 int cc;
-static char *uam = "Cleartxt Passwrd";
-unsigned int ret;
 
     while (( cc = getopt( ac, av, "1234567CmVvh:p:u:w:" )) != EOF ) {
         switch ( cc ) {
@@ -237,136 +372,26 @@ unsigned int ret;
         fprintf(stdout, "Error: Define a password with -w\n");
 	}
 
-	/************************************
-	 *                                  *
-	 * Connection user 1                *
-	 *                                  *
-	 ************************************/
-
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
     	return 1;
     }
-    connect_server(Conn);
-	/* dsi with no open session */
-    Dsi = &Conn->dsi;
 
-	if (!Quiet) {
-		fprintf(stdout, "DSIGetStatus\n");
-	}
-	if (DSIGetStatus(Conn)) {
-		test_failed();
-		return ExitCode;
-	}
-	CloseClientSocket(Dsi->socket);
-
-	/* ------------------------ */
-    connect_server(Conn);
-    Dsi = &Conn->dsi;
-
-	if (!Quiet) {
-		fprintf(stdout,"DSIOpenSession\n");
-	}
-	if (DSIOpenSession(Conn)) {
-		test_failed();
-		return ExitCode;
-	}
-	if (Mac) {
-		if (!Quiet) {
-			fprintf(stdout,"DSIGetStatus\n");
-		}
-		if (DSIGetStatus(Conn)) {
-			test_failed();
-			return ExitCode;
-		}
-	}
-	if (!Quiet) {
-		fprintf(stdout,"DSICloseSession\n");
-	}
-	if (DSICloseSession(Conn)) {
-		test_failed();
-		return ExitCode;
-	}
-	CloseClientSocket(Dsi->socket);
-	/* -------------------------- */
-
-	if (!Quiet) {
-		fprintf(stdout,"DSIOpenSession non zero parameter should be ignored by the server\n");
-	}
-
-    connect_server(Conn);
-    Dsi = &Conn->dsi;
-{
-DSI *dsi;
-uint32_t i = 0;
-
-	dsi = Dsi;
-	/* DSIOpenSession */
-	memset(&dsi->header, 0, sizeof(dsi->header));
-	dsi->header.dsi_flags = DSIFL_REQUEST;
-	dsi->header.dsi_command = DSIFUNC_OPEN;
-	dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
-	dsi->header.dsi_code = 6;
-
-
-	dsi->cmdlen = 2 + sizeof(i);
-	dsi->commands[0] = DSIOPT_ATTNQUANT;
-  	dsi->commands[1] = sizeof(i);
-  	i = htonl(DSI_DEFQUANT);
-  	memcpy(dsi->commands + 2, &i, sizeof(i));
-	my_dsi_send(dsi);
-	my_dsi_cmd_receive(dsi);
-
-	if (dsi->header.dsi_code) {
-		test_failed();
-		return ExitCode;
-	}
-}
-
-	if (!Quiet) {
-		fprintf(stdout,"DSICloseSession\n");
-	}
-	if (DSICloseSession(Conn)) {
-		test_failed();
-		return ExitCode;
-	}
-	CloseClientSocket(Dsi->socket);
-
-	/* ------------------------ */
-    /* guest login */
-    connect_server(Conn);
-    Dsi = &Conn->dsi;
+	test1();
+	test2();
     test3();
-	CloseClientSocket(Dsi->socket);
-
-	/* ------------------------
-	 * clear text login
-	*/
-    connect_server(Conn);
-    Dsi = &Conn->dsi;
-    if (Version >= 30) {
-		ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-	}
-	else {
-		ret = FPopenLogin(Conn, vers, uam, User, Password);
-	}
-	if (ret) {
-		test_failed();
-		return ExitCode;
-	}
-	Conn->afp_version = Version;
-
-   	if (FPLogOut(Conn)) {
-   		test_failed();
-   	}
-
-	/* ------------------------
-	 * too many login
-	*/
-	// FIXME: when max connections is exceeded the server still returns
-	// code DSIERR_OK and not DSIERR_TOOMANY
 #if 0
 	test4();
 #endif
+	test5();
+	test6();
+
+    fprintf(stdout,"===================\n");
+    fprintf(stdout,"TEST RESULT SUMMARY\n");
+    fprintf(stdout,"-------------------\n");
+	fprintf(stdout, "  Passed:     %d\n", PassCount);
+	fprintf(stdout, "  Failed:     %d\n", FailCount);
+	fprintf(stdout, "  Skipped:    %d\n", SkipCount);
+	fprintf(stdout, "  Not tested: %d\n", NotTestedCount);
 
 	return ExitCode;
 }
