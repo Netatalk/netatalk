@@ -94,6 +94,7 @@ EXT_FN(T2FPRead);
 EXT_FN(T2FPSetForkParms);
 
 EXT_FN(Dircache_attack);
+EXT_FN(Encoding);
 EXT_FN(Error);
 EXT_FN(Readonly);
 EXT_FN(Utf8);
@@ -180,6 +181,7 @@ FN_N(T2FPRead)
 FN_N(T2FPSetForkParms)
 
 FN_N(Dircache_attack)
+FN_N(Encoding)
 FN_N(Error)
 FN_N(Readonly)
 FN_N(Utf8)

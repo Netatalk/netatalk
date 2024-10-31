@@ -54,18 +54,6 @@ executable(
     install: true,
 )
 
-encoding_test_sources = [
-    'encoding_test.c',
-]
-
-executable(
-    'afp_encodingtest',
-    encoding_test_sources,
-    include_directories: root_includes,
-    link_with: libafptest,
-    install: true,
-)
-
 login_test_sources = [
     'logintest.c',
 ]
@@ -169,6 +157,7 @@ spectest_sources = [
     'T2_Dircache_attack.c',
     'T2_FPRead.c',
     'T2_FPSetForkParms.c',
+    'encoding_test.c',
     t2_fpopenfork_c,
 ]
 

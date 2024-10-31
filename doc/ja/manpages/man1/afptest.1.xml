@@ -17,8 +17,6 @@
   <refnamediv>
     <refname>afptest</refname>
 
-    <refname>afp_encodingtest</refname>
-
     <refname>afp_lantest</refname>
 
     <refname>afp_logintest</refname>
@@ -33,28 +31,6 @@
   </refnamediv>
 
   <refsynopsisdiv>
-    <cmdsynopsis>
-      <command>afp_encodingtest<indexterm>
-          <primary>afptest</primary>
-        </indexterm></command>
-
-      <arg>-1234567CdVv</arg>
-
-      <arg>-h <replaceable>ホスト</replaceable></arg>
-
-      <arg>-p <replaceable>ポート</replaceable></arg>
-
-      <arg>-s <replaceable>ボリューム</replaceable></arg>
-
-      <arg>-c <replaceable>ボリュームへのパス</replaceable></arg>
-
-      <arg>-u <replaceable>ユーザー</replaceable></arg>
-
-      <arg>-w <replaceable>パスワード</replaceable></arg>
-
-      <arg>-e <replaceable>エンコーディング</replaceable></arg>
-    </cmdsynopsis>
-
     <cmdsynopsis>
       <command>afp_lantest<indexterm>
           <primary>afptest</primary>
@@ -192,9 +168,8 @@
     たとえば、Tier 2 (T2) テストは、共有ボリュームへのパスを示す <option>-c</option> オプションを使用してホスト上で
     実行する必要があります。また、読み取り専用テストとスリープ テストも別々に実行する必要があります。</para>
 
-    <para><command>afp_encodingtest</command> および
-    <command>afp_logintest</command> は、独自のランナーを持つ特定の AFP
-    仕様テストスイートです。前者は、<option>-c</option> オプションを使用してローカルで実行する必要があります。</para>
+    <para><command>afp_logintest</command> は、独自のランナーを持つ特定の AFP ログイン認証
+    テストスイートです。</para>
 
     <para><command>afp_lantest</command> と <command>afp_speedtest</command>
     は、AFP サーバーのファイル転送ベンチマークです。前者は、さまざまなファイル転送パターンのバッチを実行する <emphasis
