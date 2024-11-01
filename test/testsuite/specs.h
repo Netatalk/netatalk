@@ -105,9 +105,7 @@ extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap, int afpd_erro
 #define T_NO_UNIX_PREV 21
 #define T_SINGLE     22
 #define T_VOL_BIG    23
-#if 0
 #define T_EXCLUDE    24
-#endif
 #define T_MANUAL     25
 #define T_AFP31      26
 #define T_AFP32      27

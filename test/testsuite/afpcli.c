@@ -8,9 +8,7 @@ int	Interactive = 0;
 int	Quiet = 1;
 int	Verbose = 0;
 int	Color = 1;
-#if 0
 int	Exclude = 0;
-#endif
 
 #define UNICODE(a) (a->afp_version >= 30)
 
