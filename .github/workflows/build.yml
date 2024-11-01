@@ -6,11 +6,12 @@ on:
       - branch-*
     paths-ignore:
       - "**.md"
+      - "**/COPYING"
+      - "**/README*"
       - "contrib/webmin_module/**"
       - "CONTRIBUTORS"
-      - "COPYING"
       - "COPYRIGHT"
-      - "Dockerfile"
+      - "Dockerfile*"
       - "NEWS"
   pull_request:
     branches:
@@ -22,11 +23,12 @@ on:
       - reopened
     paths-ignore:
       - "**.md"
+      - "**/COPYING"
+      - "**/README*"
       - "contrib/webmin_module/**"
       - "CONTRIBUTORS"
-      - "COPYING"
       - "COPYRIGHT"
-      - "Dockerfile"
+      - "Dockerfile*"
       - "NEWS"
 
 jobs:
