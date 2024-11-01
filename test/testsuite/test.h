@@ -139,9 +139,7 @@ extern int Loglevel;
 extern int Color;
 extern int Interactive;
 extern int Throttle;
-#if 0
 extern int Exclude;
-#endif
 
 extern int PassCount;
 extern int FailCount;
