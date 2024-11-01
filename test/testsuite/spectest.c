@@ -312,14 +312,14 @@ char    *Vol2 = "";
 char    *User;
 char    *User2;
 char    *Path = "";
-int     Version = 21;
+int     Version = 34;
 int     List = 0;
 int     Mac = 0;
 char    *Test;
 int		Locking;
 enum adouble adouble = AD_EA;
 
-char *vers = "AFPVersion 3.4";
+char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
 
 /* =============================== */
