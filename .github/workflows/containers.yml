@@ -3,9 +3,24 @@ name: Containers
 on:
     push:
         branches: [ "main" ]
+        paths-ignore:
+          - "**.md"
+          - "**/COPYING"
+          - "**/README*"
+          - "contrib/webmin_module/**"
+          - "CONTRIBUTORS"
+          - "COPYRIGHT"
+          - "NEWS"
     pull_request:
         branches: [ "main" ]
-    workflow_dispatch:
+        paths-ignore:
+          - "**.md"
+          - "**/COPYING"
+          - "**/README*"
+          - "contrib/webmin_module/**"
+          - "CONTRIBUTORS"
+          - "COPYRIGHT"
+          - "NEWS"
 
 env:
     REGISTRY: ghcr.io
