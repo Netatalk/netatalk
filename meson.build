@@ -821,9 +821,10 @@ talloc = dependency('talloc', required: false)
 
 tracker_prefix = get_option('with-tracker-prefix')
 
-if not get_option('with-spotlight')
-    have_spotlight = false
-else
+have_spotlight = false
+
+if get_option('with-spotlight')
+
     # Check for SPARQL
 
     sparql_versions = [
@@ -908,15 +909,16 @@ else
             endif
         endif
     endif
+
+    have_spotlight = (
+        sparql.found()
+        and indexer_found
+        and talloc.found()
+        and flex.found()
+        and bison.found()
+    )
 endif
 
-have_spotlight = (
-    sparql.found()
-    and indexer_found
-    and talloc.found()
-    and flex.found()
-    and bison.found()
-)
 if have_spotlight
     cdata.set('WITH_SPOTLIGHT', 1)
 endif
