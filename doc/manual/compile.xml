@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-10-18</pubdate>
+		<pubdate>2024-11-02</pubdate>
 	</appendixinfo>
 	<title>Compile Netatalk from Source</title>
 	<sect1 id="compile-overview">
@@ -71,8 +71,7 @@
   -Dbuildtype=release \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -104,19 +103,24 @@
 			<para>
 				<screen>pacman -Sy --noconfirm \
   avahi \
+  bison \
   cmark-gfm \
   cracklib \
   cups \
   db \
   docbook-xsl \
+  flex \
   gcc \
   libxslt \
+  localsearch \
   mariadb-clients \
   meson \
   ninja \
   perl \
   pkgconfig \
   rpcsvc-proto \
+  talloc \
+  tinysparql \
   unicode-character-database
 </screen>
 			</para>
@@ -128,8 +132,7 @@
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -204,8 +207,7 @@ apt-get install --assume-yes --no-install-recommends \
   -Dwith-init-hooks=false \
   -Dwith-init-style=debian-sysv,systemd \
   -Dwith-pkgconfdir-path=/etc/netatalk \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -273,8 +275,7 @@ apt-get install --assume-yes --no-install-recommends \
   -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -344,8 +345,7 @@ apt-get install --assume-yes --no-install-recommends \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
   -Dwith-init-hooks=false \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -419,8 +419,7 @@ sudo apt-get install --assume-yes --no-install-recommends \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-init-hooks=false \
   -Dwith-manual-l10n=ja \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -469,9 +468,7 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 			<para>
 				<screen>meson setup build \
   -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -540,8 +537,7 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dwith-appletalk=true \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -580,9 +576,7 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-  -Dwith-appletalk=true \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -634,8 +628,7 @@ meson setup build \
   -Dwith-appletalk=true \
   -Dwith-dtrace=false \
   -Dwith-krbV-uam=false \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -682,9 +675,7 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/usr/local/lib/pkgconfig \
-  -Dwith-appletalk=true \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -728,11 +719,9 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/opt/local/lib/pkgconfig \
-  -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-ldap-path=/opt/local \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -772,11 +761,9 @@ curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData
 meson setup build \
   -Dbuildtype=release \
   -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-  -Dwith-appletalk=true \
   -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
   -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-  -Dwith-tests=true \
-  -Dwith-testsuite=true
+  -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
