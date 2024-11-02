@@ -1,3 +1,45 @@
+Changes in 4.0.4
+================
+* FIX: Fix loss of FinderInfo on resource fork creation with
+       AppleDouble EA backend, GitHub #1702
+* FIX: Remove remnants of obsoleted DEBUG compile time flag, GitHub #1696
+       - Fixes compile time error on MUSL systems when building with AppleTalk
+       - When building debug builds, the EBUG flag is now activated
+       - Print build type in the Meson summary
+* FIX: meson: Detect rresvport() function in system libraries, GitHub #1697
+       - Local rresvport() code was previoulsy behind a broken MUSL flag
+       - Enables building with AppleTalk on OpenWrt
+* FIX: meson: Fix build fail with -Dwith-spotlight=false, GitHub #1715
+* FIX: docker: Explicitly launch the cupsd daemon on startup, GitHub #1707
+* NEW: docs: Create manual page for `afptest' (testsuite) tools, GitHub #1695
+* UPD: docs: Bring CONTRIBUTORS up to date, GitHub #1722
+* UPD: testsuite: Consolidate afp_ls as a command in afparg, GitHub #1705
+       - Add `FPEnumerate <dir>' as an afparg command
+       - Remove `afp_ls' as a separate executable
+* UPD: testsuite: Merge encoding test into spectest, GitHub #1716
+       - Add `Encoding' as a testset in the spectest
+       - Rewrite the `western' test to use Unicode for the same characters
+       - Remove `afp_encodingtest' as a separate executable
+* UPD: testsuite: Collapse spectest into a single suite, GitHub #1713
+       The testsuite grouping have been removed, and all spectests
+       are in a single suite. The tier 2 tests are enabled with
+       the -c option. The sleep and readonly tests can be run with
+       the -f option.
+* UPD: testsuite: Enable Color terminal output by default,
+       and flip the -C option, GitHub #1708
+* UPD: testsuite: Print a test summary for the spectest, GitHub #1708
+* UPD: testsuite: Treat `Not Tested' as a failure again, GitHub #1709
+* FIX: testsuite: Use AFPopenLogin() for FPopenLoginExt() as bug workaround
+       to enable testing of AFP 3.x connections, GitHub #1709
+* UPD: testsuite: Install test data for test431 into the datadir, GitHub #1712
+* FIX: testsuite: Workarounds for MUSL system calls default permissions,
+       which enables the testsuite to run on Alpine Linux, GitHub #1682
+* UPD: testsuite: Break down login testsuite into atomic tests, GitHub #1717
+* UPD: testsuite: Use AFP 3.4 by default (previously: AFP 2.1), GitHub #1718
+* UPD: testsuite: Use the Exclude flag to skip test that require setup,
+       previously used to skip known buggy tests, GitHub #1720
+* FIX: testsuite: Improvements to test setup, cleanup, and early failure
+
 Changes in 4.0.3
 ================
 * FIX: afpd: Limit FPGetSrvrInfo packet for AppleTalk clients, GitHub #1661
