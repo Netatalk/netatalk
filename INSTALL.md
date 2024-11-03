@@ -81,7 +81,7 @@ Required:
   - libevent 2
   - libgcrypt version 1.2.3 or later
   - perl
-  - UnicodeData.txt
+  - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)
 
 Required for Spotlight support:
 
