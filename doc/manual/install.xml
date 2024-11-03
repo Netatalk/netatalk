@@ -136,19 +136,6 @@ Resolving deltas: 100% (32227/32227), done.
             User Authentication Modules (UAMs). They are: DHX2, DHCAST128
             (a.k.a. DHX) and RandNum.</para>
           </listitem>
-
-          <listitem>
-            <para>Perl and UnicodeData.txt</para>
-
-            <para>The build system uses Perl and the Unicode Character
-            Database to generate Netatalk's Unicode character conversion
-            sources.</para>
-
-            <para>Additionally, Netatalk's administrative utility scripts rely
-            on the Perl runtime, version 5.8 or later. The required Perl
-            modules include <emphasis>IO::Socket::IP</emphasis> (asip-status)
-            and <emphasis>Net::DBus</emphasis> (afpstats).</para>
-          </listitem>
         </itemizedlist>
       </sect3>
 
@@ -255,6 +242,15 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
+            <para>Perl</para>
+
+            <para>Netatalk's administrative utility scripts rely
+            on the Perl runtime, version 5.8 or later. The required Perl
+            modules include <emphasis>IO::Socket::IP</emphasis> (asip-status)
+            and <emphasis>Net::DBus</emphasis> (afpstats).</para>
+          </listitem>
+
+          <listitem>
             <para>TCP wrappers</para>
 
             <para>Wietse Venema's network logger, also known as TCPD or
@@ -284,6 +280,14 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>Samba's talloc library, a Yacc parser such as bison, and a
             lexer like flex are also required for Spotlight.</para>
+          </listitem>
+
+          <listitem>
+            <para>Perl and UnicodeData.txt</para>
+
+            <para>The build system uses Perl and the Unicode Character
+            Database to generate Netatalk's Unicode character conversion
+            sources.</para>
           </listitem>
         </itemizedlist>
       </sect3>

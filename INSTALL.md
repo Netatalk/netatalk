@@ -80,8 +80,6 @@ Required:
   - Berkeley DB version 4.6.0 or later
   - libevent 2
   - libgcrypt version 1.2.3 or later
-  - perl
-  - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)
 
 Required for Spotlight support:
 
@@ -101,7 +99,9 @@ Optional:
   - libldap                          (for LDAP support)
   - libpam                           (for PAM support)
   - libtirpc or libquota             (for Quota support)
+  - Perl                             (for admin scripts)
   - tcpwrap                          (for TCP wrapper support)
+  - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)                  (for regenerating Unicode lookup tables)
 
 More details about dependencies can be found in the documentation at
 https://netatalk.io/stable/htmldocs/installation

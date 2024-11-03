@@ -8,7 +8,7 @@ unicode_sources = [
     'util_unistr.c',
 ]
 
-if unicode_data_file != '' and perl.found()
+if fs.exists(unicode_data_file) and perl.found()
     run_command(
         'make-casetable.pl',
         unicode_data_file,

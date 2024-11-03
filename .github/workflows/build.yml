@@ -425,7 +425,6 @@ jobs:
       - name: Install dependencies
         run: |
           brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
-          curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
       - name: Configure
         run: |
           meson setup build \
@@ -487,7 +486,6 @@ jobs:
               tracker3
           run: |
             set -e
-            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
               -Dwith-appletalk=true \
@@ -531,7 +529,6 @@ jobs:
               tracker3
           run: |
             set -e
-            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
@@ -641,7 +638,6 @@ jobs:
               tracker3
           run: |
             set -e
-            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
@@ -690,7 +686,6 @@ jobs:
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
@@ -737,7 +732,6 @@ jobs:
             pip install meson
           run: |
             set -e
-            curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
@@ -797,8 +791,7 @@ jobs:
             meson \
             ninja-build \
             systemtap-sdt-dev \
-            tracker-miner-fs \
-            unicode-data
+            tracker-miner-fs
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v3
       - name: Run build-wrapper
