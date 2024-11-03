@@ -33,7 +33,6 @@ foreach man : manfiles
 endforeach
 
 afptest_staticmans = [
-    'afp_encodingtest.1',
     'afp_lantest.1',
     'afp_logintest.1',
     'afp_spectest.1',
