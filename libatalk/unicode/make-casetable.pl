@@ -263,7 +263,7 @@ sub make_array{
         }
     }
 
-    print(CSOURCE "    return \(val\)\;\n");
+    print(CSOURCE "    return val\;\n");
     print(CSOURCE "\}\n");
     print(CSOURCE "\n");
 
@@ -318,7 +318,7 @@ sub make_array{
         }
     }
 
-    print(CSOURCE "    return \(val\)\;\n");
+    print(CSOURCE "    return val\;\n");
     print(CSOURCE "\}\n");
     print(CSOURCE "\n");
 }
