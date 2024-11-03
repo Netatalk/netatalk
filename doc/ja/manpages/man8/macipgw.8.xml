@@ -28,6 +28,8 @@
 
       <arg>-n <replaceable>nameserver</replaceable></arg>
 
+      <arg>-u <replaceable>unprivileged-user</replaceable></arg>
+
       <arg>-z <replaceable>zone</replaceable></arg>
 
       <arg>-V</arg>
@@ -89,6 +91,14 @@
         <listitem>
           <para>ゲートウェイ経由で接続された AppleTalk デバイスが使用する DNS ネーム サーバーの IP
           アドレスを指定します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-u <replaceable>unprivileged-user</replaceable></term>
+
+        <listitem>
+          <para>サーバーの起動後に、ルート権限を削除してユーザー unprivileged-user に変更します。</para>
         </listitem>
       </varlistentry>
 

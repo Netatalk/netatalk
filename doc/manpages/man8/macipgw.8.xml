@@ -28,6 +28,8 @@
 
       <arg>-n <replaceable>nameserver</replaceable></arg>
 
+      <arg>-u <replaceable>unprivileged-user</replaceable></arg>
+
       <arg>-z <replaceable>zone</replaceable></arg>
 
       <arg>-V</arg>
@@ -94,6 +96,15 @@
         <listitem>
           <para>Specifies the IP address of a DNS name server the AppleTalk
           devices connected through the gateway should use.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-u <replaceable>unprivileged-user</replaceable></term>
+
+        <listitem>
+          <para>Drop root privileges and change to user unprivileged-user
+          after the server has started.</para>
         </listitem>
       </varlistentry>
 
