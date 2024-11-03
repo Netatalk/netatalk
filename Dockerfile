@@ -15,14 +15,12 @@ ARG RUN_DEPS="\
     talloc \
     tracker \
     tracker-miners \
-    tzdata \
-    bash"
+    tzdata"
 ARG BUILD_DEPS="\
     acl-dev \
     avahi-dev \
     bison \
     cups-dev \
-    curl \
     db-dev \
     dbus-dev \
     build-base \
@@ -35,11 +33,9 @@ ARG BUILD_DEPS="\
     meson \
     ninja \
     openldap-dev \
-    perl \
     pkgconfig \
     talloc-dev \
-    tracker-dev \
-    unicode-character-database"
+    tracker-dev"
 
 FROM alpine:3.20 AS build
 
