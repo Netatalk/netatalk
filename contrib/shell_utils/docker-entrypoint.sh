@@ -191,8 +191,12 @@ fi
 echo "*** Starting AFP server"
 
 if [ -z "$TESTSUITE" ]; then
-    # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
-    netatalk -d
+    if [ -z "$AFP_DRYRUN" ]; then
+        # Prevent afpd from forking with '-d' parameter, to maintain container lifecycle
+        netatalk -d
+    else
+        netatalk -V
+    fi
 else
     if [ "$TESTSUITE" == "spectest" ]; then
         cat <<EXT > /usr/local/etc/extmap.conf
