@@ -129,17 +129,6 @@ Resolving deltas: 100% (32227/32227), done.
             Libgcrypt</ulink> ライブラリは、標準のユーザー認証モジュール (UAM)
             の暗号化を提供する。これらは、DHX2、DHCAST128 (別名 DHX)、および RandNum である。</para>
           </listitem>
-
-          <listitem>
-            <para>Perl と UnicodeData.txt</para>
-
-            <para>ビルド システムは、Perl と Unicode 文字データベースを使用して、Netatalk の Unicode
-            文字変換ソースを生成する。</para>
-
-            <para>さらに、Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン 5.8
-            以降に依存する。必須 Perl モジュールは以下： <emphasis>IO::Socket::IP</emphasis>
-            (asip-status) 又は <emphasis>Net::DBus</emphasis> (afpstats)。</para>
-          </listitem>
         </itemizedlist>
       </sect3>
 
@@ -233,6 +222,14 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
+            <para>Perl</para>
+
+            <para>Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン 5.8
+            以降に依存する。必須 Perl モジュールは以下： <emphasis>IO::Socket::IP</emphasis>
+            (asip-status) 又は <emphasis>Net::DBus</emphasis> (afpstats)。</para>
+          </listitem>
+
+          <listitem>
             <para>TCP ラッパー</para>
 
             <para>Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれる。</para>
@@ -261,6 +258,13 @@ Resolving deltas: 100% (32227/32227), done.
 
             <para>Spotlight には、Samba の talloc ライブラリ、bison などの Yacc パーサー、flex
             などのレキサーも必要。</para>
+          </listitem>
+
+          <listitem>
+            <para>UnicodeData.txt</para>
+
+            <para>ビルド システムは、Perl と Unicode 文字データベースを使用して、Netatalk の Unicode
+            文字変換ソースを生成する。</para>
           </listitem>
         </itemizedlist>
       </sect3>

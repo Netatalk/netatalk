@@ -194,7 +194,7 @@ endif
 
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
-perl = find_program('perl', required: true)
+perl = find_program('perl', required: false)
 uname = find_program('uname', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
 
@@ -598,8 +598,6 @@ unicode_data_file = unicode_data_path / 'UnicodeData.txt'
 
 if fs.exists(unicode_data_file)
     message('Unicode Character Database found at ' + unicode_data_path)
-else
-    error('UnicodeData.txt not found. Specify path with -Dwith-unicode-data-path')
 endif
 
 #
