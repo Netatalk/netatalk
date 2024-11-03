@@ -28,7 +28,7 @@ env:
 
 jobs:
     build-container:
-        name: Netatalk container
+        name: Build Netatalk container
         runs-on: ubuntu-latest
         timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
@@ -68,7 +68,7 @@ jobs:
 
 
     build-container-testsuite:
-        name: Netatalk testsuite container
+        name: Build Netatalk testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
@@ -105,6 +105,25 @@ jobs:
                 push: true
                 labels: ${{ steps.metadata.outputs.labels }}
                 tags: ${{ steps.metadata.outputs.tags }}
+
+
+    check-container:
+        name: Netatalk container dry run
+        needs: build-container
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_PASS: afpafp
+            AFP_GROUP: afpusers
+            ATALKD_INTERFACE: eth0
+            TZ: Europe/Stockholm
+            AFP_DRYRUN: 1
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk:latest
+              with:
+                entrypoint: /usr/local/sbin/netatalk
+                args: -V
 
 
     afp-spectest-afp34:
