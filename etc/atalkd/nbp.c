@@ -506,8 +506,7 @@ Can't find route's interface!" );
 
         for ( ntab = nbptab; ntab; ntab = ntab->nt_next ) {
             /* don't send out entries if we don't want to route. */
-            if ((ap->ap_iface != ntab->nt_iface) &&
-                (ntab->nt_iface->i_flags & IFACE_ISROUTER) == 0) {
+            if (ap->ap_iface != ntab->nt_iface) {
                 continue;
             }
 
