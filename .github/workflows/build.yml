@@ -177,7 +177,7 @@ jobs:
             libdb-dev \
             libdbus-1-dev \
             libevent-dev \
-            libgcrypt-dev \
+            libgcrypt20-dev \
             libglib2.0-dev \
             libkrb5-dev \
             libldap2-dev \
@@ -364,7 +364,7 @@ jobs:
             libdb-dev \
             libdbus-1-dev \
             libevent-dev \
-            libgcrypt-dev \
+            libgcrypt20-dev \
             libglib2.0-dev \
             libkrb5-dev \
             libldap2-dev \
@@ -778,7 +778,7 @@ jobs:
             libdb-dev \
             libdbus-1-dev \
             libevent-dev \
-            libgcrypt-dev \
+            libgcrypt20-dev \
             libglib2.0-dev \
             libkrb5-dev \
             libldap2-dev \
