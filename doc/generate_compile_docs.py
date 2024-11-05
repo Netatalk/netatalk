@@ -23,6 +23,8 @@ import yaml
 now = datetime.datetime.now()
 date_time = now.strftime("%Y-%m-%d")
 
+linebreak_escape_pattern = r'\\\n\s+'
+
 lang_en = {
   "title_1": "Compile Netatalk from Source",
   "title_2": "Overview",
@@ -108,6 +110,12 @@ def generate_docbook(strings, output_file):
         # Skip GitHub actions steps irrelevant to documentation
         if "uses" in step and step["uses"].startswith("actions/"):
           continue
+        # Strip out line break escape sequences
+        if "run" in step:
+          step["run"] = re.sub(linebreak_escape_pattern, "", step["run"])
+        if "with" in step:
+          step["with"]["prepare"] = re.sub(linebreak_escape_pattern, "", step["with"]["prepare"])
+          step["with"]["run"] = re.sub(linebreak_escape_pattern, "", step["with"]["run"])
 
         # The vmactions jobs have a different structure
         if "uses" in step and step["uses"].startswith("vmactions/"):

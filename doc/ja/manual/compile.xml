@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-11-02</pubdate>
+		<pubdate>2024-11-05</pubdate>
 	</appendixinfo>
 	<title>ソースコードから Netatalk をコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -26,52 +26,12 @@
 			<title>Alpine Linux</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>apk add \
-  acl-dev \
-  avahi-compat-libdns_sd \
-  avahi-dev \
-  bison \
-  build-base \
-  cracklib \
-  cracklib-dev \
-  cracklib-words \
-  cups \
-  cups-dev \
-  curl \
-  db-dev \
-  dbus-dev \
-  docbook-xsl \
-  flex \
-  gcc \
-  krb5-dev \
-  libevent-dev \
-  libgcrypt-dev \
-  libtirpc-dev \
-  libtracker \
-  libxslt \
-  linux-pam-dev \
-  mariadb-dev \
-  meson \
-  ninja \
-  openldap-dev \
-  openrc \
-  perl \
-  pkgconfig \
-  rpcsvc-proto-dev \
-  talloc-dev \
-  tracker \
-  tracker-dev \
-  tracker-miners \
-  unicode-character-database
+				<screen>apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev docbook-xsl flex gcc krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker libxslt linux-pam-dev mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tracker tracker-dev tracker-miners unicode-character-database
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -101,38 +61,12 @@
 			<title>Arch Linux</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>pacman -Sy --noconfirm \
-  avahi \
-  bison \
-  cmark-gfm \
-  cracklib \
-  cups \
-  db \
-  docbook-xsl \
-  flex \
-  gcc \
-  libxslt \
-  localsearch \
-  mariadb-clients \
-  meson \
-  ninja \
-  perl \
-  pkgconfig \
-  rpcsvc-proto \
-  talloc \
-  tinysparql \
-  unicode-character-database
+				<screen>pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db docbook-xsl flex gcc libxslt localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql unicode-character-database
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 \
-  -Dwith-init-hooks=false \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 -Dwith-init-hooks=false -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -163,51 +97,12 @@
 			<para>Install dependencies</para>
 			<para>
 				<screen>apt-get update
-apt-get install --assume-yes --no-install-recommends \
-  bison \
-  cmark-gfm \
-  cracklib-runtime \
-  docbook-xsl \
-  file \
-  flex \
-  libacl1-dev \
-  libavahi-client-dev \
-  libcrack2-dev \
-  libcups2-dev \
-  libdb-dev \
-  libdbus-1-dev \
-  libevent-dev \
-  libgcrypt-dev \
-  libglib2.0-dev \
-  libkrb5-dev \
-  libldap2-dev \
-  libmariadb-dev \
-  libpam0g-dev \
-  libtalloc-dev \
-  libtirpc-dev \
-  libtracker-sparql-3.0-dev \
-  libwrap0-dev \
-  meson \
-  ninja-build \
-  quota \
-  systemtap-sdt-dev \
-  tcpd \
-  tracker \
-  tracker-miner-fs \
-  unicode-data \
-  xsltproc
+apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime docbook-xsl file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs unicode-data xsltproc
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-init-hooks=false \
-  -Dwith-init-style=debian-sysv,systemd \
-  -Dwith-pkgconfdir-path=/etc/netatalk \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -237,45 +132,12 @@ apt-get install --assume-yes --no-install-recommends \
 			<title>Fedora Linux</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>dnf --setopt=install_weak_deps=False --assumeyes install \
-  avahi-devel \
-  bison \
-  chkconfig \
-  cracklib-devel \
-  cups-devel \
-  dbus-devel \
-  docbook-style-xsl \
-  flex \
-  glib2-devel \
-  krb5-devel \
-  libacl-devel \
-  libdb-devel \
-  libgcrypt-devel \
-  libtalloc-devel \
-  libxslt \
-  mariadb-connector-c-devel \
-  meson \
-  ninja-build \
-  openldap-devel \
-  pam-devel \
-  perl \
-  perl-Net-DBus \
-  quota-devel \
-  systemd \
-  systemtap-sdt-devel \
-  tracker \
-  tracker-devel \
-  unicode-ucd
+				<screen>dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cracklib-devel cups-devel dbus-devel docbook-style-xsl flex glib2-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel libxslt mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel unicode-ucd
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-init-hooks=false \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -305,47 +167,12 @@ apt-get install --assume-yes --no-install-recommends \
 			<title>openSUSE Linux</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>zypper in -y \
-  bison \
-  cracklib-devel \
-  dbus-1-devel \
-  docbook-xsl-stylesheets \
-  file \
-  flex \
-  gawk \
-  gcc \
-  libacl-devel \
-  libavahi-devel \
-  libdb-4_8-devel \
-  libevent-devel \
-  libgcrypt-devel \
-  libmariadb-devel \
-  libtalloc-devel \
-  libtdb-devel \
-  libtracker-sparql-3_0-0 \
-  libxslt-tools \
-  meson \
-  ninja \
-  openldap2-devel \
-  pam-devel \
-  perl \
-  pkg-config \
-  systemd \
-  systemtap-sdt-devel \
-  tcpd-devel \
-  tracker \
-  unicode-ucd
+				<screen>zypper in -y bison cracklib-devel dbus-1-devel docbook-xsl-stylesheets file flex gawk gcc libacl-devel libavahi-devel libdb-4_8-devel libevent-devel libgcrypt-devel libmariadb-devel libtalloc-devel libtdb-devel libtracker-sparql-3_0-0 libxslt-tools meson ninja openldap2-devel pam-devel perl pkg-config systemd systemtap-sdt-devel tcpd-devel tracker unicode-ucd
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 \
-  -Dwith-init-hooks=false \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 -Dwith-init-hooks=false -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -376,50 +203,12 @@ apt-get install --assume-yes --no-install-recommends \
 			<para>Install dependencies</para>
 			<para>
 				<screen>sudo apt-get update
-sudo apt-get install --assume-yes --no-install-recommends \
-  bison \
-  cmark-gfm \
-  cracklib-runtime \
-  docbook-xsl \
-  file \
-  flex \
-  libacl1-dev \
-  libavahi-client-dev \
-  libcrack2-dev \
-  libcups2-dev \
-  libdb-dev \
-  libdbus-1-dev \
-  libevent-dev \
-  libgcrypt-dev \
-  libglib2.0-dev \
-  libkrb5-dev \
-  libldap2-dev \
-  libmariadb-dev \
-  libpam0g-dev \
-  libtalloc-dev \
-  libtirpc-dev \
-  libtracker-sparql-3.0-dev \
-  libwrap0-dev \
-  meson \
-  ninja-build \
-  quota \
-  systemtap-sdt-dev \
-  tcpd \
-  tracker \
-  tracker-miner-fs \
-  unicode-data \
-  xsltproc
+sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime docbook-xsl file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs unicode-data xsltproc
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-init-hooks=false \
-  -Dwith-manual-l10n=ja \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-manual-l10n=ja -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -461,14 +250,11 @@ asip-status localhost
 			<para>Install dependencies</para>
 			<para>
 				<screen>brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
 </screen>
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build \
-  -Dbuildtype=release \
-  -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -509,35 +295,13 @@ asip-status localhost
 			<title>DragonflyBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg install -y \
-  avahi \
-  bison \
-  db5 \
-  docbook-xsl \
-  krb5-devel \
-  libevent \
-  libgcrypt \
-  libxslt \
-  meson \
-  mysql80-client \
-  openldap26-client \
-  perl5 \
-  pkgconf \
-  py39-gdbm \
-  py39-sqlite3 \
-  py39-tkinter \
-  talloc \
-  tracker3
+				<screen>pkg install -y avahi bison db5 docbook-xsl krb5-devel libevent libgcrypt libxslt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
-meson setup build \
-  -Dbuildtype=release \
-  -Dwith-appletalk=true \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -550,33 +314,13 @@ ninja -C build uninstall
 			<title>FreeBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg install -y \
-  avahi \
-  bison \
-  db5 \
-  docbook-xsl \
-  flex \
-  libevent \
-  libgcrypt \
-  libxslt \
-  meson \
-  mysql84-client \
-  openldap26-client-2.6.8 \
-  p5-Net-DBus \
-  perl5 \
-  pkgconf \
-  talloc \
-  tracker3
+				<screen>pkg install -y avahi bison db5 docbook-xsl flex libevent libgcrypt libxslt meson mysql84-client openldap26-client-2.6.8 p5-Net-DBus perl5 pkgconf talloc tracker3
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
-meson setup build \
-  -Dbuildtype=release \
-  -Dpkg_config_path=/usr/local/libdata/pkgconfig \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -597,38 +341,13 @@ ninja -C build uninstall
 			<title>NetBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg_add \
-  avahi \
-  bison \
-  db5 \
-  docbook-xsl \
-  flex \
-  gcc13 \
-  gnome-tracker \
-  heimdal \
-  libcups \
-  libevent \
-  libgcrypt \
-  libxslt \
-  meson \
-  mysql-client \
-  p5-Net-DBus \
-  perl \
-  pkg-config \
-  talloc \
-  tex-unicode-data
+				<screen>pkg_add avahi bison db5 docbook-xsl flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt libxslt meson mysql-client p5-Net-DBus perl pkg-config talloc tex-unicode-data
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-meson setup build \
-  -Dbuildtype=release \
-  -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
-  -Dwith-appletalk=true \
-  -Dwith-dtrace=false \
-  -Dwith-krbV-uam=false \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/pkg/lib/pkgconfig -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-krbV-uam=false -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -648,34 +367,13 @@ ninja -C build uninstall
 			<title>OpenBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg_add -I \
-  avahi \
-  bison \
-  db-4.6.21p7v0 \
-  dbus \
-  docbook-xsl \
-  gcc-11.2.0p14 \
-  libevent \
-  libgcrypt \
-  libtalloc \
-  libxslt \
-  mariadb-client \
-  meson \
-  openldap-client-2.6.8v0 \
-  openpam \
-  p5-Net-DBus \
-  pkgconf \
-  tracker3
+				<screen>pkg_add -I avahi bison db-4.6.21p7v0 dbus docbook-xsl gcc-11.2.0p14 libevent libgcrypt libtalloc libxslt mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
-meson setup build \
-  -Dbuildtype=release \
-  -Dpkg_config_path=/usr/local/lib/pkgconfig \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-tests=true
 meson compile -C build
 meson install -C build
 /usr/local/sbin/netatalk -V
@@ -693,35 +391,18 @@ ninja -C build uninstall
 			<title>OmniOS</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg install \
-  build-essential \
-  pkg-config
+				<screen>pkg install build-essential pkg-config
 curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz
 tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-pkgin -y install \
-  avahi \
-  docbook-xsl \
-  gnome-tracker \
-  libevent \
-  libgcrypt \
-  libxslt \
-  meson \
-  mysql-client \
-  talloc
+pkgin -y install avahi docbook-xsl gnome-tracker libevent libgcrypt libxslt meson mysql-client talloc
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
-meson setup build \
-  -Dbuildtype=release \
-  -Dpkg_config_path=/opt/local/lib/pkgconfig \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-ldap-path=/opt/local \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
@@ -742,28 +423,14 @@ ninja -C build uninstall
 			<title>Solaris</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg install \
-  bison \
-  flex \
-  gcc \
-  libevent \
-  libgcrypt \
-  ninja \
-  pkg-config \
-  python/pip
+				<screen>pkg install bison flex gcc libevent libgcrypt ninja pkg-config python/pip
 pip install meson
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-curl https://www.unicode.org/Public/UNIDATA/UnicodeData.txt --output UnicodeData.txt
-meson setup build \
-  -Dbuildtype=release \
-  -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-  -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-  -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets \
-  -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docbook-path=/usr/share/sgml/docbook/xsl-stylesheets -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
