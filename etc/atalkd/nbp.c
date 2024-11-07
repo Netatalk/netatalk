@@ -499,6 +499,11 @@ Can't find route's interface!" );
         /*FALL THROUGH*/
 
     case NBPOP_LKUP :
+        /* do not send replies from the loopback interface */
+        if (ap->ap_iface->i_flags & IFACE_LOOPBACK)
+        {
+            return 0;
+        }
         /* search our data */
         n = i = 0;
         data = packet + 1 + SZ_NBPHDR;
