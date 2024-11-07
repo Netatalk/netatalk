@@ -43,14 +43,6 @@ configure_file(
     install_tag: 'webmin',
 )
 
-configure_file(
-    input: 'netatalk-lib.pl.in',
-    output: 'netatalk-lib.pl',
-    configuration: cdata,
-    install_dir: webmin_build_dir,
-    install_tag: 'webmin',
-)
-
 meson.add_install_script(
     tar,
     '-czf',
