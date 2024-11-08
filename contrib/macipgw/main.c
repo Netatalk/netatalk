@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 	struct sigaction sv;
 	uint32_t net = 0, mask = 0, ns = 0;
 	char *zone = "*";
-	char c;
+    int opt;
 
 	struct passwd *pwd = NULL;
 	uid_t user;
@@ -179,8 +179,8 @@ int main(int argc, char *argv[])
 
 	gDebug = 0;
 
-	while ((c = getopt(argc, argv, "Vd:n:u:z:")) != EOF) {
-		switch (c) {
+    while ((opt = getopt(argc, argv, "Vd:n:u:z:")) != -1) {
+        switch (opt) {
 		case 'd':
 			gDebug = strtol(optarg, 0, 0);
 			break;
