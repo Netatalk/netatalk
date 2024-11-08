@@ -946,7 +946,8 @@ DSI *dsi;
 fin:
 	FPDelete(Conn, vol,  dir , name);
 	FPDelete(Conn, vol,  dir , name1);
-	sleep(1);
+	// FIXME: A more sophisticated way to ensure that the files have been deleted
+	sleep(2);
 	FAIL (FPDelete(Conn, vol,  dir , ""))
 test_exit:
 	exit_test("FPSetFileDirParms:test358: set unix access privilege two users");
