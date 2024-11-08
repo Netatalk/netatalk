@@ -973,6 +973,7 @@ uint16_t bitmap;
 
 	if (Exclude) {
 		test_skipped(T_EXCLUDE);
+		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
@@ -1015,6 +1016,7 @@ uint16_t bitmap;
 fin:
 	FPDelete(Conn, vol,  DIRDID_ROOT , name);
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
+test_exit:
 	exit_test("FPGetFileDirParms:test371: check default type");
 }
 
@@ -1038,6 +1040,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	if (Exclude) {
 		test_skipped(T_EXCLUDE);
+		goto test_exit;
 	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
@@ -1079,6 +1082,7 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 	}
 fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
+test_exit:
 	exit_test("FPGetFileDirParms:test380: check type mapping");
 }
 
