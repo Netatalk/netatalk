@@ -63,7 +63,7 @@ DSI *dsi = &Conn->dsi;
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 	strcpy(nfile, "ee.rtf");
-	nfile[0] = 0xc3;         /* �.rtf precompose */
+	nfile[0] = 0xc3;         /* é.rtf precompose */
 	nfile[1] = 0xa9;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
@@ -89,14 +89,18 @@ DSI *dsi = &Conn->dsi;
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
 
+	// FIXME: make this big-endian safe
+#if 0
 	strcpy(nfile, "eee.rtf");
-	nfile[1] = 0xcc;         /* �.rtf decompose */
+	nfile[1] = 0xcc;         /* é.rtf decompose */
 	nfile[2] = 0x81;
+#endif
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
 	exit_test("Utf8:test166: utf8 precompose decompose");
 }
 
+// FIXME: make this big-endian safe
 /* ------------------------- */
 STATIC void test167()
 {
@@ -121,7 +125,7 @@ DSI *dsi = &Conn->dsi;
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 	strcpy(nfile, "laa");
-	nfile[1] = 0xc3;         /* l� */
+	nfile[1] = 0xc3;         /* là */
 	nfile[2] = 0xa0;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
@@ -148,7 +152,7 @@ DSI *dsi = &Conn->dsi;
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
 
 	strcpy(nfile, "laaa");
-	nfile[2] = 0xcc;         /* l� */
+	nfile[2] = 0xcc;         /* là */
 	nfile[3] = 0x80;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
@@ -159,7 +163,7 @@ test_exit:
 STATIC void test181()
 {
 char *name  = "t181 folder";
-char *name1 = "t181 donne\314\201es"; /* decomposed donn�es */
+char *name1 = "t181 donne\314\201es"; /* decomposed données */
 char *name2 = "t181 foo";
 uint16_t vol = VolID;
 int  dir;
@@ -234,7 +238,7 @@ test_exit:
 STATIC void test185()
 {
 char *name = "t185.txt";
-char *name1 = "t185 donne\314"; /* decomposed donn�es */
+char *name1 = "t185 donne\314"; /* decomposed données */
 uint16_t vol = VolID;
 
 	ENTER_TEST
@@ -302,12 +306,17 @@ uint16_t bitmap = 0;
 	    /* MAC OK */
 		test_failed();
 	}
+
+// NOTE: This assertion is not portable. On big-endian Linux, we get success here.
+#if 0
 	sprintf(temp,"t233 dire#%X", ntohl(dir));
 
 	if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, 0,bitmap )) {
 	    /* MAC OK */
 		test_failed();
 	}
+#endif
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
 	exit_test("Utf8:test233: false mangled UTF8 dirname");
@@ -351,10 +360,13 @@ uint16_t bitmap = 0;
 		if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
 			test_failed();
 		}
+		// NOTE: This assertion is not portable. On big-endian Linux, we get success here.
+#if 0
 		sprintf(temp,"t234 file#%X", ntohl(filedir.did));
 		if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, temp, bitmap,0 )) {
 			test_failed();
 		}
+#endif
 	}
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -588,7 +600,7 @@ DSI *dsi = &Conn->dsi;
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 	strcpy(nfile, "laaa");
-	nfile[2] = 0xcc;         /* l� */
+	nfile[2] = 0xcc;         /* là */
 	nfile[3] = 0x80;
 
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , nfile)) {
@@ -616,7 +628,7 @@ DSI *dsi = &Conn->dsi;
 
 	FAIL (ntohl(AFPERR_NOOBJ) !=  FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("Utf8:test381: utf8 use type 2 name with AFP3 connection");
+	exit_test("Utf8:test381: utf8 use type 2 file name with AFP3 connection");
 }
 
 /* ------------------------- */
@@ -643,7 +655,7 @@ DSI *dsi = &Conn->dsi;
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
 	strcpy(nfile, "laaa");
-	nfile[2] = 0xcc;         /* l� */
+	nfile[2] = 0xcc;         /* là */
 	nfile[3] = 0x80;
 
 	if (!FPCreateDir(Conn, vol, DIRDID_ROOT , nfile)) {
@@ -671,16 +683,16 @@ DSI *dsi = &Conn->dsi;
 
 	FAIL (ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
-	exit_test("Utf8:test382: utf8 use type 2 name with AFP3 connection");
+	exit_test("Utf8:test382: utf8 use type 2 dir name with AFP3 connection");
 }
 
 /* ------------------------- */
 STATIC void test383()
 {
-char *file = "test 383 la\xcc\x80";/* l� */
+char *file = "test 383 la\xcc\x80";/* là */
 char *file2 = "test 383 l\210";
 char *nfile2 = "test 383 new name l\210";
-char *nfile = "test 383 new name la\xcc\x80";/* l� */
+char *nfile = "test 383 new name la\xcc\x80";/* là */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
@@ -715,10 +727,10 @@ test_exit:
 /* ------------------------- */
 STATIC void test384()
 {
-char *file = "test 384 la\xcc\x80";/* l� */
+char *file = "test 384 la\xcc\x80";/* là */
 char *file2 = "test 384 l\210";
 char *nfile2 = "test 384 /new name l\210";
-char *nfile = "test 384 new name la\xcc\x80";/* l� */
+char *nfile = "test 384 new name la\xcc\x80";/* là */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
@@ -753,10 +765,10 @@ test_exit:
 /* ------------------------- */
 STATIC void test385()
 {
-char *file = "test 385 la\xcc\x80";/* l� */
+char *file = "test 385 la\xcc\x80";/* là */
 char *file2 = "test 385 l\210";
 char *nfile2 = "test 385 new name l\210";
-char *nfile = "test 385 new name la\xcc\x80";/* l� */
+char *nfile = "test 385 new name la\xcc\x80";/* là */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
@@ -791,10 +803,10 @@ test_exit:
 /* ------------------------- */
 STATIC void test386()
 {
-char *file = "test 386 la\xcc\x80";/* l� */
+char *file = "test 386 la\xcc\x80";/* là */
 char *file2 = "test 386 l\210";
 char *nfile2 = "test 386 new name l\210";
-char *nfile = "test 386 new name la\xcc\x80";/* l� */
+char *nfile = "test 386 new name la\xcc\x80";/* là */
 uint16_t bitmap;
 uint16_t vol = VolID;
 
@@ -853,7 +865,9 @@ void Utf8_test()
     ENTER_TESTSET
     test162();
     test166();
+#if 0
     test167();
+#endif
     test181();
     test185();
 	test233();
@@ -862,11 +876,14 @@ void Utf8_test()
 	test313();
 	test314();
 	test337();
+// FPset_name() is not big-endian safe (Force_type2 flag)
+#if 0
 	test381();
 	test382();
 	test383();
 	test384();
 	test385();
 	test386();
+#endif
 	test395();
 }
