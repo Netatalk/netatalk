@@ -663,7 +663,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/omnios-vm@v1.0.8
+        uses: vmactions/omnios-vm@v1.0.9
         with:
           copyback: false
           prepare: |
