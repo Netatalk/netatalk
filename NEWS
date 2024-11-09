@@ -1,3 +1,29 @@
+Changes in 4.0.5
+================
+* UPD: Distribute pre-generated Unicode table sources, GitHub #1724
+       This reverts the previous change in v4.0.0 removing these sources.
+       We retain the ability to regenerate them on the fly,
+       if Unicode character database is found by the build system.
+       Built with UnicodeData.txt version 16.0.
+       This also removes hard Perl and Unicode dependencies.
+* NEW: afpd: Fallback to new DSI icon when no icon defined, GitHub #1729
+* FIX: atalkd: Don't send NBP Reply packets from the loopback interface,
+       addressing side effect in Linux kernel 6.9+ GitHub #1734
+* FIX: docs: Strip out linebreak escapes in Compile appendix, GitHub #1733
+* FIX: docs: Remove straggler afp_encodingtest.1 man page alias, GitHub #1728
+* FIX: macipgw: On MACIP_ASSIGN, prepopulate the newly-assigned IP address
+       into the arp cache to avoid warning on Linux, GitHub #1727
+* NEW: macipgw: Add command-line option to drop root privileges
+       after the server has been started, GitHub #1727
+* FIX: macipgw: Fix argument handling in main() for aarch64 compatibility,
+       GitHub #1735
+* FIX: webmin: Revert default dir detection to address
+       critical regression bug, GitHub #1736
+* FIX: testsuite: Exit tests with the Exclude flag early, GitHub #1737
+* FIX: testsuite: Longer sleep time after file operation in test358,
+       GitHub #1739
+* FIX: testsuite: Make Utf8 tests big-endian safe, GitHub #1740
+
 Changes in 4.0.4
 ================
 * FIX: Fix loss of FinderInfo on resource fork creation with
