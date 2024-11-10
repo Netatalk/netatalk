@@ -35,6 +35,8 @@
       <arg>-p printcap</arg>
 
       <arg>-P pidfile</arg>
+
+      <arg>-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -114,6 +116,14 @@
         <listitem>
           <para>Specifies the file in which <command>papd</command> stores its
           process id.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>Print version information and exit.</para>
         </listitem>
       </varlistentry>
     </variablelist>

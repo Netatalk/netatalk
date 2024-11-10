@@ -27,6 +27,8 @@
       <arg choice="opt">-d</arg>
 
       <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+
+      <arg choice="opt">-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -77,6 +79,14 @@
         <listitem>
           <para>このサーバーを <emphasis remap="I">nbpname</emphasis>
           として登録します。デフォルトではホスト名になります。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>バージョン情報を出力して終了します。</para>
         </listitem>
       </varlistentry>
     </variablelist>

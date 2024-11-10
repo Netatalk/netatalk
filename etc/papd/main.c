@@ -4,7 +4,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
@@ -203,7 +203,7 @@ int main(int ac, char **av)
     defprinter.p_pagecost_msg = NULL;
     defprinter.p_lock = "lock";
 
-    while (( c = getopt( ac, av, "adf:p:P:v" )) != EOF ) {
+    while (( c = getopt( ac, av, "adVvf:p:P:" )) != EOF ) {
 	switch ( c ) {
 	case 'a' :		/* for compatibility with old papd */
 	    break;
@@ -224,8 +224,9 @@ int main(int ac, char **av)
 	    pidfile = optarg;
 	    break;
 
+	case 'V' :
 	case 'v' :		/* version */
-	    printf( "papd (version %s)\n", VERSION );
+	    printf( "papd %s - Printer Access Protocol Daemon\n", version );
 	    exit ( 1 );
 	    break;
 

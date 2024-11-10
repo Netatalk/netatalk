@@ -818,7 +818,7 @@ int main( int ac, char **av)
     socklen_t 		fromlen;
     char		*prog;
 
-    while (( c = getopt( ac, av, "12df:P:tv" )) != EOF ) {
+    while (( c = getopt( ac, av, "12dtVvf:P:" )) != EOF ) {
 	switch ( c ) {
 	case '1' :
 	    defphase = IFACE_PHASE1;
@@ -844,8 +844,9 @@ int main( int ac, char **av)
 	    transition++;
 	    break;
 
+	case 'V' :
 	case 'v' :	/* version */
-	    printf( "atalkd (version %s)\n", version );
+	    printf( "atalkd %s - AppleTalk Network Manager Daemon\n", version );
 	    exit ( 1 );
 	    break;
 

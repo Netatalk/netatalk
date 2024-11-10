@@ -37,6 +37,8 @@
       <arg>-p printcap</arg>
 
       <arg>-P pidfile</arg>
+
+      <arg>-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -108,6 +110,14 @@
 
         <listitem>
           <para><command>papd</command> がプロセス ID を保存するファイルを指定します。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>バージョン情報を出力して終了します。</para>
         </listitem>
       </varlistentry>
     </variablelist>

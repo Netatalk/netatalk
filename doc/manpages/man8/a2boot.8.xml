@@ -25,6 +25,8 @@
       <arg choice="opt">-d</arg>
 
       <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+
+      <arg choice="opt">-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -78,6 +80,14 @@
         <listitem>
           <para>Register this server as <emphasis
           remap="I">nbpname</emphasis>. This defaults to the hostname.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+
+        <listitem>
+          <para>Print version information and exit.</para>
         </listitem>
       </varlistentry>
     </variablelist>

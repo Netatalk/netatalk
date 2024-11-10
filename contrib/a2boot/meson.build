@@ -6,6 +6,7 @@ a2boot_c_args = [
     + pkgconfdir
     + '/a2boot/Apple :2f:2fe Boot Blocks"',
     '-D_PATH_P16_IMAGE="' + pkgconfdir + '/a2boot/ProDOS16 Image"',
+    dversion,
 ]
 
 executable(

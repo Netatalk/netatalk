@@ -32,7 +32,7 @@
 
       <arg>-z <replaceable>zone</replaceable></arg>
 
-      <arg>-V</arg>
+      <arg>-v</arg>
 
       <arg choice="plain"><replaceable>network</replaceable></arg>
 
@@ -112,7 +112,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-V</term>
+        <term>-v</term>
 
         <listitem>
           <para>バージョン情報を表示して終了します。</para>
