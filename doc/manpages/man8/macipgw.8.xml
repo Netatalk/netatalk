@@ -32,7 +32,7 @@
 
       <arg>-z <replaceable>zone</replaceable></arg>
 
-      <arg>-V</arg>
+      <arg>-v</arg>
 
       <arg choice="plain"><replaceable>network</replaceable></arg>
 
@@ -118,7 +118,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-V</term>
+        <term>-v</term>
 
         <listitem>
           <para>Show version information and exit.</para>

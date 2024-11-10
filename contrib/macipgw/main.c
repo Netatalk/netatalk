@@ -18,6 +18,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -46,17 +50,10 @@
 #include "tunnel.h"
 #include "util.h"
 
-static char *version = "macipgw 1.1\n"
-    "Copyright (c) 1997 Stefan Bethke. All rights reserved.\n"
-    "Copyright (c) 1988, 1992, 1993\n"
-    "\tThe Regents of the University of California.  All rights reserved.\n"
-    "Copyright (c) 1990,1996 Regents of The University of Michigan.\n"
-    "\tAll Rights Reserved.\n"
-    "See the file COPYRIGHT for further information.\n";
-
 int atsocket;
 int tundev;
 int debug = 0;
+static char	*version = VERSION;
 
 static void die(int n)
 {
@@ -179,21 +176,27 @@ int main(int argc, char *argv[])
 
 	gDebug = 0;
 
-    while ((opt = getopt(argc, argv, "Vd:n:u:z:")) != -1) {
+    while ((opt = getopt(argc, argv, "Vvd:n:u:z:")) != -1) {
         switch (opt) {
 		case 'd':
 			gDebug = strtol(optarg, 0, 0);
 			break;
-
 		case 'n':
 			ns = atoip(optarg);
 			break;
-
 		case 'z':
 			zone = optarg;
-			break;
-		case 'V':
-			usage(version);
+            break;
+        case 'V':
+        case 'v':
+            fprintf(stdout, "macipgw %s - Mac IP Gateway Daemon\n"
+               "Copyright (c) 1997, 2013 Stefan Bethke. All rights reserved.\n"
+               "Copyright (c) 1988, 1992, 1993\n"
+               "\tThe Regents of the University of California.  All rights reserved.\n"
+               "Copyright (c) 1990, 1996 Regents of The University of Michigan.\n"
+               "\tAll Rights Reserved.\n"
+               "See the file COPYRIGHT for further information.\n", version);
+            exit(1);
 			break;
 		case 'u':
 			pwd = get_user(optarg);

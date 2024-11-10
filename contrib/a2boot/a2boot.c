@@ -67,6 +67,7 @@ char	*bad = "Bad request!";
 char	buf[ 4624 ];
 char	*server;
 int32_t fileoff;
+static char	*version = VERSION;
 
 long a2bootreq(char *fname);
 
@@ -125,7 +126,7 @@ int main( int ac, char **av )
     }
     server = hostname;
 
-    while (( c = getopt( ac, av, "dn:" )) != EOF ) {
+    while (( c = getopt( ac, av, "dVvn:" )) != EOF ) {
 	switch ( c ) {
 	case 'd' :
 	    debug++;
@@ -133,6 +134,14 @@ int main( int ac, char **av )
 	case 'n' :
 	    server = optarg;
 	    break;
+    case 'V' :
+    case 'v' :
+        fprintf(stdout, "a2boot %s - Apple2 Netboot Daemon\n"
+               "Copyright (c) 1990,1992 Regents of The University of Michigan.\n"
+               "\tAll Rights Reserved.\n"
+               "Copyright (c) 1990, The University of Melbourne.\n", version );
+        exit ( 1 );
+        break;
 	default :
 	    fprintf( stderr, "Unknown option -- '%c'\n", c );
 	    usage( *av );
