@@ -1900,26 +1900,43 @@ endif
 
 init_style = get_option('with-init-style')
 init_dirs = []
+init_style_auto = false
+init_cmd = ''
 
 if 'auto' in init_style
+    init_style_auto = true
     if host_os == 'linux'
         if linux_distro in ['arch', 'centos', 'debian', 'fedora', 'rhel', 'suse', 'ubuntu']
             init_style = ['systemd']
+            init_cmd = 'systemctl'
         elif linux_distro in ['alpine', 'gentoo']
             init_style = ['openrc']
+            init_cmd = 'rc-service'
         endif
     elif host_os == 'freebsd'
         init_style = ['freebsd']
     elif host_os == 'netbsd'
         init_style = ['netbsd']
+        init_cmd = 'service'
     elif host_os == 'openbsd'
         init_style = ['openbsd']
+        init_cmd = 'rcctl'
     elif host_os == 'darwin'
         init_style = ['macos-launchd']
     elif host_os == 'sunos'
         init_style = ['solaris']
+        init_cmd = 'svcadm'
     else
         init_style = ['none']
+    endif
+endif
+
+if init_cmd != ''
+    init_program = find_program(init_cmd, required: not init_style_auto)
+    if not init_program.found()
+        warning(init_cmd + ' not found, defaulting to no init scripts')
+        init_style = ['none']
+        init_cmd = ''
     endif
 endif
 
