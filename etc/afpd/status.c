@@ -499,7 +499,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
     status_machine(status);
     status_versions(status,
 #ifndef NO_DDP
-                    asp,
+                    NULL,
 #endif
                     dsi);
     status_uams(status, options->uamlist);
