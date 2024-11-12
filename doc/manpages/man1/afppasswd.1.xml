@@ -127,7 +127,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-w <emphasis>string</emphasis></term>
+        <term><option>-w</option><replaceable> string</replaceable></term>
 
         <listitem>
           <para>Use string as password, instead of typing it interactively.

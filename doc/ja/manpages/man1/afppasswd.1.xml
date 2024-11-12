@@ -119,7 +119,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-w <emphasis>文字列</emphasis></term>
+        <term><option>-w</option><replaceable> 文字列</replaceable></term>
 
         <listitem>
           <para>パスワードを対話形式で入力するのではなく、文字列をパスワードとして使用する。
