@@ -117,8 +117,8 @@ int ad_find(int argc, char **argv, AFPObj *obj)
 
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];
-    if (convert_charset(vol.vol->v_volcharset,
-                        vol.vol->v_volcharset,
+    if (convert_charset(CH_UNIX,
+                        CH_UNIX,
                         vol.vol->v_maccharset,
                         argv[optind],
                         strlen(argv[optind]),
