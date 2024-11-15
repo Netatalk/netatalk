@@ -9,6 +9,7 @@ webmin_files = [
     'edit_print.cgi',
     'edit_vol_section.cgi',
     'index.cgi',
+    'netatalk-lib.pl',
     'README.md',
     'save_atalk.cgi',
     'save_global_section.cgi',
