@@ -24,51 +24,52 @@
     <cmdsynopsis>
       <command>asip-status</command>
 
-      <group choice="opt">
-        <arg choice="plain">-4</arg>
+      <group>
+        <arg>-4</arg>
 
-        <arg choice="plain">-6</arg>
+        <arg>-6</arg>
       </group>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt">-i</arg>
+      <arg>-i</arg>
 
-      <arg choice="opt">-x</arg>
+      <arg>-x</arg>
 
-      <arg choice="plain"><replaceable>HOSTNAME</replaceable></arg>
+      <arg><replaceable>HOSTNAME</replaceable></arg>
 
-      <arg choice="opt"><replaceable>PORT</replaceable></arg>
+      <arg><replaceable>PORT</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>asip-status</command>
 
-      <group choice="opt">
-        <arg choice="plain">-4</arg>
+      <group>
+        <arg>-4</arg>
 
-        <arg choice="plain">-6</arg>
+        <arg>-6</arg>
       </group>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt">-i</arg>
+      <arg>-i</arg>
 
-      <arg choice="opt">-x</arg>
+      <arg>-x</arg>
 
-      <arg
-      choice="plain"><replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable></arg>
+      <arg>
+        <replaceable>HOSTNAME</replaceable>:<replaceable>PORT</replaceable>
+      </arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>asip-status</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
+      <group>
+        <arg>-v</arg>
 
-        <arg choice="plain">-version</arg>
+        <arg>-version</arg>
 
-        <arg choice="plain">--version</arg>
+        <arg>--version</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

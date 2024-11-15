@@ -22,20 +22,20 @@
     <cmdsynopsis>
       <command>afpldaptest</command>
 
-      <group choice="req">
-        <arg choice="plain">-u <replaceable>USER</replaceable></arg>
-        <arg choice="plain">-g <replaceable>GROUP</replaceable></arg>
-        <arg choice="plain">-i <replaceable>UUID</replaceable></arg>
+      <group>
+        <arg>-u <replaceable>USER</replaceable></arg>
+        <arg>-g <replaceable>GROUP</replaceable></arg>
+        <arg>-i <replaceable>UUID</replaceable></arg>
       </group>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>afpldaptest</command>
 
-      <group choice="req">
-        <arg choice="plain">-h</arg>
-        <arg choice="plain">-?</arg>
-        <arg choice="plain">-:</arg>
+      <group>
+        <arg>-h</arg>
+        <arg>-?</arg>
+        <arg>-:</arg>
       </group>
 
     </cmdsynopsis>

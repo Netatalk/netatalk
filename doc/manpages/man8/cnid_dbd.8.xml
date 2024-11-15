@@ -26,9 +26,9 @@
     <cmdsynopsis>
       <command>cnid_dbd</command>
 
-        <group choice="plain">
-          <arg choice="plain">-v</arg>
-          <arg choice="plain">-V</arg>
+        <group>
+          <arg>-v</arg>
+          <arg>-V</arg>
         </group>
     </cmdsynopsis>
   </refsynopsisdiv>

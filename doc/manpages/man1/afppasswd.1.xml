@@ -23,19 +23,13 @@
     <cmdsynopsis>
       <command>afppasswd</command>
 
-      <arg choice="opt">-acfn</arg>
+      <arg>-acfn</arg>
 
-      <arg choice="opt"><arg choice="plain">-p
-      <replaceable>afppasswd</replaceable></arg><arg
-      choice="plain"><replaceable>file</replaceable></arg></arg>
+      <arg>-p <replaceable>afppasswd file</replaceable></arg>
 
-      <arg choice="opt"><arg choice="plain">-u
-      <replaceable>minimum</replaceable></arg><arg
-      choice="plain"><replaceable>uid</replaceable></arg></arg>
+      <arg>-u <replaceable>minimum uid</replaceable></arg>
 
-      <arg choice="opt"><arg choice="plain">-w
-      <replaceable>password</replaceable></arg><arg
-      choice="plain"><replaceable>string</replaceable></arg></arg>
+      <arg>-w <replaceable>password string</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

@@ -23,19 +23,18 @@
     <cmdsynopsis>
       <command>cnid_metad</command>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt"><arg choice="plain">-F </arg><arg
-      choice="plain"><replaceable>configuration file</replaceable></arg></arg>
+      <arg>-F <replaceable>configuration file</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>cnid_metad</command>
 
-	<group choice="plain">
-	  <arg choice="plain">-v</arg>
-	  <arg choice="plain">-V</arg>
-	</group>
+      <group>
+        <arg>-v</arg>
+        <arg>-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 

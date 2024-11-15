@@ -40,7 +40,7 @@
 
       <arg>-m <replaceable>maccodepage</replaceable></arg>
 
-      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+      <arg><replaceable>nbpname</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -54,7 +54,7 @@
 
       <arg>-m <replaceable>maccodepage</replaceable></arg>
 
-      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+      <arg><replaceable>nbpname</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -66,7 +66,7 @@
 
       <arg>-m <replaceable>maccodepage</replaceable></arg>
 
-      <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+      <arg><replaceable>nbpname</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

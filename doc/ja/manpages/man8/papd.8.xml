@@ -32,11 +32,11 @@
 
       <arg>-d</arg>
 
-      <arg>-f configfile</arg>
+      <arg>-f <replaceable>configfile</replaceable></arg>
 
-      <arg>-p printcap</arg>
+      <arg>-p <replaceable>printcap</replaceable></arg>
 
-      <arg>-P pidfile</arg>
+      <arg>-P <replaceable>pidfile</replaceable></arg>
 
       <arg>-v</arg>
     </cmdsynopsis>

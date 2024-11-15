@@ -24,9 +24,9 @@
     <cmdsynopsis>
       <command>dbd</command>
 
-      <arg choice="opt">-cfFstuvV</arg>
+      <arg>-cfFstuvV</arg>
 
-      <arg choice="plain"><replaceable>volumepath</replaceable></arg>
+      <arg><replaceable>volumepath</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

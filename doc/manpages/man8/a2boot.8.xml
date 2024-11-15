@@ -22,11 +22,15 @@
     <cmdsynopsis>
       <command>a2boot</command>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+      <arg>-n <replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
 
-      <arg choice="opt">-v</arg>
+    <cmdsynopsis>
+      <command>a2boot</command>
+
+      <arg>-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

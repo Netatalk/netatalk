@@ -24,20 +24,20 @@
     <cmdsynopsis>
       <command>afpd</command>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt">-F <replaceable>configfile</replaceable></arg>
+      <arg>-F <replaceable>configfile</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>afpd</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
+      <group>
+        <arg>-v</arg>
 
-        <arg choice="plain">-V</arg>
+        <arg>-V</arg>
 
-        <arg choice="plain">-h</arg>
+        <arg>-h</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

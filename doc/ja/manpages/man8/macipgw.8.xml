@@ -34,9 +34,9 @@
 
       <arg>-v</arg>
 
-      <arg choice="plain"><replaceable>network</replaceable></arg>
+      <arg><replaceable>network</replaceable></arg>
 
-      <arg choice="plain"><replaceable>netmask</replaceable></arg>
+      <arg><replaceable>netmask</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
