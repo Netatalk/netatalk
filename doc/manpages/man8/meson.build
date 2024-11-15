@@ -1,15 +1,20 @@
 manfiles = [
-    'a2boot.8',
     'afpd.8',
-    'atalkd.8',
     'cnid_dbd.8',
     'cnid_metad.8',
-    'macipgw.8',
     'netatalk.8',
-    'papd.8',
-    'papstatus.8',
-    'timelord.8',
 ]
+
+if have_appletalk
+    manfiles += [
+        'a2boot.8',
+        'atalkd.8',
+        'macipgw.8',
+        'papd.8',
+        'papstatus.8',
+        'timelord.8',
+    ]
+endif
 
 foreach man : manfiles
     man_xmlfile = configure_file(

@@ -28,8 +28,13 @@ endif
 if get_option('with-readmes')
     readmes = [
         'DEVELOPER',
-        'README.AppleTalk',
     ]
+
+    if have_appletalk
+        readmes += [
+            'README.AppleTalk',
+        ]
+    endif
 
     foreach file : readmes
         install_data(
