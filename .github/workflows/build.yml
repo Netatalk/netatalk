@@ -284,7 +284,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 9
     container:
-      image: opensuse/leap:latest
+      image: opensuse/leap:15.6
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
