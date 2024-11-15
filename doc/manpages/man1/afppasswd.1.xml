@@ -26,12 +26,16 @@
       <arg choice="opt">-acfn</arg>
 
       <arg choice="opt"><arg choice="plain">-p
-      <replaceable>passwd</replaceable></arg><arg
+      <replaceable>afppasswd</replaceable></arg><arg
       choice="plain"><replaceable>file</replaceable></arg></arg>
 
       <arg choice="opt"><arg choice="plain">-u
       <replaceable>minimum</replaceable></arg><arg
       choice="plain"><replaceable>uid</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-w
+      <replaceable>password</replaceable></arg><arg
+      choice="plain"><replaceable>string</replaceable></arg></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -127,12 +131,12 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-w</option><replaceable> string</replaceable></term>
+        <term><option>-w</option><replaceable> password string</replaceable></term>
 
         <listitem>
           <para>Use string as password, instead of typing it interactively.
           Please use this option only if absolutely necessary, since the
-          password will remain in the terminal history in plain text.</para>
+          password may remain in the terminal history in plain text.</para>
         </listitem>
       </varlistentry>
     </variablelist>

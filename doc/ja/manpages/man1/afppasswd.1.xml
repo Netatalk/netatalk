@@ -27,12 +27,14 @@
       <arg choice="opt">-acfn</arg>
 
       <arg choice="opt"><arg choice="plain">-p
-      <replaceable>passwd</replaceable></arg><arg
-      choice="plain"><replaceable>file</replaceable></arg></arg>
+      <replaceable>afppasswdファイル</replaceable></arg></arg>
 
       <arg choice="opt"><arg choice="plain">-u
       <replaceable>minimum</replaceable></arg><arg
       choice="plain"><replaceable>uid</replaceable></arg></arg>
+
+      <arg choice="opt"><arg choice="plain">-w
+      <replaceable>パスワード文字列</replaceable></arg></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -119,7 +121,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-w</option><replaceable> 文字列</replaceable></term>
+        <term><option>-w</option><replaceable> パスワード文字列</replaceable></term>
 
         <listitem>
           <para>パスワードを対話形式で入力するのではなく、文字列をパスワードとして使用する。
