@@ -26,12 +26,11 @@
           <primary>papstatus</primary>
         </indexterm></command>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt"><arg choice="plain">-p </arg><arg
-      choice="plain"><replaceable>printer</replaceable></arg></arg>
+      <arg>-p <replaceable>printer</replaceable></arg>
 
-      <arg choice="opt"><replaceable>retrytime</replaceable></arg>
+      <arg><replaceable>retrytime</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

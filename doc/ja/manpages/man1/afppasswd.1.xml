@@ -24,17 +24,13 @@
     <cmdsynopsis>
       <command>afppasswd</command>
 
-      <arg choice="opt">-acfn</arg>
+      <arg>-acfn</arg>
 
-      <arg choice="opt"><arg choice="plain">-p
-      <replaceable>afppasswdファイル</replaceable></arg></arg>
+      <arg>-p <replaceable>afppasswdファイル</replaceable></arg>
 
-      <arg choice="opt"><arg choice="plain">-u
-      <replaceable>minimum</replaceable></arg><arg
-      choice="plain"><replaceable>uid</replaceable></arg></arg>
+      <arg>-u <replaceable>最低限 uid</replaceable></arg>
 
-      <arg choice="opt"><arg choice="plain">-w
-      <replaceable>パスワード文字列</replaceable></arg></arg>
+      <arg>-w <replaceable>パスワード文字列</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

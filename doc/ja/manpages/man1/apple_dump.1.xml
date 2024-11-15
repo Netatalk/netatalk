@@ -24,64 +24,64 @@
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <arg choice="opt"><arg choice="plain">-a</arg></arg>
+      <arg><arg>-a</arg></arg>
 
-      <group choice="opt">
-        <arg choice="plain"><replaceable>FILE</replaceable></arg>
+      <group>
+        <arg><replaceable>FILE</replaceable></arg>
 
-        <arg choice="plain"><replaceable>DIR</replaceable></arg>
+        <arg><replaceable>DIR</replaceable></arg>
       </group>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <arg choice="plain">-e</arg>
+      <arg>-e</arg>
 
-      <group choice="plain">
-        <arg choice="plain"><replaceable>FILE</replaceable></arg>
+      <group>
+        <arg><replaceable>FILE</replaceable></arg>
 
-        <arg choice="plain"><replaceable>DIR</replaceable></arg>
+        <arg><replaceable>DIR</replaceable></arg>
       </group>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <arg choice="plain">-f</arg>
+      <arg>-f</arg>
 
-      <arg choice="opt"><replaceable>FILE</replaceable></arg>
+      <arg><replaceable>FILE</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <arg choice="plain">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt"><replaceable>FILE</replaceable></arg>
+      <arg><replaceable>FILE</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <group choice="plain">
-        <arg choice="plain">-h</arg>
+      <group>
+        <arg>-h</arg>
 
-        <arg choice="plain">-help</arg>
+        <arg>-help</arg>
 
-        <arg choice="plain">--help</arg>
+        <arg>--help</arg>
       </group>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
+      <group>
+        <arg>-v</arg>
 
-        <arg choice="plain">-version</arg>
+        <arg>-version</arg>
 
-        <arg choice="plain">--version</arg>
+        <arg>--version</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

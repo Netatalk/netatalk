@@ -28,18 +28,18 @@
     <cmdsynopsis>
       <command>macusers</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
+      <group>
+        <arg>-v</arg>
 
-        <arg choice="plain">-version</arg>
+        <arg>-version</arg>
 
-        <arg choice="plain">--version</arg>
+        <arg>--version</arg>
 
-        <arg choice="plain">-h</arg>
+        <arg>-h</arg>
 
-        <arg choice="plain">-help</arg>
+        <arg>-help</arg>
 
-        <arg choice="plain">--help</arg>
+        <arg>--help</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

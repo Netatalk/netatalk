@@ -22,13 +22,13 @@
     <cmdsynopsis>
       <command>getzones<indexterm><primary>getzones</primary></indexterm></command>
 
-      <group choice="opt">
-        <arg choice="plain">-m</arg>
+      <group>
+        <arg>-m</arg>
 
-        <arg choice="plain">-l</arg>
+        <arg>-l</arg>
       </group>
 
-      <arg choice="opt"><replaceable>address</replaceable></arg>
+      <arg><replaceable>address</replaceable></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

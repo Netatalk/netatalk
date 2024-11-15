@@ -24,13 +24,13 @@
     <cmdsynopsis>
       <command>timelord</command>
 
-      <arg choice="opt">-d</arg>
+      <arg>-d</arg>
 
-      <arg choice="opt">-l</arg>
+      <arg>-l</arg>
 
-      <arg choice="opt">-n <replaceable>nbpname</replaceable></arg>
+      <arg>-n <replaceable>nbpname</replaceable></arg>
 
-      <arg choice="opt">-v</arg>
+      <arg>-v</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 

@@ -26,13 +26,13 @@
     <cmdsynopsis>
       <command>macusers</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
-        <arg choice="plain">-version</arg>
-        <arg choice="plain">--version</arg>
-        <arg choice="plain">-h</arg>
-        <arg choice="plain">-help</arg>
-        <arg choice="plain">--help</arg>
+      <group>
+        <arg>-v</arg>
+        <arg>-version</arg>
+        <arg>--version</arg>
+        <arg>-h</arg>
+        <arg>-help</arg>
+        <arg>--help</arg>
       </group>
 
     </cmdsynopsis>

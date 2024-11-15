@@ -22,15 +22,15 @@
     <cmdsynopsis>
       <command>netatalk</command>
 
-      <arg choice="opt">-F <replaceable>configfile</replaceable></arg>
+      <arg>-F <replaceable>configfile</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>netatalk</command>
 
-      <group choice="plain">
-        <arg choice="plain">-v</arg>
-        <arg choice="plain">-V</arg>
+      <group>
+        <arg>-v</arg>
+        <arg>-V</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>
