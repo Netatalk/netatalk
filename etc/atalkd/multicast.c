@@ -290,25 +290,13 @@ static const unsigned char	ethermultitab[ 253 ][ 6 ] = {
 };
 
 
-
 /* configure multicast for a given named interface */
 int addmulti(const char *name, const unsigned char *data)
 {
-#ifdef NO_DATA_LINK_PASSTHROUGH
-    struct sockaddr_dl sa;
-#else /* NO_DATA_LINK_PASSTHROUGH */
     struct sockaddr sa;
-#endif /* NO_DATA_LINK_PASSTHROUGH */
 
     memset(&sa, 0, sizeof(sa));
-#ifdef NO_DATA_LINK_PASSTHROUGH
-    sa.sdl_family = AF_LINK;
-    memcpy(LLADDR(&sa), data ? data : ethermulti, sizeof(ethermulti));
-    sa.sdl_alen = sizeof(ethermulti);
-    sa.sdl_len = sizeof(sa);
-#else /* NO_DATA_LINK_PASSTHROUGH */
     memcpy(sa.sa_data, data ? data : ethermulti, sizeof(ethermulti));
-#endif /* NO_DATA_LINK_PASSTHROUGH */
     if (ifconfig(name, SIOCADDMULTI, (struct sockaddr_at *)&sa))
       return -1;
 
