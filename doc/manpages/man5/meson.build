@@ -2,10 +2,15 @@ manfiles = [
     'afp_signature.conf.5',
     'afp_voluuid.conf.5',
     'afp.conf.5',
-    'atalkd.conf.5',
     'extmap.conf.5',
-    'papd.conf.5',
 ]
+
+if have_appletalk
+    manfiles += [
+        'atalkd.conf.5',
+        'papd.conf.5',
+    ]
+endif
 
 foreach man : manfiles
     man_xmlfile = configure_file(
