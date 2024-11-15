@@ -1,3 +1,18 @@
+Changes in 4.0.6
+================
+* FIX: Workaround for bug in AppleShare Client 3.7.4, GitHub #1749
+       Only report support of AFP 2.2 and later to DSI (TCP) clients
+       which shaves several bytes off the server response
+       and lowers the chance of >512 byte FPGetSrvrInfo response.
+* UPD: All AppleTalk daemons now take -v to print version info, GitHub #1745
+* FIX: `ad find' can take any kind of string, not just lowercase, GitHub #1751
+* UPD: meson: Default to no init scripts if service management command
+       not found, GitHub #1743
+* FIX: Include config.h by relative path consistently (cleanup) GitHub #1746
+* FIX: Remove duplicate header includes in MySQL CNID backend, GitHub #1748
+* FIX: docs: Fix formatting of afppasswd man page, GitHub #1750
+* FIX: webmin: Properly install netatalk-lib.pl, GitHub #1752
+
 Changes in 4.0.5
 ================
 * UPD: Distribute pre-generated Unicode table sources, GitHub #1724
