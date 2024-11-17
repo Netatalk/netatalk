@@ -77,8 +77,8 @@ options.
 
 Required:
 
-  - Berkeley DB version 4.6.0 or later
-  - libevent 2
+  - Berkeley DB version 4.6.0 or later (packaged as `bdb` or sometimes `db`)
+  - libevent version 2
   - libgcrypt version 1.2.3 or later
 
 Required for Spotlight support:
