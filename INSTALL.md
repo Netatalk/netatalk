@@ -1,6 +1,6 @@
 # Quick start
 
-Netatalk uses the Meson build system.
+Netatalk uses the Meson build system with ninja-build as the backend.
 
 Meson only supports out-of-tree builds, and must be passed a directory to put
 built and generated sources into. We'll call that directory "build" here. It's
