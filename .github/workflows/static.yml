@@ -22,7 +22,7 @@ concurrency:
 jobs:
   deploy:
     environment:
-      name: github-pages
+      name: html-manual
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +33,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends \
             docbook-xsl \
-            file \
             libdb-dev \
             libevent-dev \
             libgcrypt20-dev \
