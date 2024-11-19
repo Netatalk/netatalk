@@ -116,6 +116,7 @@ pre.programlisting, pre.screen {
   color: #993300;
   padding: 2px;
   font-size: 100%;
+  white-space: pre-wrap;
 }
 div.warning {
   border: dashed 1px;
