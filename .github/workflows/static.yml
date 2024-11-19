@@ -42,10 +42,11 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dwith-manual=www \
-            -Dwith-manual-l10n=ja
+            -Dwith-manual=local
       - name: Build
         run: meson compile -C build
+      - name: Prepare Pages
+        run: cp ./doc/manual/netatalk.css ./build/doc/manual/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
