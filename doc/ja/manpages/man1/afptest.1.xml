@@ -235,8 +235,6 @@ Create directory tree with 10^3 dirs                      496 ms</computeroutput
   <refsect1>
     <title>著者</title>
 
-    <para><ulink
-    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
-    を参照</para>
+    <para><ulink url='https://netatalk.io/contributors'>CONTRIBUTORS</ulink> を参照</para>
   </refsect1>
 </refentry>
