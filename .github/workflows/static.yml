@@ -42,6 +42,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
+            -Dwith-appletalk=true \
             -Dwith-manual=local
       - name: Build
         run: meson compile -C build
