@@ -370,11 +370,12 @@ option(
     type: 'combo',
     choices: [
         'none',
-        'local',
-        'www',
+        'local',    # html and troff docs for installation and distribution
+        'man_only', # troff man pages only for installation and distribution
+        'www',      # html for web publishing (project admin use)
     ],
     value: 'local',
-    description: 'Build and install the html manual',
+    description: 'Format of manual to build and install',
 )
 option(
     'with-manual-l10n',
