@@ -18,10 +18,13 @@ if build_xml_docs
     )
 
     subdir('manpages')
-    subdir('manual')
 
-    if 'ja' in get_option('with-manual-l10n')
-        subdir('ja')
+    if get_option('with-manual') != 'man_only'
+        subdir('manual')
+
+        if 'ja' in get_option('with-manual-l10n')
+            subdir('ja')
+        endif
     endif
 endif
 
