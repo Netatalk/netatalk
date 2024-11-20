@@ -55,7 +55,7 @@ Changes in 4.0.4
 * NEW: docs: Create manual page for `afptest' (testsuite) tools, GitHub #1695
 * UPD: docs: Bring CONTRIBUTORS up to date, GitHub #1722
 * UPD: testsuite: Consolidate afp_ls as a command in afparg, GitHub #1705
-       - Add `FPEnumerate <dir>' as an afparg command
+       - Add `FPEnumerate dir' as an afparg command
        - Remove `afp_ls' as a separate executable
 * UPD: testsuite: Merge encoding test into spectest, GitHub #1716
        - Add `Encoding' as a testset in the spectest
