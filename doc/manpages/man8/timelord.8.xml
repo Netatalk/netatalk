@@ -31,8 +31,12 @@
 
     <cmdsynopsis>
       <command>timelord</command>
-      
-      <arg>-v</arg>
+
+      <group>
+        <arg choice="plain">-v</arg>
+
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -84,7 +88,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-v</term>
+        <term>-v | -V</term>
 
         <listitem>
           <para>Print version information and exit.</para>

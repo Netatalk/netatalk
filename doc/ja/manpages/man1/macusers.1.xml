@@ -29,17 +29,17 @@
       <command>macusers</command>
 
       <group>
-        <arg>-v</arg>
+        <arg choice="plain">-v</arg>
 
-        <arg>-version</arg>
+        <arg choice="plain">-version</arg>
 
-        <arg>--version</arg>
+        <arg choice="plain">--version</arg>
 
-        <arg>-h</arg>
+        <arg choice="plain">-h</arg>
 
-        <arg>-help</arg>
+        <arg choice="plain">-help</arg>
 
-        <arg>--help</arg>
+        <arg choice="plain">--help</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

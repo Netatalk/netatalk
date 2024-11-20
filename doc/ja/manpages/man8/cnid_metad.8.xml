@@ -34,9 +34,9 @@
       <command>cnid_metad</command>
 
       <group>
-        <arg>-v</arg>
+        <arg choice="plain">-v</arg>
 
-        <arg>-V</arg>
+        <arg choice="plain">-V</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -47,7 +47,8 @@
     <para><command>cnid_metad</command>は<emphasis
     remap="B">afpd</emphasis>からの要求を待ち、<emphasis
     remap="B">cnid_dbd</emphasis>デーモンのインスタンスを起動する。一度起動した<emphasis
-    remap="B">cnid_dbd</emphasis>インスタンスの状態を絶えず把握し、もし必要なら再起動する。<command>cnid_metad</command>は通常、<command>netatalk</command>(8)によってブート時に起動され、シャットダウンまでずっと動作する。</para>
+    remap="B">cnid_dbd</emphasis>インスタンスの状態を絶えず把握し、もし必要なら再起動する。
+    <command>cnid_metad</command>は通常、<command>netatalk</command>(8)によってブート時に起動され、シャットダウンまでずっと動作する。</para>
   </refsect1>
 
   <refsect1>
@@ -75,7 +76,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-v, -V</option></term>
+        <term><option>-v | -V</option></term>
 
         <listitem>
           <para>バージョンを表示してから終了する。</para>

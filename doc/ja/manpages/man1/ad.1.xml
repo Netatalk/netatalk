@@ -24,15 +24,24 @@
     <cmdsynopsis>
       <command>ad</command>
 
-      <arg choice="req">ls | cp | mv | rm | set</arg>
+      <group>
+        <arg choice="plain">ls</arg>
+        <arg choice="plain">cp</arg>
+        <arg choice="plain">mv</arg>
+        <arg choice="plain">rm</arg>
+        <arg choice="plain">set</arg>
+      </group>
 
-      <arg>...</arg>
+      <arg><replaceable>...</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
       <command>ad</command>
 
-      <arg choice="req">-v | --version</arg>
+      <group>
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">--version</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 

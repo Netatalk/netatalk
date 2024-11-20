@@ -29,8 +29,8 @@
       <command>netatalk</command>
 
       <group>
-        <arg>-v</arg>
-        <arg>-V</arg>
+        <arg choice="plain">-v</arg>
+        <arg choice="plain">-V</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>
