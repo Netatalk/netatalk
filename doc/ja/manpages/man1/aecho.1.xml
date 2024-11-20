@@ -21,15 +21,23 @@
   </refnamediv>
 
   <refsynopsisdiv>
-    <para><command>aecho<indexterm>
+    <cmdsynopsis>
+      <command>aecho<indexterm>
         <primary>aecho</primary>
       </indexterm><indexterm>
         <primary>AEP</primary>
 
         <secondary>Apple Echo Protocol</secondary>
-      </indexterm></command> [ <option>-c</option><replaceable>
-    count</replaceable> ] ( <command>address</command> |
-    <command>nbpname</command> )</para>
+      </indexterm></command>
+
+      <arg>-c <replaceable>count</replaceable></arg>
+
+      <group>
+        <arg choice="plain"><replaceable>address</replaceable></arg>
+
+        <arg choice="plain"><replaceable>nbpname</replaceable></arg>
+      </group>
+    </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1>

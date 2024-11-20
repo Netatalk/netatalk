@@ -27,9 +27,9 @@
         </indexterm></command>
 
       <group>
-        <arg>-m</arg>
+        <arg choice="plain">-m</arg>
 
-        <arg>-l</arg>
+        <arg choice="plain">-l</arg>
       </group>
 
       <arg><replaceable>address</replaceable></arg>

@@ -27,8 +27,15 @@
       <arg>-d</arg>
 
       <arg>-n <replaceable>nbpname</replaceable></arg>
+    </cmdsynopsis>
 
-      <arg>-v</arg>
+    <cmdsynopsis>
+      <command>a2boot</command>
+      <group>
+        <arg choice="plain">-v</arg>
+
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -83,7 +90,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-v</term>
+        <term>-v | -V</term>
 
         <listitem>
           <para>バージョン情報を出力して終了します。</para>

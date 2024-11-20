@@ -24,12 +24,12 @@
     <cmdsynopsis>
       <command>apple_dump</command>
 
-      <arg><arg>-a</arg></arg>
+      <arg>-a</arg>
 
       <group>
-        <arg><replaceable>FILE</replaceable></arg>
+        <arg choice="plain"><replaceable>FILE</replaceable></arg>
 
-        <arg><replaceable>DIR</replaceable></arg>
+        <arg choice="plain"><replaceable>DIR</replaceable></arg>
       </group>
     </cmdsynopsis>
 
@@ -39,9 +39,9 @@
       <arg>-e</arg>
 
       <group>
-        <arg><replaceable>FILE</replaceable></arg>
+        <arg choice="plain"><replaceable>FILE</replaceable></arg>
 
-        <arg><replaceable>DIR</replaceable></arg>
+        <arg choice="plain"><replaceable>DIR</replaceable></arg>
       </group>
     </cmdsynopsis>
 
@@ -65,11 +65,11 @@
       <command>apple_dump</command>
 
       <group>
-        <arg>-h</arg>
+        <arg choice="plain">-h</arg>
 
-        <arg>-help</arg>
+        <arg choice="plain">-help</arg>
 
-        <arg>--help</arg>
+        <arg choice="plain">--help</arg>
       </group>
     </cmdsynopsis>
 
@@ -77,11 +77,11 @@
       <command>apple_dump</command>
 
       <group>
-        <arg>-v</arg>
+        <arg choice="plain">-v</arg>
 
-        <arg>-version</arg>
+        <arg choice="plain">-version</arg>
 
-        <arg>--version</arg>
+        <arg choice="plain">--version</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

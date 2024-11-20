@@ -25,9 +25,9 @@
       <command>asip-status</command>
 
       <group>
-        <arg>-4</arg>
+        <arg choice="plain">-4</arg>
 
-        <arg>-6</arg>
+        <arg choice="plain">-6</arg>
       </group>
 
       <arg>-d</arg>
@@ -45,9 +45,9 @@
       <command>asip-status</command>
 
       <group>
-        <arg>-4</arg>
+        <arg choice="plain">-4</arg>
 
-        <arg>-6</arg>
+        <arg choice="plain">-6</arg>
       </group>
 
       <arg>-d</arg>
@@ -65,11 +65,11 @@
       <command>asip-status</command>
 
       <group>
-        <arg>-v</arg>
+        <arg choice="plain">-v</arg>
 
-        <arg>-version</arg>
+        <arg choice="plain">-version</arg>
 
-        <arg>--version</arg>
+        <arg choice="plain">--version</arg>
       </group>
     </cmdsynopsis>
   </refsynopsisdiv>

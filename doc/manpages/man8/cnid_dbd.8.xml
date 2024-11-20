@@ -26,10 +26,11 @@
     <cmdsynopsis>
       <command>cnid_dbd</command>
 
-        <group>
-          <arg>-v</arg>
-          <arg>-V</arg>
-        </group>
+      <group>
+        <arg choice="plain">-v</arg>
+
+        <arg choice="plain">-V</arg>
+      </group>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -98,7 +99,7 @@
 
     <variablelist remap="TP">
       <varlistentry>
-        <term><option>-v, -V</option></term>
+        <term><option>-v | -V</option></term>
 
         <listitem>
           <para>Show version and exit.</para>
