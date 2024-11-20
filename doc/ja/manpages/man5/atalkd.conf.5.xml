@@ -174,8 +174,6 @@ le1 -seed -net 9461-9471 -zone netatalk -zone Argus</programlisting></para>
   <refsect1>
     <title>著者</title>
 
-    <para><ulink
-    url="https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTORS">CONTRIBUTORS</ulink>
-    を参照</para>
+    <para><ulink url='https://netatalk.io/contributors'>CONTRIBUTORS</ulink> を参照</para>
   </refsect1>
 </refentry>
