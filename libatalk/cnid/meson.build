@@ -14,6 +14,12 @@ if use_mysql_backend
     libcnid_deps += mysql_deps
 endif
 
+if use_sqlite_backend
+    subdir('sqlite')
+    libcnid_libs += libcnid_sqlite
+    libcnid_deps += sqlite_deps
+endif
+
 cnid_sources = ['cnid_init.c', 'cnid.c']
 
 libcnid = static_library(
