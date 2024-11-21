@@ -73,9 +73,13 @@ endif
 
 if have_quota
     afpd_sources += [
-        'nfsquota.c',
         'quota.c',
     ]
+    if not have_libquota
+        afpd_sources += [
+            'nfsquota.c',
+        ]
+    endif
     afpd_external_deps += quota_deps
 endif
 

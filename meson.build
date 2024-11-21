@@ -971,6 +971,7 @@ tirpc = dependency('libtirpc', required: false)
 
 quota_deps = []
 quota_provider = ''
+have_libquota = false
 
 rpc_headers = [
     'rpc/rpc.h',
@@ -1017,7 +1018,8 @@ else
         if have_quota
             quota_deps += rpcsvc
             quota_provider += 'SunRPC'
-            if quota.found() and cc.has_function('getfsquota', dependencies: [quota, prop, rpcsvc])
+            if quota.found() and cc.has_function('quota_open', dependencies: [quota, prop, rpcsvc])
+                have_libquota = true
                 quota_deps += [quota, prop]
                 cdata.set('HAVE_LIBQUOTA', 1)
             endif

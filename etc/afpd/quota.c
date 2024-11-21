@@ -32,6 +32,7 @@
 #include <atalk/util.h>
 
 #include "auth.h"
+#include "directory.h"
 #include "volume.h"
 #include "unix.h"
 

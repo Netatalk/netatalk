@@ -56,9 +56,13 @@ endif
 
 if have_quota
     test_sources += [
-        meson.project_source_root() / 'etc/afpd/nfsquota.c',
         meson.project_source_root() / 'etc/afpd/quota.c',
     ]
+    if not have_libquota
+        test_sources += [
+            meson.project_source_root() / 'etc/afpd/nfsquota.c',
+        ]
+    endif
     test_external_deps += quota_deps
 endif
 
