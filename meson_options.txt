@@ -217,7 +217,7 @@ option(
     'with-bdb-version',
     type: 'string',
     value: '',
-    description: 'Set installed Berkeley DB version to link against',
+    description: 'Set installed Berkeley DB version x.y (major.minor) to link against',
 )
 option(
     'with-cracklib-path',
