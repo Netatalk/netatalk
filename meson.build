@@ -2010,7 +2010,11 @@ int main(void) {
 }
 '''
 
-    have_tcpwrap = wrap.found() and cc.links(tcpwrap_code, args: '-lwrap')
+    # *BSD have tcpwrappers support in libc
+    have_tcpwrap = wrap.found() and cc.links(tcpwrap_code)
+    if not have_tcpwrap
+	have_tcpwrap = wrap.found() and cc.links(tcpwrap_code, args: '-lwrap')
+    endif
     if not have_tcpwrap
         have_tcpwrap = cc.links(tcpwrap_code, args: ['-lwrap', '-lnsl'])
     endif
