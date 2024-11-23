@@ -1739,17 +1739,24 @@ endif
 
 enable_shadow = get_option('with-shadow')
 
-if not enable_shadow
+if host_os in ['darwin', 'dragonfly', 'freebsd', 'netbsd', 'openbsd']
+    have_shadow = false
+elif not enable_shadow
     have_shadow = false
 else
     have_shadow = (cc.has_header('shadow.h'))
     if have_shadow
         cdata.set('SHADOWPW', 1)
-        uams_options += 'shadow'
     else
         have_shadow = false
         warning('Shadow password support requested but required header not found')
     endif
+endif
+
+if have_shadow
+    uams_options += 'shadow'
+else
+    uams_options += 'passwd'
 endif
 
 #
