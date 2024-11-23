@@ -585,7 +585,6 @@ jobs:
             set -e
             meson setup build \
               -Dbuildtype=release \
-              -Dpkg_config_path=/usr/pkg/lib/pkgconfig \
               -Dwith-appletalk=true \
               -Dwith-dtrace=false \
               -Dwith-krbV-uam=false \
