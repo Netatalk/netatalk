@@ -1,6 +1,10 @@
 if build_xml_docs
     if get_option('with-manual') == 'www'
         input_file = 'html-www.xsl.in'
+        python = find_program('python3', required: false)
+        if python.found()
+            run_command(python, 'generate_compile_docs.py')
+        endif
     else
         input_file = 'html.xsl.in'
     endif

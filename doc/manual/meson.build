@@ -98,10 +98,12 @@ custom_target(
         '@INPUT@',
     ],
     install: true,
-    install_dir: datadir / 'doc/netatalk/htmldocs',
+    install_dir: manual_install_path,
 )
 
-install_data(
-    'netatalk.css',
-    install_dir: datadir / 'doc/netatalk/htmldocs',
-)
+if get_option('with-manual') == 'local'
+    install_data(
+        'netatalk.css',
+        install_dir: manual_install_path,
+    )
+endif
