@@ -298,6 +298,12 @@ option(
     description: 'Set path to PAM config directory',
 )
 option(
+    'with-perl-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to directory that containts the perl runtime binary',
+)
+option(
     'with-pkgconfdir-path',
     type: 'string',
     value: '',

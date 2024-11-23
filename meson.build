@@ -200,7 +200,6 @@ endif
 
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
-perl = find_program('perl', required: false)
 uname = find_program('uname', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
 
@@ -573,6 +572,18 @@ if not have_bdb
         msg = 'Berkeley DB library required but not found!'
     endif
     error(msg, 'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)')
+endif
+
+#
+# Check for Perl
+#
+
+perl_path = get_option('with-perl-path')
+
+if perl_path == ''
+    perl = find_program('perl', required: false)
+else
+    perl = find_program(perl_path / 'perl', required: false)
 endif
 
 #
