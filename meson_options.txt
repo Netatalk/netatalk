@@ -280,6 +280,12 @@ option(
     description: 'Set path to Netatalk lockfile',
 )
 option(
+    'with-manual-install-path',
+    type: 'string',
+    value: '',
+    description: 'Set path where to install manual html pages',
+)
+option(
     'with-pam-path',
     type: 'string',
     value: '',

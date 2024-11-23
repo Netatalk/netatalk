@@ -101,6 +101,12 @@ else
     homedir = '/home'
 endif
 
+manual_install_path = get_option('with-manual-install-path')
+
+if manual_install_path == ''
+    manual_install_path = datadir / 'doc/netatalk/htmldocs'
+endif
+
 ##################
 # Compiler flags #
 ##################
