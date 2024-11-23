@@ -1232,10 +1232,10 @@ dbus_daemonpath = ''
 if dbus_daemon_path != ''
     dbus_daemonpath += dbus_daemon_path
     cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemon_path + '"')
-elif host_os == 'darwin'
+elif fs.exists(bindir / 'dbus-daemon')
     dbus_daemonpath += bindir / 'dbus-daemon'
     cdata.set('DBUS_DAEMON_PATH', '"' + bindir / 'dbus-daemon' + '"')
-else
+elif dbus.found()
     dbus_daemonpath += '/bin/dbus-daemon'
     cdata.set('DBUS_DAEMON_PATH', '"/bin/dbus-daemon"')
 endif
@@ -1250,7 +1250,7 @@ dbus_sysconfpath = ''
 if dbus_sysconf_path != ''
     dbus_sysconfpath += dbus_sysconf_path
     cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
-else
+elif dbus.found()
     dbus_sysconfpath += datadir / 'dbus-1/system.d'
     cdata.set('DBUS_SYS_DIR', '"' + datadir + '/dbus-1/system.d' + '"')
 endif

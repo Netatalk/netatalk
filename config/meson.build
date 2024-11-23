@@ -4,12 +4,6 @@ afp_conf = configure_file(
     configuration: cdata,
 )
 
-dbus_session_conf = configure_file(
-    input: 'dbus-session.conf.in',
-    output: 'dbus-session.conf',
-    configuration: cdata,
-)
-
 if (
     fs.exists(pkgconfdir / 'afp.conf')
     and not get_option('with-overwrite')
@@ -19,22 +13,32 @@ else
     install_data(afp_conf, install_dir: pkgconfdir)
 endif
 
-if (
-    fs.exists(pkgconfdir / 'dbus-session.conf')
-    and not get_option('with-overwrite')
-)
-    message('will not replace existing', pkgconfdir / 'dbus-session.conf')
-else
-    install_data(dbus_session_conf, install_dir: pkgconfdir)
+if have_spotlight
+    dbus_session_conf = configure_file(
+        input: 'dbus-session.conf.in',
+        output: 'dbus-session.conf',
+        configuration: cdata,
+    )
+
+    if (
+        fs.exists(pkgconfdir / 'dbus-session.conf')
+        and not get_option('with-overwrite')
+    )
+        message('will not replace existing', pkgconfdir / 'dbus-session.conf')
+    else
+        install_data(dbus_session_conf, install_dir: pkgconfdir)
+    endif
 endif
 
-if (
-    fs.exists(dbus_sysconfpath / 'netatalk-dbus.conf')
-    and not get_option('with-overwrite')
-)
-    message('will not replace existing', dbus_sysconfpath / 'netatalk-dbus.conf')
-else
-    install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
+if have_afpstats
+    if (
+        fs.exists(dbus_sysconfpath / 'netatalk-dbus.conf')
+        and not get_option('with-overwrite')
+    )
+        message('will not replace existing', dbus_sysconfpath / 'netatalk-dbus.conf')
+    else
+        install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
+    endif
 endif
 
 static_conf_files = ['extmap.conf']
