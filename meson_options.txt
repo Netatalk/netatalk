@@ -228,7 +228,7 @@ option(
 option(
     'with-dbus-daemon-path',
     type: 'string',
-    value: '/bin/dbus-daemon',
+    value: '',
     description: 'Set path to D-Bus daemon',
 )
 option(
