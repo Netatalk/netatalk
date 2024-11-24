@@ -16,7 +16,6 @@ webmin_files = [
     'save_print.cgi',
     'save_vol_section.cgi',
     'server_status.cgi',
-    'show_atalk.cgi',
     'show_users.cgi',
 ]
 

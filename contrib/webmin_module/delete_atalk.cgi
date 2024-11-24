@@ -44,7 +44,7 @@ eval {
 		}
 	}
 
-	redirect("show_atalk.cgi");
+	redirect("index.cgi");
 };
 if($@) {
 	# in case the block above has been exited through "die": output error message

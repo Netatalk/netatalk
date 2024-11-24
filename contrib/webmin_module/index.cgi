@@ -22,6 +22,11 @@
 require 'netatalk-lib.pl';
 use File::Basename;
 
+my @tabs = ( [ 'global', $text{'index_tab_global'} ],
+             [ 'ddp', $text{'index_tab_ddp'} ],
+             [ 'fileserver', $text{'index_tab_fileserver'} ]
+            );
+
 ui_print_header(&text('index_version', version()), $text{'index_title'}, "", "configs", 1, 1);
 
 # check if netatalk daemon's path is configured correctly, if not: print error then exit
@@ -40,40 +45,8 @@ if($@) {
 	exit;
 }
 
-# Volumes
-print "<h3>$text{index_volumes}</h3>\n";
-my @volume_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume\">$text{'index_create_volume_link_name'}</a>" );
-if(@{$$afpconf{volumeSections}}) {
-	unshift @volume_links, (
-		&select_all_link('section_index', $current_formindex),
-		&select_invert_link('section_index', $current_formindex)
-	) if(@{$$afpconf{volumeSections}} > 1);
-	print &ui_form_start('delete_sections.cgi', 'post', undef, "id='volumes'");
-	print &ui_columns_start( [
-			'',
-			$text{'index_col_title_vol_name'},
-			$text{'index_col_title_path'},
-			$text{'index_col_title_uses_preset'}
-		], undef, 0, undef, undef
-	);
-	foreach $volumeSection (@{$$afpconf{volumeSections}}) {
-		print &ui_columns_row( [
-				&ui_checkbox('section_index', $$volumeSection{'index'}),
-				"<a href=\"edit_vol_section.cgi?action=edit_volume&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
-				$$volumeSection{parameters}{'path'}{value},
-				$$volumeSection{parameters}{'vol preset'}{value}
-		], [ "width='20'" ]);
-	}
-	print &ui_columns_end();
-	print &ui_links_row(\@volume_links);
-	print &ui_form_end([[undef, $text{'index_delete_volumes_button_title'}, 0, undef]]);
-	$current_formindex += 1;
-} else {
-	print "<b>$text{'index_no_volumes'}</b>\n";
-	print "<p>\n";
-	print &ui_links_row(\@volume_links);
-}
-print &ui_hr();
+print &ui_tabs_start(\@tabs, 'mode', 'fileserver');
+print &ui_tabs_start_tab('mode', 'global');
 
 # Volume presets
 print "<h3>$text{index_volume_presets}</h3>\n";
@@ -135,33 +108,153 @@ if($$afpconf{sectionsByName}{'Homes'}) {
 	print "<p>\n";
 	print &ui_links_row( ["<a href=\"edit_vol_section.cgi?action=new_homes\">$text{'index_create_homes_link_name'}</a>"] );
 }
-print &ui_hr();
 
 print"<h3>$text{index_global}</h3>\n";
 
-my @links = (
+my @links_g = (
 	"edit_global_section.cgi",
-	"show_atalk.cgi",
-	"edit_print.cgi",
-	"show_users.cgi",
-	"server_status.cgi"
+	"edit_print.cgi"
 );
-my @titles = (
+my @titles_g = (
 	$text{'index_icon_text_server'},
-	$text{'index_icon_text_atalk'},
-	$text{'index_icon_text_print'},
-	$text{'index_icon_text_users'},
-	$text{'index_icon_text_capabilities'}
+	$text{'index_icon_text_print'}
 );
-my @icons = (
+my @icons_g = (
 	"images/server.gif",
-	"images/ifcs.gif",
-	"images/printer.gif",
-	"images/users.gif",
-	"images/inspect.gif"
+	"images/printer.gif"
 );
-icons_table(\@links, \@titles, \@icons, 5);
+icons_table(\@links_g, \@titles_g, \@icons_g);
 
+print &ui_tabs_end_tab('mode', 'global');
+
+print &ui_tabs_start_tab('mode', 'ddp');
+
+my @atalk_ifs = getAtalkIfs();
+
+print "<h3>$text{index_show_atalk_title}</h3>\n";
+print "<p>$text{'show_atalk_notice'}</p>";
+my @atalk_links = ( "<a href=\"edit_atalk.cgi?action=create\">$text{'index_create_atalk'}</a>" );
+
+if (@atalk_ifs) {
+	unshift @atalk_links, (
+		&select_all_link('section_index', 1),
+		&select_invert_link('section_index', 1)
+	);
+	print &ui_form_start('delete_atalk.cgi', 'POST');
+	print &ui_columns_start([
+			'',
+			$text{'show_atalk_iface'},
+			$text{'show_atalk_routing'},
+			$text{'show_atalk_phase'},
+			$text{'show_atalk_net'},
+			$text{'show_atalk_addr'},
+			$text{'show_atalk_zone'}
+		], undef, 0, undef, undef);
+        my $index = 0;
+	foreach $if (@atalk_ifs) {
+		print &ui_columns_row([
+			&ui_checkbox('section_index', $if->{atalk_iface}),
+			"<a href=\"edit_atalk.cgi?action=edit&index=".$index."\">"
+			.$if->{atalk_iface}."</a>",
+			$if->{atalk_routing} ? $if->{atalk_routing} : $text{'index_value_not_set'},
+			$if->{atalk_phase} ? $if->{atalk_phase} : $text{'index_value_not_set'},
+			$if->{atalk_net} ? $if->{atalk_net} : $text{'index_value_not_set'},
+			$if->{atalk_addr} ? $if->{atalk_addr} : $text{'index_value_not_set'},
+			$if->{atalk_zone} ? $if->{atalk_zone} : $text{'index_value_not_set'}
+		], [ "width='20'" ]);
+                $index++;
+	}
+	print &ui_columns_end();
+	print &ui_links_row(\@atalk_links);
+	print &ui_form_end([[undef, $text{'index_delete_atalk_ifs'}, 0, undef]]);
+} else {
+	print "<p><b>$text{'index_no_atalk_ifs'}</b></p>\n";
+	print &ui_links_row(\@atalk_links);
+}
+
+my @daemons = (
+	{basename($config{atalkd_d}) => $text{index_process_atalkd}},
+	{basename($config{papd_d}) => $text{index_process_papd}},
+	{basename($config{timelord_d}) => $text{index_process_timelord}},
+	{basename($config{a2boot_d}) => $text{index_process_a2boot}}
+);
+
+print "<h3>$text{'index_appletalk_services'}</h3>\n";
+print "<p>$text{'index_appletalk_services_notice'}</p>";
+
+foreach my $daemon (@daemons) {
+	foreach my $d (keys %$daemon) {
+		if (-x $config{$d.'_d'}) {
+			if (&find_byname($config{$d.'_d'})) {
+				print "<h3>".&text('index_running_service', $daemon->{$d})."</h3>\n";
+				print &ui_buttons_start();
+				print &ui_buttons_row(
+					'control.cgi?action=restart&daemon='.$d,
+					&text('running_restart_daemon', $daemon->{$d}),
+					&text('index_process_control_restart_daemon', $d)
+				);
+				print &ui_buttons_row(
+					'control.cgi?action=stop&daemon='.$d,
+					&text('running_stop_daemon', $daemon->{$d}),
+					&text('index_process_control_stop_daemon', $d)
+				);
+				print &ui_buttons_end();
+				$current_formindex += 2;
+			} else {
+				print "<h3>".&text('index_not_running', $daemon->{$d})."</h3>\n";
+				print &ui_buttons_start();
+				print &ui_buttons_row(
+					'control.cgi?action=start&daemon='.$d,
+					&text('running_start_daemon', $daemon->{$d}),
+					&text('index_process_control_start_daemon', $d)
+				);
+				print &ui_buttons_end();
+				$current_formindex += 1;
+			}
+		}
+		else {
+			print "<p>".&text('index_daemon_not_found', $d)."</p>";
+		}
+	}
+}
+
+print &ui_tabs_end_tab('mode', 'ddp');
+
+print &ui_tabs_start_tab('mode', 'fileserver');
+
+# Volumes
+print "<h3>$text{index_volumes}</h3>\n";
+my @volume_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume\">$text{'index_create_volume_link_name'}</a>" );
+if(@{$$afpconf{volumeSections}}) {
+	unshift @volume_links, (
+		&select_all_link('section_index', $current_formindex),
+		&select_invert_link('section_index', $current_formindex)
+	) if(@{$$afpconf{volumeSections}} > 1);
+	print &ui_form_start('delete_sections.cgi', 'post', undef, "id='volumes'");
+	print &ui_columns_start( [
+			'',
+			$text{'index_col_title_vol_name'},
+			$text{'index_col_title_path'},
+			$text{'index_col_title_uses_preset'}
+		], undef, 0, undef, undef
+	);
+	foreach $volumeSection (@{$$afpconf{volumeSections}}) {
+		print &ui_columns_row( [
+				&ui_checkbox('section_index', $$volumeSection{'index'}),
+				"<a href=\"edit_vol_section.cgi?action=edit_volume&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
+				$$volumeSection{parameters}{'path'}{value},
+				$$volumeSection{parameters}{'vol preset'}{value}
+		], [ "width='20'" ]);
+	}
+	print &ui_columns_end();
+	print &ui_links_row(\@volume_links);
+	print &ui_form_end([[undef, $text{'index_delete_volumes_button_title'}, 0, undef]]);
+	$current_formindex += 1;
+} else {
+	print "<b>$text{'index_no_volumes'}</b>\n";
+	print "<p>\n";
+	print &ui_links_row(\@volume_links);
+}
 print &ui_hr();
 
 # since we are using a different number of forms, depending on the status of the service,
@@ -196,55 +289,19 @@ if(&find_byname($config{'netatalk_d'})) {
 	$current_formindex += 1;
 }
 
-print &ui_hr();
+my @links_f = (
+	"server_status.cgi",
+	"show_users.cgi"
+);
+my @titles_f = (
+	$text{'index_icon_text_capabilities'},
+	$text{'index_icon_text_users'}
+);
+my @icons_f = (
+	"images/inspect.gif",
+	"images/users.gif"
+);
+icons_table(\@links_f, \@titles_f, \@icons_f);
 
-# Show process control buttons for AppleTalk services
-# only if atalkd init commands are defined.
-if ($config{'start_atalkd'} && $config{'stop_atalkd'} && $config{'restart_atalkd'}) {
-
-	my @daemons = (
-		{basename($config{atalkd_d}) => $text{index_process_atalkd}},
-		{basename($config{papd_d}) => $text{index_process_papd}},
-		{basename($config{timelord_d}) => $text{index_process_timelord}},
-		{basename($config{a2boot_d}) => $text{index_process_a2boot}}
-	);
-
-	print "<h3>$text{'index_appletalk_services'}</h3>\n";
-	print "<p>$text{'index_appletalk_services_notice'}</p>";
-
-	foreach my $daemon (@daemons) {
-		foreach my $d (keys %$daemon) {
-			if (-x $config{$d.'_d'}) {
-				if (&find_byname($config{$d.'_d'})) {
-					print "<h3>".&text('index_running_service', $daemon->{$d})."</h3>\n";
-					print &ui_buttons_start();
-					print &ui_buttons_row(
-						'control.cgi?action=restart&daemon='.$d,
-						&text('running_restart_daemon', $daemon->{$d}),
-						&text('index_process_control_restart_daemon', $d)
-					);
-					print &ui_buttons_row(
-						'control.cgi?action=stop&daemon='.$d,
-						&text('running_stop_daemon', $daemon->{$d}),
-						&text('index_process_control_stop_daemon', $d)
-					);
-					print &ui_buttons_end();
-					$current_formindex += 2;
-				} else {
-					print "<h3>".&text('index_not_running', $daemon->{$d})."</h3>\n";
-					print &ui_buttons_start();
-					print &ui_buttons_row(
-						'control.cgi?action=start&daemon='.$d,
-						&text('running_start_daemon', $daemon->{$d}),
-						&text('index_process_control_start_daemon', $d)
-					);
-					print &ui_buttons_end();
-					$current_formindex += 1;
-				}
-			}
-			else {
-				print "<p>".&text('index_daemon_not_found', $d)."</p>";
-			}
-		}
-	}
-}
+print &ui_tabs_end_tab('mode', 'fileserver');
+print &ui_tabs_end();

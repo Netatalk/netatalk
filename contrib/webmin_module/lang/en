@@ -18,23 +18,26 @@ index_version=Version $1
 index_ever=The $1 program was not found on your system. Either Netatalk is not installed, or your <a href='$2'> module configuration</a> is incorrect.
 
 init_failed=Command "$1" failed
-
 delete_failed=Could not delete file
 not_valid_path=Not Valid Path
 no_path=No Path
 
-index_filesharing_services=File Sharing Services
-index_appletalk_services=AppleTalk Services
-index_appletalk_services_notice=<em>Note:</em> Start <strong>AppleTalk Network Manager</strong> first if you want the other services made available over AppleTalk, including the AFP File Server.
+index_tab_global=Global Settings
+index_tab_ddp=DDP Services
+index_tab_fileserver=File Sharing Services
+
+index_filesharing_services=File Sharing Service Control
+index_appletalk_services=DDP (AppleTalk) Service Control
+index_appletalk_services_notice=<em>Note:</em> Start <strong>Network Manager</strong> before any other services, including <code>netatalk</code>.
 index_daemon_not_found=<code>$1</code> not found. Have you configured the daemon path correctly?
 index_process_control_restart_daemon=Restarts the <code>$1</code> daemon
 index_process_control_start_daemon=Starts the <code>$1</code> daemon
 index_process_control_stop_daemon=Stops the <code>$1</code> daemon
 
-index_process_atalkd=AppleTalk Network Manager
+index_process_atalkd=Network Manager
 index_process_papd=Print Server
 index_process_timelord=Time Server
-index_process_a2boot=Apple II Netboot Server
+index_process_a2boot=Apple II Network Boot Server
 
 running_restart=Restart AFP File Server
 running_start=Start AFP File Server
@@ -45,33 +48,31 @@ running_stop_daemon=Stop $1
 
 index_global=Global Configurations and Options
 index_volumes=Volumes
-index_create_volume_link_name=Create new volume.
+index_create_volume_link_name=Create new volume
 index_delete_volumes_button_title=Delete selected volumes
-index_no_volumes=No volumes defined.
+index_no_volumes=No volumes defined
 index_col_title_vol_name=Volume name
 index_col_title_path=Path
 index_col_title_uses_preset=Uses preset
 
 index_volume_presets=Volume Presets
-index_create_volume_preset_link_name=Create new volume preset.
+index_create_volume_preset_link_name=Create new volume preset
 index_delete_volume_presets_button_title=Delete selected volume presets
-index_no_volume_presets=No volume presets defined.
+index_no_volume_presets=No volume presets defined
 index_col_title_preset_name=Preset name
 index_col_title_used_by=Used by
 
 index_homes=User Home Volumes
-index_create_homes_link_name=Create settings for home volumes.
+index_create_homes_link_name=Create settings for home volumes
 index_delete_homes_button_title=Delete home volume settings
-index_no_homes=No user home volumes defined.
+index_no_homes=No user home volumes defined
 index_col_title_basedir_regex=Base directory regex
 index_col_title_home_path=Relative path in home
 index_col_title_home_name=Home volume name
 index_value_not_set=<i>not set</i>
 
 index_icon_text_server=Edit Server Options
-index_atalk=Manage AppleTalk Interfaces
 index_print=Manage Print Server
-index_icon_text_atalk=Edit AppleTalk Interfaces
 index_icon_text_print=Edit Print Server Configuration
 index_icon_text_users=Manage Connected Users
 index_icon_text_capabilities=Show Server Status
@@ -169,9 +170,9 @@ edit_global_section_log_level=Log level
 edit_global_section_log_microseconds=Log microsecond timestamps
 edit_global_section_zeroconf=Enable service discovery (Zeroconf)
 edit_global_section_zeroconf_name=Server name (Zeroconf)
-edit_global_section_appletalk=Enable AppleTalk
-edit_global_section_spotlight=Enable Spotlight
-edit_global_section_afpstats=Allow afpstats tool
+edit_global_section_appletalk=Enable AppleTalk (DDP)
+edit_global_section_spotlight=Enable Spotlight support
+edit_global_section_afpstats=Enable AFP stats over D-Bus
 edit_global_section_mimic_model=Mounted volume icon
 edit_global_section_mimic_model_help=Examples: Laptop, RackMount, Tower
 edit_global_section_legacy_icon=Mounted volume icon (Classic Mac OS)
@@ -271,7 +272,6 @@ edit_groups=Groups
 edit_undefined=Leave undefined
 edit_default=default
 
-show_atalk_title=AppleTalk Interfaces
 show_atalk_notice=<em>Note:</em> When <code>atalkd</code> starts up, it attempts to autodetect available interfaces and may rewrite these settings.
 show_atalk_iface=Interface
 show_atalk_addr=Address
@@ -281,25 +281,25 @@ show_atalk_phase=Phase
 show_atalk_zone=Zone
 
 index_delete_atalk_ifs=Delete selected interfaces
-index_no_atalk_ifs=No AppleTalk interfaces configured
-index_show_atalk_title=Manage AppleTalk network interfaces
+index_no_atalk_ifs=No network interfaces configured
+index_show_atalk_title=Manage network interfaces
 index_create_atalk=Create new interface
 
-edit_atalk_title=Edit AppleTalk Interface
-edit_atalk_new_title=Create new AppleTalk Interface
-edit_atalk_table_heading=AppleTalk options
+edit_atalk_title=Edit DDP Interface
+edit_atalk_new_title=Create new Interface
+edit_atalk_table_heading=DDP options
 edit_atalk_iface=Network interface
 edit_atalk_iface_help=Confirm available Network Interfaces (new tab)
-edit_atalk_addr=AppleTalk address
+edit_atalk_addr=DDP address
 edit_atalk_addr_help=example: 77.7
-edit_atalk_net=AppleTalk net range
+edit_atalk_net=DDP net range
 edit_atalk_net_help=example: 9461-9471
-edit_atalk_routing=AppleTalk routing
+edit_atalk_routing=Routing
 edit_atalk_routing_dontroute=disabled (dontroute)
 edit_atalk_routing_route=single interface (route)
 edit_atalk_routing_seed=multiple interfaces (seed)
-edit_atalk_phase=AppleTalk phase
-edit_atalk_zone=AppleTalk zone
+edit_atalk_phase=Phase
+edit_atalk_zone=Zone
 
 manual_title=Edit Directives
 manual_file=Edit File:
