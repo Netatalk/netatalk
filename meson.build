@@ -86,13 +86,6 @@ if statedir_override != ''
     localstatedir = statedir_override
 endif
 
-spooldir = get_option('localstatedir') / 'spool' / 'netatalk'
-
-spooldir_override = get_option('with-spooldir')
-if spooldir_override != ''
-    spooldir = spooldir_override
-endif
-
 if host_os == 'darwin'
     homedir = '/Users'
 elif host_os == 'sunos'
@@ -954,12 +947,20 @@ libevent = dependency(
 
 cups = dependency('cups', required: false)
 cups_config = find_program('cups-config', required: false)
+spooldir = ''
 
-if not (get_option('with-appletalk') or get_option('with-cups'))
+if not get_option('with-appletalk')
     have_cups = false
     spooldir_required = false
     cdata.set('DISABLE_SPOOL', 1)
 else
+    spooldir = get_option('localstatedir') / 'spool' / 'netatalk'
+
+    spooldir_override = get_option('with-spooldir')
+    if spooldir_override != ''
+        spooldir = spooldir_override
+    endif
+
     have_cups = cups.found() and cups_config.found()
     if have_cups
         spooldir_required = true
