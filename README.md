@@ -1,11 +1,20 @@
 # About Netatalk
 
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
+[![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 [![Project releases](https://img.shields.io/github/release/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/releases)
-[![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
+[![Downloads](https://img.shields.io/github/downloads/Netatalk/netatalk/total)](https://github.com/Netatalk/netatalk/releases)
 [![Project contributors](https://img.shields.io/github/contributors/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/contributors)
+[![Monthly commits](https://img.shields.io/github/commit-activity/m/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/commit-activity)
+[![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
+[![Docker pulls](https://img.shields.io/docker/pulls/netatalk/netatalk?logo=docker&logoColor=white)](https://hub.docker.com/r/netatalk/netatalk)
+[![Image size](https://img.shields.io/docker/image-size/netatalk/netatalk?logo=docker&logoColor=white&sort=semver)](https://hub.docker.com/r/netatalk/netatalk)
+[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=ncloc)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
+[![Security](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=security_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=duplicated_lines_density)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![License: GPL v2](https://img.shields.io/github/license/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/blob/main/COPYING)
-[<img src="https://sonarcloud.io/images/project_badges/sonarcloud-orange.svg" height="22" />](https://sonarcloud.io/summary/overall?id=Netatalk_netatalk)
 
 Netatalk is a Free and Open Source file server that implements the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) 3.4 over TCP/IP and AppleTalk.
 AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X, as well as one of several supported protocols on macOS.
