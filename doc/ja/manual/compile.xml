@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-11-05</pubdate>
+		<pubdate>2024-11-24</pubdate>
 	</appendixinfo>
 	<title>ソースコードから Netatalk をコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -249,7 +249,7 @@ asip-status localhost
 			<title>macOS</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>brew install berkeley-db cmark-gfm docbook-xsl libxslt meson mysql talloc
+				<screen>brew install berkeley-db cmark-gfm dbus docbook-xsl libxslt meson mysql talloc
 </screen>
 			</para>
 			<para>Configure</para>
@@ -341,13 +341,13 @@ ninja -C build uninstall
 			<title>NetBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>pkg_add avahi bison db5 docbook-xsl flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt libxslt meson mysql-client p5-Net-DBus perl pkg-config talloc tex-unicode-data
+				<screen>pkg_add bison db5 docbook-xsl flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt libxslt meson mysql-client p5-Net-DBus perl pkg-config talloc tex-unicode-data
 </screen>
 			</para>
 			<para>コンフィグレーションとビルド</para>
 			<para>
 				<screen>set -e
-meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/pkg/lib/pkgconfig -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-krbV-uam=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-krbV-uam=false -Dwith-tests=true
 meson compile -C build
 cd build
 meson test
