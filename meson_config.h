@@ -43,7 +43,7 @@
 /* Define if shell check should be disabled */
 #mesondefine DISABLE_SHELLCHECK
 
-/* Define to enable spooldir support */
+/* Define to disable spooldir support */
 #mesondefine DISABLE_SPOOL
 
 /* BSD compatibility macro */
