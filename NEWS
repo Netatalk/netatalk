@@ -1,3 +1,30 @@
+Changes in 4.0.7
+================
+* FIX: Remove bitrotted code in the bstring library, GitHub #1769
+       This was a regression between netatalk 3.2 and 4.0.
+* FIX: meson: Check for SunRPC function quota_open(), GitHub #1225
+       This should enable build with quota on *BSDs.
+* FIX: meson: *BSD compatible libwrap check, GitHub #1770
+* NEW: meson: Add option with-manual=man_only
+       which compiles and installs only troff pages, GitHub #1766
+* NEW: meson: Option to specify path to perl runtime, GitHub #1776
+* UPD: meson: Flip order of Berkeley DB version detection, GitHub #1771
+       A more recent version of dbd is now prioritized over older ones.
+* FIX: meson: Don't attempt to detect shadow passwords
+       on *BSD and macOS, GitHub #1777
+* FIX: meson: Configure dbus paths and config files only if dbus exists,
+       GitHub #1773
+* FIX: meson: Don't define spooldir when building without papd, GitHub #1786
+* UPD: meson: Generate appendix XML sources via with-manual=www
+       and allow custom manual install path with with-manual-install-path,
+       GitHub #1781
+       (This is useful primarily for project maintainers.)
+* UPD: docs: Only compile and install appletalk documentation when
+       with-appletalk=true, GitHub #1753
+* UPD: docs: Overhaul of man page Synopsis sections, GitHub #1765
+* UPD: docs: Refer to CONTRIBUTORS hosted on netatalk.io in man pages,
+       GitHub #1767
+
 Changes in 4.0.6
 ================
 * FIX: Workaround for bug in AppleShare Client 3.7.4, GitHub #1749
