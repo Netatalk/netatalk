@@ -949,11 +949,7 @@ cups = dependency('cups', required: false)
 cups_config = find_program('cups-config', required: false)
 spooldir = ''
 
-if not get_option('with-appletalk')
-    have_cups = false
-    spooldir_required = false
-    cdata.set('DISABLE_SPOOL', 1)
-else
+if get_option('with-cups') and get_option('with-appletalk')
     spooldir = get_option('localstatedir') / 'spool' / 'netatalk'
 
     spooldir_override = get_option('with-spooldir')
@@ -974,6 +970,10 @@ else
     else
         warning('CUPS not found, you might need to specify the path to cups-config')
     endif
+else
+    have_cups = false
+    spooldir_required = false
+    cdata.set('DISABLE_SPOOL', 1)
 endif
 
 #
