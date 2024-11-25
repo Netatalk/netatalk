@@ -34,6 +34,10 @@ afpd_external_deps = [libgcrypt]
 afpd_internal_deps = []
 afpd_link_args = []
 
+if host_os == 'darwin'
+    afpd_link_args += '-Wl,-sectcreate,__DATA,__objc_fork_ok'
+endif
+
 if have_appletalk
     afpd_sources += [
         'afp_asp.c',
@@ -195,7 +199,7 @@ executable(
         statedir,
         uamdir,
     ],
-    link_args: netatalk_common_link_args,
+    link_args: [netatalk_common_link_args, afpd_link_args],
     export_dynamic: true,
     install: true,
     install_dir: sbindir,

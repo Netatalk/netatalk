@@ -1,8 +1,12 @@
 if have_spotlight
     subdir('spotlight')
 endif
+
+if use_dbd_backend
+    subdir('cnid_dbd')
+endif
+
 subdir('afpd')
-subdir('cnid_dbd')
 subdir('netatalk')
 subdir('uams')
 
