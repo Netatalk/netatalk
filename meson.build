@@ -1361,6 +1361,10 @@ ldap_path = get_option('with-ldap-path')
 
 ldap_link_args = []
 
+if ldap_path == '' and host_os == 'darwin' and fs.exists(macos_prefix / 'opt/openldap')
+    ldap_path = macos_prefix / 'opt/openldap'
+endif
+
 if ldap_path != ''
     ldap_link_args += ['-L' + ldap_path / 'lib', '-lldap']
     ldap = declare_dependency(
