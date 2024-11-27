@@ -424,11 +424,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db cmark-gfm dbus docbook-xsl libxslt meson mysql talloc
+          brew install berkeley-db cmark-gfm dbus docbook-xsl libxslt meson mysql openldap talloc
       - name: Configure
         run: |
           meson setup build \
             -Dbuildtype=release \
+            -Dwith-ldap-path=/opt/homebrew/opt/openldap \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
