@@ -889,8 +889,10 @@ uint16_t bitmap = 0;
 uint16_t vol2;
 uint8_t old_access[4];
 DSI *dsi2;
-
 DSI *dsi;
+int maxattempts = 10;
+int attempt = 0;
+int ret;
 
 	dsi = &Conn->dsi;
 
@@ -944,11 +946,27 @@ DSI *dsi;
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 
 fin:
-	FPDelete(Conn, vol,  dir , name);
-	FPDelete(Conn, vol,  dir , name1);
-	// FIXME: A more sophisticated way to ensure that the files have been deleted
-	sleep(2);
-	FAIL (FPDelete(Conn, vol,  dir , ""))
+	FAIL (FPDelete(Conn, vol, dir, name))
+	FAIL (FPDelete(Conn, vol, dir, name1))
+
+	while (attempt < maxattempts) {
+		ret = FPDelete(Conn, vol, dir, "");
+		if (ret == AFP_OK) {
+			if (!Quiet) {
+				printf("FPDelete succeeded on attempt %d\n", attempt + 1);
+			}
+			break;
+		} else if (!Quiet) {
+			printf("FPDelete failed on attempt %d\n", attempt + 1);
+		}
+		attempt++;
+		sleep(1);
+	}
+
+	if (ret != AFP_OK) {
+		test_failed();
+	}
+
 test_exit:
 	exit_test("FPSetFileDirParms:test358: set unix access privilege two users");
 }
