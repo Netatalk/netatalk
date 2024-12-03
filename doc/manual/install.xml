@@ -164,8 +164,8 @@ Resolving deltas: 100% (32227/32227), done.
             sharing and Time Machine volumes by using Avahi or
             mDNSResponder.</para>
 
-            <para>The Avahi library itself must have been built with D-Bus
-            support.</para>
+            <para>When using Avahi, D-Bus is also required, and the Avahi
+            library must have been built with D-Bus support.</para>
           </listitem>
 
           <listitem>
@@ -181,19 +181,26 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>D-Bus and GLib</para>
+            <para>D-Bus</para>
 
-            <para>Used by the <userinput>afpstats</userinput> tool to inquire
-            afpd about file server usage statistics.</para>
+            <para>Used to enable multiple features: Spotlight, Zeroconf with
+            Avahi, and the <userinput>afpstats</userinput> tool.</para>
           </listitem>
 
           <listitem>
             <para>DocBook XSL and xsltproc</para>
 
             <para>The Netatalk documentation, including this manual, are
-            authored in XML format. Then we leverage DocBook XSL stylesheets
-            and xsltproc to transcode the XML to other human-readable formats
+            authored in XML format. Then DocBook XSL stylesheets and xsltproc
+            are used to transcode the XML to other human-readable formats
             such as troff (for man pages), html, or pdf.</para>
+          </listitem>
+
+          <listitem>
+            <para>GLib and GIO</para>
+
+            <para>Used by the <userinput>afpstats</userinput> tool to inquire
+            afpd about file server usage statistics.</para>
           </listitem>
 
           <listitem>
@@ -283,7 +290,7 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
-            <para>Perl and UnicodeData.txt</para>
+            <para>UnicodeData.txt</para>
 
             <para>The build system uses Perl and the Unicode Character
             Database to generate Netatalk's Unicode character conversion
