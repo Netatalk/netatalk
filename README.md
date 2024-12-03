@@ -7,8 +7,6 @@
 [![Project contributors](https://img.shields.io/github/contributors/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/contributors)
 [![Monthly commits](https://img.shields.io/github/commit-activity/m/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/commit-activity)
 [![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
-[![Docker pulls](https://img.shields.io/docker/pulls/netatalk/netatalk?logo=docker&logoColor=white)](https://hub.docker.com/r/netatalk/netatalk)
-[![Image size](https://img.shields.io/docker/image-size/netatalk/netatalk?logo=docker&logoColor=white&sort=semver)](https://hub.docker.com/r/netatalk/netatalk)
 [![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=ncloc)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=security_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
