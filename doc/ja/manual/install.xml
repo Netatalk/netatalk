@@ -170,8 +170,9 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>D-Bus</para>
 
-            <para>下記機能を有効にするには、D-Bus が必要である：Spotlight、Avahi を使用した Zeroconf、
-            および <userinput>afpstats</userinput> ツール。</para>
+            <para>D-Bus はプロセス間にメッセージを通信するメカニズムを提供し、下記 Netatalk 機能に使われる：
+            Spotlight、Avahi を使用した Zeroconf、および <userinput>afpstats</userinput>
+            ツール。</para>
           </listitem>
 
           <listitem>
@@ -185,8 +186,8 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>GLib および GIO</para>
 
-            <para>afpd にファイル サーバーの使用統計を問い合わせるために
-            <userinput>afpstats</userinput> ツールによって使用される。</para>
+            <para>D-Bus とのインターフェースとして、<userinput>afpstats</userinput>
+            ツールに使われる。</para>
           </listitem>
 
           <listitem>
