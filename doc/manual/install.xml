@@ -183,8 +183,9 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>D-Bus</para>
 
-            <para>Used to enable multiple features: Spotlight, Zeroconf with
-            Avahi, and the <userinput>afpstats</userinput> tool.</para>
+            <para>D-Bus provides a mechanism for sending messages between
+            processes, used by multiple Netatalk features: Spotlight, Zeroconf
+            with Avahi, and the <userinput>afpstats</userinput> tool.</para>
           </listitem>
 
           <listitem>
@@ -199,8 +200,8 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>GLib and GIO</para>
 
-            <para>Used by the <userinput>afpstats</userinput> tool to inquire
-            afpd about file server usage statistics.</para>
+            <para>Used by the <userinput>afpstats</userinput> tool to interface
+            with D-Bus.</para>
           </listitem>
 
           <listitem>
