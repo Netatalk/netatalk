@@ -29,11 +29,10 @@
       <para>Netatalk のバイナリーパッケージは、いくつかの Linux、BSD、Solaris
       ディストリビューションに含まれている。通常の配布元も見たいだろうと思う。</para>
 
-      <para>第三者が提供しているパッケージ リポジトリも参照する手もある。例えば、Red Hat 派生 Linux
-      ディストリビューションの為の <ulink url="https://rpmfind.net/">rpmfind</ulink>、
-      Solaris 系 OS の為の <ulink
-      url="https://www.opencsw.org/">OpenCSW</ulink>、そして macOS の為の <ulink
-      url="https://brew.sh/">Homebrew</ulink> か <ulink
+      <para>第三者が提供しているパッケージ リポジトリも参照する手もある。例えば、Red Hat 派生 Linux ディストリビューションの為の
+      <ulink url="https://rpmfind.net/">rpmfind</ulink>、 Solaris 系 OS の為の
+      <ulink url="https://www.opencsw.org/">OpenCSW</ulink>、そして macOS の為の
+      <ulink url="https://brew.sh/">Homebrew</ulink> か <ulink
       url="https://www.macports.org/">MacPorts</ulink>。</para>
     </sect2>
 
@@ -154,7 +153,15 @@ Resolving deltas: 100% (32227/32227), done.
             Netatalk は、Avahi または mDNSResponder を使用して AFP ファイル共有と Time Machine
             ボリュームをアドバタイズできる。</para>
 
-            <para>Avahi を使用する場合は、D-Bus または D-Bus サポートを有効になっている Avahi ライブラリは必要になる。</para>
+            <para>Avahi を使用する場合は、D-Bus または D-Bus サポートを有効になっている Avahi
+            ライブラリは必要になる。</para>
+          </listitem>
+
+          <listitem>
+            <para>cmark-gfm</para>
+
+            <para>CommonMark は、マークダウンをプレーンテキストに変換するために使用され、Netatalk の README
+            をインストールまたはパッケージ化するのに使われる。</para>
           </listitem>
 
           <listitem>
@@ -178,9 +185,10 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>DocBook XSL および xsltproc</para>
 
-            <para>このマニュアルを含む Netatalk ドキュメントは、XML 形式で作成されている。次に、DocBook XSL
+            <para>このマニュアルを含む Netatalk ドキュメントは、XML 形式で作成されている。DocBook XSL
             スタイルシートと xsltproc を使用して、XML を troff (マニュアル ページ用)、html、pdf
-            などの人間が読める形式に変換する。</para>
+            などの人間が読める形式に変換する。DocBook XSL
+            スタイルシートは名前空間化されていない必要があることに注意してください。</para>
           </listitem>
 
           <listitem>
@@ -232,9 +240,9 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Perl</para>
 
-            <para>Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン 5.8
-            以降に依存する。必須 Perl モジュールは以下： <emphasis>IO::Socket::IP</emphasis>
-            (asip-status) 又は <emphasis>Net::DBus</emphasis> (afpstats)。</para>
+            <para>Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン 5.8 以降に依存する。必須
+            Perl モジュールは以下： <emphasis>IO::Socket::IP</emphasis> (asip-status)
+            又は <emphasis>Net::DBus</emphasis> (afpstats)。</para>
           </listitem>
 
           <listitem>

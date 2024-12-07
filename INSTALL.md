@@ -83,6 +83,7 @@ Required:
 
 Required for Spotlight support:
 
+  - D-Bus (also used by avahi and afpstats)
   - talloc
   - tracker version 0.12 or later, or tinysparql and localsearch version 3.8.0 or later
   - bison
@@ -91,9 +92,10 @@ Required for Spotlight support:
 Optional:
 
   - avahi or mDNSresponder           (for Zeroconf support)
+  - cmark-gfm                        (for converting Markdown to plain text)
   - cracklib and cracklib dictionary (for password strength check in afppasswd)
-  - Docbook XSL and xsltproc         (for manpages & manual documentation)
-  - GLib 2 and D-Bus                 (for afpstats support)
+  - Docbook XSL, non-namespaced      (for manpages & manual documentation)
+  - GLib 2 and GIO                   (for afpstats support)
   - Kerberos V                       (for krbV UAM support)
   - libacl                           (for ACL support)
   - libldap                          (for LDAP support)
@@ -102,6 +104,7 @@ Optional:
   - Perl                             (for admin scripts)
   - tcpwrap                          (for TCP wrapper support)
   - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)                  (for regenerating Unicode lookup tables)
+  - xsltproc or libxslt              (for manpages & manual documentation)
 
 More details about dependencies can be found in the documentation at
 https://netatalk.io/stable/htmldocs/installation
