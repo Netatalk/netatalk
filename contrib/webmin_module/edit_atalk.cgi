@@ -75,4 +75,4 @@ if ($in{action} =~ /edit/) {
 }
 print &ui_form_end([[undef, $text{'save_button_title'}]]);
 
-&ui_print_footer("show_atalk.cgi", $text{'index_atalk'});
+&ui_print_footer("index.cgi", $text{'edit_return'});
