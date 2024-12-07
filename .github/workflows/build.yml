@@ -66,6 +66,7 @@ jobs:
             libtracker \
             libxslt \
             linux-pam-dev \
+            localsearch \
             mariadb-dev \
             meson \
             ninja \
@@ -75,9 +76,7 @@ jobs:
             pkgconfig \
             rpcsvc-proto-dev \
             talloc-dev \
-            tracker \
-            tracker-dev \
-            tracker-miners \
+            tinysparql-dev \
             unicode-character-database
       - name: Configure
         run: |
