@@ -1012,40 +1012,43 @@ endif
 if not enable_quota
     have_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-else
-    have_quota = tirpc.found() and cc.has_header('rpcsvc/rquota.h')
-    if have_quota
-        cdata.set('NEED_RQUOTA', 1)
-        quota_deps += tirpc
-        quota_provider += 'libtirpc'
-        if cc.compiles(
-            '''
-                    #include <rpcsvc/rquota.h>
-                    int main(void) {
-                        enum qr_status foo;
-                        foo = Q_OK;
-                        return 0;
-                    }
-                ''',
-            dependencies: tirpc,
+elif quota.found() and cc.has_function('quota_open')
+    # FreeBSD provides libquota API in libc
+    have_libquota = true
+    have_quota = true
+    quota_provider += 'libquota'
+    cdata.set('HAVE_LIBQUOTA', 1)
+elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
+    have_libquota = true
+    have_quota = true
+    quota_provider += 'libquota'
+    quota_deps += [quota, prop]
+    cdata.set('HAVE_LIBQUOTA', 1)
+elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
+    cdata.set('NEED_RQUOTA', 1)
+    quota_deps += tirpc
+    quota_provider += 'libtirpc'
+    if cc.compiles(
+        '''
+        #include <rpcsvc/rquota.h>
+        int main(void) {
+        enum qr_status foo;
+        foo = Q_OK;
+        return 0;
+        }
+        ''',
+        dependencies: tirpc,
         )
-            cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
-        endif
-    else
-        have_quota = rpcsvc.found() and rpc_headers_ok
-        if have_quota
-            quota_deps += rpcsvc
-            quota_provider += 'SunRPC'
-            if quota.found() and cc.has_function('quota_open', dependencies: [quota, prop, rpcsvc])
-                have_libquota = true
-                quota_deps += [quota, prop]
-                cdata.set('HAVE_LIBQUOTA', 1)
-            endif
-        else
-            have_quota = false
-            cdata.set('NO_QUOTA_SUPPORT', 1)
-        endif
+        cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
     endif
+    have_quota = true
+elif rpcsvc.found() and rpc_headers_ok
+    quota_deps += rpcsvc
+    quota_provider += 'SunRPC'
+    have_quota = true
+else
+    have_quota = false
+    cdata.set('NO_QUOTA_SUPPORT', 1)
 endif
 
 if enable_quota and not have_quota
