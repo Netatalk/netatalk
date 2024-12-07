@@ -169,6 +169,14 @@ Resolving deltas: 100% (32227/32227), done.
           </listitem>
 
           <listitem>
+            <para>cmark-gfm</para>
+
+            <para>CommonMark is used to translate markdown to plain text,
+            which is useful for installing or packaging Netatalk's
+            READMEs.</para>
+          </listitem>
+
+          <listitem>
             <para>CrackLib</para>
 
             <para>When using the Random Number UAMs and netatalk's own
@@ -192,16 +200,17 @@ Resolving deltas: 100% (32227/32227), done.
             <para>DocBook XSL and xsltproc</para>
 
             <para>The Netatalk documentation, including this manual, are
-            authored in XML format. Then DocBook XSL stylesheets and xsltproc
-            are used to transcode the XML to other human-readable formats
-            such as troff (for man pages), html, or pdf.</para>
+            authored in XML format. DocBook XSL stylesheets and xsltproc are
+            used to transcode the XML to other human-readable formats such as
+            troff (for man pages), html, or pdf. Note that the DocBook XSL
+            stylesheets have to be non-namespaced.</para>
           </listitem>
 
           <listitem>
             <para>GLib and GIO</para>
 
-            <para>Used by the <userinput>afpstats</userinput> tool to interface
-            with D-Bus.</para>
+            <para>Used by the <userinput>afpstats</userinput> tool to
+            interface with D-Bus.</para>
           </listitem>
 
           <listitem>
@@ -252,10 +261,10 @@ Resolving deltas: 100% (32227/32227), done.
           <listitem>
             <para>Perl</para>
 
-            <para>Netatalk's administrative utility scripts rely
-            on the Perl runtime, version 5.8 or later. The required Perl
-            modules include <emphasis>IO::Socket::IP</emphasis> (asip-status)
-            and <emphasis>Net::DBus</emphasis> (afpstats).</para>
+            <para>Netatalk's administrative utility scripts rely on the Perl
+            runtime, version 5.8 or later. The required Perl modules include
+            <emphasis>IO::Socket::IP</emphasis> (asip-status) and
+            <emphasis>Net::DBus</emphasis> (afpstats).</para>
           </listitem>
 
           <listitem>
