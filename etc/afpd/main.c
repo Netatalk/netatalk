@@ -201,10 +201,10 @@ static int setlimits(void)
         LOG(log_warning, logtype_afpd, "setlimits: reading current limits failed: %s", strerror(errno));
         return -1;
     }
-    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < 65535) {
-        rlim.rlim_cur = 65535;
-        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < 65535)
-            rlim.rlim_max = 65535;
+    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < RLIM_MAX) {
+        rlim.rlim_cur = RLIM_MAX;
+        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX)
+            rlim.rlim_max = RLIM_MAX;
         if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
             LOG(log_warning, logtype_afpd, "setlimits: increasing limits failed: %s", strerror(errno));
             return -1;

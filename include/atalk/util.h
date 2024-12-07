@@ -24,6 +24,14 @@
 #include <atalk/cnid.h>
 #include <atalk/unicode.h>
 
+#ifndef RLIM_MAX
+#ifdef __APPLE__
+#define RLIM_MAX 10240
+#else
+#define RLIM_MAX 65535
+#endif
+#endif
+
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
