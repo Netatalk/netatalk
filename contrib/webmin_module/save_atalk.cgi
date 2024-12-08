@@ -40,4 +40,4 @@ if ($atalkLine ne 0) {
 	addLineToFile($filetoedit, $atalkLine, $lineNumber, $totalLines);
 }
 
-redirect("show_atalk.cgi");
+redirect("index.cgi");
