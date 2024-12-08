@@ -1582,50 +1582,65 @@ build_xml_docs = false
 xsltproc = find_program('xsltproc', required: false)
 xsl = []
 docbook_root = ''
-docbook_xsl_dirs = [
-    docbook_path,
-    '/usr/share/sgml/docbook/xsl-stylesheets',
-    '/usr/share/xml/docbook/stylesheet/docbook-xsl',
-    '/usr/share/xml/docbook/xsl-stylesheets',
-    '/opt/local/share/xsl/docbook',
-    '/usr/local/share/xsl/docbook',
-    '/usr/pkg/share/xsl/docbook',
-]
+docbook_xsl_dirs = []
 
-if host_os == 'darwin'
-    docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
+if docbook_path != ''
+    docbook_xsl_dirs += [docbook_path]
+else
+    if host_os == 'darwin'
+        docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
+    endif
+
+    docbook_xsl_dirs += [
+        '/usr/share/sgml/docbook/xsl-stylesheets',
+        '/usr/share/xml/docbook/stylesheet/docbook-xsl',
+        '/usr/share/xml/docbook/xsl-stylesheets-nons',
+        '/usr/share/xml/docbook/xsl-stylesheets',
+        '/opt/local/share/xsl/docbook',
+        '/usr/local/share/xsl/docbook',
+        '/usr/pkg/share/xsl/docbook',
+    ]
 endif
 
 if compile_manual
     foreach dir : docbook_xsl_dirs
         foreach format : ['html', 'manpages']
-            if fs.exists(dir / format / 'docbook.xsl')
-                build_xml_docs = true
-                docbook_root += dir
-                xsl += dir / format / 'docbook.xsl'
-                if (
-                    run_command(
-                        [xsltproc, '--nonet', xsl],
-                        check: false,
-                    ).returncode() == 0
-                )
-                    cdata.set('DOCBOOK_ROOT', dir)
+            if fs.exists(dir)
+                if fs.exists(dir / format / 'docbook.xsl')
+                    build_xml_docs = true
+                    docbook_root += dir
+                    xsl += dir / format / 'docbook.xsl'
+                    if (
+                        run_command(
+                            [xsltproc, '--nonet', xsl],
+                            check: false,
+                        ).returncode() == 0
+                    )
+                        message('Found docbook-xsl ' + format + ' stylesheets at ' + dir)
+                        cdata.set('DOCBOOK_ROOT', dir)
+                    endif
+                else
+                    warning('docbook-xsl ' + format + ' stylesheets not found at ' + dir)
                 endif
             endif
-            if docbook_root != ''
-                break
-            else
-                continue
-            endif
         endforeach
+        if docbook_root != ''
+            break
+        else
+            continue
+        endif
     endforeach
 endif
 
-docbook_ok = xsltproc.found() and docbook_root != ''
-
-if compile_manual and not docbook_ok
+if compile_manual and not xsltproc.found()
     warning(
-        'xsltproc and docbook-xsl stylesheets are required to compile manpages and html documentation',
+        'xsltproc is required to compile manpages and html documentation',
+    )
+endif
+
+if compile_manual and docbook_root == ''
+    warning(
+        'docbook-xsl stylesheets are required to compile manpages and html documentation',
     )
 endif
 
