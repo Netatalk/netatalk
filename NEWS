@@ -1,3 +1,20 @@
+Changes in 4.0.8
+================
+* UPD: Set resource max limit to 10240 on macOS, GitHub #1793
+       Compatibility with older macOS hosts such as 10.15 Catalina.
+* UPD: meson: Allow building papd without CUPS, GitHub #1774
+       Activate the override with: -Dwith-cups=false
+* UPD: meson: Favor openldap when building on macOS, GitHub #1792
+       Avoids linking with macOS LDAP.Framework by default.
+* UPD: meson: Improved libquota detection on FreeBSD and NetBSD, GitHub #1805
+* FIX: meson: DocBook detection stops at first hit, GitHub #1800
+       Detect xsl-stylesheets-nons with higher priority than xsl-stylesheets;
+       -Dwith-docbook-path is now a hard override
+* UPD: docs: Clarify D-Bus and GLib dependencies in the Install chapter,
+       GitHub #1798 GitHub #1799
+* FIX: docs: Document that DocBook XSL has to be non-namespaced, GitHub #1800
+* FIX: testsuite: Retry logic for final cleanup step in test358, GitHub #1795
+
 Changes in 4.0.7
 ================
 * FIX: Remove bitrotted code in the bstring library, GitHub #1769
