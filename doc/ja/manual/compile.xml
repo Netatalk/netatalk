@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2024-11-24</pubdate>
+		<pubdate>2024-12-09</pubdate>
 	</appendixinfo>
 	<title>ソースコードから Netatalk をコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -26,7 +26,7 @@
 			<title>Alpine Linux</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev docbook-xsl flex gcc krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker libxslt linux-pam-dev mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tracker tracker-dev tracker-miners unicode-character-database
+				<screen>apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev docbook-xsl flex gcc krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker libxslt linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev unicode-character-database
 </screen>
 			</para>
 			<para>Configure</para>
@@ -66,7 +66,7 @@
 			</para>
 			<para>Configure</para>
 			<para>
-				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docbook-path=/usr/share/xml/docbook/xsl-stylesheets-1.79.2 -Dwith-init-hooks=false -Dwith-tests=true
+				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 </screen>
 			</para>
 			<para>Build</para>
@@ -249,7 +249,7 @@ asip-status localhost
 			<title>macOS</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>brew install berkeley-db cmark-gfm dbus docbook-xsl libxslt meson mysql talloc
+				<screen>brew install berkeley-db bison cmark-gfm dbus docbook-xsl libxslt meson mysql openldap talloc tracker
 </screen>
 			</para>
 			<para>Configure</para>
