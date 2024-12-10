@@ -5,9 +5,9 @@ if perl.found() and grep.found()
         configuration: cdata,
     )
 
-    appledump_script = configure_file(
-        input: 'apple_dump.in',
-        output: 'apple_dump',
+    addump_script = configure_file(
+        input: 'addump.in',
+        output: 'addump',
         configuration: cdata,
     )
 
@@ -20,7 +20,7 @@ if perl.found() and grep.found()
     install_data(
         [
             afpstats_script,
-            appledump_script,
+            addump_script,
             asipstatus_script,
         ],
         install_dir: bindir,
