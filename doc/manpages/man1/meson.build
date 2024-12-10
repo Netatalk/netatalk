@@ -4,7 +4,7 @@ manfiles = [
     'afppasswd.1',
     'afpstats.1',
     'afptest.1',
-    'apple_dump.1',
+    'addump.1',
     'asip-status.1',
     'dbd.1',
     'macusers.1',

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<refentry id="apple_dump.1">
+<refentry id="addump.1">
   <refmeta>
-    <refentrytitle>apple_dump</refentrytitle>
+    <refentrytitle>addump</refentrytitle>
 
     <manvolnum>1</manvolnum>
 
@@ -12,14 +12,14 @@
   </refmeta>
 
   <refnamediv>
-    <refname>apple_dump</refname>
+    <refname>addump</refname>
 
     <refpurpose>Dump AppleSingle/AppleDouble format data</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-a</arg>
 
@@ -30,7 +30,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-e</arg>
 
@@ -41,7 +41,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-f</arg>
 
@@ -49,7 +49,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-d</arg>
 
@@ -57,7 +57,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <group>
         <arg choice="plain">-h</arg>
@@ -67,7 +67,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <group>
         <arg choice="plain">-v</arg>
@@ -81,7 +81,7 @@
   <refsect1>
     <title>Description</title>
 
-    <para><command>apple_dump</command> dumps
+    <para><command>addump</command> dumps
     AppleSingle/AppleDouble format data. </para>
     <para>It can dump various AppleSingle/AppleDouble data created
     by mailers, archivers, Mac OS X, Netatalk and so on.</para>
@@ -162,7 +162,7 @@
     <title>Note</title>
 
     <para>There is no way to detect whether FinderInfo is FileInfo or DirInfo.
-    By default, apple_dump examines whether the file, directory or parent directory
+    By default, addump examines whether the file, directory or parent directory
     is .AppleDouble, filename is ._*, filename is .Parent, and so on.</para>
 
     <para>When setting option -e, -f or -d, assume FinderInfo and don't look

@@ -43,7 +43,7 @@ manual_html = [
         'afppasswd.1.html',
         'afpstats.1.html',
         'afptest.1.html',
-        'apple_dump.1.html',
+        'addump.1.html',
         'asip-status.1.html',
         'atalk.4.html',
         'atalk_aton.3.html',

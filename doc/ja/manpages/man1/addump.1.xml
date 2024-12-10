@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<refentry id="apple_dump.1">
+<refentry id="addump.1">
   <refmeta>
-    <refentrytitle>apple_dump</refentrytitle>
+    <refentrytitle>addump</refentrytitle>
 
     <manvolnum>1</manvolnum>
 
@@ -15,14 +15,14 @@
   </refmeta>
 
   <refnamediv>
-    <refname>apple_dump</refname>
+    <refname>addump</refname>
 
     <refpurpose>AppleSingle/AppleDoubleフォーマットのデータをダンプする</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-a</arg>
 
@@ -34,7 +34,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-e</arg>
 
@@ -46,7 +46,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-f</arg>
 
@@ -54,7 +54,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <arg>-d</arg>
 
@@ -62,7 +62,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <group>
         <arg choice="plain">-h</arg>
@@ -74,7 +74,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>apple_dump</command>
+      <command>addump</command>
 
       <group>
         <arg choice="plain">-v</arg>
@@ -89,7 +89,7 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>apple_dump</command>はAppleSingle/AppleDoubleフォーマットのデータをダンプするperlスクリプトです。</para>
+    <para><command>addump</command>はAppleSingle/AppleDoubleフォーマットのデータをダンプするperlスクリプトです。</para>
 
     <para>このスクリプトはメーラ、アーカイバ、Mac OS
     X、Netatalkなどが生成する様々なAppleSingle/AppleDoubleデータをダンプできます。</para>
@@ -156,7 +156,7 @@
   <refsect1>
     <title>注記</title>
 
-    <para>FinderInfoがFileInfoなのかDirInfoなのかを検出する方法がありません。デフォルトでは、apple_dumpはそれがファイルなのかディレクトリなのか、親ディレクトリが.AppleDoubleか、ファイル名が._*か、ファイル名が.Parentかなどを調査します。</para>
+    <para>FinderInfoがFileInfoなのかDirInfoなのかを検出する方法がありません。デフォルトでは、addumpはそれがファイルなのかディレクトリなのか、親ディレクトリが.AppleDoubleか、ファイル名が._*か、ファイル名が.Parentかなどを調査します。</para>
 
     <para>もしオプション-eまたは-fまたは-dを設定した場合、FinderInfoを仮定し他のデータを探しません。</para>
   </refsect1>
