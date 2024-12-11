@@ -108,7 +108,7 @@ static int ad_mkrf(const char *path);
 static int ad_header_read(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade(struct adouble *ad, const char *name);
 
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
 static int ad_mkrf_ea(const char *path);
 #endif
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst);
@@ -126,7 +126,7 @@ static struct adouble_fops ad_adouble = {
 };
 
 static struct adouble_fops ad_adouble_ea = {
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
     &ad_path_ea,
     &ad_mkrf_ea,
 #else
@@ -1249,6 +1249,11 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_, struct ado
         }
     }
 
+#ifdef __APPLE__
+    char * FinderInfo;
+    char NativeFinderInfo[32]={'\0'};
+#endif
+
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
         if (!(adflags & ADFLAGS_CREATE)) {
@@ -1272,9 +1277,22 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_, struct ado
         /* Create one */
         EC_NEG1_LOG(new_ad_header(ad, path, NULL, adflags));
         ad->ad_mdp->adf_flags |= O_CREAT; /* mark as just created */
+#ifdef __APPLE__
+        /* read in finderinfo from macos */
+        FinderInfo = ad_entry(ad, ADEID_FINDERI);
+        if (sys_getxattr(path,EA_FINFO,NativeFinderInfo,32))
+            memcpy(FinderInfo, NativeFinderInfo,32);
+#endif
         ad_flush(ad);
         LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
     }
+
+#ifdef __APPLE__
+        /* read in finderinfo from macos */
+        FinderInfo = ad_entry(ad, ADEID_FINDERI);
+        if (sys_getxattr(path,EA_FINFO,NativeFinderInfo,32))
+            memcpy(FinderInfo, NativeFinderInfo,32);
+#endif
 
     if (ad_meta_fileno(ad) != -1)
         ad->ad_mdp->adf_refcount++;
@@ -1393,7 +1411,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
     int oflags;
     int opened = 0;
     int closeflags = adflags & (ADFLAGS_DF | ADFLAGS_HF);
-#ifndef HAVE_EAFD
+#ifndef SOLARIS
     const char *rfpath;
     struct stat st;
 #endif
@@ -1416,7 +1434,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         EC_NEG1_LOG( ad->ad_rlen = ad_reso_size(path, adflags, ad));
         goto EC_CLEANUP;
     }
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
     if (ad_meta_fileno(ad) < 0)
         EC_FAIL;
     if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
@@ -1722,8 +1740,14 @@ const char *ad_path_osx(const char *path, int adflags _U_)
         pathbuf[ 0 ] = '\0';
         slash = buf;
     }
+#ifdef __APPLE__
+    /* macos abstracts the resource fork as "filename/..namedfork/rsrc" which we can treat as a file */
+    strlcat( pathbuf, buf, MAXPATHLEN +1);
+    strlcat( pathbuf, "/..namedfork/rsrc", MAXPATHLEN  +1);
+#else
     strlcat( pathbuf, "._", MAXPATHLEN  +1);
     strlcat( pathbuf, slash, MAXPATHLEN +1);
+#endif
     return pathbuf;
 }
 
