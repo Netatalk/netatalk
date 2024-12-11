@@ -79,7 +79,7 @@ static char attr_name[256 +5] = "user.";
 
 static const char *prefix(const char *uname)
 {
-#if defined(HAVE_ATTROPEN)
+#if defined(HAVE_ATTROPEN) || defined(__APPLE__)
 	return uname;
 #else
 	strlcpy(attr_name +5, uname, 256);

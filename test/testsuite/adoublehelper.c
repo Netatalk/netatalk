@@ -251,7 +251,7 @@ static int chmod_unix_adouble(char *path,char *name, int mode)
 int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode, AD_EA_META);
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -288,7 +288,7 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode, AD_EA_RESO);
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -302,6 +302,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
         }
         return 0;
 #else
+#ifndef __APPLE__
         sprintf(temp, "%s/%s/._%s", path, name, file);
         if (!Quiet) {
             fprintf(stdout, "chmod(%s, 0%o)\n", temp, mode);
@@ -313,6 +314,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
             test_failed();
             return -1;
         }
+#endif
         return 0;
 #endif
     } else {
