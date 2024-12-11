@@ -127,7 +127,13 @@
           <listitem>
             <para>Mac のメタデータ（すなわち FinderInfo、AFP フラグ、コメント、CNID）は
             “<filename>org.netatalk.Metadata</filename>”
-            という名前の拡張属性に保存される。</para>
+            という名前の拡張属性に保存される。<itemizedlist>
+                <listitem>
+                  <para>さらに、Netatalk 4.1.0以降を実行しているmacOSホストでは、FinderInfo
+                  はファイルシステムにネイティブに保存され、"com.apple.FinderInfo"
+                  という名前の拡張属性として表示されます。</para>
+                </listitem>
+              </itemizedlist></para>
           </listitem>
 
           <listitem>
@@ -142,6 +148,9 @@
                   <para>ないしは、ファイル名が “<filename>file</filename>”
                   であるものに対して各々、“<filename>._file</filename>” という名の別の
                   AppleDouble ファイルに保存される。</para>
+                </listitem>
+                <listitem>
+                  <para>Netatalk 4.1.0 以降、macOS ホスト上のリソース フォークにネイティブに保存されています。</para>
                 </listitem>
               </itemizedlist></para>
           </listitem>

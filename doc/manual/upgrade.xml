@@ -129,7 +129,14 @@
           <listitem>
             <para>stores Mac Metadata (eg FinderInfo, AFP Flags, Comment,
             CNID) in an Extended Attributed named
-            “<filename>org.netatalk.Metadata</filename>”</para>
+            “<filename>org.netatalk.Metadata</filename>”<itemizedlist>
+                <listitem>
+                  <para>Additionally, on macOS hosts running Netatalk 4.1.0 or 
+                  later, FinderInfo is natively stored in the file system and
+                  appears as an Extended Attribute named
+                  “<filename>com.apple.FinderInfo</filename>”</para>
+                </listitem>
+              </itemizedlist></para>
           </listitem>
 
           <listitem>
@@ -143,7 +150,12 @@
                 <listitem>
                   <para>an extra AppleDouble file named
                   “<filename>._file</filename>” for a file named
-                  “<filename>file</filename>”</para>
+                  “<filename>file</filename>” or</para>
+                </listitem>
+
+                <listitem>
+                  <para>natively stored in the resource fork
+                  on macOS hosts as of Netatalk 4.1.0.</para>
                 </listitem>
               </itemizedlist></para>
           </listitem>
