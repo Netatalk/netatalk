@@ -552,7 +552,7 @@ static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
 }
 static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 {
-#ifdef HAVE_EAFD
+#if defined (HAVE_EAFD) && defined (SOLARIS)
     /* the EA VFS module does this all for us */
     return 0;
 #endif
@@ -575,8 +575,14 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     EC_NULL(dup2 = strdup(src));
     EC_NULL(dir = dirname(dup2));
     EC_NULL(s = bfromcstr(dir));
+#ifdef __APPLE__
+    EC_ZERO(bcatcstr(s, "/"));
+    EC_ZERO(bcatcstr(s, name));
+    EC_ZERO(bcatcstr(s, "/..namedfork/rsrc"));
+#else
     EC_ZERO(bcatcstr(s, "/._"));
     EC_ZERO(bcatcstr(s, name));
+#endif
 
     /* build dst path to ._file*/
     EC_NULL(dup4 = strdup(dst));
@@ -585,8 +591,14 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     EC_NULL(dup3 = strdup(dst));
     EC_NULL(dir = dirname(dup3));
     EC_NULL(d = bfromcstr(dir));
+#ifdef __APPLE__
+    EC_ZERO(bcatcstr(d, "/"));
+    EC_ZERO(bcatcstr(d, name));
+    EC_ZERO(bcatcstr(d, "/..namedfork/rsrc"));
+#else
     EC_ZERO(bcatcstr(d, "/._"));
     EC_ZERO(bcatcstr(d, name));
+#endif
 
     if (copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666) != 0) {
         switch (errno) {
@@ -864,7 +876,7 @@ void initvol_vfs(struct vol *vol)
         vol->ad_path = ad_path;
     } else {
         vol->vfs_modules[0] = &netatalk_adouble_ea;
-#ifdef HAVE_EAFD
+#if defined(HAVE_EAFD) && defined(SOLARIS)
         vol->ad_path = ad_path_ea;
 #else
         vol->ad_path = ad_path_osx;

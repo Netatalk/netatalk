@@ -113,6 +113,14 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 copy:
     /* Create a adouble:ea meta EA */
     LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): copying adouble", fullpathname(path), ret);
+#ifdef __APPLE__
+    /* Create macOS native FinderInfo EA */
+    char * FinderInfo;
+    char NativeFinderInfo[32]={'\0'};
+    FinderInfo = ad_entry(&adv2, ADEID_FINDERI);
+    memcpy(NativeFinderInfo, FinderInfo,ADEDLEN_FINDERI);
+    EC_ZERO_LOG( sys_setxattr(path, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0) );
+#endif
     EC_ZERO_LOGSTR( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE),
                     "ad_conv_v22ea_hf(\"%s\"): error creating metadata EA: %s",
                     fullpathname(path), strerror(errno));

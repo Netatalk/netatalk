@@ -313,12 +313,21 @@ static int ad_flush_hf(struct adouble *ad)
             break;
         case AD_VERSION_EA:
             if (AD_META_OPEN(ad)) {
+#ifdef __APPLE__
+                char * FinderInfo;
+                char NativeFinderInfo[32]={'\0'};
+                FinderInfo = ad_entry(ad, ADEID_FINDERI);
+                memcpy(NativeFinderInfo, FinderInfo,ADEDLEN_FINDERI);
+#endif
                 if (ad->ad_adflags & ADFLAGS_DIR) {
                     EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
                     EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
 
                     ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
-
+#ifdef __APPLE__
+                    if (!(ad->ad_mdp->adf_flags & O_CREAT))
+                        sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+#endif
                     if (ret != 0) {
                         if (errno != EPERM)
                             EC_FAIL;
@@ -335,6 +344,10 @@ static int ad_flush_hf(struct adouble *ad)
 
                         become_root();
                         ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+#ifdef __APPLE__
+                        if (!(ad->ad_mdp->adf_flags & O_CREAT))
+                            sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+#endif
                         unbecome_root();
 
                         if (ret != 0) {
@@ -348,6 +361,11 @@ static int ad_flush_hf(struct adouble *ad)
                     cwd = -1;
                 } else {
                     EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
+#ifdef __APPLE__
+                    /* write back finderinfo to macos native ea, but only if we aren't creating a new adouble ea for netatalk */
+                    if (!(ad->ad_mdp->adf_flags & O_CREAT))
+                        EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0) );
+#endif
                 }
             }
             break;

@@ -105,6 +105,18 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
             memcpy((char *)data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
         }
     }
+#ifdef __APPLE__
+    /* If no adouble finder information was found, check for native macOS info */
+    if (chk_ext && (vol->v_adouble == AD_VERSION_EA))
+    {
+        char NativeFinderInfo[32] ={'\0'};
+        if (ad_open_native_finderinfo(upath, NativeFinderInfo))
+        {
+            memcpy(data, NativeFinderInfo, ADEDLEN_FINDERI);
+            chk_ext = 0;
+        }
+    }
+#endif
 
     if (islink && !vol_syml_opt(vol)) {
         uint16_t linkflag;

@@ -1207,6 +1207,9 @@ elif cc.has_function('getxattr', dependencies: attr)
             cdata.set(define, 1)
         endif
     endforeach
+    if host_os == 'darwin'
+        cdata.set('HAVE_EAFD', 1)
+    endif
 else
     have_ea = false
 endif
