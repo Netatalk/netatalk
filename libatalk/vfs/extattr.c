@@ -82,7 +82,7 @@ static char attr_name[256 +5] = "user.";
 
 static const char *prefix(const char *uname)
 {
-#if defined(SOLARIS)
+#if defined(SOLARIS) || defined(__APPLE__)
 	return uname;
 #else
 	strlcpy(attr_name +5, uname, 256);
@@ -124,6 +124,11 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 	return getxattr(path, name, value, size);
 #else
 	int options = 0;
+#ifdef __APPLE__
+        /* macOS only returns EA size if value is NULL */
+        if (size == 0)
+            value = NULL;
+#endif
 	return getxattr(path, name, value, size, 0, options);
 #endif
 #elif defined(HAVE_GETEA)
@@ -182,6 +187,11 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
     return fgetxattr(filedes, name, value, size);
 #else
     int options = 0;
+#ifdef __APPLE__
+    /* macOS only returns EA size if value is NULL */
+    if (size == 0)
+        value = NULL;
+#endif
     return fgetxattr(filedes, name, value, size, 0, options);
 #endif
 #elif defined(HAVE_FGETEA)
@@ -240,6 +250,11 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	return lgetxattr(path, name, value, size);
 #elif defined(HAVE_GETXATTR) && defined(XATTR_ADD_OPT)
 	int options = XATTR_NOFOLLOW;
+#ifdef __APPLE__
+        /* macOS only returns EA size if value is NULL */
+        if (size == 0)
+            value = NULL;
+#endif
 	return getxattr(path, name, value, size, 0, options);
 #elif defined(HAVE_LGETEA)
 	return lgetea(path, name, value, size);
@@ -444,7 +459,10 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 	char *ptr;
 	char *ptr1;
 	ssize_t ptrsize;
-
+#ifdef __APPLE__
+        /* macOS doesn't prefix EAs with "user." */
+        return ret;
+#else
 	if (ret <= 0 || size == 0)
 		return ret;
 	ptrsize = ret;
@@ -461,6 +479,7 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 		ptr1 += len;
 	}
 	return ptr -list;
+#endif
 }
 #endif
 
