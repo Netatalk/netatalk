@@ -473,7 +473,7 @@ DSI *dsi;
         filedir.access[0] = 0;
         filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
  		FAIL (FPSetFilDirParam(Conn, vol, dir , name, bitmap, &filedir))
- 
+
 		fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0 , dir , name, OPENACC_RD);
 		if (fork) {
 			test_failed();
@@ -853,7 +853,7 @@ DSI *dsi;
 	if (!ret) {
 		filedir.unix_priv = old_unixpriv;
  		FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
-	} 
+	}
 
 	filedir.unix_priv = S_IRUSR | S_IXUSR ;
  	FAIL (FPSetFilDirParam(Conn, vol, DIRDID_ROOT , "", bitmap, &filedir))
@@ -898,6 +898,10 @@ int ret;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

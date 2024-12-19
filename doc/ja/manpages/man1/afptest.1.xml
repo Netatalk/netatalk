@@ -78,7 +78,7 @@
           <primary>afptest</primary>
         </indexterm></command>
 
-      <arg>-1234567aCiLlmVvx</arg>
+      <arg>-1234567aCiLlmVvXx</arg>
 
       <arg>-h <replaceable>ホスト</replaceable></arg>
 
