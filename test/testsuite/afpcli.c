@@ -9,6 +9,7 @@ int	Quiet = 1;
 int	Verbose = 0;
 int	Color = 1;
 int	Exclude = 0;
+int	Bigendian = 0;
 
 #define UNICODE(a) (a->afp_version >= 30)
 
@@ -1328,10 +1329,10 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir, uint16
         case FILPBIT_UNIXPR:
         	l = htonl(filedir->uid);
         	memcpy(b, &l, sizeof(l)); b += sizeof(l);
-        
+
         	l = htonl(filedir->gid);
         	memcpy(b, &l, sizeof(l)); b += sizeof(l);
-        
+
         	l = htonl(filedir->unix_priv);
         	memcpy(b, &l, sizeof(l)); b += sizeof(l);
 
