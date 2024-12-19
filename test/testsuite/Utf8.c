@@ -89,18 +89,17 @@ DSI *dsi = &Conn->dsi;
 		                    (1 << FILPBIT_PDINFO )|(1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
 		                    |(1 << FILPBIT_DFLEN) |(1 << FILPBIT_RFLEN), 0);
 
-	// FIXME: make this big-endian safe
-#if 0
-	strcpy(nfile, "eee.rtf");
-	nfile[1] = 0xcc;         /* é.rtf decompose */
-	nfile[2] = 0x81;
-#endif
+	if (!Bigendian) {
+		strcpy(nfile, "eee.rtf");
+		nfile[1] = 0xcc;         /* é.rtf decompose */
+		nfile[2] = 0x81;
+	}
+
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , nfile))
 test_exit:
 	exit_test("Utf8:test166: utf8 precompose decompose");
 }
 
-// FIXME: make this big-endian safe
 /* ------------------------- */
 STATIC void test167()
 {
@@ -113,6 +112,10 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -588,6 +591,10 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -643,6 +650,10 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -698,6 +709,10 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -736,6 +751,10 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -774,6 +793,10 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -812,6 +835,10 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
+	if (Bigendian) {
+		test_skipped(T_BIGENDIAN);
+		goto test_exit;
+	}
 	if (Conn->afp_version < 30) {
 		test_skipped(T_AFP3);
 		goto test_exit;
@@ -865,9 +892,7 @@ void Utf8_test()
     ENTER_TESTSET
     test162();
     test166();
-#if 0
     test167();
-#endif
     test181();
     test185();
 	test233();
@@ -876,14 +901,11 @@ void Utf8_test()
 	test313();
 	test314();
 	test337();
-// FPset_name() is not big-endian safe (Force_type2 flag)
-#if 0
 	test381();
 	test382();
 	test383();
 	test384();
 	test385();
 	test386();
-#endif
 	test395();
 }

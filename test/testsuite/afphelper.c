@@ -891,6 +891,9 @@ void test_skipped(int why)
 	case T_NONDETERM:
 		s = "nondeterministic behavior";
 		break;
+	case T_BIGENDIAN:
+		s = "not big-endian compatible";
+		break;
 	}
 	if (Color) {
 		snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), ANSI_BBLUE "SKIPPED (%s)" ANSI_NORMAL, s);

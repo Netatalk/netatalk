@@ -325,7 +325,7 @@ char *uam = "Cleartxt Passwrd";
 /* =============================== */
 void usage( char * av0 )
 {
-    fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+    fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvXx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
 	"[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0 );
     fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
@@ -350,6 +350,7 @@ void usage( char * av0 )
     fprintf( stdout,"\t-v\tverbose\n");
     fprintf( stdout,"\t-V\tvery verbose\n");
     fprintf( stdout,"\t-x\tdon't run tests that require special setup\n");
+    fprintf( stdout,"\t-X\tdon't run tests that fail on big-endian systems\n");
     fprintf( stdout,"\t-f\ttest or testset to run\n");
     fprintf( stdout,"\t-l\tlist testsets\n");
     fprintf( stdout,"\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
@@ -363,7 +364,7 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
-    while (( cc = getopt( ac, av, "1234567aCiLlmVvxc:d:f:H:h:p:S:s:u:w:" )) != EOF ) {
+    while (( cc = getopt( ac, av, "1234567aCiLlmVvXxc:d:f:H:h:p:S:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
 			vers = "AFPVersion 2.1";
@@ -457,6 +458,9 @@ int ret;
         case 'x':
         	Exclude = 1;
         	break;
+        case 'X':
+          Bigendian = 1;
+          break;
 
         default :
             usage( av[ 0 ] );
