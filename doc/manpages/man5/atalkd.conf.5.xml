@@ -149,7 +149,7 @@
           <para>Specifies a specific zone that this interface should appear on
           (example: <option>-zone "Parking Lot"</option>). Please note that
           zones with spaces and other special characters should be enclosed in
-          parentheses.</para>
+          quotation marks.</para>
         </listitem>
       </varlistentry>
     </variablelist>
