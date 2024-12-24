@@ -93,8 +93,8 @@ jobs:
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -145,8 +145,8 @@ jobs:
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -212,8 +212,8 @@ jobs:
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -272,8 +272,8 @@ jobs:
         run: sudo meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Uninstall
         run: sudo ninja -C build uninstall
 
@@ -334,8 +334,8 @@ jobs:
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -398,8 +398,8 @@ jobs:
         run: sudo meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /usr/local/sbin/netatalk -V
-          /usr/local/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Start netatalk
         run: |
           sudo systemctl start netatalk
@@ -436,8 +436,8 @@ jobs:
         run: sudo meson install -C build
       - name: Check netatalk capabilities
         run: |
-          /opt/homebrew/sbin/netatalk -V
-          /opt/homebrew/sbin/afpd -V
+          netatalk -V
+          afpd -V
       - name: Start netatalk
         run: |
           sudo netatalkd start
@@ -490,8 +490,8 @@ jobs:
               -Dwith-tests=true
             meson compile -C build
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             ninja -C build uninstall
 
   build-freebsd:
@@ -536,11 +536,11 @@ jobs:
             meson test
             cd ..
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             /usr/local/etc/rc.d/netatalk start
             sleep 1
-            /usr/local/bin/asip-status localhost
+            asip-status localhost
             /usr/local/etc/rc.d/netatalk stop
             /usr/local/etc/rc.d/netatalk disable
             ninja -C build uninstall
@@ -592,8 +592,8 @@ jobs:
             meson test
             cd ..
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             service netatalk onestart
             sleep 1
             asip-status localhost
@@ -640,8 +640,8 @@ jobs:
               -Dwith-tests=true
             meson compile -C build
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             rcctl -d start netatalk
             sleep 1
             asip-status localhost
@@ -683,6 +683,7 @@ jobs:
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             meson setup build \
+              --prefix=/opt/local \
               -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
@@ -693,12 +694,12 @@ jobs:
             meson test
             cd ..
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             sleep 1
             svcadm enable svc:/network/netatalk:default
             sleep 1
-            /usr/local/bin/asip-status localhost
+            asip-status localhost
             svcadm disable svc:/network/netatalk:default
             ninja -C build uninstall
 
@@ -728,7 +729,9 @@ jobs:
             pip install meson
           run: |
             set -e
+            export PATH=/opt/local/sbin:/opt/local/bin:$PATH
             meson setup build \
+              --prefix=/opt/local \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
@@ -739,12 +742,12 @@ jobs:
             meson test
             cd ..
             meson install -C build
-            /usr/local/sbin/netatalk -V
-            /usr/local/sbin/afpd -V
+            netatalk -V
+            afpd -V
             sleep 1
             svcadm enable svc:/network/netatalk:default
             sleep 1
-            /usr/local/bin/asip-status localhost
+            asip-status localhost
             svcadm disable svc:/network/netatalk:default
             ninja -C build uninstall
 
