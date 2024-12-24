@@ -140,7 +140,7 @@
 
         <listitem>
           <para>このインターフェイスが表示される特定のゾーンを指定します (例: <option>-zone "Parking
-          Lot"</option>)。スペースやその他の特殊文字を含むゾーンは、括弧で囲む必要があることに注意してください。</para>
+          Lot"</option>)。スペースやその他の特殊文字を含むゾーンは、ダブルクォーテーションで囲む必要があることに注意してください。</para>
         </listitem>
       </varlistentry>
     </variablelist>
