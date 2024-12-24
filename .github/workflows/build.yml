@@ -557,7 +557,6 @@ jobs:
       - name: Build on VM
         uses: vmactions/netbsd-vm@v1.1.4
         with:
-          release: "9.4"
           copyback: false
           prepare: |
             pkg_add \
