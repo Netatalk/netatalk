@@ -660,7 +660,7 @@ else
 
     if not enable_gssapi
         have_gssapi = false
-    elif get_option('with-gssapi-path') != ''
+    elif gssapi_path != ''
         have_gssapi = true
         gss = cc.find_library(
             'gssapi',
@@ -702,10 +702,9 @@ else
     #
 
     enable_kerberos = get_option('with-kerberos')
+    kerberos_path = get_option('with-kerberos-path')
 
-    kerberos = cc.find_library('krb5', dirs: libsearch_dirs, required: false)
-    krb5_config = find_program('krb5-config', required: false)
-
+    kerberos_includes = []
     kerberos_c_args = []
     kerberos_headers = [
         'kerberosv5/krb5.h',
@@ -713,12 +712,33 @@ else
         'krb5/krb5.h',
     ]
 
+    if kerberos_path != ''
+        kerberos = cc.find_library(
+            'krb5',
+            dirs: kerberos_path / 'lib',
+            required: false,
+        )
+        kerberos_includes += include_directories(kerberos_path / 'include')
+
+        krb5_config = find_program(
+            'krb5-config',
+            dirs: kerberos_path / 'bin',
+            required: false,
+        )
+    else
+        kerberos = cc.find_library('krb5', dirs: libsearch_dirs, required: false)
+        krb5_config = find_program('krb5-config', required: false)
+    endif
+
     foreach header : kerberos_headers
         if cc.has_header(
             header,
-            include_directories: include_directories(header_dir),
+            include_directories: include_directories(
+                [kerberos_path / 'include', header_dir],
+            )
         )
             cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
+            break
         endif
     endforeach
 

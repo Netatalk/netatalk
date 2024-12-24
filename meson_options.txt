@@ -256,6 +256,12 @@ option(
     description: 'Set path to OS specific init directory',
 )
 option(
+    'with-kerberos-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to Kerberos V library. Must contain lib and include dirs',
+)
+option(
     'with-ldap-path',
     type: 'string',
     value: '',
