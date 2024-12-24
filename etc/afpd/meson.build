@@ -33,6 +33,7 @@ afpd_c_args = []
 afpd_external_deps = [libgcrypt]
 afpd_internal_deps = []
 afpd_link_args = []
+afpd_includes = [root_includes]
 
 if have_appletalk
     afpd_sources += [
@@ -90,6 +91,7 @@ endif
 if have_kerberos
     afpd_external_deps += kerberos
     afpd_c_args += kerberos_c_args
+    afpd_includes += kerberos_includes
 endif
 
 if have_tcpwrap
@@ -114,7 +116,7 @@ endif
 libafpd = static_library(
     'afpd',
     afpd_sources,
-    include_directories: root_includes,
+    include_directories: afpd_includes,
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [
@@ -184,7 +186,7 @@ executable(
     'afpd',
     afpd_dtrace_input,
     objects: afpd_objs,
-    include_directories: root_includes,
+    include_directories: afpd_includes,
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
     c_args: [

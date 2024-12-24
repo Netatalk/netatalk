@@ -296,6 +296,7 @@ jobs:
             flex \
             gawk \
             gcc \
+            krb5-devel \
             libacl-devel \
             libavahi-devel \
             libdb-4_8-devel \
@@ -584,7 +585,6 @@ jobs:
               -Dbuildtype=release \
               -Dwith-appletalk=true \
               -Dwith-dtrace=false \
-              -Dwith-krbV-uam=false \
               -Dwith-tests=true
             meson compile -C build
             cd build
@@ -620,6 +620,7 @@ jobs:
               dbus \
               docbook-xsl \
               gcc-11.2.0p14 \
+              heimdal \
               libevent \
               libgcrypt \
               libtalloc \
@@ -636,6 +637,8 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-gssapi-path=/usr/local/heimdal \
+              -Dwith-kerberos-path=/usr/local/heimdal \
               -Dwith-tests=true
             meson compile -C build
             meson install -C build

@@ -35,6 +35,7 @@ test_c_args = []
 test_external_deps = [libgcrypt]
 test_internal_deps = []
 test_link_args = []
+test_includes = [root_includes]
 
 if have_spotlight
     test_sources += [
@@ -73,6 +74,7 @@ endif
 if have_kerberos
     test_external_deps += kerberos
     test_c_args += kerberos_c_args
+    test_includes += kerberos_includes
 endif
 
 if have_tcpwrap
@@ -97,7 +99,7 @@ endif
 afpdtestlib = static_library(
     'afpdtestlib',
     test_sources,
-    include_directories: root_includes,
+    include_directories: test_includes,
     link_with: [test_internal_deps, libatalk],
     dependencies: [
         test_external_deps,
@@ -169,7 +171,7 @@ afpdtest = executable(
     'afpdtest',
     afpdtest_dtrace_input,
     objects: test_objs,
-    include_directories: root_includes,
+    include_directories: test_includes,
     link_with: [test_internal_deps, libatalk],
     dependencies: [
         test_external_deps,
