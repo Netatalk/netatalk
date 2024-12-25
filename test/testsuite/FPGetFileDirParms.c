@@ -1130,6 +1130,78 @@ test_exit:
 	exit_test("FPGetFileDirParms:test396: dir root attribute");
 }
 
+/* -------------------------- */
+STATIC void test423()
+{
+uint16_t vol = VolID;
+int  dir;
+char *name  = "t423 file";
+char *name2 = "t423 file new name";
+char *name1 = "t423 dir";
+int  ofs =  3 * sizeof( uint16_t );
+uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
+struct afp_filedir_parms filedir;
+int fid = 0;
+int fork = 0;
+DSI *dsi = &Conn->dsi;
+
+	ENTER_TEST
+
+	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
+		test_failed();
+		goto test_exit;
+	}
+
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
+
+	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap , dir, name, OPENACC_WR |OPENACC_RD|OPENACC_DWR| OPENACC_DRD);
+	if (!fork) {
+		test_failed();
+		goto fin;
+	}
+	if (FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100)) {
+		test_failed();
+		goto fin;
+	}
+
+	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
+		test_failed();
+		goto fin;
+	}
+	else {
+		filedir.isdir = 0;
+		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
+		fid = filedir.did;
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
+	}
+	FAIL (FPMoveAndRename(Conn, vol, dir, dir, name, name2))
+	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
+		test_failed();
+	}
+	else {
+		filedir.isdir = 0;
+		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
+		if (fid != filedir.did) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
+			}
+			test_failed();
+
+		}
+		else {
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
+		}
+	}
+
+fin:
+	FAIL (fork && FPCloseFork(Conn,fork))
+	FAIL (FPDelete(Conn, vol,  dir, name2))
+	FPDelete(Conn, vol,  dir, name);
+	FAIL (FPDelete(Conn, vol,  dir, ""))
+test_exit:
+	exit_test("FPGetFileDirParms:test420: an open file is renamed");
+}
+
 /* ----------- */
 void FPGetFileDirParms_test()
 {
@@ -1153,4 +1225,5 @@ void FPGetFileDirParms_test()
     test371();
     test380();
 	test396();
+	test423();
 }

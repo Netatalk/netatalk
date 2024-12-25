@@ -433,7 +433,7 @@ fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 
-	exit_test("FPCopyFile:test158: copyFile dest exist and is open");
+	exit_test("FPCopyFile:test375: copyFile dest exist and is open");
 }
 
 /* ------------------------- */

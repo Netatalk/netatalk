@@ -268,6 +268,72 @@ test_exit:
 	exit_test("FPResolveID:test362: Resolve ID two users interactions");
 }
 
+/* -------------------------- */
+STATIC void test417()
+{
+uint16_t vol = VolID;
+int  dir;
+char *name  = "t417 file";
+char *name2 = "t417 file new name";
+char *name1 = "t417 dir";
+int  ofs =  3 * sizeof( uint16_t );
+uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
+struct afp_filedir_parms filedir;
+int fid = 0;
+DSI *dsi = &Conn->dsi;
+
+	ENTER_TEST
+
+	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name1))) {
+		test_failed();
+		goto test_exit;
+	}
+
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name))
+
+	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
+		test_failed();
+		goto fin;
+	}
+
+	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
+		test_failed();
+	}
+	else {
+		filedir.isdir = 0;
+		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
+		fid = filedir.did;
+		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
+	}
+	FAIL (FPMoveAndRename(Conn, vol, dir, dir, name, name2))
+
+	if (FPGetFileDirParams(Conn, vol,  dir , name2, bitmap,0)) {
+		test_failed();
+	}
+	else {
+		filedir.isdir = 0;
+		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
+		if (fid != filedir.did) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
+			}
+			test_failed();
+
+		}
+		else {
+			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
+		}
+	}
+
+fin:
+	FAIL (FPDelete(Conn, vol,  dir, name2))
+	FPDelete(Conn, vol,  dir, name);
+	FAIL (FPDelete(Conn, vol,  dir, ""))
+test_exit:
+	exit_test("FPResolveID:test417: Resolve ID file modified with AFP command");
+
+}
+
 
 /* ----------- */
 void FPResolveID_test()
@@ -278,4 +344,5 @@ void FPResolveID_test()
 	test310();
 	test311();
 	test362();
+	test417();
 }

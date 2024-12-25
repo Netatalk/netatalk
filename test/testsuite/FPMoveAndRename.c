@@ -297,8 +297,44 @@ test_exit:
 	exit_test("FPMoveAndRename:test138: Move And Rename");
 }
 
-/* -------------------------
-*/
+/* ------------------------- */
+STATIC void test322()
+{
+char *name = "t322 dir";
+char *name1 = "t322 file";
+char *name2 = "t322 file1";
+int dir;
+uint16_t vol = VolID;
+int id;
+int id1;
+
+	ENTER_TEST
+
+	if (!(dir = FPCreateDir(Conn,vol, DIRDID_ROOT , name))) {
+		test_nottested();
+		goto test_exit;
+	}
+
+	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
+
+	id = get_fid(Conn, vol, dir , name1);
+
+	FAIL (FPMoveAndRename(Conn, vol, dir, dir, name1, name2))
+
+	id1 = get_fid(Conn, vol, dir , name2);
+	if (id != id1) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED id are not the same %d %d\n", ntohl(id), ntohl(id1));
+		}
+		test_failed();
+	}
+	FAIL (FPDelete(Conn, vol,  dir , name2))
+	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+test_exit:
+	exit_test("FPMoveAndRename:test322: file renamed, cnid not updated");
+}
+
+/* ------------------------- */
 STATIC void test378()
 {
 char *name =  "t378 name";
@@ -341,5 +377,6 @@ void FPMoveAndRename_test()
     test73();
     test77();
     test138();
+    test322();
     test378();
 }
