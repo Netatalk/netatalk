@@ -18,8 +18,8 @@ uint32_t mdate = 0;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -28,7 +28,7 @@ uint32_t mdate = 0;
 		goto fin;
 	}
 
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -61,9 +61,9 @@ uint32_t mdate = 0;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 		if (mdate != filedir.mdate)  {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED modification date differ\n");
-		}
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED modification date differ\n");
+			}
 	        test_failed();
 	        goto fin;
 		}

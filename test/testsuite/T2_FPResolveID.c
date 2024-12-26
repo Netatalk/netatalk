@@ -23,8 +23,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -88,8 +88,8 @@ int ret;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -158,8 +158,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -461,10 +461,8 @@ DSI *dsi = &Conn->dsi;
 			FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 		}
 	}
-	if (!Mac) {
-		if (get_fs_lock(name1, name3) < 0) {
-			goto fin;
-		}
+	if (get_fs_lock(name1, name3) < 0) {
+		goto fin;
 	}
 
 fin:
@@ -741,8 +739,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 

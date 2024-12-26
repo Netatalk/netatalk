@@ -86,7 +86,7 @@ extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap, int afpd_erro
 #define T_PATH       2
 #define T_AFP3       3
 #define T_AFP3_CONN2 4
-#define T_MAC_PATH   5
+/* #define T_MAC_PATH   5 */
 #define T_UNIX_PREV  6
 #define T_UTF8       7
 #define T_VOL2       8

@@ -16,8 +16,8 @@ DSI *dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 	dsi = &Conn->dsi;
@@ -33,10 +33,8 @@ DSI *dsi;
 	else {
 		filedir.isdir = 1;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, 0, bitmap);
-		if (!Mac) {
-			if (delete_unix_adouble(Path, name)) {
-				goto fin;
-			}
+		if (delete_unix_adouble(Path, name)) {
+			goto fin;
 		}
  		FAIL (FPSetDirParms(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
  		FAIL (htonl(AFPERR_BITMAP) != FPSetDirParms(Conn, vol, DIRDID_ROOT , name, 0xffff, &filedir))
