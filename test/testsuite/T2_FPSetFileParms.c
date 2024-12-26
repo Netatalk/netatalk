@@ -67,8 +67,8 @@ unsigned ret;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
  	if (!(dir = folder_with_ro_adouble(vol, DIRDID_ROOT, name, file))) {
@@ -114,8 +114,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -130,9 +130,7 @@ DSI *dsi = &Conn->dsi;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
-		if (!Mac) {
-            delete_unix_md(Path,"", name);
-		}
+		delete_unix_md(Path,"", name);
  		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, bitmap, &filedir))
 	}
 

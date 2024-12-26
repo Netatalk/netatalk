@@ -21,8 +21,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -50,12 +50,7 @@ uint16_t vol = VolID;
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir , name1))
-	if (Mac) {
-		if (FPDelete(Conn, vol,  dir , "")) {
-			test_failed();
-		}
-	}
-	else if (delete_unix_dir(Path, name)) {
+	if (delete_unix_dir(Path, name)) {
 		test_failed();
 		goto fin;
 	}
@@ -131,8 +126,8 @@ int ret;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -159,10 +154,7 @@ int ret;
 		goto fin;
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name1))
-	if (Mac) {
-		FAIL (FPDelete(Conn, vol,  dir , ""))
-	}
-	else if (delete_unix_dir(Path, name)) {
+	if (delete_unix_dir(Path, name)) {
 		test_failed();
 		goto fin;
 	}
@@ -235,8 +227,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -270,10 +262,7 @@ uint16_t vol = VolID;
 		test_failed();
 	}
 
-	if (Mac) {
-		FAIL (FPDelete(Conn, vol,  dir , ""))
-	}
-	else if (delete_unix_dir(Path, name)) {
+	if (delete_unix_dir(Path, name)) {
 		test_failed();
 		goto fin;
 	}
@@ -309,8 +298,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 	if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "new/.invisible",
@@ -344,8 +333,8 @@ uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -395,20 +384,16 @@ uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
 	}
 
     sleep(1);
-    if (!Mac) {
-		sprintf(temp, "%s/t104 dir1/t104 dir2/t104 dir2_1", Path);
-		if (!Quiet) {
-			fprintf(stdout, "mkdir(%s)\n", temp);
-		}
-		if (mkdir(temp, 0777)) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
-			}
-			test_failed();
-		}
+
+	sprintf(temp, "%s/t104 dir1/t104 dir2/t104 dir2_1", Path);
+	if (!Quiet) {
+		fprintf(stdout, "mkdir(%s)\n", temp);
 	}
-	else if (!(FPCreateDir(Conn,vol, dir2, name6))) {
-		test_nottested();
+	if (mkdir(temp, 0777)) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED mkdir %s %s\n", temp, strerror(errno));
+		}
+		test_failed();
 	}
 
     bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME)|(1<< DIRPBIT_OFFCNT);
@@ -479,8 +464,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -492,14 +477,8 @@ uint16_t vol = VolID;
 		test_failed();
 	}
 
-	if (!Mac) {
-		sprintf(temp, "%s/%s", name, name1);
-		delete_unix_dir(Path, temp);
-	}
-	else {
-		FAIL (FPDelete(Conn,vol, dir1,""))
-	}
-
+	sprintf(temp, "%s/%s", name, name1);
+	delete_unix_dir(Path, temp);
 
 	FAIL (FPCloseVol(Conn,vol))
 
@@ -530,8 +509,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -543,13 +522,8 @@ uint16_t vol = VolID;
 		test_failed();
 	}
 
-	if (!Mac) {
-		sprintf(temp, "%s/%s", name, name1);
-		delete_unix_dir(Path, temp);
-	}
-	else {
-		FAIL (FPDelete(Conn,vol, dir1,""))
-	}
+	sprintf(temp, "%s/%s", name, name1);
+	delete_unix_dir(Path, temp);
 
 	FAIL (FPDelete(Conn,vol, dir,""))
 
@@ -577,8 +551,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -589,8 +563,9 @@ uint16_t vol = VolID;
 	}
 
 	dir1  = FPCreateDir(Conn,vol, dir , name);
-	if (!dir) {
+	if (!dir1) {
 		test_failed();
+		goto fin;
 	}
 
 	FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
@@ -608,18 +583,13 @@ uint16_t vol = VolID;
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir , name1))
-	if (!Mac) {
-		sprintf(temp,"%s/%s", name, name);
-		if (delete_unix_dir(Path, temp)) {
-			test_failed();
-		}
-		else if (delete_unix_dir(Path, name)) {
-			test_failed();
-		}
+
+	sprintf(temp,"%s/%s", name, name);
+	if (delete_unix_dir(Path, temp)) {
+		test_failed();
 	}
-	else {
-		FAIL (FPDelete(Conn, vol,  dir1 , ""))
-		FAIL (FPDelete(Conn, vol,  dir , ""))
+	else if (delete_unix_dir(Path, name)) {
+		test_failed();
 	}
 
 	FAIL (FPCloseVol(Conn,vol))
@@ -653,6 +623,7 @@ uint16_t vol = VolID;
 		test_failed();
 	}
 
+fin:
     /* dir and dir1 should be != but if inode reused they are the same */
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
@@ -672,8 +643,8 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -687,33 +658,28 @@ int fd;
 
 	id = get_fid(Conn, vol, dir , name1);
 
-	if (!Mac) {
-	    /* so it doesn't reuse the same inode */
-//        sleep(2); /* FIXME: Ensure ctimes differ, this circumvents dircache caching which only has second granularity */
-		sprintf(temp,"%s/%s/%s", Path, name, name2);
-		fd = open(temp, O_RDWR | O_CREAT, 0666);
-		if (fd < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin;
+	/* so it doesn't reuse the same inode */
+//    sleep(2); /* FIXME: Ensure ctimes differ, this circumvents dircache caching which only has second granularity */
+	sprintf(temp,"%s/%s/%s", Path, name, name2);
+	fd = open(temp, O_RDWR | O_CREAT, 0666);
+	if (fd < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
 		}
-		close(fd);
-		delete_unix_file(Path, name, name1);
+		test_failed();
+		goto fin;
+	}
+	close(fd);
+	delete_unix_file(Path, name, name1);
 
-		sprintf(temp1,"%s/%s/%s", Path, name, name1);
-		if (rename(temp, temp1) < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
-			}
-			test_failed();
+	sprintf(temp1,"%s/%s/%s", Path, name, name1);
+	if (rename(temp, temp1) < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
 		}
+		test_failed();
 	}
-	else {
-		FAIL (FPDelete(Conn, vol,  dir , name))
-		FAIL (FPCreateFile(Conn, vol,  0, dir , name1))
-	}
+
 	id1 = get_fid(Conn, vol, dir , name1);
 	if (id == id1) {
 		if (!Quiet) {
@@ -752,8 +718,8 @@ struct afp_filedir_parms filedir;
 		test_skipped(T_CONN2);
 		goto test_exit;
 	}
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -855,8 +821,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -883,12 +849,7 @@ uint16_t vol = VolID;
 	}
 
 	FAIL (FPDelete(Conn, vol,  dir , name1))
-	if (Mac) {
-		if (FPDelete(Conn, vol,  dir , "")) {
-			test_failed();
-		}
-	}
-	else if (delete_unix_dir(Path, name)) {
+	if (delete_unix_dir(Path, name)) {
 		test_failed();
 		goto fin;
 	}
@@ -976,7 +937,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
 struct afp_filedir_parms filedir;
 int fid = 0;
-int fork = 0;
+uint16_t fork = 0;
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST

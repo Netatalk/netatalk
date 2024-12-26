@@ -24,8 +24,8 @@ STATIC void test3()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test3: Checks data fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -42,7 +42,7 @@ STATIC void test3()
 	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -81,8 +81,8 @@ STATIC void test4()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test4: Checks reso fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -99,7 +99,7 @@ STATIC void test4()
 	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -140,8 +140,8 @@ STATIC void test7()
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test7: Checks fork / adouble metadata refcounting\n");
 	}
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -159,7 +159,7 @@ STATIC void test7()
 	FAIL (FPRead(Conn, fork1, 0, 2000, Data))
 	FAIL (FPCloseFork(Conn, fork1))
 
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -196,8 +196,8 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -378,8 +378,8 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -397,10 +397,10 @@ int dir;
 		test_failed();
 		goto fin;
 	}
-	if (!Mac) {
-		sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name, file);
-		unlink(temp);
-	}
+
+	sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name, file);
+	unlink(temp);
+
 	fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,dir, file, OPENACC_WR | OPENACC_RD);
 
 	if (!fork1) {
@@ -445,8 +445,8 @@ unsigned int ret;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -467,7 +467,7 @@ unsigned int ret;
 	if (not_valid(ret, 0, AFPERR_LOCK)) {
 		test_failed();
 	}
-	if (!Mac && ret != htonl(AFPERR_LOCK)) {
+	if (ret != htonl(AFPERR_LOCK)) {
 		test_failed();
 	}
 	if (fork) {
@@ -488,8 +488,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -497,7 +497,7 @@ uint16_t vol = VolID;
 		test_nottested();
 		goto test_exit;
 	}
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -528,8 +528,8 @@ STATIC void test157()
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -537,7 +537,7 @@ STATIC void test157()
 		test_nottested();
 		goto test_exit;
 	}
-	if (!Mac && delete_unix_md(Path, "", name)) {
+	if (delete_unix_md(Path, "", name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -571,8 +571,8 @@ uint16_t vol = VolID;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -614,8 +614,8 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -629,37 +629,36 @@ int fd;
 		goto test_exit;
 	}
 
-	if (!Mac) {
-		sprintf(temp,"%s/%s", Path, file);
-		if (chmod(temp, 0444) < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin;
-		}
-		sprintf(temp,"%s/.AppleDouble/%s", Path, file);
+	sprintf(temp,"%s/%s", Path, file);
+	if (chmod(temp, 0444) < 0) {
 		if (!Quiet) {
-			fprintf(stdout,"unlink %s \n", temp);
+			fprintf(stdout,"\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
 		}
-		unlink(temp);
-		fd = open(temp, O_RDWR | O_CREAT, 0666);
-		if (fd < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin;
-		}
-		close(fd);
-		if (chmod(temp, 0444) < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin;
-		}
+		test_failed();
+		goto fin;
 	}
+	sprintf(temp,"%s/.AppleDouble/%s", Path, file);
+	if (!Quiet) {
+		fprintf(stdout,"unlink %s \n", temp);
+	}
+	unlink(temp);
+	fd = open(temp, O_RDWR | O_CREAT, 0666);
+	if (fd < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to create %s :%s\n", temp, strerror(errno));
+		}
+		test_failed();
+		goto fin;
+	}
+	close(fd);
+	if (chmod(temp, 0444) < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
+		}
+		test_failed();
+		goto fin;
+	}
+
 	bitmap = 0x693f;
 	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, file, bitmap, 0 )) {
 		test_failed();
@@ -699,8 +698,8 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -744,31 +743,30 @@ int fd;
 		}
 	    test_failed();
 	}
-	if (!Mac) {
-		sprintf(temp,"%s/%s", Path, name);
-		fd = open(temp, O_RDWR , 0666);
-		if (fd < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin1;
+
+	sprintf(temp,"%s/%s", Path, name);
+	fd = open(temp, O_RDWR , 0666);
+	if (fd < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
 		}
-		if (read(fd, data, 5) != 5) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
-			}
-			test_failed();
-		}
-		if (memcmp(data, "test\r", 5)) {
-			if (!Quiet) {
-				fprintf(stdout, "\tFAILED not \"test\\r\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
-				data[0],data[1],data[2],data[3],data[4]);
-			}
-		    test_failed();
-		}
-		close(fd);
+		test_failed();
+		goto fin1;
 	}
+	if (read(fd, data, 5) != 5) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
+		}
+		test_failed();
+	}
+	if (memcmp(data, "test\r", 5)) {
+		if (!Quiet) {
+			fprintf(stdout, "\tFAILED not \"test\\r\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+			data[0],data[1],data[2],data[3],data[4]);
+		}
+		test_failed();
+	}
+	close(fd);
 
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
@@ -793,8 +791,8 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -838,31 +836,30 @@ int fd;
 		}
 	    test_failed();
 	}
-	if (!Mac) {
-		sprintf(temp,"%s/%s", Path, name);
-		fd = open(temp, O_RDWR , 0666);
-		if (fd < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin1;
+
+	sprintf(temp,"%s/%s", Path, name);
+	fd = open(temp, O_RDWR , 0666);
+	if (fd < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
 		}
-		if (read(fd, data, 5) != 5) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
-			}
-			test_failed();
-		}
-		if (memcmp(data, "test\n", 5)) {
-			if (!Quiet) {
-				fprintf(stdout, "\tFAILED not \"test\\n\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
-				data[0],data[1],data[2],data[3],data[4]);
-			}
-		    test_failed();
-		}
-		close(fd);
+		test_failed();
+		goto fin1;
 	}
+	if (read(fd, data, 5) != 5) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
+		}
+		test_failed();
+	}
+	if (memcmp(data, "test\n", 5)) {
+		if (!Quiet) {
+			fprintf(stdout, "\tFAILED not \"test\\n\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+			data[0],data[1],data[2],data[3],data[4]);
+		}
+		test_failed();
+	}
+	close(fd);
 
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
@@ -887,8 +884,8 @@ int fd;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -932,31 +929,30 @@ int fd;
 		}
 	    test_failed();
 	}
-	if (!Mac) {
-		sprintf(temp,"%s/%s", Path, name);
-		fd = open(temp, O_RDWR , 0666);
-		if (fd < 0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
-			}
-			test_failed();
-			goto fin1;
+
+	sprintf(temp,"%s/%s", Path, name);
+	fd = open(temp, O_RDWR , 0666);
+	if (fd < 0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to open %s :%s\n", temp, strerror(errno));
 		}
-		if (read(fd, data, 5) != 5) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
-			}
-			test_failed();
-		}
-		if (memcmp(data, "test\r", 5)) {
-			if (!Quiet) {
-				fprintf(stdout, "\tFAILED not \"test\\r\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
-				data[0],data[1],data[2],data[3],data[4]);
-			}
-		    test_failed();
-		}
-		close(fd);
+		test_failed();
+		goto fin1;
 	}
+	if (read(fd, data, 5) != 5) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unable to read data:%s\n", strerror(errno));
+		}
+		test_failed();
+	}
+	if (memcmp(data, "test\r", 5)) {
+		if (!Quiet) {
+			fprintf(stdout, "\tFAILED not \"test\\r\" get 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+			data[0],data[1],data[2],data[3],data[4]);
+		}
+		test_failed();
+	}
+	close(fd);
 
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
@@ -978,8 +974,8 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -992,9 +988,7 @@ int dir;
 		goto fin;
 	}
 
-	if (!Mac) {
-		delete_unix_md(Path, name, file);
-	}
+	delete_unix_md(Path, name, file);
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,dir, file, OPENACC_RD);
 
@@ -1005,7 +999,7 @@ int dir;
 
 	FAIL (FPCloseFork(Conn,fork))
 
-    if (!Mac && (delete_unix_md(Path, name, file) == 0)) {
+    if (delete_unix_md(Path, name, file) == 0) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED Resource fork there!\n");
 		}
@@ -1035,8 +1029,8 @@ int dir;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -1049,12 +1043,10 @@ int dir;
 		goto fin;
 	}
 
-	if (!Mac) {
-		sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name, file);
-		if (unlink(temp)) {
-		    test_nottested();
-		    goto fin;
-		}
+	sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name, file);
+	if (unlink(temp)) {
+		test_nottested();
+		goto fin;
 	}
 
 	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,dir, file, OPENACC_WR | OPENACC_RD);
@@ -1348,8 +1340,8 @@ STATIC void test431()
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 	if (Conn->afp_version < 31) {

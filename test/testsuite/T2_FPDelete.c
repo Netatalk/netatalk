@@ -29,8 +29,8 @@ int ret;
 		goto test_exit;
 	}
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -76,7 +76,7 @@ int ret;
     filedir.access[3] = 7;
  	FAIL (FPSetDirParms(Conn, vol, dir , "", bitmap, &filedir))
 	FAIL (ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir , name))
-	if (!Mac && adouble == AD_V2) {
+	if (adouble == AD_V2) {
 		sprintf(temp,"%s/%s/.AppleDouble/%s", Path, name1, name);
 		if (chmod(temp, 0644) <0) {
 			if (!Quiet) {
@@ -99,7 +99,7 @@ int ret;
 			test_failed();
 		}
 	} else {
-        if (!Mac && adouble == AD_V2) {
+        if (adouble == AD_V2) {
             if (chmod(temp, 0666) <0) {
 		if (!Quiet) {
 			fprintf(stdout,"\tFAILED chmod(%s) %s\n", temp, strerror(errno));
@@ -138,8 +138,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -185,8 +185,8 @@ int fork;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 
@@ -210,27 +210,27 @@ int fork;
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi->data +ofs, bitmap, 0);
 	}
-	if (!Mac) {
-		sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
 
-		if (unlink(temp1) <0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
-			}
-			test_failed();
+	sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
+
+	if (unlink(temp1) <0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
 		}
-		sprintf(temp1, "%s/%s/%s", Path, name1, name);
-		if (unlink(temp1) <0) {
-			if (!Quiet) {
-				fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
-			}
-			test_failed();
-		}
-		if (delete_unix_dir(Path, name1)) {
-			test_failed();
-		}
-		getchar();
+		test_failed();
 	}
+	sprintf(temp1, "%s/%s/%s", Path, name1, name);
+	if (unlink(temp1) <0) {
+		if (!Quiet) {
+			fprintf(stdout,"\tFAILED unlink %s %s\n", temp, strerror(errno));
+		}
+		test_failed();
+	}
+	if (delete_unix_dir(Path, name1)) {
+		test_failed();
+	}
+	getchar();
+
 	if (FPGetForkParam(Conn, fork, bitmap)) {
 		test_failed();
 	}
@@ -256,8 +256,8 @@ DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
 
-	if (!Mac && Path[0] == '\0') {
-		test_skipped(T_MAC_PATH);
+	if (Path[0] == '\0') {
+		test_skipped(T_PATH);
 		goto test_exit;
 	}
 

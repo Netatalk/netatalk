@@ -1142,7 +1142,7 @@ int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
 struct afp_filedir_parms filedir;
 int fid = 0;
-int fork = 0;
+uint16_t fork = 0;
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST

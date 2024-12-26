@@ -831,9 +831,11 @@ void test_skipped(int why)
 	case T_AFP32:
 		s = "AFP 3.2 or higher";
 		break;
+/*
 	case T_MAC_PATH:
 		s = "Mac OS server or volume path";
 		break;
+*/
 	case T_UNIX_PREV:
 		s ="volume with UNIX privileges";
 		break;
