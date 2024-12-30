@@ -1588,7 +1588,11 @@ static bool ad_entry_check_size(uint32_t eid,
 		[ADEID_SHORTNAME] = {ADEDLEN_SHORTNAME, false, false},
 		[ADEID_AFPFILEI] = {ADEDLEN_AFPFILEI, true, false},
 		[ADEID_DID] = {ADEDLEN_DID, true, false},
+#ifdef __APPLE__
+		[ADEID_PRIVDEV] = {ADEDLEN_PRIVDEV, false, false},
+#else
 		[ADEID_PRIVDEV] = {ADEDLEN_PRIVDEV, true, false},
+#endif
 		[ADEID_PRIVINO] = {ADEDLEN_PRIVINO, true, false},
 		[ADEID_PRIVSYN] = {ADEDLEN_PRIVSYN, true, false},
 		[ADEID_PRIVID] = {ADEDLEN_PRIVID, true, false},
