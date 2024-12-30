@@ -188,8 +188,7 @@ int id1;
 		if (!Quiet) {
 			fprintf(stdout,"\tNOTE id are not the same %d %d\n", ntohl(id), ntohl(id1));
 		}
-		// FIXME; file ID gets changed on f.e. macOS
-		// test_failed();
+		test_failed();
 	}
 	FAIL (FPDelete(Conn, vol,  dir , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))

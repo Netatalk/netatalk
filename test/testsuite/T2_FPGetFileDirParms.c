@@ -990,8 +990,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tNOTE FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			// FIXME; file ID gets changed on f.e. macOS
-			// test_failed();
+			test_failed();
 
 		}
 		else {
