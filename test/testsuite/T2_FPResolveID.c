@@ -286,8 +286,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tNOTE FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			// FIXME; file ID gets changed on f.e. macOS
-			// test_failed();
+			test_failed();
 
 		}
 		else {
@@ -453,8 +452,7 @@ DSI *dsi = &Conn->dsi;
 			if (!Quiet) {
 				fprintf(stdout,"\tNOTE FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 			}
-			// FIXME; file ID gets changed on f.e. macOS
-			// test_failed();
+			test_failed();
 
 		}
 		else {
@@ -597,7 +595,6 @@ DSI *dsi = &Conn->dsi;
 	}
 
 	if (FPGetFileDirParams(Conn, vol,  dir1 , name, bitmap,0)) {
-		// FIXME: Why does this assertion fail on macOS?
 		test_failed();
 		goto fin;
 	}
@@ -608,8 +605,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tNOTE FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 		}
-		// FIXME; file ID gets changed on f.e. macOS
-		// test_failed();
+		test_failed();
 
 	}
 	else {
@@ -705,8 +701,7 @@ DSI *dsi = &Conn->dsi;
 		if (!Quiet) {
 			fprintf(stdout,"\tNOTE FPGetFileDirParams id differ %x %x\n", fid, filedir.did);
 		}
-		// FIXME; file ID gets changed on f.e. macOS
-		// test_failed();
+		test_failed();
 	}
 	else {
 		FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
