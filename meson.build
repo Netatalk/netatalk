@@ -431,7 +431,6 @@ have_bdb = false
 bdb_header = ''
 bdb_includes = []
 bdb_libdir = ''
-bdb_link_args = []
 bdb_major_version = ''
 bdb_minor_version = ''
 bdb_version = ''
