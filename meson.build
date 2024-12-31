@@ -144,14 +144,16 @@ uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
 # Includes #
 ############
 
-macos_prefix = ''
+brew_prefix = ''
+find_program('brew', required: false)
 if host_os == 'darwin'
-    brew = find_program('brew', required: false)
-    if cpu == 'aarch64' and brew.found()
-        macos_prefix += '/opt/homebrew'
-    elif cpu == 'x86_64' and brew.found()
-        macos_prefix += '/usr/local'
+    if cpu == 'aarch64'
+        brew_prefix += '/opt/homebrew'
+    elif cpu == 'x86_64'
+        brew_prefix += '/usr/local'
     endif
+elif host_os == 'linux'
+    brew_prefix = '/home/linuxbrew/.linuxbrew'
 endif
 
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
@@ -197,7 +199,7 @@ uname = find_program('uname', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
 
 if host_os == 'darwin'
-    bison = find_program(macos_prefix / 'opt/bison/bin/bison', required: false)
+    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
     if not bison.found()
         bison = find_program('/opt/local/bin/bison', required: false)
     endif
@@ -434,15 +436,23 @@ bdb_libdir = ''
 bdb_major_version = ''
 bdb_minor_version = ''
 bdb_version = ''
+bdb_dirs = []
 
 if bdb_path != ''
-    bdb_dirs = [ bdb_path ]
+    bdb_dirs += [ bdb_path ]
 else
-    bdb_dirs = [
+    if brew_prefix != ''
+        bdb_dirs += [
+            brew_prefix / 'opt/berkeley-db@5',
+            brew_prefix / 'opt/berkeley-db@4',
+            brew_prefix / 'opt/berkeley-db',
+        ]
+    endif
+
+    bdb_dirs += [
         '/usr/local',
         '/usr/pkg',
         '/opt/local',
-        macos_prefix / 'opt/berkeley-db',
         '/usr',
     ]
 endif
@@ -1383,8 +1393,8 @@ ldap_path = get_option('with-ldap-path')
 
 ldap_link_args = []
 
-if ldap_path == '' and host_os == 'darwin' and fs.exists(macos_prefix / 'opt/openldap')
-    ldap_path = macos_prefix / 'opt/openldap'
+if ldap_path == '' and fs.exists(brew_prefix / 'opt/openldap')
+    ldap_path = brew_prefix / 'opt/openldap'
 endif
 
 if ldap_path != ''
@@ -1607,7 +1617,7 @@ if docbook_path != ''
     docbook_xsl_dirs += [docbook_path]
 else
     if host_os == 'darwin'
-        docbook_xsl_dirs += macos_prefix / 'opt/docbook-xsl/docbook-xsl'
+        docbook_xsl_dirs += brew_prefix / 'opt/docbook-xsl/docbook-xsl'
     endif
 
     docbook_xsl_dirs += [
@@ -2041,7 +2051,7 @@ else
         elif host_os == 'darwin'
             cdata.set(
                 '_PATH_CRACKLIB',
-                '"' + macos_prefix / 'var/cracklib/cracklib-words' + '"',
+                '"' + brew_prefix / 'var/cracklib/cracklib-words' + '"',
             )
         elif cracklib_dict != ''
             cdata.set('_PATH_CRACKLIB', '"' + cracklib_dict + '"')
