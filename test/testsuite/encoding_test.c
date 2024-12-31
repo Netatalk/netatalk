@@ -3,10 +3,10 @@
 
 static char temp[MAXPATHLEN];
 static char *extascii[24] = {
-	" ?\"#$%&'", // substituted: !
-	"()*+,-.?", // substituted: /
+	" ?\"#$%&'", // substituted illegal char: ! -> ?
+	"()*+,-.?", // substituted illegal char: / -> ?
 	"01234567",
-	"89?;<=>?", // substituted: :
+	"89?;<=>?", // substituted illegal char: : -> ?
 	"@ABCDEFG",
 	"HIJKLMNO",
 	"PQRSTUVW",
@@ -90,6 +90,12 @@ DSI *dsi;
 		}
 		else {
 			close(fd);
+			if (unlink(temp) <0) {
+				if (!Quiet) {
+					fprintf(stdout,"\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+				}
+				test_nottested();
+			}
 		}
 	}
 test_exit:
