@@ -554,11 +554,10 @@ static int get_zones(void)
 	saddr.sat_len = sizeof(struct sockaddr_at);
 #endif
 	saddr.sat_family = AF_APPLETALK;
-	if ((se = getservbyname("zip", "ddp")) == NULL) {
-		fprintf(stderr, "Unknown service \"zip/ddp\".\n");
-		return -1;
-	}
-	saddr.sat_port = ntohs(se->s_port);
+	if ((se = getservbyname("zip", "ddp")) == NULL)
+		saddr.sat_port = 6;
+	else
+		saddr.sat_port = ntohs(se->s_port);
 	saddr.sat_addr.s_net = ATADDR_ANYNET;
 	saddr.sat_addr.s_node = ATADDR_ANYNODE;
 
