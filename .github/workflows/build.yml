@@ -423,7 +423,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db bison cmark-gfm dbus docbook-xsl libxslt meson mysql openldap talloc tracker
+          brew install berkeley-db@5 bison cmark-gfm dbus docbook-xsl libxslt meson mysql openldap talloc tracker
       - name: Configure
         run: |
           meson setup build \
