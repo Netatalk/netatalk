@@ -70,6 +70,7 @@ Test Suite:
 	Daniel Markstedt <daniel@mindani.net>
 
 Package Maintainers and Contributors:
+	Arvid Norlander (Arch Linux)
 	Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
 	Jonas Smedegaard <dr@jones.dk> (Debian GNU/Linux)
 	Daniel Markstedt <daniel@mindani.net> (Debian GNU/Linux)
@@ -77,14 +78,13 @@ Package Maintainers and Contributors:
 	Joe Clarke <marcus@FreeBSD.org> (FreeBSD)
 	David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 	Hauke Fath <hf@spg.tu-darmstadt.de> (NetBSD)
-	Arvid Norlander (Arch Linux)
-	APCCV (OpenWrt)
+	Antonio Pastor (OpenWrt)
 
-NOTE: This list of package maintainers is nowhere near complete.
-      This cohort represent folks who have engaged directly with the
-      Netatalk developers.
+NOTE: This list of package maintainers is nowhere near complete,
+      but rather folks who have engaged directly with the Netatalk project.
+      Our gratitude goes out to all package maintainers not listed here, too!
 
-Sourceforge Website Maintainers:
+Website Maintainers:
 	Andrew Morgan <morgan@orst.edu>
 
 Documentation: Version 1.4.99 - 2.0
@@ -229,6 +229,8 @@ Patches: Version 3.2 - 4.0
 	Simon McVittie <smcv@collabora.com>
 	cy384
 	Denis Yantarev
+	Ken McLeod
+ 	Antonio Pastor
 
 macipgw
 	Stefan Bethke <Stefan.Bethke@Hanse.DE> (1997-2013)
