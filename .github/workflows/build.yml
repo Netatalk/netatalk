@@ -490,6 +490,9 @@ jobs:
               -Dwith-appletalk=true \
               -Dwith-tests=true
             meson compile -C build
+            cd build
+            meson test
+            cd ..
             meson install -C build
             netatalk -V
             afpd -V
@@ -641,6 +644,9 @@ jobs:
               -Dwith-kerberos-path=/usr/local/heimdal \
               -Dwith-tests=true
             meson compile -C build
+            cd build
+            meson test
+            cd ..
             meson install -C build
             netatalk -V
             afpd -V
