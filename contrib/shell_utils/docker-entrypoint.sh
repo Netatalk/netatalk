@@ -104,16 +104,22 @@ fi
 
 echo "*** Removing residual lock files"
 
-if [ -f "/var/lock/netatalk" ]; then
-    rm -f /var/lock/netatalk
+# Workaround for Alpine Docker image bug
+# https://github.com/Netatalk/netatalk/issues/1843
+if [ ! -d "/run/lock" ]; then
+    mkdir /run/lock
 fi
 
-if [ -f "/var/lock/atalkd" ]; then
-    rm -f /var/lock/atalkd
+if [ -f "/run/lock/netatalk" ]; then
+    rm -f /run/lock/netatalk
 fi
 
-if [ -f "/var/lock/papd" ]; then
-    rm -f /var/lock/papd
+if [ -f "/run/lock/atalkd" ]; then
+    rm -f /run/lock/atalkd
+fi
+
+if [ -f "/run/lock/papd" ]; then
+    rm -f /run/lock/papd
 fi
 
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
