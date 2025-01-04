@@ -242,7 +242,7 @@ print &ui_table_row($text{'edit_global_section_force_group'},
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'k5 keytab', \%in);
 print &ui_table_row($text{'edit_global_section_kerberos_keytab'},
-	&ui_filebox('p_k5_keytab', $values[0], 40, undef, undef, undef, 1)
+	&ui_filebox('p_k5_keytab', $values[0], 40)
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'k5 service', \%in);
