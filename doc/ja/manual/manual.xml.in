@@ -12,6 +12,7 @@
 
 <!ENTITY a2boot.8 SYSTEM "../manpages/man8/a2boot.8.xml">
 <!ENTITY ad.1 SYSTEM "../manpages/man1/ad.1.xml">
+<!ENTITY addump.1 SYSTEM "../manpages/man1/addump.1.xml">
 <!ENTITY aecho.1 SYSTEM "../manpages/man1/aecho.1.xml">
 <!ENTITY afp.conf.5 SYSTEM "../manpages/man5/afp.conf.5.xml">
 <!ENTITY afp_signature.conf.5 SYSTEM "../manpages/man5/afp_signature.conf.5.xml">
@@ -21,7 +22,6 @@
 <!ENTITY afppasswd.1 SYSTEM "../manpages/man1/afppasswd.1.xml">
 <!ENTITY afpstats.1 SYSTEM "../manpages/man1/afpstats.1.xml">
 <!ENTITY afptest.1 SYSTEM "../manpages/man1/afptest.1.xml">
-<!ENTITY addump.1 SYSTEM "../manpages/man1/addump.1.xml">
 <!ENTITY asip-status.1 SYSTEM "../manpages/man1/asip-status.1.xml">
 <!ENTITY atalk.4 SYSTEM "../manpages/man4/atalk.4.xml">
 <!ENTITY atalkd.conf.5 SYSTEM "../manpages/man5/atalkd.conf.5.xml">
@@ -81,6 +81,8 @@
 
     &ad.1;
 
+    &addump.1;
+
     &aecho.1;
 
     &afp.conf.5;
@@ -98,8 +100,6 @@
     &afpstats.1;
 
     &afptest.1;
-
-    &addump.1;
 
     &asip-status.1;
 
