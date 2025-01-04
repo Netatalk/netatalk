@@ -1211,6 +1211,10 @@ else
     have_ea = false
 endif
 
+if host_os == 'darwin'
+    cdata.set('HAVE_EAFD', 1)
+endif
+
 if have_ea
     netatalk_ea += ' | sys"'
     ea_summary += ', filesystem EA'

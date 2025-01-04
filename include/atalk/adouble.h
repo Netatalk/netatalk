@@ -412,6 +412,9 @@ extern void ad_init       (struct adouble *, const struct vol * restrict);
 extern void ad_init_old   (struct adouble *ad, int flags, int options);
 extern int ad_init_offsets(struct adouble *ad);
 extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
+#ifdef __APPLE__
+extern int ad_open_native_finderinfo(const char *path, char *ret);
+#endif
 extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
 extern int ad_refresh     (const char *path, struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
