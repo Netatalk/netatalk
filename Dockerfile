@@ -1,7 +1,6 @@
 ARG RUN_DEPS="\
     acl \
     avahi \
-    avahi-compat-libdns_sd \
     bash \
     cups \
     db \
@@ -9,12 +8,11 @@ ARG RUN_DEPS="\
     krb5 \
     libevent \
     libgcrypt \
-    libtracker \
     linux-pam \
+    localsearch \
     openldap \
     talloc \
-    tracker \
-    tracker-miners \
+    tinysparql \
     tzdata"
 ARG BUILD_DEPS="\
     acl-dev \
@@ -35,9 +33,9 @@ ARG BUILD_DEPS="\
     openldap-dev \
     pkgconfig \
     talloc-dev \
-    tracker-dev"
+    tinysparql-dev"
 
-FROM alpine:3.20 AS build
+FROM alpine:3.21 AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -68,7 +66,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM alpine:3.20 AS deploy
+FROM alpine:3.21 AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
