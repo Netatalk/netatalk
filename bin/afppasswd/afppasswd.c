@@ -90,9 +90,9 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
       key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
     if (j <= DES_KEY_SZ)
       memset(key + j, 0, sizeof(key) - j);
-    memset(key, 0, sizeof(key));
     ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
     ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
+    memset(key, 0, sizeof(key));
     if (newpwd) {
         ctxerror = gcry_cipher_encrypt(ctx, newpwd, DES_KEY_SZ, NULL, 0);
     } else {
@@ -183,6 +183,12 @@ found_entry:
       fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
       err = -1;
       goto update_done;
+    }
+    /* Make sure we null out any remaining bytes of the input string */
+    if (strlen(passwd) < PASSWDLEN) {
+      for (int s = (int) strlen(passwd); s <= PASSWDLEN; s++) {
+        passwd[s] = '\0';
+      }
     }
     memcpy(password, passwd, sizeof(password));
   } else {
