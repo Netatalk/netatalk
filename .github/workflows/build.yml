@@ -560,6 +560,7 @@ jobs:
         with:
           copyback: false
           prepare: |
+            export PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/x86_64/10.1/All/
             pkg_add \
               bison \
               db5 \
