@@ -488,24 +488,20 @@ int main(int argc, char **argv)
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
-        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start dbus", 1)) {
-            dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
-            LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
-            if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
-                LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
-                netatalk_exit(EXITERR_CONF);
-            }
-
-            /* Allow dbus some time to start up */
-            sleep(1);
+        dbus_path = atalk_iniparser_getstring(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
+        LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
+        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
+            LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
+            netatalk_exit(EXITERR_CONF);
         }
+
+        /* Allow dbus some time to start up */
+        sleep(1);
 
         set_sl_volumes();
 
-        if (atalk_iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL, "start tracker", 1)) {
-            LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
-            system(INDEXER_COMMAND " -s");
-        }
+        LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
+        system(INDEXER_COMMAND " -s");
     }
 #endif
 
