@@ -14,8 +14,19 @@ papd_sources = [
     'uam.c',
 ]
 
+devprinter_path = ''
+
+if host_os == 'netbsd'
+    devprinter_path = '/var/run/printer'
+else
+    devprinter_path = '/dev/printer'
+endif
+
 papd_c_args = [
+    '-D_PATH_DEVPRINTER="' + devprinter_path + '"',
     '-D_PATH_PAPDCONF="' + pkgconfdir + '/papd.conf"',
+    '-D_PATH_PAPDPRINTCAP="/etc/printcap"',
+    '-D_PATH_PAPDSPOOLDIR="/var/spool/lpd"',
     '-D_PATH_PAPDUAMPATH="' + libdir + '/netatalk/"',
     '-DSPOOLDIR="' + spooldir + '/"',
     dversion,

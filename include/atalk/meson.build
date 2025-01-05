@@ -19,7 +19,6 @@ headers = [
     'nbp.h',
     'netddp.h',
     'pap.h',
-    'paths.h',
     'queue.h',
     'rtmp.h',
     'standards.h',

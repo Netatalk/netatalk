@@ -1835,21 +1835,36 @@ endif
 #
 
 lockfile_path = get_option('with-lockfile-path')
-lockfile = ''
+lockfile_suffix = ''
 
-if lockfile_path != ''
-    lockfile += lockfile_path
-elif host_os == 'freebsd'
-    lockfile += '/var/spool/lock/netatalk'
-elif host_os in ['netbsd', 'openbsd', 'darwin']
-    lockfile += '/var/run/netatalk.pid'
-elif host_os == 'linux'
-    lockfile += '/var/lock/netatalk'
-else
-    lockfile += '/var/spool/locks/netatalk'
+if host_os in ['netbsd', 'openbsd', 'darwin']
+    lockfile_suffix = '.pid'
 endif
 
-cdata.set('PATH_NETATALK_LOCK', '"' + lockfile + '"')
+if lockfile_path == ''
+    if host_os == 'freebsd'
+        lockfile_path += '/var/spool/lock'
+    elif host_os in ['netbsd', 'openbsd', 'darwin']
+        lockfile_path += '/var/run'
+    elif host_os == 'linux'
+        lockfile_path += '/var/lock'
+    else
+        lockfile_path += '/var/spool/locks'
+    endif
+endif
+
+cdata.set(
+    'PATH_ATALKD_LOCK',
+    '"' + lockfile_path + '/atalkd' + lockfile_suffix + '"'
+)
+cdata.set(
+    'PATH_NETATALK_LOCK',
+    '"' + lockfile_path + '/netatalk' + lockfile_suffix + '"'
+)
+cdata.set(
+    'PATH_PAPD_LOCK',
+    '"' + lockfile_path + '/papd' + lockfile_suffix + '"'
+)
 
 #
 # Check for largefle support
@@ -2535,7 +2550,7 @@ summary_info = {
     '  dbus daemon path': dbus_daemonpath,
     '  dbus system directory': dbus_sysconfpath,
     '  init directory': init_dirs,
-    '  Netatalk lockfile': lockfile,
+    '  lockfile directory': lockfile_path,
     '  PAM config directory': pam_confdir,
     '  Print spool directory': spooldir,
     '  User home basedir': homedir,

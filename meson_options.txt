@@ -283,7 +283,7 @@ option(
     'with-lockfile-path',
     type: 'string',
     value: '',
-    description: 'Set path to Netatalk lockfile',
+    description: 'Set path to directory that contains the Netatalk lockfiles',
 )
 option(
     'with-manual-install-path',

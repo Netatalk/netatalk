@@ -41,7 +41,6 @@
 #include <atalk/compat.h>
 #include <atalk/atp.h>
 #include <atalk/pap.h>
-#include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/nbp.h>
 #include <atalk/unicode.h>
@@ -75,7 +74,7 @@ unsigned char	connid, quantum, sock, oquantum = PAP_MAXQUANTUM;
 char		*cannedstatus = "status: print spooler processing job";
 struct printer	*printer = NULL;
 char		*version = VERSION;
-static char	*pidfile = _PATH_PAPDLOCK;
+static char	*pidfile = PATH_PAPD_LOCK;
 
 char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;

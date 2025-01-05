@@ -40,7 +40,6 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
-#include <atalk/paths.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
 #include <atalk/util.h>

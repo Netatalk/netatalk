@@ -40,7 +40,6 @@
 #include <atalk/nbp.h>
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
-#include <atalk/paths.h>
 #include <atalk/util.h>
 
 #ifdef __svr4__
@@ -91,7 +90,7 @@ static int		nfds = 0;
 static fd_set		fds;
 static char		Packet[ PKTSZ ];
 static char		*version = VERSION;
-static char     	*pidfile = _PATH_ATALKDLOCK;
+static char     	*pidfile = PATH_ATALKD_LOCK;
 
 
 /* from config.c */

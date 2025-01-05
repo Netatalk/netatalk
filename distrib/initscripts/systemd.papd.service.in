@@ -11,6 +11,7 @@ Requires=atalkd.service
 Type=forking
 GuessMainPID=no
 ExecStart=@sbindir@/papd
+PIDFile=@lockfile_path@/papd
 Restart=always
 RestartSec=1
 
