@@ -68,7 +68,6 @@ our %netatalkParameterDefaults = (
 	'prodos'				=> 'no',
 	'recvfile'					=> 'no',
 	'read only'					=> 'no',
-	'root preexec close'		=> 'no',
 	'save password'				=> 'yes',
 	'search db'					=> 'no',
 	'server quantum'			=> '1048576',

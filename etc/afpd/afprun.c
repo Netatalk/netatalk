@@ -47,10 +47,10 @@
 
 #include <atalk/logger.h>
 
-/**************************************************************************n
+/****************************************************************************
  Find a suitable temporary directory. The result should be copied immediately
   as it may be overwritten by a subsequent call.
-  ****************************************************************************/
+****************************************************************************/
 
 static const char *tmpdir(void)
 {
@@ -244,18 +244,17 @@ run a command being careful about uid/gid handling and putting the output in
 outfd (or discard it if outfd is NULL).
 ****************************************************************************/
 
-int afprun(int root, char *cmd, int *outfd)
+int afprun(char *cmd, int *outfd)
 {
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();
-    int ret;
 
     /* point our stdout at the file we want output to go into */
     if (outfd && ((*outfd = setup_out_fd()) == -1)) {
         return -1;
     }
-    LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, root?0:uid);
+    LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
 
@@ -325,14 +324,8 @@ int afprun(int root, char *cmd, int *outfd)
 
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
-    if (root) {
-    	ret = become_user_permanently(0, 0);
-    	uid = gid = 0;
-    }
-    else {
-    	ret = become_user_permanently(uid, gid);
-    }
-    if (ret != 0) {
+
+    if (become_user_permanently(uid, gid) != 0) {
         exit(82);
     }
     if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
@@ -357,15 +350,14 @@ int afprun(int root, char *cmd, int *outfd)
  * Run a command in the background without waiting,
  * being careful about uid/gid handling
  */
-int afprun_bg(int root, char *cmd)
+int afprun_bg(char *cmd)
 {
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();
     int fd, fdlimit = sysconf(_SC_OPEN_MAX);
-    int ret;
 
-    LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, root ? 0 : uid);
+    LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
 
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
@@ -390,13 +382,8 @@ int afprun_bg(int root, char *cmd)
 
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
-    if (root) {
-        ret = become_user_permanently(0, 0);
-        uid = gid = 0;
-    } else {
-        ret = become_user_permanently(uid, gid);
-    }
-    if (ret != 0) {
+
+    if (become_user_permanently(uid, gid) != 0) {
         exit(82);
     }
 

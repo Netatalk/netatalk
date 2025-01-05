@@ -608,7 +608,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0.0</entry>
+                <entry>introduced in 4.0.0</entry>
               </row>
             </tbody>
           </tgroup>
@@ -1301,7 +1301,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0.0</entry>
+                <entry>introduced in 4.0.0</entry>
               </row>
 
               <row>
@@ -1469,7 +1469,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0.0</entry>
+                <entry>introduced in 4.0.0</entry>
               </row>
 
               <row>
@@ -1483,7 +1483,7 @@
 
                 <entry>(G)</entry>
 
-                <entry>Reinstated in 4.0.2</entry>
+                <entry>introduced in 4.0.2</entry>
               </row>
 
               <row>
@@ -2036,15 +2036,15 @@
               <row>
                 <entry>root_preexec:</entry>
 
-                <entry>root preexec</entry>
+                <entry>-</entry>
+
+                <entry>-</entry>
 
                 <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>(V)</entry>
-
-                <entry>-</entry>
+                <entry>obsoleted in 4.1.0</entry>
               </row>
 
               <row>
@@ -2246,15 +2246,15 @@
               <row>
                 <entry>options:root_preexec_close</entry>
 
-                <entry>root preexec close</entry>
+                <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>no</entry>
-
-                <entry>(V)</entry>
+                <entry>-</entry>
 
                 <entry>-</entry>
+
+                <entry>obsoleted in 4.1.0</entry>
               </row>
 
               <row>
@@ -2422,7 +2422,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>Reinstated in 4.0.0</entry>
+                <entry>introduced in 4.0.0</entry>
               </row>
 
               <row>
@@ -2478,7 +2478,7 @@
 
                 <entry>(V)</entry>
 
-                <entry>Reinstated in 4.0.0</entry>
+                <entry>introduced in 4.0.0</entry>
               </row>
 
               <row>

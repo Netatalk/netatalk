@@ -63,7 +63,7 @@
 
 #define VOLPASSLEN  8
 
-extern int afprun(int root, char *cmd, int *outfd);
+extern int afprun(char *cmd, int *outfd);
 
 /*!
  * Read band-size info from Info.plist XML file of an TM sparsebundle
@@ -763,15 +763,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return stat_vol(obj, bitmap, volume, rbuf, rbuflen);
     }
 
-    if (volume->v_root_preexec) {
-        if ((ret = afprun(1, volume->v_root_preexec, NULL)) && volume->v_root_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): root preexec : %d", volume->v_path, ret );
-            return AFPERR_MISC;
-        }
-    }
-
     if (volume->v_preexec) {
-        if ((ret = afprun(0, volume->v_preexec, NULL)) && volume->v_preexec_close) {
+        if ((ret = afprun(volume->v_preexec, NULL)) && volume->v_preexec_close) {
             LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path, ret );
             return AFPERR_MISC;
         }
@@ -906,10 +899,7 @@ void closevol(const AFPObj *obj, struct vol *vol)
     }
 
     if (vol->v_postexec) {
-        afprun(0, vol->v_postexec, NULL);
-    }
-    if (vol->v_root_postexec) {
-        afprun(1, vol->v_root_postexec, NULL);
+        afprun(vol->v_postexec, NULL);
     }
 }
 

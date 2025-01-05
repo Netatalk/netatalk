@@ -66,7 +66,7 @@
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"
 
-extern int afprun_bg(int root, char *cmd);
+extern int afprun_bg(char *cmd);
 
 /* We store our connection data here */
 static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
@@ -368,7 +368,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             bformata(cmd, " -S '%s'", bdata(boldpath));
             bdestroy(boldpath);
         }
-        (void)afprun_bg(1, bdata(cmd));
+        (void)afprun_bg(bdata(cmd));
         bdestroy(cmd);
     }
 
