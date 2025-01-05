@@ -595,8 +595,14 @@
 /* Define to the version of this package. */
 #mesondefine PACKAGE_VERSION
 
+/* atalkd lockfile path */
+#mesondefine PATH_ATALKD_LOCK
+
 /* netatalk lockfile path */
 #mesondefine PATH_NETATALK_LOCK
+
+/* papd lockfile path */
+#mesondefine PATH_PAPD_LOCK
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

@@ -13,6 +13,7 @@ ExecStartPre=/bin/sh -c 'systemctl set-environment ATALK_NAME=$$(hostname|cut -d
 ExecStart=@sbindir@/atalkd
 ExecStartPost=-@bindir@/nbprgstr -p 4 "${ATALK_NAME}:Workstation"
 ExecStartPost=-@bindir@/nbprgstr -p 4 "${ATALK_NAME}:netatalk"
+PIDFile=@lockfile_path@/atalkd
 Restart=always
 RestartSec=1
 

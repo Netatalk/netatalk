@@ -33,7 +33,6 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
-#include <atalk/paths.h>
 #include <atalk/util.h>
 
 #include "status.h"

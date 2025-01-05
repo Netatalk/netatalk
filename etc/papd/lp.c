@@ -92,7 +92,6 @@
 #include <atalk/logger.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
-#include <atalk/paths.h>
 #include <atalk/unicode.h>
 
 #include "printer.h"
