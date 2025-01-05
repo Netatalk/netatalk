@@ -469,16 +469,6 @@ print &ui_table_row($text{'edit_global_section_spotlight_expr'},
 	&build_select($afpconfRef, $sectionRef, \%in, 'spotlight expr', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'start dbus', \%in);
-print &ui_table_row($text{'edit_global_section_start_dbus'},
-	&build_select($afpconfRef, $sectionRef, \%in, 'start dbus', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'start tracker', \%in);
-print &ui_table_row($text{'edit_global_section_start_tracker'},
-	&build_select($afpconfRef, $sectionRef, \%in, 'start tracker', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
-);
-
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'veto message', \%in);
 print &ui_table_row($text{'edit_global_section_veto_message'},
 	&build_select($afpconfRef, $sectionRef, \%in, 'veto message', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')

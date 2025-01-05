@@ -1028,27 +1028,6 @@
         </varlistentry>
 
         <varlistentry>
-          <term>start dbus = <replaceable>BOOLEAN</replaceable> (デフォルト:
-          <emphasis>yes</emphasis>) <type>(G)</type></term>
-
-          <listitem>
-            <para>Tracker もしくは LocalSearch を使うためにdbusインスタンスを開始するかどうか。</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>start tracker = <replaceable>BOOLEAN</replaceable> (デフォルト:
-          <emphasis>yes</emphasis>) <type>(G)</type></term>
-
-          <listitem>
-            <para>"<command>tracker daemon -s</command>"、
-            "<command>localsearch daemon -s</command>" によって Tracker もしくは
-            LocalSearch を開始するかどうか。古いTrackerの場合、"<command>tracker-control
-            -s</command>"が代わりに使われる。</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term>veto message = <replaceable>BOOLEAN</replaceable> (デフォルト:
           <emphasis>no</emphasis>) <type>(G)</type></term>
 

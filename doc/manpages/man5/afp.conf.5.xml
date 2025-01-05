@@ -1194,28 +1194,6 @@
         </varlistentry>
 
         <varlistentry>
-          <term>start dbus = <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>yes</emphasis>) <type>(G)</type></term>
-
-          <listitem>
-            <para>Whether to start a dbus instance for use with Tracker or
-            LocalSearch.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>start tracker = <replaceable>BOOLEAN</replaceable> (default:
-          <emphasis>yes</emphasis>) <type>(G)</type></term>
-
-          <listitem>
-            <para>Whether to start Tracker or LocalSearch with
-            "<command>tracker daemon -s</command>" or "<command>localsearch
-            daemon -s</command>". In case of old Tracker,
-            "<command>tracker-control -s</command>" is used instead.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term>veto message = <replaceable>BOOLEAN</replaceable> (default:
           <emphasis>no</emphasis>) <type>(G)</type></term>
 
