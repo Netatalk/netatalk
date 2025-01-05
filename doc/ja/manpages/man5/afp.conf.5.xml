@@ -832,9 +832,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Spotlight機能が使用するdbus-daemon実行ファイルのパスを設定する。デフォルト値
-            <filename>[@DBUS_DAEMON_PATH@]</filename>
-            はnetatalkのビルド時に決定される。</para>
+            <para>Spotlight機能が使用するdbus-daemon実行ファイルのパスを設定する。
+            コンパイル時のデフォルト値が実行環境と一致しない場合に使用する。</para>
           </listitem>
         </varlistentry>
 

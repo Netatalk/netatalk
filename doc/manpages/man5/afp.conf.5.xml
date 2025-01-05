@@ -969,10 +969,9 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Sets the path to dbus-daemon binary used by Spotlight
-            feature. The default value
-            <filename>[@DBUS_DAEMON_PATH@]</filename> is determined when
-            building netatalk.</para>
+            <para>Sets the path to dbus-daemon binary used by the Spotlight
+            feature. Can be used when the compile-time default path
+            does not match the runtime environment.</para>
           </listitem>
         </varlistentry>
 
