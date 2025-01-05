@@ -2023,15 +2023,15 @@
               <row>
                 <entry>root_preexec:</entry>
 
-                <entry>root preexec</entry>
-
                 <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>(V)</entry>
-
                 <entry>-</entry>
+
+                <entry></entry>
+
+                <entry>4.1.0で廃止</entry>
               </row>
 
               <row>
@@ -2051,15 +2051,15 @@
               <row>
                 <entry>root_postexec:</entry>
 
-                <entry>root postexec</entry>
+                <entry>-</entry>
+
+                <entry>-</entry>
 
                 <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>(V)</entry>
-
-                <entry>-</entry>
+                <entry>4.1.0で廃止</entry>
               </row>
 
               <row>
@@ -2233,15 +2233,15 @@
               <row>
                 <entry>options:root_preexec_close</entry>
 
-                <entry>root preexec close</entry>
+                <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>no</entry>
-
-                <entry>(V)</entry>
+                <entry>-</entry>
 
                 <entry>-</entry>
+
+                <entry>4.1.0で廃止</entry>
               </row>
 
               <row>

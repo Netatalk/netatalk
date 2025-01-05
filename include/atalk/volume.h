@@ -90,11 +90,17 @@ struct vol {
     int             v_new;        /* volume deleted but there's a new one with the same name */
 #endif
     int             v_deleted;    /* volume open but deleted in new config file */
+#if 0
     char            *v_root_preexec;
+#endif
     char            *v_preexec;
+#if 0
     char            *v_root_postexec;
+#endif
     char            *v_postexec;
+#if 0
     int             v_root_preexec_close;
+#endif
     int             v_preexec_close;
     char            *v_uuid;    /* For TimeMachine zeroconf record */
     int             v_qfd;

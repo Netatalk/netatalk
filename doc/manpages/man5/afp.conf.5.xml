@@ -2087,24 +2087,6 @@
         </varlistentry>
 
         <varlistentry>
-          <term>root preexec = <replaceable>command</replaceable>
-          <type>(V)</type></term>
-
-          <listitem>
-            <para>command to be run as root when the volume is mounted</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>root postexec = <replaceable>command</replaceable>
-          <type>(V)</type></term>
-
-          <listitem>
-            <para>command to be run as root when the volume is closed</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term>rolist = <option>users/groups</option> <type>(V)</type></term>
 
           <listitem>
@@ -2301,17 +2283,6 @@
             <para>Specifies the share as being read only for all users.
             Overwrites <option>ea = auto</option> with <option>ea =
             none</option></para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>root preexec close= <replaceable>BOOLEAN</replaceable>
-          (default: <emphasis>no</emphasis>) <type>(V)</type></term>
-
-          <listitem>
-            <para>A non-zero return code from root_preexec closes the volume
-            immediately, preventing clients to mount/see the volume in
-            question.</para>
           </listitem>
         </varlistentry>
 

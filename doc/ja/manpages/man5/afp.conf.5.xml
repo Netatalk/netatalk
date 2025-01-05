@@ -1851,24 +1851,6 @@ directory perm = 0770</programlisting></para>
         </varlistentry>
 
         <varlistentry>
-          <term>root preexec = <replaceable>command</replaceable>
-          <type>(V)</type></term>
-
-          <listitem>
-            <para>ボリュームがマウントされる時にルート権限で実行されるコマンド</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>root postexec = <replaceable>command</replaceable>
-          <type>(V)</type></term>
-
-          <listitem>
-            <para>ボリュームが閉じられる時にルート権限で実行されるコマンド</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
           <term>rolist = <option>users/groups</option> <type>(V)</type></term>
 
           <listitem>
@@ -2047,16 +2029,6 @@ directory perm = 0770</programlisting></para>
           <listitem>
             <para>その共有を全てのユーザーに対して読み込み専用と指定する。<option>ea = auto</option> は
             <option>ea = none</option> で上書きされる。</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term>root preexec close= <replaceable>BOOLEAN</replaceable> (デフォルト:
-          <emphasis>no</emphasis>) <type>(V)</type></term>
-
-          <listitem>
-            <para>root_preexec からの 0
-            以外のリターンコードで、クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる。</para>
           </listitem>
         </varlistentry>
 

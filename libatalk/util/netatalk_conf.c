@@ -885,12 +885,6 @@ static struct vol *creatvol(AFPObj *obj,
     if ((val = getoption(obj->iniconfig, section, "postexec", preset, NULL)))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if ((val = getoption(obj->iniconfig, section, "root preexec", preset, NULL)))
-        EC_NULL( volume->v_root_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
-
-    if ((val = getoption(obj->iniconfig, section, "root postexec", preset, NULL)))
-        EC_NULL( volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
-
     if ((val = getoption(obj->iniconfig, section, "appledouble", preset, NULL))) {
         if (strcmp(val, "v2") == 0)
             volume->v_adouble = AD_VERSION2;
@@ -980,8 +974,6 @@ static struct vol *creatvol(AFPObj *obj,
 
     if (getoption_bool(obj->iniconfig, section, "preexec close", preset, 0))
         volume->v_preexec_close = 1;
-    if (getoption_bool(obj->iniconfig, section, "root preexec close", preset, 0))
-        volume->v_root_preexec_close = 1;
     if (vdgoption_bool(obj->iniconfig, section, "force xattr with sticky bit", preset, 0))
         volume->v_flags |= AFPVOL_FORCE_STICKY_XATTR;
 
@@ -1575,9 +1567,7 @@ void volume_free(struct vol *vol)
     free(vol->v_cnidserver);
     free(vol->v_cnidport);
     free(vol->v_preexec);
-    free(vol->v_root_preexec);
     free(vol->v_postexec);
-    free(vol->v_root_postexec);
 
     free(vol);
 }
