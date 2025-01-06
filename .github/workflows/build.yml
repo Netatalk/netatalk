@@ -289,15 +289,12 @@ jobs:
         run: |
           zypper in -y \
             bison \
-            dbus-1-devel \
             docbook-xsl-stylesheets \
             file \
             flex \
             gawk \
             gcc \
             krb5-devel \
-            libacl-devel \
-            libavahi-devel \
             libdb-4_8-devel \
             libevent-devel \
             libgcrypt-devel \
