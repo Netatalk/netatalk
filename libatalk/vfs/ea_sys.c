@@ -170,6 +170,10 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         return AFPERR_ACCESS;
 #endif
 
+    /* Protect special attributes set by Netatalk server */
+    if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN))
+        return AFPERR_ACCESS;
+
     /* Start building reply packet */
 
     if (maxreply <= MAX_REPLY_EXTRA_BYTES) {
@@ -380,6 +384,10 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN))
         return AFPERR_ACCESS;
 #endif
+
+    /* Protect special attributes set by Netatalk server */
+    if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN))
+        return AFPERR_ACCESS;
 
     /*
      * Buffer for a copy of the xattr plus one byte in case
