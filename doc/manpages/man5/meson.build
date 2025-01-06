@@ -29,3 +29,5 @@ foreach man : manfiles
         build_by_default: true,
     )
 endforeach
+
+install_data('macipgw.conf.5', install_dir: mandir / 'man5')

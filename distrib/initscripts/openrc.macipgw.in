@@ -14,6 +14,6 @@ depend() {
 
 start() {
     ebegin "Starting $name"
-    start-stop-daemon --start --quiet --exec @sbindir@/$name -n 8.8.8.8 192.168.151.0 255.255.255.0
+    start-stop-daemon --start --quiet --exec @sbindir@/$name
     eend $?
 }

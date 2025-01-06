@@ -125,7 +125,7 @@
 
         <listitem>
           <para>設定情報については、<filename>atalkd.conf</filename>
-          ではなく、<replaceable>configfile</replaceable> を参照してください。</para>
+          ではなく、<replaceable>configfile</replaceable> を参照します。</para>
         </listitem>
       </varlistentry>
 

@@ -1,6 +1,7 @@
 /*
  *
  * (c) 1997 Stefan Bethke. All rights reserved.
+ * (c) 2025 Daniel Markstedt. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,3 +19,13 @@
  */
 
 typedef void (*outputfunc_t)(char *buffer, int len);
+
+typedef struct {
+    char *network;
+    char *netmask;
+    char *nameserver;
+    char *zone;
+    char *unprivileged_user;
+} macip_options;
+
+macip_options * read_options (const char *);

@@ -17,6 +17,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdint.h>
+
 extern int  tunnel_open (uint32_t net, uint32_t mask, outputfunc_t o);
 extern void tunnel_close (void);
 extern void tunnel_input (void);

@@ -16,7 +16,11 @@ macipgw_sources = [
 
 macipgw_includes = include_directories('../../libatalk/atp')
 
-macipgw_c_args = ['-DSERVERTEXT="' + pkgconfdir + '/msg"', dversion]
+macipgw_c_args = [
+    '-DSERVERTEXT="' + pkgconfdir + '/msg"',
+    '-D_PATH_MACIPGWCONF="' + pkgconfdir + '/macipgw.conf"',
+    dversion,
+]
 
 executable(
     'macipgw',

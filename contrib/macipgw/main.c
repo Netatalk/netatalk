@@ -2,6 +2,7 @@
  * AppleTalk MacIP Gateway
  *
  * (c) 1997 Stefan Bethke. All rights reserved.
+ * (c) 2025 Daniel Markstedt. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +33,13 @@
 #include <atalk/aep.h>
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
+#include <atalk/globals.h>
+#include <atalk/iniparser.h>
 
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -162,13 +166,33 @@ struct passwd * get_user(const char *username) {
 	return pwd;
 }
 
+macip_options * read_options(const char *conf)
+{
+    const dictionary *config;
+    macip_options *options = (macip_options *)malloc(sizeof(macip_options));
+
+    config = atalk_iniparser_load(conf);
+
+    options->network = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "network", "");
+    options->netmask = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "netmask", "");
+    options->nameserver = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nameserver", "");
+    options->zone = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "zone", "");
+    options->unprivileged_user = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "unprivileged user", "");
+
+    return options;
+}
+
 
 int main(int argc, char *argv[])
 {
 	struct sigaction sv;
-	uint32_t net = 0, mask = 0, ns = 0;
+	uint32_t net = 0;
+	uint32_t mask = 0;
+	uint32_t ns = 0;
 	char *zone = "*";
-    int opt;
+	const char *conffile = _PATH_MACIPGWCONF;
+	int opt;
+	macip_options *mio;
 
 	struct passwd *pwd = NULL;
 	uid_t user;
@@ -176,10 +200,15 @@ int main(int argc, char *argv[])
 
 	gDebug = 0;
 
-    while ((opt = getopt(argc, argv, "Vvd:n:u:z:")) != -1) {
+    while ((opt = getopt(argc, argv, "Vvd:f:n:u:z:")) != -1) {
         switch (opt) {
 		case 'd':
 			gDebug = strtol(optarg, 0, 0);
+			break;
+		case 'f':
+			conffile = optarg;
+			if (strlen(conffile) > MAXPATHLEN)
+				usage("not a valid config file path.");
 			break;
 		case 'n':
 			ns = atoip(optarg);
@@ -210,13 +239,45 @@ int main(int argc, char *argv[])
 	}
 	argc -= optind;
 	argv += optind;
-	if (argc != 2)
-		usage("wrong number of parameters.");
-	net = atoip(argv[0]);
-	mask = atoip(argv[1]);
+
+	if (argc == 2) {
+		net = atoip(argv[0]);
+		mask = atoip(argv[1]);
+	}
+
+	mio = read_options(conffile);
+
+	if ((mio->network[0] != '\0') && (net == 0)) {
+		if (gDebug & DEBUG_MACIP)
+			printf("set network to %s\n", mio->network);
+		net = atoip(mio->network);
+	}
+	if ((mio->netmask[0] != '\0') && (mask == 0)) {
+		if (gDebug & DEBUG_MACIP)
+			printf("set netmask to %s\n", mio->netmask);
+		mask = atoip(mio->netmask);
+	}
+	if ((mio->nameserver[0] != '\0') &&  (ns == 0)) {
+		if (gDebug & DEBUG_MACIP)
+			printf("set nameserver to %s\n", mio->nameserver);
+		ns = atoip(mio->nameserver);
+	}
+	if ((mio->zone[0] != '\0') && (! strcmp(zone, "*"))) {
+		if (gDebug & DEBUG_MACIP)
+			printf("set zone to %s\n", mio->zone);
+		zone = mio->zone;
+	}
+	if ((mio->unprivileged_user[0] != '\0') && (pwd == NULL)) {
+		if (gDebug & DEBUG_MACIP)
+			printf("set unprivileged_user to %s\n", mio->unprivileged_user);
+		pwd = get_user(mio->unprivileged_user);
+		user = pwd->pw_uid;
+		group = pwd->pw_gid;
+	}
+
 	net &= mask;
 	if ((net & mask) == 0)
-		usage("invalid ip address.");
+		usage("please supply a valid network address and netmask");
 
 	openlog("macipgw", LOG_PID | gDebug ? LOG_PERROR : 0, LOG_DAEMON);
 

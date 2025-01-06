@@ -44,7 +44,7 @@ endif
 static_conf_files = ['extmap.conf']
 
 if have_appletalk
-    static_conf_files += ['atalkd.conf', 'papd.conf']
+    static_conf_files += ['atalkd.conf', 'macipgw.conf', 'papd.conf']
 endif
 
 foreach file : static_conf_files

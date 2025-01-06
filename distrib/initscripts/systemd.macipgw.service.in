@@ -10,7 +10,7 @@ Requires=atalkd.service
 [Service]
 Type=forking
 GuessMainPID=no
-ExecStart=@sbindir@/macipgw -n 8.8.8.8 192.168.151.0 255.255.255.0
+ExecStart=@sbindir@/macipgw
 Restart=always
 RestartSec=1
 
