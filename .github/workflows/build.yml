@@ -289,7 +289,6 @@ jobs:
         run: |
           zypper in -y \
             bison \
-            cracklib-devel \
             dbus-1-devel \
             docbook-xsl-stylesheets \
             file \
