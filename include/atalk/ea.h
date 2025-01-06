@@ -88,6 +88,7 @@ enum {
 
 /* Names for our Extended Attributes adouble data */
 #define AD_EA_META "org.netatalk.Metadata"
+#define AD_EA_META_LEN (sizeof (AD_EA_META) - 1)
 #ifdef __APPLE__
 #define AD_EA_RESO "com.apple.ResourceFork"
 #define EA_FINFO "com.apple.FinderInfo"
