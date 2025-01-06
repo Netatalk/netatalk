@@ -26,6 +26,8 @@
 
       <arg>-d <replaceable>debugclass</replaceable></arg>
 
+      <arg>-f <replaceable>configfile</replaceable></arg>
+
       <arg>-n <replaceable>nameserver</replaceable></arg>
 
       <arg>-u <replaceable>unprivileged-user</replaceable></arg>
@@ -71,6 +73,11 @@
     を使用しません。ゲートウェイは、常にネットワークの最初のアドレスをローカル アドレスとして使用します。つまり、ネットワーク
     192.168.1.0/24 の場合は 192.168.1.1 です。</para>
 
+    <para>存在する場合、<command>macipgw</command> は
+    <filename>/usr/etc/macipgw.conf</filename> (または同等の pkgconf パス)
+    から構成オプションを読み取ります。コマンド ライン オプションは、構成ファイル
+    オプションよりも優先されます。例については以下を参照してください。</para>
+
     <para><command>macipgw</command> は、<emphasis
     remap="B">LOG_DAEMON</emphasis> 機能の下で、<citerefentry>
         <refentrytitle>syslog</refentrytitle>
@@ -90,6 +97,15 @@
           <para>デーモンがフォークせず、すべてのアクションのトレースが書き込まれるように指定します<emphasis
           remap="B">stdout</emphasis> に出力します。 debugclass の有用な値については、ソース
           コードを参照してください。</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-f <replaceable>configfile</replaceable></term>
+
+        <listitem>
+          <para>設定情報については、<filename>macipgw.conf</filename>
+          ではなく、<replaceable>configfile</replaceable> を参照します。</para>
         </listitem>
       </varlistentry>
 
@@ -148,12 +164,27 @@
   <refsect1>
     <title>例</title>
 
-    <screen><userinput>/usr/local/libexec/macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0 255.255.255.0</userinput>
+    <example>
+      <title><command>macipgw</command> 呼び出しの例。</title>
+
+      <screen><userinput>/usr/local/libexec/macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0 255.255.255.0</userinput>
 </screen>
 
-    <para><command>macipgw</command> を起動し、ゲートウェイ経由で接続されたデバイスにクラス C ネットワーク
-    192.168.1.0 を割り当て、<command>macipgw</command> が動作しているシステムをネーム
-    サーバーとして使用でき、ゾーン Remote Users に登録する必要があることを指定します。</para>
+      <para><command>macipgw</command> を起動し、ゲートウェイ経由で接続されたデバイスにクラス C ネットワーク
+      192.168.1.0 を割り当て、<command>macipgw</command> が動作しているシステムをネーム
+      サーバーとして使用でき、ゾーン Remote Users に登録する必要があることを指定します。</para>
+    </example>
+
+    <example>
+      <title>例: <filename>macipgw.conf</filename> 構成ファイル。</title>
+
+      <programlisting>[Global]
+network = 192.168.151.0
+netmask = 255.255.255.0
+nameserver = 8.8.8.8
+zone = My Zone
+unprivileged user = foobar</programlisting>
+    </example>
   </refsect1>
 
   <refsect1>

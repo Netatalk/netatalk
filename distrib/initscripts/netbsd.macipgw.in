@@ -11,7 +11,6 @@
 name="macipgw"
 rcvar=$name
 command="@sbindir@/macipgw"
-command_args="-n 8.8.8.8 192.168.151.0 255.255.255.0"
 
 load_rc_config $name
 run_rc_command "$1"

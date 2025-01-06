@@ -17,6 +17,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdint.h>
+
 extern int gDebug;
 
 #if defined(DEBUG)
@@ -31,5 +33,5 @@ extern int gDebug;
 #define DEBUG_TUNDEV	(0)
 #endif
 
-extern char *iptoa (u_long ip);
-extern u_long atoip (char *s);
+extern char *iptoa (uint32_t ip);
+extern uint32_t atoip (char *s);
