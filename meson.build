@@ -1515,17 +1515,19 @@ else
             cdata.set('ICONV_CONST', 'const')
         endif
 
-        if cc.run(
-            '''
-        #include <iconv.h>
-        int main(void) {
-            iconv_t cd = iconv_open("ASCII", "UCS-2-INTERNAL");
-            if (cd == 0 || cd == (iconv_t)-1) return -1;
-            return 0;
-        }
-        ''',
-        ).returncode() == 0
-            cdata.set('HAVE_UCS2INTERNAL', 1)
+        if not meson.is_cross_build()
+                if cc.run(
+                    '''
+                #include <iconv.h>
+                int main(void) {
+                    iconv_t cd = iconv_open("ASCII", "UCS-2-INTERNAL");
+                    if (cd == 0 || cd == (iconv_t)-1) return -1;
+                    return 0;
+                }
+                ''',
+                ).returncode() == 0
+                    cdata.set('HAVE_UCS2INTERNAL', 1)
+                endif
         endif
     else
         have_iconv = false
