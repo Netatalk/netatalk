@@ -313,7 +313,7 @@ basedir regex = /usr/home</programlisting></para>
       <emphasis>multibyte</emphasis> character sets.</para>
 
       <para>One standardized multibyte charset encoding scheme is known as
-      <ulink url="http://www.unicode.org/">unicode</ulink>. A big advantage of
+      <ulink url="http://www.unicode.org/">Unicode</ulink>. A big advantage of
       using a multibyte charset is that you only need one. There is no need to
       make sure two computers use the same charset when they are
       communicating.</para>
@@ -526,10 +526,10 @@ basedir regex = /usr/home</programlisting></para>
             use codepages to communicate with afpd. However, there is no
             support for negotiating the codepage used by the client in the AFP
             protocol. If not specified otherwise, afpd assumes the
-            <emphasis>MacRoman</emphasis> codepage is used. In case you're
+            <emphasis>MacRoman</emphasis> codepage is used. In case your
             clients use another codepage, e.g.
             <emphasis>MacCyrillic</emphasis>, you'll <emphasis
-            role="bold">have</emphasis> to explicitly configure this. see
+            role="bold">have</emphasis> to explicitly configure this. See
             <citerefentry>
                 <refentrytitle>afp.conf</refentrytitle>
 
@@ -696,7 +696,7 @@ basedir regex = /usr/home</programlisting></para>
       support exists since AppleShare client 3.8.x.</para>
 
       <para>On macOS, there exist some client-side techniques to make the
-      AFP-client more verbose, so one can have a look what's happening while
+      AFP-client more verbose, so one can have a look at what's happening while
       negotiating the UAMs to use. Compare with this <ulink
       url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
     </sect2>
@@ -1149,7 +1149,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
       <para>Netatalk can query a directory server using LDAP queries. Either
       the directory server already provides an UUID attribute for user and
       groups (Active Directory, Open Directory) or you reuse an unused
-      attribute (or add a new one) to you directory server (eg
+      attribute (or add a new one) to you directory server (e.g.
       OpenLDAP).</para>
 
       <para>In detail:</para>
@@ -1165,7 +1165,7 @@ uams_dhx2.so -&gt; uams_dhx2_pam.so</programlisting> then you're using PAM,
 aclmode = passthrough</screen>
 
           <para>For an explanation of what this knob does and how to apply it,
-          check your hosts ZFS documentation (eg man zfs).</para>
+          check your hosts ZFS documentation (e.g. man zfs).</para>
         </listitem>
 
         <listitem>
@@ -1220,7 +1220,7 @@ aclmode = passthrough</screen>
 
       <para>ACLs and UNIX permissions interact in a rather simple way. As ACLs
       are optional UNIX permissions act as a default mechanism for access
-      control. Changing an objects's UNIX permissions will leave it's ACL
+      control. Changing an objects's UNIX permissions will leave its ACL
       intact and modifying an ACL will never change the object's UNIX
       permissions. While doing access checks, macOS first examines an object's
       ACL evaluating ACEs in order until all requested rights have been
@@ -1253,7 +1253,7 @@ aclmode = passthrough</screen>
         can have access ACLs which are consulted for access checks.
         Directories can also have default ACLs irrelevant to access checks.
         When a new object is created inside a directory with a default ACL,
-        the default ACL is applied to the new object as it's access ACL.
+        the default ACL is applied to the new object as its access ACL.
         Subdirectories inherit default ACLs from their parent. There are no
         further mechanisms of inheritance control.</para>
 
@@ -1341,7 +1341,7 @@ aclmode = passthrough</screen>
       <sect3>
         <title>Mapping POSIX ACLs to macOS ACLs</title>
 
-        <para>When a client wants to read an object's ACL, afpd maps it's
+        <para>When a client wants to read an object's ACL, afpd maps its
         POSIX ACL onto an equivalent macOS ACL. Writing an object's ACL
         requires afpd to map an macOS ACL onto a POSIX ACL. Due to
         architectural restrictions of POSIX ACLs, it is usually impossible to
@@ -1396,7 +1396,7 @@ aclmode = passthrough</screen>
         structure (see Apple Filing Protocol Reference, page 181). Changing an
         object's permissions, afpd always updates ACL_USER_OBJ, ACL_GROUP_OBJ
         and ACL_OTHERS. If an ACL_MASK entry is present too, afpd recalculates
-        it's value so that the new group rights become effective and existing
+        its value so that the new group rights become effective and existing
         entries of type ACL_USER or ACL_GROUP stay intact.</para>
       </sect3>
     </sect2>
@@ -1408,7 +1408,7 @@ aclmode = passthrough</screen>
       </indexterm></title>
 
     <para>Netatalk includes a nifty filesystem change event (FCE) mechanism
-    where afpd processes notfiy interested listeners about certain filesystem
+    where afpd processes notify interested listeners about certain filesystem
     event by UDP network datagrams.</para>
 
     <para>For the format of the UDP packets and for an example C application
@@ -1503,7 +1503,7 @@ aclmode = passthrough</screen>
             event API for tracking filesystem changes. On large filesystems
             this may be problematic since the inotify API doesn't offer
             recursive directory watches but instead requires that for every
-            subdirectoy watches must be added individually.</para>
+            subdirectory watches must be added individually.</para>
 
             <para>On Solaris the FEN file event notification system is used.
             It is unknown which limitations and resource consumption this
@@ -1650,7 +1650,7 @@ org.freedesktop.Tracker.Writeback verbosity 'debug'
               backend (FAM on Linux, FEN on Solaris), this feature may not
               work as reliable as one might wish, so it may be safer to
               disable it and instead rely on periodic crawling of Tracker
-              itself. See aslo the option <option>crawling-interval
+              itself. See also the option <option>crawling-interval
               </option>.</para>
             </listitem>
           </varlistentry>

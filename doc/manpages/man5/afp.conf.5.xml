@@ -2220,7 +2220,7 @@
 
           <listitem>
             <para>make dot files invisible. WARNING: enabling this option will
-            lead to unwanted sideeffects were OS X applications when saving
+            lead to unwanted side effects where OS X applications, when saving
             files to a temporary file starting with a dot first, then renaming
             the temp file to its final name, result in the saved file being
             invisible. The only thing this option is useful for is making
@@ -2363,7 +2363,7 @@
           <para>This backend is an exception, in terms of ID persistency. ID's
           are only valid for the current session. This is basically what
           <command>afpd</command> did in the 1.5 (and 1.6) versions. This
-          backend is still available, as it is useful for e.g. sharing cdroms.
+          backend is still available, as it is useful for e.g. sharing CD-ROMs.
           Starting with Netatalk 3.0, it becomes the <emphasis>read only
           mode</emphasis> automatically.</para>
 

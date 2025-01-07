@@ -171,7 +171,7 @@ Disadvantages:
   is very portable and the cnid_dbd IPC mechanisms can be extended to
   use faster IPC (like mmap) on architectures where it is
   supported. As a ballpark figure, 20000 requests/replies to the cnid_dbd
-  daemon take about 0.6 seconds on a Pentium III 733 Mhz running Linux
+  daemon take about 0.6 seconds on a Pentium III 733 MHz running Linux
   Kernel 2.4.18 using unix domain sockets. The requests are "empty"
   (no database lookups/changes), so this is just the IPC
   overhead.
