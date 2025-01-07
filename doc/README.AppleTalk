@@ -1,4 +1,4 @@
-This is a README for using netatalk with AppleTalk networking.
+This is a README for using Netatalk with AppleTalk networking.
 
 Platforms Covered:
 A.   Linux
@@ -12,7 +12,7 @@ A. Linux
 
 Some Linux distributions ship with AppleTalk support out of the box
 (e.g. Debian) others have the kernel module but with a blacklisting
-in effect that has to be deactived before you can use it (e.g. Fedora.)
+in effect that has to be deactivated before you can use it (e.g. Fedora.)
 
 Netatalk supplies two different types of AFP servers and both
 can run at the same time. Classic AFP requires afpd and
@@ -60,7 +60,7 @@ The source code for the kernel module is located in
 sys/netatalk of the NetBSD source tree.
 
 As of NetBSD 9.3, the netatalk kernel module is loaded by default,
-and made available to the atalkd deamon when it starts up.
+and made available to the atalkd daemon when it starts up.
 
 B.II Other BSDs
 
@@ -69,8 +69,8 @@ dated after 12 September 1996, as well as OpenBSD 2.2,
 or openbsd-current dated after Aug 1, 1997.
 
 However, both distributions deprecated AppleTalk in the 2010s.
-You can still run netatalk as an AFP over TCP server on any
-BSD derived operating system.
+You can still run Netatalk as an AFP over TCP server on any
+BSD-derived operating system.
 
 ----------------------------------------------------------------
 

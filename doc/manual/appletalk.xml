@@ -211,7 +211,7 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
       fail.</para>
 
       <para>So you should have atalkd act as a seed router on one or all
-      active interfaces. A seed router has to supply informations
+      active interfaces. A seed router has to supply information
       about:</para>
 
       <itemizedlist>
@@ -246,8 +246,8 @@ eth2 -dontroute -phase 2 -net 1-1000 -addr 10.142 -zone "Printers"</programlisti
       adapt the already established ones on the net (if in doubt, always check
       syslog for details).</para>
 
-      <para>Netranges, you can use, include pretty small ones, eg. 42-42, to
-      very large ones, eg. 1-65279 - the latter one representing the maximum.
+      <para>Netranges, you can use, include pretty small ones, e.g. 42-42, to
+      very large ones, e.g. 1-65279 - the latter one representing the maximum.
       In routed environments you can use any numbers in the range between 1
       and 65279 unless they do not overlap with settings of other connected
       subnets.</para>
@@ -376,7 +376,7 @@ eth2 -phase 2 -net 65279-65279 -addr 65279.142 -zone "Parking" -zone "No Parking
         <para><programlisting>eth0
 eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
         In case in the network connected to eth0 lives no active seed router
-        or one with a mismatching configuration (eg. an overlapping netrange
+        or one with a mismatching configuration (e.g. an overlapping netrange
         of 1-200) atalkd will fail. Otherwise it will fetch the configuration
         from this machine and will route between eth0 and eth1, on the latter
         acting as a seed router itself.</para>
@@ -444,7 +444,7 @@ eth1 -seed -phase 2 -net 99-100 -addr 99.200 -zone "Testing"</programlisting>
       general. Netatalk does not contain a full-blown spooler implementation
       itself, papd only handles the bidirectional communication and
       submittance of printjobs from PAP clients. So normally one needs to
-      integrate papd with a Unix printing system like eg. classic SysV
+      integrate papd with a Unix printing system like e.g. classic SysV
       lpd<indexterm>
           <primary>lpd</primary>
 

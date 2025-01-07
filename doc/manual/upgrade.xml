@@ -127,7 +127,7 @@
 
       <para>Implementation details:<itemizedlist>
           <listitem>
-            <para>stores Mac Metadata (eg FinderInfo, AFP Flags, Comment,
+            <para>stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment,
             CNID) in an Extended Attributed named
             “<filename>org.netatalk.Metadata</filename>”<itemizedlist>
                 <listitem>

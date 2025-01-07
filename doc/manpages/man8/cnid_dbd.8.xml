@@ -164,7 +164,7 @@
           remap="I">flush_frequency</emphasis> requests have been received or
           ii) more than <emphasis remap="I">flush_interval</emphasis> seconds
           have elapsed since the last save/checkpoint. Be careful to check
-          your harddisk configuration for on disk cache settings. Many IDE
+          your hard disk configuration for on disk cache settings. Many IDE
           disks just cache writes as the default behaviour, so even flushing
           database files to disk will not have the desired effect.</para>
         </listitem>
