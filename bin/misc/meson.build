@@ -6,12 +6,18 @@ fce_sources = ['fce.c']
 
 afpldaptest_sources = ['uuidtest.c']
 
+misc_deps = []
+
+if have_iconv
+    misc_deps += iconv
+endif
+
 executable(
     'netacnv',
     netacnv_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: mysqlclient,
+    dependencies: [mysqlclient, misc_deps],
     install: false,
 )
 
@@ -20,7 +26,7 @@ executable(
     loggertest_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: mysqlclient,
+    dependencies: [mysqlclient, misc_deps],
     install: false,
 )
 
@@ -29,7 +35,7 @@ executable(
     fce_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: mysqlclient,
+    dependencies: [mysqlclient, misc_deps],
     install: false,
 )
 
@@ -45,7 +51,7 @@ if have_ldap
         afpldaptest_sources,
         include_directories: root_includes,
         link_with: libatalk,
-        dependencies: [afpldaptest_deps, ldap],
+        dependencies: [afpldaptest_deps, ldap, misc_deps],
         c_args: confdir,
         install: true,
         build_rpath: rpath_libdir,

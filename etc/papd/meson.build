@@ -32,12 +32,18 @@ papd_c_args = [
     dversion,
 ]
 
+papd_deps = []
+
+if have_iconv
+    papd_deps += iconv
+endif
+
 executable(
     'papd',
     papd_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: cups,
+    dependencies: [cups, papd_deps],
     c_args: papd_c_args,
     export_dynamic: true,
     install: true,

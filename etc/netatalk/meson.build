@@ -11,6 +11,10 @@ elif have_dns
     netatalk_deps += dns_sd_libs
 endif
 
+if have_iconv
+    netatalk_deps += iconv
+endif
+
 executable(
     'netatalk',
     netatalk_sources,

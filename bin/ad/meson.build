@@ -12,6 +12,10 @@ ad_sources = [
 
 ad_deps = []
 
+if have_iconv
+    ad_deps += iconv
+endif
+
 if use_mysql_backend
     ad_deps += mysqlclient
 endif

@@ -1,3 +1,9 @@
+a2boot_deps = []
+
+if have_iconv
+    a2boot_deps += iconv
+endif
+
 a2boot_c_args = [
     '-D_PATH_A_GS_BLOCKS="'
     + pkgconfdir
@@ -14,6 +20,7 @@ executable(
     'a2boot.c',
     include_directories: root_includes,
     link_with: libatalk,
+    dependencies: a2boot_deps,
     c_args: a2boot_c_args,
     install: true,
     install_dir: sbindir,
