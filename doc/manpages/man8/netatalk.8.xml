@@ -41,8 +41,7 @@
     <para><command>netatalk</command> is the service controller daemon
     responsible for starting and restarting the AFP daemon
     <command>afpd</command> and the CNID daemon <command>cnid_metad</command>.
-    It is normally started at boot time by an init system (BSD-style init,
-    SysV-sytle init, systemd, Upstart, OpenRC, SMF and so on).</para>
+    It is normally started at boot time by an init system.</para>
   </refsect1>
 
   <refsect1>
@@ -53,7 +52,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>Starts netatalk in non-forking mode, for debugging purposes.</para>
+          <para>Do not disassociate daemon from terminal.</para>
         </listitem>
       </varlistentry>
 

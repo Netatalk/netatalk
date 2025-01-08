@@ -116,7 +116,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>追加のデバッグ情報を stdout に書き込みます。</para>
+          <para>デーモンをターミナルから切り離さないで、追加のデバッグ情報を stdout に書き込みます。</para>
         </listitem>
       </varlistentry>
 

@@ -41,8 +41,7 @@
   <refsect1>
     <title>説明</title>
 
-    <para><command>netatalk</command>は、AFPデーモン<command>afpd</command>とCNIDデーモン<command>cnid_metad</command>の起動と再起動を請け負うサービスコントローラデーモンである。これは通常、ブート時にinitシステム
-    (BSDスタイルinit、SysVスタイルinit、systemd、Upstart、OpenRC、SMF等) によって起動される。</para>
+    <para><command>netatalk</command>は、AFPデーモン<command>afpd</command>とCNIDデーモン<command>cnid_metad</command>の起動と再起動を請け負うサービスコントローラデーモンである。</para>
   </refsect1>
 
   <refsect1>
@@ -53,7 +52,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>デバッグ目的で、netatalk を非フォーク モードで開始する。</para>
+          <para>デーモンをターミナルから切り離さない。</para>
         </listitem>
       </varlistentry>
 

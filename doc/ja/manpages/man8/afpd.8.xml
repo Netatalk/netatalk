@@ -59,7 +59,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>デーモンがフォークしないことを指定する。</para>
+          <para>デーモンをターミナルから切り離さない。</para>
         </listitem>
       </varlistentry>
 
