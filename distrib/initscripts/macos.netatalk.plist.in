@@ -11,8 +11,8 @@
 	<string>io.netatalk.daemon</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>@bindir@/netatalkd</string>
-		<string>start</string>
+		<string>@sbindir@/netatalk</string>
+		<string>-d</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
