@@ -38,12 +38,16 @@ if have_iconv
     papd_deps += iconv
 endif
 
+if have_cups
+    papd_deps += cups
+endif
+
 executable(
     'papd',
     papd_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: [cups, papd_deps],
+    dependencies: papd_deps,
     c_args: papd_c_args,
     export_dynamic: true,
     install: true,
