@@ -60,7 +60,7 @@
         <term>-d</term>
 
         <listitem>
-          <para>Specifies that the daemon should not fork.</para>
+          <para>Do not disassociate daemon from terminal.</para>
         </listitem>
       </varlistentry>
 

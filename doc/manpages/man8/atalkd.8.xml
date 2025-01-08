@@ -117,7 +117,8 @@
         <term>-d</term>
 
         <listitem>
-          <para>Write some additional debugging information to stdout.</para>
+          <para>Do not disassociate daemon from terminal. Writes some additional
+          debugging information to stdout.</para>
         </listitem>
       </varlistentry>
 
