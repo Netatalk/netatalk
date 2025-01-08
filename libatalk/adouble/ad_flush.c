@@ -315,7 +315,7 @@ static int ad_flush_hf(struct adouble *ad)
             if (AD_META_OPEN(ad)) {
 #ifdef __APPLE__
                 char * FinderInfo;
-                char NativeFinderInfo[32]={'\0'};
+                char NativeFinderInfo[ADEDLEN_FINDERI]={'\0'};
                 FinderInfo = ad_entry(ad, ADEID_FINDERI);
                 memcpy(NativeFinderInfo, FinderInfo,ADEDLEN_FINDERI);
 #endif

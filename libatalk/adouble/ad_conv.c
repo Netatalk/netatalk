@@ -116,9 +116,9 @@ copy:
 #ifdef __APPLE__
     /* Create macOS native FinderInfo EA */
     char * FinderInfo;
-    char NativeFinderInfo[32]={'\0'};
+    char NativeFinderInfo[ADEDLEN_FINDERI]={'\0'};
     FinderInfo = ad_entry(&adv2, ADEID_FINDERI);
-    memcpy(NativeFinderInfo, FinderInfo,ADEDLEN_FINDERI);
+    memcpy(NativeFinderInfo, FinderInfo, ADEDLEN_FINDERI);
     EC_ZERO_LOG( sys_setxattr(path, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0) );
 #endif
     EC_ZERO_LOGSTR( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE),
