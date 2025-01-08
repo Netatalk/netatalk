@@ -14,6 +14,12 @@ run_command(
 
 srp_sources = ['sparql_map.c', 'sparql_parser.c', 'spotlight_rawquery_lexer.c']
 
+spotlight_deps = []
+
+if have_iconv
+    spotlight_deps += iconv
+endif
+
 executable(
     'srp',
     srp_sources,
@@ -24,6 +30,7 @@ executable(
         mysqlclient,
         talloc,
         sparql,
+        spotlight_deps,
     ],
     c_args: ['-DMAIN'],
     install: false,

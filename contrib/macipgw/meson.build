@@ -1,3 +1,9 @@
+macipgw_deps = []
+
+if have_iconv
+    macipgw_deps += iconv
+endif
+
 macipgw_sources = [
 	'atp_input.c',
 	'macip.c',
@@ -17,6 +23,7 @@ executable(
     macipgw_sources,
     include_directories: [root_includes, macipgw_includes],
     link_with: libatalk,
+    dependencies: macipgw_deps,
     c_args: macipgw_c_args,
     export_dynamic: true,
     install: true,

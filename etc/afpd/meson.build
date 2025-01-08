@@ -72,6 +72,10 @@ if have_acls
     afpd_external_deps += [acl_deps]
 endif
 
+if have_iconv
+    afpd_external_deps += iconv
+endif
+
 if have_quota
     afpd_sources += [
         'quota.c',

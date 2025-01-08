@@ -17,6 +17,10 @@ if have_libgcrypt
     afppasswd_deps += [libgcrypt]
 endif
 
+if have_iconv
+    afppasswd_deps += iconv
+endif
+
 executable(
     'afppasswd',
     afppasswd_sources,

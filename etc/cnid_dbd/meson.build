@@ -23,6 +23,10 @@ if use_dbd_backend
         cnid_dbd_deps += mysqlclient
     endif
 
+    if have_iconv
+        cnid_dbd_deps += iconv
+    endif
+
     cnid_metad_sources = ['cnid_metad.c', 'usockfd.c', 'db_param.c']
 
     dbd_sources = [
