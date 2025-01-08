@@ -109,7 +109,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
     /* If no adouble finder information was found, check for native macOS info */
     if (chk_ext && (vol->v_adouble == AD_VERSION_EA))
     {
-        char NativeFinderInfo[32] ={'\0'};
+        char NativeFinderInfo[ADEDLEN_FINDERI] ={'\0'};
         if (ad_open_native_finderinfo(upath, NativeFinderInfo))
         {
             memcpy(data, NativeFinderInfo, ADEDLEN_FINDERI);

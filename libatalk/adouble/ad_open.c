@@ -992,22 +992,24 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
 #ifdef __APPLE__
 int ad_open_native_finderinfo(const char *path, char *ret)
 {
+    ssize_t size;
     LOG(log_debug, logtype_ad,
         "ad_open_native_finderinfo(\"%s\"): BEGIN",
         fullpathname(path));
-    if (sys_getxattr(path,EA_FINFO,ret,ADEDLEN_FINDERI))
-    {
+    size = sys_getxattr(path,EA_FINFO,0,0);
+    if (size < 0) {
         LOG(log_debug, logtype_ad,
-            "ad_open_native_finderinfo(\"%s\"): INFO FOUND",
+            "ad_open_native_finderinfo(\"%s\"): Native macOS FinderInfo not found",
             fullpathname(path));
-        return 1;
+        return 0;
     }
     else
     {
+        sys_getxattr(path,EA_FINFO,ret,ADEDLEN_FINDERI);
         LOG(log_debug, logtype_ad,
-            "ad_open_native_finderinfo(\"%s\"): INFO NOT FOUND",
+            "ad_open_native_finderinfo(\"%s\"): Native macOS FinderInfo found",
             fullpathname(path));
-        return 0;
+        return 1;
     }
 }
 #endif
@@ -1273,7 +1275,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_, struct ado
 
 #ifdef __APPLE__
     char * FinderInfo;
-    char NativeFinderInfo[32]={'\0'};
+    char NativeFinderInfo[ADEDLEN_FINDERI]={'\0'};
 #endif
 
     /* Read the adouble header in and parse it.*/
@@ -1303,7 +1305,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_, struct ado
         /* Read in FinderInfo from macOS */
         FinderInfo = ad_entry(ad, ADEID_FINDERI);
         if (ad_open_native_finderinfo(path, NativeFinderInfo))
-            memcpy(FinderInfo, NativeFinderInfo,ADEDLEN_FINDERI);
+            memcpy(FinderInfo, NativeFinderInfo, ADEDLEN_FINDERI);
 #endif
         ad_flush(ad);
         LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
@@ -1313,7 +1315,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_, struct ado
         /* Read in FinderInfo from macOS */
         FinderInfo = ad_entry(ad, ADEID_FINDERI);
         if (ad_open_native_finderinfo(path, NativeFinderInfo))
-            memcpy(FinderInfo, NativeFinderInfo,ADEDLEN_FINDERI);
+            memcpy(FinderInfo, NativeFinderInfo, ADEDLEN_FINDERI);
 #endif
 
     if (ad_meta_fileno(ad) != -1)
