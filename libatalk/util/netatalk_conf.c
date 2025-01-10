@@ -2058,9 +2058,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
 
-    become_root();
     config = atalk_iniparser_load(AFPObj->options.configfile);
-    unbecome_root();
     if (config == NULL)
         return -1;
     AFPObj->iniconfig = config;
