@@ -506,7 +506,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.1.6
+        uses: vmactions/freebsd-vm@v1.1.8
         with:
           copyback: false
           prepare: |
@@ -557,7 +557,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/netbsd-vm@v1.1.6
+        uses: vmactions/netbsd-vm@v1.1.7
         with:
           copyback: false
           prepare: |
@@ -611,7 +611,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1.1.4
+        uses: vmactions/openbsd-vm@v1.1.6
         with:
           copyback: false
           prepare: |
