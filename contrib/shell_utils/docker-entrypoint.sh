@@ -222,6 +222,10 @@ EXT
         afp_spectest "${TEST_FLAGS}" -"${AFP_VERSION}" -f Readonly_test -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
     elif [ "$TESTSUITE" == "login" ]; then
         afp_logintest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}"
+    elif [ "$TESTSUITE" == "lan" ]; then
+        afp_lantest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
+    elif [ "$TESTSUITE" == "speed" ]; then
+        afp_speedtest "${TEST_FLAGS}" -"${AFP_VERSION}" -h 127.0.0.1 -p 548 -u "${AFP_USER}" -w "${AFP_PASS}" -s "${SHARE_NAME}"
     else
         echo "Unknown testsuite: ${TESTSUITE}"
         exit 1

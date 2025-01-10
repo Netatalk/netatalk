@@ -350,3 +350,39 @@ jobs:
           AFP_VERSION: 1
       steps:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-lantest:
+      name: AFP lantest
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_PASS: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          INSECURE_AUTH: 1
+          VERBOSE: 1
+          TESTSUITE: lan
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-speedtest:
+      name: AFP speedtest
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_PASS: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          INSECURE_AUTH: 1
+          VERBOSE: 1
+          TESTSUITE: speed
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
