@@ -35,6 +35,7 @@ char    *User = "";
 char    *Path;
 int     Version = 34;
 int     Mac = 0;
+char    *Test = NULL;
 
 /* Unused */
 CONN *Conn2;
@@ -660,13 +661,8 @@ int main(int ac, char **av)
 {
     int cc, i, t;
     int Debug = 0;
-    char *tests = NULL;
     static char *vers = "AFP3.4";
     static char *uam = "Cleartxt Passwrd";
-    struct passwd *pw = getpwuid(getuid());
-
-    if (pw)
-        User = strdup(pw->pw_name);
 
     while (( cc = getopt( ac, av, "1234567bGgVvF:f:h:n:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
@@ -697,7 +693,7 @@ int main(int ac, char **av)
             bigfilename = strdup(optarg);
             break;
         case 'f':
-            tests = strdup(optarg);
+            Test = strdup(optarg);
             break;
         case 'G':
             rwsize *= 100;
@@ -722,8 +718,6 @@ int main(int ac, char **av)
             Vol = strdup(optarg);
             break;
         case 'u':
-            if (User)
-                free(User);
             User = strdup(optarg);
             break;
         case 'V':
@@ -738,6 +732,21 @@ int main(int ac, char **av)
             break;
         default :
             usage( av[ 0 ] );
+        }
+    }
+
+    if (User[0] == '\0') {
+        struct passwd pwd;
+        struct passwd *result = NULL;
+        uid_t uid = geteuid();
+        char buf[1024];
+        int ret;
+
+        ret = getpwuid_r(uid, &pwd, buf, sizeof(buf), &result);
+
+        if (ret == 0 && result != NULL) {
+            User = pwd.pw_name;
+            printf("Using current user: %s\n", User);
         }
     }
 
@@ -767,12 +776,12 @@ int main(int ac, char **av)
     Iterations_save = Iterations;
     results = calloc(Iterations * NUMTESTS, sizeof(unsigned long));
 
-    if (!tests) {
+    if (!Test) {
         memset(teststorun, 1, NUMTESTS);
     } else {
         i = 0;
-        for (; tests[i]; i++) {
-            t = tests[i] - '1';
+        for (; Test[i]; i++) {
+            t = Test[i] - '1';
             if ((t >= 0) && (t <= NUMTESTS))
                 teststorun[t] = 1;
         }
@@ -780,7 +789,7 @@ int main(int ac, char **av)
             teststorun[TEST_WRITE100MB] = 1;
         if (teststorun[TEST_ENUM2000FILES])
             teststorun[TEST_CREATE2000FILES] = 1;
-        free(tests);
+        free(Test);
     }
 
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL)
