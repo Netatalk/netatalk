@@ -23,9 +23,9 @@ STATIC void test222()
 char *name = "t222 file";
 uint16_t vol = VolID,vol2;
 unsigned int ret;
-char *token;
+char *token = NULL;
 uint32_t len;
-CONN *conn2;
+CONN *conn2 = NULL;
 DSI *dsi3;
 int sock;
 int fork = 0, fork1;
@@ -148,6 +148,10 @@ fin:
     }
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
+    if (conn2)
+        free(conn2);
+    if (token)
+        free(token);
 	exit_test("FPDisconnectOldSession:test222: AFP 3.x disconnect old session");
 
 }
@@ -158,10 +162,10 @@ STATIC void test338()
 char *name = "t338 file";
 uint16_t vol, vol2;
 unsigned int ret;
-char *token;
+char *token = NULL;
 uint32_t len;
-CONN *loc_conn1;
-CONN *loc_conn2;
+CONN *loc_conn1 = NULL;
+CONN *loc_conn2 = NULL;
 DSI *loc_dsi1, *loc_dsi2;
 int sock1, sock2;
 int fork = 0, fork1;
@@ -274,6 +278,12 @@ uint32_t time= 12345;
 fin:
     FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
+    if (loc_conn1)
+        free(loc_conn1);
+    if (loc_conn2)
+        free(loc_conn2);
+    if (token)
+        free(token);
 	exit_test("FPDisconnectOldSession:test338: AFP 3.x disconnect old session");
 
 }
@@ -288,10 +298,10 @@ char *no_user_uam = "No User Authent";
 
 uint16_t vol1, vol2;
 unsigned int ret;
-char *token;
+char *token = NULL;
 uint32_t len;
-CONN *loc_conn1;
-CONN *loc_conn2;
+CONN *loc_conn1 = NULL;
+CONN *loc_conn2 = NULL;
 DSI *dsi;
 DSI *loc_dsi1, *loc_dsi2;
 int sock1, sock2;
@@ -438,6 +448,13 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
+    if (loc_conn1)
+        free(loc_conn1);
+    if (loc_conn2)
+        free(loc_conn2);
+    if (token)
+        free(token);
+    
 	exit_test("FPDisconnectOldSession:test339: AFP 3.x No auth disconnect old session");
 }
 
@@ -449,10 +466,10 @@ char *ndir = "t370 dir";
 char *no_user_uam = "No User Authent";
 uint16_t vol1;
 unsigned int ret;
-char *token;
+char *token = NULL;
 uint32_t len;
-CONN *loc_conn1;
-CONN *loc_conn2;
+CONN *loc_conn1 = NULL;
+CONN *loc_conn2 = NULL;
 DSI *dsi;
 DSI *loc_dsi1, *loc_dsi2;
 int sock1, sock2;
@@ -604,6 +621,12 @@ fin:
     FAIL (FPDelete(Conn, vol,  dir, name))
     FAIL (FPDelete(Conn, vol,  dir, ""))
 test_exit:
+    if (loc_conn1)
+        free(loc_conn1);
+    if (loc_conn2)
+        free(loc_conn2);
+    if (token)
+        free(token);
 	exit_test("FPDisconnectOldSession:test370: AFP 3.x disconnect different user");
 
 }

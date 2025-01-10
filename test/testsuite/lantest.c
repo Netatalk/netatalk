@@ -780,9 +780,6 @@ int main(int ac, char **av)
             teststorun[TEST_WRITE100MB] = 1;
         if (teststorun[TEST_ENUM2000FILES])
             teststorun[TEST_CREATE2000FILES] = 1;
-    }
-
-    if (tests) {
         free(tests);
     }
 
