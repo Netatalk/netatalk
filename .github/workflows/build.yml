@@ -521,7 +521,7 @@ jobs:
               libxslt \
               meson \
               mysql84-client \
-              openldap26-client-2.6.8 \
+              openldap26-client \
               p5-Net-DBus \
               perl5 \
               pkgconf \
